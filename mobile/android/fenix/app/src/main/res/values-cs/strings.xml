@@ -21,10 +21,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Tady se zobrazí vaše anonymní panely.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">Jeden otevřený panel. Klepnutím panely přepnete.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -186,6 +182,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Přizpůsobit zobrazení čtečky</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Přidat</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Upravit</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Nelze se připojit. Schéma URL nebylo rozpoznáno.</string>
@@ -1186,9 +1187,6 @@
     <string name="onboarding_header">Vítá vás %s</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Už máte účet?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Poznejte aplikaci %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Co je nového</string>
     <!-- text for the "what's new" onboarding card description
@@ -1196,10 +1194,10 @@
     <string name="onboarding_whats_new_description">Zajímají vás novinky v přepracované aplikaci %s? Chcete vědět, co se změnilo?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Zde najdete všechny odpovědi</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">S účtem Firefoxu můžete synchronizovat záložky, hesla i další svá data.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Synchronizace Firefoxu mezi zařízeními</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Zjistit více</string>
+    <string name="onboarding_manual_sign_in_description">Přeneste si své záložky, historii a hesla do Firefoxu i na toto zařízení.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1208,8 +1206,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Ano, přihlásit</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Přihlašování…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Přihlásit se do Firefoxu</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Přihlásit se</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Nepřihlašovat</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1217,26 +1215,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Přihlášení selhalo</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Automatické soukromí</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Nastavení soukromí a zabezpečení blokuje sledovací prvky, malware a společnosti, které vás sledují.</string>
+    <string name="onboarding_tracking_protection_header_3">Soukromí pro vás a napořád</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox automaticky zabrání společnostem v tajném sledování vašeho prohlížení webu.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standardní (výchozí)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Blokuje méně sledovacích prvků. Stránky se načítají běžným způsobem.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Vyvážené soukromí a výkon. Neovlivní správné načítání webových stránek.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Přísná (doporučeno)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Přísná</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Blokuje více sledovacích prvků, reklam a vyskakovacích oken. Zrychlí i načítání stránek, ale může omezit jejich fungování.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Vyberte si svou stranu</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Blokuje více sledovacích prvků. Zrychlí i načítání stránek, ale může omezit jejich fungování.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Vyberte si umístění nástrojové lišty</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Zkuste po webu brouzdat jednou rukou s adresním řádkem vespod obrazovky, nebo ho přesuňte nahoru.</string>
+    <string name="onboarding_toolbar_placement_description_1">Nastavte si umístění nástrojové lišty na obrazovce dole nebo nahoře, ať na ni dosáhnete.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Prohlížejte v soukromí</string>
     <!-- text for the private browsing onboarding card description
@@ -1249,7 +1244,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vaše soukromí</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">%s vám dává kontrolu nad tím, co sdílíte online a co sdílíte s námi.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Přečíst zásady ochrany osobních údajů</string>
@@ -1264,7 +1259,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Vyberte si vzhled</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Šetřete baterku i své oči povolením tmavého režimu.</string>
+    <string name="onboarding_theme_picker_description_2">Šetřete baterku i své oči povolením tmavého režimu.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatický</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1319,13 +1314,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standardní (výchozí)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokuje méně sledovacích prvků. Stránky se načítají běžným způsobem.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Vyvážené soukromí a výkon. Neovlivní správné načítání webových stránek.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Co blokuje běžné nastavení ochrany proti sledování</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Přísná</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokuje více sledovacích prvků, reklam a vyskakovacích oken. Zrychlí i načítání stránek, ale může omezit jejich fungování.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokuje více sledovacích prvků. Zrychlí i načítání stránek, ale může omezit jejich fungování.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Co blokuje přísné nastavení ochrany proti sledování</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1561,6 +1556,37 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Seřadit podle</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Platební karty</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Ukládat a automaticky vyplňovat karty</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Data jsou šifrována</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Synchronizovat karty napříč zařízeními</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Přidat platební kartu</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Přidat kartu</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Číslo karty</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Datum platnosti</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Jméno na kartě</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Vaše označení karty</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Odstranit kartu</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Uložit</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Uložit</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Zrušit</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Přidat vyhledávač</string>

@@ -801,8 +801,6 @@
     <string name="bookmark_saved_snackbar">Markah berhasil disimpan!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">EDIT</string>
-    <!-- Bookmark overflow menu edit button -->
-    <string name="bookmark_menu_edit_button">Edit</string>
     <!-- Bookmark overflow menu select button -->
     <string name="bookmark_menu_select_button">Pilih</string>
     <!-- Bookmark overflow menu copy button -->

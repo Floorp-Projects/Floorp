@@ -20,10 +20,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Accaren-ik n tbaḍnit ad d-ttwaseknen dagi.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 yiccer i yeldin. Sit akken ad tbeddleḍ iccer.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -185,6 +181,12 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Sagen timeẓri n tɣuri</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Rnu</string>
+
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Ẓreg</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Ur izmir ara ad yeqqen. Azenziɣ n tensa URL ur yettwassen ara.</string>
@@ -1179,9 +1181,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_header">Ansuf ɣer %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Tesεiḍ yakan amiḍan?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Wali %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Wali amaynut</string>
     <!-- text for the "what's new" onboarding card description
@@ -1189,10 +1188,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_whats_new_description">Tesεiḍ asteqsi ɣef %s ittwasinflen? Tebɣiḍ ad tezreḍ acu ibeddlen?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Awi-d tiririyen da</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Bdu amtawi n ticraḍ, awalen uffiren, akked waṭas-nniḍen s umiḍan n Firefox.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Mtawi Firefox gar yibenkan</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Issin ugar</string>
+    <string name="onboarding_manual_sign_in_description">Awi-d ticraḍ n yisebtar, amazray, d wawalen uffiren ɣer Firefox deg yibenk-a.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1201,8 +1200,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_firefox_account_auto_signin_confirm">Ih, qqen-iyi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Tuqqna tetteddu…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Kcem ɣer Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Jerred</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Qqim beṛṛa n tuqqna</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1210,26 +1209,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Tuccḍa n tuqqna</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Tabaḍnit tawurmant</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Iɣewwaren n tbaḍnit d tɣellist sewḥalen imekaren, yir azeɣzan d tkebbaniyin ara ak-yeṭṭaferen.</string>
+    <string name="onboarding_tracking_protection_header_3">Tabaḍnit tezga tettwaḍmen</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Alugan (amezwer)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Drus n yimakaren i isewḥal. Isebtar ad d-alin s wudem amagnu.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Uḥriṣ (yelha)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Uḥris</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Ad isewḥel ugar n yineḍfaren, n udellel d yisfuyla udhimen. Isebtar ad d-ttalin s zzreb, maca kra n tmahilin zemrent ur teddunt ara.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Ddem ṛṛay</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Ɛreḍ tunigin s yiwen ufus s useqdec n ufeggag n ddaw neɣ err-it d asawen.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Tunigin tusligin</string>
     <!-- text for the private browsing onboarding card description
@@ -1243,7 +1229,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_privacy_notice_header">Tabaḍnit inek/m</string>
 
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Nfeṣṣel %si w akken ad nerr gar ifassen-ik·im ayen i tbeṭṭuḍ srid aked wayen tbeṭṭuḍ yid-neɣ.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Ɣer tasertit-nneɣ n tbaḍnit</string>
@@ -1257,8 +1243,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Fren asentel</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Ḥreze tabatrit d wallen-ik s usermed n usentel aberkan.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Awurman</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1313,14 +1297,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Issin ugar</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Alugan (amezwer)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">gDrus n yimakaren i isewḥal. Isebtar ad d-alin s wudem amahnu.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ayen iweḥlen s ummeten n tizeɣt mgal aḍfaṛ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Uḥriṣ</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Ad isewḥel ugar n yineḍfaren, n udellel d yisfuyla udhimen. Isebtar ad d-ttalin s zzreb, maca kra n tmahilin zemrent ur teddunt ara.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ayen iweḥlen s ummeten n uḥriṣ mgal aḍfaṛ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

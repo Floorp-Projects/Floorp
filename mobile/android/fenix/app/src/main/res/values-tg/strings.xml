@@ -1138,32 +1138,32 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Нашри Firefox-и «Пешнамоиш» акнун Firefox-и «Ҳаршабона» шуд</string>
+    <string name="tip_firefox_preview_moved_header">Нашри Firefox-и «Пешнамоиш» акнун Firefox-и «Ҳаршабонарӯзӣ» шуд</string>
 
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description">
-        Firefox-и «Ҳаршабона» ҳар шаб навсозӣ мешавад ва хусусиятҳои нави таҷрибавиро дар бар мегирад.
+        Firefox-и «Ҳаршабонарӯзӣ» ҳар шаб навсозӣ мешавад ва хусусиятҳои нави таҷрибавиро дар бар мегирад.
         Аммо, он метавонад ноустувор бошад. Барои ба даст овардани таҷрибаи устувор, браузери «бета»-ро боргирӣ намоед.</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">«Firefox»-ро барои «Android Beta» ба даст оред</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Нашри Firefox-и «Ҳаршабона» интиқол дода шуд</string>
+    <string name="tip_firefox_preview_moved_header_preview_installed">Нашри Firefox-и «Ҳаршабонарӯзӣ» интиқол дода шуд</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_installed">
-        Ин барнома дигар навсозиҳои амниятиро қабул намекунад. Истифодаи ин барномаро қатъ кунед ва ба нашри нави «Ҳаршабона» гузаред.
+        Ин барнома дигар навсозиҳои амниятиро қабул намекунад. Истифодаи ин барномаро қатъ кунед ва ба нашри нави «Ҳаршабонарӯзӣ» гузаред.
         \n\nБарои интиқол додани хатбаракҳо, воридшавиҳо ва таърихи худ ба барномаи дигар, ҳисоби Firefox-ро эҷод намоед.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Ба нашри нави «Ҳаршабона» гузаред</string>
+    <string name="tip_firefox_preview_moved_button_preview_installed">Ба нашри нави «Ҳаршабонарӯзӣ» гузаред</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Нашри Firefox-и «Ҳаршабона» интиқол дода шуд</string>
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Нашри Firefox-и «Ҳаршабонарӯзӣ» интиқол дода шуд</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_not_installed">
-        Ин барнома дигар навсозиҳои амниятиро қабул намекунад. Нашри нави «Ҳаршабона»-ро ба даст оред ва истифодаи ин барномаро қатъ кунед.
+        Ин барнома дигар навсозиҳои амниятиро қабул намекунад. Нашри нави «Ҳаршабонарӯзӣ»-ро ба даст оред ва истифодаи ин барномаро қатъ кунед.
         \n\nБарои интиқол додани хатбаракҳо, воридшавиҳо ва таърихи худ ба барномаи дигар, ҳисоби Firefox-ро эҷод намоед.</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Нашри «Ҳаршабона»-и навро ба даст оред</string>
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Нашри «Ҳаршабонарӯзӣ»-и навро ба даст оред</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

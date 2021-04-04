@@ -21,10 +21,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Yksityiset välilehdet näkyvät tässä.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 avoin välilehti. Napauta vaihtaaksesi.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -185,6 +181,12 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Mukauta lukunäkymää</string>
+
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Lisää</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Muokkaa</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Yhteyden muodostaminen epäonnistui. URL-skeeman tunnistaminen ei onnistu.</string>
@@ -221,6 +223,11 @@
     <string name="search_suggestions_onboarding_text">%s jakaa kaiken osoitepalkkiin kirjoittamasi asettamallesi oletushakukoneelle.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Lue lisää</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Hae hakukoneella %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Hae suoraan osoitepalkista</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -1176,9 +1183,6 @@
     <string name="onboarding_header">Tervetuloa %siin!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Onko sinulla jo tili?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Opi tuntemaan %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Katso, mikä on uutta</string>
     <!-- text for the "what's new" onboarding card description
@@ -1186,10 +1190,10 @@
     <string name="onboarding_whats_new_description">Kysymyksiä liittyen uudistettuun %siin? Haluatko tietää, mikä kaikki on muuttunut?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Vastauksia on tarjolla täällä</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Aloita kirjanmerkkien, salasanojen ja paljon muun synkronointi Firefox-tilillä.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Synkronoi Firefox laitteidesi välillä</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Lue lisää</string>
+    <string name="onboarding_manual_sign_in_description">Tuo kirjanmerkit, historia ja salasanat Firefoxiin tässä laitteessa.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1198,8 +1202,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Kyllä, kirjaa minut sisään</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Kirjaudutaan sisään…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Kirjaudu sisään Firefoxiin</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Rekisteröidy</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Pysy uloskirjautuneena</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1207,26 +1211,21 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Sisäänkirjautuminen epäonnistui</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Automaattinen yksityisyys</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Tietosuoja- ja suojausasetukset estävät seuraimia, haittaohjelmia ja sinua seuraavia yrityksiä.</string>
+    <string name="onboarding_tracking_protection_header_3">Yksityisyys aina päällä</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox estää automaattisesti yrityksiä seuraamasta sinua salaa ympäri verkkoa.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Tavallinen (oletus)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Estää vähemmän seuraimia. Sivut latautuvat normaalisti.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Tasapainotettu yksityisyyden ja suorituskyvyn välillä. Sivut latautuvat normaalisti.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Tiukka (suositeltu)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Tiukka</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Estää enemmän seuraimia, mainoksia ja ponnahdusikkunoita. Sivut latautuvat nopeammin, mutta osa toiminnoista ei välttämättä toimi.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Valitse puolesi</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Valitse työkalupalkin sijoitus</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Kokeile selaamista yhdellä kädellä pitämällä työkalupalkki alhaalla tai siirrä se ylös.</string>
+    <string name="onboarding_toolbar_placement_description_1">Sijoita työkalupalkki helposti ulottuville. Pidä se alhaalla tai siirrä se ylös.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Selaa yksityisesti</string>
     <!-- text for the private browsing onboarding card description
@@ -1239,7 +1238,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Yksityisyytesi</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Olemme suunnitelleet %sin siten, että voit hallita mitä jaat verkossa ja mitä jaat kanssamme.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lue yksityisyyskäytäntömme</string>
@@ -1254,7 +1253,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Valitse teema</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Säästä hieman akkua ja silmiäsi ottamalla tumma tila käyttöön.</string>
+    <string name="onboarding_theme_picker_description_2">Säästä hieman akkua ja silmiäsi ottamalla tumma tila käyttöön.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automaattinen</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1310,13 +1309,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Tavallinen (oletus)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Estää vähemmän seuraimia. Sivut latautuvat normaalisti.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Tasapainotettu yksityisyyden ja suorituskyvyn välillä. Sivut latautuvat normaalisti.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mitä tavallinen seurannan suojaus estää</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Tiukka</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Estää enemmän seuraimia, mainoksia ja ponnahdusikkunoita. Sivut latautuvat nopeammin, mutta osa toiminnoista ei välttämättä toimi.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Estää enemmän seuraimia, joten sivut latautuvat nopeammin, mutta jotkin sivujen toiminnot saattavat rikkoutua.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mitä tiukka seurannan suojaus estää</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1564,6 +1563,25 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkronoi kortit laitteiden välillä</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Lisää luottokortti</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Lisää kortti</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Kortin numero</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Vanhenemispäivä</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Nimi kortissa</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Kortin kutsumanimi</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Poista kortti</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Tallenna</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Tallenna</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Peruuta</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Lisää hakukone</string>

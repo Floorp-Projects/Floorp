@@ -20,10 +20,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Тут будуць паказаны вашы прыватныя карткі.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 адкрытая картка. Націсніце, каб пераключыць карткі.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -182,6 +178,9 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Уладкаваць рэжым чытання</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Дадаць</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Немагчыма злучыцца. Невядомая схема URL.</string>
@@ -1180,9 +1179,6 @@
     <string name="onboarding_header">Вітаем у %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Ужо маеце ўліковы запіс?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Пазнаёмцеся з %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Паглядзіце, што новага</string>
     <!-- text for the "what's new" onboarding card description
@@ -1190,10 +1186,8 @@
     <string name="onboarding_whats_new_description">Маеце пытанні па абноўленым выглядзе %s? Хочаце ведаць, што змянілася?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Адказы тут</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Пачніце сінхранізаваць закладкі, паролі і шмат іншага праз свой уліковы запіс Firefox.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Падрабязней</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Сінхранізуйце Firefox паміж прыладамі</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1202,35 +1196,20 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Так, увайсці</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Уваход…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Увайсці ў Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Зарэгістравацца</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Не ўваходзіць</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Сінхранізацыя ўключана</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Няўдача ўваходу</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Аўтаматычная прыватнасць</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Налады прыватнасці і бяспекі блакуюць трэкеры, шкоднасныя праграмы і кампаніі, што ідуць за вамі.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартная (прадвызначана)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Блакуе менш трэкераў. Старонкі загружаюцца нармальна.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Строгая (рэкамендуецца)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Строгая</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Блакуе больш трэкераў, рэкламы і выплыўных вокнаў. Старонкі загружаюцца хутчэй, але некаторыя функцыі могуць не працаваць.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Выберыце становішча</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Паспрабуйце навігацыю адной рукой на паліцы прылад унізе або перамясціце яе ўверх.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Аглядайце прыватна</string>
     <!-- text for the private browsing onboarding card description
@@ -1243,7 +1222,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ваша прыватнасць</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Мы распрацавалі %s, каб даць вам кантроль над тым, чым дзяліцца ў Інтэрнэце, і тым, чым вы падзеліцеся з намі.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Паведамленне аб прыватнасці</string>
@@ -1256,8 +1235,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Выберыце тэму</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Зберажыце зарад батарэі і зрок, уключыўшы цёмны рэжым.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Аўтаматычна</string>
 
@@ -1313,14 +1290,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Даведацца больш</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартная (прадвызначана)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Блакуе менш трэкераў. Старонкі загружаюцца нармальна.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Што блакуецца стандартнай аховай ад сачэння</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Строгая</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Блакуе больш трэкераў, рэкламы і выплыўных вокнаў. Старонкі загружаюцца хутчэй, але некаторыя функцыі могуць не працаваць.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Што блакуецца строгай аховай ад сачэння</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

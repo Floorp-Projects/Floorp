@@ -23,10 +23,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">您開啟的隱私瀏覽分頁將顯示於此處。</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">百度</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">京東</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">開啟了 1 個分頁，點擊即可切換分頁。</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -186,6 +182,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">自訂閱讀模式</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">新增</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">編輯</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">不認識的通訊協定，無法連線。</string>
@@ -1196,9 +1197,6 @@
     <string name="onboarding_header">歡迎使用 %s！</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">已經有帳號了嗎？</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">了解 %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">看看有什麼新鮮事</string>
     <!-- text for the "what's new" onboarding card description
@@ -1206,10 +1204,10 @@
     <string name="onboarding_whats_new_description">對重新設計的 %s 有好奇的地方嗎？想知道哪裡變得不一樣了？</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">在此尋找答案</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">使用您的 Firefox 帳號同步書籤、密碼等資料。</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">在不同裝置間同步 Firefox</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">了解更多</string>
+    <string name="onboarding_manual_sign_in_description">將 Firefox 上的書籤、瀏覽紀錄、網站密碼帶到此裝置。</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1218,9 +1216,9 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">好，請幫我登入</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">登入中…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">登入 Firefox</string>
 
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">註冊</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">不要登入</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1228,26 +1226,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">登入失敗</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">自動保護隱私</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">可透過隱私與安全性設定，封鎖追蹤器、惡意軟體與企業在網路上追蹤您的行為。</string>
+    <string name="onboarding_tracking_protection_header_3">隨時都有隱私保護</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox 會自動封鎖讓大企業在網路上偷偷跟蹤您的程式。</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">標準（預設）</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">封鎖少一點追蹤器，網頁可正常運作。</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">隱私權保護與效能兼顧。網站可正常運作。</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">嚴格（建議）</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">嚴格</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">封鎖更多追蹤器、廣告與彈出視窗。可更快載入網頁，但頁面中的部分功能可能會不正常。</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">表示你的立場</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">封鎖更多追蹤器，讓網頁可以更快載入，但頁面上的某些功能可能會故障。</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">挑選工具列要放置的位置</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">用畫面底部的工具列試試看單手上網，也可以移到畫面頂端。</string>
+    <string name="onboarding_toolbar_placement_description_1">可以將工具列放在畫面底端或頂端，容易操作的地方。</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">上網變得私密</string>
     <!-- text for the private browsing onboarding card description
@@ -1260,7 +1255,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">您的隱私權</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">我們將 %s 設計成讓您可以完整控制要在網路上分享哪些東西、以及與我們分享哪些東西。</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">閱讀我們的隱私權公告</string>
@@ -1275,7 +1270,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">選擇佈景主題</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">開啟暗色模式，更省電又保護視力。</string>
+    <string name="onboarding_theme_picker_description_2">使用暗色模式，更省電又保護視力。</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">自動</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1330,13 +1325,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">標準（預設）</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">封鎖少一點追蹤器，網頁可正常運作。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">隱私權保護與效能兼顧。網站可正常運作。</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">標準追蹤保護會封鎖哪些內容</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">嚴格</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">封鎖更多追蹤器、廣告與彈出視窗。可更快載入網頁，但頁面中的部分功能可能會不正常。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">封鎖更多追蹤器，讓網頁可以更快載入，但頁面上的某些功能可能會故障。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">嚴格追蹤保護會封鎖哪些內容</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1583,6 +1578,25 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">在不同裝置間同步卡片資料</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">新增信用卡</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">新增付款卡片</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">卡號</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">到期日</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">持卡人姓名</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">卡片暱稱</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">刪除卡片</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">儲存</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">儲存</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">取消</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">新增搜尋引擎</string>

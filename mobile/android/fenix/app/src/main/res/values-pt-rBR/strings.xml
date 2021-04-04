@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Suas abas privativas são mostradas aqui.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 aba aberta. Toque para alternar abas.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -183,6 +179,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Personalizar leitor</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Adicionar</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Editar</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Não foi possível conectar. Esquema de URL não reconhecível.</string>
@@ -510,13 +511,13 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">Puxar para atualizar</string>
+    <string name="preference_gestures_website_pull_to_refresh">Atualizar página ao deslizar para baixo desde o topo</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Deslizar para ocultar a barra de ferramentas</string>
+    <string name="preference_gestures_dynamic_toolbar">Ocultar barra de ferramentas ao deslizar para cima</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Deslizar a barra de ferramentas para o lado para mudar de aba</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Mudar de aba ao deslizar a barra de ferramentas para o lado</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
-    <string name="preference_gestures_swipe_toolbar_show_tabs">Deslizar a barra de ferramentas para cima para abrir abas</string>
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Abrir abas ao deslizar a barra de ferramentas para cima</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -1166,9 +1167,6 @@
     <string name="onboarding_header">Boas-vindas ao %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Já tem uma conta?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Conheça o %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Veja as novidades</string>
     <!-- text for the "what's new" onboarding card description
@@ -1176,10 +1174,10 @@
     <string name="onboarding_whats_new_description">Tem dúvidas sobre o %s reprojetado? Quer saber o que mudou?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Obtenha respostas aqui</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Comece a sincronizar favoritos, senhas e muito mais com sua Conta Firefox.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Sincronize o Firefox entre dispositivos</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Saiba mais</string>
+    <string name="onboarding_manual_sign_in_description">Traga favoritos, histórico e senhas para o Firefox deste dispositivo.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1188,8 +1186,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Sim, entrar</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Entrando…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Entrar no Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Criar uma conta</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Permanecer desconectado</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1197,26 +1195,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Falha ao entrar</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Privacidade automática</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">As configurações de privacidade e segurança bloqueiam rastreadores, código malicioso (malware) e empresas que seguem você.</string>
+    <string name="onboarding_tracking_protection_header_3">Privacidade sempre ativa</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">O Firefox impede automaticamente que empresas sigam você secretamente pela web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Normal (padrão)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Bloqueia menos rastreadores. As páginas são carregadas normalmente.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Balanceado entre privacidade e desempenho. Páginas são carregadas normalmente.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Rigoroso (recomendado)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Rigoroso</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Bloqueia mais rastreadores, anúncios e notificações. As páginas são carregadas mais rápido, mas algumas coisas podem não funcionar.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Escolha uma posição</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Bloqueia mais rastreadores, assim as páginas carregam mais rápido, mas pode atrapalhar algumas funcionalidades de páginas.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Escolha a posição da barra de ferramentas</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Experimente navegar usando apenas uma mão com a barra de ferramentas embaixo, ou a mova para o alto.</string>
+    <string name="onboarding_toolbar_placement_description_1">Facilite o alcance à barra de ferramentas. Mantenha embaixo, ou mova para cima.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegue com privacidade</string>
     <!-- text for the private browsing onboarding card description
@@ -1229,7 +1224,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Sua privacidade</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Projetamos o %s para te dar controle sobre o que você compartilha online e o que você compartilha conosco.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Leia nosso aviso de privacidade</string>
@@ -1245,7 +1240,7 @@
     <string name="onboarding_theme_picker_header">Escolha um tema</string>
 
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Se quiser poupar sua vista e economizar bateria, use o modo escuro.</string>
+    <string name="onboarding_theme_picker_description_2">Poupe sua vista e economize bateria com o modo escuro.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automático</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1304,13 +1299,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Normal (padrão)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Bloqueia menos rastreadores. As páginas são carregadas normalmente.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Balanceado entre privacidade e desempenho. Páginas são carregadas normalmente.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">O que é bloqueado pela proteção normal contra rastreamento</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Rigoroso</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloqueia mais rastreadores, anúncios e notificações. As páginas são carregadas mais rápido, mas algumas coisas podem não funcionar.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Bloqueia mais rastreadores, assim as páginas carregam mais rápido, mas pode atrapalhar algumas funcionalidades de páginas.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">O que é bloqueado pela proteção rigorosa contra rastreamento</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1557,6 +1552,25 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar cartões entre dispositivos</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Adicionar cartão de crédito</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Adicionar cartão</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Número do cartão</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Data de validade</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Nome no cartão</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Apelido do cartão</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Excluir cartão</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Salvar</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Salvar</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Cancelar</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adicionar mecanismo de pesquisa</string>

@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Тут зʼявлятимуться ваші приватні вкладки.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 відкрита вкладка. Торкніться, щоб перемкнути вкладки.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -184,6 +180,12 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Налаштувати режим читача</string>
+
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Додати</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Редагувати</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Неможливо з’єднатися. Невідома схема URL-адреси.</string>
@@ -1175,9 +1177,6 @@
     <string name="onboarding_header">Вітаємо в %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Вже маєте обліковий запис?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Познайомтеся з %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Погляньте, що нового</string>
     <!-- text for the "what's new" onboarding card description
@@ -1186,10 +1185,10 @@
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Отримайте відповіді тут</string>
 
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Почніть синхронізувати закладки, паролі та інші дані з обліковим записом Firefox.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Синхронізуйте Firefox між пристроями</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Докладніше</string>
+    <string name="onboarding_manual_sign_in_description">Перенесіть свої закладки, історію та паролі у Firefox на цей пристрій.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1198,8 +1197,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Так, увійти</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Вхід…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Увійти в Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Зареєструватись</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Не входити</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1208,26 +1207,23 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Не вдалося увійти</string>
 
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Автоматичний захист приватності</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Налаштування приватності та безпеки блокують елементи стеження, зловмисне програмне забезпечення та стеження компаній за вами.</string>
+    <string name="onboarding_tracking_protection_header_3">Постійна приватність</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox автоматично блокує таємне стеження компаній за вами в Інтернеті.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартний (типово)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Блокує менше елементів стеження. Сторінки завантажуватимуться нормально.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Баланс приватності та швидкодії. Сторінки завантажуються нормально.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Надійний (рекомендовано)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Надійний</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Блокує більше елементів стеження, реклами та виринаючих вікон. Сторінки завантажуються швидше, але деякі функції можуть не працювати.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Зробіть вибір</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Блокує більше стеження, тому сторінки завантажуються швидше, однак можливі порушення їх роботи.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Оберіть розташування панелі інструментів</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Спробуйте керування однією рукою завдяки нижньому розташуванню панелі, або перемістіть її вгору.</string>
+    <string name="onboarding_toolbar_placement_description_1">Розташуйте панель для легкого доступу. Тримайте її внизу, або перемістіть вгору.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Переглядайте приватно</string>
 
@@ -1242,7 +1238,7 @@
     <string name="onboarding_privacy_notice_header">Ваша приватність</string>
 
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Ми створили %s, щоб надати вам контроль над тим, чим ви ділитесь в Інтернеті та з нами.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Повідомлення про приватність</string>
@@ -1257,7 +1253,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Оберіть тему</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Заощадьте заряд акумулятора і збережіть свої очі, увімкнувши темний режим.</string>
+    <string name="onboarding_theme_picker_description_2">Заощадьте заряд акумулятора і збережіть свої очі з темним режимом.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Автоматично</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1313,13 +1309,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартний (типово)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Блокує менше елементів стеження. Сторінки завантажуються нормально.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Баланс приватності та швидкодії. Сторінки завантажуються нормально.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Що блокується стандартним рівнем захисту від стеження</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Надійний</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Блокує більше елементів стеження, реклами та виринаючих вікон. Сторінки завантажуються швидше, але деякі функції можуть не працювати.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Блокує більше стеження, тому сторінки завантажуються швидше, однак можливі порушення їх роботи.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Що блокується надійним рівнем захисту від стеження</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1568,6 +1564,25 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">Синхронізувати картки між пристроями</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Додати кредитну картку</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Додати картку</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Номер картки</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Термін дії</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Ім’я на картці</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Псевдонім картки</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Видалити картку</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Зберегти</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Зберегти</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Скасувати</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Додати засіб пошуку</string>

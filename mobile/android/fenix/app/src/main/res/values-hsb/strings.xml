@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Waše priwatne rajtarki so tu wočinja.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">Wočinjene rajtarki: %1$s. Podótkńće so, zo byšće rajtarki přepinał.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -70,9 +66,9 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Přidajće skrótšenku, zo byšće priwatne rajtarki ze swojeje startoweje wobrazowki wočinił.</string>
+    <string name="cfr_message">Přidajće zwjazanje, zo byšće priwatne rajtarki ze swojeje startoweje wobrazowki wočinił.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Skrótšenku přidać</string>
+    <string name="cfr_pos_button_text">Zwjazanje přidać</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ně, dźakuju so</string>
 
@@ -183,6 +179,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Čitanski napohlad přiměrić</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Přidać</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Wobdźěłać</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Zwisk móžny njeje. Njespóznawajomna URL-šema.</string>
@@ -285,7 +286,7 @@
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
     <string name="preferences_screenshots_in_private_mode_disclaimer">Jeli dowolene, budu priwatne rajtarki tež widźomne, hdyž wjacore nałoženja su wočinjene</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">Skrótšenku za priwatny modus přidać</string>
+    <string name="preferences_add_private_browsing_shortcut">Zwjazanje za priwatny modus přidać</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Bjezbarjernosć</string>
     <!-- Preference to override the Firefox Account server -->
@@ -331,7 +332,7 @@
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Pytanske namjety pokazać</string>
     <!-- Preference title for switch preference to show voice search button -->
-    <string name="preferences_show_voice_search">Hłosowe pytanje pokazać</string>
+    <string name="preferences_show_voice_search">Rěčenske pytanje pokazać</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">W priwatnych posedźenjach pokazać</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -1035,7 +1036,7 @@
     <!-- Text shown in snackbar action for viewing bookmarks -->
     <string name="snackbar_message_bookmarks_view">Pokazać</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Woblubowanym sydłam přidate!</string>
+    <string name="snackbar_added_to_top_sites">Wažnym sydłam přidate!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Priwatny rajtark je so začinił</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1169,9 +1170,6 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Maće hižo konto?</string>
 
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s zeznać</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Čitajće, štož je nowe</string>
     <!-- text for the "what's new" onboarding card description
@@ -1179,10 +1177,10 @@
     <string name="onboarding_whats_new_description">Maće prašenja wo nowo wuhotowanym %s? Chceće wědźeć, štož je so změniło?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Tu dóstanjeće wotmołwy</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Synchronizujće nětko zapołožki, hesła a wjace ze swojim kontom Firefox.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Firefox mjez gratami synchronizować</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Dalše informacije</string>
+    <string name="onboarding_manual_sign_in_description">Přinjesće zapołožki, historiju a hesła k Firefox na tutym graće.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1191,35 +1189,24 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Haj, přizjewić</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Přizjewja so…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Pola Firefox přizjewić</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Registrować</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Wotzjewjeny wostać</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchronizacija je zmóžnjena</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Přizjewjenje njeje so poradźiło</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Awtomatiska priwatnosć</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Nastajenja priwatnosće a wěstoty přesćěhowaki, škódnu softwaru a předewzaća blokuja, kotrež wam slěduja.</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox awtomatisce zadźěwa tomu, zo předewzaća wam skradźu po webje slěduja.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Blokuje mjenje přesćěhowakow. Strony so normalnje začitaja.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Wuwaženy za priwatnosć a wukon. Strony so normalnje začitaja.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Striktny (doporučeny)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Striktny</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Blokuje wjace přesćěhowakow, wabjenja a wuskakowacych woknow. Strony so spěšnišo začitaja, ale někotre funkcije snano njefunguja.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Rozsudźće so</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Spytajće z delnjej symbolowej lajstu z jednej ruku přehladować abo přesuńće ju horje.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Priwatnje přehladować</string>
     <!-- text for the private browsing onboarding card description
@@ -1232,7 +1219,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Waša priwatnosć</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Sym %s wuwili, zo bychmy wam kontrolu wo tym dali, što online dźěliće a što z nami.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Čitajće naš zdźělenku priwatnosće</string>
@@ -1247,7 +1234,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Wubjerće swoju drastu</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Zmóžńće ćmowy modus, zo byšće swoju bateriju a swoje woči šonował.</string>
+    <string name="onboarding_theme_picker_description_2">Zmóžńće ćmowy modus, zo byšće swoju bateriju a swoje woči šonował.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Awtomatiski</string>
 
@@ -1303,13 +1290,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokuje mjenje přesćěhowakow. Strony so normalnje začitaja.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Wuwaženy za priwatnosć a wukon. Strony so normalnje začitaja.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Što so přez standardny slědowanski škit blokuje?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Striktny</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokuje wjace přesćěhowakow, wabjenja a wuskakowacych woknow. Strony so spěšnišo začitaja, ale někotre funkcije snano njefunguja.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Što so přez striktny slědowanski škit blokuje?</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1433,7 +1418,7 @@
     <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
     <string name="add_to_homescreen_continue">Dale k websydłu</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_text_placeholder">Mjeno skrótšenki</string>
+    <string name="add_to_homescreen_text_placeholder">Mjeno zwjazanja</string>
 
     <!-- Describes the add to homescreen functionality -->
     <string name="add_to_homescreen_description_2">Móžeće startowej wobrazowce swojeho grata tute websydło lochko přidać, zo byšće direktny přistup měł a spěšnišo z dožiwjenjom nałoženja přehladował.</string>
@@ -1558,6 +1543,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Kreditnu kartu přidać</string>
 
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Kartu přidać</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Kartowe čisło</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Datum płaćiwosće</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Mjeno na karće</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Kartowe přimjeno</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Kartu zhašeć</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Składować</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Składować</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Přetorhnyć</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pytawu přidać</string>
     <!-- Title of the Edit search engine screen -->
@@ -1644,7 +1648,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Chceće woprawdźe tutu zapołožku zhašeć?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Woblubowanym sydłam přidać</string>
+    <string name="browser_menu_add_to_top_sites">Wažnym sydłam přidać</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Přepruwowany wot: %1$s </string>
@@ -1673,7 +1677,7 @@
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Hesło trěbne</string>
     <!-- Voice search button content description  -->
-    <string name="voice_search_content_description">Hłosowe pytanje</string>
+    <string name="voice_search_content_description">Rěčenske pytanje</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Nětko rěčeć</string>
 
@@ -1706,7 +1710,7 @@
     <string name="top_sites_max_limit_confirmation_button">W porjadku, sym zrozumił</string>
 
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Najhusćišo wopytowane sydła pokazać</string>
+    <string name="top_sites_toggle_top_frecent_sites">Najhusćišo wopytane sydła pokazać</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Mjeno</string>

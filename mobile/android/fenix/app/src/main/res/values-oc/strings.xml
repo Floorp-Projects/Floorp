@@ -19,10 +19,6 @@
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Los onglets privats se mostraràn aquí.</string>
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 onglet dobèrt. Tocatz per i bascular.</string>
 
@@ -182,6 +178,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Personalizar la vista lectura</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Apondre</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Modificar</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Connexion impossibla. Esquèma d’URL desconegut.</string>
@@ -1172,9 +1173,6 @@
     <string name="onboarding_header">La benvenguda a %s !</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Avètz ja un compte ?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Descobrissètz %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Descobrissètz las novetats</string>
     <!-- text for the "what's new" onboarding card description
@@ -1182,10 +1180,6 @@
     <string name="onboarding_whats_new_description">Avètz de question tocant lo nòu %s ? Volètz saber çò que cambièt ?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Trobatz de responsas aquí</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Començatz de sincronizar los marcapaginas, senhals e mai amb vòstre compte Firefox</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Ne saber mai</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1194,35 +1188,18 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Òc, connectatz-me</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Connexion…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Se connectar a Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Demorar desconnectat</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sincro. activada</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Fracàs de connexion</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Confidencialitat automatica</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Los paramètres de confidencialitat e de seguretat blocan los traçadors, los logicials malvolents e las entrepresas que vos pistan.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Estandard (per defaut)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Bloca mens de traçadors. Las paginas se cargan normalament.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricte (recomandat)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Estricte</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Bloca mai d’elements de seguiment, publicitats e fenèstras sorgissentas. Las paginas se cargament rapidament, mas pòt arribar que d’unas foncionalitats sián copadas.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Prenètz posicion</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Ensajatz la navegacion amb la man amb la barra d’aisinas inferiora o deplaçatz-la ennaut.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegatz d’un biais privat</string>
     <!-- text for the private browsing onboarding card description
@@ -1235,7 +1212,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vòstra vida privada</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Concebèrem %s per vos donar lo contraròtle de çò que partejatz en linha e çò que partejatz amb nosautres.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Legissètz nòstra politica de confidencialitat</string>
@@ -1248,8 +1225,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Causissètz vòstre tèma</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Estalviatz la batariá e vòstra vista en activant lo mòde fosc.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatic</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1304,14 +1279,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ne saber mai</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Estandarda (per defaut)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Bloca mens de traçadors. Las paginas se cargan normalament.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Çò que la proteccion contra lo seguiment estandarda bloca</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricte</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloca mai d’elements de seguiment, publicitats e fenèstras sorgissentas. Las paginas se cargament rapidament, mas pòt arribar que d’unas foncionalitats sián copadas.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Çò que la proteccion contra lo seguiment estricta bloca</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1565,6 +1536,19 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar las cartas entre los periferics</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Apondre una cartas de crèdit</string>
+
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Numèro de carta</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Data d’expiracion</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Titular</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Enregistrar</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Enregistrar</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Anullar</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Apondre un motor de recèrca</string>

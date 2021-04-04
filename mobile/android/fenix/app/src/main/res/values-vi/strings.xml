@@ -20,10 +20,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Các thẻ riêng tư của bạn sẽ được hiển thị ở đây.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 thẻ đang mở. Chạm để chuyển thẻ.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -183,6 +179,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Tùy chỉnh chế độ đọc</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Thêm</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Chỉnh sửa</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Không thể kết nối. Không thể nhận dạng URL.</string>
@@ -1160,9 +1161,6 @@
     <string name="onboarding_header">Chào mừng đến với %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Đã có một tài khoản?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Tìm hiểu qua %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Xem có gì mới</string>
     <!-- text for the "what's new" onboarding card description
@@ -1170,10 +1168,10 @@
     <string name="onboarding_whats_new_description">Có câu hỏi nào về %s được thiết kế lại không? Bạn muốn biết những gì đã thay đổi?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Nhận câu trả lời tại đây</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Bắt đầu đồng bộ hóa dấu trang, mật khẩu và nhiều hơn nữa với tài khoản Firefox của bạn.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Đồng bộ hóa Firefox giữa các thiết bị</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Tìm hiểu thêm</string>
+    <string name="onboarding_manual_sign_in_description">Mang dấu trang, lịch sử và mật khẩu vào Firefox trên thiết bị này.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1182,8 +1180,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Có, đăng nhập cho tôi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Đang đăng nhập…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Đăng nhập vào Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Đăng ký</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Vẫn đăng xuất</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1191,26 +1189,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Không thể đăng nhập</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Bảo mật tự động</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Cài đặt riêng tư và bảo mật chặn trình theo dõi, phần mềm độc hại và các công ty theo dõi bạn.</string>
+    <string name="onboarding_tracking_protection_header_3">Luôn bảo vệ quyền riêng tư</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox tự động ngăn các công ty bí mật theo dõi bạn trên web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Tiêu chuẩn (mặc định)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Chặn trình theo dõi ít hơn. Các trang sẽ tải bình thường.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Cân bằng cho sự riêng tư và hiệu suất. Các trang tải bình thường.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Nghiêm ngặt (được khuyến nghị)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Nghiêm ngặt</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Chặn nhiều trình theo dõi, quảng cáo và cửa sổ bật lên. Các trang tải nhanh hơn, nhưng một số chức năng có thể không hoạt động.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Thể hiện vị trí của bạn</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Chặn nhiều trình theo dõi hơn để các trang tải nhanh hơn, nhưng một số trên trang có thể bị hỏng về mặt chức năng.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Chọn vị trí thanh công cụ của bạn</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Hãy thử duyệt bằng một tay với thanh công cụ dưới cùng hoặc di chuyển nó lên trên cùng.</string>
+    <string name="onboarding_toolbar_placement_description_1">Đặt thanh công cụ trong tầm với. Giữ nó ở dưới cùng hoặc di chuyển nó lên trên cùng.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Duyệt web riêng tư hơn</string>
     <!-- text for the private browsing onboarding card description
@@ -1223,7 +1218,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Quyền riêng tư của bạn</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Chúng tôi đã thiết kế %s để cung cấp cho bạn quyền kiểm soát những gì bạn chia sẻ trực tuyến và những gì bạn chia sẻ với chúng tôi.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Đọc thông báo bảo mật của chúng tôi</string>
@@ -1238,7 +1233,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Chọn chủ đề của bạn</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Tiết kiệm pin và bảo vệ thị lực của bạn bằng cách bật chế độ tối.</string>
+    <string name="onboarding_theme_picker_description_2">Tiết kiệm pin và thị lực của bạn với chế độ tối.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Tự động</string>
 
@@ -1294,13 +1289,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Tiêu chuẩn (mặc định)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Chặn trình theo dõi ít hơn. Các trang sẽ tải bình thường.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Cân bằng cho sự riêng tư và hiệu suất. Các trang tải bình thường.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Những gì bị chặn bởi trình chống theo dõi tiêu chuẩn</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Nghiêm ngặt</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Chặn nhiều trình theo dõi, quảng cáo và cửa sổ bật lên. Các trang tải nhanh hơn, nhưng một số chức năng có thể không hoạt động.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Chặn nhiều trình theo dõi hơn để các trang tải nhanh hơn, nhưng một số chức năng trên trang có thể bị hỏng.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Những gì bị chặn bởi trình chống theo dõi nghiêm ngặt</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1545,6 +1540,25 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">Đồng bộ thông tin thẻ tín dụng trên các thiết bị</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Thêm thẻ tín dụng</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Thêm thẻ</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Số thẻ</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Ngày hết hạn</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Tên trên thẻ</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Biệt danh thẻ</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Xóa thẻ</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Lưu</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Lưu</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Hủy bỏ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Thêm công cụ tìm kiếm</string>

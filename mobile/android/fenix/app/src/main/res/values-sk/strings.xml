@@ -267,7 +267,7 @@
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Heslá</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Kreditné karty a adresy</string>
+    <string name="preferences_credit_cards_addresses">Platobné karty a adresy</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Nastaviť ako predvolený prehliadač</string>
     <!-- Preference category for advanced settings -->
@@ -1550,6 +1550,18 @@
     <string name="saved_logins_sort_strategy_last_used">posledného použitia</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Zoradiť ponuku prihlasovacích údajov</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Platobné karty</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Ukladať a automaticky dopĺňať údaje o platobných kartách</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Údaje sú šifrované</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Synchronizovať karty naprieč zariadeniami</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Pridať platobnú kartu</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pridať vyhľadávací modul</string>

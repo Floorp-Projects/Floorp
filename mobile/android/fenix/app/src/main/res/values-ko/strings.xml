@@ -22,10 +22,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">사생활 보호 탭이 여기에 표시됩니다.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">열린 탭 1개. 탭을 전환하려면 누르세요.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -192,6 +188,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">리더뷰 사용자 지정</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">추가</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">편집</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">연결할 수 없음. 인식할 수 없는 URL 구성표.</string>
@@ -1212,9 +1213,6 @@
     <string name="onboarding_header">%s에 오신걸 환영합니다!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">계정이 이미 있으신가요?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s에 대해 알기</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">새 기능 살펴보기</string>
     <!-- text for the "what's new" onboarding card description
@@ -1222,10 +1220,10 @@
     <string name="onboarding_whats_new_description">새롭게 디자인된 %s에 대해 궁금한 점이 있습니까? 변경된 사항을 알고 싶으십니까?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">여기서 답을 얻으세요</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Firefox 계정으로 북마크, 비밀번호 등을 동기화하세요.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">기기 간에 Firefox 동기화</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">더 알아보기</string>
+    <string name="onboarding_manual_sign_in_description">이 기기의 Firefox에 북마크, 기록 및 비밀번호를 가져오세요.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1234,8 +1232,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">예, 로그인함</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">로그인 중…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Firefox에 로그인</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">가입하기</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">로그아웃 유지</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1244,26 +1242,23 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">로그인 실패</string>
 
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">자동 개인정보 보호</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">개인 정보 및 보안 설정은 추적기, 악성 코드 및 사용자를 따라다니는 회사를 차단합니다.</string>
+    <string name="onboarding_tracking_protection_header_3">상시 개인 정보 보호</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox는 회사가 웹에서 사용자를 몰래 따라 다니는 것을 자동으로 중지합니다.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">표준 (기본값)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">더 적은 추적기를 차단합니다. 페이지가 정상적으로 로드됩니다.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">개인 정보 보호와 성능사이의 균형이 잡혀 있습니다. 페이지가 정상적으로 로드됩니다.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">엄격 (권장)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">엄격</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">더 많은 추적기, 광고 및 팝업을 차단합니다. 페이지가 더 빨리 로드되지만, 일부 기능이 작동하지 않을 수 있습니다.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">위치를 잡으세요</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">더 많은 추적기를 차단하여 페이지가 더 빨리 로드되지만, 일부 페이지의 기능이 손상될 수 있습니다.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">도구 모음 위치 선택</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">하단 도구 모음을 사용하여 한 손으로 탐색하시거나, 상단으로 이동하세요.</string>
+    <string name="onboarding_toolbar_placement_description_1">도구 모음을 쉽게 접근할 수 있는 곳에 놓으세요. 하단에 두거나 상단으로 옮기세요.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">사생활 보호 모드</string>
     <!-- text for the private browsing onboarding card description
@@ -1276,7 +1271,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">개인 정보 보호</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">우리는 %s가 무엇을 온라인에서 공유하고 우리와 공유할지 사용자가 제어할 수 있게 만들었습니다.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">개인정보처리방침 읽기</string>
@@ -1291,7 +1286,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">테마 선택</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">어두운 모드를 활성화하여 배터리를 절약하고 시력을 보호하세요.</string>
+    <string name="onboarding_theme_picker_description_2">어두운 모드를 활성화하여 배터리를 절약하고 시력을 보호하세요.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">자동</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1347,13 +1342,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">표준 (기본값)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">더 적은 추적기를 차단합니다. 페이지가 정상적으로 로드됩니다.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">개인 정보 보호와 성능사이의 균형이 잡혀 있습니다. 페이지가 정상적으로 로드됩니다.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">표준 추적 방지 기능에 의해 차단된 것</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">엄격</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">더 많은 추적기, 광고 및 팝업을 차단합니다. 페이지가 더 빨리 로드되지만, 일부 기능이 작동하지 않을 수 있습니다.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">더 많은 추적기를 차단하여 페이지가 더 빨리 로드되지만, 일부 페이지의 기능이 손상될 수 있습니다.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">엄격 추적 방지 기능에 의해 차단된 것</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1599,9 +1594,29 @@
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">데이터가 암호화됨</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
-    <string name="preferences_credit_cards_sync_cards_across_devices">기기간 카드 동기화</string>
+    <string name="preferences_credit_cards_sync_cards_across_devices">기기 간에 카드 동기화</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">신용 카드 추가</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">카드 추가</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">카드 번호</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">유효 기간</string>
+
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">카드상의 이름</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">카드 별명</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">카드 삭제</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">저장</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">저장</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">취소</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">검색 엔진 추가</string>

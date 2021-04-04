@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">แท็บส่วนตัวของคุณจะถูกแสดงที่นี่</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 แท็บที่เปิด แตะเพื่อสลับไปยังแท็บ</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -181,6 +177,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">ปรับแต่งมุมมองผู้อ่าน</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">เพิ่ม</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">แก้ไข</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">ไม่สามารถเชื่อมต่อได้เนื่องจากเป็นรูปแบบ URL ที่ไม่รู้จัก</string>
@@ -1163,9 +1164,6 @@
     <string name="onboarding_header">ยินดีต้อนรับสู่ %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">มีบัญชีอยู่แล้ว?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">ทำความรู้จัก %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">ดูว่ามีอะไรใหม่</string>
     <!-- text for the "what's new" onboarding card description
@@ -1173,10 +1171,10 @@
     <string name="onboarding_whats_new_description">มีคำถามเกี่ยวกับ %s ที่ออกแบบใหม่หรือไม่? ต้องการรู้ว่ามีอะไรเปลี่ยนไปบ้างหรือไม่?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">พบคำตอบได้ที่นี่</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">เริ่มซิงค์ที่คั่นหน้า รหัสผ่าน และอื่น ๆ ด้วยบัญชี Firefox ของคุณ</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">ซิงค์ Firefox ระหว่างอุปกรณ์</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">เรียนรู้เพิ่มเติม</string>
+    <string name="onboarding_manual_sign_in_description">นำที่คั่นหน้า ประวัติ และรหัสผ่านไปยัง Firefox บนอุปกรณ์นี้</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1185,8 +1183,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">ใช่ ให้ฉันลงชื่อเข้า</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">กำลังลงชื่อเข้า…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">ลงชื่อเข้าไปยัง Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">ลงทะเบียน</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">ลงชื่อออกต่อไป</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1194,26 +1192,13 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ไม่สามารถเข้าสู่ระบบ</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">ความเป็นส่วนตัวอัตโนมัติ</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">ตั้งค่าความเป็นส่วนตัวและความปลอดภัยป้องกันตัวติดตาม มัลแวร์ และบริษัทที่ตามคุณ</string>
+    <string name="onboarding_tracking_protection_header_3">ความเป็นส่วนตัวตลอดเวลา</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">มาตรฐาน (ค่าเริ่มต้น)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">ปิดกั้นตัวติดตามน้อยลง หน้าเว็บจะโหลดตามปกติ</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">เข้มงวด (แนะนำ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">เข้มงวด</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">ปิดกั้นตัวติดตาม โฆษณา และป๊อปอัปมากขึ้น เว็บโหลดเร็วขึ้น แต่ฟังก์ชั่นบางอย่างอาจไม่ทำงาน</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">เลือกตำแหน่ง</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">ลองใช้การเรียกดูด้วยมือเดียวด้วยแถบเครื่องมือด้านล่างหรือย้ายไปด้านบน</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">เรียกดูอย่างเป็นส่วนตัว</string>
     <!-- text for the private browsing onboarding card description
@@ -1226,7 +1211,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ความเป็นส่วนตัวของคุณ</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">เราได้ออกแบบ %s เพื่อให้คุณสามารถควบคุมสิ่งที่คุณต้องการแบ่งปันออนไลน์และสิ่งที่คุณต้องการแบ่งปันกับเราได้</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">อ่านประกาศความเป็นส่วนตัวของเรา</string>
@@ -1240,8 +1225,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">เลือกชุดตกแต่งของคุณ</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">ประหยัดแบตเตอรี่และถนอมสายตาของคุณโดยเปิดใช้งานโหมดมืด</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">อัตโนมัติ</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1296,14 +1279,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">เรียนรู้เพิ่มเติม</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">มาตรฐาน (ค่าเริ่มต้น)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">ปิดกั้นตัวติดตามน้อยลง หน้าเว็บจะโหลดตามปกติ</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">สิ่งที่ถูกปิดกั้นโดยการป้องกันการติดตามแบบมาตรฐาน</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">เข้มงวด</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">ปิดกั้นตัวติดตาม โฆษณา และป๊อปอัปมากขึ้น เว็บโหลดเร็วขึ้น แต่ฟังก์ชั่นบางอย่างอาจไม่ทำงาน</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">สิ่งที่ถูกปิดกั้นโดยการป้องกันการติดตามแบบเข้มงวด</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1539,6 +1518,37 @@
     <string name="saved_logins_sort_strategy_last_used">ใช้งานครั้งสุดท้าย</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">เรียงเมนูเข้าสู่ระบบ</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">บัตรเครดิต</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">บันทึกและเติมข้อมูลบัตรอัตโนมัติ</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">ข้อมูลถูกเข้ารหัส</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">ซิงค์บัตรระหว่างอุปกรณ์</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">เพิ่มบัตรเครดิต</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">เพิ่มบัตร</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">หมายเลขบัตร</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">วันหมดอายุ</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">ชื่อบนบัตร</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">ชื่อย่อบัตร</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">ลบบัตร</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">บันทึก</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">บันทึก</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">ยกเลิก</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">เพิ่มเครื่องมือค้นหา</string>
