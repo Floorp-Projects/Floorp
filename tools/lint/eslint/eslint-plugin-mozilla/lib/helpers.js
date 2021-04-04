@@ -6,7 +6,7 @@
  */
 "use strict";
 
-const parser = require("babel-eslint");
+const parser = require("@babel/eslint-parser");
 const { analyze } = require("eslint-scope");
 const { KEYS: defaultVisitorKeys } = require("eslint-visitor-keys");
 const estraverse = require("estraverse");
@@ -492,14 +492,33 @@ module.exports = {
    *         Espree compatible permissive config.
    */
   getPermissiveConfig() {
-    return {
+    const config = {
       range: true,
+      requireConfigFile: false,
+      babelOptions: {
+        // configFile: path.join(gRootDir, ".babel-eslint.rc.js"),
+        // parserOpts: {
+        //   plugins: [
+        //     "@babel/plugin-proposal-class-static-block",
+        //     "@babel/plugin-syntax-class-properties",
+        //     "@babel/plugin-syntax-jsx",
+        //   ],
+        // },
+      },
       loc: true,
       comment: true,
       attachComment: true,
       ecmaVersion: this.getECMAVersion(),
       sourceType: "script",
     };
+
+    if (this.isMozillaCentralBased()) {
+      config.babelOptions.configFile = path.join(
+        gRootDir,
+        ".babel-eslint.rc.js"
+      );
+    }
+    return config;
   },
 
   /**
