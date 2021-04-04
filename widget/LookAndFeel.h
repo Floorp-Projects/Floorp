@@ -430,6 +430,8 @@ class LookAndFeel {
                                               : ColorScheme::Light;
   }
 
+  static ColorScheme ColorSchemeForDocument(const dom::Document& aDoc);
+
   // Whether standins for native colors should be used (that is, colors faked,
   // taken from win7, mostly). This forces light appearance, effectively.
   enum class UseStandins : bool { No, Yes };
