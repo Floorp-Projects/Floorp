@@ -242,6 +242,8 @@ export class _CollapsibleSection extends React.PureComponent {
       titleStyle = { visibility: "hidden" };
     }
     return (
+      // TODO: Bug 1702140: re-enable this rule.
+      // eslint-disable-next-line jsx-a11y/role-supports-aria-props
       <section
         className={`collapsible-section ${this.props.className}${
           enableAnimation ? " animation-enabled" : ""

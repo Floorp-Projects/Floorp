@@ -32,7 +32,7 @@ module.exports = {
     "plugin:mozilla/mochitest-test",
     "plugin:mozilla/xpcshell-test",
     "plugin:prettier/recommended", // require("eslint-plugin-prettier")
-    "prettier/react", // require("eslint-config-prettier")
+    "prettier", // require("eslint-config-prettier")
   ],
   overrides: [
     {
