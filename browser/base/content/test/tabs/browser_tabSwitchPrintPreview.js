@@ -15,7 +15,7 @@ add_task(async function() {
     let tab = BrowserTestUtils.addTab(gBrowser, kURL2);
     document.getElementById("cmd_printPreview").doCommand();
     gBrowser.selectedTab = tab;
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => gInPrintPreviewMode,
       "should be in print preview mode"
     );
@@ -43,7 +43,7 @@ add_task(async function() {
     let tabSwitched = BrowserTestUtils.switchTab(gBrowser, () => {
       PrintUtils.exitPrintPreview();
     });
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => !gInPrintPreviewMode,
       "should no longer be in print preview mode"
     );
