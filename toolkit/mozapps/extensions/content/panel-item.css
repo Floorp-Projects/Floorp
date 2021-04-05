@@ -21,15 +21,15 @@ button {
   background-color: transparent;
   color: inherit;
   background-image: var(--icon);
-  background-position: 14px center;
+  background-position: 8px center;
   background-repeat: no-repeat;
   background-size: 16px;
   border: none;
   position: relative;
   display: block;
   font-size: inherit;
-  padding: 4px 40px;
-  padding-inline-end: 12px;
+  padding: 4px 8px;
+  padding-inline-start: 32px;
   text-align: start;
   width: 100%;
 }
@@ -50,13 +50,16 @@ button:dir(rtl) {
   inset-inline-start: 28px;
 }
 
-button:focus,
 button:enabled:hover {
-  background-color: var(--in-content-button-background);
+  background-color: var(--in-content-button-background-hover);
 }
 
 button:enabled:hover:active {
-  background-color: var(--in-content-button-background-hover);
+  background-color: var(--in-content-button-background-active);
+}
+
+button:focus-visible {
+  outline-offset: -2px;
 }
 
 button:disabled {

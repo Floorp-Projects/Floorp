@@ -56,8 +56,6 @@
 
   --dialog-warning-text-color: var(--red-60);
 
-  --panel-border-radius: 2px; /* This is overridden on Windows */
-
   --checkbox-border-color: rgb(143,143,157);
   --checkbox-unchecked-bgcolor: rgb(240,240,244);
   --checkbox-unchecked-hover-bgcolor: rgb(224,224,230);
