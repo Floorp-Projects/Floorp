@@ -14,7 +14,11 @@ let { PromptUtils } = ChromeUtils.import(
 const AdjustableTitle = {
   _cssSnippet: `
     #titleContainer {
-      display: flex;
+      /* go from left to right with the mask: */
+      --mask-dir: right;
+
+      display: flex; /* Try removing me when browser.proton.enabled goes away. */
+
       flex-direction: row;
       margin-inline: 4px;
       --icon-size: 20px; /* 16px icon + 4px spacing. */
@@ -22,9 +26,16 @@ const AdjustableTitle = {
       /* Ensure we don't exceed the bounds of the dialog minus our own padding: */
       max-width: calc(100vw - 32px - var(--icon-size));
       overflow: hidden;
-      justify-content: end;
+      justify-content: right;
       position: relative;
       min-height: max(16px, 1.5em);
+      mask-repeat: no-repeat;
+    }
+
+    #titleContainer[rtlorigin] {
+      justify-content: left;
+      /* go from right to left with the mask: */
+      --mask-dir: left;
     }
 
     #titleContainer[noicon] {
@@ -42,12 +53,13 @@ const AdjustableTitle = {
       position: absolute;
       /* center vertically: */
       top: max(0px, calc(0.75em - 8px));
-      left: 0;
+      inset-inline-start: 0;
       width: 16px;
-      padding-right: 4px;
       height: 16px;
+      padding-inline-end: 4px;
       background-image: var(--icon-url, url("chrome://global/skin/icons/defaultFavicon.svg"));
       background-size: 16px 16px;
+      background-origin: content-box;
       background-repeat: no-repeat;
       background-color: var(--in-content-page-background);
       -moz-context-properties: fill;
@@ -58,6 +70,8 @@ const AdjustableTitle = {
       font-weight: 600;
       flex: 1 0 auto; /* Grow but do not shrink. */
       white-space: nowrap;
+      unicode-bidi: plaintext; /* Ensure we align RTL text correctly. */
+      text-align: match-parent;
     }
 
     #titleText[nomaskfade] {
@@ -66,9 +80,17 @@ const AdjustableTitle = {
       text-overflow: ellipsis;
     }
 
-    #titleContainer[overflown] {
-      mask-image: linear-gradient(to right, black, black 20px, transparent 20px, black 120px);
-      mask-repeat: no-repeat;
+    /* Mask when the icon is at the same side as the side of the domain we're
+     * masking. */
+    #titleContainer[overflown][rtlorigin]:-moz-locale-dir(rtl),
+    #titleContainer[overflown]:not([rtlorigin]):-moz-locale-dir(ltr) {
+      mask-image: linear-gradient(to var(--mask-dir), black, black var(--icon-size), transparent var(--icon-size), black calc(100px + var(--icon-size)));
+    }
+
+    /* Mask when the icon is on the opposite side as the side of the domain we're masking. */
+    #titleContainer[overflown]:not([rtlorigin]):-moz-locale-dir(rtl),
+    #titleContainer[overflown][rtlorigin]:-moz-locale-dir(ltr) {
+      mask-image: linear-gradient(to var(--mask-dir), transparent, black 100px);
     }
 
     /* hide the old title */
@@ -116,6 +138,11 @@ const AdjustableTitle = {
     title = JSON.parse(title);
     if (title.raw) {
       this._titleEl.textContent = title.raw;
+      let { DIRECTION_RTL } = window.windowUtils;
+      this._containerEl.toggleAttribute(
+        "rtlorigin",
+        window.windowUtils.getDirectionFromText(title.raw) == DIRECTION_RTL
+      );
     } else {
       document.l10n.setAttributes(this._titleEl, title.l10nId);
     }
