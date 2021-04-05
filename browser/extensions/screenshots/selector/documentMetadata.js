@@ -5,7 +5,6 @@
 "use strict";
 
 this.documentMetadata = (function() {
-
   function findSiteName() {
     let el = document.querySelector("meta[property~='og:site_name'][content]");
     if (el) {
@@ -33,7 +32,9 @@ this.documentMetadata = (function() {
     profile:first_name profile:last_name profile:username profile:gender
     `.split(/\s+/g);
     for (const prop of openGraphProperties) {
-      let elems = document.querySelectorAll(`meta[property~='og:${prop}'][content]`);
+      let elems = document.querySelectorAll(
+        `meta[property~='og:${prop}'][content]`
+      );
       if (forceSingle.includes(prop) && elems.length > 1) {
         elems = [elems[0]];
       }
@@ -67,7 +68,9 @@ this.documentMetadata = (function() {
     player player:width player:height player:stream player:stream:content_type
     `.split(/\s+/g);
     for (const prop of properties) {
-      const elem = document.querySelector(`meta[name='twitter:${prop}'][content]`);
+      const elem = document.querySelector(
+        `meta[name='twitter:${prop}'][content]`
+      );
       if (elem) {
         const value = elem.getAttribute("content");
         if (value) {
@@ -86,6 +89,5 @@ this.documentMetadata = (function() {
     result.twitterCard = getTwitterCard();
     return result;
   };
-
 })();
 null;
