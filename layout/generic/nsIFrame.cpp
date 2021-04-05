@@ -6185,18 +6185,14 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     }
   }
 
-  // Calculate and apply min max transferred size contraint.
-  // https://github.com/w3c/csswg-drafts/issues/5257
-  // If we have definite preferred size, the transferred minimum and maximum
-  // are clampled by it. This means transferred minimum and maximum don't have
-  // effects with definite preferred size.
+  // Calculate and apply transferred min & max size contraints.
+  // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-size-transfers
   //
-  // Note: The axis in which the preferred size calculation depends on this
-  // aspect ratio is called the ratio-dependent axis, and the resulting size
-  // is definite if its input sizes are also definite.
-  const bool isDefiniteISize =
-      styleISize.IsLengthPercentage() ||
-      aspectRatioUsage == AspectRatioUsage::ToComputeISize;
+  // Note: The basic principle is that sizing constraints transfer through the
+  // aspect-ratio to the other side to preserve the aspect ratio to the extent
+  // that they can without violating any sizes specified explicitly on that
+  // affected axis.
+  const bool isDefiniteISize = styleISize.IsLengthPercentage();
   const bool isFlexItemInlineAxisMainAxis =
       isFlexItem && flexMainAxis == eLogicalAxisInline;
   const auto& minBSizeCoord = stylePos->MinBSize(aWM);
