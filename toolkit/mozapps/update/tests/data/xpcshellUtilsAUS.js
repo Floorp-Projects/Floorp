@@ -958,6 +958,16 @@ function setupTestCommon(aAppUpdateAutoEnabled = false, aAllowBits = false) {
     grePrefsFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
   }
 
+  // The name of the update lock needs to be changed to match the path
+  // overridden in adjustGeneralPaths() above. Wait until now to reset
+  // because the GRE dir now exists, which may cause the "install
+  // path" to be normalized differently now that it can be resolved.
+  debugDump("resetting update lock");
+  let syncManager = Cc["@mozilla.org/updates/update-sync-manager;1"].getService(
+    Ci.nsIUpdateSyncManager
+  );
+  syncManager.resetLock();
+
   // Remove the updates directory on Windows and Mac OS X which is located
   // outside of the application directory after the call to adjustGeneralPaths
   // has set it up. Since the test hasn't ran yet and the directory shouldn't
@@ -4425,14 +4435,6 @@ function adjustGeneralPaths() {
 
     debugDump("finish - unregistering directory provider");
   });
-
-  // Now that we've overridden the directory provider, the name of the update
-  // lock needs to be changed to match the overridden path.
-  debugDump("resetting update lock");
-  let syncManager = Cc["@mozilla.org/updates/update-sync-manager;1"].getService(
-    Ci.nsIUpdateSyncManager
-  );
-  syncManager.resetLock();
 }
 
 /**

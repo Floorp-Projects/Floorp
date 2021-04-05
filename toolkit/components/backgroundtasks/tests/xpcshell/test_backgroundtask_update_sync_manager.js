@@ -29,4 +29,20 @@ add_task(async function test_backgroundtask_update_sync_manager() {
     extraArgs: [file.path],
   });
   Assert.equal(81, exitCode, "No other instance is running");
+
+  let upperCaseFile = Cc["@mozilla.org/file/local;1"].createInstance(
+    Ci.nsIFile
+  );
+  upperCaseFile.initWithPath(
+    Services.dirsvc.get("XREExeF", Ci.nsIFile).path.toUpperCase()
+  );
+  if (upperCaseFile.exists()) {
+    // The uppercased path can still be used to access the exe, indicating a
+    // case-insensitive filesystem (as is usual on Windows and macOS), so path
+    // normalization can be tested.
+    exitCode = await do_backgroundtask("update_sync_manager", {
+      extraArgs: [upperCaseFile.path],
+    });
+    Assert.equal(80, exitCode, "Another instance is running");
+  }
 });
