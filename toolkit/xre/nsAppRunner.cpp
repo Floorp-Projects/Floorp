@@ -5565,10 +5565,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   mProfileLock->Unlock();
   gProfileLock = nullptr;
 
-#ifdef MOZ_BACKGROUNDTASKS
-  BackgroundTasks::Shutdown();
-#endif
-
   gLastAppVersion.Truncate();
   gLastAppBuildID.Truncate();
 
@@ -5602,6 +5598,11 @@ int XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
   int result = main.XRE_main(argc, argv, aConfig);
   mozilla::RecordShutdownEndTimeStamp();
+#ifdef MOZ_BACKGROUNDTASKS
+  // This is well after the profile has been unlocked, so it's okay if this does
+  // delete this background task's temporary profile.
+  mozilla::BackgroundTasks::Shutdown();
+#endif
   return result;
 }
 
