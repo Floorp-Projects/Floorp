@@ -169,11 +169,7 @@ var ProcessHangMonitor = {
     switch (report.hangType) {
       case report.SLOW_SCRIPT: {
         this._recordTelemetryForReport(report, endReason, backupInfo);
-        if (report.addonId) {
-          report.terminateGlobal();
-        } else {
-          report.terminateScript();
-        }
+        report.terminateScript();
         break;
       }
       case report.PLUGIN_HANG: {

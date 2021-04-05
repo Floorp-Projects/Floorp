@@ -42,7 +42,7 @@ parent:
   async ClearHang();
 
 child:
-  async TerminateScript(bool aTerminateGlobal);
+  async TerminateScript();
 
   async BeginStartingDebugger();
   async EndStartingDebugger();

@@ -5016,9 +5016,6 @@ nsGlobalWindowInner::ShowSlowScriptDialog(JSContext* aCx,
     if (action == ProcessHangMonitor::Terminate) {
       return KillSlowScript;
     }
-    if (action == ProcessHangMonitor::TerminateGlobal) {
-      return KillScriptGlobal;
-    }
 
     if (action == ProcessHangMonitor::StartDebugger) {
       // Spin a nested event loop so that the debugger in the parent can fetch
@@ -5189,7 +5186,6 @@ nsGlobalWindowInner::ShowSlowScriptDialog(JSContext* aCx,
 
   JS_ClearPendingException(aCx);
 
-  if (checkboxValue && isAddonScript) return KillScriptGlobal;
   return KillSlowScript;
 }
 
