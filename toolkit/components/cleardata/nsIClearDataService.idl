@@ -143,11 +143,6 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_IMAGE_CACHE = 1 << 2;
 
   /**
-   * Data stored by external plugins.
-   */
-  const uint32_t CLEAR_PLUGIN_DATA = 1 << 3;
-
-  /**
    * Completed downloads.
    */
   const uint32_t CLEAR_DOWNLOADS = 1 << 4;
@@ -273,7 +268,7 @@ interface nsIClearDataService : nsISupports
    */
   const uint32_t CLEAR_FORGET_ABOUT_SITE =
     CLEAR_HISTORY | CLEAR_SESSION_HISTORY | CLEAR_ALL_CACHES |
-    CLEAR_COOKIES | CLEAR_EME | CLEAR_PLUGIN_DATA | CLEAR_DOWNLOADS | CLEAR_PASSWORDS |
+    CLEAR_COOKIES | CLEAR_EME | CLEAR_DOWNLOADS | CLEAR_PASSWORDS |
     CLEAR_PERMISSIONS | CLEAR_DOM_STORAGES | CLEAR_CONTENT_PREFERENCES |
     CLEAR_PREDICTOR_NETWORK_DATA | CLEAR_DOM_PUSH_NOTIFICATIONS |
     CLEAR_SECURITY_SETTINGS | CLEAR_REPORTS | CLEAR_CERT_EXCEPTIONS;
