@@ -1635,7 +1635,7 @@ function getPatchOfType(update, patch_type) {
  *
  * @param postStaging true if we have just attempted to stage an update.
  */
-function handleFallbackToCompleteUpdate(postStaging) {
+async function handleFallbackToCompleteUpdate(postStaging) {
   // If we failed to install an update, we need to fall back to a complete
   // update. If the install directory has been modified, more partial updates
   // will fail for the same reason. Since we only download partial updates
@@ -1661,7 +1661,7 @@ function handleFallbackToCompleteUpdate(postStaging) {
     return;
   }
 
-  aus.stopDownload();
+  await aus.stopDownload();
   cleanupActiveUpdates();
 
   if (!update.selectedPatch) {
@@ -2579,7 +2579,7 @@ UpdateService.prototype = {
       // intentional fallthrough
       case "test-post-update-processing":
         // Clean up any extant updates
-        this._postUpdateProcessing();
+        await this._postUpdateProcessing();
         break;
       case "network:offline-status-changed":
         this._offlineStatusChanged(data);
@@ -2625,7 +2625,7 @@ UpdateService.prototype = {
         // Windows BITS are not stopped since they don't require Firefox to be
         // running to perform the download.
         if (this._downloader && !this._downloader.usingBits) {
-          this.stopDownload();
+          await this.stopDownload();
         }
         // Prevent leaking the downloader (bug 454964)
         this._downloader = null;
@@ -2666,7 +2666,7 @@ UpdateService.prototype = {
    * notify the user of install success.
    */
   /* eslint-disable-next-line complexity */
-  _postUpdateProcessing: function AUS__postUpdateProcessing() {
+  _postUpdateProcessing: async function AUS__postUpdateProcessing() {
     if (this.disabledByPolicy) {
       // This function is a point when we can potentially enter the update
       // system, even with update disabled. Make sure that we do not continue
@@ -2984,7 +2984,7 @@ UpdateService.prototype = {
       }
 
       // Something went wrong with the patch application process.
-      handleFallbackToCompleteUpdate(false);
+      await handleFallbackToCompleteUpdate(false);
     }
   },
 
@@ -3937,16 +3937,16 @@ UpdateService.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  stopDownload: function AUS_stopDownload() {
+  stopDownload: async function AUS_stopDownload() {
     if (this.isDownloading) {
-      this._downloader.cancel();
+      await this._downloader.cancel();
     } else if (this._retryTimer) {
       // Download status is still considered as 'downloading' during retry.
       // We need to cancel both retry and download at this stage.
       this._retryTimer.cancel();
       this._retryTimer = null;
       if (this._downloader) {
-        this._downloader.cancel();
+        await this._downloader.cancel();
       }
     }
     this._downloader = null;
@@ -4449,7 +4449,7 @@ UpdateManager.prototype = {
         update.state = getBestPendingState();
         writeStatusFile(getReadyUpdateDir(), update.state);
       } else if (!handleUpdateFailure(update, parts[1])) {
-        handleFallbackToCompleteUpdate(true);
+        await handleFallbackToCompleteUpdate(true);
       }
     }
     if (update.state == STATE_APPLIED && shouldUseService()) {
@@ -4466,14 +4466,13 @@ UpdateManager.prototype = {
 
     // Send an observer notification which the app update doorhanger uses to
     // display a restart notification after any langpacks have staged.
-    promiseLangPacksUpdated(update).then(() => {
-      LOG(
-        "UpdateManager:refreshUpdateStatus - Notifying observers that " +
-          "the update was staged. topic: update-staged, status: " +
-          update.state
-      );
-      Services.obs.notifyObservers(update, "update-staged", update.state);
-    });
+    await promiseLangPacksUpdated(update);
+    LOG(
+      "UpdateManager:refreshUpdateStatus - Notifying observers that " +
+        "the update was staged. topic: update-staged, status: " +
+        update.state
+    );
+    Services.obs.notifyObservers(update, "update-staged", update.state);
   },
 
   /**
