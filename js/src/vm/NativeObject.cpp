@@ -1489,12 +1489,12 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
   } else {
     if (desc.hasGetterObject() &&
         (!(shapeAttrs & JSPROP_GETTER) ||
-         desc.getterObject() != prop.shape()->getterObject())) {
+         desc.getterObject() != obj->getGetter(prop.shape()))) {
       return true;
     }
     if (desc.hasSetterObject() &&
         (!(shapeAttrs & JSPROP_SETTER) ||
-         desc.setterObject() != prop.shape()->setterObject())) {
+         desc.setterObject() != obj->getSetter(prop.shape()))) {
       return true;
     }
   }
@@ -1668,8 +1668,8 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
       desc.setValue(currentValue);
       desc.setWritable(IsWritable(shapeAttrs));
     } else {
-      desc.setGetterObject(prop.shape()->getterObject());
-      desc.setSetterObject(prop.shape()->setterObject());
+      desc.setGetterObject(obj->getGetter(prop.shape()));
+      desc.setSetterObject(obj->getSetter(prop.shape()));
     }
   } else if (desc.isDataDescriptor() != IsDataDescriptor(shapeAttrs)) {
     // Step 6.
@@ -1729,22 +1729,22 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     if (desc.hasSetterObject()) {
       // Step 8.a.i.
       if (!IsConfigurable(shapeAttrs) &&
-          desc.setterObject() != prop.shape()->setterObject()) {
+          desc.setterObject() != obj->getSetter(prop.shape())) {
         return result.fail(JSMSG_CANT_REDEFINE_PROP);
       }
     } else {
       // Fill in desc.[[Set]] from shape.
-      desc.setSetterObject(prop.shape()->setterObject());
+      desc.setSetterObject(obj->getSetter(prop.shape()));
     }
     if (desc.hasGetterObject()) {
       // Step 8.a.ii.
       if (!IsConfigurable(shapeAttrs) &&
-          desc.getterObject() != prop.shape()->getterObject()) {
+          desc.getterObject() != obj->getGetter(prop.shape())) {
         return result.fail(JSMSG_CANT_REDEFINE_PROP);
       }
     } else {
       // Fill in desc.[[Get]] from shape.
-      desc.setGetterObject(prop.shape()->getterObject());
+      desc.setGetterObject(obj->getGetter(prop.shape()));
     }
 
     // Step 8.a.iii (Omitted).
@@ -2028,13 +2028,13 @@ bool js::NativeGetOwnPropertyDescriptor(
     // than return true with desc incomplete, we fill out the missing
     // getter or setter with a null, following CompletePropertyDescriptor.
     if (desc.hasGetterObject()) {
-      desc.setGetterObject(prop.shape()->getterObject());
+      desc.setGetterObject(obj->getGetter(prop.shape()));
     } else {
       desc.setGetterObject(nullptr);
       desc.attributesRef() |= JSPROP_GETTER;
     }
     if (desc.hasSetterObject()) {
-      desc.setSetterObject(prop.shape()->setterObject());
+      desc.setSetterObject(obj->getSetter(prop.shape()));
     } else {
       desc.setSetterObject(nullptr);
       desc.attributesRef() |= JSPROP_SETTER;
@@ -2098,13 +2098,13 @@ static bool GetCustomDataProperty(JSContext* cx, HandleObject obj, HandleId id,
   return true;
 }
 
-static inline bool CallGetter(JSContext* cx, HandleObject obj,
+static inline bool CallGetter(JSContext* cx, HandleNativeObject obj,
                               HandleValue receiver, HandleShape shape,
                               MutableHandleValue vp) {
   MOZ_ASSERT(!shape->isDataProperty());
 
   if (shape->hasGetterValue()) {
-    RootedValue getter(cx, shape->getterValue());
+    RootedValue getter(cx, obj->getGetterValue(shape));
     return js::CallGetter(cx, receiver, getter, vp);
   }
 
@@ -2127,7 +2127,7 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
 
   vp.setUndefined();
 
-  if (!shape->isCustomDataProperty() && !shape->getterObject()) {
+  if (!shape->isCustomDataProperty() && !obj->hasGetter(shape)) {
     return true;
   }
 
@@ -2624,11 +2624,12 @@ static bool SetExistingProperty(JSContext* cx, HandleId id, HandleValue v,
   // Steps 6-11.
   MOZ_ASSERT(shape->isAccessorDescriptor());
 
-  if (!shape->setterObject()) {
+  JSObject* setterObject = pobj->getSetter(shape);
+  if (!setterObject) {
     return result.fail(JSMSG_GETTER_ONLY);
   }
 
-  RootedValue setter(cx, ObjectValue(*shape->setterObject()));
+  RootedValue setter(cx, ObjectValue(*setterObject));
   if (!js::CallSetter(cx, receiver, setter, v)) {
     return false;
   }

@@ -4119,16 +4119,17 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   // Look up the '@@species' value on Array
   Shape* speciesShape =
       arrayCtor->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
-  if (!speciesShape || !speciesShape->hasGetterValue()) {
+  if (!speciesShape || !arrayCtor->hasGetter(speciesShape)) {
     return;
   }
 
   // Get the referred value, ensure it holds the canonical Array[@@species]
   // function.
-  JSFunction* speciesFun;
-  if (!IsFunctionObject(speciesShape->getterValue(), &speciesFun)) {
+  JSObject* speciesGetter = arrayCtor->getGetter(speciesShape);
+  if (!speciesGetter->is<JSFunction>()) {
     return;
   }
+  JSFunction* speciesFun = &speciesGetter->as<JSFunction>();
   if (!IsSelfHostedFunctionWithName(speciesFun, cx->names().ArraySpecies)) {
     return;
   }
@@ -4184,7 +4185,8 @@ bool js::ArraySpeciesLookup::isArrayStateStillSane() {
   // Note: This is currently guaranteed to be always true, because modifying
   // the getter property implies a new shape is generated. If this ever
   // changes, convert this assertion into an if-statement.
-  MOZ_ASSERT(arraySpeciesShape_->getterObject() == canonicalSpeciesFunc_);
+  MOZ_ASSERT(arrayConstructor_->getGetter(arraySpeciesShape_) ==
+             canonicalSpeciesFunc_);
 
   return true;
 }
