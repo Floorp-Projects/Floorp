@@ -360,7 +360,7 @@ input[name="password"] {
 
 .vulnerable-alert,
 .breach-alert {
-  border-radius: var(--panel-border-radius);
+  border-radius: 4px;
   border: 1px solid var(--in-content-border-color);
   box-shadow: 0 2px 8px 0 var(--grey-90-a10);
   font-size: .9em;

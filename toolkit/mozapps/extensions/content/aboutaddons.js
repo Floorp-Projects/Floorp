@@ -807,11 +807,17 @@ class PanelList extends HTMLElement {
     // Calculate the left/right alignment.
     let align;
     let leftOffset;
-    // The tip of the arrow is 25px from the edge of the panel,
-    // but 26px looks right.
-    let arrowOffset = 26;
-    let leftAlignX = anchorLeft + anchorWidth / 2 - arrowOffset;
-    let rightAlignX = anchorLeft + anchorWidth / 2 - panelWidth + arrowOffset;
+    let leftAlignX = anchorLeft;
+    let rightAlignX = anchorLeft - panelWidth;
+    if (!Services.prefs.getBoolPref("browser.proton.enabled")) {
+      // NOTE: Remove arrow from HTML template when this branch is removed.
+      // The tip of the arrow is 25px from the edge of the panel,
+      // but 26px looks right.
+      let arrowOffset = 26;
+      leftAlignX += anchorWidth / 2 - arrowOffset;
+      rightAlignX += anchorWidth / 2 + arrowOffset;
+    }
+
     if (Services.locale.isAppLocaleRTL) {
       // Prefer aligning on the right.
       align = rightAlignX < 0 ? "left" : "right";
