@@ -7203,6 +7203,13 @@
   value: false
   mirror: always
 
+# Should deprecated plugin behavior fallback to normal behavior or use
+# the experimental design.
+- name: layout.use-plugin-fallback
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------

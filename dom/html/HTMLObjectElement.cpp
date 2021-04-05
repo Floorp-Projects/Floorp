@@ -166,9 +166,8 @@ bool HTMLObjectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
     return false;
   }
 
-  // If we have decided that this is a blocked plugin then do not allow focus.
-  if ((Type() == eType_Null) &&
-      (PluginFallbackType() == eFallbackBlockAllPlugins)) {
+  // Plugins that show the empty fallback should not accept focus.
+  if (Type() == eType_Fallback) {
     if (aTabIndex) {
       *aTabIndex = -1;
     }
