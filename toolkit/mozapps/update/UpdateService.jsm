@@ -2624,8 +2624,13 @@ UpdateService.prototype = {
         // be resumed the next time the application starts. Downloads using
         // Windows BITS are not stopped since they don't require Firefox to be
         // running to perform the download.
-        if (this._downloader && !this._downloader.usingBits) {
-          await this.stopDownload();
+        if (this._downloader) {
+          if (this._downloader.usingBits) {
+            await this._downloader.cleanup();
+          } else {
+            // stopDownload() calls _downloader.cleanup()
+            await this.stopDownload();
+          }
         }
         // Prevent leaking the downloader (bug 454964)
         this._downloader = null;
@@ -3948,6 +3953,9 @@ UpdateService.prototype = {
       if (this._downloader) {
         await this._downloader.cancel();
       }
+    }
+    if (this._downloader) {
+      await this._downloader.cleanup();
     }
     this._downloader = null;
   },
@@ -6203,13 +6211,12 @@ Downloader.prototype = {
    * This function should be called when shutting down so that resources get
    * freed properly.
    */
-  cleanup: function Downloader_cleanup() {
+  cleanup: async function Downloader_cleanup() {
     if (this.usingBits) {
       if (this._pendingRequest) {
-        this._pendingRequest.then(() => this._request.shutdown());
-      } else {
-        this._request.shutdown();
+        await this._pendingRequest;
       }
+      this._request.shutdown();
     }
   },
 
