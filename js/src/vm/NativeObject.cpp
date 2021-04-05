@@ -1280,23 +1280,38 @@ bool NativeObject::reshapeForShadowedProp(JSContext* cx,
   return generateOwnShape(cx, obj);
 }
 
-enum class IsAddOrChange { Add, AddOrChange };
+// Whether we're adding a new property or changing an existing property (this
+// can be either a property stored in the shape tree or a dense element).
+enum class IsAddOrChange { Add, Change };
 
 template <IsAddOrChange AddOrChange>
 static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
     JSContext* cx, HandleNativeObject obj, HandleId id,
-    Handle<PropertyDescriptor> desc) {
+    Handle<PropertyDescriptor> desc, PropertyResult* existing = nullptr) {
   desc.assertComplete();
+
+#ifdef DEBUG
+  if constexpr (AddOrChange == IsAddOrChange::Add) {
+    MOZ_ASSERT(existing == nullptr);
+    MOZ_ASSERT(!obj->containsPure(id));
+  } else {
+    static_assert(AddOrChange == IsAddOrChange::Change);
+    MOZ_ASSERT(existing);
+    MOZ_ASSERT(existing->isNativeProperty() || existing->isDenseElement());
+  }
+#endif
 
   if (!ReshapeForShadowedProp(cx, obj, id)) {
     return false;
   }
 
-  // Use dense storage for new indexed properties where possible.
-  if (JSID_IS_INT(id) && desc.attributes() == JSPROP_ENUMERATE &&
-      (!obj->isIndexed() || !obj->containsPure(id)) &&
-      !obj->is<TypedArrayObject>()) {
+  // Use dense storage for indexed properties where possible: when we have an
+  // integer key with default property attributes and are either adding a new
+  // property or changing a dense element.
+  if (id.isInt() && desc.attributes() == JSPROP_ENUMERATE &&
+      (AddOrChange == IsAddOrChange::Add || existing->isDenseElement())) {
     MOZ_ASSERT(!desc.isAccessorDescriptor());
+    MOZ_ASSERT(!obj->is<TypedArrayObject>());
     uint32_t index = JSID_TO_INT(id);
     DenseElementResult edResult = obj->ensureDenseElements(cx, index, 1);
     if (edResult == DenseElementResult::Failure) {
@@ -1349,7 +1364,11 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
   // and investigate converting the object to dense indexes.
   if (JSID_IS_INT(id)) {
     uint32_t index = JSID_TO_INT(id);
-    obj->removeDenseElementForSparseIndex(index);
+    if constexpr (AddOrChange == IsAddOrChange::Add) {
+      MOZ_ASSERT(!obj->containsDenseElement(index));
+    } else {
+      obj->removeDenseElementForSparseIndex(index);
+    }
     DenseElementResult edResult =
         NativeObject::maybeDensifySparseElements(cx, obj);
     if (edResult == DenseElementResult::Failure) {
@@ -1751,7 +1770,8 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
   }
 
   // Step 9.
-  if (!AddOrChangeProperty<IsAddOrChange::AddOrChange>(cx, obj, id, desc)) {
+  if (!AddOrChangeProperty<IsAddOrChange::Change>(cx, obj, id, desc,
+                                                  prop.address())) {
     return false;
   }
 
