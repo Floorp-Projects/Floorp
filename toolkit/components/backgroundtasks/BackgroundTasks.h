@@ -16,7 +16,7 @@
 #include "nsString.h"
 #include "nsXULAppAPI.h"
 
-#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/LateWriteChecks.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
@@ -39,8 +39,8 @@ class BackgroundTasks final : public nsIBackgroundTasks {
 
     MOZ_RELEASE_ASSERT(!sSingleton,
                        "BackgroundTasks singleton already initialized");
+    // The singleton will be cleaned up by `Shutdown()`.
     sSingleton = new BackgroundTasks(aBackgroundTask);
-    ClearOnShutdown(&sSingleton);
   }
 
   static void Shutdown() {
@@ -51,7 +51,9 @@ class BackgroundTasks final : public nsIBackgroundTasks {
     }
 
     if (sSingleton->mProfD) {
-      sSingleton->mProfD->Remove(/* aRecursive */ true);
+      AutoSuspendLateWriteChecks suspend;
+
+      mozilla::Unused << sSingleton->mProfD->Remove(/* aRecursive */ true);
     }
 
     sSingleton = nullptr;
@@ -107,6 +109,10 @@ class BackgroundTasks final : public nsIBackgroundTasks {
 
     return GetSingleton()->CreateTemporaryProfileDirectoryImpl(aInstallHash,
                                                                aFile);
+  }
+
+  static bool IsUsingTemporaryProfile() {
+    return sSingleton && sSingleton->mProfD;
   }
 
   static nsresult RunBackgroundTask(nsICommandLine* aCmdLine) {
