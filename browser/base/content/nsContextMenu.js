@@ -211,7 +211,6 @@ class nsContextMenu {
     this.onAudio = context.onAudio;
     this.onCanvas = context.onCanvas;
     this.onCompletedImage = context.onCompletedImage;
-    this.onCTPPlugin = context.onCTPPlugin;
     this.onDRMMedia = context.onDRMMedia;
     this.onPiPVideo = context.onPiPVideo;
     this.onEditable = context.onEditable;
@@ -940,8 +939,8 @@ class nsContextMenu {
   }
 
   initClickToPlayItems() {
-    this.showItem("context-ctp-play", this.onCTPPlugin);
-    this.showItem("context-ctp-hide", this.onCTPPlugin);
+    this.showItem("context-ctp-play", false);
+    this.showItem("context-ctp-hide", false);
   }
 
   initPasswordManagerItems() {
@@ -1849,11 +1848,11 @@ class nsContextMenu {
   }
 
   playPlugin() {
-    this.actor.pluginCommand("play", this.targetIdentifier);
+    /* no-op.  TODO: Remove me. */
   }
 
   hidePlugin() {
-    this.actor.pluginCommand("hide", this.targetIdentifier);
+    /* no-op.  TODO: Remove me. */
   }
 
   // Generate email address and put it on clipboard.
