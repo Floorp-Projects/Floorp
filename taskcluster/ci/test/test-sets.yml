@@ -168,6 +168,7 @@ browsertime:
     - browsertime-tp6-live
     - browsertime-tp6-live-sheriffed
     - browsertime-benchmark
+    - browsertime-benchmark-wasm
     - browsertime-tp6-profiling
 
 # Raptor desktop power tests
