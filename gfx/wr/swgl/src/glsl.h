@@ -1666,6 +1666,10 @@ struct vec4_scalar {
       : x(x), y(y), z(z), w(w) {}
   vec4_scalar(vec3_scalar xyz, float w) : x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
 
+  static vec4_scalar load_from_ptr(const float* f) {
+    return vec4_scalar(f[0], f[1], f[2], f[3]);
+  }
+
   ALWAYS_INLINE float& select(XYZW c) {
     switch (c) {
       case X:
