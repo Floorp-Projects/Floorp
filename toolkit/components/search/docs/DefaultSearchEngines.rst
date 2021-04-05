@@ -20,9 +20,22 @@ The default engine may change when:
 * The user chooses to set a different engine via preferences.
 * The user installs an add-on which sets its default as one of the application
   provided engines.
-* The user installs an add-on which supplies a different engine and allows the
-  different engine to be set as default.
+* The user installs an add-on which supplies a different engine and the user allows
+  the different engine to be set as default.
 * The user or Firefox (e.g. via blocklist) causes the default engine to be removed.
+
+Add-ons and Prompting for Default
+---------------------------------
+
+The prompt for selecting a search engine from an add-on as default is shown to
+the user on installation of the add-on. It may also be shown if an add-on is
+re-enabled, if the default engine was not changed in the meantime.
+
+The following diagram shows the full flow for search engines from add-ons:
+
+.. image:: ./search-add-on-prompts-flow.png
+    :align: center
+    :alt: Flowchart for prompting for default engine for Search Engines related to add-ons.
 
 When the Default Engine is Removed
 ==================================
