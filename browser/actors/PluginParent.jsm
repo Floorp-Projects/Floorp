@@ -15,13 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gPluginHost",
-  "@mozilla.org/plugin/host;1",
-  "nsIPluginHost"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "CrashSubmit",
@@ -33,154 +26,15 @@ XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
   return Services.strings.createBundle(url);
 });
 
-const kNotificationId = "click-to-play-plugins";
-
-const {
-  PLUGIN_ACTIVE,
-  PLUGIN_VULNERABLE_NO_UPDATE,
-  PLUGIN_VULNERABLE_UPDATABLE,
-  PLUGIN_CLICK_TO_PLAY_QUIET,
-} = Ci.nsIObjectLoadingContent;
-
-/**
- * Map the plugin's name to a filtered version more suitable for UI.
- *
- * N.B. This should be completely dead code at this point.
- *
- * @param aName The full-length name string of the plugin.
- * @return the simplified name string.
- */
-function makeNicePluginName(aName) {
-  if (aName == "Shockwave Flash") {
-    return "Adobe Flash";
-  }
-  // Regex checks if aName begins with "Java" + non-letter char
-  if (/^Java\W/.test(aName)) {
-    return "Java";
-  }
-
-  // Clean up the plugin name by stripping off parenthetical clauses,
-  // trailing version numbers or "plugin".
-  // EG, "Foo Bar (Linux) Plugin 1.23_02" --> "Foo Bar"
-  // Do this by first stripping the numbers, etc. off the end, and then
-  // removing "Plugin" (and then trimming to get rid of any whitespace).
-  // (Otherwise, something like "Java(TM) Plug-in 1.7.0_07" gets mangled)
-  let newName = aName
-    .replace(/\(.*?\)/g, "")
-    .replace(/[\s\d\.\-\_\(\)]+$/, "")
-    .replace(/\bplug-?in\b/i, "")
-    .trim();
-  return newName;
-}
-
 const PluginManager = {
-  _initialized: false,
-
-  pluginMap: new Map(),
-  crashReports: new Map(),
   gmpCrashes: new Map(),
-  _pendingCrashQueries: new Map(),
-
-  // BrowserGlue.jsm ensures we catch all plugin crashes.
-  // Barring crashes, we don't need to do anything until/unless an
-  // actor gets instantiated, in which case we also care about the
-  // plugin list changing.
-  ensureInitialized() {
-    if (this._initialized) {
-      return;
-    }
-    this._initialized = true;
-    this._updatePluginMap();
-    Services.obs.addObserver(this, "plugins-list-updated");
-    Services.obs.addObserver(this, "profile-after-change");
-  },
-
-  destroy() {
-    if (!this._initialized) {
-      return;
-    }
-    Services.obs.removeObserver(this, "plugins-list-updated");
-    Services.obs.removeObserver(this, "profile-after-change");
-    this.crashReports = new Map();
-    this.gmpCrashes = new Map();
-    this.pluginMap = new Map();
-  },
 
   observe(subject, topic, data) {
     switch (topic) {
-      case "plugins-list-updated":
-        this._updatePluginMap();
-        break;
-      case "plugin-crashed":
-        this.ensureInitialized();
-        this._registerNPAPICrash(subject);
-        break;
       case "gmp-plugin-crash":
-        this.ensureInitialized();
         this._registerGMPCrash(subject);
         break;
-      case "profile-after-change":
-        this.destroy();
-        break;
     }
-  },
-
-  getPluginTagById(id) {
-    return this.pluginMap.get(id);
-  },
-
-  _updatePluginMap() {
-    this.pluginMap = new Map();
-    let plugins = gPluginHost.getPluginTags();
-    for (let plugin of plugins) {
-      this.pluginMap.set(plugin.id, plugin);
-    }
-  },
-
-  // Crashed-plugin observer. Notified once per plugin crash, before events
-  // are dispatched to individual plugin instances. However, because of IPC,
-  // the event and the observer notification may still race.
-  _registerNPAPICrash(subject) {
-    let propertyBag = subject;
-    if (
-      !(propertyBag instanceof Ci.nsIWritablePropertyBag2) ||
-      !propertyBag.hasKey("runID") ||
-      !propertyBag.hasKey("pluginName")
-    ) {
-      Cu.reportError(
-        "A NPAPI plugin crashed, but the notification is incomplete."
-      );
-      return;
-    }
-
-    let runID = propertyBag.getPropertyAsUint32("runID");
-    let uglyPluginName = propertyBag.getPropertyAsAString("pluginName");
-    let pluginName = makeNicePluginName(uglyPluginName);
-    let pluginDumpID = propertyBag.getPropertyAsAString("pluginDumpID");
-
-    let state;
-    let crashReporter = Services.appinfo.QueryInterface(Ci.nsICrashReporter);
-    if (!AppConstants.MOZ_CRASHREPORTER || !crashReporter.enabled) {
-      // This state tells the user that crash reporting is disabled, so we
-      // cannot send a report.
-      state = "noSubmit";
-    } else if (!pluginDumpID) {
-      // If we don't have a minidumpID, we can't submit anything.
-      // This can happen if the plugin is killed from the task manager.
-      // This state tells the user that this is the case.
-      state = "noReport";
-    } else {
-      // This state asks the user to submit a crash report.
-      state = "please";
-    }
-
-    let crashInfo = { runID, state, pluginName, pluginDumpID };
-    this.crashReports.set(runID, crashInfo);
-    let listeners = this._pendingCrashQueries.get(runID) || [];
-    for (let listener of listeners) {
-      listener(crashInfo);
-    }
-    this._pendingCrashQueries.delete(runID);
   },
 
   _registerGMPCrash(subject) {
@@ -217,14 +71,10 @@ const PluginManager = {
   },
 
   /**
-   * Submit a crash report for a crashed NPAPI plugin.
+   * Submit a crash report for a crashed plugin.
    *
    * @param pluginCrashID
-   *        An object with either a runID (for NPAPI crashes) or a pluginID
-   *        property (for GMP plugin crashes).
-   *        A run ID is a unique identifier for a particular run of a plugin
-   *        process - and is analogous to a process ID (though it is managed
-   *        by Gecko instead of the operating system).
+   *        An object with a pluginID.
    * @param keyVals
    *        An object whose key-value pairs will be merged
    *        with the ".extra" file submitted with the report.
@@ -242,132 +92,26 @@ const PluginManager = {
     }
 
     let { pluginDumpID } = report;
-    let submissionPromise = CrashSubmit.submit(pluginDumpID, {
+    CrashSubmit.submit(pluginDumpID, {
       recordSubmission: true,
       extraExtraKeyVals: keyVals,
     });
 
-    this.broadcastState(pluginCrashID, "submitting");
-
-    submissionPromise.then(
-      () => {
-        this.broadcastState(pluginCrashID, "success");
-      },
-      () => {
-        this.broadcastState(pluginCrashID, "failed");
-      }
-    );
-
-    if (pluginCrashID.hasOwnProperty("runID")) {
-      this.crashReports.delete(pluginCrashID.runID);
-    } else {
-      this.gmpCrashes.delete(pluginCrashID.pluginID);
-    }
-  },
-
-  broadcastState(pluginCrashID, state) {
-    if (!pluginCrashID.hasOwnProperty("runID")) {
-      return;
-    }
-    let { runID } = pluginCrashID;
-    Services.ppmm.broadcastAsyncMessage(
-      "PluginParent:NPAPIPluginCrashReportSubmitted",
-      { runID, state }
-    );
+    this.gmpCrashes.delete(pluginCrashID.pluginID);
   },
 
   getCrashReport(pluginCrashID) {
-    if (pluginCrashID.hasOwnProperty("pluginID")) {
-      return this.gmpCrashes.get(pluginCrashID.pluginID);
-    }
-    return this.crashReports.get(pluginCrashID.runID);
-  },
-
-  /**
-   * Called by actors when they want crash info on behalf of the child.
-   * Will either return such info immediately if we have it, or return
-   * a promise, which resolves when we do have it. The promise resolution
-   * function is kept around for when we get the `plugin-crashed` observer
-   * notification.
-   */
-  awaitPluginCrashInfo(runID) {
-    if (this.crashReports.has(runID)) {
-      return this.crashReports.get(runID);
-    }
-    let listeners = this._pendingCrashQueries.get(runID);
-    if (!listeners) {
-      listeners = [];
-      this._pendingCrashQueries.set(runID, listeners);
-    }
-    return new Promise(resolve => listeners.push(resolve));
-  },
-
-  /**
-   * This allows dependency injection, where an automated test can
-   * dictate how and when we respond to a child's inquiry about a crash.
-   * This is helpful when testing different orderings for plugin crash
-   * notifications (ie race conditions).
-   *
-   * Concretely, for the toplevel browsingContext of the `browser` we're
-   * passed, call the passed `handler` function the next time the child
-   * asks for crash data (using PluginContent:GetCrashData). We'll return
-   * the result of the function to the child. The message in question
-   * uses the actor query API, so promises and/or async functions will
-   * Just Work.
-   */
-  mockResponse(browser, handler) {
-    let { currentWindowGlobal } = browser.frameLoader.browsingContext;
-    currentWindowGlobal.getActor("Plugin")._mockedResponder = handler;
+    return this.gmpCrashes.get(pluginCrashID.pluginID);
   },
 };
 
 class PluginParent extends JSWindowActorParent {
-  constructor() {
-    super();
-    PluginManager.ensureInitialized();
-  }
-
   receiveMessage(msg) {
     let browser = this.manager.rootFrameLoader.ownerElement;
-    let win = browser.ownerGlobal;
     switch (msg.name) {
-      case "PluginContent:ShowClickToPlayNotification":
-        this.showClickToPlayNotification(
-          browser,
-          msg.data.plugin,
-          msg.data.showNow
-        );
-        break;
-      case "PluginContent:RemoveNotification":
-        this.removeNotification(browser);
-        break;
       case "PluginContent:ShowPluginCrashedNotification":
         this.showPluginCrashedNotification(browser, msg.data.pluginCrashID);
         break;
-      case "PluginContent:SubmitReport":
-        if (AppConstants.MOZ_CRASHREPORTER) {
-          this.submitReport(
-            msg.data.runID,
-            msg.data.keyVals,
-            msg.data.submitURLOptIn
-          );
-        }
-        break;
-      case "PluginContent:LinkClickCallback":
-        switch (msg.data.name) {
-          case "managePlugins":
-          case "openHelpPage":
-            this[msg.data.name](win);
-            break;
-        }
-        break;
-      case "PluginContent:GetCrashData":
-        if (this._mockedResponder) {
-          let rv = this._mockedResponder(msg.data);
-          delete this._mockedResponder;
-          return rv;
-        }
-        return PluginManager.awaitPluginCrashInfo(msg.data.runID);
 
       default:
         Cu.reportError(
@@ -379,284 +123,14 @@ class PluginParent extends JSWindowActorParent {
     return null;
   }
 
-  // Callback for user clicking on a disabled plugin
-  managePlugins(window) {
-    window.BrowserOpenAddonsMgr("addons://list/plugin");
-  }
-
-  submitReport(runID, keyVals, submitURLOptIn) {
-    if (!AppConstants.MOZ_CRASHREPORTER) {
-      return;
-    }
-    Services.prefs.setBoolPref(
-      "dom.ipc.plugins.reportCrashURL",
-      !!submitURLOptIn
-    );
-    PluginManager.submitCrashReport({ runID }, keyVals);
-  }
-
-  // Callback for user clicking a "reload page" link
-  reloadPage(browser) {
-    browser.reload();
-  }
-
-  // Callback for user clicking the help icon
-  openHelpPage(window) {
-    window.openHelpLink("plugin-crashed", false);
-  }
-
-  _clickToPlayNotificationEventCallback(event) {
-    if (event == "showing") {
-      Services.telemetry
-        .getHistogramById("PLUGINS_NOTIFICATION_SHOWN")
-        .add(!this.options.showNow);
-    } else if (event == "dismissed") {
-      // Once the popup is dismissed, clicking the icon should show the full
-      // list again
-      this.options.showNow = false;
-    }
-  }
-
   /**
-   * Called from the plugin doorhanger to set the new permissions for a plugin
-   * and activate plugins if necessary.
-   * aNewState should be one of:
-   * - "allownow"
-   * - "block"
-   * - "continue"
-   * - "continueblocking"
-   */
-  _updatePluginPermission(aBrowser, aActivationInfo, aNewState) {
-    let permission;
-    let histogram = Services.telemetry.getHistogramById(
-      "PLUGINS_NOTIFICATION_USER_ACTION_2"
-    );
-
-    let window = aBrowser.ownerGlobal;
-    let notification = window.PopupNotifications.getNotification(
-      kNotificationId,
-      aBrowser
-    );
-
-    // Update the permission manager.
-    // Also update the current state of activationInfo.fallbackType so that
-    // subsequent opening of the notification shows the current state.
-    switch (aNewState) {
-      case "allownow":
-        permission = Ci.nsIPermissionManager.ALLOW_ACTION;
-        histogram.add(0);
-        aActivationInfo.fallbackType = PLUGIN_ACTIVE;
-        notification.options.extraAttr = "active";
-        break;
-
-      case "block":
-        permission = Ci.nsIPermissionManager.PROMPT_ACTION;
-        histogram.add(2);
-        aActivationInfo.fallbackType = PLUGIN_CLICK_TO_PLAY_QUIET;
-        notification.options.extraAttr = "inactive";
-        break;
-
-      // In case a plugin has already been allowed/disallowed in another tab, the
-      // buttons matching the existing block state shouldn't change any permissions
-      // but should run the plugin-enablement code below.
-      case "continue":
-        aActivationInfo.fallbackType = PLUGIN_ACTIVE;
-        notification.options.extraAttr = "active";
-        break;
-
-      case "continueblocking":
-        aActivationInfo.fallbackType = PLUGIN_CLICK_TO_PLAY_QUIET;
-        notification.options.extraAttr = "inactive";
-        break;
-
-      default:
-        Cu.reportError(Error("Unexpected plugin state: " + aNewState));
-        return;
-    }
-
-    if (aNewState != "continue" && aNewState != "continueblocking") {
-      let { principal } = notification.options;
-      Services.perms.addFromPrincipal(
-        principal,
-        aActivationInfo.permissionString,
-        permission,
-        Ci.nsIPermissionManager.EXPIRE_SESSION,
-        0 // do not expire (only expire at the end of the session)
-      );
-    }
-
-    this.sendAsyncMessage("PluginParent:ActivatePlugins", {
-      activationInfo: aActivationInfo,
-      newState: aNewState,
-    });
-  }
-
-  showClickToPlayNotification(browser, plugin, showNow) {
-    let window = browser.ownerGlobal;
-    if (!window.PopupNotifications) {
-      return;
-    }
-    let notification = window.PopupNotifications.getNotification(
-      kNotificationId,
-      browser
-    );
-
-    if (!plugin) {
-      this.removeNotification(browser);
-      return;
-    }
-
-    // We assume that we can only have 1 notification at a time anyway.
-    if (notification) {
-      if (showNow) {
-        notification.options.showNow = true;
-        notification.reshow();
-      }
-      return;
-    }
-
-    // Construct a notification for the plugin:
-    let { id, fallbackType } = plugin;
-    let pluginTag = PluginManager.getPluginTagById(id);
-    if (!pluginTag) {
-      return;
-    }
-    let permissionString = gPluginHost.getPermissionStringForTag(pluginTag);
-    let active = fallbackType == PLUGIN_ACTIVE;
-
-    let { top } = this.browsingContext;
-    if (!top.currentWindowGlobal) {
-      return;
-    }
-    let principal = top.currentWindowGlobal.documentPrincipal;
-
-    let options = {
-      dismissed: !showNow,
-      hideClose: true,
-      persistent: showNow,
-      eventCallback: this._clickToPlayNotificationEventCallback,
-      showNow,
-      popupIconClass: "plugin-icon",
-      extraAttr: active ? "active" : "inactive",
-      principal,
-    };
-
-    let description;
-    if (
-      fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE
-    ) {
-      description = gNavigatorBundle.GetStringFromName(
-        "flashActivate.outdated.message"
-      );
-    } else {
-      description = gNavigatorBundle.GetStringFromName("flashActivate.message");
-    }
-
-    let badge = window.document.getElementById("plugin-icon-badge");
-    badge.setAttribute("animate", "true");
-    badge.addEventListener("animationend", function animListener(event) {
-      if (
-        event.animationName == "blink-badge" &&
-        badge.hasAttribute("animate")
-      ) {
-        badge.removeAttribute("animate");
-        badge.removeEventListener("animationend", animListener);
-      }
-    });
-
-    let weakBrowser = Cu.getWeakReference(browser);
-
-    let activationInfo = { id, fallbackType, permissionString };
-    // Note: in both of these action callbacks, we check the fallbackType on the
-    // activationInfo object, not the local variable. This is important because
-    // the activationInfo object is effectively read/write - the notification
-    // will stay up, and for blocking after allowing (or vice versa) to work, we
-    // need to always read the updated value.
-    let mainAction = {
-      callback: () => {
-        let browserRef = weakBrowser.get();
-        if (!browserRef) {
-          return;
-        }
-        let perm =
-          activationInfo.fallbackType == PLUGIN_ACTIVE
-            ? "continue"
-            : "allownow";
-        this._updatePluginPermission(browserRef, activationInfo, perm);
-      },
-      label: gNavigatorBundle.GetStringFromName("flashActivate.allow"),
-      accessKey: gNavigatorBundle.GetStringFromName(
-        "flashActivate.allow.accesskey"
-      ),
-      dismiss: true,
-    };
-    let secondaryActions = [
-      {
-        callback: () => {
-          let browserRef = weakBrowser.get();
-          if (!browserRef) {
-            return;
-          }
-          let perm =
-            activationInfo.fallbackType == PLUGIN_ACTIVE
-              ? "block"
-              : "continueblocking";
-          this._updatePluginPermission(browserRef, activationInfo, perm);
-        },
-        label: gNavigatorBundle.GetStringFromName("flashActivate.noAllow"),
-        accessKey: gNavigatorBundle.GetStringFromName(
-          "flashActivate.noAllow.accesskey"
-        ),
-        dismiss: true,
-      },
-    ];
-
-    window.PopupNotifications.show(
-      browser,
-      kNotificationId,
-      description,
-      "plugins-notification-icon",
-      mainAction,
-      secondaryActions,
-      options
-    );
-
-    // Check if the plugin is insecure and update the notification icon accordingly.
-    let haveInsecure = false;
-    switch (fallbackType) {
-      // haveInsecure will trigger the red flashing icon and the infobar
-      // styling below
-      case PLUGIN_VULNERABLE_UPDATABLE:
-      case PLUGIN_VULNERABLE_NO_UPDATE:
-        haveInsecure = true;
-    }
-
-    window.document
-      .getElementById("plugins-notification-icon")
-      .classList.toggle("plugin-blocked", haveInsecure);
-  }
-
-  removeNotification(browser) {
-    let { PopupNotifications } = browser.ownerGlobal;
-    let notification = PopupNotifications.getNotification(
-      kNotificationId,
-      browser
-    );
-    if (notification) {
-      PopupNotifications.remove(notification);
-    }
-  }
-
-  /**
-   * Shows a plugin-crashed notification bar for a browser that has had an
-   * invisible NPAPI plugin crash, or a GMP plugin crash.
+   * Shows a plugin-crashed notification bar for a browser that has had a
+   * GMP plugin crash.
    *
    * @param browser
    *        The browser to show the notification for.
    * @param pluginCrashID
-   *        The unique-per-process identifier for the NPAPI plugin or GMP.
-   *        This will have either a runID or pluginID property, identifying
-   *        an npapi plugin or gmp plugin crash, respectively.
+   *        The unique-per-process identifier for GMP.
    */
   showPluginCrashedNotification(browser, pluginCrashID) {
     // If there's already an existing notification bar, don't do anything.
