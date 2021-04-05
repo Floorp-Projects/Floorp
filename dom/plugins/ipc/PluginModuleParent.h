@@ -127,14 +127,6 @@ class PluginModuleParent : public PPluginModuleParent,
 
   mozilla::ipc::IPCResult RecvPluginHideWindow(const uint32_t& aWindowId);
 
-  mozilla::ipc::IPCResult RecvSetCursor(const NSCursorInfo& aCursorInfo);
-
-  mozilla::ipc::IPCResult RecvShowCursor(const bool& aShow);
-
-  mozilla::ipc::IPCResult RecvPushCursor(const NSCursorInfo& aCursorInfo);
-
-  mozilla::ipc::IPCResult RecvPopCursor();
-
   mozilla::ipc::IPCResult RecvNPN_SetException(const nsCString& aMessage);
 
   mozilla::ipc::IPCResult RecvNPN_ReloadPlugins(const bool& aReloadPages);
