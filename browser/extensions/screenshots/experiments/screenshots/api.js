@@ -10,8 +10,6 @@ const TOPIC = "menuitem-screenshot";
 
 this.screenshots = class extends ExtensionAPI {
   getAPI(context) {
-    const { extension } = context;
-    const { tabManager } = extension;
     let EventManager = ExtensionCommon.EventManager;
 
     return {
@@ -38,10 +36,17 @@ this.screenshots = class extends ExtensionAPI {
             return Services.prefs.getBoolPref("places.history.enabled", true);
           },
           isUploadDisabled() {
-            return Services.prefs.getBoolPref("extensions.screenshots.upload-disabled", false);
+            return Services.prefs.getBoolPref(
+              "extensions.screenshots.upload-disabled",
+              false
+            );
           },
-          setIcon: (isActive) => {
-            Services.obs.notifyObservers(null, "toggle-screenshot-disable", isActive);
+          setIcon: isActive => {
+            Services.obs.notifyObservers(
+              null,
+              "toggle-screenshot-disable",
+              isActive
+            );
           },
           onScreenshotCommand: new EventManager({
             context,
