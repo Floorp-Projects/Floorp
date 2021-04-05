@@ -37,7 +37,10 @@ class RevocableToken {
  public:
   RevocableToken() = default;
 
-  void Revoke() { mRevoked = true; }
+  void Revoke() {
+    mRevoked = true;
+    CleanUpAfterRevoked();
+  }
 
   bool IsRevoked() const { return mRevoked; }
 
@@ -45,6 +48,9 @@ class RevocableToken {
   // Virtual destructor is required since we might delete a Listener object
   // through its base type pointer.
   virtual ~RevocableToken() = default;
+
+  // Inherited class can use this to perform the clean up after revoke.
+  virtual void CleanUpAfterRevoked(){};
 
  private:
   Atomic<bool> mRevoked{false};
@@ -108,6 +114,11 @@ struct EventTarget<nsIEventTarget> {
                        already_AddRefed<nsIRunnable> aTask) {
     aTarget->Dispatch(std::move(aTask), NS_DISPATCH_NORMAL);
   }
+  static bool IsOnTargetThread(nsIEventTarget* aTarget) {
+    bool rv;
+    aTarget->IsOnCurrentThread(&rv);
+    return rv;
+  }
 };
 
 template <>
@@ -115,6 +126,11 @@ struct EventTarget<AbstractThread> {
   static void Dispatch(AbstractThread* aTarget,
                        already_AddRefed<nsIRunnable> aTask) {
     Unused << aTarget->Dispatch(std::move(aTask));
+  }
+  static bool IsOnTargetThread(AbstractThread* aTarget) {
+    bool rv;
+    aTarget->IsOnCurrentThread(&rv);
+    return rv;
   }
 };
 
@@ -177,7 +193,10 @@ class ListenerImpl : public Listener<As...> {
  public:
   template <typename F>
   ListenerImpl(Target* aTarget, F&& aFunction)
-      : mTarget(aTarget), mFunction(std::forward<F>(aFunction)) {}
+      : mTarget(aTarget),
+        mFunctionWrapper(new FunctionWrapper<F>(std::forward<F>(aFunction))) {
+    MOZ_DIAGNOSTIC_ASSERT(mTarget);
+  }
 
  private:
   void DispatchTask(already_AddRefed<nsIRunnable> aTask) override {
@@ -190,6 +209,7 @@ class ListenerImpl : public Listener<As...> {
   template <typename F>
   std::enable_if_t<TakeArgs<F>::value, void> ApplyWithArgsImpl(
       const F& aFunc, As&&... aEvents) {
+    AssertOnTargetThread();
     aFunc(std::move(aEvents)...);
   }
 
@@ -202,9 +222,10 @@ class ListenerImpl : public Listener<As...> {
 
   void ApplyWithArgs(As&&... aEvents) override {
     MOZ_RELEASE_ASSERT(TakeArgs<Function>::value);
+    AssertOnTargetThread();
     // Don't call the listener if it is disconnected.
     if (!RevocableToken::IsRevoked()) {
-      ApplyWithArgsImpl(mFunction, std::move(aEvents)...);
+      ApplyWithArgsImpl(mFunctionWrapper->Get(), std::move(aEvents)...);
     }
   }
 
@@ -219,19 +240,46 @@ class ListenerImpl : public Listener<As...> {
   template <typename F>
   std::enable_if_t<!TakeArgs<F>::value, void> ApplyWithNoArgsImpl(
       const F& aFunc) {
+    AssertOnTargetThread();
     aFunc();
   }
 
-  virtual void ApplyWithNoArgs() override {
+  void ApplyWithNoArgs() override {
     MOZ_RELEASE_ASSERT(!TakeArgs<Function>::value);
+    AssertOnTargetThread();
     // Don't call the listener if it is disconnected.
     if (!RevocableToken::IsRevoked()) {
-      ApplyWithNoArgsImpl(mFunction);
+      ApplyWithNoArgsImpl(mFunctionWrapper->Get());
     }
   }
 
+  void CleanUpAfterRevoked() override {
+    MOZ_DIAGNOSTIC_ASSERT(RevocableToken::IsRevoked());
+    DispatchTask(NS_NewRunnableFunction(
+        "ListenerImpl::CleanUpAfterRevoked",
+        [func = std::move(mFunctionWrapper),
+         target = RefPtr<Target>(mTarget)]() {
+          MOZ_DIAGNOSTIC_ASSERT(EventTarget<Target>::IsOnTargetThread(target));
+        }));
+  }
+
+  void AssertOnTargetThread() {
+    MOZ_DIAGNOSTIC_ASSERT(EventTarget<Target>::IsOnTargetThread(mTarget));
+  }
+
   const RefPtr<Target> mTarget;
-  FunctionStorage mFunction;
+
+  // The function we captured might contain a strong reference, which should be
+  // clear when the listener revokes the token. Otherwise, it's possible to
+  // cause a memory leak if the reference eventually becomes a cycle.
+  template <typename F>
+  struct FunctionWrapper {
+    explicit FunctionWrapper(F&& aFunction)
+        : mFunction(std::forward<F>(aFunction)) {}
+    FunctionStorage& Get() { return mFunction; }
+    FunctionStorage mFunction;
+  };
+  UniquePtr<FunctionWrapper<Function>> mFunctionWrapper;
 };
 
 /**
