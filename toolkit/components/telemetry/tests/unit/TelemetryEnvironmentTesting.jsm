@@ -49,12 +49,6 @@ const PROFILE_CREATION_DATE_MS = PROFILE_FIRST_USE_MS - MILLISECONDS_PER_DAY;
 const GFX_VENDOR_ID = "0xabcd";
 const GFX_DEVICE_ID = "0x1234";
 
-const FLASH_PLUGIN_NAME = "Shockwave Flash";
-const FLASH_PLUGIN_DESC = "A mock flash plugin";
-const FLASH_PLUGIN_VERSION = "\u201c1.1.1.1\u201d";
-const PLUGIN_MIME_TYPE1 = "application/x-shockwave-flash";
-const PLUGIN_MIME_TYPE2 = "text/plain";
-
 const EXPECTED_HDD_FIELDS = ["profile", "binary", "system"];
 
 // Valid attribution code to write so that settings.attribution can be tested.
@@ -103,75 +97,12 @@ var SysInfo = {
   QueryInterface: ChromeUtils.generateQI(["nsIPropertyBag2", "nsISystemInfo"]),
 };
 
-const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
-  Ci.nsIPluginHost
-);
-
-/**
- * Used to mock plugin tags in our fake plugin host.
- */
-class PluginTag {
-  constructor(aName, aDescription, aVersion, aEnabled) {
-    this.mimeTypes = [PLUGIN_MIME_TYPE1, PLUGIN_MIME_TYPE2];
-    this.pluginTag = pluginHost.createFakePlugin({
-      handlerURI: "resource://fake-plugin/${Math.random()}.xhtml",
-      mimeEntries: this.mimeTypes.map(type => ({ type })),
-      name: aName,
-      description: aDescription,
-      fileName: `${aName}.so`,
-      version: aVersion,
-    });
-    this.name = aName;
-    this.description = aDescription;
-    this.version = aVersion;
-    this.disabled = !aEnabled;
-  }
-
-  get disabled() {
-    return this.pluginTag.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
-  }
-
-  set disabled(val) {
-    this.pluginTag.enabledState =
-      Ci.nsIPluginTag[val ? "STATE_DISABLED" : "STATE_CLICKTOPLAY"];
-  }
-
-  getMimeTypes() {
-    return this.mimeTypes;
-  }
-}
-
-// A container for the plugins handled by the fake plugin host.
-var gInstalledPlugins = [
-  new PluginTag("Java", "A mock Java plugin", "1.0", false /* Disabled */),
-  new PluginTag(
-    FLASH_PLUGIN_NAME,
-    FLASH_PLUGIN_DESC,
-    FLASH_PLUGIN_VERSION,
-    true
-  ),
-];
-
-// A fake plugin host for testing plugin telemetry environment.
-var PluginHost = {
-  getPluginTags() {
-    return gInstalledPlugins.map(plugin => plugin.pluginTag);
-  },
-
-  QueryInterface: ChromeUtils.generateQI(["nsIPluginHost"]),
-};
-
 /**
  * TelemetryEnvironmentTesting - tools for testing the telemetry environment
  * reporting.
  */
 var TelemetryEnvironmentTesting = {
   EXPECTED_HDD_FIELDS,
-  FLASH_PLUGIN_NAME,
-  FLASH_PLUGIN_DESC,
-  FLASH_PLUGIN_VERSION,
-  PLUGIN_MIME_TYPE1,
-  PLUGIN_MIME_TYPE2,
 
   init(appInfo) {
     this.appInfo = appInfo;
@@ -179,18 +110,6 @@ var TelemetryEnvironmentTesting = {
 
   setSysInfoOverrides(overrides) {
     SysInfo.overrides = overrides;
-  },
-
-  addPlugin(name, description, version, enabled) {
-    gInstalledPlugins.push(new PluginTag(name, description, version, enabled));
-  },
-
-  removePlugin(name) {
-    let plugin = gInstalledPlugins.find(p => p.name == name);
-    Assert.ok(plugin, "The test plugin must exist.");
-
-    // Remove it from the PluginHost.
-    gInstalledPlugins = gInstalledPlugins.filter(p => p != plugin);
   },
 
   spoofGfxAdapter() {
@@ -248,10 +167,6 @@ var TelemetryEnvironmentTesting = {
 
   registerFakeSysInfo() {
     MockRegistrar.register("@mozilla.org/system-info;1", SysInfo);
-  },
-
-  registerFakePluginHost() {
-    MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
   },
 
   /**
@@ -816,32 +731,6 @@ var TelemetryEnvironmentTesting = {
     }
   },
 
-  checkPlugin(data) {
-    const EXPECTED_PLUGIN_FIELDS_TYPES = {
-      name: "string",
-      version: "string",
-      description: "string",
-      blocklisted: "boolean",
-      disabled: "boolean",
-      clicktoplay: "boolean",
-      updateDay: "number",
-    };
-
-    for (let f in EXPECTED_PLUGIN_FIELDS_TYPES) {
-      Assert.ok(f in data, f + " must be available.");
-      Assert.equal(
-        typeof data[f],
-        EXPECTED_PLUGIN_FIELDS_TYPES[f],
-        f + " must have the correct type."
-      );
-    }
-
-    Assert.ok(Array.isArray(data.mimeTypes));
-    for (let type of data.mimeTypes) {
-      Assert.ok(this.checkString(type));
-    }
-  },
-
   checkTheme(data) {
     const EXPECTED_THEME_FIELDS_TYPES = {
       id: "string",
@@ -879,12 +768,7 @@ var TelemetryEnvironmentTesting = {
   },
 
   checkAddonsSection(data, expectBrokenAddons, partialAddonsRecords) {
-    const EXPECTED_FIELDS = [
-      "activeAddons",
-      "theme",
-      "activePlugins",
-      "activeGMPlugins",
-    ];
+    const EXPECTED_FIELDS = ["activeAddons", "theme", "activeGMPlugins"];
 
     Assert.ok(
       "addons" in data,
@@ -905,12 +789,6 @@ var TelemetryEnvironmentTesting = {
     // Check "theme" structure.
     if (Object.keys(data.addons.theme).length !== 0) {
       this.checkTheme(data.addons.theme);
-    }
-
-    // Check the active plugins.
-    Assert.ok(Array.isArray(data.addons.activePlugins));
-    for (let plugin of data.addons.activePlugins) {
-      this.checkPlugin(plugin);
     }
 
     // Check active GMPlugins

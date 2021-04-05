@@ -209,11 +209,6 @@ class MockBlocklist {
     }
     return null;
   }
-
-  async getPluginBlocklistState(plugin, version, appVersion, toolkitVersion) {
-    await new Promise(r => setTimeout(r, 150));
-    return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
-  }
 }
 
 MockBlocklist.prototype.QueryInterface = ChromeUtils.generateQI([
@@ -789,24 +784,21 @@ var AddonTestUtils = {
    *        The directory in which the files live.
    * @param {string} prefix
    *        a prefix for the files which ought to be loaded.
-   *        This method will suffix -extensions.json and -plugins.json
-   *        to the prefix it is given, and attempt to load both.
-   *        Insofar as either exists, their data will be dumped into
-   *        the respective store, and the respective update handlers
+   *        This method will suffix -extensions.json
+   *        to the prefix it is given, and attempt to load it.
+   *        If it exists, its data will be dumped into
+   *        the respective store, and the update handler
    *        will be called.
    */
   async loadBlocklistData(dir, prefix) {
     let loadedData = {};
-    for (let fileSuffix of ["extensions", "plugins"]) {
-      const fileName = `${prefix}-${fileSuffix}.json`;
-      let jsonStr = await OS.File.read(OS.Path.join(dir.path, fileName), {
-        encoding: "UTF-8",
-      }).catch(() => {});
-      if (!jsonStr) {
-        continue;
-      }
+    let fileSuffix = "extensions";
+    const fileName = `${prefix}-${fileSuffix}.json`;
+    let jsonStr = await OS.File.read(OS.Path.join(dir.path, fileName), {
+      encoding: "UTF-8",
+    }).catch(() => {});
+    if (jsonStr) {
       this.info(`Loaded ${fileName}`);
-
       loadedData[fileSuffix] = JSON.parse(jsonStr);
     }
     return this.loadBlocklistRawData(loadedData);
@@ -830,7 +822,6 @@ var AddonTestUtils = {
     const blocklistMapping = {
       extensions: bsPass.ExtensionBlocklistRS,
       extensionsMLBF: bsPass.ExtensionBlocklistMLBF,
-      plugins: bsPass.PluginBlocklistRS,
     };
 
     // Since we load the specified test data, we shouldn't let the
