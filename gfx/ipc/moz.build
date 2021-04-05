@@ -17,7 +17,6 @@ EXPORTS.mozilla.gfx += [
     "GPUProcessImpl.h",
     "GPUProcessListener.h",
     "GPUProcessManager.h",
-    "SharedDIB.h",
     "VsyncBridgeChild.h",
     "VsyncBridgeParent.h",
     "VsyncIOThreadHolder.h",
@@ -34,16 +33,6 @@ EXPORTS.mozilla.widget += [
     "CompositorWidgetVsyncObserver.h",
 ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    EXPORTS.mozilla.gfx += [
-        "SharedDIBSurface.h",
-        "SharedDIBWin.h",
-    ]
-    UNIFIED_SOURCES += [
-        "SharedDIBSurface.cpp",
-        "SharedDIBWin.cpp",
-    ]
-
 UNIFIED_SOURCES += [
     "CompositorSession.cpp",
     "CompositorWidgetVsyncObserver.cpp",
@@ -55,7 +44,6 @@ UNIFIED_SOURCES += [
     "GPUProcessManager.cpp",
     "InProcessCompositorSession.cpp",
     "RemoteCompositorSession.cpp",
-    "SharedDIB.cpp",
     "VsyncBridgeChild.cpp",
     "VsyncBridgeParent.cpp",
     "VsyncIOThreadHolder.cpp",

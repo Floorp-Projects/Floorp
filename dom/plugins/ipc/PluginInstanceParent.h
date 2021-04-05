@@ -189,12 +189,6 @@ class PluginInstanceParent : public PPluginInstanceParent {
                                    const SurfaceDescriptor& newSurface,
                                    SurfaceDescriptor* prevSurface);
 
-  PPluginSurfaceParent* AllocPPluginSurfaceParent(
-      const WindowsSharedMemoryHandle& handle,
-      const mozilla::gfx::IntSize& size, const bool& transparent);
-
-  bool DeallocPPluginSurfaceParent(PPluginSurfaceParent* s);
-
   mozilla::ipc::IPCResult AnswerNPN_PushPopupsEnabledState(const bool& aState);
 
   mozilla::ipc::IPCResult AnswerNPN_PopPopupsEnabledState();
