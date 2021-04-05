@@ -17,6 +17,11 @@
                     "filesize": 589947,
                     "hashValue": "eb7a1c9c2d29a2fd12dfe82d0f575f1d855478640816a7fb9402ce82c65878ffc5aa3d5f8bb46cd01231005c37d86984d7a631cfe45c7d56a6d4dabc427b15a0"
                 },
+                "Darwin_aarch64-gcc3": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-aarch64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
+                    "filesize": 391930,
+                    "hashValue": "c0429dbe060fd1cff00aceaf3cb44072345a4822917269723d59dfaf6c510f6e2a97082ea87067dd5a7a976f939b23feac6a753a05af52921d53320244c4c69a"
+                },
                 "Darwin_x86_64-gcc3": {
                     "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
                     "filesize": 466258,
