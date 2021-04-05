@@ -517,14 +517,6 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     rv = mContentTempDir->Clone(getter_AddRefs(file));
   }
 #endif  // defined(MOZ_SANDBOX)
-#if defined(MOZ_SANDBOX)
-  else if (0 == strcmp(aProperty, NS_APP_PLUGIN_PROCESS_TEMP_DIR)) {
-    if (!mPluginTempDir && NS_FAILED((rv = LoadPluginProcessTempDir()))) {
-      return rv;
-    }
-    rv = mPluginTempDir->Clone(getter_AddRefs(file));
-  }
-#endif  // defined(MOZ_SANDBOX)
   else if (NS_SUCCEEDED(GetProfileStartupDir(getter_AddRefs(file)))) {
     // We need to allow component, xpt, and chrome registration to
     // occur prior to the profile-after-change notification.
@@ -677,43 +669,6 @@ nsresult nsXREDirProvider::LoadContentProcessTempDir() {
   return NS_OK;
 }
 
-//
-// Sets mPluginTempDir so that it refers to the appropriate temp dir.
-// If NS_APP_PLUGIN_PROCESS_TEMP_DIR fails for any reason, NS_OS_TEMP_DIR
-// is used.
-//
-nsresult nsXREDirProvider::LoadPluginProcessTempDir() {
-  // The parent is responsible for creating the sandbox temp dir.
-  if (XRE_IsParentProcess()) {
-    mPluginProcessSandboxTempDir =
-        CreateProcessSandboxTempDir(GeckoProcessType_Plugin);
-    mPluginTempDir = mPluginProcessSandboxTempDir;
-  } else {
-    MOZ_ASSERT(XRE_IsPluginProcess());
-    mPluginTempDir = GetProcessSandboxTempDir(GeckoProcessType_Plugin);
-  }
-
-  if (!mPluginTempDir) {
-    nsresult rv =
-        NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mPluginTempDir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-#  if defined(XP_WIN)
-  // The temp dir is used in sandbox rules, so we need to make sure
-  // it doesn't contain any junction points or symlinks or the sandbox will
-  // reject those rules.
-  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(
-          mPluginTempDir)) {
-    NS_WARNING("Failed to resolve plugin temp dir.");
-  }
-#  endif
-
-  return NS_OK;
-}
-
 static bool IsContentSandboxDisabled() {
   return !mozilla::BrowserTabsRemoteAutostart() ||
          (!mozilla::IsContentSandboxEnabled());
@@ -733,13 +688,9 @@ static already_AddRefed<nsIFile> GetProcessSandboxTempDir(
     return nullptr;
   }
 
-  MOZ_ASSERT((type == GeckoProcessType_Content) ||
-             (type == GeckoProcessType_Plugin));
+  MOZ_ASSERT(type == GeckoProcessType_Content);
 
-  const char* prefKey = (type == GeckoProcessType_Content)
-                            ? "security.sandbox.content.tempDirSuffix"
-                            : "security.sandbox.plugin.tempDirSuffix";
-
+  const char* prefKey = "security.sandbox.content.tempDirSuffix";
   nsAutoString tempDirSuffix;
   rv = mozilla::Preferences::GetString(prefKey, tempDirSuffix);
   if (NS_WARN_IF(NS_FAILED(rv)) || tempDirSuffix.IsEmpty()) {
@@ -757,7 +708,7 @@ static already_AddRefed<nsIFile> GetProcessSandboxTempDir(
 //
 // Create a temporary directory for use from sandboxed processes.
 // Only called in the parent. The path is derived from a UUID stored in a
-// pref which is available to content and plugin processes. Returns null
+// pref which is available to content processes. Returns null
 // if the content sandbox is disabled or if an error occurs.
 //
 static already_AddRefed<nsIFile> CreateProcessSandboxTempDir(
@@ -766,13 +717,10 @@ static already_AddRefed<nsIFile> CreateProcessSandboxTempDir(
     return nullptr;
   }
 
-  MOZ_ASSERT((procType == GeckoProcessType_Content) ||
-             (procType == GeckoProcessType_Plugin));
+  MOZ_ASSERT(procType == GeckoProcessType_Content);
 
   // Get (and create if blank) temp directory suffix pref.
-  const char* pref = (procType == GeckoProcessType_Content)
-                         ? "security.sandbox.content.tempDirSuffix"
-                         : "security.sandbox.plugin.tempDirSuffix";
+  const char* pref = "security.sandbox.content.tempDirSuffix";
 
   nsresult rv;
   nsAutoString tempDirSuffix;
@@ -1069,11 +1017,6 @@ nsXREDirProvider::DoStartup() {
       mozilla::Unused << NS_WARN_IF(NS_FAILED(LoadContentProcessTempDir()));
     }
 #endif
-#if defined(MOZ_SANDBOX)
-    if (!mPluginTempDir) {
-      mozilla::Unused << NS_WARN_IF(NS_FAILED(LoadPluginProcessTempDir()));
-    }
-#endif
   }
   return NS_OK;
 }
@@ -1109,7 +1052,6 @@ void nsXREDirProvider::DoShutdown() {
   if (XRE_IsParentProcess()) {
 #if defined(MOZ_SANDBOX)
     mozilla::Unused << DeleteDirIfExists(mContentProcessSandboxTempDir);
-    mozilla::Unused << DeleteDirIfExists(mPluginProcessSandboxTempDir);
 #endif
   }
 }
