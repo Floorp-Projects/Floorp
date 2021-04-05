@@ -137,11 +137,21 @@
 :root:not([uidensity=compact]) .tab-content[pinned] {
   padding: 0 12px;
 }
+
+.tab-loading-burst.proton {
+  display: none;
+}
 } /*** END !proton ***/
 
+@supports -moz-bool-pref("browser.proton.enabled") {
+.tab-loading-burst:not(.proton) {
+  display: none;
+}
+} /*** END proton ***/
 
 @media (prefers-reduced-motion: no-preference) {
   :root[sessionrestored] .tab-loading-burst {
+    border-radius: inherit;
     position: relative;
     overflow: hidden;
   }
@@ -730,10 +740,6 @@
   box-shadow: 0 0 1.5px var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9)));
 }
 } /*** END proton ***/
-
-.tab-background-inner {
-  border-radius: inherit;
-}
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
 

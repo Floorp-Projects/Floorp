@@ -13,7 +13,7 @@
         ? `
         <vbox class="tab-background">
           <hbox class="tab-context-line"/>
-          <spacer flex="1" class="tab-background-inner"/>
+          <hbox class="tab-loading-burst proton" flex="1"/>
         </vbox>
 `
         : `
@@ -101,7 +101,9 @@
         ".tab-background": "selected=visuallyselected,fadein,multiselected",
         ".tab-line":
           "selected=visuallyselected,multiselected,before-multiselected",
-        ".tab-loading-burst": "pinned,bursting,notselectedsinceload",
+        ".tab-loading-burst.proton": "pinned,bursting,notselectedsinceload",
+        ".tab-loading-burst:not(.proton)":
+          "pinned,bursting,notselectedsinceload",
         ".tab-content":
           "pinned,selected=visuallyselected,titlechanged,attention",
         ".tab-icon-stack":
