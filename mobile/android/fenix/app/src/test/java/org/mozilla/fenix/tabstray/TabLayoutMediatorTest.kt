@@ -49,6 +49,21 @@ class TabLayoutMediatorTest {
         verify { tab.select() }
     }
 
+    @Test
+    fun `lifecycle methods adds and removes observer`() {
+        val store = createState("456")
+        val tabLayout: TabLayout = mockk(relaxed = true)
+        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store)
+
+        mediator.start()
+
+        verify { tabLayout.addOnTabSelectedListener(any()) }
+
+        mediator.stop()
+
+        verify { tabLayout.removeOnTabSelectedListener(any()) }
+    }
+
     private fun createState(selectedId: String) = BrowserStore(
         initialState = BrowserState(
             tabs = listOf(

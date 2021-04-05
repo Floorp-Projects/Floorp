@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import com.google.android.material.tabs.TabLayout
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_NORMAL_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_PRIVATE_TABS
 
@@ -19,15 +20,21 @@ class TabLayoutMediator(
     private val tabLayout: TabLayout,
     private val interactor: TabsTrayInteractor,
     private val store: BrowserStore
-) {
+) : LifecycleAwareFeature {
+
+    private val observer = TabLayoutObserver(interactor)
 
     /**
      * Start observing the [TabLayout] and select the current tab for initial state.
      */
-    fun attach() {
-        tabLayout.addOnTabSelectedListener(TabLayoutObserver(interactor))
+    override fun start() {
+        tabLayout.addOnTabSelectedListener(observer)
 
         selectActivePage()
+    }
+
+    override fun stop() {
+        tabLayout.removeOnTabSelectedListener(observer)
     }
 
     @VisibleForTesting

@@ -19,6 +19,7 @@ import org.mozilla.fenix.HomeActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.ui.tabcounter.TabCounter
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
@@ -31,6 +32,8 @@ import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
+
+    private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
 
     private val selectTabUseCase by lazy {
         SelectTabUseCaseWrapper(
@@ -85,11 +88,14 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
         setupPager(view.context, this, browserTrayInteractor, syncedTabsTrayInteractor)
 
-        TabLayoutMediator(
-            tabLayout = tab_layout,
-            interactor = this,
-            store = requireComponents.core.store
-        ).attach()
+        tabLayoutMediator.set(
+            feature = TabLayoutMediator(
+                tabLayout = tab_layout,
+                interactor = this,
+                store = requireComponents.core.store
+            ), owner = this,
+            view = view
+        )
 
         consumeFrom(requireComponents.core.store) {
             view.findViewById<TabCounter>(R.id.tab_counter)?.apply {
