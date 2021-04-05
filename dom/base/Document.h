@@ -3096,24 +3096,6 @@ class Document : public nsINode,
 
   dom::ImageTracker* ImageTracker();
 
-  // AddPlugin adds a plugin-related element to mPlugins when the element is
-  // added to the tree.
-  void AddPlugin(nsIObjectLoadingContent* aPlugin) {
-    MOZ_ASSERT(aPlugin);
-    mPlugins.Insert(aPlugin);
-  }
-
-  // RemovePlugin removes a plugin-related element to mPlugins when the
-  // element is removed from the tree.
-  void RemovePlugin(nsIObjectLoadingContent* aPlugin) {
-    MOZ_ASSERT(aPlugin);
-    mPlugins.Remove(aPlugin);
-  }
-
-  // GetPlugins returns the plugin-related elements from
-  // the frame and any subframes.
-  void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins);
-
   // Adds an element to mResponsiveContent when the element is
   // added to the tree.
   void AddResponsiveContent(HTMLImageElement* aContent) {
@@ -5114,9 +5096,6 @@ class Document : public nsINode,
 
   // A set of responsive images keyed by address pointer.
   nsTHashSet<HTMLImageElement*> mResponsiveContent;
-
-  // Tracking for plugins in the document.
-  nsTHashSet<nsIObjectLoadingContent*> mPlugins;
 
   RefPtr<DocumentTimeline> mDocumentTimeline;
   LinkedList<DocumentTimeline> mTimelines;
