@@ -7,4 +7,10 @@ These pages contain documentation for Mozilla's Cross-Platform Component Object 
    :maxdepth: 1
 
    logging
+   stringguide
+   refptr
+   huntingleaks
+   collections
+   xpidl
+   dmd
 
