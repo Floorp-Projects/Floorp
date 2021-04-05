@@ -32,7 +32,7 @@ function getFirefoxExecutableFile() {
 
 async function do_backgroundtask(
   task,
-  options = { extraArgs: [], extraEnv: {} }
+  options = { extraArgs: [], extraEnv: {}, stdoutLines: null }
 ) {
   options = Object.assign({}, options);
   options.extraArgs = options.extraArgs || [];
@@ -48,7 +48,7 @@ async function do_backgroundtask(
     .QueryInterface(Ci.nsIResProtocolHandler);
 
   let uri = protocolHandler.getSubstitution("testing-common");
-  Assert.ok(uri, "resource://testing-common is not substituted");
+  Assert.ok(!!uri, "resource://testing-common is not substituted");
 
   // The equivalent of _TESTING_MODULES_DIR in xpcshell.
   options.extraEnv.XPCSHELL_TESTING_MODULES_URI = uri.spec;
@@ -59,6 +59,8 @@ async function do_backgroundtask(
       options.extraEnv
     )}`
   );
+  // We must assemble all of the string fragments from stdout.
+  let stdoutChunks = [];
   let proc = await Subprocess.call({
     command,
     arguments: args,
@@ -70,9 +72,7 @@ async function do_backgroundtask(
     const dumpPipe = async pipe => {
       let data = await pipe.readString();
       while (data) {
-        for (let line of data.split(/\r\n|\r|\n/).slice(0, -1)) {
-          dump("> " + line + "\n");
-        }
+        stdoutChunks.push(data);
         data = await pipe.readString();
       }
     };
@@ -82,6 +82,15 @@ async function do_backgroundtask(
   });
 
   let { exitCode } = await proc.wait();
+
+  let stdout = stdoutChunks.join("");
+  for (let line of stdout.split(/\r\n|\r|\n/).slice(0, -1)) {
+    dump("> " + line + "\n");
+    if (options.stdoutLines !== null && options.stdoutLines !== undefined) {
+      options.stdoutLines.push(line);
+    }
+  }
+
   return exitCode;
 }
 

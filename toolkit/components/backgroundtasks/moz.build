@@ -13,6 +13,9 @@ with Files("docs/**"):
 
 FINAL_LIBRARY = "xul"
 
+for var in ("MOZ_APP_VENDOR",):
+    DEFINES[var] = '"%s"' % CONFIG[var]
+
 UNIFIED_SOURCES += [
     "BackgroundTasks.cpp",
 ]
@@ -51,6 +54,7 @@ TESTING_JS_MODULES.backgroundtasks += [
     "tests/BackgroundTask_crash.jsm",
     "tests/BackgroundTask_policies.jsm",
     "tests/BackgroundTask_shouldprocessupdates.jsm",
+    "tests/BackgroundTask_unique_profile.jsm",
     "tests/BackgroundTask_update_sync_manager.jsm",
     "tests/BackgroundTask_wait.jsm",
 ]
