@@ -152,9 +152,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
     );
     result.suggestedIndex = UrlbarPrefs.get("quicksuggest.suggestedIndex");
-    if (result.suggestedIndex == -1) {
-      result.suggestedIndex = UrlbarPrefs.get("maxRichResults") - 1;
-    }
     addCallback(this, result);
 
     this._addedResultInLastQuery = true;
