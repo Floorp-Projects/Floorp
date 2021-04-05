@@ -6,4 +6,6 @@
     <string name="mozac_browser_menu_highlighted">Аерылган</string>
     <!-- Label for add-ons submenu section -->
     <string name="mozac_browser_menu_addons">Кушымчалар</string>
-    </resources>
+    <!-- Label for add-ons sub menu item for add-ons manager -->
+    <string name="mozac_browser_menu_addons_manager">Кушымчалар менеджеры</string>
+</resources>
