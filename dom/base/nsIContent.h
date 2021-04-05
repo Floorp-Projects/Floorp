@@ -770,7 +770,7 @@ class nsIContent : public nsINode {
   ~nsIContent() = default;
 
  public:
-#ifdef DEBUG
+#if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
 #  define MOZ_DOM_LIST
 #endif
 
