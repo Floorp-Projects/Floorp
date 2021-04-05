@@ -14,7 +14,7 @@ import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.Config
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -47,7 +47,10 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
         // https://github.com/mozilla/probe-scraper/blob/master/repositories.yaml
         val appInfo = NimbusAppInfo(
             appName = "fenix",
-            channel = Config.channel.toString()
+            // Note: Using BuildConfig.BUILD_TYPE is important here so that it matches the value
+            // passed into Glean. `Config.channel.toString()` turned out to be non-deterministic
+            // and would mostly produce the value `Beta` and rarely would produce `beta`.
+            channel = BuildConfig.BUILD_TYPE
         )
         Nimbus(context, appInfo, serverSettings).apply {
             // This performs the minimal amount of work required to load branch and enrolment data
