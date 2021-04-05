@@ -10,7 +10,7 @@
   position: absolute;
   background: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
-  border-radius: var(--panel-border-radius);
+  border-radius: 4px;
   padding: 6px 0;
   margin-bottom: 16px;
   box-shadow: var(--shadow-30);
@@ -23,6 +23,11 @@
 .list {
   margin: 0;
   padding: 0;
+}
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+:host {
+  border-radius: 2px;
 }
 
 .arrow {
@@ -56,3 +61,4 @@
 :host([align="right"]) > .arrow {
   right: 16px;
 }
+} /*** END !proton ***/

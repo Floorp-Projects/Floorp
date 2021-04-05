@@ -4,10 +4,6 @@
 
 %include ../../../shared/in-content/common.inc.css
 
-:root {
-  --panel-border-radius: 0;
-}
-
 xul|menulist::part(dropmarker) {
   margin-block: 1px;
 }

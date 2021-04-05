@@ -492,7 +492,7 @@ addon-details {
   display: flex;
   padding: var(--card-padding);
   border: 1px solid var(--in-content-box-border-color);
-  border-radius: var(--panel-border-radius);
+  border-radius: 4px;
   margin-bottom: var(--card-padding);
   flex-direction: column;
 }
