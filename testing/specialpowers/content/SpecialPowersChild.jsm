@@ -870,13 +870,6 @@ class SpecialPowersChild extends JSWindowActorChild {
     return this.sendQuery("SPObserverService", msg);
   }
 
-  setTestPluginEnabledState(newEnabledState, pluginName) {
-    return this.sendQuery("SPSetTestPluginEnabledState", {
-      newEnabledState,
-      pluginName,
-    });
-  }
-
   async pushPrefEnv(inPrefs, callback = null) {
     await this.sendQuery("PushPrefEnv", inPrefs).then(callback);
     await this.promiseTimeout(0);

@@ -4,7 +4,7 @@
   <pluginItems>
     <pluginItem>
       <match name="name" exp="^Test Plug-in"/>
-      <versionRange minVersion="0" maxVersion="*" severity="0" vulnerabilitystatus="2"/>
+      <versionRange minVersion="0" maxVersion="*" severity="0"/>
     </pluginItem>
   </pluginItems>
 </blocklist>

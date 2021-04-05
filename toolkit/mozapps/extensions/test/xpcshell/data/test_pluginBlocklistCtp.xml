@@ -4,23 +4,23 @@
   <pluginItems>
     <pluginItem>
       <match name="name" exp="^test_plugin_0"/>
-      <versionRange minVersion="0" maxVersion="*" severity="0" vulnerabilitystatus="0"/>
+      <versionRange minVersion="0" maxVersion="*" severity="0"/>
     </pluginItem>
     <pluginItem>
       <match name="name" exp="^test_plugin_1"/>
-      <versionRange minVersion="0" maxVersion="*" severity="0" vulnerabilitystatus="1"/>
+      <versionRange minVersion="0" maxVersion="*" severity="0"/>
     </pluginItem>
     <pluginItem>
       <match name="name" exp="^test_plugin_2"/>
-      <versionRange minVersion="0" maxVersion="*" severity="0" vulnerabilitystatus="2"/>
+      <versionRange minVersion="0" maxVersion="*" severity="0"/>
     </pluginItem>
     <pluginItem>
       <match name="name" exp="^test_plugin_3"/>
-      <versionRange minVersion="0" maxVersion="*" vulnerabilitystatus="2"/>
+      <versionRange minVersion="0" maxVersion="*"/>
     </pluginItem>
     <pluginItem>
       <match name="name" exp="^test_plugin_4"/>
-      <versionRange minVersion="0" maxVersion="*" severity="1" vulnerabilitystatus="2"/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </pluginItem>
   </pluginItems>
 </blocklist>

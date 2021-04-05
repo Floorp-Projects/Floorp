@@ -38,8 +38,6 @@ var gHttpRoot = null;
 // The URL of the data directory, on the webserver.
 var gDataRoot = null;
 
-const PLUGIN_UPDATED_TOPIC = "plugins-list-updated";
-
 function MockAddonWrapper(aAddon) {
   this.addon = aAddon;
 }
@@ -174,10 +172,7 @@ add_task(async function setup() {
   // search service needs it.
   Services.prefs.clearUserPref("services.settings.default_bucket");
 
-  // Register a fake plugin host for consistent flash version data.
-  TelemetryEnvironmentTesting.registerFakePluginHost();
-
-  // Setup a webserver to serve Addons, Plugins, etc.
+  // Setup a webserver to serve Addons, etc.
   gHttpServer = new HttpServer();
   gHttpServer.start(-1);
   let port = gHttpServer.identity.primaryPort;
@@ -498,86 +493,6 @@ add_task(async function test_addonsWatch_InterestingChange() {
   );
 });
 
-add_task(async function test_pluginsWatch_Add() {
-  if (!gIsFirefox) {
-    Assert.ok(true, "Skipping: there is no Plugin Manager on Android.");
-    return;
-  }
-
-  Assert.equal(
-    TelemetryEnvironment.currentEnvironment.addons.activePlugins.length,
-    1
-  );
-
-  TelemetryEnvironmentTesting.addPlugin(
-    PLUGIN2_NAME,
-    PLUGIN2_DESC,
-    PLUGIN2_VERSION,
-    true
-  );
-
-  let receivedNotifications = 0;
-  let callback = (reason, data) => {
-    receivedNotifications++;
-  };
-  TelemetryEnvironment.registerChangeListener("testWatchPlugins_Add", callback);
-
-  Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC);
-
-  await ContentTaskUtils.waitForCondition(() => {
-    return (
-      TelemetryEnvironment.currentEnvironment.addons.activePlugins.length == 2
-    );
-  });
-
-  TelemetryEnvironment.unregisterChangeListener("testWatchPlugins_Add");
-
-  Assert.equal(
-    receivedNotifications,
-    0,
-    "We must not receive any notifications."
-  );
-});
-
-add_task(async function test_pluginsWatch_Remove() {
-  if (!gIsFirefox) {
-    Assert.ok(true, "Skipping: there is no Plugin Manager on Android.");
-    return;
-  }
-
-  Assert.equal(
-    TelemetryEnvironment.currentEnvironment.addons.activePlugins.length,
-    2
-  );
-
-  TelemetryEnvironmentTesting.removePlugin(PLUGIN2_NAME);
-
-  let receivedNotifications = 0;
-  let callback = () => {
-    receivedNotifications++;
-  };
-  TelemetryEnvironment.registerChangeListener(
-    "testWatchPlugins_Remove",
-    callback
-  );
-
-  Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC);
-
-  await ContentTaskUtils.waitForCondition(() => {
-    return (
-      TelemetryEnvironment.currentEnvironment.addons.activePlugins.length == 1
-    );
-  });
-
-  TelemetryEnvironment.unregisterChangeListener("testWatchPlugins_Remove");
-
-  Assert.equal(
-    receivedNotifications,
-    0,
-    "We must not receive any notifications."
-  );
-});
-
 add_task(async function test_addonsWatch_NotInterestingChange() {
   // We are not interested to dictionary addons changes.
   const DICTIONARY_ADDON_INSTALL_URL = gDataRoot + "dictionary.xpi";
@@ -613,7 +528,7 @@ add_task(async function test_addonsWatch_NotInterestingChange() {
   interestingAddon.uninstall();
 });
 
-add_task(async function test_addonsAndPlugins() {
+add_task(async function test_addons() {
   const ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";
   const ADDON_ID = "tel-restartless-webext@tests.mozilla.org";
   const ADDON_INSTALL_DATE = truncateToDays(Date.now());
@@ -674,15 +589,6 @@ add_task(async function test_addonsAndPlugins() {
     isSystem: false,
     isWebExtension: true,
     multiprocessCompatible: true,
-  };
-
-  const EXPECTED_PLUGIN_DATA = {
-    name: TelemetryEnvironmentTesting.FLASH_PLUGIN_NAME,
-    version: TelemetryEnvironmentTesting.FLASH_PLUGIN_VERSION,
-    description: TelemetryEnvironmentTesting.FLASH_PLUGIN_DESC,
-    blocklisted: false,
-    disabled: false,
-    clicktoplay: true,
   };
 
   let deferred = PromiseUtils.defer();
@@ -764,34 +670,6 @@ add_task(async function test_addonsAndPlugins() {
   }
 
   await webextension.unload();
-
-  // Check plugin data.
-  Assert.equal(
-    data.addons.activePlugins.length,
-    1,
-    "We must have only one active plugin."
-  );
-  let targetPlugin = data.addons.activePlugins[0];
-  for (let f in EXPECTED_PLUGIN_DATA) {
-    Assert.equal(
-      targetPlugin[f],
-      EXPECTED_PLUGIN_DATA[f],
-      f + " must have the correct value."
-    );
-  }
-
-  // Check plugin mime types.
-  Assert.ok(
-    targetPlugin.mimeTypes.find(
-      m => m == TelemetryEnvironmentTesting.PLUGIN_MIME_TYPE1
-    )
-  );
-  Assert.ok(
-    targetPlugin.mimeTypes.find(
-      m => m == TelemetryEnvironmentTesting.PLUGIN_MIME_TYPE2
-    )
-  );
-  Assert.ok(!targetPlugin.mimeTypes.find(m => m == "Not There."));
 
   // Uninstall the addon.
   await addon.startupPromise;
