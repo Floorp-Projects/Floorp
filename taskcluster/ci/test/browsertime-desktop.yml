@@ -155,22 +155,16 @@ browsertime-tp6-essential:
 browsertime-benchmark:
     description: "Raptor (browsertime) Benchmark tests "
     raptor-subtests:
-        - [speedometer, sp]
         - ares6
-        - [motionmark-animometer, mm-a]
-        - [motionmark-htmlsuite, mm-h]
-        - [stylebench, sb]
-        - [webaudio, wa]
-        - [wasm-godot, godot]
-        - [wasm-godot-baseline, godot-b]
-        - [wasm-godot-optimizing, godot-i]
-        - [sunspider, ss]
         - [assorted-dom, dom]
         - [jetstream2, js2]
+        - [motionmark-animometer, mm-a]
+        - [motionmark-htmlsuite, mm-h]
+        - [speedometer, sp]
+        - [stylebench, sb]
+        - [sunspider, ss]
         - [unity-webgl, ugl]
-        - [wasm-misc, wm]
-        - [wasm-misc-baseline, wm-b]
-        - [wasm-misc-optimizing, wm-i]
+        - [webaudio, wa]
     apps: [firefox, chrome, chromium]
     treeherder-symbol: Btime()
     tier:
@@ -235,6 +229,40 @@ browsertime-benchmark:
             - assorted-dom
             - jetstream2
             - unity-webgl
+
+browsertime-benchmark-wasm:
+    description: "Raptor (browsertime) WASM benchmarks"
+    raptor-subtests:
+        by-app:
+            firefox:
+                - [wasm-godot, godot]
+                - [wasm-godot-baseline, godot-b]
+                - [wasm-godot-optimizing, godot-i]
+                - [wasm-misc, wm]
+                - [wasm-misc-baseline, wm-b]
+                - [wasm-misc-optimizing, wm-i]
+            default:
+                - [wasm-misc, wm]
+                - [wasm-godot, godot]
+    apps: [firefox, chrome, chromium]
+    treeherder-symbol: Btime()
+    tier: 2
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows7.*: []
+                    default: [mozilla-central]
+            default:
+                by-test-platform:
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    linux.*shippable.*: ["trunk", "mozilla-beta"]
+                    macos.*shippable.*: ["trunk", "mozilla-beta"]
+                    windows10.*shippable.*: ["trunk", "mozilla-beta"]
+                    default: []
+    max-run-time: 900
+    fetches:
+        fetch:
             - wasm-misc
 
 browsertime-tp6-live:
