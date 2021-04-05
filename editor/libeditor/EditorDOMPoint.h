@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Text.h"
@@ -957,6 +958,21 @@ class EditorDOMPointBase final {
     Maybe<int32_t> comp = nsContentUtils::ComparePoints(
         ToRawRangeBoundary(), aOther.ToRawRangeBoundary());
     return comp.isSome() && comp.value() <= 0;
+  }
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const SelfType& aDOMPoint) {
+    aStream << "{ mParent=" << aDOMPoint.mParent.get();
+    if (aDOMPoint.mParent) {
+      aStream << " (" << *aDOMPoint.mParent << ")";
+    }
+    aStream << ", mChild=" << aDOMPoint.mChild.get();
+    if (aDOMPoint.mChild) {
+      aStream << " (" << *aDOMPoint.mChild << ")";
+    }
+    aStream << ", mOffset=" << aDOMPoint.mOffset << ", mIsChildInitialized="
+            << (aDOMPoint.mIsChildInitialized ? "true" : "false") << " }";
+    return aStream;
   }
 
  private:

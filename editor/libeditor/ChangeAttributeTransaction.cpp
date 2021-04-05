@@ -5,6 +5,8 @@
 
 #include "ChangeAttributeTransaction.h"
 
+#include "mozilla/Logging.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/Element.h"  // for Element
 
 #include "nsAString.h"
@@ -41,6 +43,23 @@ ChangeAttributeTransaction::ChangeAttributeTransaction(Element& aElement,
       mRemoveAttribute(!aValue),
       mAttributeWasSet(false) {}
 
+std::ostream& operator<<(std::ostream& aStream,
+                         const ChangeAttributeTransaction& aTransaction) {
+  aStream << "{ mElement=" << aTransaction.mElement.get();
+  if (aTransaction.mElement) {
+    aStream << " (" << *aTransaction.mElement << ")";
+  }
+  aStream << ", mAttribute=" << nsAtomCString(aTransaction.mAttribute).get()
+          << ", mValue=\"" << NS_ConvertUTF16toUTF8(aTransaction.mValue).get()
+          << "\", mUndoValue=\""
+          << NS_ConvertUTF16toUTF8(aTransaction.mUndoValue).get()
+          << "\", mRemoveAttribute="
+          << (aTransaction.mRemoveAttribute ? "true" : "false")
+          << ", mAttributeWasSet="
+          << (aTransaction.mAttributeWasSet ? "true" : "false") << " }";
+  return aStream;
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeAttributeTransaction,
                                    EditTransactionBase, mElement)
 
@@ -61,6 +80,10 @@ NS_IMETHODIMP ChangeAttributeTransaction::DoTransaction() {
   }
   // XXX: end hack
 
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p ChangeAttributeTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   // Now set the attribute to the new value
   if (mRemoveAttribute) {
     OwningNonNull<Element> element = *mElement;
@@ -76,6 +99,10 @@ NS_IMETHODIMP ChangeAttributeTransaction::DoTransaction() {
 }
 
 NS_IMETHODIMP ChangeAttributeTransaction::UndoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p ChangeAttributeTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!mElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -93,6 +120,10 @@ NS_IMETHODIMP ChangeAttributeTransaction::UndoTransaction() {
 }
 
 NS_IMETHODIMP ChangeAttributeTransaction::RedoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p ChangeAttributeTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!mElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }

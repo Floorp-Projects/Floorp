@@ -4,10 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EditAggregateTransaction.h"
+
+#include "mozilla/Logging.h"
 #include "mozilla/ReverseIterator.h"  // for Reversed
 #include "nsAString.h"
-#include "nsCOMPtr.h"          // for nsCOMPtr
-#include "nsError.h"           // for NS_OK, etc.
+#include "nsAtom.h"
+#include "nsCOMPtr.h"  // for nsCOMPtr
+#include "nsError.h"   // for NS_OK, etc.
+#include "nsGkAtoms.h"
 #include "nsISupportsUtils.h"  // for NS_ADDREF
 #include "nsString.h"          // for nsAutoString
 
@@ -22,6 +26,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditAggregateTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP EditAggregateTransaction::DoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p EditAggregateTransaction::%s this={ mName=%s, mChildren=%zu } "
+           "Start==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get(),
+           mChildren.Length()));
   // FYI: It's legal (but not very useful) to have an empty child list.
   for (const OwningNonNull<EditTransactionBase>& childTransaction :
        CopyableAutoTArray<OwningNonNull<EditTransactionBase>, 10>(mChildren)) {
@@ -31,10 +41,21 @@ NS_IMETHODIMP EditAggregateTransaction::DoTransaction() {
       return rv;
     }
   }
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p EditAggregateTransaction::%s this={ mName=%s } "
+           "End================================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
   return NS_OK;
 }
 
 NS_IMETHODIMP EditAggregateTransaction::UndoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p EditAggregateTransaction::%s this={ mName=%s, mChildren=%zu } "
+           "Start==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get(),
+           mChildren.Length()));
   // FYI: It's legal (but not very useful) to have an empty child list.
   // Undo goes through children backwards.
   const CopyableAutoTArray<OwningNonNull<EditTransactionBase>, 10> children(
@@ -47,10 +68,21 @@ NS_IMETHODIMP EditAggregateTransaction::UndoTransaction() {
       return rv;
     }
   }
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p EditAggregateTransaction::%s this={ mName=%s } "
+           "End================================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
   return NS_OK;
 }
 
 NS_IMETHODIMP EditAggregateTransaction::RedoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p EditAggregateTransaction::%s this={ mName=%s, mChildren=%zu } "
+           "Start==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get(),
+           mChildren.Length()));
   // It's legal (but not very useful) to have an empty child list.
   const CopyableAutoTArray<OwningNonNull<EditTransactionBase>, 10> children(
       mChildren);
@@ -61,6 +93,11 @@ NS_IMETHODIMP EditAggregateTransaction::RedoTransaction() {
       return rv;
     }
   }
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p EditAggregateTransaction::%s this={ mName=%s } "
+           "End================================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
   return NS_OK;
 }
 
@@ -70,6 +107,11 @@ NS_IMETHODIMP EditAggregateTransaction::Merge(nsITransaction* aOtherTransaction,
     *aDidMerge = false;
   }
   if (mChildren.IsEmpty()) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p EditAggregateTransaction::%s this={ mName=%s } returned false "
+             "due to no children",
+             this, __FUNCTION__,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
     return NS_OK;
   }
   // FIXME: Is this really intended not to loop?  It looks like the code

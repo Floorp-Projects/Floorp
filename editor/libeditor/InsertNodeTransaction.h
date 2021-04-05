@@ -53,6 +53,11 @@ class InsertNodeTransaction final : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(InsertNodeTransaction)
 
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const InsertNodeTransaction& aTransaction);
+
  protected:
   virtual ~InsertNodeTransaction() = default;
 

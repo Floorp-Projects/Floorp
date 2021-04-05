@@ -7,8 +7,10 @@
 
 #include "HTMLEditUtils.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/Logging.h"
 #include "mozilla/SelectionState.h"  // RangeUpdater
 #include "mozilla/TextEditor.h"
+#include "mozilla/ToString.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsAString.h"
@@ -32,6 +34,24 @@ DeleteNodeTransaction::DeleteNodeTransaction(EditorBase& aEditorBase,
       mContentToDelete(&aContentToDelete),
       mParentNode(aContentToDelete.GetParentNode()) {}
 
+std::ostream& operator<<(std::ostream& aStream,
+                         const DeleteNodeTransaction& aTransaction) {
+  aStream << "{ mContentToDelete=" << aTransaction.mContentToDelete.get();
+  if (aTransaction.mContentToDelete) {
+    aStream << " (" << *aTransaction.mContentToDelete << ")";
+  }
+  aStream << ", mParentNode=" << aTransaction.mParentNode.get();
+  if (aTransaction.mParentNode) {
+    aStream << " (" << *aTransaction.mParentNode << ")";
+  }
+  aStream << ", mRefContent=" << aTransaction.mRefContent.get();
+  if (aTransaction.mRefContent) {
+    aStream << " (" << *aTransaction.mRefContent << ")";
+  }
+  aStream << ", mEditorBase=" << aTransaction.mEditorBase.get() << " }";
+  return aStream;
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTransaction, EditTransactionBase,
                                    mEditorBase, mContentToDelete, mParentNode,
                                    mRefContent)
@@ -51,6 +71,10 @@ bool DeleteNodeTransaction::CanDoIt() const {
 }
 
 NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteNodeTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!CanDoIt())) {
     return NS_OK;
   }
@@ -79,8 +103,11 @@ NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
   return error.StealNSResult();
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
-DeleteNodeTransaction::UndoTransaction() {
+NS_IMETHODIMP DeleteNodeTransaction::UndoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteNodeTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!CanDoIt())) {
     // This is a legal state, the transaction is a no-op.
     return NS_OK;
@@ -115,6 +142,10 @@ DeleteNodeTransaction::UndoTransaction() {
 }
 
 NS_IMETHODIMP DeleteNodeTransaction::RedoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteNodeTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!CanDoIt())) {
     // This is a legal state, the transaction is a no-op.
     return NS_OK;

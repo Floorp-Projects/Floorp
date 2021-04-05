@@ -56,6 +56,11 @@ class JoinNodeTransaction final : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(JoinNodeTransaction)
 
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const JoinNodeTransaction& aTransaction);
+
  protected:
   RefPtr<HTMLEditor> mHTMLEditor;
 
