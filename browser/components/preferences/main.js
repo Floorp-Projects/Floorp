@@ -1983,7 +1983,7 @@ var gMainPane = {
       let aus = Cc["@mozilla.org/updates/update-service;1"].getService(
         Ci.nsIApplicationUpdateService
       );
-      aus.stopDownload();
+      await aus.stopDownload();
       um.cleanupReadyUpdate();
       um.cleanupDownloadingUpdate();
     }
