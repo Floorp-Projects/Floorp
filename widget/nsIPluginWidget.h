@@ -13,8 +13,6 @@
     }                                                \
   }
 
-class nsIPluginInstanceOwner;
-
 /**
  * This is used by Mac only.
  */
@@ -28,9 +26,6 @@ class NS_NO_VTABLE nsIPluginWidget : public nsISupports {
   NS_IMETHOD StartDrawPlugin(void) = 0;
 
   NS_IMETHOD EndDrawPlugin(void) = 0;
-
-  NS_IMETHOD SetPluginInstanceOwner(
-      nsIPluginInstanceOwner* pluginInstanceOwner) = 0;
 
   NS_IMETHOD SetPluginEventModel(int inEventModel) = 0;
 

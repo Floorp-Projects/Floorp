@@ -18,8 +18,6 @@
  **************************************************************/
 
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/plugins/PluginInstanceParent.h"
-using mozilla::plugins::PluginInstanceParent;
 
 #include "nsWindowGfx.h"
 #include "nsAppRunner.h"
@@ -136,13 +134,6 @@ void nsWindow::ForcePresent() {
 }
 
 bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
-  // We never have reentrant paint events, except when we're running our RPC
-  // windows event spin loop. If we don't trap for this, we'll try to paint,
-  // but view manager will refuse to paint the surface, resulting is black
-  // flashes on the plugin rendering surface.
-  if (mozilla::ipc::MessageChannel::IsSpinLoopActive() && mPainting)
-    return false;
-
   DeviceResetReason resetReason = DeviceResetReason::OK;
   if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset(
           &resetReason)) {
@@ -166,43 +157,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
 
     gfxCriticalNote << "(nsWindow) Finished device reset.";
     return false;
-  }
-
-  // After we CallUpdateWindow to the child, occasionally a WM_PAINT message
-  // is posted to the parent event loop with an empty update rect. Do a
-  // dummy paint so that Windows stops dispatching WM_PAINT in an inifinite
-  // loop. See bug 543788.
-  if (IsPlugin()) {
-    RECT updateRect;
-    if (!GetUpdateRect(mWnd, &updateRect, FALSE) ||
-        (updateRect.left == updateRect.right &&
-         updateRect.top == updateRect.bottom)) {
-      PAINTSTRUCT ps;
-      BeginPaint(mWnd, &ps);
-      EndPaint(mWnd, &ps);
-      return true;
-    }
-
-    if (mWindowType == eWindowType_plugin_ipc_chrome) {
-      // Fire off an async request to the plugin to paint its window
-      mozilla::dom::ContentParent::SendAsyncUpdate(this);
-      ValidateRect(mWnd, nullptr);
-      return true;
-    }
-
-    PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
-        ::GetPropW(mWnd, L"PluginInstanceParentProperty"));
-    if (instance) {
-      Unused << instance->CallUpdateWindow();
-    } else {
-      // We should never get here since in-process plugins should have
-      // subclassed our HWND and handled WM_PAINT, but in some cases that
-      // could fail. Return without asserting since it's not our fault.
-      NS_WARNING("Plugin failed to subclass our window");
-    }
-
-    ValidateRect(mWnd, nullptr);
-    return true;
   }
 
   PAINTSTRUCT ps;
@@ -257,8 +211,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
     aDC = mBasicLayersSurface->GetTransparentDC();
   }
 #endif
-
-  mPainting = true;
 
 #ifdef WIDGET_DEBUG_OUTPUT
   HRGN debugPaintFlashRegion = nullptr;
@@ -432,8 +384,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
     ::DeleteObject(debugPaintFlashRegion);
   }
 #endif  // WIDGET_DEBUG_OUTPUT
-
-  mPainting = false;
 
   // Re-get the listener since painting may have killed it.
   listener = GetPaintListener();

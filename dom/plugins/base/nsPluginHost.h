@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "prlink.h"
 #include "nsIPluginTag.h"
-#include "nsPluginsDir.h"
 #include "nsWeakReference.h"
 #include "MainThreadUtils.h"
 #include "nsTArray.h"
@@ -26,7 +25,6 @@
 #include "nsIIDNService.h"
 #include "nsCRT.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/plugins/PluginTypes.h"
 
 #ifdef XP_WIN
 #  include <minwindef.h>
@@ -42,16 +40,11 @@ class ContentParent;
 }  // namespace dom
 }  // namespace mozilla
 
-class nsNPAPIPlugin;
 class nsIFile;
 class nsIChannel;
-class nsPluginNativeWindow;
 class nsObjectLoadingContent;
-class nsPluginInstanceOwner;
 class nsPluginUnloadRunnable;
 class nsNPAPIPluginInstance;
-class nsNPAPIPluginStreamListener;
-class nsIPluginInstanceOwner;
 class nsIInputStream;
 class nsIStreamListener;
 #ifndef npapi_h_
@@ -97,48 +90,17 @@ class nsPluginHost final : public nsIPluginHost,
   void GetPlugins(nsTArray<nsCOMPtr<nsIInternalPluginTag>>& aPluginArray,
                   bool aIncludeDisabled = false);
 
-  nsresult GetURL(nsISupports* pluginInst, const char* url, const char* target,
-                  nsNPAPIPluginStreamListener* streamListener,
-                  const char* altHost, const char* referrer,
-                  bool forceJSEnabled);
-  nsresult PostURL(nsISupports* pluginInst, const char* url,
-                   uint32_t postDataLen, const char* postData,
-                   const char* target,
-                   nsNPAPIPluginStreamListener* streamListener,
-                   const char* altHost, const char* referrer,
-                   bool forceJSEnabled, uint32_t postHeadersLength,
-                   const char* postHeaders);
-
   nsresult UserAgent(const char** retstring);
   nsresult ParsePostBufferToFixHeaders(const char* inPostData,
                                        uint32_t inPostDataLen,
                                        char** outPostData,
                                        uint32_t* outPostDataLen);
-  nsresult NewPluginNativeWindow(nsPluginNativeWindow** aPluginNativeWindow);
-
-  void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, bool isVisible);
-  void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame);
 
   nsresult GetPluginName(nsNPAPIPluginInstance* aPluginInstance,
                          const char** aPluginName);
   nsresult StopPluginInstance(nsNPAPIPluginInstance* aInstance);
   nsresult GetPluginTagForInstance(nsNPAPIPluginInstance* aPluginInstance,
                                    nsIPluginTag** aPluginTag);
-
-  nsresult NewPluginURLStream(const nsString& aURL,
-                              nsNPAPIPluginInstance* aInstance,
-                              nsNPAPIPluginStreamListener* aListener,
-                              nsIInputStream* aPostStream = nullptr,
-                              const char* aHeadersData = nullptr,
-                              uint32_t aHeadersDataLen = 0);
-
-  nsresult GetURLWithHeaders(
-      nsNPAPIPluginInstance* pluginInst, const char* url,
-      const char* target = nullptr,
-      nsNPAPIPluginStreamListener* streamListener = nullptr,
-      const char* altHost = nullptr, const char* referrer = nullptr,
-      bool forceJSEnabled = false, uint32_t getHeadersLength = 0,
-      const char* getHeaders = nullptr);
 
   nsresult AddHeadersToChannel(const char* aHeadersData,
                                uint32_t aHeadersDataLen,
@@ -166,9 +128,6 @@ class nsPluginHost final : public nsIPluginHost,
 
   static nsresult PostPluginUnloadEvent(PRLibrary* aLibrary);
 
-  void PluginCrashed(nsNPAPIPlugin* aPlugin, const nsAString& aPluginDumpID,
-                     const nsACString& aAdditionalMinidumps);
-
   nsNPAPIPluginInstance* FindInstance(const char* mimetype);
   nsNPAPIPluginInstance* FindOldestStoppedInstance();
   uint32_t StoppedInstanceCount();
@@ -178,27 +137,13 @@ class nsPluginHost final : public nsIPluginHost,
   // Return the tag for |aLibrary| if found, nullptr if not.
   nsPluginTag* FindTagForLibrary(PRLibrary* aLibrary);
 
-  // The last argument should be false if we already have an in-flight stream
-  // and don't need to set up a new stream.
-  nsresult InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aURL,
-                                     nsObjectLoadingContent* aContent,
-                                     nsPluginInstanceOwner** aOwner);
-
-  // Does not accept nullptr and should never fail.
-  nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
-
   nsPluginTag* PluginWithId(uint32_t aId);
 
-  nsresult GetPlugin(const nsACString& aMimeType, nsNPAPIPlugin** aPlugin);
-  nsresult GetPluginForContentProcess(uint32_t aPluginId,
-                                      nsNPAPIPlugin** aPlugin);
   void NotifyContentModuleDestroyed(uint32_t aPluginId);
 
   nsresult NewPluginStreamListener(nsIURI* aURL,
                                    nsNPAPIPluginInstance* aInstance,
                                    nsIStreamListener** aStreamListener);
-
-  void CreateWidget(nsPluginInstanceOwner* aOwner);
 
   nsresult EnumerateSiteData(const nsACString& domain,
                              const nsTArray<nsCString>& sites,
@@ -206,9 +151,6 @@ class nsPluginHost final : public nsIPluginHost,
 
   nsresult UpdateCachedSerializablePluginList();
   nsresult SendPluginsToContent(mozilla::dom::ContentParent* parent);
-  nsresult SetPluginsInContent(
-      uint32_t aPluginEpoch, nsTArray<mozilla::plugins::PluginTag>& aPlugins,
-      nsTArray<mozilla::plugins::FakePluginTag>& aFakePlugins);
 
   void UpdatePluginBlocklistState(nsPluginTag* aPluginTag,
                                   bool aShouldSoftblock = false);
@@ -216,9 +158,6 @@ class nsPluginHost final : public nsIPluginHost,
  private:
   nsresult LoadPlugins();
   nsresult UnloadPlugins();
-
-  nsresult SetUpPluginInstance(const nsACString& aMimeType, nsIURI* aURL,
-                               nsPluginInstanceOwner* aOwner);
 
   friend class nsPluginUnloadRunnable;
   friend class mozilla::plugins::BlocklistPromiseHandler;
@@ -228,9 +167,6 @@ class nsPluginHost final : public nsIPluginHost,
   // Writes updated plugins settings to disk and unloads the plugin
   // if it is now disabled. Should only be called by the plugin tag in question
   void UpdatePluginInfo(nsPluginTag* aPluginTag);
-
-  nsresult TrySetUpPluginInstance(const nsACString& aMimeType, nsIURI* aURL,
-                                  nsPluginInstanceOwner* aOwner);
 
   // FIXME-jsplugins comment here about when things may be fake
   nsPluginTag* FindPreferredPlugin(const nsTArray<nsPluginTag*>& matches);
@@ -265,9 +201,6 @@ class nsPluginHost final : public nsIPluginHost,
   nsPluginTag* FindNativePluginForExtension(const nsACString& aExtension,
                                             /* out */ nsACString& aMimeType,
                                             bool aCheckEnabled);
-
-  nsresult FindStoppedPluginForURL(nsIURI* aURL,
-                                   nsIPluginInstanceOwner* aOwner);
 
   nsresult BroadcastPluginsToContent();
 
@@ -317,9 +250,6 @@ class nsPluginHost final : public nsIPluginHost,
   RefPtr<nsPluginTag> mPlugins;
 
   nsTArray<RefPtr<nsFakePluginTag>> mFakePlugins;
-
-  AutoTArray<mozilla::plugins::PluginTag, 1> mSerializablePlugins;
-  nsTArray<mozilla::plugins::FakePluginTag> mSerializableFakePlugins;
 
   bool mPluginsLoaded;
 

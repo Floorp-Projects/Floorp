@@ -72,7 +72,6 @@ DIRS += [
     "network",
     "permission",
     "plugins/base",
-    "plugins/ipc",
     "prototype",
     "indexedDB",
     "system",
@@ -109,9 +108,6 @@ DIRS += [
     "prio",
     "l10n",
 ]
-
-if CONFIG["OS_ARCH"] == "WINNT":
-    DIRS += ["plugins/ipc/hangui"]
 
 TEST_DIRS += [
     "tests",
