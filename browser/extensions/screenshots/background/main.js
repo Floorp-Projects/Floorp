@@ -2,14 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals selectorLoader, analytics, communication, catcher, log, makeUuid, auth, senderror, startBackground, blobConverters buildSettings */
+/* globals browser, getStrings, selectorLoader, analytics, communication, catcher, log, makeUuid, auth, senderror, startBackground, blobConverters buildSettings, startSelectionWithOnboarding */
 
 "use strict";
 
 this.main = (function() {
   const exports = {};
 
-  const pasteSymbol = (window.navigator.platform.match(/Mac/i)) ? "\u2318" : "Ctrl";
   const { sendEvent, incrementCount } = analytics;
 
   const manifest = browser.runtime.getManifest();
@@ -44,14 +43,18 @@ this.main = (function() {
   }
 
   function toggleSelector(tab) {
-    return analytics.refreshTelemetryPref()
+    return analytics
+      .refreshTelemetryPref()
       .then(() => selectorLoader.toggle(tab.id))
       .then(active => {
         setIconActive(active);
         return active;
       })
-      .catch((error) => {
-        if (error.message && /Missing host permission for the tab/.test(error.message)) {
+      .catch(error => {
+        if (
+          error.message &&
+          /Missing host permission for the tab/.test(error.message)
+        ) {
           error.noReport = true;
         }
         error.popupMessage = "UNSHOOTABLE_PAGE";
@@ -61,15 +64,15 @@ this.main = (function() {
 
   // This is called by startBackground.js, where is registered as a click
   // handler for the webextension page action.
-  exports.onClicked = catcher.watchFunction((tab) => {
+  exports.onClicked = catcher.watchFunction(tab => {
     _startShotFlow(tab, "toolbar-button");
   });
 
-  exports.onClickedContextMenu = catcher.watchFunction((tab) => {
+  exports.onClickedContextMenu = catcher.watchFunction(tab => {
     _startShotFlow(tab, "context-menu");
   });
 
-  exports.onCommand = catcher.watchFunction((tab) => {
+  exports.onCommand = catcher.watchFunction(tab => {
     _startShotFlow(tab, "keyboard-shortcut");
   });
 
@@ -85,16 +88,19 @@ this.main = (function() {
       return;
     }
 
-    catcher.watchPromise(toggleSelector(tab)
-      .then(active => {
-        let event = "start-shot";
-        if (inputType !== "context-menu") {
-          event = active ? "start-shot" : "cancel-shot";
-        }
-        sendEvent(event, inputType, {incognito: tab.incognito});
-      }).catch((error) => {
-        throw error;
-      }));
+    catcher.watchPromise(
+      toggleSelector(tab)
+        .then(active => {
+          let event = "start-shot";
+          if (inputType !== "context-menu") {
+            event = active ? "start-shot" : "cancel-shot";
+          }
+          sendEvent(event, inputType, { incognito: tab.incognito });
+        })
+        .catch(error => {
+          throw error;
+        })
+    );
   };
 
   function urlEnabled(url) {
@@ -102,7 +108,11 @@ this.main = (function() {
     if (url && url.startsWith("about:reader?url=")) {
       return true;
     }
-    if (isShotOrMyShotPage(url) || /^(?:about|data|moz-extension):/i.test(url) || isBlacklistedUrl(url)) {
+    if (
+      isShotOrMyShotPage(url) ||
+      /^(?:about|data|moz-extension):/i.test(url) ||
+      isBlacklistedUrl(url)
+    ) {
       return false;
     }
     return true;
@@ -113,7 +123,10 @@ this.main = (function() {
     if (!url.startsWith(backend)) {
       return false;
     }
-    const path = url.substr(backend.length).replace(/^\/*/, "").replace(/[?#].*/, "");
+    const path = url
+      .substr(backend.length)
+      .replace(/^\/*/, "")
+      .replace(/[?#].*/, "");
     if (path === "shots") {
       return true;
     }
@@ -137,7 +150,7 @@ this.main = (function() {
   }
 
   communication.register("getStrings", (sender, ids) => {
-    return getStrings(ids.map(id => ({id})));
+    return getStrings(ids.map(id => ({ id })));
   });
 
   communication.register("sendEvent", (sender, ...args) => {
@@ -146,16 +159,18 @@ this.main = (function() {
     return null;
   });
 
-  communication.register("openMyShots", (sender) => {
+  communication.register("openMyShots", sender => {
     return catcher.watchPromise(
-      auth.maybeLogin()
-      .then(() => browser.tabs.create({url: backend + "/shots"})));
+      auth
+        .maybeLogin()
+        .then(() => browser.tabs.create({ url: backend + "/shots" }))
+    );
   });
 
-  communication.register("openShot", async (sender, {url, copied}) => {
+  communication.register("openShot", async (sender, { url, copied }) => {
     if (copied) {
       const id = makeUuid();
-      const [ title, message ] = await getStrings([
+      const [title, message] = await getStrings([
         { id: "screenshots-notification-link-copied-title" },
         { id: "screenshots-notification-link-copied-details" },
       ]);
@@ -178,7 +193,10 @@ this.main = (function() {
     canvas.height = imageData.height;
     canvas.getContext("2d").putImageData(imageData, 0, 0);
     let dataUrl = canvas.toDataURL();
-    if (buildSettings.pngToJpegCutoff && dataUrl.length > buildSettings.pngToJpegCutoff) {
+    if (
+      buildSettings.pngToJpegCutoff &&
+      dataUrl.length > buildSettings.pngToJpegCutoff
+    ) {
       const jpegDataUrl = canvas.toDataURL("image/jpeg");
       if (jpegDataUrl.length < dataUrl.length) {
         // Only use the JPEG if it is actually smaller
@@ -224,22 +242,25 @@ this.main = (function() {
     browser.downloads.onChanged.addListener(onChangedCallback);
     catcher.watchPromise(incrementCount("download"));
     return browser.windows.getLastFocused().then(windowInfo => {
-      return browser.downloads.download({
-        url,
-        incognito: windowInfo.incognito,
-        filename: info.filename,
-      }).catch((error) => {
-        // We are not logging error message when user cancels download
-        if (error && error.message && !error.message.includes("canceled")) {
-          log.error(error.message);
-        }
-      }).then((id) => {
-        downloadId = id;
-      });
+      return browser.downloads
+        .download({
+          url,
+          incognito: windowInfo.incognito,
+          filename: info.filename,
+        })
+        .catch(error => {
+          // We are not logging error message when user cancels download
+          if (error && error.message && !error.message.includes("canceled")) {
+            log.error(error.message);
+          }
+        })
+        .then(id => {
+          downloadId = id;
+        });
     });
   });
 
-  communication.register("closeSelector", (sender) => {
+  communication.register("closeSelector", sender => {
     setIconActive(false);
   });
 
@@ -252,14 +273,16 @@ this.main = (function() {
   });
 
   // A Screenshots page wants us to start/force onboarding
-  communication.register("requestOnboarding", (sender) => {
+  communication.register("requestOnboarding", sender => {
     return startSelectionWithOnboarding(sender.tab);
   });
 
   communication.register("getPlatformOs", () => {
-    return catcher.watchPromise(browser.runtime.getPlatformInfo().then(platformInfo => {
-      return platformInfo.os;
-    }));
+    return catcher.watchPromise(
+      browser.runtime.getPlatformInfo().then(platformInfo => {
+        return platformInfo.os;
+      })
+    );
   });
 
   // This allows the web site show notifications through sitehelper.js
