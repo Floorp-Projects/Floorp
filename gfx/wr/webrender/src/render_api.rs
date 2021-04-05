@@ -1435,6 +1435,7 @@ pub struct MemoryReport {
     pub interning: InterningMemoryReport,
     pub display_list: usize,
     pub upload_staging_memory: usize,
+    pub swgl: usize,
 
     //
     // GPU memory.
