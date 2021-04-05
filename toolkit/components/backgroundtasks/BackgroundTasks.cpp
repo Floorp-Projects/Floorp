@@ -13,8 +13,8 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS(BackgroundTasks, nsIBackgroundTasks);
 
-nsresult BackgroundTasks::GetOrCreateTemporaryProfileDirectoryImpl(
-    nsIFile** aFile) {
+nsresult BackgroundTasks::CreateTemporaryProfileDirectoryImpl(
+    const nsCString& aInstallHash, nsIFile** aFile) {
   if (mBackgroundTask.isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -30,34 +30,20 @@ nsresult BackgroundTasks::GetOrCreateTemporaryProfileDirectoryImpl(
     rv = GetSpecialSystemDirectory(OS_TemporaryDirectory, getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // TODO: mix in the application hash and perhaps add some additional
-    // randomness.
-    rv = file->AppendNative(
-        nsPrintfCString("backgroundtask-%s", mBackgroundTask.ref().get()));
+    // The base path is /tmp/[vendor]BackgroundTask-[pathHash]-[taskName].
+    rv = file->AppendNative(nsPrintfCString("%sBackgroundTask-%s-%s",
+                                            MOZ_APP_VENDOR, aInstallHash.get(),
+                                            mBackgroundTask.ref().get()));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Make sure that the profile path exists and it's a directory.
-    bool exists;
-    rv = file->Exists(&exists);
+    // Create a unique profile directory.  This can fail if there are too many
+    // (thousands) of existing directories, which is unlikely to happen.
+    rv = file->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = file->Create(nsIFile::DIRECTORY_TYPE, 0700);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      bool isDir;
-      rv = file->IsDirectory(&isDir);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!isDir) {
-        return NS_ERROR_FILE_DESTINATION_NOT_DIR;
-      }
-    }
 
     rv = file->Clone(getter_AddRefs(mProfD));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  nsString path;
-  file->GetPath(path);
 
   file.forget(aFile);
   return NS_OK;
