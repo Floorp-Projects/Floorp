@@ -218,6 +218,20 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         /**
+         * Enable the Enteprise Roots feature.
+         *
+         * When Enabled, GeckoView will fetch the third-party root certificates added to the
+         * Android OS CA store and will use them internally.
+         *
+         * @param enabled whether to enable this feature or not
+         * @return The builder instance
+         */
+        public @NonNull Builder enterpiseRootsEnabled(final boolean enabled) {
+            getSettings().setEnterpriseRootsEnabled(enabled);
+            return this;
+        }
+
+        /**
          * Set whether or not font inflation for non mobile-friendly pages should be enabled. The
          * default value of this setting is <code>false</code>.
          *
@@ -484,6 +498,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         "geckoview.console.enabled", false);
     /* package */ final Pref<Integer> mFontSizeFactor = new Pref<>(
         "font.size.systemFontScale", 100);
+    /* package */ final Pref<Boolean> mEnterpriseRootsEnabled = new Pref<>(
+            "security.enterprise_roots.enabled", false);
     /* package */ final Pref<Integer> mFontInflationMinTwips = new Pref<>(
         "font.size.inflation.minTwips", 0);
     /* package */ final Pref<Boolean> mInputAutoZoom = new Pref<>(
@@ -917,6 +933,29 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             throw new IllegalStateException("Not allowed when automatic font size adjustment is enabled");
         }
         return setFontSizeFactorInternal(fontSizeFactor);
+    }
+
+    /*
+     * Enable the Enteprise Roots feature.
+     *
+     * When Enabled, GeckoView will fetch the third-party root certificates added to the
+     * Android OS CA store and will use them internally.
+     *
+     * @param enabled whether to enable this feature or not
+     * @return This GeckoRuntimeSettings instance
+     */
+    public @NonNull GeckoRuntimeSettings setEnterpriseRootsEnabled(final boolean enabled) {
+        mEnterpriseRootsEnabled.commit(enabled);
+        return this;
+    }
+
+    /**
+     * Gets whether the Enteprise Roots feature is enabled or not.
+     *
+     * @return true if the feature is enabled, false otherwise.
+     */
+    public boolean getEnterpriseRootsEnabled() {
+        return mEnterpriseRootsEnabled.get();
     }
 
     private final static float DEFAULT_FONT_SIZE_FACTOR = 1f;
