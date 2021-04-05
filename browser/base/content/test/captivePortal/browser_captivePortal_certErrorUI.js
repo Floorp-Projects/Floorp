@@ -3,37 +3,6 @@
 
 "use strict";
 
-const BAD_CERT_PAGE = "https://expired.example.com/";
-
-async function setupCaptivePortalTab() {
-  let captivePortalStatePropagated = TestUtils.topicObserved(
-    "ipc:network:captive-portal-set-state"
-  );
-  Services.obs.notifyObservers(null, "captive-portal-login");
-  info(
-    "Waiting for captive portal state to be propagated to the content process."
-  );
-  await captivePortalStatePropagated;
-
-  // Open a page with a cert error.
-  let browser;
-  let certErrorLoaded;
-  let errorTab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    () => {
-      let tab = BrowserTestUtils.addTab(gBrowser, BAD_CERT_PAGE);
-      gBrowser.selectedTab = tab;
-      browser = gBrowser.selectedBrowser;
-      certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
-      return tab;
-    },
-    false
-  );
-  info("Waiting for cert error page to load");
-  await certErrorLoaded;
-  return errorTab;
-}
-
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -49,7 +18,8 @@ add_task(async function checkCaptivePortalCertErrorUI() {
     "Checking that the alternate cert error UI is shown when we are behind a captive portal"
   );
 
-  let tab = await setupCaptivePortalTab();
+  await portalDetected();
+  let tab = await openCaptivePortalErrorTab();
   let browser = tab.linkedBrowser;
   let portalTabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
@@ -122,7 +92,8 @@ add_task(async function testCaptivePortalAdvancedPanel() {
   info(
     "Checking that the advanced section of the about:certerror UI is shown when we are behind a captive portal."
   );
-  let tab = await setupCaptivePortalTab();
+  await portalDetected();
+  let tab = await openCaptivePortalErrorTab();
   let browser = tab.linkedBrowser;
 
   await SpecialPowers.spawn(browser, [BAD_CERT_PAGE], async expectedURL => {
