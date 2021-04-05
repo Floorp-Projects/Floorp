@@ -973,7 +973,7 @@ static bool AddLengthProperty(JSContext* cx, HandleArrayObject obj) {
 
   Shape* shape = obj->lastProperty();
   if (!shape->isEmptyShape()) {
-    MOZ_ASSERT(JSID_IS_ATOM(shape->propidRaw(), cx->names().length));
+    MOZ_ASSERT(shape->propidRaw().isAtom(cx->names().length));
     MOZ_ASSERT(shape->previous()->isEmptyShape());
     return true;
   }
@@ -4223,7 +4223,7 @@ bool js::ArraySpeciesLookup::tryOptimizeArray(JSContext* cx,
     return false;
   }
 
-  MOZ_ASSERT(JSID_IS_ATOM(shape->propidRaw(), cx->names().length));
+  MOZ_ASSERT(shape->propidRaw().isAtom(cx->names().length));
   return true;
 }
 
