@@ -96,12 +96,19 @@ let tests = [
 function startTest()
 {
   let popup = document.getElementById("menulist-popup1");
-  let menupopupHeight = popup.getBoundingClientRect().height;
   let menuitemHeight = popup.firstChild.getBoundingClientRect().height;
+
+  let cs = window.getComputedStyle(popup);
+  let csArrow = window.getComputedStyle(popup.scrollBox);
+  let bpTop = parseFloat(cs.paddingTop) + parseFloat(cs.borderTopWidth) +
+              parseFloat(csArrow.paddingTop) + parseFloat(csArrow.borderTopWidth);
+  let bpBottom = parseFloat(cs.paddingBottom) + parseFloat(cs.borderBottomWidth) +
+                 parseFloat(csArrow.paddingBottom) + parseFloat(csArrow.borderBottomWidth);
 
   // First, set the height of each popup to the height of four menuitems plus
   // any padding and border on the menupopup.
-  let height = menuitemHeight * 4 + (menupopupHeight - menuitemHeight * 10);
+  let height = menuitemHeight * 4 + bpTop + bpBottom;
+
   popup.height = height;
   document.getElementById("menulist-popup2").height = height;
   document.getElementById("menulist-popup3").height = height;
@@ -127,7 +134,9 @@ function menulistShown()
   is(menulist.activeChild.label, menulist.getItemAtIndex(test.initial).label, test.list + " initial selection");
 
   let cs = window.getComputedStyle(menulist.menupopup);
-  let bpTop = parseFloat(cs.paddingTop) + parseFloat(cs.borderTopWidth);
+  let csArrow = window.getComputedStyle(menulist.menupopup.scrollBox);
+  let bpTop = parseFloat(cs.paddingTop) + parseFloat(cs.borderTopWidth) +
+              parseFloat(csArrow.paddingTop) + parseFloat(csArrow.borderTopWidth);
 
   // Skip menulist3 as it has a label that scrolling doesn't need normally deal with.
   if (test.scroll >= 0) {

@@ -72,6 +72,7 @@
     {
       testname: "select out of order checked radio",
       item: "bysubject",
+      scroll: true,
       checked: ["toolbar", "history", "bysubject", "ascending"]
     },
     {
@@ -111,6 +112,13 @@
   function popupShown()
   {
     var test = tests[gTestIndex];
+
+    if (test.scroll) {
+      // On Windows 10, the menu is larger than the test frame. Scroll the later
+      // items into view. Since we are just testing the checked state of the items,
+      // and not their positions, this doesn't affect the behaviour of the test.
+      document.getElementById(test.item).scrollIntoView({ block: 'nearest' });
+    }
     synthesizeMouse(document.getElementById(test.item), 4, 4, { });
   }
 
