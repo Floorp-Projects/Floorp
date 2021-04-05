@@ -1000,7 +1000,7 @@ void EditorBase::EndPlaceholderTransaction(
   MOZ_ASSERT(mPlaceholderBatch > 0,
              "zero or negative placeholder batch count when ending batch!");
 
-  if (mPlaceholderBatch == 1) {
+  if (!(--mPlaceholderBatch)) {
     // By making the assumption that no reflow happens during the calls
     // to EndUpdateViewBatch and ScrollSelectionFocusIntoView, we are able to
     // allow the selection to cache a frame offset which is used by the
@@ -1038,8 +1038,13 @@ void EditorBase::EndPlaceholderTransaction(
     }
     // We might have never made a placeholder if no action took place.
     if (mPlaceholderTransaction) {
+      // FYI: Disconnect placeholder transaction before dispatching "input"
+      //      event because an input event listener may start other things.
+      // TODO: We should forget EditActionDataSetter too.
+      RefPtr<PlaceholderTransaction> placeholderTransaction =
+          std::move(mPlaceholderTransaction);
       DebugOnly<nsresult> rvIgnored =
-          mPlaceholderTransaction->EndPlaceHolderBatch();
+          placeholderTransaction->EndPlaceHolderBatch();
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "PlaceholderTransaction::EndPlaceHolderBatch() failed, but ignored");
@@ -1048,12 +1053,10 @@ void EditorBase::EndPlaceholderTransaction(
       if (!mComposition) {
         NotifyEditorObservers(eNotifyEditorObserversOfEnd);
       }
-      mPlaceholderTransaction = nullptr;
     } else {
       NotifyEditorObservers(eNotifyEditorObserversOfCancel);
     }
   }
-  mPlaceholderBatch--;
 }
 
 NS_IMETHODIMP EditorBase::SetShouldTxnSetSelection(bool aShould) {
