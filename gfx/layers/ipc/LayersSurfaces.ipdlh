@@ -122,15 +122,8 @@ namespace layers {
   MaybeVideoBridgeSource source;
 };
 
-[Comparable] struct SurfaceDescriptorPlugin {
-  uint64_t id;
-  SurfaceDescriptorD3D10 pluginSurf;
-  SurfaceDescriptorD3D10 displaySurf;
-};
-
 [Comparable] union SurfaceDescriptorGPUVideo {
   SurfaceDescriptorRemoteDecoder;
-  SurfaceDescriptorPlugin;
 };
 
 [Comparable] struct RGBDescriptor {

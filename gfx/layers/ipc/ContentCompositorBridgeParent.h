@@ -212,10 +212,6 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientTexture(
       const int64_t aTextureId) final;
 
-  mozilla::ipc::IPCResult RecvSupportsAsyncDXGISurface(bool* value) override;
-  mozilla::ipc::IPCResult RecvPreferredDXGIAdapter(
-      DxgiAdapterDesc* desc) override;
-
  private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~ContentCompositorBridgeParent();
