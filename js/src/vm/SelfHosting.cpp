@@ -3000,7 +3000,7 @@ static bool CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject,
   // Now our shapes are in last-to-first order, so....
   std::reverse(shapes.begin(), shapes.end());
   for (size_t i = 0; i < shapes.length(); ++i) {
-    MOZ_ASSERT(!shapes[i]->isAccessorShape(),
+    MOZ_ASSERT(shapes[i]->isDataProperty(),
                "Can't handle cloning accessors here yet.");
     if (!ids.append(shapes[i]->propid())) {
       return false;
