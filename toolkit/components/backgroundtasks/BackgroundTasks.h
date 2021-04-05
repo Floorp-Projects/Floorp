@@ -99,12 +99,14 @@ class BackgroundTasks final : public nsIBackgroundTasks {
     return GetBackgroundTasks().isSome();
   }
 
-  static nsresult GetOrCreateTemporaryProfileDirectory(nsIFile** aFile) {
+  static nsresult CreateTemporaryProfileDirectory(const nsCString& aInstallHash,
+                                                  nsIFile** aFile) {
     if (!XRE_IsParentProcess()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    return GetSingleton()->GetOrCreateTemporaryProfileDirectoryImpl(aFile);
+    return GetSingleton()->CreateTemporaryProfileDirectoryImpl(aInstallHash,
+                                                               aFile);
   }
 
   static nsresult RunBackgroundTask(nsICommandLine* aCmdLine) {
@@ -131,7 +133,8 @@ class BackgroundTasks final : public nsIBackgroundTasks {
   Maybe<nsCString> mBackgroundTask;
   nsCOMPtr<nsIFile> mProfD;
 
-  nsresult GetOrCreateTemporaryProfileDirectoryImpl(nsIFile** aFile);
+  nsresult CreateTemporaryProfileDirectoryImpl(const nsCString& aInstallHash,
+                                               nsIFile** aFile);
 
   virtual ~BackgroundTasks() = default;
 };

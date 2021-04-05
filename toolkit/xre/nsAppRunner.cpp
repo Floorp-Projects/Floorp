@@ -4528,9 +4528,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   if (BackgroundTasks::IsBackgroundTaskMode()) {
     // Allow tests to specify profile path via the environment.
     if (!EnvHasValue("XRE_PROFILE_PATH")) {
+      nsString installHash;
+      mDirProvider.GetInstallHash(installHash);
+
       nsCOMPtr<nsIFile> file;
-      nsresult rv = BackgroundTasks::GetOrCreateTemporaryProfileDirectory(
-          getter_AddRefs(file));
+      nsresult rv = BackgroundTasks::CreateTemporaryProfileDirectory(
+          NS_LossyConvertUTF16toASCII(installHash), getter_AddRefs(file));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return 1;
       }
