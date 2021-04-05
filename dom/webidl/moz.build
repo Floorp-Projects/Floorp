@@ -148,9 +148,6 @@ with Files("HTML*"):
 with Files("HashChangeEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Navigation")
 
-with Files("HiddenPluginEvent.webidl"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
-
 with Files("IDB*"):
     BUG_COMPONENT = ("Core", "Storage: IndexedDB")
 
@@ -1083,7 +1080,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     "GamepadEvent.webidl",
     "GPUUncapturedErrorEvent.webidl",
     "HashChangeEvent.webidl",
-    "HiddenPluginEvent.webidl",
     "ImageCaptureErrorEvent.webidl",
     "MediaQueryListEvent.webidl",
     "MediaRecorderErrorEvent.webidl",
