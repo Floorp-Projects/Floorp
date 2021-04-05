@@ -795,8 +795,8 @@ def create_self_signed_cert(name):
     cert.set_pubkey(k)
     cert.sign(k, "sha1")
 
-    open(CERT_FILE, "wt").write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    open(KEY_FILE, "wt").write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+    open(CERT_FILE, "wb").write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    open(KEY_FILE, "wb").write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
 
 
 if __name__ == "__main__":
