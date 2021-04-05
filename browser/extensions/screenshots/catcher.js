@@ -67,7 +67,7 @@ this.catcher = (function() {
   };
 
   exports.watchPromise = function watchPromise(promise, quiet) {
-    return promise.catch((e) => {
+    return promise.catch(e => {
       if (quiet) {
         if (!e.noReport) {
           log.debug("------Error in promise:", e);
