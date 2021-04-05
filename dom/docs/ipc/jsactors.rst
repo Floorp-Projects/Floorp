@@ -398,12 +398,7 @@ Here's an example ``JSWindowActor`` registration pulled from ``BrowserGlue.jsm``
       child: {
         moduleURI: "resource:///actors/PluginChild.jsm",
         events: {
-          PluginBindingAttached: { capture: true, wantUntrusted: true },
           PluginCrashed: { capture: true },
-          PluginOutdated: { capture: true },
-          PluginInstantiated: { capture: true },
-          PluginRemoved: { capture: true },
-          HiddenPlugin: { capture: true },
         },
 
         observers: ["decoder-doctor-notification"],
@@ -412,7 +407,7 @@ Here's an example ``JSWindowActor`` registration pulled from ``BrowserGlue.jsm``
       allFrames: true,
     },
 
-This example is for the JSWindowActor implementation of click-to-play for Flash.
+This example is for the JSWindowActor implementation of crash reporting for GMP.
 
 Let's examine parent registration:
 
@@ -434,12 +429,7 @@ Let's look at the second chunk:
       child: {
         moduleURI: "resource:///actors/PluginChild.jsm",
         events: {
-          PluginBindingAttached: { capture: true, wantUntrusted: true },
           PluginCrashed: { capture: true },
-          PluginOutdated: { capture: true },
-          PluginInstantiated: { capture: true },
-          PluginRemoved: { capture: true },
-          HiddenPlugin: { capture: true },
         },
 
         observers: ["decoder-doctor-notification"],
