@@ -545,7 +545,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   bool HasVideo() const { return mMediaInfo.HasVideo(); }
 
-  bool IsEncrypted() const { return mIsEncrypted; }
+  bool IsEncrypted() const override { return mIsEncrypted; }
 
   bool Paused() const { return mPaused; }
 
