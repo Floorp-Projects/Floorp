@@ -159,6 +159,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],
 
+  // Whether results will include a calculator.
+  ["suggest.calculator", false],
+
   // Whether results will include QuickSuggest suggestions.
   ["suggest.quicksuggest", true],
 
