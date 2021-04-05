@@ -123,6 +123,8 @@
             <menupopup id="context-sendlinktodevice-popup"
                   onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, gContextMenu.linkURL, gContextMenu.linkTextStr);"/>
       </menu>
+      <menuseparator id="context-sep-sendlinktodevice" class="sync-ui-item"
+                hidden="true"/>
       <menuseparator id="context-sep-copylink"/>
       <menuitem id="context-media-play"
                 data-l10n-id="main-context-menu-media-play"
