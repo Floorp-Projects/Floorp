@@ -15851,7 +15851,7 @@ void Document::IncLazyLoadImageCount() {
   if (!mLazyLoadImageCount) {
     if (WindowContext* wc = GetTopLevelWindowContext()) {
       if (!wc->HadLazyLoadImage()) {
-        MOZ_ALWAYS_SUCCEEDS(wc->SetHadLazyLoadImage(true));
+        Unused << wc->SetHadLazyLoadImage(true);
       }
     }
   }
