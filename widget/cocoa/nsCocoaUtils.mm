@@ -608,11 +608,6 @@ NSEvent* nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(const WidgetKeyboardEve
 }
 
 // static
-void nsCocoaUtils::InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent) {
-  memset(aNPCocoaEvent, 0, sizeof(NPCocoaEvent));
-}
-
-// static
 void nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent, NSEvent* aNativeEvent) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 

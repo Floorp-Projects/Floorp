@@ -5,7 +5,7 @@
 #ifndef YUV_STAMPER_H_
 #define YUV_STAMPER_H_
 
-#include "nptypes.h"
+#include <cstdint>
 
 namespace mozilla {
 

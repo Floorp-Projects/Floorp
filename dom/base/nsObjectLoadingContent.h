@@ -157,22 +157,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    */
   void NotifyOwnerDocumentActivityChanged();
 
-  /**
-   * When a plug-in is instantiated, it can create a scriptable
-   * object that the page wants to interact with.  We expose this
-   * object by placing it on the prototype chain of our element,
-   * between the element itself and its most-derived DOM prototype.
-   *
-   * SetupProtoChain handles actually inserting the plug-in
-   * scriptable object into the proto chain if needed.
-   *
-   * DoResolve is a hook that allows us to find out when the web
-   * page is looking up a property name on our object and make sure
-   * that our plug-in, if any, is instantiated.
-   */
-  // Helper for WebIDL node wrapping
-  void SetupProtoChain(JSContext* aCx, JS::Handle<JSObject*> aObject);
-
   // Helper for WebIDL NeedResolve
   bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
                  JS::Handle<jsid> aId,
@@ -428,8 +412,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    */
   void QueueCheckPluginStopEvent();
 
-  void NotifyContentObjectWrapper();
-
   /**
    * Opens the channel pointed to by mURI into mChannel.
    */
@@ -575,32 +557,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    */
   void MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
                                 nsIURI** aRewrittenURI);
-
-  // Helper class for SetupProtoChain
-  class SetupProtoChainRunner final : public nsIRunnable {
-    ~SetupProtoChainRunner() = default;
-
-   public:
-    NS_DECL_ISUPPORTS
-
-    explicit SetupProtoChainRunner(nsObjectLoadingContent* aContent);
-
-    NS_IMETHOD Run() override;
-
-   private:
-    // We store an nsIObjectLoadingContent because we can
-    // unambiguously refcount that.
-    RefPtr<nsIObjectLoadingContent> mContent;
-  };
-
-  // Utility getter for getting our nsNPAPIPluginInstance in a safe way.
-  nsNPAPIPluginInstance* ScriptRequestPluginInstance(JSContext* aCx);
-
-  // Utility method for getting our plugin JSObject
-  static nsresult GetPluginJSObject(JSContext* cx,
-                                    nsNPAPIPluginInstance* plugin_inst,
-                                    JS::MutableHandle<JSObject*> plugin_obj,
-                                    JS::MutableHandle<JSObject*> plugin_proto);
 
   // Utility for firing an error event, if we're an <object>.
   void MaybeFireErrorEvent();

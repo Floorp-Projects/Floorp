@@ -2239,16 +2239,6 @@ void TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
   WidgetKeyboardEvent keyEvent(true, message, mWidget);
   InitKeyEvent(aNativeEvent, keyEvent, false);
 
-  // Attach a plugin event, in case keyEvent gets dispatched to a plugin.  Only
-  // one field is needed -- the type.  The other fields can be constructed as
-  // the need arises.  But Gecko doesn't have anything equivalent to the
-  // NPCocoaEventFlagsChanged type, and this needs to be passed accurately to
-  // any plugin to which this event is sent.
-  NPCocoaEvent cocoaEvent;
-  nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-  cocoaEvent.type = NPCocoaEventFlagsChanged;
-  keyEvent.mPluginEvent.Copy(cocoaEvent);
-
   KeyEventState currentKeyEvent(aNativeEvent);
   nsEventStatus status = nsEventStatus_eIgnore;
   mDispatcher->DispatchKeyboardEvent(message, keyEvent, status, &currentKeyEvent);
