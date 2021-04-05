@@ -12,7 +12,7 @@ this.blobConverters = (function() {
       contentType = "image/png";
     }
     const data = Uint8Array.from(binary, char => char.charCodeAt(0));
-    const blob = new Blob([data], {type: contentType});
+    const blob = new Blob([data], { type: contentType });
     return blob;
   };
 
