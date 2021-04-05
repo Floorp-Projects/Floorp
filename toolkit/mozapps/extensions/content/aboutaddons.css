@@ -521,7 +521,7 @@ addon-details {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid var(--in-content-box-border-color);
+  border-top: 1px solid var(--in-content-border-color);
   margin: 0 calc(var(--card-padding) * -1);
   padding: var(--card-padding);
   color: var(--in-content-text-color);
@@ -691,8 +691,8 @@ li.permission-info > label {
   margin-top: 8px;
   /* Pull the buttons flush with the side of the card */
   margin-inline: calc(var(--card-padding) * -1);
-  border-bottom: 1px solid var(--in-content-box-border-color);
-  border-top: 1px solid var(--in-content-box-border-color);
+  border-bottom: 1px solid var(--in-content-border-color);
+  border-top: 1px solid var(--in-content-border-color);
   font-size: 0;
   line-height: 0;
 }
