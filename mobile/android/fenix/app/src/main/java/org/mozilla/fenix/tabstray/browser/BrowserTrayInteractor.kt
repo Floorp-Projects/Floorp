@@ -13,6 +13,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.selection.SelectionInteractor
 import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.tabstray.TabsTrayController
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TrayPagerAdapter
 import org.mozilla.fenix.tabstray.ext.numberOfGridColumns
@@ -35,6 +36,11 @@ interface BrowserTrayInteractor : SelectionInteractor<Tab>, UserInteractionHandl
      * Returns the appropriate [RecyclerView.LayoutManager] to be used at [position].
      */
     fun getLayoutManagerForPosition(context: Context, position: Int): RecyclerView.LayoutManager
+
+    /**
+     * TabTray's Floating Action Button clicked.
+     */
+    fun onFabClicked(isPrivate: Boolean)
 }
 
 /**
@@ -43,6 +49,7 @@ interface BrowserTrayInteractor : SelectionInteractor<Tab>, UserInteractionHandl
 class DefaultBrowserTrayInteractor(
     private val store: TabsTrayStore,
     private val trayInteractor: TabsTrayInteractor,
+    private val controller: TabsTrayController,
     private val selectTab: TabsUseCases.SelectTabUseCase,
     private val settings: Settings,
     private val metrics: MetricController
@@ -120,5 +127,12 @@ class DefaultBrowserTrayInteractor(
         }
 
         return GridLayoutManager(context, numberOfColumns)
+    }
+
+    /**
+     * See [BrowserTrayInteractor.onFabClicked]
+     */
+    override fun onFabClicked(isPrivate: Boolean) {
+        controller.onNewTabTapped(isPrivate)
     }
 }

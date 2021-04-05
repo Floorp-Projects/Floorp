@@ -17,6 +17,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
 import kotlinx.android.synthetic.main.tabs_tray_tab_counter2.*
+import kotlinx.android.synthetic.main.component_tabstray2.tab_layout
+import kotlinx.android.synthetic.main.component_tabstray2.tabsTray
+import kotlinx.android.synthetic.main.component_tabstray2.view.tab_wrapper
+import kotlinx.android.synthetic.main.component_tabstray_fab.view.new_tab_button
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
@@ -26,15 +30,19 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.HomeScreenViewModel
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
+    private var fabView: View? = null
     private lateinit var tabsTrayStore: TabsTrayStore
     private lateinit var browserTrayInteractor: BrowserTrayInteractor
+    private lateinit var tabsTrayController: DefaultTabsTrayController
     private lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
+    private var hasAccessibilityEnabled: Boolean = false
 
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
     private val tabCounterBinding = ViewBoundFeatureWrapper<TabCounterBinding>()
@@ -60,16 +68,27 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
         tabsTrayStore = StoreProvider.get(this) { TabsTrayStore() }
 
+        fabView = LayoutInflater.from(containerView.context)
+            .inflate(R.layout.component_tabstray_fab, containerView, true)
+
         return containerView
     }
 
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val activity = activity as HomeActivity
+        hasAccessibilityEnabled = activity.settings().accessibilityServicesEnabled
+
+        tabsTrayController = DefaultTabsTrayController(
+            browsingModeManager = activity.browsingModeManager,
+            navController = findNavController()
+        )
 
         val browserTrayInteractor = DefaultBrowserTrayInteractor(
             tabsTrayStore,
             this@TabsTrayFragment,
+            tabsTrayController,
             requireComponents.useCases.tabsUseCases.selectTab,
             requireComponents.settings,
             requireComponents.analytics.metrics
@@ -120,6 +139,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     override fun setCurrentTrayPosition(position: Int, smoothScroll: Boolean) {
         tabsTray.setCurrentItem(position, smoothScroll)
+        setupNewTabButtons(tabsTray.currentItem)
     }
 
     override fun navigateToBrowser() {
@@ -188,5 +208,43 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         val directions = NavGraphDirections.actionGlobalHome()
         findNavController().navigate(directions)
         dismissAllowingStateLoss()
+    }
+
+    private fun setupNewTabButtons(currentPage: Int) {
+        fabView?.let { fabView ->
+            when (currentPage) {
+                NORMAL -> {
+                    fabView.new_tab_button.shrink()
+                    fabView.new_tab_button.show()
+                    fabView.new_tab_button.setOnClickListener {
+                        browserTrayInteractor.onFabClicked(false)
+                    }
+                }
+                PRIVATE -> {
+                    fabView.new_tab_button.text =
+                        requireContext().resources.getText(R.string.tab_drawer_fab_content)
+                    fabView.new_tab_button.extend()
+                    fabView.new_tab_button.show()
+                    fabView.new_tab_button.setOnClickListener {
+                        browserTrayInteractor.onFabClicked(true)
+                    }
+                }
+                SYNC -> {
+                    fabView.new_tab_button.text =
+                        requireContext().resources.getText(R.string.preferences_sync_now)
+                    fabView.new_tab_button.extend()
+                    fabView.new_tab_button.show()
+                    fabView.new_tab_button.setOnClickListener {
+                    }
+                }
+            }
+        }
+    }
+
+    companion object {
+        // TabsTray Pages
+        const val NORMAL = 0
+        const val PRIVATE = 1
+        const val SYNC = 2
     }
 }
