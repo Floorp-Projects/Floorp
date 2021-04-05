@@ -113,8 +113,6 @@ async function checkObjectValue(browser) {
 }
 
 add_task(async function() {
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
-
   // create a few tabs
   let tabs = [
     gBrowser.tabs[0],
