@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This is the same value used by CustomizableUI tests.
-const kForceOverflowWidthPx = 450;
-
 registerCleanupFunction(async function() {
   // Clean up when the test finishes.
   await task_resetState();
