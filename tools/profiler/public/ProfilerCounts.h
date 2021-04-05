@@ -110,6 +110,16 @@ class BaseProfilerCount {
 #  endif
   }
 
+  void Clear() {
+    *mCounter = 0;
+#  ifdef DEBUG
+    mPrevNumber = 0;
+#endif
+    if (mNumber) {
+      *mNumber = 0;
+    }
+  }
+
   // We don't define ++ and Add() here, since the static defines directly
   // increment the atomic counters, and the subclasses implement ++ and
   // Add() directly.
