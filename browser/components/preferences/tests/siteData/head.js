@@ -241,7 +241,7 @@ function promiseCookiesCleared() {
 
 async function loadServiceWorkerTestPage(url) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await BrowserTestUtils.waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return SpecialPowers.spawn(
       tab.linkedBrowser,
       [],
@@ -255,7 +255,7 @@ async function loadServiceWorkerTestPage(url) {
 }
 
 function promiseServiceWorkersCleared() {
-  return BrowserTestUtils.waitForCondition(() => {
+  return TestUtils.waitForCondition(() => {
     let serviceWorkers = serviceWorkerManager.getAllRegistrations();
     if (!serviceWorkers.length) {
       ok(true, "Cleared all service workers");
@@ -266,7 +266,7 @@ function promiseServiceWorkersCleared() {
 }
 
 function promiseServiceWorkerRegisteredFor(url) {
-  return BrowserTestUtils.waitForCondition(() => {
+  return TestUtils.waitForCondition(() => {
     try {
       let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         url
