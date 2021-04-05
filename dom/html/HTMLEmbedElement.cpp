@@ -11,7 +11,6 @@
 #include "mozilla/dom/ElementInlines.h"
 
 #include "mozilla/dom/Document.h"
-#include "nsIPluginDocument.h"
 #include "nsThreadUtils.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
@@ -73,16 +72,9 @@ nsresult HTMLEmbedElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsInComposedDoc()) {
-    // Don't kick off load from being bound to a plugin document - the plugin
-    // document will call nsObjectLoadingContent::InitializeFromChannel() for
-    // the initial load.
-    nsCOMPtr<nsIPluginDocument> pluginDoc =
-        do_QueryInterface(&aContext.OwnerDoc());
-    if (!pluginDoc) {
-      void (HTMLEmbedElement::*start)() = &HTMLEmbedElement::StartObjectLoad;
-      nsContentUtils::AddScriptRunner(
-          NewRunnableMethod("dom::HTMLEmbedElement::BindToTree", this, start));
-    }
+    void (HTMLEmbedElement::*start)() = &HTMLEmbedElement::StartObjectLoad;
+    nsContentUtils::AddScriptRunner(
+        NewRunnableMethod("dom::HTMLEmbedElement::BindToTree", this, start));
   }
 
   return NS_OK;
