@@ -547,6 +547,8 @@ void install_memory_hooks() {
     // Also initialize the ThreadIntercept, even if native allocation tracking
     // won't be turned on. This way the TLS will be initialized.
     ThreadIntercept::Init();
+  } else {
+    sCounter->Clear();
   }
   jemalloc_replace_dynamic(replace_init);
 }
