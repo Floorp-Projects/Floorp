@@ -48,7 +48,6 @@
 #ifdef XP_WIN
 #  include "mozilla/a11y/Compatibility.h"
 #  include "mozilla/dom/ContentChild.h"
-#  include "HTMLWin32ObjectAccessible.h"
 #  include "mozilla/StaticPtr.h"
 #endif
 
