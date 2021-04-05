@@ -12,7 +12,6 @@ include protocol PFunctionBroker;
 using NPError from "npapi.h";
 using NPNVariable from "npapi.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
-using class mac_plugin_interposing::NSCursorInfo from "mozilla/plugins/PluginMessageUtils.h";
 using struct nsID from "nsID.h";
 using struct mozilla::plugins::NPAudioDeviceChangeDetailsIPC from "mozilla/plugins/PluginMessageUtils.h";
 using struct mozilla::plugins::NPAudioDeviceStateChangedIPC from "mozilla/plugins/PluginMessageUtils.h";
@@ -126,12 +125,6 @@ parent:
                          int32_t aX, int32_t aY,
                          double aWidth, double aHeight);
   async PluginHideWindow(uint32_t aWindowId);
-
-  // OS X Specific calls to allow the plugin to manage the cursor.
-  async SetCursor(NSCursorInfo cursorInfo);
-  async ShowCursor(bool show);
-  async PushCursor(NSCursorInfo cursorInfo);
-  async PopCursor();
 
   sync NPN_SetException(nsCString message);
 
