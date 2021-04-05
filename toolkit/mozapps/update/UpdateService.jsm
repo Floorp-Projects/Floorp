@@ -295,6 +295,14 @@ var gBITSInUseByAnotherUser = false;
 // accurate than checking for STATE_APPLYING because there are brief periods of
 // time at the beginning and end of staging when that will not be the state.
 let gStagingInProgress = false;
+// The update service can be invoked as part of a standalone headless background
+// task.  In this context, when the background task kicks off an update
+// download, we don't want it to move on to staging. As soon as the download has
+// kicked off, the task begins shutting down and, even if the the download
+// completes incredibly quickly, we don't want staging to begin while we are
+// shutting down. That isn't a well tested scenario and it's possible that it
+// could leave us in a bad state.
+let gOnlyDownloadUpdatesThisSession = false;
 
 XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
   return (
@@ -4016,6 +4024,20 @@ UpdateService.prototype = {
     LOG("End of UpdateService status");
   },
 
+  /**
+   * See nsIUpdateService.idl
+   */
+  get onlyDownloadUpdatesThisSession() {
+    return gOnlyDownloadUpdatesThisSession;
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  set onlyDownloadUpdatesThisSession(newValue) {
+    gOnlyDownloadUpdatesThisSession = newValue;
+  },
+
   classID: UPDATESERVICE_CID,
 
   _xpcom_factory: UpdateServiceFactory,
@@ -4994,6 +5016,14 @@ Downloader.prototype = {
   _langPackTimeout: null,
 
   /**
+   * If gOnlyDownloadUpdatesThisSession is true, we prevent the update process
+   * from progressing past the downloading stage. If the download finishes,
+   * pretend that it hasn't in order to keep the current update in the
+   * "downloading" state.
+   */
+  _pretendingDownloadIsNotDone: false,
+
+  /**
    * Cancels the active download.
    *
    * For a BITS download, this will cancel and remove the download job. For
@@ -5033,7 +5063,21 @@ Downloader.prototype = {
         throw e;
       }
     } else if (this._request && this._request instanceof Ci.nsIRequest) {
-      this._request.cancel(cancelError);
+      // Normally, cancelling an nsIIncrementalDownload results in it stopping
+      // the download but leaving the downloaded data so that we can resume the
+      // download later. If we've already finished the download, there is no
+      // transfer to stop.
+      // Note that this differs from the BITS case. Cancelling a BITS job, even
+      // when the transfer has completed, results in all data being deleted.
+      // Therefore, even if the transfer has completed, cancelling a BITS job
+      // has effects that we must not skip.
+      if (this._pretendingDownloadIsNotDone) {
+        LOG(
+          "Downloader: cancel - Ignoring cancel request of finished download"
+        );
+      } else {
+        this._request.cancel(cancelError);
+      }
     }
   },
 
@@ -5715,6 +5759,22 @@ Downloader.prototype = {
    */
   /* eslint-disable-next-line complexity */
   onStopRequest: async function Downloader_onStopRequest(request, status) {
+    if (gOnlyDownloadUpdatesThisSession) {
+      LOG(
+        "Downloader:onStopRequest - End of update download detected and " +
+          "ignored because we are restricted to update downloads this " +
+          "session. We will continue with this update next session."
+      );
+      // In order to keep the update from progressing past the downloading
+      // stage, we will pretend that the download is still going.
+      // A lot of this work is done for us by just not setting this._request to
+      // null, which usually signals that the transfer has completed.
+      this._pretendingDownloadIsNotDone = true;
+      // This notification is currently used only for testing.
+      Services.obs.notifyObservers(null, "update-download-restriction-hit");
+      return;
+    }
+
     if (!this.usingBits) {
       LOG(
         "Downloader:onStopRequest - downloader: nsIIncrementalDownload, " +
