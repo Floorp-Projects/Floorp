@@ -416,6 +416,9 @@ async function testSelectColors(selectID, itemCount, options) {
   }
 }
 
+// System colors may be different in content pages and chrome pages.
+let kDefaultSelectStyles = {};
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -423,6 +426,19 @@ add_task(async function setup() {
       ["dom.forms.select.customstyling", true],
     ],
   });
+  kDefaultSelectStyles = await BrowserTestUtils.withNewTab(
+    `data:text/html,<select>`,
+    function(browser) {
+      return SpecialPowers.spawn(browser, [], function() {
+        let cs = content.getComputedStyle(
+          content.document.querySelector("select")
+        );
+        return {
+          backgroundColor: cs.backgroundColor,
+        };
+      });
+    }
+  );
 });
 
 // This test checks when a <select> element has styles applied to <option>s within it.
@@ -606,9 +622,7 @@ add_task(async function test_transparent_color_with_text_shadow() {
   let options = {
     selectColor: "rgba(0, 0, 0, 0)",
     selectTextShadow: "rgb(48, 48, 48) 0px 0px 0px",
-    skipSelectColorTest: {
-      background: true,
-    },
+    selectBgColor: kDefaultSelectStyles.backgroundColor,
   };
 
   await testSelectColors(
@@ -622,9 +636,7 @@ add_task(
   async function test_select_with_transition_doesnt_lose_scroll_position() {
     let options = {
       selectColor: "rgb(128, 0, 128)",
-      skipSelectColorTest: {
-        background: true,
-      },
+      selectBgColor: kDefaultSelectStyles.backgroundColor,
       waitForComputedStyle: {
         property: "color",
         value: "rgb(128, 0, 128)",
@@ -653,9 +665,7 @@ add_task(
     let options = {
       selectColor: "rgb(0, 0, 255)",
       selectTextShadow: "rgb(0, 0, 255) 1px 1px 2px",
-      skipSelectColorTest: {
-        background: true,
-      },
+      selectBgColor: kDefaultSelectStyles.backgroundColor,
       leaveOpen: true,
     };
 
