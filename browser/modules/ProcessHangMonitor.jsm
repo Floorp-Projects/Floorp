@@ -111,14 +111,6 @@ var ProcessHangMonitor = {
   },
 
   /**
-   * Terminate Sandbox globals associated with the hang being reported
-   * for the selected browser in |win|.
-   */
-  terminateGlobal(win) {
-    this.handleUserInput(win, report => report.terminateGlobal());
-  },
-
-  /**
    * Start devtools debugger for JavaScript associated with the hang
    * being reported for the selected browser in |win|.
    */
@@ -165,24 +157,6 @@ var ProcessHangMonitor = {
         break;
       case report.PLUGIN_HANG:
         this.terminatePlugin(win);
-        break;
-    }
-  },
-
-  /**
-   * Stop all scripts from running in the Sandbox global attached to
-   * this window.
-   */
-  stopGlobal(win) {
-    let report = this.findActiveReport(win.gBrowser.selectedBrowser);
-    if (!report) {
-      return;
-    }
-
-    switch (report.hangType) {
-      case report.SLOW_SCRIPT:
-        this._recordTelemetryForReport(report, "user-aborted");
-        this.terminateGlobal(win);
         break;
     }
   },
@@ -577,22 +551,11 @@ var ProcessHangMonitor = {
         brandShortName,
       ]);
 
-      buttons.unshift(
-        {
-          label: bundle.getString("processHang.add-on.learn-more.text"),
-          link:
-            "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes",
-        },
-        {
-          label: bundle.getString("processHang.button_stop_sandbox.label2"),
-          accessKey: bundle.getString(
-            "processHang.button_stop_sandbox.accessKey"
-          ),
-          callback() {
-            ProcessHangMonitor.stopGlobal(win);
-          },
-        }
-      );
+      buttons.unshift({
+        label: bundle.getString("processHang.add-on.learn-more.text"),
+        link:
+          "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes",
+      });
     } else {
       let scriptBrowser = report.scriptBrowser;
       if (scriptBrowser == win.gBrowser?.selectedBrowser) {
