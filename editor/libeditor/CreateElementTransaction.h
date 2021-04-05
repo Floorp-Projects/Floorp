@@ -58,6 +58,9 @@ class CreateElementTransaction final : public EditTransactionBase {
 
   dom::Element* GetNewElement() const { return mNewElement; }
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const CreateElementTransaction& aTransaction);
+
  protected:
   virtual ~CreateElementTransaction() = default;
 

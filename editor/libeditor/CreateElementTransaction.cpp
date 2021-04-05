@@ -14,11 +14,15 @@
 #include "mozilla/Casting.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/Logging.h"
+#include "mozilla/ToString.h"
 
 #include "nsAlgorithm.h"
 #include "nsAString.h"
+#include "nsAtom.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINode.h"
 #include "nsISupportsUtils.h"
@@ -60,6 +64,22 @@ CreateElementTransaction::CreateElementTransaction(
   AutoEditorDOMPointOffsetInvalidator lockChild(mPointToInsert);
 }
 
+std::ostream& operator<<(std::ostream& aStream,
+                         const CreateElementTransaction& aTransaction) {
+  aStream << "{ mTag=\""
+          << nsAtomCString(aTransaction.mTag ? aTransaction.mTag.get()
+                                             : nsGkAtoms::_empty)
+                 .get()
+          << "\""
+          << ", mPointToInsert=" << aTransaction.mPointToInsert
+          << ", mNewElement=" << aTransaction.mNewElement.get();
+  if (aTransaction.mNewElement) {
+    aStream << " (" << *aTransaction.mNewElement << ")";
+  }
+  aStream << ", mEditorBase=" << aTransaction.mEditorBase.get() << " }";
+  return aStream;
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CreateElementTransaction,
                                    EditTransactionBase, mEditorBase,
                                    mPointToInsert, mNewElement)
@@ -70,6 +90,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CreateElementTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP CreateElementTransaction::DoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p CreateElementTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTag) ||
       NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -173,6 +197,10 @@ void CreateElementTransaction::InsertNewNode(ErrorResult& aError) {
 }
 
 NS_IMETHODIMP CreateElementTransaction::UndoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p CreateElementTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mPointToInsert.IsSet()) ||
       NS_WARN_IF(!mNewElement)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -187,6 +215,10 @@ NS_IMETHODIMP CreateElementTransaction::UndoTransaction() {
 }
 
 NS_IMETHODIMP CreateElementTransaction::RedoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p CreateElementTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mPointToInsert.IsSet()) ||
       NS_WARN_IF(!mNewElement)) {
     return NS_ERROR_NOT_AVAILABLE;

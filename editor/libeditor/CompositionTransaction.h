@@ -61,6 +61,7 @@ class CompositionTransaction final : public EditTransactionBase,
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(CompositionTransaction)
 
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
   NS_IMETHOD Merge(nsITransaction* aOtherTransaction, bool* aDidMerge) override;
 
   void MarkFixed();
@@ -68,6 +69,9 @@ class CompositionTransaction final : public EditTransactionBase,
   MOZ_CAN_RUN_SCRIPT static nsresult SetIMESelection(
       EditorBase& aEditorBase, dom::Text* aTextNode, uint32_t aOffsetInNode,
       uint32_t aLengthOfCompositionString, const TextRangeArray* aRanges);
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const CompositionTransaction& aTransaction);
 
  private:
   virtual ~CompositionTransaction() = default;

@@ -53,6 +53,9 @@ class DeleteNodeTransaction final : public EditTransactionBase {
 
   nsIContent* GetContent() const { return mContentToDelete; }
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const DeleteNodeTransaction& aTransaction);
+
  protected:
   virtual ~DeleteNodeTransaction() = default;
 

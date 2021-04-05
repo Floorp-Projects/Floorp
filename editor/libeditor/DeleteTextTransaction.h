@@ -68,9 +68,14 @@ class DeleteTextTransaction final : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(DeleteTextTransaction)
 
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
+
   dom::Text* GetText() const { return mTextNode; }
   uint32_t Offset() const { return mOffset; }
   uint32_t LengthToDelete() const { return mLengthToDelete; }
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const DeleteTextTransaction& aTransaction);
 
  protected:
   // The provider of basic editing operations.

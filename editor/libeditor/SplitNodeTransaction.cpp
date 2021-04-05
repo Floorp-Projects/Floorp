@@ -7,6 +7,8 @@
 
 #include "mozilla/EditorDOMPoint.h"  // for RangeBoundary, EditorRawDOMPoint
 #include "mozilla/HTMLEditor.h"      // for HTMLEditor
+#include "mozilla/Logging.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsDebug.h"     // for NS_ASSERTION, etc.
@@ -40,6 +42,22 @@ SplitNodeTransaction::SplitNodeTransaction(
   MOZ_DIAGNOSTIC_ASSERT(aStartOfRightContent.IsInContentNode());
 }
 
+std::ostream& operator<<(std::ostream& aStream,
+                         const SplitNodeTransaction& aTransaction) {
+  aStream << "{ mStartOfRightContent=" << aTransaction.mStartOfRightContent;
+  aStream << ", mNewLeftContent=" << aTransaction.mNewLeftContent.get();
+  if (aTransaction.mNewLeftContent) {
+    aStream << " (" << *aTransaction.mNewLeftContent << ")";
+  }
+  aStream << ", mContainerParentNode="
+          << aTransaction.mContainerParentNode.get();
+  if (aTransaction.mContainerParentNode) {
+    aStream << " (" << *aTransaction.mContainerParentNode << ")";
+  }
+  aStream << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get() << " }";
+  return aStream;
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTransaction, EditTransactionBase,
                                    mHTMLEditor, mStartOfRightContent,
                                    mContainerParentNode, mNewLeftContent)
@@ -50,6 +68,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p SplitNodeTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!mHTMLEditor) ||
       NS_WARN_IF(!mStartOfRightContent.IsInContentNode())) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -119,6 +141,10 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
 }
 
 NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p SplitNodeTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mNewLeftContent) ||
       NS_WARN_IF(!mContainerParentNode) ||
       NS_WARN_IF(!mStartOfRightContent.IsInContentNode())) {
@@ -142,6 +168,10 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
  * state.
  */
 NS_IMETHODIMP SplitNodeTransaction::RedoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p SplitNodeTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!mNewLeftContent) || NS_WARN_IF(!mContainerParentNode) ||
       NS_WARN_IF(!mStartOfRightContent.IsInContentNode()) ||
       NS_WARN_IF(!mHTMLEditor)) {

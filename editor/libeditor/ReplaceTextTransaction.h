@@ -69,6 +69,9 @@ class ReplaceTextTransaction final : public EditTransactionBase {
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() final;
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const ReplaceTextTransaction& aTransaction);
+
  private:
   RefPtr<EditorBase> mEditorBase;
   RefPtr<dom::Text> mTextNode;
