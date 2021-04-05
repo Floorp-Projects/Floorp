@@ -27,17 +27,15 @@ html|button {
   min-width: 6.3em;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 xul|button > xul|*.button-box {
   padding-inline: 0;
 }
 }
 
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+@media (-moz-proton-contextmenus) and (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   xul|menulist > xul|menupopup {
     background-color: transparent;
     border-color: transparent;
   }
-}
 }

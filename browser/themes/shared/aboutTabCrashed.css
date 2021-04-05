@@ -6,7 +6,7 @@ body {
   font-size: 1.25rem;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 .title {
   background-image: url("chrome://browser/skin/tab-crashed.svg");
 }

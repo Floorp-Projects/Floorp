@@ -4,7 +4,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 :host(:not([native])) {
   appearance: none;
   background-color: var(--button-bgcolor, ButtonFace);

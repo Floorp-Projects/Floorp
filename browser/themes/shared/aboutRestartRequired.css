@@ -14,7 +14,7 @@
   margin: auto;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #errorPageContainer:dir(rtl) {
   background-position-x: right;
 }

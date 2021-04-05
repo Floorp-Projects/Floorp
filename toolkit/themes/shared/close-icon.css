@@ -14,7 +14,7 @@
   height: auto;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 .close-icon {
   border-radius: 2px;
 }

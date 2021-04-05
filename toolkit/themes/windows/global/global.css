@@ -14,14 +14,14 @@
   font: message-box;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :root {
   --arrowpanel-padding: 10px;
   --arrowpanel-border-radius: 0;
 }
 } /** END not Proton **/
 
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   :host,
   :root {

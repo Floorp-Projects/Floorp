@@ -139,7 +139,7 @@
   max-width: unset;
 }
 
-@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media (-moz-proton-doorhangers) {
 #downloadsPanel-mainView {
   font: caption;
   width: 35em;

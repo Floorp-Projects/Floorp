@@ -1117,9 +1117,46 @@
 
 # Enable Proton restyle. Requires restart.
 - name: browser.proton.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
+  rust: true
+
+- name: browser.proton.contextmenus.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
+- name: browser.proton.urlbar.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
+- name: browser.proton.modals.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
+- name: browser.proton.doorhangers.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
+- name: browser.proton.infobars.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
+- name: browser.proton.places-tooltip.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
 
 # Blocked plugin content
 - name: browser.safebrowsing.blockedURIs.enabled

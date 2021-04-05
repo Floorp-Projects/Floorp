@@ -10,7 +10,7 @@
 
 %include ../../shared/checkbox.inc.css
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 /* ::::: checkbox ::::: */
 
 checkbox[native] {
@@ -63,7 +63,7 @@ checkbox[native][disabled="true"] {
 }
 } /** END Proton **/
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 /* ::::: checkbox ::::: */
 
 checkbox {

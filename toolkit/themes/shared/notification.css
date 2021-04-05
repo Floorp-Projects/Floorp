@@ -16,7 +16,7 @@
   z-index: 1;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 .notificationbox-stack[notificationside="top"] {
   box-shadow: 0 3px 10px -7px #00000080;
 }
@@ -191,7 +191,7 @@ notification[type="critical"] > hbox > .messageImage {
   background-color: var(--notification-primary-button-background-active);
 }
 
-@supports -moz-bool-pref("browser.proton.infobars.enabled") {
+@media (-moz-proton-infobars) {
 .notificationbox-stack {
   background-color: var(--toolbar-bgcolor);
   width: 100%;

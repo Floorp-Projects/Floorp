@@ -20,7 +20,7 @@
   font: message-box;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :root {
   --arrowpanel-border-radius: 3.5px;
 }

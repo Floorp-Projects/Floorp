@@ -12,7 +12,7 @@
   --toolbar-field-border-color: hsla(240,5%,5%,.25);
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 :root {
   --toolbar-field-focus-border-color: -moz-accent-color;
   /* px because it's used in calc */
@@ -20,7 +20,7 @@
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
 :root {
   --toolbar-field-focus-border-color: var(--focus-outline-color);
   --urlbar-container-padding: 1px;
@@ -39,7 +39,7 @@
   margin-inline: @urlbarMarginInline@;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 :root[uidensity=touch] #urlbar-container,
 :root[uidensity=touch] #search-container {
   padding-block: 5px;
@@ -53,7 +53,7 @@
   color: FieldText;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #urlbar-container,
 #search-container {
   padding-block: 3px;
@@ -68,7 +68,7 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
 #urlbar-background,
 #searchbar {
   border-color: transparent;
@@ -81,7 +81,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #urlbar-background,
 #searchbar {
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
@@ -106,7 +106,7 @@
   outline: none;
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #urlbar:not([focused="true"]):hover > #urlbar-background,
 #searchbar:not(:focus-within):hover {
   border-color: @fieldHoverBorderColor@;
@@ -119,7 +119,7 @@
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
 #urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background {
   border: var(--focus-outline);
   /* We used --focus-outline above to inherit its width and style properties,
@@ -278,7 +278,7 @@
   width: calc(100% + 2 * @urlbarMarginInline@ + 2 * @urlbarBreakoutExtend@);
 }
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
 #urlbar[breakout][breakout-extend] {
   top: 0;
   left: -@urlbarMarginInline@;
@@ -286,7 +286,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #urlbar[breakout][breakout-extend] > #urlbar-background {
   box-shadow: 0 3px 8px 0 rgba(0,0,0,.15)
 }
@@ -302,7 +302,7 @@
   padding-inline: calc(@urlbarMarginInline@ + @urlbarBreakoutExtend@);
 }
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {
   height: var(--urlbar-toolbar-height);
   padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2 + var(--urlbar-container-padding));
@@ -370,7 +370,7 @@
   padding-inline: 8px 3px;
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #urlbar-search-mode-indicator {
   -moz-outline-radius: 2px;
   min-width: 16px; /* So the close button never causes motion */
@@ -406,7 +406,7 @@
   padding-inline: 0 4px;
   opacity: var(--identity-box-label-opacity);
 }
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #urlbar-search-mode-indicator-title {
   padding-inline: 5px;
   opacity: 1;
@@ -424,7 +424,7 @@
   fill: var(--lwt-toolbar-field-focus-color);
 }
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
 #urlbar-search-mode-indicator-close {
   height: 16px;
   border-radius: var(--toolbarbutton-border-radius);
@@ -441,14 +441,14 @@
   #urlbar-search-mode-indicator-close {
     fill-opacity: 1.0;
   }
-  @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+  @media (-moz-proton-urlbar) {
   #urlbar-search-mode-indicator-close {
     fill: HighlightText;
   }
   } /*** END proton ***/
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #urlbar-search-mode-indicator-close {
   display: none;
   margin-inline-start: -16px;
@@ -562,14 +562,14 @@
 
 /* URL bar and page action buttons */
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
 #pageActionSeparator {
   /* Just remove this element once Proton is released */
   display: none;
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #pageActionSeparator {
   /* This draws the separator the same way that #urlbar-label-box draws its
      left and right borders, which end up looking like separators.  It might not
@@ -614,7 +614,7 @@
   margin-inline: 1px;
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 .urlbar-icon {
   width: calc(var(--urlbar-min-height) - 2px);
   height: calc(var(--urlbar-min-height) - 2px);
@@ -918,7 +918,7 @@
   animation-duration: 250ms;
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #urlbar-zoom-button {
   background-color: hsla(0,0%,0%,.05);
   border: 1px solid hsla(210,4%,50%,.3);

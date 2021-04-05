@@ -6,7 +6,7 @@
 
 %include ../../shared/menulist.inc.css
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 label {
   margin: 0 3px;
 }
@@ -59,7 +59,7 @@ label {
 }
 } /** END Proton **/
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :host {
   appearance: auto;
   -moz-default-appearance: menulist;

@@ -44,7 +44,7 @@
   @media not (-moz-os-version: windows-win7) {
     @media not (-moz-os-version: windows-win8) {
       @media (-moz-windows-default-theme) {
-        @supports not -moz-bool-pref("browser.proton.enabled") {
+        @media not (-moz-proton) {
         :root:not(:-moz-lwtheme) {
           background-color: hsl(0, 0%, 78%);
         }
@@ -78,7 +78,7 @@
         }
         } /*** end !proton ***/
 
-        @supports -moz-bool-pref("browser.proton.enabled") {
+        @media (-moz-proton) {
         @media (-moz-windows-accent-color-in-titlebar) {
           :root[sizemode=normal][tabsintitlebar] {
             border-top: .5px solid -moz-accent-color;
@@ -96,7 +96,7 @@
           opacity: .6;
         }
 
-        @supports -moz-bool-pref("browser.proton.enabled") {
+        @media (-moz-proton) {
         :root[tabsintitlebar] .tab-secondary-label:-moz-window-inactive {
           opacity: .6;
         }

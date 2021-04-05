@@ -54,7 +54,7 @@
   padding-inline-end: 59px;
 }
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 #downloadsHistory {
   padding-inline: 14px;
 }

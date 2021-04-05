@@ -154,7 +154,7 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media (-moz-proton-doorhangers) {
 :is(panel, menupopup)::part(arrow) {
   display: none;
 }
@@ -772,7 +772,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   }
 }
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
   /* The page actions menu is hidden by default, it is only shown in small
      windows as the overflow target of multiple page action buttons */
   #pageActionButton {
@@ -791,7 +791,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
     display: none;
   }
 
-  @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+  @media (-moz-proton-urlbar) {
     #pageActionButton[multiple-children] {
       visibility: visible;
     }
@@ -812,7 +812,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   }
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 @media (max-width: 550px) {
   #urlbar-container {
     min-width: calc(225px + 24px + 2 * var(--toolbarbutton-inner-padding));
@@ -1424,7 +1424,7 @@ toolbarpaletteitem > #stop-reload-button {
   visibility: visible;
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 /* These pin/unpin menu options should be removed after Proton is released */
 #pageActionContextMenu[state=builtInPinned] > .pageActionContextMenuItem.builtInPinned,
 #pageActionContextMenu[state=builtInUnpinned] > .pageActionContextMenuItem.builtInUnpinned,
@@ -1564,7 +1564,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   overflow-x: auto;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 .dialogBox {
   border-radius: 8px;
 }
@@ -1674,7 +1674,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
  * End Dialogs
  */
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 /* Password update/save doorhanger */
 #password-notification-username,
 #password-notification-password {

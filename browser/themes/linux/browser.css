@@ -30,13 +30,13 @@
   --chrome-content-separator-color: ThreeDShadow;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 :root:not(:-moz-lwtheme) {
   --focus-outline-color: -moz-accent-color;
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #tabbrowser-tabs {
   --tab-line-color: -moz-accent-color;
 }
@@ -207,7 +207,7 @@ menuitem.bookmark-item {
   --autocomplete-popup-highlight-color: HighlightText;
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 :root:not(:-moz-lwtheme) {
   --urlbar-popup-url-color: -moz-nativehyperlinktext;
 }
@@ -274,7 +274,7 @@ menuitem.bookmark-item {
   }
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 .keyboard-focused-tab > .tab-stack > .tab-content,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-content {
   outline: 1px dotted;
