@@ -5,11 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsIHTTPHeaderListener.idl",
     "nsIPluginDocument.idl",
     "nsIPluginHost.idl",
-    "nsIPluginInputStream.idl",
-    "nsIPluginInstanceOwner.idl",
     "nsIPluginTag.idl",
     "nspluginroot.idl",
 ]
@@ -18,51 +15,21 @@ XPIDL_MODULE = "plugin"
 
 EXPORTS += [
     "npapi.h",
-    "npfunctions.h",
-    "npruntime.h",
     "nptypes.h",
-    "nsJSNPRuntime.h",
     "nsNPAPIPluginInstance.h",
     "nsPluginHost.h",
-    "nsPluginInstanceOwner.h",
     "nsPluginLogging.h",
-    "nsPluginNativeWindow.h",
-    "nsPluginsCID.h",
-    "nsPluginsDir.h",
     "nsPluginTags.h",
 ]
 
 UNIFIED_SOURCES += [
-    "nsJSNPRuntime.cpp",
     "nsNPAPIPluginInstance.cpp",
-    "nsNPAPIPluginStreamListener.cpp",
-    "nsPluginInstanceOwner.cpp",
-    "nsPluginStreamListenerPeer.cpp",
     "nsPluginTags.cpp",
 ]
 
 SOURCES += [
-    "nsNPAPIPlugin.cpp",  # Conflict with X11 headers
     "nsPluginHost.cpp",  # Conflict with NS_NPAPIPLUGIN_CALLBACK
 ]
-
-if CONFIG["OS_ARCH"] == "WINNT":
-    UNIFIED_SOURCES += [
-        "nsPluginNativeWindowWin.cpp",
-        "nsPluginsDirWin.cpp",
-    ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    UNIFIED_SOURCES += [
-        "nsPluginNativeWindow.cpp",
-    ]
-    SOURCES += [
-        "nsPluginsDirDarwin.cpp",  # conflict with mozilla::EventPriority
-    ]
-else:
-    UNIFIED_SOURCES += [
-        "nsPluginNativeWindow.cpp",
-        "nsPluginsDirUnix.cpp",
-    ]
 
 XPCOM_MANIFESTS += [
     "components.conf",
@@ -70,7 +37,6 @@ XPCOM_MANIFESTS += [
 
 LOCAL_INCLUDES += [
     "/dom/base",
-    "/dom/plugins/ipc",
     "/layout/generic",
     "/layout/xul",
     "/netwerk/base",

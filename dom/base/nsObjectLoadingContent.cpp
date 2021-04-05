@@ -23,10 +23,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIOService.h"
 #include "nsIPermissionManager.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsPluginHost.h"
-#include "nsPluginInstanceOwner.h"
 #include "nsIHttpChannel.h"
-#include "nsJSNPRuntime.h"
 #include "nsINestedURI.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIURILoader.h"
@@ -107,8 +106,6 @@
 #    undef CreateEvent
 #  endif
 #endif  // XP_WIN
-
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 static const char kPrefYoutubeRewrite[] = "plugins.rewrite_youtube_embeds";
 static const char kPrefFavorFallbackMode[] = "plugins.favorfallback.mode";
@@ -497,26 +494,7 @@ void nsObjectLoadingContent::QueueCheckPluginStopEvent() {
 
 // Tedious syntax to create a plugin stream listener with checks and put it in
 // mFinalListener
-bool nsObjectLoadingContent::MakePluginListener() {
-  if (!mInstanceOwner) {
-    MOZ_ASSERT_UNREACHABLE("expecting a spawned plugin");
-    return false;
-  }
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  if (!pluginHost) {
-    MOZ_ASSERT_UNREACHABLE("No pluginHost");
-    return false;
-  }
-  NS_ASSERTION(!mFinalListener, "overwriting a final listener");
-  nsresult rv;
-  RefPtr<nsNPAPIPluginInstance> inst = mInstanceOwner->GetInstance();
-  nsCOMPtr<nsIStreamListener> finalListener;
-  rv = pluginHost->NewPluginStreamListener(mURI, inst,
-                                           getter_AddRefs(finalListener));
-  NS_ENSURE_SUCCESS(rv, false);
-  mFinalListener = finalListener;
-  return true;
-}
+bool nsObjectLoadingContent::MakePluginListener() { return false; }
 
 // Helper to spawn the frameloader.
 void nsObjectLoadingContent::SetupFrameLoader(int32_t aJSPluginId) {
@@ -580,15 +558,7 @@ void nsObjectLoadingContent::UnbindFromTree(bool aNullParent) {
   Document* ownerDoc = thisElement->OwnerDoc();
   ownerDoc->RemovePlugin(this);
 
-  /// XXX(johns): Do we want to somehow propogate the reparenting behavior to
-  ///             FakePlugin types as well?
-  if (mType == eType_Plugin && (mInstanceOwner || mInstantiating)) {
-    // we'll let the plugin continue to run at least until we get back to
-    // the event loop. If we get back to the event loop and the node
-    // has still not been added back to the document then we tear down the
-    // plugin
-    QueueCheckPluginStopEvent();
-  } else if (mType != eType_Image) {
+  if (mType != eType_Image) {
     // nsImageLoadingContent handles the image case.
     // Reset state and clear pending events
     /// XXX(johns): The implementation for GenericFrame notes that ideally we
@@ -632,7 +602,7 @@ nsObjectLoadingContent::~nsObjectLoadingContent() {
         "Should not be tearing down frame loaders at this point");
     mFrameLoader->Destroy();
   }
-  if (mInstanceOwner || mInstantiating) {
+  if (mInstantiating) {
     // This is especially bad as delayed stop will try to hold on to this
     // object...
     MOZ_ASSERT_UNREACHABLE(
@@ -643,137 +613,7 @@ nsObjectLoadingContent::~nsObjectLoadingContent() {
 }
 
 nsresult nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading) {
-  if (mInstanceOwner || mType != eType_Plugin || (mIsLoading != aIsLoading) ||
-      mInstantiating) {
-    // If we hit this assertion it's probably because LoadObject re-entered :(
-    //
-    // XXX(johns): This hackiness will go away in bug 767635
-    NS_ASSERTION(mIsLoading || !aIsLoading,
-                 "aIsLoading should only be true inside LoadObject");
-    return NS_OK;
-  }
-
-  mInstantiating = true;
-  AutoSetInstantiatingToFalse autoInstantiating(this);
-
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
-  nsCOMPtr<Document> doc = thisContent->GetComposedDoc();
-  if (!doc || !InActiveDocument(thisContent)) {
-    NS_ERROR(
-        "Shouldn't be calling "
-        "InstantiatePluginInstance without an active document");
-    return NS_ERROR_FAILURE;
-  }
-
-  // Instantiating an instance can result in script execution, which
-  // can destroy this DOM object. Don't allow that for the scope
-  // of this method.
-  nsCOMPtr<nsIObjectLoadingContent> kungFuDeathGrip = this;
-
-  // Flush layout so that the frame is created if possible and the plugin is
-  // initialized with the latest information.
-  doc->FlushPendingNotifications(FlushType::Layout);
-  // Flushing layout may have re-entered and loaded something underneath us
-  NS_ENSURE_TRUE(mInstantiating, NS_OK);
-
-  if (!thisContent->GetPrimaryFrame()) {
-    LOG(("OBJLC [%p]: Not instantiating plugin with no frame", this));
-    return NS_OK;
-  }
-
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-
-  if (!pluginHost) {
-    MOZ_ASSERT_UNREACHABLE("No pluginhost");
-    return NS_ERROR_FAILURE;
-  }
-
-  // If you add early return(s), be sure to balance this call to
-  // appShell->SuspendNative() with additional call(s) to
-  // appShell->ReturnNative().
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell) {
-    appShell->SuspendNative();
-  }
-
-  RefPtr<nsPluginInstanceOwner> newOwner;
-  nsresult rv = pluginHost->InstantiatePluginInstance(
-      mContentType, mURI.get(), this, getter_AddRefs(newOwner));
-
-  // XXX(johns): We don't suspend native inside stopping plugins...
-  if (appShell) {
-    appShell->ResumeNative();
-  }
-
-  if (!mInstantiating || NS_FAILED(rv)) {
-    LOG(
-        ("OBJLC [%p]: Plugin instantiation failed or re-entered, "
-         "killing old instance",
-         this));
-    // XXX(johns): This needs to be de-duplicated with DoStopPlugin, but we
-    //             don't want to touch the protochain or delayed stop.
-    //             (Bug 767635)
-    if (newOwner) {
-      RefPtr<nsNPAPIPluginInstance> inst = newOwner->GetInstance();
-      if (inst) {
-        pluginHost->StopPluginInstance(inst);
-      }
-      newOwner->Destroy();
-    }
-    return NS_OK;
-  }
-
-  mInstanceOwner = newOwner;
-
-  if (mInstanceOwner) {
-    RefPtr<nsNPAPIPluginInstance> inst = mInstanceOwner->GetInstance();
-
-    rv = inst->GetRunID(&mRunID);
-    mHasRunID = NS_SUCCEEDED(rv);
-  }
-
-  // Set up scripting interfaces.
-  NotifyContentObjectWrapper();
-
-  RefPtr<nsNPAPIPluginInstance> pluginInstance = GetPluginInstance();
-  if (pluginInstance) {
-    nsCOMPtr<nsIPluginTag> pluginTag;
-    pluginHost->GetPluginTagForInstance(pluginInstance,
-                                        getter_AddRefs(pluginTag));
-
-    uint32_t blockState = nsIBlocklistService::STATE_NOT_BLOCKED;
-    pluginTag->GetBlocklistState(&blockState);
-    if (blockState == nsIBlocklistService::STATE_OUTDATED) {
-      // Fire plugin outdated event if necessary
-      LOG(("OBJLC [%p]: Dispatching plugin outdated event for content\n",
-           this));
-      nsCOMPtr<nsIRunnable> ev =
-          new nsSimplePluginEvent(thisContent, u"PluginOutdated"_ns);
-      nsresult rv = NS_DispatchToCurrentThread(ev);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("failed to dispatch nsSimplePluginEvent");
-      }
-    }
-
-    // If we have a URI but didn't open a channel yet (eAllowPluginSkipChannel)
-    // or we did load with a channel but are re-instantiating, re-open the
-    // channel. OpenChannel() performs security checks, and this plugin has
-    // already passed content policy in LoadObject.
-    if ((mURI && !mChannelLoaded) || (mChannelLoaded && !aIsLoading)) {
-      NS_ASSERTION(!mChannel, "should not have an existing channel here");
-      // We intentionally ignore errors here, leaving it up to the plugin to
-      // deal with not having an initial stream.
-      OpenChannel();
-    }
-  }
-
-  nsCOMPtr<nsIRunnable> ev =
-      new nsSimplePluginEvent(thisContent, doc, u"PluginInstantiated"_ns);
-  NS_DispatchToCurrentThread(ev);
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 void nsObjectLoadingContent::GetPluginAttributes(
@@ -898,7 +738,7 @@ void nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged() {
 
   // If we have a plugin we want to queue an event to stop it unless we are
   // moved into an active document before returning to the event loop.
-  if (mInstanceOwner || mInstantiating) {
+  if (mInstantiating) {
     QueueCheckPluginStopEvent();
   }
   nsImageLoadingContent::NotifyOwnerDocumentActivityChanged();
@@ -913,25 +753,6 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest* aRequest) {
 
   if (aRequest != mChannel || !aRequest) {
     // happens when a new load starts before the previous one got here
-    return NS_BINDING_ABORTED;
-  }
-
-  // If we already switched to type plugin, this channel can just be passed to
-  // the final listener.
-  if (mType == eType_Plugin) {
-    if (!mInstanceOwner) {
-      // We drop mChannel when stopping plugins, so something is wrong
-      MOZ_ASSERT_UNREACHABLE(
-          "Opened a channel in plugin mode, but don't have "
-          "a plugin");
-      return NS_BINDING_ABORTED;
-    }
-    if (MakePluginListener()) {
-      return mFinalListener->OnStartRequest(aRequest);
-    }
-    MOZ_ASSERT_UNREACHABLE(
-        "Failed to create PluginStreamListener, aborting "
-        "channel");
     return NS_BINDING_ABORTED;
   }
 
@@ -1097,11 +918,7 @@ nsObjectLoadingContent::GetDisplayedType(uint32_t* aType) {
 }
 
 nsNPAPIPluginInstance* nsObjectLoadingContent::GetPluginInstance() {
-  if (!mInstanceOwner) {
-    return nullptr;
-  }
-
-  return mInstanceOwner->GetInstance();
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -2023,7 +1840,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
 
   // Sanity check: We shouldn't have any loaded resources, pending events, or
   // a final listener at this point
-  if (mFrameLoader || mPendingInstantiateEvent || mInstanceOwner ||
+  if (mFrameLoader || mPendingInstantiateEvent ||
       mPendingCheckPluginStopEvent || mFinalListener) {
     MOZ_ASSERT_UNREACHABLE("Trying to load new plugin with existing content");
     return NS_OK;
@@ -2157,7 +1974,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
   // If we didn't load anything, handle switching to fallback state
   if (mType == eType_Null) {
     LOG(("OBJLC [%p]: Loading fallback, type %u", this, fallbackType));
-    NS_ASSERTION(!mFrameLoader && !mInstanceOwner,
+    NS_ASSERTION(!mFrameLoader,
                  "switched to type null but also loaded something");
 
     // Don't fire error events if we're falling back to click-to-play or if we
@@ -2426,7 +2243,7 @@ void nsObjectLoadingContent::Destroy() {
     mFrameLoader = nullptr;
   }
 
-  if (mInstanceOwner || mInstantiating) {
+  if (mInstantiating) {
     QueueCheckPluginStopEvent();
   }
 
@@ -2479,13 +2296,7 @@ void nsObjectLoadingContent::UnloadObject(bool aResetState) {
 
   mScriptRequested = false;
 
-  if (mIsStopping) {
-    // The protochain is normally thrown out after a plugin stops, but if we
-    // re-enter while stopping a plugin and try to load something new, we need
-    // to throw away the old protochain in the nested unload.
-    TeardownProtoChain();
-    mIsStopping = false;
-  }
+  mIsStopping = false;
 
   mCachedAttributes.Clear();
   mCachedParameters.Clear();
@@ -2595,17 +2406,7 @@ void nsObjectLoadingContent::CreateStaticClone(
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::PluginDestroyed() {
-  // Called when our plugin is destroyed from under us, usually when reloading
-  // plugins in plugin host. Invalidate instance owner / prototype but otherwise
-  // don't take any action.
-  TeardownProtoChain();
-  if (mInstanceOwner) {
-    mInstanceOwner->Destroy();
-    mInstanceOwner = nullptr;
-  }
-  return NS_OK;
-}
+nsObjectLoadingContent::PluginDestroyed() { return NS_OK; }
 
 NS_IMETHODIMP
 nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
@@ -2674,16 +2475,12 @@ nsNPAPIPluginInstance* nsObjectLoadingContent::ScriptRequestPluginInstance(
       MOZ_ASSERT_UNREACHABLE("failed to dispatch PluginScripted event");
     }
     mScriptRequested = true;
-  } else if (callerIsContentJS && mType == eType_Plugin && !mInstanceOwner &&
+  } else if (callerIsContentJS && mType == eType_Plugin &&
              nsContentUtils::IsSafeToRunScript() &&
              InActiveDocument(thisContent)) {
     // If we're configured as a plugin in an active document and it's safe to
     // run scripts right now, try spawning synchronously
     SyncStartPluginInstance();
-  }
-
-  if (mInstanceOwner) {
-    return mInstanceOwner->GetInstance();
   }
 
   // Note that returning a null plugin is expected (and happens often)
@@ -2713,8 +2510,7 @@ nsObjectLoadingContent::SyncStartPluginInstance() {
 
 NS_IMETHODIMP
 nsObjectLoadingContent::AsyncStartPluginInstance() {
-  // OK to have an instance already or a pending spawn.
-  if (mInstanceOwner || mPendingInstantiateEvent) {
+  if (mPendingInstantiateEvent) {
     return NS_OK;
   }
 
@@ -2746,7 +2542,7 @@ void nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
   ObjectType oldType = mType;
   FallbackType oldFallbackType = mFallbackType;
 
-  NS_ASSERTION(!mInstanceOwner && !mFrameLoader && !mChannel,
+  NS_ASSERTION(!mFrameLoader && !mChannel,
                "LoadFallback called with loaded content");
 
   //
@@ -2813,49 +2609,6 @@ void nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
   NotifyStateChanged(oldType, oldState, oldFallbackType, false, true);
 }
 
-void nsObjectLoadingContent::DoStopPlugin(
-    nsPluginInstanceOwner* aInstanceOwner) {
-  // DoStopPlugin can process events -- There may be pending
-  // CheckPluginStopEvent events which can drop in underneath us and destroy the
-  // instance we are about to destroy. We prevent that with the mIsStopping
-  // flag.
-  if (mIsStopping) {
-    return;
-  }
-  mIsStopping = true;
-
-  RefPtr<nsPluginInstanceOwner> kungFuDeathGrip(aInstanceOwner);
-  if (mType == eType_FakePlugin) {
-    if (mFrameLoader) {
-      mFrameLoader->Destroy();
-      mFrameLoader = nullptr;
-    }
-  } else {
-    RefPtr<nsNPAPIPluginInstance> inst = aInstanceOwner->GetInstance();
-    if (inst) {
-#if defined(XP_MACOSX)
-      aInstanceOwner->HidePluginWindow();
-#endif
-
-      RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-      NS_ASSERTION(pluginHost, "No plugin host?");
-      pluginHost->StopPluginInstance(inst);
-    }
-  }
-
-  aInstanceOwner->Destroy();
-
-  // If we re-enter in plugin teardown UnloadObject will tear down the
-  // protochain -- the current protochain could be from a new, unrelated, load.
-  if (!mIsStopping) {
-    LOG(("OBJLC [%p]: Re-entered in plugin teardown", this));
-    return;
-  }
-
-  TeardownProtoChain();
-  mIsStopping = false;
-}
-
 NS_IMETHODIMP
 nsObjectLoadingContent::StopPluginInstance() {
   AUTO_PROFILER_LABEL("nsObjectLoadingContent::StopPluginInstance", OTHER);
@@ -2866,26 +2619,6 @@ nsObjectLoadingContent::StopPluginInstance() {
   // If we're currently instantiating, clearing this will cause
   // InstantiatePluginInstance's re-entrance check to destroy the created plugin
   mInstantiating = false;
-
-  if (!mInstanceOwner) {
-    return NS_OK;
-  }
-
-  if (mChannel) {
-    // The plugin has already used data from this channel, we'll need to
-    // re-open it to handle instantiating again, even if we don't invalidate
-    // our loaded state.
-    /// XXX(johns): Except currently, we don't, just leaving re-opening channels
-    ///             to plugins...
-    LOG(("OBJLC [%p]: StopPluginInstance - Closing used channel", this));
-    CloseChannel();
-  }
-
-  RefPtr<nsPluginInstanceOwner> ownerGrip(mInstanceOwner);
-  mInstanceOwner = nullptr;
-
-  // This can/will re-enter
-  DoStopPlugin(ownerGrip);
 
   return NS_OK;
 }
@@ -3316,52 +3049,6 @@ nsresult nsObjectLoadingContent::GetPluginJSObject(
   }
 
   return NS_OK;
-}
-
-void nsObjectLoadingContent::TeardownProtoChain() {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
-  NS_ENSURE_TRUE_VOID(thisContent->GetWrapper());
-
-  // We don't init the AutoJSAPI with our wrapper because we don't want it
-  // reporting errors to our window's onerror listeners.
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> obj(cx, thisContent->GetWrapper());
-  MOZ_ASSERT(obj);
-
-  JS::Rooted<JSObject*> proto(cx);
-  JSAutoRealm ar(cx, obj);
-
-  // Loop over the DOM element's JS object prototype chain and remove
-  // all JS objects of the class sNPObjectJSWrapperClass
-  DebugOnly<bool> removed = false;
-  while (obj) {
-    if (!::JS_GetPrototype(cx, obj, &proto)) {
-      return;
-    }
-    if (!proto) {
-      break;
-    }
-    // Unwrap while checking the class - if the prototype is a wrapper for
-    // an NP object, that counts too.
-    if (nsNPObjWrapper::IsWrapper(js::UncheckedUnwrap(proto))) {
-      // We found an NPObject on the proto chain, get its prototype...
-      if (!::JS_GetPrototype(cx, proto, &proto)) {
-        return;
-      }
-
-      MOZ_ASSERT(!removed, "more than one NPObject in prototype chain");
-      removed = true;
-
-      // ... and pull it out of the chain.
-      ::JS_SetPrototype(cx, obj, proto);
-    }
-
-    obj = proto;
-  }
 }
 
 bool nsObjectLoadingContent::DoResolve(

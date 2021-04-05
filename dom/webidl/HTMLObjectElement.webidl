@@ -195,13 +195,6 @@ interface mixin MozObjectLoadingContent {
   readonly attribute unsigned long pluginFallbackType;
 
   /**
-   * If this object currently owns a running plugin, regardless of whether or
-   * not one is pending spawn/despawn.
-   */
-  [ChromeOnly]
-  readonly attribute boolean hasRunningPlugin;
-
-  /**
    * Disable the use of fake plugins and reload the tag if necessary
    */
   [ChromeOnly, Throws]
