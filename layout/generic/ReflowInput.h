@@ -931,8 +931,7 @@ struct ReflowInput : public SizeComputationInput {
   // This calculates the size by using the resolved auto block size (from
   // non-auto block insets), according to the writing mode of current block.
   LogicalSize CalculateAbsoluteSizeWithResolvedAutoBlockSize(
-      nscoord aAutoBSize, bool aNeedsComputeInlineSizeByAspectRatio,
-      const LogicalSize& aTentativeComputedSize);
+      nscoord aAutoBSize, const LogicalSize& aTentativeComputedSize);
 
   void InitAbsoluteConstraints(nsPresContext* aPresContext,
                                const ReflowInput* aCBReflowInput,
