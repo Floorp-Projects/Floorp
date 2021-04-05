@@ -4147,10 +4147,8 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   arrayProto_ = arrayProto;
   arrayConstructor_ = arrayCtor;
   arrayConstructorShape_ = arrayCtor->lastProperty();
-#ifdef DEBUG
   arraySpeciesShape_ = speciesShape;
   canonicalSpeciesFunc_ = speciesFun;
-#endif
   arrayProtoShape_ = arrayProto->lastProperty();
   arrayProtoConstructorSlot_ = ctorShape->slot();
 }
@@ -4182,13 +4180,8 @@ bool js::ArraySpeciesLookup::isArrayStateStillSane() {
   }
 
   // Ensure the species getter contains the canonical @@species function.
-  // Note: This is currently guaranteed to be always true, because modifying
-  // the getter property implies a new shape is generated. If this ever
-  // changes, convert this assertion into an if-statement.
-  MOZ_ASSERT(arrayConstructor_->getGetter(arraySpeciesShape_) ==
-             canonicalSpeciesFunc_);
-
-  return true;
+  JSObject* getter = arrayConstructor_->getGetter(arraySpeciesShape_);
+  return getter == canonicalSpeciesFunc_;
 }
 
 bool js::ArraySpeciesLookup::tryOptimizeArray(JSContext* cx,
