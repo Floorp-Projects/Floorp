@@ -153,7 +153,6 @@
   "passwords.jsm": ["Password", "DumpPasswords"],
   "PdfJsNetwork.jsm": ["NetworkManager"],
   "PhoneNumberMetaData.jsm": ["PHONE_NUMBER_META_DATA"],
-  "PluginProvider.jsm": [],
   "PointerAdapter.jsm": ["PointerRelay", "PointerAdapter"],
   "policies.js": ["ErrorHandler", "SyncScheduler"],
   "PreferenceExperiments.jsm": ["PreferenceExperiments", "migrateStorage"],

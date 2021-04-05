@@ -6,9 +6,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIPluginTag;
-interface nsIVariant;
-
 [scriptable, uuid(a6dcc76e-9f62-4cc1-a470-b483a1a6f096)]
 interface nsIBlocklistService : nsISupports
 {
@@ -19,34 +16,9 @@ interface nsIBlocklistService : nsISupports
   const unsigned long STATE_SOFTBLOCKED = 1;
   // Indicates that the item should be blocked and never used.
   const unsigned long STATE_BLOCKED     = 2;
-  // Indicates that the item is considered outdated, and there is a known
-  // update available.
-  const unsigned long STATE_OUTDATED    = 3;
-  // Indicates that the item is vulnerable and there is an update.
-  const unsigned long STATE_VULNERABLE_UPDATE_AVAILABLE = 4;
-  // Indicates that the item is vulnerable and there is no update.
-  const unsigned long STATE_VULNERABLE_NO_UPDATE = 5;
 
   // Unused; Please increment if we add more blocklist states.
-  const unsigned long STATE_MAX = 6;
-
-  /**
-   * Determine the blocklist state of a plugin
-   * @param   plugin
-   *          The plugin to get the state for
-   * @param   appVersion
-   *          The version of the application we are checking in the blocklist.
-   *          If this parameter is null, the version of the running application
-   *          is used.
-   * @param   toolkitVersion
-   *          The version of the toolkit we are checking in the blocklist.
-   *          If this parameter is null, the version of the running toolkit
-   *          is used.
-   * @returns Promise that resolves to the STATE constant.
-   */
-  Promise getPluginBlocklistState(in nsIPluginTag plugin,
-                                  [optional] in AString appVersion,
-                                  [optional] in AString toolkitVersion);
+  const unsigned long STATE_MAX = 3;
 
   readonly attribute boolean isLoaded;
 };
