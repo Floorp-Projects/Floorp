@@ -207,7 +207,6 @@ PurgeTrackerService.prototype = {
           Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
           Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
           Ci.nsIClearDataService.CLEAR_EME |
-          Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
           Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES |
           Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
           Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |

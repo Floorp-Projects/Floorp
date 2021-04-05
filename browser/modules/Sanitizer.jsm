@@ -359,7 +359,6 @@ var Sanitizer = {
         await clearData(
           range,
           Ci.nsIClearDataService.CLEAR_COOKIES |
-            Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
             Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES
         );
         TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
@@ -656,9 +655,7 @@ var Sanitizer = {
     },
 
     pluginData: {
-      async clear(range) {
-        await clearData(range, Ci.nsIClearDataService.CLEAR_PLUGIN_DATA);
-      },
+      async clear(range) {},
     },
   },
 };
@@ -978,8 +975,7 @@ async function sanitizeSessionPrincipal(progress, principal) {
         Ci.nsIClearDataService.CLEAR_COOKIES |
         Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
         Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-        Ci.nsIClearDataService.CLEAR_EME |
-        Ci.nsIClearDataService.CLEAR_PLUGIN_DATA,
+        Ci.nsIClearDataService.CLEAR_EME,
       resolve
     );
   });
