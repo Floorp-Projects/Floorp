@@ -3279,8 +3279,7 @@ var addonTypes = [
     URI_EXTENSION_STRINGS,
     "type.extension.name",
     AddonManager.VIEW_TYPE_LIST,
-    4000,
-    AddonManager.TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL
+    4000
   ),
   new AddonManagerPrivate.AddonType(
     "theme",
@@ -3294,18 +3293,14 @@ var addonTypes = [
     URI_EXTENSION_STRINGS,
     "type.dictionary.name",
     AddonManager.VIEW_TYPE_LIST,
-    7000,
-    AddonManager.TYPE_UI_HIDE_EMPTY |
-      AddonManager.TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL
+    7000
   ),
   new AddonManagerPrivate.AddonType(
     "locale",
     URI_EXTENSION_STRINGS,
     "type.locale.name",
     AddonManager.VIEW_TYPE_LIST,
-    8000,
-    AddonManager.TYPE_UI_HIDE_EMPTY |
-      AddonManager.TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL
+    8000
   ),
 ];
 
