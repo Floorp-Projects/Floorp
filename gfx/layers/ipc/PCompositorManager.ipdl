@@ -15,7 +15,7 @@ using mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
-using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
+using mozilla::layers::CompositorOptions from "mozilla/layers/LayersMessageUtils.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MemoryReport from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::WebRenderError from "mozilla/webrender/WebRenderTypes.h";

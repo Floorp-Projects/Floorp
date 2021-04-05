@@ -58,7 +58,6 @@
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "npapi.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"

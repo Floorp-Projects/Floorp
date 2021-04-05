@@ -170,6 +170,7 @@
 #include "nsConsoleService.h"
 #include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
+#include "nsCRT.h"
 #include "nsDebugImpl.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDocShell.h"
@@ -3151,10 +3152,6 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     group->Subscribe(this);
   }
 
-  // Start up nsPluginHost and run FindPlugins to cache the plugin list.
-  // If this isn't our first content process, just send over cached list.
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  pluginHost->SendPluginsToContent(this);
   MaybeEnableRemoteInputEventQueue();
 
   return true;
@@ -6311,12 +6308,6 @@ bool ContentParent::DeallocPSessionStorageObserverParent(
   MOZ_ASSERT(aActor);
 
   return mozilla::dom::DeallocPSessionStorageObserverParent(aActor);
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvMaybeReloadPlugins() {
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  pluginHost->ReloadPlugins();
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvDeviceReset() {
