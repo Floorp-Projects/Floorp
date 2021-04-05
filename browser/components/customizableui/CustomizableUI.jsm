@@ -2083,14 +2083,16 @@ var CustomizableUIInternal = {
       this.showWidgetView(aWidget, aNode, aEvent);
     } else if (aWidget.type == "button-and-view") {
       // Do the command if we're in the toolbar and the button was clicked.
-      // Otherwise, open the view. There is no way to trigger the command while
+      // Otherwise, including when we have currently overflowed out of the
+      // toolbar, open the view. There is no way to trigger the command while
       // the widget is in the panel, by design.
       let button = aNode.firstElementChild;
       let area = this.getPlacementOfWidget(aNode.id).area;
       let areaType = CustomizableUI.getAreaType(area);
       if (
         areaType == CustomizableUI.TYPE_TOOLBAR &&
-        button.contains(aEvent.target)
+        button.contains(aEvent.target) &&
+        !aNode.hasAttribute("overflowedItem")
       ) {
         this.doWidgetCommand(aWidget, aNode, aEvent);
       } else {
