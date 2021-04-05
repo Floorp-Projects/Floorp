@@ -15,7 +15,6 @@
 #  include "mozilla/gfx/DeviceManagerDx.h"  // for DeviceManagerDx
 #  include "mozilla/layers/ImageDataSerializer.h"
 #endif
-#include "mozilla/D3DMessageUtils.h"  // for DxgiAdapterDesc
 #include "mozilla/dom/WebGLParent.h"
 #include "mozilla/ipc/Transport.h"           // for Transport
 #include "mozilla/layers/AnimationHelper.h"  // for CompositorAnimationStorage
@@ -682,63 +681,6 @@ void ContentCompositorBridgeParent::ObserveLayersUpdate(
   }
 
   Unused << state->mParent->SendObserveLayersUpdate(aLayersId, aEpoch, aActive);
-}
-
-static inline bool AllowDirectDXGISurfaceDrawing() {
-  if (!StaticPrefs::dom_ipc_plugins_asyncdrawing_enabled()) {
-    return false;
-  }
-#if defined(XP_WIN)
-  gfx::DeviceManagerDx* dm = gfx::DeviceManagerDx::Get();
-  MOZ_ASSERT(dm);
-  if (!dm || !dm->GetCompositorDevice() || !dm->TextureSharingWorks()) {
-    return false;
-  }
-  return true;
-#else
-  return false;
-#endif
-}
-
-mozilla::ipc::IPCResult
-ContentCompositorBridgeParent::RecvSupportsAsyncDXGISurface(bool* value) {
-  *value = AllowDirectDXGISurfaceDrawing();
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvPreferredDXGIAdapter(
-    DxgiAdapterDesc* aOutDesc) {
-  PodZero(aOutDesc);
-#ifdef XP_WIN
-  if (!AllowDirectDXGISurfaceDrawing()) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  RefPtr<ID3D11Device> device =
-      gfx::DeviceManagerDx::Get()->GetCompositorDevice();
-  if (!device) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  RefPtr<IDXGIDevice> dxgi;
-  if (FAILED(device->QueryInterface(__uuidof(IDXGIDevice),
-                                    getter_AddRefs(dxgi))) ||
-      !dxgi) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  RefPtr<IDXGIAdapter> adapter;
-  if (FAILED(dxgi->GetAdapter(getter_AddRefs(adapter))) || !adapter) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  DXGI_ADAPTER_DESC desc;
-  if (FAILED(adapter->GetDesc(&desc))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  *aOutDesc = DxgiAdapterDesc::From(desc);
-#endif
-  return IPC_OK();
 }
 
 already_AddRefed<dom::PWebGLParent>

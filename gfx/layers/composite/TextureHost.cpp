@@ -355,19 +355,6 @@ already_AddRefed<TextureHost> CreateBackendIndependentTextureHost(
       break;
     }
     case SurfaceDescriptor::TSurfaceDescriptorGPUVideo: {
-      if (aDesc.get_SurfaceDescriptorGPUVideo().type() ==
-          SurfaceDescriptorGPUVideo::TSurfaceDescriptorPlugin) {
-        MOZ_ASSERT(aDeallocator && aDeallocator->UsesImageBridge());
-        auto ibpBase = static_cast<ImageBridgeParent*>(aDeallocator);
-        result =
-            ibpBase->LookupTextureHost(aDesc.get_SurfaceDescriptorGPUVideo());
-        if (!result) {
-          return nullptr;
-        }
-        MOZ_ASSERT(aFlags == result->GetFlags());
-        break;
-      }
-
       MOZ_ASSERT(aDesc.get_SurfaceDescriptorGPUVideo().type() ==
                  SurfaceDescriptorGPUVideo::TSurfaceDescriptorRemoteDecoder);
       result = GPUVideoTextureHost::CreateFromDescriptor(

@@ -1241,12 +1241,6 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
 
   const auto& desc = data->SD();
 
-  if (desc.type() ==
-      layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorPlugin) {
-    MOZ_ASSERT_UNREACHABLE(
-        "BlitImage does not support plugin surface descriptors");
-    return false;
-  }
   MOZ_ASSERT(
       desc.type() ==
       layers::SurfaceDescriptorGPUVideo::TSurfaceDescriptorRemoteDecoder);
