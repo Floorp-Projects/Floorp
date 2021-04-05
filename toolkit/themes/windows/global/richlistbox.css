@@ -22,7 +22,7 @@ richlistitem[selected="true"] {
   color: -moz-cellhighlighttext;
 }
 
-richlistbox:focus > richlistitem[selected="true"] {
+richlistbox:where(:focus) > richlistitem[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
