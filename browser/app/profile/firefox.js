@@ -349,6 +349,7 @@ pref("browser.urlbar.suggest.searches",             true);
 pref("browser.urlbar.suggest.topsites",             true);
 pref("browser.urlbar.suggest.engines",              true);
 pref("browser.urlbar.suggest.quicksuggest",         true);
+pref("browser.urlbar.suggest.calculator",           false);
 
 // Whether the QuickSuggest experiment is enabled.
 pref("browser.urlbar.quicksuggest.enabled", false);

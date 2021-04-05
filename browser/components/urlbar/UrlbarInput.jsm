@@ -1959,6 +1959,8 @@ class UrlbarInput {
       }
       case UrlbarUtils.RESULT_TYPE.OMNIBOX:
         return result.payload.content;
+      case UrlbarUtils.RESULT_TYPE.DYNAMIC:
+        return result.payload.input || "";
     }
 
     try {
