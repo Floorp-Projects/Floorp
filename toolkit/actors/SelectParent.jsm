@@ -108,12 +108,15 @@ var SelectParentHelper = {
       selectStyle["background-color"] = uaStyle["background-color"];
     }
 
-    let selectBackgroundSet =
-      selectStyle["background-color"] != uaStyle["background-color"];
-
     if (selectStyle.color == selectStyle["background-color"]) {
       selectStyle.color = uaStyle.color;
     }
+
+    // We ensure that we set the content background if the color changes as
+    // well, to prevent contrast issues.
+    let selectBackgroundSet =
+      selectStyle["background-color"] != uaStyle["background-color"] ||
+      selectStyle.color != uaStyle.color;
 
     if (customStylingEnabled) {
       if (selectStyle["text-shadow"] != "none") {
@@ -127,14 +130,22 @@ var SelectParentHelper = {
 
       let addedRule = false;
       for (let property of SUPPORTED_SELECT_PROPERTIES) {
-        if (property == "direction") {
-          // Handled above, or before.
-          continue;
-        }
-        if (
-          !selectStyle[property] ||
-          selectStyle[property] == uaStyle[property]
-        ) {
+        let shouldSkip = (function() {
+          if (property == "direction") {
+            // Handled elsewhere.
+            return true;
+          }
+          if (!selectStyle[property]) {
+            return true;
+          }
+          if (property == "background-color") {
+            // This also depends on whether "color" is set.
+            return !selectBackgroundSet;
+          }
+          return selectStyle[property] == uaStyle[property];
+        })();
+
+        if (shouldSkip) {
           continue;
         }
         if (!addedRule) {
