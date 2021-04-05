@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals catcher */
+/* globals catcher, browser, navigator */
 
 "use strict";
 
@@ -10,9 +10,11 @@ this.deviceInfo = (function() {
   const manifest = browser.runtime.getManifest();
 
   let platformInfo = {};
-  catcher.watchPromise(browser.runtime.getPlatformInfo().then((info) => {
-    platformInfo = info;
-  }));
+  catcher.watchPromise(
+    browser.runtime.getPlatformInfo().then(info => {
+      platformInfo = info;
+    })
+  );
 
   return function deviceInfo() {
     let match = navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9.]{1,1000})/);
@@ -34,5 +36,4 @@ this.deviceInfo = (function() {
       appName,
     };
   };
-
 })();
