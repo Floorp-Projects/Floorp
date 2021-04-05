@@ -7,7 +7,8 @@
 "use strict";
 
 this.randomString = function randomString(length, chars) {
-  const randomStringChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const randomStringChars =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   chars = chars || randomStringChars;
   let result = "";
   for (let i = 0; i < length; i++) {
