@@ -14,8 +14,6 @@ toolkit.jar:
   content/mozapps/extensions/abuse-report-frame.html            (content/abuse-report-frame.html)
   content/mozapps/extensions/abuse-report-panel.css             (content/abuse-report-panel.css)
   content/mozapps/extensions/abuse-report-panel.js              (content/abuse-report-panel.js)
-  content/mozapps/extensions/blocklist.xhtml                    (content/blocklist.xhtml)
-  content/mozapps/extensions/blocklist.js                       (content/blocklist.js)
   content/mozapps/extensions/default-theme.svg                  (content/default-theme.svg)
   content/mozapps/extensions/drag-drop-addon-installer.js       (content/drag-drop-addon-installer.js)
   content/mozapps/extensions/firefox-compact-dark.svg           (content/firefox-compact-dark.svg)

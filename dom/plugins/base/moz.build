@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    "nsIPluginHost.idl",
     "nsIPluginTag.idl",
     "nspluginroot.idl",
 ]
@@ -28,10 +27,6 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     "nsPluginHost.cpp",  # Conflict with NS_NPAPIPLUGIN_CALLBACK
-]
-
-XPCOM_MANIFESTS += [
-    "components.conf",
 ]
 
 LOCAL_INCLUDES += [

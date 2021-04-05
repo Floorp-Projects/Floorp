@@ -10,7 +10,6 @@
 #include "nsIWebNavigation.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIPluginHost.h"
 #include "nsIDocShell.h"
 #include "nsContentUtils.h"
 #include "imgLoader.h"
@@ -52,40 +51,7 @@ uint32_t nsWebNavigationInfo::IsTypeSupported(const nsACString& aType,
   }
 
   const nsCString& flatType = PromiseFlatCString(aType);
-  uint32_t result = IsTypeSupportedInternal(flatType);
-  if (result != nsIWebNavigationInfo::UNSUPPORTED) {
-    return result;
-  }
-
-  // As of FF 52, we only support flash and test plugins, so if the mime types
-  // don't match for that, exit before we start loading plugins.
-  if (!nsPluginHost::CanUsePluginForMIMEType(aType)) {
-    return nsIWebNavigationInfo::UNSUPPORTED;
-  }
-
-  // If this request is for a docShell that isn't going to allow plugins,
-  // there's no need to try and find a plugin to handle it.
-  if (!aPluginsAllowed) {
-    return nsIWebNavigationInfo::UNSUPPORTED;
-  }
-
-  // Try reloading plugins in case they've changed.
-  nsCOMPtr<nsIPluginHost> pluginHost =
-      do_GetService(MOZ_PLUGIN_HOST_CONTRACTID);
-  if (pluginHost) {
-    // false will ensure that currently running plugins will not
-    // be shut down
-    nsresult rv = pluginHost->ReloadPlugins();
-    if (NS_SUCCEEDED(rv)) {
-      // OK, we reloaded plugins and there were new ones
-      // (otherwise NS_ERROR_PLUGINS_PLUGINSNOTCHANGED would have
-      // been returned).  Try checking whether we can handle the
-      // content now.
-      return IsTypeSupportedInternal(flatType);
-    }
-  }
-
-  return nsIWebNavigationInfo::UNSUPPORTED;
+  return IsTypeSupportedInternal(flatType);
 }
 
 uint32_t nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType) {
