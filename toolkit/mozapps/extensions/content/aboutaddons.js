@@ -104,7 +104,6 @@ const BUILTIN_THEME_PREVIEWS = new Map([
 ]);
 
 const PERMISSION_MASKS = {
-  "ask-to-activate": AddonManager.PERM_CAN_ASK_TO_ACTIVATE,
   enable: AddonManager.PERM_CAN_ENABLE,
   "always-activate": AddonManager.PERM_CAN_ENABLE,
   disable: AddonManager.PERM_CAN_DISABLE,
@@ -2190,7 +2189,6 @@ class PluginOptions extends AddonOptions {
 
   setElementState(el, card, addon) {
     const userDisabledStates = {
-      "ask-to-activate": AddonManager.STATE_ASK_TO_ACTIVATE,
       "always-activate": false,
       "never-activate": true,
     };
@@ -3062,11 +3060,6 @@ class AddonCard extends HTMLElement {
             }
           } else {
             await addon.disable();
-          }
-          break;
-        case "ask-to-activate":
-          if (hasPermission(addon, "ask-to-activate")) {
-            addon.userDisabled = AddonManager.STATE_ASK_TO_ACTIVATE;
           }
           break;
         case "always-activate":
