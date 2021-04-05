@@ -11,12 +11,9 @@
 #include "mozilla/plugins/PPluginInstanceChild.h"
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
-#include "mozilla/plugins/PPluginSurfaceChild.h"
 #include "mozilla/ipc/CrossProcessMutex.h"
 #include "nsRefPtrHashtable.h"
-#if defined(OS_WIN)
-#  include "mozilla/gfx/SharedDIBWin.h"
-#elif defined(MOZ_WIDGET_COCOA)
+#if defined(MOZ_WIDGET_COCOA)
 #  include "PluginUtilsOSX.h"
 #  include "mozilla/gfx/QuartzSupport.h"
 #  include "base/timer.h"
@@ -94,16 +91,6 @@ class PluginInstanceChild : public PPluginInstanceChild {
 
   virtual void DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                                 const NPRemoteWindow& aWindow, bool aIsAsync);
-
-  PPluginSurfaceChild* AllocPPluginSurfaceChild(
-      const WindowsSharedMemoryHandle&, const gfx::IntSize&, const bool&) {
-    return new PPluginSurfaceChild();
-  }
-
-  bool DeallocPPluginSurfaceChild(PPluginSurfaceChild* s) {
-    delete s;
-    return true;
-  }
 
   mozilla::ipc::IPCResult AnswerPaint(const NPRemoteEvent& event,
                                       int16_t* handled) {
@@ -511,12 +498,6 @@ class PluginInstanceChild : public PPluginInstanceChild {
   // copy of the background pixels if available, and fall back on
   // alpha recovery otherwise.
   RefPtr<gfxASurface> mBackground;
-
-#ifdef XP_WIN
-  // These actors mirror mCurrentSurface/mBackSurface
-  PPluginSurfaceChild* mCurrentSurfaceActor;
-  PPluginSurfaceChild* mBackSurfaceActor;
-#endif
 
   // Accumulated invalidate rect, while back buffer is not accessible,
   // in plugin coordinates.
