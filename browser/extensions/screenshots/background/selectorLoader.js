@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals catcher, communication, log, main */
+/* globals browser, catcher, communication, log, main */
 
 "use strict";
 
@@ -41,69 +41,83 @@ this.selectorLoader = (function() {
   ];
 
   exports.unloadIfLoaded = function(tabId) {
-    return browser.tabs.executeScript(tabId, {
-      code: "this.selectorLoader && this.selectorLoader.unloadModules()",
-      runAt: "document_start",
-    }).then(result => {
-      return result && result[0];
-    });
+    return browser.tabs
+      .executeScript(tabId, {
+        code: "this.selectorLoader && this.selectorLoader.unloadModules()",
+        runAt: "document_start",
+      })
+      .then(result => {
+        return result && result[0];
+      });
   };
 
   exports.testIfLoaded = function(tabId) {
     if (loadingTabs.has(tabId)) {
       return true;
     }
-    return browser.tabs.executeScript(tabId, {
-      code: "!!this.selectorLoader",
-      runAt: "document_start",
-    }).then(result => {
-      return result && result[0];
-    });
+    return browser.tabs
+      .executeScript(tabId, {
+        code: "!!this.selectorLoader",
+        runAt: "document_start",
+      })
+      .then(result => {
+        return result && result[0];
+      });
   };
 
   const loadingTabs = new Set();
 
   exports.loadModules = function(tabId) {
     loadingTabs.add(tabId);
-    catcher.watchPromise(browser.tabs.executeScript(tabId, {
-      code: `window.hasAnyShots = ${!!main.hasAnyShots()};`,
-      runAt: "document_start",
-    }).then(() => {
-      return executeModules(tabId, standardScripts.concat(selectorScripts));
-    }).finally(() => {
-      loadingTabs.delete(tabId);
-    }));
+    catcher.watchPromise(
+      browser.tabs
+        .executeScript(tabId, {
+          code: `window.hasAnyShots = ${!!main.hasAnyShots()};`,
+          runAt: "document_start",
+        })
+        .then(() => {
+          return executeModules(tabId, standardScripts.concat(selectorScripts));
+        })
+        .finally(() => {
+          loadingTabs.delete(tabId);
+        })
+    );
   };
 
   function executeModules(tabId, scripts) {
     let lastPromise = Promise.resolve(null);
-    scripts.forEach((file) => {
+    scripts.forEach(file => {
       lastPromise = lastPromise.then(() => {
-        return browser.tabs.executeScript(tabId, {
-          file,
-          runAt: "document_start",
-        }).catch((error) => {
-          log.error("error in script:", file, error);
-          error.scriptName = file;
-          throw error;
-        });
+        return browser.tabs
+          .executeScript(tabId, {
+            file,
+            runAt: "document_start",
+          })
+          .catch(error => {
+            log.error("error in script:", file, error);
+            error.scriptName = file;
+            throw error;
+          });
       });
     });
-    return lastPromise.then(() => {
-      log.debug("finished loading scripts:", scripts.join(" "));
-    },
-    (error) => {
-      exports.unloadIfLoaded(tabId);
-      catcher.unhandled(error);
-      throw error;
-    });
+    return lastPromise.then(
+      () => {
+        log.debug("finished loading scripts:", scripts.join(" "));
+      },
+      error => {
+        exports.unloadIfLoaded(tabId);
+        catcher.unhandled(error);
+        throw error;
+      }
+    );
   }
 
   exports.unloadModules = function() {
     const watchFunction = catcher.watchFunction;
     const allScripts = standardScripts.concat(selectorScripts);
-    const moduleNames = allScripts.map((filename) =>
-      filename.replace(/^.*\//, "").replace(/\.js$/, ""));
+    const moduleNames = allScripts.map(filename =>
+      filename.replace(/^.*\//, "").replace(/\.js$/, "")
+    );
     moduleNames.reverse();
     for (const moduleName of moduleNames) {
       const moduleObj = global[moduleName];
@@ -120,13 +134,12 @@ this.selectorLoader = (function() {
   };
 
   exports.toggle = function(tabId) {
-    return exports.unloadIfLoaded(tabId)
-      .then(wasLoaded => {
-        if (!wasLoaded) {
-          exports.loadModules(tabId);
-        }
-        return !wasLoaded;
-      });
+    return exports.unloadIfLoaded(tabId).then(wasLoaded => {
+      if (!wasLoaded) {
+        exports.loadModules(tabId);
+      }
+      return !wasLoaded;
+    });
   };
 
   return exports;
