@@ -38,7 +38,6 @@ const TEST_ACTION_UNKNOWN = 0;
 const TEST_ACTION_CANCELLED = 1;
 const TEST_ACTION_TERMSCRIPT = 2;
 const TEST_ACTION_TERMPLUGIN = 3;
-const TEST_ACTION_TERMGLOBAL = 4;
 const SLOW_SCRIPT = 1;
 const PLUGIN_HANG = 2;
 const ADDON_HANG = 3;
@@ -100,10 +99,6 @@ TestHangReport.prototype = {
 
   terminatePlugin() {
     this._resolver(TEST_ACTION_TERMPLUGIN);
-  },
-
-  terminateGlobal() {
-    this._resolver(TEST_ACTION_TERMGLOBAL);
   },
 
   isReportForBrowserOrChildren(aFrameLoader) {
@@ -328,8 +323,8 @@ add_task(async function terminateAtShutdown() {
   );
   is(
     addonAction,
-    TEST_ACTION_TERMGLOBAL,
-    "On shutdown, should have terminated global for add-on hang."
+    TEST_ACTION_TERMSCRIPT,
+    "On shutdown, should have terminated script for add-on hang."
   );
 
   // ProcessHangMonitor should now be in the "shutting down" state,
@@ -359,8 +354,8 @@ add_task(async function terminateAtShutdown() {
   );
   is(
     addonAction2,
-    TEST_ACTION_TERMGLOBAL,
-    "On shutdown, should have terminated global for add-on hang."
+    TEST_ACTION_TERMSCRIPT,
+    "On shutdown, should have terminated script for add-on hang."
   );
 
   ProcessHangMonitor._shuttingDown = false;
@@ -430,8 +425,8 @@ add_task(async function terminateNoWindows() {
   );
   is(
     addonAction,
-    TEST_ACTION_TERMGLOBAL,
-    "With no open windows, should have terminated global for add-on hang."
+    TEST_ACTION_TERMSCRIPT,
+    "With no open windows, should have terminated script for add-on hang."
   );
 
   // ProcessHangMonitor should notice we're in the "no windows" state,
@@ -461,8 +456,8 @@ add_task(async function terminateNoWindows() {
   );
   is(
     addonAction2,
-    TEST_ACTION_TERMGLOBAL,
-    "With no open windows, should have terminated global for add-on hang."
+    TEST_ACTION_TERMSCRIPT,
+    "With no open windows, should have terminated script for add-on hang."
   );
 
   document.documentElement.setAttribute("windowtype", "navigator:browser");
@@ -519,8 +514,8 @@ add_task(async function terminateClosedWindow() {
   );
   is(
     addonAction,
-    TEST_ACTION_TERMGLOBAL,
-    "When closing window, should have terminated global for add-on hang."
+    TEST_ACTION_TERMSCRIPT,
+    "When closing window, should have terminated script for add-on hang."
   );
 });
 
