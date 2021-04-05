@@ -36,7 +36,6 @@ class LayerTransactionParent final : public PLayerTransactionParent,
                                      public mozilla::ipc::IShmemAllocator {
   typedef nsTArray<Edit> EditArray;
   typedef nsTArray<OpDestroy> OpDestroyArray;
-  typedef nsTArray<PluginWindowData> PluginsArray;
 
   friend class PLayerTransactionParent;
 

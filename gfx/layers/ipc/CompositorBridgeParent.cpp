@@ -814,7 +814,7 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
     bool aScheduleComposite, uint32_t aPaintSequenceNumber,
     bool aIsRepeatTransaction, bool aHitTestUpdate) {
   if (!aIsRepeatTransaction && mLayerManager && mLayerManager->GetRoot()) {
-    AutoResolveRefLayers resolve(mCompositionManager, this, nullptr);
+    AutoResolveRefLayers resolve(mCompositionManager, this);
 
     if (mApzUpdater) {
       mApzUpdater->UpdateFocusState(mRootLayerTreeID, aId, aFocusTarget);

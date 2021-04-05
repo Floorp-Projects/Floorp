@@ -531,19 +531,6 @@ bool ShadowLayerForwarder::InWorkerThread() {
   return GetTextureForwarder()->GetThread()->IsOnCurrentThread();
 }
 
-void ShadowLayerForwarder::StorePluginWidgetConfigurations(
-    const nsTArray<nsIWidget::Configuration>& aConfigurations) {
-  // Cache new plugin widget configs here until we call update, at which
-  // point this data will get shipped over to chrome.
-  mPluginWindowData.Clear();
-  for (uint32_t idx = 0; idx < aConfigurations.Length(); idx++) {
-    const nsIWidget::Configuration& configuration = aConfigurations[idx];
-    mPluginWindowData.AppendElement(
-        PluginWindowData(configuration.mWindowID, configuration.mClipRegion,
-                         configuration.mBounds, configuration.mVisible));
-  }
-}
-
 void ShadowLayerForwarder::SendPaintTime(TransactionId aId,
                                          TimeDuration aPaintTime) {
   if (!IPCOpen() || !mShadowManager->SendPaintTime(aId, aPaintTime)) {
@@ -684,7 +671,6 @@ bool ShadowLayerForwarder::EndTransaction(
   info.toDestroy() = mTxn->mDestroyedActors.Clone();
   info.fwdTransactionId() = GetFwdTransactionId();
   info.id() = aId;
-  info.plugins() = mPluginWindowData.Clone();
   info.isFirstPaint() = mIsFirstPaint;
   info.focusTarget() = mFocusTarget;
   info.scheduleComposite() = aScheduleComposite;
