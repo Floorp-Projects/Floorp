@@ -19,6 +19,7 @@ const CANONICAL_CONTENT = "success";
 const CANONICAL_URL = "data:text/plain;charset=utf-8," + CANONICAL_CONTENT;
 const CANONICAL_URL_REDIRECTED = "data:text/plain;charset=utf-8,redirected";
 const PORTAL_NOTIFICATION_VALUE = "captive-portal-detected";
+const BAD_CERT_PAGE = "https://expired.example.com/";
 
 async function setupPrefsAndRecentWindowBehavior() {
   await SpecialPowers.pushPrefEnv({
@@ -211,4 +212,61 @@ async function openWindowAndWaitForFocus() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await waitForBrowserWindowActive(win);
   return win;
+}
+
+async function openCaptivePortalErrorTab() {
+  // Open a page with a cert error.
+  let browser;
+  let certErrorLoaded;
+  let errorTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    () => {
+      let tab = BrowserTestUtils.addTab(gBrowser, BAD_CERT_PAGE);
+      gBrowser.selectedTab = tab;
+      browser = gBrowser.selectedBrowser;
+      certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+      return tab;
+    },
+    false
+  );
+  await certErrorLoaded;
+  info("A cert error page was opened");
+  await SpecialPowers.spawn(errorTab.linkedBrowser, [], async () => {
+    let doc = content.document;
+    let loginButton = doc.getElementById("openPortalLoginPageButton");
+    await ContentTaskUtils.waitForCondition(
+      () => loginButton && doc.body.className == "captiveportal",
+      "Captive portal error page UI is visible"
+    );
+  });
+  info("Captive portal error page UI is visible");
+
+  return errorTab;
+}
+
+async function openCaptivePortalLoginTab(
+  errorTab,
+  LOGIN_PAGE_URL = CANONICAL_URL
+) {
+  let portalTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    LOGIN_PAGE_URL,
+    true
+  );
+
+  await SpecialPowers.spawn(errorTab.linkedBrowser, [], async () => {
+    let doc = content.document;
+    let loginButton = doc.getElementById("openPortalLoginPageButton");
+    info("Click on the login button on the captive portal error page");
+    await EventUtils.synthesizeMouseAtCenter(loginButton, {}, content);
+  });
+
+  let portalTab = await portalTabPromise;
+  is(
+    gBrowser.selectedTab,
+    portalTab,
+    "Captive Portal login page is now open in a new foreground tab."
+  );
+
+  return portalTab;
 }

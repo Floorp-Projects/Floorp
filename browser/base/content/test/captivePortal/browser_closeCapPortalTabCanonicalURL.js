@@ -5,7 +5,6 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const LOGIN_LINK = `<html><body><a href="/unlock">login</a></body></html>`;
-const BAD_CERT_PAGE = "https://expired.example.com/";
 const LOGIN_URL = "http://localhost:8080/login";
 const CANONICAL_SUCCESS_URL = "http://localhost:8080/success";
 const CPS = Cc["@mozilla.org/network/captive-portal-service;1"].getService(
@@ -14,62 +13,6 @@ const CPS = Cc["@mozilla.org/network/captive-portal-service;1"].getService(
 
 let server;
 let loginPageShown = false;
-
-async function openCaptivePortalErrorTab() {
-  await portalDetected();
-
-  // Open a page with a cert error.
-  let browser;
-  let certErrorLoaded;
-  let errorTab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    () => {
-      let tab = BrowserTestUtils.addTab(gBrowser, BAD_CERT_PAGE);
-      gBrowser.selectedTab = tab;
-      browser = gBrowser.selectedBrowser;
-      certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
-      return tab;
-    },
-    false
-  );
-  await certErrorLoaded;
-  info("A cert error page was opened");
-  await SpecialPowers.spawn(errorTab.linkedBrowser, [], async () => {
-    let doc = content.document;
-    let loginButton = doc.getElementById("openPortalLoginPageButton");
-    await ContentTaskUtils.waitForCondition(
-      () => loginButton && doc.body.className == "captiveportal",
-      "Captive portal error page UI is visible"
-    );
-  });
-  info("Captive portal error page UI is visible");
-
-  return errorTab;
-}
-
-async function openCaptivePortalLoginTab(errorTab) {
-  let portalTabPromise = BrowserTestUtils.waitForNewTab(
-    gBrowser,
-    LOGIN_URL,
-    true
-  );
-
-  await SpecialPowers.spawn(errorTab.linkedBrowser, [], async () => {
-    let doc = content.document;
-    let loginButton = doc.getElementById("openPortalLoginPageButton");
-    info("Click on the login button on the captive portal error page");
-    await EventUtils.synthesizeMouseAtCenter(loginButton, {}, content);
-  });
-
-  let portalTab = await portalTabPromise;
-  is(
-    gBrowser.selectedTab,
-    portalTab,
-    "Captive Portal login page is now open in a new foreground tab."
-  );
-
-  return portalTab;
-}
 
 function redirectHandler(request, response) {
   if (loginPageShown) {
@@ -113,8 +56,9 @@ add_task(async function setup() {
 // sucess/abort events are fired, assuming the tab has already redirected
 // to the canonical URL before they are fired.
 add_task(async function checkCaptivePortalTabCloseOnCanonicalURL_one() {
+  await portalDetected();
   let errorTab = await openCaptivePortalErrorTab();
-  let tab = await openCaptivePortalLoginTab(errorTab);
+  let tab = await openCaptivePortalLoginTab(errorTab, LOGIN_URL);
   let browser = tab.linkedBrowser;
 
   let redirectedToCanonicalURL = BrowserTestUtils.browserLoaded(
@@ -159,8 +103,9 @@ add_task(async function checkCaptivePortalTabCloseOnCanonicalURL_one() {
 // event handlers are executed.
 add_task(async function checkCaptivePortalTabCloseOnCanonicalURL_two() {
   loginPageShown = false;
+  await portalDetected();
   let errorTab = await openCaptivePortalErrorTab();
-  let tab = await openCaptivePortalLoginTab(errorTab);
+  let tab = await openCaptivePortalLoginTab(errorTab, LOGIN_URL);
   let browser = tab.linkedBrowser;
 
   let redirectedToCanonicalURL = BrowserTestUtils.waitForLocationChange(
