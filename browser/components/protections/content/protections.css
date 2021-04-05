@@ -1006,7 +1006,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   font-weight: 600;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #manage-protections,
 #sign-up-for-monitor-link,
 #get-proxy-extension-link,

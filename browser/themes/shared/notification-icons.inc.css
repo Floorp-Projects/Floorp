@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media (-moz-proton-doorhangers) {
 #notification-popup-box {
   background-color: var(--toolbarbutton-active-background);
   color: inherit;
@@ -204,7 +204,7 @@
   list-style-image: url(chrome://browser/skin/notification-icons/webauthn.svg);
 }
 
-@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media (-moz-proton-doorhangers) {
 #webRTC-preview:not([hidden]) {
   min-width: 368px;
   min-height: 10em;
@@ -242,7 +242,7 @@
 }
 } /** END Proton **/
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 #notification-popup-box {
   padding: 5px 0;
   margin: -5px 0;

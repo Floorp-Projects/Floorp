@@ -24,13 +24,13 @@
   --tabs-border-color: threedshadow;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :root {
   --toolbarbutton-border-radius: 2px;
 }
 } /* END !proton */
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #tabbrowser-tabs {
   --tab-line-color: highlight;
 }
@@ -49,7 +49,7 @@
     --chrome-content-separator-color: #e1e1e2;
   }
 
-  @supports not -moz-bool-pref("browser.proton.enabled") {
+  @media not (-moz-proton) {
   #navigator-toolbox {
     --tabs-border-color: rgba(0,0,0,.3);
   }
@@ -70,7 +70,7 @@
   --panel-separator-color: rgba(249,249,250,.1);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #navigator-toolbox:-moz-lwtheme {
   --tabs-border-color: rgba(0,0,0,.3);
 }
@@ -140,7 +140,7 @@
   color: var(--toolbar-color);
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 /* Add a fog for background tabs to be visible on Windows 7 glass window background */
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-default-theme) {
@@ -151,7 +151,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 /*
  * Windows 7 draws the chrome background color as the tab background
  * instead of in the tabs toolbar.
@@ -533,7 +533,7 @@ menuitem.bookmark-item {
 %include ../shared/urlbar-searchbar.inc.css
 
 @media not (prefers-contrast) {
-  @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+  @media (-moz-proton-urlbar) {
   :root:not(:-moz-lwtheme) #urlbar:not([focused="true"]) {
     --urlbar-box-bgcolor: white;
   }
@@ -587,7 +587,7 @@ menuitem.bookmark-item {
   }
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 :root:not(:-moz-lwtheme) {
   --urlbar-popup-url-color: -moz-nativehyperlinktext;
 }
@@ -630,7 +630,7 @@ menuitem.bookmark-item {
   }
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 /* tabbrowser-tab focus ring */
 .keyboard-focused-tab > .tab-stack > .tab-content,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-content {
@@ -776,7 +776,7 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
   margin-top: -4px;
 }
 
-@supports (-moz-bool-pref("browser.proton.contextmenus.enabled")) {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   /* :not([hidden]) to avoid the display: flex unhiding the item. */
   #context-navigation:not([hidden]) {
@@ -883,7 +883,7 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
   border-radius: var(--arrowpanel-border-radius);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 @media (-moz-os-version: windows-win7) {
   .cui-widget-panelview[id^=PanelUI-webext-] {
     border-radius: 4px;

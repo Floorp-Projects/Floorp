@@ -32,7 +32,7 @@
   --popup-notification-body-width: calc(31em - calc(2 * var(--arrowpanel-padding)));
 }
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 :root {
   --popup-notification-body-width: 25em;
 }
@@ -156,7 +156,7 @@ xul|label[disabled="true"] {
 
 /* Panel footers */
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 .panel-footer {
   background-color: var(--arrowpanel-dimmed);
 }

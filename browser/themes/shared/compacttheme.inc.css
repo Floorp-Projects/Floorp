@@ -11,7 +11,7 @@
   --autocomplete-popup-background: #2A2A2E !important;
 }
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
 #urlbar:not([focused="true"]) {
   --urlbar-box-bgcolor: var(--lwt-toolbar-field-focus);
 }

@@ -80,7 +80,7 @@
   flex: 1;
 }
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 .popup-notification-dropmarker {
   flex: none;
   padding: 0 15px !important;
@@ -112,7 +112,7 @@
 }
 
 /** PopupNotifications **/
-@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media (-moz-proton-doorhangers) {
 popupnotification {
   font: caption;
 }

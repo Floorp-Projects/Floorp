@@ -6,7 +6,7 @@ body {
   border-radius: 3.5px;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 body {
   border-radius: 8px;
 }

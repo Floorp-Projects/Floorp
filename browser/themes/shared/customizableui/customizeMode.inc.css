@@ -362,7 +362,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   background-color: var(--button-active-bgcolor);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 .customization-uidensity-menuitem,
 .customization-lwtheme-menu-theme {
   margin: 0 0 5px;
@@ -403,7 +403,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   padding: 8px 16px;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 .customization-lwtheme-menu-footeritem {
   font-weight: 600;
   border-radius: 4px;
@@ -425,7 +425,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #customization-lwtheme-menu-footer {
   background: linear-gradient(var(--arrowpanel-dimmed) 60%, transparent) border-box;
   border-top: 1px solid var(--arrowpanel-dimmed);

@@ -16,7 +16,7 @@
   padding-inline-start: 3px;
 }
 
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   /* Prevent the global arrowscrollbox rules from replacing our background,
      or adding more padding that would misalign our submenus. */

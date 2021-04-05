@@ -49,7 +49,7 @@ body.wide-container {
   fill: currentColor;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 .noIllustration {
   background-image: none;
 }
@@ -180,7 +180,7 @@ td {
 }
 
 /* Illustrated Info Pages */
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 .illustrated .title {
   margin-inline-start: 0;
   padding-inline-start: 0;

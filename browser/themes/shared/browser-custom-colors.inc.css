@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @media not (prefers-contrast) {
-  @supports -moz-bool-pref("browser.proton.enabled") {
+  @media (-moz-proton) {
   :root:not(:-moz-lwtheme) {
     --buttons-primary-button-bgcolor: rgb(0,97,224);
     --buttons-primary-button-hover-bgcolor: rgb(2,80,187);
@@ -49,7 +49,7 @@
   }
   } /** END Proton **/
 
-  @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+  @media (-moz-proton-urlbar) {
   :root:not(:-moz-lwtheme) {
     --urlbar-popup-action-color: rgb(21,20,26);
     --urlbar-popup-url-color: rgb(0,97,224);

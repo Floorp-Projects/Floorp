@@ -22,7 +22,7 @@
   --toolbarbutton-height: 0;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :root {
   --toolbarbutton-focus-outline: 2px solid currentColor;
 
@@ -47,7 +47,7 @@
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 :root {
   --toolbarbutton-focus-outline: var(--focus-outline);
 }
@@ -58,7 +58,7 @@
   --bookmark-block-padding: 1px;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :root {
   --toolbarbutton-outer-padding: 2px;
   --toolbarbutton-inner-padding: 6px;
@@ -73,7 +73,7 @@
   --bookmark-block-padding: 7px;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 :root:not([uidensity=touch]) #TabsToolbar {
   /* Override the inner padding to ensure the dimensions match the tabs, but also making sure
      different types of buttons (combined-buttons-dropmarker or text) still look correct. */
@@ -132,7 +132,7 @@ toolbar .toolbarbutton-1 {
   -moz-box-pack: center;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :root:not([uidensity=compact]) #PanelUI-button {
   padding-inline-start: 5px;
 }
@@ -141,7 +141,7 @@ toolbar .toolbarbutton-1 {
   padding-inline-end: 5px;
 }
 } /*** END !proton ***/
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 /*** Adds padding to end of toolbar while making that space click the first button ***/
 #PanelUI-menu-button {
   padding-inline-end: var(--toolbar-start-end-padding);
@@ -159,7 +159,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-text,
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
@@ -265,7 +265,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
   outline: none;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :root:not([uidensity=compact]) #back-button {
   padding-block: 3px;
   padding-inline: 3px 0;
@@ -358,7 +358,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   margin-inline: 1px;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
   #PersonalToolbar .toolbarbutton-1,
   #personal-toolbar-empty-description,
   toolbarbutton.bookmark-item:not(.subviewbutton) {

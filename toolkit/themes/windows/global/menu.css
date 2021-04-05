@@ -25,7 +25,7 @@ menucaption {
   -moz-image-region: auto;
 }
 
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   /* For Windows 10, prevent using native OS drawing of certain menu elements,
      especially background colors and shadows. */
@@ -52,7 +52,7 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   text-shadow: none;
 }
 
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   menu[disabled="true"],
   menuitem[disabled="true"],
@@ -124,7 +124,7 @@ menucaption {
 }
 
 /* Don't leave space for icons on Win10. */
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   .menu-text {
     padding-inline-start: 0 !important;
@@ -144,7 +144,7 @@ menucaption {
 }
 
 /* Override the native menu arrow with a custom one for Win10. */
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   .menu-right {
     appearance: none;
@@ -237,7 +237,7 @@ menuitem[_moz-menuactive="true"] {
   color: -moz-menuhovertext;
 }
 
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   menu[_moz-menuactive="true"]:not([disabled="true"]),
   menuitem[_moz-menuactive="true"]:not([disabled="true"]) {
@@ -301,7 +301,7 @@ menulist > menupopup > :is(menuitem, menucaption):not(.menuitem-iconic) > .menu-
   margin: 0 !important;
 }
 
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   menulist > menupopup > menuitem,
   menulist > menupopup > menucaption,
@@ -343,7 +343,7 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
   display: none;
 }
 
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   menupopup[needsgutter] menu:not([icon]),
   menupopup[needsgutter] menuitem:not([checked="true"]):not([icon]) {
@@ -403,7 +403,7 @@ menulist > menupopup > menuseparator {
 }
 
 /* On Windows 10, separators get entirely custom rendering. */
-@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   menuseparator {
     appearance: none;
