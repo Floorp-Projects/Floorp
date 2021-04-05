@@ -437,6 +437,15 @@ interface nsIApplicationUpdateService : nsISupports
    * bothering them with a doorhanger.
    */
   readonly attribute boolean manualUpdateOnly;
+
+  /**
+   * This can be set to true to prevent updates being processed beyond starting
+   * an update download. This should only be used when we are being run as a
+   * background task.
+   * This exists to prevent a particularly fast update download from beginning
+   * to stage while the background task is shutting down.
+   */
+  attribute boolean onlyDownloadUpdatesThisSession;
 };
 
 /**
