@@ -1429,31 +1429,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void) {
     nsresult rv = NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIWidget> parentWidget;
-    Document* doc = nullptr;
-    nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
-    if (content) {
-      doc = content->OwnerDoc();
-      parentWidget = nsContentUtils::WidgetForDocument(doc);
-      // If we're running in the content process, we need a remote widget
-      // created in chrome.
-      if (XRE_IsContentProcess()) {
-        if (nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow()) {
-          if (nsCOMPtr<nsPIDOMWindowOuter> topWindow =
-                  window->GetInProcessTop()) {
-            dom::BrowserChild* tc = dom::BrowserChild::GetFrom(topWindow);
-            if (tc) {
-              // This returns a PluginWidgetProxy which remotes a number of
-              // calls.
-              rv = tc->CreatePluginWidget(parentWidget.get(),
-                                          getter_AddRefs(mWidget));
-              if (NS_FAILED(rv)) {
-                return rv;
-              }
-            }
-          }
-        }
-      }
-    }
 
     // A failure here is terminal since we can't fall back on the non-e10s code
     // path below.

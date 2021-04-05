@@ -274,14 +274,6 @@ if CONFIG["MOZ_X11"]:
         "WindowSurfaceX11SHM.cpp",
     ]
 
-if toolkit == "windows":
-    EXPORTS += [
-        "PluginWidgetProxy.h",
-    ]
-    SOURCES += [
-        "PluginWidgetProxy.cpp",
-    ]
-
 if toolkit in ("cocoa", "windows"):
     UNIFIED_SOURCES += [
         "nsBaseClipboard.cpp",

@@ -218,7 +218,6 @@
 #include "InputData.h"
 
 #include "mozilla/Telemetry.h"
-#include "mozilla/plugins/PluginProcessParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 
@@ -3753,36 +3752,12 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
   return nullptr;
 }
 
-static void SetChildStyleAndParent(HWND aChildWindow, HWND aParentWindow) {
-  // Make sure the window is styled to be a child window.
-  LONG_PTR style = GetWindowLongPtr(aChildWindow, GWL_STYLE);
-  style |= WS_CHILD;
-  style &= ~WS_POPUP;
-  SetWindowLongPtr(aChildWindow, GWL_STYLE, style);
-
-  // Do the reparenting. Note that this call will probably cause a sync native
-  // message to the process that owns the child window.
-  ::SetParent(aChildWindow, aParentWindow);
-}
-
 void nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
   switch (aDataType) {
     case NS_NATIVE_CHILD_WINDOW:
     case NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW: {
-      HWND childHwnd = reinterpret_cast<HWND>(aVal);
-      DWORD childProc = 0;
-      GetWindowThreadProcessId(childHwnd, &childProc);
-      if (!PluginProcessParent::IsPluginProcessId(
-              static_cast<base::ProcessId>(childProc))) {
-        MOZ_ASSERT_UNREACHABLE(
-            "SetNativeData window origin was not a plugin process.");
-        break;
-      }
-      HWND parentHwnd = aDataType == NS_NATIVE_CHILD_WINDOW
-                            ? mWnd
-                            : WinUtils::GetTopLevelHWND(mWnd);
-      SetChildStyleAndParent(childHwnd, parentHwnd);
-      RecreateDirectManipulationIfNeeded();
+      MOZ_ASSERT_UNREACHABLE(
+          "SetNativeData window origin was not a plugin process.");
       break;
     }
     default:

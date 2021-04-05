@@ -1218,22 +1218,8 @@ already_AddRefed<ContentParent> ContentParent::GetNewOrUsedJSPluginProcess(
 }
 
 #if defined(XP_WIN)
-extern const wchar_t* kPluginWidgetContentParentProperty;
-
 /*static*/
-void ContentParent::SendAsyncUpdate(nsIWidget* aWidget) {
-  if (!aWidget || aWidget->Destroyed()) {
-    return;
-  }
-  // Fire off an async request to the plugin to paint its window
-  HWND hwnd = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
-  NS_ASSERTION(hwnd, "Expected valid hwnd value.");
-  ContentParent* cp = reinterpret_cast<ContentParent*>(
-      ::GetPropW(hwnd, kPluginWidgetContentParentProperty));
-  if (cp && cp->CanSend()) {
-    Unused << cp->SendUpdateWindow((uintptr_t)hwnd);
-  }
-}
+void ContentParent::SendAsyncUpdate(nsIWidget* aWidget) {}
 #endif  // defined(XP_WIN)
 
 static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement) {

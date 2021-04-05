@@ -73,9 +73,6 @@ namespace dom {
 class BrowserChild;
 enum class CallerType : uint32_t;
 }  // namespace dom
-namespace plugins {
-class PluginWidgetChild;
-}  // namespace plugins
 namespace layers {
 class AsyncDragMetrics;
 class Compositor;
@@ -1992,15 +1989,6 @@ class nsIWidget : public nsISupports {
       BrowserChild* aBrowserChild);
 
   static already_AddRefed<nsIWidget> CreateHeadlessWidget();
-
-  /**
-   * Allocate and return a "plugin proxy widget", a subclass of PuppetWidget
-   * used in wrapping a PPluginWidget connection for remote widgets. Note
-   * this call creates the base object, it does not create the widget. Use
-   * nsIWidget's Create to do this.
-   */
-  static already_AddRefed<nsIWidget> CreatePluginProxyWidget(
-      BrowserChild* aBrowserChild, mozilla::plugins::PluginWidgetChild* aActor);
 
   /**
    * Reparent this widget's native widget.
