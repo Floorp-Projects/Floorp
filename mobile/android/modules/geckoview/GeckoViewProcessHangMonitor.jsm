@@ -136,11 +136,7 @@ class GeckoViewProcessHangMonitor extends GeckoViewModule {
   stopHang(report) {
     switch (report.hangType) {
       case report.SLOW_SCRIPT: {
-        if (report.addonId) {
-          report.terminateGlobal();
-        } else {
-          report.terminateScript();
-        }
+        report.terminateScript();
         break;
       }
       case report.PLUGIN_HANG: {

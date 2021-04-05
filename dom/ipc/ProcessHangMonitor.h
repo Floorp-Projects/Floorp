@@ -66,7 +66,6 @@ class ProcessHangMonitor final : public nsIObserver {
     Continue,
     Terminate,
     StartDebugger,
-    TerminateGlobal,
   };
   SlowScriptAction NotifySlowScript(nsIBrowserChild* aBrowserChild,
                                     const char* aFileName,
