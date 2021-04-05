@@ -25,7 +25,7 @@
   padding: 5px 0;
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
-  border-radius: 5px;
+  border-radius: 4px;
   box-shadow: var(--shadow-30);
   min-width: max-content;
   list-style-type: none;
@@ -33,10 +33,11 @@
   flex-direction: column;
   /* Show on top of .breach-alert which is also positioned */
   z-index: 1;
+  font: menu;
 }
 
 .menuitem-button {
-  padding: 2px 8px;
+  padding: 4px 8px;
   /* 32px = 8px (padding) + 16px (icon) + 8px (padding) */
   padding-inline-start: 32px;
   background-repeat: no-repeat;
@@ -50,7 +51,7 @@
   border-radius: 0;
   text-align: start;
   min-height: initial;
-  font-weight: normal;
+  font: inherit;
 }
 
 .menuitem-button:dir(rtl) {
@@ -62,7 +63,7 @@
 }
 
 .menuitem-separator {
-  border-top-width: 2px;
+  border-top-width: 1px;
   margin-block: 5px;
   width: 100%;
 }
