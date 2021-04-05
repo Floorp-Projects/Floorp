@@ -18,6 +18,7 @@ class TelemetryProbesReporterOwner {
   virtual Maybe<nsAutoString> GetKeySystem() const = 0;
   virtual MediaInfo GetMediaInfo() const = 0;
   virtual FrameStatistics* GetFrameStatistics() const = 0;
+  virtual bool IsEncrypted() const = 0;
   virtual void DispatchAsyncTestingEvent(const nsAString& aName) = 0;
 };
 
