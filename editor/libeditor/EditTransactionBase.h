@@ -33,6 +33,7 @@ class EditAggregateTransaction;
 class InsertNodeTransaction;
 class InsertTextTransaction;
 class JoinNodeTransaction;
+class LogModule;
 class PlaceholderTransaction;
 class ReplaceTextTransaction;
 class SplitNodeTransaction;
@@ -77,6 +78,8 @@ class EditTransactionBase : public nsITransaction {
 
  protected:
   virtual ~EditTransactionBase() = default;
+
+  static LogModule* GetLogModule();
 };
 
 #undef NS_DECL_GETASTRANSACTION_BASE

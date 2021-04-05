@@ -85,6 +85,20 @@ DeleteTextTransaction::DeleteTextTransaction(EditorBase& aEditorBase,
                "Trying to delete more characters than in node");
 }
 
+std::ostream& operator<<(std::ostream& aStream,
+                         const DeleteTextTransaction& aTransaction) {
+  aStream << "{ mTextNode=" << aTransaction.mTextNode.get();
+  if (aTransaction.mTextNode) {
+    aStream << " (" << *aTransaction.mTextNode << ")";
+  }
+  aStream << ", mOffset=" << aTransaction.mOffset
+          << ", mLengthToDelete=" << aTransaction.mLengthToDelete
+          << ", mDeletedText=\""
+          << NS_ConvertUTF16toUTF8(aTransaction.mDeletedText).get() << "\""
+          << ", mEditorBase=" << aTransaction.mEditorBase.get() << " }";
+  return aStream;
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteTextTransaction, EditTransactionBase,
                                    mEditorBase, mTextNode)
 
@@ -100,6 +114,10 @@ bool DeleteTextTransaction::CanDoIt() const {
 }
 
 NS_IMETHODIMP DeleteTextTransaction::DoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteTextTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!CanDoIt())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -140,6 +158,10 @@ NS_IMETHODIMP DeleteTextTransaction::DoTransaction() {
 // XXX: We may want to store the selection state and restore it properly.  Was
 //     it an insertion point or an extended selection?
 NS_IMETHODIMP DeleteTextTransaction::UndoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteTextTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+
   if (NS_WARN_IF(!CanDoIt())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -149,6 +171,13 @@ NS_IMETHODIMP DeleteTextTransaction::UndoTransaction() {
   editorBase->DoInsertText(*textNode, mOffset, mDeletedText, error);
   NS_WARNING_ASSERTION(!error.Failed(), "EditorBase::DoInsertText() failed");
   return error.StealNSResult();
+}
+
+NS_IMETHODIMP DeleteTextTransaction::RedoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteTextTransaction::%s this=%s", this, __FUNCTION__,
+           ToString(*this).c_str()));
+  return DoTransaction();
 }
 
 }  // namespace mozilla

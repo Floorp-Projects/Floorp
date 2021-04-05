@@ -56,6 +56,9 @@ class SplitNodeTransaction final : public EditTransactionBase {
 
   nsIContent* GetNewLeftContent() const { return mNewLeftContent; }
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const SplitNodeTransaction& aTransaction);
+
  protected:
   virtual ~SplitNodeTransaction() = default;
 

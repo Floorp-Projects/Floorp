@@ -9,6 +9,8 @@
 
 #include "CompositionTransaction.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/Logging.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/Selection.h"
 #include "nsGkAtoms.h"
 #include "nsQueryObject.h"
@@ -50,9 +52,21 @@ NS_INTERFACE_MAP_END_INHERITING(EditAggregateTransaction)
 NS_IMPL_ADDREF_INHERITED(PlaceholderTransaction, EditAggregateTransaction)
 NS_IMPL_RELEASE_INHERITED(PlaceholderTransaction, EditAggregateTransaction)
 
-NS_IMETHODIMP PlaceholderTransaction::DoTransaction() { return NS_OK; }
+NS_IMETHODIMP PlaceholderTransaction::DoTransaction() {
+  MOZ_LOG(
+      GetLogModule(), LogLevel::Info,
+      ("%p PlaceholderTransaction::%s this={ mName=%s }", this, __FUNCTION__,
+       nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+  return NS_OK;
+}
 
 NS_IMETHODIMP PlaceholderTransaction::UndoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p PlaceholderTransaction::%s this={ mName=%s } "
+           "Start==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+
   if (NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -72,10 +86,22 @@ NS_IMETHODIMP PlaceholderTransaction::UndoTransaction() {
   rv = mStartSel.RestoreSelection(*selection);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "SelectionState::RestoreSelection() failed");
+
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p PlaceholderTransaction::%s this={ mName=%s } "
+           "End==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
   return rv;
 }
 
 NS_IMETHODIMP PlaceholderTransaction::RedoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p PlaceholderTransaction::%s this={ mName=%s } "
+           "Start==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+
   if (NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -95,6 +121,11 @@ NS_IMETHODIMP PlaceholderTransaction::RedoTransaction() {
   rv = mEndSel.RestoreSelection(*selection);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "SelectionState::RestoreSelection() failed");
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p PlaceholderTransaction::%s this={ mName=%s } "
+           "End==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
   return rv;
 }
 
@@ -117,6 +148,11 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
   RefPtr<EditTransactionBase> otherTransactionBase =
       aOtherTransaction->GetAsEditTransactionBase();
   if (!otherTransactionBase) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+             "mName=%s } returned false due to non edit transaction",
+             this, __FUNCTION__, aOtherTransaction,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
     return NS_OK;
   }
 
@@ -173,12 +209,22 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
   if (mCommitted ||
       (mName != nsGkAtoms::TypingTxnName && mName != nsGkAtoms::IMETxnName &&
        mName != nsGkAtoms::DeleteTxnName)) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+             "mName=%s } returned false due to non mergable transaction",
+             this, __FUNCTION__, aOtherTransaction,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
     return NS_OK;
   }
 
   PlaceholderTransaction* otherPlaceholderTransaction =
       otherTransactionBase->GetAsPlaceholderTransaction();
   if (!otherPlaceholderTransaction) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+             "mName=%s } returned false due to non placeholder transaction",
+             this, __FUNCTION__, aOtherTransaction,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
     return NS_OK;
   }
 
@@ -189,11 +235,22 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
                        "PlaceholderTransaction::GetName() failed, but ignored");
   if (!otherTransactionName || otherTransactionName == nsGkAtoms::_empty ||
       otherTransactionName != mName) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+             "mName=%s } returned false due to non mergable placeholder "
+             "transaction",
+             this, __FUNCTION__, aOtherTransaction,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
     return NS_OK;
   }
   // check if start selection of next placeholder matches
   // end selection of this placeholder
   if (!otherPlaceholderTransaction->StartSelectionEquals(mEndSel)) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+             "mName=%s } returned false due to selection difference",
+             this, __FUNCTION__, aOtherTransaction,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
     return NS_OK;
   }
   mAbsorb = true;  // we need to start absorbing again
@@ -210,6 +267,11 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
       "PlaceholderTransaction::RememberEndingSelection() failed, but "
       "ignored");
   *aDidMerge = true;
+  MOZ_LOG(GetLogModule(), LogLevel::Debug,
+          ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+           "mName=%s } returned true",
+           this, __FUNCTION__, aOtherTransaction,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
   return NS_OK;
 }
 

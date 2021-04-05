@@ -7,15 +7,21 @@
 
 #include "DeleteNodeTransaction.h"
 #include "DeleteTextTransaction.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
-#include "mozilla/dom/Selection.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/Logging.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/RangeBoundary.h"
+#include "mozilla/ToString.h"
+#include "mozilla/dom/Selection.h"
+
+#include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINode.h"
 #include "nsAString.h"
@@ -36,6 +42,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditAggregateTransaction)
 
 NS_IMETHODIMP DeleteRangeTransaction::DoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteRangeTransaction::%s this={ mName=%s } "
+           "Start==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mRangeToDelete)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -90,6 +102,12 @@ NS_IMETHODIMP DeleteRangeTransaction::DoTransaction() {
     return rv;
   }
 
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteRangeTransaction::%s this={ mName=%s } "
+           "End==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+
   if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
     return NS_OK;
   }
@@ -105,16 +123,40 @@ NS_IMETHODIMP DeleteRangeTransaction::DoTransaction() {
 }
 
 NS_IMETHODIMP DeleteRangeTransaction::UndoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteRangeTransaction::%s this={ mName=%s } "
+           "Start==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+
   nsresult rv = EditAggregateTransaction::UndoTransaction();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditAggregateTransaction::UndoTransaction() failed");
+
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteRangeTransaction::%s this={ mName=%s } "
+           "End==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
   return rv;
 }
 
 NS_IMETHODIMP DeleteRangeTransaction::RedoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteRangeTransaction::%s this={ mName=%s } "
+           "Start==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+
   nsresult rv = EditAggregateTransaction::RedoTransaction();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditAggregateTransaction::RedoTransaction() failed");
+
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p DeleteRangeTransaction::%s this={ mName=%s } "
+           "End==============================",
+           this, __FUNCTION__,
+           nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
   return rv;
 }
 

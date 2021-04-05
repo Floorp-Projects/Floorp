@@ -5,6 +5,8 @@
 
 #include "mozilla/EditTransactionBase.h"
 
+#include "mozilla/Logging.h"
+
 #include "ChangeAttributeTransaction.h"
 #include "ChangeStyleTransaction.h"
 #include "CompositionTransaction.h"
@@ -40,18 +42,31 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(EditTransactionBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(EditTransactionBase)
 
-NS_IMETHODIMP EditTransactionBase::RedoTransaction() { return DoTransaction(); }
+NS_IMETHODIMP EditTransactionBase::RedoTransaction() {
+  MOZ_LOG(GetLogModule(), LogLevel::Info, ("%p %s", this, __FUNCTION__));
+  return DoTransaction();
+}
 
 NS_IMETHODIMP EditTransactionBase::GetIsTransient(bool* aIsTransient) {
+  MOZ_LOG(GetLogModule(), LogLevel::Verbose,
+          ("%p %s returned false", this, __FUNCTION__));
   *aIsTransient = false;
-
   return NS_OK;
 }
 
 NS_IMETHODIMP EditTransactionBase::Merge(nsITransaction* aOtherTransaction,
                                          bool* aDidMerge) {
+  MOZ_LOG(GetLogModule(), LogLevel::Info,
+          ("%p %s(aOtherTransaction=%p) returned false", this, __FUNCTION__,
+           aOtherTransaction));
   *aDidMerge = false;
   return NS_OK;
+}
+
+// static
+LogModule* EditTransactionBase::GetLogModule() {
+  static LazyLogModule sLog("EditorTransaction");
+  return static_cast<LogModule*>(sLog);
 }
 
 #define NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(aClass)           \

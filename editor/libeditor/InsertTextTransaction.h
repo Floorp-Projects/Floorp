@@ -51,12 +51,16 @@ class InsertTextTransaction final : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(InsertTextTransaction)
 
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
   NS_IMETHOD Merge(nsITransaction* aOtherTransaction, bool* aDidMerge) override;
 
   /**
    * Return the string data associated with this transaction.
    */
   void GetData(nsString& aResult);
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const InsertTextTransaction& aTransaction);
 
  private:
   virtual ~InsertTextTransaction() = default;
