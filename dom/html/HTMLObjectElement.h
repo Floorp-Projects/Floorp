@@ -47,8 +47,11 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
                                int32_t* aTabIndex) override;
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
+  NS_IMETHOD Reset() override { return NS_OK; }
+
+  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override {
+    return NS_OK;
+  }
 
   virtual void DoneAddingChildren(bool aHaveNotified) override;
   virtual bool IsDoneAddingChildren() override;
