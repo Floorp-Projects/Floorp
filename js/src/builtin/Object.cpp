@@ -1742,7 +1742,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
         if (!shape || !shape->enumerable()) {
           continue;
         }
-        if (!shape->isAccessorShape()) {
+        if (shape->isDataProperty()) {
           if (!NativeGetExistingProperty(cx, nobj, nobj, shape, &value)) {
             return false;
           }
