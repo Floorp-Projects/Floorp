@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Dine private faneblade vil blive vist her.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 åbent faneblad. Tryk for at skifte faneblade.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -182,6 +178,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Tilpas læsevisning</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Tilføj</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Rediger</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Ude af stand til at oprette forbindelse. Ikke-genkendelig URL-skema.</string>
@@ -1157,9 +1158,6 @@
     <string name="onboarding_header">Velkommen til %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Har du allerede en konto?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Lær %s at kende</string>
 
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Se nyhederne</string>
@@ -1168,10 +1166,10 @@
     <string name="onboarding_whats_new_description">Har du spørgsmål om den nye version af %s? Vil du vide, hvad der er ændret?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Få svar her</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Begynd at synkronisere bogmærker, adgangskoder m.m. med din Firefox-konto.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Synkroniser Firefox mellem enheder</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Læs mere</string>
+    <string name="onboarding_manual_sign_in_description">Synkroniser bogmærker, historik og adgangskoder med Firefox på denne enhed.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1180,35 +1178,26 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja, log mig ind</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Logger ind…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Log in på Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Tilmeld dig</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Forbliv udlogget</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synkronisering er slået til</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Kunne ikke logge ind</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Automatisk privatlivsbeskyttelse</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Indstillinger for privatlivsbeskyttelse og sikkerhed blokerer sporings-mekanismer, skadelig software og virksomheder, der følger dig på nettet.</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox forhindrer automatisk virksomheder i at følge dig i smug på nettet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Blokerer færre sporings-mekanismer. Sider indlæses som normalt.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Balanceret mellem privatliv og ydelse. Sider indlæses som normalt.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Striks (anbefalet)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Striks</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Blokerer flere sporings-mekanismer, reklamer og pop ups. Sider indlæses hurtigere, men noget funktionalitet virker måske ikke.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Vælg side</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Brug værktøjslinjen nederst til at browse med én hånd. Værktøjslinjen kan flyttes til toppen.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Blokerer flere sporings-mekanismer. Sider indlæses hurtigere, men noget funktionalitet virker måske ikke.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Privat browsing</string>
     <!-- text for the private browsing onboarding card description
@@ -1221,7 +1210,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Bedre beskyttelse af dit privatliv</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Vi har designet %s til at give dig kontrol over, hvad du deler på nettet - og hvad du deler med os.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Læs vores privatlivspolitik</string>
@@ -1236,7 +1225,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Vælg tema</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Skån dit batteri og dine øjne ved at aktivere mørkt tema.</string>
+    <string name="onboarding_theme_picker_description_2">Skån dit batteri og dine øjne med et mørkt tema.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatisk</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1291,13 +1280,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokerer færre sporings-mekanismer. Sider indlæses som normalt.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Balanceret mellem privatliv og ydelse. Sider indlæses som normalt.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Hvad der bliver blokeret af standard-opsætningen af beskyttelse mod sporing</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Striks</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokerer flere sporings-mekanismer, reklamer og pop ups. Sider indlæses hurtigere, men noget funktionalitet virker måske ikke.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokerer flere sporings-mekanismer. Sider indlæses hurtigere, men noget funktionalitet virker måske ikke.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Hvad der bliver blokeret af striks beskyttelse mod sporing</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1532,6 +1521,34 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sortér menuen logins</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Betalingskort</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Gem og autofyld betalingskort</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Data er krypteret</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Synkroniser kort på tværs af enheder</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Tilføj betalingskort</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Tilføj kort</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Kortnummer</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Udløbsdato</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Navn på kort</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Slet kort</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Gem</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Gem</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Annuller</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tilføj søgetjeneste</string>
