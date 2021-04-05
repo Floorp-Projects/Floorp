@@ -109,3 +109,30 @@
 .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner:not([selected]) > .urlbarView-no-wrap > .urlbarView-dynamic-onboardTabToSearch-text-container > .urlbarView-dynamic-onboardTabToSearch-description {
   opacity: 0.6;
 }
+
+/* CSS for Calculator */
+.urlbarView-row[dynamicType=calculator] > .urlbarView-row-inner[selected] {
+  background-color: var(--autocomplete-popup-highlight-background);
+  color: var(--autocomplete-popup-highlight-color);
+}
+
+.urlbarView-row[dynamicType=calculator] > .urlbarView-row-inner:hover {
+  background: var(--arrowpanel-dimmed);
+}
+
+.urlbarView-dynamic-calculator-action {
+  font-size: .85em;
+  font-weight: normal;
+  visibility: collapse;
+}
+
+.urlbarView-row[dynamicType=calculator] > .urlbarView-row-inner:hover .urlbarView-dynamic-calculator-action,
+.urlbarView-row[dynamicType=calculator] > .urlbarView-row-inner[selected] .urlbarView-dynamic-calculator-action {
+  visibility: visible;
+}
+
+.urlbarView-dynamic-calculator-action::before {
+  content: "\2014";
+  margin: 0 .4em;
+  opacity: 0.6;
+}
