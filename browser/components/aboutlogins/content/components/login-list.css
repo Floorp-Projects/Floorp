@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  border-inline-end: 1px solid var(--in-content-border-color);
+  border-inline-end: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-background);
   display: flex;
   flex-direction: column;
@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   padding: 9px 16px;
-  border-bottom: 1px solid var(--in-content-border-color);
+  border-bottom: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-background);
   color: var(--in-content-deemphasized-text);
   font-size: 0.8em;
@@ -99,7 +99,7 @@ ol {
 }
 
 .create-login-button-container {
-  border-top: 1px solid var(--in-content-border-color);
+  border-top: 1px solid var(--in-content-box-border-color);
   display: flex;
   flex-direction: column;
 }
@@ -117,25 +117,17 @@ ol {
   border-top: 1px solid var(--in-content-border-color);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
 .login-list-item:hover {
   background-color: var(--in-content-page-background);
 }
-} /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.enabled") {
-.login-list-item:not(.selected):hover {
-  background-color: var(--in-content-button-background-hover);
-}
-
-.login-list-item:not(.selected):hover:active {
+.login-list-item:hover:active {
   background-color: var(--in-content-button-background-active);
 }
-} /*** END proton ***/
 
 .login-list-item.keyboard-selected {
   border-inline-start-color: var(--in-content-border-color);
-  background-color: var(--in-content-button-background-hover);
+  background-color: var(--in-content-page-background);
 }
 
 .login-list-item.selected {

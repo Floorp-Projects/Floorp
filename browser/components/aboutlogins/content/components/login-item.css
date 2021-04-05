@@ -8,24 +8,14 @@
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
   --reveal-checkbox-opacity-active: 1;
-  --success-color: #2AC3A2;
+  --success-color: #00c100;
   --edit-delete-button-color: #4a4a4f;
 }
 
 /* Only overwrite the deemphasized text color in non-dark mode. */
-@media not (prefers-color-scheme: dark) {
+@media not all and (prefers-color-scheme: dark) {
   :host {
     --in-content-deemphasized-text: #737373;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :host {
-    --reveal-checkbox-opacity: .8;
-    --reveal-checkbox-opacity-hover: 1;
-    --reveal-checkbox-opacity-active: .6;
-    --success-color: #54FFBD;
-    --edit-delete-button-color: #cfcfd1;
   }
 }
 
@@ -370,7 +360,7 @@ input[name="password"] {
 
 .vulnerable-alert,
 .breach-alert {
-  border-radius: 4px;
+  border-radius: var(--panel-border-radius);
   border: 1px solid var(--in-content-border-color);
   box-shadow: 0 2px 8px 0 var(--grey-90-a10);
   font-size: .9em;
@@ -463,4 +453,14 @@ input[name="password"] {
   color: currentColor;
   text-decoration: underline;
   font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --reveal-checkbox-opacity: .8;
+    --reveal-checkbox-opacity-hover: 1;
+    --reveal-checkbox-opacity-active: .6;
+    --success-color: #86DE74;
+    --edit-delete-button-color: #cfcfd1;
+  }
 }
