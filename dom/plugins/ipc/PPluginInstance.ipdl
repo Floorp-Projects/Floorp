@@ -8,7 +8,6 @@ include protocol PPluginModule;
 include protocol PPluginScriptableObject;
 include protocol PBrowserStream;
 include protocol PStreamNotify;
-include protocol PPluginSurface;
 
 include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/GfxMessageUtils.h";
@@ -46,7 +45,6 @@ struct IOSurfaceDescriptor {
 union SurfaceDescriptor {
   Shmem;
   SurfaceDescriptorX11;
-  PPluginSurface; // used on Windows
   IOSurfaceDescriptor; // used on OSX 10.5+
   // Descriptor can be null here in case
   // 1) of first Show call (prevSurface is null)
@@ -64,7 +62,6 @@ intr protocol PPluginInstance
   manages PPluginScriptableObject;
   manages PBrowserStream;
   manages PStreamNotify;
-  manages PPluginSurface;
 
 child:
   async __delete__();
@@ -216,10 +213,6 @@ parent:
   //                      the shmem for reuse
   sync Show(NPRect updatedRect, SurfaceDescriptor newSurface)
     returns (SurfaceDescriptor prevSurface);
-
-  async PPluginSurface(WindowsSharedMemoryHandle handle,
-                       IntSize size,
-                       bool transparent);
 
   intr NPN_PushPopupsEnabledState(bool aState);
 
