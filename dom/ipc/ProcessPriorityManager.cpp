@@ -755,11 +755,6 @@ void ParticularProcessPriorityManager::SetPriorityNow(
     return;
   }
 
-  if (mPriority == aPriority) {
-    hal::SetProcessPriority(Pid(), mPriority);
-    return;
-  }
-
   LOGP("Changing priority from %s to %s.", ProcessPriorityToString(mPriority),
        ProcessPriorityToString(aPriority));
 
