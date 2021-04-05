@@ -4524,22 +4524,10 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 0;
   }
 
-  rv = NS_NewToolkitProfileService(getter_AddRefs(mProfileSvc));
-  if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
-    PR_fprintf(PR_STDERR,
-               "Error: Access was denied while trying to open files in "
-               "your profile directory.\n");
-  }
-  if (NS_FAILED(rv)) {
-    // We failed to choose or create profile - notify user and quit
-    ProfileMissingDialog(mNativeApp);
-    return 1;
-  }
-
 #ifdef MOZ_BACKGROUNDTASKS
   if (BackgroundTasks::IsBackgroundTaskMode()) {
+    // Allow tests to specify profile path via the environment.
     if (!EnvHasValue("XRE_PROFILE_PATH")) {
-      // Allow tests to specify profile path via the environment.
       nsCOMPtr<nsIFile> file;
       nsresult rv = BackgroundTasks::GetOrCreateTemporaryProfileDirectory(
           getter_AddRefs(file));
@@ -4551,6 +4539,18 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     }
   }
 #endif
+
+  rv = NS_NewToolkitProfileService(getter_AddRefs(mProfileSvc));
+  if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
+    PR_fprintf(PR_STDERR,
+               "Error: Access was denied while trying to open files in "
+               "your profile directory.\n");
+  }
+  if (NS_FAILED(rv)) {
+    // We failed to choose or create profile - notify user and quit
+    ProfileMissingDialog(mNativeApp);
+    return 1;
+  }
 
   bool wasDefaultSelection;
   nsCOMPtr<nsIToolkitProfile> profile;
