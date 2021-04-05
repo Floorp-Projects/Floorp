@@ -16,6 +16,10 @@
 #include "nsString.h"
 #include "nsXULAppAPI.h"
 
+#ifdef XP_WIN
+#  include "WinUtils.h"
+#endif
+
 // The lock code generates a path that already includes the vendor name,
 // so this only needs to name the specific lock.
 #define UPDATE_LOCK_NAME_TOKEN "UpdateLock"
@@ -94,6 +98,32 @@ nsresult nsUpdateSyncManager::OpenLock(nsIFile* anAppFile) {
                      getter_AddRefs(appFile));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // It is possible that the path we have is on a case insensitive
+  // filesystem in which case the path may vary depending on how the
+  // application is called. We want to normalize the case somehow.
+  // On Linux XRE_EXECUTABLE_FILE already seems to be set to the correct path.
+  //
+  // See similar nsXREDirProvider::GetInstallHash. The main difference here is
+  // to allow lookup to fail on OSX, because some tests use a nonexistent
+  // appFile.
+#ifdef XP_WIN
+  // Windows provides a way to get the correct case.
+  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(appFile)) {
+    NS_WARNING("Failed to resolve install directory.");
+  }
+#elif defined(MOZ_WIDGET_COCOA)
+  // On OSX roundtripping through an FSRef fixes the case.
+  FSRef ref;
+  nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(appFile);
+  if (macFile && NS_SUCCEEDED(macFile->GetFSRef(&ref)) &&
+      NS_SUCCEEDED(
+          NS_NewLocalFileWithFSRef(&ref, true, getter_AddRefs(macFile)))) {
+    appFile = static_cast<nsIFile*>(macFile);
+  } else {
+    NS_WARNING("Failed to resolve install directory.");
+  }
+#endif
 
   nsCOMPtr<nsIFile> appDirFile;
   rv = appFile->GetParent(getter_AddRefs(appDirFile));
