@@ -522,16 +522,6 @@ class PluginChild extends JSWindowActorChild {
         break;
 
       case "PluginVulnerableUpdatable":
-        let updateLink = this.getPluginUI(pluginElement, "checkForUpdatesLink");
-        let { pluginTag } = this._getPluginInfo(pluginElement);
-        this.addLinkClickCallback(
-          updateLink,
-          "forwardCallback",
-          "openPluginUpdatePage",
-          pluginTag.id
-        );
-
-      /* FALLTHRU */
       case "PluginVulnerableNoUpdate":
       case "PluginClickToPlay":
         this._handleClickToPlayEvent(pluginElement);
@@ -542,19 +532,6 @@ class PluginChild extends JSWindowActorChild {
         );
         let overlayText = this.getPluginUI(pluginElement, "clickToPlay");
         overlayText.textContent = messageString;
-        if (
-          eventType == "PluginVulnerableUpdatable" ||
-          eventType == "PluginVulnerableNoUpdate"
-        ) {
-          let vulnerabilityString = gNavigatorBundle.GetStringFromName(
-            eventType
-          );
-          let vulnerabilityText = this.getPluginUI(
-            pluginElement,
-            "vulnerabilityStatus"
-          );
-          vulnerabilityText.textContent = vulnerabilityString;
-        }
         shouldShowNotification = true;
         break;
 
