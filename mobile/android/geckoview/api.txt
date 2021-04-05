@@ -630,6 +630,7 @@ package org.mozilla.geckoview {
     method @Nullable public Float getDisplayDensityOverride();
     method @Nullable public Integer getDisplayDpiOverride();
     method public boolean getDoubleTapZoomingEnabled();
+    method public boolean getEnterpriseRootsEnabled();
     method @NonNull public Bundle getExtras();
     method public boolean getFontInflationEnabled();
     method public float getFontSizeFactor();
@@ -653,6 +654,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean);
     method @NonNull public GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setDoubleTapZoomingEnabled(boolean);
+    method @NonNull public GeckoRuntimeSettings setEnterpriseRootsEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontInflationEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontSizeFactor(float);
     method @NonNull public GeckoRuntimeSettings setForceUserScalableEnabled(boolean);
@@ -688,6 +690,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder displayDensityOverride(float);
     method @NonNull public GeckoRuntimeSettings.Builder displayDpiOverride(int);
     method @NonNull public GeckoRuntimeSettings.Builder doubleTapZoomingEnabled(boolean);
+    method @NonNull public GeckoRuntimeSettings.Builder enterpiseRootsEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder extras(@NonNull Bundle);
     method @NonNull public GeckoRuntimeSettings.Builder fontInflation(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder fontSizeFactor(float);
