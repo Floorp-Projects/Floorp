@@ -94,7 +94,7 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(disableLicm, false);
 
   // Toggle whether branch pruning is globally disabled.
-  SET_DEFAULT(disablePruning, true);
+  SET_DEFAULT(disablePruning, false);
 
   // Toggles whether instruction reordering is globally disabled.
   SET_DEFAULT(disableInstructionReordering, false);
