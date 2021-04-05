@@ -136,7 +136,7 @@ html|input.findbar-textbox[flash="true"] {
   margin-inline-start: 12px;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 .findbar-find-status[status="notfound"] {
   color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
 }
@@ -153,7 +153,7 @@ html|input.findbar-textbox[flash="true"] {
   margin-inline: 4px 8px !important;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 html|input.findbar-textbox {
   border-radius: 0;
   border-start-start-radius: 2px;
@@ -227,7 +227,7 @@ html|input.findbar-textbox[status="notfound"] {
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 .findbar-find-status[status="notfound"] {
   color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
   opacity: 0.8;

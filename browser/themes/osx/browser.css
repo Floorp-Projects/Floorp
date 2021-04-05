@@ -32,14 +32,14 @@
   --arrowpanel-field-background: rgba(12,12,13,.3);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #navigator-toolbox {
   appearance: none;
   --tabs-border-color: rgba(0,0,0,.2);
 }
 } /*** end !proton ***/
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 #navigator-toolbox {
   appearance: none;
 }
@@ -49,7 +49,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #navigator-toolbox:not(:-moz-lwtheme):-moz-window-inactive {
   --tabs-border-color: rgba(0,0,0,.05);
 }
@@ -76,7 +76,7 @@
   opacity: 0.001;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #tabbrowser-tabs {
   --tab-line-color: -moz-accent-color;
 }
@@ -87,7 +87,7 @@
   text-shadow: inherit;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :root[macOSNativeFullscreen]:not(:-moz-lwtheme) :is(#navigator-toolbox, #sidebar-box) {
   /* Make the toolbar opaque using this color that simulates the
   -moz-mac-vibrant-toolbar-dark effect. This hides vibrancy, but it also
@@ -141,7 +141,7 @@
   color: var(--toolbar-color);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 .browser-toolbar.titlebar-color:not(:-moz-lwtheme) {
   appearance: auto;
 }
@@ -159,7 +159,7 @@
   position: relative;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
 #nav-bar:not(:-moz-lwtheme):-moz-window-inactive {
   background-color: -moz-mac-chrome-inactive;
@@ -205,7 +205,7 @@
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 /* On Mac, native buttons keep their full opacity when they become disabled
  * and only the glyph or text on top of them becomes less opaque. */
 :root:not([customizing]) #back-button[disabled="true"] {
@@ -238,7 +238,7 @@
 %include ../shared/urlbar-searchbar.inc.css
 
 @media not (prefers-contrast) {
-  @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+  @media (-moz-proton-urlbar) {
   :root:not(:-moz-lwtheme) #urlbar:not([focused="true"]) {
     --urlbar-box-bgcolor: white;
   }
@@ -358,7 +358,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   text-align: start;
 }
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 #editBookmarkPanelRows > vbox > html|input,
 #editBookmarkPanelRows > vbox > hbox > html|input {
   appearance: none;
@@ -546,7 +546,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   text-shadow: inherit;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :is(.keyboard-focused-tab, .tabbrowser-tab:focus:not([aria-activedescendant])) > .tab-stack > .tab-content > .tab-label-container:not([pinned]),
 :is(.keyboard-focused-tab, .tabbrowser-tab:focus:not([aria-activedescendant])) > .tab-stack > .tab-content > .tab-icon-image[pinned],
 :is(.keyboard-focused-tab, .tabbrowser-tab:focus:not([aria-activedescendant])) > .tab-stack > .tab-content > .tab-throbber[pinned] {
@@ -558,7 +558,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   padding-top: var(--space-above-tabbar);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #TabsToolbar:not(:-moz-lwtheme) {
   color: #333;
 }

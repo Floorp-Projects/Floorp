@@ -152,7 +152,7 @@ html|img#editBookmarkPanelFavicon[src] {
   display: flex;
 }
 
-@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media (-moz-proton-doorhangers) {
 #editBookmarkPanel {
   font: caption;
 }
@@ -261,7 +261,7 @@ html|img#editBookmarkPanelFavicon[src] {
 }
 } /** END Proton **/
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 #editBookmarkPanelInfoArea {
   margin: 6px 8px 0;
 }

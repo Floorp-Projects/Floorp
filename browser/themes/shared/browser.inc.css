@@ -50,7 +50,7 @@
   --lwt-popup-brighttext-url-color: #74c0ff;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
   :root {
     --focus-outline-width: 0;
     --identity-box-margin-inline: 3px;
@@ -68,7 +68,7 @@
   --urlbar-icon-padding: 7px; /* (34px - 2px border - 2px padding - 16px icon) / 2 */
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 :root {
   --urlbar-min-height: 30px;
   --urlbar-icon-padding: 6px; /* (30px - 2px border - 16px icon) / 2 */
@@ -91,7 +91,7 @@
   color: var(--lwt-text-color);
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 :root {
   --focus-outline-width: 2px;
   --focus-outline-color: currentColor;
@@ -155,7 +155,7 @@
   border-bottom-style: none;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 /* Add space to beginning of toolbar and make that space click the first <toolbarbutton> */
 #nav-bar-customization-target > :is(toolbarbutton, toolbaritem):first-child,
 #nav-bar-customization-target > toolbarpaletteitem:first-child > :is(toolbarbutton, toolbaritem) {
@@ -178,13 +178,13 @@
   max-height: 4em;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #PersonalToolbar {
   padding: 2px 6px;
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 #PersonalToolbar {
   padding-inline: 6px;
 }
@@ -851,7 +851,7 @@ menupopup::part(drop-indicator) {
   flex: 1;
 }
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 .webRTC-selectDevice-label {
   margin-top: 6px;
   font-weight: 600;
@@ -863,7 +863,7 @@ menupopup::part(drop-indicator) {
 }
 } /** END not Proton **/
 
-@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media (-moz-proton-doorhangers) {
 popupnotificationcontent {
   margin-block-start: 8px;
 }

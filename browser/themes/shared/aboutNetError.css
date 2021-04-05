@@ -193,7 +193,7 @@ body:not(.neterror) #advancedButton {
   display: none;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 .connectionFailure #errorPageContainer,
 .netInterrupt #errorPageContainer,
 .netTimeout #errorPageContainer,

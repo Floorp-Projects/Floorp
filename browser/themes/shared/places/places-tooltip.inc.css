@@ -6,7 +6,7 @@
    on extra theming and proton variables that would need to be
    injected into the sidebar. */
 
-@supports -moz-bool-pref("browser.proton.places-tooltip.enabled") {
+@media (-moz-proton-places-tooltip) {
 .places-tooltip-title {
   font-weight: 600;
 %ifdef XP_MACOSX

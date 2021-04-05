@@ -6,7 +6,7 @@
 
 %include ../../shared/menulist.inc.css
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 label {
   margin: 1px 3px;
 }
@@ -50,7 +50,7 @@ dropmarker[native] {
 }
 } /** END Proton **/
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :host {
   appearance: auto;
   -moz-default-appearance: menulist;

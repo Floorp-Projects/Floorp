@@ -7,7 +7,7 @@
 
 %include ../../shared/findBar.inc.css
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 html|input.findbar-textbox {
   background-image: url("chrome://global/skin/icons/search-textbox.svg");
   padding-inline-start: 19px;

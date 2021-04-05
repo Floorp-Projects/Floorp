@@ -110,7 +110,7 @@
   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :host,
 :root {
   --in-content-page-background: #f9f9fa;
@@ -191,7 +191,7 @@
   }
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 @media (prefers-color-scheme: dark) {
   :host,
   :root {
@@ -326,7 +326,7 @@ xul|menulist {
   font-size: 1em;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 button {
   font-weight: 600;
 }
@@ -473,7 +473,7 @@ html|button.ghost-button:enabled:hover:active {
   background-color: var(--in-content-button-background-hover);
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 html|button.ghost-button:enabled:hover {
   background-color: var(--in-content-button-background-hover);
 }
@@ -603,7 +603,7 @@ html|textarea:-moz-ui-invalid {
   outline: 1px solid var(--in-content-border-invalid);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
 html|textarea,
 xul|search-textbox {
@@ -724,7 +724,7 @@ html|a:-moz-focusring,
 
 /* Checkboxes and radio buttons */
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 /* Add invisible vertical click-target */
 xul|*.checkbox-check,
 html|input[type="checkbox"] {
@@ -914,7 +914,7 @@ html|*#categories > html|*.category:dir(rtl) {
   background-color: var(--in-content-button-background-active);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 #categories > .category {
   border-radius: 2px;
 }
@@ -1315,7 +1315,7 @@ xul|*.sidebar-footer-link {
   background-color: var(--in-content-button-background-active);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 .sidebar-footer-link {
   border-radius: 2px;
 }
@@ -1404,7 +1404,7 @@ xul|*.addons-icon {
   transform: scaleX(-1);
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@media (-moz-proton) {
 /* Adjust vertical margins for buttons in dialogs. We do this here because
  * this sheet gets inserted into the Shadow DOM for the button box in the dialog,
  * so can actually affect the button styling that way.  */

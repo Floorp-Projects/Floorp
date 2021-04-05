@@ -49,7 +49,7 @@
   min-height: 0;
 }
 
-@supports not -moz-bool-pref("browser.proton.modals.enabled") {
+@media not (-moz-proton-modals) {
 .sizeDetermined,
 .sizeDetermined .dialogRow,
 .sizeDetermined #infoContainer {
@@ -76,7 +76,7 @@ dialog[subdialog] #infoContainer {
   text-align: match-parent;
 }
 
-@supports -moz-bool-pref("browser.proton.modals.enabled") {
+@media (-moz-proton-modals) {
 /* use flexbox instead of grid: */
 dialog[subdialog],
 dialog[subdialog] #dialogGrid,

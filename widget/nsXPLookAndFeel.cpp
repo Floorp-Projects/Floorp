@@ -374,7 +374,6 @@ void nsXPLookAndFeel::Shutdown() {
   nsNativeBasicTheme::Shutdown();
 }
 
-// static
 static void IntPrefChanged() {
   // Int prefs can't change our system colors or fonts.
   LookAndFeel::NotifyChangedAllWindows(
@@ -387,7 +386,6 @@ static void FloatPrefChanged() {
       widget::ThemeChangeKind::MediaQueriesOnly);
 }
 
-// static
 static void ColorPrefChanged() {
   // Color prefs affect style, because they by definition change system colors.
   LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::Style);
@@ -395,8 +393,6 @@ static void ColorPrefChanged() {
 
 // static
 void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
-  // looping in the same order as in ::Init
-
   nsDependentCString prefName(aPref);
   for (const char* pref : sIntPrefs) {
     if (prefName.Equals(pref)) {
@@ -420,11 +416,20 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   }
 }
 
+static constexpr nsLiteralCString kBoolMediaQueryPrefs[] = {
+    "browser.proton.enabled"_ns,
+    "browser.proton.urlbar.enabled"_ns,
+    "browser.proton.contextmenus.enabled"_ns,
+    "browser.proton.modals.enabled"_ns,
+    "browser.proton.doorhangers.enabled"_ns,
+    "browser.proton.infobars.enabled"_ns,
+    "browser.proton.places-tooltip.enabled"_ns,
+};
+
 // Read values from the user's preferences.
 // This is done once at startup, but since the user's preferences
 // haven't actually been read yet at that time, we also have to
 // set a callback to inform us of changes to each pref.
-//
 void nsXPLookAndFeel::Init() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -439,6 +444,15 @@ void nsXPLookAndFeel::Init() {
   // We really do just want the accessibility.tabfocus pref, not other prefs
   // that start with that string.
   Preferences::RegisterCallback(OnPrefChanged, "accessibility.tabfocus");
+
+  for (auto& pref : kBoolMediaQueryPrefs) {
+    Preferences::RegisterCallback(
+        [](const char*, void*) {
+          LookAndFeel::NotifyChangedAllWindows(
+              widget::ThemeChangeKind::MediaQueriesOnly);
+        },
+        pref);
+  }
 }
 
 nsXPLookAndFeel::~nsXPLookAndFeel() {

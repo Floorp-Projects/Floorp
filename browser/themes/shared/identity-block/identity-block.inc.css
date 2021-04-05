@@ -10,7 +10,7 @@
   margin-inline-end: var(--identity-box-margin-inline);
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #identity-box {
   margin-inline-start: var(--identity-box-margin-inline);
 }
@@ -31,7 +31,7 @@
   fill-opacity: .6;
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #identity-box[pageproxystate="invalid"] {
   margin-inline-end: calc(var(--identity-box-margin-inline) + 2px);
 }
@@ -62,7 +62,7 @@
   background-color: hsla(0,0%,70%,.3);
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 .identity-box-button:hover:not([open=true]),
 .identity-box-button:hover:active,
 .identity-box-button[open=true],
@@ -85,7 +85,7 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 .identity-box-button {
   padding-inline: calc(var(--urlbar-icon-padding) / 2);
   border-radius: 0;
@@ -121,7 +121,7 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media (-moz-proton-urlbar) {
 #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
 #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
@@ -149,7 +149,7 @@
   pointer-events: none;
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #identity-box[pageproxystate="valid"].notSecureText,
 #identity-box[pageproxystate="valid"].chromeUI,
 #identity-box[pageproxystate="valid"].extensionPage,
@@ -224,7 +224,7 @@
   }
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #identity-box[pageproxystate="valid"].chromeUI #identity-icon {
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
@@ -324,7 +324,7 @@
   position: relative;
 }
 
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+@media not (-moz-proton-urlbar) {
 #tracking-protection-icon-container {
   border-radius: 0;
   /* Separator */
