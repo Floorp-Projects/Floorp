@@ -341,8 +341,10 @@ interface nsIApplicationUpdateService : nsISupports
    * calling nsIRequest::Cancel on the download's nsIRequest. When downloading
    * with nsIIncrementalDownload, this will leave the partial download in place.
    * When downloading with BITS, any partial download progress will be removed.
+   *
+   * @returns A Promise that resolves once the download has been stopped.
    */
-  void stopDownload();
+  Promise stopDownload();
 
   /**
    * Whether or not there is an download happening at the moment.
@@ -554,8 +556,10 @@ interface nsIUpdateManager : nsISupports
 
   /**
    * Refresh the update status based on the information in update.status.
+   *
+   * @returns A Promise that resolves after the update status is refreshed.
    */
-  void refreshUpdateStatus();
+  Promise refreshUpdateStatus();
 
   /**
    * The user agreed to proceed with an elevated update and we are now

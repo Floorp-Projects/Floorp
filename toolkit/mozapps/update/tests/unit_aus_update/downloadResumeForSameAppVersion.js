@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-function run_test() {
+async function run_test() {
   setupTestCommon();
 
   debugDump(
@@ -33,6 +33,6 @@ function run_test() {
 
   // Cancel the download early to prevent it writing the update xml files during
   // shutdown.
-  gAUS.stopDownload();
+  await gAUS.stopDownload();
   executeSoon(doTestFinish);
 }
