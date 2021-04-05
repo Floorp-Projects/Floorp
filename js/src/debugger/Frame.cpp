@@ -1942,7 +1942,7 @@ JSObject* js::IdVectorToArray(JSContext* cx, Handle<IdVector> ids) {
         return nullptr;
       }
       vals[i].setString(str);
-    } else if (JSID_IS_ATOM(id)) {
+    } else if (id.isAtom()) {
       vals[i].setString(JSID_TO_STRING(id));
     } else if (JSID_IS_SYMBOL(id)) {
       vals[i].setSymbol(JSID_TO_SYMBOL(id));
