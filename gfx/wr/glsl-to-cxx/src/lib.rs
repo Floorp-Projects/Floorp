@@ -393,9 +393,8 @@ fn write_set_uniform_4fv(
         if float4_compatible(tk.clone()) {
             write!(
                 state,
-                "  self->{} = {}_scalar(value);\n",
-                name,
-                tk.glsl_primitive_type_name().unwrap(),
+                "  self->{} = vec4_scalar::load_from_ptr(value);\n",
+                name
             );
         } else {
             write!(state, "  assert(0); // {}\n", name);
