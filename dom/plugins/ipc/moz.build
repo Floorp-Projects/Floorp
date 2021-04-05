@@ -89,17 +89,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "PluginUtilsOSX.mm",
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    EXPORTS.mozilla.plugins += [
-        "PluginWidgetChild.h",
-        "PluginWidgetParent.h",
-    ]
-    UNIFIED_SOURCES += ["D3D11SurfaceHolder.cpp", "PluginUtilsWin.cpp"]
-    SOURCES += [
-        "PluginWidgetChild.cpp",
-        "PluginWidgetParent.cpp",
-    ]
-
 IPDL_SOURCES += [
     "PBrowserStream.ipdl",
     "PFunctionBroker.ipdl",
