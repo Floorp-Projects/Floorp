@@ -2144,14 +2144,15 @@ bool js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp,
          NativeGetPureInline(&obj->as<NativeObject>(), id, prop, vp, cx);
 }
 
-static inline bool NativeGetGetterPureInline(PropertyResult prop,
+static inline bool NativeGetGetterPureInline(NativeObject* holder,
+                                             PropertyResult prop,
                                              JSFunction** fp) {
   MOZ_ASSERT(prop.isNativeProperty());
 
-  if (prop.shape()->hasGetterObject()) {
-    Shape* shape = prop.shape();
-    if (shape->getterObject()->is<JSFunction>()) {
-      *fp = &shape->getterObject()->as<JSFunction>();
+  if (holder->hasGetter(prop.shape())) {
+    JSObject* getter = holder->getGetter(prop.shape());
+    if (getter->is<JSFunction>()) {
+      *fp = &getter->as<JSFunction>();
       return true;
     }
   }
@@ -2174,7 +2175,7 @@ bool js::GetGetterPure(JSContext* cx, JSObject* obj, jsid id, JSFunction** fp) {
     return true;
   }
 
-  return prop.isNativeProperty() && NativeGetGetterPureInline(prop, fp);
+  return prop.isNativeProperty() && NativeGetGetterPureInline(pobj, prop, fp);
 }
 
 bool js::GetOwnGetterPure(JSContext* cx, JSObject* obj, jsid id,
@@ -2190,7 +2191,8 @@ bool js::GetOwnGetterPure(JSContext* cx, JSObject* obj, jsid id,
     return true;
   }
 
-  return prop.isNativeProperty() && NativeGetGetterPureInline(prop, fp);
+  return prop.isNativeProperty() &&
+         NativeGetGetterPureInline(&obj->as<NativeObject>(), prop, fp);
 }
 
 bool js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id,
@@ -2202,11 +2204,16 @@ bool js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id,
     return false;
   }
 
-  if (!prop.isNativeProperty() || !prop.shape()->hasGetterObject()) {
+  if (!prop.isNativeProperty()) {
     return true;
   }
 
-  JSObject* getterObj = prop.shape()->getterObject();
+  NativeObject* nobj = &obj->as<NativeObject>();
+  if (!nobj->hasGetter(prop.shape())) {
+    return true;
+  }
+
+  JSObject* getterObj = nobj->getGetter(prop.shape());
   if (!getterObj->is<JSFunction>()) {
     return true;
   }
@@ -3179,11 +3186,11 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
   if (attrs & JSPROP_PERMANENT) out.put(" permanent");
 
   if (shape.hasGetterValue()) {
-    out.printf(" getterValue %p", shape.getterObject());
+    out.printf(" getterValue %p", obj->getGetter(&shape));
   }
 
   if (shape.hasSetterValue()) {
-    out.printf(" setterValue %p", shape.setterObject());
+    out.printf(" setterValue %p", obj->getSetter(&shape));
   }
 
   if (shape.isCustomDataProperty()) {
