@@ -997,21 +997,6 @@ function getMainChromeWindow(aWindow) {
   return aWindow.browsingContext.topChromeWindow;
 }
 
-/** Sets the test plugin(s) initially expected enabled state.
- * It will automatically be reset to it's previous value after the test
- * ends.
- * @param aNewEnabledState [in] the enabled state, e.g. SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED
- * @param aPluginName [in, optional] The name of the plugin, defaults to "Test Plug-in"
- */
-function setTestPluginEnabledState(aNewEnabledState, aPluginName) {
-  var plugin = getTestPluginTag(aPluginName);
-  var oldEnabledState = plugin.enabledState;
-  plugin.enabledState = aNewEnabledState;
-  SimpleTest.registerCleanupFunction(function() {
-    getTestPluginTag(aPluginName).enabledState = oldEnabledState;
-  });
-}
-
 // //////////////////////////////////////////////////////////////////////////////
 // Private
 // //////////////////////////////////////////////////////////////////////////////
@@ -1045,22 +1030,6 @@ function getObjAddress(aObj) {
   }
 
   return aObj.toString();
-}
-
-function getTestPluginTag(aPluginName) {
-  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"].getService(
-    SpecialPowers.Ci.nsIPluginHost
-  );
-  var tags = ph.getPluginTags();
-  var name = aPluginName || "Test Plug-in";
-  for (var tag of tags) {
-    if (tag.name == name) {
-      return tag;
-    }
-  }
-
-  ok(false, "Could not find plugin tag with plugin name '" + name + "'");
-  return null;
 }
 
 function normalizeAccTreeObj(aObj) {

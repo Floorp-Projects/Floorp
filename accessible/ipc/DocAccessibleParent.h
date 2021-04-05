@@ -234,9 +234,6 @@ class DocAccessibleParent : public RemoteAccessible,
    */
   void SendParentCOMProxy(LocalAccessible* aOuterDoc);
 
-  virtual mozilla::ipc::IPCResult RecvGetWindowedPluginIAccessible(
-      const WindowsHandle& aHwnd, IAccessibleHolder* aPluginCOMProxy) override;
-
   /**
    * Set emulated native window handle for a document.
    * @param aWindowHandle emulated native window handle
