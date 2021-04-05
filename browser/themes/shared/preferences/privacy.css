@@ -5,7 +5,7 @@
 /* Permissions */
 
 #trackingGroup {
-  --section-highlight-background-color: rgba(69, 161, 255, 0.2);
+  --section-highlight-background-color: color-mix(in srgb, var(--in-content-accent-color) 20%, transparent);
 }
 
 .content-blocking-icon,
@@ -151,8 +151,8 @@
 }
 
 .content-blocking-category {
-  border: 1px solid var(--in-content-border-color);
-  background-color: rgba(215, 215, 219, 0.2);
+  border: 1px solid var(--in-content-box-border-color);
+  background-color: rgba(215, 215, 219, 0.1);
 }
 
 .content-blocking-category.disabled {
@@ -183,11 +183,11 @@
 
 .arrowhead:not([disabled]):hover {
   cursor: pointer;
-  background-color: var(--grey-90-a10);
+  background-color: var(--in-content-button-background-hover);
 }
 
 .arrowhead:not([disabled]):hover:active {
-  background-color: var(--grey-90-a20);
+  background-color: var(--in-content-button-background-active);
 }
 
 .arrowhead.up {
@@ -236,29 +236,20 @@
   min-height: 30px;
   padding: 0 20px;
   list-style-image: url("chrome://browser/skin/reload.svg");
-  background-color: var(--blue-50);
   align-self: center;
-}
-
-.reload-tabs-button:not([disabled="true"]):hover {
-  background-color: var(--blue-60);
-}
-
-.reload-tabs-button:not([disabled="true"]):hover:active {
-  background-color: var(--blue-70);
 }
 
 .reload-tabs-button .button-icon {
   margin: 0 6px;
-  color: white;
+  color: inherit;
 }
 
 .reload-tabs-button .button-text {
-  color: white;
+  color: inherit;
 }
 
 .content-blocking-category.expanded:not(.selected) .content-blocking-warning {
-  background-color: var(--grey-90-a10);
+  background-color: var(--in-content-box-info-background);
 }
 
 .content-blocking-category.selected .arrowhead {
@@ -266,7 +257,7 @@
 }
 
 .content-blocking-category.selected {
-  border: 1px solid #45A1FF;
+  border: 1px solid var(--in-content-accent-color);
   background-color: var(--section-highlight-background-color);
 }
 

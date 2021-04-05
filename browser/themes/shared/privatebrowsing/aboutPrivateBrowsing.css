@@ -96,6 +96,7 @@ p {
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.15);
   cursor: text;
   font-size: 15px;
+  font-weight: normal;
   margin: 0;
   padding-block: 0;
   padding-inline: 46px 48px;
