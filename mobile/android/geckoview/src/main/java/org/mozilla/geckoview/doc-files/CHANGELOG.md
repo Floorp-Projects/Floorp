@@ -21,11 +21,15 @@ exclude: true
 - ⚠️ Deprecated [`NavigationDelegate.onLocationChange`][89.4], to be removed in v92. The
   new `onLocationChange` callback simply adds permissions information, migration of existing
   functionality should only require updating the function signature.
+- Added [`GeckoRuntimeSettings.setEnterpriseRootsEnabled`][89.1] which allows
+  GeckoView to add third party certificate roots from the Android OS CA store.
+  ([bug 1678191]({{bugzilla}}1678191)).
 
 [89.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.ContentPermission.html
 [89.2]: {{javadoc_uri}}/StorageController.html#getPermissions-java.lang.String-
 [89.3]: {{javadoc_uri}}/StorageController.html#getAllPermissions--
 [89.4]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-
+[89.5]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setEnterpriseRootsEnabled-boolean-
 
 ## v88
 - Added [`WebExtension.Download#update`][88.1] that can be used to
@@ -948,4 +952,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 638023f7c8ddb3ccf732df09b0bdee4416c04237
+[api-version]: 03df1c68b161c8df9f9a1095fac75dc3446aefde
