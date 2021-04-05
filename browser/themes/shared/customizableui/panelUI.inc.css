@@ -504,9 +504,13 @@ panelview:not([mainview]) .toolbarbutton-text,
   --arrowpanel-padding: 4px 0;
 }
 
-#appMenu-popup panelview,
-#customizationui-widget-multiview panelview:not([extension]) {
+#appMenu-popup panelview {
   width: 22.5em;
+}
+
+#customizationui-widget-multiview panelview:not([extension]) {
+  min-width: @menuPanelWidth@;
+  max-width: 35em;
 }
 
 #customizationui-widget-multiview #appMenu-libraryView,
@@ -688,8 +692,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   margin-top: 6px;
 }
 
-#appMenu-popup panelview,
-#customizationui-widget-multiview panelview:not([extension]) {
+#appMenu-popup panelview {
   min-width: @menuPanelWidth@;
   max-width: 35em;
 }
