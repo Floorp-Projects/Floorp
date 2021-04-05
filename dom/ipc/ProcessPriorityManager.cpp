@@ -163,7 +163,6 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
   already_AddRefed<ParticularProcessPriorityManager>
   GetParticularProcessPriorityManager(ContentParent* aContentParent);
 
-  void ObserveContentParentCreated(nsISupports* aContentParent);
   void ObserveContentParentDestroyed(nsISupports* aSubject);
 
   nsTHashMap<uint64_t, RefPtr<ParticularProcessPriorityManager> >
@@ -382,7 +381,6 @@ void ProcessPriorityManagerImpl::Init() {
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->AddObserver(this, "ipc:content-created", /* ownsWeak */ true);
     os->AddObserver(this, "ipc:content-shutdown", /* ownsWeak */ true);
   }
 }
@@ -391,9 +389,7 @@ NS_IMETHODIMP
 ProcessPriorityManagerImpl::Observe(nsISupports* aSubject, const char* aTopic,
                                     const char16_t* aData) {
   nsDependentCString topic(aTopic);
-  if (topic.EqualsLiteral("ipc:content-created")) {
-    ObserveContentParentCreated(aSubject);
-  } else if (topic.EqualsLiteral("ipc:content-shutdown")) {
+  if (topic.EqualsLiteral("ipc:content-shutdown")) {
     ObserveContentParentDestroyed(aSubject);
   } else {
     MOZ_ASSERT(false);
@@ -410,8 +406,6 @@ ProcessPriorityManagerImpl::GetParticularProcessPriorityManager(
     if (!entry) {
       entry.Insert(new ParticularProcessPriorityManager(aContentParent));
       entry.Data()->Init();
-      FireTestOnlyObserverNotification("process-created",
-                                       nsPrintfCString("%" PRIu64, cpId));
     }
     return do_AddRef(entry.Data());
   });
@@ -425,15 +419,6 @@ void ProcessPriorityManagerImpl::SetProcessPriority(
   if (pppm) {
     pppm->SetPriorityNow(aPriority);
   }
-}
-
-void ProcessPriorityManagerImpl::ObserveContentParentCreated(
-    nsISupports* aContentParent) {
-  // Do nothing; it's sufficient to get the PPPM.  But assign to nsRefPtr so we
-  // don't leak the already_AddRefed object.
-  RefPtr<ContentParent> cp = do_QueryObject(aContentParent);
-  RefPtr<ParticularProcessPriorityManager> pppm =
-      GetParticularProcessPriorityManager(cp);
 }
 
 void ProcessPriorityManagerImpl::ObserveContentParentDestroyed(
