@@ -63,48 +63,19 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
     eType_Loading = TYPE_LOADING,
     // Content is a *non-svg* image
     eType_Image = TYPE_IMAGE,
-    // Content is a plugin
-    eType_Plugin = TYPE_PLUGIN,
+    // Content is a "special" plugin.  Plugins are removed but these MIME
+    // types display an transparent region in their place.
+    // (Special plugins that have an HTML fallback are eType_Null)
+    eType_Fallback = TYPE_FALLBACK,
     // Content is a fake plugin, which loads as a document but behaves as a
-    // plugin (see nsPluginHost::CreateFakePlugin)
+    // plugin (see nsPluginHost::CreateFakePlugin).  Currently only used for
+    // pdf.js.
     eType_FakePlugin = TYPE_FAKE_PLUGIN,
     // Content is a subdocument, possibly SVG
     eType_Document = TYPE_DOCUMENT,
-    // No content loaded (fallback). May be showing alternate content or
-    // a custom error handler - *including* click-to-play dialogs
+    // Content is unknown and should be represented by an empty element,
+    // unless an HTML fallback is available.
     eType_Null = TYPE_NULL
-  };
-
-  enum FallbackType {
-    // The content type is not supported (e.g. plugin not installed)
-    eFallbackUnsupported = nsIObjectLoadingContent::PLUGIN_UNSUPPORTED,
-    // Showing alternate content
-    eFallbackAlternate = nsIObjectLoadingContent::PLUGIN_ALTERNATE,
-    // The plugin exists, but is disabled
-    eFallbackDisabled = nsIObjectLoadingContent::PLUGIN_DISABLED,
-    // The plugin is blocklisted and disabled
-    eFallbackBlocklisted = nsIObjectLoadingContent::PLUGIN_BLOCKLISTED,
-    // The plugin is considered outdated, but not disabled
-    eFallbackOutdated = nsIObjectLoadingContent::PLUGIN_OUTDATED,
-    // The plugin has crashed
-    eFallbackCrashed = nsIObjectLoadingContent::PLUGIN_CRASHED,
-    /// ** All values >= eFallbackClickToPlay are plugin placeholder types
-    ///    that would be replaced by a real plugin if activated (PlayPlugin())
-    /// ** Furthermore, values >= eFallbackClickToPlay and
-    ///    <= eFallbackClickToPlayQuiet are click-to-play types.
-    // The plugin is disabled until the user clicks on it
-    eFallbackClickToPlay = nsIObjectLoadingContent::PLUGIN_CLICK_TO_PLAY,
-    // The plugin is vulnerable (update available)
-    eFallbackVulnerableUpdatable =
-        nsIObjectLoadingContent::PLUGIN_VULNERABLE_UPDATABLE,
-    // The plugin is vulnerable (no update available)
-    eFallbackVulnerableNoUpdate =
-        nsIObjectLoadingContent::PLUGIN_VULNERABLE_NO_UPDATE,
-    // The plugin is click-to-play, but the user won't see overlays
-    eFallbackClickToPlayQuiet =
-        nsIObjectLoadingContent::PLUGIN_CLICK_TO_PLAY_QUIET,
-    // Plugins are no longer supported.  Content is just a transparent rect.
-    eFallbackBlockAllPlugins = nsIObjectLoadingContent::PLUGIN_BLOCK_ALL,
   };
 
   nsObjectLoadingContent();
@@ -179,21 +150,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   uint32_t GetContentTypeForMIMEType(const nsAString& aMIMEType) {
     return GetTypeOfContent(NS_ConvertUTF16toUTF8(aMIMEType), false);
   }
-  void PlayPlugin(mozilla::dom::SystemCallerGuarantee,
-                  mozilla::ErrorResult& aRv);
   void Reload(bool aClearActivation, mozilla::ErrorResult& aRv) {
     aRv = Reload(aClearActivation);
   }
-  bool Activated() const { return mActivated; }
   nsIURI* GetSrcURI() const { return mURI; }
-
-  /**
-   * The default state that this plugin would be without manual activation.
-   * @returns PLUGIN_ACTIVE if the default state would be active.
-   */
-  uint32_t DefaultFallbackType();
-
-  uint32_t PluginFallbackType() const { return mFallbackType; }
 
   // FIXME rename this
   void SkipFakePlugins(mozilla::ErrorResult& aRv) { aRv = SkipFakePlugins(); }
@@ -308,7 +268,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
 
   void CreateStaticClone(nsObjectLoadingContent* aDest) const;
 
-  nsresult BindToTree(mozilla::dom::BindContext&, nsINode& aParent);
+  nsresult BindToTree(mozilla::dom::BindContext& aCxt, nsINode& aParent) {
+    nsImageLoadingContent::BindToTree(aCxt, aParent);
+    return NS_OK;
+  }
   void UnbindFromTree(bool aNullParent = true);
 
   /**
@@ -367,13 +330,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   [[nodiscard]] nsresult BuildParametersArray();
 
   /**
-   * Loads fallback content with the specified FallbackType
-   *
-   * @param aType   FallbackType value for type of fallback we're loading
-   * @param aNotify Send notifications and events. If false, caller is
-   *                responsible for doing so
+   * Configure fallback for deprecated plugin and broken elements.
    */
-  void LoadFallback(FallbackType aType, bool aNotify);
+  void ConfigureFallback();
 
   /**
    * Internal version of LoadObject that should only be used by this class
@@ -384,7 +343,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
                       nsIRequest* aLoadingChannel);
 
   /**
-   * Introspects the object and sets the following member variables:
+   * Inspects the object and sets the following member variables:
    * - mOriginalContentType : This is the type attribute on the element
    * - mOriginalURI         : The src or data attribute on the element
    * - mURI                 : The final URI, considering mChannel if
@@ -428,33 +387,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   bool ShouldBlockContent();
 
   /**
-   * If this object is allowed to play plugin content, or if it would display
-   * click-to-play instead.
-   * NOTE that this does not actually check if the object is a loadable plugin
-   * NOTE This ignores the current activated state. The caller should check
-   *      this if appropriate.
-   */
-  bool ShouldPlay(FallbackType& aReason);
-
-  /**
-   * This method tells if the fallback content should be attempted to be used
-   * over the original object content.
-   * It will look at prefs and this plugin's CTP state to make a decision.
-   *
-   * NOTE that this doesn't say whether the fallback _will_ be used, only
-   * whether we should look into it to possibly use it. The final answer will be
-   * given by the PreferFallback method.
-   *
-   * @param aIsPluginClickToPlay Whether this object instance is CTP.
-   */
-  bool FavorFallbackMode(bool aIsPluginClickToPlay);
-
-  /**
-   * Whether the page has provided good fallback content to this object.
-   */
-  bool HasGoodFallback();
-
-  /**
    * This method tells the final answer on whether this object's fallback
    * content should be used instead of the original plugin content.
    *
@@ -480,12 +412,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    * @return true if call succeeded and NS_CP_ACCEPTED(*aContentPolicy)
    */
   bool CheckProcessPolicy(int16_t* aContentPolicy);
-
-  /**
-   * Gets the plugin instance and creates a plugin stream listener, assigning
-   * it to mFinalListener
-   */
-  bool MakePluginListener();
 
   void SetupFrameLoader(int32_t aJSPluginId);
 
@@ -513,12 +439,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    * this method is called. This method is cheap if the type and state didn't
    * actually change.
    *
-   * @param aSync If a synchronous frame construction is required. If false,
-   *              the construction may either be sync or async.
    * @param aNotify if false, only need to update the state of our element.
    */
   void NotifyStateChanged(ObjectType aOldType, mozilla::EventStates aOldState,
-                          FallbackType aOldFallbackType, bool aSync,
                           bool aNotify);
 
   /**
@@ -599,8 +522,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
 
   // Type of the currently-loaded content.
   ObjectType mType : 8;
-  // The type of fallback content we're showing (see ObjectState())
-  FallbackType mFallbackType : 8;
 
   uint32_t mRunID;
   bool mHasRunID : 1;
@@ -618,10 +539,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   // created using NS_FROM_PARSER_NETWORK flag. If the element is modified,
   // it may lose the flag.
   bool mNetworkCreated : 1;
-
-  // Used to keep track of whether or not a plugin has been explicitly
-  // activated by PlayPlugin(). (see ShouldPlay())
-  bool mActivated : 1;
 
   // Whether content blocking is enabled or not for this object.
   bool mContentBlockingEnabled : 1;
@@ -644,11 +561,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   // comments for details), we change these to try to load HTML5 versions of
   // videos.
   bool mRewrittenYoutubeEmbed : 1;
-
-  // Cache the answer of PreferFallback() because ShouldPlay is called several
-  // times during the load process.
-  bool mPreferFallback : 1;
-  bool mPreferFallbackKnown : 1;
 
   nsTArray<mozilla::dom::MozPluginParameter> mCachedAttributes;
   nsTArray<mozilla::dom::MozPluginParameter> mCachedParameters;
