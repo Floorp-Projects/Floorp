@@ -132,7 +132,9 @@ TEST(MediaEventSource, DisconnectBeforeNotification)
  */
 TEST(MediaEventSource, DisconnectAndConnect)
 {
-  RefPtr<TaskQueue> queue;
+  RefPtr<TaskQueue> queue =
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+
   MediaEventProducerExc<int> source;
   MediaEventListener listener = source.Connect(queue, []() {});
   listener.Disconnect();
@@ -375,7 +377,9 @@ TEST(MediaEventSource, NoMove)
  */
 TEST(MediaEventSource, MoveLambda)
 {
-  RefPtr<TaskQueue> queue;
+  RefPtr<TaskQueue> queue =
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+
   MediaEventProducer<void> source;
 
   int counter = 0;
@@ -395,4 +399,53 @@ TEST(MediaEventSource, MoveLambda)
 
   listener1.Disconnect();
   listener2.Disconnect();
+}
+
+class ClassForDestroyCheck final {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ClassForDestroyCheck);
+
+  explicit ClassForDestroyCheck(bool* aIsDestroyed)
+      : mIsDestroyed(aIsDestroyed) {
+    EXPECT_FALSE(*aIsDestroyed);
+  }
+
+  int32_t RefCountNums() const { return mRefCnt; }
+
+ private:
+  ~ClassForDestroyCheck() {
+    EXPECT_FALSE(*mIsDestroyed);
+    *mIsDestroyed = true;
+  }
+  bool* const mIsDestroyed;
+};
+
+TEST(MediaEventSource, ResetFuncReferenceAfterDisconnect)
+{
+  const RefPtr<TaskQueue> queue =
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+  MediaEventProducer<void> source;
+
+  // Using a class that supports refcounting to check the object destruction.
+  bool isDestroyed = false;
+  auto object = MakeRefPtr<ClassForDestroyCheck>(&isDestroyed);
+  EXPECT_FALSE(isDestroyed);
+  EXPECT_EQ(object->RefCountNums(), 1);
+
+  // Function holds a strong reference to object.
+  MediaEventListener listener = source.Connect(queue, [ptr = object] {});
+  EXPECT_FALSE(isDestroyed);
+  EXPECT_EQ(object->RefCountNums(), 2);
+
+  // This should destroy the function and release the object reference from the
+  // function on the task queue,
+  listener.Disconnect();
+  queue->BeginShutdown();
+  queue->AwaitShutdownAndIdle();
+  EXPECT_FALSE(isDestroyed);
+  EXPECT_EQ(object->RefCountNums(), 1);
+
+  // No one is holding reference to object, it should be destroyed
+  // immediately.
+  object = nullptr;
+  EXPECT_TRUE(isDestroyed);
 }
