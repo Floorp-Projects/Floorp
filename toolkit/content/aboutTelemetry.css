@@ -234,6 +234,7 @@ section:not(.active) {
   padding-block: 12px;
   padding-inline: 20px;
   border: 1px solid var(--in-content-box-border-color);
+  background-color: var(--in-content-box-background);
   border-radius: 2px;
   margin-bottom: 24px;
   margin-inline-end: 24px;
@@ -281,8 +282,8 @@ section:not(.active) {
 }
 
 .bar-inner {
-  background-color: #0a84ff;
-  border: 1px solid #0060df;
+  background-color: var(--in-content-accent-color);
+  border: 1px solid rgba(0,0,0,0.1);
   border-radius: 2px;
 }
 
@@ -304,7 +305,7 @@ table {
 
 td {
   padding-bottom: 0.25em;
-  border-bottom: 1px solid var(--in-content-box-border-color);
+  border-bottom: 1px solid var(--in-content-border-color);
 }
 
 tr:not(:first-child):hover {
