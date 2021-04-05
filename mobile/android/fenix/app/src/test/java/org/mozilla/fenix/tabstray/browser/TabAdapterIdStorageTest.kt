@@ -4,13 +4,11 @@
 
 package org.mozilla.fenix.tabstray.browser
 
-import mozilla.components.concept.tabstray.Tab
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import java.util.UUID
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TabAdapterIdStorageTest {
@@ -78,8 +76,3 @@ class TabAdapterIdStorageTest {
         assertNotEquals(id2, id3)
     }
 }
-
-fun createTab() = Tab(
-    UUID.randomUUID().toString(),
-    "https://mozilla.org"
-)

@@ -74,8 +74,8 @@ class TrayPagerAdapter(
     companion object {
         const val TRAY_TABS_COUNT = 3
 
-        const val POSITION_NORMAL_TABS = 0
-        const val POSITION_PRIVATE_TABS = 1
-        const val POSITION_SYNCED_TABS = 2
+        val POSITION_NORMAL_TABS = Page.NormalTabs.ordinal
+        val POSITION_PRIVATE_TABS = Page.PrivateTabs.ordinal
+        val POSITION_SYNCED_TABS = Page.SyncedTabs.ordinal
     }
 }
