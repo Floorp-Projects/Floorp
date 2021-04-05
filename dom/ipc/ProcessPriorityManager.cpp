@@ -132,7 +132,7 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
    * given topic with the given data.  This is used for testing
    */
   void FireTestOnlyObserverNotification(const char* aTopic,
-                                        const nsACString& aData = ""_ns);
+                                        const nsACString& aData);
 
   /**
    * This must be called by a ParticularProcessPriorityManager when it changes
@@ -262,11 +262,7 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   }
 
  private:
-  void FireTestOnlyObserverNotification(const char* aTopic,
-                                        const nsACString& aData = ""_ns);
-
-  void FireTestOnlyObserverNotification(const char* aTopic,
-                                        const char* aData = nullptr);
+  void FireTestOnlyObserverNotification(const char* aTopic, const char* aData);
 
   bool IsHoldingWakeLock(const nsAString& aTopic);
 
@@ -800,7 +796,7 @@ void ParticularProcessPriorityManager::ShutDown() {
 }
 
 void ProcessPriorityManagerImpl::FireTestOnlyObserverNotification(
-    const char* aTopic, const nsACString& aData /* = ""_ns */) {
+    const char* aTopic, const nsACString& aData) {
   if (!TestMode()) {
     return;
   }
@@ -816,30 +812,16 @@ void ProcessPriorityManagerImpl::FireTestOnlyObserverNotification(
 }
 
 void ParticularProcessPriorityManager::FireTestOnlyObserverNotification(
-    const char* aTopic, const char* aData /* = nullptr */) {
-  if (!ProcessPriorityManagerImpl::TestMode()) {
-    return;
-  }
+    const char* aTopic, const char* aData) {
+  MOZ_ASSERT(aData, "Pass in data");
 
-  nsAutoCString data;
-  if (aData) {
-    data.AppendASCII(aData);
-  }
-
-  FireTestOnlyObserverNotification(aTopic, data);
-}
-
-void ParticularProcessPriorityManager::FireTestOnlyObserverNotification(
-    const char* aTopic, const nsACString& aData /* = ""_ns */) {
   if (!ProcessPriorityManagerImpl::TestMode()) {
     return;
   }
 
   nsAutoCString data(nsPrintfCString("%" PRIu64, ChildID()));
-  if (!aData.IsEmpty()) {
-    data.Append(':');
-    data.Append(aData);
-  }
+  data.Append(':');
+  data.AppendASCII(aData);
 
   // ProcessPriorityManagerImpl::GetSingleton() is guaranteed not to return
   // null, since ProcessPriorityManagerImpl is the only class which creates
