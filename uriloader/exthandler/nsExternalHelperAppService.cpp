@@ -2850,13 +2850,6 @@ nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt,
     return NS_OK;
   }
 
-  // Try the plugins
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  if (pluginHost &&
-      pluginHost->HavePluginForExtension(aFileExt, aContentType)) {
-    return NS_OK;
-  }
-
   // Let's see if an extension added something
   nsCOMPtr<nsICategoryManager> catMan(
       do_GetService("@mozilla.org/categorymanager;1"));

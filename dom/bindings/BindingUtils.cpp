@@ -2259,19 +2259,6 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
       MOZ_CRASH();
     }
   }
-
-  JS::Rooted<JSObject*> maybeObjLC(aCx, aObj);
-  nsObjectLoadingContent* htmlobject;
-  nsresult rv = UNWRAP_OBJECT(HTMLObjectElement, &maybeObjLC, htmlobject);
-  if (NS_FAILED(rv)) {
-    rv = UNWRAP_OBJECT(HTMLEmbedElement, &maybeObjLC, htmlobject);
-    if (NS_FAILED(rv)) {
-      htmlobject = nullptr;
-    }
-  }
-  if (htmlobject) {
-    htmlobject->SetupProtoChain(aCx, aObj);
-  }
 }
 
 GlobalObject::GlobalObject(JSContext* aCx, JSObject* aObject)

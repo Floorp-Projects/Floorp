@@ -23,7 +23,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIOService.h"
 #include "nsIPermissionManager.h"
-#include "nsNPAPIPluginInstance.h"
 #include "nsPluginHost.h"
 #include "nsIHttpChannel.h"
 #include "nsINestedURI.h"
@@ -99,6 +98,7 @@
 #include "nsChannelClassifier.h"
 #include "nsFocusManager.h"
 #include "ReferrerInfo.h"
+#include "nsIEffectiveTLDService.h"
 
 #ifdef XP_WIN
 // Thanks so much, Microsoft! :(
@@ -915,10 +915,6 @@ NS_IMETHODIMP
 nsObjectLoadingContent::GetDisplayedType(uint32_t* aType) {
   *aType = DisplayedType();
   return NS_OK;
-}
-
-nsNPAPIPluginInstance* nsObjectLoadingContent::GetPluginInstance() {
-  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -2442,51 +2438,6 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
   return NS_OK;
 }
 
-nsNPAPIPluginInstance* nsObjectLoadingContent::ScriptRequestPluginInstance(
-    JSContext* aCx) {
-  // The below methods pull the cx off the stack, so make sure they match.
-  //
-  // NB: Sometimes there's a null cx on the stack, in which case |cx| is the
-  // safe JS context. But in that case, IsCallerChrome() will return true,
-  // so the ensuing expression is short-circuited.
-  // XXXbz the NB comment above doesn't really make sense.  At the moment, all
-  // the callers to this except maybe SetupProtoChain have a useful JSContext*
-  // that could be used for nsContentUtils::IsSystemCaller...  We do need to
-  // sort out what the SetupProtoChain callers look like.
-  MOZ_ASSERT_IF(nsContentUtils::GetCurrentJSContext(),
-                aCx == nsContentUtils::GetCurrentJSContext());
-  // FIXME(emilio): Doesn't account for UA widgets, but probably doesn't matter?
-  bool callerIsContentJS = (nsContentUtils::GetCurrentJSContext() &&
-                            !nsContentUtils::IsCallerChrome());
-
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
-  // The first time content script attempts to access placeholder content, fire
-  // an event.  Fallback types >= eFallbackClickToPlay are plugin-replacement
-  // types, see header.
-  if (callerIsContentJS && !mScriptRequested && InActiveDocument(thisContent) &&
-      mType == eType_Null && mFallbackType >= eFallbackClickToPlay &&
-      mFallbackType <= eFallbackClickToPlayQuiet) {
-    nsCOMPtr<nsIRunnable> ev =
-        new nsSimplePluginEvent(thisContent, u"PluginScripted"_ns);
-    nsresult rv = NS_DispatchToCurrentThread(ev);
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT_UNREACHABLE("failed to dispatch PluginScripted event");
-    }
-    mScriptRequested = true;
-  } else if (callerIsContentJS && mType == eType_Plugin &&
-             nsContentUtils::IsSafeToRunScript() &&
-             InActiveDocument(thisContent)) {
-    // If we're configured as a plugin in an active document and it's safe to
-    // run scripts right now, try spawning synchronously
-    SyncStartPluginInstance();
-  }
-
-  // Note that returning a null plugin is expected (and happens often)
-  return nullptr;
-}
-
 NS_IMETHODIMP
 nsObjectLoadingContent::SyncStartPluginInstance() {
   NS_ASSERTION(
@@ -2621,24 +2572,6 @@ nsObjectLoadingContent::StopPluginInstance() {
   mInstantiating = false;
 
   return NS_OK;
-}
-
-void nsObjectLoadingContent::NotifyContentObjectWrapper() {
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
-
-  JS::Rooted<JSObject*> obj(cx, thisContent->GetWrapper());
-  if (!obj) {
-    // Nothing to do here if there's no wrapper for mContent. The proto
-    // chain will be fixed appropriately when the wrapper is created.
-    return;
-  }
-
-  SetupProtoChain(cx, obj);
 }
 
 void nsObjectLoadingContent::PlayPlugin(SystemCallerGuarantee,
@@ -2922,141 +2855,9 @@ Document* nsObjectLoadingContent::GetContentDocument(
   return sub_doc;
 }
 
-void nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
-                                             JS::Handle<JSObject*> aObject) {
-  if (mType != eType_Plugin) {
-    return;
-  }
-
-  if (!nsContentUtils::IsSafeToRunScript()) {
-    RefPtr<SetupProtoChainRunner> runner = new SetupProtoChainRunner(this);
-    nsContentUtils::AddScriptRunner(runner);
-    return;
-  }
-
-  // We get called on random realms here for some reason
-  // (perhaps because WrapObject can happen on a random realm?)
-  // so make sure to enter the realm of aObject.
-  MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
-
-  MOZ_ASSERT(IsDOMObject(aObject));
-  JSAutoRealm ar(aCx, aObject);
-
-  RefPtr<nsNPAPIPluginInstance> pi = ScriptRequestPluginInstance(aCx);
-
-  if (!pi) {
-    // No plugin around for this object.
-    return;
-  }
-
-  JS::Rooted<JSObject*> pi_obj(
-      aCx);  // XPConnect-wrapped peer object, when we get it.
-  JS::Rooted<JSObject*> pi_proto(aCx);  // 'pi.__proto__'
-
-  nsresult rv = GetPluginJSObject(aCx, pi, &pi_obj, &pi_proto);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (!pi_obj) {
-    // Didn't get a plugin instance JSObject, nothing we can do then.
-    return;
-  }
-
-  // If we got an xpconnect-wrapped plugin object, set obj's
-  // prototype's prototype to the scriptable plugin.
-
-  JS::Handle<JSObject*> my_proto = GetDOMClass(aObject)->mGetProto(aCx);
-  MOZ_ASSERT(my_proto);
-
-  // Set 'this.__proto__' to pi
-  if (!::JS_SetPrototype(aCx, aObject, pi_obj)) {
-    return;
-  }
-
-  if (pi_proto && JS::GetClass(pi_proto) != js::ObjectClassPtr) {
-    // The plugin wrapper has a proto that's not Object.prototype, set
-    // 'pi.__proto__.__proto__' to the original 'this.__proto__'
-    if (pi_proto != my_proto && !::JS_SetPrototype(aCx, pi_proto, my_proto)) {
-      return;
-    }
-  } else {
-    // 'pi' didn't have a prototype, or pi's proto was
-    // 'Object.prototype' (i.e. pi is an NPRuntime wrapped JS object)
-    // set 'pi.__proto__' to the original 'this.__proto__'
-    if (!::JS_SetPrototype(aCx, pi_obj, my_proto)) {
-      return;
-    }
-  }
-
-  // Before this proto dance the objects involved looked like this:
-  //
-  // this.__proto__.__proto__
-  //   ^      ^         ^
-  //   |      |         |__ Object.prototype
-  //   |      |
-  //   |      |__ WebIDL prototype (shared)
-  //   |
-  //   |__ WebIDL object
-  //
-  // pi.__proto__
-  // ^      ^
-  // |      |__ Object.prototype or some other object
-  // |
-  // |__ Plugin NPRuntime JS object wrapper
-  //
-  // Now, after the above prototype setup the prototype chain should
-  // look like this if pi.__proto__ was Object.prototype:
-  //
-  // this.__proto__.__proto__.__proto__
-  //   ^      ^         ^         ^
-  //   |      |         |         |__ Object.prototype
-  //   |      |         |
-  //   |      |         |__ WebIDL prototype (shared)
-  //   |      |
-  //   |      |__ Plugin NPRuntime JS object wrapper
-  //   |
-  //   |__ WebIDL object
-  //
-  // or like this if pi.__proto__ was some other object:
-  //
-  // this.__proto__.__proto__.__proto__.__proto__
-  //   ^      ^         ^         ^         ^
-  //   |      |         |         |         |__ Object.prototype
-  //   |      |         |         |
-  //   |      |         |         |__ WebIDL prototype (shared)
-  //   |      |         |
-  //   |      |         |__ old pi.__proto__
-  //   |      |
-  //   |      |__ Plugin NPRuntime JS object wrapper
-  //   |
-  //   |__ WebIDL object
-  //
-}
-
-// static
-nsresult nsObjectLoadingContent::GetPluginJSObject(
-    JSContext* cx, nsNPAPIPluginInstance* plugin_inst,
-    JS::MutableHandle<JSObject*> plugin_obj,
-    JS::MutableHandle<JSObject*> plugin_proto) {
-  if (plugin_inst) {
-    plugin_inst->GetJSObject(cx, plugin_obj.address());
-    if (plugin_obj) {
-      if (!::JS_GetPrototype(cx, plugin_obj, plugin_proto)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
 bool nsObjectLoadingContent::DoResolve(
     JSContext* aCx, JS::Handle<JSObject*> aObject, JS::Handle<jsid> aId,
     JS::MutableHandle<JS::PropertyDescriptor> aDesc) {
-  // We don't resolve anything; we just try to make sure we're instantiated.
-  // This purposefully does not fire for chrome/xray resolves, see bug 967694
-  Unused << ScriptRequestPluginInstance(aCx);
   return true;
 }
 
@@ -3068,12 +2869,7 @@ bool nsObjectLoadingContent::MayResolve(jsid aId) {
 
 void nsObjectLoadingContent::GetOwnPropertyNames(
     JSContext* aCx, JS::MutableHandleVector<jsid> /* unused */,
-    bool /* unused */, ErrorResult& aRv) {
-  // Just like DoResolve, just make sure we're instantiated.  That will do
-  // the work our Enumerate hook needs to do.  This purposefully does not fire
-  // for xray resolves, see bug 967694
-  Unused << ScriptRequestPluginInstance(aCx);
-}
+    bool /* unused */, ErrorResult& aRv) {}
 
 void nsObjectLoadingContent::MaybeFireErrorEvent() {
   nsCOMPtr<nsIContent> thisContent =
@@ -3130,29 +2926,3 @@ void nsObjectLoadingContent::SubdocumentIntrinsicSizeOrRatioChanged(
     sdf->SubdocumentIntrinsicSizeOrRatioChanged();
   }
 }
-
-// SetupProtoChainRunner implementation
-nsObjectLoadingContent::SetupProtoChainRunner::SetupProtoChainRunner(
-    nsObjectLoadingContent* aContent)
-    : mContent(aContent) {}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::SetupProtoChainRunner::Run() {
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSContext* cx = jsapi.cx();
-
-  nsCOMPtr<nsIContent> content;
-  CallQueryInterface(mContent.get(), getter_AddRefs(content));
-  JS::Rooted<JSObject*> obj(cx, content->GetWrapper());
-  if (!obj) {
-    // No need to set up our proto chain if we don't even have an object
-    return NS_OK;
-  }
-  nsObjectLoadingContent* objectLoadingContent =
-      static_cast<nsObjectLoadingContent*>(mContent.get());
-  objectLoadingContent->SetupProtoChain(cx, obj);
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(nsObjectLoadingContent::SetupProtoChainRunner, nsIRunnable)

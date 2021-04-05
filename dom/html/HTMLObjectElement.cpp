@@ -15,7 +15,6 @@
 #include "nsGkAtoms.h"
 #include "nsError.h"
 #include "mozilla/dom/Document.h"
-#include "nsNPAPIPluginInstance.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #ifdef XP_MACOSX
@@ -300,13 +299,7 @@ nsresult HTMLObjectElement::CopyInnerTo(Element* aDest) {
 
 JSObject* HTMLObjectElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
-  JS::Rooted<JSObject*> obj(
-      aCx, HTMLObjectElement_Binding::Wrap(aCx, this, aGivenProto));
-  if (!obj) {
-    return nullptr;
-  }
-  SetupProtoChain(aCx, obj);
-  return obj;
+  return HTMLObjectElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 }  // namespace mozilla::dom

@@ -6,27 +6,19 @@
 
 XPIDL_SOURCES += [
     "nsIPluginTag.idl",
-    "nspluginroot.idl",
 ]
 
 XPIDL_MODULE = "plugin"
 
 EXPORTS += [
-    "npapi.h",
-    "nptypes.h",
-    "nsNPAPIPluginInstance.h",
     "nsPluginHost.h",
     "nsPluginLogging.h",
     "nsPluginTags.h",
 ]
 
 UNIFIED_SOURCES += [
-    "nsNPAPIPluginInstance.cpp",
+    "nsPluginHost.cpp",
     "nsPluginTags.cpp",
-]
-
-SOURCES += [
-    "nsPluginHost.cpp",  # Conflict with NS_NPAPIPLUGIN_CALLBACK
 ]
 
 LOCAL_INCLUDES += [
