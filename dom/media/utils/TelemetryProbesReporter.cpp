@@ -178,6 +178,12 @@ void TelemetryProbesReporter::ReportResultForVideo() {
   Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_MS,
                         SECONDS_TO_MS(invisiblePlayTimeS));
 
+  if (mOwner->IsEncrypted()) {
+    LOG("VIDEO_ENCRYPTED_PLAY_TIME_S = %f", totalPlayTimeS);
+    Telemetry::Accumulate(Telemetry::VIDEO_ENCRYPTED_PLAY_TIME_MS,
+                          SECONDS_TO_MS(totalPlayTimeS));
+  }
+
   // Report result for video using CDM
   auto keySystem = mOwner->GetKeySystem();
   if (keySystem) {
