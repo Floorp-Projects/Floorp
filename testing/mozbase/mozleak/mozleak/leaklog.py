@@ -181,7 +181,7 @@ def process_leak_log(
     leakThresholds = leak_thresholds or {}
     ignoreMissingLeaks = ignore_missing_leaks or []
 
-    # This list is based on kGeckoProcessTypeString. ipdlunittest processes likely
+    # This list is based on XRE_GeckoProcessTypeToString. ipdlunittest processes likely
     # are not going to produce leak logs we will ever see.
     knownProcessTypes = [
         "default",

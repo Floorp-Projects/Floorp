@@ -20,9 +20,6 @@
 static_assert(nsICrashService::PROCESS_TYPE_MAIN ==
                   (int)GeckoProcessType_Default,
               "GeckoProcessType enum is out of sync with nsICrashService!");
-static_assert(nsICrashService::PROCESS_TYPE_PLUGIN ==
-                  (int)GeckoProcessType_Plugin,
-              "GeckoProcessType enum is out of sync with nsICrashService!");
 static_assert(nsICrashService::PROCESS_TYPE_CONTENT ==
                   (int)GeckoProcessType_Content,
               "GeckoProcessType enum is out of sync with nsICrashService!");
@@ -149,22 +146,18 @@ void CrashReporterHost::RecordCrashWithTelemetry(GeckoProcessType aProcessType,
                                                  int32_t aCrashType) {
   nsCString key;
 
-  if (aProcessType == GeckoProcessType_Plugin &&
-      aCrashType == nsICrashService::CRASH_TYPE_HANG) {
-    key.AssignLiteral("pluginhang");
-  } else {
-    switch (aProcessType) {
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
-  case GeckoProcessType_##enum_name:                                   \
-    key.AssignLiteral(string_name);                                    \
+  switch (aProcessType) {
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
+                           bin_type)                                     \
+  case GeckoProcessType_##enum_name:                                     \
+    key.AssignLiteral(string_name);                                      \
     break;
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
-      // We can't really hit this, thanks to the above switch, but having it
-      // here will placate the compiler.
-      default:
-        MOZ_ASSERT_UNREACHABLE("unknown process type");
-    }
+    // We can't really hit this, thanks to the above switch, but having it
+    // here will placate the compiler.
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown process type");
   }
 
   Telemetry::Accumulate(Telemetry::SUBPROCESS_CRASHES_WITH_DUMP, key, 1);

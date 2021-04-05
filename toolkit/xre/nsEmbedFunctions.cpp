@@ -216,16 +216,21 @@ void XRE_TermEmbedding() {
 }
 
 const char* XRE_GeckoProcessTypeToString(GeckoProcessType aProcessType) {
-  return (aProcessType < GeckoProcessType_End)
-             ? kGeckoProcessTypeString[aProcessType]
-             : "invalid";
+  switch (aProcessType) {
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
+                           bin_type)                                     \
+  case GeckoProcessType::GeckoProcessType_##enum_name:                   \
+    return string_name;
+#include "mozilla/GeckoProcessTypes.h"
+#undef GECKO_PROCESS_TYPE
+    default:
+      return "invalid";
+  }
 }
 
 const char* XRE_ChildProcessTypeToAnnotation(GeckoProcessType aProcessType) {
   switch (aProcessType) {
     case GeckoProcessType_GMPlugin:
-      // The gecko media plugin and normal plugin processes are lumped together
-      // as a historical artifact.
       return "plugin";
     case GeckoProcessType_Default:
       return "";
@@ -259,9 +264,10 @@ void XRE_SetProcessType(const char* aProcessTypeString) {
   called = true;
 
   sChildProcessType = GeckoProcessType_Invalid;
-  for (int i = 0; i < (int)ArrayLength(kGeckoProcessTypeString); ++i) {
-    if (!strcmp(kGeckoProcessTypeString[i], aProcessTypeString)) {
-      sChildProcessType = static_cast<GeckoProcessType>(i);
+  for (GeckoProcessType t :
+       MakeEnumeratedRange(GeckoProcessType::GeckoProcessType_End)) {
+    if (!strcmp(XRE_GeckoProcessTypeToString(t), aProcessTypeString)) {
+      sChildProcessType = t;
       return;
     }
   }
