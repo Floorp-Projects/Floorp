@@ -1999,12 +1999,13 @@
 
 # The root margin for image lazy loading, defined as four (value, percentage)
 # pairs.
-#
-# (0px, 0px, 0px, 0px) by default, for now. We could also consider an
-# adaptative version of this.
 - name: dom.image-lazy-loading.root-margin.top
   type: float
+#if defined(EARLY_BETA_OR_EARLIER)
+  value: 600
+#else
   value: 300
+#endif
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.top.percentage
@@ -2014,7 +2015,11 @@
 
 - name: dom.image-lazy-loading.root-margin.bottom
   type: float
+#if defined(EARLY_BETA_OR_EARLIER)
+  value: 600
+#else
   value: 300
+#endif
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.bottom.percentage
@@ -2024,7 +2029,11 @@
 
 - name: dom.image-lazy-loading.root-margin.left
   type: float
+#if defined(EARLY_BETA_OR_EARLIER)
+  value: 600
+#else
   value: 300
+#endif
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.left.percentage
@@ -2034,7 +2043,11 @@
 
 - name: dom.image-lazy-loading.root-margin.right
   type: float
+#if defined(EARLY_BETA_OR_EARLIER)
+  value: 600
+#else
   value: 300
+#endif
   mirror: always
 
 - name: dom.image-lazy-loading.root-margin.right.percentage
