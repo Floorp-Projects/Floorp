@@ -53,7 +53,6 @@ Structure:
         sessionLength: <integer>, // the session length until now in seconds, monotonic
         subsessionLength: <integer>, // the subsession length in seconds, monotonic
 
-        flashVersion: <string>, // obsolete, use ``environment.addons.activePlugins``
         addons: <string>, // obsolete, use ``environment.addons``
       },
 
@@ -484,6 +483,10 @@ Structure:
 
 Version History
 ---------------
+
+- Firefox 88:
+
+  - Stopped reporting ``flashVersion`` since Flash is no longer supported. (`bug 1682030 <https://bugzilla.mozilla.org/show_bug.cgi?id=1682030>`_)
 
 - Firefox 61:
 

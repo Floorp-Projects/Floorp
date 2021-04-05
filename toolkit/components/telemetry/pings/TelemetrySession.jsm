@@ -577,12 +577,6 @@ var Impl = {
       ret.addons = this._addons;
     }
 
-    // TODO: Remove this when bug 1201837 lands.
-    let flashVersion = this.getFlashVersion();
-    if (flashVersion) {
-      ret.flashVersion = flashVersion;
-    }
-
     return ret;
   },
 
@@ -946,21 +940,6 @@ var Impl = {
     })();
 
     return this._delayedInitTask;
-  },
-
-  getFlashVersion: function getFlashVersion() {
-    if (AppConstants.MOZ_APP_NAME == "firefox") {
-      let host = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-      let tags = host.getPluginTags();
-
-      for (let i = 0; i < tags.length; i++) {
-        if (tags[i].name == "Shockwave Flash") {
-          return tags[i].version;
-        }
-      }
-    }
-
-    return null;
   },
 
   /**
