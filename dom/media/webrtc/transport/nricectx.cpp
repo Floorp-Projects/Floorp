@@ -213,17 +213,16 @@ nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server* server) const {
     protocol = IPPROTO_TCP;
   } else if (transport_ == kNrIceTransportTls) {
     protocol = IPPROTO_TCP;
-    if (has_addr_) {
-      // Refuse to try TLS without an FQDN
-      return NS_ERROR_INVALID_ARG;
-    }
-    server->addr.tls = 1;
   } else {
     MOZ_MTLOG(ML_ERROR, "Unsupported STUN server transport: " << transport_);
     return NS_ERROR_FAILURE;
   }
 
   if (has_addr_) {
+    if (transport_ == kNrIceTransportTls) {
+      // Refuse to try TLS without an FQDN
+      return NS_ERROR_INVALID_ARG;
+    }
     r = nr_praddr_to_transport_addr(&addr_, &server->addr, protocol, 0);
     if (r) {
       return NS_ERROR_FAILURE;
@@ -237,7 +236,12 @@ nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server* server) const {
       nr_str_port_to_transport_addr("0.0.0.0", port_, protocol, &server->addr);
     }
     PL_strncpyz(server->addr.fqdn, host_.c_str(), sizeof(server->addr.fqdn));
+    if (transport_ == kNrIceTransportTls) {
+      server->addr.tls = 1;
+    }
   }
+
+  nr_transport_addr_fmt_addr_string(&server->addr);
 
   return NS_OK;
 }

@@ -571,6 +571,12 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 
         if ((r=nr_transport_addr_fmt_addr_string(&addr)))
           ABORT(r);
+
+        r_log(LOG_ICE, LOG_DEBUG,
+              "ICE(%s): Creating socket for address %s (turn server %s)",
+              ctx->label, addr.as_string,
+              ctx->turn_servers[j].turn_server.addr);
+
         /* Create a local socket */
         if((r=nr_socket_factory_create_socket(ctx->socket_factory,&addr,&local_sock))){
           r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create socket for address %s",ctx->label,addr.as_string);
