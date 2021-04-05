@@ -291,7 +291,7 @@ about-logins-import-dialog-error-unable-to-read-title = Unable to Parse File
 about-logins-import-dialog-error-unable-to-read-description = Make sure you selected a CSV or TSV file.
 about-logins-import-dialog-error-no-logins-imported = No logins have been imported
 about-logins-import-dialog-error-learn-more = Learn more
-about-logins-import-dialog-error-try-again = Try Again…
+about-logins-import-dialog-error-try-import-again = Try Import Again…
 about-logins-import-dialog-error-cancel = Cancel
 
 about-logins-import-report-title = Import Summary
