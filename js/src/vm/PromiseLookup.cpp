@@ -48,9 +48,11 @@ bool js::PromiseLookup::isDataPropertyNative(JSContext* cx, NativeObject* obj,
   return fun->maybeNative() == native && fun->realm() == cx->realm();
 }
 
-bool js::PromiseLookup::isAccessorPropertyNative(JSContext* cx, Shape* shape,
+bool js::PromiseLookup::isAccessorPropertyNative(JSContext* cx,
+                                                 NativeObject* holder,
+                                                 Shape* shape,
                                                  JSNative native) {
-  JSObject* getter = shape->getterObject();
+  JSObject* getter = holder->getGetter(shape);
   return getter && IsNativeFunction(getter, native) &&
          getter->as<JSFunction>().realm() == cx->realm();
 }
@@ -113,13 +115,14 @@ void js::PromiseLookup::initialize(JSContext* cx) {
   // Look up the '@@species' value on Promise.
   Shape* speciesShape =
       promiseCtor->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
-  if (!speciesShape || !speciesShape->hasGetterObject()) {
+  if (!speciesShape || !promiseCtor->hasGetter(speciesShape)) {
     return;
   }
 
   // Get the referred value, ensure it holds the canonical Promise[@@species]
   // function.
-  if (!isAccessorPropertyNative(cx, speciesShape, Promise_static_species)) {
+  if (!isAccessorPropertyNative(cx, promiseCtor, speciesShape,
+                                Promise_static_species)) {
     return;
   }
 
@@ -196,7 +199,7 @@ bool js::PromiseLookup::isPromiseStateStillSane(JSContext* cx) {
   // the getter property implies a new shape is generated. If this ever
   // changes, convert this assertion into an if-statement.
 #ifdef DEBUG
-  MOZ_ASSERT(isAccessorPropertyNative(cx, promiseSpeciesShape_,
+  MOZ_ASSERT(isAccessorPropertyNative(cx, promiseCtor, promiseSpeciesShape_,
                                       Promise_static_species));
 #endif
 

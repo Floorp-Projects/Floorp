@@ -1088,6 +1088,21 @@ class NativeObject : public JSObject {
     getSlotAddressUnchecked(slot)->init(this, HeapSlot::Slot, slot, value);
   }
 
+  // Returns the (possibly nullptr) getter or setter object. The shape must be
+  // for an accessor property.
+  JSObject* getGetter(Shape* shape) const { return shape->getterObject(); }
+  JSObject* getSetter(Shape* shape) const { return shape->setterObject(); }
+
+  // Returns true if the property has a non-nullptr getter or setter object. The
+  // shape can be any property shape.
+  bool hasGetter(Shape* shape) const { return shape->hasGetterObject(); }
+  bool hasSetter(Shape* shape) const { return shape->hasSetterObject(); }
+
+  // If the property has a non-nullptr getter/setter, return it as ObjectValue.
+  // Else return |undefined|. The shape must be for an accessor property.
+  Value getGetterValue(Shape* shape) const { return shape->getterValue(); }
+  Value getSetterValue(Shape* shape) const { return shape->setterValue(); }
+
   // MAX_FIXED_SLOTS is the biggest number of fixed slots our GC
   // size classes will give an object.
   static constexpr uint32_t MAX_FIXED_SLOTS =

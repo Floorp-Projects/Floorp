@@ -128,8 +128,8 @@ class MOZ_NON_TEMPORARY_CLASS PromiseLookup final {
                                    uint32_t slot, JSNative native);
 
   // Return true if the accessor shape contains the given native.
-  static bool isAccessorPropertyNative(JSContext* cx, Shape* shape,
-                                       JSNative native);
+  static bool isAccessorPropertyNative(JSContext* cx, NativeObject* holder,
+                                       Shape* shape, JSNative native);
 
  public:
   /** Construct a |PromiseSpeciesLookup| in the uninitialized state. */
