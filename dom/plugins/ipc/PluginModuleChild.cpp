@@ -50,7 +50,6 @@
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-#  include "PluginInterposeOSX.h"
 #  include "PluginUtilsOSX.h"
 #endif
 
@@ -123,12 +122,6 @@ PluginModuleChild::PluginModuleChild(bool aIsChrome)
     MOZ_ASSERT(!gChromeInstance);
     gChromeInstance = this;
   }
-
-#ifdef XP_MACOSX
-  if (aIsChrome) {
-    mac_plugin_interposing::child::SetUpCocoaInterposing();
-  }
-#endif
 }
 
 PluginModuleChild::~PluginModuleChild() {

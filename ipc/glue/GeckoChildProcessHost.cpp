@@ -1142,25 +1142,13 @@ bool PosixProcessLauncher::DoSetup() {
 
 #  elif OS_MACOSX  // defined(OS_LINUX) || defined(OS_BSD)
     mLaunchOptions->env_map["DYLD_LIBRARY_PATH"] = path.get();
-    // XXX DYLD_INSERT_LIBRARIES should only be set when launching a plugin
-    //     process, and has no effect on other subprocesses (the hooks in
-    //     libplugin_child_interpose.dylib become noops).  But currently it
-    //     gets set when launching any kind of subprocess.
-    //
-    // Trigger "dyld interposing" for the dylib that contains
-    // plugin_child_interpose.mm.  This allows us to hook OS calls in the
-    // plugin process (ones that don't work correctly in a background
-    // process).  Don't break any other "dyld interposing" that has already
-    // been set up by whatever may have launched the browser.
-    const char* prevInterpose = PR_GetEnv("DYLD_INSERT_LIBRARIES");
-    nsCString interpose;
-    if (prevInterpose && strlen(prevInterpose) > 0) {
-      interpose.Assign(prevInterpose);
-      interpose.Append(':');
+
+    // DYLD_INSERT_LIBRARIES is currently unused by default but we allow
+    // it to be set by the external environment.
+    const char* interpose = PR_GetEnv("DYLD_INSERT_LIBRARIES");
+    if (interpose && strlen(interpose) > 0) {
+      mLaunchOptions->env_map["DYLD_INSERT_LIBRARIES"] = interpose;
     }
-    interpose.Append(path.get());
-    interpose.AppendLiteral("/libplugin_child_interpose.dylib");
-    mLaunchOptions->env_map["DYLD_INSERT_LIBRARIES"] = interpose.get();
 
     // Prevent connection attempts to diagnosticd(8) to save cycles. Log
     // messages can trigger these connection attempts, but access to
