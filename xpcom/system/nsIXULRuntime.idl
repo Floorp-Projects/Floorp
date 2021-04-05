@@ -177,7 +177,6 @@ interface nsIXULRuntime : nsISupports
    * The legal values of processType.
    */
   const unsigned long PROCESS_TYPE_DEFAULT = 0;
-  const unsigned long PROCESS_TYPE_PLUGIN = 1;
   const unsigned long PROCESS_TYPE_CONTENT = 2;
   const unsigned long PROCESS_TYPE_IPDLUNITTEST = 3;
   const unsigned long PROCESS_TYPE_GMPLUGIN = 4;
