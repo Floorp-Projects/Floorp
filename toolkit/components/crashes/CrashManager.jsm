@@ -166,9 +166,6 @@ CrashManager.prototype = Object.freeze({
   // A crash in a content process.
   PROCESS_TYPE_CONTENT: "content",
 
-  // A crash in a plugin process.
-  PROCESS_TYPE_PLUGIN: "plugin",
-
   // A crash in a Gecko media plugin process.
   PROCESS_TYPE_GMPLUGIN: "gmplugin",
 
@@ -922,8 +919,7 @@ var gCrashManager;
  *
  * The store has a mechanism for ensuring it doesn't grow too large. A ceiling
  * is placed on the number of daily events that can occur for events that can
- * occur with relatively high frequency, notably plugin crashes and hangs
- * (plugins can enter cycles where they repeatedly crash). If we've reached
+ * occur with relatively high frequency. If we've reached
  * the high water mark and new data arrives, it's silently dropped.
  * However, the count of actual events is always preserved. This allows
  * us to report on the severity of problems beyond the storage threshold.
