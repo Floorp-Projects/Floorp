@@ -142,8 +142,8 @@ checkbox {
 }
 
 .spotlight {
-  background-color: var(--blue-40-a10);
-  outline: var(--blue-60) 1px dotted;
+  background-color: color-mix(in srgb, var(--in-content-accent-color) 15%, transparent);
+  outline: var(--in-content-accent-color) 1px dotted;
   -moz-outline-radius: 2px;
   animation: fade-out 0.5s ease-out 2s forwards;
   /* Show the border to spotlight the components in high-contrast mode. */
@@ -349,13 +349,19 @@ checkbox {
 }
 
 #handlersView > richlistitem {
-  min-height: 30px !important;
+  min-height: 30px;
 }
 
-#handlersView > richlistitem > hbox > hbox > menulist {
-  margin-block: 0;
-  margin-inline-end: 0;
+#handlersView .actionsMenu {
+  margin: 0;
   min-height: 0;
+  padding: 0;
+  border: none;
+  padding-inline-end: 8px;
+}
+
+#handlersView .actionsMenu::part(label) {
+  margin: 0;
 }
 
 .certManagerRichlistBox > richlistitem {
@@ -366,12 +372,9 @@ checkbox {
   margin-inline: 10px 9px !important;
 }
 
+#handlersView .actionsMenu::part(icon),
 .actionIcon {
   margin-inline: 11px 8px !important;
-}
-
-.actionsMenu {
-  min-height: 36px;
 }
 
 .actionsMenu > menupopup > menuitem {
@@ -450,13 +453,13 @@ checkbox {
 #blocklistsTree > treechildren::-moz-tree-image(selectionCol, checked) {
   list-style-image: url("chrome://global/skin/icons/check.svg");
   -moz-context-properties: fill, stroke;
-  fill: #2292d0;
+  fill: var(--in-content-accent-color);
 }
 
 #engineList > treechildren::-moz-tree-image(engineShown, checked, selected),
 #blocklistsTree > treechildren::-moz-tree-image(selectionCol, checked, selected) {
-  fill: white;
-  stroke: #0095dd;
+  fill: var(--in-content-item-selected-text);
+  stroke: var(--in-content-item-selected);
 }
 
 #engineList > treechildren::-moz-tree-row,
@@ -548,7 +551,7 @@ checkbox {
   /* `transparent` will use the dialogText color in high-contrast themes and
      when page colors are disabled */
   border: 1px solid transparent;
-  border-radius: 3.5px;
+  border-radius: 8px;
   box-shadow: 0 2px 6px 0 rgba(0,0,0,0.3);
   display: -moz-box;
   margin: 0;
@@ -565,10 +568,19 @@ checkbox {
 
 .dialogTitleBar {
   margin-top: 0;
-  padding: 3.5px 0;
-  background-color: var(--in-content-dialog-header-background);
+  padding: 6px 4px;
   border-bottom: 1px solid var(--in-content-border-color);
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+.dialogBox {
+  border-radius: 3.5px;
+}
+.dialogTitleBar {
+  padding: 3.5px 0;
+  background-color: var(--in-content-dialog-header-background);
+}
+} /*** END !proton ***/
 
 .dialogTitle {
   font-size: .9em;
@@ -582,6 +594,8 @@ checkbox {
   background-color: transparent; /* override common.css, but keep hover/active states */
   min-width: 0;
   min-height: auto;
+  width: 20px;
+  height: 20px;
   padding: 0;
   margin-inline: 0 8px;
 }
