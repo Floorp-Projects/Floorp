@@ -190,10 +190,8 @@ class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final {
   // Shape of matching Array, and slot containing the @@species
   // property, and the canonical value.
   MOZ_INIT_OUTSIDE_CTOR Shape* arrayConstructorShape_;
-#ifdef DEBUG
   MOZ_INIT_OUTSIDE_CTOR Shape* arraySpeciesShape_;
   MOZ_INIT_OUTSIDE_CTOR JSFunction* canonicalSpeciesFunc_;
-#endif
 
   // Shape of matching Array.prototype object, and slot containing the
   // constructor for it.
