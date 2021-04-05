@@ -25,7 +25,7 @@
 
 #containersView richlistitem {
   padding-block: 4px;
-  border-block-end: 1px solid var(--in-content-box-border-color);
+  border-block-end: 1px solid var(--in-content-border-color);
 }
 
 /* Crop the label at the end using CSS. This isn't using XUL crop

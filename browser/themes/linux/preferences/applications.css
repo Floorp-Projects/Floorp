@@ -2,31 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * Line up the actions menu with action labels above and below it.
- * Equalize the distance from the left side of the action box to the left side
- * of the icon for both the menu and the non-menu versions of the action box.
- * Also make sure the labels are the same distance away from the icons.
- */
-.actionsMenu {
-  margin-block: -1px;
-  margin-inline: -1px 0;
-}
-
-.typeIcon,
-.actionIcon {
-  margin-inline: 3px;
-}
-
-#handlersView > richlistitem label {
-  margin-inline-start: 1px;
-  margin-top: 2px;
-}
-
-#handlersView > richlistitem {
-  min-height: 25px;
-}
-
 richlistitem[appHandlerIcon="handleInternally"],
 menuitem[appHandlerIcon="handleInternally"] {
   list-style-image: url("chrome://branding/content/icon32.png");
@@ -45,21 +20,6 @@ menuitem[appHandlerIcon="save"] {
 richlistitem[appHandlerIcon="plugin"],
 menuitem[appHandlerIcon="plugin"] {
   list-style-image: url("chrome://global/skin/icons/plugin.svg");
-}
-
-.actionsMenu::part(icon) {
-  margin-inline: 3px 6px;
-  height: 16px;
-  width: 16px;
-}
-
-.actionsMenu > menupopup > menuitem > .menu-iconic-left {
-  padding-inline-start: 0;
-  padding-inline-end: 4px !important;
-}
-
-.actionsMenu > menupopup > menuitem {
-  padding-inline-start: 3px;
 }
 
 #appList {
