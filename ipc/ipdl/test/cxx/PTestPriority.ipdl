@@ -5,14 +5,14 @@ sync protocol PTestPriority {
 parent:
     [Priority=input] async PMsg1();
     [Priority=input] sync PMsg2();
-    [Priority=high] async PMsg3();
-    [Priority=high] sync PMsg4();
+    [Priority=vsync] async PMsg3();
+    [Priority=vsync] sync PMsg4();
     [Priority=mediumhigh] async PMsg5();
     [Priority=mediumhigh] sync PMsg6();
 
 child:
     [Priority=input] async CMsg1();
-    [Priority=high] async CMsg2();
+    [Priority=vsync] async CMsg2();
     [Priority=mediumhigh] async CMsg3();
 };
 
