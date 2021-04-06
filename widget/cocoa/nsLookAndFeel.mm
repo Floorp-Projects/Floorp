@@ -480,10 +480,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 0;
       break;
     case IntID::SwipeAnimationEnabled:
-      aResult = 0;
-      if ([NSEvent respondsToSelector:@selector(isSwipeTrackingFromScrollEventsEnabled)]) {
-        aResult = [NSEvent isSwipeTrackingFromScrollEventsEnabled];
-      }
+      aResult = NSEvent.isSwipeTrackingFromScrollEventsEnabled;
       break;
     case IntID::ContextMenuOffsetVertical:
       aResult = -6;
