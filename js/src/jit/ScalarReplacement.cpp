@@ -1629,8 +1629,6 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArg(
   if (isInlinedArguments()) {
     auto* actualArgs = args_->toCreateInlinedArgumentsObject();
 
-    // TODO: optimize for constant indices.
-
     // Insert bounds check.
     auto* length =
         MConstant::New(alloc(), Int32Value(actualArgs->numActuals()));
@@ -1640,6 +1638,10 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArg(
     check->setBailoutKind(ins->bailoutKind());
     ins->block()->insertBefore(ins, check);
 
+    if (mir_->outerInfo().hadBoundsCheckBailout()) {
+      check->setNotMovable();
+    }
+
     loadArg = MGetInlinedArgument::New(alloc(), check, actualArgs);
   } else {
     // Insert bounds check.
@@ -1647,9 +1649,12 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArg(
     ins->block()->insertBefore(ins, length);
 
     MInstruction* check = MBoundsCheck::New(alloc(), index, length);
+    check->setBailoutKind(ins->bailoutKind());
     ins->block()->insertBefore(ins, check);
 
-    check->setBailoutKind(ins->bailoutKind());
+    if (mir_->outerInfo().hadBoundsCheckBailout()) {
+      check->setNotMovable();
+    }
 
     if (JitOptions.spectreIndexMasking) {
       check = MSpectreMaskIndex::New(alloc(), check, length);
