@@ -1,0 +1,251 @@
+changeset:   649910:59994b59eb51
+tag:         tip
+parent:      649905:058997a8167d
+user:        Gabriele Svelto <gsvelto@mozilla.com>
+date:        Wed Mar 31 16:25:34 2021 +0200
+summary:     Bug 1702043 - Print out the list of unloaded modules when processing a minidump
+
+diff --git a/src/google_breakpad/processor/minidump.h b/src/google_breakpad/processor/minidump.h
+--- a/src/google_breakpad/processor/minidump.h
++++ b/src/google_breakpad/processor/minidump.h
+@@ -792,16 +792,19 @@ class MinidumpUnloadedModule : public Mi
+   string debug_file() const override;
+   string debug_identifier() const override;
+   string version() const override;
+   CodeModule* Copy() const override;
+   bool is_unloaded() const override { return true; }
+   uint64_t shrink_down_delta() const override;
+   void SetShrinkDownDelta(uint64_t shrink_down_delta) override;
+ 
++  // Print a human-readable representation of the object to stdout.
++  void Print();
++
+  protected:
+   explicit MinidumpUnloadedModule(Minidump* minidump);
+ 
+  private:
+   // These objects are managed by MinidumpUnloadedModuleList
+   friend class MinidumpUnloadedModuleList;
+ 
+   // This works like MinidumpStream::Read, but is driven by
+@@ -850,16 +853,19 @@ class MinidumpUnloadedModuleList : publi
+   const MinidumpUnloadedModule* GetMainModule() const override;
+   const MinidumpUnloadedModule*
+       GetModuleAtSequence(unsigned int sequence) const override;
+   const MinidumpUnloadedModule*
+       GetModuleAtIndex(unsigned int index) const override;
+   const CodeModules* Copy() const override;
+   vector<linked_ptr<const CodeModule>> GetShrunkRangeModules() const override;
+ 
++  // Print a human-readable representation of the object to stdout.
++  void Print();
++
+  protected:
+   explicit MinidumpUnloadedModuleList(Minidump* minidump_);
+ 
+  private:
+   friend class Minidump;
+ 
+   typedef vector<MinidumpUnloadedModule> MinidumpUnloadedModules;
+ 
+diff --git a/src/processor/minidump.cc b/src/processor/minidump.cc
+--- a/src/processor/minidump.cc
++++ b/src/processor/minidump.cc
+@@ -3727,16 +3727,46 @@ MinidumpUnloadedModule::MinidumpUnloaded
+       name_(NULL) {
+ 
+ }
+ 
+ MinidumpUnloadedModule::~MinidumpUnloadedModule() {
+   delete name_;
+ }
+ 
++void MinidumpUnloadedModule::Print() {
++  if (!valid_) {
++    BPLOG(ERROR) << "MinidumpUnloadedModule cannot print invalid data";
++    return;
++  }
++
++  printf("MDRawUnloadedModule\n");
++  printf("  base_of_image                   = 0x%" PRIx64 "\n",
++         unloaded_module_.base_of_image);
++  printf("  size_of_image                   = 0x%x\n",
++         unloaded_module_.size_of_image);
++  printf("  checksum                        = 0x%x\n",
++         unloaded_module_.checksum);
++  printf("  time_date_stamp                 = 0x%x %s\n",
++         unloaded_module_.time_date_stamp,
++         TimeTToUTCString(unloaded_module_.time_date_stamp).c_str());
++  printf("  module_name_rva                 = 0x%x\n",
++         unloaded_module_.module_name_rva);
++
++  printf("  (code_file)                     = \"%s\"\n", code_file().c_str());
++  printf("  (code_identifier)               = \"%s\"\n",
++         code_identifier().c_str());
++
++  printf("  (debug_file)                    = \"%s\"\n", debug_file().c_str());
++  printf("  (debug_identifier)              = \"%s\"\n",
++         debug_identifier().c_str());
++  printf("  (version)                       = \"%s\"\n", version().c_str());
++  printf("\n");
++}
++
+ string MinidumpUnloadedModule::code_file() const {
+   if (!valid_) {
+     BPLOG(ERROR) << "Invalid MinidumpUnloadedModule for code_file";
+     return "";
+   }
+ 
+   return *name_;
+ }
+@@ -3911,16 +3941,34 @@ MinidumpUnloadedModuleList::MinidumpUnlo
+   range_map_->SetMergeStrategy(MergeRangeStrategy::kTruncateLower);
+ }
+ 
+ MinidumpUnloadedModuleList::~MinidumpUnloadedModuleList() {
+   delete range_map_;
+   delete unloaded_modules_;
+ }
+ 
++void MinidumpUnloadedModuleList::Print() {
++  if (!valid_) {
++    BPLOG(ERROR) << "MinidumpUnloadedModuleList cannot print invalid data";
++    return;
++  }
++
++  printf("MinidumpUnloadedModuleList\n");
++  printf("  module_count = %d\n", module_count_);
++  printf("\n");
++
++  for (unsigned int module_index = 0;
++       module_index < module_count_;
++       ++module_index) {
++    printf("module[%d]\n", module_index);
++
++    (*unloaded_modules_)[module_index].Print();
++  }
++}
+ 
+ bool MinidumpUnloadedModuleList::Read(uint32_t expected_size) {
+   range_map_->Clear();
+   delete unloaded_modules_;
+   unloaded_modules_ = NULL;
+   module_count_ = 0;
+ 
+   valid_ = false;
+diff --git a/src/processor/minidump_dump.cc b/src/processor/minidump_dump.cc
+--- a/src/processor/minidump_dump.cc
++++ b/src/processor/minidump_dump.cc
+@@ -40,16 +40,17 @@
+ #include "google_breakpad/processor/minidump.h"
+ #include "processor/logging.h"
+ 
+ namespace {
+ 
+ using google_breakpad::Minidump;
+ using google_breakpad::MinidumpThreadList;
+ using google_breakpad::MinidumpModuleList;
++using google_breakpad::MinidumpUnloadedModuleList;
+ using google_breakpad::MinidumpMemoryInfoList;
+ using google_breakpad::MinidumpMemoryList;
+ using google_breakpad::MinidumpException;
+ using google_breakpad::MinidumpAssertion;
+ using google_breakpad::MinidumpSystemInfo;
+ using google_breakpad::MinidumpMiscInfo;
+ using google_breakpad::MinidumpBreakpadInfo;
+ using google_breakpad::MinidumpCrashpadInfo;
+@@ -127,16 +128,25 @@ static bool PrintMinidumpDump(const Opti
+   MinidumpModuleList *module_list = minidump.GetModuleList();
+   if (!module_list) {
+     ++errors;
+     BPLOG(ERROR) << "minidump.GetModuleList() failed";
+   } else {
+     module_list->Print();
+   }
+ 
++  MinidumpUnloadedModuleList::set_max_modules(UINT32_MAX);
++  MinidumpUnloadedModuleList *unloaded_module_list = minidump.GetUnloadedModuleList();
++  if (!unloaded_module_list) {
++    ++errors;
++    BPLOG(ERROR) << "minidump.GetUnloadedModuleList() failed";
++  } else {
++    unloaded_module_list->Print();
++  }
++
+   MinidumpMemoryList *memory_list = minidump.GetMemoryList();
+   if (!memory_list) {
+     ++errors;
+     BPLOG(ERROR) << "minidump.GetMemoryList() failed";
+   } else {
+     memory_list->Print();
+   }
+ 
+diff --git a/src/processor/stackwalk_common.cc b/src/processor/stackwalk_common.cc
+--- a/src/processor/stackwalk_common.cc
++++ b/src/processor/stackwalk_common.cc
+@@ -777,16 +777,46 @@ static void PrintModulesMachineReadable(
+            StripSeparator(module->debug_identifier()).c_str(),
+            kOutputSeparator, base_address,
+            kOutputSeparator, base_address + module->size() - 1,
+            kOutputSeparator,
+            main_module != NULL && base_address == main_address ? 1 : 0);
+   }
+ }
+ 
++// PrintUnloadedModulesMachineReadable outputs a list of loaded modules,
++// one per line, in the following machine-readable pipe-delimited
++// text format:
++// UnloadedModule|{Module Filename}|{Base Address}|{Max Address}|{Main}
++static void PrintUnloadedModulesMachineReadable(const CodeModules* modules) {
++  if (!modules)
++    return;
++
++  uint64_t main_address = 0;
++  const CodeModule* main_module = modules->GetMainModule();
++  if (main_module) {
++    main_address = main_module->base_address();
++  }
++
++  unsigned int module_count = modules->module_count();
++  for (unsigned int module_sequence = 0;
++       module_sequence < module_count;
++       ++module_sequence) {
++    const CodeModule* module = modules->GetModuleAtSequence(module_sequence);
++    uint64_t base_address = module->base_address();
++    printf("UnloadedModule%c%s%c0x%08" PRIx64 "%c0x%08" PRIx64 "%c%d\n",
++           kOutputSeparator,
++           StripSeparator(PathnameStripper::File(module->code_file())).c_str(),
++           kOutputSeparator, base_address,
++           kOutputSeparator, base_address + module->size() - 1,
++           kOutputSeparator,
++           main_module != NULL && base_address == main_address ? 1 : 0);
++  }
++}
++
+ }  // namespace
+ 
+ void PrintProcessState(const ProcessState& process_state,
+                        bool output_stack_contents,
+                        SourceLineResolverInterface* resolver) {
+   // Print OS and CPU information.
+   string cpu = process_state.system_info()->cpu;
+   string cpu_info = process_state.system_info()->cpu_info;
+@@ -921,16 +951,17 @@ void PrintProcessStateMachineReadable(co
+ 
+   if (requesting_thread != -1) {
+     printf("%d\n", requesting_thread);
+   } else {
+     printf("\n");
+   }
+ 
+   PrintModulesMachineReadable(process_state.modules());
++  PrintUnloadedModulesMachineReadable(process_state.unloaded_modules());
+ 
+   // blank line to indicate start of threads
+   printf("\n");
+ 
+   // If the thread that requested the dump is known, print it first.
+   if (requesting_thread != -1) {
+     PrintStackMachineReadable(requesting_thread,
+                               process_state.threads()->at(requesting_thread));
+

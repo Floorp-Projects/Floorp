@@ -3732,6 +3732,36 @@ MinidumpUnloadedModule::~MinidumpUnloadedModule() {
   delete name_;
 }
 
+void MinidumpUnloadedModule::Print() {
+  if (!valid_) {
+    BPLOG(ERROR) << "MinidumpUnloadedModule cannot print invalid data";
+    return;
+  }
+
+  printf("MDRawUnloadedModule\n");
+  printf("  base_of_image                   = 0x%" PRIx64 "\n",
+         unloaded_module_.base_of_image);
+  printf("  size_of_image                   = 0x%x\n",
+         unloaded_module_.size_of_image);
+  printf("  checksum                        = 0x%x\n",
+         unloaded_module_.checksum);
+  printf("  time_date_stamp                 = 0x%x %s\n",
+         unloaded_module_.time_date_stamp,
+         TimeTToUTCString(unloaded_module_.time_date_stamp).c_str());
+  printf("  module_name_rva                 = 0x%x\n",
+         unloaded_module_.module_name_rva);
+
+  printf("  (code_file)                     = \"%s\"\n", code_file().c_str());
+  printf("  (code_identifier)               = \"%s\"\n",
+         code_identifier().c_str());
+
+  printf("  (debug_file)                    = \"%s\"\n", debug_file().c_str());
+  printf("  (debug_identifier)              = \"%s\"\n",
+         debug_identifier().c_str());
+  printf("  (version)                       = \"%s\"\n", version().c_str());
+  printf("\n");
+}
+
 string MinidumpUnloadedModule::code_file() const {
   if (!valid_) {
     BPLOG(ERROR) << "Invalid MinidumpUnloadedModule for code_file";
@@ -3916,6 +3946,24 @@ MinidumpUnloadedModuleList::~MinidumpUnloadedModuleList() {
   delete unloaded_modules_;
 }
 
+void MinidumpUnloadedModuleList::Print() {
+  if (!valid_) {
+    BPLOG(ERROR) << "MinidumpUnloadedModuleList cannot print invalid data";
+    return;
+  }
+
+  printf("MinidumpUnloadedModuleList\n");
+  printf("  module_count = %d\n", module_count_);
+  printf("\n");
+
+  for (unsigned int module_index = 0;
+       module_index < module_count_;
+       ++module_index) {
+    printf("module[%d]\n", module_index);
+
+    (*unloaded_modules_)[module_index].Print();
+  }
+}
 
 bool MinidumpUnloadedModuleList::Read(uint32_t expected_size) {
   range_map_->Clear();

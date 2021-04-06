@@ -782,6 +782,36 @@ static void PrintModulesMachineReadable(const CodeModules *modules) {
   }
 }
 
+// PrintUnloadedModulesMachineReadable outputs a list of loaded modules,
+// one per line, in the following machine-readable pipe-delimited
+// text format:
+// UnloadedModule|{Module Filename}|{Base Address}|{Max Address}|{Main}
+static void PrintUnloadedModulesMachineReadable(const CodeModules* modules) {
+  if (!modules)
+    return;
+
+  uint64_t main_address = 0;
+  const CodeModule* main_module = modules->GetMainModule();
+  if (main_module) {
+    main_address = main_module->base_address();
+  }
+
+  unsigned int module_count = modules->module_count();
+  for (unsigned int module_sequence = 0;
+       module_sequence < module_count;
+       ++module_sequence) {
+    const CodeModule* module = modules->GetModuleAtSequence(module_sequence);
+    uint64_t base_address = module->base_address();
+    printf("UnloadedModule%c%s%c0x%08" PRIx64 "%c0x%08" PRIx64 "%c%d\n",
+           kOutputSeparator,
+           StripSeparator(PathnameStripper::File(module->code_file())).c_str(),
+           kOutputSeparator, base_address,
+           kOutputSeparator, base_address + module->size() - 1,
+           kOutputSeparator,
+           main_module != NULL && base_address == main_address ? 1 : 0);
+  }
+}
+
 }  // namespace
 
 void PrintProcessState(const ProcessState& process_state,
@@ -926,6 +956,7 @@ void PrintProcessStateMachineReadable(const ProcessState& process_state) {
   }
 
   PrintModulesMachineReadable(process_state.modules());
+  PrintUnloadedModulesMachineReadable(process_state.unloaded_modules());
 
   // blank line to indicate start of threads
   printf("\n");
