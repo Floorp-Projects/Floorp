@@ -134,7 +134,6 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
 #if defined(MOZ_SANDBOX)
   // Load the temp directory for sandboxed content processes
   nsresult LoadContentProcessTempDir();
-  nsresult LoadPluginProcessTempDir();
 #endif
 
   void Append(nsIFile* aDirectory);
@@ -153,8 +152,6 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
 #if defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> mContentTempDir;
   nsCOMPtr<nsIFile> mContentProcessSandboxTempDir;
-  nsCOMPtr<nsIFile> mPluginTempDir;
-  nsCOMPtr<nsIFile> mPluginProcessSandboxTempDir;
 #endif
 
  private:
