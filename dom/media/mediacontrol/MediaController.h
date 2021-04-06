@@ -15,6 +15,7 @@
 #include "mozilla/dom/MediaSession.h"
 #include "mozilla/LinkedList.h"
 #include "nsISupportsImpl.h"
+#include "nsITimer.h"
 
 namespace mozilla {
 namespace dom {
