@@ -7,16 +7,18 @@ const { PromptTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromptTestUtils.jsm"
 );
 
+const TEST_ROOT = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "https://example.com"
+);
+
 async function checkAlert(
   pageToLoad,
   expectedTitle,
   expectedIcon = "chrome://global/skin/icons/defaultFavicon.svg"
 ) {
-  return BrowserTestUtils.withNewTab(pageToLoad, async browser => {
-    let promptPromise = PromptTestUtils.waitForPrompt(browser, {
-      modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
-    });
-    let spawnPromise = SpecialPowers.spawn(browser, [], () => {
+  function openFn(browser) {
+    return SpecialPowers.spawn(browser, [], () => {
       if (content.document.nodePrincipal.isSystemPrincipal) {
         // Can't eval in privileged contexts due to CSP, just call directly:
         content.alert("Test");
@@ -25,6 +27,33 @@ async function checkAlert(
         content.eval("alert('Test')");
       }
     });
+  }
+  return checkDialog(pageToLoad, openFn, expectedTitle, expectedIcon);
+}
+
+async function checkBeforeunload(
+  pageToLoad,
+  expectedTitle,
+  expectedIcon = "chrome://global/skin/icons/defaultFavicon.svg"
+) {
+  async function openFn(browser) {
+    let tab = gBrowser.getTabForBrowser(browser);
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "body",
+      {},
+      browser.browsingContext
+    );
+    return gBrowser.removeTab(tab); // trigger beforeunload.
+  }
+  return checkDialog(pageToLoad, openFn, expectedTitle, expectedIcon);
+}
+
+async function checkDialog(pageToLoad, openFn, expectedTitle, expectedIcon) {
+  return BrowserTestUtils.withNewTab(pageToLoad, async browser => {
+    let promptPromise = PromptTestUtils.waitForPrompt(browser, {
+      modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
+    });
+    let spawnPromise = openFn(browser);
     let dialog = await promptPromise;
 
     let doc = dialog.ui.prompt.document;
@@ -116,4 +145,8 @@ add_task(async function test_check_prompt_origin_display() {
     { l10nId: "common-dialog-title-system" },
     "chrome://branding/content/icon32.png"
   );
+
+  await checkBeforeunload(TEST_ROOT + "file_beforeunload_stop.html", {
+    value: "example.com",
+  });
 });
