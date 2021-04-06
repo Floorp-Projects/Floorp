@@ -1,1 +1,1 @@
-|jit-test| --large-arraybuffers; skip-if: (getBuildConfiguration()["pointer-byte-size"] === 4 || getBuildConfiguration().tsan)
+|jit-test| --large-arraybuffers; allow-oom; skip-if: (getBuildConfiguration()["pointer-byte-size"] === 4 || getBuildConfiguration().tsan)
