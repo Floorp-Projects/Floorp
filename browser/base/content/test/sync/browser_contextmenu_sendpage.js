@@ -80,6 +80,38 @@ add_task(async function test_link_contextmenu() {
     "context-sendlinktodevice",
     "context-sendlinktodevice-popup"
   );
+
+  let expectedArray = [
+    "context-openlinkintab",
+    "context-openlinkinusercontext-menu",
+    "context-openlink",
+    "context-openlinkprivate",
+    "context-sep-open",
+    "context-bookmarklink",
+    "context-savelink",
+    "context-savelinktopocket",
+    "context-copylink",
+    "context-sendlinktodevice",
+    "context-sep-sendlinktodevice",
+    "context-searchselect",
+    "frame-sep",
+    "context-inspect-a11y",
+    "context-inspect",
+  ];
+  let menu = document.getElementById("contentAreaContextMenu");
+
+  for (let i = 0, j = 0; i < menu.children.length; i++) {
+    let item = menu.children[i];
+    if (item.hidden) {
+      continue;
+    }
+    ok(
+      expectedArray[j] == item.id,
+      "Ids in context menu match expected values"
+    );
+    j++;
+  }
+
   is(
     document.getElementById("context-sendlinktodevice").hidden,
     false,
