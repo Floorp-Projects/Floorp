@@ -106,13 +106,8 @@ async function test_bookmarks_popup({
         "title should match isEditingBookmark state"
       );
       Assert.equal(
-        bookmarkRemoveButton.label,
-        isNewBookmark
-          ? gNavigatorBundle.getString("editBookmarkPanel.cancel.label")
-          : PluralForm.get(
-              1,
-              gNavigatorBundle.getString("editBookmark.removeBookmarks.label")
-            ).replace("#1", 1),
+        bookmarkRemoveButton.dataset.l10nId,
+        isNewBookmark ? "bookmark-panel-cancel" : "bookmark-panel-remove",
         "remove/cancel button label should match isEditingBookmark state"
       );
 
