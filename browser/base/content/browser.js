@@ -5079,16 +5079,6 @@ var XULBrowserWindow = {
     return gBrowser.tabs.length;
   },
 
-  // Called before links are navigated to to allow us to retarget them if needed.
-  onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
-    return BrowserUtils.onBeforeLinkTraversal(
-      originalTarget,
-      linkURI,
-      linkNode,
-      isAppTab
-    );
-  },
-
   onProgressChange(
     aWebProgress,
     aRequest,
