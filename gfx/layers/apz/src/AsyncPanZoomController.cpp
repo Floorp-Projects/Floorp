@@ -383,6 +383,16 @@ typedef PlatformSpecificStateBase
  * Units: screen pixels (for distance)
  *        screen pixels per millisecond (for velocity)
  *
+ * \li\b apz.overscroll.spring_stiffness
+ * The spring stiffness constant for the overscroll mass-spring-damper model.
+ *
+ * \li\b apz.overscroll.damping
+ * The damping constant for the overscroll mass-spring-damper model.
+ *
+ * \li\b apz.overscroll.max_velocity
+ * The maximum velocity (in ParentLayerPixels per millisecond) allowed when
+ * initiating the overscroll snap-back animation.
+ *
  * \li\b apz.paint_skipping.enabled
  * When APZ is scrolling and sending repaint requests to the main thread, often
  * the main thread doesn't actually need to do a repaint. This pref allows the
