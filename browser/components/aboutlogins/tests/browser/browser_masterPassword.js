@@ -68,7 +68,9 @@ add_task(async function test() {
     "master-password-login-required notification should be visible"
   );
 
-  let buttons = notification.querySelectorAll(".notification-button");
+  let buttons = notification.buttonContainer.querySelectorAll(
+    ".notification-button"
+  );
   is(buttons.length, 1, "Should have one button.");
 
   let refreshPromise = BrowserTestUtils.browserLoaded(browser);
