@@ -671,23 +671,6 @@ var EnvironmentData = {
     addonSection.appendChild(table);
   },
 
-  renderActivePlugins(addonObj, addonSection, sectionTitle) {
-    let table = document.createElement("table");
-    table.setAttribute("id", sectionTitle);
-    this.appendAddonSubsectionTitle(sectionTitle, table);
-
-    for (let plugin of addonObj) {
-      let data = explodeObject(plugin);
-      this.appendHeadingName(table, data.get("name"));
-
-      for (let [key, value] of data) {
-        this.appendRow(table, key, value);
-      }
-    }
-
-    addonSection.appendChild(table);
-  },
-
   renderAddonsObject(addonObj, addonSection, sectionTitle) {
     let table = document.createElement("table");
     table.setAttribute("id", sectionTitle);
@@ -740,11 +723,6 @@ var EnvironmentData = {
     addonSection.setAttribute("class", "subsection-data subdata");
     let addons = ping.environment.addons;
     this.renderAddonsObject(addons.activeAddons, addonSection, "activeAddons");
-    this.renderActivePlugins(
-      addons.activePlugins,
-      addonSection,
-      "activePlugins"
-    );
     this.renderKeyValueObject(addons.theme, addonSection, "theme");
     this.renderAddonsObject(
       addons.activeGMPlugins,
