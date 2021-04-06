@@ -33,8 +33,6 @@ using namespace mozilla;
 using mozilla::dom::DisplayMode;
 using mozilla::dom::Document;
 
-static nsTArray<const nsStaticAtom*>* sSystemMetrics = nullptr;
-
 // A helper for four features below
 static nsSize GetSize(const Document* aDocument) {
   nsPresContext* pc = aDocument->GetPresContext();
