@@ -18,9 +18,8 @@ loader.lazyRequireGetter(
 
 loader.lazyRequireGetter(
   this,
-  "stringToCauseType",
-  "devtools/server/actors/network-monitor/network-observer",
-  true
+  "NetworkUtils",
+  "devtools/server/actors/network-monitor/utils/network-utils"
 );
 
 loader.lazyRequireGetter(
@@ -75,7 +74,8 @@ const NetworkContentActor = ActorClassWithSpec(networkContentSpec, {
       loadingNode: doc,
       securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
       contentPolicyType:
-        stringToCauseType(cause.type) || Ci.nsIContentPolicy.TYPE_OTHER,
+        NetworkUtils.stringToCauseType(cause.type) ||
+        Ci.nsIContentPolicy.TYPE_OTHER,
     });
 
     channel.QueryInterface(Ci.nsIHttpChannel);
