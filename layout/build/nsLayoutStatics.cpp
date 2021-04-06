@@ -43,7 +43,6 @@
 #include "nsTextFrame.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsTextFragment.h"
-#include "nsMediaFeatures.h"
 #include "nsCORSListenerProxy.h"
 #include "nsHtml5Module.h"
 #include "nsHTMLTags.h"
@@ -320,7 +319,6 @@ void nsLayoutStatics::Shutdown() {
   IMEStateManager::Shutdown();
   EditorController::Shutdown();
   HTMLEditorController::Shutdown();
-  nsMediaFeatures::Shutdown();
   HTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
   StaticPresData::Shutdown();

@@ -48,7 +48,6 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsIAnonymousContentCreator.h"
 #include "mozilla/dom/DocumentInlines.h"
-#include "nsMediaFeatures.h"
 #include "nsPrintfCString.h"
 #include "gfxUserFontSet.h"
 #include "nsWindowSizes.h"
@@ -339,8 +338,6 @@ void ServoStyleSet::PreTraverseSync() {
   mDocument->FlushUserFontSet();
 
   ResolveMappedAttrDeclarationBlocks();
-
-  nsMediaFeatures::InitSystemMetrics();
 
   LookAndFeel::NativeInit();
 

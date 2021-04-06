@@ -47,7 +47,6 @@
 #include "nsViewManager.h"
 #include "mozilla/RestyleManager.h"
 #include "SurfaceCacheUtils.h"
-#include "nsMediaFeatures.h"
 #include "gfxPlatform.h"
 #include "nsFontFaceLoader.h"
 #include "mozilla/AnimationEventDispatcher.h"
@@ -1387,10 +1386,6 @@ void nsPresContext::ThemeChangedInternal() {
       ContentParent::BroadcastThemeUpdate(kind);
     }
   }
-
-  // This will force the system metrics to be generated the next time they're
-  // used.
-  nsMediaFeatures::FreeSystemMetrics();
 
   // Reset default background and foreground colors for the document since they
   // may be using system colors.

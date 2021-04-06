@@ -538,6 +538,8 @@ bool Gecko_IsDocumentBody(const mozilla::dom::Element* element);
 nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
                                         const mozilla::dom::Document*);
 
+int32_t Gecko_GetLookAndFeelInt(int32_t int_id);
+
 void Gecko_AddPropertyToSet(nsCSSPropertyIDSet*, nsCSSPropertyID);
 
 // Style-struct management.
@@ -635,10 +637,6 @@ mozilla::PointerCapabilities Gecko_MediaFeatures_AllPointerCapabilities(
     const mozilla::dom::Document*);
 
 float Gecko_MediaFeatures_GetDevicePixelRatio(const mozilla::dom::Document*);
-
-bool Gecko_MediaFeatures_HasSystemMetric(const mozilla::dom::Document*,
-                                         nsAtom* metric,
-                                         bool is_accessible_from_content);
 
 bool Gecko_MediaFeatures_IsResourceDocument(const mozilla::dom::Document*);
 nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(
