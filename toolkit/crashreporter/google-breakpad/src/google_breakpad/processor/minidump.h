@@ -797,6 +797,9 @@ class MinidumpUnloadedModule : public MinidumpObject,
   uint64_t shrink_down_delta() const override;
   void SetShrinkDownDelta(uint64_t shrink_down_delta) override;
 
+  // Print a human-readable representation of the object to stdout.
+  void Print();
+
  protected:
   explicit MinidumpUnloadedModule(Minidump* minidump);
 
@@ -854,6 +857,9 @@ class MinidumpUnloadedModuleList : public MinidumpStream,
       GetModuleAtIndex(unsigned int index) const override;
   const CodeModules* Copy() const override;
   vector<linked_ptr<const CodeModule>> GetShrunkRangeModules() const override;
+
+  // Print a human-readable representation of the object to stdout.
+  void Print();
 
  protected:
   explicit MinidumpUnloadedModuleList(Minidump* minidump_);

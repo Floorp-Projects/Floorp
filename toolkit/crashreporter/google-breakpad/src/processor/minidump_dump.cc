@@ -45,6 +45,7 @@ namespace {
 using google_breakpad::Minidump;
 using google_breakpad::MinidumpThreadList;
 using google_breakpad::MinidumpModuleList;
+using google_breakpad::MinidumpUnloadedModuleList;
 using google_breakpad::MinidumpMemoryInfoList;
 using google_breakpad::MinidumpMemoryList;
 using google_breakpad::MinidumpException;
@@ -130,6 +131,15 @@ static bool PrintMinidumpDump(const Options& options) {
     BPLOG(ERROR) << "minidump.GetModuleList() failed";
   } else {
     module_list->Print();
+  }
+
+  MinidumpUnloadedModuleList::set_max_modules(UINT32_MAX);
+  MinidumpUnloadedModuleList *unloaded_module_list = minidump.GetUnloadedModuleList();
+  if (!unloaded_module_list) {
+    ++errors;
+    BPLOG(ERROR) << "minidump.GetUnloadedModuleList() failed";
+  } else {
+    unloaded_module_list->Print();
   }
 
   MinidumpMemoryList *memory_list = minidump.GetMemoryList();
