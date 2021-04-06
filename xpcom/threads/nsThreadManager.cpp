@@ -51,6 +51,9 @@ class BackgroundEventTarget final : public nsIEventTarget {
   already_AddRefed<nsISerialEventTarget> CreateBackgroundTaskQueue(
       const char* aName);
 
+  using CancelPromise = TaskQueue::CancelPromise::AllPromiseType;
+  RefPtr<CancelPromise> CancelBackgroundDelayedRunnables();
+
   void BeginShutdown(nsTArray<RefPtr<ShutdownPromise>>&);
   void FinishShutdown();
 
@@ -62,6 +65,7 @@ class BackgroundEventTarget final : public nsIEventTarget {
 
   Mutex mMutex;
   nsTArray<RefPtr<TaskQueue>> mTaskQueues;
+  bool mIsBackgroundDelayedRunnablesCanceled;
 };
 
 NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget)
@@ -196,6 +200,19 @@ BackgroundEventTarget::CreateBackgroundTaskQueue(const char* aName) {
   mTaskQueues.AppendElement(queue);
 
   return queue.forget();
+}
+
+auto BackgroundEventTarget::CancelBackgroundDelayedRunnables()
+    -> RefPtr<CancelPromise> {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
+  mIsBackgroundDelayedRunnablesCanceled = true;
+  nsTArray<RefPtr<TaskQueue::CancelPromise>> promises;
+  for (const auto& tq : mTaskQueues) {
+    promises.AppendElement(tq->CancelDelayedRunnables());
+  }
+  return TaskQueue::CancelPromise::All(GetMainThreadSerialEventTarget(),
+                                       promises);
 }
 
 extern "C" {
@@ -402,6 +419,8 @@ void nsThreadManager::Shutdown() {
   // in-flight asynchronous thread shutdowns to complete.
   mMainThread->WaitForAllAsynchronousShutdowns();
 
+  mMainThread->mEventTarget->NotifyShutdown();
+
   // In case there are any more events somehow...
   NS_ProcessPendingEvents(mMainThread);
 
@@ -488,6 +507,17 @@ nsThreadManager::CreateBackgroundTaskQueue(const char* aName) {
   }
 
   return mBackgroundEventTarget->CreateBackgroundTaskQueue(aName);
+}
+
+void nsThreadManager::CancelBackgroundDelayedRunnables() {
+  if (!mInitialized) {
+    return;
+  }
+
+  bool canceled = false;
+  mBackgroundEventTarget->CancelBackgroundDelayedRunnables()->Then(
+      GetMainThreadSerialEventTarget(), __func__, [&] { canceled = true; });
+  ::SpinEventLoopUntil([&]() { return canceled; });
 }
 
 nsThread* nsThreadManager::GetCurrentThread() {
