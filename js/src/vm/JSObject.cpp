@@ -142,19 +142,20 @@ JS_PUBLIC_API const char* JS::InformalValueTypeName(const Value& v) {
 }
 
 // ES6 draft rev37 6.2.4.4 FromPropertyDescriptor
-JS_PUBLIC_API bool JS::FromPropertyDescriptor(JSContext* cx,
-                                              Handle<PropertyDescriptor> desc,
-                                              MutableHandleValue vp) {
+JS_PUBLIC_API bool JS::FromPropertyDescriptor(
+    JSContext* cx, Handle<Maybe<PropertyDescriptor>> desc_,
+    MutableHandleValue vp) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(desc);
+  cx->check(desc_);
 
   // Step 1.
-  if (!desc.object()) {
+  if (desc_.isNothing()) {
     vp.setUndefined();
     return true;
   }
 
+  Rooted<PropertyDescriptor> desc(cx, *desc_);
   return FromPropertyDescriptorToObject(cx, desc, vp);
 }
 

@@ -18,7 +18,9 @@ BEGIN_TEST(test_GetPropertyDescriptor) {
   CHECK_SAME(desc.value(), JS::Int32Value(123));
 
   JS::RootedValue descValue(cx);
-  CHECK(JS::FromPropertyDescriptor(cx, desc, &descValue));
+  JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> descriptor(
+      cx, mozilla::Some(desc.get()));
+  CHECK(JS::FromPropertyDescriptor(cx, descriptor, &descValue));
   CHECK(descValue.isObject());
   JS::RootedObject descObj(cx, &descValue.toObject());
   JS::RootedValue value(cx);
