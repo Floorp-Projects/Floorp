@@ -5567,13 +5567,13 @@
     type: bool
     value: false
     mirror: always
+#endif  // NIGHTLY_BUILD
 
   # Experimental support for Top-level Await in JavaScript.
 -   name: javascript.options.experimental.top_level_await
     type: bool
-    value: false
+    value: true
     mirror: always
-#endif  // NIGHTLY_BUILD
 
 # The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
 - name: javascript.options.gc_delay
