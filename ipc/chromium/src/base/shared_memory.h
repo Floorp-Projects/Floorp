@@ -108,15 +108,6 @@ class SharedMemory {
     return handle;
   }
 
-#ifdef OS_WIN
-  // Used only in gfx/ipc/SharedDIBWin.cpp; should be removable once
-  // NPAPI goes away.
-  HANDLE GetHandle() {
-    freezeable_ = false;
-    return mapped_file_.get();
-  }
-#endif
-
   // Make the shared memory object read-only, such that it cannot be
   // written even if it's sent to an untrusted process.  If it was
   // mapped in this process, it will be unmapped.  The object must
