@@ -333,6 +333,9 @@ function trrQueryHandler(req, resp, url) {
       global.dns_query_counts[domain][type] + 1 || 1;
 
     let flags = global.dnsPacket.RECURSION_DESIRED;
+    if (!response.answers && !response.flags) {
+      flags |= 2; // SERVFAIL
+    }
     flags |= response.flags || 0;
     let buf = global.dnsPacket.encode({
       type: "response",
