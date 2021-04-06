@@ -140,10 +140,6 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
                     false // Allow click listeners firing for children.
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    if (isExpandInProgress || !isCollapsed) {
-                        return true
-                    }
-
                     if (isScrollingUp(ev)) {
                         expand()
                         true
@@ -157,13 +153,23 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
                     return callParentOnInterceptTouchEvent(ev)
                 }
             }
+        } else {
+            return if (ev != null && !isTouchingTheWrappedView(ev)) {
+                // If the menu is expanded but smaller than the parent height
+                // and the user touches above the menu, in the empty space.
+                blankTouchListener?.invoke()
+                true
+            } else if (isExpandInProgress) {
+                // Swallow all menu touches while the menu is expanding.
+                true
+            } else {
+                callParentOnInterceptTouchEvent(ev)
+            }
         }
-
-        return callParentOnInterceptTouchEvent(ev)
     }
 
     @VisibleForTesting
-    internal fun shouldInterceptTouches() = isCollapsed || parentHeight > expandedHeight
+    internal fun shouldInterceptTouches() = isCollapsed && !isExpandInProgress
 
     @VisibleForTesting
     internal fun isTouchingTheWrappedView(ev: MotionEvent): Boolean {

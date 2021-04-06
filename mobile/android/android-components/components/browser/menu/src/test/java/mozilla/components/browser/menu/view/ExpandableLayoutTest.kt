@@ -142,16 +142,52 @@ class ExpandableLayoutTest {
     }
 
     @Test
-    fun `GIVEN ExpandableLayout WHEN onInterceptTouchEvent is called for an event for which should not be intercepted THEN super is called`() {
+    fun `GIVEN an expanded menu WHEN onInterceptTouchEvent is called for a touch on the menu THEN super is called`() {
+        val blankTouchListener = spy {}
         val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1) { }
+            FrameLayout(testContext), 1, blankTouchListener)
         )
         val event: MotionEvent = mock()
         doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
+        doReturn(true).`when`(expandableLayout).isTouchingTheWrappedView(any())
 
         expandableLayout.onInterceptTouchEvent(event)
 
+        verify(blankTouchListener, never()).invoke()
         verify(expandableLayout).callParentOnInterceptTouchEvent(event)
+    }
+
+    @Test
+    fun `GIVEN a menu currently expanding WHEN onInterceptTouchEvent is called for a touch on the menu THEN the touch is swallowed`() {
+        val blankTouchListener = spy {}
+        val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(
+            FrameLayout(testContext), 1, blankTouchListener)
+        )
+        val event: MotionEvent = mock()
+        doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
+        doReturn(true).`when`(expandableLayout).isTouchingTheWrappedView(any())
+        expandableLayout.isExpandInProgress = true
+
+        expandableLayout.onInterceptTouchEvent(event)
+
+        verify(blankTouchListener, never()).invoke()
+        verify(expandableLayout, never()).callParentOnInterceptTouchEvent(event)
+    }
+
+    @Test
+    fun `GIVEN an expanded menu WHEN onInterceptTouchEvent is called for a outside the menu THEN super blankTouchListener is invoked`() {
+        val blankTouchListener = spy {}
+        val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(
+            FrameLayout(testContext), 1, blankTouchListener)
+        )
+        val event: MotionEvent = mock()
+        doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
+        doReturn(false).`when`(expandableLayout).isTouchingTheWrappedView(any())
+
+        expandableLayout.onInterceptTouchEvent(event)
+
+        verify(blankTouchListener).invoke()
+        verify(expandableLayout, never()).callParentOnInterceptTouchEvent(event)
     }
 
     @Test
@@ -246,23 +282,8 @@ class ExpandableLayoutTest {
             FrameLayout(testContext), 1) { }
         )
         val actionDown = MotionEvent.obtain(0, 0, ACTION_MOVE, 0f, 0f, 0)
-        doReturn(true).`when`(expandableLayout).shouldInterceptTouches()
-        expandableLayout.isExpandInProgress = true
-
-        assertTrue(expandableLayout.onInterceptTouchEvent(actionDown))
-        verify(expandableLayout, never()).expand()
-        verify(expandableLayout, never()).callParentOnInterceptTouchEvent(any())
-    }
-
-    @Test
-    fun `GIVEN the wrappedView is expanded but smaller than the parent WHEN onInterceptTouchEvent is called for scroll events THEN these events are intercepted`() {
-        val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1) { }
-        )
-        val actionDown = MotionEvent.obtain(0, 0, ACTION_MOVE, 0f, 0f, 0)
-        doReturn(true).`when`(expandableLayout).shouldInterceptTouches()
-        expandableLayout.isExpandInProgress = false
-        expandableLayout.isCollapsed = false
+        doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
+        doReturn(false).`when`(expandableLayout).isTouchingTheWrappedView(any())
 
         assertTrue(expandableLayout.onInterceptTouchEvent(actionDown))
         verify(expandableLayout, never()).expand()
@@ -277,7 +298,6 @@ class ExpandableLayoutTest {
         val actionDown = MotionEvent.obtain(0, 0, ACTION_MOVE, 0f, 0f, 0)
         doReturn(true).`when`(expandableLayout).shouldInterceptTouches()
         doReturn(false).`when`(expandableLayout).isScrollingUp(any())
-        expandableLayout.isExpandInProgress = false
 
         assertFalse(expandableLayout.onInterceptTouchEvent(actionDown))
         verify(expandableLayout, never()).expand()
@@ -292,7 +312,6 @@ class ExpandableLayoutTest {
         val actionDown = MotionEvent.obtain(0, 0, ACTION_MOVE, 0f, 0f, 0)
         doReturn(true).`when`(expandableLayout).shouldInterceptTouches()
         doReturn(true).`when`(expandableLayout).isScrollingUp(any())
-        expandableLayout.isExpandInProgress = false
 
         assertTrue(expandableLayout.onInterceptTouchEvent(actionDown))
         verify(expandableLayout).expand()
@@ -340,27 +359,24 @@ class ExpandableLayoutTest {
     }
 
     @Test
-    fun `GIVEN ExpandableLayout not collapsed and the wrappedView smaller than it's parent WHEN shouldInterceptTouches is called THEN it returns true`() {
+    fun `GIVEN ExpandableLayout not collapsed WHEN shouldInterceptTouches is called THEN it returns false`() {
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
             FrameLayout(testContext), 1
         ) { }
         expandableLayout.isCollapsed = false
-        expandableLayout.parentHeight = 101
-        expandableLayout.expandedHeight = 100
 
-        assertTrue(expandableLayout.shouldInterceptTouches())
+        assertFalse(expandableLayout.shouldInterceptTouches())
     }
 
     @Test
-    fun `GIVEN ExpandableLayout not collapsed and the wrappedView bigger than it's parent WHEN shouldInterceptTouches is called THEN it returns false`() {
+    fun `GIVEN ExpandableLayout currently expanding WHEN shouldInterceptTouches is called THEN it returns false`() {
         val expandableLayout = ExpandableLayout.wrapContentInExpandableView(
             FrameLayout(testContext), 1
         ) { }
-        expandableLayout.isCollapsed = false
-        expandableLayout.parentHeight = 101
-        expandableLayout.expandedHeight = 102
+        expandableLayout.isCollapsed = true
+        expandableLayout.isExpandInProgress = false
 
-        assertFalse(expandableLayout.shouldInterceptTouches())
+        assertTrue(expandableLayout.shouldInterceptTouches())
     }
 
     @Test
