@@ -2788,13 +2788,4 @@ void DestroyContext(Context* c) {
   delete c;
 }
 
-size_t ReportMemory(size_t (*size_of_op)(void*)) {
-  size_t size = 0;
-  for (auto& t : ctx->textures) {
-    if (t && t->buf) {
-      size += size_of_op(t->buf);
-    }
-  }
-  return size;
-}
 }  // extern "C"
