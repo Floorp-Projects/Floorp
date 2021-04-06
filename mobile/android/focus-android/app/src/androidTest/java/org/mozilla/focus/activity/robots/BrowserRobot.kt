@@ -26,6 +26,11 @@ class BrowserRobot {
             UiSelector().resourceId("$appName:id/progress")
         )
 
+    fun verifyBrowserView() =
+        assertTrue(mDevice.findObject(UiSelector().resourceId("$appName:id/webview"))
+            .waitForExists(webPageLoadwaitingTime)
+        )
+
     fun verifyPageContent(expectedText: String) {
         val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
@@ -89,4 +94,4 @@ inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
 
 private val browserURLbar = mDevice.findObject(UiSelector().resourceId("$appName:id/display_url"))
 
-private var floatingEraseButton = onView(allOf(withId(R.id.erase), isDisplayed()))
+private val floatingEraseButton = onView(allOf(withId(R.id.erase), isDisplayed()))

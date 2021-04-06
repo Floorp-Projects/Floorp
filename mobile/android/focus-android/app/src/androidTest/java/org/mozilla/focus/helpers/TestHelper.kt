@@ -47,7 +47,7 @@ object TestHelper {
             .targetContext.packageName
 
     @JvmStatic
-    val appContext = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
+    val appContext: Context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
 
     fun getStringResource(id: Int) = appContext.getString(id)
 
@@ -66,6 +66,14 @@ object TestHelper {
         } catch (exception: PackageManager.NameNotFoundException) {
             Log.d("TestLog", exception.message.toString())
             false
+        }
+    }
+
+    fun restartApp(activity: MainActivityFirstrunTestRule) {
+        with(activity) {
+            finishActivity()
+            mDevice.waitForIdle()
+            launchActivity(null)
         }
     }
 
