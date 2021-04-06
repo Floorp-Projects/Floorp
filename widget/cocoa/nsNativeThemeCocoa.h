@@ -20,6 +20,7 @@
 
 @class MOZCellDrawWindow;
 @class MOZCellDrawView;
+@class MOZSearchFieldCell;
 @class NSProgressBarCell;
 class nsDeviceContext;
 struct SegmentedControlRenderSettings;
@@ -434,8 +435,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   NSButtonCell* mRadioButtonCell;
   NSButtonCell* mCheckboxCell;
   NSTextFieldCell* mTextFieldCell;
-  NSSearchFieldCell* mSearchFieldCell;
-  NSSearchFieldCell* mToolbarSearchFieldCell;
+  MOZSearchFieldCell* mSearchFieldCell;
   NSPopUpButtonCell* mDropdownCell;
   NSComboBoxCell* mComboBoxCell;
   NSProgressBarCell* mProgressBarCell;
