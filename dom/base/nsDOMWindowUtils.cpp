@@ -3491,18 +3491,6 @@ nsDOMWindowUtils::GetPaintingSuppressed(bool* aPaintingSuppressed) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetPlugins(JSContext* cx,
-                             JS::MutableHandle<JS::Value> aPlugins) {
-  nsCOMPtr<Document> doc = GetDocument();
-  NS_ENSURE_STATE(doc);
-
-  nsTArray<nsIObjectLoadingContent*> plugins;
-  doc->GetPlugins(plugins);
-
-  return ToJSValue(cx, plugins, aPlugins) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::SetVisualViewportSize(float aWidth, float aHeight) {
   if (!(aWidth >= 0.0 && aHeight >= 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
