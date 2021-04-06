@@ -406,8 +406,20 @@ void ExecutionRunnable::RunOnWorkletThread() {
   // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-module-script
   // without /rethrow errors/ and so unhandled exceptions do not cause the
   // promise to be rejected.
-  JS::Rooted<JS::Value> ignored(cx);
-  JS::ModuleEvaluate(cx, module, &ignored);
+  JS::Rooted<JS::Value> rval(cx);
+  JS::ModuleEvaluate(cx, module, &rval);
+  // With top-level await, we need to unwrap the module promise, or we end up
+  // with less helpfull error messages. A modules return value can either be a
+  // promise or undefined. If the value is defined, we have an async module and
+  // can unwrap it.
+  if (!rval.isUndefined() && rval.isObject()) {
+    JS::Rooted<JSObject*> aEvaluationPromise(cx);
+    aEvaluationPromise.set(&rval.toObject());
+    if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
+      mResult = NS_ERROR_DOM_ABORT_ERR;
+      return;
+    }
+  }
 
   // All done.
   mResult = NS_OK;
