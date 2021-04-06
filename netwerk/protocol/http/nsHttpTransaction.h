@@ -251,7 +251,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
       nsresult aErrorCode);
 
   void OnHttp3BackupTimer();
-  void OnBackupConnectionReady();
+  void OnBackupConnectionReady(bool aHTTPSRRUsed);
   void OnFastFallbackTimer();
   void HandleFallback(nsHttpConnectionInfo* aFallbackConnInfo);
   void MaybeCancelFallbackTimer();
