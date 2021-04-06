@@ -11,12 +11,11 @@
     title: "Multistream: Two audio streams"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true}, {audio: true}],
                              [{audio: true}, {audio: true}]);
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

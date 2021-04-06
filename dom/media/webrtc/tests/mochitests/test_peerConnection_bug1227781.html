@@ -11,21 +11,25 @@
     title: "Test with invalid TURN server"
   });
 
-  var turnConfig = { iceServers: [{"username":"mozilla","credential"
-                                   :"mozilla","url":"turn:test@10.0.0.1"}] };
-  var test;
+  const turnConfig = {
+    iceServers: [
+      {
+        username: "mozilla",
+        credential: "mozilla",
+        url: "turn:test@10.0.0.1",
+      },
+    ],
+  };
   runNetworkTest(function (options) {
-    var exception = false;
-
+    let exception = false;
     try {
-      pc = new RTCPeerConnection(turnConfig);
+      new RTCPeerConnection(turnConfig);
     } catch (e) {
       info(e);
       exception = true;
     }
     is(exception, true, "Exception fired");
     ok("Success");
-    SimpleTest.finish();
   });
 </script>
 </pre>

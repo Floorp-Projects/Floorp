@@ -38,10 +38,7 @@
         });
       }]);
 
-    // This inlines test.run(), to allow for multiple tests to run.
-    test.updateChainSteps();
-    await test.chain.execute();
-    await test.close();
+    await test.run();
   }
 
   runNetworkTest(async (options) => {
@@ -54,8 +51,6 @@
     await testBlocklist(options, "mochi.test", false);
     await testBlocklist(options, "example.com,mochi.test", false);
     await testBlocklist(options, "*.test", false);
-
-    networkTestFinished();
   });
 
 </script>

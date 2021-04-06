@@ -13,18 +13,19 @@
     visible: true,
   });
 
-  let verifyScreenshare = async (video, helper, upleft, upright, downleft, downright) => {
+  const verifyScreenshare =
+      async (video, helper, upleft, upright, downleft, downright) => {
     if (video.readyState < video.HAVE_CURRENT_DATA) {
       info("Waiting for data");
-      await new Promise(r => video.addEventListener("loadeddata", r, {once: true}));
+      await new Promise(r => video.onloadeddata = r);
     }
 
     // We assume video size will not change. Offsets help to account for a
     // square fullscreen-canvas, while the screen is rectangular.
-    let offsetX = Math.max(0, video.videoWidth - video.videoHeight) / 2;
-    let offsetY = Math.max(0, video.videoHeight - video.videoWidth) / 2;
+    const offsetX = Math.max(0, video.videoWidth - video.videoHeight) / 2;
+    const offsetY = Math.max(0, video.videoHeight - video.videoWidth) / 2;
 
-    let verifyAround = async (internalX, internalY, color) => {
+    const verifyAround = async (internalX, internalY, color) => {
       // Pick a couple of samples around a coordinate to check for a color.
       // We check multiple rows and columns, to avoid most artifact issues.
       let areaSamples = [
@@ -33,21 +34,20 @@
         {dx: 8, dy: 5},
       ];
       for (let {dx, dy} of areaSamples) {
-        let x = offsetX + dx + internalX;
-        let y = offsetY + dy + internalY;
-        info("Checking screen coordinate (" + [x,y] + ") of total resolution "
-          + video.videoWidth + "x" + video.videoHeight
-          + " against " + color.name + ".");
+        const x = offsetX + dx + internalX;
+        const y = offsetY + dy + internalY;
+        info(`Checking screen coordinate (${[x,y]}) of total resolution `
+          + `${video.videoWidth}x${video.videoHeight} against ${color.name}.`);
         await helper.waitForPixel(video, px => {
           let result = helper.isPixel(px, color, 16);
-          info("Checking pixel against " + color.name + ". Got ["
-            + Array.from(px) + "] (" + (result ? "YES" : "NO") + ")");
+          info(`Checking pixel against ${color.name}. Got [${Array.from(px)}` +
+               `] (${(result ? "YES" : "NO")})`);
           return result;
         }, {offsetX: x, offsetY: y});
       }
     };
 
-    let screenSizeSq = Math.min(video.videoWidth, video.videoHeight);
+    const screenSizeSq = Math.min(video.videoWidth, video.videoHeight);
 
     info("Waiting for upper left quadrant to become " + upleft.name);
     await verifyAround(screenSizeSq / 4, screenSizeSq / 4, upleft);
@@ -74,18 +74,18 @@
       ["full-screen-api.transition-duration.leave", "0 0"],
     );
 
-    let testVideo = createMediaElement('video', 'testVideo');
+    const testVideo = createMediaElement('video', 'testVideo');
 
-    let canvas = document.createElement("canvas");
+    const canvas = document.createElement("canvas");
     canvas.width = canvas.height = 20;
     document.getElementById("content").appendChild(canvas);
-    let draw = (upleft, upright, downleft, downright) => {
-      helper.drawColor(canvas, upleft, {offsetX: 0, offsetY: 0});
-      helper.drawColor(canvas, upright, {offsetX: 10, offsetY: 0});
-      helper.drawColor(canvas, downleft, {offsetX: 0, offsetY: 10});
-      helper.drawColor(canvas, downright, {offsetX: 10, offsetY: 10});
+    const draw = ([upleft, upright, downleft, downright]) => {
+      helper.drawColor(canvas, helper[upleft], {offsetX: 0, offsetY: 0});
+      helper.drawColor(canvas, helper[upright], {offsetX: 10, offsetY: 0});
+      helper.drawColor(canvas, helper[downleft], {offsetX: 0, offsetY: 10});
+      helper.drawColor(canvas, helper[downright], {offsetX: 10, offsetY: 10});
     };
-    let helper = new CaptureStreamTestHelper2D(1, 1);
+    const helper = new CaptureStreamTestHelper2D(1, 1);
 
     await new Promise((resolve, reject) => {
       SpecialPowers.wrap(document).onfullscreenchange = resolve;
@@ -113,8 +113,8 @@
        "Width setting should match video width");
     is(settings.height, testVideo.videoHeight,
        "Height setting should match video height");
-    let screenWidth = testVideo.videoWidth;
-    let screenHeight = testVideo.videoHeight;
+    const screenWidth = testVideo.videoWidth;
+    const screenHeight = testVideo.videoHeight;
     await verifyScreenshare(testVideo, helper,
                             helper.red, helper.blue,
                             helper.green, helper.grey);
@@ -168,7 +168,7 @@
                             helper.grey, helper.blue);
 
     info("Testing modifying screenshare with applyConstraints");
-    let resize = haveEvent(testVideo, "resize", wait(5000, new Error("Timeout")));
+    const resize = haveEvent(testVideo, "resize", wait(5000, new Error("Timeout")));
     await testVideo.srcObject.getVideoTracks()[0].applyConstraints({
       mediaSource: 'screen',
       width: 200,
@@ -181,7 +181,7 @@
     // getSettings() should report correct size as soon as applyConstraints()
     // resolves - bug 1453259. Until fixed, check that we at least report
     // something sane.
-    let newSettings = stream.getTracks()[0].getSettings();
+    const newSettings = stream.getTracks()[0].getSettings();
     ok(newSettings.width > settings.width && newSettings.width < screenWidth,
        `Width setting ${newSettings.width} should have increased after applyConstraints`);
     ok(newSettings.height > settings.height && newSettings.height < screenHeight,

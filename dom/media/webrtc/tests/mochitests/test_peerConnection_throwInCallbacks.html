@@ -12,11 +12,12 @@
   });
 
 runNetworkTest(function () {
-  function finish() {
+  let finish;
+  const onfinished = new Promise(r => finish = async () => {
     window.onerror = oldOnError;
     is(error_count, 7, "Seven expected errors verified.");
-    networkTestFinished();
-  }
+    r();
+  });
 
   function getFail() {
     return err => {
@@ -72,6 +73,8 @@ runNetworkTest(function () {
     }, getFail());
     throw new Error("Expected");
   });
+
+  return onfinished;
 });
 
 </script>

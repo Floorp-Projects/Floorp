@@ -7,48 +7,45 @@
 <pre id="test">
 
 <script>
-(async function() {
+createHTML({
+  title: "Check tab muting when the tab plays audio via the Web Audio API",
+  bug: "1346880",
+  visible: false
+});
 
-  await createHTML({
-    title: "Check tab muting when the tab plays audio via the Web Audio API",
-    bug: "1346880",
-    visible: false
-  });
-  /**
-   * Check that muting a tab results in no audible audio: mute a tab, in which
-   * an OscillatorNode is playing. The default audio output device is a
-   * pulseaudio null-sink. Simulateously, record the other side of the null
-   * sink, and check that no audio has been written to the sink, because the tab
-   * was muted. Then, umute the tab and check that audio is being sent to the
-   * null-sink. */
-  await runTestWhenReady(async () => {
-    let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
-    if (!audioDevice) {
-      todo(false, "No loopback device set by framework. Try --use-test-media-devices");
-      return;
-    }
+/**
+ * Check that muting a tab results in no audible audio: mute a tab, in which
+ * an OscillatorNode is playing. The default audio output device is a
+ * pulseaudio null-sink. Simulateously, record the other side of the null
+ * sink, and check that no audio has been written to the sink, because the tab
+ * was muted. Then, umute the tab and check that audio is being sent to the
+ * null-sink. */
+runTest(async () => {
+  if (!SpecialPowers.getCharPref("media.audio_loopback_dev", "")) {
+    todo(false, "No loopback device set by framework. Try --use-test-media-devices");
+    return;
+  }
 
-    // Mute the tab
-    await SpecialPowers.toggleMuteState(true, window.top);
-    // Don't use a loopback tone, the loopback device is here to check that
-    // nothing is output because the tab is muted.
-    DISABLE_LOOPBACK_TONE = true;
+  // Mute the tab
+  await SpecialPowers.toggleMuteState(true, window.top);
+  // Don't use a loopback tone, the loopback device is here to check that
+  // nothing is output because the tab is muted.
+  DISABLE_LOOPBACK_TONE = true;
 
-    let stream = await getUserMedia({audio: true});
-
-    let ac = new AudioContext();
-
-    let osc = new OscillatorNode(ac);
+  const stream = await getUserMedia({audio: true});
+  try {
+    const ac = new AudioContext();
+    const osc = new OscillatorNode(ac);
     osc.connect(ac.destination);
     osc.start();
 
-    let analyser = new AudioStreamAnalyser(ac, stream);
+    const analyser = new AudioStreamAnalyser(ac, stream);
     // Wait for some time, checking there is only ever silent audio in the
     // loopback stream. `waitForAnalysisSuccess` runs off requestAnimationFrame
     let silenceFor = 3 / (1 / 60);
     await analyser.waitForAnalysisSuccess(array => {
         // `array` has values between 0 and 255, 0 being silence.
-        let sum = array.reduce((acc, v) => { return acc + v; });
+        const sum = array.reduce((acc, v) => { return acc + v; });
         if (sum == 0) {
           silenceFor--;
         } else {
@@ -67,7 +64,7 @@
 
     await analyser.waitForAnalysisSuccess(array => {
         // `array` has values between 0 and 255, 0 being silence.
-        let sum = array.reduce((acc, v) => { return acc + v; });
+        const sum = array.reduce((acc, v) => { return acc + v; });
         if (sum != 0) {
           info(`Sum after unmuting ${sum}`);
           ok(true, "Unmuting the tab was effective");
@@ -82,10 +79,12 @@
           return false;
         }
     });
-
-  });
-  finish()
- })();
+  } finally {
+    for (let t of stream.getTracks()) {
+      t.stop();
+    }
+  }
+});
 </script>
 </pre>
 </body>

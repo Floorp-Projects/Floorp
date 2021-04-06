@@ -548,32 +548,20 @@ PeerConnectionTest.prototype.updateChainSteps = function() {
 /**
  * Start running the tests as assigned to the command chain.
  */
-PeerConnectionTest.prototype.run = function() {
+PeerConnectionTest.prototype.run = async function() {
   /* We have to modify the chain here to allow tests which modify the default
    * test chain instantiating a PeerConnectionTest() */
   this.updateChainSteps();
-  var finished = () => {
-    if (window.SimpleTest) {
-      networkTestFinished();
-    } else {
-      finish();
-    }
-  };
-  return this.chain
-    .execute()
-    .then(() => this.close())
-    .catch(e =>
-      ok(
-        false,
-        "Error in test execution: " +
-          e +
-          (typeof e.stack === "string"
-            ? " " + e.stack.split("\n").join(" ... ")
-            : "")
-      )
-    )
-    .then(() => finished())
-    .catch(e => ok(false, "Error in finished()"));
+  try {
+    await this.chain.execute();
+    await this.close();
+  } catch (e) {
+    const stack =
+      typeof e.stack === "string"
+        ? ` ${e.stack.split("\n").join(" ... ")}`
+        : "";
+    ok(false, `Error in test execution: ${e} (${stack})`);
+  }
 };
 
 /**
@@ -2415,7 +2403,6 @@ function loadScript(...scripts) {
 // Ensure SimpleTest.js is loaded before other scripts.
 var scriptsReady = loadScript("/tests/SimpleTest/SimpleTest.js").then(() => {
   return loadScript(
-    "../../../test/manifest.js",
     "head.js",
     "templates.js",
     "turnConfig.js",
@@ -2535,5 +2522,6 @@ async function runNetworkTest(testFunction, fixtureOptions = {}) {
       });
     }
     await testFunction(options);
+    await networkTestFinished();
   });
 }

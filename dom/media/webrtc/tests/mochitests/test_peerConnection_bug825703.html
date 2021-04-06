@@ -99,7 +99,7 @@ runNetworkTest(() => {
 
   var push = prefs => SpecialPowers.pushPrefEnv(prefs);
 
-  Promise.resolve()
+  return Promise.resolve()
   // This set of tests are setting the about:config User preferences for default
   // ice servers and checking the outputs when RTCPeerConnection() is
   // invoked. See Bug 1167922 for more information.
@@ -131,8 +131,7 @@ runNetworkTest(() => {
        "warning has this file");
     ok(remainder.includes('line: ' + lineNumberAndFunction.line),
        "warning has correct line number");
-    })
-    .then(networkTestFinished);
+    });
 });
 </script>
 </pre>

@@ -11,19 +11,20 @@
     title: "Don't offer m=application unless createDataChannel is called first"
   });
 
-  runNetworkTest(function () {
-    var pc = new RTCPeerConnection();
+  runNetworkTest(async function () {
+    const pc = new RTCPeerConnection();
 
     // necessary to circumvent bug 864109
-    var options = { offerToReceiveAudio: true };
+    const options = { offerToReceiveAudio: true };
 
-    pc.createOffer(options).then(offer => {
+    const errorCallback = generateErrorCallback();
+    try {
+      const offer = await pc.createOffer(options);
       ok(!offer.sdp.includes("m=application"),
         "m=application is not contained in the SDP");
-
-      networkTestFinished();
-    })
-    .catch(generateErrorCallback());
+    } catch(e) {
+      errorCallback(e);
+    }
   });
 
 </script>

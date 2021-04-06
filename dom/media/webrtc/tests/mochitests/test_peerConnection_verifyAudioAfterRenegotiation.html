@@ -11,10 +11,9 @@
     title: "Renegotiation: verify audio after renegotiation"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
-    var helper = new AudioStreamHelper();
+    const test = new PeerConnectionTest(options);
+    const helper = new AudioStreamHelper();
 
     test.chain.append([
       function CHECK_ASSUMPTIONS() {
@@ -92,7 +91,7 @@
     ]);
 
     test.setMediaConstraints([{audio: true}], []);
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

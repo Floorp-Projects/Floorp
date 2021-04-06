@@ -11,10 +11,9 @@
     title: "Basic windowshare-only peer connection"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
-    var constraints = {
+    const test = new PeerConnectionTest(options);
+    const constraints = {
       video: {
          mozMediaSource: "window",
          mediaSource: "window"
@@ -22,7 +21,7 @@
       fake: false
     };
     test.setMediaConstraints([constraints], []);
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

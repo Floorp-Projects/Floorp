@@ -52,39 +52,36 @@
     emitter.stream().getTracks().forEach(t => pc1.addTrack(t, emitter.stream()));
     let h = emitter.helper();
 
-    pc1.createOffer({})
-    .then(offer => pc1.setLocalDescription(offer))
-    .then(() => pc2.setRemoteDescription(pc1.localDescription))
-    .then(() => pc2.createAnswer({}))  // check that createAnswer accepts arg.
-    .then(answer => pc2.setLocalDescription(answer))
-    .then(() => pc1.setRemoteDescription(pc2.localDescription))
+    let offer = await pc1.createOffer({});
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(pc1.localDescription);
+    // check that createAnswer accepts arg.
+    let answer = await pc2.createAnswer({});
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(pc2.localDescription);
 
     // re-negotiate to trigger the race condition in the jitter buffer
-    .then(() => pc1.createOffer({})) // check that createOffer accepts arg.
-    .then(offer => pc1.setLocalDescription(offer))
-    .then(() => pc2.setRemoteDescription(pc1.localDescription))
-    .then(() => pc2.createAnswer({}))
-    .then(answer => pc2.setLocalDescription(answer))
-    .then(() => pc1.setRemoteDescription(pc2.localDescription))
-    .then(() => delivered)
+    offer = await pc1.createOffer({}); // check that createOffer accepts arg.
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(pc1.localDescription);
+    answer = await pc2.createAnswer({});
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(pc2.localDescription);
+    await delivered;
 
     // now verify that actually something gets rendered into the remote video
     // element.
-    .then(() => h.pixelMustBecome(v2, h.blue, {
+    await h.pixelMustBecome(v2, h.blue, {
       threshold: 128,
       infoString: "pcRemote's video should become blue",
-    }))
+    });
     // This will verify that new changes to the canvas propagate through
     // the peerconnection
-    .then(() => {
-      emitter.colors(h.red, h.green)
-    })
-    .then(() => h.pixelMustBecome(v2, h.red, {
+    emitter.colors(h.red, h.green)
+    await h.pixelMustBecome(v2, h.red, {
       threshold: 128,
       infoString: "pcRemote's video should become red",
-    }))
-    .catch(reason => ok(false, "unexpected failure: " + reason))
-    .then(networkTestFinished);
+    });
   });
 </script>
 </pre>

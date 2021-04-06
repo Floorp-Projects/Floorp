@@ -67,8 +67,7 @@ runNetworkTest(() => {
   ]);
 
   return pushPrefs(['media.peerconnection.dtmf.enabled', true])
-    .then(() => { test.run() })
-    .catch(e => ok(false, "unexpected failure: " + e));
+    .then(() => test.run());
 });
 
 </script>

@@ -7,13 +7,12 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-  createHTML({
-    bug: "1437366",
-    title: "Basic audio-only peer connection, with the MTG running at a rate not supported by the MediaPipeline (49000Hz)"
-  });
+createHTML({
+  bug: "1437366",
+  title: "Basic audio-only peer connection, with the MTG running at a rate not supported by the MediaPipeline (49000Hz)"
+});
 
-  test_peerconnection_audio_forced_sample_rate(49000);
-
+test_peerconnection_audio_forced_sample_rate(49000);
 </script>
 </pre>
 </body>

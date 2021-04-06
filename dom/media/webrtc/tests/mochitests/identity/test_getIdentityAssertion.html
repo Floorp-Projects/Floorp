@@ -91,7 +91,7 @@ function theTest() {
         .then(a => checkIdentity(a, 'user@example.com'));
     }
   ]);
-  test.run();
+  return test.run();
 }
 runNetworkTest(theTest);
 

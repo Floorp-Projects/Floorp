@@ -15,7 +15,7 @@
     /** Test for Bug 872377 **/
 
     var rtcSession = new RTCSessionDescription({ sdp: "Picklechips!",
-                                                    type: "offer" });
+                                                 type: "offer" });
     var jsonCopy = JSON.parse(JSON.stringify(rtcSession));
     for (key in rtcSession) {
       if (typeof(rtcSession[key]) == "function") continue;
@@ -32,7 +32,6 @@
       if (typeof(rtcIceCandidate[key]) == "function") continue;
       is(rtcIceCandidate[key], jsonCopy[key], "key " + key + " should match.");
     }
-    networkTestFinished();
   });
 </script>
 </pre>

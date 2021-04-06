@@ -13,7 +13,7 @@ createHTML({
 });
 
 runNetworkTest(async () => {
-  var test = new PeerConnectionTest();
+  const test = new PeerConnectionTest();
 
   await pushPrefs(
     ["media.getusermedia.camera.stop_on_disable.enabled", true],
@@ -39,10 +39,10 @@ runNetworkTest(async () => {
          "pcRemote should have one stream");
     },
     async function CHECK_VIDEO() {
-      var h = new CaptureStreamTestHelper2D();
-      var localVideo = test.pcLocal.localMediaElements
+      const h = new CaptureStreamTestHelper2D();
+      const localVideo = test.pcLocal.localMediaElements
         .find(e => e instanceof HTMLVideoElement);
-      var remoteVideo = test.pcRemote.remoteMediaElements
+      const remoteVideo = test.pcRemote.remoteMediaElements
         .find(e => e instanceof HTMLVideoElement);
       // We check a pixel somewhere away from the top left corner since
       // MediaEngineDefault puts semi-transparent time indicators there.
@@ -52,11 +52,11 @@ runNetworkTest(async () => {
 
       // We're regarding black as disabled here, and we're setting the alpha
       // channel of the pixel to 255 to disregard alpha when testing.
-      var checkVideoEnabled = video => h.waitForPixel(video,
+      const checkVideoEnabled = video => h.waitForPixel(video,
         px => (px[3] = 255, h.isPixelNot(px, h.black, threshold)),
         { offsetX, offsetY }
       );
-      var checkVideoDisabled = video => h.waitForPixel(video,
+      const checkVideoDisabled = video => h.waitForPixel(video,
         px => (px[3] = 255, h.isPixel(px, h.black, threshold)),
         { offsetX, offsetY }
       );
@@ -75,16 +75,16 @@ runNetworkTest(async () => {
       await checkVideoDisabled(remoteVideo);
     },
     async function CHECK_AUDIO() {
-      var ac = new AudioContext();
-      var localAnalyser = new AudioStreamAnalyser(ac, test.pcLocal._pc.getLocalStreams()[0]);
-      var remoteAnalyser = new AudioStreamAnalyser(ac, test.pcRemote._pc.getRemoteStreams()[0]);
+      const ac = new AudioContext();
+      const localAnalyser = new AudioStreamAnalyser(ac, test.pcLocal._pc.getLocalStreams()[0]);
+      const remoteAnalyser = new AudioStreamAnalyser(ac, test.pcRemote._pc.getRemoteStreams()[0]);
 
-      var checkAudio = (analyser, fun) => analyser.waitForAnalysisSuccess(fun);
+      const checkAudio = (analyser, fun) => analyser.waitForAnalysisSuccess(fun);
 
-      var freq = localAnalyser.binIndexForFrequency(TEST_AUDIO_FREQ);
-      var checkAudioEnabled = analyser =>
+      const freq = localAnalyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+      const checkAudioEnabled = analyser =>
         checkAudio(analyser, array => array[freq] > 200);
-      var checkAudioDisabled = analyser =>
+      const checkAudioDisabled = analyser =>
         checkAudio(analyser, array => array[freq] < 50);
 
       info("Checking local audio enabled");
@@ -100,7 +100,7 @@ runNetworkTest(async () => {
       await checkAudioDisabled(remoteAnalyser);
     },
   ]);
-  test.run();
+  await test.run();
 });
 </script>
 </pre>

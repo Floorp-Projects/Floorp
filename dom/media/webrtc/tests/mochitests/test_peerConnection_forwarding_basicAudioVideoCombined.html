@@ -30,11 +30,10 @@ runNetworkTest(function() {
     }
   ]);
   gumTest.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
-  gumTest.chain.execute()
+  return gumTest.chain.execute()
     .then(() => forwardingTest.chain.execute())
     .then(() => gumTest.close())
-    .then(() => forwardingTest.close())
-    .then(() => networkTestFinished());
+    .then(() => forwardingTest.close());
 });
 </script>
 </pre>

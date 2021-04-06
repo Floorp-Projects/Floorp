@@ -11,11 +11,10 @@
     title: "Renegotiation: add DataChannel"
   });
 
-  var test;
   runNetworkTest(function (options) {
     options = options || { };
     options.bundle = false;
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
                      commandsCreateDataChannel.concat(
                        [
@@ -36,7 +35,7 @@
                             1);
 
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.run();
+    return test.run();
   });
 
 </script>

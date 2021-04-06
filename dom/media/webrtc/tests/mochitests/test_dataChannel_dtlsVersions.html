@@ -23,10 +23,7 @@
     addInitialDataChannel(test.chain);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
 
-    // This inlines test.run(), to allow for multiple tests to run.
-    test.updateChainSteps();
-    await test.chain.execute();
-    await test.close();
+    await test.run();
   }
 
   runNetworkTest(async (options) => {
@@ -34,7 +31,6 @@
     for (var version = 770; version <= 772; version++) {
       await testDtlsVersion(options, version);
     }
-    networkTestFinished();
   });
 </script>
 </pre>

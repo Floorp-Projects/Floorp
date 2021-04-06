@@ -49,7 +49,7 @@ runNetworkTest(async function (options) {
 
   test.setMediaConstraints([{audio: true}, {video: true}],
                            [{audio: true}, {video: true}]);
-  test.run();
+  await test.run();
 });
 </script>
 </pre>

@@ -42,7 +42,7 @@ runNetworkTest(() => {
   test = new PeerConnectionTest();
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
   test.chain.append(steps);
-  test.run();
+  return test.run();
 });
 </script>
 </pre>
