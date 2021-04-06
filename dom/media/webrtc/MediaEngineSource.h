@@ -177,12 +177,6 @@ class MediaEngineSourceInterface {
   virtual nsresult Deallocate() = 0;
 
   /**
-   * Called by MediaEngine when it knows this MediaEngineSource won't be used
-   * anymore. Use it to clean up anything that needs to be cleaned up.
-   */
-  virtual void Shutdown() = 0;
-
-  /**
    * If implementation of MediaEngineSource supports TakePhoto(), the picture
    * should be returned via aCallback object. Otherwise, it returns
    * NS_ERROR_NOT_IMPLEMENTED.
@@ -255,9 +249,6 @@ class MediaEngineSource : public MediaEngineSourceInterface {
 
   // Returns NS_ERROR_NOT_AVAILABLE by default.
   nsresult FocusOnSelectedSource() override;
-
-  // Shutdown does nothing by default.
-  void Shutdown() override;
 
   // TakePhoto returns NS_ERROR_NOT_IMPLEMENTED by default,
   // to tell the caller to fallback to other methods.
