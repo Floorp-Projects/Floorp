@@ -209,7 +209,7 @@ perftest_perfstats.js
 
 **Collect perfstats for the given site**
 
-This test launches browsertime with the perfStats option (will collect low-overhead timings, see Bug 1553254). The test currently runs a single site, google.com - the top-ranking global Alexa site.
+This test launches browsertime with the perfStats option (will collect low-overhead timings, see Bug 1553254). The test currently runs a short user journey. A selection of popular sites are visited, first as cold pageloads, and then as warm.
 
 
 If you have any questions, please see this `wiki page <https://wiki.mozilla.org/TestEngineering/Performance#Where_to_find_us>`_.
