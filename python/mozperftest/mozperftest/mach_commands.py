@@ -147,7 +147,7 @@ class Perftest(MachCommandBase):
             }
 
             task_config = {"parameters": parameters, "version": 2}
-            if args["verbose"]:
+            if args.get("verbose"):
                 print("Pushing run to try...")
                 print(json.dumps(task_config, indent=4, sort_keys=True))
 
