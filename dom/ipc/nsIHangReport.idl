@@ -22,9 +22,8 @@ webidl Element;
 interface nsIHangReport : nsISupports
 {
   const unsigned long SLOW_SCRIPT = 1;
-  const unsigned long PLUGIN_HANG = 2;
 
-  // The type of hang being reported: SLOW_SCRIPT or PLUGIN_HANG.
+  // The type of hang being reported: must be SLOW_SCRIPT.
   readonly attribute unsigned long hangType;
 
   // For SLOW_SCRIPT reports, these fields contain information about the
@@ -35,10 +34,6 @@ interface nsIHangReport : nsISupports
   // Duration of the hang so far.
   readonly attribute double hangDuration;
   readonly attribute AString addonId;
-
-  // For PLUGIN_HANGs, this field contains information about the plugin.
-  // Only valid for PLUGIN_HANG reports.
-  readonly attribute ACString pluginName;
 
   // The child id of the process in which the hang happened.
   readonly attribute unsigned long long childID;
@@ -51,9 +46,6 @@ interface nsIHangReport : nsISupports
   // Only valid for SLOW_SCRIPT reports.
   void terminateScript();
 
-  // Terminate the plugin if it is still hung.
-  // Only valid for PLUGIN_HANG reports.
-  void terminatePlugin();
 
   // Ask the content process to start up the slow script debugger.
   // Only valid for SLOW_SCRIPT reports.
