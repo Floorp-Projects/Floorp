@@ -620,14 +620,24 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
                   object:nil
       suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
 
-  [NSDistributedNotificationCenter.defaultCenter
-             addObserver:self
-                selector:@selector(entireThemeChanged)
-                    name:@"AppleInterfaceThemeChangedNotification"
-                  object:nil
-      suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
+  [MOZGlobalAppearance.sharedInstance addObserver:self
+                                       forKeyPath:@"effectiveAppearance"
+                                          options:0
+                                          context:nil];
+  [NSApp addObserver:self forKeyPath:@"effectiveAppearance" options:0 context:nil];
 
   return self;
+}
+
+- (void)observeValueForKeyPath:(NSString*)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary<NSKeyValueChangeKey, id>*)change
+                       context:(void*)context {
+  if ([keyPath isEqualToString:@"effectiveAppearance"]) {
+    [self entireThemeChanged];
+  } else {
+    [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+  }
 }
 
 - (void)entireThemeChanged {
