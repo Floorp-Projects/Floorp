@@ -9,6 +9,7 @@
 #define js_PropertyDescriptor_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
 #include <stdint.h>  // uint8_t
 
@@ -125,6 +126,7 @@ struct JS_PUBLIC_API PropertyDescriptor {
   unsigned attrs = 0;
   JSObject* getter = nullptr;
   JSObject* setter = nullptr;
+
  private:
   Value value_;
 
@@ -202,7 +204,9 @@ struct JS_PUBLIC_API PropertyDescriptor {
 
   bool hasGetterOrSetter() const { return getter || setter; }
 
-  // Intentionally no object() getter to prevent usage.
+  JS::Handle<JSObject*> objectDoNotUse() const {
+    return JS::Handle<JSObject*>::fromMarkedLocation(&obj);
+  }
   unsigned attributes() const { return attrs; }
 
   void assertValid() const {
@@ -287,9 +291,7 @@ class WrappedPtrOperations<JS::PropertyDescriptor, Wrapper> {
 
   bool hasGetterOrSetter() const { return desc().hasGetterObject(); }
 
-  JS::Handle<JSObject*> object() const {
-    return JS::Handle<JSObject*>::fromMarkedLocation(&desc().obj);
-  }
+  JS::Handle<JSObject*> object() const { return desc().objectDoNotUse(); }
   unsigned attributes() const { return desc().attributes(); }
 
   void assertValid() const { desc().assertValid(); }
@@ -406,10 +408,11 @@ extern JS_PUBLIC_API bool ObjectToCompletePropertyDescriptor(
 /*
  * ES6 draft rev 32 (2015 Feb 2) 6.2.4.4 FromPropertyDescriptor(Desc).
  *
- * If desc.object() is null, then vp is set to undefined.
+ * If desc.isNothing(), then vp is set to undefined.
  */
 extern JS_PUBLIC_API bool FromPropertyDescriptor(
-    JSContext* cx, Handle<PropertyDescriptor> desc, MutableHandle<Value> vp);
+    JSContext* cx, Handle<mozilla::Maybe<PropertyDescriptor>> desc,
+    MutableHandle<Value> vp);
 
 }  // namespace JS
 

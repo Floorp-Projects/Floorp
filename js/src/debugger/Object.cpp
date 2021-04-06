@@ -806,7 +806,7 @@ bool DebuggerObject::CallData::getOwnPropertyDescriptorMethod() {
     return false;
   }
 
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx);
   if (!DebuggerObject::getOwnPropertyDescriptor(cx, object, id, &desc)) {
     return false;
   }
@@ -2072,7 +2072,7 @@ bool DebuggerObject::getOwnPropertySymbols(JSContext* cx,
 /* static */
 bool DebuggerObject::getOwnPropertyDescriptor(
     JSContext* cx, HandleDebuggerObject object, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) {
+    MutableHandle<Maybe<PropertyDescriptor>> desc_) {
   RootedObject referent(cx, object->referent());
   Debugger* dbg = object->owner();
 
@@ -2084,12 +2084,14 @@ bool DebuggerObject::getOwnPropertyDescriptor(
     cx->markId(id);
 
     ErrorCopier ec(ar);
-    if (!GetOwnPropertyDescriptor(cx, referent, id, desc)) {
+    if (!GetOwnPropertyDescriptor(cx, referent, id, desc_)) {
       return false;
     }
   }
 
-  if (desc.object()) {
+  if (desc_.isSome()) {
+    Rooted<PropertyDescriptor> desc(cx, *desc_);
+
     // Rewrap the debuggee values in desc for the debugger.
     if (!dbg->wrapDebuggeeValue(cx, desc.value())) {
       return false;
@@ -2112,7 +2114,10 @@ bool DebuggerObject::getOwnPropertyDescriptor(
 
     // Avoid tripping same-compartment assertions in
     // JS::FromPropertyDescriptor().
+    // TODO: Remove this when PropertyDescriptor doesn't have an
+    // object anymore.
     desc.object().set(object);
+    desc_.set(mozilla::Some(desc.get()));
   }
 
   return true;

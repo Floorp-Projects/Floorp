@@ -110,7 +110,7 @@ class DebuggerObject : public NativeObject {
       MutableHandle<IdVector> result);
   [[nodiscard]] static bool getOwnPropertyDescriptor(
       JSContext* cx, HandleDebuggerObject object, HandleId id,
-      MutableHandle<PropertyDescriptor> desc);
+      MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc);
   [[nodiscard]] static bool preventExtensions(JSContext* cx,
                                               HandleDebuggerObject object);
   [[nodiscard]] static bool seal(JSContext* cx, HandleDebuggerObject object);
