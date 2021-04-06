@@ -362,3 +362,51 @@ TEST(FilenameEvalParser, WebExtensionPathParser)
   }
 }
 #endif
+
+TEST(FilenameEvalParser, AboutPageParser)
+{
+  {
+    constexpr auto str = u"about:about"_ns;
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str, false);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+                ret.second.value() == u"about:about"_ns);
+#else
+    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
+#endif
+  }
+  {
+    constexpr auto str = u"about:about?hello"_ns;
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str, false);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+                ret.second.value() == u"about:about"_ns);
+#else
+    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
+#endif
+  }
+  {
+    constexpr auto str = u"about:about#mom"_ns;
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str, false);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+                ret.second.value() == u"about:about"_ns);
+#else
+    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
+#endif
+  }
+  {
+    constexpr auto str = u"about:about?hello=there#mom"_ns;
+    FilenameTypeAndDetails ret =
+        nsContentSecurityUtils::FilenameToFilenameType(str, false);
+#if defined(XP_WIN)
+    ASSERT_TRUE(ret.first == kSanitizedWindowsURL &&
+                ret.second.value() == u"about:about"_ns);
+#else
+    ASSERT_TRUE(ret.first == kOther && !ret.second.isSome());
+#endif
+  }
+}
