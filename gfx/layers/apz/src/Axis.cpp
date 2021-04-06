@@ -112,6 +112,11 @@ bool Axis::AdjustDisplacement(
   mOverscroll -= consumedOverscroll;
   displacement += consumedOverscroll;
 
+  if (consumedOverscroll != 0.0f) {
+    AXIS_LOG("%p|%s changed overscroll amount to %f\n", mAsyncPanZoomController,
+             Name(), mOverscroll.value);
+  }
+
   // Split the requested displacement into an allowed displacement that does
   // not overscroll, and an overscroll amount.
   aOverscrollAmountOut = DisplacementWillOverscrollAmount(displacement);
@@ -176,6 +181,9 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
     MOZ_ASSERT(mOverscroll <= 0);
   }
   mOverscroll += aOverscroll;
+
+  AXIS_LOG("%p|%s changed overscroll amount to %f\n", mAsyncPanZoomController,
+           Name(), mOverscroll.value);
 }
 
 ParentLayerCoord Axis::GetOverscroll() const { return mOverscroll; }
@@ -191,6 +199,10 @@ void Axis::StartOverscrollAnimation(float aVelocity) {
   // Convert velocity from ParentLayerCoords/millisecond to
   // ParentLayerCoords/second.
   mMSDModel.SetVelocity(DoGetVelocity() * 1000.0);
+
+  AXIS_LOG(
+      "%p|%s beginning overscroll animation with amount %f and velocity %f\n",
+      mAsyncPanZoomController, Name(), mOverscroll.value, DoGetVelocity());
 }
 
 void Axis::EndOverscrollAnimation() {
@@ -201,6 +213,9 @@ void Axis::EndOverscrollAnimation() {
 bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
   mMSDModel.Simulate(aDelta);
   mOverscroll = mMSDModel.GetPosition();
+
+  AXIS_LOG("%p|%s changed overscroll amount to %f\n", mAsyncPanZoomController,
+           Name(), mOverscroll.value);
 
   if (mMSDModel.IsFinished(1.0)) {
     // "Jump" to the at-rest state. The jump shouldn't be noticeable as the
