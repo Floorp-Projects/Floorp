@@ -5,9 +5,13 @@
 #ifndef MOCK_CALL_H_
 #define MOCK_CALL_H_
 
+#include "gmock/gmock.h"
 #include "mozilla/Assertions.h"
-#include <api/call/audio_sink.h>
-#include <call/call.h>
+#include "WebrtcCallWrapper.h"
+
+// libwebrtc
+#include "api/call/audio_sink.h"
+#include "call/call.h"
 
 using namespace webrtc;
 
@@ -239,6 +243,22 @@ class MockCall : public webrtc::Call {
   VideoSendStream::Config mVideoSendConfig;
   Call::Stats mStats;
   MockVideoSendStream* mCurrentVideoSendStream;
+};
+
+class MockCallWrapper : public mozilla::WebrtcCallWrapper {
+ public:
+  MockCallWrapper()
+      : mozilla::WebrtcCallWrapper(
+            mozilla::AbstractThread::MainThread(), nullptr, nullptr, nullptr,
+            nullptr, mozilla::dom::RTCStatsTimestampMaker(), nullptr) {}
+
+  static RefPtr<testing::NiceMock<MockCallWrapper>> Create() {
+    auto wrapper = mozilla::MakeRefPtr<testing::NiceMock<MockCallWrapper>>();
+    wrapper->SetCall(mozilla::WrapUnique(new MockCall));
+    return wrapper;
+  }
+
+  MockCall* GetMockCall() { return static_cast<MockCall*>(Call()); }
 };
 
 }  // namespace test
