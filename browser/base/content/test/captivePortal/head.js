@@ -134,7 +134,7 @@ function ensurePortalNotification(win) {
 // Helper to test whether the "Show Login Page" is visible in the captive portal
 // notification (it should be hidden when the portal tab is selected).
 function testShowLoginPageButtonVisibility(notification, visibility) {
-  let showLoginPageButton = notification.querySelector(
+  let showLoginPageButton = notification.buttonContainer.querySelector(
     "button.notification-button"
   );
   // If the visibility property was never changed from default, it will be
