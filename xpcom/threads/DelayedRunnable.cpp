@@ -13,13 +13,23 @@ DelayedRunnable::DelayedRunnable(already_AddRefed<nsIEventTarget> aTarget,
                                  uint32_t aDelay)
     : mozilla::Runnable("DelayedRunnable"),
       mTarget(aTarget),
+      mObserver(do_QueryInterface(mTarget)),
       mWrappedRunnable(aRunnable),
       mDelayedFrom(TimeStamp::NowLoRes()),
-      mDelay(aDelay) {}
+      mDelay(aDelay) {
+  MOZ_DIAGNOSTIC_ASSERT(mObserver,
+                        "Target must implement nsIDelayedRunnableObserver");
+}
 
 nsresult DelayedRunnable::Init() {
+  mObserver->OnDelayedRunnableCreated(this);
   return NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, mDelay,
                                  nsITimer::TYPE_ONE_SHOT, mTarget);
+}
+
+void DelayedRunnable::CancelTimer() {
+  MOZ_ASSERT(mTarget->IsOnCurrentThread());
+  mTimer->Cancel();
 }
 
 NS_IMETHODIMP DelayedRunnable::Run() {
@@ -33,6 +43,9 @@ NS_IMETHODIMP DelayedRunnable::Run() {
   // Are we too early?
   if ((mozilla::TimeStamp::NowLoRes() - mDelayedFrom).ToMilliseconds() <
       mDelay) {
+    if (mObserver) {
+      mObserver->OnDelayedRunnableScheduled(this);
+    }
     return NS_OK;  // Let the nsITimer run us.
   }
 
@@ -44,6 +57,9 @@ NS_IMETHODIMP DelayedRunnable::Notify(nsITimer* aTimer) {
   // If we already ran, the timer should have been canceled.
   MOZ_ASSERT(mWrappedRunnable);
 
+  if (mObserver) {
+    mObserver->OnDelayedRunnableRan(this);
+  }
   return DoRun();
 }
 
