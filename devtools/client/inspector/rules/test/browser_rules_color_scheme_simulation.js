@@ -9,7 +9,7 @@ const TEST_URI = URL_ROOT + "doc_media_queries.html";
 add_task(async function() {
   await pushPref("devtools.inspector.color-scheme-simulation.enabled", true);
   await addTab(TEST_URI);
-  const { inspector, view } = await openRuleView();
+  const { inspector, view, toolbox } = await openRuleView();
 
   info("Check that the color scheme simulation buttons exist");
   const lightButton = inspector.panelDoc.querySelector(
@@ -65,8 +65,7 @@ add_task(async function() {
   );
 
   info("Select the node from the remote iframe");
-  const iframeEl = await getNodeFrontInFrame("html", "iframe", inspector);
-  await selectNode(iframeEl, inspector);
+  await selectNodeInFrames(["iframe", "html"], inspector);
 
   ok(
     iframeHasDarkSchemeStyling(),
@@ -100,9 +99,42 @@ add_task(async function() {
   ok(divHasDefaultStyling(), "We're not simulating color-scheme anymore");
 
   info("Select the node from the remote iframe again");
-  await selectNode(iframeEl, inspector);
+  await selectNodeInFrames(["iframe", "html"], inspector);
   await waitFor(() => iframeElHasDefaultStyling());
   ok(true, "The simulation stopped on the remote iframe as well");
+
+  info("Check that reloading keep the selected simulation");
+  await selectNode("div", inspector);
+  darkButton.click();
+  await waitFor(() => divHasDarkSchemeStyling());
+
+  await navigateTo(TEST_URI);
+  await selectNode("div", inspector);
+  await waitFor(() => view.element.children[1]);
+  ok(
+    divHasDarkSchemeStyling(),
+    "dark mode is still simulated after reloading the page"
+  );
+
+  await selectNodeInFrames(["iframe", "html"], inspector);
+  await waitFor(() => iframeHasDarkSchemeStyling());
+  ok(true, "simulation is still applied to the iframe after reloading");
+
+  info("Check that closing DevTools reset the simulation");
+  await toolbox.destroy();
+  const matchesPrefersDarkColorSchemeMedia = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => {
+      const { matches } = content.matchMedia("(prefers-color-scheme: dark)");
+      return matches;
+    }
+  );
+  is(
+    matchesPrefersDarkColorSchemeMedia,
+    false,
+    "color scheme simulation is disabled after closing DevTools"
+  );
 });
 
 function isButtonChecked(el) {
