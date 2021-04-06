@@ -27,7 +27,6 @@ UNIFIED_SOURCES += [
     "EnumVariant.cpp",
     "GeckoCustom.cpp",
     "HTMLTableAccessibleWrap.cpp",
-    "HTMLWin32ObjectAccessible.cpp",
     "HyperTextAccessibleWrap.cpp",
     "ImageAccessibleWrap.cpp",
     "IUnknownImpl.cpp",
