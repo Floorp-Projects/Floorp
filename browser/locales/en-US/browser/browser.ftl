@@ -267,8 +267,20 @@ search-one-offs-history =
 
 ## Bookmark Panel
 
-bookmarks-add-bookmark = Add Bookmark
-bookmarks-edit-bookmark = Edit Bookmark
+bookmarks-add-bookmark = Add bookmark
+bookmarks-edit-bookmark = Edit bookmark
+bookmark-panel-cancel =
+    .label = Cancel
+    .accesskey = C
+# Variables:
+#  $count (number): number of bookmarks that will be removed
+bookmark-panel-remove =
+    .label =
+        { $count ->
+            [1] Remove bookmark
+           *[other] Remove { $count } bookmarks
+        }
+    .accesskey = R
 bookmark-panel-show-editor-checkbox =
     .label = Show editor when saving
     .accesskey = S
