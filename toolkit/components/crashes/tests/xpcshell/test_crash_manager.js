@@ -186,7 +186,7 @@ add_task(async function test_prune_old() {
   let oldDate = new Date(Date.now() - 86400000);
   let newDate = new Date(Date.now() - 10000);
   await m.createEventsFile("1", "crash.main.3", oldDate, "id1", "{}");
-  await m.addCrash(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_CRASH, "id2", newDate);
+  await m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_CRASH, "id2", newDate);
 
   await m.aggregateEventsFiles();
 
@@ -456,18 +456,6 @@ add_task(async function test_addCrash() {
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_PLUGIN,
-    m.CRASH_TYPE_CRASH,
-    "plugin-crash",
-    DUMMY_DATE
-  );
-  await m.addCrash(
-    m.PROCESS_TYPE_PLUGIN,
-    m.CRASH_TYPE_HANG,
-    "plugin-hang",
-    DUMMY_DATE
-  );
-  await m.addCrash(
     m.PROCESS_TYPE_GMPLUGIN,
     m.CRASH_TYPE_CRASH,
     "gmplugin-crash",
@@ -512,7 +500,7 @@ add_task(async function test_addCrash() {
   );
 
   crashes = await m.getCrashes();
-  Assert.equal(crashes.length, 12);
+  Assert.equal(crashes.length, 10);
 
   let map = new Map(crashes.map(crash => [crash.id, crash]));
 
@@ -539,18 +527,6 @@ add_task(async function test_addCrash() {
   Assert.equal(crash.crashDate, DUMMY_DATE);
   Assert.equal(crash.type, m.PROCESS_TYPE_CONTENT + "-" + m.CRASH_TYPE_HANG);
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
-
-  crash = map.get("plugin-crash");
-  Assert.ok(!!crash);
-  Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_PLUGIN + "-" + m.CRASH_TYPE_CRASH);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_CRASH));
-
-  crash = map.get("plugin-hang");
-  Assert.ok(!!crash);
-  Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_PLUGIN + "-" + m.CRASH_TYPE_HANG);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_HANG));
 
   crash = map.get("gmplugin-crash");
   Assert.ok(!!crash);
@@ -600,7 +576,6 @@ add_task(async function test_child_process_crash_ping() {
   ];
 
   const UNEXPECTED_PROCESSES = [
-    m.PROCESS_TYPE_PLUGIN,
     m.PROCESS_TYPE_GMPLUGIN,
     null,
     12, // non-string process type

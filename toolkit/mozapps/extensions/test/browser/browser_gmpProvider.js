@@ -296,17 +296,6 @@ add_task(async function testInstalledGlobalEmeDisabled() {
     let item = getAddonCard(win, addon.id);
     if (addon.isEME) {
       is(item.parentNode.getAttribute("section"), "1", "Should be disabled");
-      // Open the options menu (needed to check the disabled buttons).
-      const pluginOptions = item.querySelector("plugin-options");
-      pluginOptions.querySelector("panel-list").open = true;
-      const askActivate = pluginOptions.querySelector(
-        "panel-item[action=ask-to-activate]"
-      );
-      ok(
-        askActivate.shadowRoot.querySelector("button").disabled,
-        "ask-to-activate should be disabled"
-      );
-      pluginOptions.querySelector("panel-list").open = false;
     } else {
       Assert.ok(item, "Got add-on element.");
     }
