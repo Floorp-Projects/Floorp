@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     "nsIEmbeddingSiteWindow.idl",
     "nsIWebBrowser.idl",
     "nsIWebBrowserChrome.idl",
-    "nsIWebBrowserChrome3.idl",
     "nsIWebBrowserChromeFocus.idl",
 ]
 
