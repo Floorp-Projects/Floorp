@@ -388,13 +388,10 @@ enum LinearFilter {
 
 // Dispatches to an appropriate linear filter depending on the selected filter.
 template <bool BLEND, typename S, typename C, typename P>
-static int blendTextureLinear(S sampler, vec2 uv, int span,
-                              const vec4_scalar& uv_rect, C color, P* buf,
-                              LinearFilter filter) {
-  if (!matchTextureFormat(sampler, buf)) {
-    return 0;
-  }
-  LINEAR_QUANTIZE_UV(sampler, uv, uv_step, uv_rect, min_uv, max_uv);
+static P* blendTextureLinearDispatch(S sampler, vec2 uv, int span,
+                                     vec2_scalar uv_step, vec2_scalar min_uv,
+                                     vec2_scalar max_uv, C color, P* buf,
+                                     LinearFilter filter) {
   P* end = buf + span;
   if (filter != LINEAR_FILTER_FALLBACK) {
     // If we're not using the fallback, then Y is constant across the entire
@@ -417,15 +414,15 @@ static int blendTextureLinear(S sampler, vec2 uv, int span,
     if (uv_step.x > 0.0f && insideDist >= uv_step.x) {
       int inside =
           clamp(int(insideDist / uv_step.x) * swgl_StepSize, 0, int(end - buf));
-      if (filter == LINEAR_FILTER_FAST) {
-        blendTextureLinearFast<BLEND>(sampler, uv, inside, min_uv, max_uv,
-                                      color, buf);
-      } else if (filter == LINEAR_FILTER_DOWNSCALE) {
+      if (filter == LINEAR_FILTER_DOWNSCALE) {
         blendTextureLinearDownscale<BLEND>(sampler, uv, inside, min_uv, max_uv,
                                            color, buf);
-      } else {
+      } else if (filter == LINEAR_FILTER_UPSCALE) {
         blendTextureLinearUpscale<BLEND>(sampler, uv, inside, uv_step, min_uv,
                                          max_uv, color, buf);
+      } else {
+        blendTextureLinearFast<BLEND>(sampler, uv, inside, min_uv, max_uv,
+                                      color, buf);
       }
       buf += inside;
       uv.x += (inside / swgl_StepSize) * uv_step.x;
@@ -434,9 +431,23 @@ static int blendTextureLinear(S sampler, vec2 uv, int span,
   // If the fallback filter was requested, or if there are any samples left that
   // may be outside the row and require clamping, then handle that with here.
   if (buf < end) {
-    blendTextureLinearFallback<BLEND>(sampler, uv, int(end - buf), uv_step,
-                                      min_uv, max_uv, color, buf);
+    buf = blendTextureLinearFallback<BLEND>(
+        sampler, uv, int(end - buf), uv_step, min_uv, max_uv, color, buf);
   }
+  return buf;
+}
+
+// Helper function to quantize UVs for linear filtering before dispatch
+template <bool BLEND, typename S, typename C, typename P>
+static inline int blendTextureLinear(S sampler, vec2 uv, int span,
+                                     const vec4_scalar& uv_rect, C color,
+                                     P* buf, LinearFilter filter) {
+  if (!matchTextureFormat(sampler, buf)) {
+    return 0;
+  }
+  LINEAR_QUANTIZE_UV(sampler, uv, uv_step, uv_rect, min_uv, max_uv);
+  blendTextureLinearDispatch<BLEND>(sampler, uv, span, uv_step, min_uv, max_uv,
+                                    color, buf, filter);
   return span;
 }
 
@@ -629,16 +640,18 @@ static int blendTextureLinearRepeat(S sampler, vec2 uv, int span,
   if (!matchTextureFormat(sampler, buf)) {
     return 0;
   }
+  vec2_scalar uv_scale = {uv_repeat.z - uv_repeat.x, uv_repeat.w - uv_repeat.y};
+  vec2_scalar uv_offset = {uv_repeat.x, uv_repeat.y};
+  // Choose a linear filter to use for no-repeat sub-spans
+  LinearFilter filter =
+      needsTextureLinear(sampler, uv * uv_scale + uv_offset, span);
   // We need to step UVs unscaled and unquantized so that we can modulo them
   // with fract. We use uv_scale and uv_offset to map them into the correct
   // range.
   vec2_scalar uv_step =
       float(swgl_StepSize) * vec2_scalar{uv.x.y - uv.x.x, uv.y.y - uv.y.x};
-  vec2_scalar uv_scale = swgl_linearQuantizeStep(
-      sampler,
-      vec2_scalar{uv_repeat.z - uv_repeat.x, uv_repeat.w - uv_repeat.y});
-  vec2_scalar uv_offset =
-      swgl_linearQuantize(sampler, vec2_scalar{uv_repeat.x, uv_repeat.y});
+  uv_scale = swgl_linearQuantizeStep(sampler, uv_scale);
+  uv_offset = swgl_linearQuantize(sampler, uv_offset);
   vec2_scalar min_uv =
       swgl_linearQuantize(sampler, vec2_scalar{uv_rect.x, uv_rect.y});
   vec2_scalar max_uv =
@@ -650,9 +663,9 @@ static int blendTextureLinearRepeat(S sampler, vec2 uv, int span,
     if (steps > 0) {
       steps = computeNoRepeatSteps(uv.y, uv_step.y, tile_repeat.y, steps);
       if (steps > 0) {
-        buf = blendTextureLinearFallback<BLEND>(
+        buf = blendTextureLinearDispatch<BLEND>(
             sampler, fract(uv) * uv_scale + uv_offset, steps * swgl_StepSize,
-            uv_step * uv_scale, min_uv, max_uv, color, buf);
+            uv_step * uv_scale, min_uv, max_uv, color, buf, filter);
         if (buf >= end) {
           break;
         }
