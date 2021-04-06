@@ -608,7 +608,7 @@
 
 - name: apz.overscroll.max_velocity
   type: AtomicFloat
-  value: 20
+  value: 10
   mirror: always
 
 - name: apz.paint_skipping.enabled
