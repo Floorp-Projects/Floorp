@@ -1347,10 +1347,10 @@
             uiDensity,
             pinnedTabWidth: tabs[0].getBoundingClientRect().width,
             scrollStartOffset:
-              arrowScrollbox._scrollButtonDown.getBoundingClientRect().width +
+              arrowScrollbox.scrollbox.getBoundingClientRect().left -
+              arrowScrollbox.getBoundingClientRect().left +
               parseFloat(
-                getComputedStyle(this.arrowScrollbox.scrollbox)
-                  .paddingInlineStart
+                getComputedStyle(arrowScrollbox.scrollbox).paddingInlineStart
               ),
           };
         }
