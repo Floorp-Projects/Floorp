@@ -942,6 +942,7 @@ using CompilerFunction = CompilerGCPointer<JSFunction*>;
 using CompilerBaseScript = CompilerGCPointer<BaseScript*>;
 using CompilerPropertyName = CompilerGCPointer<PropertyName*>;
 using CompilerShape = CompilerGCPointer<Shape*>;
+using CompilerGetterSetter = CompilerGCPointer<GetterSetter*>;
 
 // An instruction is an SSA name that is inserted into a basic block's IR
 // stream.
