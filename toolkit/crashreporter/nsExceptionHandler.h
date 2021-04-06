@@ -170,17 +170,6 @@ nsresult SetSubmitReports(bool aSubmitReport);
 // thread.
 void OOPInit();
 
-/*
- * Takes a minidump for the current process and returns the dump file.
- * Callers are responsible for managing the resulting file.
- *
- * @param aResult - file pointer that holds the resulting minidump.
- * @param aMoveToPending - if true move the report to the report
- *   pending directory.
- * @returns boolean indicating success or failure.
- */
-bool TakeMinidump(nsIFile** aResult, bool aMoveToPending = false);
-
 // Return true if a dump was found for |childPid|, and return the
 // path in |dump|.  The caller owns the last reference to |dump| if it
 // is non-nullptr. The annotations for the crash will be stored in
