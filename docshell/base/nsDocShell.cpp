@@ -163,7 +163,6 @@
 #include "nsIURILoader.h"
 #include "nsIViewSourceChannel.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIWebBrowserChrome3.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebProgress.h"
@@ -12804,21 +12803,13 @@ nsresult nsDocShell::OnLinkClick(
     return NS_OK;
   }
 
-  nsresult rv = NS_ERROR_FAILURE;
-  nsAutoString target;
-
-  nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
   bool noOpenerImplied = false;
-  if (browserChrome3) {
-    rv = browserChrome3->OnBeforeLinkTraversal(aTargetSpec, aURI, aContent,
-                                               mIsAppTab, target);
+  nsAutoString target(aTargetSpec);
+  if (ShouldOpenInBlankTarget(aTargetSpec, aURI, aContent)) {
+    target = u"_blank";
     if (!aTargetSpec.Equals(target)) {
       noOpenerImplied = true;
     }
-  }
-
-  if (NS_FAILED(rv)) {
-    target = aTargetSpec;
   }
 
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(aURI);
@@ -12837,6 +12828,50 @@ nsresult nsDocShell::OnLinkClick(
       new OnLinkClickEvent(this, aContent, loadState, noOpenerImplied,
                            aIsTrusted, aTriggeringPrincipal);
   return Dispatch(TaskCategory::UI, ev.forget());
+}
+
+bool nsDocShell::ShouldOpenInBlankTarget(const nsAString& aOriginalTarget,
+                                         nsIURI* aLinkURI,
+                                         nsIContent* aContent) {
+  // Don't modify non-default targets.
+  if (!aOriginalTarget.IsEmpty()) {
+    return false;
+  }
+
+  // Only check targets that are in extension panels or app tabs.
+  // (isAppTab will be false for app tab subframes).
+  nsString mmGroup = mBrowsingContext->Top()->GetMessageManagerGroup();
+  if (!mmGroup.EqualsLiteral("webext-browsers") && !mIsAppTab) {
+    return false;
+  }
+
+  // External links from within app tabs should always open in new tabs
+  // instead of replacing the app tab's page (Bug 575561)
+  // nsIURI.host can throw for non-nsStandardURL nsIURIs. If we fail to
+  // get either host, just return false to use the original target.
+  nsAutoCString linkHost;
+  if (NS_FAILED(aLinkURI->GetHost(linkHost))) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> docURI = aContent->OwnerDoc()->GetDocumentURIObject();
+  if (!docURI) {
+    return false;
+  }
+
+  nsAutoCString docHost;
+  if (NS_FAILED(docURI->GetHost(docHost))) {
+    return false;
+  }
+
+  if (linkHost.Equals(docHost)) {
+    return false;
+  }
+
+  // Special case: ignore "www" prefix if it is part of host string
+  return linkHost.Length() < docHost.Length()
+             ? !docHost.Equals("www."_ns + linkHost)
+             : !linkHost.Equals("www."_ns + docHost);
 }
 
 static bool IsElementAnchorOrArea(nsIContent* aContent) {

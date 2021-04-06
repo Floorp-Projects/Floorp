@@ -8,7 +8,6 @@ var { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -315,28 +314,6 @@ const BrowserListener = {
 addMessageListener("Extension:InitBrowser", BrowserListener);
 addMessageListener("Extension:UnblockParser", BrowserListener);
 addMessageListener("Extension:GrabFocus", BrowserListener);
-
-var WebBrowserChrome = {
-  onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
-    // isAppTab is the value for the docShell that received the click.  We're
-    // handling this in the top-level frame and want traversal behavior to
-    // match the value for this frame rather than any subframe, so we pass
-    // through the docShell.isAppTab value rather than what we were handed.
-    return BrowserUtils.onBeforeLinkTraversal(
-      originalTarget,
-      linkURI,
-      linkNode,
-      docShell.isAppTab
-    );
-  },
-};
-
-if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-  let tabchild = docShell
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIBrowserChild);
-  tabchild.webBrowserChrome = WebBrowserChrome;
-}
 
 // This is a temporary hack to prevent regressions (bug 1471327).
 void content;
