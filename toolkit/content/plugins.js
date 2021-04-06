@@ -126,64 +126,6 @@ RPMSendQuery("RequestPlugins", {}).then(aPlugins => {
       var descDd = document.createElement("dd");
       descDd.appendChild(document.createTextNode(plugin.description));
       dl.appendChild(descDd);
-
-      // MIME Type table
-      var mimetypeTable = document.createElement("table");
-      mimetypeTable.setAttribute("border", "1");
-      mimetypeTable.setAttribute("class", "contenttable");
-      fragment.appendChild(mimetypeTable);
-
-      var thead = document.createElement("thead");
-      mimetypeTable.appendChild(thead);
-      var tr = document.createElement("tr");
-      thead.appendChild(tr);
-
-      // "MIME Type" column header
-      var typeTh = document.createElement("th");
-      typeTh.setAttribute("class", "type");
-      document.l10n.setAttributes(typeTh, "mime-type-label");
-      tr.appendChild(typeTh);
-
-      // "Description" column header
-      var descTh = document.createElement("th");
-      descTh.setAttribute("class", "desc");
-      document.l10n.setAttributes(descTh, "description-label");
-      tr.appendChild(descTh);
-
-      // "Suffixes" column header
-      var suffixesTh = document.createElement("th");
-      suffixesTh.setAttribute("class", "suff");
-      document.l10n.setAttributes(suffixesTh, "suffixes-label");
-      tr.appendChild(suffixesTh);
-
-      var tbody = document.createElement("tbody");
-      mimetypeTable.appendChild(tbody);
-
-      var mimeTypes = plugin.pluginMimeTypes;
-      for (var j = 0; j < mimeTypes.length; j++) {
-        var mimetype = mimeTypes[j];
-        if (mimetype) {
-          var mimetypeRow = document.createElement("tr");
-          tbody.appendChild(mimetypeRow);
-
-          // "application/x-shockwave-flash"
-          var typename = document.createElement("td");
-          typename.appendChild(document.createTextNode(mimetype.type));
-          mimetypeRow.appendChild(typename);
-
-          // "Shockwave Flash"
-          var description = document.createElement("td");
-          description.appendChild(
-            document.createTextNode(mimetype.description)
-          );
-          mimetypeRow.appendChild(description);
-
-          // "swf"
-          var suffixes = document.createElement("td");
-          suffixes.appendChild(document.createTextNode(mimetype.suffixes));
-          mimetypeRow.appendChild(suffixes);
-        }
-      }
     }
   }
 

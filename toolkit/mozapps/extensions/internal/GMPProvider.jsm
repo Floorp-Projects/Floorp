@@ -438,9 +438,6 @@ GMPWrapper.prototype = {
     return this._updateTask;
   },
 
-  get pluginMimeTypes() {
-    return [];
-  },
   get pluginLibraries() {
     if (this.isInstalled) {
       let path = this.version;
