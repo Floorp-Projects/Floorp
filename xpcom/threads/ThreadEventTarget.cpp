@@ -33,13 +33,18 @@ ThreadEventTarget::ThreadEventTarget(ThreadTargetSink* aSink,
   mThread = PR_GetCurrentThread();
 }
 
+ThreadEventTarget::~ThreadEventTarget() {
+  MOZ_ASSERT(mScheduledDelayedRunnables.IsEmpty());
+}
+
 void ThreadEventTarget::SetCurrentThread(PRThread* aThread) {
   mThread = aThread;
 }
 
 void ThreadEventTarget::ClearCurrentThread() { mThread = nullptr; }
 
-NS_IMPL_ISUPPORTS(ThreadEventTarget, nsIEventTarget, nsISerialEventTarget)
+NS_IMPL_ISUPPORTS(ThreadEventTarget, nsIEventTarget, nsISerialEventTarget,
+                  nsIDelayedRunnableObserver)
 
 NS_IMETHODIMP
 ThreadEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
@@ -135,4 +140,24 @@ ThreadEventTarget::IsOnCurrentThreadInfallible() {
   // only happens when the thread has exited the event loop.  Therefore, when
   // we are called, we can never be on this thread.
   return false;
+}
+
+void ThreadEventTarget::OnDelayedRunnableCreated(DelayedRunnable* aRunnable) {}
+
+void ThreadEventTarget::OnDelayedRunnableScheduled(DelayedRunnable* aRunnable) {
+  MOZ_ASSERT(IsOnCurrentThread());
+  mScheduledDelayedRunnables.AppendElement(aRunnable);
+}
+
+void ThreadEventTarget::OnDelayedRunnableRan(DelayedRunnable* aRunnable) {
+  MOZ_ASSERT(IsOnCurrentThread());
+  MOZ_ALWAYS_TRUE(mScheduledDelayedRunnables.RemoveElement(aRunnable));
+}
+
+void ThreadEventTarget::NotifyShutdown() {
+  MOZ_ASSERT(IsOnCurrentThread());
+  for (const auto& runnable : mScheduledDelayedRunnables) {
+    runnable->CancelTimer();
+  }
+  mScheduledDelayedRunnables.Clear();
 }
