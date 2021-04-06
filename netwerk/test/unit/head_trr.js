@@ -129,14 +129,14 @@ class TRRDNSListener {
       );
     }
 
-    let resolverInfo =
+    this.resolverInfo =
       trrServer == "" ? null : gDNS.newTRRResolverInfo(trrServer);
     try {
       this.request = gDNS.asyncResolve(
         this.name,
         Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         this.options.flags || 0,
-        resolverInfo,
+        this.resolverInfo,
         this,
         currentThread,
         {} // defaultOriginAttributes
@@ -213,6 +213,18 @@ class TRRDNSListener {
   // Implement then so we can await this as a promise.
   then() {
     return this.promise.then.apply(this.promise, arguments);
+  }
+
+  cancel(aStatus = Cr.NS_ERROR_ABORT) {
+    gDNS.cancelAsyncResolve(
+      this.name,
+      this.type,
+      this.options.flags || 0,
+      this.resolverInfo,
+      this,
+      aStatus,
+      {}
+    );
   }
 }
 

@@ -202,6 +202,9 @@ bool TRR::MaybeBlockRequest() {
 
 nsresult TRR::SendHTTPRequest() {
   // This is essentially the "run" method - created from nsHostResolver
+  if (mCancelled) {
+    return NS_ERROR_FAILURE;
+  }
 
   if ((mType != TRRTYPE_A) && (mType != TRRTYPE_AAAA) &&
       (mType != TRRTYPE_NS) && (mType != TRRTYPE_TXT) &&
@@ -1007,6 +1010,11 @@ void TRR::Cancel(nsresult aStatus) {
       return;
     }
   }
+
+  if (mCancelled) {
+    return;
+  }
+  mCancelled = true;
 
   if (mChannel) {
     RecordReason(TRRSkippedReason::TRR_REQ_CANCELLED);
