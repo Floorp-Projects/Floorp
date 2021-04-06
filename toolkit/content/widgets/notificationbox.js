@@ -595,13 +595,15 @@
         }
       }
 
+      get control() {
+        return this.closest(".notificationbox-stack")._notificationBox;
+      }
+
       close() {
         if (!this.parentNode) {
           return;
         }
-        this.closest(
-          ".notificationbox-stack"
-        )._notificationBox.removeNotification(this);
+        this.control.removeNotification(this);
       }
 
       addFtl(filepaths) {
