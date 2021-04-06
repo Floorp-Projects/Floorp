@@ -623,6 +623,11 @@ void WebRenderLayerManager::ClearCachedResources(Layer* aSubtree) {
     return;
   }
   WrBridge()->BeginClearCachedResources();
+  // We flush any pending async resource updates before we clear the display
+  // list items because some resources (e.g. images) might be shared between
+  // multiple layer managers, not get freed here, and we want to keep their
+  // states consistent.
+  mStateManager.FlushAsyncResourceUpdates();
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardImages();
   mStateManager.ClearCachedResources();
