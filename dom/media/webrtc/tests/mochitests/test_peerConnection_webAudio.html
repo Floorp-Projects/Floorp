@@ -16,16 +16,16 @@ createHTML({
 // stream is connected to an AnalyserNode and compared to the source node.
 
 runNetworkTest(function() {
-  var test = new PeerConnectionTest();
+  const test = new PeerConnectionTest();
   test.audioContext = new AudioContext();
   test.setMediaConstraints([{audio: true}], []);
   test.chain.replace("PC_LOCAL_GUM", [
     function PC_LOCAL_WEBAUDIO_SOURCE(test) {
-      var oscillator = test.audioContext.createOscillator();
+      const oscillator = test.audioContext.createOscillator();
       oscillator.type = 'sine';
       oscillator.frequency.value = 700;
       oscillator.start();
-      var dest = test.audioContext.createMediaStreamDestination();
+      const dest = test.audioContext.createMediaStreamDestination();
       oscillator.connect(dest);
       test.pcLocal.attachLocalStream(dest.stream);
     }
@@ -35,7 +35,7 @@ runNetworkTest(function() {
       return test.pcRemote.checkReceivingToneFrom(test.audioContext, test.pcLocal);
     }
   ]);
-  test.run();
+  return test.run();
 });
 </script>
 </pre>

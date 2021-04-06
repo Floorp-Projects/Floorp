@@ -11,20 +11,19 @@
     title: "PeerConnection verify current and pending descriptions"
   });
 
-  var pc1 = new RTCPeerConnection();
-  var pc2 = new RTCPeerConnection();
+  const pc1 = new RTCPeerConnection();
+  const pc2 = new RTCPeerConnection();
 
   var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
   pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
   pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
 
-  var v1, v2;
 
   runNetworkTest(function() {
-    v1 = createMediaElement('video', 'v1');
-    v2 = createMediaElement('video', 'v2');
+    const v1 = createMediaElement('video', 'v1');
+    const v2 = createMediaElement('video', 'v2');
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    return navigator.mediaDevices.getUserMedia({ video: true, audio: true })
     .then(stream => (v1.srcObject = stream).getTracks().forEach(t => pc1.addTrack(t, stream)))
     .then(() => pc1.createOffer({})) // check that createOffer accepts arg.
     .then(offer => pc1.setLocalDescription(offer))
@@ -51,9 +50,7 @@
       ok(pc1.currentRemoteDescription, "pc1 currentRemoteDescription is set");
       ok(!pc1.pendingRemoteDescription, "pc1 pendingRemoteDescription is empty");
       ok(pc1.remoteDescription, "pc1 remoteDescription is set");
-    })
-    .catch(reason => ok(false, "unexpected failure: " + reason))
-    .then(networkTestFinished);
+    });
   });
 </script>
 </pre>

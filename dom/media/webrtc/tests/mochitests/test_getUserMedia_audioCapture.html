@@ -8,32 +8,31 @@
 <pre id="test">
 <script>
 
-createHTML({
-  bug: "1156472",
-  title: "Test AudioCapture with regular HTMLMediaElement, AudioContext, and HTMLMediaElement playing a MediaStream",
-  visible: true
-});
+(async () => {
+  // Get an opus file containing a sine wave at maximum amplitude, of duration
+  // `lengthSeconds`, and of frequency `frequency`.
+  async function getSineWaveFile(frequency, lengthSeconds) {
+    const off = new OfflineAudioContext(1, lengthSeconds * 48000, 48000);
+    const osc = off.createOscillator();
+    const rec = new MediaRecorder(off.destination,
+                                  {mimeType: "audio/ogg; codecs=opus"});
+    osc.frequency.value = frequency;
+    osc.connect(off.destination);
+    osc.start();
+    rec.start();
+    off.startRendering();
+    const {data} = await new Promise(r => rec.ondataavailable = r);
+    return data;
+  }
 
-// Get an opus file containing a sine wave at maximum amplitude, of duration
-// `lengthSeconds`, and of frequency `frequency`.
-async function getSineWaveFile(frequency, lengthSeconds) {
-  const off = new OfflineAudioContext(1, lengthSeconds * 48000, 48000);
-  const osc = off.createOscillator();
-  const rec = new MediaRecorder(off.destination,
-                                {mimeType: "audio/ogg; codecs=opus"});
-  osc.frequency.value = frequency;
-  osc.connect(off.destination);
-  osc.start();
-  rec.start();
-  off.startRendering();
-  const {data} = await new Promise(r => rec.ondataavailable = r);
-  return data;
-}
+  await createHTML({
+    bug: "1156472",
+    title: "Test AudioCapture with regular HTMLMediaElement, AudioContext, " +
+           "and HTMLMediaElement playing a MediaStream",
+    visible: true
+  });
 
-(async function() {
-  await scriptsReady;
-  FAKE_ENABLED = false;
-  await runTestWhenReady(async function() {
+  await runTestWhenReady(async () => {
     /**
      * Get two HTMLMediaElements:
      * - One playing a sine tone from a blob (of an opus file created on the fly)
@@ -77,26 +76,28 @@ async function getSineWaveFile(frequency, lengthSeconds) {
     const constraints = {audio: {mediaSource: "audioCapture"}};
 
     const stream = await getUserMedia(constraints);
-    window.grip = stream;
-    const analyser = new AudioStreamAnalyser(ac, stream);
-    analyser.enableDebugCanvas();
-    await analyser.waitForAnalysisSuccess(array => {
-      // We want to find three frequency components here, around 1000, 5000
-      // and 10000Hz. Frequency are logarithmic. Also make sure we have low
-      // energy in between, not just a flat white noise.
-      return (array[analyser.binIndexForFrequency(50)]    < 50 &&
-              array[analyser.binIndexForFrequency(1000)]  > 200 &&
-              array[analyser.binIndexForFrequency(2500)]  < 50 &&
-              array[analyser.binIndexForFrequency(5000)]  > 200 &&
-              array[analyser.binIndexForFrequency(7500)]  < 50 &&
-              array[analyser.binIndexForFrequency(10000)] > 200);
-    });
-    finish();
+    try {
+      const analyser = new AudioStreamAnalyser(ac, stream);
+      analyser.enableDebugCanvas();
+      await analyser.waitForAnalysisSuccess(array => {
+        // We want to find three frequency components here, around 1000, 5000
+        // and 10000Hz. Frequency are logarithmic. Also make sure we have low
+        // energy in between, not just a flat white noise.
+        return (array[analyser.binIndexForFrequency(50)]    < 50 &&
+                array[analyser.binIndexForFrequency(1000)]  > 200 &&
+                array[analyser.binIndexForFrequency(2500)]  < 50 &&
+                array[analyser.binIndexForFrequency(5000)]  > 200 &&
+                array[analyser.binIndexForFrequency(7500)]  < 50 &&
+                array[analyser.binIndexForFrequency(10000)] > 200);
+      });
+    } finally {
+      for (let t of stream.getTracks()) {
+        t.stop();
+      }
+      ac.close();
+    }
   });
 })();
-
-
-
 </script>
 </pre>
 </body>

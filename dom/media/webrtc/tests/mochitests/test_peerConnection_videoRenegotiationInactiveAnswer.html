@@ -13,7 +13,6 @@
     title: "Renegotiation: answerer uses a=inactive for video"
   });
 
-  var test;
   runNetworkTest(async (options) => {
     // [TODO] re-enable HW decoder after bug 1526207 is fixed.
     if (navigator.userAgent.includes("Android")) {
@@ -24,7 +23,7 @@
     const emitter = new VideoFrameEmitter();
     const helper = new VideoStreamHelper();
 
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
 
     test.chain.replace("PC_LOCAL_GUM", [
       function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
@@ -88,7 +87,7 @@
     ]);
 
     test.setMediaConstraints([{video: true}], []);
-    test.run();
+    await test.run();
   });
 </script>
 </pre>

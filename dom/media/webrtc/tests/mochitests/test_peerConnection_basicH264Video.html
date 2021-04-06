@@ -17,7 +17,7 @@
     options.h264 = true;
     test = new PeerConnectionTest(options);
     test.setMediaConstraints([{video: true}], [{video: true}]);
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

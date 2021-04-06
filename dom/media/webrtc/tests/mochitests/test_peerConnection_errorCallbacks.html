@@ -44,11 +44,9 @@
   // level to evoke an error in createOffer.
 
   runNetworkTest(function () {
-    testCreateAnswerError()
+    return testCreateAnswerError()
     .then(testSetLocalDescriptionError)
-    .then(testSetRemoteDescriptionError)
-    .catch(reason => ok(false, "unexpected error: " + reason))
-    .then(networkTestFinished);
+    .then(testSetRemoteDescriptionError);
   });
 
 </script>

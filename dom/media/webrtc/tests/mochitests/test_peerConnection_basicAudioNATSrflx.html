@@ -35,7 +35,7 @@ if (!("mediaDevices" in navigator)) {
     makeOffererNonTrickle(test.chain);
     makeAnswererNonTrickle(test.chain);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.run();
+    await test.run();
   }, { useIceServer: true });
 }
 </script>

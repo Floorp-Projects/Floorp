@@ -61,10 +61,7 @@
       },
     ]);
 
-    // This inlines test.run(), to allow for multiple tests to run.
-    test.updateChainSteps();
-    await test.chain.execute();
-    await test.close();
+    await test.run();
   }
 
   runNetworkTest(async (options) => {
@@ -77,8 +74,6 @@
       }
       info(`Tested audio for codec ${codec}`);
     }
-
-    networkTestFinished();
   });
 </script>
 </pre>

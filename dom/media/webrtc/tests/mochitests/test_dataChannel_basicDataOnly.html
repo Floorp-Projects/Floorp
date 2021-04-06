@@ -15,7 +15,7 @@
   runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
     addInitialDataChannel(test.chain);
-    test.run();
+    return test.run();
   });
 
 </script>

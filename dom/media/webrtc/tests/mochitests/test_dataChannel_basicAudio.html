@@ -16,7 +16,7 @@
     test = new PeerConnectionTest(options);
     addInitialDataChannel(test.chain);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.run();
+    return test.run();
   });
 
 </script>

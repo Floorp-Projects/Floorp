@@ -28,14 +28,14 @@ function PC_BOTH_WAIT_FOR_ICE_FAILED(test) {
   .then(() => ok(true, "ICE on both sides must fail."));
 }
 
-var test;
-
-runNetworkTest(options =>
-    pushPrefs(['media.peerconnection.ice.stun_client_maximum_transmits', 3],
-              ['media.peerconnection.ice.trickle_grace_period', 5000]).then(() => {
+runNetworkTest(async options => {
+  await pushPrefs(
+    ['media.peerconnection.ice.stun_client_maximum_transmits', 3],
+    ['media.peerconnection.ice.trickle_grace_period', 5000]
+  );
   options = options || {};
   options.config_local = options.config_local || {};
-  var servers = options.config_local.iceServers || [];
+  const servers = options.config_local.iceServers || [];
   // remove any turn servers
   options.config_local.iceServers = servers.filter(server =>
       server.urls.every(u => !u.toLowerCase().startsWith('turn')));
@@ -43,7 +43,7 @@ runNetworkTest(options =>
   // Here's the setting we're testing. Comment out and this test should fail:
   options.config_local.iceTransportPolicy = "relay";
 
-  test = new PeerConnectionTest(options);
+  const test = new PeerConnectionTest(options);
   test.setMediaConstraints([{audio: true}, {video: true}],
                            [{audio: true}, {video: true}]);
   test.chain.remove("PC_LOCAL_SETUP_ICE_LOGGER");  // Needed to suppress failing
@@ -51,8 +51,8 @@ runNetworkTest(options =>
   test.chain.insertAfter("PC_LOCAL_SETUP_ICE_HANDLER", PC_LOCAL_NO_CANDIDATES);
   test.chain.replace("PC_LOCAL_WAIT_FOR_ICE_CONNECTED", PC_BOTH_WAIT_FOR_ICE_FAILED);
   test.chain.removeAfter("PC_BOTH_WAIT_FOR_ICE_FAILED");
-  test.run();
-}));
+  await test.run();
+});
 
 </script>
 </pre>

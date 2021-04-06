@@ -13,7 +13,7 @@
 
   runNetworkTest(function (options) {
     SimpleTest.requestCompleteLog();
-    var test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     test.chain.replace("PC_LOCAL_GUM",
       [
         function PC_LOCAL_GUM_ATTACH_VIDEO_ONLY(test) {
@@ -47,7 +47,7 @@
       ]
     );
 
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

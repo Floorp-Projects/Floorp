@@ -15,7 +15,7 @@
     var pc1 = new RTCPeerConnection();
     var pc2 = new RTCPeerConnection();
 
-    pc1.createOffer({ offerToReceiveAudio: true }).then(offer => {
+    return pc1.createOffer({ offerToReceiveAudio: true }).then(offer => {
       // The whole point of this test is not to wait for the
       // setRemoteDescription call to succesfully complete, so we
       // don't wait for it to succeed.
@@ -27,7 +27,6 @@
     .then(() => {
       pc1.close();
       pc2.close();
-      networkTestFinished();
     })
     .catch(reason => ok(false, reason.message));
   });

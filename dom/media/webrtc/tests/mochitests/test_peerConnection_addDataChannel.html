@@ -11,9 +11,8 @@
     title: "Renegotiation: add DataChannel"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
                      commandsCreateDataChannel,
                      commandsCheckDataChannel);
@@ -25,7 +24,7 @@
                             1);
 
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.run();
+    return test.run();
   });
 
 </script>

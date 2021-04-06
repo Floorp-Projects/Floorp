@@ -8,13 +8,9 @@
  * A stub function for preparing the network if needed
  *
  */
-function startNetworkAndTest() {
-  return Promise.resolve();
-}
+async function startNetworkAndTest() {}
 
 /**
  * A stub function to shutdown the network if needed
  */
-function networkTestFinished() {
-  return Promise.resolve().then(() => finish());
-}
+async function networkTestFinished() {}

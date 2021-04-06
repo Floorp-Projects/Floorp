@@ -13,16 +13,16 @@
   });
 
   async function testVideoCodec(options = {}, codec) {
-    let test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     test.setMediaConstraints([{video: true}], []);
 
     test.chain.insertBefore("PC_LOCAL_SET_LOCAL_DESCRIPTION", [
       function PC_LOCAL_FILTER_OUT_CODECS() {
-        let otherCodec = codecs.find(c => c != codec);
-        let otherId = sdputils.findCodecId(test.originalOffer.sdp, otherCodec.name, otherCodec.offset);
-        let otherRtpmapMatcher = new RegExp(`a=rtpmap:${otherId}.*\\r\\n`, "gi");
+        const otherCodec = codecs.find(c => c != codec);
+        const otherId = sdputils.findCodecId(test.originalOffer.sdp, otherCodec.name, otherCodec.offset);
+        const otherRtpmapMatcher = new RegExp(`a=rtpmap:${otherId}.*\\r\\n`, "gi");
 
-        let id = sdputils.findCodecId(test.originalOffer.sdp, codec.name, codec.offset);
+        const id = sdputils.findCodecId(test.originalOffer.sdp, codec.name, codec.offset);
         if (codec.offset) {
           isnot(id, sdputils.findCodecId(test.originalOffer.sdp, codec.name, 0),
             "Different offsets should return different payload types");
@@ -44,7 +44,7 @@
     test.chain.append([
       async function CHECK_VIDEO_FLOW() {
         try {
-          let h = new VideoStreamHelper();
+          const h = new VideoStreamHelper();
           await h.checkVideoPlaying(
               test.pcRemote.remoteMediaElements[0],
               10, 10, 128);
@@ -55,10 +55,7 @@
       },
     ]);
 
-    // This inlines test.run(), to allow for multiple tests to run.
-    test.updateChainSteps();
-    await test.chain.execute();
-    await test.close();
+    await test.run();
   }
 
   // We match the name against the sdp to figure out the payload type,
@@ -86,8 +83,6 @@
       }
       info(`Tested video for codec ${codec.name}`);
     }
-
-    networkTestFinished();
   });
 </script>
 </pre>
