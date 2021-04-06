@@ -9,7 +9,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
 
-#include "nsIPluginHost.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
 #include "prlink.h"
@@ -52,8 +51,7 @@ struct _NPP;
 typedef _NPP* NPP;
 #endif
 
-class nsPluginHost final : public nsIPluginHost,
-                           public nsIObserver,
+class nsPluginHost final : public nsIObserver,
                            public nsITimerCallback,
                            public nsSupportsWeakReference,
                            public nsINamed {
@@ -67,17 +65,21 @@ class nsPluginHost final : public nsIPluginHost,
   static already_AddRefed<nsPluginHost> GetInst();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPLUGINHOST
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
   // Acts like a bitfield
-  enum PluginFilter {
-    eExcludeNone = nsIPluginHost::EXCLUDE_NONE,
-    eExcludeDisabled = nsIPluginHost::EXCLUDE_DISABLED,
-    eExcludeFake = nsIPluginHost::EXCLUDE_FAKE
-  };
+  enum PluginFilter { eExcludeNone, eExcludeDisabled, eExcludeFake };
+
+  NS_IMETHOD GetPluginTagForType(const nsACString& aMimeType,
+                                 uint32_t aExcludeFlags,
+                                 nsIPluginTag** aResult);
+  NS_IMETHOD GetPermissionStringForTag(nsIPluginTag* aTag,
+                                       uint32_t aExcludeFlags,
+                                       nsACString& aPermissionString);
+  NS_IMETHOD ReloadPlugins();
+
   // FIXME-jsplugins comment about fake
   bool HavePluginForType(const nsACString& aMimeType,
                          PluginFilter aFilter = eExcludeDisabled);
@@ -151,9 +153,6 @@ class nsPluginHost final : public nsIPluginHost,
 
   nsresult UpdateCachedSerializablePluginList();
   nsresult SendPluginsToContent(mozilla::dom::ContentParent* parent);
-
-  void UpdatePluginBlocklistState(nsPluginTag* aPluginTag,
-                                  bool aShouldSoftblock = false);
 
  private:
   nsresult LoadPlugins();

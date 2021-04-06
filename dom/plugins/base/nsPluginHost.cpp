@@ -298,9 +298,6 @@ nsPluginHost::nsPluginHost()
       mozilla::services::GetObserverService();
   if (obsService) {
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-    if (XRE_IsParentProcess()) {
-      obsService->AddObserver(this, "plugin-blocklist-updated", false);
-    }
   }
 
 #ifdef PLUGIN_LOGGING
@@ -337,7 +334,7 @@ nsPluginHost::~nsPluginHost() {
   UnloadPlugins();
 }
 
-NS_IMPL_ISUPPORTS(nsPluginHost, nsIPluginHost, nsIObserver, nsITimerCallback,
+NS_IMPL_ISUPPORTS(nsPluginHost, nsIObserver, nsITimerCallback,
                   nsISupportsWeakReference, nsINamed)
 
 already_AddRefed<nsPluginHost> nsPluginHost::GetInst() {
@@ -526,39 +523,6 @@ nsPluginHost::GetPluginTagForType(const nsACString& aMimeType,
 }
 
 NS_IMETHODIMP
-nsPluginHost::GetStateForType(const nsACString& aMimeType,
-                              uint32_t aExcludeFlags, uint32_t* aResult) {
-  nsCOMPtr<nsIPluginTag> tag;
-  nsresult rv =
-      GetPluginTagForType(aMimeType, aExcludeFlags, getter_AddRefs(tag));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return tag->GetEnabledState(aResult);
-}
-
-NS_IMETHODIMP
-nsPluginHost::GetBlocklistStateForType(const nsACString& aMimeType,
-                                       uint32_t aExcludeFlags,
-                                       uint32_t* aState) {
-  nsCOMPtr<nsIPluginTag> tag;
-  nsresult rv =
-      GetPluginTagForType(aMimeType, aExcludeFlags, getter_AddRefs(tag));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return tag->GetBlocklistState(aState);
-}
-
-NS_IMETHODIMP
-nsPluginHost::GetPermissionStringForType(const nsACString& aMimeType,
-                                         uint32_t aExcludeFlags,
-                                         nsACString& aPermissionString) {
-  nsCOMPtr<nsIPluginTag> tag;
-  nsresult rv =
-      GetPluginTagForType(aMimeType, aExcludeFlags, getter_AddRefs(tag));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return GetPermissionStringForTag(tag, aExcludeFlags, aPermissionString);
-}
-
-NS_IMETHODIMP
 nsPluginHost::GetPermissionStringForTag(nsIPluginTag* aTag,
                                         uint32_t aExcludeFlags,
                                         nsACString& aPermissionString) {
@@ -569,13 +533,7 @@ nsPluginHost::GetPermissionStringForTag(nsIPluginTag* aTag,
   nsresult rv = aTag->GetBlocklistState(&blocklistState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (blocklistState ==
-          nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE ||
-      blocklistState == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE) {
-    aPermissionString.AssignLiteral("plugin-vulnerable:");
-  } else {
-    aPermissionString.AssignLiteral("plugin:");
-  }
+  aPermissionString.AssignLiteral("plugin:");
 
   nsCString niceName;
   rv = aTag->GetNiceName(niceName);
@@ -628,22 +586,6 @@ void nsPluginHost::GetPlugins(
     }
     plugin = plugin->mNext;
   }
-}
-
-// FIXME-jsplugins Check users for order of fake v non-fake
-NS_IMETHODIMP
-nsPluginHost::GetPluginTags(nsTArray<RefPtr<nsIPluginTag>>& aResults) {
-  LoadPlugins();
-
-  for (nsPluginTag* plugin = mPlugins; plugin; plugin = plugin->mNext) {
-    aResults.AppendElement(plugin);
-  }
-
-  for (nsIInternalPluginTag* plugin : mFakePlugins) {
-    aResults.AppendElement(plugin);
-  }
-
-  return NS_OK;
 }
 
 nsPluginTag* nsPluginHost::FindPreferredPlugin(
@@ -924,106 +866,6 @@ static bool MimeTypeIsAllowedForFakePlugin(const nsString& aMimeType) {
   return false;
 }
 
-NS_IMETHODIMP
-nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
-                                 JSContext* aCx, nsIFakePluginTag** aResult) {
-  FakePluginTagInit initDictionary;
-  if (!initDictionary.Init(aCx, aInitDictionary)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  for (const FakePluginMimeEntry& mimeEntry : initDictionary.mMimeEntries) {
-    if (!MimeTypeIsAllowedForFakePlugin(mimeEntry.mType)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  RefPtr<nsFakePluginTag> newTag;
-  nsresult rv = nsFakePluginTag::Create(initDictionary, getter_AddRefs(newTag));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  for (const auto& existingTag : mFakePlugins) {
-    if (newTag->HandlerURIMatches(existingTag->HandlerURI())) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  mFakePlugins.AppendElement(newTag);
-
-  nsAutoCString disableFullPage;
-  Preferences::GetCString(kPrefDisableFullPage, disableFullPage);
-  for (uint32_t i = 0; i < newTag->MimeTypes().Length(); i++) {
-    if (!IsTypeInList(newTag->MimeTypes()[i], disableFullPage)) {
-      RegisterWithCategoryManager(newTag->MimeTypes()[i], ePluginRegister);
-    }
-  }
-
-  newTag.forget(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginHost::CreateFakePlugin(JS::Handle<JS::Value> aInitDictionary,
-                               JSContext* aCx, nsIFakePluginTag** aResult) {
-  FakePluginTagInit initDictionary;
-  if (!initDictionary.Init(aCx, aInitDictionary)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<nsFakePluginTag> newTag;
-  nsresult rv = nsFakePluginTag::Create(initDictionary, getter_AddRefs(newTag));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  newTag.forget(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginHost::UnregisterFakePlugin(const nsACString& aHandlerURI) {
-  nsCOMPtr<nsIURI> handlerURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(handlerURI), aHandlerURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  for (uint32_t i = 0; i < mFakePlugins.Length(); ++i) {
-    if (mFakePlugins[i]->HandlerURIMatches(handlerURI)) {
-      mFakePlugins.RemoveElementAt(i);
-      return NS_OK;
-    }
-  }
-
-  return NS_OK;
-}
-
-// FIXME-jsplugins Is this method actually needed?
-NS_IMETHODIMP
-nsPluginHost::GetFakePlugin(const nsACString& aMimeType,
-                            nsIFakePluginTag** aResult) {
-  RefPtr<nsFakePluginTag> result = FindFakePluginForType(aMimeType, false);
-  if (result) {
-    result.forget(aResult);
-    return NS_OK;
-  }
-
-  *aResult = nullptr;
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-// FIXME-jsplugins what should this do for fake plugins?
-NS_IMETHODIMP
-nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
-                            uint64_t flags, int64_t maxAge,
-                            nsIClearSiteDataCallback* callbackFunc) {
-  return NS_ERROR_FAILURE;
-}
-
-// This will spin the event loop while waiting on an async
-// call to GetSitesWithData
-NS_IMETHODIMP
-nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
-                          bool* result) {
-  return NS_ERROR_FAILURE;
-}
-
 nsPluginHost::SpecialType nsPluginHost::GetSpecialType(
     const nsACString& aMIMEType) {
   if (aMIMEType.LowerCaseEqualsASCII("application/x-test")) {
@@ -1090,26 +932,6 @@ void nsPluginHost::AddPluginTag(nsPluginTag* aPluginTag) {
                                     ePluginRegister);
       }
     }
-  }
-}
-
-void nsPluginHost::UpdatePluginBlocklistState(nsPluginTag* aPluginTag,
-                                              bool aShouldSoftblock) {
-  nsCOMPtr<nsIBlocklistService> blocklist =
-      do_GetService("@mozilla.org/extensions/blocklist;1");
-  MOZ_ASSERT(blocklist, "Should be able to access the blocklist");
-  if (!blocklist) {
-    return;
-  }
-  // Asynchronously get the blocklist state.
-  RefPtr<Promise> promise;
-  blocklist->GetPluginBlocklistState(aPluginTag, u""_ns, u""_ns,
-                                     getter_AddRefs(promise));
-  MOZ_ASSERT(promise,
-             "Should always get a promise for plugin blocklist state.");
-  if (promise) {
-    promise->AppendNativeHandler(new mozilla::plugins::BlocklistPromiseHandler(
-        aPluginTag, aShouldSoftblock));
   }
 }
 
@@ -1314,17 +1136,7 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports* aSubject, const char* aTopic,
       LoadPlugins();
     }
   }
-  if (XRE_IsParentProcess() && !strcmp("plugin-blocklist-updated", aTopic)) {
-    // The blocklist has updated. Asynchronously get blocklist state for all
-    // items. The promise resolution handler takes care of checking if anything
-    // changed, and writing an updated state to file, as well as sending data to
-    // child processes.
-    nsPluginTag* plugin = mPlugins;
-    while (plugin) {
-      UpdatePluginBlocklistState(plugin);
-      plugin = plugin->mNext;
-    }
-  }
+
   return NS_OK;
 }
 

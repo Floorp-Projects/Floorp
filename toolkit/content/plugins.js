@@ -46,13 +46,7 @@ RPMSendQuery("RequestPlugins", {}).then(aPlugins => {
   fragment.appendChild(deprecation);
 
   var stateNames = {};
-  [
-    "STATE_SOFTBLOCKED",
-    "STATE_BLOCKED",
-    "STATE_OUTDATED",
-    "STATE_VULNERABLE_UPDATE_AVAILABLE",
-    "STATE_VULNERABLE_NO_UPDATE",
-  ].forEach(function(label) {
+  ["STATE_SOFTBLOCKED", "STATE_BLOCKED"].forEach(function(label) {
     stateNames[Ci.nsIBlocklistService[label]] = label;
   });
 
