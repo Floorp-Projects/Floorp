@@ -29,14 +29,15 @@ namespace dom {
 class RTCStatsTimestampMaker {
  public:
   RTCStatsTimestampMaker() = default;
-  explicit RTCStatsTimestampMaker(const GlobalObject* aGlobal);
+  explicit RTCStatsTimestampMaker(nsPIDOMWindowInner* aWindow);
   DOMHighResTimeStamp GetNow() const;
 
  private:
-  uint64_t mRandomTimelineSeed = 0;
-  DOMHighResTimeStamp mStartWallClockRaw = (double)PR_Now() / PR_USEC_PER_MSEC;
-  TimeStamp mStartMonotonic = TimeStamp::Now();
-  bool mCrossOriginIsolated = false;
+  const uint64_t mRandomTimelineSeed = 0;
+  const TimeStamp mStartMonotonic = TimeStamp::Now();
+  const DOMHighResTimeStamp mStartWallClockRaw =
+      (double)PR_Now() / PR_USEC_PER_MSEC;
+  const bool mCrossOriginIsolated = false;
 };
 
 // TODO(bug 1588303): If we ever get move semantics for webidl dictionaries, we
