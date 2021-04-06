@@ -14,7 +14,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
   OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
@@ -245,109 +244,6 @@ const ImageCacheCleaner = {
       imageCache.clearCache(false); // true=chrome, false=content
       aResolve();
     });
-  },
-};
-
-const PluginDataCleaner = {
-  deleteByHost(aHost, aOriginAttributes) {
-    return this._deleteInternal((aPh, aTag) => {
-      return new Promise(aResolve => {
-        try {
-          aPh.clearSiteData(
-            aTag,
-            aHost,
-            Ci.nsIPluginHost.FLAG_CLEAR_ALL,
-            -1,
-            aResolve
-          );
-        } catch (e) {
-          // Ignore errors from the plugin, but resolve the promise
-          // We cannot check if something is a bailout or an error
-          aResolve();
-        }
-      });
-    });
-  },
-
-  deleteByRange(aFrom, aTo) {
-    let age = Date.now() / 1000 - aFrom / 1000000;
-
-    return this._deleteInternal((aPh, aTag) => {
-      return new Promise(aResolve => {
-        try {
-          aPh.clearSiteData(
-            aTag,
-            null,
-            Ci.nsIPluginHost.FLAG_CLEAR_ALL,
-            age,
-            aResolve
-          );
-        } catch (e) {
-          aResolve(Cr.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED);
-        }
-      }).then(aRv => {
-        // If the plugin doesn't support clearing by age, clear everything.
-        if (aRv == Cr.NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED) {
-          return new Promise(aResolve => {
-            try {
-              aPh.clearSiteData(
-                aTag,
-                null,
-                Ci.nsIPluginHost.FLAG_CLEAR_ALL,
-                -1,
-                aResolve
-              );
-            } catch (e) {
-              aResolve();
-            }
-          });
-        }
-
-        return true;
-      });
-    });
-  },
-
-  deleteAll() {
-    return this._deleteInternal((aPh, aTag) => {
-      return new Promise(aResolve => {
-        try {
-          aPh.clearSiteData(
-            aTag,
-            null,
-            Ci.nsIPluginHost.FLAG_CLEAR_ALL,
-            -1,
-            aResolve
-          );
-        } catch (e) {
-          aResolve();
-        }
-      });
-    });
-  },
-
-  _deleteInternal(aCb) {
-    let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-
-    let promises = [];
-    let tags = ph.getPluginTags();
-    for (let tag of tags) {
-      if (tag.loaded) {
-        promises.push(aCb(ph, tag));
-      }
-    }
-
-    // As evidenced in bug 1253204, clearing plugin data can sometimes be
-    // very, very long, for mysterious reasons. Unfortunately, this is not
-    // something actionable by Mozilla, so crashing here serves no purpose.
-    //
-    // For this reason, instead of waiting for sanitization to always
-    // complete, we introduce a soft timeout. Once this timeout has
-    // elapsed, we proceed with the shutdown of Firefox.
-    return Promise.race([
-      Promise.all(promises),
-      new Promise(aResolve => setTimeout(aResolve, 10000 /* 10 seconds */)),
-    ]);
   },
 };
 
@@ -1122,11 +1018,6 @@ const FLAGS_MAP = [
   {
     flag: Ci.nsIClearDataService.CLEAR_CSS_CACHE,
     cleaners: [CSSCacheCleaner],
-  },
-
-  {
-    flag: Ci.nsIClearDataService.CLEAR_PLUGIN_DATA,
-    cleaners: [PluginDataCleaner],
   },
 
   {
