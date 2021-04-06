@@ -91,10 +91,6 @@ static nsresult SystemWantsDarkTheme(int32_t& darkThemeEnabled) {
 
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
-      mUseAccessibilityTheme(0),
-      mUseDefaultTheme(0),
-      mNativeThemeId(eWindowsTheme_Generic),
-      mCaretBlinkTime(-1),
       mHasColorMenuHoverText(false),
       mHasColorAccent(false),
       mHasColorAccentText(false),
@@ -112,16 +108,7 @@ void nsLookAndFeel::NativeInit() { EnsureInit(); }
 /* virtual */
 void nsLookAndFeel::RefreshImpl() {
   nsXPLookAndFeel::RefreshImpl();
-
-  for (auto e = mSystemFontCache.begin(), end = mSystemFontCache.end();
-       e != end; ++e) {
-    e->mCacheValid = false;
-  }
-  mCaretBlinkTime = -1;
-
-  mCacheValidBits.reset();
-
-  mInitialized = false;
+  mInitialized = false; // Fetch system colors next time they're used.
 }
 
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
@@ -380,12 +367,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 3;
       break;
     case IntID::CaretBlinkTime:
-      // IntID::CaretBlinkTime is often called by updating editable text
-      // that has focus. So it should be cached to improve performance.
-      if (mCaretBlinkTime < 0) {
-        mCaretBlinkTime = static_cast<int32_t>(::GetCaretBlinkTime());
-      }
-      aResult = mCaretBlinkTime;
+      aResult = static_cast<int32_t>(::GetCaretBlinkTime());
       break;
     case IntID::CaretWidth:
       aResult = 1;
@@ -424,16 +406,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       // High contrast is a misnomer under Win32 -- any theme can be used with
       // it, e.g. normal contrast with large fonts, low contrast, etc. The high
       // contrast flag really means -- use this theme and don't override it.
-      if (XRE_IsContentProcess()) {
-        // If we're running in the content process, then the parent should
-        // have sent us the accessibility state when nsLookAndFeel
-        // initialized, and stashed it in the mUseAccessibilityTheme cache.
-        aResult = mUseAccessibilityTheme;
-      } else {
-        // Otherwise, we can ask the OS to see if we're using High Contrast
-        // mode.
-        aResult = nsUXThemeData::IsHighContrastOn();
-      }
+      aResult = nsUXThemeData::IsHighContrastOn();
       break;
     case IntID::ScrollArrowStyle:
       aResult = eScrollArrowStyle_Single;
@@ -460,20 +433,11 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = !nsUXThemeData::IsAppThemed();
       break;
     case IntID::WindowsDefaultTheme:
-      if (XRE_IsContentProcess()) {
-        aResult = mUseDefaultTheme;
-      } else {
-        aResult = nsUXThemeData::IsDefaultWindowTheme();
-      }
+      aResult = nsUXThemeData::IsDefaultWindowTheme();
       break;
     case IntID::WindowsThemeIdentifier:
-      if (XRE_IsContentProcess()) {
-        aResult = mNativeThemeId;
-      } else {
-        aResult = nsUXThemeData::GetNativeThemeId();
-      }
+      aResult = nsUXThemeData::GetNativeThemeId();
       break;
-
     case IntID::OperatingSystemVersionIdentifier: {
       aResult = int32_t(GetOperatingSystemVersion());
       break;
@@ -605,25 +569,13 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     }
     case IntID::PrimaryPointerCapabilities: {
-      if (!mCacheValidBits[PrimaryPointerCapabilitiesKind] &&
-          !XRE_IsContentProcess()) {
-        mPrimaryPointerCapabilities = static_cast<int32_t>(
-            widget::WinUtils::GetPrimaryPointerCapabilities());
-        mCacheValidBits[PrimaryPointerCapabilitiesKind] = true;
-      }
-
-      aResult = mPrimaryPointerCapabilities;
+      aResult = static_cast<int32_t>(
+          widget::WinUtils::GetPrimaryPointerCapabilities());
       break;
     }
     case IntID::AllPointerCapabilities: {
-      if (!mCacheValidBits[AllPointerCapabilitiesKind] &&
-          !XRE_IsContentProcess()) {
-        mAllPointerCapabilities =
-            static_cast<int32_t>(widget::WinUtils::GetAllPointerCapabilities());
-        mCacheValidBits[AllPointerCapabilitiesKind] = true;
-      }
-
-      aResult = mAllPointerCapabilities;
+      aResult =
+          static_cast<int32_t>(widget::WinUtils::GetAllPointerCapabilities());
       break;
     }
     default:
@@ -714,10 +666,6 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFontInternal(
 }
 
 LookAndFeelFont nsLookAndFeel::GetLookAndFeelFont(LookAndFeel::FontID anID) {
-  if (XRE_IsContentProcess()) {
-    return mFontCache[anID];
-  }
-
   LookAndFeelFont result{};
 
   result.haveFont() = false;
@@ -771,54 +719,10 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFont(LookAndFeel::FontID anID) {
   return result;
 }
 
-bool nsLookAndFeel::GetSysFont(LookAndFeel::FontID anID, nsString& aFontName,
-                               gfxFontStyle& aFontStyle) {
-  LookAndFeelFont font = GetLookAndFeelFont(anID);
-
-  if (!font.haveFont()) {
-    return false;
-  }
-
-  aFontName = std::move(font.name());
-
-  aFontStyle.size = font.size();
-
-  // FIXME: What about oblique?
-  aFontStyle.style =
-      font.italic() ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
-
-  aFontStyle.weight = FontWeight(font.weight());
-
-  // FIXME: Set aFontStyle->stretch correctly!
-  aFontStyle.stretch = FontStretch::Normal();
-
-  aFontStyle.systemFont = true;
-
-  return true;
-}
-
-bool nsLookAndFeel::NativeGetFont(FontID anID, nsString& aFontName,
+bool nsLookAndFeel::NativeGetFont(LookAndFeel::FontID anID, nsString& aFontName,
                                   gfxFontStyle& aFontStyle) {
-  CachedSystemFont& cacheSlot = mSystemFontCache[anID];
-
-  bool status;
-  if (cacheSlot.mCacheValid) {
-    status = cacheSlot.mHaveFont;
-    if (status) {
-      aFontName = cacheSlot.mFontName;
-      aFontStyle = cacheSlot.mFontStyle;
-    }
-  } else {
-    status = GetSysFont(anID, aFontName, aFontStyle);
-
-    cacheSlot.mCacheValid = true;
-    cacheSlot.mHaveFont = status;
-    if (status) {
-      cacheSlot.mFontName = aFontName;
-      cacheSlot.mFontStyle = aFontStyle;
-    }
-  }
-  return status;
+  LookAndFeelFont font = GetLookAndFeelFont(anID);
+  return LookAndFeelFontToStyle(font, aFontName, aFontStyle);
 }
 
 /* virtual */

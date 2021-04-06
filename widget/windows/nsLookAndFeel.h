@@ -60,12 +60,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   char16_t GetPasswordCharacterImpl() override;
 
  private:
-  enum CachedValueKind {
-    PrimaryPointerCapabilitiesKind,
-    AllPointerCapabilitiesKind,
-    CachedValueKindMax = AllPointerCapabilitiesKind,
-  };
-
   /**
    * Fetches the Windows accent color from the Windows settings if
    * the accent color is set to apply to the title bar, otherwise
@@ -89,25 +83,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   LookAndFeelFont GetLookAndFeelFont(LookAndFeel::FontID anID);
 
-  bool GetSysFont(LookAndFeel::FontID anID, nsString& aFontName,
-                  gfxFontStyle& aFontStyle);
-
-  // Content process cached values that get shipped over from the browser
-  // process.
-  int32_t mUseAccessibilityTheme;
-  int32_t mUseDefaultTheme;  // is the current theme a known default?
-  int32_t mNativeThemeId;    // see LookAndFeel enum 'WindowsTheme'
-
-  // Information about whether pointers exist, and whether they are fine
-  // (like a mouse) or coarse (like a VR peripheral), and whether they
-  // support the concept of "hovering" over something
-  //
-  // See the CSS "@media pointer" query for more info
-  int32_t mPrimaryPointerCapabilities;
-  int32_t mAllPointerCapabilities;
-
-  int32_t mCaretBlinkTime;
-
   // Cached colors and flags indicating success in their retrieval.
   nscolor mColorMenuHoverText;
   bool mHasColorMenuHoverText;
@@ -126,28 +101,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   void EnsureInit();
 
-  struct CachedSystemFont {
-    CachedSystemFont() : mCacheValid(false) {}
-
-    bool mCacheValid;
-    bool mHaveFont;
-    nsString mFontName;
-    gfxFontStyle mFontStyle;
-  };
-
-  mozilla::EnumeratedArray<FontID, FontID::End, CachedSystemFont>
-      mSystemFontCache;
-
-  using FontCache =
-      mozilla::EnumeratedArray<FontID, FontID::End, LookAndFeelFont>;
-  FontCache mFontCache;
-
   nsCOMPtr<nsIWindowsRegKey> mDwmKey;
-
-  // A bitmap of which cached values are currently valid (ignored in content
-  // process, since all cached values in content may only be updated from
-  // one valid value to another, otherwise layout will not function properly)
-  std::bitset<CachedValueKindMax + 1> mCacheValidBits;
 };
 
 #endif
