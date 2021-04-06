@@ -2013,8 +2013,8 @@ MessageChannel::MessageTask::GetPriority(uint32_t* aPriority) {
     case Message::INPUT_PRIORITY:
       *aPriority = PRIORITY_INPUT_HIGH;
       break;
-    case Message::VSYNC_PRIORITY:
-      *aPriority = PRIORITY_VSYNC;
+    case Message::HIGH_PRIORITY:
+      *aPriority = PRIORITY_HIGH;
       break;
     case Message::MEDIUMHIGH_PRIORITY:
       *aPriority = PRIORITY_MEDIUMHIGH;

@@ -2136,12 +2136,6 @@
   value: false
   mirror: always
 
-# Whether we perform a more strict alignment with vsync for input events
-- name: dom.input_events.strict_input_vsync_alignment
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 # Enable not moving the cursor to end when a text input or textarea has .value
 # set to the value it already has.  By default, enabled.
 - name: dom.input.skip_cursor_move_for_same_value_set
