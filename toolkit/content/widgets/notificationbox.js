@@ -454,6 +454,7 @@
           });
           buttonElem.setAttribute("href", link);
           buttonElem.classList.add("notification-link");
+          buttonElem.onclick = (...args) => this._doButtonCommand(...args);
         } else {
           buttonElem = document.createXULElement(
             "button",
