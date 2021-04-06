@@ -762,53 +762,6 @@ void SerialEventTargetGuard::InitTLS() {
   }
 }
 
-DelayedRunnable::DelayedRunnable(already_AddRefed<nsIEventTarget> aTarget,
-                                 already_AddRefed<nsIRunnable> aRunnable,
-                                 uint32_t aDelay)
-    : mozilla::Runnable("DelayedRunnable"),
-      mTarget(aTarget),
-      mWrappedRunnable(aRunnable),
-      mDelayedFrom(TimeStamp::NowLoRes()),
-      mDelay(aDelay) {}
-
-nsresult DelayedRunnable::Init() {
-  return NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, mDelay,
-                                 nsITimer::TYPE_ONE_SHOT, mTarget);
-}
-
-NS_IMETHODIMP DelayedRunnable::Run() {
-  MOZ_ASSERT(mTimer, "DelayedRunnable without Init?");
-
-  // Already ran?
-  if (!mWrappedRunnable) {
-    return NS_OK;
-  }
-
-  // Are we too early?
-  if ((mozilla::TimeStamp::NowLoRes() - mDelayedFrom).ToMilliseconds() <
-      mDelay) {
-    return NS_OK;  // Let the nsITimer run us.
-  }
-
-  mTimer->Cancel();
-  return DoRun();
-}
-
-NS_IMETHODIMP DelayedRunnable::Notify(nsITimer* aTimer) {
-  // If we already ran, the timer should have been canceled.
-  MOZ_ASSERT(mWrappedRunnable);
-  MOZ_ASSERT(aTimer == mTimer);
-
-  return DoRun();
-}
-
-nsresult DelayedRunnable::DoRun() {
-  nsCOMPtr<nsIRunnable> r = std::move(mWrappedRunnable);
-  return r->Run();
-}
-
-NS_IMPL_ISUPPORTS_INHERITED(DelayedRunnable, Runnable, nsITimerCallback)
-
 }  // namespace mozilla
 
 bool nsIEventTarget::IsOnCurrentThread() {

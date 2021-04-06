@@ -1941,28 +1941,6 @@ typedef LogTaskBase<dom::FrameRequestCallback> LogFrameRequestCallback;
 // If you add new types don't forget to add:
 // `template class LogTaskBase<YourType>;` to nsThreadUtils.cpp
 
-class DelayedRunnable : public mozilla::Runnable, public nsITimerCallback {
- public:
-  DelayedRunnable(already_AddRefed<nsIEventTarget> aTarget,
-                  already_AddRefed<nsIRunnable> aRunnable, uint32_t aDelay);
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIRUNNABLE
-  NS_DECL_NSITIMERCALLBACK
-
-  nsresult Init();
-
- private:
-  ~DelayedRunnable() = default;
-  nsresult DoRun();
-
-  const nsCOMPtr<nsIEventTarget> mTarget;
-  nsCOMPtr<nsIRunnable> mWrappedRunnable;
-  nsCOMPtr<nsITimer> mTimer;
-  const mozilla::TimeStamp mDelayedFrom;
-  uint32_t mDelay;
-};
-
 }  // namespace mozilla
 
 #endif  // nsThreadUtils_h__
