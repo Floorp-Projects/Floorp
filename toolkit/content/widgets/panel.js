@@ -206,7 +206,8 @@
 
       if (this.isAnchored && this.anchorNode) {
         let anchorRoot =
-          this.anchorNode.closest("toolbarbutton") || this.anchorNode;
+          this.anchorNode.closest("toolbarbutton, .anchor-root") ||
+          this.anchorNode;
         anchorRoot.setAttribute("open", "true");
       }
 
@@ -232,7 +233,8 @@
 
       if (this.isAnchored && this.anchorNode) {
         let anchorRoot =
-          this.anchorNode.closest("toolbarbutton") || this.anchorNode;
+          this.anchorNode.closest("toolbarbutton, .anchor-root") ||
+          this.anchorNode;
         anchorRoot.removeAttribute("open");
       }
 

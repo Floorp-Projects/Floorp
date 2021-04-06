@@ -5,7 +5,7 @@
 %endif
 
 @media (-moz-proton-doorhangers) {
-#notification-popup-box {
+#notification-popup-box[open] {
   background-color: var(--toolbarbutton-active-background);
   color: inherit;
   padding: 5px 0;
