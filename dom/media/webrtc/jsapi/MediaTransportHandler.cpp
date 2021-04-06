@@ -289,6 +289,7 @@ static NrIceCtx::Policy toNrIcePolicy(dom::RTCIceTransportPolicy aPolicy) {
 
 // list of known acceptable ports for webrtc
 int16_t gGoodWebrtcPortList[] = {
+    53,    // Some deplyoments use DNS port to punch through overzealous NATs
     3478,  // stun or turn
     5349,  // stuns or turns
     0,     // Sentinel value: This MUST be zero
