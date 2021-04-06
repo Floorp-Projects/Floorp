@@ -77,7 +77,6 @@ EXPORTS.mozilla += [
     "ThreadBound.h",
     "ThreadEventQueue.h",
     "ThrottledEventQueue.h",
-    "VsyncTaskManager.h",
 ]
 
 SOURCES += [
@@ -117,7 +116,6 @@ UNIFIED_SOURCES += [
     "ThreadLocalVariables.cpp",
     "ThrottledEventQueue.cpp",
     "TimerThread.cpp",
-    "VsyncTaskManager.cpp",
 ]
 
 LOCAL_INCLUDES += [
