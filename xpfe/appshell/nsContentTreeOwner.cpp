@@ -381,21 +381,6 @@ NS_IMETHODIMP nsContentTreeOwner::OnBeforeLinkTraversal(
   return NS_OK;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(
-    nsIDocShell* aDocShell, nsIURI* aURI, nsIReferrerInfo* aReferrerInfo,
-    bool aHasPostData, nsIPrincipal* aTriggeringPrincipal,
-    nsIContentSecurityPolicy* aCsp, bool* _retval) {
-  *_retval = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURIInThisProcess(nsIURI* aURI,
-                                                             bool* aRetVal) {
-  MOZ_ASSERT_UNREACHABLE("Should only be called in child process.");
-  *aRetVal = true;
-  return NS_OK;
-}
-
 //*****************************************************************************
 // nsContentTreeOwner::nsIWebBrowserChrome
 //*****************************************************************************

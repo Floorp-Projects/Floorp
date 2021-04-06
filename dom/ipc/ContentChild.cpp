@@ -901,23 +901,10 @@ nsresult ContentChild::ProvideWindowCommon(
       (aLoadState &&
        (aLoadState->IsFormSubmission() || aLoadState->PostDataStream()));
   if (!cannotLoadInDifferentProcess) {
-    // Check if we should load in a different process. If we have the noopener
-    // flag set, we can do so, but we may also want to do so eagerly if the load
-    // cannot be completed within the current process.
-    bool loadInDifferentProcess =
-        aForceNoOpener && StaticPrefs::dom_noopener_newprocess_enabled();
-    if (!loadInDifferentProcess && aURI) {
-      nsCOMPtr<nsIWebBrowserChrome3> browserChrome3;
-      rv = aTabOpener->GetWebBrowserChrome(getter_AddRefs(browserChrome3));
-      if (NS_SUCCEEDED(rv) && browserChrome3) {
-        bool shouldLoad;
-        rv = browserChrome3->ShouldLoadURIInThisProcess(aURI, &shouldLoad);
-        loadInDifferentProcess = NS_SUCCEEDED(rv) && !shouldLoad;
-      }
-    }
-
     // If we're in a content process and we have noopener set, there's no reason
     // to load in our process, so let's load it elsewhere!
+    bool loadInDifferentProcess =
+        aForceNoOpener && StaticPrefs::dom_noopener_newprocess_enabled();
     if (loadInDifferentProcess) {
       float fullZoom;
       nsCOMPtr<nsIPrincipal> triggeringPrincipal;
