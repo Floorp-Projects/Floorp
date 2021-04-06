@@ -33,8 +33,6 @@
 #include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
-struct DxgiAdapterDesc;
-
 namespace mozilla {
 
 class CancelableRunnable;
@@ -294,14 +292,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual mozilla::ipc::IPCResult RecvInitPCanvasParent(
       Endpoint<PCanvasParent>&& aEndpoint) = 0;
   virtual mozilla::ipc::IPCResult RecvReleasePCanvasParent() = 0;
-
-  virtual mozilla::ipc::IPCResult RecvSupportsAsyncDXGISurface(bool* value) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  virtual mozilla::ipc::IPCResult RecvPreferredDXGIAdapter(
-      DxgiAdapterDesc* desc) {
-    return IPC_FAIL_NO_REASON(this);
-  }
 
   virtual already_AddRefed<PWebGLParent> AllocPWebGLParent() = 0;
 
