@@ -13,11 +13,6 @@ interface nsIURI;
 
 webidl BrowsingContext;
 
-%{C++
-class nsNPAPIPluginInstance;
-%}
-[ptr] native nsNPAPIPluginInstancePtr(nsNPAPIPluginInstance);
-
 /**
  * This interface represents a content node that loads objects.
  *
@@ -95,12 +90,6 @@ interface nsIObjectLoadingContent : nsISupports
   unsigned long getContentTypeForMIMEType(in AUTF8String aMimeType);
 
   /**
-   * Returns the plugin instance if it has already been instantiated. This
-   * will never instantiate the plugin and so is safe to call even when
-   * content script must not execute.
-   */
-  [notxpcom,nostdcall] readonly attribute nsNPAPIPluginInstancePtr pluginInstance;
-
   /*
    * Notifications from pluginhost that our instance crashed or was destroyed.
    */

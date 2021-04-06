@@ -256,15 +256,7 @@ nsresult HTMLEmbedElement::CopyInnerTo(HTMLEmbedElement* aDest) {
 
 JSObject* HTMLEmbedElement::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
-  JSObject* obj;
-  obj = HTMLEmbedElement_Binding::Wrap(aCx, this, aGivenProto);
-
-  if (!obj) {
-    return nullptr;
-  }
-  JS::Rooted<JSObject*> rootedObj(aCx, obj);
-  SetupProtoChain(aCx, rootedObj);
-  return rootedObj;
+  return HTMLEmbedElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 nsContentPolicyType HTMLEmbedElement::GetContentPolicyType() const {

@@ -123,6 +123,10 @@ using mozilla::_ipdltest::IPDLUnitTestProcessChild;
 #  include "mozilla/ipc/ForkServer.h"
 #endif
 
+#if defined(MOZ_X11)
+#  include <X11/Xlib.h>
+#endif
+
 #include "VRProcessChild.h"
 
 using namespace mozilla;

@@ -1067,16 +1067,7 @@ HangMonitoredProcess::GetPluginName(nsACString& aPluginName) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  uint32_t id = mHangData.get_PluginHangData().pluginId();
-
-  RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
-  nsPluginTag* tag = host->PluginWithId(id);
-  if (!tag) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  aPluginName = tag->Name();
-  return NS_OK;
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
