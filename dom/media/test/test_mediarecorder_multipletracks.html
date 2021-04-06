@@ -23,15 +23,14 @@
       const track = ac.createMediaStreamDestination().stream.getTracks()[0];
       stream.addTrack(track);
       stream.addTrack(track.clone());
-      recorder.start();
-      await haveEvent(recorder, "start",
-          wait(5000, new Error("Timeout")));
-      const {error} = await haveEvent(recorder, "error",
-          wait(5000, new Error("Timeout")));
-      await haveEvent(recorder, "stop",
-          wait(5000, new Error("Timeout")));
-      is(error.name, "NotSupportedError",
-          "Multiple audio tracks should be rejected");
+      mustThrowWith("Starting with multiple audio tracks",
+                    "NotSupportedError",
+                    () => recorder.start());
+      await Promise.all([
+        haveNoEvent(recorder, "start"),
+        haveNoEvent(recorder, "error"),
+        haveNoEvent(recorder, "stop"),
+      ]);
       for (let t of stream.getTracks()) {
         stream.removeTrack(t);
         t.stop();
@@ -45,15 +44,14 @@
       const track = canvas.captureStream().getTracks()[0];
       stream.addTrack(track);
       stream.addTrack(track.clone());
-      recorder.start();
-      await haveEvent(recorder, "start",
-          wait(5000, new Error("Timeout")));
-      const {error} = await haveEvent(recorder, "error",
-          wait(5000, new Error("Timeout")));
-      await haveEvent(recorder, "stop",
-          wait(5000, new Error("Timeout")));
-      is(error.name, "NotSupportedError",
-          "Multiple video tracks should be rejected");
+      mustThrowWith("Starting with multiple video tracks",
+                    "NotSupportedError",
+                    () => recorder.start());
+      await Promise.all([
+        haveNoEvent(recorder, "start"),
+        haveNoEvent(recorder, "error"),
+        haveNoEvent(recorder, "stop"),
+      ]);
       for (let t of stream.getTracks()) {
         stream.removeTrack(t);
         t.stop();
