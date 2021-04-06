@@ -306,7 +306,7 @@ add_task(async function test_other_ignored() {
   Assert.ok(notification, "There should be a notification");
 
   // Dismiss notification, creating the .dmp.ignore file
-  notification.querySelector(".messageCloseButton").click();
+  notification.closeButton.click();
   gNotificationBox.removeNotification(notification, true);
   await waitForIgnoredReports(toIgnore);
 
@@ -369,7 +369,9 @@ add_task(async function test_can_submit() {
 
   // Attempt to submit the notification by clicking on the submit
   // button
-  let buttons = notification.querySelectorAll(".notification-button");
+  let buttons = notification.buttonContainer.querySelectorAll(
+    ".notification-button"
+  );
   // ...which should be the first button.
   let submit = buttons[0];
 
@@ -397,7 +399,9 @@ add_task(async function test_can_submit_several() {
 
   // Attempt to submit the notification by clicking on the submit
   // button
-  let buttons = notification.querySelectorAll(".notification-button");
+  let buttons = notification.buttonContainer.querySelectorAll(
+    ".notification-button"
+  );
   // ...which should be the first button.
   let submit = buttons[0];
 
@@ -433,7 +437,9 @@ add_task(async function test_can_submit_always() {
 
   // Attempt to submit the notification by clicking on the send all
   // button
-  let buttons = notification.querySelectorAll(".notification-button");
+  let buttons = notification.buttonContainer.querySelectorAll(
+    ".notification-button"
+  );
   // ...which should be the second button.
   let sendAll = buttons[1];
 
@@ -495,7 +501,7 @@ add_task(async function test_can_ignore() {
   Assert.ok(notification, "There should be a notification");
 
   // Dismiss the notification by clicking on the "X" button.
-  notification.querySelector(".messageCloseButton").click();
+  notification.closeButton.click();
   // We'll not wait for the notification to finish its transition -
   // we'll just remove it right away.
   gNotificationBox.removeNotification(notification, true);
@@ -566,7 +572,7 @@ add_task(async function test_shutdown_while_not_showing() {
   Assert.ok(notification, "There should be a notification");
 
   // Dismiss the notification by clicking on the "X" button.
-  notification.querySelector(".messageCloseButton").click();
+  notification.closeButton.click();
   // We'll not wait for the notification to finish its transition -
   // we'll just remove it right away.
   gNotificationBox.removeNotification(notification, true);
