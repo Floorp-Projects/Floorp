@@ -123,7 +123,18 @@ add_task(async () => {
       // 3. Content area (#tabbrowser-tabpanels)
       // 4. Some fullscreen pointer grabber (#fullscreen-and-pointerlock-wrapper)
       // 5. Accessibility announcements dialog (#a11y-announcement)
-      is(rootChildCount(), 5, "Root with no popups has 5 children");
+      // 6. Tab notification deck (#tab-notification-deck) (proton only)
+      let baseRootChildCount = Services.prefs.getBoolPref(
+        "browser.proton.infobars.enabled",
+        false
+      )
+        ? 6
+        : 5;
+      is(
+        rootChildCount(),
+        baseRootChildCount,
+        "Root with no popups has 6 children"
+      );
 
       // Open a context menu
       const menu = document.getElementById("contentAreaContextMenu");
@@ -132,8 +143,8 @@ add_task(async () => {
       });
       await waitForMacEvent("AXMenuOpened");
 
-      // Now root has 6 children
-      is(rootChildCount(), 6, "Root has 6 children");
+      // Now root has 1 more child
+      is(rootChildCount(), baseRootChildCount + 1, "Root has 1 more child");
 
       // Close context menu
       let closed = waitForMacEvent("AXMenuClosed", "contentAreaContextMenu");
@@ -141,23 +152,23 @@ add_task(async () => {
       await BrowserTestUtils.waitForPopupEvent(menu, "hidden");
       await closed;
 
-      // We're back to 5
-      is(rootChildCount(), 5, "Root has 5 children");
+      // We're back to base child count
+      is(rootChildCount(), baseRootChildCount, "Root has original child count");
 
       // Open site identity popup
       document.getElementById("identity-icon-box").click();
       const identityPopup = document.getElementById("identity-popup");
       await BrowserTestUtils.waitForPopupEvent(identityPopup, "shown");
 
-      // Now root has 6 children
-      is(rootChildCount(), 6, "Root has 6 children");
+      // Now root has another child
+      is(rootChildCount(), baseRootChildCount + 1, "Root has another child");
 
       // Close popup
       EventUtils.synthesizeKey("KEY_Escape");
       await BrowserTestUtils.waitForPopupEvent(identityPopup, "hidden");
 
-      // We're back to 5
-      is(rootChildCount(), 5, "Root has 5 children");
+      // We're back to the base child count
+      is(rootChildCount(), baseRootChildCount, "Root has the base child count");
     }
   );
 });
