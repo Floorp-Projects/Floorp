@@ -315,8 +315,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
        * If id is a string that's not an identifier, or if it's a
        * negative integer, then it must be quoted.
        */
-      if (JSID_IS_ATOM(id) ? !IsIdentifier(JSID_TO_ATOM(id))
-                           : JSID_TO_INT(id) < 0) {
+      if (id.isAtom() ? !IsIdentifier(JSID_TO_ATOM(id)) : JSID_TO_INT(id) < 0) {
         UniqueChars quotedId = QuoteString(cx, idstr, '\'');
         if (!quotedId) {
           return false;
@@ -883,7 +882,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
       return true;
     }
     // __proto__ is not supported by CanAddNewPropertyExcludingProtoFast.
-    if (MOZ_UNLIKELY(JSID_IS_ATOM(id, cx->names().proto))) {
+    if (MOZ_UNLIKELY(id.isAtom(cx->names().proto))) {
       return true;
     }
     if (MOZ_UNLIKELY(!propShape.isDataProperty())) {
@@ -1856,7 +1855,7 @@ bool js::IdToStringOrSymbol(JSContext* cx, HandleId id,
       return false;
     }
     result.setString(str);
-  } else if (JSID_IS_ATOM(id)) {
+  } else if (id.isAtom()) {
     result.setString(JSID_TO_STRING(id));
   } else {
     result.setSymbol(JSID_TO_SYMBOL(id));
