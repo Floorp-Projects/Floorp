@@ -80,7 +80,6 @@ class InputEventStatistics {
   }
 
   TimeStamp GetInputHandlingStartTime(uint32_t aInputCount);
-  TimeDuration GetMaxInputHandlingDuration() const;
 
   void SetEnable(bool aEnable) { mEnable = aEnable; }
 };

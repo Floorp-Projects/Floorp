@@ -7,7 +7,6 @@
 #ifndef mozilla_InputTaskManager_h
 #define mozilla_InputTaskManager_h
 
-#include "nsXULAppAPI.h"
 #include "TaskController.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -49,8 +48,7 @@ class InputTaskManager : public TaskManager {
 
   bool IsSuspended(const MutexAutoLock& aProofOfLock) override {
     MOZ_ASSERT(NS_IsMainThread());
-    return mInputQueueState == STATE_DISABLED ||
-           mInputQueueState == STATE_SUSPEND || mSuspensionLevel > 0;
+    return mSuspensionLevel > 0;
   }
 
   bool IsSuspended() {
@@ -81,62 +79,8 @@ class InputTaskManager : public TaskManager {
                InputEventQueueState::STATE_DISABLED;
   }
 
-  void NotifyVsync() {
-    MOZ_ASSERT(StaticPrefs::dom_input_events_strict_input_vsync_alignment());
-    mInputPriorityController.DidVsync();
-  }
-
  private:
   InputTaskManager() : mInputQueueState(STATE_DISABLED) {}
-
-  class InputPriorityController {
-   public:
-    InputPriorityController();
-    // Determines whether we should use the highest input priority for input
-    // tasks
-    bool ShouldUseHighestPriority(InputTaskManager*);
-
-    void DidVsync();
-
-    // Gets called when a input task is finished to run; If the current
-    // input vsync state is `HasPendingVsync`, determines whether we
-    // should continue running input tasks or leave the `HasPendingVsync` state
-    // based on
-    //    1. Whether we still have time to process input tasks
-    //    2. Whether we have processed the max number of tasks that
-    //    we should process.
-    void DidRunTask();
-
-   private:
-    // Used to represents the relationship between Input and Vsync.
-    //
-    // HasPendingVsync: There are pending vsync tasks and we are using
-    // InputHighest priority for inputs.
-    // NoPendingVsync: No pending vsync tasks and no need to use InputHighest
-    // priority.
-    // RunVsync: Finished running input tasks and the vsync task
-    // should be run.
-    enum class InputVsyncState {
-      HasPendingVsync,
-      NoPendingVsync,
-      RunVsync,
-    };
-
-    void EnterPendingVsyncState(uint32_t aNumPendingTasks);
-    void LeavePendingVsyncState(bool aRunVsync);
-
-    // Stores the number of pending input tasks when we enter the
-    // InputVsyncState::HasPendingVsync state.
-    uint32_t mMaxInputTasksToRun = 0;
-
-    bool mIsInitialized;
-    InputVsyncState mInputVsyncState;
-
-    TimeStamp mRunInputStartTime;
-    TimeDuration mMaxInputHandlingDuration;
-  };
-
-  int32_t GetPriorityModifierForEventLoopTurnForStrictVsyncAlignment();
 
   TimeStamp mInputHandlingStartTime;
   Atomic<InputEventQueueState> mInputQueueState;
@@ -146,8 +90,6 @@ class InputTaskManager : public TaskManager {
 
   // Number of BCGs have asked InputTaskManager to suspend input events
   uint32_t mSuspensionLevel = 0;
-
-  InputPriorityController mInputPriorityController;
 };
 
 }  // namespace mozilla
