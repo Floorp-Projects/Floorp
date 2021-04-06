@@ -613,7 +613,10 @@
           link.href = filepath;
           this.shadowRoot.append(link);
         }
-        document.l10n.connectRoot(this.shadowRoot);
+        if (!this._rootConnected) {
+          this._rootConnected = true;
+          document.l10n.connectRoot(this.shadowRoot);
+        }
       }
 
       _insertNotificationFtl() {
