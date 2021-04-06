@@ -5,13 +5,7 @@
 "use strict";
 
 let gProvider;
-const {
-  STATE_BLOCKED,
-  STATE_OUTDATED,
-  STATE_SOFTBLOCKED,
-  STATE_VULNERABLE_NO_UPDATE,
-  STATE_VULNERABLE_UPDATE_AVAILABLE,
-} = Ci.nsIBlocklistService;
+const { STATE_BLOCKED, STATE_SOFTBLOCKED } = Ci.nsIBlocklistService;
 
 const brandBundle = Services.strings.createBundle(
   "chrome://branding/locale/brand.properties"
@@ -276,63 +270,6 @@ add_task(async function testSoftBlocked() {
     linkUrl,
     text: "Soft Blocked is known to cause security or stability issues.",
     type: "warning",
-  });
-});
-
-add_task(async function testOutdated() {
-  let id = "outdated@mochi.test";
-  let linkUrl = "https://example.com/addon-blocked";
-  gProvider.createAddons([
-    {
-      blocklistState: STATE_OUTDATED,
-      blocklistURL: linkUrl,
-      id,
-      name: "Outdated",
-    },
-  ]);
-  await checkMessageState(id, "extension", {
-    linkText: "Update Now",
-    linkUrl,
-    text: "An important update is available for Outdated.",
-    type: "warning",
-  });
-});
-
-add_task(async function testVulnerableUpdate() {
-  let id = "vulnerable-update@mochi.test";
-  let linkUrl = "https://example.com/addon-blocked";
-  gProvider.createAddons([
-    {
-      blocklistState: STATE_VULNERABLE_UPDATE_AVAILABLE,
-      blocklistURL: linkUrl,
-      id,
-      name: "Vulnerable Update",
-    },
-  ]);
-  await checkMessageState(id, "extension", {
-    linkText: "Update Now",
-    linkUrl,
-    text: "Vulnerable Update is known to be vulnerable and should be updated.",
-    type: "error",
-  });
-});
-
-add_task(async function testVulnerableNoUpdate() {
-  let id = "vulnerable-no-update@mochi.test";
-  let linkUrl = "https://example.com/addon-blocked";
-  gProvider.createAddons([
-    {
-      blocklistState: STATE_VULNERABLE_NO_UPDATE,
-      blocklistURL: linkUrl,
-      id,
-      name: "Vulnerable No Update",
-    },
-  ]);
-  await checkMessageState(id, "extension", {
-    linkText: "More Information",
-    linkUrl,
-    text: "Vulnerable No Update is known to be vulnerable. Use with caution.",
-    type: "error",
   });
 });
 

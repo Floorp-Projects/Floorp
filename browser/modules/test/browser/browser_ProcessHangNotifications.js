@@ -37,9 +37,8 @@ function popPrefs() {
 const TEST_ACTION_UNKNOWN = 0;
 const TEST_ACTION_CANCELLED = 1;
 const TEST_ACTION_TERMSCRIPT = 2;
-const TEST_ACTION_TERMPLUGIN = 3;
+const TEST_ACTION_TERMGLOBAL = 3;
 const SLOW_SCRIPT = 1;
-const PLUGIN_HANG = 2;
 const ADDON_HANG = 3;
 const ADDON_ID = "fake-addon";
 
@@ -48,7 +47,7 @@ const ADDON_ID = "fake-addon";
  * to trigger notifications.
  *
  * @param hangType
- *        One of SLOW_SCRIPT, PLUGIN_HANG, ADDON_HANG.
+ *        One of SLOW_SCRIPT, ADDON_HANG.
  * @param browser (optional)
  *        The <xul:browser> that this hang should be associated with.
  *        If not supplied, the hang will be associated with every browser,
@@ -77,7 +76,6 @@ let TestHangReport = function(
 
 TestHangReport.prototype = {
   SLOW_SCRIPT,
-  PLUGIN_HANG,
 
   get addonId() {
     return this._addonId;
@@ -95,10 +93,6 @@ TestHangReport.prototype = {
 
   terminateScript() {
     this._resolver(TEST_ACTION_TERMSCRIPT);
-  },
-
-  terminatePlugin() {
-    this._resolver(TEST_ACTION_TERMPLUGIN);
   },
 
   isReportForBrowserOrChildren(aFrameLoader) {
@@ -245,33 +239,6 @@ add_task(async function hangGoesAwayTest() {
 });
 
 /**
- * Tests if hang reports receive a terminate plugin callback when the user selects
- * stop in response to a plugin hang.
- */
-add_task(async function terminatePluginTest() {
-  let hangReport = new TestHangReport(PLUGIN_HANG);
-  let promise = promiseNotificationShown(window, "process-hang");
-  Services.obs.notifyObservers(hangReport, "process-hang-report");
-  let notification = await promise;
-
-  let buttons = notification.currentNotification.buttonContainer.getElementsByTagName(
-    "button"
-  );
-  // Plugin hangs only ever show 1 button in the notification - even in
-  // DevEdition.
-  is(buttons.length, 1, "proper number of buttons");
-
-  // Click the "Stop" button, we should get a terminate script callback
-  buttons[0].click();
-  let action = await hangReport.promise;
-  is(
-    action,
-    TEST_ACTION_TERMPLUGIN,
-    "Expected the 'Stop' button to terminate the plug-in"
-  );
-});
-
-/**
  * Tests that if we're shutting down, any pre-existing hang reports will
  * be terminated appropriately.
  */
@@ -284,16 +251,15 @@ add_task(async function terminateAtShutdown() {
     "There should be a paused report for the selected browser."
   );
 
-  let pluginHang = new TestHangReport(PLUGIN_HANG);
   let scriptHang = new TestHangReport(SLOW_SCRIPT);
   let addonHang = new TestHangReport(ADDON_HANG);
 
-  [pluginHang, scriptHang, addonHang].forEach(hangReport => {
+  [scriptHang, addonHang].forEach(hangReport => {
     Services.obs.notifyObservers(hangReport, "process-hang-report");
   });
 
   // Simulate the browser being told to shutdown. This should cause
-  // hangs to terminate scripts / plugins.
+  // hangs to terminate scripts.
   ProcessHangMonitor.onQuitApplicationGranted();
 
   // In case this test happens to throw before it can finish, make
@@ -303,7 +269,6 @@ add_task(async function terminateAtShutdown() {
   });
 
   let pausedAction = await pausedHang.promise;
-  let pluginAction = await pluginHang.promise;
   let scriptAction = await scriptHang.promise;
   let addonAction = await addonHang.promise;
 
@@ -311,11 +276,6 @@ add_task(async function terminateAtShutdown() {
     pausedAction,
     TEST_ACTION_TERMSCRIPT,
     "On shutdown, should have terminated script for paused script hang."
-  );
-  is(
-    pluginAction,
-    TEST_ACTION_TERMPLUGIN,
-    "On shutdown, should have terminated plugin for plugin hang."
   );
   is(
     scriptAction,
@@ -331,23 +291,16 @@ add_task(async function terminateAtShutdown() {
   // ProcessHangMonitor should now be in the "shutting down" state,
   // meaning that any further hangs should be handled immediately
   // without user interaction.
-  let pluginHang2 = new TestHangReport(PLUGIN_HANG);
   let scriptHang2 = new TestHangReport(SLOW_SCRIPT);
   let addonHang2 = new TestHangReport(ADDON_HANG);
 
-  [pluginHang2, scriptHang2, addonHang2].forEach(hangReport => {
+  [scriptHang2, addonHang2].forEach(hangReport => {
     Services.obs.notifyObservers(hangReport, "process-hang-report");
   });
 
-  let pluginAction2 = await pluginHang.promise;
   let scriptAction2 = await scriptHang.promise;
   let addonAction2 = await addonHang.promise;
 
-  is(
-    pluginAction2,
-    TEST_ACTION_TERMPLUGIN,
-    "On shutdown, should have terminated plugin for plugin hang."
-  );
   is(
     scriptAction2,
     TEST_ACTION_TERMSCRIPT,
@@ -381,11 +334,10 @@ add_task(async function terminateNoWindows() {
     "There should be a paused report for the selected browser."
   );
 
-  let pluginHang = new TestHangReport(PLUGIN_HANG);
   let scriptHang = new TestHangReport(SLOW_SCRIPT);
   let addonHang = new TestHangReport(ADDON_HANG);
 
-  [pluginHang, scriptHang, addonHang].forEach(hangReport => {
+  [scriptHang, addonHang].forEach(hangReport => {
     Services.obs.notifyObservers(hangReport, "process-hang-report");
   });
 
@@ -405,7 +357,6 @@ add_task(async function terminateNoWindows() {
   await BrowserTestUtils.closeWindow(testWin);
 
   let pausedAction = await pausedHang.promise;
-  let pluginAction = await pluginHang.promise;
   let scriptAction = await scriptHang.promise;
   let addonAction = await addonHang.promise;
 
@@ -413,11 +364,6 @@ add_task(async function terminateNoWindows() {
     pausedAction,
     TEST_ACTION_TERMSCRIPT,
     "With no open windows, should have terminated script for paused script hang."
-  );
-  is(
-    pluginAction,
-    TEST_ACTION_TERMPLUGIN,
-    "With no open windows, should have terminated plugin for plugin hang."
   );
   is(
     scriptAction,
@@ -433,23 +379,16 @@ add_task(async function terminateNoWindows() {
   // ProcessHangMonitor should notice we're in the "no windows" state,
   // so any further hangs should be handled immediately without user
   // interaction.
-  let pluginHang2 = new TestHangReport(PLUGIN_HANG);
   let scriptHang2 = new TestHangReport(SLOW_SCRIPT);
   let addonHang2 = new TestHangReport(ADDON_HANG);
 
-  [pluginHang2, scriptHang2, addonHang2].forEach(hangReport => {
+  [scriptHang2, addonHang2].forEach(hangReport => {
     Services.obs.notifyObservers(hangReport, "process-hang-report");
   });
 
-  let pluginAction2 = await pluginHang.promise;
   let scriptAction2 = await scriptHang.promise;
   let addonAction2 = await addonHang.promise;
 
-  is(
-    pluginAction2,
-    TEST_ACTION_TERMPLUGIN,
-    "With no open windows, should have terminated plugin for plugin hang."
-  );
   is(
     scriptAction2,
     TEST_ACTION_TERMSCRIPT,
@@ -483,18 +422,16 @@ add_task(async function terminateClosedWindow() {
     "There should be a paused report for the selected browser."
   );
 
-  let pluginHang = new TestHangReport(PLUGIN_HANG, testBrowser);
   let scriptHang = new TestHangReport(SLOW_SCRIPT, testBrowser);
   let addonHang = new TestHangReport(ADDON_HANG, testBrowser);
 
-  [pluginHang, scriptHang, addonHang].forEach(hangReport => {
+  [scriptHang, addonHang].forEach(hangReport => {
     Services.obs.notifyObservers(hangReport, "process-hang-report");
   });
 
   await BrowserTestUtils.closeWindow(testWin);
 
   let pausedAction = await pausedHang.promise;
-  let pluginAction = await pluginHang.promise;
   let scriptAction = await scriptHang.promise;
   let addonAction = await addonHang.promise;
 
@@ -502,11 +439,6 @@ add_task(async function terminateClosedWindow() {
     pausedAction,
     TEST_ACTION_TERMSCRIPT,
     "When closing window, should have terminated script for a paused script hang."
-  );
-  is(
-    pluginAction,
-    TEST_ACTION_TERMPLUGIN,
-    "When closing window, should have terminated hung plug-in."
   );
   is(
     scriptAction,

@@ -30,17 +30,12 @@ add_task(async function setup() {
 
   // This will initialize the remote settings clients for blocklists.
   BlocklistGlobal.ExtensionBlocklistRS.ensureInitialized();
-  BlocklistGlobal.PluginBlocklistRS.ensureInitialized();
   BlocklistGlobal.GfxBlocklistRS._ensureInitialized();
 
   gBlocklistClients = [
     {
       client: BlocklistGlobal.ExtensionBlocklistRS._client,
       testData: ["i808", "i720", "i539"],
-    },
-    {
-      client: BlocklistGlobal.PluginBlocklistRS._client,
-      testData: ["p1044", "p32", "p28"],
     },
     {
       client: BlocklistGlobal.GfxBlocklistRS._client,
@@ -59,7 +54,7 @@ add_task(
         client.collectionName !=
           BlocklistGlobal.ExtensionBlocklistRS._client.collectionName
       ) {
-        // On Android we don't ship the dumps of plugins and gfx.
+        // On Android we don't ship the dumps of gfx.
         continue;
       }
       Assert.ok(
