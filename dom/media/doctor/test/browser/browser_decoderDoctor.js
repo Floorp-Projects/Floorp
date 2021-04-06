@@ -94,14 +94,19 @@ async function test_decoder_doctor_notification(
         }
         ok(notification, "Got decoder-doctor-notification notification");
 
+        const protonInfobarsEnabled = Services.prefs.getBoolPref(
+          "browser.proton.infobars.enabled",
+          false
+        );
         is(
           notification.messageText.textContent,
-          notificationMessage,
+          notificationMessage +
+            (protonInfobarsEnabled && isLink && label ? " " : ""),
           "notification message should match expectation"
         );
 
-        let button = notification.querySelector("button");
-        let link = notification.querySelector(".text-link");
+        let button = notification.buttonContainer.querySelector("button");
+        let link = notification.messageText.querySelector(".text-link");
         if (!label) {
           ok(!button, "There should not be a button");
           ok(!link, "There should not be a link");
