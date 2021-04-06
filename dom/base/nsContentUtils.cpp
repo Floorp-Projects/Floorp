@@ -8,10 +8,6 @@
 
 #include "nsContentUtils.h"
 
-// nsNPAPIPluginInstance must be included before mozilla/dom/Document.h, which
-// is included in mozAutoDocUpdate.h.
-#include "nsNPAPIPluginInstance.h"
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -344,7 +340,6 @@
 #include "nsMappedAttributes.h"
 #include "nsMargin.h"
 #include "nsMimeTypes.h"
-#include "nsNPAPIPluginInstance.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -6804,32 +6799,7 @@ bool nsContentUtils::HaveEqualPrincipals(Document* aDoc1, Document* aDoc2) {
 /* static */
 bool nsContentUtils::HasPluginWithUncontrolledEventDispatch(
     nsIContent* aContent) {
-#ifdef XP_MACOSX
-  // We control dispatch to all mac plugins.
   return false;
-#else
-  if (!aContent || !aContent->IsInComposedDoc()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(aContent);
-  if (!olc) {
-    return false;
-  }
-
-  RefPtr<nsNPAPIPluginInstance> plugin = olc->GetPluginInstance();
-  if (!plugin) {
-    return false;
-  }
-
-  bool isWindowless = false;
-  nsresult res = plugin->IsWindowless(&isWindowless);
-  if (NS_FAILED(res)) {
-    return false;
-  }
-
-  return !isWindowless;
-#endif
 }
 
 /* static */
