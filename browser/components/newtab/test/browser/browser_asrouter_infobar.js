@@ -33,7 +33,7 @@ add_task(async function show_and_send_telemetry() {
   Assert.equal(dispatchStub.secondCall.args[0].data.event, "IMPRESSION");
   Assert.equal(dispatchStub.secondCall.args[0].data.message_id, message.id);
 
-  let primaryBtn = infobar.notification.querySelector(
+  let primaryBtn = infobar.notification.buttonContainer.querySelector(
     ".notification-button.primary"
   );
 
@@ -102,8 +102,7 @@ add_task(async function dismiss_telemetry() {
   // Remove any IMPRESSION pings
   dispatchStub.reset();
 
-  let closeBtn = infobar.notification.querySelector(".messageCloseButton");
-  closeBtn.click();
+  infobar.notification.closeButton.click();
 
   await BrowserTestUtils.waitForCondition(
     () => infobar.notification === null,
