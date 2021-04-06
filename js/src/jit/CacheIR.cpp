@@ -1656,7 +1656,7 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
 AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
                                                          ObjOperandId objId,
                                                          HandleId id) {
-  if (!JSID_IS_ATOM(id, cx_->names().length)) {
+  if (!id.isAtom(cx_->names().length)) {
     return AttachDecision::NoAction;
   }
 
@@ -1709,10 +1709,9 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  bool isLength = JSID_IS_ATOM(id, cx_->names().length);
-  bool isByteOffset = JSID_IS_ATOM(id, cx_->names().byteOffset);
-  if (!isLength && !isByteOffset &&
-      !JSID_IS_ATOM(id, cx_->names().byteLength)) {
+  bool isLength = id.isAtom(cx_->names().length);
+  bool isByteOffset = id.isAtom(cx_->names().byteOffset);
+  if (!isLength && !isByteOffset && !id.isAtom(cx_->names().byteLength)) {
     return AttachDecision::NoAction;
   }
 
@@ -1789,8 +1788,8 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  bool isByteOffset = JSID_IS_ATOM(id, cx_->names().byteOffset);
-  if (!isByteOffset && !JSID_IS_ATOM(id, cx_->names().byteLength)) {
+  bool isByteOffset = id.isAtom(cx_->names().byteOffset);
+  if (!isByteOffset && !id.isAtom(cx_->names().byteLength)) {
     return AttachDecision::NoAction;
   }
 
@@ -1859,7 +1858,7 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
     return AttachDecision::NoAction;
   }
 
-  if (!JSID_IS_ATOM(id, cx_->names().byteLength)) {
+  if (!id.isAtom(cx_->names().byteLength)) {
     return AttachDecision::NoAction;
   }
 
@@ -1950,8 +1949,8 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  bool isLength = JSID_IS_ATOM(id, cx_->names().length);
-  if (!isLength && !JSID_IS_ATOM(id, cx_->names().name)) {
+  bool isLength = id.isAtom(cx_->names().length);
+  if (!isLength && !id.isAtom(cx_->names().name)) {
     return AttachDecision::NoAction;
   }
 
@@ -2088,7 +2087,7 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
   JSProtoKey protoKey;
   switch (val_.type()) {
     case ValueType::String:
-      if (JSID_IS_ATOM(id, cx_->names().length)) {
+      if (id.isAtom(cx_->names().length)) {
         // String length is special-cased, see js::GetProperty.
         return AttachDecision::NoAction;
       }
@@ -2170,7 +2169,7 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
 
 AttachDecision GetPropIRGenerator::tryAttachStringLength(ValOperandId valId,
                                                          HandleId id) {
-  if (!val_.isString() || !JSID_IS_ATOM(id, cx_->names().length)) {
+  if (!val_.isString() || !id.isAtom(cx_->names().length)) {
     return AttachDecision::NoAction;
   }
 
@@ -2241,8 +2240,7 @@ AttachDecision GetPropIRGenerator::tryAttachMagicArgumentsName(
     return AttachDecision::NoAction;
   }
 
-  if (!JSID_IS_ATOM(id, cx_->names().length) &&
-      !JSID_IS_ATOM(id, cx_->names().callee)) {
+  if (!id.isAtom(cx_->names().length) && !id.isAtom(cx_->names().callee)) {
     return AttachDecision::NoAction;
   }
 
@@ -2250,10 +2248,10 @@ AttachDecision GetPropIRGenerator::tryAttachMagicArgumentsName(
   writer.guardMagicValue(valId, JS_OPTIMIZED_ARGUMENTS);
   writer.guardFrameHasNoArgumentsObject();
 
-  if (JSID_IS_ATOM(id, cx_->names().length)) {
+  if (id.isAtom(cx_->names().length)) {
     writer.loadFrameNumActualArgsResult();
   } else {
-    MOZ_ASSERT(JSID_IS_ATOM(id, cx_->names().callee));
+    MOZ_ASSERT(id.isAtom(cx_->names().callee));
     writer.loadFrameCalleeResult();
   }
 
@@ -2326,7 +2324,7 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectCallee(
     return AttachDecision::NoAction;
   }
 
-  if (!JSID_IS_ATOM(id, cx_->names().callee)) {
+  if (!id.isAtom(cx_->names().callee)) {
     return AttachDecision::NoAction;
   }
 
@@ -3870,7 +3868,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetArrayLength(HandleObject obj,
   // Don't attach an array length stub for ops like JSOp::InitElem.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
 
-  if (!obj->is<ArrayObject>() || !JSID_IS_ATOM(id, cx_->names().length) ||
+  if (!obj->is<ArrayObject>() || !id.isAtom(cx_->names().length) ||
       !obj->as<ArrayObject>().lengthIsWritable()) {
     return AttachDecision::NoAction;
   }
@@ -4419,7 +4417,7 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
   // Special-case JSFunction resolve hook to allow redefining the 'prototype'
   // property without triggering lazy expansion of property and object
   // allocation.
-  if (obj->is<JSFunction>() && JSID_IS_ATOM(id, cx_->names().prototype)) {
+  if (obj->is<JSFunction>() && id.isAtom(cx_->names().prototype)) {
     MOZ_ASSERT(ClassMayResolveId(cx_->names(), obj->getClass(), id, obj));
 
     // We're only interested in functions that have a builtin .prototype
@@ -4562,7 +4560,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
 
   // If this is the special function.prototype case, we need to guard the
   // function is a non-builtin constructor. See canAttachAddSlotStub.
-  if (nobj->is<JSFunction>() && JSID_IS_ATOM(id, cx_->names().prototype)) {
+  if (nobj->is<JSFunction>() && id.isAtom(cx_->names().prototype)) {
     MOZ_ASSERT(nobj->as<JSFunction>().isNonBuiltinConstructor());
     writer.guardFunctionIsNonBuiltinCtor(objId);
   }
