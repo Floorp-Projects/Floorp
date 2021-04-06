@@ -49,6 +49,7 @@ gfxUserFontEntry::gfxUserFontEntry(
     : gfxFontEntry("userfont"_ns),
       mUserFontLoadState(STATUS_NOT_LOADED),
       mFontDataLoadingState(NOT_LOADING),
+      mSeenLocalSource(false),
       mUnsupportedFormat(false),
       mFontDisplay(aFontDisplay),
       mLoader(nullptr),
@@ -419,17 +420,20 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync) {
     if (currSrc.mSourceType == gfxFontFaceSrc::eSourceType_Local) {
       // Don't look up local fonts if the font whitelist is being used.
       gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-      gfxFontEntry* fe =
-          pfl && pfl->IsFontFamilyWhitelistActive()
-              ? nullptr
-              : gfxPlatform::GetPlatform()->LookupLocalFont(
-                    currSrc.mLocalName, Weight(), Stretch(), SlantStyle());
-      nsTArray<gfxUserFontSet*> fontSets;
-      GetUserFontSets(fontSets);
-      for (gfxUserFontSet* fontSet : fontSets) {
-        // We need to note on each gfxUserFontSet that contains the user
-        // font entry that we used a local() rule.
-        fontSet->SetLocalRulesUsed();
+      gfxFontEntry* fe = nullptr;
+      if (!pfl->IsFontFamilyWhitelistActive()) {
+        fe = gfxPlatform::GetPlatform()->LookupLocalFont(
+            currSrc.mLocalName, Weight(), Stretch(), SlantStyle());
+        // Note that we've attempted a local lookup, even if it failed,
+        // as this means we are dependent on any updates to the font list.
+        mSeenLocalSource = true;
+        nsTArray<gfxUserFontSet*> fontSets;
+        GetUserFontSets(fontSets);
+        for (gfxUserFontSet* fontSet : fontSets) {
+          // We need to note on each gfxUserFontSet that contains the user
+          // font entry that we used a local() rule.
+          fontSet->SetLocalRulesUsed();
+        }
       }
       if (fe) {
         LOG(("userfonts (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n",
@@ -1067,11 +1071,15 @@ void gfxUserFontSet::ForgetLocalFaces() {
     for (const auto& f : fonts) {
       auto ufe = static_cast<gfxUserFontEntry*>(f.get());
       // If the user font entry has loaded an entry using src:local(),
-      // discard it as no longer valid, and reset the load state so that
-      // the load will be re-done based on the updated font list.
+      // discard it as no longer valid.
       if (ufe->GetPlatformFontEntry() &&
           ufe->GetPlatformFontEntry()->IsLocalUserFont()) {
         ufe->mPlatformFontEntry = nullptr;
+      }
+      // We need to re-evaluate the source list in the context of the new
+      // platform fontlist, whether or not the entry actually used a local()
+      // source last time, as one might be newly available.
+      if (ufe->mSeenLocalSource) {
         ufe->LoadCanceled();
       }
     }
