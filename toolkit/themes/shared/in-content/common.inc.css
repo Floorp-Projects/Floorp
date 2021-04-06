@@ -582,7 +582,7 @@ html|textarea {
   margin: 2px 4px;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):enabled:not(:focus):hover,
 html|textarea:enabled:not(:focus):hover,
 xul|search-textbox:not([disabled="true"], [focused]):hover {
@@ -1038,7 +1038,7 @@ xul|richlistbox {
   color: var(--in-content-text-color);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 html|select[size][multiple],
 xul|listheader,
 xul|richlistbox {
@@ -1136,7 +1136,7 @@ xul|treecols {
   padding: 0;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 xul|tree {
   border-radius: 2px;
 }
