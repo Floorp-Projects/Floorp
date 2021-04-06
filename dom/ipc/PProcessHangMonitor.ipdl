@@ -23,16 +23,9 @@ struct SlowScriptData
   double duration;
 };
 
-struct PluginHangData
-{
-  uint32_t pluginId;
-  ProcessId contentProcessId;
-};
-
 union HangData
 {
   SlowScriptData;
-  PluginHangData;
 };
 
 protocol PProcessHangMonitor
