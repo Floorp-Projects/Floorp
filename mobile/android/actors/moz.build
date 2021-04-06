@@ -17,5 +17,4 @@ FINAL_TARGET_FILES.actors += [
     "ProgressDelegateParent.jsm",
     "ScrollDelegateChild.jsm",
     "SelectionActionDelegateChild.jsm",
-    "WebBrowserChromeChild.jsm",
 ]

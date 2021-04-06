@@ -201,7 +201,6 @@ function OnRefTestLoad(win)
       // TODO Bug 1156817: reftests don't have most of GeckoView infra so we
       // can't register this actor
       ChromeUtils.unregisterWindowActor("LoadURIDelegate");
-      ChromeUtils.unregisterWindowActor("WebBrowserChrome");
     } else {
       document.getElementById("reftest-window").appendChild(g.browser);
     }
