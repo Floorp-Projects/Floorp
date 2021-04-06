@@ -20,6 +20,8 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
+DNSRequestHandler::DNSRequestHandler() : mFlags(0) {}
+
 //-----------------------------------------------------------------------------
 // DNSRequestHandler::nsISupports
 //-----------------------------------------------------------------------------

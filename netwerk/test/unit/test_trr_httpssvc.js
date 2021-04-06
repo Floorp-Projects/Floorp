@@ -6,7 +6,9 @@
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
+let prefs;
 let h2Port;
+let listen;
 
 function inChildProcess() {
   return (
@@ -18,9 +20,14 @@ function inChildProcess() {
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
+const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
+  Ci.nsIThreadManager
+);
+const mainThread = threadManager.currentThread;
+
+const defaultOriginAttributes = {};
 
 function setup() {
-  trr_test_setup();
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
@@ -28,28 +35,99 @@ function setup() {
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 
-  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
+  // Set to allow the cert presented by our H2 server
+  do_get_profile();
+  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+
+  prefs.setBoolPref("network.http.spdy.enabled", true);
+  prefs.setBoolPref("network.http.spdy.enabled.http2", true);
+  // the TRR server is on 127.0.0.1
+  prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+
+  // make all native resolve calls "secretly" resolve localhost instead
+  prefs.setBoolPref("network.dns.native-is-localhost", true);
+
+  // 0 - off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow
+  prefs.setIntPref("network.trr.mode", 2); // TRR first
+  prefs.setBoolPref("network.trr.wait-for-portal", false);
+  // don't confirm that TRR is working, just go!
+  prefs.setCharPref("network.trr.confirmationNS", "skip");
+
+  // So we can change the pref without clearing the cache to check a pushed
+  // record with a TRR path that fails.
+  Services.prefs.setBoolPref("network.trr.clear-cache-on-pref-change", false);
+
+  // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
+  // so add that cert to the trust list as a signing cert.  // the foo.example.com domain name.
+  const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 }
 
 if (!inChildProcess()) {
   setup();
   registerCleanupFunction(() => {
-    trr_clear_prefs();
+    prefs.clearUserPref("network.http.spdy.enabled");
+    prefs.clearUserPref("network.http.spdy.enabled.http2");
+    prefs.clearUserPref("network.dns.localDomains");
+    prefs.clearUserPref("network.dns.native-is-localhost");
+    prefs.clearUserPref("network.trr.mode");
+    prefs.clearUserPref("network.trr.uri");
+    prefs.clearUserPref("network.trr.credentials");
+    prefs.clearUserPref("network.trr.wait-for-portal");
+    prefs.clearUserPref("network.trr.allow-rfc1918");
+    prefs.clearUserPref("network.trr.useGET");
+    prefs.clearUserPref("network.trr.confirmationNS");
+    prefs.clearUserPref("network.trr.bootstrapAddress");
+    prefs.clearUserPref("network.trr.blacklist-duration");
+    prefs.clearUserPref("network.trr.request-timeout");
+    prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
   });
 }
+
+class DNSListener {
+  constructor() {
+    this.promise = new Promise(resolve => {
+      this.resolve = resolve;
+    });
+  }
+  onLookupComplete(inRequest, inRecord, inStatus) {
+    this.resolve([inRequest, inRecord, inStatus]);
+  }
+  // So we can await this as a promise.
+  then() {
+    return this.promise.then.apply(this.promise, arguments);
+  }
+}
+
+DNSListener.prototype.QueryInterface = ChromeUtils.generateQI([
+  "nsIDNSListener",
+]);
 
 add_task(async function testHTTPSSVC() {
   // use the h2 server as DOH provider
   if (!inChildProcess()) {
-    Services.prefs.setCharPref(
+    prefs.setCharPref(
       "network.trr.uri",
       "https://foo.example.com:" + h2Port + "/httpssvc"
     );
   }
 
-  let [, inRecord] = await new TRRDNSListener("test.httpssvc.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
-  });
+  let listenerEsni = new DNSListener();
+  let request = dns.asyncResolve(
+    "test.httpssvc.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listenerEsni,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listenerEsni;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
   Assert.equal(answer[0].priority, 1);
   Assert.equal(answer[0].name, "h3pool");
@@ -372,10 +450,19 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  let [, , inStatus2] = await new TRRDNSListener("multi.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
-    expectedSuccess: false,
-  });
+  let listener = new DNSListener();
+  let request = dns.asyncResolve(
+    "multi.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
   Assert.ok(
     !Components.isSuccessCode(inStatus2),
     `${inStatus2} should be an error code`
@@ -405,10 +492,19 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("order.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
-    expectedSuccess: false,
-  });
+  listener = new DNSListener();
+  request = dns.asyncResolve(
+    "order.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
   Assert.ok(
     !Components.isSuccessCode(inStatus2),
     `${inStatus2} should be an error code`
@@ -434,10 +530,19 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("duplicate.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
-    expectedSuccess: false,
-  });
+  listener = new DNSListener();
+  request = dns.asyncResolve(
+    "duplicate.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
   Assert.ok(
     !Components.isSuccessCode(inStatus2),
     `${inStatus2} should be an error code`
@@ -464,10 +569,19 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("mandatory.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
-    expectedSuccess: false,
-  });
+  listener = new DNSListener();
+  request = dns.asyncResolve(
+    "mandatory.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
   Assert.ok(!Components.isSuccessCode(inStatus2), `${inStatus2} should fail`);
 
   // mandatory svcparam
@@ -505,10 +619,19 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("mandatory2.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
-  });
+  listener = new DNSListener();
+  request = dns.asyncResolve(
+    "mandatory2.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
 
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
   Assert.ok(Components.isSuccessCode(inStatus2), `${inStatus2} should succeed`);
 
   // alias-mode with . targetName
@@ -528,11 +651,19 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  [, , inStatus2] = await new TRRDNSListener("no-alias.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
-    expectedSuccess: false,
-  });
+  listener = new DNSListener();
+  request = dns.asyncResolve(
+    "no-alias.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
 
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
   Assert.ok(!Components.isSuccessCode(inStatus2), `${inStatus2} should fail`);
 
   // service-mode with . targetName
@@ -552,10 +683,19 @@ add_task(async function test_aliasform() {
     ],
   });
 
-  let inRecord;
-  [, inRecord, inStatus2] = await new TRRDNSListener("service.com", {
-    type: dns.RESOLVE_TYPE_HTTPSSVC,
-  });
+  listener = new DNSListener();
+  request = dns.asyncResolve(
+    "service.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    null, // resolverInfo
+    listener,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  [inRequest, inRecord, inStatus2] = await listener;
+  Assert.equal(inRequest, request, "correct request was used");
   Assert.ok(Components.isSuccessCode(inStatus2), `${inStatus2} should work`);
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
   Assert.equal(answer[0].priority, 1);

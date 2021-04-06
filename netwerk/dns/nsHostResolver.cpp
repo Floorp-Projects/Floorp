@@ -197,7 +197,12 @@ size_t nsHostKey::SizeOfExcludingThis(
 NS_IMPL_ISUPPORTS0(nsHostRecord)
 
 nsHostRecord::nsHostRecord(const nsHostKey& key)
-    : nsHostKey(key), mTRRQuery("nsHostRecord.mTRRQuery") {}
+    : nsHostKey(key),
+      mEffectiveTRRMode(nsIRequest::TRR_DEFAULT_MODE),
+      mTRRQuery("nsHostRecord.mTRRQuery"),
+      mResolving(0),
+      negative(false),
+      mDoomed(false) {}
 
 void nsHostRecord::Invalidate() { mDoomed = true; }
 
@@ -285,7 +290,15 @@ static size_t SizeOfResolveHostCallbackListExcludingHead(
 
 NS_IMPL_ISUPPORTS_INHERITED(AddrHostRecord, nsHostRecord, AddrHostRecord)
 
-AddrHostRecord::AddrHostRecord(const nsHostKey& key) : nsHostRecord(key) {}
+AddrHostRecord::AddrHostRecord(const nsHostKey& key)
+    : nsHostRecord(key),
+      addr_info_lock("AddrHostRecord.addr_info_lock"),
+      addr_info_gencnt(0),
+      addr_info(nullptr),
+      addr(nullptr),
+      mResolverType(DNSResolverType::Native),
+      mTRRSuccess(0),
+      mNativeSuccess(0) {}
 
 AddrHostRecord::~AddrHostRecord() {
   mCallbacks.clear();
@@ -498,7 +511,10 @@ NS_IMPL_ISUPPORTS_INHERITED(TypeHostRecord, nsHostRecord, TypeHostRecord,
                             nsIDNSTXTRecord, nsIDNSHTTPSSVCRecord)
 
 TypeHostRecord::TypeHostRecord(const nsHostKey& key)
-    : nsHostRecord(key), DNSHTTPSSVCRecordBase(key.host) {}
+    : nsHostRecord(key),
+      DNSHTTPSSVCRecordBase(key.host),
+      mResultsLock("TypeHostRecord.mResultsLock"),
+      mAllRecordsExcluded(false) {}
 
 TypeHostRecord::~TypeHostRecord() { mCallbacks.clear(); }
 
@@ -676,7 +692,14 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
     : mMaxCacheEntries(maxCacheEntries),
       mDefaultCacheLifetime(defaultCacheEntryLifetime),
       mDefaultGracePeriod(defaultGracePeriod),
-      mIdleTaskCV(mLock, "nsHostResolver.mIdleTaskCV") {
+      mLock("nsHostResolver.mLock"),
+      mIdleTaskCV(mLock, "nsHostResolver.mIdleTaskCV"),
+      mEvictionQSize(0),
+      mShutdown(true),
+      mNumIdleTasks(0),
+      mActiveTaskCount(0),
+      mActiveAnyThreadCount(0),
+      mPendingCount(0) {
   mCreationTime = PR_Now();
 
   mLongIdleTimeout = TimeDuration::FromSeconds(LongIdleTimeoutSeconds);
@@ -803,13 +826,8 @@ void nsHostResolver::FlushCache(bool aTrrToo) {
         if (record->isInList()) {
           record->remove();
         }
-        LOG(("Removing (%s) Addr record from mRecordDB", record->host.get()));
         iter.Remove();
       }
-    } else if (aTrrToo) {
-      // remove by type records
-      LOG(("Removing (%s) type record from mRecordDB", record->host.get()));
-      iter.Remove();
     }
   }
 }
@@ -2139,29 +2157,26 @@ void nsHostResolver::CancelAsyncRequest(
   nsHostKey key(host, aTrrServer, aType, flags, af,
                 (aOriginAttributes.mPrivateBrowsingId > 0), originSuffix);
   RefPtr<nsHostRecord> rec = mRecordDB.Get(key);
-  if (!rec) {
-    return;
-  }
+  if (rec) {
+    nsHostRecord* recPtr = nullptr;
 
-  for (RefPtr<nsResolveHostCallback> c : rec->mCallbacks) {
-    if (c->EqualsAsyncListener(aListener)) {
-      c->remove();
-      c->OnResolveHostComplete(this, rec.get(), status);
-      break;
-    }
-  }
-
-  // If there are no more callbacks, remove the hash table entry
-  if (rec->mCallbacks.isEmpty()) {
-    mRecordDB.Remove(*static_cast<nsHostKey*>(rec.get()));
-    // If record is on a Queue, remove it
-    if (rec->isInList()) {
-      // if the queue this record is in is the eviction queue
-      // then we should also update mEvictionQSize
-      if (mEvictionQ.contains(rec)) {
-        mEvictionQSize--;
+    for (const RefPtr<nsResolveHostCallback>& c : rec->mCallbacks) {
+      if (c->EqualsAsyncListener(aListener)) {
+        RefPtr<nsResolveHostCallback> callback = c;
+        c->remove();
+        recPtr = rec;
+        callback->OnResolveHostComplete(this, recPtr, status);
+        break;
       }
-      rec->remove();
+    }
+
+    // If there are no more callbacks, remove the hash table entry
+    if (recPtr && recPtr->mCallbacks.isEmpty()) {
+      mRecordDB.Remove(*static_cast<nsHostKey*>(recPtr));
+      // If record is on a Queue, remove it and then deref it
+      if (recPtr->isInList()) {
+        recPtr->remove();
+      }
     }
   }
 }
