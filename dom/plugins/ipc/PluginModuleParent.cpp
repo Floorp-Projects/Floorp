@@ -58,7 +58,6 @@
 #ifdef MOZ_WIDGET_GTK
 #  include <glib.h>
 #elif XP_MACOSX
-#  include "PluginInterposeOSX.h"
 #  include "PluginUtilsOSX.h"
 #endif
 
@@ -2278,80 +2277,16 @@ void PluginModuleParent::ProcessRemoteNativeEventsInInterruptCall() {
 mozilla::ipc::IPCResult PluginModuleParent::RecvPluginShowWindow(
     const uint32_t& aWindowId, const bool& aModal, const int32_t& aX,
     const int32_t& aY, const double& aWidth, const double& aHeight) {
-  PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-#if defined(XP_MACOSX)
-  CGRect windowBound = ::CGRectMake(aX, aY, aWidth, aHeight);
-  mac_plugin_interposing::parent::OnPluginShowWindow(aWindowId, windowBound,
-                                                     aModal);
-  return IPC_OK();
-#else
   MOZ_ASSERT_UNREACHABLE(
       "PluginInstanceParent::RecvPluginShowWindow not implemented!");
   return IPC_FAIL_NO_REASON(this);
-#endif
 }
 
 mozilla::ipc::IPCResult PluginModuleParent::RecvPluginHideWindow(
     const uint32_t& aWindowId) {
-  PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-#if defined(XP_MACOSX)
-  mac_plugin_interposing::parent::OnPluginHideWindow(aWindowId, OtherPid());
-  return IPC_OK();
-#else
   MOZ_ASSERT_UNREACHABLE(
       "PluginInstanceParent::RecvPluginHideWindow not implemented!");
   return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-mozilla::ipc::IPCResult PluginModuleParent::RecvSetCursor(
-    const NSCursorInfo& aCursorInfo) {
-  PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-#if defined(XP_MACOSX)
-  mac_plugin_interposing::parent::OnSetCursor(aCursorInfo);
-  return IPC_OK();
-#else
-  MOZ_ASSERT_UNREACHABLE(
-      "PluginInstanceParent::RecvSetCursor not implemented!");
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-mozilla::ipc::IPCResult PluginModuleParent::RecvShowCursor(const bool& aShow) {
-  PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-#if defined(XP_MACOSX)
-  mac_plugin_interposing::parent::OnShowCursor(aShow);
-  return IPC_OK();
-#else
-  MOZ_ASSERT_UNREACHABLE(
-      "PluginInstanceParent::RecvShowCursor not implemented!");
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-mozilla::ipc::IPCResult PluginModuleParent::RecvPushCursor(
-    const NSCursorInfo& aCursorInfo) {
-  PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-#if defined(XP_MACOSX)
-  mac_plugin_interposing::parent::OnPushCursor(aCursorInfo);
-  return IPC_OK();
-#else
-  MOZ_ASSERT_UNREACHABLE(
-      "PluginInstanceParent::RecvPushCursor not implemented!");
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-mozilla::ipc::IPCResult PluginModuleParent::RecvPopCursor() {
-  PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-#if defined(XP_MACOSX)
-  mac_plugin_interposing::parent::OnPopCursor();
-  return IPC_OK();
-#else
-  MOZ_ASSERT_UNREACHABLE(
-      "PluginInstanceParent::RecvPopCursor not implemented!");
-  return IPC_FAIL_NO_REASON(this);
-#endif
 }
 
 mozilla::ipc::IPCResult PluginModuleParent::RecvNPN_SetException(
