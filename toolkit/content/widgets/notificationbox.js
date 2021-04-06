@@ -422,6 +422,7 @@
         ["messageImage", ".messageImage"],
         ["messageText", ".messageText"],
         ["spacer", "spacer"],
+        ["buttonContainer", ".messageDetails"],
       ]) {
         this[propertyName] = this.querySelector(selector);
       }
