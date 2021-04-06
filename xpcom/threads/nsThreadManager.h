@@ -67,6 +67,14 @@ class nsThreadManager : public nsIThreadManager {
   already_AddRefed<nsISerialEventTarget> CreateBackgroundTaskQueue(
       const char* aName);
 
+  // For each background TaskQueue cancel pending DelayedRunnables, and prohibit
+  // creating future DelayedRunnables for them, since we'll soon be shutting
+  // them down.
+  // Pending DelayedRunnables are canceled on their respective TaskQueue.
+  // We block main thread until they are all done, but spin the eventloop in the
+  // meantime.
+  void CancelBackgroundDelayedRunnables();
+
   ~nsThreadManager();
 
   void EnableMainThreadEventPrioritization();

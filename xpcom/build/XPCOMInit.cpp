@@ -621,6 +621,7 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
 
     mozilla::AppShutdown::AdvanceShutdownPhase(
         mozilla::ShutdownPhase::XPCOMShutdownThreads);
+    nsThreadManager::get().CancelBackgroundDelayedRunnables();
     gXPCOMThreadsShutDown = true;
     NS_ProcessPendingEvents(thread);
 

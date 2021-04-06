@@ -10,18 +10,30 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/SynchronizedEventQueue.h"  // for ThreadTargetSink
+#include "nsIDelayedRunnableObserver.h"
 #include "nsISerialEventTarget.h"
 
 namespace mozilla {
+class DelayedRunnable;
 
 // ThreadEventTarget handles the details of posting an event to a thread. It can
 // be used with any ThreadTargetSink implementation.
-class ThreadEventTarget final : public nsISerialEventTarget {
+class ThreadEventTarget final : public nsISerialEventTarget,
+                                public nsIDelayedRunnableObserver {
  public:
   ThreadEventTarget(ThreadTargetSink* aSink, bool aIsMainThread);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
+
+  // nsIDelayedRunnableObserver
+  void OnDelayedRunnableCreated(DelayedRunnable* aRunnable) override;
+  void OnDelayedRunnableScheduled(DelayedRunnable* aRunnable) override;
+  void OnDelayedRunnableRan(DelayedRunnable* aRunnable) override;
+
+  // Notification from, and on, the owner thread that it is shutting down.
+  // Cancels any scheduled DelayedRunnables.
+  void NotifyShutdown();
 
   // Disconnects the target so that it can no longer post events.
   void Disconnect(const MutexAutoLock& aProofOfLock) {
@@ -43,10 +55,14 @@ class ThreadEventTarget final : public nsISerialEventTarget {
   }
 
  private:
-  ~ThreadEventTarget() = default;
+  ~ThreadEventTarget();
 
   RefPtr<ThreadTargetSink> mSink;
   bool mIsMainThread;
+
+  // DelayedRunnables (from DelayedDispatch) that are managed by their
+  // respective timers, but have not yet run. Accessed only on this nsThread.
+  nsTArray<RefPtr<mozilla::DelayedRunnable>> mScheduledDelayedRunnables;
 };
 
 }  // namespace mozilla
