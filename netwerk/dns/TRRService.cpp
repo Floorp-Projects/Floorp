@@ -224,8 +224,12 @@ bool TRRService::GetParentalControlEnabledInternal() {
 }
 
 void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
+  LOG(("SetDetectedTrrURI(%s", nsPromiseFlatCString(aURI).get()));
   // If the user has set a custom URI then we don't want to override that.
+  // If the URI is set via doh-rollout.uri, mURIPrefHasUserValue will be false
+  // (see TRRServiceBase::OnTRRURIChange)
   if (mURIPrefHasUserValue) {
+    LOG(("Already has user value. Not setting URI"));
     return;
   }
 
@@ -286,8 +290,9 @@ void TRRService::GetPrefBranch(nsIPrefBranch** result) {
 bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
   bool clearCache = false;
   nsAutoCString newURI(aURI);
-  ProcessURITemplate(newURI);
+  LOG(("MaybeSetPrivateURI(%s)", newURI.get()));
 
+  ProcessURITemplate(newURI);
   {
     MutexAutoLock lock(mLock);
     if (mPrivateURI.Equals(newURI)) {
@@ -586,9 +591,16 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   LOG(("TRR::Observe() topic=%s\n", aTopic));
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    TRR* prevConf = mConfirmation.mTask;
+
     ReadPrefs(NS_ConvertUTF16toUTF8(aData).get());
     mConfirmation.RecordEvent("pref-change");
-    HandleConfirmationEvent(ConfirmationEvent::PrefChange);
+
+    // We should only trigger a new confirmation if reading the prefs didn't
+    // already trigger one.
+    if (prevConf == mConfirmation.mTask) {
+      HandleConfirmationEvent(ConfirmationEvent::PrefChange);
+    }
   } else if (!strcmp(aTopic, kOpenCaptivePortalLoginEvent)) {
     // We are in a captive portal
     LOG(("TRRservice in captive portal\n"));
