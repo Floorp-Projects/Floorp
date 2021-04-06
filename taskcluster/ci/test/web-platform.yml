@@ -423,6 +423,7 @@ web-platform-tests-print-reftest:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['trunk']
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
+                    linux.*64-asan/opt: ['trunk']
                     default: []
             default: built-projects
     mozharness:
