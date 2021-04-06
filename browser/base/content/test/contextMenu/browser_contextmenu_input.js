@@ -227,8 +227,6 @@ add_task(
           "context-savepage",
           true,
           ...(hasPocket ? ["context-pocket", true] : []),
-          "---",
-          null,
           "context-selectall",
           null,
           "---",
