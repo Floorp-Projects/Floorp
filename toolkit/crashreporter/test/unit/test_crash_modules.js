@@ -27,6 +27,18 @@ add_task(async function run_test() {
       const unloadedModules = extra.StackTraces.unloaded_modules;
       Assert.ok(!!unloadedModules, "The unloaded_modules field exists");
       Assert.notEqual(unloadedModules.find(e => e.filename == "wininet.DLL"));
+
+      // Check the module signature information
+      const sigInfo = JSON.parse(extra.ModuleSignatureInfo);
+      Assert.ok(
+        !!sigInfo["Microsoft Windows"],
+        "The module signature info contains valid data"
+      );
+      Assert.greater(
+        sigInfo["Microsoft Windows"].length,
+        0,
+        "Multiple signed binaries were found"
+      );
     },
     // process will exit with a zero exit status
     true
