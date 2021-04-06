@@ -909,6 +909,26 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                                           "text/css"_ns, &shouldLoad,
                                           nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+    // Asynchronously notify observers (e.g devtools) of CSP failure.
+    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+        "Loader::NotifyOnFailedCheckPolicy",
+        [targetURI = RefPtr<nsIURI>(aTargetURI),
+         requestingNode = RefPtr<nsINode>(aRequestingNode),
+         contentPolicyType]() {
+          nsCOMPtr<nsIChannel> channel;
+          NS_NewChannel(
+              getter_AddRefs(channel), targetURI, requestingNode,
+              nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT,
+              contentPolicyType);
+          NS_SetRequestBlockingReason(
+              channel, nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_GENERAL);
+          nsCOMPtr<nsIObserverService> obsService =
+              services::GetObserverService();
+          if (obsService) {
+            obsService->NotifyObservers(
+                channel, "http-on-failed-opening-request", nullptr);
+          }
+        }));
     return NS_ERROR_CONTENT_BLOCKED;
   }
   return NS_OK;

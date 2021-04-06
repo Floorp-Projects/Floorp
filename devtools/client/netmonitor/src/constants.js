@@ -552,7 +552,7 @@ const BLOCKED_REASON_MESSAGES = {
   4000: "CSP",
   4001: "CSP No Data Protocol",
   4002: "CSP Web Extension",
-  4003: "CSP ContentBlocked",
+  4003: "CSP Content Blocked",
   4004: "CSP Data Document",
   4005: "CSP Web Browser",
   4006: "CSP Preload",
