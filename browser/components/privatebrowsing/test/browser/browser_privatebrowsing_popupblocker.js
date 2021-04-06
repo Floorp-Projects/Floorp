@@ -55,7 +55,7 @@ add_task(async function test() {
           checkMenuItem(function() {
             aCallback();
           });
-          notification.querySelector("button").doCommand();
+          notification.buttonContainer.querySelector("button").click();
         });
       },
       { once: true }
