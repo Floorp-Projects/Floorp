@@ -33,17 +33,17 @@ nsLookAndFeel::~nsLookAndFeel() = default;
 
 static nscolor GetColorFromNSColor(NSColor* aColor) {
   NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-  return NS_RGB((unsigned int)([deviceColor redComponent] * 255.0),
-                (unsigned int)([deviceColor greenComponent] * 255.0),
-                (unsigned int)([deviceColor blueComponent] * 255.0));
+  return NS_RGBA((unsigned int)(deviceColor.redComponent * 255.0),
+                 (unsigned int)(deviceColor.greenComponent * 255.0),
+                 (unsigned int)(deviceColor.blueComponent * 255.0),
+                 (unsigned int)(deviceColor.alphaComponent * 255.0));
 }
 
-static nscolor GetColorFromNSColorWithAlpha(NSColor* aColor, float alpha) {
+static nscolor GetColorFromNSColorWithCustomAlpha(NSColor* aColor, float alpha) {
   NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-  return NS_RGBA((unsigned int)([deviceColor redComponent] * 255.0),
-                 (unsigned int)([deviceColor greenComponent] * 255.0),
-                 (unsigned int)([deviceColor blueComponent] * 255.0),
-                 (unsigned int)(alpha * 255.0));
+  return NS_RGBA((unsigned int)(deviceColor.redComponent * 255.0),
+                 (unsigned int)(deviceColor.greenComponent * 255.0),
+                 (unsigned int)(deviceColor.blueComponent * 255.0), (unsigned int)(alpha * 255.0));
 }
 
 // Turns an opaque selection color into a partially transparent selection color,
@@ -212,11 +212,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::Buttonshadow:
       color = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
-    case ColorID::Graytext: {
-      NSColor* disabledColor = NSColor.disabledControlTextColor;
-      color = GetColorFromNSColorWithAlpha(disabledColor, [disabledColor alphaComponent]);
+    case ColorID::Graytext:
+      color = GetColorFromNSColor(NSColor.disabledControlTextColor);
       break;
-    }
     case ColorID::Inactiveborder:
     case ColorID::Inactivecaption:
       color = GetColorFromNSColor(NSColor.controlBackgroundColor);
@@ -283,7 +281,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     }
     case ColorID::MozMacFocusring:
-      color = GetColorFromNSColorWithAlpha(NSColor.keyboardFocusIndicatorColor, 0.48);
+      color = GetColorFromNSColorWithCustomAlpha(NSColor.keyboardFocusIndicatorColor, 0.48);
       break;
     case ColorID::MozMacMenushadow:
       color = NS_RGB(0xA3, 0xA3, 0xA3);
