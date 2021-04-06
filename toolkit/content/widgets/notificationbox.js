@@ -64,13 +64,11 @@
       }
 
       var closedNotification = this._closedNotification;
-      var notifications = this.stack.getElementsByTagName(
-        this.protonInfobarsEnabled ? "notification-message" : "notification"
-      );
-      return Array.prototype.filter.call(
-        notifications,
-        n => n != closedNotification
-      );
+      var notifications = [
+        ...this.stack.getElementsByTagName("notification"),
+        ...this.stack.getElementsByTagName("notification-message"),
+      ];
+      return notifications.filter(n => n != closedNotification);
     }
 
     getNotificationWithValue(aValue) {
@@ -173,7 +171,7 @@
 
       // Create the Custom Element and connect it to the document immediately.
       var newitem;
-      if (this.protonInfobarsEnabled) {
+      if (this.protonInfobarsEnabled && !aNotificationIs) {
         if (!customElements.get("notification-message")) {
           // There's some weird timing stuff when this element is created at
           // script load time, we don't need it until now anyway so be lazy.
