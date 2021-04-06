@@ -104,6 +104,7 @@ const BUILTIN_THEME_PREVIEWS = new Map([
 ]);
 
 const PERMISSION_MASKS = {
+  "ask-to-activate": AddonManager.PERM_CAN_ASK_TO_ACTIVATE,
   enable: AddonManager.PERM_CAN_ENABLE,
   "always-activate": AddonManager.PERM_CAN_ENABLE,
   disable: AddonManager.PERM_CAN_DISABLE,
@@ -279,7 +280,13 @@ function isInState(install, state) {
 async function getAddonMessageInfo(addon) {
   const { name } = addon;
   const appName = brandBundle.GetStringFromName("brandShortName");
-  const { STATE_BLOCKED, STATE_SOFTBLOCKED } = Ci.nsIBlocklistService;
+  const {
+    STATE_BLOCKED,
+    STATE_OUTDATED,
+    STATE_SOFTBLOCKED,
+    STATE_VULNERABLE_UPDATE_AVAILABLE,
+    STATE_VULNERABLE_NO_UPDATE,
+  } = Ci.nsIBlocklistService;
 
   const formatString = (name, args) =>
     extBundle.formatStringFromName(
@@ -330,6 +337,27 @@ async function getAddonMessageInfo(addon) {
       linkUrl: await addon.getBlocklistURL(),
       message: formatString("softblocked", [name]),
       type: "warning",
+    };
+  } else if (addon.blocklistState === STATE_OUTDATED) {
+    return {
+      linkText: getString("outdated.link"),
+      linkUrl: await addon.getBlocklistURL(),
+      message: formatString("outdated", [name]),
+      type: "warning",
+    };
+  } else if (addon.blocklistState === STATE_VULNERABLE_UPDATE_AVAILABLE) {
+    return {
+      linkText: getString("vulnerableUpdatable.link"),
+      linkUrl: await addon.getBlocklistURL(),
+      message: formatString("vulnerableUpdatable", [name]),
+      type: "error",
+    };
+  } else if (addon.blocklistState === STATE_VULNERABLE_NO_UPDATE) {
+    return {
+      linkText: getString("vulnerableNoUpdate.link"),
+      linkUrl: await addon.getBlocklistURL(),
+      message: formatString("vulnerableNoUpdate", [name]),
+      type: "error",
     };
   } else if (addon.isGMPlugin && !addon.isInstalled && addon.isActive) {
     return {
@@ -2189,6 +2217,7 @@ class PluginOptions extends AddonOptions {
 
   setElementState(el, card, addon) {
     const userDisabledStates = {
+      "ask-to-activate": AddonManager.STATE_ASK_TO_ACTIVATE,
       "always-activate": false,
       "never-activate": true,
     };
@@ -2196,7 +2225,11 @@ class PluginOptions extends AddonOptions {
     if (action in userDisabledStates) {
       let userDisabled = userDisabledStates[action];
       el.checked = addon.userDisabled === userDisabled;
-      el.disabled = !(el.checked || hasPermission(addon, action));
+      let resultProp =
+        action == "always-activate" && addon.isFlashPlugin
+          ? "hidden"
+          : "disabled";
+      el[resultProp] = !(el.checked || hasPermission(addon, action));
     } else {
       super.setElementState(el, card, addon);
     }
@@ -3060,6 +3093,11 @@ class AddonCard extends HTMLElement {
             }
           } else {
             await addon.disable();
+          }
+          break;
+        case "ask-to-activate":
+          if (hasPermission(addon, "ask-to-activate")) {
+            addon.userDisabled = AddonManager.STATE_ASK_TO_ACTIVATE;
           }
           break;
         case "always-activate":

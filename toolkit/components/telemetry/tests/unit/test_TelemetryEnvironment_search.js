@@ -68,7 +68,10 @@ add_task(async function setup() {
   // search service needs it.
   Services.prefs.clearUserPref("services.settings.default_bucket");
 
-  // Setup a webserver to serve Addons, etc.
+  // Register a fake plugin host for consistent flash version data.
+  TelemetryEnvironmentTesting.registerFakePluginHost();
+
+  // Setup a webserver to serve Addons, Plugins, etc.
   gHttpServer = new HttpServer();
   gHttpServer.start(-1);
   let port = gHttpServer.identity.primaryPort;

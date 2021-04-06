@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+richlistitem {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-inline-start: 7px;
+  padding-inline-end: 7px;
+  border-bottom: 1px solid #C0C0C0;
+}
+
+.addon-name-version {
+  font-size: 110%;
+}
+
+.blockedLabel {
+  font-weight: bold;
+  font-style: italic;
+}

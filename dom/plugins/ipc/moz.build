@@ -1,0 +1,149 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    DIRS += ["interpose"]
+
+EXPORTS.mozilla += [
+    "PluginLibrary.h",
+]
+
+EXPORTS.mozilla.plugins += [
+    "AStream.h",
+    "BrowserStreamChild.h",
+    "BrowserStreamParent.h",
+    "ChildTimer.h",
+    "FunctionBrokerIPCUtils.h",
+    "IpdlTuple.h",
+    "NPEventAndroid.h",
+    "NPEventOSX.h",
+    "NPEventUnix.h",
+    "NPEventWindows.h",
+    "PluginBridge.h",
+    "PluginInstanceChild.h",
+    "PluginInstanceParent.h",
+    "PluginMessageUtils.h",
+    "PluginModuleChild.h",
+    "PluginModuleParent.h",
+    "PluginProcessChild.h",
+    "PluginProcessParent.h",
+    "PluginQuirks.h",
+    "PluginScriptableObjectChild.h",
+    "PluginScriptableObjectParent.h",
+    "PluginScriptableObjectUtils-inl.h",
+    "PluginScriptableObjectUtils.h",
+    "PluginUtilsOSX.h",
+    "StreamNotifyChild.h",
+    "StreamNotifyParent.h",
+]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    EXPORTS.mozilla.plugins += [
+        "PluginSurfaceParent.h",
+    ]
+    UNIFIED_SOURCES += [
+        "PluginHangUIParent.cpp",
+        "PluginSurfaceParent.cpp",
+    ]
+    SOURCES += [
+        "MiniShmParent.cpp",  # Issues with CreateEvent
+    ]
+    DEFINES["MOZ_HANGUI_PROCESS_NAME"] = '"plugin-hang-ui%s"' % CONFIG["BIN_SUFFIX"]
+    LOCAL_INCLUDES += [
+        "/widget",
+        "hangui",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    EXPORTS.mozilla.plugins += [
+        "PluginInterposeOSX.h",
+    ]
+
+UNIFIED_SOURCES += [
+    "BrowserStreamChild.cpp",
+    "BrowserStreamParent.cpp",
+    "ChildTimer.cpp",
+    "FunctionBroker.cpp",
+    "FunctionBrokerChild.cpp",
+    "FunctionBrokerIPCUtils.cpp",
+    "FunctionBrokerParent.cpp",
+    "FunctionHook.cpp",
+    "PluginBackgroundDestroyer.cpp",
+    "PluginInstanceParent.cpp",
+    "PluginMessageUtils.cpp",
+    "PluginModuleChild.cpp",
+    "PluginModuleParent.cpp",
+    "PluginProcessChild.cpp",
+    "PluginProcessParent.cpp",
+    "PluginQuirks.cpp",
+    "PluginScriptableObjectChild.cpp",
+    "PluginScriptableObjectParent.cpp",
+]
+
+SOURCES += [
+    "PluginInstanceChild.cpp",  # 'PluginThreadCallback' : ambiguous symbol
+]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    UNIFIED_SOURCES += [
+        "PluginInterposeOSX.mm",
+        "PluginUtilsOSX.mm",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    EXPORTS.mozilla.plugins += [
+        "PluginWidgetChild.h",
+        "PluginWidgetParent.h",
+    ]
+    UNIFIED_SOURCES += ["D3D11SurfaceHolder.cpp", "PluginUtilsWin.cpp"]
+    SOURCES += [
+        "PluginWidgetChild.cpp",
+        "PluginWidgetParent.cpp",
+    ]
+
+IPDL_SOURCES += [
+    "PBrowserStream.ipdl",
+    "PFunctionBroker.ipdl",
+    "PluginTypes.ipdlh",
+    "PPluginBackgroundDestroyer.ipdl",
+    "PPluginInstance.ipdl",
+    "PPluginModule.ipdl",
+    "PPluginScriptableObject.ipdl",
+    "PPluginSurface.ipdl",
+    "PStreamNotify.ipdl",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
+
+FINAL_LIBRARY = "xul"
+LOCAL_INCLUDES += [
+    "../base",
+    "/xpcom/base/",
+    "/xpcom/threads/",
+]
+
+if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
+    LOCAL_INCLUDES += [
+        "/security/sandbox/chromium",
+        "/security/sandbox/chromium-shim",
+        "/security/sandbox/win/src/sandboxpermissions",
+    ]
+
+DEFINES["FORCE_PR_LOG"] = True
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "gtk":
+    CXXFLAGS += CONFIG["TK_CFLAGS"]
+else:
+    # Force build against gtk+2 for struct offsets and such.
+    CXXFLAGS += CONFIG["MOZ_GTK2_CFLAGS"]
+
+CXXFLAGS += CONFIG["MOZ_CAIRO_CFLAGS"]
+
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-Wno-error=shadow"]

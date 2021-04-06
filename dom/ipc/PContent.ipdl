@@ -25,6 +25,7 @@ include protocol PNecko;
 include protocol PStreamFilter;
 include protocol PGMPContent;
 include protocol PGMPService;
+include protocol PPluginModule;
 include protocol PGMP;
 include protocol PPrinting;
 include protocol PChildToParentStream;
@@ -51,6 +52,7 @@ include WindowGlobalTypes;
 include IPCBlob;
 include IPCStream;
 include PTabContext;
+include PluginTypes;
 include ProtocolTypes;
 include PBackgroundSharedTypes;
 include PContentPermission;
@@ -779,6 +781,18 @@ child:
 
     async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
 
+    /**
+     * This call takes the set of plugins loaded in the chrome process, and
+     * sends them to the content process. However, in many cases this set will
+     * not have changed since the last SetPluginList message. To keep track of
+     * this, the chrome process increments an epoch number every time the set of
+     * plugins changes. The chrome process sends up the last epoch it observed.
+     * If the epoch last seen by the content process is the same, the content
+     * process ignores the update. Otherwise the content process updates its
+     * list and reloads its plugins.
+     **/
+    async SetPluginList(uint32_t pluginEpoch, PluginTag[] plugins, FakePluginTag[] fakePlugins);
+
     async ShareCodeCoverageMutex(CrossProcessMutexHandle handle);
     async FlushCodeCoverageCounters() returns (bool unused);
 
@@ -962,6 +976,23 @@ parent:
 
     async InitStreamFilter(uint64_t channelId, nsString addonId)
         returns (Endpoint<PStreamFilterChild> aEndpoint);
+
+    /**
+     * This call connects the content process to a plugin process. This call
+     * returns an endpoint for a new PluginModuleParent. The corresponding
+     * PluginModuleChild will be started up in the plugin process.
+     */
+    sync LoadPlugin(uint32_t aPluginId)
+        returns (nsresult aResult, uint32_t aRunID, Endpoint<PPluginModuleParent> aEndpoint);
+
+    /**
+     * This call is used by asynchronous plugin instantiation to notify the
+     * content parent that it is now safe to initiate the plugin bridge for
+     * the specified plugin id. The endpoint for the content process part of the
+     * bridge is returned.
+     */
+    sync ConnectPluginBridge(uint32_t aPluginId)
+        returns (nsresult rv, Endpoint<PPluginModuleParent> aEndpoint);
 
     async PRemoteSpellcheckEngine();
 
@@ -1531,6 +1562,8 @@ parent:
                              IHandlerControlHolder aHandlerControl);
 
     async AddMemoryReport(MemoryReport aReport);
+
+    async MaybeReloadPlugins();
 
     async BHRThreadHang(HangDetails aHangDetails);
 

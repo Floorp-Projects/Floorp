@@ -132,6 +132,7 @@ EXPORTS += [
     "nsBaseScreen.h",
     "nsBaseWidget.h",
     "nsIDeviceContextSpec.h",
+    "nsIPluginWidget.h",
     "nsIPrintDialogService.h",
     "nsIRollupListener.h",
     "nsIWidget.h",
@@ -271,6 +272,14 @@ if CONFIG["MOZ_X11"]:
         "GfxInfoX11.cpp",
         "nsShmImage.cpp",
         "WindowSurfaceX11SHM.cpp",
+    ]
+
+if toolkit == "windows":
+    EXPORTS += [
+        "PluginWidgetProxy.h",
+    ]
+    SOURCES += [
+        "PluginWidgetProxy.cpp",
     ]
 
 if toolkit in ("cocoa", "windows"):

@@ -1,0 +1,16 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIStreamListener.idl"
+
+[uuid(a93a0f0f-24f0-4206-a21b-56a43dcbdd88)]
+interface nsIPluginDocument : nsISupports
+{
+ /**
+  * Causes the plugin to print in full-page mode
+  */
+  void print();
+};

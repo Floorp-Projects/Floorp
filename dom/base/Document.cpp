@@ -2239,6 +2239,8 @@ Document::~Document() {
 
   mPendingTitleChangeEvent.Revoke();
 
+  mPlugins.Clear();
+
   MOZ_ASSERT(mDOMMediaQueryLists.isEmpty(),
              "must not have media query lists left");
 
@@ -13010,6 +13012,15 @@ mozilla::dom::ImageTracker* Document::ImageTracker() {
     mImageTracker = new mozilla::dom::ImageTracker;
   }
   return mImageTracker;
+}
+
+void Document::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) {
+  aPlugins.AppendElements(ToArray(mPlugins));
+  auto recurse = [&aPlugins](Document& aSubDoc) {
+    aSubDoc.GetPlugins(aPlugins);
+    return CallState::Continue;
+  };
+  EnumerateSubDocuments(recurse);
 }
 
 void Document::ScheduleSVGUseElementShadowTreeUpdate(

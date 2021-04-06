@@ -610,6 +610,10 @@ class ContentChild final : public PContentChild,
   nsresult AsyncOpenAnonymousTemporaryFile(
       const AnonymousTemporaryFileCallback& aCallback);
 
+  mozilla::ipc::IPCResult RecvSetPluginList(
+      const uint32_t& aPluginEpoch, nsTArray<PluginTag>&& aPluginTags,
+      nsTArray<FakePluginTag>&& aFakePluginTags);
+
   mozilla::ipc::IPCResult RecvSaveRecording(const FileDescriptor& aFile);
 
   mozilla::ipc::IPCResult RecvCrossProcessRedirect(

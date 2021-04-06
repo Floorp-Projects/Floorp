@@ -1,0 +1,20 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIInputStream.idl"
+#include "nspluginroot.idl"
+
+/**
+ * The nsIPluginInputStream interface ...
+ */
+[uuid(af160530-542a-11d2-8164-006008119d7a)]
+interface nsIPluginInputStream : nsIInputStream {
+  /**
+   *  Corresponds to NPStream's lastmodified field.)
+   */
+  void getLastModified(out unsigned long aResult);
+
+  void requestRead(out NPByteRange aRangeList);
+};

@@ -1,0 +1,277 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PPluginBackgroundDestroyer;
+include protocol PPluginModule;
+include protocol PPluginScriptableObject;
+include protocol PBrowserStream;
+include protocol PStreamNotify;
+include protocol PPluginSurface;
+
+include "gfxipc/ShadowLayerUtils.h";
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/LayersMessageUtils.h";
+
+using NPError from "npapi.h";
+using struct mozilla::plugins::NPRemoteWindow from "mozilla/plugins/PluginMessageUtils.h";
+using struct mozilla::plugins::NPRemoteEvent from "mozilla/plugins/PluginMessageUtils.h";
+using NPRect from "npapi.h";
+using NPNURLVariable from "npapi.h";
+using NPCoordinateSpace from "npapi.h";
+using NPNVariable from "npapi.h";
+using mozilla::plugins::NativeWindowHandle from "mozilla/plugins/PluginMessageUtils.h";
+using gfxSurfaceType from "gfxTypes.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::gfx::IntRect from "mozilla/gfx/2D.h";
+using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
+using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
+using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMessageUtils.h";
+using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/SurfaceDescriptor.h";
+using nsIntRect from "nsRect.h";
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+using struct DxgiAdapterDesc from "mozilla/D3DMessageUtils.h";
+using struct mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
+using class mozilla::NativeEventData from "ipc/nsGUIEventIPC.h";
+
+namespace mozilla {
+namespace plugins {
+
+struct IOSurfaceDescriptor {
+  uint32_t surfaceId;
+  double contentsScaleFactor;
+};
+
+union SurfaceDescriptor {
+  Shmem;
+  SurfaceDescriptorX11;
+  PPluginSurface; // used on Windows
+  IOSurfaceDescriptor; // used on OSX 10.5+
+  // Descriptor can be null here in case
+  // 1) of first Show call (prevSurface is null)
+  // 2) when child is going to destroy
+  //    and it just want to grab prevSurface
+  //     back without giving new surface
+  null_t;
+};
+
+intr protocol PPluginInstance
+{
+  manager PPluginModule;
+
+  manages PPluginBackgroundDestroyer;
+  manages PPluginScriptableObject;
+  manages PBrowserStream;
+  manages PStreamNotify;
+  manages PPluginSurface;
+
+child:
+  async __delete__();
+
+  // This is only used on Windows and, for windowed plugins, must be called
+  // before the first call to NPP_SetWindow.
+  intr CreateChildPluginWindow()
+    returns (NativeWindowHandle childPluginWindow);
+
+  // This is only used on Windows and, for windowless plugins.
+  async CreateChildPopupSurrogate(NativeWindowHandle netscapeWindow);
+
+  intr NPP_SetWindow(NPRemoteWindow window);
+
+  intr NPP_GetValue_NPPVpluginWantsAllNetworkStreams()
+    returns (bool value, NPError result);
+
+  intr NPP_GetValue_NPPVpluginScriptableNPObject()
+    returns (nullable PPluginScriptableObject value, NPError result);
+
+  intr NPP_SetValue_NPNVprivateModeBool(bool value) returns (NPError result);
+  intr NPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId()
+    returns (nsCString plug_id, NPError result);
+
+  intr NPP_SetValue_NPNVCSSZoomFactor(double value) returns (NPError result);
+
+  intr NPP_SetValue_NPNVmuteAudioBool(bool muted) returns (NPError result);
+
+  intr NPP_HandleEvent(NPRemoteEvent event)
+    returns (int16_t handled);
+  // special cases where we need to a shared memory buffer
+  intr NPP_HandleEvent_Shmem(NPRemoteEvent event, Shmem buffer)
+    returns (int16_t handled, Shmem rtnbuffer);
+  // special cases where we need an iosurface
+  intr NPP_HandleEvent_IOSurface(NPRemoteEvent event, uint32_t surfaceid)
+    returns (int16_t handled);
+  // special cases of HandleEvent to make mediating races simpler
+  intr Paint(NPRemoteEvent event)
+    returns (int16_t handled);
+  // this is only used on windows to forward WM_WINDOWPOSCHANGE
+  async WindowPosChanged(NPRemoteEvent event);
+  // used on OS X to tell the child the contents scale factor
+  // of its parent has changed
+  async ContentsScaleFactorChanged(double aContentsScaleFactor);
+
+  // ********************** Async plugins rendering
+  // see https://wiki.mozilla.org/Gecko:AsyncPluginPainting
+  // **********************
+
+  // Async version of SetWindow call
+  // @param surfaceType - gfxASurface::gfxSurfaceType
+  //        plugin child must create offscreen buffer
+  //        with type equals to surfaceType
+  async AsyncSetWindow(gfxSurfaceType surfaceType, NPRemoteWindow window);
+
+  // There is now an opaque background behind this instance (or the
+  // background was updated).  The changed area is |rect|.  The
+  // browser owns the background surface, and it's read-only from
+  // within the plugin process.  |background| is either null_t to
+  // refer to the existing background or a fresh descriptor.
+  async UpdateBackground(SurfaceDescriptor background, nsIntRect rect);
+
+  async NPP_DidComposite();
+
+  intr NPP_Destroy()
+    returns (NPError rv);
+
+parent:
+  intr NPN_GetValue_NPNVWindowNPObject()
+    returns (nullable PPluginScriptableObject value, NPError result);
+  intr NPN_GetValue_NPNVPluginElementNPObject()
+    returns (nullable PPluginScriptableObject value, NPError result);
+  intr NPN_GetValue_NPNVprivateModeBool()
+    returns (bool value, NPError result);
+  intr NPN_GetValue_NPNVnetscapeWindow()
+    returns (NativeWindowHandle value, NPError result);
+  intr NPN_GetValue_NPNVdocumentOrigin()
+    returns (nsCString value, NPError result);
+  intr NPN_GetValue_DrawingModelSupport(NPNVariable model)
+    returns (bool value);
+  intr NPN_GetValue_SupportsAsyncBitmapSurface()
+    returns (bool value);
+  intr NPN_GetValue_SupportsAsyncDXGISurface()
+    returns (bool value);
+  intr NPN_GetValue_PreferredDXGIAdapter()
+    returns (DxgiAdapterDesc desc);
+
+  intr NPN_SetValue_NPPVpluginWindow(bool windowed)
+    returns (NPError result);
+  intr NPN_SetValue_NPPVpluginTransparent(bool transparent)
+    returns (NPError result);
+  intr NPN_SetValue_NPPVpluginUsesDOMForCursor(bool useDOMForCursor)
+    returns (NPError result);
+  intr NPN_SetValue_NPPVpluginDrawingModel(int drawingModel)
+    returns (NPError result);
+  intr NPN_SetValue_NPPVpluginEventModel(int eventModel)
+    returns (NPError result);
+  intr NPN_SetValue_NPPVpluginIsPlayingAudio(bool isAudioPlaying)
+    returns (NPError result);
+
+  intr NPN_GetURL(nsCString url, nsCString target)
+    returns (NPError result);
+  intr NPN_PostURL(nsCString url, nsCString target, nsCString buffer, bool file)
+    returns (NPError result);
+
+  /**
+   * Covers both NPN_GetURLNotify and NPN_PostURLNotify.
+   * @TODO This would be more readable as an overloaded method,
+   *       but IPDL doesn't allow that for constructors.
+   */
+  intr PStreamNotify(nsCString url, nsCString target, bool post,
+                    nsCString buffer, bool file)
+    returns (NPError result);
+
+  async NPN_InvalidateRect(NPRect rect);
+
+  // Clear the current plugin image.
+  sync RevokeCurrentDirectSurface();
+
+  // Create a new DXGI shared surface with the given format and size. The
+  // returned handle, on success, can be opened as an ID3D10Texture2D or
+  // ID3D11Texture2D on a corresponding device.
+  sync InitDXGISurface(SurfaceFormat format, IntSize size)
+    returns (WindowsHandle handle, NPError result);
+
+  // Destroy a surface previously allocated with InitDXGISurface().
+  sync FinalizeDXGISurface(WindowsHandle handle);
+
+  // Set the current plugin image to the bitmap in the given shmem buffer. The
+  // format must be B8G8R8A8 or B8G8R8X8.
+  sync ShowDirectBitmap(Shmem buffer,
+                        SurfaceFormat format,
+                        uint32_t stride,
+                        IntSize size,
+                        IntRect dirty);
+
+  // Set the current plugin image to the DXGI surface in |handle|.
+  sync ShowDirectDXGISurface(WindowsHandle handle,
+                              IntRect dirty);
+
+  // Give |newSurface|, containing this instance's updated pixels, to
+  // the browser for compositing.  When this method returns, any surface
+  // previously passed to Show may be destroyed.
+  //
+  // @param rect - actually updated rectangle, comparing to prevSurface content
+  //               could be used for partial render of layer to topLevel context
+  // @param newSurface - remotable surface
+  // @param prevSurface - if the previous surface was shared-memory, returns
+  //                      the shmem for reuse
+  sync Show(NPRect updatedRect, SurfaceDescriptor newSurface)
+    returns (SurfaceDescriptor prevSurface);
+
+  async PPluginSurface(WindowsSharedMemoryHandle handle,
+                       IntSize size,
+                       bool transparent);
+
+  intr NPN_PushPopupsEnabledState(bool aState);
+
+  intr NPN_PopPopupsEnabledState();
+
+  intr NPN_GetValueForURL(NPNURLVariable variable, nsCString url)
+    returns (nsCString value, NPError result);
+
+  intr NPN_SetValueForURL(NPNURLVariable variable, nsCString url,
+                         nsCString value)
+    returns (NPError result);
+
+  intr NPN_ConvertPoint(double sourceX, bool ignoreDestX, double sourceY, bool ignoreDestY, NPCoordinateSpace sourceSpace,
+                       NPCoordinateSpace destSpace)
+    returns (double destX, double destY, bool result);
+
+  async RedrawPlugin();
+
+  // Sends a native window to be adopted by the native window that would be
+  // returned by NPN_GetValue_NPNVnetscapeWindow. Only used on Windows.
+  async SetNetscapeWindowAsParent(NativeWindowHandle childWindow);
+
+  sync GetCompositionString(uint32_t aType)
+                            returns (uint8_t[] aDist, int32_t aLength);
+  async RequestCommitOrCancel(bool aCommitted);
+
+both:
+  async PPluginScriptableObject();
+
+child:
+  /* NPP_NewStream */
+  async PBrowserStream(nsCString url,
+                       uint32_t length,
+                       uint32_t lastmodified,
+                       nullable PStreamNotify notifyData,
+                       nsCString headers);
+
+  // Implements the legacy (synchronous) version of NPP_NewStream for when
+  // async plugin init is preffed off.
+  intr NPP_NewStream(PBrowserStream actor, nsCString mimeType, bool seekable)
+    returns (NPError rv,
+             uint16_t stype);
+
+parent:
+  intr PluginFocusChange(bool gotFocus);
+
+child:
+  intr SetPluginFocus();
+  intr UpdateWindow();
+
+  async PPluginBackgroundDestroyer();
+};
+
+} // namespace plugins
+} // namespace mozilla

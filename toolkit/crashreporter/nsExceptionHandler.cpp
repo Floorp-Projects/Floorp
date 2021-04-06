@@ -3680,6 +3680,43 @@ static mach_port_t GetChildThread(ProcessHandle childPid,
 }
 #endif
 
+bool TakeMinidump(nsIFile** aResult, bool aMoveToPending) {
+  if (!GetEnabled()) return false;
+
+#if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+  DllBlocklist_Shutdown();
+#endif
+
+  AutoIOInterposerDisable disableIOInterposition;
+
+  xpstring dump_path;
+#ifndef XP_LINUX
+  dump_path = gExceptionHandler->dump_path();
+#else
+  dump_path = gExceptionHandler->minidump_descriptor().directory();
+#endif
+
+  // capture the dump
+  if (!google_breakpad::ExceptionHandler::WriteMinidump(
+          dump_path,
+#ifdef XP_MACOSX
+          true,
+#endif
+          PairedDumpCallback, static_cast<void*>(aResult)
+#ifdef XP_WIN
+                                  ,
+          GetMinidumpType()
+#endif
+              )) {
+    return false;
+  }
+
+  if (aMoveToPending) {
+    MoveToPending(*aResult, nullptr, nullptr);
+  }
+  return true;
+}
+
 bool CreateMinidumpsAndPair(ProcessHandle aTargetHandle,
                             ThreadId aTargetBlamedThread,
                             const nsACString& aIncomingPairName,

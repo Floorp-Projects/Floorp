@@ -559,6 +559,16 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const uintptr_t& aNewHandle);
 
   mozilla::ipc::IPCResult RecvWillChangeProcess();
+  /**
+   * Native widget remoting protocol for use with windowed plugins with e10s.
+   */
+  PPluginWidgetChild* AllocPPluginWidgetChild();
+
+  bool DeallocPPluginWidgetChild(PPluginWidgetChild* aActor);
+
+#ifdef XP_WIN
+  nsresult CreatePluginWidget(nsIWidget* aParent, nsIWidget** aOut);
+#endif
 
   PPaymentRequestChild* AllocPPaymentRequestChild();
 
