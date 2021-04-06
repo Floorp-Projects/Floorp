@@ -222,11 +222,6 @@ UNIFIED_SOURCES += [
     "VideoDocument.cpp",
 ]
 
-SOURCES += [
-    # Includes npapi.h.
-    "PluginDocument.cpp",
-]
-
 EXTRA_JS_MODULES += [
     "HTMLMenuBuilder.jsm",
 ]
