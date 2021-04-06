@@ -1982,6 +1982,63 @@ bool CacheIRCompiler::emitGuardDynamicSlotIsSpecificObject(
   return true;
 }
 
+bool CacheIRCompiler::emitGuardFixedSlotValue(ObjOperandId objId,
+                                              uint32_t offsetOffset,
+                                              uint32_t valOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchValueRegister scratchVal(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawInt32);
+  emitLoadStubField(offset, scratch);
+
+  StubFieldOffset val(valOffset, StubField::Type::Value);
+  emitLoadValueStubField(val, scratchVal);
+
+  BaseIndex slotVal(obj, scratch, TimesOne);
+  masm.branchTestValue(Assembler::NotEqual, slotVal, scratchVal,
+                       failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardDynamicSlotValue(ObjOperandId objId,
+                                                uint32_t offsetOffset,
+                                                uint32_t valOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchValueRegister scratchVal(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
+
+  StubFieldOffset offset(offsetOffset, StubField::Type::RawInt32);
+  emitLoadStubField(offset, scratch2);
+
+  StubFieldOffset val(valOffset, StubField::Type::Value);
+  emitLoadValueStubField(val, scratchVal);
+
+  BaseIndex slotVal(scratch1, scratch2, TimesOne);
+  masm.branchTestValue(Assembler::NotEqual, slotVal, scratchVal,
+                       failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardIsNativeObject(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
@@ -6779,6 +6836,19 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
       default:
         MOZ_CRASH("Unhandled stub field constant type");
     }
+  }
+}
+
+void CacheIRCompiler::emitLoadValueStubField(StubFieldOffset val,
+                                             ValueOperand dest) {
+  MOZ_ASSERT(val.getStubFieldType() == StubField::Type::Value);
+
+  if (stubFieldPolicy_ == StubFieldPolicy::Constant) {
+    MOZ_ASSERT(mode_ == Mode::Ion);
+    masm.moveValue(valueStubField(val.getOffset()), dest);
+  } else {
+    Address addr(ICStubReg, stubDataOffset_ + val.getOffset());
+    masm.loadValue(addr, dest);
   }
 }
 
