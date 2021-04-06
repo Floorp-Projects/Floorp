@@ -598,12 +598,12 @@
 
 - name: apz.overscroll.spring_stiffness
   type: AtomicFloat
-  value: 400
+  value: 200
   mirror: always
 
 - name: apz.overscroll.damping
   type: AtomicFloat
-  value: 1.2
+  value: 1.1
   mirror: always
 
 - name: apz.overscroll.max_velocity
