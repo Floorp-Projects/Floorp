@@ -41,12 +41,8 @@ EXPORTS.mozilla.plugins += [
 ]
 
 if CONFIG["OS_ARCH"] == "WINNT":
-    EXPORTS.mozilla.plugins += [
-        "PluginSurfaceParent.h",
-    ]
     UNIFIED_SOURCES += [
         "PluginHangUIParent.cpp",
-        "PluginSurfaceParent.cpp",
     ]
     SOURCES += [
         "MiniShmParent.cpp",  # Issues with CreateEvent
@@ -112,7 +108,6 @@ IPDL_SOURCES += [
     "PPluginInstance.ipdl",
     "PPluginModule.ipdl",
     "PPluginScriptableObject.ipdl",
-    "PPluginSurface.ipdl",
     "PStreamNotify.ipdl",
 ]
 

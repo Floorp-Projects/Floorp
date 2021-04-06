@@ -53,7 +53,6 @@
 #if defined(OS_WIN)
 #  include <windowsx.h>
 #  include "gfxWindowsPlatform.h"
-#  include "mozilla/plugins/PluginSurfaceParent.h"
 #  include "nsClassHashtable.h"
 #  include "nsHashKeys.h"
 #  include "nsIWidget.h"
@@ -973,13 +972,6 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvShow(
 #ifdef MOZ_X11
   else if (newSurface.type() == SurfaceDescriptor::TSurfaceDescriptorX11) {
     surface = newSurface.get_SurfaceDescriptorX11().OpenForeign();
-  }
-#endif
-#ifdef XP_WIN
-  else if (newSurface.type() == SurfaceDescriptor::TPPluginSurfaceParent) {
-    PluginSurfaceParent* s = static_cast<PluginSurfaceParent*>(
-        newSurface.get_PPluginSurfaceParent());
-    surface = s->Surface();
   }
 #endif
 
@@ -1911,27 +1903,6 @@ PluginScriptableObjectParent* PluginInstanceParent::GetActorForNPObject(
 
   actor->InitializeLocal(aObject);
   return actor;
-}
-
-PPluginSurfaceParent* PluginInstanceParent::AllocPPluginSurfaceParent(
-    const WindowsSharedMemoryHandle& handle, const mozilla::gfx::IntSize& size,
-    const bool& transparent) {
-#ifdef XP_WIN
-  return new PluginSurfaceParent(handle, size, transparent);
-#else
-  NS_ERROR("This shouldn't be called!");
-  return nullptr;
-#endif
-}
-
-bool PluginInstanceParent::DeallocPPluginSurfaceParent(
-    PPluginSurfaceParent* s) {
-#ifdef XP_WIN
-  delete s;
-  return true;
-#else
-  return false;
-#endif
 }
 
 mozilla::ipc::IPCResult PluginInstanceParent::AnswerNPN_PushPopupsEnabledState(
