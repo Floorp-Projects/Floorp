@@ -26,6 +26,7 @@
 #include "mozilla/dom/InProcessParent.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScopeExit.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsFocusManager.h"
