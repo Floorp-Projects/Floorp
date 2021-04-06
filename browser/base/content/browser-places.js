@@ -96,6 +96,9 @@ var StarUI = {
           let { selectedFolderGuid, didChangeFolder } = gEditItemOverlay;
           gEditItemOverlay.uninitPanel(true);
 
+          this._anchorElement.removeAttribute("open");
+          this._anchorElement = null;
+
           let removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
           this._removeBookmarksOnPopupHidden = false;
           let guidsForRemoval = this._itemGuids;
@@ -296,6 +299,9 @@ var StarUI = {
 
     this.beginBatch();
 
+    this._anchorElement = BookmarkingUI.anchor;
+    this._anchorElement.setAttribute("open", "true");
+
     let onPanelReady = fn => {
       let target = this.panel;
       if (target.parentNode) {
@@ -320,7 +326,7 @@ var StarUI = {
       isNewBookmark: this._isNewBookmark,
     });
 
-    this.panel.openPopup(BookmarkingUI.anchor, "bottomcenter topright");
+    this.panel.openPopup(this._anchorElement, "bottomcenter topright");
   },
 
   _createPanelIfNeeded() {
