@@ -3,22 +3,30 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+const { Ci, Cr } = require("chrome");
 
-/**
- * Given a platform error code numer, return the name of it as a string
- *
- * @param {Number} code The error code to translate.
- * @return {String} The error's name.
- */
-function getErrorCodeString(code) {
-  for (const name in ErrorCodes) {
-    if (ErrorCodes[name] == code) {
-      return name;
-    }
-  }
-  return "NS_UNKNOWN_ERROR_CODE-" + code;
-}
-exports.getErrorCodeString = getErrorCodeString;
+const {
+  wildcardToRegExp,
+} = require("devtools/server/actors/network-monitor/utils/wildcard-to-regexp");
+
+loader.lazyRequireGetter(
+  this,
+  "NetworkHelper",
+  "devtools/shared/webconsole/network-helper"
+);
+
+loader.lazyGetter(this, "tpFlagsMask", () => {
+  const Services = require("Services");
+  const trackingProtectionLevel2Enabled = Services.prefs
+    .getStringPref("urlclassifier.trackingTable")
+    .includes("content-track-digest256");
+
+  return trackingProtectionLevel2Enabled
+    ? ~Ci.nsIClassifiedChannel.CLASSIFIED_ANY_BASIC_TRACKING &
+        ~Ci.nsIClassifiedChannel.CLASSIFIED_ANY_STRICT_TRACKING
+    : ~Ci.nsIClassifiedChannel.CLASSIFIED_ANY_BASIC_TRACKING &
+        Ci.nsIClassifiedChannel.CLASSIFIED_ANY_STRICT_TRACKING;
+});
 
 // Copied from https://searchfox.org/mozilla-central/source/__GENERATED__/xpcom/base/ErrorList.h#297
 // Allows to stringify an error number
@@ -559,4 +567,267 @@ const ErrorCodes = {
   NS_ERROR_NOT_IN_TREE: 0x80780026,
   NS_OK_NO_NAME_CLAUSE_HANDLED: 0x780022,
   NS_ERROR_BLOCKED_BY_POLICY: 0x80780003,
+};
+
+/**
+ * Convert a nsIContentPolicy constant to a display string
+ */
+const LOAD_CAUSE_STRINGS = {
+  [Ci.nsIContentPolicy.TYPE_INVALID]: "invalid",
+  [Ci.nsIContentPolicy.TYPE_OTHER]: "other",
+  [Ci.nsIContentPolicy.TYPE_SCRIPT]: "script",
+  [Ci.nsIContentPolicy.TYPE_IMAGE]: "img",
+  [Ci.nsIContentPolicy.TYPE_STYLESHEET]: "stylesheet",
+  [Ci.nsIContentPolicy.TYPE_OBJECT]: "object",
+  [Ci.nsIContentPolicy.TYPE_DOCUMENT]: "document",
+  [Ci.nsIContentPolicy.TYPE_SUBDOCUMENT]: "subdocument",
+  [Ci.nsIContentPolicy.TYPE_PING]: "ping",
+  [Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST]: "xhr",
+  [Ci.nsIContentPolicy.TYPE_OBJECT_SUBREQUEST]: "objectSubdoc",
+  [Ci.nsIContentPolicy.TYPE_DTD]: "dtd",
+  [Ci.nsIContentPolicy.TYPE_FONT]: "font",
+  [Ci.nsIContentPolicy.TYPE_MEDIA]: "media",
+  [Ci.nsIContentPolicy.TYPE_WEBSOCKET]: "websocket",
+  [Ci.nsIContentPolicy.TYPE_CSP_REPORT]: "csp",
+  [Ci.nsIContentPolicy.TYPE_XSLT]: "xslt",
+  [Ci.nsIContentPolicy.TYPE_BEACON]: "beacon",
+  [Ci.nsIContentPolicy.TYPE_FETCH]: "fetch",
+  [Ci.nsIContentPolicy.TYPE_IMAGESET]: "imageset",
+  [Ci.nsIContentPolicy.TYPE_WEB_MANIFEST]: "webManifest",
+};
+
+/**
+ * Given a platform error code numer, return the name of it as a string
+ *
+ * @param {Number} code The error code to translate.
+ * @return {String} The error's name.
+ */
+exports.getErrorCodeString = function(code) {
+  for (const name in ErrorCodes) {
+    if (ErrorCodes[name] == code) {
+      return name;
+    }
+  }
+  return "NS_UNKNOWN_ERROR_CODE-" + code;
+};
+
+exports.causeTypeToString = function(
+  causeType,
+  loadFlags,
+  internalContentPolicyType
+) {
+  let prefix = "";
+  if (
+    (causeType == Ci.nsIContentPolicy.TYPE_IMAGESET ||
+      internalContentPolicyType == Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE) &&
+    loadFlags & Ci.nsIRequest.LOAD_BACKGROUND
+  ) {
+    prefix = "lazy-";
+  }
+
+  return prefix + LOAD_CAUSE_STRINGS[causeType] || "unknown";
+};
+
+exports.stringToCauseType = function(value) {
+  return Object.keys(LOAD_CAUSE_STRINGS).find(
+    key => LOAD_CAUSE_STRINGS[key] === value
+  );
+};
+
+/**
+ * Get the browsing context id for the channel.
+ *
+ * @param {*} channel
+ * @returns {number}
+ */
+exports.getChannelBrowsingContextID = function(channel) {
+  if (channel.loadInfo.browsingContextID) {
+    return channel.loadInfo.browsingContextID;
+  }
+  // At least WebSocket channel aren't having a browsingContextID set on their loadInfo
+  // We fallback on top frame element, which works, but will be wrong for WebSocket
+  // in same-process iframes...
+  const topFrame = NetworkHelper.getTopFrameForRequest(channel);
+  // topFrame is typically null for some chrome requests like favicons
+  if (topFrame && topFrame.browsingContext) {
+    return topFrame.browsingContext.id;
+  }
+  return null;
+};
+
+/**
+ * Does this channel represent a Preload request.
+ *
+ * @param {*} channel
+ * @returns {boolean}
+ */
+exports.isPreloadRequest = function(channel) {
+  const type = channel.loadInfo.internalContentPolicyType;
+  return (
+    type == Ci.nsIContentPolicy.TYPE_INTERNAL_SCRIPT_PRELOAD ||
+    type == Ci.nsIContentPolicy.TYPE_INTERNAL_MODULE_PRELOAD ||
+    type == Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_PRELOAD ||
+    type == Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET_PRELOAD ||
+    type == Ci.nsIContentPolicy.TYPE_INTERNAL_FONT_PRELOAD
+  );
+};
+
+/**
+ * Creates a network event based on the channel.
+ *
+ * @param {*} channel
+ * @return {Object} event - The network event
+ */
+exports.createNetworkEvent = function(
+  channel,
+  {
+    timestamp,
+    fromCache,
+    fromServiceWorker,
+    extraStringData,
+    blockedReason,
+    blockingExtension = null,
+    blockedURLs = [],
+    saveRequestAndResponseBodies = false,
+  }
+) {
+  channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
+
+  const event = {};
+  event.method = channel.requestMethod;
+  event.channelId = channel.channelId;
+  event.browsingContextID = this.getChannelBrowsingContextID(channel);
+  event.url = channel.URI.spec;
+  event.private = channel.isChannelPrivate;
+  event.headersSize = extraStringData ? extraStringData.length : 0;
+  event.startedDateTime = (timestamp
+    ? new Date(Math.round(timestamp / 1000))
+    : new Date()
+  ).toISOString();
+  event.fromCache = fromCache;
+  event.fromServiceWorker = fromServiceWorker;
+  // Only consider channels classified as level-1 to be trackers if our preferences
+  // would not cause such channels to be blocked in strict content blocking mode.
+  // Make sure the value produced here is a boolean.
+  if (channel instanceof Ci.nsIClassifiedChannel) {
+    event.isThirdPartyTrackingResource = !!(
+      channel.isThirdPartyTrackingResource() &&
+      (channel.thirdPartyClassificationFlags & tpFlagsMask) == 0
+    );
+  }
+  const referrerInfo = channel.referrerInfo;
+  event.referrerPolicy = referrerInfo
+    ? referrerInfo.getReferrerPolicyString()
+    : "";
+
+  // Determine the cause and if this is an XHR request.
+  let causeType = Ci.nsIContentPolicy.TYPE_OTHER;
+  let causeUri = null;
+
+  if (channel.loadInfo) {
+    causeType = channel.loadInfo.externalContentPolicyType;
+    const { loadingPrincipal } = channel.loadInfo;
+    if (loadingPrincipal) {
+      causeUri = loadingPrincipal.spec;
+    }
+  }
+
+  // Show the right WebSocket URL in case of WS channel.
+  if (channel.notificationCallbacks) {
+    let wsChannel = null;
+    try {
+      wsChannel = channel.notificationCallbacks.QueryInterface(
+        Ci.nsIWebSocketChannel
+      );
+    } catch (e) {
+      // Not all channels implement nsIWebSocketChannel.
+    }
+    if (wsChannel) {
+      event.url = wsChannel.URI.spec;
+      event.serial = wsChannel.serial;
+    }
+  }
+
+  event.cause = {
+    type: this.causeTypeToString(
+      causeType,
+      channel.loadFlags,
+      channel.loadInfo.internalContentPolicyType
+    ),
+    loadingDocumentUri: causeUri,
+    stacktrace: undefined,
+  };
+
+  event.isXHR =
+    causeType === Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST ||
+    causeType === Ci.nsIContentPolicy.TYPE_FETCH;
+
+  // Determine the HTTP version.
+  const httpVersionMaj = {};
+  const httpVersionMin = {};
+
+  channel.QueryInterface(Ci.nsIHttpChannelInternal);
+  channel.getRequestVersion(httpVersionMaj, httpVersionMin);
+
+  event.httpVersion =
+    "HTTP/" + httpVersionMaj.value + "." + httpVersionMin.value;
+
+  event.discardRequestBody = !saveRequestAndResponseBodies;
+  event.discardResponseBody = !saveRequestAndResponseBodies;
+
+  // Check the request URL with ones manually blocked by the user in DevTools.
+  // If it's meant to be blocked, we cancel the request and annotate the event.
+  if (!blockedReason) {
+    if (blockedReason !== undefined) {
+      // We were definitely blocked, but the blocker didn't say why.
+      event.blockedReason = "unknown";
+    } else if (blockedURLs.some(url => wildcardToRegExp(url).test(event.url))) {
+      channel.cancel(Cr.NS_BINDING_ABORTED);
+      event.blockedReason = "devtools";
+    }
+  } else {
+    event.blockedReason = blockedReason;
+    if (blockingExtension) {
+      event.blockingExtension = blockingExtension;
+    }
+  }
+
+  return event;
+};
+
+/**
+ * For a given channel, with its associated http activity object,
+ * fetch the request's headers and cookies.
+ * This data is passed to the owner, i.e. the NetworkEventActor,
+ * so that the frontend can later fetch it via getRequestHeaders/getRequestCookies.
+ *
+ * @param {*} channel
+ * @param {*} owner - The network event actor
+ * @param {Object} extraStringData - The uncached response headers.
+ */
+exports.fetchRequestHeadersAndCookies = function(
+  channel,
+  owner,
+  { extraStringData = "" }
+) {
+  const headers = [];
+  let cookies = [];
+  let cookieHeader = null;
+
+  // Copy the request header data.
+  channel.visitRequestHeaders({
+    visitHeader: function(name, value) {
+      if (name == "Cookie") {
+        cookieHeader = value;
+      }
+      headers.push({ name: name, value: value });
+    },
+  });
+
+  if (cookieHeader) {
+    cookies = NetworkHelper.parseCookieHeader(cookieHeader);
+  }
+
+  owner.addRequestHeaders(headers, extraStringData);
+  owner.addRequestCookies(cookies);
 };

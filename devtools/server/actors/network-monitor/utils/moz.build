@@ -4,4 +4,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DevToolsModules("channel-map.js", "error-codes.js", "wildcard-to-regexp.js")
+DevToolsModules("channel-map.js", "network-utils.js", "wildcard-to-regexp.js")
