@@ -725,12 +725,9 @@ bool nsCocoaUtils::HiDPIEnabled() {
       if ([desc objectForKey:NSDeviceIsScreen] == nil) {
         continue;
       }
-      CGFloat scale = [screen respondsToSelector:@selector(backingScaleFactor)]
-                          ? [screen backingScaleFactor]
-                          : 1.0;
       // Currently, we only care about differentiating "1.0" and "2.0",
       // so we set one of the two low bits to record which.
-      if (scale > 1.0) {
+      if ([screen backingScaleFactor] > 1.0) {
         scaleFactors |= 2;
       } else {
         scaleFactors |= 1;
