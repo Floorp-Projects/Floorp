@@ -14,4 +14,12 @@ StaticRefPtr<VsyncTaskManager> VsyncTaskManager::gHighPriorityTaskManager;
 void VsyncTaskManager::Init() {
   gHighPriorityTaskManager = new VsyncTaskManager();
 }
+
+void VsyncTaskManager::DidRunTask() {
+  TaskManager::DidRunTask();
+
+  if (StaticPrefs::dom_input_events_strict_input_vsync_alignment()) {
+    InputTaskManager::Get()->NotifyVsync();
+  }
+};
 }  // namespace mozilla
