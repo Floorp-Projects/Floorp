@@ -40,6 +40,14 @@ interface nsICaptivePortalService : nsISupports
    */
   readonly attribute long state;
 
+%{C++
+  int32_t State() {
+    int32_t result = nsICaptivePortalService::UNKNOWN;
+    GetState(&result);
+    return result;
+  }
+%}
+
   /**
    * Returns the time difference between NOW and the last time a request was
    * completed in milliseconds.
