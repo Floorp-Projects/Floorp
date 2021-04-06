@@ -774,7 +774,7 @@ add_task(async function test_empty_progress_tryToKeepPartialData() {
 add_task(async function test_empty_noprogress() {
   let sourcePath = "/test_empty_noprogress.txt";
   let sourceUrl = httpUrl("test_empty_noprogress.txt");
-  let deferRequestReceived = Promise.defer();
+  let deferRequestReceived = PromiseUtils.defer();
 
   // Register an interruptible handler that notifies us when the request occurs.
   function cleanup() {
@@ -903,7 +903,7 @@ add_task(async function test_cancel_midway() {
   }
 
   // Cancel the download after receiving the first part of the response.
-  let deferCancel = Promise.defer();
+  let deferCancel = PromiseUtils.defer();
   let onchange = function() {
     if (!download.stopped && !download.canceled && download.progress == 50) {
       // Cancel the download immediately during the notification.
@@ -1084,7 +1084,7 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
 
   // The second time, we'll request and obtain the second part of the response,
   // but we still stop when half of the remaining progress is reached.
-  let deferMidway = Promise.defer();
+  let deferMidway = PromiseUtils.defer();
   download.onchange = function() {
     if (
       !download.stopped &&
