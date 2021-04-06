@@ -74,7 +74,9 @@ add_task(async function test_drm_prompt_shows_for_toplevel() {
     );
 
     // Verify the "Enable DRM" button is there.
-    let buttons = notification.querySelectorAll(".notification-button");
+    let buttons = notification.buttonContainer.querySelectorAll(
+      ".notification-button"
+    );
     is(buttons.length, 1, "Should have one button.");
 
     // Prepare a Promise that should resolve when the "Enable DRM" button's
@@ -206,7 +208,9 @@ add_task(async function test_drm_prompt_shows_for_cross_origin_iframe() {
     );
 
     // Verify the "Enable DRM" button is there.
-    let buttons = notification.querySelectorAll(".notification-button");
+    let buttons = notification.buttonContainer.querySelectorAll(
+      ".notification-button"
+    );
     is(buttons.length, 1, "Should have one button.");
 
     // Prepare a Promise that should resolve when the "Enable DRM" button's
