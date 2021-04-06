@@ -797,6 +797,9 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
 
   if (!succeeded) {
     // preventDefault() was called on the popupshowing event.
+    if (nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true)) {
+      popupFrame->SetPopupState(ePopupClosed);
+    }
     return true;
   }
 
@@ -816,6 +819,20 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
   return true;
 }
 
+void nsXULPopupManager::OnNativeMenuOpened() {
+  if (!mNativeMenu) {
+    return;
+  }
+
+  RefPtr<nsXULPopupManager> kungFuDeathGrip(this);
+
+  nsCOMPtr<nsIContent> popup = mNativeMenu->Element();
+  nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(popup, true);
+  if (popupFrame) {
+    popupFrame->SetPopupState(ePopupShown);
+  }
+}
+
 void nsXULPopupManager::OnNativeMenuClosed() {
   if (!mNativeMenu) {
     return;
@@ -827,6 +844,7 @@ void nsXULPopupManager::OnNativeMenuClosed() {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(popup, true);
   if (popupFrame) {
     popupFrame->ClearTriggerContentIncludingDocument();
+    popupFrame->SetPopupState(ePopupClosed);
   }
   mNativeMenu->RemoveObserver(this);
   mNativeMenu = nullptr;
@@ -1597,6 +1615,10 @@ void nsXULPopupManager::FirePopupHidingEvent(
 }
 
 bool nsXULPopupManager::IsPopupOpen(nsIContent* aPopup) {
+  if (mNativeMenu && mNativeMenu->Element() == aPopup) {
+    return true;
+  }
+
   // a popup is open if it is in the open list. The assertions ensure that the
   // frame is in the correct state. If the popup is in the hiding or invisible
   // state, it will still be in the open popup list until it is closed.

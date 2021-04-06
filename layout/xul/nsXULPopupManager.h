@@ -345,7 +345,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   virtual bool RollupNativeMenu() override;
 
   // NativeMenu::Observer
-  void OnNativeMenuOpened() override {}
+  void OnNativeMenuOpened() override;
   void OnNativeMenuClosed() override;
 
   static nsXULPopupManager* sInstance;

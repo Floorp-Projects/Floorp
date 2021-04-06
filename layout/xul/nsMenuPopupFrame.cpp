@@ -912,7 +912,7 @@ void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
 void nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
     nsIContent* aTriggerContent, int32_t aXPos, int32_t aYPos) {
   mTriggerContent = aTriggerContent;
-  mPopupState = ePopupClosed;  // Treat native popups as closed.
+  mPopupState = ePopupShowing;
   mAnchorContent = nullptr;
   mScreenRect = nsIntRect(aXPos, aYPos, 0, 0);
   mXPos = 0;
