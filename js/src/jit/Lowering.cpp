@@ -5381,7 +5381,7 @@ void LIRGenerator::visitGuardHasGetterSetter(MGuardHasGetterSetter* ins) {
 
   auto* guard = new (alloc())
       LGuardHasGetterSetter(useRegisterAtStart(object), tempFixed(CallTempReg0),
-                            tempFixed(CallTempReg1));
+                            tempFixed(CallTempReg1), tempFixed(CallTempReg2));
   assignSnapshot(guard, ins->bailoutKind());
   add(guard, ins);
   redefine(ins, object);

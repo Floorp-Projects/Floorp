@@ -442,11 +442,13 @@ bool WarpCacheIRTranspiler::emitGuardIsNotDOMProxy(ObjOperandId objId) {
 }
 
 bool WarpCacheIRTranspiler::emitGuardHasGetterSetter(ObjOperandId objId,
+                                                     uint32_t idOffset,
                                                      uint32_t shapeOffset) {
   MDefinition* obj = getOperand(objId);
+  jsid id = idStubField(idOffset);
   Shape* shape = shapeStubField(shapeOffset);
 
-  auto* ins = MGuardHasGetterSetter::New(alloc(), obj, shape);
+  auto* ins = MGuardHasGetterSetter::New(alloc(), obj, id, shape);
   add(ins);
 
   setOperand(objId, ins);

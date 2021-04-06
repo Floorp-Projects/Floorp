@@ -6741,6 +6741,9 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val,
     case StubField::Type::RawInt32:
       masm.move32(Imm32(int32StubField(val.getOffset())), dest);
       break;
+    case StubField::Type::Id:
+      masm.movePropertyKey(idStubField(val.getOffset()), dest);
+      break;
     default:
       MOZ_CRASH("Unhandled stub field constant type");
   }
@@ -6928,13 +6931,18 @@ bool CacheIRCompiler::emitMegamorphicStoreSlot(ObjOperandId objId,
 }
 
 bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
+                                               uint32_t idOffset,
                                                uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
   Register obj = allocator.useRegister(masm, objId);
+
+  StubFieldOffset id(idOffset, StubField::Type::Id);
   StubFieldOffset shape(shapeOffset, StubField::Type::Shape);
 
   AutoScratchRegister scratch1(allocator, masm);
   AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegister scratch3(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -6947,13 +6955,16 @@ bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   volatileRegs.takeUnchecked(scratch2);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, Shape * propShape);
+  using Fn =
+      bool (*)(JSContext * cx, JSObject * obj, jsid id, Shape * propShape);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
   masm.passABIArg(obj);
-  emitLoadStubField(shape, scratch2);
+  emitLoadStubField(id, scratch2);
   masm.passABIArg(scratch2);
+  emitLoadStubField(shape, scratch3);
+  masm.passABIArg(scratch3);
   masm.callWithABI<Fn, ObjectHasGetterSetterPure>();
   masm.mov(ReturnReg, scratch1);
   masm.PopRegsInMask(volatileRegs);

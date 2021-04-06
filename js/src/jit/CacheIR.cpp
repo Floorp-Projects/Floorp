@@ -891,7 +891,7 @@ static void EmitCallGetterResultGuards(CacheIRWriter& writer, NativeObject* obj,
       TestMatchingHolder(writer, holder, holderId);
     }
   } else {
-    writer.guardHasGetterSetter(objId, shape);
+    writer.guardHasGetterSetter(objId, shape->propid(), shape);
   }
 }
 
@@ -3843,7 +3843,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
       TestMatchingHolder(writer, holder, holderId);
     }
   } else {
-    writer.guardHasGetterSetter(objId, propShape);
+    writer.guardHasGetterSetter(objId, id, propShape);
   }
 
   if (CanAttachDOMGetterSetter(cx_, JSJitInfo::Setter, nobj, holder, propShape,

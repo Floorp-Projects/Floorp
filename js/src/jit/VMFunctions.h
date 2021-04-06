@@ -560,7 +560,8 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
 bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
                                Value* val);
 
-bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* obj, Shape* propShape);
+bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* obj, jsid id,
+                               Shape* propShape);
 
 JSString* TypeOfObject(JSObject* obj, JSRuntime* rt);
 
