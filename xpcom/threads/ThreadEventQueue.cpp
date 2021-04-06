@@ -81,8 +81,8 @@ bool ThreadEventQueue::PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
       if (nsCOMPtr<nsIRunnablePriority> runnablePrio = do_QueryInterface(e)) {
         uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
         runnablePrio->GetPriority(&prio);
-        if (prio == nsIRunnablePriority::PRIORITY_HIGH) {
-          aPriority = EventQueuePriority::High;
+        if (prio == nsIRunnablePriority::PRIORITY_VSYNC) {
+          aPriority = EventQueuePriority::Vsync;
         } else if (prio == nsIRunnablePriority::PRIORITY_INPUT_HIGH) {
           aPriority = EventQueuePriority::InputHigh;
         } else if (prio == nsIRunnablePriority::PRIORITY_MEDIUMHIGH) {

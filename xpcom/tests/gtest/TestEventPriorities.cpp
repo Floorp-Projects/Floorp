@@ -75,7 +75,7 @@ TEST(EventPriorities, HighNormal)
       &normalRan, [&] { ASSERT_TRUE((highRan - normalRan) >= 0); });
   RefPtr<TestEvent> evHigh = new TestEvent(
       &highRan, [&] { ASSERT_TRUE((highRan - normalRan) >= 0); },
-      nsIRunnablePriority::PRIORITY_HIGH);
+      nsIRunnablePriority::PRIORITY_VSYNC);
 
   NS_DispatchToMainThread(evNormal);
   NS_DispatchToMainThread(evNormal);
