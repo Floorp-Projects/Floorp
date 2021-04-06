@@ -64,7 +64,12 @@ export class _Card extends React.PureComponent {
       }
 
       // Wait for the image whether just started loading or reused promise
-      await gImageLoading.get(imageUrl);
+      try {
+        await gImageLoading.get(imageUrl);
+      } catch (ex) {
+        // Ignore the failed image without changing state
+        return;
+      }
 
       // Only update state if we're still waiting to load the original image
       if (
