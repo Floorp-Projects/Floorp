@@ -11,7 +11,7 @@ INSIDE_CPOW_NESTED = 3
 
 NORMAL_PRIORITY = 1
 INPUT_PRIORITY = 2
-HIGH_PRIORITY = 3
+VSYNC_PRIORITY = 3
 MEDIUMHIGH_PRIORITY = 4
 
 
@@ -349,7 +349,7 @@ class MessageDecl(Node):
         return {
             "normal": NORMAL_PRIORITY,
             "input": INPUT_PRIORITY,
-            "high": HIGH_PRIORITY,
+            "vsync": VSYNC_PRIORITY,
             "mediumhigh": MEDIUMHIGH_PRIORITY,
         }[self.attributes["Priority"].value]
 

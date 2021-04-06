@@ -1883,8 +1883,8 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
         prioEnum = "NORMAL_PRIORITY"
     elif prio == ipdl.ast.INPUT_PRIORITY:
         prioEnum = "INPUT_PRIORITY"
-    elif prio == ipdl.ast.HIGH_PRIORITY:
-        prioEnum = "HIGH_PRIORITY"
+    elif prio == ipdl.ast.VSYNC_PRIORITY:
+        prioEnum = "VSYNC_PRIORITY"
     else:
         prioEnum = "MEDIUMHIGH_PRIORITY"
 
