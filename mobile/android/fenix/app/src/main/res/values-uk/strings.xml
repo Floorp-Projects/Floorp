@@ -985,6 +985,10 @@
 
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Недавно використані</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">Ви увійшли як %1$s</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Увійти до синхронізації</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Увійти до Синхронізації</string>
     <!-- An option from the share dialog to send link to all other sync devices -->

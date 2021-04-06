@@ -1205,6 +1205,8 @@
     <string name="onboarding_tracking_protection_description_3">Firefox маъракаҳоеро ба таври худкор қатъ мекунад, ки шуморо дар атрофи веб пинҳонӣ пайгирӣ мекунанд.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартӣ (пешфарз)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Мутаносиб барои махфият ва самаранокӣ. Саҳифаҳо ба таври муқаррар бор карда мешаванд.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Ҷиддӣ (тавсия дода мешавад)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->

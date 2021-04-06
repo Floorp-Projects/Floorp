@@ -1197,6 +1197,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Synchronizacija je zmóžnjena</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Přizjewjenje njeje so poradźiło</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Priwatnosć přeco aktiwna</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string name="onboarding_tracking_protection_description_3">Firefox awtomatisce zadźěwa tomu, zo předewzaća wam skradźu po webje slěduja.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1207,6 +1209,12 @@
     <string name="onboarding_tracking_protection_strict_button">Striktny (doporučeny)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Striktny</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Blokuje dalše přesćěhowaki, zo bychu so strony spěšnišo začitali, ale někotre strony snano korektnje njefunguja.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Wubjerće poziciju za swoju symbolowu lajstu</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Pozicioněrujće symbolowu lajstu, zo móžeće ju lochko dosahnyć. Wobchowajće ju deleka abo přesuńće ju horje.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Priwatnje přehladować</string>
     <!-- text for the private browsing onboarding card description
@@ -1295,6 +1303,8 @@
     <string name="preference_enhanced_tracking_protection_standard_info_button">Što so přez standardny slědowanski škit blokuje?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Striktny</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokuje dalše přesćěhowaki, zo bych so strony spěšnišo začitali, ale někotre strony snano korektnje njefunguja.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Što so přez striktny slědowanski škit blokuje?</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

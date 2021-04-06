@@ -20,10 +20,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Čia bus rodomos jūsų privačiosios kortelės.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 atverta kortelė. Bakstelėkite, norėdami pereiti tarp kortelių.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -182,6 +178,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Tinkinti skaitymo rodinį</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Įtraukti</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Keisti</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Nepavyko prisijungti. Neatpažįstama URL schema.</string>
@@ -1171,9 +1172,6 @@
     <string name="onboarding_header">Sveiki, čia „%s“!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Jau turite paskyrą?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Susipažinkite su „%s“</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Susipažinkite su naujovėmis</string>
 
@@ -1182,10 +1180,10 @@
     <string name="onboarding_whats_new_description">Turite klausimų apie naująją „%s“? Norite sužinoti, kas pasikeitė?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Atsakymus rasite čia</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Pradėkite sinchronizuoti adresyną, slaptažodžius, ir daugiau su savo „Firefox“ paskyra.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Sinchronizuokite „Firefox“ duomenis tarp įrenginių</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Sužinoti daugiau</string>
+    <string name="onboarding_manual_sign_in_description">Turėkite savo „Firefox“ adresyną, žurnalą, ir slaptažodžius šiame įrenginyje.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1194,8 +1192,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Taip, prisijungti</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Prisijungiama…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Prisijungti prie „Firefox“</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Kurti paskyrą</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Likti neprisijungus</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1204,27 +1202,24 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Nepavyko prisijungti</string>
 
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Automatinis privatumas</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Privatumo ir saugumo nuostatos blokuoja stebėjimo elementus, kenkėjiškas programas, ir jus sekančias kompanijas.</string>
+    <string name="onboarding_tracking_protection_header_3">Visada veikiantis privatumas</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">„Firefox“ automatiškai blokuoja kompanijų bandymus sekti jūsų veiklą internete.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standartinė (numatytoji)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Blokuoja mažiau stebėjimo elementų. Tinklalapiai bus įkeliami įprastai.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Subalansuota privatumui ir našumui. Tinklalapiai įkeliami įprastai.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Griežta (rekomenduojama)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Griežta</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Blokuoja daugiau stebėjimo elementų, reklamų, ir iššokančių langų. Tinklalapiai bus įkeliami sparčiau, tačiau gali sutrikti jų veikimas.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Pasirinkite poziciją</string>
 
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Blokuojama daugiau stebėjimų elementų, tad tinklalapiai įkeliami sparčiau, tačiau gali sutrikti dalis funkcionalumo.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Pasirinkite priemonių juostos vietą</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Išbandykite naršymą viena ranka, kai priemonių juosta apačioje, arba perkelkite ją į viršų.</string>
+    <string name="onboarding_toolbar_placement_description_1">Pasidėkite priemonių juostą patogiai. Palikite ją apačioje, arba perkelkite į viršų.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Naršykite privačiai</string>
     <!-- text for the private browsing onboarding card description
@@ -1237,7 +1232,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Jūsų privatumas</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Mes sukūrėme „%s“ siekdami jums suteikti pasirinkimą, kuo dalinatės internete, ir kuo su mumis.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Mūsų privatumo pranešimas</string>
@@ -1251,9 +1246,9 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Pasirinkite apvalkalą</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Pataupykite bateriją ir savo regėjimą, įjungdami tamsią veikseną.</string>
 
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Pataupykite bateriją ir savo regėjimą su tamsia veiksena.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatinis</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1309,13 +1304,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standartinė (numatytoji)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokuoja mažiau stebėjimo elementų. Tinklalapiai bus įkeliami įprastai.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Subalansuota privatumui ir našumui. Tinklalapiai įkeliami įprastai.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ką blokuoja numatytoji apsauga nuo stebėjimo</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Griežta</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokuoja daugiau stebėjimo elementų, reklamų, ir iššokančių langų. Tinklalapiai bus įkeliami sparčiau, tačiau gali sutrikti jų veikimas.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokuojama daugiau stebėjimų elementų, tad tinklalapiai įkeliami sparčiau, tačiau gali sutrikti dalis funkcionalumo.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ką blokuoja griežta apsauga nuo stebėjimo</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1567,6 +1562,25 @@
 
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Pridėti mokėjimo kortelę</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Pridėti kortelę</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Kortelės numeris</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Galiojimo data</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Vardas ant kortelės</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Kortelės pavadinimas</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Pašalinti kortelę</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Įrašyti</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Įrašyti</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Atsisakyti</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pridėti ieškyklę</string>
