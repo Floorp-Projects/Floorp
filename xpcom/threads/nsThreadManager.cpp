@@ -352,28 +352,17 @@ void nsThreadManager::Shutdown() {
   // Empty the main thread event queue before we begin shutting down threads.
   NS_ProcessPendingEvents(mMainThread);
 
-  typedef typename ShutdownPromise::AllPromiseType AllPromise;
-  typename AllPromise::ResolveOrRejectValue val;
-  using ResolveValueT = typename AllPromise::ResolveValueType;
-  using RejectValueT = typename AllPromise::RejectValueType;
-
   nsTArray<RefPtr<ShutdownPromise>> promises;
   mBackgroundEventTarget->BeginShutdown(promises);
 
-  RefPtr<AllPromise> complete = ShutdownPromise::All(mMainThread, promises);
-
   bool taskQueuesShutdown = false;
-
-  complete->Then(
-      mMainThread, __func__,
-      [&](const ResolveValueT& aResolveValue) {
-        mBackgroundEventTarget->FinishShutdown();
-        taskQueuesShutdown = true;
-      },
-      [&](RejectValueT aRejectValue) {
-        mBackgroundEventTarget->FinishShutdown();
-        taskQueuesShutdown = true;
-      });
+  // It's fine to capture everything by reference in the Then handler since it
+  // runs before we exit the nested event loop, thanks to the SpinEventLoopUntil
+  // below.
+  ShutdownPromise::All(mMainThread, promises)->Then(mMainThread, __func__, [&] {
+    mBackgroundEventTarget->FinishShutdown();
+    taskQueuesShutdown = true;
+  });
 
   // Wait for task queues to shutdown, so we don't shut down the underlying
   // threads of the background event target in the block below, thereby
