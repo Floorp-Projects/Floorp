@@ -1106,6 +1106,16 @@ void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
   branchPtr(cond, scratch, rhs, label);
 }
 
+void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
+                               Register rhs, Label* label) {
+  vixl::UseScratchRegisterScope temps(this);
+  const Register scratch = temps.AcquireX().asUnsized();
+  MOZ_ASSERT(scratch != lhs.base);
+  MOZ_ASSERT(scratch != lhs.index);
+  loadPtr(lhs, scratch);
+  branchPtr(cond, scratch, rhs, label);
+}
+
 void MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs,
                                       Register rhs, Label* label) {
   branchPtr(cond, lhs, rhs, label);
@@ -1733,6 +1743,12 @@ void MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr,
   uint64_t magic = MagicValue(why).asRawBits();
   cmpPtr(valaddr, ImmWord(magic));
   B(label, cond);
+}
+
+void MacroAssembler::branchTestValue(Condition cond, const BaseIndex& lhs,
+                                     const ValueOperand& rhs, Label* label) {
+  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+  branchPtr(cond, lhs, rhs.valueReg(), label);
 }
 
 void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {

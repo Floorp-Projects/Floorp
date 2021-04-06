@@ -116,6 +116,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     }
   }
   Address ToType(Address base) { return ToType(Operand(base)).toAddress(); }
+  BaseIndex ToType(BaseIndex base) {
+    return ToType(Operand(base)).toBaseIndex();
+  }
 
   template <typename T>
   void add64FromMemory(const T& address, Register64 dest) {
