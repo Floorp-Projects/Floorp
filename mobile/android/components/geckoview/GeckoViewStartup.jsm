@@ -38,12 +38,6 @@ const JSWINDOWACTORS = {
     },
     allFrames: true,
   },
-  WebBrowserChrome: {
-    child: {
-      moduleURI: "resource:///actors/WebBrowserChromeChild.jsm",
-    },
-    includeChrome: true,
-  },
 };
 
 class GeckoViewStartup {
