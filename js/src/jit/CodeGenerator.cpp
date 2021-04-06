@@ -14891,15 +14891,19 @@ void CodeGenerator::visitGuardHasGetterSetter(LGuardHasGetterSetter* lir) {
   Register object = ToRegister(lir->object());
   Register temp1 = ToRegister(lir->temp1());
   Register temp2 = ToRegister(lir->temp2());
+  Register temp3 = ToRegister(lir->temp3());
 
-  masm.movePtr(ImmGCPtr(lir->mir()->shape()), temp2);
+  masm.movePropertyKey(lir->mir()->propId(), temp2);
+  masm.movePtr(ImmGCPtr(lir->mir()->shape()), temp3);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, Shape * propShape);
+  using Fn =
+      bool (*)(JSContext * cx, JSObject * obj, jsid id, Shape * propShape);
   masm.setupUnalignedABICall(temp1);
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(object);
   masm.passABIArg(temp2);
+  masm.passABIArg(temp3);
   masm.callWithABI<Fn, ObjectHasGetterSetterPure>();
 
   bailoutIfFalseBool(ReturnReg, lir->snapshot());

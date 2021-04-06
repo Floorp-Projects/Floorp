@@ -529,6 +529,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
+    id: IdField
     shape: ShapeField
 
 - name: GuardInt32IsNonNegative

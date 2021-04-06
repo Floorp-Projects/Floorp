@@ -8634,21 +8634,23 @@ class LLoadWrapperTarget : public LInstructionHelper<1, 1, 0> {
   const LAllocation* object() { return getOperand(0); }
 };
 
-class LGuardHasGetterSetter : public LCallInstructionHelper<0, 1, 2> {
+class LGuardHasGetterSetter : public LCallInstructionHelper<0, 1, 3> {
  public:
   LIR_HEADER(GuardHasGetterSetter)
 
   LGuardHasGetterSetter(const LAllocation& object, const LDefinition& temp1,
-                        const LDefinition& temp2)
+                        const LDefinition& temp2, const LDefinition& temp3)
       : LCallInstructionHelper(classOpcode) {
     setOperand(0, object);
     setTemp(0, temp1);
     setTemp(1, temp2);
+    setTemp(2, temp3);
   }
 
   const LAllocation* object() { return getOperand(0); }
   const LDefinition* temp1() { return getTemp(0); }
   const LDefinition* temp2() { return getTemp(1); }
+  const LDefinition* temp3() { return getTemp(2); }
 
   MGuardHasGetterSetter* mir() const { return mir_->toGuardHasGetterSetter(); }
 };

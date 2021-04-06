@@ -11945,10 +11945,11 @@ class MLoadWrapperTarget : public MUnaryInstruction,
 // Guard the accessor shape is present on the object or its prototype chain.
 class MGuardHasGetterSetter : public MUnaryInstruction,
                               public SingleObjectPolicy::Data {
+  jsid propId_;
   CompilerShape shape_;
 
-  MGuardHasGetterSetter(MDefinition* obj, Shape* shape)
-      : MUnaryInstruction(classOpcode, obj), shape_(shape) {
+  MGuardHasGetterSetter(MDefinition* obj, jsid id, Shape* shape)
+      : MUnaryInstruction(classOpcode, obj), propId_(id), shape_(shape) {
     setResultType(MIRType::Object);
     setMovable();
     setGuard();
@@ -11959,6 +11960,7 @@ class MGuardHasGetterSetter : public MUnaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object))
 
+  jsid propId() const { return propId_; }
   Shape* shape() const { return shape_; }
 
   AliasSet getAliasSet() const override {
@@ -11967,6 +11969,9 @@ class MGuardHasGetterSetter : public MUnaryInstruction,
 
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isGuardHasGetterSetter()) {
+      return false;
+    }
+    if (ins->toGuardHasGetterSetter()->propId() != propId()) {
       return false;
     }
     if (ins->toGuardHasGetterSetter()->shape() != shape()) {

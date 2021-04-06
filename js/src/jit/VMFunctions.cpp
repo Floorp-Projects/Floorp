@@ -1925,9 +1925,11 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
   return true;
 }
 
-bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg,
+bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
                                Shape* propShape) {
   AutoUnsafeCallWithABI unsafe;
+
+  MOZ_ASSERT(propShape->propid() == id);
 
   MOZ_ASSERT(propShape->hasGetterObject() || propShape->hasSetterObject());
 
@@ -1938,7 +1940,6 @@ bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg,
   }
 
   NativeObject* nobj = &objArg->as<NativeObject>();
-  jsid id = propShape->propid();
 
   while (true) {
     if (Shape* shape = nobj->lastProperty()->search(cx, id)) {
