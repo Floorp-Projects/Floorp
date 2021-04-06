@@ -3903,6 +3903,11 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     return IPC_FAIL(this, "Cannot create without valid initial principal");
   }
 
+  if (!ValidatePrincipal(aInitialWindowInit.principal())) {
+    LogAndAssertFailedPrincipalValidationInfo(aInitialWindowInit.principal(),
+                                              __func__);
+  }
+
   if (browsingContext->GetBrowserParent()) {
     return IPC_FAIL(this, "BrowsingContext already has a BrowserParent");
   }
