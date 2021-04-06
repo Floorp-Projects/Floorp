@@ -1328,7 +1328,7 @@
 
     _positionPinnedTabs() {
       let tabs = this._getVisibleTabs();
-      let numPinned = gBrowser._numPinnedTabs;
+      let numPinned = tabs.filter(t => t.pinned).length;
       let doPosition =
         this.getAttribute("overflow") == "true" &&
         tabs.length > numPinned &&
@@ -1343,15 +1343,13 @@
         let uiDensity = document.documentElement.getAttribute("uidensity");
         if (!layoutData || layoutData.uiDensity != uiDensity) {
           let arrowScrollbox = this.arrowScrollbox;
+          let firstTab = tabs[0];
+          let firstTabCS = getComputedStyle(firstTab);
           layoutData = this._pinnedTabsLayoutCache = {
             uiDensity,
-            pinnedTabWidth: tabs[0].getBoundingClientRect().width,
-            scrollStartOffset:
-              arrowScrollbox.scrollbox.getBoundingClientRect().left -
-              arrowScrollbox.getBoundingClientRect().left +
-              parseFloat(
-                getComputedStyle(arrowScrollbox.scrollbox).paddingInlineStart
-              ),
+            pinnedTabWidth: parseFloat(firstTabCS.width),
+            scrollButtonWidth: arrowScrollbox._scrollButtonDown.getBoundingClientRect()
+              .width,
           };
         }
 
@@ -1361,7 +1359,7 @@
           width += layoutData.pinnedTabWidth;
           tab.style.setProperty(
             "margin-inline-start",
-            -(width + layoutData.scrollStartOffset) + "px",
+            -(width + layoutData.scrollButtonWidth) + "px",
             "important"
           );
           tab._pinnedUnscrollable = true;
