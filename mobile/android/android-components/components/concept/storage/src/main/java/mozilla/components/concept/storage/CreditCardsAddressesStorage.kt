@@ -4,6 +4,8 @@
 
 package mozilla.components.concept.storage
 
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.Deferred
 
 /**
@@ -118,6 +120,7 @@ interface CreditCardsAddressesStorage {
  * @property timeLastModified Time of last modified in milliseconds from the unix epoch.
  * @property timesUsed Number of times the credit card was used.
  */
+@Parcelize
 data class CreditCard(
     val guid: String,
     val billingName: String,
@@ -129,7 +132,7 @@ data class CreditCard(
     val timeLastUsed: Long?,
     val timeLastModified: Long,
     val timesUsed: Long
-)
+) : Parcelable
 
 /**
  * Information about a new credit card. This is what you pass to create or update a credit card.
