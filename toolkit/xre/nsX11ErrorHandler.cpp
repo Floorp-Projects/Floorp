@@ -107,6 +107,7 @@ int X11Error(Display* display, XErrorEvent* event) {
 
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Default:
+    case GeckoProcessType_Plugin:
     case GeckoProcessType_Content:
       CrashReporter::AppendAppNotesToCrashReport(notes);
       break;

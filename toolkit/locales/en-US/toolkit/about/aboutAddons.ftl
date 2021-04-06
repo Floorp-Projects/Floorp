@@ -353,6 +353,7 @@ dictionary-disabled-heading = Disabled
 locale-enabled-heading = Enabled
 locale-disabled-heading = Disabled
 
+ask-to-activate-button = Ask to Activate
 always-activate-button = Always Activate
 never-activate-button = Never Activate
 

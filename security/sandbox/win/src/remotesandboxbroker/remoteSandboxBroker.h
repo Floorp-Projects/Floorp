@@ -39,6 +39,7 @@ class RemoteSandboxBroker : public AbstractSandboxBroker {
       int32_t aSandboxLevel, const nsCOMPtr<nsIFile>& aProfileDir) override;
   bool SetSecurityLevelForRDDProcess() override;
   bool SetSecurityLevelForSocketProcess() override;
+  bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) override;
   bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
                                    bool aIsRemoteLaunch = false) override;
   bool AllowReadFile(wchar_t const* file) override;

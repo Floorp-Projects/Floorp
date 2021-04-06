@@ -35,6 +35,7 @@ enum class ProcType {
   WebCOOPCOEP,
   // the rest matches GeckoProcessTypes.h
   Browser,  // Default is named Browser here
+  Plugin,
   IPDLUnitTest,
   GMPlugin,
   GPU,

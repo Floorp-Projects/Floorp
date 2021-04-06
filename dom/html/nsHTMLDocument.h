@@ -41,6 +41,7 @@ class nsHTMLDocument : public mozilla::dom::Document {
   using NotNull = mozilla::NotNull<T>;
 
  public:
+  using Document::GetPlugins;
   using Document::SetDocumentURI;
 
   nsHTMLDocument();

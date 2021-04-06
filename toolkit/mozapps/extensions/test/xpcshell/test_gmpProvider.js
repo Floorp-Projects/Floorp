@@ -137,6 +137,9 @@ add_task(async function test_notInstalled() {
     Assert.ok(addon.providesUpdatesSecurely);
     Assert.ok(!addon.foreignInstall);
 
+    let mimetypes = addon.pluginMimeTypes;
+    Assert.ok(mimetypes);
+    Assert.equal(mimetypes.length, 0);
     let libraries = addon.pluginLibraries;
     Assert.ok(libraries);
     Assert.equal(libraries.length, 0);
@@ -189,6 +192,9 @@ add_task(async function test_installed() {
 
     Assert.equal(addon.updateDate.getTime(), TEST_TIME_SEC * 1000);
 
+    let mimetypes = addon.pluginMimeTypes;
+    Assert.ok(mimetypes);
+    Assert.equal(mimetypes.length, 0);
     let libraries = addon.pluginLibraries;
     Assert.ok(libraries);
     Assert.equal(libraries.length, 1);

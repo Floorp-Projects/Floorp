@@ -29,6 +29,19 @@ class SpecialPowersError extends Error {
   }
 }
 
+function getTestPlugin(pluginName) {
+  var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+  var tags = ph.getPluginTags();
+  var name = pluginName || "Test Plug-in";
+  for (var tag of tags) {
+    if (tag.name == name) {
+      return tag;
+    }
+  }
+
+  return null;
+}
+
 const PREF_TYPES = {
   [Ci.nsIPrefBranch.PREF_INVALID]: "INVALID",
   [Ci.nsIPrefBranch.PREF_INT]: "INT",
@@ -924,6 +937,16 @@ class SpecialPowersParent extends JSWindowActorParent {
               );
           }
           return undefined; // See comment at the beginning of this function.
+        }
+
+        case "SPSetTestPluginEnabledState": {
+          var plugin = getTestPlugin(aMessage.data.pluginName);
+          if (!plugin) {
+            return undefined;
+          }
+          var oldEnabledState = plugin.enabledState;
+          plugin.enabledState = aMessage.data.newEnabledState;
+          return oldEnabledState;
         }
 
         case "SPObserverService": {

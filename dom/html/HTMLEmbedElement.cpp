@@ -11,6 +11,7 @@
 #include "mozilla/dom/ElementInlines.h"
 
 #include "mozilla/dom/Document.h"
+#include "nsIPluginDocument.h"
 #include "nsThreadUtils.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
@@ -72,9 +73,16 @@ nsresult HTMLEmbedElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsInComposedDoc()) {
-    void (HTMLEmbedElement::*start)() = &HTMLEmbedElement::StartObjectLoad;
-    nsContentUtils::AddScriptRunner(
-        NewRunnableMethod("dom::HTMLEmbedElement::BindToTree", this, start));
+    // Don't kick off load from being bound to a plugin document - the plugin
+    // document will call nsObjectLoadingContent::InitializeFromChannel() for
+    // the initial load.
+    nsCOMPtr<nsIPluginDocument> pluginDoc =
+        do_QueryInterface(&aContext.OwnerDoc());
+    if (!pluginDoc) {
+      void (HTMLEmbedElement::*start)() = &HTMLEmbedElement::StartObjectLoad;
+      nsContentUtils::AddScriptRunner(
+          NewRunnableMethod("dom::HTMLEmbedElement::BindToTree", this, start));
+    }
   }
 
   return NS_OK;
@@ -139,8 +147,9 @@ nsresult HTMLEmbedElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
 
 bool HTMLEmbedElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                        int32_t* aTabIndex) {
-  // Plugins that show the empty fallback should not accept focus.
-  if (Type() == eType_Fallback) {
+  // If we have decided that this is a blocked plugin then do not allow focus.
+  if ((Type() == eType_Null) &&
+      (PluginFallbackType() == eFallbackBlockAllPlugins)) {
     if (aTabIndex) {
       *aTabIndex = -1;
     }
@@ -255,7 +264,15 @@ nsresult HTMLEmbedElement::CopyInnerTo(HTMLEmbedElement* aDest) {
 
 JSObject* HTMLEmbedElement::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
-  return HTMLEmbedElement_Binding::Wrap(aCx, this, aGivenProto);
+  JSObject* obj;
+  obj = HTMLEmbedElement_Binding::Wrap(aCx, this, aGivenProto);
+
+  if (!obj) {
+    return nullptr;
+  }
+  JS::Rooted<JSObject*> rootedObj(aCx, obj);
+  SetupProtoChain(aCx, rootedObj);
+  return rootedObj;
 }
 
 nsContentPolicyType HTMLEmbedElement::GetContentPolicyType() const {

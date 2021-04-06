@@ -1,0 +1,13 @@
+<!doctype html>
+<html class="reftest-wait">
+<head>
+<title>Plugin boxes</title>
+<script src="utils.js">
+</script>
+</head>
+<body onLoad="forceLoadPlugin(['p1', 'p2', 'p3', 'p4'])">
+<embed type="application/x-test" width="400" height="400" drawmode="solid" color="FFFF0000" id="p1"></embed> <!-- red -->
+<embed type="application/x-test" width="400" height="400" drawmode="solid" color="FF00FF00" id="p2"></embed> <!-- green -->
+<embed type="application/x-test" width="400" height="400" drawmode="solid" color="FF0000FF" id="p3"></embed> <!-- blue -->
+<embed type="application/x-test" width="400" height="400" drawmode="solid" color="FF999999" id="p4"></embed> <!-- gray -->
+</body></html>

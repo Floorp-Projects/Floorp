@@ -1,0 +1,26 @@
+<!doctype html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#one {
+  position:absolute;
+  left:0px; top:0px;
+  z-index:1;
+}
+#two {
+  position:absolute;
+  top:100px; left:100px;
+  width:200px; height:200px;
+  z-index:0;
+  background-color: rgb(255,0,0);
+}
+</style>
+<script src="utils.js">
+</script>
+</head>
+<body onLoad="forceLoadPlugin('one')">
+<div id="two"></div>
+<embed id="one" type="application/x-test" width="400" height="400" drawmode="solid" color="9900FF00" id="p1"></embed>
+</body>
+</html>
+

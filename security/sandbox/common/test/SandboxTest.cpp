@@ -26,7 +26,7 @@ GeckoProcessType GeckoProcessStringToType(const nsCString& aString) {
   for (GeckoProcessType type = GeckoProcessType(0);
        type < GeckoProcessType::GeckoProcessType_End;
        type = GeckoProcessType(type + 1)) {
-    if (aString == XRE_GeckoProcessTypeToString(type)) {
+    if (aString == kGeckoProcessTypeString[type]) {
       return type;
     }
   }

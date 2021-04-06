@@ -31,6 +31,8 @@
 #  define Comment _Comment
 #endif
 
+#include "nsPluginInstanceOwner.h"
+
 #ifdef XP_MACOSX
 #  undef TextRange
 #  undef TextRangeArray
@@ -147,6 +149,8 @@ void TextComposition::DispatchEvent(
     WidgetCompositionEvent* aDispatchEvent, nsEventStatus* aStatus,
     EventDispatchingCallback* aCallBack,
     const WidgetCompositionEvent* aOriginalEvent) {
+  nsPluginInstanceOwner::GeneratePluginEvent(aOriginalEvent, aDispatchEvent);
+
   if (aDispatchEvent->mMessage == eCompositionChange) {
     aDispatchEvent->mFlags.mOnlySystemGroupDispatchInContent = true;
   }

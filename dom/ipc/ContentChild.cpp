@@ -108,6 +108,8 @@
 #include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/plugins/PluginInstanceParent.h"
+#include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/widget/RemoteLookAndFeel.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
@@ -142,7 +144,6 @@
 #    include "mozilla/SandboxInfo.h"
 #  elif defined(XP_MACOSX)
 #    include "mozilla/Sandbox.h"
-#    include "mozilla/gfx/QuartzSupport.h"
 #  elif defined(__OpenBSD__)
 #    include <err.h>
 #    include <sys/stat.h>
@@ -2919,10 +2920,26 @@ void ContentChild::ShutdownInternal() {
 
 mozilla::ipc::IPCResult ContentChild::RecvUpdateWindow(
     const uintptr_t& aChildId) {
+#if defined(XP_WIN)
+  NS_ASSERTION(aChildId,
+               "Expected child hwnd value for remote plugin instance.");
+  mozilla::plugins::PluginInstanceParent* parentInstance =
+      mozilla::plugins::PluginInstanceParent::LookupPluginInstanceByID(
+          aChildId);
+  if (parentInstance) {
+    // sync! update call to the plugin instance that forces the
+    // plugin to paint its child window.
+    if (!parentInstance->CallUpdateWindow()) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+  }
+  return IPC_OK();
+#else
   MOZ_ASSERT(
       false,
       "ContentChild::RecvUpdateWindow calls unexpected on this platform.");
   return IPC_FAIL_NO_REASON(this);
+#endif
 }
 
 PContentPermissionRequestChild*
@@ -3285,6 +3302,14 @@ mozilla::ipc::IPCResult ContentChild::RecvRefreshScreens(
     nsTArray<ScreenDetails>&& aScreens) {
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.Refresh(std::move(aScreens));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvSetPluginList(
+    const uint32_t& aPluginEpoch, nsTArray<plugins::PluginTag>&& aPluginTags,
+    nsTArray<plugins::FakePluginTag>&& aFakePluginTags) {
+  RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+  host->SetPluginsInContent(aPluginEpoch, aPluginTags, aFakePluginTags);
   return IPC_OK();
 }
 
