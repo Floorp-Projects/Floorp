@@ -9,11 +9,6 @@
 
 "use strict";
 
-// Globals
-
-var { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 var { Integration } = ChromeUtils.import(
   "resource://gre/modules/Integration.jsm"
 );
@@ -21,68 +16,22 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadPaths",
-  "resource://gre/modules/DownloadPaths.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Downloads",
-  "resource://gre/modules/Downloads.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "HttpServer",
-  "resource://testing-common/httpd.js"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Promise",
-  "resource://gre/modules/Promise.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
-
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileTestUtils",
-  "resource://testing-common/FileTestUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "MockRegistrar",
-  "resource://testing-common/MockRegistrar.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "TestUtils",
-  "resource://testing-common/TestUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
+  Downloads: "resource://gre/modules/Downloads.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  HttpServer: "resource://testing-common/httpd.js",
+  MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  TestUtils: "resource://testing-common/TestUtils.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -222,6 +171,18 @@ function httpUrl(aFileName) {
  */
 function getTempFile(leafName) {
   return FileTestUtils.getTempFile(leafName);
+}
+
+/**
+ * Check for file existence.
+ * @param {string} path The file path.
+ */
+async function fileExists(path) {
+  try {
+    return (await IOUtils.stat(path)).type == "regular";
+  } catch (ex) {
+    return false;
+  }
 }
 
 /**
@@ -692,7 +653,7 @@ function startFakeServer() {
 /**
  * This is an internal reference that should not be used directly by tests.
  */
-var _gDeferResponses = Promise.defer();
+var _gDeferResponses = PromiseUtils.defer();
 
 /**
  * Ensures that all the interruptible requests started after this function is
@@ -720,7 +681,7 @@ function mustInterruptResponses() {
   _gDeferResponses.resolve();
 
   info("Interruptible responses will be blocked midway.");
-  _gDeferResponses = Promise.defer();
+  _gDeferResponses = PromiseUtils.defer();
 }
 
 /**

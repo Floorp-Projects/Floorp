@@ -310,7 +310,7 @@ add_task(async function test_history_expiration() {
   let downloadOne = await promiseNewDownload();
   let downloadTwo = await promiseNewDownload(httpUrl("interruptible.txt"));
 
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   let removeNotifications = 0;
   let downloadView = {
     onDownloadRemoved(aDownload) {
@@ -357,7 +357,7 @@ add_task(async function test_history_clear() {
   await list.add(downloadOne);
   await list.add(downloadTwo);
 
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   let removeNotifications = 0;
   let downloadView = {
     onDownloadRemoved(aDownload) {
@@ -392,7 +392,7 @@ add_task(async function test_removeFinished() {
   await list.add(downloadThree);
   await list.add(downloadFour);
 
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   let removeNotifications = 0;
   let downloadView = {
     onDownloadRemoved(aDownload) {
