@@ -8,6 +8,7 @@
 #include "FlacDemuxer.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/ScopeExit.h"
 #include "mp3sniff.h"
 #include "nestegg/nestegg.h"
 #include "nsHttpChannel.h"
