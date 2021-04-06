@@ -19,16 +19,14 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
+import kotlinx.android.synthetic.main.tabs_tray_tab_counter2.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.browser.state.selector.normalTabs
-import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.ui.tabcounter.TabCounter
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.HomeScreenViewModel
@@ -52,6 +50,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     private lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
 
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
+    private val tabCounterBinding = ViewBoundFeatureWrapper<TabCounterBinding>()
 
     private val selectTabUseCase by lazy {
         SelectTabUseCaseWrapper(
@@ -140,11 +139,14 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             view = view
         )
 
-        consumeFrom(requireComponents.core.store) {
-            view.findViewById<TabCounter>(R.id.tab_counter)?.apply {
-                setCount(requireComponents.core.store.state.normalTabs.size)
-            }
-        }
+        tabCounterBinding.set(
+            feature = TabCounterBinding(
+                store = requireComponents.core.store,
+                counter = tab_counter
+            ),
+            owner = this,
+            view = view
+        )
     }
 
     override fun setCurrentTrayPosition(position: Int, smoothScroll: Boolean) {
