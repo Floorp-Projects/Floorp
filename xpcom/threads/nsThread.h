@@ -21,7 +21,6 @@
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "nsIDelayedRunnableObserver.h"
 #include "nsIDirectTaskDispatcher.h"
 #include "nsIEventTarget.h"
 #include "nsISerialEventTarget.h"
@@ -32,7 +31,6 @@
 
 namespace mozilla {
 class CycleCollectedJSContext;
-class DelayedRunnable;
 class SynchronizedEventQueue;
 class ThreadEventQueue;
 class ThreadEventTarget;
@@ -154,7 +152,6 @@ class PerformanceCounterState {
 // A native thread
 class nsThread : public nsIThreadInternal,
                  public nsISupportsPriority,
-                 public nsIDelayedRunnableObserver,
                  public nsIDirectTaskDispatcher,
                  private mozilla::LinkedListElement<nsThread> {
   friend mozilla::LinkedList<nsThread>;
@@ -260,10 +257,6 @@ class nsThread : public nsIThreadInternal,
     MOZ_ASSERT(IsOnCurrentThread());
     mUseHangMonitor = aValue;
   }
-
-  void OnDelayedRunnableCreated(mozilla::DelayedRunnable* aRunnable) override;
-  void OnDelayedRunnableScheduled(mozilla::DelayedRunnable* aRunnable) override;
-  void OnDelayedRunnableRan(mozilla::DelayedRunnable* aRunnable) override;
 
  private:
   void DoMainThreadSpecificProcessing() const;
