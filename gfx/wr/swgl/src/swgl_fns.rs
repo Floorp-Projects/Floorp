@@ -316,6 +316,7 @@ extern "C" {
     fn ReferenceContext(ctx: *mut c_void);
     fn DestroyContext(ctx: *mut c_void);
     fn MakeCurrent(ctx: *mut c_void);
+    fn ReportMemory(size_of_op: unsafe extern "C" fn(ptr: *const c_void) -> usize) -> usize;
 }
 
 #[derive(Clone, Copy)]
@@ -448,6 +449,10 @@ impl Context {
                 None
             }
         }
+    }
+
+    pub fn report_memory(size_of_op: unsafe extern "C" fn(ptr: *const c_void) -> usize) -> usize {
+        unsafe { ReportMemory(size_of_op) }
     }
 }
 

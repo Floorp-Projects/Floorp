@@ -5287,7 +5287,7 @@ impl Renderer {
         report += self.texture_upload_pbo_pool.report_memory();
 
         // Textures held internally within the device layer.
-        report += self.device.report_memory();
+        report += self.device.report_memory(self.size_of_ops.as_ref().unwrap());
 
         report
     }
