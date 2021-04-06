@@ -49,18 +49,18 @@ class ChildDNSRecord : public nsIDNSAddrRecord {
 
   nsCString mCanonicalName;
   nsTArray<NetAddr> mAddresses;
-  uint32_t mCurrent = 0;  // addr iterator
-  uint16_t mFlags = 0;
-  double mTrrFetchDuration = 0;
-  double mTrrFetchDurationNetworkOnly = 0;
-  bool mIsTRR = false;
-  uint32_t mEffectiveTRRMode = 0;
+  uint32_t mCurrent;  // addr iterator
+  uint16_t mFlags;
+  double mTrrFetchDuration;
+  double mTrrFetchDurationNetworkOnly;
+  bool mIsTRR;
+  uint32_t mEffectiveTRRMode;
 };
 
 NS_IMPL_ISUPPORTS(ChildDNSRecord, nsIDNSRecord, nsIDNSAddrRecord)
 
 ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
-    : mFlags(flags) {
+    : mCurrent(0), mFlags(flags) {
   mCanonicalName = reply.canonicalName();
   mTrrFetchDuration = reply.trrFetchDuration();
   mTrrFetchDurationNetworkOnly = reply.trrFetchDurationNetworkOnly();
@@ -208,7 +208,7 @@ NS_IMPL_ISUPPORTS(ChildDNSByTypeRecord, nsIDNSByTypeRecord, nsIDNSRecord,
 
 ChildDNSByTypeRecord::ChildDNSByTypeRecord(const TypeRecordResultType& reply,
                                            const nsACString& aHost)
-    : DNSHTTPSSVCRecordBase(aHost) {
+    : DNSHTTPSSVCRecordBase(aHost), mAllRecordsExcluded(false) {
   mResults = reply;
 }
 

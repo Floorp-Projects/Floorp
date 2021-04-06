@@ -133,7 +133,11 @@ void nsIDNService::prefsChanged(const char* pref) {
   }
 }
 
-nsIDNService::nsIDNService() {
+nsIDNService::nsIDNService()
+    : mLock("DNService pref value lock"),
+      mShowPunycode(false),
+      mRestrictionProfile(static_cast<restrictionProfile>(0)),
+      mIDNUseWhitelist(false) {
   MOZ_ASSERT(NS_IsMainThread());
 
   uint32_t IDNAOptions = UIDNA_CHECK_BIDI | UIDNA_CHECK_CONTEXTJ;
@@ -383,11 +387,10 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString& input,
 namespace {
 
 class MOZ_STACK_CLASS MutexSettableAutoUnlock final {
- private:
-  Mutex* mMutex = nullptr;
+  Mutex* mMutex;
 
  public:
-  MutexSettableAutoUnlock() = default;
+  MutexSettableAutoUnlock() : mMutex(nullptr) {}
 
   void Acquire(mozilla::Mutex& aMutex) {
     MOZ_ASSERT(!mMutex);

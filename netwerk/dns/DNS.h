@@ -178,7 +178,7 @@ enum ObliviousDoHMessageType : uint8_t {
 };
 
 struct ObliviousDoHMessage {
-  ObliviousDoHMessageType mType{ODOH_QUERY};
+  ObliviousDoHMessageType mType;
   nsTArray<uint8_t> mKeyId;
   nsTArray<uint8_t> mEncryptedMessage;
 };
