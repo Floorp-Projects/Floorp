@@ -300,9 +300,6 @@ include percent-overflow-sizing/reftest.list
 # pixel-rounding/
 include pixel-rounding/reftest.list
 
-# plugin/
-include ../../dom/plugins/test/reftest/reftest.list
-
 # position-dynamic-changes/
 include position-dynamic-changes/reftest.list
 

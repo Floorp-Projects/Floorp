@@ -21,7 +21,6 @@ DUMMY_DATE_2.setMilliseconds(0);
 const {
   PROCESS_TYPE_MAIN,
   PROCESS_TYPE_CONTENT,
-  PROCESS_TYPE_PLUGIN,
   PROCESS_TYPE_GMPLUGIN,
   PROCESS_TYPE_GPU,
   PROCESS_TYPE_VR,
@@ -237,60 +236,6 @@ add_task(async function test_add_content_hang() {
   Assert.equal(crashes.length, 2);
 });
 
-add_task(async function test_add_plugin_crash() {
-  let s = await getStore();
-
-  Assert.ok(
-    s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "id1", new Date())
-  );
-  Assert.equal(s.crashesCount, 1);
-
-  let c = s.crashes[0];
-  Assert.ok(c.crashDate);
-  Assert.equal(c.type, PROCESS_TYPE_PLUGIN + "-" + CRASH_TYPE_CRASH);
-  Assert.ok(c.isOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH));
-
-  Assert.ok(
-    s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "id2", new Date())
-  );
-  Assert.equal(s.crashesCount, 2);
-
-  Assert.ok(
-    s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "id1", new Date())
-  );
-  Assert.equal(s.crashesCount, 2);
-
-  let crashes = s.getCrashesOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH);
-  Assert.equal(crashes.length, 2);
-});
-
-add_task(async function test_add_plugin_hang() {
-  let s = await getStore();
-
-  Assert.ok(
-    s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "id1", new Date())
-  );
-  Assert.equal(s.crashesCount, 1);
-
-  let c = s.crashes[0];
-  Assert.ok(c.crashDate);
-  Assert.equal(c.type, PROCESS_TYPE_PLUGIN + "-" + CRASH_TYPE_HANG);
-  Assert.ok(c.isOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG));
-
-  Assert.ok(
-    s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "id2", new Date())
-  );
-  Assert.equal(s.crashesCount, 2);
-
-  Assert.ok(
-    s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "id1", new Date())
-  );
-  Assert.equal(s.crashesCount, 2);
-
-  let crashes = s.getCrashesOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG);
-  Assert.equal(crashes.length, 2);
-});
-
 add_task(async function test_add_gmplugin_crash() {
   let s = await getStore();
 
@@ -421,8 +366,6 @@ add_task(async function test_add_mixed_types() {
         new Date()
       ) &&
       s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG, "chang", new Date()) &&
-      s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "pcrash", new Date()) &&
-      s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "phang", new Date()) &&
       s.addCrash(
         PROCESS_TYPE_GMPLUGIN,
         CRASH_TYPE_CRASH,
@@ -440,7 +383,7 @@ add_task(async function test_add_mixed_types() {
       )
   );
 
-  Assert.equal(s.crashesCount, 11);
+  Assert.equal(s.crashesCount, 9);
 
   await s.save();
 
@@ -449,7 +392,7 @@ add_task(async function test_add_mixed_types() {
 
   await s.load();
 
-  Assert.equal(s.crashesCount, 11);
+  Assert.equal(s.crashesCount, 9);
 
   let crashes = s.getCrashesOfType(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 1);
@@ -458,10 +401,6 @@ add_task(async function test_add_mixed_types() {
   crashes = s.getCrashesOfType(PROCESS_TYPE_CONTENT, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 1);
   crashes = s.getCrashesOfType(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG);
-  Assert.equal(crashes.length, 1);
-  crashes = s.getCrashesOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH);
-  Assert.equal(crashes.length, 1);
-  crashes = s.getCrashesOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG);
   Assert.equal(crashes.length, 1);
   crashes = s.getCrashesOfType(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 1);
@@ -492,11 +431,7 @@ add_task(async function test_high_water() {
         s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_CRASH, "cc1" + i, d1) &&
         s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_CRASH, "cc2" + i, d2) &&
         s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG, "ch1" + i, d1) &&
-        s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG, "ch2" + i, d2) &&
-        s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "pc1" + i, d1) &&
-        s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "pc2" + i, d2) &&
-        s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "ph1" + i, d1) &&
-        s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "ph2" + i, d2)
+        s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG, "ch2" + i, d2)
     );
   }
 
@@ -512,14 +447,9 @@ add_task(async function test_high_water() {
   Assert.ok(!s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG, "ch1" + i, d1));
   Assert.ok(!s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG, "ch2" + i, d2));
 
-  Assert.ok(!s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "pc1" + i, d1));
-  Assert.ok(!s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "pc2" + i, d2));
-  Assert.ok(!s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "ph1" + i, d1));
-  Assert.ok(!s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "ph2" + i, d2));
-
-  // We preserve main process crashes and hangs. Content and plugin crashes and
+  // We preserve main process crashes and hangs. Content crashes and
   // hangs beyond should be discarded.
-  Assert.equal(s.crashesCount, 12 * s.HIGH_WATER_DAILY_THRESHOLD + 4);
+  Assert.equal(s.crashesCount, 8 * s.HIGH_WATER_DAILY_THRESHOLD + 4);
 
   let crashes = s.getCrashesOfType(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 2 * s.HIGH_WATER_DAILY_THRESHOLD + 2);
@@ -529,11 +459,6 @@ add_task(async function test_high_water() {
   crashes = s.getCrashesOfType(PROCESS_TYPE_CONTENT, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 2 * s.HIGH_WATER_DAILY_THRESHOLD);
   crashes = s.getCrashesOfType(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG);
-  Assert.equal(crashes.length, 2 * s.HIGH_WATER_DAILY_THRESHOLD);
-
-  crashes = s.getCrashesOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH);
-  Assert.equal(crashes.length, 2 * s.HIGH_WATER_DAILY_THRESHOLD);
-  crashes = s.getCrashesOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG);
   Assert.equal(crashes.length, 2 * s.HIGH_WATER_DAILY_THRESHOLD);
 
   // But raw counts should be preserved.
@@ -560,15 +485,6 @@ add_task(async function test_high_water() {
     s.HIGH_WATER_DAILY_THRESHOLD + 1
   );
 
-  Assert.equal(
-    s._countsByDay.get(day1).get(PROCESS_TYPE_PLUGIN + "-" + CRASH_TYPE_CRASH),
-    s.HIGH_WATER_DAILY_THRESHOLD + 1
-  );
-  Assert.equal(
-    s._countsByDay.get(day1).get(PROCESS_TYPE_PLUGIN + "-" + CRASH_TYPE_HANG),
-    s.HIGH_WATER_DAILY_THRESHOLD + 1
-  );
-
   await s.save();
   await s.load();
 
@@ -590,15 +506,6 @@ add_task(async function test_high_water() {
   );
   Assert.equal(
     s._countsByDay.get(day1).get(PROCESS_TYPE_CONTENT + "-" + CRASH_TYPE_HANG),
-    s.HIGH_WATER_DAILY_THRESHOLD + 1
-  );
-
-  Assert.equal(
-    s._countsByDay.get(day1).get(PROCESS_TYPE_PLUGIN + "-" + CRASH_TYPE_CRASH),
-    s.HIGH_WATER_DAILY_THRESHOLD + 1
-  );
-  Assert.equal(
-    s._countsByDay.get(day1).get(PROCESS_TYPE_PLUGIN + "-" + CRASH_TYPE_HANG),
     s.HIGH_WATER_DAILY_THRESHOLD + 1
   );
 });
