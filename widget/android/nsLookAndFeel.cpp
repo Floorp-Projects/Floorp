@@ -77,8 +77,6 @@ void nsLookAndFeel::RefreshImpl() {
 
   mInitializedSystemColors = false;
   mInitializedShowPassword = false;
-  mPrefersReducedMotionCached = false;
-  mSystemUsesDarkThemeCached = false;
 }
 
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
@@ -380,12 +378,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
 
     case IntID::PrefersReducedMotion:
-      if (!mPrefersReducedMotionCached && XRE_IsParentProcess()) {
-        mPrefersReducedMotion =
-            java::GeckoSystemStateListener::PrefersReducedMotion();
-        mPrefersReducedMotionCached = true;
-      }
-      aResult = mPrefersReducedMotion;
+      aResult = java::GeckoSystemStateListener::PrefersReducedMotion();
       break;
 
     case IntID::PrimaryPointerCapabilities:
@@ -396,19 +389,8 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
 
     case IntID::SystemUsesDarkTheme: {
-      if (!mSystemUsesDarkThemeCached && XRE_IsParentProcess()) {
-        // Bail out if AndroidBridge hasn't initialized.
-        if (!jni::IsAvailable()) {
-          return NS_ERROR_FAILURE;
-        }
-
-        java::GeckoRuntime::LocalRef runtime =
-            java::GeckoRuntime::GetInstance();
-        mSystemUsesDarkTheme = runtime && runtime->UsesDarkTheme();
-        mSystemUsesDarkThemeCached = true;
-      }
-
-      aResult = mSystemUsesDarkTheme;
+      java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
+      aResult = runtime && runtime->UsesDarkTheme();
       break;
     }
 
