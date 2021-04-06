@@ -234,6 +234,8 @@
 
 /* CONTENT */
 
+.protections-popup-footer-button,
+.protections-popup-category,
 .protections-popup-empty-label,
 .tracking-protection-button,
 .protections-popup-cookiesView-list-header,
@@ -246,6 +248,7 @@
 .protections-popup-category-state-label,
 #protections-popup-content > description,
 .protections-popup-footer-button-label,
+#protections-popup-footer-protection-type-label,
 #protections-popup-trackers-blocked-counter-description,
 #protections-popup-sendReportView-heading > description {
   margin: 0;
@@ -474,26 +477,24 @@ description#identity-popup-content-verifier,
   color: #d74345;
 }
 
+.protections-popup-footer-button,
 .protections-popup-category {
   /* Overwrite toolbarbutton styles */
   appearance: none;
-  margin: 0;
-  padding-inline-start: 0;
+  border-radius: 2px;
+  padding: 0 var(--horizontal-padding);
 }
 
 .protections-popup-category:-moz-focusring,
 .protections-popup-category:hover,
 .protections-popup-footer-button:-moz-focusring,
-.protections-popup-footer-button:hover,
-#protections-popup-show-report-stack:hover > .protections-popup-footer-button {
-  border-radius: 2px;
+.protections-popup-footer-button:hover {
   background-color: var(--arrowpanel-dimmed);
   outline: none;
 }
 
 .protections-popup-category:hover:active,
-.protections-popup-footer-button:hover:active,
-#protections-popup-show-report-stack:hover:active > .protections-popup-footer-button {
+.protections-popup-footer-button:hover:active {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
@@ -725,13 +726,10 @@ description#identity-popup-content-verifier,
   }
 }
 
+.protections-popup-footer-button,
 .protections-popup-category,
 .permission-popup-permission-item {
   min-height: 24px;
-}
-
-.protections-popup-category {
-  padding: 0 var(--horizontal-padding);
 }
 
 .protections-popup-category[uidisabled] {
@@ -874,11 +872,6 @@ description#identity-popup-content-verifier,
   margin: 0;
 }
 
-#protections-popup-tp-switch-breakage-link,
-#protections-popup-tp-switch-breakage-fixed-link {
-  margin-top: calc(0.5 * var(--vertical-section-padding)) !important;
-}
-
 #protections-popup[hasException] #protections-popup-tp-switch-section {
   background: repeating-linear-gradient(
     -56deg,
@@ -983,14 +976,6 @@ description#identity-popup-content-verifier,
 
 /* Protection popup footer categories */
 
-.protections-popup-footer-button {
-  /* Overwrite toolbarbutton styles */
-  appearance: none;
-  min-height: 24px;
-  padding-inline-start: var(--horizontal-padding);
-  margin: 0;
-}
-
 #protections-popup-footer {
   padding: var(--vertical-section-padding) 0;
 }
@@ -1013,8 +998,7 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-footer-protection-type-label {
-    margin-inline-end: var(--horizontal-padding);
-    color: var(--panel-description-color);
+  color: var(--panel-description-color);
 }
 
 .protections-popup-description {
@@ -1114,6 +1098,11 @@ description#identity-popup-content-verifier,
   background: radial-gradient(circle farthest-side at top left, #9059FF, #0250BB);
 }
 
+#protections-popup-tp-switch-breakage-link,
+#protections-popup-tp-switch-breakage-fixed-link {
+  margin-top: calc(0.5 * var(--vertical-section-padding)) !important;
+}
+
 .protections-popup-footer-icon {
   -moz-context-properties: fill;
   width: 16px;
@@ -1132,3 +1121,58 @@ description#identity-popup-content-verifier,
   margin-inline-start: 1em;
 }
 }/** END not PROTON **/
+
+@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#protections-popup-mainView-panel-header {
+  min-height: 43.5px;
+}
+
+#protections-popup-info-button {
+  margin-inline-end: 16px;
+}
+
+.protections-popup-footer-button,
+.protections-popup-category {
+  min-height: 32px;
+  border-radius: var(--arrowpanel-menuitem-border-radius);
+}
+
+#protections-popup-footer {
+  padding: var(--panel-subview-body-padding);
+}
+
+#protections-popup-blocking-section-header,
+#protections-popup-not-blocking-section-header,
+#protections-popup-not-found-section-header,
+#protections-popup-tp-switch-section,
+.protections-popup-category,
+.protections-popup-footer-button {
+  padding: var(--arrowpanel-menuitem-padding);
+  margin: var(--arrowpanel-menuitem-margin);
+}
+
+#protections-popup-footer-protection-type-label {
+  margin-inline-end: 0;
+}
+
+#protections-popup-trackers-blocked-counter-box {
+  margin-inline-end: 8px;
+  padding-inline-end: var(--arrowpanel-menuitem-padding-block);
+}
+
+.protections-popup-category:hover,
+.protections-popup-footer-button:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+.protections-popup-category:hover:active,
+.protections-popup-footer-button:hover:active {
+  background-color: var(--button-active-bgcolor);
+}
+
+.protections-popup-category:focus-visible,
+.protections-popup-footer-button:focus-visible {
+  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
+  background: none;
+}
+}/** END Proton **/
