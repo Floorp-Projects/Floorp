@@ -8,6 +8,7 @@
 
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsASCIIMask.h"
 
 class nsIFile;
 class nsIURLParser;
@@ -99,9 +100,11 @@ void net_FilterURIString(const nsACString& input, nsACString& result);
  *
  * @param aInput the URL spec we want to filter
  * @param aFlags the flags which control which characters we escape
+ * @param aFilterMask a mask of characters that should excluded from the result
  * @param aResult the out param to write to if filtering happens
  */
 nsresult net_FilterAndEscapeURI(const nsACString& aInput, uint32_t aFlags,
+                                const ASCIIMaskArray& aFilterMask,
                                 nsACString& aResult);
 
 #if defined(XP_WIN)

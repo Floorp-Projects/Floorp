@@ -98,6 +98,7 @@ XPIDL_SOURCES += [
     "nsISerializationHelper.idl",
     "nsIServerSocket.idl",
     "nsISimpleStreamListener.idl",
+    "nsISimpleURIMutator.idl",
     "nsISocketFilter.idl",
     "nsISocketTransport.idl",
     "nsISocketTransportService.idl",

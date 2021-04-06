@@ -472,6 +472,7 @@ void net_FilterURIString(const nsACString& input, nsACString& result) {
 }
 
 nsresult net_FilterAndEscapeURI(const nsACString& aInput, uint32_t aFlags,
+                                const ASCIIMaskArray& aFilterMask,
                                 nsACString& aResult) {
   aResult.Truncate();
 
@@ -487,9 +488,8 @@ nsresult net_FilterAndEscapeURI(const nsACString& aInput, uint32_t aFlags,
                    charFilter)
           .base();
 
-  const ASCIIMaskArray& mask = ASCIIMask::MaskCRLFTab();
-  return NS_EscapeAndFilterURL(Substring(newStart, newEnd), aFlags, &mask,
-                               aResult, fallible);
+  return NS_EscapeAndFilterURL(Substring(newStart, newEnd), aFlags,
+                               &aFilterMask, aResult, fallible);
 }
 
 #if defined(XP_WIN)
