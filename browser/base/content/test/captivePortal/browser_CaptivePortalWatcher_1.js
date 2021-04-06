@@ -48,7 +48,9 @@ let testcases = [
       testShowLoginPageButtonVisibility(notification, "hidden");
     }
 
-    let button = notification.querySelector("button.notification-button");
+    let button = notification.buttonContainer.querySelector(
+      "button.notification-button"
+    );
     async function clickButtonAndExpectNewPortalTab() {
       let p = BrowserTestUtils.waitForNewTab(win.gBrowser, CANONICAL_URL);
       button.click();
