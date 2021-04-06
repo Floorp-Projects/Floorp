@@ -78,6 +78,12 @@ DnsAndConnectSocket::~DnsAndConnectSocket() {
   MOZ_ASSERT(!mPrimaryTransport.mSocketTransport);
   MOZ_ASSERT(!mBackupTransport.mSocketTransport);
   MOZ_ASSERT(mState == DnsAndSocketState::DONE);
+  MOZ_ASSERT(!mPrimaryTransport.mWaitingForConnect);
+  MOZ_ASSERT(!mBackupTransport.mWaitingForConnect);
+  // Check in case something goes wrong that we decrease
+  // the nsHttpConnectionMgr active connecttion number.
+  mPrimaryTransport.MaybeSetConnectingDone();
+  mBackupTransport.MaybeSetConnectingDone();
 
   if (mEnt) {
     bool inqueue = mEnt->RemoveDnsAndConnectSocket(this);
@@ -473,7 +479,6 @@ DnsAndConnectSocket::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   }
 
   mEnt->mDoNotDestroy = true;
-  gHttpHandler->ConnMgr()->RecvdConnect();
 
   rv = SetupConn(isPrimary, rv);
   if (mEnt) {
@@ -868,7 +873,22 @@ void DnsAndConnectSocket::TransportSetup::Abandon() {
   mState = TransportSetup::TransportSetupState::DONE;
 }
 
+void DnsAndConnectSocket::TransportSetup::SetConnecting() {
+  MOZ_ASSERT(!mWaitingForConnect);
+  mWaitingForConnect = true;
+  gHttpHandler->ConnMgr()->StartedConnect();
+}
+
+void DnsAndConnectSocket::TransportSetup::MaybeSetConnectingDone() {
+  if (mWaitingForConnect) {
+    mWaitingForConnect = false;
+    gHttpHandler->ConnMgr()->RecvdConnect();
+  }
+}
+
 void DnsAndConnectSocket::TransportSetup::CloseAll() {
+  MaybeSetConnectingDone();
+
   // Tell socket (and backup socket) to forget the half open socket.
   if (mSocketTransport) {
     mSocketTransport->SetEventSink(nullptr, nullptr);
@@ -878,7 +898,6 @@ void DnsAndConnectSocket::TransportSetup::CloseAll() {
 
   // Tell output stream (and backup) to forget the half open socket.
   if (mStreamOut) {
-    gHttpHandler->ConnMgr()->RecvdConnect();
     mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
     mStreamOut = nullptr;
   }
@@ -900,6 +919,7 @@ void DnsAndConnectSocket::TransportSetup::CloseAll() {
 nsresult DnsAndConnectSocket::TransportSetup::CheckConnectedResult(
     DnsAndConnectSocket* dnsAndSock) {
   mState = TransportSetup::TransportSetupState::CONNECTING_DONE;
+  MaybeSetConnectingDone();
 
   if (mSkipDnsResolution) {
     return NS_OK;
@@ -1207,7 +1227,7 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
 
   rv = mStreamOut->AsyncWait(dnsAndSock, 0, 0, nullptr);
   if (NS_SUCCEEDED(rv)) {
-    gHttpHandler->ConnMgr()->StartedConnect();
+    SetConnecting();
   }
 
   return rv;
