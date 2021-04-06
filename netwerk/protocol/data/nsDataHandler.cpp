@@ -58,7 +58,7 @@ nsDataHandler::GetProtocolFlags(uint32_t* result) {
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
 
-  nsCString spec(aSpec);
+  const nsPromiseFlatCString& spec = PromiseFlatCString(aSpec);
 
 #ifdef ANDROID
   // Due to heap limitations on mobile, limits the size of data URL
@@ -83,14 +83,16 @@ nsDataHandler::GetProtocolFlags(uint32_t* result) {
     if (base64 || (strncmp(contentType.get(), "text/", 5) != 0 &&
                    contentType.Find("xml") == kNotFound)) {
       // it's ascii encoded binary, don't let any spaces in
-      if (!spec.StripWhitespace(mozilla::fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
+               .Apply(NS_MutatorMethod(
+                   &nsISimpleURIMutator::SetSpecAndFilterWhitespace, spec,
+                   nullptr))
+               .Finalize(uri);
+    } else {
+      rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
+               .SetSpec(spec)
+               .Finalize(uri);
     }
-
-    rv = NS_MutateURI(new mozilla::net::nsSimpleURI::Mutator())
-             .SetSpec(spec)
-             .Finalize(uri);
   }
 
   if (NS_FAILED(rv)) return rv;
@@ -239,7 +241,7 @@ nsresult nsDataHandler::ParsePathWithoutRef(
   return NS_OK;
 }
 
-nsresult nsDataHandler::ParseURI(nsCString& spec, nsCString& contentType,
+nsresult nsDataHandler::ParseURI(const nsCString& spec, nsCString& contentType,
                                  nsCString* contentCharset, bool& isBase64,
                                  nsCString* dataBuffer) {
   static constexpr auto kDataScheme = "data:"_ns;
