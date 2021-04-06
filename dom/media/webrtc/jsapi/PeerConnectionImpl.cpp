@@ -293,7 +293,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       mSignalingState(RTCSignalingState::Stable),
       mIceConnectionState(RTCIceConnectionState::New),
       mIceGatheringState(RTCIceGatheringState::New),
-      mWindow(nullptr),
+      mWindow(do_QueryInterface(aGlobal ? aGlobal->GetAsSupports() : nullptr)),
       mCertificate(nullptr),
       mSTSThread(nullptr),
       mForceIceTcp(false),
@@ -309,14 +309,14 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       mActiveOnWindow(false),
       mPacketDumpEnabled(false),
       mPacketDumpFlagsMutex("Packet dump flags mutex"),
-      mTimestampMaker(aGlobal),
+      mTimestampMaker(mWindow),
       mIdGenerator(new RTCStatsIdGenerator()),
       listenPort(0),
       connectPort(0),
       connectStr(nullptr) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT_IF(aGlobal, mWindow);
   if (aGlobal) {
-    mWindow = do_QueryInterface(aGlobal->GetAsSupports());
     if (IsPrivateBrowsing(mWindow)) {
       mPrivateWindow = true;
     }
