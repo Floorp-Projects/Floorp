@@ -88,45 +88,13 @@ interface mixin MozObjectLoadingContent {
   [ChromeOnly]
   const unsigned long TYPE_IMAGE       = 1;
   [ChromeOnly]
-  const unsigned long TYPE_PLUGIN      = 2;
+  const unsigned long TYPE_FALLBACK    = 2;
   [ChromeOnly]
   const unsigned long TYPE_FAKE_PLUGIN = 3;
   [ChromeOnly]
   const unsigned long TYPE_DOCUMENT    = 4;
   [ChromeOnly]
   const unsigned long TYPE_NULL        = 5;
-
-  // The content type is not supported (e.g. plugin not installed)
-  [ChromeOnly]
-  const unsigned long PLUGIN_UNSUPPORTED          = 0;
-  // Showing alternate content
-  [ChromeOnly]
-  const unsigned long PLUGIN_ALTERNATE            = 1;
-  // The plugin exists, but is disabled
-  [ChromeOnly]
-  const unsigned long PLUGIN_DISABLED             = 2;
-  // The plugin is blocklisted and disabled
-  [ChromeOnly]
-  const unsigned long PLUGIN_BLOCKLISTED          = 3;
-  // The plugin is considered outdated, but not disabled
-  [ChromeOnly]
-  const unsigned long PLUGIN_OUTDATED             = 4;
-  // The plugin has crashed
-  [ChromeOnly]
-  const unsigned long PLUGIN_CRASHED              = 5;
-  /// ** All values >= PLUGIN_CLICK_TO_PLAY are plugin placeholder types that
-  ///    would be replaced by a real plugin if activated (playPlugin())
-  /// ** Furthermore, values >= PLUGIN_CLICK_TO_PLAY and
-  ///    <= PLUGIN_VULNERABLE_NO_UPDATE are click-to-play types.
-  // The plugin is disabled until the user clicks on it
-  [ChromeOnly]
-  const unsigned long PLUGIN_CLICK_TO_PLAY        = 8;
-  // The plugin is vulnerable (update available)
-  [ChromeOnly]
-  const unsigned long PLUGIN_VULNERABLE_UPDATABLE = 9;
-  // The plugin is vulnerable (no update available)
-  [ChromeOnly]
-  const unsigned long PLUGIN_VULNERABLE_NO_UPDATE = 10;
 
   /**
    * The actual mime type (the one we got back from the network
@@ -158,13 +126,6 @@ interface mixin MozObjectLoadingContent {
   sequence<MozPluginParameter> getPluginParameters();
 
   /**
-   * This method will play a plugin that has been stopped by the click-to-play
-   * feature.
-   */
-  [ChromeOnly, Throws, NeedsCallerType]
-  void playPlugin();
-
-  /**
    * Forces a re-evaluation and reload of the tag, optionally invalidating its
    * click-to-play state.  This can be used when the MIME type that provides a
    * type has changed, for instance, to force the tag to re-evalulate the
@@ -174,25 +135,11 @@ interface mixin MozObjectLoadingContent {
   void reload(boolean aClearActivation);
 
   /**
-   * This attribute will return true if the current content type has been
-   * activated, either explicitly or by passing checks that would have it be
-   * click-to-play.
-   */
-  [ChromeOnly]
-  readonly attribute boolean activated;
-
-  /**
    * The URL of the data/src loaded in the object. This may be null (i.e.
    * an <embed> with no src).
    */
   [ChromeOnly]
   readonly attribute URI? srcURI;
-
-  [ChromeOnly]
-  readonly attribute unsigned long defaultFallbackType;
-
-  [ChromeOnly]
-  readonly attribute unsigned long pluginFallbackType;
 
   /**
    * Disable the use of fake plugins and reload the tag if necessary

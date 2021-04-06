@@ -29,11 +29,11 @@ interface nsIWebNavigationInfo : nsISupports
   const unsigned long IMAGE = 1;
 
   /**
-   * Returned by isTypeSupported to indicate that a type is supported via an
-   * NPAPI ("Netscape 4 API") plug-in.  This is not the value returned for
-   * "XPCOM plug-ins".
+   * Returned by isTypeSupported to indicate that a type is a special NPAPI
+   * plugin that render as a transparent region (we do not support NPAPI
+   * plugins).
    */
-  const unsigned long PLUGIN = 2;
+  const unsigned long FALLBACK = 2;
 
   /**
    * @note Other return types may be added here in the future as they become
