@@ -105,6 +105,7 @@
   width: 12px;
 }
 
+@media not (-moz-proton) {
 #TabsToolbar .toolbarbutton-1,
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
@@ -116,6 +117,7 @@
   appearance: none;
   padding: 0 var(--toolbarbutton-inner-padding) !important;
 }
+} /*** END !proton ***/
 
 #navigator-toolbox:not(:hover) #tabbrowser-arrowscrollbox:not([highlight])::part(scrollbutton-down) {
   transition: 1s background-color ease-out;
@@ -131,6 +133,20 @@ toolbar .toolbarbutton-1 {
   padding: 0 var(--toolbarbutton-outer-padding);
   -moz-box-pack: center;
 }
+
+@media (-moz-proton) {
+#TabsToolbar .toolbarbutton-1 {
+  margin: 0 0 var(--tabs-navbar-shadow-size) !important;
+}
+
+#tabbrowser-arrowscrollbox::part(scrollbutton-up),
+#tabbrowser-arrowscrollbox::part(scrollbutton-down) {
+  appearance: none;
+  margin: 4px;
+  padding: var(--toolbarbutton-inner-padding) calc(var(--toolbarbutton-inner-padding) - 4px);
+  border-radius: var(--tab-border-radius);
+}
+} /*** END proton ***/
 
 @media not (-moz-proton) {
 :root:not([uidensity=compact]) #PanelUI-button {
@@ -227,6 +243,8 @@ toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover 
 }
 
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active),
+#tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover:active,
+#tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover:active,
 toolbarbutton.bookmark-item:hover:active:not(.subviewbutton, [disabled="true"]),
 toolbarbutton.bookmark-item[open="true"],
 toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-icon,
