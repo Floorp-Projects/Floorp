@@ -1025,9 +1025,10 @@ class nsContextMenu {
         "disabled",
         !enableGeneration
       );
-      this.showItem(
+      this.setItemAttr(
         "passwordmgr-items-separator",
-        showUseSavedLogin || showGenerate || showManage
+        "ensureHidden",
+        showUseSavedLogin || showGenerate || showManage ? null : true
       );
     }
   }

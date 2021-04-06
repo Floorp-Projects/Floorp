@@ -262,8 +262,6 @@
       <menuitem id="context-pocket"
                 data-l10n-id="main-context-menu-save-to-pocket"
                 oncommand="Pocket.savePage(gContextMenu.browser, gContextMenu.browser.currentURI.spec, gContextMenu.browser.contentTitle);"/>
-      <menuseparator id="context-sep-sendpagetodevice" class="sync-ui-item"
-                     hidden="true"/>
       <menu id="context-sendpagetodevice"
             class="sync-ui-item"
             data-l10n-id="main-context-menu-send-to-device"
@@ -274,14 +272,14 @@
       <menu id="fill-login" hidden="true">
         <menupopup id="fill-login-popup" />
       </menu>
-     <menuitem id="fill-login-generated-password"
-               data-l10n-id="main-context-menu-suggest-strong-password"
-               hidden="true"
-               oncommand="gContextMenu.useGeneratedPassword();"/>
-     <menuitem id="manage-saved-logins"
-               data-l10n-id="main-context-menu-manage-logins2"
-               hidden = "true"
-               oncommand="gContextMenu.openPasswordManager();"/>
+      <menuitem id="fill-login-generated-password"
+                data-l10n-id="main-context-menu-suggest-strong-password"
+                hidden="true"
+                oncommand="gContextMenu.useGeneratedPassword();"/>
+      <menuitem id="manage-saved-logins"
+                data-l10n-id="main-context-menu-manage-logins2"
+                hidden="true"
+                oncommand="gContextMenu.openPasswordManager();"/>
       <menuseparator id="passwordmgr-items-separator"/>
       <menuitem id="context-undo"
                 data-l10n-id="text-action-undo"
