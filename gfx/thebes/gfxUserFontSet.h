@@ -266,8 +266,8 @@ class gfxUserFontSet {
       const nsTArray<mozilla::gfx::FontVariation>& aVariationSettings,
       uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
       mozilla::StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
-      float aAscentOverride, float aDescentOverride,
-      float aLineGapOverride, float aSizeAdjust) = 0;
+      float aAscentOverride, float aDescentOverride, float aLineGapOverride,
+      float aSizeAdjust) = 0;
 
   // creates a font face for the specified family, or returns an existing
   // matching entry on the family if there is one
@@ -308,7 +308,7 @@ class gfxUserFontSet {
   // initialize the process that loads external font data, which upon
   // completion will call FontDataDownloadComplete method
   virtual nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
-                             const gfxFontFaceSrc* aFontFaceSrc) = 0;
+                             uint32_t aSrcIndex) = 0;
 
   // generation - each time a face is loaded, generation is
   // incremented so that the change can be recognized
@@ -514,7 +514,7 @@ class gfxUserFontSet {
 
   // report a problem of some kind (implemented in nsUserFontSet)
   virtual nsresult LogMessage(gfxUserFontEntry* aUserFontEntry,
-                              const char* aMessage,
+                              uint32_t aSrcIndex, const char* aMessage,
                               uint32_t aFlags = nsIScriptError::errorFlag,
                               nsresult aStatus = NS_OK) = 0;
 
@@ -649,8 +649,8 @@ class gfxUserFontEntry : public gfxFontEntry {
   void SetLoader(nsFontFaceLoader* aLoader) { mLoader = aLoader; }
   nsFontFaceLoader* GetLoader() const { return mLoader; }
   gfxFontSrcPrincipal* GetPrincipal() const { return mPrincipal; }
-  uint32_t GetSrcIndex() const { return mSrcIndex; }
-  void GetFamilyNameAndURIForLogging(nsACString& aFamilyName, nsACString& aURI);
+  void GetFamilyNameAndURIForLogging(uint32_t aSrcIndex,
+                                     nsACString& aFamilyName, nsACString& aURI);
 
   gfxFontEntry* Clone() const override {
     MOZ_ASSERT_UNREACHABLE("cannot Clone user fonts");
@@ -662,6 +662,12 @@ class gfxUserFontEntry : public gfxFontEntry {
 #endif
 
   const nsTArray<gfxFontFaceSrc>& SourceList() const { return mSrcList; }
+
+  // Returns a weak reference to the requested source record, which is owned
+  // by the gfxUserFontEntry.
+  const gfxFontFaceSrc& SourceAt(uint32_t aSrcIndex) const {
+    return mSrcList[aSrcIndex];
+  }
 
   // The variation-query APIs should not be called on placeholders.
   bool HasVariations() override {
@@ -698,34 +704,37 @@ class gfxUserFontEntry : public gfxFontEntry {
   // aDownloadStatus == NS_OK ==> download succeeded, error otherwise
   // Ownership of aFontData is passed in here; the font set must
   // ensure that it is eventually deleted with free().
-  void FontDataDownloadComplete(const uint8_t* aFontData, uint32_t aLength,
-                                nsresult aDownloadStatus,
+  void FontDataDownloadComplete(uint32_t aSrcIndex, const uint8_t* aFontData,
+                                uint32_t aLength, nsresult aDownloadStatus,
                                 nsIFontLoadCompleteCallback* aCallback);
 
   // helper method for creating a platform font
   // returns true if platform font creation successful
   // Ownership of aFontData is passed in here; the font must
   // ensure that it is eventually deleted with free().
-  bool LoadPlatformFontSync(const uint8_t* aFontData, uint32_t aLength);
+  bool LoadPlatformFontSync(uint32_t aSrcIndex, const uint8_t* aFontData,
+                            uint32_t aLength);
 
-  void LoadPlatformFontAsync(const uint8_t* aFontData, uint32_t aLength,
+  void LoadPlatformFontAsync(uint32_t aSrcIndex, const uint8_t* aFontData,
+                             uint32_t aLength,
                              nsIFontLoadCompleteCallback* aCallback);
 
   // helper method for LoadPlatformFontAsync; runs on a background thread
   void StartPlatformFontLoadOnBackgroundThread(
-      const uint8_t* aFontData, uint32_t aLength,
+      uint32_t aSrcIndex, const uint8_t* aFontData, uint32_t aLength,
       nsMainThreadPtrHandle<nsIFontLoadCompleteCallback> aCallback);
 
   // helper method for LoadPlatformFontAsync; runs on the main thread
   void ContinuePlatformFontLoadOnMainThread(
-      const uint8_t* aOriginalFontData, uint32_t aOriginalLength,
-      gfxUserFontType aFontType, const uint8_t* aSanitizedFontData,
-      uint32_t aSanitizedLength, nsTArray<OTSMessage>&& aMessages,
+      uint32_t aSrcIndex, const uint8_t* aOriginalFontData,
+      uint32_t aOriginalLength, gfxUserFontType aFontType,
+      const uint8_t* aSanitizedFontData, uint32_t aSanitizedLength,
+      nsTArray<OTSMessage>&& aMessages,
       nsMainThreadPtrHandle<nsIFontLoadCompleteCallback> aCallback);
 
   // helper method for LoadPlatformFontSync and
   // ContinuePlatformFontLoadOnMainThread; runs on the main thread
-  bool LoadPlatformFont(const uint8_t* aOriginalFontData,
+  bool LoadPlatformFont(uint32_t aSrcIndex, const uint8_t* aOriginalFontData,
                         uint32_t aOriginalLength, gfxUserFontType aFontType,
                         const uint8_t* aSanitizedFontData,
                         uint32_t aSanitizedLength,
@@ -736,8 +745,8 @@ class gfxUserFontEntry : public gfxFontEntry {
   void FontLoadFailed(nsIFontLoadCompleteCallback* aCallback);
 
   // store metadata and src details for current src into aFontEntry
-  void StoreUserFontData(gfxFontEntry* aFontEntry, bool aPrivate,
-                         const nsACString& aOriginalName,
+  void StoreUserFontData(gfxFontEntry* aFontEntry, uint32_t aSrcIndex,
+                         bool aPrivate, const nsACString& aOriginalName,
                          FallibleTArray<uint8_t>* aMetadata,
                          uint32_t aMetaOrigLen, uint8_t aCompression);
 
@@ -773,7 +782,7 @@ class gfxUserFontEntry : public gfxFontEntry {
 
   RefPtr<gfxFontEntry> mPlatformFontEntry;
   nsTArray<gfxFontFaceSrc> mSrcList;
-  uint32_t mSrcIndex;  // index of loading src item
+  uint32_t mCurrentSrcIndex;  // index of src item to be loaded next
   // This field is managed by the nsFontFaceLoader. In the destructor and
   // Cancel() methods of nsFontFaceLoader this reference is nulled out.
   nsFontFaceLoader* MOZ_NON_OWNING_REF
