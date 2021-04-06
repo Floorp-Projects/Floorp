@@ -14,6 +14,7 @@
 #include "mozilla/EventQueue.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/InputTaskManager.h"
+#include "mozilla/VsyncTaskManager.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/SchedulerGroup.h"
@@ -128,6 +129,7 @@ static SetThreadDescriptionPtr sSetThreadDescriptionFunc = nullptr;
 
 bool TaskController::InitializeInternal() {
   InputTaskManager::Init();
+  VsyncTaskManager::Init();
   mMTProcessingRunnable = NS_NewRunnableFunction(
       "TaskController::ExecutePendingMTTasks()",
       []() { TaskController::Get()->ProcessPendingMTTask(); });
@@ -171,6 +173,7 @@ void TaskController::SetPerformanceCounterState(
 /* static */
 void TaskController::Shutdown() {
   InputTaskManager::Cleanup();
+  VsyncTaskManager::Cleanup();
   if (sSingleton) {
     sSingleton->ShutdownThreadPoolInternal();
     sSingleton->ShutdownInternal();
