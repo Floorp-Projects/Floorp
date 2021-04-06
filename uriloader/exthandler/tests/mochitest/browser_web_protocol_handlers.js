@@ -18,7 +18,7 @@ add_task(async function() {
     gBrowser.getNotificationBox().getNotificationWithValue(notificationValue);
   await BrowserTestUtils.waitForCondition(getNotification);
   let notification = getNotification();
-  let button = notification.querySelector("button");
+  let button = notification.buttonContainer.querySelector("button");
   ok(button, "got registration button");
   button.click();
 
