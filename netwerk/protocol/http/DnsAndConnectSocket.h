@@ -163,6 +163,10 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
     bool mConnectedOK = false;
     bool mIsBackup;
 
+    bool mWaitingForConnect = false;
+    void SetConnecting();
+    void MaybeSetConnectingDone();
+
     explicit TransportSetup(bool isBackup);
 
     nsresult Init(DnsAndConnectSocket* dnsAndSock);
