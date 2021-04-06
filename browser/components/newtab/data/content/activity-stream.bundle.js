@@ -7727,7 +7727,13 @@ class _Card extends react__WEBPACK_IMPORTED_MODULE_5___default.a.PureComponent {
       } // Wait for the image whether just started loading or reused promise
 
 
-      await gImageLoading.get(imageUrl); // Only update state if we're still waiting to load the original image
+      try {
+        await gImageLoading.get(imageUrl);
+      } catch (ex) {
+        // Ignore the failed image without changing state
+        return;
+      } // Only update state if we're still waiting to load the original image
+
 
       if (content_src_lib_screenshot_utils__WEBPACK_IMPORTED_MODULE_6__["ScreenshotUtils"].isRemoteImageLocal(this.state.cardImage, this.props.link.image) && !this.state.imageLoaded) {
         this.setState({
