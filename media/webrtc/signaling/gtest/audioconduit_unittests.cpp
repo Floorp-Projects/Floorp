@@ -13,14 +13,14 @@
 #include "MockCall.h"
 
 using namespace mozilla;
+using namespace testing;
 
 namespace test {
 
 class AudioConduitTest : public ::testing::Test {
  public:
   AudioConduitTest()
-      : mCall(new MockCall()),
-        mCallWrapper(WebrtcCallWrapper::Create(UniquePtr<MockCall>(mCall))),
+      : mCallWrapper(MockCallWrapper::Create()),
         mAudioConduit(MakeRefPtr<WebrtcAudioConduit>(
             mCallWrapper, GetCurrentSerialEventTarget())) {}
 
@@ -29,8 +29,9 @@ class AudioConduitTest : public ::testing::Test {
     mCallWrapper->Destroy();
   }
 
-  MockCall* const mCall;
-  const RefPtr<WebrtcCallWrapper> mCallWrapper;
+  MockCall* Call() { return mCallWrapper->GetMockCall(); }
+
+  const RefPtr<MockCallWrapper> mCallWrapper;
   const RefPtr<WebrtcAudioConduit> mAudioConduit;
 };
 
@@ -44,7 +45,7 @@ TEST_F(AudioConduitTest, TestConfigureSendMediaCodec) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -80,7 +81,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMono) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 1UL);
@@ -106,7 +107,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusFEC) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -134,7 +135,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMaxPlaybackRate) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -162,7 +163,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMaxAverageBitrate) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -190,7 +191,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusDtx) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -218,7 +219,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusCbr) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -246,7 +247,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusPtime) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -274,7 +275,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMinPtime) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -302,7 +303,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMaxPtime) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -336,7 +337,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusAllParams) {
   mAudioConduit->StartTransmitting();
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioSendConfig.send_codec_spec->format;
+        Call()->mAudioSendConfig.send_codec_spec->format;
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -369,11 +370,11 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
   codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.sync_group, "");
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -394,11 +395,11 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
   codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.sync_group, "");
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 2U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 2U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(9);
+        Call()->mAudioReceiveConfig.decoder_map.at(9);
     ASSERT_EQ(f.name, "g722");
     ASSERT_EQ(f.clockrate_hz, 16000);
     ASSERT_EQ(f.num_channels, 2U);
@@ -406,7 +407,7 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
   }
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2U);
@@ -445,11 +446,11 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMono) {
   codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 1, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.sync_group, "");
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 1UL);
@@ -474,11 +475,11 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusDtx) {
   codecs[0]->mDTXEnabled = true;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.sync_group, "");
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -504,11 +505,11 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusFEC) {
   codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, true));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.sync_group, "");
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -535,10 +536,10 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxPlaybackRate) {
   codecs[0]->mMaxPlaybackRate = 0;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -556,10 +557,10 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxPlaybackRate) {
   codecs[0]->mMaxPlaybackRate = 8000;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -584,10 +585,10 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxAverageBitrate) {
   codecs[0]->mMaxAverageBitrate = 0;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -605,10 +606,10 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxAverageBitrate) {
   codecs[0]->mMaxAverageBitrate = 8000;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -640,10 +641,10 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusAllParameters) {
 
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.decoder_map.size(), 1U);
+  ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
   {
     const webrtc::SdpAudioFormat& f =
-        mCall->mAudioReceiveConfig.decoder_map.at(114);
+        Call()->mAudioReceiveConfig.decoder_map.at(114);
     ASSERT_EQ(f.name, "opus");
     ASSERT_EQ(f.clockrate_hz, 48000);
     ASSERT_EQ(f.num_channels, 2UL);
@@ -683,7 +684,7 @@ TEST_F(AudioConduitTest, TestSetLocalRTPExtensions) {
   ASSERT_EQ(ec, kMediaConduitNoError);
   ec = mAudioConduit->StopReceiving();
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.rtp.extensions.back().uri,
+  ASSERT_EQ(Call()->mAudioReceiveConfig.rtp.extensions.back().uri,
             webrtc::RtpExtension::kAudioLevelUri);
 
   ec = mAudioConduit->SetLocalRTPExtensions(LocalDirection::kSend, extensions);
@@ -692,7 +693,7 @@ TEST_F(AudioConduitTest, TestSetLocalRTPExtensions) {
   ASSERT_EQ(ec, kMediaConduitNoError);
   ec = mAudioConduit->StopTransmitting();
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioSendConfig.rtp.extensions.back().uri,
+  ASSERT_EQ(Call()->mAudioSendConfig.rtp.extensions.back().uri,
             webrtc::RtpExtension::kAudioLevelUri);
 
   // Contributing sources audio level
@@ -708,7 +709,7 @@ TEST_F(AudioConduitTest, TestSetLocalRTPExtensions) {
   ASSERT_EQ(ec, kMediaConduitNoError);
 
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.rtp.extensions.back().uri,
+  ASSERT_EQ(Call()->mAudioReceiveConfig.rtp.extensions.back().uri,
             webrtc::RtpExtension::kCsrcAudioLevelUri);
 
   ec = mAudioConduit->SetLocalRTPExtensions(LocalDirection::kSend, extensions);
@@ -730,7 +731,7 @@ TEST_F(AudioConduitTest, TestSetLocalRTPExtensions) {
   ASSERT_EQ(ec, kMediaConduitNoError);
   ec = mAudioConduit->StopTransmitting();
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioSendConfig.rtp.extensions.back().uri,
+  ASSERT_EQ(Call()->mAudioSendConfig.rtp.extensions.back().uri,
             webrtc::RtpExtension::kMidUri);
 }
 
@@ -742,7 +743,7 @@ TEST_F(AudioConduitTest, TestSetSyncGroup) {
   ASSERT_EQ(ec, kMediaConduitNoError);
   ec = mAudioConduit->StopReceiving();
   ASSERT_EQ(ec, kMediaConduitNoError);
-  ASSERT_EQ(mCall->mAudioReceiveConfig.sync_group, "test");
+  ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "test");
 }
 
 }  // End namespace test.

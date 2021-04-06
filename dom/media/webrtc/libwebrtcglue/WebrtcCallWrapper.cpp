@@ -55,11 +55,6 @@ namespace mozilla {
   return wrapper;
 }
 
-/* static */ RefPtr<WebrtcCallWrapper> WebrtcCallWrapper::Create(
-    UniquePtr<webrtc::Call> aCall) {
-  return new WebrtcCallWrapper(std::move(aCall));
-}
-
 void WebrtcCallWrapper::SetCall(UniquePtr<webrtc::Call> aCall) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MOZ_ASSERT(!mCall);

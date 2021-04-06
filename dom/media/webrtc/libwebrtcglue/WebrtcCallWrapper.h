@@ -39,8 +39,6 @@ class WebrtcCallWrapper {
       webrtc::AudioDecoderFactory* aAudioDecoderFactory,
       webrtc::WebRtcKeyValueConfig* aTrials);
 
-  static RefPtr<WebrtcCallWrapper> Create(UniquePtr<webrtc::Call> aCall);
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcCallWrapper)
 
   // Don't allow copying/assigning.
@@ -85,7 +83,6 @@ class WebrtcCallWrapper {
  protected:
   virtual ~WebrtcCallWrapper();
 
- private:
   WebrtcCallWrapper(RefPtr<AbstractThread> aCallThread,
                     RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
                     UniquePtr<webrtc::VideoBitrateAllocatorFactory>
@@ -111,7 +108,7 @@ class WebrtcCallWrapper {
   const UniquePtr<webrtc::RtcEventLog> mEventLog;
   const UniquePtr<webrtc::TaskQueueFactory> mTaskQueueFactory;
 
- private:
+ protected:
   // Call worker thread only.
   UniquePtr<webrtc::Call> mCall;
 };
