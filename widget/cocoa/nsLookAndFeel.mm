@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AppearanceOverride.h"
+#include "mozilla/widget/ThemeChangeKind.h"
 #include "nsLookAndFeel.h"
 #include "nsCocoaFeatures.h"
 #include "nsNativeThemeColors.h"
@@ -27,9 +28,22 @@
 
 using namespace mozilla;
 
+@interface MOZLookAndFeelDynamicChangeObserver : NSObject
++ (void)startObserving;
+@end
+
 nsLookAndFeel::nsLookAndFeel() = default;
 
 nsLookAndFeel::~nsLookAndFeel() = default;
+
+void nsLookAndFeel::NativeInit() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK
+
+  [MOZLookAndFeelDynamicChangeObserver startObserving];
+  RecordTelemetry();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK
+}
 
 static nscolor GetColorFromNSColor(NSColor* aColor) {
   NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
@@ -559,3 +573,77 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
 
   NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
+
+@implementation MOZLookAndFeelDynamicChangeObserver
+
++ (void)startObserving {
+  static MOZLookAndFeelDynamicChangeObserver* gInstance = nil;
+  if (!gInstance) {
+    gInstance = [[MOZLookAndFeelDynamicChangeObserver alloc] init];  // leaked
+  }
+}
+
+- (instancetype)init {
+  self = [super init];
+
+  [NSNotificationCenter.defaultCenter addObserver:self
+                                         selector:@selector(colorsChanged)
+                                             name:NSControlTintDidChangeNotification
+                                           object:nil];
+  [NSNotificationCenter.defaultCenter addObserver:self
+                                         selector:@selector(colorsChanged)
+                                             name:NSSystemColorsDidChangeNotification
+                                           object:nil];
+
+  if (@available(macOS 10.14, *)) {
+    [NSWorkspace.sharedWorkspace.notificationCenter
+        addObserver:self
+           selector:@selector(mediaQueriesChanged)
+               name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
+             object:nil];
+  } else {
+    [NSNotificationCenter.defaultCenter
+        addObserver:self
+           selector:@selector(mediaQueriesChanged)
+               name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
+             object:nil];
+  }
+
+  [NSNotificationCenter.defaultCenter addObserver:self
+                                         selector:@selector(scrollbarsChanged)
+                                             name:NSPreferredScrollerStyleDidChangeNotification
+                                           object:nil];
+  [NSDistributedNotificationCenter.defaultCenter
+             addObserver:self
+                selector:@selector(scrollbarsChanged)
+                    name:@"AppleAquaScrollBarVariantChanged"
+                  object:nil
+      suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
+
+  [NSDistributedNotificationCenter.defaultCenter
+             addObserver:self
+                selector:@selector(entireThemeChanged)
+                    name:@"AppleInterfaceThemeChangedNotification"
+                  object:nil
+      suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
+
+  return self;
+}
+
+- (void)entireThemeChanged {
+  LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::StyleAndLayout);
+}
+
+- (void)scrollbarsChanged {
+  LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::StyleAndLayout);
+}
+
+- (void)mediaQueriesChanged {
+  LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::MediaQueriesOnly);
+}
+
+- (void)colorsChanged {
+  LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::Style);
+}
+
+@end

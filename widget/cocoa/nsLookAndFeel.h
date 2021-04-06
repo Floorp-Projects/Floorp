@@ -12,7 +12,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
-  void NativeInit() final { RecordTelemetry(); }
+  void NativeInit() final;
   nsresult NativeGetColor(ColorID, ColorScheme, nscolor& aColor) override;
   nsresult NativeGetInt(IntID, int32_t& aResult) override;
   nsresult NativeGetFloat(FloatID, float& aResult) override;
