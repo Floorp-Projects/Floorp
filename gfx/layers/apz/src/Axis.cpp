@@ -41,7 +41,8 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
       mAxisLocked(false),
       mAsyncPanZoomController(aAsyncPanZoomController),
       mOverscroll(0),
-      mMSDModel(0.0, 0.0, 0.0, 400.0, 1.2),
+      mMSDModel(0.0, 0.0, 0.0, StaticPrefs::apz_overscroll_spring_stiffness(),
+                StaticPrefs::apz_overscroll_damping()),
       mVelocityTracker(mAsyncPanZoomController->GetPlatformSpecificState()
                            ->CreateVelocityTracker(this)) {}
 
@@ -193,7 +194,8 @@ void Axis::RestoreOverscroll(ParentLayerCoord aOverscroll) {
 }
 
 void Axis::StartOverscrollAnimation(float aVelocity) {
-  aVelocity = clamped(aVelocity / 2.0f, -20.0f, 20.0f);
+  const float maxVelocity = StaticPrefs::apz_overscroll_max_velocity();
+  aVelocity = clamped(aVelocity / 2.0f, -maxVelocity, maxVelocity);
   SetVelocity(aVelocity);
   mMSDModel.SetPosition(mOverscroll);
   // Convert velocity from ParentLayerCoords/millisecond to
