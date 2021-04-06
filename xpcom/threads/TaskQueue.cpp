@@ -6,6 +6,7 @@
 
 #include "mozilla/TaskQueue.h"
 
+#include "mozilla/DelayedRunnable.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -27,9 +28,11 @@ TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
 TaskQueue::~TaskQueue() {
   // No one is referencing this TaskQueue anymore, meaning no tasks can be
   // pending as all Runner hold a reference to this TaskQueue.
+  MOZ_ASSERT(mScheduledDelayedRunnables.IsEmpty());
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(TaskQueue, AbstractThread, nsIDirectTaskDispatcher);
+NS_IMPL_ISUPPORTS_INHERITED(TaskQueue, AbstractThread, nsIDirectTaskDispatcher,
+                            nsIDelayedRunnableObserver);
 
 TaskDispatcher& TaskQueue::TailDispatcher() {
   MOZ_ASSERT(IsCurrentThreadIn());
@@ -104,6 +107,52 @@ void TaskQueue::AwaitShutdownAndIdle() {
   AwaitIdleLocked();
 }
 
+void TaskQueue::OnDelayedRunnableCreated(DelayedRunnable* aRunnable) {
+#ifdef DEBUG
+  MonitorAutoLock mon(mQueueMonitor);
+  MOZ_ASSERT(!mDelayedRunnablesCancelPromise);
+#endif
+}
+
+void TaskQueue::OnDelayedRunnableScheduled(DelayedRunnable* aRunnable) {
+  MOZ_ASSERT(IsOnCurrentThread());
+  mScheduledDelayedRunnables.AppendElement(aRunnable);
+}
+
+void TaskQueue::OnDelayedRunnableRan(DelayedRunnable* aRunnable) {
+  MOZ_ASSERT(IsOnCurrentThread());
+  MOZ_ALWAYS_TRUE(mScheduledDelayedRunnables.RemoveElement(aRunnable));
+}
+
+auto TaskQueue::CancelDelayedRunnables() -> RefPtr<CancelPromise> {
+  MonitorAutoLock mon(mQueueMonitor);
+  return CancelDelayedRunnablesLocked();
+}
+
+auto TaskQueue::CancelDelayedRunnablesLocked() -> RefPtr<CancelPromise> {
+  mQueueMonitor.AssertCurrentThreadOwns();
+  if (mDelayedRunnablesCancelPromise) {
+    return mDelayedRunnablesCancelPromise;
+  }
+  mDelayedRunnablesCancelPromise =
+      mDelayedRunnablesCancelHolder.Ensure(__func__);
+  nsCOMPtr<nsIRunnable> cancelRunnable =
+      NewRunnableMethod("TaskQueue::CancelDelayedRunnablesImpl", this,
+                        &TaskQueue::CancelDelayedRunnablesImpl);
+  MOZ_ALWAYS_SUCCEEDS(DispatchLocked(/* passed by ref */ cancelRunnable,
+                                     NS_DISPATCH_NORMAL, TailDispatch));
+  return mDelayedRunnablesCancelPromise;
+}
+
+void TaskQueue::CancelDelayedRunnablesImpl() {
+  MOZ_ASSERT(IsOnCurrentThread());
+  for (const auto& runnable : mScheduledDelayedRunnables) {
+    runnable->CancelTimer();
+  }
+  mScheduledDelayedRunnables.Clear();
+  mDelayedRunnablesCancelHolder.Resolve(true, __func__);
+}
+
 RefPtr<ShutdownPromise> TaskQueue::BeginShutdown() {
   // Dispatch any tasks for this queue waiting in the caller's tail dispatcher,
   // since this is the last opportunity to do so.
@@ -111,6 +160,7 @@ RefPtr<ShutdownPromise> TaskQueue::BeginShutdown() {
     currentThread->TailDispatchTasksFor(this);
   }
   MonitorAutoLock mon(mQueueMonitor);
+  Unused << CancelDelayedRunnablesLocked();
   mIsShutdown = true;
   RefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
   MaybeResolveShutdown();
