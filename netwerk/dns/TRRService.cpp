@@ -1185,21 +1185,21 @@ void TRRService::ConfirmationContext::RequestCompleted(
 }
 
 void TRRService::CompleteConfirmation(nsresult aStatus, TRR* aTRRRequest) {
-  // Ignore confirmations that dont match the pending task.
-  if (mConfirmation.mTask != aTRRRequest) {
-    return;
-  }
-  MOZ_ASSERT(mConfirmation.State() == CONFIRM_TRYING_OK ||
-             mConfirmation.State() == CONFIRM_TRYING_FAILED);
-  if (mConfirmation.State() != CONFIRM_TRYING_OK &&
-      mConfirmation.State() != CONFIRM_TRYING_FAILED) {
-    return;
-  }
-
-  mConfirmation.RequestCompleted(aStatus, aTRRRequest->ChannelStatus());
-
   {
     MutexAutoLock lock(mLock);
+    // Ignore confirmations that dont match the pending task.
+    if (mConfirmation.mTask != aTRRRequest) {
+      return;
+    }
+    MOZ_ASSERT(mConfirmation.State() == CONFIRM_TRYING_OK ||
+               mConfirmation.State() == CONFIRM_TRYING_FAILED);
+    if (mConfirmation.State() != CONFIRM_TRYING_OK &&
+        mConfirmation.State() != CONFIRM_TRYING_FAILED) {
+      return;
+    }
+
+    mConfirmation.RequestCompleted(aStatus, aTRRRequest->ChannelStatus());
+
     MOZ_ASSERT(mConfirmation.mTask);
     if (NS_SUCCEEDED(aStatus)) {
       HandleConfirmationEvent(ConfirmationEvent::ConfirmOK, lock);
