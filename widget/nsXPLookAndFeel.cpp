@@ -803,6 +803,7 @@ bool nsXPLookAndFeel::LookAndFeelFontToStyle(const LookAndFeelFont& aFont,
   aStyle.weight = FontWeight(aFont.weight());
   aStyle.style =
       aFont.italic() ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
+  aStyle.systemFont = true;
   return true;
 }
 
