@@ -1492,7 +1492,9 @@ class gfxFont {
     // but it may be overridden by a value computed in metrics initialization
     // from font-size-adjust.
     if (mAdjustedSize < 0.0) {
-      mAdjustedSize = mStyle.sizeAdjust == 0.0 ? 0.0 : mStyle.size * mFontEntry->mSizeAdjust;
+      mAdjustedSize = mStyle.sizeAdjust == 0.0
+                          ? 0.0
+                          : mStyle.size * mFontEntry->mSizeAdjust;
     }
     return mAdjustedSize;
   }
