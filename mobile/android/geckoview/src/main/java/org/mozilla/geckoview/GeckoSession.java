@@ -1055,7 +1055,7 @@ public class GeckoSession {
                 }
                 mNativeQueue.reset(State.INITIAL);
                 mNativeQueue = null;
-                mOwner = null;
+                mOwner = new WeakReference<>(null);
             }
 
             // Detach ourselves from the binder as well, to prevent this window from being
@@ -1117,7 +1117,7 @@ public class GeckoSession {
         private GeckoResult<Boolean> onLoadRequest(final @NonNull String uri, final int windowType,
                                                    final int flags, final @Nullable String triggeringUri,
                                                    final boolean hasUserGesture, final boolean isTopLevel) {
-            final GeckoSession session = (mOwner == null) ? null : mOwner.get();
+            final GeckoSession session = mOwner.get();
             if (session == null) {
                 // Don't handle any load request if we can't get the session for some reason.
                 return GeckoResult.fromValue(false);
