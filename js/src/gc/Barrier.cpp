@@ -14,6 +14,7 @@
 #include "vm/BigIntType.h"  // JS::BigInt
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorObject.h"
+#include "vm/GetterSetter.h"
 #include "vm/JSObject.h"
 #include "vm/Realm.h"
 #include "vm/SharedArrayObject.h"

@@ -208,6 +208,11 @@ ArenaCellSet* StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena) {
   return cells;
 }
 
+void gc::CellHeaderPostWriteBarrier(JSObject** ptr, JSObject* prev,
+                                    JSObject* next) {
+  InternalBarrierMethods<JSObject*>::postBarrier(ptr, prev, next);
+}
+
 void StoreBuffer::WholeCellBuffer::clear() {
   for (auto** headPtr : {&stringHead_, &nonStringHead_}) {
     for (auto* set = *headPtr; set; set = set->next) {

@@ -244,6 +244,7 @@
 #include "util/Windows.h"
 #include "vm/BigIntType.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/GetterSetter.h"
 #include "vm/HelperThreadState.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -402,7 +403,8 @@ static constexpr FinalizePhase BackgroundFinalizePhases[] = {
       AllocKind::EXTERNAL_STRING, AllocKind::FAT_INLINE_ATOM, AllocKind::ATOM,
       AllocKind::SYMBOL, AllocKind::BIGINT}},
     {gcstats::PhaseKind::SWEEP_SHAPE,
-     {AllocKind::SHAPE, AllocKind::ACCESSOR_SHAPE, AllocKind::BASE_SHAPE}}};
+     {AllocKind::SHAPE, AllocKind::ACCESSOR_SHAPE, AllocKind::BASE_SHAPE,
+      AllocKind::GETTER_SETTER}}};
 
 void Arena::unmarkAll() {
   MarkBitmapWord* arenaBits = chunk()->markBits.arenaBits(this);
@@ -2460,6 +2462,9 @@ js::BaseScript* MovingTracer::onScriptEdge(js::BaseScript* script) {
 BaseShape* MovingTracer::onBaseShapeEdge(BaseShape* base) {
   return onEdge(base);
 }
+GetterSetter* MovingTracer::onGetterSetterEdge(GetterSetter* gs) {
+  return onEdge(gs);
+}
 Scope* MovingTracer::onScopeEdge(Scope* scope) { return onEdge(scope); }
 RegExpShared* MovingTracer::onRegExpSharedEdge(RegExpShared* shared) {
   return onEdge(shared);
@@ -2750,7 +2755,7 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds) {
 static constexpr AllocKinds UpdatePhaseOne{
     AllocKind::SCRIPT,         AllocKind::BASE_SHAPE, AllocKind::SHAPE,
     AllocKind::ACCESSOR_SHAPE, AllocKind::STRING,     AllocKind::JITCODE,
-    AllocKind::REGEXP_SHARED,  AllocKind::SCOPE};
+    AllocKind::REGEXP_SHARED,  AllocKind::SCOPE,      AllocKind::GETTER_SETTER};
 
 // UpdatePhaseTwo is typed object descriptor objects.
 
@@ -9221,6 +9226,10 @@ js::Shape* js::gc::ClearEdgesTracer::onShapeEdge(js::Shape* shape) {
 }
 js::BaseShape* js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape* base) {
   return onEdge(base);
+}
+js::GetterSetter* js::gc::ClearEdgesTracer::onGetterSetterEdge(
+    js::GetterSetter* gs) {
+  return onEdge(gs);
 }
 js::jit::JitCode* js::gc::ClearEdgesTracer::onJitCodeEdge(
     js::jit::JitCode* code) {

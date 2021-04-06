@@ -17,6 +17,7 @@ class JSLinearString;
 namespace js {
 class BaseScript;
 class BaseShape;
+class GetterSetter;
 class RegExpShared;
 class Shape;
 class Scope;
@@ -57,7 +58,8 @@ enum class TraceKind {
   JitCode,
   Script,
   Scope,
-  RegExpShared
+  RegExpShared,
+  GetterSetter,
 };
 
 // GCCellPtr packs the trace kind into the low bits of the pointer for common
@@ -94,7 +96,8 @@ struct MapTypeToTraceKind {
   D(String,       JSString,         false,          false)       \
   D(Symbol,       JS::Symbol,       false,          false)       \
   D(BigInt,       JS::BigInt,       false,          false)       \
-  D(RegExpShared, js::RegExpShared, true,           true)
+  D(RegExpShared, js::RegExpShared, true,           true)  \
+  D(GetterSetter, js::GetterSetter, true,           true)
 // clang-format on
 
 // Returns true if the JS::TraceKind is represented as a node in cycle collector

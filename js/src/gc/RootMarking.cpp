@@ -516,6 +516,10 @@ class BufferGrayRootsTracer final : public GenericTracer {
     unsupportedEdge();
     return nullptr;
   }
+  js::GetterSetter* onGetterSetterEdge(js::GetterSetter* gs) override {
+    unsupportedEdge();
+    return nullptr;
+  }
   js::jit::JitCode* onJitCodeEdge(js::jit::JitCode* code) override {
     unsupportedEdge();
     return nullptr;
