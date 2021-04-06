@@ -588,6 +588,9 @@ void GeckoChildProcessHost::PrepareLaunch() {
 #endif
 
 #ifdef XP_WIN
+  if (mProcessType == GeckoProcessType_Plugin) {
+    InitWindowsGroupID();
+  }
 
 #  if defined(MOZ_SANDBOX)
   // We need to get the pref here as the process is launched off main thread.
@@ -1125,6 +1128,12 @@ bool PosixProcessLauncher::DoSetup() {
     const char* ld_library_path = PR_GetEnv("LD_LIBRARY_PATH");
     nsCString new_ld_lib_path(path.get());
 
+#    ifdef MOZ_WIDGET_GTK
+    if (mProcessType == GeckoProcessType_Plugin) {
+      new_ld_lib_path.AppendLiteral("/gtk2:");
+      new_ld_lib_path.Append(path.get());
+    }
+#    endif  // MOZ_WIDGET_GTK
     if (ld_library_path && *ld_library_path) {
       new_ld_lib_path.Append(':');
       new_ld_lib_path.Append(ld_library_path);
@@ -1133,13 +1142,25 @@ bool PosixProcessLauncher::DoSetup() {
 
 #  elif OS_MACOSX  // defined(OS_LINUX) || defined(OS_BSD)
     mLaunchOptions->env_map["DYLD_LIBRARY_PATH"] = path.get();
-
-    // DYLD_INSERT_LIBRARIES is currently unused by default but we allow
-    // it to be set by the external environment.
-    const char* interpose = PR_GetEnv("DYLD_INSERT_LIBRARIES");
-    if (interpose && strlen(interpose) > 0) {
-      mLaunchOptions->env_map["DYLD_INSERT_LIBRARIES"] = interpose;
+    // XXX DYLD_INSERT_LIBRARIES should only be set when launching a plugin
+    //     process, and has no effect on other subprocesses (the hooks in
+    //     libplugin_child_interpose.dylib become noops).  But currently it
+    //     gets set when launching any kind of subprocess.
+    //
+    // Trigger "dyld interposing" for the dylib that contains
+    // plugin_child_interpose.mm.  This allows us to hook OS calls in the
+    // plugin process (ones that don't work correctly in a background
+    // process).  Don't break any other "dyld interposing" that has already
+    // been set up by whatever may have launched the browser.
+    const char* prevInterpose = PR_GetEnv("DYLD_INSERT_LIBRARIES");
+    nsCString interpose;
+    if (prevInterpose && strlen(prevInterpose) > 0) {
+      interpose.Assign(prevInterpose);
+      interpose.Append(':');
     }
+    interpose.Append(path.get());
+    interpose.AppendLiteral("/libplugin_child_interpose.dylib");
+    mLaunchOptions->env_map["DYLD_INSERT_LIBRARIES"] = interpose.get();
 
     // Prevent connection attempts to diagnosticd(8) to save cycles. Log
     // messages can trigger these connection attempts, but access to
@@ -1413,6 +1434,15 @@ bool WindowsProcessLauncher::DoSetup() {
         mUseSandbox = true;
       }
       break;
+    case GeckoProcessType_Plugin:
+      if (mSandboxLevel > 0 && !PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
+        if (!mResults.mSandboxBroker->SetSecurityLevelForPluginProcess(
+                mSandboxLevel)) {
+          return false;
+        }
+        mUseSandbox = true;
+      }
+      break;
     case GeckoProcessType_IPDLUnitTest:
       // XXX: We don't sandbox this process type yet
       break;
@@ -1554,6 +1584,7 @@ bool WindowsProcessLauncher::DoFinishLaunch() {
     switch (mProcessType) {
       case GeckoProcessType_Default:
         MOZ_CRASH("shouldn't be launching a parent process");
+      case GeckoProcessType_Plugin:
       case GeckoProcessType_IPDLUnitTest:
         // No handle duplication necessary.
         break;

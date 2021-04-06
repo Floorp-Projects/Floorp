@@ -3574,7 +3574,8 @@ void NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
         continue;
       }
       if (foundPrintableCharMessages++ == aIndex) {
-        // Found message which caused the eKeyPress event.
+        // Found message which caused the eKeyPress event.  Let's set the
+        // message for plugin if it's necessary.
         break;
       }
     }

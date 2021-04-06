@@ -281,6 +281,7 @@ module.exports = {
     HashChangeEvent: false,
     Headers: false,
     HeapSnapshot: false,
+    HiddenPluginEvent: false,
     History: false,
     IDBCursor: false,
     IDBCursorWithValue: false,

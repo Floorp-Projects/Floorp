@@ -62,6 +62,7 @@
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/ipc/ProcessChild.h"
 
+#include "mozilla/plugins/PluginProcessChild.h"
 #include "mozilla/dom/ContentProcess.h"
 #include "mozilla/dom/ContentParent.h"
 
@@ -123,10 +124,6 @@ using mozilla::_ipdltest::IPDLUnitTestProcessChild;
 #  include "mozilla/ipc/ForkServer.h"
 #endif
 
-#if defined(MOZ_X11)
-#  include <X11/Xlib.h>
-#endif
-
 #include "VRProcessChild.h"
 
 using namespace mozilla;
@@ -139,6 +136,7 @@ using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentProcess;
+using mozilla::plugins::PluginProcessChild;
 
 using mozilla::gmp::GMPProcessChild;
 
@@ -216,21 +214,16 @@ void XRE_TermEmbedding() {
 }
 
 const char* XRE_GeckoProcessTypeToString(GeckoProcessType aProcessType) {
-  switch (aProcessType) {
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
-                           bin_type)                                     \
-  case GeckoProcessType::GeckoProcessType_##enum_name:                   \
-    return string_name;
-#include "mozilla/GeckoProcessTypes.h"
-#undef GECKO_PROCESS_TYPE
-    default:
-      return "invalid";
-  }
+  return (aProcessType < GeckoProcessType_End)
+             ? kGeckoProcessTypeString[aProcessType]
+             : "invalid";
 }
 
 const char* XRE_ChildProcessTypeToAnnotation(GeckoProcessType aProcessType) {
   switch (aProcessType) {
     case GeckoProcessType_GMPlugin:
+      // The gecko media plugin and normal plugin processes are lumped together
+      // as a historical artifact.
       return "plugin";
     case GeckoProcessType_Default:
       return "";
@@ -264,10 +257,9 @@ void XRE_SetProcessType(const char* aProcessTypeString) {
   called = true;
 
   sChildProcessType = GeckoProcessType_Invalid;
-  for (GeckoProcessType t :
-       MakeEnumeratedRange(GeckoProcessType::GeckoProcessType_End)) {
-    if (!strcmp(XRE_GeckoProcessTypeToString(t), aProcessTypeString)) {
-      sChildProcessType = t;
+  for (int i = 0; i < (int)ArrayLength(kGeckoProcessTypeString); ++i) {
+    if (!strcmp(kGeckoProcessTypeString[i], aProcessTypeString)) {
+      sChildProcessType = static_cast<GeckoProcessType>(i);
       return;
     }
   }
@@ -650,6 +642,10 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
       switch (XRE_GetProcessType()) {
         case GeckoProcessType_Default:
           MOZ_CRASH("This makes no sense");
+          break;
+
+        case GeckoProcessType_Plugin:
+          process = MakeUnique<PluginProcessChild>(parentPID);
           break;
 
         case GeckoProcessType_Content:

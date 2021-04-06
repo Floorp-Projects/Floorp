@@ -11,6 +11,7 @@ include protocol PContent;
 include protocol PDocAccessible;
 #endif
 include protocol PFilePicker;
+include protocol PPluginWidget;
 include protocol PRemotePrintJob;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
@@ -190,6 +191,7 @@ nested(upto inside_cpow) sync refcounted protocol PBrowser
 #endif
 
     manages PFilePicker;
+    manages PPluginWidget;
     manages PPaymentRequest;
     manages PWindowGlobal;
     manages PBrowserBridge;
@@ -211,6 +213,13 @@ parent:
     async PDocAccessible(nullable PDocAccessible aParentDoc, uint64_t aParentAcc,
                          uint32_t aMsaaID, IAccessibleHolder aDocCOMProxy);
 #endif
+
+    /*
+     * Creates a new remoted nsIWidget connection for windowed plugins
+     * in e10s mode. This is always initiated from the child in response
+     * to windowed plugin creation.
+     */
+    sync PPluginWidget();
 
     async PPaymentRequest();
 

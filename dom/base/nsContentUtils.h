@@ -2510,7 +2510,7 @@ class nsContentUtils {
   enum ContentViewerType {
     TYPE_UNSUPPORTED,
     TYPE_CONTENT,
-    TYPE_FALLBACK,
+    TYPE_PLUGIN,
     TYPE_UNKNOWN
   };
 

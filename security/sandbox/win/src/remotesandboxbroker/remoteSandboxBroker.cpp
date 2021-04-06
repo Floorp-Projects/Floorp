@@ -157,6 +157,12 @@ bool RemoteSandboxBroker::SetSecurityLevelForSocketProcess() {
       "RemoteSandboxBroker::SetSecurityLevelForSocketProcess not Implemented");
 }
 
+bool RemoteSandboxBroker::SetSecurityLevelForPluginProcess(
+    int32_t aSandboxLevel) {
+  MOZ_CRASH(
+      "RemoteSandboxBroker::SetSecurityLevelForPluginProcess not Implemented");
+}
+
 AbstractSandboxBroker* CreateRemoteSandboxBroker() {
   return new RemoteSandboxBroker();
 }

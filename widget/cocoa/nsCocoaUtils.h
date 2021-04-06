@@ -10,6 +10,7 @@
 
 #include "nsRect.h"
 #include "imgIContainer.h"
+#include "npapi.h"
 #include "nsTArray.h"
 #include "Units.h"
 
@@ -327,6 +328,11 @@ class nsCocoaUtils {
   static NSEvent* MakeNewCococaEventFromWidgetEvent(const mozilla::WidgetKeyboardEvent& aKeyEvent,
                                                     NSInteger aWindowNumber,
                                                     NSGraphicsContext* aContext);
+
+  /**
+   * Initializes aNPCocoaEvent.
+   */
+  static void InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent);
 
   /**
    * Initializes WidgetInputEvent for aNativeEvent or aModifiers.

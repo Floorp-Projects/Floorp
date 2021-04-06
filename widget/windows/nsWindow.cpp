@@ -218,6 +218,7 @@
 #include "InputData.h"
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/plugins/PluginProcessParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 
@@ -3752,12 +3753,36 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
   return nullptr;
 }
 
+static void SetChildStyleAndParent(HWND aChildWindow, HWND aParentWindow) {
+  // Make sure the window is styled to be a child window.
+  LONG_PTR style = GetWindowLongPtr(aChildWindow, GWL_STYLE);
+  style |= WS_CHILD;
+  style &= ~WS_POPUP;
+  SetWindowLongPtr(aChildWindow, GWL_STYLE, style);
+
+  // Do the reparenting. Note that this call will probably cause a sync native
+  // message to the process that owns the child window.
+  ::SetParent(aChildWindow, aParentWindow);
+}
+
 void nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
   switch (aDataType) {
     case NS_NATIVE_CHILD_WINDOW:
     case NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW: {
-      MOZ_ASSERT_UNREACHABLE(
-          "SetNativeData window origin was not a plugin process.");
+      HWND childHwnd = reinterpret_cast<HWND>(aVal);
+      DWORD childProc = 0;
+      GetWindowThreadProcessId(childHwnd, &childProc);
+      if (!PluginProcessParent::IsPluginProcessId(
+              static_cast<base::ProcessId>(childProc))) {
+        MOZ_ASSERT_UNREACHABLE(
+            "SetNativeData window origin was not a plugin process.");
+        break;
+      }
+      HWND parentHwnd = aDataType == NS_NATIVE_CHILD_WINDOW
+                            ? mWnd
+                            : WinUtils::GetTopLevelHWND(mWnd);
+      SetChildStyleAndParent(childHwnd, parentHwnd);
+      RecreateDirectManipulationIfNeeded();
       break;
     }
     default:
@@ -4670,6 +4695,70 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   MOZ_LOG(gWindowsLog, LogLevel::Info,
           ("Msg Time: %d Click Count: %d\n", curMsgTime, event.mClickCount));
 #endif
+
+  NPEvent pluginEvent;
+
+  switch (aEventMessage) {
+    case eMouseDown:
+      switch (aButton) {
+        case MouseButton::ePrimary:
+          pluginEvent.event = WM_LBUTTONDOWN;
+          break;
+        case MouseButton::eMiddle:
+          pluginEvent.event = WM_MBUTTONDOWN;
+          break;
+        case MouseButton::eSecondary:
+          pluginEvent.event = WM_RBUTTONDOWN;
+          break;
+        default:
+          break;
+      }
+      break;
+    case eMouseUp:
+      switch (aButton) {
+        case MouseButton::ePrimary:
+          pluginEvent.event = WM_LBUTTONUP;
+          break;
+        case MouseButton::eMiddle:
+          pluginEvent.event = WM_MBUTTONUP;
+          break;
+        case MouseButton::eSecondary:
+          pluginEvent.event = WM_RBUTTONUP;
+          break;
+        default:
+          break;
+      }
+      break;
+    case eMouseDoubleClick:
+      switch (aButton) {
+        case MouseButton::ePrimary:
+          pluginEvent.event = WM_LBUTTONDBLCLK;
+          break;
+        case MouseButton::eMiddle:
+          pluginEvent.event = WM_MBUTTONDBLCLK;
+          break;
+        case MouseButton::eSecondary:
+          pluginEvent.event = WM_RBUTTONDBLCLK;
+          break;
+        default:
+          break;
+      }
+      break;
+    case eMouseMove:
+      pluginEvent.event = WM_MOUSEMOVE;
+      break;
+    case eMouseExitFromWidget:
+      pluginEvent.event = WM_MOUSELEAVE;
+      break;
+    default:
+      pluginEvent.event = WM_NULL;
+      break;
+  }
+
+  pluginEvent.wParam = wParam;  // plugins NEED raw OS event flags!
+  pluginEvent.lParam = lParam;
+
+  event.mPluginEvent.Copy(pluginEvent);
 
   // call the event callback
   if (mWidgetListener) {

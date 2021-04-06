@@ -88,4 +88,11 @@ class ContextMenuParent extends JSWindowActorParent {
       handlingUserInput,
     });
   }
+
+  pluginCommand(command, targetIdentifier) {
+    this.sendAsyncMessage("ContextMenu:PluginCommand", {
+      command,
+      targetIdentifier,
+    });
+  }
 }

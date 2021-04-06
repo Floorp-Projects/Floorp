@@ -387,6 +387,13 @@ bool ClientLayerManager::EndTransactionInternal(
   return !mTransactionIncomplete;
 }
 
+void ClientLayerManager::StorePluginWidgetConfigurations(
+    const nsTArray<nsIWidget::Configuration>& aConfigurations) {
+  if (mForwarder) {
+    mForwarder->StorePluginWidgetConfigurations(aConfigurations);
+  }
+}
+
 void ClientLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                         void* aCallbackData,
                                         EndTransactionFlags aFlags) {

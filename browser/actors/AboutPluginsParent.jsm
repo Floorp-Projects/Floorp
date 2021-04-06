@@ -21,6 +21,7 @@ const NEEDED_PROPS = [
   "isActive",
   "blocklistState",
   "description",
+  "pluginMimeTypes",
 ];
 
 class AboutPluginsParent extends JSWindowActorParent {

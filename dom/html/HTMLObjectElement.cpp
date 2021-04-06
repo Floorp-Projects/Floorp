@@ -15,6 +15,8 @@
 #include "nsGkAtoms.h"
 #include "nsError.h"
 #include "mozilla/dom/Document.h"
+#include "nsIPluginDocument.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #ifdef XP_MACOSX
@@ -96,11 +98,18 @@ nsresult HTMLObjectElement::BindToTree(BindContext& aContext,
   rv = nsObjectLoadingContent::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If we already have all the children, start the load.
-  if (IsInComposedDoc() && mIsDoneAddingChildren) {
-    void (HTMLObjectElement::*start)() = &HTMLObjectElement::StartObjectLoad;
-    nsContentUtils::AddScriptRunner(
-        NewRunnableMethod("dom::HTMLObjectElement::BindToTree", this, start));
+  // Don't kick off load from being bound to a plugin document - the plugin
+  // document will call nsObjectLoadingContent::InitializeFromChannel() for the
+  // initial load.
+  if (IsInComposedDoc()) {
+    nsCOMPtr<nsIPluginDocument> pluginDoc =
+        do_QueryInterface(&aContext.OwnerDoc());
+    // If we already have all the children, start the load.
+    if (mIsDoneAddingChildren && !pluginDoc) {
+      void (HTMLObjectElement::*start)() = &HTMLObjectElement::StartObjectLoad;
+      nsContentUtils::AddScriptRunner(
+          NewRunnableMethod("dom::HTMLObjectElement::BindToTree", this, start));
+    }
   }
 
   return NS_OK;
@@ -166,8 +175,9 @@ bool HTMLObjectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
     return false;
   }
 
-  // Plugins that show the empty fallback should not accept focus.
-  if (Type() == eType_Fallback) {
+  // If we have decided that this is a blocked plugin then do not allow focus.
+  if ((Type() == eType_Null) &&
+      (PluginFallbackType() == eFallbackBlockAllPlugins)) {
     if (aTabIndex) {
       *aTabIndex = -1;
     }
@@ -200,6 +210,14 @@ bool HTMLObjectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   }
 
   return false;
+}
+
+NS_IMETHODIMP
+HTMLObjectElement::Reset() { return NS_OK; }
+
+NS_IMETHODIMP
+HTMLObjectElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
+  return NS_OK;
 }
 
 int32_t HTMLObjectElement::TabIndexDefault() { return 0; }
@@ -298,7 +316,13 @@ nsresult HTMLObjectElement::CopyInnerTo(Element* aDest) {
 
 JSObject* HTMLObjectElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
-  return HTMLObjectElement_Binding::Wrap(aCx, this, aGivenProto);
+  JS::Rooted<JSObject*> obj(
+      aCx, HTMLObjectElement_Binding::Wrap(aCx, this, aGivenProto));
+  if (!obj) {
+    return nullptr;
+  }
+  SetupProtoChain(aCx, obj);
+  return obj;
 }
 
 }  // namespace mozilla::dom

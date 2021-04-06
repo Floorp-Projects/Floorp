@@ -337,6 +337,16 @@ class ContentParent final
 
   mozilla::ipc::IPCResult RecvCreateGMPService();
 
+  mozilla::ipc::IPCResult RecvLoadPlugin(
+      const uint32_t& aPluginId, nsresult* aRv, uint32_t* aRunID,
+      Endpoint<PPluginModuleParent>* aEndpoint);
+
+  mozilla::ipc::IPCResult RecvMaybeReloadPlugins();
+
+  mozilla::ipc::IPCResult RecvConnectPluginBridge(
+      const uint32_t& aPluginId, nsresult* aRv,
+      Endpoint<PPluginModuleParent>* aEndpoint);
+
   mozilla::ipc::IPCResult RecvUngrabPointer(const uint32_t& aTime);
 
   mozilla::ipc::IPCResult RecvRemovePermission(const IPC::Principal& aPrincipal,

@@ -1,0 +1,39 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+include protocol PPluginInstance;
+
+
+using NPReason from "npapi.h";
+
+namespace mozilla {
+namespace plugins {
+
+intr protocol PStreamNotify
+{
+  manager PPluginInstance;
+
+parent:
+
+  /**
+   * Represents NPN_URLRedirectResponse
+   */
+  async RedirectNotifyResponse(bool allow);
+
+child:
+  /**
+   * Represents NPP_URLRedirectNotify
+   */
+  async RedirectNotify(nsCString url, int32_t status);
+
+  /**
+   * Represents NPP_URLNotify
+   */
+  async __delete__(NPReason reason);
+};
+
+} // namespace plugins
+} // namespace mozilla

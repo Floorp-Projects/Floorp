@@ -261,6 +261,18 @@ class ContextMenuChild extends JSWindowActorChild {
           imageName: null,
         });
       }
+
+      case "ContextMenu:PluginCommand": {
+        let target = ContentDOMReference.resolve(message.data.targetIdentifier);
+        let actor = this.manager.getActor("Plugin");
+        let { command } = message.data;
+        if (command == "play") {
+          actor.showClickToPlayNotification(target, true);
+        } else if (command == "hide") {
+          actor.hideClickToPlayOverlay(target);
+        }
+        break;
+      }
     }
 
     return undefined;
@@ -518,6 +530,22 @@ class ContextMenuChild extends JSWindowActorChild {
       !aEvent.composedTarget.nodePrincipal.isSystemPrincipal &&
       !Services.prefs.getBoolPref("dom.event.contextmenu.enabled")
     ) {
+      let plugin = null;
+
+      try {
+        plugin = aEvent.composedTarget.QueryInterface(
+          Ci.nsIObjectLoadingContent
+        );
+      } catch (e) {}
+
+      if (
+        plugin &&
+        plugin.displayedType == Ci.nsIObjectLoadingContent.TYPE_PLUGIN
+      ) {
+        // Don't open a context menu for plugins.
+        return;
+      }
+
       defaultPrevented = false;
     }
 
@@ -849,6 +877,7 @@ class ContextMenuChild extends JSWindowActorChild {
     context.onAudio = false;
     context.onCanvas = false;
     context.onCompletedImage = false;
+    context.onCTPPlugin = false;
     context.onDRMMedia = false;
     context.onPiPVideo = false;
     context.onEditable = false;
@@ -1082,6 +1111,15 @@ class ContextMenuChild extends JSWindowActorChild {
           );
         }
       }
+    } else if (
+      (context.target instanceof this.contentWindow.HTMLEmbedElement ||
+        context.target instanceof this.contentWindow.HTMLObjectElement) &&
+      context.target.displayedType ==
+        this.contentWindow.HTMLObjectElement.TYPE_NULL &&
+      context.target.pluginFallbackType ==
+        this.contentWindow.HTMLObjectElement.PLUGIN_CLICK_TO_PLAY
+    ) {
+      context.onCTPPlugin = true;
     }
 
     context.canSpellCheck = this._isSpellCheckEnabled(context.target);

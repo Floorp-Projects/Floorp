@@ -1,0 +1,31 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+native REFNSIID(REFNSIID);
+native nativeVoid(void *);
+native nativeChar(const char * *);
+[ptr] native constVoidPtr(const void);
+[ref] native PRUint32Ref(uint32_t);
+[ref] native PRUint16Ref(uint16_t);
+[ref] native constCharStarConstStar(const char* const*);
+[ptr] native constCharPtr(const char);
+[ref] native constCharStarRef(const char *);
+
+native NPWindowType(NPWindowType);
+native NPWindow(NPWindow);
+[ptr] native NPWindowPtr(NPWindow);
+[ref] native NPWindowStarRef(NPWindow *);
+[ptr] native NPPrintPtr(NPPrint);
+native NPByteRange(NPByteRange);
+[ptr] native NPByteRangePtr(NPByteRange);
+native NPPVariable(NPPVariable);
+native NPNVariable(NPNVariable);
+[ptr] native NPRectPtr(NPRect);
+native NPRegion(NPRegion);
+native NPDrawingModel(NPDrawingModel);
+native NPEventModel(NPEventModel);
+
+[ptr] native JRIEnvPtr(JRIEnv);
+native jref(jref);

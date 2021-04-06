@@ -94,6 +94,7 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/plugins/PPluginWidgetChild.h"
 #include "nsBrowserStatusFilter.h"
 #include "nsColorPickerProxy.h"
 #include "nsCommandParams.h"
@@ -142,6 +143,10 @@
 #include "nsWebBrowser.h"
 #include "nsWindowWatcher.h"
 #include "nsIXULRuntime.h"
+
+#ifdef XP_WIN
+#  include "mozilla/plugins/PluginWidgetChild.h"
+#endif
 
 #ifdef MOZ_WAYLAND
 #  include "nsAppRunner.h"
@@ -3260,6 +3265,53 @@ mozilla::ipc::IPCResult BrowserChild::RecvReleaseAllPointerCapture() {
   PointerEventHandler::ReleaseAllPointerCapture();
   return IPC_OK();
 }
+
+mozilla::plugins::PPluginWidgetChild* BrowserChild::AllocPPluginWidgetChild() {
+#ifdef XP_WIN
+  return new mozilla::plugins::PluginWidgetChild();
+#else
+  MOZ_ASSERT_UNREACHABLE("AllocPPluginWidgetChild only supports Windows");
+  return nullptr;
+#endif
+}
+
+bool BrowserChild::DeallocPPluginWidgetChild(
+    mozilla::plugins::PPluginWidgetChild* aActor) {
+  delete aActor;
+  return true;
+}
+
+#ifdef XP_WIN
+nsresult BrowserChild::CreatePluginWidget(nsIWidget* aParent,
+                                          nsIWidget** aOut) {
+  *aOut = nullptr;
+  mozilla::plugins::PluginWidgetChild* child =
+      static_cast<mozilla::plugins::PluginWidgetChild*>(
+          SendPPluginWidgetConstructor());
+  if (!child) {
+    NS_ERROR("couldn't create PluginWidgetChild");
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsCOMPtr<nsIWidget> pluginWidget =
+      nsIWidget::CreatePluginProxyWidget(this, child);
+  if (!pluginWidget) {
+    NS_ERROR("couldn't create PluginWidgetProxy");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsWidgetInitData initData;
+  initData.mWindowType = eWindowType_plugin_ipc_content;
+  initData.clipChildren = true;
+  initData.clipSiblings = true;
+  nsresult rv = pluginWidget->Create(
+      aParent, nullptr, LayoutDeviceIntRect(0, 0, 0, 0), &initData);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Creating native plugin widget on the chrome side failed.");
+  }
+  pluginWidget.forget(aOut);
+  return rv;
+}
+#endif  // XP_WIN
 
 PPaymentRequestChild* BrowserChild::AllocPPaymentRequestChild() {
   MOZ_CRASH(
