@@ -282,9 +282,6 @@ class EventStates {
 #define NS_EVENT_STATE_MOZINERT NS_DEFINE_EVENT_STATE_MACRO(54)
 // Topmost Modal <dialog> element in top layer
 #define NS_EVENT_STATE_TOPMOST_MODAL_DIALOG NS_DEFINE_EVENT_STATE_MACRO(55)
-// Handler for empty element that represents plugin instances in builds
-// where plugin support is removed..
-#define NS_EVENT_STATE_HANDLER_NOPLUGINS NS_DEFINE_EVENT_STATE_MACRO(56)
 /**
  * NOTE: do not go over 63 without updating EventStates::InternalType!
  */

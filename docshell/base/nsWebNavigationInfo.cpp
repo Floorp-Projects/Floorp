@@ -64,8 +64,8 @@ uint32_t nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType) {
     case nsContentUtils::TYPE_UNSUPPORTED:
       return nsIWebNavigationInfo::UNSUPPORTED;
 
-    case nsContentUtils::TYPE_PLUGIN:
-      return nsIWebNavigationInfo::PLUGIN;
+    case nsContentUtils::TYPE_FALLBACK:
+      return nsIWebNavigationInfo::FALLBACK;
 
     case nsContentUtils::TYPE_UNKNOWN:
       return nsIWebNavigationInfo::OTHER;

@@ -1769,16 +1769,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean paintingSuppressed;
 
   /**
-   * Returns an array of plugins on the page for opt-in activation.
-   *
-   * Cannot be accessed from unprivileged context (not content-accessible).
-   * Will throw a DOM security error if called without chrome privileges.
-   *
-   */
-  [implicit_jscontext]
-  readonly attribute jsval plugins;
-
-  /**
    * Set the viewport size for the purposes of clamping scroll positions for
    * the root scroll frame of this document to be (aWidth,aHeight) in CSS pixels.
    *
