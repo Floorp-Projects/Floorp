@@ -33,7 +33,6 @@
 #include "nsFontMetrics.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
-#include "nsMediaFeatures.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -697,6 +696,12 @@ nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId, const Document* aDoc) {
   auto colorId = static_cast<LookAndFeel::ColorID>(aId);
   AutoWriteLock guard(*sServoFFILock);
   return LookAndFeel::Color(colorId, *aDoc);
+}
+
+int32_t Gecko_GetLookAndFeelInt(int32_t aId) {
+  auto intId = static_cast<LookAndFeel::IntID>(aId);
+  AutoWriteLock guard(*sServoFFILock);
+  return LookAndFeel::GetInt(intId);
 }
 
 bool Gecko_MatchLang(const Element* aElement, nsAtom* aOverrideLang,

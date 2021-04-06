@@ -397,9 +397,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
 
     case IntID::SystemUsesDarkTheme: {
       if (!mSystemUsesDarkThemeCached && XRE_IsParentProcess()) {
-        // Bail out if AndroidBridge hasn't initialized since we try to query
-        // this value via nsMediaFeatures::InitSystemMetrics without
-        // initializing AndroidBridge on xpcshell tests.
+        // Bail out if AndroidBridge hasn't initialized.
         if (!jni::IsAvailable()) {
           return NS_ERROR_FAILURE;
         }
