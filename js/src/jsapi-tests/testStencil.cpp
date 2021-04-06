@@ -94,8 +94,9 @@ bool basic_test(const CharT* chars) {
   JS::RootedValue rval(cx);
   CHECK(JS::ModuleInstantiate(cx, moduleObject));
   CHECK(JS::ModuleEvaluate(cx, moduleObject, &rval));
-  CHECK(rval.isUndefined());
+  CHECK(!rval.isUndefined());
 
+  js::RunJobs(cx);
   CHECK(JS_GetProperty(cx, global, "x", &rval));
   CHECK(rval.isNumber() && rval.toNumber() == 42);
 
@@ -327,8 +328,9 @@ BEGIN_TEST(testStencil_OffThreadModule) {
   JS::RootedValue rval(cx);
   CHECK(JS::ModuleInstantiate(cx, moduleObject));
   CHECK(JS::ModuleEvaluate(cx, moduleObject, &rval));
-  CHECK(rval.isUndefined());
+  CHECK(!rval.isUndefined());
 
+  js::RunJobs(cx);
   CHECK(JS_GetProperty(cx, global, "x", &rval));
   CHECK(rval.isNumber() && rval.toNumber() == 42);
 
