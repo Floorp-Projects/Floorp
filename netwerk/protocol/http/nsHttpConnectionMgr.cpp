@@ -1715,7 +1715,10 @@ void nsHttpConnectionMgr::IncrementActiveConnCount() {
 }
 
 void nsHttpConnectionMgr::DecrementActiveConnCount(HttpConnectionBase* conn) {
-  mNumActiveConns--;
+  MOZ_DIAGNOSTIC_ASSERT(mNumActiveConns > 0);
+  if (mNumActiveConns > 0) {
+    mNumActiveConns--;
+  }
 
   RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
   if (!connTCP || connTCP->EverUsedSpdy()) mNumSpdyHttp3ActiveConns--;
@@ -1728,7 +1731,11 @@ void nsHttpConnectionMgr::StartedConnect() {
 }
 
 void nsHttpConnectionMgr::RecvdConnect() {
-  mNumActiveConns--;
+  MOZ_DIAGNOSTIC_ASSERT(mNumActiveConns > 0);
+  if (mNumActiveConns > 0) {
+    mNumActiveConns--;
+  }
+
   ConditionallyStopTimeoutTick();
 }
 
