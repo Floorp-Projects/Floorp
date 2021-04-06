@@ -9,18 +9,13 @@
     --panelview-toolbarbutton-hover-color: inherit;
     --panelview-toolbarbutton-active-bgcolor: rgb(207,207,216);
     --panelview-toolbarbutton-active-color: inherit;
-    --panel-banner-item-color: rgb(8,64,63);
-    --panel-banner-item-background-color: rgb(209,255,238);
-    /**
-     * --panel-banner-item-hover-bgcolor, --panel-banner-item-active-bgcolor
-     * and --panel-banner-item-update-unsupported-bgcolor are temporary
-     * colours until the right ones are determined, which is tracked by
-     * bug 1692040.
-     */
-    --panel-banner-item-hover-bgcolor: hsla(96,65%,75%,.8);
-    --panel-banner-item-active-bgcolor: hsl(96,65%,75%);
-    --panel-banner-item-update-unsupported-bgcolor: #FFE900;
-    --panel-banner-item-update-supported-bgcolor: rgb(0,135,135);
+    --panel-banner-item-color: var(--button-color);
+    --panel-banner-item-background-color: var(--button-bgcolor);
+    --panel-banner-item-hover-bgcolor: var(--button-hover-bgcolor);
+    --panel-banner-item-active-bgcolor: var(--button-active-bgcolor);
+    --panel-banner-item-update-supported-bgcolor: #2AC3A2;
+    --panel-banner-item-warning-icon-bgcolor: #FFA436;
+    --panel-banner-item-info-icon-bgcolor: #0090ED;
     --panel-separator-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
     --panel-shortcut-color: rgb(91,91,102);
     --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px rgb(0,97,224);
