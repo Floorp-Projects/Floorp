@@ -254,6 +254,9 @@ async function testNetworkEventResourcesFromTheContentProcess() {
   const JS_CSP_URL =
     EXAMPLE_DOMAIN +
     "browser/devtools/client/netmonitor/test/js_websocket-worker-test.js";
+  const CSS_CSP_URL =
+    EXAMPLE_DOMAIN +
+    "browser/devtools/client/netmonitor/test/internal-loaded.css";
 
   const CSP_BLOCKED_REASON_CODE = 4000;
 
@@ -278,8 +281,8 @@ async function testNetworkEventResourcesFromTheContentProcess() {
       for (const { resource } of updates) {
         allResourcesOnUpdate.push(resource);
       }
-      // Make sure we get 2 updates for the 2 requests sent
-      if (allResourcesOnUpdate.length == 2) {
+      // Make sure we get 3 updates for the 3 requests sent
+      if (allResourcesOnUpdate.length == 3) {
         resolve();
       }
     };
@@ -294,40 +297,76 @@ async function testNetworkEventResourcesFromTheContentProcess() {
 
   is(
     allResourcesOnAvailable.length,
-    2,
-    "Got two network events fired on available"
+    3,
+    "Got three network events fired on available"
   );
-  is(allResourcesOnUpdate.length, 2, "Got two network events fired on update");
+  is(
+    allResourcesOnUpdate.length,
+    3,
+    "Got three network events fired on update"
+  );
 
-  // Find the Blocked CSP rresource
-  const avaliableResource = allResourcesOnAvailable.find(
+  // Find the Blocked CSP JS resource
+  const availableJSResource = allResourcesOnAvailable.find(
     resource => resource.url === JS_CSP_URL
   );
-  const updateResource = allResourcesOnUpdate.find(
+  const updateJSResource = allResourcesOnUpdate.find(
     update => update.url === JS_CSP_URL
   );
 
   // Assert the data for the CSP blocked JS script file
   is(
-    avaliableResource.resourceType,
+    availableJSResource.resourceType,
     ResourceWatcher.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
-    avaliableResource.blockedReason,
+    availableJSResource.blockedReason,
     CSP_BLOCKED_REASON_CODE,
-    "The resource is blocked by CSP"
+    "The js resource is blocked by CSP"
   );
 
   is(
-    updateResource.resourceType,
+    updateJSResource.resourceType,
     ResourceWatcher.TYPES.NETWORK_EVENT,
     "This is a network event resource"
   );
   is(
-    updateResource.blockedReason,
+    updateJSResource.blockedReason,
     CSP_BLOCKED_REASON_CODE,
-    "The resource is blocked by CSP"
+    "The js resource is blocked by CSP"
+  );
+
+  // Find the Blocked CSP CSS resource
+  const availableCSSResource = allResourcesOnAvailable.find(
+    resource => resource.url === CSS_CSP_URL
+  );
+
+  const updateCSSResource = allResourcesOnUpdate.find(
+    update => update.url === CSS_CSP_URL
+  );
+
+  // Assert the data for the CSP blocked CSS file
+  is(
+    availableCSSResource.resourceType,
+    ResourceWatcher.TYPES.NETWORK_EVENT,
+    "This is a network event resource"
+  );
+  is(
+    availableCSSResource.blockedReason,
+    CSP_BLOCKED_REASON_CODE,
+    "The css resource is blocked by CSP"
+  );
+
+  is(
+    updateCSSResource.resourceType,
+    ResourceWatcher.TYPES.NETWORK_EVENT,
+    "This is a network event resource"
+  );
+  is(
+    updateCSSResource.blockedReason,
+    CSP_BLOCKED_REASON_CODE,
+    "The css resource is blocked by CSP"
   );
 
   await resourceWatcher.unwatchResources(
