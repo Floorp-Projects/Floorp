@@ -16,6 +16,7 @@ UNIFIED_SOURCES += [
     "TestCOMPtrEq.cpp",
     "TestCRT.cpp",
     "TestDafsa.cpp",
+    "TestDelayedRunnable.cpp",
     "TestEncoding.cpp",
     "TestEscape.cpp",
     "TestEventPriorities.cpp",
