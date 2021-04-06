@@ -40,7 +40,7 @@ XPCOMUtils.defineLazyServiceGetter(
 const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
 const COLLECTION_ID_FALLBACK = "nimbus-desktop-experiments";
 // TODO: Create a real collection
-const COLLECTION_REMOTE_DEFAULTS = "messaging-system";
+const COLLECTION_REMOTE_DEFAULTS = "nimbus-desktop-defaults";
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
