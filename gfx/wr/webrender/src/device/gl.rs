@@ -39,6 +39,7 @@ use webrender_build::shader::{
     ProgramSourceDigest, ShaderKind, ShaderVersion, build_shader_main_string,
     build_shader_prefix_string, do_build_shader_string, shader_source_from_file,
 };
+use malloc_size_of::MallocSizeOfOps;
 
 /// Sequence number for frames, as tracked by the device layer.
 #[derive(Debug, Copy, Clone, PartialEq, Ord, Eq, PartialOrd)]
@@ -3912,11 +3913,17 @@ impl Device {
     }
 
     /// Generates a memory report for the resources managed by the device layer.
-    pub fn report_memory(&self) -> MemoryReport {
+    pub fn report_memory(&self, size_op_funs: &MallocSizeOfOps) -> MemoryReport {
         let mut report = MemoryReport::default();
         for dim in self.depth_targets.keys() {
             report.depth_target_textures += depth_target_size_in_bytes(dim);
         }
+        #[cfg(feature = "sw_compositor")]
+        {
+            report.swgl += swgl::Context::report_memory(size_op_funs.size_of_op);
+        }
+        // unconditionally use size_op_funs
+        let _ = size_op_funs;
         report
     }
 }
