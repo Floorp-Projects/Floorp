@@ -41,7 +41,7 @@
         let lastPixel = [-1, -1, -1, -1];
         await helper.waitForPixel(video, px => {
           lastPixel = Array.from(px);
-          return helper.isPixel(px, color, 16);
+          return helper.isPixel(px, color, 48);
         }, {
           offsetX: x,
           offsetY: y,
