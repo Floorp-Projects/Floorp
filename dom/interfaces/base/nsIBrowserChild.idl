@@ -6,7 +6,7 @@
 #include "domstubs.idl"
 #include "nsIDroppedLinkHandler.idl"
 
-interface nsIWebBrowserChrome3;
+interface nsIWebBrowserChrome;
 
 webidl ContentFrameMessageManager;
 
@@ -19,8 +19,6 @@ native CommandsArray(nsTArray<nsCString>);
 interface nsIBrowserChild : nsISupports
 {
   readonly attribute ContentFrameMessageManager messageManager;
-
-  attribute nsIWebBrowserChrome3 webBrowserChrome;
 
   [notxpcom] void sendRequestFocus(in boolean canFocus, in CallerType aCallerType);
 
