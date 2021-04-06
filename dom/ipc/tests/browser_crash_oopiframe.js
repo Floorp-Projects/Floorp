@@ -157,13 +157,15 @@ async function testFrameCrash(numTabs) {
       "Should be showing the right notification" + count
     );
 
-    let buttons = notification.querySelectorAll(".notification-button");
+    let buttons = notification.buttonContainer.querySelectorAll(
+      ".notification-button"
+    );
     is(
       buttons.length,
       1,
       "Notification " + count + " should have only one button."
     );
-    let links = notification.querySelectorAll(".text-link");
+    let links = notification.messageText.querySelectorAll(".text-link");
     is(
       links.length,
       1,
