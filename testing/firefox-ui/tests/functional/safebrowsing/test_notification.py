@@ -101,9 +101,21 @@ class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
 
     def check_get_me_out_of_here_button(self):
         with self.marionette.using_context("chrome"):
-            button = self.marionette.find_element(
-                By.ID, "tabbrowser-tabbox"
-            ).find_element(By.CSS_SELECTOR, 'button[label="Get me out of here!"]')
+            if self.marionette.get_pref("browser.proton.infobars.enabled"):
+                notification_box = self.marionette.find_element(
+                    By.CSS_SELECTOR, 'vbox.notificationbox-stack[slot="selected"]'
+                )
+                message = notification_box.find_element(
+                    By.CSS_SELECTOR, "notification-message"
+                )
+                button_container = message.get_property("buttonContainer")
+                button = button_container.find_element(
+                    By.CSS_SELECTOR, 'button[label="Get me out of here!"]'
+                )
+            else:
+                button = self.marionette.find_element(
+                    By.ID, "tabbrowser-tabbox"
+                ).find_element(By.CSS_SELECTOR, 'button[label="Get me out of here!"]')
             button.click()
 
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
@@ -113,13 +125,22 @@ class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
 
     def check_x_button(self):
         with self.marionette.using_context("chrome"):
-            button = (
-                self.marionette.find_element(By.ID, "tabbrowser-tabbox")
-                .find_element(
-                    By.CSS_SELECTOR, "notification[value=blocked-badware-page]"
+            if self.marionette.get_pref("browser.proton.infobars.enabled"):
+                notification_box = self.marionette.find_element(
+                    By.CSS_SELECTOR, 'vbox.notificationbox-stack[slot="selected"]'
                 )
-                .find_element(By.CSS_SELECTOR, ".messageCloseButton")
-            )
+                message = notification_box.find_element(
+                    By.CSS_SELECTOR, "notification-message[value=blocked-badware-page]"
+                )
+                button = message.get_property("closeButton")
+            else:
+                button = (
+                    self.marionette.find_element(By.ID, "tabbrowser-tabbox")
+                    .find_element(
+                        By.CSS_SELECTOR, "notification[value=blocked-badware-page]"
+                    )
+                    .find_element(By.CSS_SELECTOR, ".messageCloseButton")
+                )
             button.click()
 
             Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
