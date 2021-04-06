@@ -10,9 +10,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
 import org.mozilla.fenix.HomeActivity
@@ -21,8 +25,12 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.ui.tabcounter.TabCounter
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.RemoveTabUseCaseWrapper
@@ -31,7 +39,14 @@ import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
-    lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
+    private lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
+    private lateinit var navigationInteractor: NavigationInteractor
+
+    private val tabLayout: TabLayout? get() =
+        view?.tab_layout
+
+    private val isPrivateModeSelected: Boolean get() =
+        tabLayout?.selectedTabPosition == TrayPagerAdapter.POSITION_PRIVATE_TABS
 
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
 
@@ -64,8 +79,18 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         val containerView = inflater.inflate(R.layout.fragment_tab_tray_dialog, container, false)
         val view: View = LayoutInflater.from(containerView.context)
             .inflate(R.layout.component_tabstray2, containerView as ViewGroup, true)
+        val activity = activity as HomeActivity
 
         behavior = BottomSheetBehavior.from(view.tab_wrapper)
+
+        navigationInteractor =
+            DefaultNavigationInteractor(
+                browserStore = activity.components.core.store,
+                navController = findNavController(),
+                metrics = activity.components.analytics.metrics,
+                dismissTabTray = ::dismissAllowingStateLoss,
+                dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome
+            )
 
         return containerView
     }
@@ -73,6 +98,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupMenu(view)
 
         val browserTrayInteractor = DefaultBrowserTrayInteractor(
             this,
@@ -147,5 +173,48 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             )
             isUserInputEnabled = false
         }
+    }
+
+    private fun setupMenu(view: View) {
+        view.tab_tray_overflow.setOnClickListener { anchor ->
+            val tabTrayItemMenu =
+                TabsTrayMenu(
+                    context = view.context,
+                    browserStore = requireComponents.core.store,
+                    tabLayout = tab_layout
+                ) {
+                    when (it) {
+                        is TabsTrayMenu.Item.ShareAllTabs ->
+                            navigationInteractor.onShareTabsOfTypeClicked(isPrivateModeSelected)
+                        is TabsTrayMenu.Item.OpenTabSettings ->
+                            navigationInteractor.onTabSettingsClicked()
+                        is TabsTrayMenu.Item.CloseAllTabs ->
+                            navigationInteractor.onCloseAllTabsClicked(isPrivateModeSelected)
+                        is TabsTrayMenu.Item.OpenRecentlyClosed ->
+                            navigationInteractor.onOpenRecentlyClosedClicked()
+                        is TabsTrayMenu.Item.SelectTabs ->
+                        { /* TODO implement when mulitiselect call is available */ }
+                    }
+                }
+
+            requireComponents.analytics.metrics.track(Event.TabsTrayMenuOpened)
+            val menu = tabTrayItemMenu.menuBuilder.build(view.context)
+            menu.show(anchor).also { popupMenu ->
+                (popupMenu.contentView as? CardView)?.setCardBackgroundColor(
+                    ContextCompat.getColor(
+                        view.context,
+                        R.color.foundation_normal_theme
+                    )
+                )
+            }
+        }
+    }
+    private val homeViewModel: HomeScreenViewModel by activityViewModels()
+
+    private fun dismissTabTrayAndNavigateHome(sessionId: String) {
+        homeViewModel.sessionToDelete = sessionId
+        val directions = NavGraphDirections.actionGlobalHome()
+        findNavController().navigate(directions)
+        dismissAllowingStateLoss()
     }
 }
