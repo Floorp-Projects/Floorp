@@ -440,6 +440,13 @@ class BaseAssemblerX64 : public BaseAssembler {
     m_formatter.oneByteOp64(OP_CMP_EvGv, offset, base, rhs);
   }
 
+  void cmpq_rm(RegisterID rhs, int32_t offset, RegisterID base,
+               RegisterID index, int scale) {
+    spew("cmpq       %s, " MEM_obs, GPReg64Name(rhs),
+         ADDR_obs(offset, base, index, scale));
+    m_formatter.oneByteOp64(OP_CMP_EvGv, offset, base, index, scale, rhs);
+  }
+
   void cmpq_mr(int32_t offset, RegisterID base, RegisterID lhs) {
     spew("cmpq       " MEM_ob ", %s", ADDR_ob(offset, base), GPReg64Name(lhs));
     m_formatter.oneByteOp64(OP_CMP_GvEv, offset, base, lhs);

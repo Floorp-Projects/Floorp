@@ -1140,6 +1140,26 @@ void MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs,
   branch32(cond, scratch2, rhs, label);
 }
 
+void MacroAssembler::branch32(Condition cond, const BaseIndex& lhs,
+                              Register rhs, Label* label) {
+  SecondScratchRegisterScope scratch2(*this);
+  {
+    ScratchRegisterScope scratch(*this);
+
+    Register base = lhs.base;
+    uint32_t scale = Imm32::ShiftOf(lhs.scale).value;
+
+    // Load lhs into scratch2.
+    if (lhs.offset != 0) {
+      ma_add(base, Imm32(lhs.offset), scratch, scratch2);
+      ma_ldr(DTRAddr(scratch, DtrRegImmShift(lhs.index, LSL, scale)), scratch2);
+    } else {
+      ma_ldr(DTRAddr(base, DtrRegImmShift(lhs.index, LSL, scale)), scratch2);
+    }
+  }
+  branch32(cond, scratch2, rhs, label);
+}
+
 void MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs,
                               Imm32 rhs, Label* label) {
   ScratchRegisterScope scratch(*this);
@@ -1371,6 +1391,11 @@ void MacroAssembler::branchPtr(Condition cond, wasm::SymbolicAddress lhs,
 void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
                                ImmWord rhs, Label* label) {
   branch32(cond, lhs, Imm32(rhs.value), label);
+}
+
+void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
+                               Register rhs, Label* label) {
+  branch32(cond, lhs, rhs, label);
 }
 
 void MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs,
@@ -1979,6 +2004,21 @@ void MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr,
 
   branch32(cond, ToPayload(valaddr), Imm32(why), label);
   bind(&notMagic);
+}
+
+void MacroAssembler::branchTestValue(Condition cond, const BaseIndex& lhs,
+                                     const ValueOperand& rhs, Label* label) {
+  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+  Label notSameValue;
+  if (cond == Assembler::Equal) {
+    branch32(Assembler::NotEqual, ToType(lhs), rhs.typeReg(), &notSameValue);
+  } else {
+    branch32(Assembler::NotEqual, ToType(lhs), rhs.typeReg(), label);
+  }
+
+  branch32(cond, ToPayload(lhs), rhs.payloadReg(), label);
+  bind(&notSameValue);
 }
 
 void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {

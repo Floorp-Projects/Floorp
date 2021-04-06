@@ -1172,6 +1172,10 @@ class AssemblerX86Shared : public AssemblerShared {
       case Operand::MEM_REG_DISP:
         masm.cmpl_rm(rhs.encoding(), lhs.disp(), lhs.base());
         break;
+      case Operand::MEM_SCALE:
+        masm.cmpl_rm(rhs.encoding(), lhs.disp(), lhs.base(), lhs.index(),
+                     lhs.scale());
+        break;
       case Operand::MEM_ADDRESS32:
         masm.cmpl_rm(rhs.encoding(), lhs.address());
         break;
