@@ -596,6 +596,21 @@
   value: 5.0f
   mirror: always
 
+- name: apz.overscroll.spring_stiffness
+  type: AtomicFloat
+  value: 400
+  mirror: always
+
+- name: apz.overscroll.damping
+  type: AtomicFloat
+  value: 1.2
+  mirror: always
+
+- name: apz.overscroll.max_velocity
+  type: AtomicFloat
+  value: 20
+  mirror: always
+
 - name: apz.paint_skipping.enabled
   type: RelaxedAtomicBool
   value: true
