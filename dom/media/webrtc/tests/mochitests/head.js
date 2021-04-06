@@ -475,11 +475,8 @@ async function runTestWhenReady(testFunc) {
   } catch (e) {
     ok(
       false,
-      "Error executing test: " +
-        e +
-        (typeof e.stack === "string"
-          ? " " + e.stack.split("\n").join(" ... ")
-          : "")
+      `Error executing test: ${e}
+${e.stack ? e.stack : ""}`
     );
   } finally {
     SimpleTest.finish();
