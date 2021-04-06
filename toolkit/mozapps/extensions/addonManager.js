@@ -10,12 +10,6 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -351,42 +345,15 @@ ChromeUtils.defineModuleGetter(this, "Blocklist", BLOCKLIST_JSM);
 
 function BlocklistService() {
   this.wrappedJSObject = this;
-  this.pluginQueries = [];
 }
 
 BlocklistService.prototype = {
   STATE_NOT_BLOCKED: Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
   STATE_SOFTBLOCKED: Ci.nsIBlocklistService.STATE_SOFTBLOCKED,
   STATE_BLOCKED: Ci.nsIBlocklistService.STATE_BLOCKED,
-  STATE_OUTDATED: Ci.nsIBlocklistService.STATE_OUTDATED,
-  STATE_VULNERABLE_UPDATE_AVAILABLE:
-    Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE,
-  STATE_VULNERABLE_NO_UPDATE: Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE,
 
   get isLoaded() {
     return Cu.isModuleLoaded(BLOCKLIST_JSM) && Blocklist.isLoaded;
-  },
-
-  async getPluginBlocklistState(plugin, appVersion, toolkitVersion) {
-    if (AppConstants.platform == "android") {
-      return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
-    }
-    if (Cu.isModuleLoaded(BLOCKLIST_JSM)) {
-      return Blocklist.getPluginBlocklistState(
-        plugin,
-        appVersion,
-        toolkitVersion
-      );
-    }
-
-    // Blocklist module isn't loaded yet. Queue the query until it is.
-    let request = { plugin, appVersion, toolkitVersion };
-    let promise = new Promise(resolve => {
-      request.resolve = resolve;
-    });
-
-    this.pluginQueries.push(request);
-    return promise;
   },
 
   observe(...args) {
