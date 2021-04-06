@@ -539,7 +539,6 @@ enum WebIDLProcType {
  "webLargeAllocation",
  "withCoopCoep",
  "browser",
- "plugin",
  "ipdlUnitTest",
  "gmpPlugin",
  "gpu",
