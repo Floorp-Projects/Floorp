@@ -255,6 +255,7 @@
             animate: true,
             byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
           });
+          event.preventDefault();
         } else if (event.originalTarget.localName == "scrollbox") {
           // The user middleclicked on the tabstrip. Check whether the click
           // was dispatched on the open space of it.
