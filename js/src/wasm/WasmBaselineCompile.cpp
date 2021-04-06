@@ -3794,6 +3794,14 @@ class BaseCompiler final : public BaseCompilerInterface {
   // count.
   StkVector stk_;
 
+  // Max number of pushes onto the value stack for any opcode or emitter that
+  // does not push a variable, unbounded amount (anything with multiple
+  // results).  This includes also intermediate pushes such as values pushed as
+  // parameters for builtin calls.
+  //
+  // This limit is set quite high on purpose, so as to avoid brittleness.  The
+  // true max value is likely no more than four or five.
+
   static constexpr size_t MaxPushesPerOpcode = 10;
 
   // BaselineCompileFunctions() "lends" us the StkVector to use in this
@@ -5245,6 +5253,12 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
 
     if (type.length() > 1) {
+      // Reserve extra space on the stack for all the values we'll push.
+      // Multi-value push is not accounted for by the pre-sizing of the stack in
+      // the decoding loop.
+      //
+      // Also make sure we leave headroom for other pushes that will occur after
+      // pushing results, just to be safe.
       if (!stk_.reserve(stk_.length() + type.length() + MaxPushesPerOpcode)) {
         return false;
       }
@@ -16112,6 +16126,8 @@ bool BaseCompiler::emitBody() {
     continue;             \
   }
 
+    // Opcodes that push more than MaxPushesPerOpcode (anything with multiple
+    // results) will perform additional reservation.
     CHECK(stk_.reserve(stk_.length() + MaxPushesPerOpcode));
 
     OpBytes op;
