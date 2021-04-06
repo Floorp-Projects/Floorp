@@ -101,7 +101,7 @@ function triggerInfoBar(expectedTimeoutMs) {
 
 var checkInfobarButton = async function(aNotification) {
   // Check that the button on the data choices infobar does the right thing.
-  let buttons = aNotification.getElementsByTagName("button");
+  let buttons = aNotification.buttonContainer.getElementsByTagName("button");
   Assert.equal(
     buttons.length,
     1,
