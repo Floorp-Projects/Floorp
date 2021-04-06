@@ -2310,48 +2310,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   // register for things we'll take from other applications
   [ChildView registerViewForDraggedTypes:self];
 
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(systemMetricsChanged)
-                                               name:NSControlTintDidChangeNotification
-                                             object:nil];
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(systemMetricsChanged)
-                                               name:NSSystemColorsDidChangeNotification
-                                             object:nil];
-
-  if (nsCocoaFeatures::OnMojaveOrLater() &&
-      NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
-    [[[NSWorkspace sharedWorkspace] notificationCenter]
-        addObserver:self
-           selector:@selector(systemMetricsChanged)
-               name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
-             object:nil];
-  } else if (NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
-    [[NSNotificationCenter defaultCenter]
-        addObserver:self
-           selector:@selector(systemMetricsChanged)
-               name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
-             object:nil];
-  }
-
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(scrollbarSystemMetricChanged)
-                                               name:NSPreferredScrollerStyleDidChangeNotification
-                                             object:nil];
-  [[NSDistributedNotificationCenter defaultCenter]
-             addObserver:self
-                selector:@selector(systemMetricsChanged)
-                    name:@"AppleAquaScrollBarVariantChanged"
-                  object:nil
-      suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
-
-  [[NSDistributedNotificationCenter defaultCenter]
-             addObserver:self
-                selector:@selector(systemMetricsChanged)
-                    name:@"AppleInterfaceThemeChangedNotification"
-                  object:nil
-      suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
-
   return self;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
@@ -2398,8 +2356,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   [mClickThroughMouseDownEvent release];
   ChildViewMouseTracker::OnDestroyView(self);
 
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
-  [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
   [mVibrancyViewsContainer removeFromSuperview];
   [mVibrancyViewsContainer release];
   [mNonDraggableViewsContainer removeFromSuperview];
@@ -2432,17 +2388,6 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 // mozView method, return our gecko child view widget. Note this does not AddRef.
 - (nsIWidget*)widget {
   return static_cast<nsIWidget*>(mGeckoChild);
-}
-
-- (void)systemMetricsChanged {
-  // TODO(emilio): We could make this more fine-grained by only passing true
-  // here when system colors / fonts change, but right now we tunnel all the
-  // relevant notifications through here.
-  if (mGeckoChild) mGeckoChild->NotifyThemeChanged(widget::ThemeChangeKind::StyleAndLayout);
-}
-
-- (void)scrollbarSystemMetricChanged {
-  [self systemMetricsChanged];
 }
 
 - (NSString*)description {
