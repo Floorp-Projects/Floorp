@@ -181,10 +181,7 @@ def mach_sys_path(mozilla_dir):
     ]
 
 
-def bootstrap(topsrcdir, mozilla_dir=None):
-    if mozilla_dir is None:
-        mozilla_dir = topsrcdir
-
+def bootstrap(topsrcdir):
     # Ensure we are running Python 2.7 or 3.5+. We put this check here so we
     # generate a user-friendly error message rather than a cryptic stack trace
     # on module import.
@@ -209,7 +206,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     # case. For default behavior, we educate users and give them an opportunity
     # to react. We always exit after creating the directory because users don't
     # like surprises.
-    sys.path[0:0] = mach_sys_path(mozilla_dir)
+    sys.path[0:0] = mach_sys_path(topsrcdir)
     import mach.base
     import mach.main
     from mach.util import setenv
@@ -267,7 +264,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
             # This API doesn't respect the vcs binary choices from configure.
             # If we ever need to use the VCS binary here, consider something
             # more robust.
-            return mozversioncontrol.get_repository_object(path=mozilla_dir)
+            return mozversioncontrol.get_repository_object(path=topsrcdir)
         except (mozversioncontrol.InvalidRepoPath, mozversioncontrol.MissingVCSTool):
             return None
 
@@ -370,7 +367,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         # default global machrc location
         driver.settings_paths.append(get_state_dir())
     # always load local repository configuration
-    driver.settings_paths.append(mozilla_dir)
+    driver.settings_paths.append(topsrcdir)
 
     for category, meta in CATEGORIES.items():
         driver.define_category(category, meta["short"], meta["long"], meta["priority"])
@@ -381,7 +378,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         # Sparse checkouts may not have all mach_commands.py files. Ignore
         # errors from missing files.
         try:
-            driver.load_commands_from_file(os.path.join(mozilla_dir, path))
+            driver.load_commands_from_file(os.path.join(topsrcdir, path))
         except mach.base.MissingFileError:
             if not repo or not repo.sparse_checkout_present():
                 raise
