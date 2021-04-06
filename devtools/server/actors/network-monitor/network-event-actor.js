@@ -83,7 +83,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       networkEvent.isThirdPartyTrackingResource;
     this._referrerPolicy = networkEvent.referrerPolicy;
     this._channelId = networkEvent.channelId;
-    this._browsingContextID = networkEvent.browingContextID;
+    this._browsingContextID = networkEvent.browsingContextID;
     this._serial = networkEvent.serial;
     this._blockedReason = networkEvent.blockedReason;
     this._blockingExtension = networkEvent.blockingExtension;
