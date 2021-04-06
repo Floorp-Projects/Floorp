@@ -15,11 +15,11 @@ ChromeUtils.defineModuleGetter(
 async function waitForWindowReadyForPopupNotifications(win) {
   // These are the same checks that PopupNotifications.jsm makes before it
   // allows a notification to open.
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => win.gBrowser.selectedBrowser.docShellIsActive,
     "The browser should be active"
   );
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => Services.focus.activeWindow == win,
     "The window should be active"
   );
