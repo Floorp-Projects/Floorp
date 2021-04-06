@@ -74,11 +74,27 @@ async function requestDevice(aAudio, aVideo, aShare, aBadDevice = false) {
 }
 message("pending");
 
+function stopTracks(aKind) {
+  for (let stream of gStreams) {
+    for (let track of stream.getTracks()) {
+      if (track.kind == aKind) {
+        track.stop();
+        stream.removeTrack(track);
+      }
+    }
+  }
+  gStreams = gStreams.filter(s => !!s.getTracks().length);
+  if (aKind == "video") {
+    gVideoEvents = [];
+  } else if (aKind == "audio") {
+    gAudioEvents = [];
+  }
+}
+
 function closeStream() {
   for (let stream of gStreams) {
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
+    for (let track of stream.getTracks()) {
+      track.stop();
     }
   }
   gStreams = [];

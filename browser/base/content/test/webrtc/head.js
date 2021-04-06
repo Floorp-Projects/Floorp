@@ -692,6 +692,51 @@ async function promiseRequestDevice(
   );
 }
 
+async function stopTracks(
+  aKind,
+  aAlreadyStopped,
+  aLastTracks,
+  aFrameId,
+  aBrowsingContext,
+  aBrowsingContextToObserve
+) {
+  // If the observers are listening to other frames, listen for a notification
+  // on the right subframe.
+  let frameBC =
+    aBrowsingContext ??
+    (await getBrowsingContextForFrame(
+      gBrowser.selectedBrowser.browsingContext,
+      aFrameId
+    ));
+
+  let observerPromises = [];
+  if (!aAlreadyStopped) {
+    observerPromises.push(
+      expectObserverCalled(
+        "recording-device-events",
+        1,
+        aBrowsingContextToObserve
+      )
+    );
+  }
+  if (aLastTracks) {
+    observerPromises.push(
+      expectObserverCalled(
+        "recording-window-ended",
+        1,
+        aBrowsingContextToObserve
+      )
+    );
+  }
+
+  info(`Stopping all ${aKind} tracks`);
+  await SpecialPowers.spawn(frameBC, [aKind], async function(kind) {
+    content.wrappedJSObject.stopTracks(kind);
+  });
+
+  await Promise.all(observerPromises);
+}
+
 async function closeStream(
   aAlreadyClosed,
   aFrameId,
