@@ -57,11 +57,11 @@ class BrowsingContextGroup final : public nsWrapperCache {
   // Synchronize the current BrowsingContextGroup state down to the given
   // content process, and continue updating it.
   //
-  // You rarely need to call this directy, as it's automatically called by
+  // You rarely need to call this directly, as it's automatically called by
   // |EnsureHostProcess| as needed.
   void Subscribe(ContentParent* aProcess);
 
-  // Stop synchromizing the current BrowsingContextGroup state down to a given
+  // Stop synchronizing the current BrowsingContextGroup state down to a given
   // content process. The content process must no longer be a host process.
   void Unsubscribe(ContentParent* aProcess);
 
@@ -72,8 +72,8 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   // When a BrowsingContext is being discarded, we may want to keep the
   // corresponding BrowsingContextGroup alive until the other process
-  // acknowledges the BrowsingContext has been discarded. A `KeepAlive` will be
-  // added to the `BrowsingContextGroup`, delaying destruction.
+  // acknowledges that the BrowsingContext has been discarded. A `KeepAlive`
+  // will be added to the `BrowsingContextGroup`, delaying destruction.
   void AddKeepAlive();
   void RemoveKeepAlive();
 
