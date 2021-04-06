@@ -7,6 +7,7 @@
 
 #include "prlink.h"
 #include "plstr.h"
+#include "prenv.h"
 #include "nsPluginHost.h"
 #include "nsIBlocklistService.h"
 #include "nsPluginLogging.h"
@@ -20,38 +21,8 @@
 #include "mozilla/dom/FakePluginTagInitBinding.h"
 #include "mozilla/StaticPrefs_plugin.h"
 
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-#  include "mozilla/SandboxSettings.h"
-#  include "nsCocoaFeatures.h"
-#endif
-
 using mozilla::dom::FakePluginTagInit;
 using namespace mozilla;
-
-// These legacy flags are used in the plugin registry. The states are now
-// stored in prefs, but we still need to be able to import them.
-#define NS_PLUGIN_FLAG_ENABLED 0x0001  // is this plugin enabled?
-// no longer used                   0x0002    // reuse only if regenerating
-// pluginreg.dat
-#define NS_PLUGIN_FLAG_FROMCACHE \
-  0x0004  // this plugintag info was loaded from cache
-// no longer used                   0x0008    // reuse only if regenerating
-// pluginreg.dat
-#define NS_PLUGIN_FLAG_CLICKTOPLAY 0x0020  // this is a click-to-play plugin
-
-static const char kPrefDefaultEnabledState[] = "plugin.default.state";
-
-// The defaults here will be read from prefs and overwritten
-#if defined(MOZ_SANDBOX)
-#  if defined(XP_WIN) || defined(XP_MACOSX)
-static int32_t sFlashSandboxLevel = 3;
-static int32_t sDefaultSandboxLevel = 0;
-#  endif
-#  if defined(XP_MACOSX)
-static bool sEnableSandboxLogging = false;
-#  endif
-#endif /* MOZ_SANDBOX */
-static bool sInitializedSandboxingInfo = false;
 
 // check comma delimited extensions
 static bool ExtensionInList(const nsCString& aExtensionList,
@@ -190,476 +161,10 @@ bool nsIInternalPluginTag::HasMimeType(const nsACString& aMimeType) const {
                              nsCaseInsensitiveCStringArrayComparator());
 }
 
-/* nsPluginTag */
-
-nsPluginTag::nsPluginTag(const char* aName, const char* aDescription,
-                         const char* aFileName, const char* aFullPath,
-                         const char* aVersion, const char* const* aMimeTypes,
-                         const char* const* aMimeDescriptions,
-                         const char* const* aExtensions, int32_t aVariants,
-                         int64_t aLastModifiedTime, uint32_t aBlocklistState,
-                         bool aArgsAreUTF8)
-    : nsIInternalPluginTag(aName, aDescription, aFileName, aVersion),
-      mId(sNextId++),
-      mContentProcessRunningCount(0),
-      mHadLocalInstance(false),
-      mLibrary(nullptr),
-      mIsFlashPlugin(false),
-      mSupportsAsyncRender(false),
-      mFullPath(aFullPath),
-      mLastModifiedTime(aLastModifiedTime),
-      mSandboxLevel(0),
-      mIsSandboxLoggingEnabled(false),
-      mBlocklistState(aBlocklistState) {
-  InitMime(aMimeTypes, aMimeDescriptions, aExtensions,
-           static_cast<uint32_t>(aVariants));
-  InitSandboxLevel();
-  if (!aArgsAreUTF8) EnsureMembersAreUTF8();
-  FixupVersion();
-}
-
-nsPluginTag::nsPluginTag(uint32_t aId, const char* aName,
-                         const char* aDescription, const char* aFileName,
-                         const char* aFullPath, const char* aVersion,
-                         nsTArray<nsCString> aMimeTypes,
-                         nsTArray<nsCString> aMimeDescriptions,
-                         nsTArray<nsCString> aExtensions, bool aIsFlashPlugin,
-                         bool aSupportsAsyncRender, int64_t aLastModifiedTime,
-                         int32_t aSandboxLevel, uint32_t aBlocklistState)
-    : nsIInternalPluginTag(aName, aDescription, aFileName, aVersion, aMimeTypes,
-                           aMimeDescriptions, aExtensions),
-      mId(aId),
-      mContentProcessRunningCount(0),
-      mHadLocalInstance(false),
-      mLibrary(nullptr),
-      mIsFlashPlugin(aIsFlashPlugin),
-      mSupportsAsyncRender(aSupportsAsyncRender),
-      mLastModifiedTime(aLastModifiedTime),
-      mSandboxLevel(aSandboxLevel),
-      mIsSandboxLoggingEnabled(false),
-      mNiceFileName(),
-      mBlocklistState(aBlocklistState) {}
-
-nsPluginTag::~nsPluginTag() {
-  NS_ASSERTION(!mNext, "Risk of exhausting the stack space, bug 486349");
-}
-
-NS_IMPL_ISUPPORTS(nsPluginTag, nsPluginTag, nsIInternalPluginTag, nsIPluginTag)
-
-void nsPluginTag::InitMime(const char* const* aMimeTypes,
-                           const char* const* aMimeDescriptions,
-                           const char* const* aExtensions,
-                           uint32_t aVariantCount) {
-  if (!aMimeTypes) {
-    return;
-  }
-
-  for (uint32_t i = 0; i < aVariantCount; i++) {
-    if (!aMimeTypes[i]) {
-      continue;
-    }
-
-    nsAutoCString mimeType(aMimeTypes[i]);
-
-    // Convert the MIME type, which is case insensitive, to lowercase in order
-    // to properly handle a mixed-case type.
-    ToLowerCase(mimeType);
-
-    // Look for certain special plugins.
-    switch (nsPluginHost::GetSpecialType(mimeType)) {
-      case nsPluginHost::eSpecialType_Flash:
-        // VLC sometimes claims to implement the Flash MIME type, and we want
-        // to allow users to control that separately from Adobe Flash.
-        if (Name().EqualsLiteral("Shockwave Flash")) {
-          mIsFlashPlugin = true;
-        }
-        break;
-      case nsPluginHost::eSpecialType_Test:
-      case nsPluginHost::eSpecialType_None:
-      default:
-        break;
-    }
-
-    // Fill in our MIME type array.
-    mMimeTypes.AppendElement(mimeType);
-
-    // Now fill in the MIME descriptions.
-    if (aMimeDescriptions && aMimeDescriptions[i]) {
-      // we should cut off the list of suffixes which the mime
-      // description string may have, see bug 53895
-      // it is usually in form "some description (*.sf1, *.sf2)"
-      // so we can search for the opening round bracket
-      char cur = '\0';
-      char pre = '\0';
-      char* p = PL_strrchr(aMimeDescriptions[i], '(');
-      if (p && (p != aMimeDescriptions[i])) {
-        if ((p - 1) && *(p - 1) == ' ') {
-          pre = *(p - 1);
-          *(p - 1) = '\0';
-        } else {
-          cur = *p;
-          *p = '\0';
-        }
-      }
-      mMimeDescriptions.AppendElement(nsCString(aMimeDescriptions[i]));
-      // restore the original string
-      if (cur != '\0') {
-        *p = cur;
-      }
-      if (pre != '\0') {
-        *(p - 1) = pre;
-      }
-    } else {
-      mMimeDescriptions.AppendElement(nsCString());
-    }
-
-    // Now fill in the extensions.
-    if (aExtensions && aExtensions[i]) {
-      mExtensions.AppendElement(nsCString(aExtensions[i]));
-    } else {
-      mExtensions.AppendElement(nsCString());
-    }
-  }
-}
-
-void nsPluginTag::InitSandboxLevel() {
-  MOZ_ASSERT(sInitializedSandboxingInfo,
-             "Should have initialized global sandboxing info");
-#if defined(MOZ_SANDBOX)
-#  if defined(XP_MACOSX)
-  mSandboxLevel = mIsFlashPlugin ? sFlashSandboxLevel : sDefaultSandboxLevel;
-  mIsSandboxLoggingEnabled = mIsFlashPlugin && sEnableSandboxLogging;
-#  elif defined(XP_WIN)
-  mSandboxLevel = mIsFlashPlugin ? sFlashSandboxLevel : sDefaultSandboxLevel;
-#  endif /* defined(XP_MACOSX) / defined(XP_WIN) */
-#endif   /* defined(MOZ_SANDBOX) */
-}
-
-#if !defined(XP_WIN) && !defined(XP_MACOSX)
-static void ConvertToUTF8(nsCString& aString) {
-  Unused << UTF_8_ENCODING->DecodeWithoutBOMHandling(aString, aString);
-}
-#endif
-
-nsresult nsPluginTag::EnsureMembersAreUTF8() {
-#if defined(XP_WIN) || defined(XP_MACOSX)
-  return NS_OK;
-#else
-  ConvertToUTF8(mFileName);
-  ConvertToUTF8(mFullPath);
-  ConvertToUTF8(mName);
-  ConvertToUTF8(mDescription);
-  for (uint32_t i = 0; i < mMimeDescriptions.Length(); ++i) {
-    ConvertToUTF8(mMimeDescriptions[i]);
-  }
-  return NS_OK;
-#endif
-}
-
-void nsPluginTag::FixupVersion() {
-#if defined(XP_LINUX)
-  if (mIsFlashPlugin) {
-    mVersion.ReplaceChar(',', '.');
-  }
-#endif
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetDescription(nsACString& aDescription) {
-  aDescription = mDescription;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetIsFlashPlugin(bool* aIsFlash) {
-  *aIsFlash = mIsFlashPlugin;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetFilename(nsACString& aFileName) {
-  aFileName = mFileName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetFullpath(nsACString& aFullPath) {
-  aFullPath = mFullPath;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetVersion(nsACString& aVersion) {
-  aVersion = mVersion;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetName(nsACString& aName) {
-  aName = mName;
-  return NS_OK;
-}
-
-bool nsPluginTag::IsActive() { return IsEnabled() && !IsBlocklisted(); }
-
-NS_IMETHODIMP
-nsPluginTag::GetActive(bool* aResult) {
-  *aResult = IsActive();
-  return NS_OK;
-}
-
-bool nsPluginTag::IsEnabled() {
-  const PluginState state = GetPluginState();
-  return (state == ePluginState_Enabled) || (state == ePluginState_Clicktoplay);
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetDisabled(bool* aDisabled) {
-  *aDisabled = !IsEnabled();
-  return NS_OK;
-}
-
-bool nsPluginTag::IsBlocklisted() {
-  return mBlocklistState == nsIBlocklistService::STATE_BLOCKED;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetBlocklisted(bool* aBlocklisted) {
-  *aBlocklisted = IsBlocklisted();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetIsEnabledStateLocked(bool* aIsEnabledStateLocked) {
-  return IsEnabledStateLockedForPlugin(this, aIsEnabledStateLocked);
-}
-
-bool nsPluginTag::IsClicktoplay() {
-  const PluginState state = GetPluginState();
-  return (state == ePluginState_Clicktoplay);
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetClicktoplay(bool* aClicktoplay) {
-  *aClicktoplay = IsClicktoplay();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetEnabledState(uint32_t* aEnabledState) {
-  int32_t enabledState;
-  nsresult rv = NS_OK;
-  if (mIsFlashPlugin) {
-    enabledState = StaticPrefs::plugin_state_flash();
-    if (enabledState == nsIPluginTag::STATE_ENABLED) {
-      enabledState = nsIPluginTag::STATE_CLICKTOPLAY;
-    }
-  } else {
-    rv = Preferences::GetInt(GetStatePrefNameForPlugin(this).get(),
-                             &enabledState);
-  }
-  if (NS_SUCCEEDED(rv) && enabledState >= nsIPluginTag::STATE_DISABLED &&
-      enabledState <= nsIPluginTag::STATE_ENABLED) {
-    *aEnabledState = (uint32_t)enabledState;
-    return rv;
-  }
-
-  // Something went wrong fetching the plugin's state (e.g. it wasn't flash
-  // and the preference was not present) - use the default state:
-  enabledState = Preferences::GetInt(kPrefDefaultEnabledState,
-                                     nsIPluginTag::STATE_ENABLED);
-  if (enabledState == nsIPluginTag::STATE_ENABLED && mIsFlashPlugin) {
-    enabledState = nsIPluginTag::STATE_CLICKTOPLAY;
-  }
-  if (enabledState >= nsIPluginTag::STATE_DISABLED &&
-      enabledState <= nsIPluginTag::STATE_ENABLED) {
-    *aEnabledState = (uint32_t)enabledState;
-    return NS_OK;
-  }
-
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-nsPluginTag::SetEnabledState(uint32_t aEnabledState) {
-  if (aEnabledState >= ePluginState_MaxValue) return NS_ERROR_ILLEGAL_VALUE;
-  if (aEnabledState == nsIPluginTag::STATE_ENABLED && mIsFlashPlugin) {
-    aEnabledState = nsIPluginTag::STATE_CLICKTOPLAY;
-  }
-  uint32_t oldState = nsIPluginTag::STATE_DISABLED;
-  GetEnabledState(&oldState);
-  if (oldState != aEnabledState) {
-    Preferences::SetInt(GetStatePrefNameForPlugin(this).get(), aEnabledState);
-    if (RefPtr<nsPluginHost> host = nsPluginHost::GetInst()) {
-      host->UpdatePluginInfo(this);
-    }
-  }
-  return NS_OK;
-}
-
-nsPluginTag::PluginState nsPluginTag::GetPluginState() {
-  uint32_t enabledState = nsIPluginTag::STATE_DISABLED;
-  GetEnabledState(&enabledState);
-  return (PluginState)enabledState;
-}
-
-void nsPluginTag::SetPluginState(PluginState state) {
-  static_assert((uint32_t)nsPluginTag::ePluginState_Disabled ==
-                    nsIPluginTag::STATE_DISABLED,
-                "nsPluginTag::ePluginState_Disabled must match "
-                "nsIPluginTag::STATE_DISABLED");
-  static_assert((uint32_t)nsPluginTag::ePluginState_Clicktoplay ==
-                    nsIPluginTag::STATE_CLICKTOPLAY,
-                "nsPluginTag::ePluginState_Clicktoplay must match "
-                "nsIPluginTag::STATE_CLICKTOPLAY");
-  static_assert((uint32_t)nsPluginTag::ePluginState_Enabled ==
-                    nsIPluginTag::STATE_ENABLED,
-                "nsPluginTag::ePluginState_Enabled must match "
-                "nsIPluginTag::STATE_ENABLED");
-  SetEnabledState((uint32_t)state);
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetMimeTypes(nsTArray<nsCString>& aResults) {
-  aResults = mMimeTypes.Clone();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetMimeDescriptions(nsTArray<nsCString>& aResults) {
-  aResults = mMimeDescriptions.Clone();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetExtensions(nsTArray<nsCString>& aResults) {
-  aResults = mExtensions.Clone();
-  return NS_OK;
-}
-
-bool nsPluginTag::HasSameNameAndMimes(const nsPluginTag* aPluginTag) const {
-  NS_ENSURE_TRUE(aPluginTag, false);
-
-  if ((!mName.Equals(aPluginTag->mName)) ||
-      (mMimeTypes.Length() != aPluginTag->mMimeTypes.Length())) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < mMimeTypes.Length(); i++) {
-    if (!mMimeTypes[i].Equals(aPluginTag->mMimeTypes[i])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetLoaded(bool* aIsLoaded) { return NS_ERROR_FAILURE; }
-
-void nsPluginTag::TryUnloadPlugin(bool inShutdown) {}
-
-/* static */ void nsPluginTag::EnsureSandboxInformation() {
-  if (sInitializedSandboxingInfo) {
-    return;
-  }
-  MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread.");
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  Preferences::GetInt("dom.ipc.plugins.sandbox-level.default",
-                      &sDefaultSandboxLevel);
-  Preferences::GetInt("dom.ipc.plugins.sandbox-level.flash",
-                      &sFlashSandboxLevel);
-#  if defined(_AMD64_)
-  // Level 3 is now the default NPAPI sandbox level for 64-bit flash.
-  // We permit the user to drop the sandbox level by at most 1.  This should
-  // be kept up to date with the default value in the firefox.js pref file.
-  sFlashSandboxLevel = std::max(sFlashSandboxLevel, 2);
-#  endif
-#elif defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  int legacyOSMinorMax = Preferences::GetInt(
-      "dom.ipc.plugins.sandbox-level.flash.max-legacy-os-minor", 10);
-  const char* levelPref = "dom.ipc.plugins.sandbox-level.flash";
-
-  if (PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
-    // Flash sandbox disabled
-    sFlashSandboxLevel = 0;
-  } else if (nsCocoaFeatures::macOSVersionMajor() == 10 &&
-             nsCocoaFeatures::macOSVersionMinor() <= legacyOSMinorMax) {
-    const char* legacyLevelPref = "dom.ipc.plugins.sandbox-level.flash.legacy";
-    int32_t compatLevel = Preferences::GetInt(legacyLevelPref, 0);
-    int32_t level = Preferences::GetInt(levelPref, 0);
-    sFlashSandboxLevel = std::min(compatLevel, level);
-  } else {
-    sFlashSandboxLevel = Preferences::GetInt(levelPref, 0);
-  }
-  sFlashSandboxLevel = ClampFlashSandboxLevel(sFlashSandboxLevel);
-
-  // At present, Flash is the only supported plugin on macOS.
-  // Other test plugins are used during testing and they will use
-  // the default plugin sandbox level.
-  Preferences::GetInt("dom.ipc.plugins.sandbox-level.default",
-                      &sDefaultSandboxLevel);
-
-  // Enable sandbox logging in the plugin process if it has
-  // been turned on via prefs or environment variables.
-  sEnableSandboxLogging =
-      sFlashSandboxLevel > 0 &&
-      (Preferences::GetBool("security.sandbox.logging.enabled") ||
-       PR_GetEnv("MOZ_SANDBOX_LOGGING") ||
-       PR_GetEnv("MOZ_SANDBOX_MAC_FLASH_LOGGING"));
-#endif
-  sInitializedSandboxingInfo = true;
-}
-
-const nsCString& nsPluginTag::GetNiceFileName() {
-  if (!mNiceFileName.IsEmpty()) {
-    return mNiceFileName;
-  }
-
-  if (mIsFlashPlugin) {
-    mNiceFileName.AssignLiteral("flash");
-    return mNiceFileName;
-  }
-
-  mNiceFileName = MakeNiceFileName(mFileName);
-  return mNiceFileName;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetNiceName(nsACString& aResult) {
-  aResult = GetNiceFileName();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetBlocklistState(uint32_t* aResult) {
-  *aResult = mBlocklistState;
-  return NS_OK;
-}
-
-void nsPluginTag::SetBlocklistState(uint32_t aBlocklistState) {
-  mBlocklistState = aBlocklistState;
-}
-
-uint32_t nsPluginTag::BlocklistState() { return mBlocklistState; }
-
-NS_IMETHODIMP
-nsPluginTag::GetLastModifiedTime(PRTime* aLastModifiedTime) {
-  MOZ_ASSERT(aLastModifiedTime);
-  *aLastModifiedTime = mLastModifiedTime;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPluginTag::GetId(uint32_t* aId) {
-  *aId = mId;
-  return NS_OK;
-}
-
 /* nsFakePluginTag */
 
 nsFakePluginTag::nsFakePluginTag()
-    : mId(sNextId++), mState(nsPluginTag::ePluginState_Disabled) {}
+    : mId(sNextId++), mState(ePluginState_Disabled) {}
 
 nsFakePluginTag::nsFakePluginTag(uint32_t aId,
                                  already_AddRefed<nsIURI>&& aHandlerURI,
@@ -675,7 +180,7 @@ nsFakePluginTag::nsFakePluginTag(uint32_t aId,
       mHandlerURI(aHandlerURI),
       mNiceName(aNiceName),
       mSandboxScript(aSandboxScript),
-      mState(nsPluginTag::ePluginState_Enabled) {}
+      mState(ePluginState_Enabled) {}
 
 nsFakePluginTag::~nsFakePluginTag() = default;
 
@@ -813,8 +318,7 @@ nsFakePluginTag::GetIsEnabledStateLocked(bool* aIsEnabledStateLocked) {
 }
 
 bool nsFakePluginTag::IsEnabled() {
-  return mState == nsPluginTag::ePluginState_Enabled ||
-         mState == nsPluginTag::ePluginState_Clicktoplay;
+  return mState == ePluginState_Enabled || mState == ePluginState_Clicktoplay;
 }
 
 NS_IMETHODIMP
@@ -825,7 +329,7 @@ nsFakePluginTag::GetDisabled(bool* aDisabled) {
 
 NS_IMETHODIMP
 nsFakePluginTag::GetClicktoplay(bool* aClicktoplay) {
-  *aClicktoplay = (mState == nsPluginTag::ePluginState_Clicktoplay);
+  *aClicktoplay = (mState == ePluginState_Clicktoplay);
   return NS_OK;
 }
 
@@ -838,7 +342,7 @@ nsFakePluginTag::GetEnabledState(uint32_t* aEnabledState) {
 NS_IMETHODIMP
 nsFakePluginTag::SetEnabledState(uint32_t aEnabledState) {
   // There are static asserts above enforcing that this enum matches
-  mState = (nsPluginTag::PluginState)aEnabledState;
+  mState = (PluginState)aEnabledState;
   // FIXME-jsplugins update
   return NS_OK;
 }
