@@ -5,30 +5,42 @@ add_task(async function() {
   registerCleanupFunction(function() {
     window.restore();
   });
-  function waitForActive() {
+  function isActive() {
     return gBrowser.selectedTab.linkedBrowser.docShellIsActive;
   }
-  function waitForInactive() {
-    return !gBrowser.selectedTab.linkedBrowser.docShellIsActive;
-  }
-  await TestUtils.waitForCondition(waitForActive);
-  is(
-    gBrowser.selectedTab.linkedBrowser.docShellIsActive,
-    true,
-    "Docshell should be active"
+
+  ok(isActive(), "Docshell should be active when starting the test");
+
+  info("Calling window.minimize");
+  let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+    window,
+    "sizemodechange"
   );
   window.minimize();
-  await TestUtils.waitForCondition(waitForInactive);
-  is(
-    gBrowser.selectedTab.linkedBrowser.docShellIsActive,
-    false,
-    "Docshell should be Inactive"
+  await promiseSizeModeChange;
+  ok(!isActive(), "Docshell should be Inactive");
+
+  info("Calling window.restore");
+  promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+    window,
+    "sizemodechange"
   );
   window.restore();
-  await TestUtils.waitForCondition(waitForActive);
-  is(
-    gBrowser.selectedTab.linkedBrowser.docShellIsActive,
-    true,
-    "Docshell should be active again"
-  );
+  // On Ubuntu `window.restore` doesn't seem to work, use a timer to make the
+  // test fail faster and more cleanly than with a test timeout.
+  await Promise.race([
+    promiseSizeModeChange,
+    new Promise((resolve, reject) =>
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      setTimeout(() => {
+        reject("timed out waiting for sizemodechange event");
+      }, 5000)
+    ),
+  ]);
+  // The sizemodechange event can sometimes be fired before the
+  // occlusionstatechange event, especially in chaos mode.
+  if (window.isFullyOccluded) {
+    await BrowserTestUtils.waitForEvent(window, "occlusionstatechange");
+  }
+  ok(isActive(), "Docshell should be active again");
 });
