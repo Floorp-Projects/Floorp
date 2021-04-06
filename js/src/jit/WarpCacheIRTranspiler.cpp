@@ -168,6 +168,11 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   uint64_t uint64StubField(uint32_t offset) {
     return static_cast<uint64_t>(stubInfo_->getStubRawInt64(stubData_, offset));
   }
+  Value valueStubField(uint32_t offset) {
+    uint64_t raw =
+        static_cast<uint64_t>(stubInfo_->getStubRawInt64(stubData_, offset));
+    return Value::fromRawBits(raw);
+  }
 
   // This must only be called when the caller knows the object is tenured and
   // not a nursery index.
@@ -736,6 +741,47 @@ bool WarpCacheIRTranspiler::emitGuardDynamicSlotIsSpecificObject(
 
   auto* guard = MGuardObjectIdentity::New(alloc(), unbox, expected,
                                           /* bailOnEquality = */ false);
+  add(guard);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardFixedSlotValue(ObjOperandId objId,
+                                                    uint32_t offsetOffset,
+                                                    uint32_t valOffset) {
+  MDefinition* obj = getOperand(objId);
+
+  size_t offset = int32StubField(offsetOffset);
+  Value val = valueStubField(valOffset);
+  MOZ_ASSERT(val.isPrivateGCThing());
+
+  uint32_t slotIndex = NativeObject::getFixedSlotIndexFromOffset(offset);
+
+  auto* load = MLoadFixedSlot::New(alloc(), obj, slotIndex);
+  add(load);
+
+  auto* guard = MGuardValue::New(alloc(), load, val);
+  add(guard);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardDynamicSlotValue(ObjOperandId objId,
+                                                      uint32_t offsetOffset,
+                                                      uint32_t valOffset) {
+  MDefinition* obj = getOperand(objId);
+
+  size_t offset = int32StubField(offsetOffset);
+  Value val = valueStubField(valOffset);
+  MOZ_ASSERT(val.isPrivateGCThing());
+
+  size_t slotIndex = NativeObject::getDynamicSlotIndexFromOffset(offset);
+
+  auto* slots = MSlots::New(alloc(), obj);
+  add(slots);
+
+  auto* load = MLoadDynamicSlot::New(alloc(), slots, slotIndex);
+  add(load);
+
+  auto* guard = MGuardValue::New(alloc(), load, val);
   add(guard);
   return true;
 }
