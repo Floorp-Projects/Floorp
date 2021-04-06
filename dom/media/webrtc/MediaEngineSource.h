@@ -234,6 +234,12 @@ class MediaEngineSource : public MediaEngineSourceInterface {
    */
   static bool IsVideo(dom::MediaSourceEnum aSource);
 
+  /**
+   * Returns true if the given source type is for audio, false otherwise.
+   * Only call with real types.
+   */
+  static bool IsAudio(dom::MediaSourceEnum aSource);
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEngineSource)
   NS_DECL_OWNINGEVENTTARGET
 
