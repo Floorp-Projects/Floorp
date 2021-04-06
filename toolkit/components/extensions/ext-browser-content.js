@@ -329,14 +329,6 @@ var WebBrowserChrome = {
       docShell.isAppTab
     );
   },
-
-  shouldLoadURI(docShell, URI, referrerInfo, hasPostData, triggeringPrincipal) {
-    return true;
-  },
-
-  shouldLoadURIInThisProcess(URI) {
-    return true;
-  },
 };
 
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
