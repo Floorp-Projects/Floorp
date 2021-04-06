@@ -9210,7 +9210,7 @@
 # Whether to record the telemetry event when a JAR channel is failed to load.
 - name: network.jar.record_failure_reason
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 #---------------------------------------------------------------------------
