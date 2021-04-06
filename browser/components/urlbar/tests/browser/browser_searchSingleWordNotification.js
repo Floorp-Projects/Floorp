@@ -116,7 +116,7 @@ async function runURLBarSearchTest({
           "http://" + valueToOpen + "/",
           aWindow.gBrowser.selectedBrowser
         );
-        notification.querySelector("button").click();
+        notification.buttonContainer.querySelector("button").click();
         await docLoadPromise;
       } else {
         notificationBox.currentNotification.close();
