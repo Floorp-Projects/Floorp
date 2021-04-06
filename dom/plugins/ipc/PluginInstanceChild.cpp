@@ -21,11 +21,9 @@
 #endif
 #ifdef XP_WIN
 #  include "mozilla/D3DMessageUtils.h"
-#  include "mozilla/gfx/SharedDIBSurface.h"
 #  include "nsCrashOnException.h"
 #  include "gfxWindowsPlatform.h"
 extern const wchar_t* kFlashFullscreenClass;
-using mozilla::gfx::SharedDIBSurface;
 #endif
 #include "gfxSharedImageSurface.h"
 #include "gfxUtils.h"
@@ -82,8 +80,6 @@ static WindowsDllInterceptor::FuncHookType<decltype(&ImmAssociateContextEx)>
 
 static PluginInstanceChild* sCurrentPluginInstance = nullptr;
 static const HIMC sHookIMC = (const HIMC)0xefefefef;
-
-using mozilla::gfx::SharedDIB;
 
 // Flash WM_USER message delay time for PostDelayedTask. Borrowed
 // from Chromium's web plugin delegate src. See 'flash msg throttling
@@ -2641,18 +2637,6 @@ bool PluginInstanceChild::CreateOptSurface(void) {
 #endif
 
 #ifdef XP_WIN
-  if (mSurfaceType == gfxSurfaceType::Win32) {
-    bool willHaveTransparentPixels = mIsTransparent && !mBackground;
-
-    SharedDIBSurface* s = new SharedDIBSurface();
-    if (!s->Create(reinterpret_cast<HDC>(mWindow.window), mWindow.width,
-                   mWindow.height, willHaveTransparentPixels))
-      return false;
-
-    mCurrentSurface = s;
-    return true;
-  }
-
   MOZ_CRASH("Shared-memory drawing not expected on Windows.");
 #endif
 
@@ -2838,22 +2822,6 @@ void PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow) {
     }
   }
 #endif  // MOZ_X11
-#ifdef XP_WIN
-  HDC dc = nullptr;
-
-  if (curSurface) {
-    if (!SharedDIBSurface::IsSharedDIBSurface(curSurface))
-      MOZ_CRASH("Expected SharedDIBSurface!");
-
-    SharedDIBSurface* dibsurf =
-        static_cast<SharedDIBSurface*>(curSurface.get());
-    dc = dibsurf->GetHDC();
-  }
-  if (mWindow.window != dc) {
-    mWindow.window = dc;
-    needWindowUpdate = true;
-  }
-#endif  // XP_WIN
 
   if (!needWindowUpdate) {
     return;
@@ -2946,21 +2914,6 @@ void PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     exposeEvent.minor_code = 0;
     mPluginIface->event(&mData, reinterpret_cast<void*>(&exposeEvent));
   }
-#elif defined(XP_WIN)
-  NS_ASSERTION(SharedDIBSurface::IsSharedDIBSurface(aSurface),
-               "Expected (SharedDIB) image surface.");
-
-  // This rect is in the window coordinate space. aRect is in the plugin
-  // coordinate space.
-  RECT rect = {mWindow.x + aRect.x, mWindow.y + aRect.y,
-               mWindow.x + aRect.XMost(), mWindow.y + aRect.YMost()};
-  NPEvent paintEvent = {WM_PAINT, uintptr_t(mWindow.window), intptr_t(&rect)};
-
-  ::SetViewportOrgEx((HDC)mWindow.window, -mWindow.x, -mWindow.y, nullptr);
-  ::SelectClipRgn((HDC)mWindow.window, nullptr);
-  ::IntersectClipRect((HDC)mWindow.window, rect.left, rect.top, rect.right,
-                      rect.bottom);
-  mPluginIface->event(&mData, reinterpret_cast<void*>(&paintEvent));
 #else
   MOZ_CRASH("Surface type not implemented.");
 #endif
@@ -3066,33 +3019,6 @@ void PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     return;
   }
 
-#ifdef XP_WIN
-  // On windows, we need an HDC and so can't paint directly to
-  // vanilla image surfaces.  Bifurcate this painting code so that
-  // we don't accidentally attempt that.
-  if (!SharedDIBSurface::IsSharedDIBSurface(aSurface))
-    MOZ_CRASH("Expected SharedDIBSurface!");
-
-  // Paint the plugin directly onto the target, with a white
-  // background and copy the result
-  PaintRectToSurface(rect, aSurface, DeviceColor::MaskOpaqueWhite());
-  {
-    RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(whiteImage);
-    RefPtr<SourceSurface> surface =
-        gfxPlatform::GetSourceSurfaceForSurface(dt, aSurface);
-    dt->CopySurface(surface, rect, IntPoint());
-  }
-
-  // Paint the plugin directly onto the target, with a black
-  // background
-  PaintRectToSurface(rect, aSurface, DeviceColor::MaskOpaqueBlack());
-
-  // Don't copy the result, just extract a subimage so that we can
-  // recover alpha directly into the target
-  gfxImageSurface* image = static_cast<gfxImageSurface*>(aSurface);
-  blackImage = image->GetSubimage(targetRect);
-
-#else
   gfxPoint deviceOffset = -targetRect.TopLeft();
   // Paint onto white background
   whiteImage->SetDeviceOffset(deviceOffset);
@@ -3109,7 +3035,6 @@ void PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
   // Paint onto black background
   blackImage->SetDeviceOffset(deviceOffset);
   PaintRectToSurface(rect, blackImage, DeviceColor::MaskOpaqueBlack());
-#endif
 
   MOZ_ASSERT(whiteImage && blackImage, "Didn't paint enough!");
 
@@ -3324,20 +3249,6 @@ bool PluginInstanceChild::ShowPluginFrame() {
     XSync(mWsInfo.display, X11False);
   } else
 #endif
-#ifdef XP_WIN
-      if (SharedDIBSurface::IsSharedDIBSurface(mCurrentSurface)) {
-    SharedDIBSurface* s = static_cast<SharedDIBSurface*>(mCurrentSurface.get());
-    if (!mCurrentSurfaceActor) {
-      base::SharedMemoryHandle handle = nullptr;
-      s->ShareToProcess(OtherPid(), &handle);
-
-      mCurrentSurfaceActor = SendPPluginSurfaceConstructor(
-          handle, mCurrentSurface->GetSize(), haveTransparentPixels);
-    }
-    currSurf = mCurrentSurfaceActor;
-    s->Flush();
-  } else
-#endif
       if (gfxSharedImageSurface::IsSharedImage(mCurrentSurface)) {
     currSurf = std::move(
         static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->GetShmem());
@@ -3361,14 +3272,10 @@ bool PluginInstanceChild::ShowPluginFrame() {
 bool PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect) {
   if (!mBackSurface) return false;
 
-    // We can read safely from XSurface,SharedDIBSurface and Unsafe
-    // SharedMemory, because PluginHost is not able to modify that surface
 #if defined(MOZ_X11)
   if (mBackSurface->GetType() != gfxSurfaceType::Xlib &&
       !gfxSharedImageSurface::IsSharedImage(mBackSurface))
     return false;
-#elif defined(XP_WIN)
-  if (!SharedDIBSurface::IsSharedDIBSurface(mBackSurface)) return false;
 #endif
 
 #if defined(MOZ_X11) || defined(XP_WIN)
@@ -3584,9 +3491,6 @@ void PluginInstanceChild::UnscheduleTimer(uint32_t id) {
 
 void PluginInstanceChild::SwapSurfaces() {
   RefPtr<gfxASurface> tmpsurf = mCurrentSurface;
-#ifdef XP_WIN
-  PPluginSurfaceChild* tmpactor = mCurrentSurfaceActor;
-#endif
 
   mCurrentSurface = mBackSurface;
 #ifdef XP_WIN
@@ -3594,9 +3498,6 @@ void PluginInstanceChild::SwapSurfaces() {
 #endif
 
   mBackSurface = tmpsurf;
-#ifdef XP_WIN
-  mBackSurfaceActor = tmpactor;
-#endif
 
 #ifdef MOZ_WIDGET_COCOA
   mDoubleBufferCARenderer.SwapSurfaces();
@@ -3629,12 +3530,6 @@ void PluginInstanceChild::ClearCurrentSurface() {
     mDoubleBufferCARenderer.ClearFrontSurface();
   }
 #endif
-#ifdef XP_WIN
-  if (mCurrentSurfaceActor) {
-    PPluginSurfaceChild::Send__delete__(mCurrentSurfaceActor);
-    mCurrentSurfaceActor = nullptr;
-  }
-#endif
   mHelperSurface = nullptr;
 }
 
@@ -3654,17 +3549,6 @@ void PluginInstanceChild::ClearAllSurfaces() {
         static_cast<gfxSharedImageSurface*>(mBackSurface.get())->GetShmem());
   mCurrentSurface = nullptr;
   mBackSurface = nullptr;
-
-#ifdef XP_WIN
-  if (mCurrentSurfaceActor) {
-    PPluginSurfaceChild::Send__delete__(mCurrentSurfaceActor);
-    mCurrentSurfaceActor = nullptr;
-  }
-  if (mBackSurfaceActor) {
-    PPluginSurfaceChild::Send__delete__(mBackSurfaceActor);
-    mBackSurfaceActor = nullptr;
-  }
-#endif
 
 #ifdef MOZ_WIDGET_COCOA
   if (mDoubleBufferCARenderer.HasBackSurface()) {
