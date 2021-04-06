@@ -32,7 +32,7 @@ const REMOTE_CONFIGURATION_NEWTAB = {
 };
 
 async function setup() {
-  const client = RemoteSettings("messaging-system");
+  const client = RemoteSettings("nimbus-desktop-defaults");
   await client.db.importChanges(
     {},
     42,
