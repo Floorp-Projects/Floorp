@@ -8,6 +8,7 @@
 #include "mozilla/ThreadEventQueue.h"
 
 #include "LeakRefPtr.h"
+#include "mozilla/DelayedRunnable.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/TimeStamp.h"
 #include "nsComponentManagerUtils.h"
