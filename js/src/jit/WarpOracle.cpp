@@ -25,6 +25,7 @@
 #include "vm/BuiltinObjectKind.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
+#include "vm/GetterSetter.h"
 #include "vm/Instrumentation.h"
 #include "vm/Opcodes.h"
 
@@ -1067,6 +1068,10 @@ bool WarpScriptOracle::replaceNurseryPointers(ICCacheIRStub* stub,
       case StubField::Type::Shape:
         static_assert(std::is_convertible_v<Shape*, gc::TenuredCell*>,
                       "Code assumes shapes are tenured");
+        break;
+      case StubField::Type::GetterSetter:
+        static_assert(std::is_convertible_v<GetterSetter*, gc::TenuredCell*>,
+                      "Code assumes GetterSetters are tenured");
         break;
       case StubField::Type::Symbol:
         static_assert(std::is_convertible_v<JS::Symbol*, gc::TenuredCell*>,
