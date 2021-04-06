@@ -125,7 +125,9 @@ async function testRealRefresh(refreshPage, delay) {
       );
 
       // Then click the button to allow the refresh.
-      let buttons = notification.querySelectorAll(".notification-button");
+      let buttons = notification.buttonContainer.querySelectorAll(
+        ".notification-button"
+      );
       is(buttons.length, 1, "Should have one button.");
 
       // Prepare a Promise that should resolve when the refresh goes through
