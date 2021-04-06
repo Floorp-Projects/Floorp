@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray
 
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.state.state.BrowserState
@@ -81,26 +82,32 @@ class NavigationInteractorTest {
     }
 
     @Test
-    fun `onTabTrayDismissed calls dismissTabTray on DefaultNaviationInteractor`() {
+    fun `onTabTrayDismissed calls dismissTabTray on DefaultNavigationInteractor`() {
         navigationInteractor.onTabTrayDismissed()
         verify(exactly = 1) { dismissTabTray() }
     }
 
     @Test
-    fun `onTabSettingsClicked calls navigation on DefaultNaviationInteractor`() {
+    fun `onTabSettingsClicked calls navigation on DefaultNavigationInteractor`() {
         navigationInteractor.onTabSettingsClicked()
         verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalTabSettingsFragment()) }
     }
 
     @Test
-    fun `onOpenRecentlyClosedClicked calls navigation on DefaultNaviationInteractor`() {
+    fun `onOpenRecentlyClosedClicked calls navigation on DefaultNavigationInteractor`() {
         navigationInteractor.onOpenRecentlyClosedClicked()
         verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalRecentlyClosed()) }
     }
 
     @Test
-    fun `onCloseAllTabsClicked calls navigation on DefaultNaviationInteractor`() {
+    fun `onCloseAllTabsClicked calls navigation on DefaultNavigationInteractor`() {
         navigationInteractor.onCloseAllTabsClicked(false)
         verify(exactly = 1) { dismissTabTrayAndNavigateHome(any()) }
+    }
+
+    @Test
+    fun `onShareTabsOfType calls navigation on DefaultNavigationInteractor`() {
+        navigationInteractor.onShareTabsOfTypeClicked(false)
+        verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
     }
 }
