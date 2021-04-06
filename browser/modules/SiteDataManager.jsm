@@ -488,7 +488,6 @@ var SiteDataManager = {
         Ci.nsIClearDataService.CLEAR_COOKIES |
         Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
         Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-        Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
         Ci.nsIClearDataService.CLEAR_EME |
         Ci.nsIClearDataService.CLEAR_ALL_CACHES;
       promises.push(
@@ -608,8 +607,7 @@ var SiteDataManager = {
         Ci.nsIClearDataService.CLEAR_COOKIES |
           Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
           Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
-          Ci.nsIClearDataService.CLEAR_EME |
-          Ci.nsIClearDataService.CLEAR_PLUGIN_DATA,
+          Ci.nsIClearDataService.CLEAR_EME,
         resolve
       );
     });

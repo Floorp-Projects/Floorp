@@ -27,7 +27,6 @@ const ClearFlags = [
     // COOKIES
     1 << 0,
     Ci.nsIClearDataService.CLEAR_COOKIES |
-      Ci.nsIClearDataService.CLEAR_PLUGIN_DATA |
       Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES,
   ],
   [
