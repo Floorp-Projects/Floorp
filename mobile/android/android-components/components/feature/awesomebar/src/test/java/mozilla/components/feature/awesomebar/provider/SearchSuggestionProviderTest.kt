@@ -13,7 +13,11 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
+import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -79,7 +83,16 @@ class SearchSuggestionProviderTest {
 
                 verify(useCase, never()).invoke(anyString(), any(), any())
 
-                suggestion.onChipClicked!!.invoke(suggestion.chips[6])
+                CollectionProcessor.withFactCollection { facts ->
+                    suggestion.onChipClicked!!.invoke(suggestion.chips[6])
+
+                    assertEquals(1, facts.size)
+                    facts[0].apply {
+                        assertEquals(Component.FEATURE_AWESOMEBAR, component)
+                        assertEquals(Action.INTERACTION, action)
+                        assertEquals(AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED, item)
+                    }
+                }
 
                 verify(useCase).invoke(eq("firefox focus"), any(), any())
             } finally {
@@ -134,7 +147,16 @@ class SearchSuggestionProviderTest {
 
                 verify(useCase, never()).invoke(anyString(), any(), any())
 
-                suggestions[6].onSuggestionClicked!!.invoke()
+                CollectionProcessor.withFactCollection { facts ->
+                    suggestions[6].onSuggestionClicked!!.invoke()
+
+                    assertEquals(1, facts.size)
+                    facts[0].apply {
+                        assertEquals(Component.FEATURE_AWESOMEBAR, component)
+                        assertEquals(Action.INTERACTION, action)
+                        assertEquals(AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED, item)
+                    }
+                }
 
                 verify(useCase).invoke(eq("firefox focus"), any(), any())
             } finally {

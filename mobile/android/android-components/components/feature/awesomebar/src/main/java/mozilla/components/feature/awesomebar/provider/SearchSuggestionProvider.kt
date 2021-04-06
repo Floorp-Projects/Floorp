@@ -190,6 +190,7 @@ class SearchSuggestionProvider private constructor(
                 score = Int.MAX_VALUE - (index + 1),
                 onSuggestionClicked = {
                     searchUseCase.invoke(item)
+                    emitSearchSuggestionClickedFact()
                 }
             ))
         }
