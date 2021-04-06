@@ -161,10 +161,6 @@ async function testModeMenuitem(mode, modePref) {
   await endCustomizing();
 }
 
-add_task(async function test_compact_mode_menuitem() {
-  await testModeMenuitem("compact", window.gUIDensity.MODE_COMPACT);
-});
-
 add_task(async function test_touch_mode_menuitem() {
   // OSX doesn't get touch mode for now.
   if (AppConstants.platform == "macosx") {

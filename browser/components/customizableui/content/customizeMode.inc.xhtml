@@ -58,7 +58,8 @@
 <button id="customization-uidensity-button"
         data-l10n-id="customize-mode-uidensity"
         class="customizationmode-button"
-        type="menu">
+        type="menu"
+        hidden="true">
   <panel type="arrow" id="customization-uidensity-menu"
          orient="vertical"
          onpopupshowing="gCustomizeMode.onUIDensityMenuShowing();"
@@ -68,7 +69,7 @@
     <menuitem id="customization-uidensity-menuitem-compact"
               class="menuitem-iconic customization-uidensity-menuitem"
               role="menuitemradio"
-              data-l10n-id="customize-mode-uidensity-menu-compact"
+              data-l10n-id="customize-mode-uidensity-menu-compact-unsupported"
               tabindex="0"
               onfocus="gCustomizeMode.updateUIDensity(this.mode);"
               onmouseover="gCustomizeMode.updateUIDensity(this.mode);"

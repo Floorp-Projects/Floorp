@@ -12,6 +12,7 @@ const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
 const kDrawInTitlebarPref = "browser.tabs.drawInTitlebar";
 const kExtraDragSpacePref = "browser.tabs.extraDragSpace";
+const kCompactModeShowPref = "browser.compactmode.show";
 const kBookmarksToolbarPref = "browser.toolbars.bookmarks.visibility";
 const kKeepBroadcastAttributes = "keepbroadcastattributeswhencustomizing";
 
@@ -440,6 +441,7 @@ CustomizeMode.prototype = {
       this._updateResetButton();
       this._updateUndoResetButton();
       this._updateTouchBarButton();
+      this._updateDensityMenu();
 
       this._skipSourceNodeCheck =
         Services.prefs.getPrefType(kSkipSourceNodePref) ==
@@ -1490,12 +1492,19 @@ CustomizeMode.prototype = {
     );
     normalItem.mode = gUIDensity.MODE_NORMAL;
 
+    let items = [normalItem];
+
     let compactItem = doc.getElementById(
       "customization-uidensity-menuitem-compact"
     );
     compactItem.mode = gUIDensity.MODE_COMPACT;
 
-    let items = [normalItem, compactItem];
+    if (Services.prefs.getBoolPref(kCompactModeShowPref)) {
+      compactItem.hidden = false;
+      items.push(compactItem);
+    } else {
+      compactItem.hidden = true;
+    }
 
     let touchItem = doc.getElementById(
       "customization-uidensity-menuitem-touch"
@@ -1571,7 +1580,7 @@ CustomizeMode.prototype = {
       panel.hidePopup();
     };
 
-    let doc = this.window.document;
+    let doc = this.document;
 
     function buildToolbarButton(aTheme) {
       let tbb = doc.createXULElement("toolbarbutton");
@@ -1700,6 +1709,20 @@ CustomizeMode.prototype = {
     let isTouchBarInitialized = gTouchBarUpdater.isTouchBarInitialized();
     touchBarButton.hidden = !isTouchBarInitialized;
     touchBarSpacer.hidden = !isTouchBarInitialized;
+  },
+
+  _updateDensityMenu() {
+    // If we're entering Customize Mode, and we're using compact mode,
+    // then show the button after that.
+    let gUIDensity = this.window.gUIDensity;
+    if (gUIDensity.getCurrentDensity().mode == gUIDensity.MODE_COMPACT) {
+      Services.prefs.setBoolPref(kCompactModeShowPref, true);
+    }
+
+    let button = this.document.getElementById("customization-uidensity-button");
+    button.hidden =
+      !Services.prefs.getBoolPref(kCompactModeShowPref) &&
+      !button.querySelector("#customization-uidensity-menuitem-touch");
   },
 
   handleEvent(aEvent) {
