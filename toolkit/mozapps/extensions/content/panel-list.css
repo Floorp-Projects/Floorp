@@ -25,7 +25,7 @@
   padding: 0;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@media not (-moz-proton) {
 :host {
   border-radius: 2px;
 }
