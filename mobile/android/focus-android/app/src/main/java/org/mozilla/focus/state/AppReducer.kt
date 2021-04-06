@@ -18,6 +18,7 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.FinishEdit -> finishEditing(state, action)
             is AppAction.ShowTabs -> showTabs(state)
             is AppAction.HideTabs -> hideTabs(state)
+            is AppAction.ShowFirstRun -> showFirstRun(state)
             is AppAction.FinishFirstRun -> finishFirstRun(state, action)
             is AppAction.Lock -> lock(state)
             is AppAction.Unlock -> unlock(state, action)
@@ -104,6 +105,13 @@ private fun finishFirstRun(state: AppState, action: AppAction.FinishFirstRun): A
     } else {
         state.copy(screen = Screen.Home)
     }
+}
+
+/**
+ * Force showing the first run screen (for testing).
+ */
+private fun showFirstRun(state: AppState): AppState {
+    return state.copy(screen = Screen.FirstRun)
 }
 
 /**

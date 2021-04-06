@@ -64,4 +64,9 @@ sealed class AppAction : Action {
      * The app should get unlocked.
      */
     data class Unlock(val tabId: String?) : AppAction()
+
+    /**
+     * Forces showing the first run screen (for tests).
+     */
+    internal object ShowFirstRun : AppAction()
 }

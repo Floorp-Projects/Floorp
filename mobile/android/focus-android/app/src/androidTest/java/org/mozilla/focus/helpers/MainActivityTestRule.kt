@@ -11,28 +11,26 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
+import kotlinx.coroutines.runBlocking
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.FirstrunFragment.Companion.FIRSTRUN_PREF
 import org.mozilla.focus.helpers.TestHelper.pressBackKey
+import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.AppStore
+import org.mozilla.focus.state.Screen
 
 // Basic Test rule with pref to skip the onboarding screen
-open class MainActivityFirstrunTestRule(launchActivity: Boolean = true, private val showFirstRun: Boolean) :
-    ActivityTestRule<MainActivity>(MainActivity::class.java, launchActivity) {
+open class MainActivityFirstrunTestRule(
+    launchActivity: Boolean = true,
+    private val showFirstRun: Boolean
+) : ActivityTestRule<MainActivity>(MainActivity::class.java, launchActivity) {
 
     @CallSuper
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
-
-        val appContext = InstrumentationRegistry.getInstrumentation()
-            .targetContext
-            .applicationContext
-
-        PreferenceManager.getDefaultSharedPreferences(appContext)
-            .edit()
-            .putBoolean(FIRSTRUN_PREF, !showFirstRun)
-            .apply()
+        updateFirstRun(showFirstRun)
     }
 
     override fun afterActivityFinished() {
@@ -59,15 +57,7 @@ open class MainActivityIntentsTestRule(launchActivity: Boolean = true, private v
     @CallSuper
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
-
-        val appContext = InstrumentationRegistry.getInstrumentation()
-            .targetContext
-            .applicationContext
-
-        PreferenceManager.getDefaultSharedPreferences(appContext)
-            .edit()
-            .putBoolean(FIRSTRUN_PREF, !showFirstRun)
-            .apply()
+        updateFirstRun(showFirstRun)
     }
 
     override fun afterActivityFinished() {
@@ -96,4 +86,36 @@ private fun closeNotificationShade() {
     ) {
         pressBackKey()
     }
+}
+
+private fun updateFirstRun(showFirstRun: Boolean) {
+    val appContext = InstrumentationRegistry.getInstrumentation()
+        .targetContext
+        .applicationContext
+
+    val appStore = appContext.components.appStore
+    if (appStore.state.screen is Screen.FirstRun && !showFirstRun) {
+        hideFirstRun(appStore)
+    } else if (appStore.state.screen !is Screen.FirstRun && showFirstRun) {
+        showFirstRun(appStore)
+    }
+
+    PreferenceManager.getDefaultSharedPreferences(appContext)
+        .edit()
+        .putBoolean(FIRSTRUN_PREF, !showFirstRun)
+        .apply()
+}
+
+private fun showFirstRun(appStore: AppStore) {
+    val job = appStore.dispatch(
+        AppAction.ShowFirstRun
+    )
+    runBlocking { job.join() }
+}
+
+private fun hideFirstRun(appStore: AppStore) {
+    val job = appStore.dispatch(
+        AppAction.FinishFirstRun(tabId = null)
+    )
+    runBlocking { job.join() }
 }
