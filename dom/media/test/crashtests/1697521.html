@@ -1,0 +1,19 @@
+<html>
+<head>
+<script>
+async function boom() {
+  const canvas = document.createElement("canvas");
+  canvas.getContext("2d");
+  const recorder = new MediaRecorder(new MediaStream([
+    ...canvas.captureStream().getTracks(),
+    ...canvas.captureStream().getTracks(),
+  ]));
+  recorder.start();
+  recorder.requestData();
+}
+</script>
+</head>
+<body onload="boom()">
+</body>
+</html>
+
