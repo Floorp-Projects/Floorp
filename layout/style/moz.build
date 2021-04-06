@@ -55,7 +55,6 @@ EXPORTS += [
     "nsDOMCSSDeclaration.h",
     "nsICSSDeclaration.h",
     "nsICSSLoaderObserver.h",
-    "nsMediaFeatures.h",
     "nsStyleAutoArray.h",
     "nsStyleConsts.h",
     "nsStyleStruct.h",
