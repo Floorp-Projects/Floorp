@@ -852,6 +852,13 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   uint32_t from = findFilenameStart(aSpec);
   nsAutoCString fileName(Substring(aSpec, from));
 
+  // Bug 1702937: Filter aboutNetError.xhtml.
+  // Note that aboutNetError.xhtml is causing ~90% of the XHTML error events. We
+  // should investigate this in the future.
+  if (StringEndsWith(fileName, "aboutNetError.xhtml"_ns)) {
+    return;
+  }
+
   nsAutoCString errorCString;
   mozilla::GetErrorName(aStatus, errorCString);
 
@@ -899,6 +906,16 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
 
     eventType = Telemetry::EventID::Zero_byte_load_Load_Xhtml;
   } else if (StringEndsWith(fileName, ".css"_ns)) {
+    // Bug 1702937: Filter out svg+'css'+'png'/NS_BINDING_ABORTED combo.
+    if (aStatus == NS_BINDING_ABORTED) {
+      return;
+    }
+
+    // Bug 1702937: Filter css/NS_ERROR_CORRUPTED_CONTENT that is coming from
+    // outside of omni.ja.
+    if (!isOmniJa && aStatus == NS_ERROR_CORRUPTED_CONTENT) {
+      return;
+    }
     eventType = Telemetry::EventID::Zero_byte_load_Load_Css;
   } else if (StringEndsWith(fileName, ".json"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Json;
@@ -919,21 +936,25 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   } else if (StringEndsWith(fileName, ".png"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Png;
     // See bug 1695560.
-    if (!isOmniJa) {
+    // Bug 1702937: Filter out svg+'css'+'png'/NS_BINDING_ABORTED combo.
+    if (!isOmniJa || aStatus == NS_BINDING_ABORTED) {
       return;
     }
   } else if (StringEndsWith(fileName, ".svg"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Svg;
     // See bug 1695560.
-    if (!isOmniJa) {
+    // Bug 1702937: Filter out svg+'css'+'png'/NS_BINDING_ABORTED combo.
+    if (!isOmniJa || aStatus == NS_BINDING_ABORTED) {
       return;
     }
   }
 
   // We're going to, for now, filter out `other` category.
   // See Bug 1693711 for investigation into those empty loads.
+  // Bug 1702937: Filter other/*.ico/NS_BINDING_ABORTED.
   if (!isTest && eventType == Telemetry::EventID::Zero_byte_load_Load_Others &&
-      !isOmniJa) {
+      (!isOmniJa || (aStatus == NS_BINDING_ABORTED &&
+                     StringEndsWith(fileName, ".ico"_ns)))) {
     return;
   }
 
