@@ -1114,6 +1114,7 @@ class Scope;
 class ScriptSourceObject;
 class Shape;
 class BaseShape;
+class GetterSetter;
 class WasmInstanceObject;
 class WasmTableObject;
 
@@ -1135,6 +1136,7 @@ using GCPtrObject = GCPtr<JSObject*>;
 using GCPtrScript = GCPtr<JSScript*>;
 using GCPtrString = GCPtr<JSString*>;
 using GCPtrShape = GCPtr<Shape*>;
+using GCPtrGetterSetter = GCPtr<GetterSetter*>;
 using GCPtrValue = GCPtr<Value>;
 using GCPtrId = GCPtr<jsid>;
 

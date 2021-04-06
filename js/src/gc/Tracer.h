@@ -129,6 +129,17 @@ inline void TraceCellHeaderEdge(JSTracer* trc,
   }
 }
 
+template <class T>
+inline void TraceCellHeaderEdge(JSTracer* trc,
+                                gc::TenuredCellWithGCPointer<T>* thingp,
+                                const char* name) {
+  T* thing = thingp->headerPtr();
+  gc::TraceEdgeInternal(trc, gc::ConvertToBase(&thing), name);
+  if (thing != thingp->headerPtr()) {
+    thingp->unbarrieredSetHeaderPtr(thing);
+  }
+}
+
 // Trace through a possibly-null edge in the live object graph on behalf of
 // tracing.
 
@@ -336,6 +347,10 @@ inline js::Shape* DispatchToOnEdge(GenericTracer* trc, js::Shape* shape) {
 inline js::BaseShape* DispatchToOnEdge(GenericTracer* trc,
                                        js::BaseShape* base) {
   return trc->onBaseShapeEdge(base);
+}
+inline js::GetterSetter* DispatchToOnEdge(GenericTracer* trc,
+                                          js::GetterSetter* gs) {
+  return trc->onGetterSetterEdge(gs);
 }
 inline js::jit::JitCode* DispatchToOnEdge(GenericTracer* trc,
                                           js::jit::JitCode* code) {

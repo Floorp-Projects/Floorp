@@ -460,6 +460,11 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
       break;
     }
 
+    case JS::TraceKind::GetterSetter: {
+      zStats->getterSettersGCHeap += thingSize;
+      break;
+    }
+
     case JS::TraceKind::JitCode: {
       zStats->jitCodesGCHeap += thingSize;
       // The code for a script is counted in ExecutableAllocator::sizeOfCode().

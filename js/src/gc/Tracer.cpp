@@ -17,6 +17,7 @@
 #include "util/Memory.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
+#include "vm/GetterSetter.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/Shape.h"
@@ -172,6 +173,10 @@ void js::gc::GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
   switch (kind) {
     case JS::TraceKind::BaseShape:
       name = "base_shape";
+      break;
+
+    case JS::TraceKind::GetterSetter:
+      name = "getter_setter";
       break;
 
     case JS::TraceKind::JitCode:

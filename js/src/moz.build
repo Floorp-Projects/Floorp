@@ -383,6 +383,7 @@ UNIFIED_SOURCES += [
     "vm/FunctionFlags.cpp",
     "vm/GeckoProfiler.cpp",
     "vm/GeneratorObject.cpp",
+    "vm/GetterSetter.cpp",
     "vm/GlobalObject.cpp",
     "vm/HelperThreads.cpp",
     "vm/Id.cpp",
