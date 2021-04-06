@@ -21,8 +21,8 @@ interface nsICrashService : nsISupports
    */
   Promise addCrash(in long processType, in long crashType, in AString id);
 
+  // This list should be kept in sync with GeckoProcessTypes.h
   const long PROCESS_TYPE_MAIN = 0;
-  const long PROCESS_TYPE_PLUGIN = 1;
   const long PROCESS_TYPE_CONTENT = 2;
   const long PROCESS_TYPE_IPDLUNITTEST = 3;
   const long PROCESS_TYPE_GMPLUGIN = 4;

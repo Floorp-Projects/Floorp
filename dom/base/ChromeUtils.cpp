@@ -779,7 +779,6 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
     PROCTYPE_TO_WEBIDL_CASE(WebCOOPCOEP, WithCoopCoep);
     PROCTYPE_TO_WEBIDL_CASE(WebLargeAllocation, WebLargeAllocation);
     PROCTYPE_TO_WEBIDL_CASE(Browser, Browser);
-    PROCTYPE_TO_WEBIDL_CASE(Plugin, Plugin);
     PROCTYPE_TO_WEBIDL_CASE(IPDLUnitTest, IpdlUnitTest);
     PROCTYPE_TO_WEBIDL_CASE(GMPlugin, GmpPlugin);
     PROCTYPE_TO_WEBIDL_CASE(GPU, Gpu);
@@ -862,9 +861,6 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
           }
           case GeckoProcessType::GeckoProcessType_Default:
             type = mozilla::ProcType::Browser;
-            break;
-          case GeckoProcessType::GeckoProcessType_Plugin:
-            type = mozilla::ProcType::Plugin;
             break;
           case GeckoProcessType::GeckoProcessType_GMPlugin:
             type = mozilla::ProcType::GMPlugin;
