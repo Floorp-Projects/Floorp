@@ -7010,16 +7010,19 @@ nsIGlobalObject* Document::GetScopeObject() const {
 }
 
 bool Document::CrossOriginIsolated() const {
-  // For a data document, it doesn't have a browsing context so that we check
-  // the cross-origin-isolated state from its creator's inner window.
+  if (auto* bc = GetBrowsingContext()) {
+    return bc->CrossOriginIsolated();
+  }
+
+  // For a data document without a browsing context we check the
+  // cross-origin-isolated state from its creator's inner window.
   if (mLoadedAsData) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
-
     return window && window->GetBrowsingContext() &&
            window->GetBrowsingContext()->CrossOriginIsolated();
   }
 
-  return GetBrowsingContext() && GetBrowsingContext()->CrossOriginIsolated();
+  return false;
 }
 
 DocGroup* Document::GetDocGroupOrCreate() {
