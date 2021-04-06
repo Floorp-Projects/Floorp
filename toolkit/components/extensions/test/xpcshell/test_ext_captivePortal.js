@@ -11,7 +11,8 @@ const PREF_CAPTIVE_MINTIME = "network.captive-portal-service.minInterval";
 const PREF_CAPTIVE_ENDPOINT = "captivedetect.canonicalURL";
 const PREF_DNS_NATIVE_IS_LOCALHOST = "network.dns.native-is-localhost";
 
-const SUCCESS_STRING = "success\n";
+const SUCCESS_STRING =
+  '<meta http-equiv="refresh" content="0;url=https://support.mozilla.org/kb/captive-portal"/>';
 let cpResponse = SUCCESS_STRING;
 
 const httpserver = createHttpServer();

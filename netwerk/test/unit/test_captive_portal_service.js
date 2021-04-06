@@ -7,7 +7,8 @@ XPCOMUtils.defineLazyGetter(this, "cpURI", function() {
   return "http://localhost:" + httpserver.identity.primaryPort + "/captive.txt";
 });
 
-const SUCCESS_STRING = "success\n";
+const SUCCESS_STRING =
+  '<meta http-equiv="refresh" content="0;url=https://support.mozilla.org/kb/captive-portal"/>';
 let cpResponse = SUCCESS_STRING;
 function contentHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
