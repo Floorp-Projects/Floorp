@@ -164,7 +164,7 @@ template void AtomMarkingRuntime::markAtom(JSContext* cx, JSAtom* thing);
 template void AtomMarkingRuntime::markAtom(JSContext* cx, JS::Symbol* thing);
 
 void AtomMarkingRuntime::markId(JSContext* cx, jsid id) {
-  if (JSID_IS_ATOM(id)) {
+  if (id.isAtom()) {
     markAtom(cx, JSID_TO_ATOM(id));
     return;
   }
@@ -251,7 +251,7 @@ bool AtomMarkingRuntime::atomIsMarked(Zone* zone, TenuredCell* thing) {
 }
 
 bool AtomMarkingRuntime::idIsMarked(Zone* zone, jsid id) {
-  if (JSID_IS_ATOM(id)) {
+  if (id.isAtom()) {
     return atomIsMarked(zone, JSID_TO_ATOM(id));
   }
 
