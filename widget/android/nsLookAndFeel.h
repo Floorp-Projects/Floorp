@@ -30,12 +30,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   bool mInitializedShowPassword = false;
   bool mShowPassword = false;
 
-  bool mSystemUsesDarkTheme = false;
-  bool mSystemUsesDarkThemeCached = false;
-
-  bool mPrefersReducedMotion = false;
-  bool mPrefersReducedMotionCached = false;
-
   nsresult GetSystemColors();
 
   void EnsureInitSystemColors();
