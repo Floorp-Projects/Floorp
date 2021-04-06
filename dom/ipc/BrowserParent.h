@@ -652,13 +652,6 @@ class BrowserParent final : public PBrowserParent,
 
   void StopIMEStateManagement();
 
-  /**
-   * Native widget remoting protocol for use with windowed plugins with e10s.
-   */
-  PPluginWidgetParent* AllocPPluginWidgetParent();
-
-  bool DeallocPPluginWidgetParent(PPluginWidgetParent* aActor);
-
   PPaymentRequestParent* AllocPPaymentRequestParent();
 
   bool DeallocPPaymentRequestParent(PPaymentRequestParent* aActor);

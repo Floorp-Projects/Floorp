@@ -62,7 +62,6 @@
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/ipc/ProcessChild.h"
 
-#include "mozilla/plugins/PluginProcessChild.h"
 #include "mozilla/dom/ContentProcess.h"
 #include "mozilla/dom/ContentParent.h"
 
@@ -136,7 +135,6 @@ using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentProcess;
-using mozilla::plugins::PluginProcessChild;
 
 using mozilla::gmp::GMPProcessChild;
 
@@ -642,10 +640,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
       switch (XRE_GetProcessType()) {
         case GeckoProcessType_Default:
           MOZ_CRASH("This makes no sense");
-          break;
-
-        case GeckoProcessType_Plugin:
-          process = MakeUnique<PluginProcessChild>(parentPID);
           break;
 
         case GeckoProcessType_Content:
