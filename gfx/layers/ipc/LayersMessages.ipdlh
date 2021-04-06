@@ -309,14 +309,6 @@ struct LayerAttributes {
   SpecificLayerAttributes specific;
 };
 
-// See nsIWidget Configurations
-[Comparable] struct PluginWindowData {
-  uintptr_t windowId;
-  LayoutDeviceIntRect[] clip;
-  LayoutDeviceIntRect bounds;
-  bool visible;
-};
-
 struct OpSetSimpleLayerAttributes {
   LayerHandle layer;
   SimpleLayerAttributes attrs;
@@ -543,7 +535,6 @@ struct TransactionInfo
   uint64_t fwdTransactionId;
   TransactionId id;
   TargetConfig targetConfig;
-  PluginWindowData[] plugins;
   bool isFirstPaint;
   FocusTarget focusTarget;
   bool scheduleComposite;
