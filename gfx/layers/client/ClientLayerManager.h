@@ -145,15 +145,6 @@ class ClientLayerManager final : public LayerManager,
 
   void SetFocusTarget(const FocusTarget& aFocusTarget) override;
 
-  /**
-   * Pass through call to the forwarder for nsPresContext's
-   * CollectPluginGeometryUpdates. Passes widget configuration information
-   * to the compositor for transmission to the chrome process. This
-   * configuration gets set when the window paints.
-   */
-  void StorePluginWidgetConfigurations(
-      const nsTArray<nsIWidget::Configuration>& aConfigurations) override;
-
   // Drop cached resources and ask our shadow manager to do the same,
   // if we have one.
   void ClearCachedResources(Layer* aSubtree = nullptr) override;
