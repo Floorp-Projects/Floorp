@@ -109,6 +109,9 @@ var BrowserPageActions = {
       template.replaceWith(template.content);
       this._panelNode = document.getElementById("pageActionPanel");
       this._panelNode.addEventListener("popupshowing", this._onPanelShowing);
+      this._panelNode.addEventListener("popuphiding", () => {
+        this.mainButtonNode.removeAttribute("open");
+      });
     }
 
     for (let action of PageActions.actionsInPanel(window)) {
@@ -333,6 +336,15 @@ var BrowserPageActions = {
     PanelMultiView.hidePopup(this.panelNode);
 
     let anchorNode = this.panelAnchorNodeForAction(action);
+    anchorNode.setAttribute("open", "true");
+    panelNode.addEventListener(
+      "popuphiding",
+      () => {
+        anchorNode.removeAttribute("open");
+      },
+      { once: true }
+    );
+
     PanelMultiView.openPopup(panelNode, anchorNode, {
       position: "bottomcenter topright",
       triggerEvent: event,
@@ -918,6 +930,7 @@ var BrowserPageActions = {
    */
   showPanel(event = null) {
     this.panelNode.hidden = false;
+    this.mainButtonNode.setAttribute("open", "true");
     PanelMultiView.openPopup(this.panelNode, this.mainButtonNode, {
       position: "bottomcenter topright",
       triggerEvent: event,
