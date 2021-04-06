@@ -132,6 +132,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   Shape* shapeStubField(uint32_t offset) {
     return reinterpret_cast<Shape*>(readStubWord(offset));
   }
+  GetterSetter* getterSetterStubField(uint32_t offset) {
+    return reinterpret_cast<GetterSetter*>(readStubWord(offset));
+  }
   const JSClass* classStubField(uint32_t offset) {
     return reinterpret_cast<const JSClass*>(readStubWord(offset));
   }

@@ -42,6 +42,7 @@
 #include "vm/BigIntType.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GeneratorObject.h"
+#include "vm/GetterSetter.h"
 #include "vm/Uint8Clamped.h"
 
 #include "builtin/Boolean-inl.h"
@@ -1089,6 +1090,8 @@ GCPtr<T>& CacheIRStubInfo::getStubField(Stub* stub, uint32_t offset) const {
 
 template GCPtr<Shape*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
     ICCacheIRStub* stub, uint32_t offset) const;
+template GCPtr<GetterSetter*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
+    ICCacheIRStub* stub, uint32_t offset) const;
 template GCPtr<JSObject*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
     ICCacheIRStub* stub, uint32_t offset) const;
 template GCPtr<JSString*>& CacheIRStubInfo::getStubField<ICCacheIRStub>(
@@ -1127,6 +1130,9 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
         break;
       case StubField::Type::Shape:
         InitGCPtr<Shape*>(destWords, field.asWord());
+        break;
+      case StubField::Type::GetterSetter:
+        InitGCPtr<GetterSetter*>(destWords, field.asWord());
         break;
       case StubField::Type::JSObject:
         InitGCPtr<JSObject*>(destWords, field.asWord());
@@ -1179,6 +1185,10 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
         TraceSameZoneCrossCompartmentEdge(trc, &shapeField, "cacheir-shape");
         break;
       }
+      case StubField::Type::GetterSetter:
+        TraceEdge(trc, &stubInfo->getStubField<T, GetterSetter*>(stub, offset),
+                  "cacheir-getter-setter");
+        break;
       case StubField::Type::JSObject:
         TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
                   "cacheir-object");
@@ -6786,6 +6796,9 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val,
     case StubField::Type::Shape:
       masm.movePtr(ImmGCPtr(shapeStubField(val.getOffset())), dest);
       break;
+    case StubField::Type::GetterSetter:
+      masm.movePtr(ImmGCPtr(getterSetterStubField(val.getOffset())), dest);
+      break;
     case StubField::Type::String:
       masm.movePtr(ImmGCPtr(stringStubField(val.getOffset())), dest);
       break;
@@ -6824,6 +6837,7 @@ void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
     switch (val.getStubFieldType()) {
       case StubField::Type::RawPointer:
       case StubField::Type::Shape:
+      case StubField::Type::GetterSetter:
       case StubField::Type::JSObject:
       case StubField::Type::Symbol:
       case StubField::Type::String:

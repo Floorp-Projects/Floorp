@@ -248,6 +248,7 @@ class StubField {
     RawInt32,
     RawPointer,
     Shape,
+    GetterSetter,
     JSObject,
     Symbol,
     String,
@@ -654,6 +655,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     MOZ_ASSERT(shape);
     assertSameZone(shape);
     addStubField(uintptr_t(shape), StubField::Type::Shape);
+  }
+  void writeGetterSetterField(GetterSetter* gs) {
+    MOZ_ASSERT(gs);
+    addStubField(uintptr_t(gs), StubField::Type::GetterSetter);
   }
   void writeObjectField(JSObject* obj) {
     MOZ_ASSERT(obj);
@@ -1202,6 +1207,7 @@ class MOZ_RAII CacheIRCloner {
   int64_t readStubInt64(uint32_t offset);
 
   Shape* getShapeField(uint32_t stubOffset);
+  GetterSetter* getGetterSetterField(uint32_t stubOffset);
   JSObject* getObjectField(uint32_t stubOffset);
   JSString* getStringField(uint32_t stubOffset);
   JSAtom* getAtomField(uint32_t stubOffset);
