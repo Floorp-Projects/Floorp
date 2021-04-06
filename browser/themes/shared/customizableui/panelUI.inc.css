@@ -2193,7 +2193,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   background-image: url(chrome://browser/skin/controlcenter/hero-message-background.svg);
   background-repeat: no-repeat;
   background-position: top right;
-  color: white;
+  -moz-context-properties: fill;
 }
 
 #protections-popup-message:-moz-locale-dir(rtl) {
@@ -2396,7 +2396,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #protections-popup-message .text-link {
-  color: white;
+  color: inherit;
   font-weight: 600;
 }
 
