@@ -23,10 +23,6 @@
 #  include "nsTHashSet.h"
 #endif
 
-#ifdef MOZ_WIDGET_COCOA
-#  include "PluginInterposeOSX.h"
-#endif
-
 #include "mozilla/plugins/PPluginModuleChild.h"
 #include "mozilla/plugins/PluginInstanceChild.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
@@ -175,14 +171,6 @@ class PluginModuleChild : public PPluginModuleChild {
   }
 
   void PluginHideWindow(uint32_t window_id) { SendPluginHideWindow(window_id); }
-
-  void SetCursor(NSCursorInfo& cursorInfo) { SendSetCursor(cursorInfo); }
-
-  void ShowCursor(bool show) { SendShowCursor(show); }
-
-  void PushCursor(NSCursorInfo& cursorInfo) { SendPushCursor(cursorInfo); }
-
-  void PopCursor() { SendPopCursor(); }
 
   bool GetNativeCursorsSupported() {
     return Settings().nativeCursorsSupported();

@@ -4,9 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    DIRS += ["interpose"]
-
 EXPORTS.mozilla += [
     "PluginLibrary.h",
 ]
@@ -53,11 +50,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "hangui",
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    EXPORTS.mozilla.plugins += [
-        "PluginInterposeOSX.h",
-    ]
-
 UNIFIED_SOURCES += [
     "BrowserStreamChild.cpp",
     "BrowserStreamParent.cpp",
@@ -85,7 +77,6 @@ SOURCES += [
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     UNIFIED_SOURCES += [
-        "PluginInterposeOSX.mm",
         "PluginUtilsOSX.mm",
     ]
 

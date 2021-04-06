@@ -23,3 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 Merge day clobber
+Bug 1682030 - OSX builds complain about TestPlugin after that product is removed from tree
