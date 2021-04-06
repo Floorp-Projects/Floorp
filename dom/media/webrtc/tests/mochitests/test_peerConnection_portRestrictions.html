@@ -42,10 +42,13 @@ runNetworkTest(() => {
 
   // check various ports on the good list for webrtc (or default port)
   makePC({ iceServers: [
+    { urls:"turn:[::1]:53", username:"p", credential:"p" },
     { urls:"turn:[::1]:5349", username:"p", credential:"p" },
     { urls:"turn:[::1]:3478", username:"p", credential:"p" },
     { urls:"turn:[::1]", username:"p", credential:"p" },
+    { urls:"turn:localhost:53?transport=udp", username:"p", credential:"p" },
     { urls:"turn:localhost:3478?transport=udp", username:"p", credential:"p" },
+    { urls:"turn:localhost:53?transport=tcp", username:"p", credential:"p" },
     { urls:"turn:localhost:3478?transport=tcp", username:"p", credential:"p" },
     { urls:"turns:localhost:3478?transport=udp", username:"p", credential:"p" },
     { urls:"stun:localhost", foo:"" }
