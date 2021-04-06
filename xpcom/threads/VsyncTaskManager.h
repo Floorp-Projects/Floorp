@@ -16,6 +16,8 @@ class VsyncTaskManager : public TaskManager {
   static void Cleanup() { gHighPriorityTaskManager = nullptr; }
   static void Init();
 
+  void DidRunTask() override;
+
  private:
   static StaticRefPtr<VsyncTaskManager> gHighPriorityTaskManager;
 };

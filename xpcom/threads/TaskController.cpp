@@ -70,7 +70,7 @@ bool TaskManager::
         const MutexAutoLock& aProofOfLock, IterationType aIterationType) {
   mCurrentSuspended = IsSuspended(aProofOfLock);
 
-  if (aIterationType == IterationType::EVENT_LOOP_TURN) {
+  if (aIterationType == IterationType::EVENT_LOOP_TURN && !mCurrentSuspended) {
     int32_t oldModifier = mCurrentPriorityModifier;
     mCurrentPriorityModifier =
         GetPriorityModifierForEventLoopTurn(aProofOfLock);
