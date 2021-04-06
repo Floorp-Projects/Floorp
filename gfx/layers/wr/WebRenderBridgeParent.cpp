@@ -1982,6 +1982,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetTestSampleTime(
   if (!mCompositorBridge->SetTestSampleTime(GetLayersId(), aTime)) {
     return IPC_FAIL_NO_REASON(this);
   }
+  if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
+    sampler->EnterTestMode();
+  }
+
   return IPC_OK();
 }
 
@@ -1991,6 +1995,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvLeaveTestMode() {
   }
 
   mCompositorBridge->LeaveTestMode(GetLayersId());
+  if (RefPtr<OMTASampler> sampler = GetOMTASampler()) {
+    sampler->LeaveTestMode();
+  }
+
   return IPC_OK();
 }
 

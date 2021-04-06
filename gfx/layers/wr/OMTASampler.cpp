@@ -26,7 +26,8 @@ OMTASampler::OMTASampler(const RefPtr<CompositorAnimationStorage>& aAnimStorage,
     : mAnimStorage(aAnimStorage),
       mStorageLock("OMTASampler::mStorageLock"),
       mThreadIdLock("OMTASampler::mThreadIdLock"),
-      mSampleTimeLock("OMTASampler::mSampleTimeLock") {
+      mSampleTimeLock("OMTASampler::mSampleTimeLock"),
+      mIsInTestMode(false) {
   mController = new OMTAController(aRootLayersId);
 }
 
@@ -91,6 +92,12 @@ void OMTASampler::ResetPreviousSampleTime() {
 
 void OMTASampler::Sample(wr::TransactionWrapper& aTxn) {
   MOZ_ASSERT(IsSamplerThread());
+
+  // If we are in test mode, don't sample with the current time stamp, it will
+  // skew cached animation values.
+  if (mIsInTestMode) {
+    return;
+  }
 
   TimeStamp sampleTime;
   TimeStamp previousSampleTime;

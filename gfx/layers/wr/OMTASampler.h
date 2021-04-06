@@ -102,6 +102,9 @@ class OMTASampler final {
    */
   bool IsSamplerThread() const;
 
+  void EnterTestMode() { mIsInTestMode = true; }
+  void LeaveTestMode() { mIsInTestMode = false; }
+
  protected:
   ~OMTASampler() = default;
 
@@ -143,6 +146,7 @@ class OMTASampler final {
   // We basically use this time stamp instead of |mSampleTime| to make
   // animations more in sync with other animations on the main thread.
   TimeStamp mPreviousSampleTime;
+  bool mIsInTestMode;
 };
 
 }  // namespace layers
