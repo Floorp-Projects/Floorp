@@ -561,6 +561,13 @@
     // gets handled automatically if needed.
     class NotificationMessage extends document.createElement("message-bar")
       .constructor {
+      constructor() {
+        super();
+        this.persistence = 0;
+        this.priority = 0;
+        this.timeout = 0;
+      }
+
       connectedCallback() {
         this.toggleAttribute("dismissable", true);
         this.closeButton.classList.add("notification-close");
@@ -575,6 +582,8 @@
         this.messageText.classList.add("notification-message");
         this.buttonContainer = document.createElement("span");
         this.buttonContainer.classList.add("notification-button-container");
+
+        this.messageImage = this.shadowRoot.querySelector(".icon");
 
         messageContent.append(this.messageText, this.buttonContainer);
         this.shadowRoot.addEventListener("click", this);
@@ -610,15 +619,10 @@
       }
 
       handleEvent(e) {
-        if (e.type == "click" && "buttonInfo" in e.target) {
+        if ("buttonInfo" in e.target) {
           let { buttonInfo } = e.target;
           let { callback, popup } = buttonInfo;
-          if (callback) {
-            if (!callback(this, buttonInfo, e.target, e)) {
-              this.close();
-            }
-            e.stopPropagation();
-          } else if (popup) {
+          if (popup) {
             document
               .getElementById(popup)
               .openPopup(
@@ -630,6 +634,11 @@
                 false,
                 e
               );
+            e.stopPropagation();
+          } else if (callback) {
+            if (!callback(this, buttonInfo, e.target, e)) {
+              this.close();
+            }
             e.stopPropagation();
           }
         }
@@ -676,7 +685,7 @@
           if (localeId) {
             document.l10n.setAttributes(buttonElem, localeId);
           } else {
-            buttonElem.textContent = button.label;
+            buttonElem.setAttribute(link ? "value" : "label", button.label);
             if (typeof button.accessKey == "string") {
               buttonElem.setAttribute("accesskey", button.accessKey);
             }
