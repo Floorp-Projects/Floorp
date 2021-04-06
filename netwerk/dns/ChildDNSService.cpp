@@ -53,8 +53,7 @@ already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton() {
 
 NS_IMPL_ISUPPORTS(ChildDNSService, nsIDNSService, nsPIDNSService, nsIObserver)
 
-ChildDNSService::ChildDNSService()
-    : mPendingRequestsLock("DNSPendingRequestsLock") {
+ChildDNSService::ChildDNSService() {
   MOZ_ASSERT_IF(nsIOService::UseSocketProcess(),
                 XRE_IsContentProcess() || XRE_IsParentProcess());
   MOZ_ASSERT_IF(!nsIOService::UseSocketProcess(),
