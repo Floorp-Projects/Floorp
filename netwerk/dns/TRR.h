@@ -124,6 +124,7 @@ class TRR : public Runnable,
   nsresult mChannelStatus = NS_OK;
 
   RequestPurpose mPurpose = Resolve;
+  Atomic<bool, Relaxed> mCancelled{false};
 
   // The request timeout in milliseconds. If 0 we will use the default timeout
   // we get from the prefs.
