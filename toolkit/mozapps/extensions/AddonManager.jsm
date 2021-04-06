@@ -489,18 +489,8 @@ AddonScreenshot.prototype = {
  * @param  aUIPriority
  *         The priority is used by the UI to list the types in order. Lower
  *         values push the type higher in the list.
- * @param  aFlags
- *         An option set of flags that customize the display of the add-on in
- *         the UI.
  */
-function AddonType(
-  aID,
-  aLocaleURI,
-  aLocaleKey,
-  aViewType,
-  aUIPriority,
-  aFlags
-) {
+function AddonType(aID, aLocaleURI, aLocaleKey, aViewType, aUIPriority) {
   if (!aID) {
     throw Components.Exception(
       "An AddonType must have an ID",
@@ -525,7 +515,6 @@ function AddonType(
   this.id = aID;
   this.uiPriority = aUIPriority;
   this.viewType = aViewType;
-  this.flags = aFlags;
 
   if (aLocaleURI) {
     XPCOMUtils.defineLazyGetter(this, "name", () => {
@@ -3882,9 +3871,6 @@ var AddonManager = {
   PERM_CAN_DISABLE: 4,
   // Indicates that the Addon can be upgraded.
   PERM_CAN_UPGRADE: 8,
-  // Indicates that the Addon can be set to be optionally enabled
-  // on a case-by-case basis.
-  PERM_CAN_ASK_TO_ACTIVATE: 16,
   // Indicates that the Addon can be set to be allowed/disallowed
   // in private browsing windows.
   PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS: 32,
@@ -3908,20 +3894,6 @@ var AddonManager = {
 
   // Add-on type is expected to be displayed in the UI in a list.
   VIEW_TYPE_LIST: "list",
-
-  // Constants describing how add-on types behave.
-
-  // If no add-ons of a type are installed, then the category for that add-on
-  // type should be hidden in the UI.
-  TYPE_UI_HIDE_EMPTY: 16,
-  // Indicates that this add-on type supports the ask-to-activate state.
-  // That is, add-ons of this type can be set to be optionally enabled
-  // on a case-by-case basis.
-  TYPE_SUPPORTS_ASK_TO_ACTIVATE: 32,
-  // The add-on type natively supports undo for restartless uninstalls.
-  // If this flag is not specified, the UI is expected to handle this via
-  // disabling the add-on, and performing the actual uninstall at a later time.
-  TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL: 64,
 
   // Constants for Addon.applyBackgroundUpdates.
   // Indicates that the Addon should not update automatically.
@@ -3985,12 +3957,6 @@ var AddonManager = {
   SIGNEDSTATE_SYSTEM: 3,
   // Add-on is signed with a "Mozilla Extensions" certificate
   SIGNEDSTATE_PRIVILEGED: 4,
-
-  // Constants for the Addon.userDisabled property
-  // Indicates that the userDisabled state of this add-on is currently
-  // ask-to-activate. That is, it can be conditionally enabled on a
-  // case-by-case basis.
-  STATE_ASK_TO_ACTIVATE: "askToActivate",
 
   get __AddonManagerInternal__() {
     return AppConstants.DEBUG ? AddonManagerInternal : undefined;
