@@ -16,7 +16,7 @@
     test = new PeerConnectionTest(options);
     addInitialDataChannel(test.chain);
     test.chain.insertAfter('PC_REMOTE_CHECK_ICE_CONNECTIONS', commandsCheckLargeXfer);
-    test.run();
+    return test.run();
   });
 
 </script>

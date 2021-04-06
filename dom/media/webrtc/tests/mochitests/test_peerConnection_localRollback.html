@@ -11,9 +11,8 @@
     title: "Rollback local offer"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.chain.insertBefore('PC_LOCAL_CREATE_OFFER', [
         function PC_REMOTE_CREATE_AND_SET_OFFER(test) {
@@ -40,7 +39,7 @@
           test.pcRemote.setupIceCandidateHandler(test);
         },
     ]);
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

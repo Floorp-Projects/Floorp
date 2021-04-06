@@ -31,7 +31,7 @@ if (!("mediaDevices" in navigator)) {
     // since relayed-tcp is the only thing that can work.
     const test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.run();
+    await test.run();
   }, { useIceServer: true });
 }
 </script>

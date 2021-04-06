@@ -6,11 +6,11 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-  createHTML({
-    title: "RTCPeerConnection with telephone-event codec first in SDP",
-    bug: "1581898",
-    visible: true
-  });
+createHTML({
+  title: "RTCPeerConnection with telephone-event codec first in SDP",
+  bug: "1581898",
+  visible: true
+});
 
 const test = async () => {
   const pc1 = new RTCPeerConnection();
@@ -45,8 +45,7 @@ const test = async () => {
       }
     };
   });
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  networkTestFinished();
+  await wait(1000);
 };
 
 runNetworkTest(test);

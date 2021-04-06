@@ -1,91 +1,80 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <script type="application/javascript" src="pc.js"></script>
+  <script src="pc.js"></script>
+  <script src="../../../test/manifest.js"></script>
 </head>
 <body>
 <pre id="test">
 <script type="application/javascript">
+(async () => {
+  await createHTML({
+    bug: "1081409",
+    title: "Captured video-only over peer connection",
+    visible: true
+  });
 
-createHTML({
-  bug: "1081409",
-  title: "Captured video-only over peer connection",
-  visible: true
-}).then(() => new Promise(resolve => {
   // Run tests in sequence for log readability.
   PARALLEL_TESTS = 1;
-  let manager = new MediaTestManager;
-  window.mediaTestManager = manager;
-  manager.runTests(getPlayableVideos(gLongerTests), startTest);
-  manager.onFinished = () => {
-    // Tear down before SimpleTest.finish.
-    if ("nsINetworkInterfaceListService" in SpecialPowers.Ci) {
-      getNetworkUtils().tearDownNetwork();
-    }
-    resolve();
-  };
-}))
-.catch(e => ok(false, "Unexpected " + e + ":\n" + e.stack));
+  const manager = new MediaTestManager;
 
-function startTest(media, token) {
-  let manager = window.mediaTestManager;
-  manager.started(token);
-  info("Starting test for " + media.name);
-  var video = document.createElement('video');
-  video.id = "id_" + media.name;
-  video.width = 160;
-  video.height = 120;
-  video.muted = true;
-  video.controls = true;
-  video.preload = "metadata";
-  video.src = "../../../test/" + media.name;
+  async function startTest(media, token) {
+    manager.started(token);
+    info(`Starting test for ${media.name}`);
+    const video = document.createElement('video');
+    video.id = "id_" + media.name;
+    video.width = 160;
+    video.height = 120;
+    video.muted = true;
+    video.controls = true;
+    video.preload = "metadata";
+    video.src = "../../../test/" + media.name;
 
-  document.getElementById("content").appendChild(video);
+    document.getElementById("content").appendChild(video);
 
-  var test;
-  new Promise((resolve, reject) => {
-    video.onloadedmetadata = resolve;
-    video.onerror = () => reject(video.error);
-  })
-  .then(() => {
-    video.onerror = () => ok(false, media.name + " failed in playback (code=" +
-                             video.error.code + "). Stream should be OK. " +
-                             "Continuing test.");
-    return runNetworkTest(() => {
-      var stream = video.mozCaptureStream();
-      test = new PeerConnectionTest({ config_local: { label_suffix: media.name },
-                                      config_remote: { label_suffix: media.name } });
-      test.setOfferOptions({ offerToReceiveVideo: false,
-                             offerToReceiveAudio: false });
-      var hasVideo = stream.getVideoTracks().length > 0;
-      var hasAudio = stream.getAudioTracks().length > 0;
-      test.setMediaConstraints([{ video: hasVideo, audio: hasAudio }], []);
-      test.chain.replace("PC_LOCAL_GUM", [
-        function PC_LOCAL_CAPTUREVIDEO(test) {
-          test.pcLocal.attachLocalStream(stream);
-        },
-      ]);
-      test.chain.insertBefore("PC_LOCAL_WAIT_FOR_MEDIA_FLOW", [
-        function PC_LOCAL_START_MEDIA(test) {
-          video.play();
-        },
-      ]);
-      return test.chain.execute();
-    });
-  })
-  // Handle both MediaErrors (with the `code` attribute) and other errors.
-  .catch(e => ok(false, "Error (" + e + ")" +
-                        (e.code ? " (code=" + e.code + ")" : "") +
-                        " in test for " + media.name +
-                        (e.stack ? ":\n" + e.stack : "")))
-  .then(() => test && test.close())
-  .then(() => {
+    const onerror = new Promise(r => video.onerror = r).then(_ =>
+      new Error(`${media.name} failed in playback. code=${video.error.code}`));
+
+    await Promise.race([
+      new Promise(res => video.onloadedmetadata = res),
+      onerror,
+    ]);
+    onerror.catch(e => ok(false, e));
+    setupEnvironment();
+    await testConfigured;
+    const stream = video.mozCaptureStream();
+    const test = new PeerConnectionTest(
+      {
+        config_local: { label_suffix: media.name },
+        config_remote: { label_suffix: media.name },
+      }
+    );
+    test.setOfferOptions(
+      {
+        offerToReceiveVideo: false,
+        offerToReceiveAudio: false,
+      }
+    );
+    const hasVideo = stream.getVideoTracks().length > 0;
+    const hasAudio = stream.getAudioTracks().length > 0;
+    test.setMediaConstraints([{ video: hasVideo, audio: hasAudio }], []);
+    test.chain.replace("PC_LOCAL_GUM", [
+      function PC_LOCAL_CAPTUREVIDEO(test) {
+        test.pcLocal.attachLocalStream(stream);
+      },
+    ]);
+    test.chain.insertBefore("PC_LOCAL_WAIT_FOR_MEDIA_FLOW", [
+      function PC_LOCAL_START_MEDIA(test) {
+        video.play();
+      },
+    ]);
+    await test.run();
     removeNodeAndSource(video);
     manager.finished(token);
-  })
-  .catch(e => ok(false, "Error (" + e + ") during shutdown."));
-};
+  }
 
+  manager.runTests(getPlayableVideos(gLongerTests), startTest);
+})();
 </script>
 </pre>
 </body>

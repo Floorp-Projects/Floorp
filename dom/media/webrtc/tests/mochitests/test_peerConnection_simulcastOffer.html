@@ -30,155 +30,157 @@
     SpecialPowers.wrap(receiver).mozAddRIDFilter(rid);
   }
 
-  runNetworkTest(() =>
-    pushPrefs(['media.peerconnection.simulcast', true],
-              // 180Kbps was determined empirically, set well-higher than
-              // the 80Kbps+overhead needed for the two simulcast streams.
-              // 100Kbps was apparently too low.
-              ['media.peerconnection.video.min_bitrate_estimate', 180*1000]).then(() => {
-      let emitter, helper;
+  runNetworkTest(async () => {
+    await pushPrefs(
+      ['media.peerconnection.simulcast', true],
+      // 180Kbps was determined empirically, set well-higher than
+      // the 80Kbps+overhead needed for the two simulcast streams.
+      // 100Kbps was apparently too low.
+      ['media.peerconnection.video.min_bitrate_estimate', 180*1000],
+    );
 
-      const test = new PeerConnectionTest({bundle: false});
-      test.setMediaConstraints([{video: true}], []);
+    let emitter, helper;
 
-      test.chain.replace("PC_LOCAL_GUM", [
-        function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
-          emitter = new VideoFrameEmitter();
-          helper = new VideoStreamHelper();
-          test.pcLocal.attachLocalStream(emitter.stream());
-          emitter.start();
-        }
-      ]);
+    const test = new PeerConnectionTest({bundle: false});
+    test.setMediaConstraints([{video: true}], []);
 
-      test.chain.insertBefore('PC_LOCAL_CREATE_OFFER', [
-        function PC_LOCAL_SET_RIDS(test) {
-          const senders = test.pcLocal._pc.getSenders();
-          is(senders.length, 1, "We have exactly one RTP sender");
-          const sender = senders[0];
-          ok(sender.track, "Sender has a track");
-
-          return sender.setParameters({
-            encodings: [{ rid: "foo", maxBitrate: 40000 },
-                        { rid: "bar", maxBitrate: 40000, scaleResolutionDownBy: 2 }]
-          });
-        }
-      ]);
-
-      test.chain.insertAfter('PC_LOCAL_GET_ANSWER', [
-        function PC_LOCAL_ADD_RIDS_TO_ANSWER(test) {
-          test._remote_answer.sdp = sdputils.transferSimulcastProperties(
-            test.originalOffer.sdp, test._remote_answer.sdp);
-          info("Answer with RIDs: " + JSON.stringify(test._remote_answer));
-          ok(test._remote_answer.sdp.match(/a=simulcast:/), "Modified answer has simulcast");
-          ok(test._remote_answer.sdp.match(/a=rid:foo/), "Modified answer has rid foo");
-          ok(test._remote_answer.sdp.match(/a=rid:bar/), "Modified answer has rid bar");
-          ok(test._remote_answer.sdp.match(/urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id/), "Modified answer has RID");
-        }
-      ]);
-
-      // For storing the rid extension so it can be checked in the RTP
-      let ridExtensionId = 0;
-
-      // do this after set local description so the MediaPipeline
-      // has been created.
-      test.chain.insertAfter('PC_REMOTE_SET_LOCAL_DESCRIPTION',[
-        function PC_REMOTE_SET_RTP_FIRST_RID(test) {
-          const extmap_id = test.originalOffer.sdp.match(
-              "a=extmap:([0-9+])/sendonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
-          ok(extmap_id, "Original offer has extmap id for simulcast: " + extmap_id[1]);
-          ridExtensionId = extmap_id[1];
-          // Cause pcRemote to filter out everything but RID "foo", only
-          // allowing one of the simulcast streams through.
-          addRIDExtension(test.pcRemote, extmap_id[1]);
-          selectRecvRID(test.pcRemote, "foo");
-        }
-      ]);
-
-      let getRtpPacket = (pc) => {
-        pc.mozEnablePacketDump(0, "rtp", false);
-        return new Promise((res, rej) =>
-          pc.mozSetPacketCallback((...args) => {
-            res([...args]);
-            pc.mozSetPacketCallback(() => {});
-            pc.mozDisablePacketDump(0, "rtp", false);
-          })
-        );
+    test.chain.replace("PC_LOCAL_GUM", [
+      function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
+        emitter = new VideoFrameEmitter();
+        helper = new VideoStreamHelper();
+        test.pcLocal.attachLocalStream(emitter.stream());
+        emitter.start();
       }
+    ]);
 
-      test.chain.insertBefore('PC_REMOTE_WAIT_FOR_MEDIA_FLOW', [
-          async function PC_REMOTE_CHECK_RID_IN_RTP() {
-            let pc = SpecialPowers.wrap(test.pcRemote._pc);
-            let [level, type, sending, data] =  await getRtpPacket(pc);
-            let extensions = ParseRtpPacket(data).header.extensions;
-            ok(ridExtensionId, "RID extension ID has been extracted from SDP");
-            let ridExt = extensions.find(e => e.id == ridExtensionId);
-            ok(ridExt, "RID is present in RTP.");
-            is(new TextDecoder('utf-8').decode(ridExt.data), "foo",
-               "RID is 'foo'.");
-          }
-      ]);
+    test.chain.insertBefore('PC_LOCAL_CREATE_OFFER', [
+      function PC_LOCAL_SET_RIDS(test) {
+        const senders = test.pcLocal._pc.getSenders();
+        is(senders.length, 1, "We have exactly one RTP sender");
+        const sender = senders[0];
+        ok(sender.track, "Sender has a track");
 
-      test.chain.append([
-        async function PC_REMOTE_WAIT_FOR_FRAMES() {
-          const vremote = test.pcRemote.remoteMediaElements[0];
-          ok(vremote, "Should have remote video element for pcRemote");
-          emitter.start();
-          await helper.checkVideoPlaying(vremote);
-          emitter.stop();
-        },
-        function PC_REMOTE_CHECK_SIZE_1() {
-          const vlocal = test.pcLocal.localMediaElements[0];
-          const vremote = test.pcRemote.remoteMediaElements[0];
-          ok(vlocal, "Should have local video element for pcLocal");
-          ok(vremote, "Should have remote video element for pcRemote");
-          is(vlocal.videoWidth, 50, "correct source width");
-          is(vlocal.videoHeight, 50, "correct source height");
-          is(vremote.videoWidth, 48,
-             "sink is same width as source, modulo our cropping algorithm");
-          is(vremote.videoHeight, 48,
-             "sink is same height as source, modulo our cropping algorithm");
-        },
-        function PC_REMOTE_SET_RTP_SECOND_RID(test) {
-          // Now, cause pcRemote to filter out everything but RID "bar", only
-          // allowing the other simulcast stream through.
-          selectRecvRID(test.pcRemote, "bar");
-        },
-        function PC_REMOTE_WAIT_FOR_SECOND_MEDIA_FLOW(test) {
-          return test.pcRemote.waitForMediaFlow();
-        },
-        async function PC_REMOTE_WAIT_FOR_FRAMES_2() {
-          const vremote = test.pcRemote.remoteMediaElements[0];
-          ok(vremote, "Should have remote video element for pcRemote");
-          emitter.start();
-          await helper.checkVideoPlaying(vremote);
-          emitter.stop();
-        },
-        // For some reason, even though we're getting a 25x25 stream, sometimes
-        // the resolution isn't updated on the video element on the first frame.
-        async function PC_REMOTE_WAIT_FOR_FRAMES_3() {
-          const vremote = test.pcRemote.remoteMediaElements[0];
-          ok(vremote, "Should have remote video element for pcRemote");
-          emitter.start();
-          await helper.checkVideoPlaying(vremote);
-          emitter.stop();
-        },
-        function PC_REMOTE_CHECK_SIZE_2() {
-          const vlocal = test.pcLocal.localMediaElements[0];
-          const vremote = test.pcRemote.remoteMediaElements[0];
-          ok(vlocal, "Should have local video element for pcLocal");
-          ok(vremote, "Should have remote video element for pcRemote");
-          is(vlocal.videoWidth, 50, "correct source width");
-          is(vlocal.videoHeight, 50, "correct source height");
-          is(vremote.videoWidth, 24,
-             "sink is 1/2 width of source, modulo our cropping algorithm");
-          is(vremote.videoHeight, 24,
-             "sink is 1/2 height of source, modulo our cropping algorithm");
-        },
-      ]);
+        return sender.setParameters({
+          encodings: [{ rid: "foo", maxBitrate: 40000 },
+                      { rid: "bar", maxBitrate: 40000, scaleResolutionDownBy: 2 }]
+        });
+      }
+    ]);
 
-      return test.run();
-  })
-  .catch(e => ok(false, "unexpected failure: " + e)));
+    test.chain.insertAfter('PC_LOCAL_GET_ANSWER', [
+      function PC_LOCAL_ADD_RIDS_TO_ANSWER(test) {
+        test._remote_answer.sdp = sdputils.transferSimulcastProperties(
+          test.originalOffer.sdp, test._remote_answer.sdp);
+        info("Answer with RIDs: " + JSON.stringify(test._remote_answer));
+        ok(test._remote_answer.sdp.match(/a=simulcast:/), "Modified answer has simulcast");
+        ok(test._remote_answer.sdp.match(/a=rid:foo/), "Modified answer has rid foo");
+        ok(test._remote_answer.sdp.match(/a=rid:bar/), "Modified answer has rid bar");
+        ok(test._remote_answer.sdp.match(/urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id/), "Modified answer has RID");
+      }
+    ]);
+
+    // For storing the rid extension so it can be checked in the RTP
+    let ridExtensionId = 0;
+
+    // do this after set local description so the MediaPipeline
+    // has been created.
+    test.chain.insertAfter('PC_REMOTE_SET_LOCAL_DESCRIPTION',[
+      function PC_REMOTE_SET_RTP_FIRST_RID(test) {
+        const extmap_id = test.originalOffer.sdp.match(
+            "a=extmap:([0-9+])/sendonly urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id");
+        ok(extmap_id, "Original offer has extmap id for simulcast: " + extmap_id[1]);
+        ridExtensionId = extmap_id[1];
+        // Cause pcRemote to filter out everything but RID "foo", only
+        // allowing one of the simulcast streams through.
+        addRIDExtension(test.pcRemote, extmap_id[1]);
+        selectRecvRID(test.pcRemote, "foo");
+      }
+    ]);
+
+    let getRtpPacket = (pc) => {
+      pc.mozEnablePacketDump(0, "rtp", false);
+      return new Promise((res, rej) =>
+        pc.mozSetPacketCallback((...args) => {
+          res([...args]);
+          pc.mozSetPacketCallback(() => {});
+          pc.mozDisablePacketDump(0, "rtp", false);
+        })
+      );
+    }
+
+    test.chain.insertBefore('PC_REMOTE_WAIT_FOR_MEDIA_FLOW', [
+        async function PC_REMOTE_CHECK_RID_IN_RTP() {
+          let pc = SpecialPowers.wrap(test.pcRemote._pc);
+          let [level, type, sending, data] =  await getRtpPacket(pc);
+          let extensions = ParseRtpPacket(data).header.extensions;
+          ok(ridExtensionId, "RID extension ID has been extracted from SDP");
+          let ridExt = extensions.find(e => e.id == ridExtensionId);
+          ok(ridExt, "RID is present in RTP.");
+          is(new TextDecoder('utf-8').decode(ridExt.data), "foo",
+             "RID is 'foo'.");
+        }
+    ]);
+
+    test.chain.append([
+      async function PC_REMOTE_WAIT_FOR_FRAMES() {
+        const vremote = test.pcRemote.remoteMediaElements[0];
+        ok(vremote, "Should have remote video element for pcRemote");
+        emitter.start();
+        await helper.checkVideoPlaying(vremote);
+        emitter.stop();
+      },
+      function PC_REMOTE_CHECK_SIZE_1() {
+        const vlocal = test.pcLocal.localMediaElements[0];
+        const vremote = test.pcRemote.remoteMediaElements[0];
+        ok(vlocal, "Should have local video element for pcLocal");
+        ok(vremote, "Should have remote video element for pcRemote");
+        is(vlocal.videoWidth, 50, "correct source width");
+        is(vlocal.videoHeight, 50, "correct source height");
+        is(vremote.videoWidth, 48,
+           "sink is same width as source, modulo our cropping algorithm");
+        is(vremote.videoHeight, 48,
+           "sink is same height as source, modulo our cropping algorithm");
+      },
+      function PC_REMOTE_SET_RTP_SECOND_RID(test) {
+        // Now, cause pcRemote to filter out everything but RID "bar", only
+        // allowing the other simulcast stream through.
+        selectRecvRID(test.pcRemote, "bar");
+      },
+      function PC_REMOTE_WAIT_FOR_SECOND_MEDIA_FLOW(test) {
+        return test.pcRemote.waitForMediaFlow();
+      },
+      async function PC_REMOTE_WAIT_FOR_FRAMES_2() {
+        const vremote = test.pcRemote.remoteMediaElements[0];
+        ok(vremote, "Should have remote video element for pcRemote");
+        emitter.start();
+        await helper.checkVideoPlaying(vremote);
+        emitter.stop();
+      },
+      // For some reason, even though we're getting a 25x25 stream, sometimes
+      // the resolution isn't updated on the video element on the first frame.
+      async function PC_REMOTE_WAIT_FOR_FRAMES_3() {
+        const vremote = test.pcRemote.remoteMediaElements[0];
+        ok(vremote, "Should have remote video element for pcRemote");
+        emitter.start();
+        await helper.checkVideoPlaying(vremote);
+        emitter.stop();
+      },
+      function PC_REMOTE_CHECK_SIZE_2() {
+        const vlocal = test.pcLocal.localMediaElements[0];
+        const vremote = test.pcRemote.remoteMediaElements[0];
+        ok(vlocal, "Should have local video element for pcLocal");
+        ok(vremote, "Should have remote video element for pcRemote");
+        is(vlocal.videoWidth, 50, "correct source width");
+        is(vlocal.videoHeight, 50, "correct source height");
+        is(vremote.videoWidth, 24,
+           "sink is 1/2 width of source, modulo our cropping algorithm");
+        is(vremote.videoHeight, 24,
+           "sink is 1/2 height of source, modulo our cropping algorithm");
+      },
+    ]);
+
+    await test.run();
+  });
 </script>
 </pre>
 </body>

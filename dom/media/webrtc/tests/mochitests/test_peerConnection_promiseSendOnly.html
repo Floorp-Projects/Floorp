@@ -41,7 +41,7 @@
 
     is(v2.currentTime, 0, "v2.currentTime is zero at outset");
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    return navigator.mediaDevices.getUserMedia({ video: true, audio: true })
     .then(stream => (v1.srcObject = stream).getTracks().forEach(t => pc1.addTrack(t, stream)))
     .then(() => pc1.createOffer({})) // check that createOffer accepts arg.
     .then(offer => pc1.setLocalDescription(offer))
@@ -53,9 +53,7 @@
 //    .then(() => canPlayThrough)    // why doesn't this fire?
     .then(() => waitUntil(() => v2.currentTime > 0))
     .then(() => ok(v2.currentTime > 0, "v2.currentTime is moving (" + v2.currentTime + ")"))
-    .then(() => ok(true, "Connected."))
-    .catch(reason => ok(false, "unexpected failure: " + reason))
-    .then(networkTestFinished);
+    .then(() => ok(true, "Connected."));
   });
 </script>
 </pre>

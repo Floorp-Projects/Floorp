@@ -59,7 +59,7 @@ runNetworkTest(() => {
       checkSentTracksReceived(dummyStream.id, dummyStreamTracks);
     },
   ]);
-  test.run();
+  return test.run();
 });
 </script>
 </pre>

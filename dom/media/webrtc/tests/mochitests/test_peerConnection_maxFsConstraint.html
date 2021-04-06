@@ -94,7 +94,6 @@
     // Disable h264 hardware support, to ensure it is not prioritized over VP8
     await pushPrefs(["media.webrtc.hw.h264.enabled", false]);
     await testScale("VP8");
-    networkTestFinished();
   });
 </script>
 </pre>

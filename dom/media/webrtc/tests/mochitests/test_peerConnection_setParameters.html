@@ -62,8 +62,7 @@ function parameterstest(pc) {
 }
 
 runNetworkTest(() => {
-
-  test = new PeerConnectionTest();
+  const test = new PeerConnectionTest();
   test.setMediaConstraints([{video: true}], [{video: true}]);
   test.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
 
@@ -74,8 +73,7 @@ runNetworkTest(() => {
     }
   ]);
 
-  return test.run()
-    .catch(e => ok(false, "unexpected failure: " + e));
+  return test.run();
 });
 
 </script>

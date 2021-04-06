@@ -75,5 +75,5 @@ function identityPcTest(remoteOptions) {
       ]);
     },
   ]);
-  test.run();
+  return test.run();
 }

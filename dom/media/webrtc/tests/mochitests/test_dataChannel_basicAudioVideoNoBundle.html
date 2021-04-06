@@ -19,7 +19,7 @@ runNetworkTest(function (options) {
   addInitialDataChannel(test.chain);
   test.setMediaConstraints([{audio: true}, {video: true}],
                            [{audio: true}, {video: true}]);
-  test.run();
+  return test.run();
 });
 </script>
 </pre>

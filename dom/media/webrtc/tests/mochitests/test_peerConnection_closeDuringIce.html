@@ -71,7 +71,7 @@ runNetworkTest(() => {
   test.chain.removeAfter("PC_LOCAL_SET_REMOTE_DESCRIPTION");
   test.chain.append([PC_REMOTE_ADD_FAKE_ICE_CANDIDATE, PC_LOCAL_ADD_FAKE_ICE_CANDIDATE,
 	PC_LOCAL_CLOSE_DURING_ICE, PC_REMOTE_CLOSE_DURING_ICE]);
-  test.run();
+  return test.run();
 });
 </script>
 </pre>

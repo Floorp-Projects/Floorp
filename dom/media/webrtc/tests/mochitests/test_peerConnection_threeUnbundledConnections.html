@@ -14,11 +14,11 @@
 
   const fakeFingerPrint = "a=fingerprint:sha-256 11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11:11";
 
-  var pc1 = new RTCPeerConnection();
-  var pc2 = new RTCPeerConnection();
-  var pc3 = new RTCPeerConnection();
+  const pc1 = new RTCPeerConnection();
+  const pc2 = new RTCPeerConnection();
+  const pc3 = new RTCPeerConnection();
 
-  var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+  const add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
   pc1.onicecandidate = e => {
     if (e.candidate) {
       if (e.candidate.sdpMid === "1") {
@@ -31,13 +31,13 @@
   pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
   pc3.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
 
-  var ice1Finished, ice2Finished, ice3Finished;
-  var ice1Done = new Promise(r => ice1Finished = r);
-  var ice2Done = new Promise(r => ice2Finished = r);
-  var ice3Done = new Promise(r => ice3Finished = r);
+  let ice1Finished, ice2Finished, ice3Finished;
+  const ice1Done = new Promise(r => ice1Finished = r);
+  const ice2Done = new Promise(r => ice2Finished = r);
+  const ice3Done = new Promise(r => ice3Finished = r);
 
-  var icsc = (pc, str, resolve) => {
-    var state = pc.iceConnectionState;
+  const icsc = (pc, str, resolve) => {
+    const state = pc.iceConnectionState;
     info(str + " ICE connection state is: " + state);
     if (state == "connected") {
       ok(true, str + " ICE connected");
@@ -127,7 +127,6 @@ runNetworkTest(async () => {
     await Promise.all([ice1Done, ice2Done, ice3Done]);
 
     ok(true, "Connected.");
-    networkTestFinished();
   });
 </script>
 </pre>

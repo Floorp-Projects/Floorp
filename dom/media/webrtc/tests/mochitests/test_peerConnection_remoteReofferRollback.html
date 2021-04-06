@@ -11,9 +11,8 @@
     title: "Rollback remote reoffer"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
       [
         function PC_LOCAL_ADD_SECOND_STREAM(test) {
@@ -43,7 +42,7 @@
     );
     test.chain.append(commandsPeerConnectionOfferAnswer);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

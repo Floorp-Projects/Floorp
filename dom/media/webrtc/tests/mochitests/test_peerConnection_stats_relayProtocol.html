@@ -32,11 +32,11 @@ if (!("mediaDevices" in navigator)) {
     test.chain.append([PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE]);
 
     test.setMediaConstraints([{ audio: true }], [{ audio: true }]);
-    test.run();
+    await test.run();
   }, { useIceServer: true });
 }
 
-var PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE = test => {
+const PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE = test => {
   return test.pcLocal.getStats().then(stats => {
     let haveRelayProtocol = {};
     for (let [k, v] of stats) {

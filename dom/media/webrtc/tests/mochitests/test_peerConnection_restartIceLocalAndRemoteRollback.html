@@ -73,7 +73,7 @@
     // like multiple streams.  See bug 1259465.
     test.setMediaConstraints([{audio: true}],
                              [{audio: true}]);
-    test.run();
+    return test.run();
   });
 
 </script>

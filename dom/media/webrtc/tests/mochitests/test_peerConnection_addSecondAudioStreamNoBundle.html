@@ -45,7 +45,7 @@
 
     // TODO(bug 1093835): figure out how to verify if media flows through the new stream
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

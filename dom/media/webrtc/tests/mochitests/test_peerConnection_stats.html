@@ -273,7 +273,7 @@ const statsExpectedByType = {
 //  Checks that the fields in a report conform to the expectations in
 // statExpectedByType
 //
-var checkExpectedFields = report => report.forEach(stat => {
+const checkExpectedFields = report => report.forEach(stat => {
   let expectations = statsExpectedByType[stat.type];
   ok(expectations, "Stats type " + stat.type + " was expected");
   // If the type is not expected or if it is flagged for skipping continue to
@@ -312,7 +312,7 @@ var checkExpectedFields = report => report.forEach(stat => {
   });
 });
 
-var pedanticChecks = report => {
+const pedanticChecks = report => {
   // Check that report is only-maplike
   [...report.keys()].forEach(key => is(report[key], undefined,
       `Report is not dictionary like, it lacks a property for key ${key}`));
@@ -799,14 +799,14 @@ var pedanticChecks = report => {
   });
 }
 
-var PC_LOCAL_TEST_LOCAL_STATS = test => {
+const PC_LOCAL_TEST_LOCAL_STATS = test => {
   return test.pcLocal.waitForSyncedRtcp().then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
   });
 }
 
-var PC_REMOTE_TEST_REMOTE_STATS = test => {
+const PC_REMOTE_TEST_REMOTE_STATS = test => {
   return test.pcRemote.waitForSyncedRtcp().then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
@@ -830,7 +830,7 @@ runNetworkTest(async function (options) {
 
   test.setMediaConstraints([{audio: true}, {video: true}],
                            [{audio: true}, {video: true}]);
-  test.run();
+  await test.run();
 });
 </script>
 </pre>

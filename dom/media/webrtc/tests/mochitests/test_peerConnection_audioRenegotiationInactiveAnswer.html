@@ -12,13 +12,12 @@
     title: "Renegotiation: answerer uses a=inactive for audio"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    var helper = new AudioStreamHelper();
+    const helper = new AudioStreamHelper();
 
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true}], []);
-    var haveFirstUnmuteEvent;
+    let haveFirstUnmuteEvent;
 
     test.chain.insertBefore("PC_REMOTE_SET_LOCAL_DESCRIPTION", [
       function PC_REMOTE_SETUP_ONUNMUTE_1() {
@@ -61,7 +60,7 @@
       }
     ]);
 
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

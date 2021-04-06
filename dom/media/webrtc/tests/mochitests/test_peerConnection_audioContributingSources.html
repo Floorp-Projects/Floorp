@@ -129,16 +129,14 @@
   };
 
   var test;
-  runNetworkTest(function(options) {
+  runNetworkTest(async function(options) {
     test = new PeerConnectionTest(options);
     test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
       [testGetContributingSources]);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.pcLocal.audioElementsOnly = true;
-    SpecialPowers.pushPrefEnv(
-    { "set": [["privacy.reduceTimerPrecision", false]]}, function() {
-      test.run();
-    });
+    await pushPrefs(["privacy.reduceTimerPrecision", false]);
+    await test.run();
   });
 </script>
 </pre>

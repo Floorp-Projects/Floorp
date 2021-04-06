@@ -15,7 +15,7 @@
   let pc1;
   let pc2;
 
-  let offerOptions = {
+  const offerOptions = {
     offerToReceiveAudio: 1,
   };
 
@@ -115,21 +115,21 @@
 
   async function getRemoteStream(localStream) {
     info("got local stream")
-    let audioTracks = localStream.getAudioTracks();
+    const audioTracks = localStream.getAudioTracks();
 
-    let servers = null;
+    const servers = null;
 
     pc1 = new RTCPeerConnection(servers);
     info('Created local peer connection object pc1');
-    let iceComplete1 = new Promise( (resolve, reject) => {
-	  pc1.onicecandidate = (e) => {
-	    onIceCandidate(pc1, e, resolve);
-	  };
+    const iceComplete1 = new Promise((resolve, reject) => {
+      pc1.onicecandidate = (e) => {
+        onIceCandidate(pc1, e, resolve);
+      };
     });
 
     pc2 = new RTCPeerConnection(servers);
     info('Created remote peer connection object pc2');
-    let iceComplete2 = new Promise( (resolve, reject) => {
+    const iceComplete2 = new Promise((resolve, reject) => {
       pc2.onicecandidate = (e) => {
         onIceCandidate(pc2, e, resolve);
       };
@@ -142,7 +142,7 @@
       onIceStateChange(pc2, e);
     };
 
-    let remoteStreamPromise = new Promise((resolve, reject) => {
+    const remoteStreamPromise = new Promise((resolve, reject) => {
       pc2.ontrack = (e) => {
         info('pc2 received remote stream ' + e.streams[0]);
         resolve(e.streams[0]);
@@ -156,42 +156,44 @@
 
     info('pc1 createOffer start');
     pc1.createOffer(offerOptions)
-    .then(onCreateOfferSuccess,onCreateSessionDescriptionError);
+      .then(onCreateOfferSuccess,onCreateSessionDescriptionError);
 
     let promise_arr = await Promise.all([remoteStreamPromise, iceComplete1, iceComplete2]);
-
     return promise_arr[0];
   }
 
-  runTest( async () => {
+  runTest(async () => {
     // Local stream operates at non default rate (32000)
     const nonDefaultRate = 32000;
-    let nonDefault_ctx = new AudioContext({sampleRate: nonDefaultRate});
+    const nonDefault_ctx = new AudioContext({sampleRate: nonDefaultRate});
     oscillator = nonDefault_ctx.createOscillator();
-    let dest = nonDefault_ctx.createMediaStreamDestination();
+    const dest = nonDefault_ctx.createMediaStreamDestination();
     oscillator.connect(dest);
     oscillator.start();
 
     // Wait for remote stream
-    let remoteStream = await getRemoteStream(dest.stream)
+    const remoteStream = await getRemoteStream(dest.stream)
     ok(true, 'Got remote stream ' + remoteStream);
 
     // remoteStream now comes from PC so operates at default
     // rates. Verify that by adding to a default context
-    let ac = new AudioContext;
-    let source_default_rate = ac.createMediaStreamSource(remoteStream);
+    const ac = new AudioContext;
+    const source_default_rate = ac.createMediaStreamSource(remoteStream);
 
     // Now try to add the remoteStream on a non default context
-    mustThrowWith("Connect stream with graph of different sample rate", "NotSupportedError", () => {
-      let source_non_default_rate = nonDefault_ctx.createMediaStreamSource(remoteStream);
-    });
+    mustThrowWith(
+      "Connect stream with graph of different sample rate",
+      "NotSupportedError", () => {
+        nonDefault_ctx.createMediaStreamSource(remoteStream);
+      }
+    );
 
     // Close peer connections to make sure we don't get error:
     // "logged result after SimpleTest.finish(): pc1 addIceCandidate success"
     // See Bug 1626814.
     pc1.close();
     pc2.close();
-  })
+  });
 </script>
 </pre>
 </body>

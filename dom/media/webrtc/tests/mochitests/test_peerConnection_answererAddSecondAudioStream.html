@@ -11,9 +11,8 @@
     title: "Renegotiation: answerer adds second audio stream"
   });
 
-  var test;
   runNetworkTest(function (options) {
-    test = new PeerConnectionTest(options);
+    const test = new PeerConnectionTest(options);
     addRenegotiationAnswerer(test.chain,
       [
         function PC_LOCAL_ADD_SECOND_STREAM(test) {
@@ -25,7 +24,7 @@
     );
 
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

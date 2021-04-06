@@ -126,7 +126,7 @@
       pc.setIdentityProvider("Invalid Provider")},
       "setIdentityProvider() on closed PC raised expected exception");
 
-    Promise.all([finished, silence]).then(networkTestFinished);
+    return Promise.all([finished, silence]);
   });
 </script>
 </pre>

@@ -15,7 +15,7 @@
     var test = new PeerConnectionTest();
     test.setMediaConstraints([], [{video: true}]);
     test.setOfferOptions({ offerToReceiveVideo: true });
-    test.run();
+    return test.run();
   });
 </script>
 </pre>

@@ -12,7 +12,7 @@
   });
 
 runNetworkTest(function () {
-  var test = new PeerConnectionTest();
+  const test = new PeerConnectionTest();
   test.setMediaConstraints([{audio: true}], [{audio: true}]);
   test.chain.removeAfter("PC_REMOTE_SET_REMOTE_DESCRIPTION");
 
@@ -23,7 +23,7 @@ runNetworkTest(function () {
     }
   ]);
 
-  test.run();
+  return test.run();
 });
 </script>
 </pre>

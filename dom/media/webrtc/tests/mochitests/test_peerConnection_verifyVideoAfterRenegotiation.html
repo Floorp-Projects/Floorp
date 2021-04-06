@@ -19,17 +19,17 @@ runNetworkTest(async () => {
                     ["media.webrtc.hw.h264.enabled", false]);
   }
 
-  var test = new PeerConnectionTest();
+  const test = new PeerConnectionTest();
 
-  var h1 = new CaptureStreamTestHelper2D(50, 50);
-  var canvas1 = h1.createAndAppendElement('canvas', 'source_canvas1');
-  var stream1;
-  var vremote1;
+  const h1 = new CaptureStreamTestHelper2D(50, 50);
+  const canvas1 = h1.createAndAppendElement('canvas', 'source_canvas1');
+  let stream1;
+  let vremote1;
 
-  var h2 = new CaptureStreamTestHelper2D(50, 50);
-  var canvas2;
-  var stream2;
-  var vremote2;
+  const h2 = new CaptureStreamTestHelper2D(50, 50);
+  let canvas2;
+  let stream2;
+  let vremote2;
 
   test.setMediaConstraints([{video: true}], []);
   test.chain.replace("PC_LOCAL_GUM", [
@@ -39,7 +39,7 @@ runNetworkTest(async () => {
     function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
       stream1 = canvas1.captureStream(0);
       test.pcLocal.attachLocalStream(stream1);
-      var i = 0;
+      let i = 0;
       return setInterval(function() {
         try {
           info("draw " + i ? "green" : "red");
@@ -114,7 +114,7 @@ runNetworkTest(async () => {
     }
   ]);
 
-  test.run();
+  await test.run();
 });
 
 </script>
