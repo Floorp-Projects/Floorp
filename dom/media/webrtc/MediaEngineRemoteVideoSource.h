@@ -128,8 +128,6 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   void Refresh(int aIndex);
 
-  void Shutdown() override;
-
   nsString GetName() const override;
   void SetName(nsString aName);
 
@@ -245,11 +243,6 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   nsString mDeviceName;
   nsCString mUniqueId;
   Maybe<nsString> mFacingMode;
-
-  // Whether init has successfully completed.
-  // Set in Init(), reset in Shutdown().
-  // Owning thread only.
-  bool mInitDone = false;
 };
 
 }  // namespace mozilla
