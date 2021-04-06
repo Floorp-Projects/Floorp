@@ -26,9 +26,6 @@
 #include "nsMimeTypes.h"
 #include "DecoderTraits.h"
 
-// plugins
-#include "nsPluginHost.h"
-
 // Factory code for creating variations on html documents
 
 #undef NOISY_REGISTRY
@@ -182,22 +179,6 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
           nsresult rv = NS_NewImageDocument(getter_AddRefs(doc));
-          NS_ENSURE_SUCCESS(rv, nullptr);
-          return doc.forget();
-        },
-        aDocListener, aDocViewer);
-  }
-
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  // Don't exclude disabled plugins, which will still trigger the "this plugin
-  // is disabled" placeholder.
-  if (pluginHost &&
-      pluginHost->HavePluginForType(contentType, nsPluginHost::eExcludeNone)) {
-    return CreateDocument(
-        aCommand, aChannel, aLoadGroup, aContainer,
-        []() -> already_AddRefed<Document> {
-          RefPtr<Document> doc;
-          nsresult rv = NS_NewPluginDocument(getter_AddRefs(doc));
           NS_ENSURE_SUCCESS(rv, nullptr);
           return doc.forget();
         },
