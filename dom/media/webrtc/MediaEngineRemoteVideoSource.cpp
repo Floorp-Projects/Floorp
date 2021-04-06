@@ -120,6 +120,28 @@ void MediaEngineRemoteVideoSource::Init() {
 
   SetName(NS_ConvertUTF8toUTF16(deviceName));
   mUniqueId = uniqueId;
+
+  mInitDone = true;
+}
+
+void MediaEngineRemoteVideoSource::Shutdown() {
+  LOG("%s", __PRETTY_FUNCTION__);
+  AssertIsOnOwningThread();
+
+  if (!mInitDone) {
+    // Already shut down
+    return;
+  }
+
+  if (mState == kStarted) {
+    Stop();
+  }
+  if (mState == kAllocated || mState == kStopped) {
+    Deallocate();
+  }
+  MOZ_ASSERT(mState == kReleased);
+
+  mInitDone = false;
 }
 
 void MediaEngineRemoteVideoSource::SetName(nsString aName) {
@@ -176,6 +198,11 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kReleased);
+
+  if (!mInitDone) {
+    LOG("Init not done");
+    return NS_ERROR_FAILURE;
+  }
 
   NormalizedConstraints constraints(aConstraints);
   webrtc::CaptureCapability newCapability;
@@ -263,6 +290,7 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+  MOZ_ASSERT(mInitDone);
   MOZ_ASSERT(mTrack);
 
   {
@@ -348,6 +376,8 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
     const char** aOutBadConstraint) {
   LOG("%s", __PRETTY_FUNCTION__);
   AssertIsOnOwningThread();
+
+  MOZ_ASSERT(mInitDone);
 
   NormalizedConstraints constraints(aConstraints);
   webrtc::CaptureCapability newCapability;

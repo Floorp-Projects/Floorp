@@ -36,24 +36,6 @@ bool MediaEngineSource::IsVideo(MediaSourceEnum aSource) {
   }
 }
 
-/* static */
-bool MediaEngineSource::IsAudio(MediaSourceEnum aSource) {
-  switch (aSource) {
-    case MediaSourceEnum::Microphone:
-    case MediaSourceEnum::AudioCapture:
-      return true;
-    case MediaSourceEnum::Camera:
-    case MediaSourceEnum::Screen:
-    case MediaSourceEnum::Window:
-    case MediaSourceEnum::Browser:
-    case MediaSourceEnum::Other:
-      return false;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown type");
-      return false;
-  }
-}
-
 bool MediaEngineSource::IsFake() const { return false; }
 
 bool MediaEngineSource::GetScary() const { return false; }
@@ -61,6 +43,8 @@ bool MediaEngineSource::GetScary() const { return false; }
 nsresult MediaEngineSource::FocusOnSelectedSource() {
   return NS_ERROR_NOT_AVAILABLE;
 }
+
+void MediaEngineSource::Shutdown() {}
 
 nsresult MediaEngineSource::TakePhoto(MediaEnginePhotoCallback* aCallback) {
   return NS_ERROR_NOT_IMPLEMENTED;

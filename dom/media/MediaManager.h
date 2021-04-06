@@ -58,7 +58,7 @@ class PrincipalInfo;
 class GetUserMediaTask;
 class GetUserMediaWindowListener;
 class MediaManager;
-class DeviceListener;
+class SourceListener;
 
 class MediaDevice : public nsIMediaDevice {
  public:
@@ -138,7 +138,7 @@ typedef MozPromise<RefPtr<AudioDeviceInfo>, nsresult, true> SinkInfoPromise;
 class MediaManager final : public nsIMediaManagerService,
                            public nsIMemoryReporter,
                            public nsIObserver {
-  friend DeviceListener;
+  friend SourceListener;
 
  public:
   static already_AddRefed<MediaManager> GetInstance();
