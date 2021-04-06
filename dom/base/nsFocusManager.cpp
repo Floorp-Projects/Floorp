@@ -2574,12 +2574,10 @@ void nsFocusManager::Focus(
       NotifyFocusStateChange(aElement, nullptr, aFlags,
                              /* aGettingFocus = */ true, shouldShowFocusRing);
 
-      // if this is an object/plug-in/remote browser, focus its widget.  Note
-      // that we might no longer be in the same document, due to the events we
-      // fired above when aIsNewDocument.
+      // If this is a remote browser, focus its widget and activate remote
+      // content.  Note that we might no longer be in the same document,
+      // due to the events we fired above when aIsNewDocument.
       if (presShell->GetDocument() == aElement->GetComposedDoc()) {
-        // if the object being focused is a remote browser, activate remote
-        // content
         ActivateRemoteFrameIfNeeded(*aElement, aActionId);
       }
 

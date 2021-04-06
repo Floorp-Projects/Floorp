@@ -15,7 +15,6 @@
 #include "nsGkAtoms.h"
 #include "nsError.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPluginDocument.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
@@ -98,18 +97,11 @@ nsresult HTMLObjectElement::BindToTree(BindContext& aContext,
   rv = nsObjectLoadingContent::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Don't kick off load from being bound to a plugin document - the plugin
-  // document will call nsObjectLoadingContent::InitializeFromChannel() for the
-  // initial load.
-  if (IsInComposedDoc()) {
-    nsCOMPtr<nsIPluginDocument> pluginDoc =
-        do_QueryInterface(&aContext.OwnerDoc());
-    // If we already have all the children, start the load.
-    if (mIsDoneAddingChildren && !pluginDoc) {
-      void (HTMLObjectElement::*start)() = &HTMLObjectElement::StartObjectLoad;
-      nsContentUtils::AddScriptRunner(
-          NewRunnableMethod("dom::HTMLObjectElement::BindToTree", this, start));
-    }
+  // If we already have all the children, start the load.
+  if (IsInComposedDoc() && mIsDoneAddingChildren) {
+    void (HTMLObjectElement::*start)() = &HTMLObjectElement::StartObjectLoad;
+    nsContentUtils::AddScriptRunner(
+        NewRunnableMethod("dom::HTMLObjectElement::BindToTree", this, start));
   }
 
   return NS_OK;
@@ -210,14 +202,6 @@ bool HTMLObjectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   }
 
   return false;
-}
-
-NS_IMETHODIMP
-HTMLObjectElement::Reset() { return NS_OK; }
-
-NS_IMETHODIMP
-HTMLObjectElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
-  return NS_OK;
 }
 
 int32_t HTMLObjectElement::TabIndexDefault() { return 0; }
