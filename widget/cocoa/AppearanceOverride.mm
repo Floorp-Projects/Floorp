@@ -86,12 +86,4 @@ static void RespectSystemAppearancePrefChanged(const char* aPref, void* aUserInf
 
   MOZGlobalAppearance.sharedInstance.shouldOverrideWithAqua =
       !mozilla::StaticPrefs::widget_macos_respect_system_appearance();
-
-  // Send a notification that ChildView reacts to. This will cause it to call ThemeChanged and
-  // invalidate LookAndFeel colors.
-  [[NSDistributedNotificationCenter defaultCenter]
-      postNotificationName:@"AppleInterfaceThemeChangedNotification"
-                    object:nil
-                  userInfo:nil
-        deliverImmediately:YES];
 }
