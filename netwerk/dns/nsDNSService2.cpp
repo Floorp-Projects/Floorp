@@ -71,8 +71,7 @@ class nsDNSRecord : public nsIDNSAddrRecord {
   NS_DECL_NSIDNSRECORD
   NS_DECL_NSIDNSADDRRECORD
 
-  explicit nsDNSRecord(nsHostRecord* hostRecord)
-      : mIterGenCnt(-1), mDone(false) {
+  explicit nsDNSRecord(nsHostRecord* hostRecord) {
     mHostRecord = do_QueryObject(hostRecord);
   }
 
@@ -95,10 +94,10 @@ class nsDNSRecord : public nsIDNSAddrRecord {
     return &*mIter;
   }
 
-  int mIterGenCnt;  // the generation count of
-                    // mHostRecord->addr_info when we
-                    // start iterating
-  bool mDone;
+  int mIterGenCnt = -1;  // the generation count of
+                         // mHostRecord->addr_info when we
+                         // start iterating
+  bool mDone = false;
 };
 
 NS_IMPL_ISUPPORTS(nsDNSRecord, nsIDNSRecord, nsIDNSAddrRecord)
@@ -465,12 +464,12 @@ class nsDNSAsyncRequest final : public nsResolveHostCallback,
   RefPtr<nsHostResolver> mResolver;
   nsCString mHost;       // hostname we're resolving
   nsCString mTrrServer;  // A trr server to be used.
-  uint16_t mType;
+  uint16_t mType = 0;
   const OriginAttributes
       mOriginAttributes;  // The originAttributes for this resolving
   nsCOMPtr<nsIDNSListener> mListener;
-  uint16_t mFlags;
-  uint16_t mAF;
+  uint16_t mFlags = 0;
+  uint16_t mAF = 0;
 
  private:
   virtual ~nsDNSAsyncRequest() = default;
@@ -534,21 +533,20 @@ nsDNSAsyncRequest::Cancel(nsresult reason) {
 class nsDNSSyncRequest : public nsResolveHostCallback {
   NS_DECL_THREADSAFE_ISUPPORTS
  public:
-  explicit nsDNSSyncRequest(PRMonitor* mon)
-      : mDone(false), mStatus(NS_OK), mMonitor(mon) {}
+  explicit nsDNSSyncRequest(PRMonitor* mon) : mMonitor(mon) {}
 
   void OnResolveHostComplete(nsHostResolver*, nsHostRecord*, nsresult) override;
   bool EqualsAsyncListener(nsIDNSListener* aListener) override;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf) const override;
 
-  bool mDone;
-  nsresult mStatus;
+  bool mDone = false;
+  nsresult mStatus = NS_OK;
   RefPtr<nsHostRecord> mHostRecord;
 
  private:
   virtual ~nsDNSSyncRequest() = default;
 
-  PRMonitor* mMonitor;
+  PRMonitor* mMonitor = nullptr;
 };
 
 NS_IMPL_ISUPPORTS0(nsDNSSyncRequest)
@@ -603,23 +601,6 @@ class NotifyDNSResolution : public Runnable {
 };
 
 //-----------------------------------------------------------------------------
-
-nsDNSService::nsDNSService()
-    : mLock("nsDNSServer.mLock"),
-      mDisableIPv6(false),
-      mDisablePrefetch(false),
-      mBlockDotOnion(false),
-      mNotifyResolution(false),
-      mOfflineLocalhost(false),
-      mForceResolveOn(false),
-      mTrrService(nullptr),
-      mHasSocksProxy(false),
-      mResCacheEntries(0),
-      mResCacheExpiration(0),
-      mResCacheGrace(0),
-      mResolverPrefsUpdated(false) {}
-
-nsDNSService::~nsDNSService() = default;
 
 NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
                   nsIMemoryReporter)
