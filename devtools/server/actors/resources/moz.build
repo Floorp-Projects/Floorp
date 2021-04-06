@@ -15,6 +15,7 @@ DevToolsModules(
     "document-event.js",
     "error-messages.js",
     "index.js",
+    "network-events-content.js",
     "network-events-stacktraces.js",
     "network-events.js",
     "platform-messages.js",

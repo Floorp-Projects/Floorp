@@ -68,6 +68,9 @@ const FrameTargetResources = augmentResourceDictionary({
   [TYPES.STYLESHEET]: {
     path: "devtools/server/actors/resources/stylesheets",
   },
+  [TYPES.NETWORK_EVENT]: {
+    path: "devtools/server/actors/resources/network-events-content",
+  },
   [TYPES.NETWORK_EVENT_STACKTRACE]: {
     path: "devtools/server/actors/resources/network-events-stacktraces",
   },
