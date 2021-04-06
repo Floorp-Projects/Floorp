@@ -369,6 +369,8 @@ nsLocalFile::CreateAllAncestors(uint32_t aPermissions) {
   // <jband> I promise to play nice
   char* buffer = mPath.BeginWriting();
   char* slashp = buffer;
+  int mkdir_result = 0;
+  int mkdir_errno;
 
 #ifdef DEBUG_NSIFILE
   fprintf(stderr, "nsIFile: before: %s\n", buffer);
@@ -397,9 +399,9 @@ nsLocalFile::CreateAllAncestors(uint32_t aPermissions) {
 #ifdef DEBUG_NSIFILE
     fprintf(stderr, "nsIFile: mkdir(\"%s\")\n", buffer);
 #endif
-    int mkdir_result = mkdir(buffer, aPermissions);
-    int mkdir_errno = errno;
+    mkdir_result = mkdir(buffer, aPermissions);
     if (mkdir_result == -1) {
+      mkdir_errno = errno;
       /*
        * Always set |errno| to EEXIST if the dir already exists
        * (we have to do this here since the errno value is not consistent
@@ -407,28 +409,26 @@ nsLocalFile::CreateAllAncestors(uint32_t aPermissions) {
        * automounter-controlled dir, etc. can affect it (see bug 125489
        * for details)).
        */
-      if (access(buffer, F_OK) == 0) {
+      if (mkdir_errno != EEXIST && access(buffer, F_OK) == 0) {
         mkdir_errno = EEXIST;
       }
+#ifdef DEBUG_NSIFILE
+      fprintf(stderr, "nsIFile: errno: %d\n", mkdir_errno);
+#endif
     }
 
-    /* Put the / back before we (maybe) return */
+    /* Put the / back */
     *slashp = '/';
-
-    /*
-     * We could get EEXIST for an existing file -- not directory --
-     * with the name of one of our ancestors, but that's OK: we'll get
-     * ENOTDIR when we try to make the next component in the path,
-     * either here on back in Create, and error out appropriately.
-     */
-    if (mkdir_result == -1 && mkdir_errno != EEXIST) {
-      return nsresultForErrno(mkdir_errno);
-    }
   }
 
-#ifdef DEBUG_NSIFILE
-  fprintf(stderr, "nsIFile: after: %s\n", buffer);
-#endif
+  /*
+   * We could get EEXIST for an existing file -- not directory --
+   * but that's OK: we'll get ENOTDIR when we try to make the final
+   * component of the path back in Create and error out appropriately.
+   */
+  if (mkdir_result == -1 && mkdir_errno != EEXIST) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
