@@ -10,6 +10,20 @@
 :root {
   --tab-min-height: 33px;
   --inline-tab-padding: 9px;
+  /* Value for --in-content-page-background in in-content/common.inc.css */
+  --tabpanel-background-color: #f9f9fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Value for --in-content-page-background for dark mode in in-content/common.inc.css */
+    --tabpanel-background-color: #2a2a2e;
+  }
+}
+
+:root[privatebrowsingmode=temporary] {
+  /* Value for --in-content-page-background in aboutPrivateBrowsing.css */
+  --tabpanel-background-color: #25003e;
 }
 
 @media (-moz-proton) {
@@ -19,7 +33,15 @@
   --tab-shadow-max-size: 6px;
   --proton-tab-block-margin: 4px;
   --inline-tab-padding: 8px;
+  /* Value for --in-content-page-background in in-content/common.inc.css */
+  --tabpanel-background-color: #fff;
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Value for --in-content-page-background for dark mode in in-content/common.inc.css */
+    --tabpanel-background-color: rgb(28,27,34);
+  }
+} /*** END prefers-color-scheme: dark ***/
 } /*** END proton ***/
 
 :root[uidensity=compact] {
@@ -43,20 +65,7 @@
 } /* end !proton */
 
 #tabbrowser-tabpanels {
-  /* Value for --in-content-page-background in in-content/common.inc.css */
-  background-color: #f9f9fa;
-}
-
-:root[privatebrowsingmode=temporary] #tabbrowser-tabpanels {
-  /* Value for --in-content-page-background in aboutPrivateBrowsing.css */
-  background-color: #25003e;
-}
-
-@media (prefers-color-scheme: dark) {
-  #tabbrowser-tabpanels {
-    /* Value for --in-content-page-background for dark mode in in-content/common.inc.css */
-    background-color: #2A2A2E;
-  }
+  background-color: var(--tabpanel-background-color);
 }
 
 #tabbrowser-tabs,
