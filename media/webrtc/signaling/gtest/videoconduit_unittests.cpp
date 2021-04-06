@@ -22,6 +22,7 @@
 
 using namespace mozilla;
 using namespace testing;
+using namespace webrtc;
 
 namespace test {
 
