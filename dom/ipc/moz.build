@@ -152,7 +152,6 @@ IPDL_SOURCES += [
     "PFilePicker.ipdl",
     "PInProcess.ipdl",
     "PLoginReputation.ipdl",
-    "PPluginWidget.ipdl",
     "PProcessHangMonitor.ipdl",
     "PrefsTypes.ipdlh",
     "PTabContext.ipdlh",

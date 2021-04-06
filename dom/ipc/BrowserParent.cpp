@@ -45,7 +45,6 @@
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layout/RemoteLayerTreeOwner.h"
-#include "mozilla/plugins/PPluginWidgetParent.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
@@ -135,7 +134,6 @@
 #include "VsyncSource.h"
 
 #ifdef XP_WIN
-#  include "mozilla/plugins/PluginWidgetParent.h"
 #  include "FxRWindowManager.h"
 #endif
 
@@ -623,17 +621,6 @@ void BrowserParent::DestroyInternal() {
   // and auto-cleanup will kick in.  Otherwise, the child side will
   // destroy itself and send back __delete__().
   Unused << SendDestroy();
-
-#ifdef XP_WIN
-  // Let all PluginWidgets know we are tearing down. Prevents
-  // these objects from sending async events after the child side
-  // is shut down.
-  const ManagedContainer<PPluginWidgetParent>& kids =
-      ManagedPPluginWidgetParent();
-  for (const auto& key : kids) {
-    static_cast<mozilla::plugins::PluginWidgetParent*>(key)->ParentDestroy();
-  }
-#endif
 }
 
 void BrowserParent::Destroy() {
@@ -3654,22 +3641,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvRemoteIsReadyToHandleInputEvents() {
   // events.
   SetReadyToHandleInputEvents();
   return IPC_OK();
-}
-
-mozilla::plugins::PPluginWidgetParent*
-BrowserParent::AllocPPluginWidgetParent() {
-#ifdef XP_WIN
-  return new mozilla::plugins::PluginWidgetParent();
-#else
-  MOZ_ASSERT_UNREACHABLE("AllocPPluginWidgetParent only supports Windows");
-  return nullptr;
-#endif
-}
-
-bool BrowserParent::DeallocPPluginWidgetParent(
-    mozilla::plugins::PPluginWidgetParent* aActor) {
-  delete aActor;
-  return true;
 }
 
 PPaymentRequestParent* BrowserParent::AllocPPaymentRequestParent() {

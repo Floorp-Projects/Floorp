@@ -120,11 +120,6 @@
 
 #include "mozilla/ContentPrincipal.h"
 
-#ifdef XP_WIN
-#  include "mozilla/plugins/PPluginWidgetParent.h"
-#  include "../plugins/ipc/PluginWidgetParent.h"
-#endif
-
 #ifdef MOZ_XUL
 #  include "nsXULPopupManager.h"
 #endif
@@ -1295,20 +1290,6 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
 
   otherBrowserParent->SetBrowserDOMWindow(browserDOMWindow);
   browserParent->SetBrowserDOMWindow(otherBrowserDOMWindow);
-
-#ifdef XP_WIN
-  // Native plugin windows used by this remote content need to be reparented.
-  if (nsPIDOMWindowOuter* newWin = ourDoc->GetWindow()) {
-    RefPtr<nsIWidget> newParent =
-        nsGlobalWindowOuter::Cast(newWin)->GetMainWidget();
-    const ManagedContainer<mozilla::plugins::PPluginWidgetParent>& plugins =
-        otherBrowserParent->ManagedPPluginWidgetParent();
-    for (auto* key : plugins) {
-      static_cast<mozilla::plugins::PluginWidgetParent*>(key)->SetParent(
-          newParent);
-    }
-  }
-#endif  // XP_WIN
 
   MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
   aOther->MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
