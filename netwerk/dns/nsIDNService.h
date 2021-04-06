@@ -170,7 +170,7 @@ class nsIDNService final : public nsIIDNService,
   // These members can only be updated on the main thread and
   // read on any thread. Therefore, acquiring the mutex is required
   // only for threads other than the main thread.
-  mozilla::Mutex mLock{"IDNService"};
+  mozilla::Mutex mLock;
 
   // guarded by mLock
   nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist;
@@ -182,7 +182,7 @@ class nsIDNService final : public nsIIDNService,
    *
    * guarded by mLock
    */
-  bool mShowPunycode = false;
+  bool mShowPunycode;
 
   /**
    * Restriction-level Detection profiles defined in UTR 39
@@ -195,11 +195,11 @@ class nsIDNService final : public nsIIDNService,
     eModeratelyRestrictiveProfile
   };
   // guarded by mLock;
-  restrictionProfile mRestrictionProfile{eASCIIOnlyProfile};
+  restrictionProfile mRestrictionProfile;
   // guarded by mLock;
   nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch;
   // guarded by mLock
-  bool mIDNUseWhitelist = false;
+  bool mIDNUseWhitelist;
 };
 
 #endif  // nsIDNService_h__

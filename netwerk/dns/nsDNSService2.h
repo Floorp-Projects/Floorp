@@ -32,7 +32,7 @@ class nsDNSService final : public nsPIDNSService,
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEMORYREPORTER
 
-  nsDNSService() = default;
+  nsDNSService();
 
   static already_AddRefed<nsIDNSService> GetXPCOMSingleton();
 
@@ -49,7 +49,7 @@ class nsDNSService final : public nsPIDNSService,
       nsIDNSRecord** result);
 
  private:
-  ~nsDNSService() = default;
+  ~nsDNSService();
 
   nsresult ReadPrefs(const char* name);
   static already_AddRefed<nsDNSService> GetSingleton();
@@ -85,27 +85,27 @@ class nsDNSService final : public nsPIDNSService,
 
   // mLock protects access to mResolver, mLocalDomains, mIPv4OnlyDomains and
   // mFailedSVCDomainNames
-  mozilla::Mutex mLock{"nsDNSServer.mLock"};
+  mozilla::Mutex mLock;
 
   // mIPv4OnlyDomains is a comma-separated list of domains for which only
   // IPv4 DNS lookups are performed. This allows the user to disable IPv6 on
   // a per-domain basis and work around broken DNS servers. See bug 68796.
   nsCString mIPv4OnlyDomains;
   nsCString mForceResolve;
-  bool mDisableIPv6 = false;
-  bool mDisablePrefetch = false;
-  bool mBlockDotOnion = false;
-  bool mNotifyResolution = false;
-  bool mOfflineLocalhost = false;
-  bool mForceResolveOn = false;
+  bool mDisableIPv6;
+  bool mDisablePrefetch;
+  bool mBlockDotOnion;
+  bool mNotifyResolution;
+  bool mOfflineLocalhost;
+  bool mForceResolveOn;
   nsTHashSet<nsCString> mLocalDomains;
   RefPtr<mozilla::net::TRRService> mTrrService;
-  mozilla::Atomic<bool, mozilla::Relaxed> mHasSocksProxy{false};
+  mozilla::Atomic<bool, mozilla::Relaxed> mHasSocksProxy;
 
-  uint32_t mResCacheEntries = 0;
-  uint32_t mResCacheExpiration = 0;
-  uint32_t mResCacheGrace = 0;
-  bool mResolverPrefsUpdated = false;
+  uint32_t mResCacheEntries;
+  uint32_t mResCacheExpiration;
+  uint32_t mResCacheGrace;
+  bool mResolverPrefsUpdated;
   bool mODoHActivated = false;
   nsClassHashtable<nsCStringHashKey, nsTArray<nsCString>> mFailedSVCDomainNames;
 };
