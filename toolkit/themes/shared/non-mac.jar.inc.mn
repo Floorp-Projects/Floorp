@@ -22,7 +22,6 @@
   skin/classic/global/icons/search-textbox.svg             (../../windows/global/icons/search-textbox.svg)
 
   skin/classic/mozapps/downloads/unknownContentType.css      (../../windows/mozapps/downloads/unknownContentType.css)
-  skin/classic/mozapps/extensions/blocklist.css              (../../windows/mozapps/extensions/blocklist.css)
   skin/classic/mozapps/handling/handling.css                 (../../windows/mozapps/handling/handling.css)
   skin/classic/mozapps/profile/profileSelection.css          (../../windows/mozapps/profile/profileSelection.css)
 
