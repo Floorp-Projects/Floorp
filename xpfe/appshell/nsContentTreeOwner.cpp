@@ -68,27 +68,6 @@ class nsSiteWindow : public nsIEmbeddingSiteWindow {
   nsContentTreeOwner* mAggregator;
 };
 
-already_AddRefed<nsIWebBrowserChrome3>
-nsContentTreeOwner::GetWebBrowserChrome() {
-  if (!mAppWindow) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDocShell> docShell;
-  mAppWindow->GetDocShell(getter_AddRefs(docShell));
-
-  if (!docShell) {
-    return nullptr;
-  }
-
-  if (nsCOMPtr<nsIWebBrowserChrome3> chrome =
-          do_QueryActor("WebBrowserChrome", docShell->GetDocument())) {
-    return chrome.forget();
-  }
-
-  return nullptr;
-}
-
 //*****************************************************************************
 //***    nsContentTreeOwner: Object Management
 //*****************************************************************************
@@ -113,7 +92,6 @@ NS_INTERFACE_MAP_BEGIN(nsContentTreeOwner)
   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome3)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
   // NOTE: This is using aggregation because there are some properties and
@@ -167,13 +145,6 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID,
   if (aIID.Equals(NS_GET_IID(nsIAppWindow))) {
     NS_ENSURE_STATE(mAppWindow);
     return mAppWindow->QueryInterface(aIID, aSink);
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome3))) {
-    if (nsCOMPtr<nsIWebBrowserChrome3> chrome = GetWebBrowserChrome()) {
-      chrome.forget(aSink);
-      return NS_OK;
-    }
   }
 
   return QueryInterface(aIID, aSink);
@@ -359,26 +330,6 @@ NS_IMETHODIMP
 nsContentTreeOwner::GetHasPrimaryContent(bool* aResult) {
   NS_ENSURE_STATE(mAppWindow);
   return mAppWindow->GetHasPrimaryContent(aResult);
-}
-
-//*****************************************************************************
-// nsContentTreeOwner::nsIWebBrowserChrome3
-//*****************************************************************************
-
-NS_IMETHODIMP nsContentTreeOwner::OnBeforeLinkTraversal(
-    const nsAString& originalTarget, nsIURI* linkURI, nsINode* linkNode,
-    bool isAppTab, nsAString& _retval) {
-  NS_ENSURE_STATE(mAppWindow);
-
-  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
-  mAppWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
-
-  if (xulBrowserWindow)
-    return xulBrowserWindow->OnBeforeLinkTraversal(originalTarget, linkURI,
-                                                   linkNode, isAppTab, _retval);
-
-  _retval = originalTarget;
-  return NS_OK;
 }
 
 //*****************************************************************************

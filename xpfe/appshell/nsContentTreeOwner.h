@@ -16,7 +16,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIWebBrowserChrome3.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsIWindowProvider.h"
 
 namespace mozilla {
@@ -27,7 +27,7 @@ class nsSiteWindow;
 class nsContentTreeOwner final : public nsIDocShellTreeOwner,
                                  public nsIBaseWindow,
                                  public nsIInterfaceRequestor,
-                                 public nsIWebBrowserChrome3,
+                                 public nsIWebBrowserChrome,
                                  public nsIWindowProvider {
   friend class mozilla::AppWindow;
   friend class nsSiteWindow;
@@ -39,7 +39,6 @@ class nsContentTreeOwner final : public nsIDocShellTreeOwner,
   NS_DECL_NSIDOCSHELLTREEOWNER
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBBROWSERCHROME
-  NS_DECL_NSIWEBBROWSERCHROME3
   NS_DECL_NSIWINDOWPROVIDER
 
  protected:
@@ -48,9 +47,6 @@ class nsContentTreeOwner final : public nsIDocShellTreeOwner,
 
   void AppWindow(mozilla::AppWindow* aAppWindow);
   mozilla::AppWindow* AppWindow();
-
- private:
-  already_AddRefed<nsIWebBrowserChrome3> GetWebBrowserChrome();
 
  protected:
   mozilla::AppWindow* mAppWindow;
