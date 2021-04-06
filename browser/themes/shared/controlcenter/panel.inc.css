@@ -276,17 +276,6 @@
 
 #protections-popup-mainView-panel-header-section {
   overflow: hidden;
-  color: white;
-  background: radial-gradient(circle farthest-side at top right, #9059FF, #0250BB);
-  /* Set custom hover/focus/active states on the info button,
-     to make them more visible on the header background */
-  --arrowpanel-dimmed: rgba(12, 12, 13, 0.2);
-  --arrowpanel-dimmed-further: rgba(12, 12, 13, 0.3);
-  --arrowpanel-dimmed-even-further: rgba(12, 12, 13, 0.4);
-}
-
-#protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
-  background: radial-gradient(circle farthest-side at top left, #9059FF, #0250BB);
 }
 
 #permission-popup-mainView-panel-header-span,
@@ -787,8 +776,7 @@ description#identity-popup-content-verifier,
   fill: rgb(224, 41, 29);
 }
 
-.protections-popup-category-label,
-.protections-popup-footer-button-label {
+.protections-popup-category-label {
   margin-inline-start: 1em;
 }
 
@@ -1003,20 +991,6 @@ description#identity-popup-content-verifier,
   margin: 0;
 }
 
-.protections-popup-footer-icon {
-  -moz-context-properties: fill;
-  width: 16px;
-  height: 16px;
-}
-
-.protections-popup-settings-icon {
-  list-style-image: url(chrome://global/skin/icons/settings.svg);
-}
-
-.protections-popup-show-report-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/dashboard.svg);
-}
-
 #protections-popup-footer {
   padding: var(--vertical-section-padding) 0;
 }
@@ -1123,3 +1097,38 @@ description#identity-popup-content-verifier,
   fill: #ffd567;
   stroke: #ffbd4f;
 }
+
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#protections-popup-mainView-panel-header-section {
+  color: white;
+  background: radial-gradient(circle farthest-side at top right, #9059FF, #0250BB);
+
+  /* Set custom hover/focus/active states on the info button,
+     to make them more visible on the header background */
+  --arrowpanel-dimmed: rgba(12, 12, 13, 0.2);
+  --arrowpanel-dimmed-further: rgba(12, 12, 13, 0.3);
+  --arrowpanel-dimmed-even-further: rgba(12, 12, 13, 0.4);
+}
+
+#protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
+  background: radial-gradient(circle farthest-side at top left, #9059FF, #0250BB);
+}
+
+.protections-popup-footer-icon {
+  -moz-context-properties: fill;
+  width: 16px;
+  height: 16px;
+}
+
+.protections-popup-settings-icon {
+  list-style-image: url(chrome://global/skin/icons/settings.svg);
+}
+
+.protections-popup-show-report-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/dashboard.svg);
+}
+
+.protections-popup-footer-button-label {
+  margin-inline-start: 1em;
+}
+}/** END not PROTON **/
