@@ -148,7 +148,7 @@ var ClientIDImpl = {
     // Try to load the client id from the DRS state file.
     let hasCurrentClientID = false;
     try {
-      let state = await CommonUtils.readJSON(gStateFilePath);
+      let state = await IOUtils.readJSON(gStateFilePath);
       if (state) {
         try {
           if (Services.prefs.prefHasUserValue(PREF_CACHED_CLIENTID)) {
@@ -220,18 +220,17 @@ var ClientIDImpl = {
       let obj = {
         clientID: this._clientID,
       };
-      try {
-        await IOUtils.makeDirectory(gDatareportingPath);
-      } catch (ex) {
-        if (!(ex instanceof DOMException) || ex.name !== "AbortError") {
-          throw ex;
-        }
-      }
-      await CommonUtils.writeJSON(obj, gStateFilePath);
+      await IOUtils.makeDirectory(gDatareportingPath);
+      await IOUtils.writeJSON(gStateFilePath, obj, {
+        tmpPath: `${gStateFilePath}.tmp`,
+      });
       this._saveClientIdTask = null;
     } catch (ex) {
       Services.telemetry.scalarAdd("telemetry.state_file_save_errors", 1);
-      throw ex;
+
+      if (!(ex instanceof DOMException) || ex.name !== "AbortError") {
+        throw ex;
+      }
     }
   },
 
