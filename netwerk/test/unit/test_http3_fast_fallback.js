@@ -460,7 +460,7 @@ add_task(async function testFastfallbackWithEchConfig() {
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
-    1000
+    50
   );
 
   await trrServer.registerDoHAnswers("test.ech.org", "HTTPS", {
@@ -564,7 +564,7 @@ add_task(async function testFastfallbackWithpartialEchConfig() {
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
-    1000
+    50
   );
 
   await trrServer.registerDoHAnswers("test.partial_ech.org", "HTTPS", {
@@ -634,7 +634,7 @@ add_task(async function testFastfallbackWithoutEchConfig() {
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
-    1000
+    50
   );
 
   await trrServer.registerDoHAnswers("test.no_ech_h2.org", "HTTPS", {
