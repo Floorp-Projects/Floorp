@@ -24,7 +24,6 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -824,18 +823,10 @@ void HangMonitorParent::SendHangNotification(const HangData& aHangData,
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   nsString dumpId;
-  if ((aHangData.type() == HangData::TPluginHangData) && aTakeMinidump) {
-    // We've been handed a partial minidump; complete it with plugin and
-    // content process dumps.
-    const PluginHangData& phd = aHangData.get_PluginHangData();
+  MOZ_ASSERT(aHangData.type() != HangData::TPluginHangData);
 
-    plugins::TakeFullMinidump(phd.pluginId(), phd.contentProcessId(),
-                              aBrowserDumpId, dumpId);
-    UpdateMinidump(phd.pluginId(), dumpId);
-  } else {
-    // We already have a full minidump; go ahead and use it.
-    dumpId = aBrowserDumpId;
-  }
+  // We already have a full minidump; go ahead and use it.
+  dumpId = aBrowserDumpId;
 
   mProcess->SetHangData(aHangData, dumpId);
 
@@ -1140,23 +1131,7 @@ HangMonitoredProcess::EndStartingDebugger() {
 }
 
 NS_IMETHODIMP
-HangMonitoredProcess::TerminatePlugin() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (mHangData.type() != HangData::TPluginHangData) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Use the multi-process crash report generated earlier.
-  uint32_t id = mHangData.get_PluginHangData().pluginId();
-  base::ProcessId contentPid =
-      mHangData.get_PluginHangData().contentProcessId();
-  plugins::TerminatePlugin(id, contentPid, "HangMonitor"_ns, mDumpId);
-
-  if (mActor) {
-    mActor->CleanupPluginHang(id, false);
-  }
-  return NS_OK;
-}
+HangMonitoredProcess::TerminatePlugin() { return NS_ERROR_UNEXPECTED; }
 
 NS_IMETHODIMP
 HangMonitoredProcess::IsReportForBrowserOrChildren(nsFrameLoader* aFrameLoader,

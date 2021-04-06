@@ -11,29 +11,27 @@
 #include "nsTArray.h"
 #include "nsPIDOMWindow.h"
 #include "nsITimer.h"
-#include "nsIPluginInstanceOwner.h"
 #include "nsHashKeys.h"
 #include <prinrval.h>
 #include "js/TypeDecls.h"
 #include "AudioChannelAgent.h"
+#include "npapi.h"
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/PluginLibrary.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/PopupBlocker.h"
 
-class nsPluginStreamListenerPeer;   // browser-initiated stream class
-class nsNPAPIPluginStreamListener;  // plugin-initiated stream class
-class nsIPluginInstanceOwner;
 class nsIOutputStream;
-class nsPluginInstanceOwner;
 
 namespace mozilla {
 namespace dom {
 class Element;
 }  // namespace dom
+namespace layers {
+class ImageContainer;
+}  // namespace layers
 }  // namespace mozilla
 
 #if defined(OS_WIN)
@@ -79,17 +77,12 @@ class nsNPAPITimer {
 
 class nsNPAPIPluginInstance final : public nsIAudioChannelAgentCallback,
                                     public mozilla::SupportsWeakPtr {
- private:
-  typedef mozilla::PluginLibrary PluginLibrary;
-
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
-  nsresult Initialize(nsNPAPIPlugin* aPlugin, nsPluginInstanceOwner* aOwner,
-                      const nsACString& aMIMEType);
   nsresult Start();
   nsresult Stop();
   nsresult SetWindow(NPWindow* window);
@@ -127,8 +120,6 @@ class nsNPAPIPluginInstance final : public nsIAudioChannelAgentCallback,
   nsresult GetScrollCaptureContainer(
       mozilla::layers::ImageContainer** aContainer);
 #endif
-  nsPluginInstanceOwner* GetOwner();
-  void SetOwner(nsPluginInstanceOwner* aOwner);
   void DidComposite();
 
   bool HasAudioChannelAgent() const { return !!mAudioChannelAgent; }
@@ -137,8 +128,6 @@ class nsNPAPIPluginInstance final : public nsIAudioChannelAgentCallback,
   void NotifyStoppedPlaying();
 
   nsresult SetMuted(bool aIsMuted);
-
-  nsNPAPIPlugin* GetPlugin();
 
   nsresult GetNPP(NPP* aNPP);
 
@@ -158,9 +147,6 @@ class nsNPAPIPluginInstance final : public nsIAudioChannelAgentCallback,
 
   void* GetCurrentEvent() { return mCurrentPluginEvent; }
 #endif
-
-  nsresult NewStreamListener(const char* aURL, void* notifyData,
-                             nsNPAPIPluginStreamListener** listener);
 
   nsNPAPIPluginInstance();
 
@@ -199,10 +185,6 @@ class nsNPAPIPluginInstance final : public nsIAudioChannelAgentCallback,
                       NPCoordinateSpace sourceSpace, double* destX,
                       double* destY, NPCoordinateSpace destSpace);
 
-  nsTArray<nsNPAPIPluginStreamListener*>* StreamListeners();
-
-  nsTArray<nsPluginStreamListenerPeer*>* FileCachedStreamListeners();
-
   nsresult AsyncSetWindow(NPWindow& window);
 
   void URLRedirectResponse(void* notifyData, NPBool allow);
@@ -238,8 +220,6 @@ class nsNPAPIPluginInstance final : public nsIAudioChannelAgentCallback,
  protected:
   virtual ~nsNPAPIPluginInstance();
 
-  nsresult GetTagType(nsPluginTagType* result);
-
   nsresult CreateAudioChannelAgentIfNeeded();
 
   void NotifyAudibleStateChanged() const;
@@ -266,19 +246,9 @@ class nsNPAPIPluginInstance final : public nsIAudioChannelAgentCallback,
   bool mInPluginInitCall;
 
  private:
-  RefPtr<nsNPAPIPlugin> mPlugin;
-
-  nsTArray<nsNPAPIPluginStreamListener*> mStreamListeners;
-
-  nsTArray<nsPluginStreamListenerPeer*> mFileCachedStreamListeners;
-
   nsTArray<mozilla::dom::PopupBlocker::PopupControlState> mPopupStates;
 
   char* mMIMEType;
-
-  // Weak pointer to the owner. The owner nulls this out (by calling
-  // InvalidateOwner()) when it's no longer our owner.
-  nsPluginInstanceOwner* mOwner;
 
   nsTArray<nsNPAPITimer*> mTimers;
 
