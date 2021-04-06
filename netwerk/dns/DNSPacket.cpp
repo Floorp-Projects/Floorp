@@ -1393,9 +1393,8 @@ static SECStatus HKDFExtract(SECItem* aSalt, PK11SymKey* aIkm,
   return SECSuccess;
 }
 
-static SECStatus HKDFExpand(PK11SymKey* aPrk, const SECItem* aInfo,
-                            unsigned int aLen, bool aKey,
-                            UniquePK11SymKey& aOutKey) {
+static SECStatus HKDFExpand(PK11SymKey* aPrk, const SECItem* aInfo, int aLen,
+                            bool aKey, UniquePK11SymKey& aOutKey) {
   CK_HKDF_PARAMS params = {0};
   SECItem paramsItem = {siBuffer, (unsigned char*)&params, sizeof(params)};
 
@@ -1449,8 +1448,8 @@ bool ODoHDNSPacket::DecryptDNSResponse() {
   const SECItem kODoHSecretInfoItem = {
       siBuffer, (unsigned char*)kODoHSecret,
       static_cast<unsigned int>(strlen(kODoHSecret))};
-  const unsigned int kAes128GcmKeyLen = 16;
-  const unsigned int kAes128GcmNonceLen = 12;
+  const int kAes128GcmKeyLen = 16;
+  const int kAes128GcmNonceLen = 12;
   PK11SymKey* tmp = nullptr;
   SECStatus rv =
       PK11_HPKE_ExportSecret(mContext, &kODoHSecretInfoItem, 32, &tmp);

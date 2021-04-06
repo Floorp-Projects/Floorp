@@ -85,12 +85,12 @@ class DNSRequestSender final : public DNSRequestBase, public nsICancelable {
   nsCOMPtr<nsIDNSListener> mListener;
   nsCOMPtr<nsIEventTarget> mTarget;
   nsCOMPtr<nsIDNSRecord> mResultRecord;
-  nsresult mResultStatus;
+  nsresult mResultStatus = NS_OK;
   nsCString mHost;
   nsCString mTrrServer;
-  uint16_t mType;
+  uint16_t mType = 0;
   const OriginAttributes mOriginAttributes;
-  uint16_t mFlags;
+  uint16_t mFlags = 0;
 };
 
 // DNSRequestHandler handles the dns request and sends the result back via IPC.
@@ -100,7 +100,7 @@ class DNSRequestHandler final : public DNSRequestBase, public nsIDNSListener {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
 
-  DNSRequestHandler();
+  DNSRequestHandler() = default;
 
   void DoAsyncResolve(const nsACString& hostname, const nsACString& trrServer,
                       uint16_t type, const OriginAttributes& originAttributes,
@@ -120,7 +120,7 @@ class DNSRequestHandler final : public DNSRequestBase, public nsIDNSListener {
  private:
   virtual ~DNSRequestHandler() = default;
 
-  uint32_t mFlags;
+  uint32_t mFlags = 0;
 };
 
 // Provides some common methods for DNSRequestChild and DNSRequestParent.
