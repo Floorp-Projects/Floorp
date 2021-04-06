@@ -2,21 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals global, documentMetadata, util, uicontrol, ui, catcher */
+/* globals global, browser, documentMetadata, util, uicontrol, ui, catcher */
 /* globals buildSettings, domainFromUrl, randomString, shot, blobConverters */
 
 "use strict";
 
-this.shooter = (function() { // eslint-disable-line no-unused-vars
+this.shooter = (function() {
+  // eslint-disable-line no-unused-vars
   const exports = {};
   const { AbstractShot } = shot;
 
   const RANDOM_STRING_LENGTH = 16;
-  const MAX_CANVAS_DIMENSION = 32767;
   let backend;
   let shotObject;
   const callBackground = global.callBackground;
-  const clipboard = global.clipboard;
 
   function regexpEscape(str) {
     // http://stackoverflow.com/questions/3115150/how-to-escape-regular-expression-special-characters-using-javascript
@@ -25,7 +24,10 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
 
   function sanitizeError(data) {
     const href = new RegExp(regexpEscape(window.location.href), "g");
-    const origin = new RegExp(`${regexpEscape(window.location.origin)}[^ \t\n\r",>]*`, "g");
+    const origin = new RegExp(
+      `${regexpEscape(window.location.origin)}[^ \t\n\r",>]*`,
+      "g"
+    );
     const json = JSON.stringify(data)
       .replace(href, "REDACTED_HREF")
       .replace(origin, "REDACTED_URL");
@@ -33,7 +35,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     return result;
   }
 
-  catcher.registerHandler((errorObj) => {
+  catcher.registerHandler(errorObj => {
     callBackground("reportError", sanitizeError(errorObj));
   });
 
@@ -51,42 +53,53 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
         "screenshotPage",
         selectedPos.toJSON(),
         isFullPage,
-        window.devicePixelRatio);
+        window.devicePixelRatio
+      );
     }
 
-    catcher.watchPromise(promise.then((dataUrl) => {
-      screenshotTaskFn(dataUrl);
-    }));
+    catcher.watchPromise(
+      promise.then(dataLoc => {
+        screenshotTaskFn(dataLoc);
+      })
+    );
   }
 
   exports.downloadShot = function(selectedPos, previewDataUrl, type) {
-    const shotPromise = previewDataUrl ? Promise.resolve(previewDataUrl) : hideUIFrame();
-    catcher.watchPromise(shotPromise.then(dataUrl => {
-      screenshotPage(dataUrl, selectedPos, type, url => {
-        let type = blobConverters.getTypeFromDataUrl(url);
-        type = type ? type.split("/", 2)[1] : null;
-        shotObject.delAllClips();
-        shotObject.addClip({
-          createdDate: Date.now(),
-          image: {
-            url,
-            type,
-            location: selectedPos,
-          },
+    const shotPromise = previewDataUrl
+      ? Promise.resolve(previewDataUrl)
+      : hideUIFrame();
+    catcher.watchPromise(
+      shotPromise.then(dataUrl => {
+        screenshotPage(dataUrl, selectedPos, type, url => {
+          let typeFromDataUrl = blobConverters.getTypeFromDataUrl(url);
+          typeFromDataUrl = typeFromDataUrl
+            ? typeFromDataUrl.split("/", 2)[1]
+            : null;
+          shotObject.delAllClips();
+          shotObject.addClip({
+            createdDate: Date.now(),
+            image: {
+              url,
+              type: typeFromDataUrl,
+              location: selectedPos,
+            },
+          });
+          ui.triggerDownload(url, shotObject.filename);
+          uicontrol.deactivate();
         });
-        ui.triggerDownload(url, shotObject.filename);
-        uicontrol.deactivate();
-      });
-    }));
+      })
+    );
   };
 
   exports.preview = function(selectedPos, type) {
-    catcher.watchPromise(hideUIFrame().then(dataUrl => {
-      screenshotPage(dataUrl, selectedPos, type, url => {
-        ui.iframe.usePreview();
-        ui.Preview.display(url);
-      });
-    }));
+    catcher.watchPromise(
+      hideUIFrame().then(dataUrl => {
+        screenshotPage(dataUrl, selectedPos, type, url => {
+          ui.iframe.usePreview();
+          ui.Preview.display(url);
+        });
+      })
+    );
   };
 
   let copyInProgress = null;
@@ -107,16 +120,22 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
         copyInProgress = null;
       }
     };
-    const shotPromise = previewDataUrl ? Promise.resolve(previewDataUrl) : hideUIFrame();
-    catcher.watchPromise(shotPromise.then(dataUrl => {
-      screenshotPage(dataUrl, selectedPos, type, url => {
-        const blob = blobConverters.dataUrlToBlob(url);
-        catcher.watchPromise(callBackground("copyShotToClipboard", blob).then(() => {
-          uicontrol.deactivate();
-          unsetCopyInProgress();
-        }, unsetCopyInProgress));
-      });
-    }));
+    const shotPromise = previewDataUrl
+      ? Promise.resolve(previewDataUrl)
+      : hideUIFrame();
+    catcher.watchPromise(
+      shotPromise.then(dataUrl => {
+        screenshotPage(dataUrl, selectedPos, type, url => {
+          const blob = blobConverters.dataUrlToBlob(url);
+          catcher.watchPromise(
+            callBackground("copyShotToClipboard", blob).then(() => {
+              uicontrol.deactivate();
+              unsetCopyInProgress();
+            }, unsetCopyInProgress)
+          );
+        });
+      })
+    );
   };
 
   exports.sendEvent = function(...args) {
@@ -125,7 +144,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     if (typeof maybeOptions === "object") {
       maybeOptions.incognito = browser.extension.inIncognitoContext;
     } else {
-      args.push({incognito: browser.extension.inIncognitoContext});
+      args.push({ incognito: browser.extension.inIncognitoContext });
     }
 
     callBackground("sendEvent", ...args);
