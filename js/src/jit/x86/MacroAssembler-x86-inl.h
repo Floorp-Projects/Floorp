@@ -976,6 +976,21 @@ void MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr,
   bind(&notMagic);
 }
 
+void MacroAssembler::branchTestValue(Condition cond, const BaseIndex& lhs,
+                                     const ValueOperand& rhs, Label* label) {
+  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+  Label notSameValue;
+  if (cond == Assembler::Equal) {
+    branch32(Assembler::NotEqual, ToType(lhs), rhs.typeReg(), &notSameValue);
+  } else {
+    branch32(Assembler::NotEqual, ToType(lhs), rhs.typeReg(), label);
+  }
+
+  branch32(cond, ToPayload(lhs), rhs.payloadReg(), label);
+  bind(&notSameValue);
+}
+
 void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {
   jmp(Operand(addr));
 }

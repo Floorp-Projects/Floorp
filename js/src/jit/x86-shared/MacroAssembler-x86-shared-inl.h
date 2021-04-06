@@ -537,6 +537,11 @@ void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
   branchPtrImpl(cond, lhs, rhs, label);
 }
 
+void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
+                               Register rhs, Label* label) {
+  branchPtrImpl(cond, lhs, rhs, label);
+}
+
 template <typename T, typename S, typename L>
 void MacroAssembler::branchPtrImpl(Condition cond, const T& lhs, const S& rhs,
                                    L label) {

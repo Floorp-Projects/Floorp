@@ -66,6 +66,7 @@ class MacroAssemblerARM : public Assembler {
     return Operand(Register::FromCode(base.base()), base.disp());
   }
   Address ToPayload(const Address& base) const { return base; }
+  BaseIndex ToPayload(const BaseIndex& base) const { return base; }
 
  protected:
   Operand ToType(Operand base) const {
@@ -74,6 +75,10 @@ class MacroAssemblerARM : public Assembler {
   }
   Address ToType(const Address& base) const {
     return ToType(Operand(base)).toAddress();
+  }
+  BaseIndex ToType(const BaseIndex& base) const {
+    return BaseIndex(base.base, base.index, base.scale,
+                     base.offset + sizeof(void*));
   }
 
   Address ToPayloadAfterStackPush(const Address& base) const {

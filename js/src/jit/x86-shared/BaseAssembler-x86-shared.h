@@ -1763,6 +1763,13 @@ class BaseAssembler : public GenericAssembler {
     m_formatter.oneByteOp(OP_CMP_EvGv, offset, base, rhs);
   }
 
+  void cmpl_rm(RegisterID rhs, int32_t offset, RegisterID base,
+               RegisterID index, int scale) {
+    spew("cmpl       %s, " MEM_obs, GPReg32Name(rhs),
+         ADDR_obs(offset, base, index, scale));
+    m_formatter.oneByteOp(OP_CMP_EvGv, offset, base, index, scale, rhs);
+  }
+
   void cmpl_mr(int32_t offset, RegisterID base, RegisterID lhs) {
     spew("cmpl       " MEM_ob ", %s", ADDR_ob(offset, base), GPReg32Name(lhs));
     m_formatter.oneByteOp(OP_CMP_GvEv, offset, base, lhs);
