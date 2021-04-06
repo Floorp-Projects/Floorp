@@ -15,7 +15,7 @@ function promiseElementVisible(element) {
   // HTMLElement.offsetParent is null when the element is not visisble
   // (or if the element has |position: fixed|). See:
   // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetParent
-  return BrowserTestUtils.waitForCondition(
+  return TestUtils.waitForCondition(
     () => element.offsetParent !== null,
     "Waiting for element to be visible"
   );
