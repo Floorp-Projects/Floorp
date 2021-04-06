@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 class RemoteAgentError extends Error {
   constructor(message = "", cause = undefined) {
@@ -37,7 +37,7 @@ class RemoteAgentError extends Error {
 
   notify() {
     Cu.reportError(this);
-    log.error(this.toString({ stack: true }));
+    logger.error(this.toString({ stack: true }));
   }
 
   toString({ stack = false } = {}) {
@@ -94,7 +94,7 @@ class FatalError extends RemoteAgentError {
   }
 
   notify() {
-    log.fatal(this.toString({ stack: true }));
+    logger.fatal(this.toString({ stack: true }));
   }
 
   quit(mode = Ci.nsIAppStartup.eForceQuit) {

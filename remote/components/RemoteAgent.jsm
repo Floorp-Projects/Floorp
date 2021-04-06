@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TargetList: "chrome://remote/content/cdp/targets/TargetList.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "log", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 const ENABLED = "remote.enabled";
 const FORCE_LOCAL = "remote.force-local";
@@ -82,7 +82,7 @@ class RemoteAgentClass {
 
     for (let [k, v] of RecommendedPreferences) {
       if (!Preferences.isSet(k)) {
-        log.debug(`Setting recommended pref ${k} to ${v}`);
+        logger.debug(`Setting recommended pref ${k} to ${v}`);
         Preferences.set(k, v);
         this.alteredPrefs.add(k);
       }
@@ -118,14 +118,14 @@ class RemoteAgentClass {
       );
     } catch (e) {
       await this.close();
-      log.error(`Unable to start remote agent: ${e.message}`, e);
+      logger.error(`Unable to start remote agent: ${e.message}`, e);
     }
   }
 
   close() {
     try {
       for (let k of this.alteredPrefs) {
-        log.debug(`Resetting recommended pref ${k}`);
+        logger.debug(`Resetting recommended pref ${k}`);
         Preferences.reset(k);
       }
       this.alteredPrefs.clear();
@@ -141,7 +141,7 @@ class RemoteAgentClass {
       }
     } catch (e) {
       // this function must never fail
-      log.error("unable to stop listener", e);
+      logger.error("unable to stop listener", e);
     } finally {
       this.server = null;
       this.targetList = null;
