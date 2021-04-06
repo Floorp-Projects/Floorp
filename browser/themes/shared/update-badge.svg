@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="10px" height="10px">
-  <line x1="5" x2="5" y1="9" y2="2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="5" x2="2" y1="2" y2="5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="5" x2="8" y1="2" y2="5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="5" x2="5" y1="9" y2="2" stroke="context-stroke #fff" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="5" x2="2" y1="2" y2="5" stroke="context-stroke #fff" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="5" x2="8" y1="2" y2="5" stroke="context-stroke #fff" stroke-width="1.5" stroke-linecap="round"/>
 </svg>
