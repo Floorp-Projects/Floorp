@@ -492,7 +492,7 @@ add_task(async function test_Multistage_About_Welcome_navigation() {
   let browser = await openAboutWelcome();
 
   await onButtonClick(browser, "button.primary");
-  await BrowserTestUtils.waitForCondition(() => browser.canGoBack);
+  await TestUtils.waitForCondition(() => browser.canGoBack);
   browser.goBack();
 
   await test_screen_content(
@@ -857,7 +857,7 @@ add_task(async function test_updatesPrefOnAWOpen() {
   await setAboutWelcomePref(true);
 
   await openAboutWelcome();
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       Services.prefs.getBoolPref(DID_SEE_ABOUT_WELCOME_PREF, false) === true,
     "Updated pref to seen AW"
