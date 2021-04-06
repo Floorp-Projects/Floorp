@@ -89,7 +89,6 @@
 #include "nsPluginInstanceOwner.h"
 #include "nsPluginLogging.h"
 #include "nsPluginNativeWindow.h"
-#include "nsPluginStreamListenerPeer.h"
 #include "nsPluginTags.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
@@ -122,8 +121,6 @@ using mozilla::dom::Document;
 using mozilla::dom::FakePluginMimeEntry;
 using mozilla::dom::FakePluginTagInit;
 using mozilla::dom::Promise;
-using mozilla::plugins::FakePluginTag;
-using mozilla::plugins::PluginTag;
 
 // Null out a strong ref to a linked list iteratively to avoid
 // exhausting the stack (bug 486349).
@@ -352,25 +349,7 @@ already_AddRefed<nsPluginHost> nsPluginHost::GetInst() {
   return do_AddRef(sInst);
 }
 
-bool nsPluginHost::IsRunningPlugin(nsPluginTag* aPluginTag) {
-  if (!aPluginTag || !aPluginTag->mPlugin) {
-    return false;
-  }
-
-  if (aPluginTag->mContentProcessRunningCount) {
-    return true;
-  }
-
-  for (uint32_t i = 0; i < mInstances.Length(); i++) {
-    nsNPAPIPluginInstance* instance = mInstances[i].get();
-    if (instance && instance->GetPlugin() == aPluginTag->mPlugin &&
-        instance->IsRunning()) {
-      return true;
-    }
-  }
-
-  return false;
-}
+bool nsPluginHost::IsRunningPlugin(nsPluginTag* aPluginTag) { return false; }
 
 nsresult nsPluginHost::ReloadPlugins() {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::ReloadPlugins\n"));
@@ -466,98 +445,6 @@ nsresult nsPluginHost::UserAgent(const char** retstring) {
   return res;
 }
 
-nsresult nsPluginHost::GetURL(nsISupports* pluginInst, const char* url,
-                              const char* target,
-                              nsNPAPIPluginStreamListener* streamListener,
-                              const char* altHost, const char* referrer,
-                              bool forceJSEnabled) {
-  return GetURLWithHeaders(static_cast<nsNPAPIPluginInstance*>(pluginInst), url,
-                           target, streamListener, altHost, referrer,
-                           forceJSEnabled, 0, nullptr);
-}
-
-nsresult nsPluginHost::GetURLWithHeaders(
-    nsNPAPIPluginInstance* pluginInst, const char* url, const char* target,
-    nsNPAPIPluginStreamListener* streamListener, const char* altHost,
-    const char* referrer, bool forceJSEnabled, uint32_t getHeadersLength,
-    const char* getHeaders) {
-  // we can only send a stream back to the plugin (as specified by a
-  // null target) if we also have a nsNPAPIPluginStreamListener to talk to
-  if (!target && !streamListener) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  nsresult rv = NS_OK;
-
-  if (target) {
-    RefPtr<nsPluginInstanceOwner> owner = pluginInst->GetOwner();
-    if (owner) {
-      rv = owner->GetURL(url, target, nullptr, nullptr, 0, true);
-    }
-  }
-
-  if (streamListener) {
-    rv = NewPluginURLStream(NS_ConvertUTF8toUTF16(url), pluginInst,
-                            streamListener, nullptr, getHeaders,
-                            getHeadersLength);
-  }
-  return rv;
-}
-
-nsresult nsPluginHost::PostURL(nsISupports* pluginInst, const char* url,
-                               uint32_t postDataLen, const char* postData,
-                               const char* target,
-                               nsNPAPIPluginStreamListener* streamListener,
-                               const char* altHost, const char* referrer,
-                               bool forceJSEnabled, uint32_t postHeadersLength,
-                               const char* postHeaders) {
-  nsresult rv;
-
-  // we can only send a stream back to the plugin (as specified
-  // by a null target) if we also have a nsNPAPIPluginStreamListener
-  // to talk to also
-  if (!target && !streamListener) return NS_ERROR_ILLEGAL_VALUE;
-
-  nsNPAPIPluginInstance* instance =
-      static_cast<nsNPAPIPluginInstance*>(pluginInst);
-
-  nsCOMPtr<nsIInputStream> postStream;
-  char* dataToPost;
-  uint32_t newDataToPostLen;
-  ParsePostBufferToFixHeaders(postData, postDataLen, &dataToPost,
-                              &newDataToPostLen);
-  if (!dataToPost) return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIStringInputStream> sis =
-      do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
-  if (!sis) {
-    free(dataToPost);
-    return rv;
-  }
-
-  // data allocated by ParsePostBufferToFixHeaders() is managed and
-  // freed by the string stream.
-  postDataLen = newDataToPostLen;
-  sis->AdoptData(dataToPost, postDataLen);
-  postStream = sis;
-
-  if (target) {
-    RefPtr<nsPluginInstanceOwner> owner = instance->GetOwner();
-    if (owner) {
-      rv = owner->GetURL(url, target, postStream, (void*)postHeaders,
-                         postHeadersLength, true);
-    }
-  }
-
-  // if we don't have a target, just create a stream.
-  if (streamListener) {
-    rv =
-        NewPluginURLStream(NS_ConvertUTF8toUTF16(url), instance, streamListener,
-                           postStream, postHeaders, postHeadersLength);
-  }
-  return rv;
-}
-
 nsresult nsPluginHost::UnloadPlugins() {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::UnloadPlugins Called\n"));
 
@@ -579,104 +466,13 @@ nsresult nsPluginHost::UnloadPlugins() {
     sPluginTempDir->Remove(true);
     NS_RELEASE(sPluginTempDir);
   }
-  mSerializablePlugins.Clear();
-  mSerializableFakePlugins.Clear();
 
   mPluginsLoaded = false;
 
   return NS_OK;
 }
 
-void nsPluginHost::OnPluginInstanceDestroyed(nsPluginTag* aPluginTag) {
-  bool hasInstance = false;
-  for (uint32_t i = 0; i < mInstances.Length(); i++) {
-    if (TagForPlugin(mInstances[i]->GetPlugin()) == aPluginTag) {
-      hasInstance = true;
-      break;
-    }
-  }
-
-  if (!hasInstance) {
-    aPluginTag->TryUnloadPlugin(false);
-  }
-}
-
-nsresult nsPluginHost::InstantiatePluginInstance(
-    const nsACString& aMimeType, nsIURI* aURL, nsObjectLoadingContent* aContent,
-    nsPluginInstanceOwner** aOwner) {
-  NS_ENSURE_ARG_POINTER(aOwner);
-
-#ifdef PLUGIN_LOGGING
-  nsAutoCString urlSpec;
-  if (aURL) aURL->GetAsciiSpec(urlSpec);
-
-  MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-          ("nsPluginHost::InstantiatePlugin Begin mime=%s, url=%s\n",
-           PromiseFlatCString(aMimeType).get(), urlSpec.get()));
-
-  PR_LogFlush();
-#endif
-
-  if (aMimeType.IsEmpty()) {
-    MOZ_ASSERT_UNREACHABLE("Attempting to spawn a plugin with no mime type");
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<nsPluginInstanceOwner> instanceOwner = new nsPluginInstanceOwner();
-  if (!instanceOwner) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIContent> ourContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(aContent));
-  nsresult rv = instanceOwner->Init(ourContent);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsPluginTagType tagType;
-  rv = instanceOwner->GetTagType(&tagType);
-  if (NS_FAILED(rv)) {
-    instanceOwner->Destroy();
-    return rv;
-  }
-
-  if (tagType != nsPluginTagType_Embed && tagType != nsPluginTagType_Object) {
-    instanceOwner->Destroy();
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = SetUpPluginInstance(aMimeType, aURL, instanceOwner);
-  if (NS_FAILED(rv)) {
-    instanceOwner->Destroy();
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<nsNPAPIPluginInstance> instance = instanceOwner->GetInstance();
-
-  if (instance) {
-    CreateWidget(instanceOwner);
-  }
-
-  // At this point we consider instantiation to be successful. Do not return an
-  // error.
-  instanceOwner.forget(aOwner);
-
-#ifdef PLUGIN_LOGGING
-  nsAutoCString urlSpec2;
-  if (aURL != nullptr) aURL->GetAsciiSpec(urlSpec2);
-
-  MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-          ("nsPluginHost::InstantiatePlugin Finished mime=%s, rv=%" PRIu32
-           ", url=%s\n",
-           PromiseFlatCString(aMimeType).get(), static_cast<uint32_t>(rv),
-           urlSpec2.get()));
-
-  PR_LogFlush();
-#endif
-
-  return NS_OK;
-}
+void nsPluginHost::OnPluginInstanceDestroyed(nsPluginTag* aPluginTag) {}
 
 nsPluginTag* nsPluginHost::FindTagForLibrary(PRLibrary* aLibrary) {
   nsPluginTag* pluginTag;
@@ -686,125 +482,6 @@ nsPluginTag* nsPluginHost::FindTagForLibrary(PRLibrary* aLibrary) {
     }
   }
   return nullptr;
-}
-
-nsPluginTag* nsPluginHost::TagForPlugin(nsNPAPIPlugin* aPlugin) {
-  nsPluginTag* pluginTag;
-  for (pluginTag = mPlugins; pluginTag; pluginTag = pluginTag->mNext) {
-    if (pluginTag->mPlugin == aPlugin) {
-      return pluginTag;
-    }
-  }
-  // a plugin should never exist without a corresponding tag
-  NS_ERROR("TagForPlugin has failed");
-  return nullptr;
-}
-
-nsresult nsPluginHost::SetUpPluginInstance(const nsACString& aMimeType,
-                                           nsIURI* aURL,
-                                           nsPluginInstanceOwner* aOwner) {
-  NS_ENSURE_ARG_POINTER(aOwner);
-
-  nsresult rv = TrySetUpPluginInstance(aMimeType, aURL, aOwner);
-  if (NS_SUCCEEDED(rv)) {
-    return rv;
-  }
-
-  // If we failed to load a plugin instance we'll try again after
-  // reloading our plugin list. Only do that once per document to
-  // avoid redundant high resource usage on pages with multiple
-  // unkown instance types. We'll do that by caching the document.
-  nsCOMPtr<Document> document;
-  aOwner->GetDocument(getter_AddRefs(document));
-
-  nsCOMPtr<Document> currentdocument = do_QueryReferent(mCurrentDocument);
-  if (document == currentdocument) {
-    return rv;
-  }
-
-  mCurrentDocument = do_GetWeakReference(document);
-
-  // Don't try to set up an instance again if nothing changed.
-  if (ReloadPlugins() == NS_ERROR_PLUGINS_PLUGINSNOTCHANGED) {
-    return rv;
-  }
-
-  return TrySetUpPluginInstance(aMimeType, aURL, aOwner);
-}
-
-nsresult nsPluginHost::TrySetUpPluginInstance(const nsACString& aMimeType,
-                                              nsIURI* aURL,
-                                              nsPluginInstanceOwner* aOwner) {
-#ifdef PLUGIN_LOGGING
-  MOZ_LOG(
-      nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-      ("nsPluginHost::TrySetupPluginInstance Begin mime=%s, owner=%p, url=%s\n",
-       PromiseFlatCString(aMimeType).get(), aOwner,
-       aURL ? aURL->GetSpecOrDefault().get() : ""));
-
-  PR_LogFlush();
-#endif
-
-#ifdef XP_WIN
-  bool changed;
-  if ((mRegKeyHKLM && NS_SUCCEEDED(mRegKeyHKLM->HasChanged(&changed)) &&
-       changed) ||
-      (mRegKeyHKCU && NS_SUCCEEDED(mRegKeyHKCU->HasChanged(&changed)) &&
-       changed)) {
-    ReloadPlugins();
-  }
-#endif
-
-  RefPtr<nsNPAPIPlugin> plugin;
-  GetPlugin(aMimeType, getter_AddRefs(plugin));
-  if (!plugin) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsPluginTag* pluginTag = FindNativePluginForType(aMimeType, true);
-
-  NS_ASSERTION(pluginTag, "Must have plugin tag here!");
-
-  plugin->GetLibrary()->SetHasLocalInstance();
-
-  RefPtr<nsNPAPIPluginInstance> instance = new nsNPAPIPluginInstance();
-
-  // This will create the owning reference. The connection must be made between
-  // the instance and the instance owner before initialization. Plugins can call
-  // into the browser during initialization.
-  aOwner->SetInstance(instance.get());
-
-  // Add the instance to the instances list before we call NPP_New so that
-  // it is "in play" before NPP_New happens. Take it out if NPP_New fails.
-  mInstances.AppendElement(instance.get());
-
-  // this should not addref the instance or owner
-  // except in some cases not Java, see bug 140931
-  // our COM pointer will free the peer
-  nsresult rv = instance->Initialize(plugin.get(), aOwner, aMimeType);
-  if (NS_FAILED(rv)) {
-    mInstances.RemoveElement(instance.get());
-    aOwner->SetInstance(nullptr);
-    return rv;
-  }
-
-  // Cancel the plugin unload timer since we are creating
-  // an instance for it.
-  if (pluginTag->mUnloadTimer) {
-    pluginTag->mUnloadTimer->Cancel();
-  }
-
-#ifdef PLUGIN_LOGGING
-  MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-          ("nsPluginHost::TrySetupPluginInstance Finished mime=%s, rv=%" PRIu32
-           ", owner=%p, url=%s\n",
-           PromiseFlatCString(aMimeType).get(), static_cast<uint32_t>(rv),
-           aOwner, aURL ? aURL->GetSpecOrDefault().get() : ""));
-
-  PR_LogFlush();
-#endif
-
-  return rv;
 }
 
 bool nsPluginHost::HavePluginForType(const nsACString& aMimeType,
@@ -1090,57 +767,7 @@ nsPluginTag* nsPluginHost::FindNativePluginForExtension(
   return preferredPlugin;
 }
 
-static nsresult CreateNPAPIPlugin(nsPluginTag* aPluginTag,
-                                  nsNPAPIPlugin** aOutNPAPIPlugin) {
-  nsresult rv;
-  rv = nsNPAPIPlugin::CreatePlugin(aPluginTag, aOutNPAPIPlugin);
-
-  return rv;
-}
-
 nsresult nsPluginHost::EnsurePluginLoaded(nsPluginTag* aPluginTag) {
-  RefPtr<nsNPAPIPlugin> plugin = aPluginTag->mPlugin;
-  if (!plugin) {
-    nsresult rv = CreateNPAPIPlugin(aPluginTag, getter_AddRefs(plugin));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    aPluginTag->mPlugin = plugin;
-  }
-  return NS_OK;
-}
-
-nsresult nsPluginHost::GetPluginForContentProcess(uint32_t aPluginId,
-                                                  nsNPAPIPlugin** aPlugin) {
-  AUTO_PROFILER_LABEL("nsPluginHost::GetPluginForContentProcess", OTHER);
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  // If plugins haven't been scanned yet, do so now
-  LoadPlugins();
-
-  nsPluginTag* pluginTag = PluginWithId(aPluginId);
-  if (pluginTag) {
-    // When setting up a bridge, double check with chrome to see if this plugin
-    // is blocked hard. Note this does not protect against vulnerable plugins
-    // that the user has explicitly allowed. :(
-    if (pluginTag->IsBlocklisted()) {
-      return NS_ERROR_PLUGIN_BLOCKLISTED;
-    }
-
-    nsresult rv = EnsurePluginLoaded(pluginTag);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // We only get here if a content process doesn't have a PluginModuleParent
-    // for the given plugin already. Therefore, this counter is counting the
-    // number of outstanding PluginModuleParents for the plugin, excluding the
-    // one from the chrome process.
-    pluginTag->mContentProcessRunningCount++;
-    NS_ADDREF(*aPlugin = pluginTag->mPlugin);
-    return NS_OK;
-  }
-
   return NS_ERROR_FAILURE;
 }
 
@@ -1182,47 +809,6 @@ void nsPluginHost::NotifyContentModuleDestroyed(uint32_t aPluginId) {
   RefPtr<nsPluginUnloadRunnable> runnable =
       new nsPluginUnloadRunnable(aPluginId);
   NS_DispatchToMainThread(runnable);
-}
-
-nsresult nsPluginHost::GetPlugin(const nsACString& aMimeType,
-                                 nsNPAPIPlugin** aPlugin) {
-  nsresult rv = NS_ERROR_FAILURE;
-  *aPlugin = nullptr;
-
-  // If plugins haven't been scanned yet, do so now
-  LoadPlugins();
-
-  nsPluginTag* pluginTag = FindNativePluginForType(aMimeType, true);
-  if (pluginTag) {
-    rv = NS_OK;
-    PLUGIN_LOG(
-        PLUGIN_LOG_BASIC,
-        ("nsPluginHost::GetPlugin Begin mime=%s, plugin=%s\n",
-         PromiseFlatCString(aMimeType).get(), pluginTag->FileName().get()));
-
-#ifdef DEBUG
-    if (!pluginTag->FileName().IsEmpty())
-      printf("For %s found plugin %s\n", PromiseFlatCString(aMimeType).get(),
-             pluginTag->FileName().get());
-#endif
-
-    rv = EnsurePluginLoaded(pluginTag);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    NS_ADDREF(*aPlugin = pluginTag->mPlugin);
-    return NS_OK;
-  }
-
-  PLUGIN_LOG(
-      PLUGIN_LOG_NORMAL,
-      ("nsPluginHost::GetPlugin End mime=%s, rv=%" PRIu32
-       ", plugin=%p name=%s\n",
-       PromiseFlatCString(aMimeType).get(), static_cast<uint32_t>(rv), *aPlugin,
-       (pluginTag ? pluginTag->FileName().get() : "(not found)")));
-
-  return rv;
 }
 
 // Normalize 'host' to ACE.
@@ -1422,231 +1008,20 @@ nsPluginHost::GetFakePlugin(const nsACString& aMimeType,
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-#define ClearDataFromSitesClosure_CID                \
-  {                                                  \
-    0x9fb21761, 0x2403, 0x41ad, {                    \
-      0x9e, 0xfd, 0x36, 0x7e, 0xc4, 0x4f, 0xa4, 0x5e \
-    }                                                \
-  }
-
-// Class to hold all the data we need need for IterateMatchesAndClear and
-// ClearDataFromSites
-class ClearDataFromSitesClosure : public nsIClearSiteDataCallback,
-                                  public nsIGetSitesWithDataCallback {
- public:
-  ClearDataFromSitesClosure(nsIPluginTag* plugin, const nsACString& domain,
-                            uint64_t flags, int64_t maxAge,
-                            nsCOMPtr<nsIClearSiteDataCallback> callback,
-                            nsPluginHost* host)
-      : domain(domain),
-        callback(callback),
-        tag(plugin),
-        flags(flags),
-        maxAge(maxAge),
-        host(host) {}
-  NS_DECL_ISUPPORTS
-
-  // Callback from NPP_ClearSiteData, continue to iterate the matches and clear
-  NS_IMETHOD Callback(nsresult rv) override {
-    if (NS_FAILED(rv)) {
-      callback->Callback(rv);
-      return NS_OK;
-    }
-    if (!matches.Length()) {
-      callback->Callback(NS_OK);
-      return NS_OK;
-    }
-
-    const nsCString match(matches[0]);
-    matches.RemoveElement(match);
-    PluginLibrary* library =
-        static_cast<nsPluginTag*>(tag)->mPlugin->GetLibrary();
-    rv = library->NPP_ClearSiteData(match.get(), flags, maxAge, this);
-    if (NS_FAILED(rv)) {
-      callback->Callback(rv);
-      return NS_OK;
-    }
-    return NS_OK;
-  }
-
-  // Callback from NPP_GetSitesWithData, kick the iteration off to clear the
-  // data
-  NS_IMETHOD SitesWithData(nsTArray<nsCString>& sites) override {
-    // Enumerate the sites and build a list of matches.
-    nsresult rv = host->EnumerateSiteData(domain, sites, matches, false);
-    Callback(rv);
-    return NS_OK;
-  }
-
-  nsCString domain;
-  nsCOMPtr<nsIClearSiteDataCallback> callback;
-  nsTArray<nsCString> matches;
-  nsIPluginTag* tag;
-  uint64_t flags;
-  int64_t maxAge;
-  nsPluginHost* host;
-  NS_DECLARE_STATIC_IID_ACCESSOR(ClearDataFromSitesClosure_CID)
- private:
-  virtual ~ClearDataFromSitesClosure() = default;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(ClearDataFromSitesClosure,
-                              ClearDataFromSitesClosure_CID)
-
-NS_IMPL_ADDREF(ClearDataFromSitesClosure)
-NS_IMPL_RELEASE(ClearDataFromSitesClosure)
-
-NS_INTERFACE_MAP_BEGIN(ClearDataFromSitesClosure)
-  NS_INTERFACE_MAP_ENTRY(nsIClearSiteDataCallback)
-  NS_INTERFACE_MAP_ENTRY(nsIGetSitesWithDataCallback)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIClearSiteDataCallback)
-NS_INTERFACE_MAP_END
-
 // FIXME-jsplugins what should this do for fake plugins?
 NS_IMETHODIMP
 nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
                             uint64_t flags, int64_t maxAge,
                             nsIClearSiteDataCallback* callbackFunc) {
-  nsCOMPtr<nsIClearSiteDataCallback> callback(callbackFunc);
-  // maxAge must be either a nonnegative integer or -1.
-  NS_ENSURE_ARG(maxAge >= 0 || maxAge == -1);
-
-  // Caller may give us a tag object that is no longer live.
-  if (!IsLiveTag(plugin)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsPluginTag* tag = static_cast<nsPluginTag*>(plugin);
-
-  if (!tag->IsEnabled()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // We only ensure support for clearing Flash site data for now.
-  // We will also attempt to clear data for any plugin that happens
-  // to be loaded already.
-  if (!tag->mIsFlashPlugin && !tag->mPlugin) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Make sure the plugin is loaded.
-  nsresult rv = EnsurePluginLoaded(tag);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PluginLibrary* library = tag->mPlugin->GetLibrary();
-
-  // If 'domain' is the null string, clear everything.
-  if (domain.IsVoid()) {
-    return library->NPP_ClearSiteData(nullptr, flags, maxAge, callback);
-  }
-  nsCOMPtr<nsIGetSitesWithDataCallback> closure(new ClearDataFromSitesClosure(
-      plugin, domain, flags, maxAge, callback, this));
-  rv = library->NPP_GetSitesWithData(closure);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
-
-#define GetSitesClosure_CID                          \
-  {                                                  \
-    0x4c9268ac, 0x2fd1, 0x4f2a, {                    \
-      0x9a, 0x10, 0x7a, 0x09, 0xf1, 0xb7, 0x60, 0x3a \
-    }                                                \
-  }
-
-// Closure to contain the data needed to handle the callback from
-// NPP_GetSitesWithData
-class GetSitesClosure : public nsIGetSitesWithDataCallback {
- public:
-  NS_DECL_ISUPPORTS
-  GetSitesClosure(const nsACString& domain, nsPluginHost* host)
-      : domain(domain),
-        host(host),
-        result{false},
-        keepWaiting(true),
-        retVal(NS_ERROR_NOT_INITIALIZED) {}
-
-  NS_IMETHOD SitesWithData(nsTArray<nsCString>& sites) override {
-    retVal = HandleGetSites(sites);
-    keepWaiting = false;
-    return NS_OK;
-  }
-
-  nsresult HandleGetSites(nsTArray<nsCString>& sites) {
-    // If there's no data, we're done.
-    if (sites.IsEmpty()) {
-      result = false;
-      return NS_OK;
-    }
-
-    // If 'domain' is the null string, and there's data for at least one site,
-    // we're done.
-    if (domain.IsVoid()) {
-      result = true;
-      return NS_OK;
-    }
-
-    // Enumerate the sites and determine if there's a match.
-    nsTArray<nsCString> matches;
-    nsresult rv = host->EnumerateSiteData(domain, sites, matches, true);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    result = !matches.IsEmpty();
-    return NS_OK;
-  }
-
-  nsCString domain;
-  RefPtr<nsPluginHost> host;
-  bool result;
-  bool keepWaiting;
-  nsresult retVal;
-  NS_DECLARE_STATIC_IID_ACCESSOR(GetSitesClosure_CID)
- private:
-  virtual ~GetSitesClosure() = default;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(GetSitesClosure, GetSitesClosure_CID)
-
-NS_IMPL_ISUPPORTS(GetSitesClosure, GetSitesClosure, nsIGetSitesWithDataCallback)
 
 // This will spin the event loop while waiting on an async
 // call to GetSitesWithData
 NS_IMETHODIMP
 nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
                           bool* result) {
-  // Caller may give us a tag object that is no longer live.
-  if (!IsLiveTag(plugin)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // FIXME-jsplugins audit casts
-  nsPluginTag* tag = static_cast<nsPluginTag*>(plugin);
-
-  // We only ensure support for clearing Flash site data for now.
-  // We will also attempt to clear data for any plugin that happens
-  // to be loaded already.
-  if (!tag->mIsFlashPlugin && !tag->mPlugin) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Make sure the plugin is loaded.
-  nsresult rv = EnsurePluginLoaded(tag);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PluginLibrary* library = tag->mPlugin->GetLibrary();
-
-  // Get the list of sites from the plugin
-  nsCOMPtr<GetSitesClosure> closure(new GetSitesClosure(domain, this));
-  rv = library->NPP_GetSitesWithData(
-      nsCOMPtr<nsIGetSitesWithDataCallback>(closure));
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Spin the event loop while we wait for the async call to GetSitesWithData
-  SpinEventLoopUntil([&]() { return !closure->keepWaiting; });
-  *result = closure->result;
-  return closure->retVal;
+  return NS_ERROR_FAILURE;
 }
 
 nsPluginHost::SpecialType nsPluginHost::GetSpecialType(
@@ -1718,8 +1093,6 @@ void nsPluginHost::AddPluginTag(nsPluginTag* aPluginTag) {
   }
 }
 
-typedef NS_NPAPIPLUGIN_CALLBACK(char*, NP_GETMIMEDESCRIPTION)(void);
-
 void nsPluginHost::UpdatePluginBlocklistState(nsPluginTag* aPluginTag,
                                               bool aShouldSoftblock) {
   nsCOMPtr<nsIBlocklistService> blocklist =
@@ -1779,154 +1152,14 @@ nsresult nsPluginHost::LoadPlugins() { return NS_OK; }
 
 void nsPluginHost::FindingFinished() {}
 
-nsresult nsPluginHost::SetPluginsInContent(
-    uint32_t aPluginEpoch, nsTArray<mozilla::plugins::PluginTag>& aPlugins,
-    nsTArray<mozilla::plugins::FakePluginTag>& aFakePlugins) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-
-  nsTArray<PluginTag> plugins;
-
-  nsTArray<FakePluginTag> fakePlugins;
-
-  if (aPluginEpoch != ChromeEpochForContent()) {
-    // Since we know we're going to be repopulating the lists anyways,
-    // clear out all old entries.
-    ClearNonRunningPlugins();
-
-    SetChromeEpochForContent(aPluginEpoch);
-
-    for (auto tag : aPlugins) {
-      // Don't add the same plugin again.
-      if (nsPluginTag* existing = PluginWithId(tag.id())) {
-        UpdateInMemoryPluginInfo(existing);
-        existing->SetBlocklistState(tag.blocklistState());
-        continue;
-      }
-
-      nsPluginTag* pluginTag = new nsPluginTag(
-          tag.id(), tag.name().get(), tag.description().get(),
-          tag.filename().get(),
-          "",  // aFullPath
-          tag.version().get(), tag.mimeTypes().Clone(),
-          tag.mimeDescriptions().Clone(), tag.extensions().Clone(),
-          tag.isFlashPlugin(), tag.supportsAsyncRender(),
-          tag.lastModifiedTime(), tag.sandboxLevel(), tag.blocklistState());
-      AddPluginTag(pluginTag);
-    }
-
-    for (const auto& tag : aFakePlugins) {
-      // Don't add the same plugin again.
-      for (const auto& existingTag : mFakePlugins) {
-        if (existingTag->Id() == tag.id()) {
-          continue;
-        }
-      }
-
-      RefPtr<nsFakePluginTag> pluginTag =
-          *mFakePlugins.AppendElement(new nsFakePluginTag(
-              tag.id(), mozilla::ipc::DeserializeURI(tag.handlerURI()),
-              tag.name().get(), tag.description().get(), tag.mimeTypes(),
-              tag.mimeDescriptions(), tag.extensions(), tag.niceName(),
-              tag.sandboxScript()));
-      nsAutoCString disableFullPage;
-      Preferences::GetCString(kPrefDisableFullPage, disableFullPage);
-      for (uint32_t i = 0; i < pluginTag->MimeTypes().Length(); i++) {
-        if (!IsTypeInList(pluginTag->MimeTypes()[i], disableFullPage)) {
-          RegisterWithCategoryManager(pluginTag->MimeTypes()[i],
-                                      ePluginRegister);
-        }
-      }
-    }
-
-    nsCOMPtr<nsIObserverService> obsService =
-        mozilla::services::GetObserverService();
-    if (obsService) {
-      obsService->NotifyObservers(nullptr, "plugins-list-updated", nullptr);
-    }
-  }
-
-  mPluginsLoaded = true;
-  return NS_OK;
-}
-
 nsresult nsPluginHost::UpdateCachedSerializablePluginList() {
-  nsTArray<nsCOMPtr<nsIInternalPluginTag>> plugins;
-  GetPlugins(plugins, true);
-  mSerializablePlugins.Clear();
-  mSerializableFakePlugins.Clear();
-
-  for (size_t i = 0; i < plugins.Length(); i++) {
-    nsCOMPtr<nsIInternalPluginTag> basetag = plugins[i];
-
-    nsCOMPtr<nsIFakePluginTag> faketag = do_QueryInterface(basetag);
-    if (faketag) {
-      /// FIXME-jsplugins - We need to add a nsIInternalPluginTag->AsNative() to
-      /// avoid this hacky static cast
-      nsFakePluginTag* tag = static_cast<nsFakePluginTag*>(basetag.get());
-      mozilla::ipc::URIParams handlerURI;
-      SerializeURI(tag->HandlerURI(), handlerURI);
-      mSerializableFakePlugins.AppendElement(FakePluginTag(
-          tag->Id(), handlerURI, tag->Name(), tag->Description(),
-          tag->MimeTypes(), tag->MimeDescriptions(), tag->Extensions(),
-          tag->GetNiceFileName(), tag->SandboxScript()));
-      continue;
-    }
-
-    /// FIXME-jsplugins - We need to cleanup the various plugintag classes
-    /// to be more sane and avoid this dance
-    nsPluginTag* tag = static_cast<nsPluginTag*>(basetag.get());
-
-    uint32_t blocklistState;
-    if (NS_WARN_IF(NS_FAILED(tag->GetBlocklistState(&blocklistState)))) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mSerializablePlugins.AppendElement(PluginTag(
-        tag->mId, tag->Name(), tag->Description(), tag->MimeTypes(),
-        tag->MimeDescriptions(), tag->Extensions(), tag->mIsFlashPlugin,
-        tag->mSupportsAsyncRender, tag->FileName(), tag->Version(),
-        tag->mLastModifiedTime, tag->mSandboxLevel, blocklistState));
-  }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
-nsresult nsPluginHost::BroadcastPluginsToContent() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  // Load plugins so that the epoch is correct.
-  nsresult rv = LoadPlugins();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = UpdateCachedSerializablePluginList();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  uint32_t newPluginEpoch = ChromeEpoch();
-
-  nsTArray<dom::ContentParent*> parents;
-  dom::ContentParent::GetAll(parents);
-  for (auto p : parents) {
-    Unused << p->SendSetPluginList(newPluginEpoch, mSerializablePlugins,
-                                   mSerializableFakePlugins);
-  }
-  return NS_OK;
-}
+nsresult nsPluginHost::BroadcastPluginsToContent() { return NS_ERROR_FAILURE; }
 
 nsresult nsPluginHost::SendPluginsToContent(dom::ContentParent* parent) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(parent);
-  // Load plugins so that the epoch is correct.
-  nsresult rv = LoadPlugins();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  Unused << parent->SendSetPluginList(ChromeEpoch(), mSerializablePlugins,
-                                      mSerializableFakePlugins);
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 void nsPluginHost::UpdateInMemoryPluginInfo(nsPluginTag* aPluginTag) {
@@ -2006,121 +1239,6 @@ void nsPluginHost::RegisterWithCategoryManager(const nsCString& aMimeType,
   }
 }
 
-nsresult nsPluginHost::NewPluginURLStream(
-    const nsString& aURL, nsNPAPIPluginInstance* aInstance,
-    nsNPAPIPluginStreamListener* aListener, nsIInputStream* aPostStream,
-    const char* aHeadersData, uint32_t aHeadersDataLen) {
-  nsCOMPtr<nsIURI> url;
-  nsAutoString absUrl;
-
-  if (aURL.Length() <= 0) return NS_OK;
-
-  // get the base URI for the plugin to create an absolute url
-  // in case aURL is relative
-  RefPtr<nsPluginInstanceOwner> owner = aInstance->GetOwner();
-  if (owner) {
-    NS_MakeAbsoluteURI(absUrl, aURL, owner->GetBaseURI());
-  }
-
-  if (absUrl.IsEmpty()) absUrl.Assign(aURL);
-
-  nsresult rv = NS_NewURI(getter_AddRefs(url), absUrl);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RefPtr<nsPluginStreamListenerPeer> listenerPeer =
-      new nsPluginStreamListenerPeer();
-  NS_ENSURE_TRUE(listenerPeer, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = listenerPeer->Initialize(url, aInstance, aListener);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RefPtr<dom::Element> element;
-  nsCOMPtr<Document> doc;
-  if (owner) {
-    owner->GetDOMElement(getter_AddRefs(element));
-    owner->GetDocument(getter_AddRefs(doc));
-  }
-
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIChannel> channel;
-  // @arg loadgroup:
-  // do not add this internal plugin's channel on the
-  // load group otherwise this channel could be canceled
-  // form |nsDocShell::OnLinkClickSync| bug 166613
-  rv = NS_NewChannel(
-      getter_AddRefs(channel), url, element,
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT |
-          nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
-      nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
-      nullptr,  // aPerformanceStorage
-      nullptr,  // aLoadGroup
-      listenerPeer,
-      nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (doc) {
-    // And if it's a script allow it to execute against the
-    // document's script context.
-    nsCOMPtr<nsIScriptChannel> scriptChannel(do_QueryInterface(channel));
-    if (scriptChannel) {
-      scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
-      // Plug-ins seem to depend on javascript: URIs running synchronously
-      scriptChannel->SetExecuteAsync(false);
-    }
-  }
-
-  // deal with headers and post data
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-  if (httpChannel) {
-    if (!aPostStream) {
-      // Only set the Referer header for GET requests because IIS throws
-      // errors about malformed requests if we include it in POSTs. See
-      // bug 724465.
-      nsCOMPtr<nsIURI> referer;
-      dom::ReferrerPolicy referrerPolicy = dom::ReferrerPolicy::_empty;
-
-      nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(element);
-      if (olc) olc->GetSrcURI(getter_AddRefs(referer));
-
-      if (!referer) {
-        if (!doc) {
-          return NS_ERROR_FAILURE;
-        }
-        referer = doc->GetDocumentURIAsReferrer();
-        referrerPolicy = doc->GetReferrerPolicy();
-      }
-      nsCOMPtr<nsIReferrerInfo> referrerInfo =
-          new dom::ReferrerInfo(referer, referrerPolicy);
-      rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    if (aPostStream) {
-      // XXX it's a bit of a hack to rewind the postdata stream
-      // here but it has to be done in case the post data is
-      // being reused multiple times.
-      nsCOMPtr<nsISeekableStream> postDataSeekable(
-          do_QueryInterface(aPostStream));
-      if (postDataSeekable)
-        postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-
-      nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
-      NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
-
-      uploadChannel->SetUploadStream(aPostStream, ""_ns, -1);
-    }
-
-    if (aHeadersData) {
-      rv = AddHeadersToChannel(aHeadersData, aHeadersDataLen, httpChannel);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-  rv = channel->AsyncOpen(listenerPeer);
-  if (NS_SUCCEEDED(rv)) listenerPeer->TrackRequest(channel);
-  return rv;
-}
-
 nsresult nsPluginHost::AddHeadersToChannel(const char* aHeadersData,
                                            uint32_t aHeadersDataLen,
                                            nsIChannel* aGenericChannel) {
@@ -2173,76 +1291,13 @@ nsresult nsPluginHost::AddHeadersToChannel(const char* aHeadersData,
 }
 
 nsresult nsPluginHost::StopPluginInstance(nsNPAPIPluginInstance* aInstance) {
-  AUTO_PROFILER_LABEL("nsPluginHost::StopPluginInstance", OTHER);
-  if (PluginDestructionGuard::DelayDestroy(aInstance)) {
-    return NS_OK;
-  }
-
-  PLUGIN_LOG(
-      PLUGIN_LOG_NORMAL,
-      ("nsPluginHost::StopPluginInstance called instance=%p\n", aInstance));
-
-  if (aInstance->HasStartedDestroying()) {
-    return NS_OK;
-  }
-
-  Telemetry::AutoTimer<Telemetry::PLUGIN_SHUTDOWN_MS> timer;
-  aInstance->Stop();
-
-  // if the instance does not want to be 'cached' just remove it
-  bool doCache = aInstance->ShouldCache();
-  if (doCache) {
-    // try to get the max cached instances from a pref or use default
-    uint32_t cachedInstanceLimit = Preferences::GetUint(
-        NS_PREF_MAX_NUM_CACHED_INSTANCES, DEFAULT_NUMBER_OF_STOPPED_INSTANCES);
-    if (StoppedInstanceCount() >= cachedInstanceLimit) {
-      nsNPAPIPluginInstance* oldestInstance = FindOldestStoppedInstance();
-      if (oldestInstance) {
-        nsPluginTag* pluginTag = TagForPlugin(oldestInstance->GetPlugin());
-        oldestInstance->Destroy();
-        mInstances.RemoveElement(oldestInstance);
-        // TODO: Remove this check once bug 752422 was investigated
-        if (pluginTag) {
-          OnPluginInstanceDestroyed(pluginTag);
-        }
-      }
-    }
-  } else {
-    nsPluginTag* pluginTag = TagForPlugin(aInstance->GetPlugin());
-    aInstance->Destroy();
-    mInstances.RemoveElement(aInstance);
-    // TODO: Remove this check once bug 752422 was investigated
-    if (pluginTag) {
-      OnPluginInstanceDestroyed(pluginTag);
-    }
-  }
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsPluginHost::NewPluginStreamListener(
     nsIURI* aURI, nsNPAPIPluginInstance* aInstance,
     nsIStreamListener** aStreamListener) {
-  NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(aStreamListener);
-
-  RefPtr<nsPluginStreamListenerPeer> listener =
-      new nsPluginStreamListenerPeer();
-  nsresult rv = listener->Initialize(aURI, aInstance, nullptr);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  listener.forget(aStreamListener);
-
-  return NS_OK;
-}
-
-void nsPluginHost::CreateWidget(nsPluginInstanceOwner* aOwner) {
-  aOwner->CreateWidget();
-
-  // If we've got a native window, the let the plugin know about it.
-  aOwner->CallSetWindow();
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsPluginHost::Observe(nsISupports* aSubject, const char* aTopic,
@@ -2426,37 +1481,14 @@ nsresult nsPluginHost::ParsePostBufferToFixHeaders(const char* inPostData,
   return NS_OK;
 }
 
-nsresult nsPluginHost::NewPluginNativeWindow(
-    nsPluginNativeWindow** aPluginNativeWindow) {
-  return PLUG_NewPluginNativeWindow(aPluginNativeWindow);
-}
-
 nsresult nsPluginHost::GetPluginName(nsNPAPIPluginInstance* aPluginInstance,
                                      const char** aPluginName) {
-  nsNPAPIPluginInstance* instance =
-      static_cast<nsNPAPIPluginInstance*>(aPluginInstance);
-  if (!instance) return NS_ERROR_FAILURE;
-
-  nsNPAPIPlugin* plugin = instance->GetPlugin();
-  if (!plugin) return NS_ERROR_FAILURE;
-
-  *aPluginName = TagForPlugin(plugin)->Name().get();
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsPluginHost::GetPluginTagForInstance(
     nsNPAPIPluginInstance* aPluginInstance, nsIPluginTag** aPluginTag) {
-  NS_ENSURE_ARG_POINTER(aPluginInstance);
-  NS_ENSURE_ARG_POINTER(aPluginTag);
-
-  nsNPAPIPlugin* plugin = aPluginInstance->GetPlugin();
-  if (!plugin) return NS_ERROR_FAILURE;
-
-  *aPluginTag = TagForPlugin(plugin);
-
-  NS_ADDREF(*aPluginTag);
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsPluginHost::Notify(nsITimer* timer) {
@@ -2522,77 +1554,6 @@ static void CheckForDisabledWindows() {
 }
 #endif
 
-void nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin,
-                                 const nsAString& aPluginDumpID,
-                                 const nsACString& aAdditionalMinidumps) {
-  nsPluginTag* crashedPluginTag = TagForPlugin(aPlugin);
-  MOZ_ASSERT(crashedPluginTag);
-
-  // Notify the app's observer that a plugin crashed so it can submit
-  // a crashreport.
-  bool submittedCrashReport = false;
-  nsCOMPtr<nsIObserverService> obsService =
-      mozilla::services::GetObserverService();
-  nsCOMPtr<nsIWritablePropertyBag2> propbag =
-      do_CreateInstance("@mozilla.org/hash-property-bag;1");
-  if (obsService && propbag) {
-    uint32_t runID = 0;
-    PluginLibrary* library = aPlugin->GetLibrary();
-
-    if (!NS_WARN_IF(!library)) {
-      library->GetRunID(&runID);
-    }
-    propbag->SetPropertyAsUint32(u"runID"_ns, runID);
-
-    nsCString pluginName;
-    crashedPluginTag->GetName(pluginName);
-    propbag->SetPropertyAsAString(u"pluginName"_ns,
-                                  NS_ConvertUTF8toUTF16(pluginName));
-    propbag->SetPropertyAsAString(u"pluginDumpID"_ns, aPluginDumpID);
-    propbag->SetPropertyAsACString(u"additionalMinidumps"_ns,
-                                   aAdditionalMinidumps);
-    propbag->SetPropertyAsBool(u"submittedCrashReport"_ns,
-                               submittedCrashReport);
-    obsService->NotifyObservers(propbag, "plugin-crashed", nullptr);
-    // see if an observer submitted a crash report.
-    propbag->GetPropertyAsBool(u"submittedCrashReport"_ns,
-                               &submittedCrashReport);
-  }
-
-  // Invalidate each nsPluginInstanceTag for the crashed plugin
-
-  for (uint32_t i = mInstances.Length(); i > 0; i--) {
-    nsNPAPIPluginInstance* instance = mInstances[i - 1];
-    if (instance->GetPlugin() == aPlugin) {
-      // notify the content node (nsIObjectLoadingContent) that the
-      // plugin has crashed
-      RefPtr<dom::Element> domElement;
-      instance->GetDOMElement(getter_AddRefs(domElement));
-      nsCOMPtr<nsIObjectLoadingContent> objectContent(
-          do_QueryInterface(domElement));
-      if (objectContent) {
-        objectContent->PluginCrashed(crashedPluginTag, aPluginDumpID,
-                                     submittedCrashReport);
-      }
-
-      instance->Destroy();
-      mInstances.RemoveElement(instance);
-      OnPluginInstanceDestroyed(crashedPluginTag);
-    }
-  }
-
-  // Only after all instances have been invalidated is it safe to null
-  // out nsPluginTag.mPlugin. The next time we try to create an
-  // instance of this plugin we reload it (launch a new plugin process).
-
-  crashedPluginTag->mPlugin = nullptr;
-  crashedPluginTag->mContentProcessRunningCount = 0;
-
-#ifdef XP_WIN
-  CheckForDisabledWindows();
-#endif
-}
-
 nsNPAPIPluginInstance* nsPluginHost::FindInstance(const char* mimetype) {
   for (uint32_t i = 0; i < mInstances.Length(); i++) {
     nsNPAPIPluginInstance* instance = mInstances[i];
@@ -2637,35 +1598,7 @@ nsTArray<RefPtr<nsNPAPIPluginInstance>>* nsPluginHost::InstanceArray() {
   return &mInstances;
 }
 
-void nsPluginHost::DestroyRunningInstances(nsPluginTag* aPluginTag) {
-  for (int32_t i = mInstances.Length(); i > 0; i--) {
-    nsNPAPIPluginInstance* instance = mInstances[i - 1];
-    if (instance->IsRunning() &&
-        (!aPluginTag || aPluginTag == TagForPlugin(instance->GetPlugin()))) {
-      instance->SetWindow(nullptr);
-      instance->Stop();
-
-      // Get rid of all the instances without the possibility of caching.
-      nsPluginTag* pluginTag = TagForPlugin(instance->GetPlugin());
-      instance->SetWindow(nullptr);
-
-      RefPtr<dom::Element> domElement;
-      instance->GetDOMElement(getter_AddRefs(domElement));
-      nsCOMPtr<nsIObjectLoadingContent> objectContent =
-          do_QueryInterface(domElement);
-
-      instance->Destroy();
-
-      mInstances.RemoveElement(instance);
-      OnPluginInstanceDestroyed(pluginTag);
-
-      // Notify owning content that we destroyed its plugin out from under it
-      if (objectContent) {
-        objectContent->PluginDestroyed();
-      }
-    }
-  }
-}
+void nsPluginHost::DestroyRunningInstances(nsPluginTag* aPluginTag) {}
 
 /* static */
 bool nsPluginHost::CanUsePluginForMIMEType(const nsACString& aMIMEType) {

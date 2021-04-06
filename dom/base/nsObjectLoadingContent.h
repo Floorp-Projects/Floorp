@@ -29,7 +29,6 @@ class nsStopPluginRunnable;
 class AutoSetInstantiatingToFalse;
 class nsIPrincipal;
 class nsFrameLoader;
-class nsPluginInstanceOwner;
 
 namespace mozilla {
 namespace dom {
@@ -174,9 +173,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   // Helper for WebIDL node wrapping
   void SetupProtoChain(JSContext* aCx, JS::Handle<JSObject*> aObject);
 
-  // Remove plugin from protochain
-  void TeardownProtoChain();
-
   // Helper for WebIDL NeedResolve
   bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
                  JS::Handle<jsid> aId,
@@ -214,7 +210,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   uint32_t DefaultFallbackType();
 
   uint32_t PluginFallbackType() const { return mFallbackType; }
-  bool HasRunningPlugin() const { return !!mInstanceOwner; }
+
   // FIXME rename this
   void SkipFakePlugins(mozilla::ErrorResult& aRv) { aRv = SkipFakePlugins(); }
   void SwapFrameLoaders(mozilla::dom::HTMLIFrameElement& aOtherLoaderOwner,
@@ -327,8 +323,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   static void Unlink(nsObjectLoadingContent* tmp);
 
   void CreateStaticClone(nsObjectLoadingContent* aDest) const;
-
-  void DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner);
 
   nsresult BindToTree(mozilla::dom::BindContext&, nsINode& aParent);
   void UnbindFromTree(bool aNullParent = true);
@@ -700,7 +694,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   bool mPreferFallback : 1;
   bool mPreferFallbackKnown : 1;
 
-  RefPtr<nsPluginInstanceOwner> mInstanceOwner;
   nsTArray<mozilla::dom::MozPluginParameter> mCachedAttributes;
   nsTArray<mozilla::dom::MozPluginParameter> mCachedParameters;
 

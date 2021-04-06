@@ -129,7 +129,6 @@ avoid-blacklist-and-whitelist:
         - dom/media/webrtc/transport/stun_socket_filter.cpp
         - dom/media/webrtc/transport/test/ice_unittest.cpp
         - dom/plugins/base/nsPluginHost.h
-        - dom/plugins/ipc/PluginQuirks.cpp
         - dom/push/PushServiceWebSocket.jsm
         - dom/security/nsCSPContext.cpp
         - dom/security/nsCSPService.cpp

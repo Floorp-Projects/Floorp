@@ -16,8 +16,6 @@
 
 class nsIURI;
 struct PRLibrary;
-struct nsPluginInfo;
-class nsNPAPIPlugin;
 
 namespace mozilla {
 namespace dom {
@@ -113,8 +111,6 @@ class nsPluginTag final : public nsIInternalPluginTag {
     ePluginState_MaxValue = 3,
   };
 
-  nsPluginTag(nsPluginInfo* aPluginInfo, int64_t aLastModifiedTime,
-              uint32_t aBlocklistState);
   nsPluginTag(const char* aName, const char* aDescription,
               const char* aFileName, const char* aFullPath,
               const char* aVersion, const char* const* aMimeTypes,
@@ -161,7 +157,6 @@ class nsPluginTag final : public nsIInternalPluginTag {
   bool mHadLocalInstance;
 
   PRLibrary* mLibrary;
-  RefPtr<nsNPAPIPlugin> mPlugin;
   bool mIsFlashPlugin;
   bool mSupportsAsyncRender;
   nsCString mFullPath;  // UTF-8

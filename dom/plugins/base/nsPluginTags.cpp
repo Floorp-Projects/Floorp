@@ -7,11 +7,9 @@
 
 #include "prlink.h"
 #include "plstr.h"
-#include "nsPluginsDir.h"
 #include "nsPluginHost.h"
 #include "nsIBlocklistService.h"
 #include "nsPluginLogging.h"
-#include "nsNPAPIPlugin.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
@@ -193,28 +191,6 @@ bool nsIInternalPluginTag::HasMimeType(const nsACString& aMimeType) const {
 }
 
 /* nsPluginTag */
-
-nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo, int64_t aLastModifiedTime,
-                         uint32_t aBlocklistState)
-    : nsIInternalPluginTag(aPluginInfo->fName, aPluginInfo->fDescription,
-                           aPluginInfo->fFileName, aPluginInfo->fVersion),
-      mId(sNextId++),
-      mContentProcessRunningCount(0),
-      mHadLocalInstance(false),
-      mLibrary(nullptr),
-      mIsFlashPlugin(false),
-      mSupportsAsyncRender(false),
-      mFullPath(aPluginInfo->fFullPath),
-      mLastModifiedTime(aLastModifiedTime),
-      mSandboxLevel(0),
-      mIsSandboxLoggingEnabled(false),
-      mBlocklistState(aBlocklistState) {
-  InitMime(aPluginInfo->fMimeTypeArray, aPluginInfo->fMimeDescriptionArray,
-           aPluginInfo->fExtensionArray, aPluginInfo->fVariantCount);
-  InitSandboxLevel();
-  EnsureMembersAreUTF8();
-  FixupVersion();
-}
 
 nsPluginTag::nsPluginTag(const char* aName, const char* aDescription,
                          const char* aFileName, const char* aFullPath,
@@ -579,22 +555,9 @@ bool nsPluginTag::HasSameNameAndMimes(const nsPluginTag* aPluginTag) const {
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetLoaded(bool* aIsLoaded) {
-  *aIsLoaded = !!mPlugin;
-  return NS_OK;
-}
+nsPluginTag::GetLoaded(bool* aIsLoaded) { return NS_ERROR_FAILURE; }
 
-void nsPluginTag::TryUnloadPlugin(bool inShutdown) {
-  // We never want to send NPP_Shutdown to an in-process plugin unless
-  // this process is shutting down.
-  if (!mPlugin) {
-    return;
-  }
-  if (inShutdown || mPlugin->GetLibrary()->IsOOP()) {
-    mPlugin->Shutdown();
-    mPlugin = nullptr;
-  }
-}
+void nsPluginTag::TryUnloadPlugin(bool inShutdown) {}
 
 /* static */ void nsPluginTag::EnsureSandboxInformation() {
   if (sInitializedSandboxingInfo) {
