@@ -35,6 +35,7 @@
 #include "vm/ArrayObject.h"
 #include "vm/BigIntType.h"
 #include "vm/GeneratorObject.h"
+#include "vm/GetterSetter.h"
 #include "vm/RegExpShared.h"
 #include "vm/Scope.h"  // GetScopeDataTrailingNames
 #include "vm/Shape.h"
@@ -1078,6 +1079,10 @@ void GCMarker::traverse(BaseShape* thing) {
   traceChildren(thing);
 }
 template <>
+void GCMarker::traverse(GetterSetter* thing) {
+  traceChildren(thing);
+}
+template <>
 void GCMarker::traverse(JS::Symbol* thing) {
   traceChildren(thing);
 }
@@ -1583,6 +1588,15 @@ void BaseShape::traceChildren(JSTracer* trc) {
 
   if (proto_.isObject()) {
     TraceEdge(trc, &proto_, "baseshape_proto");
+  }
+}
+
+void GetterSetter::traceChildren(JSTracer* trc) {
+  if (getter()) {
+    TraceCellHeaderEdge(trc, this, "gettersetter_getter");
+  }
+  if (setter()) {
+    TraceEdge(trc, &setter_, "gettersetter_setter");
   }
 }
 
@@ -2804,6 +2818,9 @@ js::RegExpShared* TenuringTracer::onRegExpSharedEdge(RegExpShared* shared) {
   return shared;
 }
 js::BaseShape* TenuringTracer::onBaseShapeEdge(BaseShape* base) { return base; }
+js::GetterSetter* TenuringTracer::onGetterSetterEdge(GetterSetter* gs) {
+  return gs;
+}
 js::jit::JitCode* TenuringTracer::onJitCodeEdge(jit::JitCode* code) {
   return code;
 }
@@ -3834,6 +3851,9 @@ js::BaseScript* SweepingTracer::onScriptEdge(js::BaseScript* script) {
 BaseShape* SweepingTracer::onBaseShapeEdge(BaseShape* base) {
   return onEdge(base);
 }
+GetterSetter* SweepingTracer::onGetterSetterEdge(GetterSetter* gs) {
+  return onEdge(gs);
+}
 jit::JitCode* SweepingTracer::onJitCodeEdge(jit::JitCode* jit) {
   return onEdge(jit);
 }
@@ -4137,6 +4157,10 @@ js::BaseScript* BarrierTracer::onScriptEdge(js::BaseScript* script) {
 BaseShape* BarrierTracer::onBaseShapeEdge(BaseShape* base) {
   PreWriteBarrier(base);
   return base;
+}
+GetterSetter* BarrierTracer::onGetterSetterEdge(GetterSetter* gs) {
+  PreWriteBarrier(gs);
+  return gs;
 }
 Scope* BarrierTracer::onScopeEdge(Scope* scope) {
   PreWriteBarrier(scope);

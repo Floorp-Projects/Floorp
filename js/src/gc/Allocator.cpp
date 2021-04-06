@@ -17,6 +17,7 @@
 #include "gc/Nursery.h"
 #include "threading/CpuCount.h"
 #include "util/Poison.h"
+#include "vm/GetterSetter.h"
 #include "vm/JSContext.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"

@@ -47,6 +47,7 @@ class GCCellPtrTypeCache(object):
             "Script": "js::BaseScript",
             "Scope": "js::Scope",
             "RegExpShared": "js::RegExpShared",
+            "GetterSetter": "js::GetterSetter",
         }
 
         # Map from AllocKind to TraceKind for out-of-line types.
@@ -55,6 +56,7 @@ class GCCellPtrTypeCache(object):
             "SCRIPT": "Script",
             "SCOPE": "Scope",
             "REGEXP_SHARED": "RegExpShared",
+            "GETTER_SETTER": "GetterSetter",
         }
 
         self.trace_kind_to_type = {

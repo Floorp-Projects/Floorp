@@ -721,11 +721,6 @@ class alignas(gc::CellAlignBytes) TenuredCellWithNonGCPointer
   }
 
   PtrT* headerPtr() const {
-    // Currently we never observe any flags set here because this base class is
-    // only used for JSObject (for which the nursery kind flags are always
-    // clear) or GC things that are always tenured (for which the nursery kind
-    // flags are also always clear). This means we don't need to use masking to
-    // get and set the pointer.
     MOZ_ASSERT(flags() == 0);
     return reinterpret_cast<PtrT*>(uintptr_t(header_));
   }
@@ -787,10 +782,6 @@ class alignas(gc::CellAlignBytes) CellWithTenuredGCPointer : public BaseCell {
 
  public:
   PtrT* headerPtr() const {
-    // Currently we never observe any flags set here because this base class is
-    // only used for GC things that are always tenured (for which the nursery
-    // kind flags are also always clear). This means we don't need to use
-    // masking to get and set the pointer.
     staticAsserts();
     MOZ_ASSERT(this->flags() == 0);
     return reinterpret_cast<PtrT*>(uintptr_t(this->header_));
@@ -805,6 +796,61 @@ class alignas(gc::CellAlignBytes) CellWithTenuredGCPointer : public BaseCell {
 
   static constexpr size_t offsetOfHeaderPtr() {
     return offsetof(CellWithTenuredGCPointer, header_);
+  }
+};
+
+void CellHeaderPostWriteBarrier(JSObject** ptr, JSObject* prev, JSObject* next);
+
+template <class PtrT>
+class alignas(gc::CellAlignBytes) TenuredCellWithGCPointer
+    : public TenuredCell {
+  static void staticAsserts() {
+    // These static asserts are not in class scope because the PtrT may not be
+    // defined when this class template is instantiated.
+    static_assert(
+        !std::is_pointer_v<PtrT>,
+        "PtrT should be the type of the referent, not of the pointer");
+    static_assert(
+        std::is_base_of_v<Cell, PtrT>,
+        "Only use TenuredCellWithGCPointer for pointers to GC things");
+    static_assert(
+        !std::is_base_of_v<TenuredCell, PtrT>,
+        "Don't use TenuredCellWithGCPointer for always-tenured GC things");
+  }
+
+ protected:
+  TenuredCellWithGCPointer() = default;
+  explicit TenuredCellWithGCPointer(PtrT* initial) { initHeaderPtr(initial); }
+
+  void initHeaderPtr(PtrT* initial) {
+    uintptr_t data = uintptr_t(initial);
+    MOZ_ASSERT((data & Cell::RESERVED_MASK) == 0);
+    this->header_ = data;
+    if (IsInsideNursery(initial)) {
+      CellHeaderPostWriteBarrier(headerPtrAddress(), nullptr, initial);
+    }
+  }
+
+  PtrT** headerPtrAddress() {
+    MOZ_ASSERT(this->flags() == 0);
+    return reinterpret_cast<PtrT**>(&this->header_);
+  }
+
+ public:
+  PtrT* headerPtr() const {
+    MOZ_ASSERT(this->flags() == 0);
+    return reinterpret_cast<PtrT*>(uintptr_t(this->header_));
+  }
+
+  void unbarrieredSetHeaderPtr(PtrT* newValue) {
+    uintptr_t data = uintptr_t(newValue);
+    MOZ_ASSERT(this->flags() == 0);
+    MOZ_ASSERT((data & Cell::RESERVED_MASK) == 0);
+    this->header_ = data;
+  }
+
+  static constexpr size_t offsetOfHeaderPtr() {
+    return offsetof(TenuredCellWithGCPointer, header_);
   }
 };
 
