@@ -44,22 +44,11 @@ function requestDevice(aAudio, aVideo, aShare) {
 }
 message("pending");
 
-function stopTracks(aKind) {
-  for (let stream of gStreams) {
-    for (let track of stream.getTracks()) {
-      if (track.kind == aKind) {
-        track.stop();
-        stream.removeTrack(track);
-      }
-    }
-  }
-  gStreams = gStreams.filter(s => !!s.getTracks().length);
-}
-
 function closeStream() {
   for (let stream of gStreams) {
-    for (let track of stream.getTracks()) {
-      track.stop();
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
     }
   }
   gStreams = [];
