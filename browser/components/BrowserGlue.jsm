@@ -607,6 +607,7 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  // GMP crash reporting
   Plugin: {
     parent: {
       moduleURI: "resource:///actors/PluginParent.jsm",
@@ -614,15 +615,8 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/PluginChild.jsm",
       events: {
-        PluginBindingAttached: { capture: true, wantUntrusted: true },
         PluginCrashed: { capture: true },
-        PluginOutdated: { capture: true },
-        PluginInstantiated: { capture: true },
-        PluginRemoved: { capture: true },
-        HiddenPlugin: { capture: true },
       },
-
-      observers: ["decoder-doctor-notification"],
     },
 
     allFrames: true,
