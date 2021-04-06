@@ -154,7 +154,9 @@ add_task(async function terminateScriptTest() {
   Services.obs.notifyObservers(hangReport, "process-hang-report");
   let notification = await promise;
 
-  let buttons = notification.currentNotification.getElementsByTagName("button");
+  let buttons = notification.currentNotification.buttonContainer.getElementsByTagName(
+    "button"
+  );
   is(buttons.length, buttonCount, "proper number of buttons");
 
   // Click the "Stop" button, we should get a terminate script callback
@@ -177,13 +179,10 @@ add_task(async function waitForScriptTest() {
   Services.obs.notifyObservers(hangReport, "process-hang-report");
   let notification = await promise;
 
-  let buttons = notification.currentNotification.getElementsByTagName("button");
-  is(buttons.length, buttonCount, "proper number of buttons");
-  let toolbarbuttons = notification.currentNotification.getElementsByTagName(
-    "toolbarbutton"
+  let buttons = notification.currentNotification.buttonContainer.getElementsByTagName(
+    "button"
   );
-  is(toolbarbuttons.length, 1, "proper number of toolbarbuttons");
-  let closeButton = toolbarbuttons[0];
+  is(buttons.length, buttonCount, "proper number of buttons");
 
   await pushPrefs(["browser.hangNotification.waitPeriod", 1000]);
 
@@ -205,8 +204,8 @@ add_task(async function waitForScriptTest() {
     }
   });
 
-  // Click the "Wait" button this time, we shouldn't get a callback at all.
-  closeButton.click();
+  // Click the "Close" button this time, we shouldn't get a callback at all.
+  notification.currentNotification.closeButton.click();
 
   // send another hang pulse, we should not get a notification here
   Services.obs.notifyObservers(hangReport, "process-hang-report");
@@ -255,7 +254,9 @@ add_task(async function terminatePluginTest() {
   Services.obs.notifyObservers(hangReport, "process-hang-report");
   let notification = await promise;
 
-  let buttons = notification.currentNotification.getElementsByTagName("button");
+  let buttons = notification.currentNotification.buttonContainer.getElementsByTagName(
+    "button"
+  );
   // Plugin hangs only ever show 1 button in the notification - even in
   // DevEdition.
   is(buttons.length, 1, "proper number of buttons");

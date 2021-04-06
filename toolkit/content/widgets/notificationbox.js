@@ -261,7 +261,7 @@
       if (aChild.eventCallback) {
         aChild.eventCallback("removed");
       }
-      this.stack.removeChild(aChild);
+      aChild.remove();
 
       // make sure focus doesn't get lost (workaround for bug 570835)
       if (!Services.focus.getFocusedElementForWindow(window, false, {})) {
@@ -421,6 +421,7 @@
         ["messageText", ".messageText"],
         ["spacer", "spacer"],
         ["buttonContainer", ".messageDetails"],
+        ["closeButton", ".messageCloseButton"],
       ]) {
         this[propertyName] = this.querySelector(selector);
       }
@@ -595,6 +596,9 @@
       }
 
       close() {
+        if (!this.parentNode) {
+          return;
+        }
         this.closest(
           ".notificationbox-stack"
         )._notificationBox.removeNotification(this);
