@@ -425,8 +425,7 @@ WebRenderAPI::WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
       mUseTripleBuffering(aUseTripleBuffering),
       mSupportsExternalBufferTextures(aSupportsExternalBufferTextures),
       mCaptureSequence(false),
-      mSyncHandle(aSyncHandle),
-      mRendererDestroyed(false) {}
+      mSyncHandle(aSyncHandle) {}
 
 WebRenderAPI::~WebRenderAPI() {
   if (!mRootDocumentApi) {
@@ -434,24 +433,17 @@ WebRenderAPI::~WebRenderAPI() {
   }
 
   if (!mRootApi) {
-    MOZ_RELEASE_ASSERT(mRendererDestroyed);
+    RenderThread::Get()->SetDestroyed(GetId());
+
+    layers::SynchronousTask task("Destroy WebRenderAPI");
+    auto event = MakeUnique<RemoveRenderer>(&task);
+    RunOnRenderThread(std::move(event));
+    task.Wait();
+
     wr_api_shut_down(mDocHandle);
   }
 
   wr_api_delete(mDocHandle);
-}
-
-void WebRenderAPI::DestroyRenderer() {
-  MOZ_RELEASE_ASSERT(!mRootApi);
-
-  RenderThread::Get()->SetDestroyed(GetId());
-
-  layers::SynchronousTask task("Destroy WebRenderAPI");
-  auto event = MakeUnique<RemoveRenderer>(&task);
-  RunOnRenderThread(std::move(event));
-  task.Wait();
-
-  mRendererDestroyed = true;
 }
 
 void WebRenderAPI::UpdateDebugFlags(uint32_t aFlags) {
