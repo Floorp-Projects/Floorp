@@ -8,6 +8,10 @@ const { AppMenuNotifications } = ChromeUtils.import(
 );
 
 add_task(async function testModals() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.windowPromptSubDialog", true]],
+  });
+
   is(
     PanelUI.notificationPanel.state,
     "closed",
