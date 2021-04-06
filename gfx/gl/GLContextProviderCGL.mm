@@ -168,22 +168,13 @@ static bool IsSameGPU(CGOpenGLDisplayMask mask1, CGOpenGLDisplayMask mask2) {
   return !mask1 && !mask2;
 }
 
-static NSOpenGLPixelFormat* GetPixelFormatForContext(NSOpenGLContext* aContext) {
-  // -[NSOpenGLContext pixelFormat] is macOS 10.10+
-  if ([aContext respondsToSelector:@selector(pixelFormat)]) {
-    return [aContext pixelFormat];
-  }
-  return [[[NSOpenGLPixelFormat alloc]
-      initWithCGLPixelFormatObj:CGLGetPixelFormat([aContext CGLContextObj])] autorelease];
-}
-
 void GLContextCGL::MigrateToActiveGPU() {
   if (!mActiveGPUSwitchMayHaveOccurred.compareExchange(true, false)) {
     return;
   }
 
   CGOpenGLDisplayMask newPreferredDisplayMask = GetFreshContextDisplayMask();
-  NSOpenGLPixelFormat* pixelFormat = GetPixelFormatForContext(mContext);
+  NSOpenGLPixelFormat* pixelFormat = [mContext pixelFormat];
   GLint currentVirtualScreen = [mContext currentVirtualScreen];
   GLint currentDisplayMask = 0;
   [pixelFormat getValues:&currentDisplayMask
