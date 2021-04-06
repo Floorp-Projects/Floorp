@@ -16,6 +16,7 @@
 #include "nsITransport.h"
 #include "nsIObserverService.h"
 #include "nsThreadPool.h"
+#include "mozilla/DelayedRunnable.h"
 #include "mozilla/Services.h"
 
 namespace mozilla {
