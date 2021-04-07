@@ -266,12 +266,24 @@ add_task(async function test_connectivity_change() {
     "network:captive-portal-connectivity",
     "clear"
   );
+  // This means a CP check completed successfully. But no CP was previously
+  // detected, so this is mostly a no-op.
+  equal(dns.currentTrrConfirmationState, CONFIRM_OK);
 
-  // The state was already OK. Should still be OK after the event
-  await waitForConfirmationState(CONFIRM_OK, 1000);
-  equal(
-    await trrServer.requestCount("confirm.example.com", "NS"),
-    confirmationCount + 1
+  Services.obs.notifyObservers(
+    null,
+    "network:captive-portal-connectivity",
+    "captive"
+  );
+  // This basically a successful CP login event. Wasn't captive before.
+  // Still treating as a no-op.
+  equal(dns.currentTrrConfirmationState, CONFIRM_OK);
+
+  // This makes the TRR service set mCaptiveIsPassed=false
+  Services.obs.notifyObservers(
+    null,
+    "captive-portal-login",
+    "{type: 'captive-portal-login', id: 0, url: 'http://localhost/'}"
   );
 
   await registerNS(500);
@@ -279,6 +291,9 @@ add_task(async function test_connectivity_change() {
   // The failure should cause us to go into CONFIRM_TRYING_OK and do an NS req
   await waitForConfirmationState(CONFIRM_TRYING_OK, 3000);
   await failures;
+
+  // The notification sets mCaptiveIsPassed=true then triggers an entirely new
+  // confirmation.
   Services.obs.notifyObservers(
     null,
     "network:captive-portal-connectivity",
