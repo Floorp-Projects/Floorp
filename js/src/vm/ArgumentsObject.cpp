@@ -642,8 +642,7 @@ static bool ResolveArgumentsProperty(JSContext* cx,
              id.isAtom(cx->names().callee));
 
   attrs |= JSPROP_CUSTOM_DATA_PROP;
-  if (!NativeObject::addAccessorProperty(cx, obj, id, nullptr, nullptr,
-                                         attrs)) {
+  if (!NativeObject::addCustomDataProperty(cx, obj, id, attrs)) {
     return false;
   }
 
@@ -792,8 +791,7 @@ static bool DefineMappedIndex(JSContext* cx, Handle<MappedArgumentsObject*> obj,
   if (enumerable) {
     attrs |= JSPROP_ENUMERATE;
   }
-  if (!NativeObject::putAccessorProperty(cx, obj, id, nullptr, nullptr,
-                                         attrs)) {
+  if (!NativeObject::changeCustomDataPropAttributes(cx, obj, id, attrs)) {
     return false;
   }
 
