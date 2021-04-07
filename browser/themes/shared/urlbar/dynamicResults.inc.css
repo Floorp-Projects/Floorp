@@ -30,42 +30,9 @@
 .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
   min-width: 32px;
   height: 32px;
-  color: rgb(0,97,224);
-  stroke: #fff;
-  -moz-context-properties: fill, stroke;
+  color: var(--urlbar-popup-url-color);
+  -moz-context-properties: fill;
 }
-
-.urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner[selected] > .urlbarView-no-wrap > .urlbarView-favicon {
-  color: #fff;
-  stroke: rgb(0,97,224);
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner:not([selected]) > .urlbarView-no-wrap > .urlbarView-favicon {
-  color: rgb(0,221,255);
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner[selected] > .urlbarView-no-wrap > .urlbarView-favicon {
-  stroke: rgb(0,221,255);
-}
-
-@media not (-moz-proton-urlbar) {
-.urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
-  color: #0060df; /* Blue-60 */
-}
-
-.urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner[selected] > .urlbarView-no-wrap > .urlbarView-favicon {
-  color: #fff;
-  stroke: #0060df;
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner:not([selected]) > .urlbarView-no-wrap > .urlbarView-favicon {
-  color: #0a84ff; /* Blue-50 */
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner[selected] > .urlbarView-no-wrap > .urlbarView-favicon {
-  stroke: #0a84ff;
-}
-} /*** END !proton ***/
 
 .urlbarView-dynamic-onboardTabToSearch-text-container {
   display: flex;

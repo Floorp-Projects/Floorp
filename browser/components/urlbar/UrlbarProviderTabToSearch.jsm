@@ -450,7 +450,7 @@ function makeOnboardingResult(engine, satisfiesAutofillThreshold = false) {
       engine: engine.name,
       url,
       providesSearchMode: true,
-      icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+      icon: UrlbarUtils.ICON.SEARCH_GLASS,
       dynamicType: DYNAMIC_RESULT_TYPE,
       satisfiesAutofillThreshold,
     }
@@ -473,7 +473,7 @@ function makeResult(context, engine, satisfiesAutofillThreshold = false) {
       isGeneralPurposeEngine: engine.isGeneralPurposeEngine,
       url,
       providesSearchMode: true,
-      icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+      icon: UrlbarUtils.ICON.SEARCH_GLASS,
       query: "",
       satisfiesAutofillThreshold,
     })
