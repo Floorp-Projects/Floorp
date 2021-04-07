@@ -167,12 +167,12 @@ vec4 sample_yuv(
 
     // See the YuvColorMatrix definition for an explanation of where the constants come from.
     vec3 yuv = yuv_value * coefficient - yuv_offset_vector;
-    #ifdef WR_FEATURE_ALPHA_PASS
-        // Avoid negative Y values that can mess with blending. These occur due to invalid Y
-        // values outside the mappable space that never the less can be generated.
-        yuv.x = max(yuv.x, 0.0);
-    #endif
     vec3 rgb = yuv_color_matrix * yuv;
+    #if defined(WR_FEATURE_ALPHA_PASS) && defined(SWGL_CLIP_MASK)
+        // Avoid negative RGB values that can mess with blending. These occur due to invalid
+        // YUV values outside the mappable space that never the less can be generated.
+        rgb = max(rgb, 0.0);
+    #endif
     vec4 color = vec4(rgb, 1.0);
 
     return color;

@@ -1612,10 +1612,19 @@ vec3_scalar step(vec3_scalar edge, vec3_scalar x) {
 SI vec3 min(vec3 a, vec3 b) {
   return vec3(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z));
 }
+SI vec3 min(vec3 a, Float b) {
+  return vec3(min(a.x, b), min(a.y, b), min(a.z, b));
+}
+SI vec3_scalar min(vec3_scalar a, vec3_scalar b) {
+  return vec3_scalar{min(a.x, b.x), min(a.y, b.y), min(a.z, b.z)};
+}
+
 SI vec3 max(vec3 a, vec3 b) {
   return vec3(max(a.x, b.x), max(a.y, b.y), max(a.z, b.z));
 }
-
+SI vec3 max(vec3 a, Float b) {
+  return vec3(max(a.x, b), max(a.y, b), max(a.z, b));
+}
 SI vec3_scalar max(vec3_scalar a, vec3_scalar b) {
   return vec3_scalar{max(a.x, b.x), max(a.y, b.y), max(a.z, b.z)};
 }
