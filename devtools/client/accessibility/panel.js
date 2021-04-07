@@ -103,10 +103,6 @@ AccessibilityPanel.prototype = {
       EVENTS.ACCESSIBILITY_INSPECTOR_UPDATED,
       this.onAccessibilityInspectorUpdated
     );
-    // Expose a promise so that tests can wait for the UI to be ready.
-    this._accessibilityViewInitialized = this.panelWin.once(EVENTS.INITIALIZED);
-
-    this.shouldRefresh = true;
 
     this.accessibilityProxy = new AccessibilityProxy(this._commands);
     this.accessibilityProxy.startListeningForTargetUpdated(
@@ -130,6 +126,12 @@ AccessibilityPanel.prototype = {
       init: this.onLifecycleEvent,
       shutdown: this.onLifecycleEvent,
     });
+
+    // Force refresh to render the UI and wait for the INITIALIZED event.
+    const onInitialized = this.panelWin.once(EVENTS.INITIALIZED);
+    this.shouldRefresh = true;
+    this.refresh();
+    await onInitialized;
 
     resolver(this);
     return this._opening;
