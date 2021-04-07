@@ -77,10 +77,12 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType
                                                  action:nil
                                           keyEquivalent:@""];
 
-    mNativeMenuItem.enabled = isEnabled;
+    mIsChecked = mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                                                    nsGkAtoms::_true, eCaseMatters);
 
-    SetChecked(mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
-                                                  nsGkAtoms::_true, eCaseMatters));
+    mNativeMenuItem.enabled = isEnabled;
+    mNativeMenuItem.state = mIsChecked ? NSOnState : NSOffState;
+
     SetKeyEquiv();
   }
 
@@ -123,8 +125,11 @@ nsresult nsMenuItemX::SetChecked(bool aIsChecked) {
 
   // update the content model. This will also handle unchecking our siblings
   // if we are a radiomenu
-  mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                                 mIsChecked ? u"true"_ns : u"false"_ns, true);
+  if (mIsChecked) {
+    mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, u"true"_ns, true);
+  } else {
+    mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked, true);
+  }
 
   // update native menu item
   mNativeMenuItem.state = mIsChecked ? NSOnState : NSOffState;
