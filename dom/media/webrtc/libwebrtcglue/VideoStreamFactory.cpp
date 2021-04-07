@@ -112,12 +112,10 @@ static void SelectBitrates(unsigned short width, unsigned short height, int min,
 }
 
 void VideoStreamFactory::SetCodecMode(webrtc::VideoCodecMode aCodecMode) {
-  MOZ_ASSERT(NS_IsMainThread());
   mCodecMode = aCodecMode;
 }
 
 void VideoStreamFactory::SetSendingFramerate(unsigned int aSendingFramerate) {
-  MOZ_ASSERT(NS_IsMainThread());
   mSendingFramerate = aSendingFramerate;
 }
 
