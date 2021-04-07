@@ -666,6 +666,11 @@ enum class ObjectFlag : uint16_t {
   //   most proto chains. Code using this flag must check for "__proto__"
   //   property names separately.
   HasNonWritableOrAccessorPropExclProto = 1 << 9,
+
+  // If set, the object either mutated or deleted an accessor property. This is
+  // used to invalidate IC/Warp code specializing on specific getter/setter
+  // objects. See also the SMDOC comment in vm/GetterSetter.h.
+  HadGetterSetterChange = 1 << 10,
 };
 
 using ObjectFlags = EnumFlags<ObjectFlag>;
@@ -930,7 +935,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     MOZ_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(),
                   p->maybeSlot() <= maybeSlot());
     MOZ_ASSERT_IF(p && !inDictionary(),
-                  isDataProperty() == (p->maybeSlot() != maybeSlot()));
+                  !isCustomDataProperty() == (p->maybeSlot() != maybeSlot()));
     parent = p;
   }
 
@@ -1100,63 +1105,21 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
  public:
   bool inDictionary() const { return immutableFlags & IN_DICTIONARY; }
 
-  inline JSObject* maybeGetterObject() const;
-  inline JSObject* getterObject() const;
-  bool hasGetterObject() const { return hasGetterValue() && getterObject(); }
-
-  // Per ES5, decode null getterObj as the undefined value, which encodes as
-  // null.
-  Value getterValue() const {
-    MOZ_ASSERT(hasGetterValue());
-    if (JSObject* getterObj = getterObject()) {
-      return ObjectValue(*getterObj);
-    }
-    return UndefinedValue();
-  }
-
-  Value getterOrUndefined() const {
-    return hasGetterValue() ? getterValue() : UndefinedValue();
-  }
-
-  inline JSObject* maybeSetterObject() const;
-  inline JSObject* setterObject() const;
-  bool hasSetterObject() const { return hasSetterValue() && setterObject(); }
-
-  // Per ES5, decode null setterObj as the undefined value, which encodes as
-  // null.
-  Value setterValue() const {
-    MOZ_ASSERT(hasSetterValue());
-    if (JSObject* setterObj = setterObject()) {
-      return ObjectValue(*setterObj);
-    }
-    return UndefinedValue();
-  }
-
-  Value setterOrUndefined() const {
-    return hasSetterValue() ? setterValue() : UndefinedValue();
-  }
-
   bool matches(const Shape* other) const {
     return propid_.get() == other->propid_.get() &&
            matchesParamsAfterId(other->base(), other->objectFlags(),
-                                other->maybeSlot(), other->attrs,
-                                other->maybeGetterObject(),
-                                other->maybeSetterObject());
+                                other->maybeSlot(), other->attrs);
   }
 
   inline bool matches(const StackShape& other) const;
 
   bool matchesParamsAfterId(BaseShape* base, ObjectFlags aobjectFlags,
-                            uint32_t aslot, unsigned aattrs, JSObject* getter,
-                            JSObject* setter) const {
+                            uint32_t aslot, unsigned aattrs) const {
     return base == this->base() && objectFlags() == aobjectFlags &&
-           matchesPropertyParamsAfterId(aslot, aattrs, getter, setter);
+           matchesPropertyParamsAfterId(aslot, aattrs);
   }
-
-  bool matchesPropertyParamsAfterId(uint32_t aslot, unsigned aattrs,
-                                    JSObject* getter, JSObject* setter) const {
-    return maybeSlot() == aslot && attrs == aattrs &&
-           maybeGetterObject() == getter && maybeSetterObject() == setter;
+  bool matchesPropertyParamsAfterId(uint32_t aslot, unsigned aattrs) const {
+    return maybeSlot() == aslot && attrs == aattrs;
   }
 
   // Note: this returns true only for plain data properties with a slot. Returns
@@ -1170,7 +1133,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return isDataProperty(attrs);
   }
   uint32_t slot() const {
-    MOZ_ASSERT(isDataProperty() && !hasMissingSlot());
+    MOZ_ASSERT(!isCustomDataProperty());
+    MOZ_ASSERT(!hasMissingSlot());
     return maybeSlot();
   }
   uint32_t maybeSlot() const { return immutableFlags & SLOT_MASK; }
@@ -1326,7 +1290,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   MOZ_ALWAYS_INLINE Shape* searchLinear(jsid id);
 
   void fixupAfterMovingGC();
-  void fixupGetterSetterForBarrier(JSTracer* trc);
   void updateBaseShapeAfterMovingGC();
 
   // For JIT usage.
@@ -1363,23 +1326,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 };
 
 /* Fat Shape used for accessor properties. */
-class AccessorShape : public Shape {
-  friend class Shape;
-  friend class NativeObject;
-
-  // If hasGetterValue(), the getter object or null.
-  JSObject* getter_;
-
-  // If hasSetterValue(), the setter object or null.
-  JSObject* setter_;
-
- public:
-  /* Get a shape identical to this one, without parent/children information. */
-  inline AccessorShape(const StackShape& other, uint32_t nfixed);
-
-  inline AccessorShape(BaseShape* base, ObjectFlags objectFlags,
-                       uint32_t nfixed);
-};
+class AccessorShape : public Shape {};
 
 struct EmptyShape : public js::Shape {
   EmptyShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed)
@@ -1488,8 +1435,6 @@ struct StackShape {
   /* For performance, StackShape only roots when absolutely necessary. */
   BaseShape* base;
   jsid propid;
-  JSObject* getter;
-  JSObject* setter;
   uint32_t immutableFlags;
   ObjectFlags objectFlags;
   uint8_t attrs;
@@ -1499,8 +1444,6 @@ struct StackShape {
                       uint32_t slot, unsigned attrs)
       : base(base),
         propid(propid),
-        getter(nullptr),
-        setter(nullptr),
         immutableFlags(slot),
         objectFlags(objectFlags),
         attrs(uint8_t(attrs)),
@@ -1513,23 +1456,10 @@ struct StackShape {
   explicit StackShape(Shape* shape)
       : base(shape->base()),
         propid(shape->propidRef()),
-        getter(shape->maybeGetterObject()),
-        setter(shape->maybeSetterObject()),
         immutableFlags(shape->immutableFlags),
         objectFlags(shape->objectFlags()),
         attrs(shape->attrs),
         mutableFlags(shape->mutableFlags) {}
-
-  void updateGetterSetter(JSObject* getter, JSObject* setter) {
-    if (getter || setter || (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-      immutableFlags |= Shape::ACCESSOR_SHAPE;
-    } else {
-      immutableFlags &= ~Shape::ACCESSOR_SHAPE;
-    }
-
-    this->getter = getter;
-    this->setter = setter;
-  }
 
   bool isDataProperty() const {
     MOZ_ASSERT(!JSID_IS_EMPTY(propid));
@@ -1537,8 +1467,10 @@ struct StackShape {
   }
   bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
+  bool isCustomDataProperty() const { return attrs & JSPROP_CUSTOM_DATA_PROP; }
+
   uint32_t slot() const {
-    MOZ_ASSERT(isDataProperty() && !hasMissingSlot());
+    MOZ_ASSERT(!hasMissingSlot());
     return maybeSlot();
   }
   uint32_t maybeSlot() const { return immutableFlags & Shape::SLOT_MASK; }
@@ -1548,15 +1480,11 @@ struct StackShape {
     immutableFlags = (immutableFlags & ~Shape::SLOT_MASK) | slot;
   }
 
-  bool isAccessorShape() const {
-    return immutableFlags & Shape::ACCESSOR_SHAPE;
-  }
-
   HashNumber hash() const {
     HashNumber hash = HashId(propid);
     return mozilla::AddToHash(
-        hash, mozilla::HashGeneric(base, objectFlags.toRaw(), attrs,
-                                   maybeSlot(), getter, setter));
+        hash,
+        mozilla::HashGeneric(base, objectFlags.toRaw(), attrs, maybeSlot()));
   }
 
   // StructGCPolicy implementation.
@@ -1571,11 +1499,11 @@ class WrappedPtrOperations<StackShape, Wrapper> {
 
  public:
   bool isDataProperty() const { return ss().isDataProperty(); }
+  bool isCustomDataProperty() const { return ss().isCustomDataProperty(); }
   bool hasMissingSlot() const { return ss().hasMissingSlot(); }
   uint32_t slot() const { return ss().slot(); }
   uint32_t maybeSlot() const { return ss().maybeSlot(); }
   uint32_t slotSpan() const { return ss().slotSpan(); }
-  bool isAccessorShape() const { return ss().isAccessorShape(); }
   uint8_t attrs() const { return ss().attrs; }
   ObjectFlags objectFlags() const { return ss().objectFlags; }
   jsid propid() const { return ss().propid; }
@@ -1587,9 +1515,6 @@ class MutableWrappedPtrOperations<StackShape, Wrapper>
   StackShape& ss() { return static_cast<Wrapper*>(this)->get(); }
 
  public:
-  void updateGetterSetter(JSObject* getter, JSObject* setter) {
-    ss().updateGetterSetter(getter, setter);
-  }
   void setSlot(uint32_t slot) { ss().setSlot(slot); }
   void setBase(BaseShape* base) { ss().base = base; }
   void setAttrs(uint8_t attrs) { ss().attrs = attrs; }
@@ -1608,28 +1533,10 @@ inline Shape::Shape(const StackShape& other, uint32_t nfixed)
       parent(nullptr) {
   setNumFixedSlots(nfixed);
 
-#ifdef DEBUG
-  gc::AllocKind allocKind = getAllocKind();
-  MOZ_ASSERT_IF(other.isAccessorShape(),
-                allocKind == gc::AllocKind::ACCESSOR_SHAPE);
-  MOZ_ASSERT_IF(allocKind == gc::AllocKind::SHAPE, !other.isAccessorShape());
-#endif
-
   MOZ_ASSERT_IF(!isEmptyShape(), AtomIsMarked(zone(), propid()));
 
   children.setNone();
 }
-
-// This class is used to update any shapes in a zone that have nursery objects
-// as getters/setters.  It updates the pointers and the shapes' entries in the
-// parents' ShapeSet tables.
-class NurseryShapesRef : public gc::BufferableRef {
-  Zone* zone_;
-
- public:
-  explicit NurseryShapesRef(Zone* zone) : zone_(zone) {}
-  void trace(JSTracer* trc) override;
-};
 
 inline Shape::Shape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed)
     : CellWithTenuredGCPointer(base),
@@ -1641,24 +1548,6 @@ inline Shape::Shape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed)
       parent(nullptr) {
   MOZ_ASSERT(base);
   children.setNone();
-}
-
-inline JSObject* Shape::maybeGetterObject() const {
-  return isAccessorShape() ? asAccessorShape().getter_ : nullptr;
-}
-
-inline JSObject* Shape::maybeSetterObject() const {
-  return isAccessorShape() ? asAccessorShape().setter_ : nullptr;
-}
-
-inline JSObject* Shape::getterObject() const {
-  MOZ_ASSERT(hasGetterValue());
-  return asAccessorShape().getter_;
-}
-
-inline JSObject* Shape::setterObject() const {
-  MOZ_ASSERT(hasSetterValue());
-  return asAccessorShape().setter_;
 }
 
 inline Shape* Shape::searchLinear(jsid id) {
@@ -1675,7 +1564,7 @@ inline Shape* Shape::searchLinear(jsid id) {
 inline bool Shape::matches(const StackShape& other) const {
   return propid_.get() == other.propid &&
          matchesParamsAfterId(other.base, other.objectFlags, other.maybeSlot(),
-                              other.attrs, other.getter, other.setter);
+                              other.attrs);
 }
 
 template <MaybeAdding Adding>

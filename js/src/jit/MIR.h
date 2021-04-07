@@ -11948,10 +11948,10 @@ class MLoadWrapperTarget : public MUnaryInstruction,
 class MGuardHasGetterSetter : public MUnaryInstruction,
                               public SingleObjectPolicy::Data {
   jsid propId_;
-  CompilerShape shape_;
+  CompilerGetterSetter getterSetter_;
 
-  MGuardHasGetterSetter(MDefinition* obj, jsid id, Shape* shape)
-      : MUnaryInstruction(classOpcode, obj), propId_(id), shape_(shape) {
+  MGuardHasGetterSetter(MDefinition* obj, jsid id, GetterSetter* gs)
+      : MUnaryInstruction(classOpcode, obj), propId_(id), getterSetter_(gs) {
     setResultType(MIRType::Object);
     setMovable();
     setGuard();
@@ -11963,7 +11963,7 @@ class MGuardHasGetterSetter : public MUnaryInstruction,
   NAMED_OPERANDS((0, object))
 
   jsid propId() const { return propId_; }
-  Shape* shape() const { return shape_; }
+  GetterSetter* getterSetter() const { return getterSetter_; }
 
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields);
@@ -11976,7 +11976,7 @@ class MGuardHasGetterSetter : public MUnaryInstruction,
     if (ins->toGuardHasGetterSetter()->propId() != propId()) {
       return false;
     }
-    if (ins->toGuardHasGetterSetter()->shape() != shape()) {
+    if (ins->toGuardHasGetterSetter()->getterSetter() != getterSetter()) {
       return false;
     }
     return congruentIfOperandsEqual(ins);
