@@ -655,7 +655,21 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       }
       return NS_OK;
     }
+
+#ifdef NIGHTLY_BUILD
+    if (aFeature == FEATURE_WEBRENDER_SOFTWARE) {
+      const bool isMali4xx =
+          mGLStrings->Renderer().Find("Mali-4", /*ignoreCase*/ true) >= 0;
+      if (isMali4xx) {
+        *aStatus = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
+      } else {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_BUG_1703140";
+      }
+      return NS_OK;
+    }
   }
+#endif
 
   return GfxInfoBase::GetFeatureStatusImpl(
       aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
