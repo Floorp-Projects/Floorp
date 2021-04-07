@@ -28,11 +28,12 @@ bool Merger::Parse(const std::string &Str, bool ParseCoverage) {
   return Parse(SS, ParseCoverage);
 }
 
-void Merger::ParseOrExit(std::istream &IS, bool ParseCoverage) {
+int Merger::ParseOrExit(std::istream &IS, bool ParseCoverage) {
   if (!Parse(IS, ParseCoverage)) {
     Printf("MERGE: failed to parse the control file (unexpected error)\n");
-    exit(1);
+    return 1;
   }
+  return 0;
 }
 
 // The control file example:
@@ -194,11 +195,13 @@ Set<uint32_t> Merger::AllFeatures() const {
 }
 
 // Inner process. May crash if the target crashes.
-void Fuzzer::CrashResistantMergeInternalStep(const std::string &CFPath) {
+int Fuzzer::CrashResistantMergeInternalStep(const std::string &CFPath) {
   Printf("MERGE-INNER: using the control file '%s'\n", CFPath.c_str());
   Merger M;
   std::ifstream IF(CFPath);
-  M.ParseOrExit(IF, false);
+  int Res = M.ParseOrExit(IF, false);
+  if (Res != 0)
+    return Res;
   IF.close();
   if (!M.LastFailure.empty())
     Printf("MERGE-INNER: '%s' caused a failure at the previous merge step\n",
@@ -216,7 +219,8 @@ void Fuzzer::CrashResistantMergeInternalStep(const std::string &CFPath) {
   };
   Set<const TracePC::PCTableEntry *> AllPCs;
   for (size_t i = M.FirstNotProcessedFile; i < M.Files.size(); i++) {
-    Fuzzer::MaybeExitGracefully();
+    if (Fuzzer::MaybeExitGracefully())
+      return 0;
     auto U = FileToVector(M.Files[i].Name);
     if (U.size() > MaxInputLen) {
       U.resize(MaxInputLen);
@@ -261,12 +265,14 @@ void Fuzzer::CrashResistantMergeInternalStep(const std::string &CFPath) {
     OF.flush();
   }
   PrintStatsWrapper("DONE  ");
+  return 0;
 }
 
-static size_t WriteNewControlFile(const std::string &CFPath,
+static int WriteNewControlFile(const std::string &CFPath,
                                   const Vector<SizedFile> &OldCorpus,
                                   const Vector<SizedFile> &NewCorpus,
-                                  const Vector<MergeFileInfo> &KnownFiles) {
+                                  const Vector<MergeFileInfo> &KnownFiles,
+                                  size_t &NumFiles) {
   std::unordered_set<std::string> FilesToSkip;
   for (auto &SF: KnownFiles)
     FilesToSkip.insert(SF.Name);
@@ -292,14 +298,15 @@ static size_t WriteNewControlFile(const std::string &CFPath,
   if (!ControlFile) {
     Printf("MERGE-OUTER: failed to write to the control file: %s\n",
            CFPath.c_str());
-    exit(1);
+    return 1;
   }
 
-  return FilesToUse.size();
+  NumFiles = FilesToUse.size();
+  return 0;
 }
 
 // Outer process. Does not call the target code and thus should not fail.
-void CrashResistantMerge(const Vector<std::string> &Args,
+int CrashResistantMerge(const Vector<std::string> &Args,
                          const Vector<SizedFile> &OldCorpus,
                          const Vector<SizedFile> &NewCorpus,
                          Vector<std::string> *NewFiles,
@@ -309,8 +316,9 @@ void CrashResistantMerge(const Vector<std::string> &Args,
                          Set<uint32_t> *NewCov,
                          const std::string &CFPath,
                          bool V /*Verbose*/) {
-  if (NewCorpus.empty() && OldCorpus.empty()) return;  // Nothing to merge.
+  if (NewCorpus.empty() && OldCorpus.empty()) return 0;  // Nothing to merge.
   size_t NumAttempts = 0;
+  int Res;
   Vector<MergeFileInfo> KnownFiles;
   if (FileSize(CFPath)) {
     VPrintf(V, "MERGE-OUTER: non-empty control file provided: '%s'\n",
@@ -331,7 +339,8 @@ void CrashResistantMerge(const Vector<std::string> &Args,
           VPrintf(
               V,
               "MERGE-OUTER: nothing to do, merge has been completed before\n");
-          exit(0);
+          Fuzzer::GracefullyExit();
+          return 0;
         }
 
         // Number of input files likely changed, start merge from scratch, but
@@ -356,7 +365,9 @@ void CrashResistantMerge(const Vector<std::string> &Args,
             "%zd files, %zd in the initial corpus, %zd processed earlier\n",
             OldCorpus.size() + NewCorpus.size(), OldCorpus.size(),
             KnownFiles.size());
-    NumAttempts = WriteNewControlFile(CFPath, OldCorpus, NewCorpus, KnownFiles);
+    Res = WriteNewControlFile(CFPath, OldCorpus, NewCorpus, KnownFiles, NumAttempts);
+    if (Res != 0)
+      return Res;
   }
 
   // Execute the inner process until it passes.
@@ -366,7 +377,8 @@ void CrashResistantMerge(const Vector<std::string> &Args,
   BaseCmd.removeFlag("fork");
   BaseCmd.removeFlag("collect_data_flow");
   for (size_t Attempt = 1; Attempt <= NumAttempts; Attempt++) {
-    Fuzzer::MaybeExitGracefully();
+    if (Fuzzer::MaybeExitGracefully())
+      return 0;
     VPrintf(V, "MERGE-OUTER: attempt %zd\n", Attempt);
     Command Cmd(BaseCmd);
     Cmd.addFlag("merge_control_file", CFPath);
@@ -388,7 +400,9 @@ void CrashResistantMerge(const Vector<std::string> &Args,
   VPrintf(V, "MERGE-OUTER: the control file has %zd bytes\n",
           (size_t)IF.tellg());
   IF.seekg(0, IF.beg);
-  M.ParseOrExit(IF, true);
+  Res = M.ParseOrExit(IF, true);
+  if (Res != 0)
+    return Res;
   IF.close();
   VPrintf(V,
           "MERGE-OUTER: consumed %zdMb (%zdMb rss) to parse the control file\n",
@@ -399,6 +413,7 @@ void CrashResistantMerge(const Vector<std::string> &Args,
   VPrintf(V, "MERGE-OUTER: %zd new files with %zd new features added; "
           "%zd new coverage edges\n",
          NewFiles->size(), NewFeatures->size(), NewCov->size());
+  return 0;
 }
 
 } // namespace fuzzer

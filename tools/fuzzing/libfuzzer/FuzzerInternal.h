@@ -35,8 +35,8 @@ public:
   Fuzzer(UserCallback CB, InputCorpus &Corpus, MutationDispatcher &MD,
          FuzzingOptions Options);
   ~Fuzzer();
-  void Loop(Vector<SizedFile> &CorporaFiles);
-  void ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles);
+  int Loop(Vector<SizedFile> &CorporaFiles);
+  int ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles);
   void MinimizeCrashLoop(const Unit &U);
   void RereadOutputCorpus(size_t MaxSize);
 
@@ -65,13 +65,16 @@ public:
   static void StaticFileSizeExceedCallback();
   static void StaticGracefulExitCallback();
 
+  static void GracefullyExit();
+  static bool isGracefulExitRequested();
+
   int ExecuteCallback(const uint8_t *Data, size_t Size);
   bool RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile = false,
               InputInfo *II = nullptr, bool *FoundUniqFeatures = nullptr);
 
   // Merge Corpora[1:] into Corpora[0].
   void Merge(const Vector<std::string> &Corpora);
-  void CrashResistantMergeInternalStep(const std::string &ControlFilePath);
+  int CrashResistantMergeInternalStep(const std::string &ControlFilePath);
   MutationDispatcher &GetMD() { return MD; }
   void PrintFinalStats();
   void SetMaxInputLen(size_t MaxInputLen);
@@ -84,7 +87,7 @@ public:
                                bool DuringInitialCorpusExecution);
 
   void HandleMalloc(size_t Size);
-  static void MaybeExitGracefully();
+  static bool MaybeExitGracefully();
   std::string WriteToOutputCorpus(const Unit &U);
 
 private:
@@ -93,7 +96,7 @@ private:
   void ExitCallback();
   void CrashOnOverwrittenData();
   void InterruptCallback();
-  void MutateAndTestOne();
+  bool MutateAndTestOne();
   void PurgeAllocator();
   void ReportNewCoverage(InputInfo *II, const Unit &U);
   void PrintPulseAndReportSlowInput(const uint8_t *Data, size_t Size);
