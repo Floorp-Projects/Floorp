@@ -114,6 +114,9 @@
   ; Register AccessibleMarshal.dll with COM (this requires write access to HKLM)
   ${RegisterAccessibleMarshal}
 
+  ; Record the Windows Error Reporting module
+  WriteRegDWORD HKLM "SOFTWARE\Microsoft\Windows\Windows Error Reporting\RuntimeExceptionHelperModules" "$INSTDIR\mozwer.dll" 0
+
 !ifdef MOZ_MAINTENANCE_SERVICE
   Call IsUserAdmin
   Pop $R0
@@ -1477,6 +1480,7 @@ ${RemoveDefaultBrowserAgentShortcut}
   Push "minidump-analyzer.exe"
   Push "pingsender.exe"
   Push "updater.exe"
+  Push "mozwer.dll"
   Push "${FileMainEXE}"
 !macroend
 !define PushFilesToCheck "!insertmacro PushFilesToCheck"

@@ -427,6 +427,8 @@ bin/libfreebl_64int_3.so
 @RESPATH@/crashreporter.ini
 #ifdef XP_UNIX
 @RESPATH@/Throbber-small.gif
+#elif defined(XP_WIN)
+@BINPATH@/@DLL_PREFIX@mozwer@DLL_SUFFIX@
 #endif
 #endif
 @RESPATH@/browser/crashreporter-override.ini

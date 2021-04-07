@@ -379,6 +379,16 @@ Section "-Application" APP_IDX
 
   ClearErrors
 
+  ; Record the Windows Error Reporting module
+  WriteRegDWORD HKLM "SOFTWARE\Microsoft\Windows\Windows Error Reporting\RuntimeExceptionHelperModules" "$INSTDIR\mozwer.dll" 0
+  ${If} ${Errors}
+    ${LogMsg} "** ERROR Recording: $INSTDIR\mozwer.dll **"
+  ${Else}
+    ${LogMsg} "Recorded: $INSTDIR\mozwer.dll"
+  ${EndIf}
+
+  ClearErrors
+
   ; Default for creating Start Menu shortcut
   ; (1 = create, 0 = don't create)
   ${If} $AddStartMenuSC == ""
