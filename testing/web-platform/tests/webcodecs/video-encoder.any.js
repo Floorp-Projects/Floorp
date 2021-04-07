@@ -4,6 +4,7 @@
 
 const defaultConfig = {
   codec: 'vp8',
+  framerate: 25,
   width: 640,
   height: 480
 };
@@ -59,19 +60,8 @@ promise_test(t => {
 promise_test(async t => {
   let output_chunks = [];
   let codecInit = getDefaultCodecInit(t);
-  let decoderConfig = null;
-  let encoderConfig = {
-    codec: 'vp8',
-    width: 640,
-    height: 480,
-    displayWidth: 800,
-    displayHeight: 600,
-  };
-
   codecInit.output = (chunk, metadata) => {
     assert_not_equals(metadata, null);
-    if (metadata.decoderConfig)
-      decoderConfig = metadata.decoderConfig;
     output_chunks.push(chunk);
   }
 
@@ -80,7 +70,7 @@ promise_test(async t => {
   // No encodes yet.
   assert_equals(encoder.encodeQueueSize, 0);
 
-  encoder.configure(encoderConfig);
+  encoder.configure(defaultConfig);
 
   // Still no encodes.
   assert_equals(encoder.encodeQueueSize, 0);
@@ -96,14 +86,6 @@ promise_test(async t => {
   assert_true(encoder.encodeQueueSize >= 0 && encoder.encodeQueueSize <= 2)
 
   await encoder.flush();
-
-  // Decoder config should be given with the first chunk
-  assert_not_equals(decoderConfig, null);
-  assert_equals(decoderConfig.codedHeight, encoderConfig.height);
-  assert_equals(decoderConfig.codedWidth, encoderConfig.width);
-  assert_equals(decoderConfig.codec, encoderConfig.codec);
-  assert_equals(decoderConfig.displayHeight, encoderConfig.displayHeight);
-  assert_equals(decoderConfig.displayWidth, encoderConfig.displayWidth);
 
   // We can guarantee that all encodes are processed after a flush.
   assert_equals(encoder.encodeQueueSize, 0);
