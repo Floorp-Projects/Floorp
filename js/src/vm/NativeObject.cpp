@@ -203,7 +203,7 @@ void js::NativeObject::checkShapeConsistency() {
 
     shape = lastProperty();
     while (shape) {
-      MOZ_ASSERT_IF(!shape->isEmptyShape() && shape->isDataProperty(),
+      MOZ_ASSERT_IF(!shape->isEmptyShape() && shape->hasSlot(),
                     shape->slot() < slotSpan());
       if (!prev) {
         MOZ_ASSERT(lastProperty() == shape);
@@ -225,7 +225,7 @@ void js::NativeObject::checkShapeConsistency() {
         }
       }
       if (prev) {
-        MOZ_ASSERT_IF(shape->isDataProperty(),
+        MOZ_ASSERT_IF(shape->hasSlot(),
                       prev->maybeSlot() >= shape->maybeSlot());
         shape->children.checkHasChild(prev);
       }

@@ -2984,7 +2984,7 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
   Shape* shape;
   if (obj->is<NativeObject>()) {
     shape = obj->as<NativeObject>().lastProperty();
-    while (shape && (shape->isEmptyShape() || !shape->isDataProperty() ||
+    while (shape && (shape->isEmptyShape() || !shape->hasSlot() ||
                      shape->slot() != slot)) {
       shape = shape->previous();
     }
@@ -3177,28 +3177,29 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
   if (shape.isDataProperty()) {
     out.printf(": ");
     dumpValue(obj->getSlot(shape.maybeSlot()), out);
+  } else if (shape.isAccessorDescriptor()) {
+    out.printf(": getter %p setter %p", obj->getGetter(&shape),
+               obj->getSetter(&shape));
   }
 
   out.printf(" (shape %p", (void*)&shape);
 
   uint8_t attrs = shape.attributes();
-  if (attrs & JSPROP_ENUMERATE) out.put(" enumerate");
-  if (attrs & JSPROP_READONLY) out.put(" readonly");
-  if (attrs & JSPROP_PERMANENT) out.put(" permanent");
-
-  if (shape.hasGetterValue()) {
-    out.printf(" getterValue %p", obj->getGetter(&shape));
+  if (attrs & JSPROP_ENUMERATE) {
+    out.put(" enumerate");
   }
-
-  if (shape.hasSetterValue()) {
-    out.printf(" setterValue %p", obj->getSetter(&shape));
+  if (attrs & JSPROP_READONLY) {
+    out.put(" readonly");
+  }
+  if (attrs & JSPROP_PERMANENT) {
+    out.put(" permanent");
   }
 
   if (shape.isCustomDataProperty()) {
     out.printf(" <custom-data-prop>");
   }
 
-  if (shape.isDataProperty()) {
+  if (shape.hasSlot()) {
     out.printf(" slot %u", shape.slot());
   }
 
