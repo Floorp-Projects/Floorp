@@ -25,6 +25,12 @@
 
 #include "nsJSUtils.h"
 
+#ifdef XP_MACOSX
+#  include <CoreFoundation/CoreFoundation.h>
+#  include <Security/Security.h>
+#  include "KeychainSecret.h"  // for ScopedCFType
+#endif                         // XP_MACOSX
+
 using namespace mozilla;
 using namespace mozilla::psm;
 
@@ -190,6 +196,62 @@ nsClientAuthRememberService::RememberDecision(
   return NS_OK;
 }
 
+#ifdef XP_MACOSX
+// On macOS, users can add "identity preference" items in the keychain. These
+// can be added via the Keychain Access tool. These specify mappings from
+// URLs/wildcards like "*.mozilla.org" to specific client certificates. This
+// function retrieves the preferred client certificate for a hostname by
+// querying a system API that checks for these identity preferences.
+nsresult CheckForPreferredCertificate(const nsACString& aHostName,
+                                      nsACString& aCertDBKey) {
+  aCertDBKey.Truncate();
+  // SecIdentityCopyPreferred seems to expect a proper URI which it can use
+  // for prefix and wildcard matches.
+  // We don't have the full URL but we can turn the hostname into a URI with
+  // an authority section, so that it matches against macOS identity preferences
+  // like `*.foo.com`. If we know that this connection is always going to be
+  // https, then we should put that in the URI as well, so that it matches
+  // identity preferences like `https://foo.com/` as well. If we can plumb
+  // the path or the full URL into this function we could also match identity
+  // preferences like `https://foo.com/bar/` but for now we cannot.
+  nsPrintfCString fakeUrl("//%s/", PromiseFlatCString(aHostName).get());
+  ScopedCFType<CFStringRef> host(::CFStringCreateWithCString(
+      kCFAllocatorDefault, fakeUrl.get(), kCFStringEncodingUTF8));
+  if (!host) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  ScopedCFType<SecIdentityRef> identity(
+      ::SecIdentityCopyPreferred(host.get(), NULL, NULL));
+  if (!identity) {
+    // No preferred identity for this hostname, leave aCertDBKey empty and
+    // return
+    return NS_OK;
+  }
+  SecCertificateRef certRefRaw = NULL;
+  OSStatus copyResult =
+      ::SecIdentityCopyCertificate(identity.get(), &certRefRaw);
+  ScopedCFType<SecCertificateRef> certRef(certRefRaw);
+  if (copyResult != errSecSuccess || certRef.get() == NULL) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  ScopedCFType<CFDataRef> der(::SecCertificateCopyData(certRef.get()));
+  if (!der) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIX509Cert> cert(nsNSSCertificate::ConstructFromDER(
+      // ConstructFromDER is not const-correct so we have to cast away the
+      // const.
+      const_cast<char*>(
+          reinterpret_cast<const char*>(::CFDataGetBytePtr(der.get()))),
+      ::CFDataGetLength(der.get())));
+  if (!cert) {
+    return NS_ERROR_FAILURE;
+  }
+  return cert->GetDbKey(aCertDBKey);
+}
+#endif
+
 NS_IMETHODIMP
 nsClientAuthRememberService::HasRememberedDecision(
     const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
@@ -212,14 +274,24 @@ nsClientAuthRememberService::HasRememberedDecision(
   DataStorageType storageType = GetDataStorageType(aOriginAttributes);
 
   nsCString listEntry = mClientAuthRememberList->Get(entryKey, storageType);
-  if (listEntry.IsEmpty()) {
+  if (!listEntry.IsEmpty()) {
+    if (!listEntry.Equals(nsClientAuthRemember::SentinelValue)) {
+      aCertDBKey = listEntry;
+    }
+    *aRetVal = true;
     return NS_OK;
   }
 
-  if (!listEntry.Equals(nsClientAuthRemember::SentinelValue)) {
-    aCertDBKey = listEntry;
+#ifdef XP_MACOSX
+  rv = CheckForPreferredCertificate(aHostName, aCertDBKey);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  *aRetVal = true;
+  if (!aCertDBKey.IsEmpty()) {
+    *aRetVal = true;
+    return NS_OK;
+  }
+#endif
 
   return NS_OK;
 }

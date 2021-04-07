@@ -17,10 +17,11 @@ NS_IMPL_ISUPPORTS(X509CertValidity, nsIX509CertValidity)
 
 using namespace mozilla;
 using namespace mozilla::pkix;
-using namespace mozilla::pkix::der;
 
 X509CertValidity::X509CertValidity(Input certDER)
     : mNotBefore(0), mNotAfter(0), mTimesInitialized(false) {
+  using namespace mozilla::pkix::der;
+
   // We're not building a verified certificate chain, so the EndEntityOrCA
   // parameter doesn't matter.
   BackCert cert(certDER, EndEntityOrCA::MustBeEndEntity, nullptr);
