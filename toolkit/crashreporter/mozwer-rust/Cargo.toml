@@ -1,0 +1,27 @@
+[package]
+name = "mozwer_s"
+version = "0.1.0"
+authors = ["Gabriele Svelto <gsvelto@mozilla.com>"]
+edition = "2018"
+
+[dependencies]
+libc = "0.2.0"
+rust-ini = "0.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+uuid = { version = "0.8.1", features = ["v4"] }
+winapi = { version = "0.3", features = [
+    "combaseapi",
+    "impl-default",
+    "knownfolders",
+    "psapi",
+    "shlobj",
+    "winerror",
+    "winbase",
+    "winnt",
+] }
+
+[lib]
+name = "mozwer_s"
+crate-type = ["staticlib"]
+path = "lib.rs"

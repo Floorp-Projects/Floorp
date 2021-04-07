@@ -26,9 +26,11 @@ FINAL_LIBRARY = "xul"
 if CONFIG["MOZ_CRASHREPORTER"]:
     if CONFIG["OS_ARCH"] == "WINNT":
         DIRS += [
+            "breakpad-windows-libxul",
             "google-breakpad/src/common",
             "google-breakpad/src/processor",
-            "breakpad-windows-libxul",
+            "mozwer",
+            "mozwer-rust",
         ]
 
         if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
