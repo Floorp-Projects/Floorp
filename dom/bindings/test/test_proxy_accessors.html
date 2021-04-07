@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1700052
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1700052</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1700052">Mozilla Bug 1700052</a>
+<p id="display"></p>
+<form id="theform"></form>
+<pre id="test">
+<script>
+function expandoTests() {
+  // Get a DOM proxy with an expando object. Define/redefine a "foo" getter/setter
+  // and ensure the right function is called.
+
+  var obj = document.getElementById("theform");
+  var count1 = 0, count2 = 0, count3 = 0;
+  var fun1 = function() { count1++; };
+  var fun2 = function() { count2++; };
+  var fun3 = function() { count3++; };
+
+  Object.defineProperty(obj, "foo", {configurable: true, get: fun1, set: fun1});
+
+  for (var i = 0; i < 100; i++) {
+    obj.foo;
+    obj.foo = i;
+    if (i === 50) {
+      Object.defineProperty(obj, "foo", {configurable: true, get: fun2, set: fun2});
+    } else if (i === 80) {
+      Object.defineProperty(obj, "foo", {configurable: true, get: fun3, set: fun3});
+    }
+  }
+
+  is(count1, 102, "call count for fun1 must match");
+  is(count2, 60, "call count for fun2 must match");
+  is(count3, 38, "call count for fun3 must match");
+}
+expandoTests();
+
+function unshadowedTests() {
+  // Same as above, but for non-shadowing properties on the prototype.
+
+  var obj = document.getElementById("theform");
+  var proto = Object.getPrototypeOf(obj);
+
+  var count1 = 0, count2 = 0;
+  var fun1 = function() { count1++; };
+  var fun2 = function() { count2++; };
+
+  for (var i = 0; i < 100; i++) {
+    obj.name;
+    obj.name = "test";
+    if (i === 50) {
+      let desc = Object.getOwnPropertyDescriptor(proto, "name");
+      desc.get = desc.set = fun1;
+      Object.defineProperty(proto, "name", desc);
+    }
+    if (i === 90) {
+      let desc = Object.getOwnPropertyDescriptor(proto, "name");
+      desc.get = desc.set = fun2;
+      Object.defineProperty(proto, "name", desc);
+    }
+  }
+
+  is(count1, 80, "call count for fun1 must match");
+  is(count2, 18, "call count for fun2 must match");
+}
+unshadowedTests();
+</script>
+</pre>
+</body>
+</html>
