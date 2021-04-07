@@ -18,7 +18,7 @@ async function testResizingInIframe(inspector, boxmodel, testActor) {
   info("Test that resizing an element in an iframe updates its box model");
 
   info("Selecting the nested test node");
-  await selectNodeInIframe2("div", inspector);
+  await selectNodeInFrames(["iframe", "iframe", "div"], inspector);
 
   info("Checking that the box model view shows the right value");
   const sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
@@ -46,7 +46,7 @@ async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
   await onInspectorUpdated;
 
   info("Selecting the test node in iframe1");
-  await selectNodeInIframe1("p", inspector);
+  await selectNodeInFrames(["iframe", "p"], inspector);
 
   info("Checking that the box model view shows the right value");
   const sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
@@ -60,19 +60,6 @@ async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
 
   info("Checking that the box model view shows the right value after update");
   is(sizeElt.textContent, "200\u00D7100");
-}
-
-async function selectNodeInIframe1(selector, inspector) {
-  const iframe1 = await getNodeFront("iframe", inspector);
-  const node = await getNodeFrontInFrame(selector, iframe1, inspector);
-  await selectNode(node, inspector);
-}
-
-async function selectNodeInIframe2(selector, inspector) {
-  const iframe1 = await getNodeFront("iframe", inspector);
-  const iframe2 = await getNodeFrontInFrame("iframe", iframe1, inspector);
-  const node = await getNodeFrontInFrame(selector, iframe2, inspector);
-  await selectNode(node, inspector);
 }
 
 async function setStyleInIframe1(testActor, selector, propertyName, value) {

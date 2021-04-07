@@ -42,8 +42,7 @@ add_task(async function() {
   );
 
   info("Select the node from the remote iframe");
-  const iframeEl = await getNodeFrontInFrame("html", "iframe", inspector);
-  await selectNode(iframeEl, inspector);
+  await selectNodeInFrames(["iframe", "html"], inspector);
 
   ok(
     ruleViewHasColor("#0ff"),
@@ -62,7 +61,7 @@ add_task(async function() {
   await waitFor(() => ruleViewHasColor("#f00"));
 
   info("Select the node from the remote iframe again");
-  await selectNode(iframeEl, inspector);
+  await selectNodeInFrames(["iframe", "html"], inspector);
 
   await waitFor(() => ruleViewHasColor("#ff0"));
   ok(true, "The simulation stopped on the remote iframe as well");

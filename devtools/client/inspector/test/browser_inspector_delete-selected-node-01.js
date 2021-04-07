@@ -9,7 +9,7 @@ const TEST_URL = URL_ROOT + "doc_inspector_delete-selected-node-01.html";
 add_task(async function() {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
-  const span = await getNodeFrontInFrame("span", "iframe", inspector);
+  const span = await getNodeFrontInFrames(["iframe", "span"], inspector);
   await selectNode(span, inspector);
 
   info("Removing selected <span> element.");

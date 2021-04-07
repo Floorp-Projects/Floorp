@@ -27,9 +27,8 @@ async function testPolygonIframeMovePoint(config) {
 
   info(`Turn on shapes highlighter for ${selector}`);
   // Get a reference to the highlighter's target node inside the iframe.
-  const highlightedNode = await getNodeFrontInFrame(
-    selector,
-    "#frame",
+  const highlightedNode = await getNodeFrontInFrames(
+    ["#frame", selector],
     inspector
   );
   // Select the nested node so toggling of the shapes highlighter works from the rule view
