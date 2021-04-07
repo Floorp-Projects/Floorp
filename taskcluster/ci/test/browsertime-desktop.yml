@@ -85,7 +85,6 @@ browsertime-tp6:
         run-visual-metrics: true
         treeherder-symbol: Btime(tp6)
     raptor-subtests:
-        - apple
         - [bing-search, bing]
         - buzzfeed
         - cnn
@@ -96,7 +95,6 @@ browsertime-tp6:
         - fandom
         - [google-docs, gdocs]
         - [google-search, gsearch]
-        - [google-sheets, gsheets]
         - imdb
         - instagram
         - linkedin
@@ -111,8 +109,6 @@ browsertime-tp6:
         - wikia
         - wikipedia
         - yahoo-mail
-        - yahoo-news
-        - yandex
         - youtube
     tier:
         by-variant:
@@ -275,7 +271,6 @@ browsertime-tp6-live:
             - --live-sites
     raptor-subtests:
         - amazon
-        - apple
         - [bing-search, bing]
         - ebay
         - [facebook, fb]
@@ -283,7 +278,6 @@ browsertime-tp6-live:
         - [google-docs, gdocs]
         - [google-mail, gmail]
         - [google-search, gsearch]
-        - [google-sheets, gsheets]
         - [google-slides, gslides]
         - imdb
         - imgur
@@ -301,8 +295,6 @@ browsertime-tp6-live:
         - twitter
         - wikipedia
         - yahoo-mail
-        - yahoo-news
-        - yandex
         - youtube
     run-on-projects: []
     tier: 3

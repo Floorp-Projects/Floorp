@@ -36,29 +36,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **use live sites**: false
 
 
-.. dropdown:: apple (BT, FF, CH, CU)
-
-   * **alert on**: fcp, loadtime
-   * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
-   * **browser cycles**: 25
-   * **expected**: pass
-   * **gecko profile entries**: 14000000
-   * **gecko profile interval**: 1
-   * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
-   * **page cycles**: 25
-   * **page timeout**: 60000
-   * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
-   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
-   * **playback version**: 5.1.1
-   * **test url**: `<https://www.apple.com/macbook-pro/>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: false
-
-
 .. dropdown:: bing-search (BT, FF, CH, CU)
 
    * **alert on**: fcp, loadtime
@@ -307,29 +284,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
    * **playback version**: 5.1.1
    * **test url**: `<https://www.google.com/search?hl=en&q=barack+obama&cad=h>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: false
-
-
-.. dropdown:: google-sheets (BT, FF, CH, CU)
-
-   * **alert on**: fcp, loadtime
-   * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
-   * **browser cycles**: 25
-   * **expected**: pass
-   * **gecko profile entries**: 14000000
-   * **gecko profile interval**: 1
-   * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
-   * **page cycles**: 25
-   * **page timeout**: 60000
-   * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
-   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
-   * **playback version**: 5.1.1
-   * **test url**: `<https://docs.google.com/spreadsheets/d/1jT9qfZFAeqNoOK97gruc34Zb7y_Q-O_drZ8kSXT-4D4/edit?usp=sharing>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
@@ -767,52 +721,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
    * **playback version**: 5.1.1
    * **test url**: `<https://mail.yahoo.com/>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: false
-
-
-.. dropdown:: yahoo-news (BT, FF, CH, CU)
-
-   * **alert on**: fcp, loadtime
-   * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
-   * **browser cycles**: 25
-   * **expected**: pass
-   * **gecko profile entries**: 14000000
-   * **gecko profile interval**: 1
-   * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
-   * **page cycles**: 25
-   * **page timeout**: 60000
-   * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
-   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
-   * **playback version**: 5.1.1
-   * **test url**: `<https://www.yahoo.com/lifestyle/police-respond-noise-complaint-end-playing-video-games-respectful-tenants-002329963.html>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: false
-
-
-.. dropdown:: yandex (BT, FF, CH, CU)
-
-   * **alert on**: fcp, loadtime
-   * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
-   * **browser cycles**: 25
-   * **expected**: pass
-   * **gecko profile entries**: 14000000
-   * **gecko profile interval**: 1
-   * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
-   * **page cycles**: 25
-   * **page timeout**: 60000
-   * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
-   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
-   * **playback version**: 5.1.1
-   * **test url**: `<https://yandex.ru/search/?text=barack%20obama&lr=10115>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
