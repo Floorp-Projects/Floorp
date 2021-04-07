@@ -545,7 +545,7 @@ std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors(
   return {sAccentColor, sColorWhiteAlpha80, sAccentColorLight};
 }
 
-sRGBColor nsNativeBasicTheme::ComputeScrollbarTrackColor(
+sRGBColor nsNativeBasicTheme::ComputeScrollbarColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, UseSystemColors aUseSystemColors) {
   const nsStyleUI* ui = aStyle.StyleUI();
@@ -624,8 +624,7 @@ nscolor nsNativeBasicTheme::GetScrollbarButtonColor(nscolor aTrackColor,
 }
 
 /*static*/
-Maybe<nscolor> nsNativeBasicTheme::GetScrollbarArrowColor(
-    nscolor aButtonColor) {
+nscolor nsNativeBasicTheme::GetScrollbarArrowColor(nscolor aButtonColor) {
   // In Windows 10 scrollbar, there are several gray colors used:
   //
   // State  | Background (lum) | Arrow   | Contrast
@@ -639,14 +638,6 @@ Maybe<nscolor> nsNativeBasicTheme::GetScrollbarArrowColor(
   //
   // This function is written based on these values.
 
-  if (NS_GET_A(aButtonColor) == 0) {
-    // If the button color is transparent, because of e.g.
-    // scrollbar-color: <something> transparent, then use
-    // the thumb color, which is expected to have enough
-    // contrast.
-    return Nothing();
-  }
-
   float luminance = RelativeLuminanceUtils::Compute(aButtonColor);
   // Color with luminance larger than 0.72 has contrast ratio over 4.6
   // to color with luminance of gray 96, so this value is chosen for
@@ -655,19 +646,15 @@ Maybe<nscolor> nsNativeBasicTheme::GetScrollbarArrowColor(
     // ComputeRelativeLuminanceFromComponents(96). That function cannot
     // be constexpr because of std::pow.
     const float GRAY96_LUMINANCE = 0.117f;
-    return Some(RelativeLuminanceUtils::Adjust(aButtonColor, GRAY96_LUMINANCE));
+    return RelativeLuminanceUtils::Adjust(aButtonColor, GRAY96_LUMINANCE);
   }
   // The contrast ratio of a color to black equals that to white when its
   // luminance is around 0.18, with a contrast ratio ~4.6 to both sides,
   // thus the value below. It's the lumanince of gray 118.
-  //
-  // TODO(emilio): Maybe the button alpha is not the best thing to use here and
-  // we should use the thumb alpha? It seems weird that the color of the arrow
-  // depends on the opacity of the scrollbar thumb...
   if (luminance >= 0.18) {
-    return Some(NS_RGBA(0, 0, 0, NS_GET_A(aButtonColor)));
+    return NS_RGBA(0, 0, 0, NS_GET_A(aButtonColor));
   }
-  return Some(NS_RGBA(255, 255, 255, NS_GET_A(aButtonColor)));
+  return NS_RGBA(255, 255, 255, NS_GET_A(aButtonColor));
 }
 
 bool nsNativeBasicTheme::ShouldUseDarkScrollbar(nsIFrame* aFrame,
@@ -744,18 +731,12 @@ nsNativeBasicTheme::ComputeScrollbarButtonColors(
                            StyleSystemColor::TextForeground);
   }
 
-  auto trackColor = ComputeScrollbarTrackColor(aFrame, aStyle, aDocumentState,
-                                               aUseSystemColors);
+  auto trackColor =
+      ComputeScrollbarColor(aFrame, aStyle, aDocumentState, aUseSystemColors);
   nscolor buttonColor =
       GetScrollbarButtonColor(trackColor.ToABGR(), aElementState);
-  auto arrowColor =
-      GetScrollbarArrowColor(buttonColor)
-          .map(sRGBColor::FromABGR)
-          .valueOrFrom([&] {
-            return ComputeScrollbarThumbColor(aFrame, aStyle, aElementState,
-                                              aDocumentState, aUseSystemColors);
-          });
-  return {sRGBColor::FromABGR(buttonColor), arrowColor};
+  nscolor arrowColor = GetScrollbarArrowColor(buttonColor);
+  return {sRGBColor::FromABGR(buttonColor), sRGBColor::FromABGR(arrowColor)};
 }
 
 static const CSSCoord kInnerFocusOutlineWidth = 2.0f;
@@ -1515,8 +1496,8 @@ bool nsNativeBasicTheme::DoPaintDefaultScrollbar(
                                 NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
     return true;
   }
-  auto scrollbarColor = ComputeScrollbarTrackColor(
-      aFrame, aStyle, aDocumentState, aUseSystemColors);
+  auto scrollbarColor =
+      ComputeScrollbarColor(aFrame, aStyle, aDocumentState, aUseSystemColors);
   FillRect(aPaintData, aRect, scrollbarColor);
   return true;
 }
@@ -1547,8 +1528,8 @@ bool nsNativeBasicTheme::DoPaintDefaultScrollCorner(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, UseSystemColors aUseSystemColors,
     DPIRatio aDpiRatio) {
-  auto scrollbarColor = ComputeScrollbarTrackColor(
-      aFrame, aStyle, aDocumentState, aUseSystemColors);
+  auto scrollbarColor =
+      ComputeScrollbarColor(aFrame, aStyle, aDocumentState, aUseSystemColors);
   FillRect(aPaintData, aRect, scrollbarColor);
   return true;
 }
