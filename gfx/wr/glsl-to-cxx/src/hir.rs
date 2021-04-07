@@ -3268,8 +3268,22 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         state,
         "min",
         None,
+        Type::new(Vec2),
+        vec![Type::new(Vec2), Type::new(Float)],
+    );
+    declare_function(
+        state,
+        "min",
+        None,
         Type::new(Vec3),
         vec![Type::new(Vec3), Type::new(Vec3)],
+    );
+    declare_function(
+        state,
+        "min",
+        None,
+        Type::new(Vec3),
+        vec![Type::new(Vec3), Type::new(Float)],
     );
 
     declare_function(
@@ -3299,6 +3313,13 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         None,
         Type::new(Vec3),
         vec![Type::new(Vec3), Type::new(Vec3)],
+    );
+    declare_function(
+        state,
+        "max",
+        None,
+        Type::new(Vec3),
+        vec![Type::new(Vec3), Type::new(Float)],
     );
 
     declare_function(
