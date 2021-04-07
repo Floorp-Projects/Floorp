@@ -13,6 +13,8 @@ UNIFIED_SOURCES += [
 
 EXPORTS += ["MediaSink.h"]
 
+DEFINES["TRACING"] = True
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
