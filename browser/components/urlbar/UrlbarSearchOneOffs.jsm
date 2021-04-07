@@ -33,6 +33,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
     UrlbarPrefs.addObserver(this);
     // Override the SearchOneOffs.jsm value for the Address Bar.
     this.disableOneOffsHorizontalKeyNavigation = true;
+    this._webEngines = [];
   }
 
   /**
