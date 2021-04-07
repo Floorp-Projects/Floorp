@@ -29,6 +29,7 @@ import org.mozilla.fenix.components.metrics.AppStartupTelemetry
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.AppStartReasonProvider
+import org.mozilla.fenix.perf.StartupActivityLog
 import org.mozilla.fenix.perf.StartupActivityStateProvider
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.utils.ClipboardHandler
@@ -176,4 +177,5 @@ class Components(private val context: Context) {
 
     val appStartReasonProvider by lazyMonitored { AppStartReasonProvider() }
     val startupActivityStateProvider by lazyMonitored { StartupActivityStateProvider() }
+    val startupActivityLog by lazyMonitored { StartupActivityLog() }
 }
