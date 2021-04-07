@@ -51,6 +51,7 @@ class VideoConduitTest : public Test {
             "")) {
     NSS_NoDB_Init(nullptr);
 
+    mVideoConduit->InitCall();
     mVideoConduit->SetLocalSSRCs({42}, {43});
   }
 

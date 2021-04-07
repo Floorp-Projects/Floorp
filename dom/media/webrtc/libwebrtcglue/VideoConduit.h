@@ -215,30 +215,31 @@ class WebrtcVideoConduit
 
   uint8_t TemporalLayers() const { return mTemporalLayers; }
 
-  webrtc::VideoCodecMode CodecMode() const {
-    MOZ_ASSERT(NS_IsMainThread());
-    return mCodecMode;
-  }
+  webrtc::VideoCodecMode CodecMode() const;
 
   WebrtcVideoConduit(RefPtr<WebrtcCallWrapper> aCall,
                      nsCOMPtr<nsISerialEventTarget> aStsThread,
                      Options aOptions, std::string aPCHandle);
   virtual ~WebrtcVideoConduit();
 
+  // Necessary Init steps on main thread.
   MediaConduitErrorCode Init();
+  // Necessary Init steps on the Call thread.
+  void InitCall();
 
   std::vector<uint32_t> GetLocalSSRCs() override;
+
+  // Any thread.
+  bool GetRemoteSSRC(uint32_t* ssrc) override;
+
+  // Call thread only.
   bool SetLocalSSRCs(const std::vector<uint32_t>& ssrcs,
                      const std::vector<uint32_t>& rtxSsrcs) override;
-  // Can be called from any thread
-  bool GetRemoteSSRC(uint32_t* ssrc) override;
   bool SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) override;
   bool UnsetRemoteSSRC(uint32_t ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
   bool SetLocalMID(const std::string& mid) override;
-
   void SetSyncGroup(const std::string& group) override;
-
   bool SetRemoteSSRCLocked(uint32_t ssrc, uint32_t rtxSsrc);
 
   Maybe<webrtc::VideoReceiveStream::Stats> GetReceiverStats() const override;
@@ -300,6 +301,9 @@ class WebrtcVideoConduit
   // Accessed on any thread under mTransportMonitor.
   unsigned short mReceivingHeight = 0;
 
+  // Call worker thread. All access to mCall->Call() happens here.
+  const nsCOMPtr<nsISerialEventTarget> mCallThread;
+
   // Socket transport service thread that runs stats queries against us. Any
   // thread.
   const nsCOMPtr<nsISerialEventTarget> mStsThread;
@@ -317,11 +321,12 @@ class WebrtcVideoConduit
   const UniquePtr<WebrtcVideoEncoderFactory> mEncoderFactory;
 
   // Adapter handling resolution constraints from signaling and sinks.
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread.
   UniquePtr<cricket::VideoAdapter> mVideoAdapter;
 
   // Our own record of the sinks added to mVideoBroadcaster so we can support
-  // dispatching updates to sinks from off-main-thread. Main thread only.
+  // dispatching updates to sinks from off-Call-thread. Call thread only.
   AutoTArray<rtc::VideoSinkInterface<webrtc::VideoFrame>*, 1> mRegisteredSinks;
 
   // Broadcaster that distributes our frames to all registered sinks.
@@ -336,31 +341,34 @@ class WebrtcVideoConduit
   // Accessed on the frame-feeding thread only.
   webrtc::I420BufferPool mBufferPool;
 
-  // Engine state we are concerned with. Written on main thread and read
+  // Engine state we are concerned with. Written on the Call thread and read
   // anywhere.
   mozilla::Atomic<bool>
       mEngineTransmitting;  // If true ==> Transmit Subsystem is up and running
   mozilla::Atomic<bool>
       mEngineReceiving;  // if true ==> Receive Subsystem up and running
 
-  // Local database of currently applied receive codecs. Main thread only.
+  // Local database of currently applied receive codecs. Call thread only.
   nsTArray<UniquePtr<VideoCodecConfig>> mRecvCodecList;
 
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread.
   UniquePtr<VideoCodecConfig> mCurSendCodecConfig;
 
-  // Bookkeeping of stats for telemetry. Main thread only.
+  // Bookkeeping of stats for telemetry. Call thread only.
   RunningStat mSendFramerate;
   RunningStat mSendBitrate;
   RunningStat mRecvFramerate;
   RunningStat mRecvBitrate;
 
   // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete this.
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread.
   webrtc::VideoReceiveStream* mRecvStream = nullptr;
 
   // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete this.
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread.
   webrtc::VideoSendStream* mSendStream = nullptr;
 
   // Written on the frame feeding thread.
@@ -401,29 +409,28 @@ class WebrtcVideoConduit
   static const unsigned int sAlphaDen = 8;
   static const unsigned int sRoundingPadding = 1024;
 
-  // Main thread only.
-  RefPtr<WebrtcAudioConduit> mSyncedTo;
-
-  // Main thread only.
+  // Call thread only.
   webrtc::VideoCodecMode mActiveCodecMode;
   webrtc::VideoCodecMode mCodecMode;
 
   // WEBRTC.ORG Call API
-  // Const so can be accessed on any thread. Most methods are called on
-  // main thread, though Receiver() is called on STS. This seems fine.
+  // Const so can be accessed on any thread. All methods are called on the Call
+  // thread.
   const RefPtr<WebrtcCallWrapper> mCall;
 
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread. Typical non-Call thread access is on the frame delivery
+  // thread.
   webrtc::VideoSendStream::Config mSendStreamConfig;
 
-  // Main thread only.
+  // Call thread only.
   webrtc::VideoEncoderConfig mEncoderConfig;
 
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
-  // Calls can happen on any thread.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread. Calls can happen on any thread.
   RefPtr<rtc::RefCountedObject<VideoStreamFactory>> mVideoStreamFactory;
 
-  // Main thread only.
+  // Call thread only.
   webrtc::VideoReceiveStream::Config mRecvStreamConfig;
 
   // Are SSRC changes without signaling allowed or not.
@@ -433,11 +440,11 @@ class WebrtcVideoConduit
   // Accessed only on mStsThread.
   bool mWaitingForInitialSsrc = true;
 
-  // Accessed during configuration/signaling (main),
+  // Accessed during configuration/signaling (call),
   // and when receiving packets (sts).
   Atomic<uint32_t> mRecvSSRC;  // this can change during a stream!
-  // Accessed from both the STS and main thread for a variety of things
-  // Set when receiving packets
+  // Accessed from both the STS and Call thread for a variety of things.
+  // Set when receiving packets.
   Atomic<uint32_t> mRemoteSSRC;  // this can change during a stream!
 
   // Accessed only on mStsThread.
@@ -448,6 +455,7 @@ class WebrtcVideoConduit
   // Main thread only
   nsTArray<uint64_t> mRecvCodecPluginIDs;
 
+  // Call thread only
   MediaEventListener mSendPluginCreated;
   MediaEventListener mSendPluginReleased;
   MediaEventListener mRecvPluginCreated;

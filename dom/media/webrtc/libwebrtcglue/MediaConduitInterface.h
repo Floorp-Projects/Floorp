@@ -331,6 +331,11 @@ class VideoSessionConduit : public MediaSessionConduit {
    * Factory function to create and initialize a Video Conduit Session
    * @param  webrtc::Call instance shared by paired audio and video
    *         media conduits
+   * @param  aOptions are a number of options, typically from prefs, used to
+   *         configure the created VideoConduit.
+   * @param  aPCHandle is a string representing the RTCPeerConnection that is
+   *         creating this VideoConduit. This is used when reporting GMP plugin
+   *         crashes.
    * @result Concrete VideoSessionConduitObject or nullptr in the case
    *         of failure
    */
