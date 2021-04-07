@@ -242,7 +242,12 @@ class Bootstrapper(object):
                 cls = ArchlinuxBootstrapper
             elif dist_id in ("void"):
                 cls = VoidBootstrapper
-            elif dist_id in ("opensuse", "opensuse-tumbleweed", "suse"):
+            elif dist_id in (
+                "opensuse",
+                "opensuse-leap",
+                "opensuse-tumbleweed",
+                "suse",
+            ):
                 cls = OpenSUSEBootstrapper
             else:
                 raise NotImplementedError(
