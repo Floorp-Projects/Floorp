@@ -7043,6 +7043,9 @@ static bool TouchDeviceNeedsPanGestureConversion(HANDLE aSource) {
 // We only do this for touch devices with a specific name and identifiers.
 static bool TouchDeviceNeedsPanGestureConversion(PTOUCHINPUT aOSEvent,
                                                  uint32_t aTouchCount) {
+  if (!StaticPrefs::apz_windows_check_for_pan_gesture_conversion()) {
+    return false;
+  }
   if (aTouchCount == 0) {
     return false;
   }
