@@ -4636,6 +4636,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
                       gc::InitialHeap initialHeap, Label* fail,
                       bool initContents = true);
 
+  void createPlainGCObject(Register result, Register shape, Register temp,
+                           Register temp2, uint32_t numFixedSlots,
+                           uint32_t numDynamicSlots, gc::AllocKind allocKind,
+                           gc::InitialHeap initialHeap, Label* fail);
+
   void initGCThing(Register obj, Register temp,
                    const TemplateObject& templateObj, bool initContents = true);
 
