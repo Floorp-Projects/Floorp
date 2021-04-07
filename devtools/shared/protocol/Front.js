@@ -50,6 +50,10 @@ class Front extends Pool {
     // These listeners are register via Front.before function.
     // Map(Event Name[string] => Event Listener[function])
     this._beforeListeners = new Map();
+
+    // This flag allows to check if the `initialize` method has resolved.
+    // Used to avoid notifying about initialized fronts in `watchFronts`.
+    this._initializeResolved = false;
   }
 
   /**
@@ -141,6 +145,7 @@ class Front extends Pool {
     if (typeof front.initialize == "function") {
       await front.initialize();
     }
+    front._initializeResolved = true;
 
     // Ensure calling form() *before* notifying about this front being just created.
     // We exprect the front to be fully initialized, especially via its form attributes.
@@ -188,9 +193,11 @@ class Front extends Pool {
     }
 
     if (onAvailable) {
-      // First fire the callback on already instantiated fronts
+      // First fire the callback on fronts with the correct type and which have
+      // been initialized. If initialize() is still in progress, the front will
+      // be emitted via _frontCreationListeners shortly after.
       for (const front of this.poolChildren()) {
-        if (front.typeName == typeName) {
+        if (front.typeName == typeName && front._initializeResolved) {
           onAvailable(front);
         }
       }
