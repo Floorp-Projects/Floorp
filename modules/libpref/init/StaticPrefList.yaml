@@ -708,6 +708,11 @@
   value: true
   mirror: always
 
+- name: apz.windows.check_for_pan_gesture_conversion
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: apz.x_skate_highmem_adjust
   type: AtomicFloat
   value: 0.0f
