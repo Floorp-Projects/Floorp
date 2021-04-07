@@ -38,63 +38,24 @@ function setup() {
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
 
-  // Set to allow the cert presented by our H2 server
-  do_get_profile();
-  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+  trr_test_setup();
 
-  prefs.setBoolPref("network.security.esni.enabled", false);
-  prefs.setBoolPref("network.http.spdy.enabled", true);
-  prefs.setBoolPref("network.http.spdy.enabled.http2", true);
-  // the TRR server is on 127.0.0.1
-  prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
-
-  // make all native resolve calls "secretly" resolve localhost instead
-  prefs.setBoolPref("network.dns.native-is-localhost", true);
-
-  // 0 - off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow
-  prefs.setIntPref("network.trr.mode", 2); // TRR first
-  prefs.setBoolPref("network.trr.wait-for-portal", false);
-  // don't confirm that TRR is working, just go!
-  prefs.setCharPref("network.trr.confirmationNS", "skip");
-
-  // So we can change the pref without clearing the cache to check a pushed
-  // record with a TRR path that fails.
-  Services.prefs.setBoolPref("network.trr.clear-cache-on-pref-change", false);
-
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR first
   Services.prefs.setBoolPref("network.http.http3.enabled", true);
-
-  // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
-  // so add that cert to the trust list as a signing cert.  // the foo.example.com domain name.
-  const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 }
 
 setup();
 registerCleanupFunction(async () => {
-  prefs.clearUserPref("network.security.esni.enabled");
-  prefs.clearUserPref("network.http.spdy.enabled");
-  prefs.clearUserPref("network.http.spdy.enabled.http2");
-  prefs.clearUserPref("network.dns.localDomains");
-  prefs.clearUserPref("network.dns.native-is-localhost");
-  prefs.clearUserPref("network.trr.mode");
-  prefs.clearUserPref("network.trr.uri");
-  prefs.clearUserPref("network.trr.credentials");
-  prefs.clearUserPref("network.trr.wait-for-portal");
-  prefs.clearUserPref("network.trr.allow-rfc1918");
-  prefs.clearUserPref("network.trr.useGET");
-  prefs.clearUserPref("network.trr.confirmationNS");
-  prefs.clearUserPref("network.trr.bootstrapAddress");
-  prefs.clearUserPref("network.trr.request-timeout");
-  prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
-  prefs.clearUserPref("network.dns.upgrade_with_https_rr");
-  prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
-  prefs.clearUserPref("network.dns.echconfig.enabled");
-  prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
-  prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
-  prefs.clearUserPref("network.http.http3.enabled");
-  prefs.clearUserPref("network.dns.httpssvc.http3_fast_fallback_timeout");
+  trr_clear_prefs();
+  Services.prefs.clearUserPref("network.dns.upgrade_with_https_rr");
+  Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
+  Services.prefs.clearUserPref("network.dns.echconfig.enabled");
+  Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
+  Services.prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
+  Services.prefs.clearUserPref("network.http.http3.enabled");
+  Services.prefs.clearUserPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout"
+  );
   Services.prefs.clearUserPref(
     "network.http.http3.alt-svc-mapping-for-testing"
   );
@@ -104,25 +65,6 @@ registerCleanupFunction(async () => {
     await trrServer.stop();
   }
 });
-
-class DNSListener {
-  constructor() {
-    this.promise = new Promise(resolve => {
-      this.resolve = resolve;
-    });
-  }
-  onLookupComplete(inRequest, inRecord, inStatus) {
-    this.resolve([inRequest, inRecord, inStatus]);
-  }
-  // So we can await this as a promise.
-  then() {
-    return this.promise.then.apply(this.promise, arguments);
-  }
-}
-
-DNSListener.prototype.QueryInterface = ChromeUtils.generateQI([
-  "nsIDNSListener",
-]);
 
 function makeChan(url) {
   let chan = NetUtil.newChannel({
