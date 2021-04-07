@@ -110,7 +110,7 @@ async function testIsBookmarksMenuItemStateChecked(expected) {
 async function promiseOpenBookmarksLibrary() {
   return BrowserTestUtils.domWindowOpened(null, async win => {
     await BrowserTestUtils.waitForEvent(win, "load");
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () =>
         win.document.documentURI ===
         "chrome://browser/content/places/places.xhtml"
