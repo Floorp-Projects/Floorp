@@ -18,11 +18,12 @@ import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_PRIVATE_TA
  */
 class TabLayoutMediator(
     private val tabLayout: TabLayout,
-    private val interactor: TabsTrayInteractor,
-    private val store: BrowserStore
+    interactor: TabsTrayInteractor,
+    private val browserStore: BrowserStore,
+    trayStore: TabsTrayStore
 ) : LifecycleAwareFeature {
 
-    private val observer = TabLayoutObserver(interactor)
+    private val observer = TabLayoutObserver(interactor, trayStore)
 
     /**
      * Start observing the [TabLayout] and select the current tab for initial state.
@@ -39,7 +40,7 @@ class TabLayoutMediator(
 
     @VisibleForTesting
     internal fun selectActivePage() {
-        val selectedTab = store.state.selectedTab ?: return
+        val selectedTab = browserStore.state.selectedTab ?: return
 
         val selectedPagerPosition = if (selectedTab.content.private) {
             POSITION_PRIVATE_TABS
@@ -55,7 +56,8 @@ class TabLayoutMediator(
  * An observer for the [TabLayout] used for the Tabs Tray.
  */
 internal class TabLayoutObserver(
-    private val interactor: TabsTrayInteractor
+    private val interactor: TabsTrayInteractor,
+    private val trayStore: TabsTrayStore
 ) : TabLayout.OnTabSelectedListener {
 
     private var initialScroll = true
@@ -70,8 +72,16 @@ internal class TabLayoutObserver(
         }
 
         interactor.setCurrentTrayPosition(tab.position, animate)
+
+        trayStore.dispatch(TabsTrayAction.PageSelected(tab.toPage()))
     }
 
     override fun onTabUnselected(tab: TabLayout.Tab) = Unit
     override fun onTabReselected(tab: TabLayout.Tab) = Unit
+}
+
+fun TabLayout.Tab.toPage() = when (this.position) {
+    0 -> Page.NormalTabs
+    1 -> Page.PrivateTabs
+    else -> Page.SyncedTabs
 }

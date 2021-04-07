@@ -10,14 +10,18 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.tabstray.TabsTrayController
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 
-internal class SyncedTabsInteractor(
+class SyncedTabsInteractor(
     private val metrics: MetricController,
     private val activity: HomeActivity,
-    private val trayInteractor: TabsTrayInteractor
+    private val trayInteractor: TabsTrayInteractor,
+    private val controller: TabsTrayController
 ) : SyncedTabsView.Listener {
-    override fun onRefresh() = Unit
+    override fun onRefresh() {
+        controller.onSyncStarted()
+    }
     override fun onTabClicked(tab: Tab) {
         metrics.track(Event.SyncedTabOpened)
         activity.openToBrowserAndLoad(

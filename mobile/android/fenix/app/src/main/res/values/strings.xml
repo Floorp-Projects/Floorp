@@ -598,6 +598,8 @@
     <string name="add_private_tab">Add private tab</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Private</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sync</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Open Tabs</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
