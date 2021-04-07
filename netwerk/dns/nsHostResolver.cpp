@@ -803,8 +803,13 @@ void nsHostResolver::FlushCache(bool aTrrToo) {
         if (record->isInList()) {
           record->remove();
         }
+        LOG(("Removing (%s) Addr record from mRecordDB", record->host.get()));
         iter.Remove();
       }
+    } else if (aTrrToo) {
+      // remove by type records
+      LOG(("Removing (%s) type record from mRecordDB", record->host.get()));
+      iter.Remove();
     }
   }
 }
