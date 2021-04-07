@@ -43,11 +43,12 @@ class MockVideoSink : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
 
 class VideoConduitTest : public Test {
  public:
-  VideoConduitTest()
+  VideoConduitTest(
+      VideoSessionConduit::Options aOptions = VideoSessionConduit::Options())
       : mCallWrapper(MockCallWrapper::Create()),
         mVideoConduit(MakeRefPtr<WebrtcVideoConduit>(
-            mCallWrapper, GetCurrentSerialEventTarget(),
-            VideoSessionConduit::Options(), "")) {
+            mCallWrapper, GetCurrentSerialEventTarget(), std::move(aOptions),
+            "")) {
     NSS_NoDB_Init(nullptr);
 
     mVideoConduit->SetLocalSSRCs({42}, {43});
@@ -725,6 +726,57 @@ TEST_F(VideoConduitTest, TestOnSinkWantsChanged) {
   ASSERT_EQ(videoStreams.size(), 1U);
   EXPECT_EQ(videoStreams[0].width, 240U);
   EXPECT_EQ(videoStreams[0].height, 135U);
+
+  mVideoConduit->StopTransmitting();
+}
+
+class VideoConduitTestScalingLocked : public VideoConduitTest {
+ public:
+  static VideoSessionConduit::Options CreateOptions() {
+    VideoSessionConduit::Options options;
+    options.mLockScaling = true;
+    return options;
+  }
+  VideoConduitTestScalingLocked() : VideoConduitTest(CreateOptions()) {}
+};
+
+TEST_F(VideoConduitTestScalingLocked, TestOnSinkWantsChanged) {
+  UniquePtr<MockVideoSink> sink(new MockVideoSink());
+  rtc::VideoSinkWants wants;
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+  RtpRtcpConfig rtpConf(webrtc::RtcpMode::kCompound);
+
+  wants.max_pixel_count = 256000;
+  EncodingConstraints constraints;
+  VideoCodecConfig::Encoding encoding;
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mEncodings.push_back(encoding);
+  std::vector<webrtc::VideoStream> videoStreams;
+
+  codecConfig.mEncodingConstraints.maxFs = 0;
+  mVideoConduit->ConfigureSendMediaCodec(&codecConfig, rtpConf);
+  mVideoConduit->StartTransmitting();
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+  SendVideoFrame(1920, 1080, 1);
+  EXPECT_EQ(sink->mVideoFrame.width(), 1920);
+  EXPECT_EQ(sink->mVideoFrame.height(), 1080);
+  videoStreams = Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
+                                              sink->mVideoFrame.height());
+  ASSERT_EQ(videoStreams.size(), 1U);
+  EXPECT_EQ(videoStreams[0].width, 1920U);
+  EXPECT_EQ(videoStreams[0].height, 1080U);
+
+  codecConfig.mEncodingConstraints.maxFs = 500;
+  mVideoConduit->ConfigureSendMediaCodec(&codecConfig, rtpConf);
+  mVideoConduit->AddOrUpdateSink(sink.get(), wants);
+  SendVideoFrame(1920, 1080, 2);
+  EXPECT_LE(sink->mVideoFrame.width() * sink->mVideoFrame.height(),
+            500 * 16 * 16);
+  videoStreams = Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
+                                              sink->mVideoFrame.height());
+  ASSERT_EQ(videoStreams.size(), 1U);
+  EXPECT_EQ(videoStreams[0].width, 360U);
+  EXPECT_EQ(videoStreams[0].height, 201U);
 
   mVideoConduit->StopTransmitting();
 }
