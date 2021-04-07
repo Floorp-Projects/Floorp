@@ -865,12 +865,19 @@ static void AssertCanChangeAttrs(Shape* shape, unsigned attrs) {
     return;
   }
 
-  /* A permanent property must stay permanent. */
+  // A non-configurable property must stay non-configurable.
   MOZ_ASSERT(attrs & JSPROP_PERMANENT);
 
-  /* Reject attempts to remove a slot from the permanent data property. */
-  MOZ_ASSERT_IF(shape->isDataProperty(),
-                !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+  // Reject attempts to turn a non-configurable data property into an accessor
+  // or custom data property.
+  MOZ_ASSERT_IF(
+      shape->isDataProperty(),
+      !(attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_CUSTOM_DATA_PROP)));
+
+  // Reject attempts to turn a non-configurable accessor property into a data
+  // property or custom data property.
+  MOZ_ASSERT_IF(shape->isAccessorDescriptor(),
+                attrs & (JSPROP_GETTER | JSPROP_SETTER));
 #endif
 }
 
@@ -949,8 +956,7 @@ Shape* NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
   // If the caller wants to allocate a slot, but doesn't care which slot,
   // copy the existing shape's slot into slot so we can match shape, if all
   // other members match.
-  uint32_t slot =
-      shape->isCustomDataProperty() ? SHAPE_INVALID_SLOT : shape->slot();
+  uint32_t slot = shape->hasSlot() ? shape->slot() : SHAPE_INVALID_SLOT;
 
   ObjectFlags objectFlags =
       GetObjectFlagsForNewProperty(obj->lastProperty(), id, attrs, cx);
@@ -971,7 +977,7 @@ Shape* NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
     return nullptr;
   }
 
-  MOZ_ASSERT_IF(!shape->isCustomDataProperty(), shape->slot() == slot);
+  MOZ_ASSERT_IF(shape->hasSlot(), shape->slot() == slot);
 
   if (obj->inDictionaryMode()) {
     // Updating some property in a dictionary-mode object. Create a new
@@ -1183,7 +1189,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
   }
 
   /* If shape has a slot, free its slot number. */
-  if (!shape->isCustomDataProperty()) {
+  if (shape->hasSlot()) {
     obj->freeSlot(cx, shape->slot());
   }
 
@@ -1812,8 +1818,7 @@ void Shape::dump(js::GenericPrinter& out) const {
     JSID_TO_SYMBOL(propid)->dump(out);
   }
 
-  out.printf(" slot %d attrs %x ",
-             isCustomDataProperty() ? -1 : int32_t(slot()), attrs);
+  out.printf(" slot %d attrs %x ", hasSlot() ? int32_t(slot()) : -1, attrs);
 
   if (attrs) {
     int first = 1;

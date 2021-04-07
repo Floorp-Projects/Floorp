@@ -835,7 +835,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   // compilation can access the immutableFlags word, so we don't want any
   // mutable state here to avoid (TSan) races.
   enum ImmutableFlags : uint32_t {
-    // Mask to get the index in object slots for isDataProperty() shapes.
+    // Mask to get the index in object slots for hasSlot() shapes (all property
+    // shapes except custom data properties).
     // For other shapes in the property tree with a parent, stores the
     // parent's slot index (which may be invalid), and invalid for all
     // other shapes.
@@ -924,10 +925,17 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   void handoffTableTo(Shape* newShape);
 
   void setParent(Shape* p) {
+    // For non-dictionary shapes: if the parent has a slot number, it must be
+    // less than or equal to the child's slot number. (Parent and child can have
+    // the same slot number if the child is a custom data property, these don't
+    // have a slot.)
     MOZ_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(),
                   p->maybeSlot() <= maybeSlot());
+    // For non-dictionary shapes: if the child has a slot, its slot number
+    // must not be the same as the parent's slot number. If the child does not
+    // have a slot, its slot number must match the parent's slot number.
     MOZ_ASSERT_IF(p && !inDictionary(),
-                  !isCustomDataProperty() == (p->maybeSlot() != maybeSlot()));
+                  hasSlot() == (p->maybeSlot() != maybeSlot()));
     parent = p;
   }
 
@@ -1075,13 +1083,10 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   static inline Shape* new_(JSContext* cx, Handle<StackShape> other,
                             uint32_t nfixed);
 
-  /*
-   * Whether this shape has a valid slot value. This may be true even if
-   * !isDataProperty() (see SlotInfo comment above), and may be false even if
-   * isDataProperty() if the shape is being constructed and has not had a slot
-   * assigned yet. After construction, isDataProperty() implies
-   * !hasMissingSlot().
-   */
+  // Whether this shape has a valid slot value. This may be true even if
+  // !hasSlot() (see SlotInfo comment above), and may be false even if
+  // hasSlot() if the shape is being constructed and has not had a slot
+  // assigned yet. After construction, hasSlot() implies !hasMissingSlot().
   bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
  public:
@@ -1115,11 +1120,16 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return isDataProperty(attrs);
   }
   uint32_t slot() const {
-    MOZ_ASSERT(!isCustomDataProperty());
-    MOZ_ASSERT(!hasMissingSlot());
+    MOZ_ASSERT(hasSlot());
     return maybeSlot();
   }
   uint32_t maybeSlot() const { return immutableFlags & SLOT_MASK; }
+
+  bool hasSlot() const {
+    MOZ_ASSERT(!isEmptyShape());
+    MOZ_ASSERT_IF(!isCustomDataProperty(), !hasMissingSlot());
+    return !isCustomDataProperty();
+  }
 
   bool isCustomDataProperty() const { return attrs & JSPROP_CUSTOM_DATA_PROP; }
 
