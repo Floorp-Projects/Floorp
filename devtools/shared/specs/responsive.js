@@ -9,29 +9,6 @@ const responsiveSpec = generateActorSpec({
   typeName: "responsive",
 
   methods: {
-    setDPPXOverride: {
-      request: {
-        dppx: Arg(0, "number"),
-      },
-      response: {
-        valueChanged: RetVal("boolean"),
-      },
-    },
-
-    getDPPXOverride: {
-      request: {},
-      response: {
-        dppx: RetVal("number"),
-      },
-    },
-
-    clearDPPXOverride: {
-      request: {},
-      response: {
-        valueChanged: RetVal("boolean"),
-      },
-    },
-
     setNetworkThrottling: {
       request: {
         options: Arg(0, "json"),

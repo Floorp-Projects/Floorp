@@ -30,7 +30,9 @@ addRDMTask(
 
     info("Try to update the DPI");
     await selectDevicePixelRatio(ui, 2);
-    const dppx = await waitForDevicePixelRatio(ui, 2);
+    const dppx = await waitForDevicePixelRatio(ui, 2, {
+      waitForTargetConfiguration: true,
+    });
     is(dppx, 2, "Content has expected devicePixelRatio");
 
     const clientClosed = waitForClientClose(ui);

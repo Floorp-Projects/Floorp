@@ -45,7 +45,6 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
   },
 
   destroy() {
-    this.clearDPPXOverride();
     this.clearNetworkThrottling();
     this.clearTouchEventsOverride();
     this.clearMetaViewportOverride();
@@ -89,37 +88,6 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
 
   get win() {
     return this.docShell.chromeEventHandler.ownerGlobal;
-  },
-
-  /* DPPX override */
-
-  _previousDPPXOverride: undefined,
-
-  setDPPXOverride(dppx) {
-    if (this.getDPPXOverride() === dppx) {
-      return false;
-    }
-
-    if (this._previousDPPXOverride === undefined) {
-      this._previousDPPXOverride = this.getDPPXOverride();
-    }
-
-    // FIXME: This should be set in the parent process.
-    this.docShell.browsingContext.overrideDPPX = dppx;
-
-    return true;
-  },
-
-  getDPPXOverride() {
-    return this.docShell.browsingContext.overrideDPPX;
-  },
-
-  clearDPPXOverride() {
-    if (this._previousDPPXOverride !== undefined) {
-      return this.setDPPXOverride(this._previousDPPXOverride);
-    }
-
-    return false;
   },
 
   /* Network Throttling */

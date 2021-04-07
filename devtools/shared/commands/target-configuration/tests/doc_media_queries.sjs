@@ -23,6 +23,7 @@ function handleRequest(request, response) {
       <script>
         globalThis.initialMatchesPrefersDarkColorScheme =
           window.matchMedia("(prefers-color-scheme: dark)").matches;
+        globalThis.initialDevicePixelRatio = window.devicePixelRatio;
       </script>
       <style>
         html { background: cyan;}
@@ -48,6 +49,7 @@ function handleRequest(request, response) {
          */
         globalThis.initialMatchesPrefersDarkColorScheme =
           window.matchMedia("(prefers-color-scheme: dark)").matches;
+        globalThis.initialDevicePixelRatio = window.devicePixelRatio
       </script>
       <style>
         @media (prefers-color-scheme: dark) {
