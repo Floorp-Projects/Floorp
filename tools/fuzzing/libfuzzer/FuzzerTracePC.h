@@ -116,7 +116,7 @@ class TracePC {
       CB(PC);
   }
 
-  void SetFocusFunction(const std::string &FuncName);
+  int SetFocusFunction(const std::string &FuncName);
   bool ObservedFocusFunction();
 
   struct PCTableEntry {
