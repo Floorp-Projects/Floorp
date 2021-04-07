@@ -7,7 +7,6 @@
 #include "common/browser_logging/CSFLog.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/Telemetry.h"
-#include "TaskQueueWrapper.h"
 #include "transport/runnable_utils.h"
 #include "WebrtcCallWrapper.h"
 
@@ -44,11 +43,12 @@ RefPtr<AudioSessionConduit> AudioSessionConduit::Create(
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   MOZ_ASSERT(NS_IsMainThread());
 
-  return MakeRefPtr<WebrtcAudioConduit>(aCall, aStsThread);
+  return MakeRefPtr<WebrtcAudioConduit>(std::move(aCall),
+                                        std::move(aStsThread));
 }
 
 void WebrtcAudioConduit::DeleteStreams() {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MutexAutoLock lock(mMutex);
   DeleteSendStream();
   DeleteRecvStream();
@@ -59,7 +59,7 @@ WebrtcAudioConduit::WebrtcAudioConduit(
     : mTransportMonitor("WebrtcAudioConduit"),
       mTransmitterTransport(nullptr),
       mReceiverTransport(nullptr),
-      mCall(aCall),
+      mCall(std::move(aCall)),
       mRecvStreamConfig(),
       mRecvStream(nullptr),
       mSendStreamConfig(
@@ -71,7 +71,8 @@ WebrtcAudioConduit::WebrtcAudioConduit(
       mRecvStreamRunning(false),
       mDtmfEnabled(false),
       mMutex("WebrtcAudioConduit::mMutex"),
-      mStsThread(aStsThread) {}
+      mCallThread(std::move(mCall->mCallThread)),
+      mStsThread(std::move(aStsThread)) {}
 
 /**
  * Destruction defines for our super-classes
@@ -84,7 +85,7 @@ WebrtcAudioConduit::~WebrtcAudioConduit() {
 
 bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
                                        const std::vector<uint32_t>& aRtxSSRCs) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MOZ_ASSERT(aSSRCs.size() == 1,
              "WebrtcAudioConduit::SetLocalSSRCs accepts exactly 1 ssrc.");
 
@@ -114,12 +115,12 @@ bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
 }
 
 std::vector<uint32_t> WebrtcAudioConduit::GetLocalSSRCs() {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   return std::vector<uint32_t>(1, mRecvStreamConfig.rtp.local_ssrc);
 }
 
 bool WebrtcAudioConduit::SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
   // We ignore aRtxSsrc, it is only used in the VideoConduit.
   if (mRecvStreamConfig.rtp.remote_ssrc == ssrc) {
@@ -131,7 +132,7 @@ bool WebrtcAudioConduit::SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) {
 }
 
 bool WebrtcAudioConduit::GetRemoteSSRC(uint32_t* ssrc) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   if (!mRecvStream) {
     return false;
   }
@@ -140,26 +141,25 @@ bool WebrtcAudioConduit::GetRemoteSSRC(uint32_t* ssrc) {
 }
 
 bool WebrtcAudioConduit::SetLocalCNAME(const char* cname) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mSendStreamConfig.rtp.c_name = cname;
   return true;
 }
 
 bool WebrtcAudioConduit::SetLocalMID(const std::string& mid) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mSendStreamConfig.rtp.mid = mid;
   return true;
 }
 
 void WebrtcAudioConduit::SetSyncGroup(const std::string& group) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mRecvStreamConfig.sync_group = group;
 }
 
 Maybe<webrtc::AudioReceiveStream::Stats> WebrtcAudioConduit::GetReceiverStats()
     const {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   if (!mRecvStream) {
     return Nothing();
   }
@@ -168,8 +168,7 @@ Maybe<webrtc::AudioReceiveStream::Stats> WebrtcAudioConduit::GetReceiverStats()
 
 Maybe<webrtc::AudioSendStream::Stats> WebrtcAudioConduit::GetSenderStats()
     const {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   if (!mSendStream) {
     return Nothing();
   }
@@ -177,14 +176,13 @@ Maybe<webrtc::AudioSendStream::Stats> WebrtcAudioConduit::GetSenderStats()
 }
 
 webrtc::Call::Stats WebrtcAudioConduit::GetCallStats() const {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   return mCall->Call()->GetStats();
 }
 
 bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type, int freq) {
   CSFLogInfo(LOGTAG, "%s : setting dtmf payload %d", __FUNCTION__, (int)type);
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mDtmfPayloadType = type;
   mDtmfPayloadFrequency = freq;
 
@@ -194,7 +192,7 @@ bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type, int freq) {
 bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
                                         bool outOfBand, int lengthMs,
                                         int attenuationDb) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   if (!mSendStream || !mDtmfEnabled || !outOfBand) {
     return false;
   }
@@ -202,7 +200,6 @@ bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
   MOZ_DIAGNOSTIC_ASSERT(mDtmfPayloadType != -1);
   MOZ_DIAGNOSTIC_ASSERT(mDtmfPayloadFrequency != -1);
 
-  auto current = TaskQueueWrapper::MainAsCurrent();
   return mSendStream->SendTelephoneEvent(
       mDtmfPayloadType, mDtmfPayloadFrequency, eventCode, lengthMs);
 }
@@ -259,7 +256,7 @@ MediaConduitErrorCode WebrtcAudioConduit::SetReceiverTransport(
 MediaConduitErrorCode WebrtcAudioConduit::ConfigureSendMediaCodec(
     const AudioCodecConfig* codecConfig) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
   MediaConduitErrorCode condError = kMediaConduitNoError;
 
@@ -288,7 +285,7 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureSendMediaCodec(
 
 MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
     const std::vector<UniquePtr<AudioCodecConfig>>& codecConfigList) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   MediaConduitErrorCode condError = kMediaConduitNoError;
@@ -365,7 +362,6 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
 
   // If we are here, at least one codec should have been set
   {
-    auto current = TaskQueueWrapper::MainAsCurrent();
     MutexAutoLock lock(mMutex);
     DeleteRecvStream();
     condError = StartReceivingLocked();
@@ -379,7 +375,7 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
 
 MediaConduitErrorCode WebrtcAudioConduit::SetLocalRTPExtensions(
     LocalDirection aDirection, const RtpExtList& extensions) {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   CSFLogDebug(LOGTAG, "%s direction: %s", __FUNCTION__,
               MediaSessionConduit::LocalDirectionToString(aDirection).c_str());
 
@@ -513,17 +509,18 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
 
   // Spec says to "queue a task" to update contributing/synchronization source
   // stats; that's what we're doing here.
-  NS_DispatchToMainThread(
-      media::NewRunnableFrom([this, self = RefPtr<WebrtcAudioConduit>(this)]() {
-        auto current = TaskQueueWrapper::MainAsCurrent();
+  mCallThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [this, self = RefPtr<WebrtcAudioConduit>(this)] {
         std::vector<webrtc::RtpSource> sources;
         if (mRecvStream) {
           sources = mRecvStream->GetSources();
         }
-        UpdateRtpSources(sources);
-        return NS_OK;
-      }),
-      NS_DISPATCH_NORMAL);
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "WebrtcAudioConduit::GetAudioFrame (call thread)",
+            [this, self = std::move(self), sources = std::move(sources)] {
+              UpdateRtpSources(sources);
+            }));
+      }));
 
   CSFLogDebug(LOGTAG, "%s Got %zu channels of %zu samples", __FUNCTION__,
               frame->num_channels(), frame->samples_per_channel());
@@ -536,7 +533,7 @@ void WebrtcAudioConduit::ReceivedRTPPacket(const uint8_t* data, int len,
   ASSERT_ON_THREAD(mStsThread);
 
   // Handle the unknown ssrc (and ssrc-not-signaled case).
-  // We can't just do this here; it has to happen on MainThread :-(
+  // We can't just do this here; it has to happen on the Call thread.
   // We also don't want to drop the packet, nor stall this thread, so we hold
   // the packet (and any following) for inserting once the SSRC is set.
 
@@ -562,7 +559,7 @@ void WebrtcAudioConduit::ReceivedRTPPacket(const uint8_t* data, int len,
     // we "switch" here immediately, but buffer until the queue is released
     mRecvSSRC = header.ssrc;
 
-    InvokeAsync(GetMainThreadSerialEventTarget(), __func__,
+    InvokeAsync(mCallThread, __func__,
                 [this, self = RefPtr<WebrtcAudioConduit>(this),
                  ssrc = header.ssrc]() mutable {
                   SetRemoteSSRC(ssrc, 0);
@@ -613,39 +610,35 @@ DOMHighResTimeStamp WebrtcAudioConduit::GetNow() const {
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::StopTransmitting() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MutexAutoLock lock(mMutex);
 
   return StopTransmittingLocked();
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::StartTransmitting() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MutexAutoLock lock(mMutex);
 
   return StartTransmittingLocked();
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::StopReceiving() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MutexAutoLock lock(mMutex);
 
   return StopReceivingLocked();
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::StartReceiving() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MutexAutoLock lock(mMutex);
 
   return StartReceivingLocked();
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::StopTransmittingLocked() {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
 
   if (mSendStreamRunning) {
@@ -660,7 +653,7 @@ MediaConduitErrorCode WebrtcAudioConduit::StopTransmittingLocked() {
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::StartTransmittingLocked() {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
 
   if (mSendStreamRunning) {
@@ -680,7 +673,7 @@ MediaConduitErrorCode WebrtcAudioConduit::StartTransmittingLocked() {
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::StopReceivingLocked() {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
 
   if (mRecvStreamRunning) {
@@ -693,7 +686,7 @@ MediaConduitErrorCode WebrtcAudioConduit::StopReceivingLocked() {
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::StartReceivingLocked() {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
 
   if (mRecvStreamRunning) {
@@ -724,12 +717,12 @@ bool WebrtcAudioConduit::SendRtp(const uint8_t* data, size_t len,
     CSFLogDebug(LOGTAG, "%s Sent RTP Packet ", __FUNCTION__);
     if (options.packet_id >= 0) {
       int64_t now_ms = PR_Now() / 1000;
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
+      MOZ_ALWAYS_SUCCEEDS(mCallThread->Dispatch(NS_NewRunnableFunction(
           __func__, [call = mCall, packet_id = options.packet_id, now_ms] {
             if (call->Call()) {
               call->Call()->OnSentPacket({packet_id, now_ms});
             }
-          }));
+          })));
     }
     return true;
   }
@@ -861,8 +854,7 @@ MediaConduitErrorCode WebrtcAudioConduit::ValidateCodecConfig(
 }
 
 void WebrtcAudioConduit::DeleteSendStream() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
   if (mSendStream) {
     mSendStream->Stop();
@@ -873,8 +865,7 @@ void WebrtcAudioConduit::DeleteSendStream() {
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::CreateSendStream() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
 
   mSendStream = mCall->Call()->CreateAudioSendStream(mSendStreamConfig);
@@ -886,8 +877,7 @@ MediaConduitErrorCode WebrtcAudioConduit::CreateSendStream() {
 }
 
 void WebrtcAudioConduit::DeleteRecvStream() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
   if (mRecvStream) {
     mRecvStream->Stop();
@@ -898,8 +888,7 @@ void WebrtcAudioConduit::DeleteRecvStream() {
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::CreateRecvStream() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
 
   mRecvStreamConfig.rtcp_send_transport = this;
@@ -913,7 +902,7 @@ MediaConduitErrorCode WebrtcAudioConduit::CreateRecvStream() {
 }
 
 bool WebrtcAudioConduit::RecreateSendStreamIfExists() {
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MutexAutoLock lock(mMutex);
   bool wasTransmitting = mSendStreamRunning;
   bool hadSendStream = mSendStream;
@@ -932,8 +921,7 @@ bool WebrtcAudioConduit::RecreateSendStreamIfExists() {
 }
 
 bool WebrtcAudioConduit::RecreateRecvStreamIfExists() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MutexAutoLock lock(mMutex);
   bool wasReceiving = mRecvStreamRunning;
   bool hadRecvStream = mRecvStream;
@@ -955,11 +943,9 @@ void WebrtcAudioConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
                                        PacketType type) {
   ASSERT_ON_THREAD(mStsThread);
 
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
+  MOZ_ALWAYS_SUCCEEDS(mCallThread->Dispatch(NS_NewRunnableFunction(
       __func__, [this, self = RefPtr<WebrtcAudioConduit>(this),
                  packet = std::move(packet), type] {
-        auto current = TaskQueueWrapper::MainAsCurrent();
-
         if (!mCall->Call()) {
           return;
         }
@@ -974,7 +960,7 @@ void WebrtcAudioConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
                       __FUNCTION__, type == PacketType::RTP ? "RTP" : "RTCP",
                       status);
         }
-      }));
+      })));
 }
 
 }  // namespace mozilla
