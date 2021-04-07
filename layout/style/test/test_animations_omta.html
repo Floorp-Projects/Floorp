@@ -2108,8 +2108,11 @@ addAsyncAnimTest(async function() {
   div1.style.height = "10px";
   div1.style.animation = "anim2 linear 1s";
 
+  const topLocation =
+    await SpecialPowers.spawnChrome([], () => browsingContext.top.currentURI.spec);
+
   var visitedLink = document.createElement("a");
-  visitedLink.setAttribute("href", window.top.location.href);
+  visitedLink.setAttribute("href", topLocation);
   visitedLink.classList.add("visitedLink");
   visitedLink.classList.add("target");
   visitedLink.style.display = "block";
@@ -2117,7 +2120,7 @@ addAsyncAnimTest(async function() {
   visitedLink.style.animation = "anim2 linear 1s";
 
   var refVisitedLink = document.createElement("a");
-  refVisitedLink.setAttribute("href", window.top.location.href);
+  refVisitedLink.setAttribute("href", topLocation);
   refVisitedLink.classList.add("visitedLink");
 
   gDisplay.appendChild(div1);
@@ -2499,7 +2502,9 @@ addAsyncAnimTest(async function() {
   omta_todo_is("background-color", "rgb(128, 128, 0)", RunningOn.ToDoCompositor,
           "background-color on compositor at 5s");
 
-  gDiv.setAttribute("href", window.top.location.href);
+  const topLocation =
+    await SpecialPowers.spawnChrome([], () => browsingContext.top.currentURI.spec);
+  gDiv.setAttribute("href", topLocation);
   await waitForVisitedLinkColoring(gDiv, "color", "rgb(0, 0, 255)");
   await waitForPaintsFlushed();
 
