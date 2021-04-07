@@ -3878,8 +3878,8 @@ Shape* StringObject::assignInitialShape(JSContext* cx,
                                         Handle<StringObject*> obj) {
   MOZ_ASSERT(obj->empty());
 
-  return NativeObject::addDataProperty(cx, obj, cx->names().length, LENGTH_SLOT,
-                                       JSPROP_PERMANENT | JSPROP_READONLY);
+  return NativeObject::addProperty(cx, obj, cx->names().length, LENGTH_SLOT,
+                                   JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 JSObject* StringObject::createPrototype(JSContext* cx, JSProtoKey key) {
