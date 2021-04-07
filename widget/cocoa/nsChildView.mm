@@ -2970,10 +2970,12 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   geckoEvent.mClickCount = clickCount;
 
   if (!StaticPrefs::dom_event_treat_ctrl_click_as_right_click_disabled() &&
-      ([theEvent modifierFlags] & NSEventModifierFlagControl)) {
+      geckoEvent.IsControl()) {
     geckoEvent.mButton = MouseButton::eSecondary;
   } else {
     geckoEvent.mButton = MouseButton::ePrimary;
+    // Don't send a click if ctrl key is pressed.
+    geckoEvent.mClickEventPrevented = geckoEvent.IsControl();
   }
 
   mGeckoChild->DispatchInputEvent(&geckoEvent);
