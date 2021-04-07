@@ -124,6 +124,7 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aContentHandler);
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+  RefPtr<nsDocShell> docShell = mDocShell;
 
   *aAbortProcess = false;
 
@@ -153,9 +154,9 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
 
   if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {
     // XXX: Why does this not stop the content too?
-    mDocShell->Stop(nsIWebNavigation::STOP_NETWORK);
-
-    mDocShell->SetLoadType(aIsContentPreferred ? LOAD_LINK : LOAD_NORMAL);
+    docShell->Stop(nsIWebNavigation::STOP_NETWORK);
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+    docShell->SetLoadType(aIsContentPreferred ? LOAD_LINK : LOAD_NORMAL);
   }
 
   // In case of multipart jpeg request (mjpeg) we don't really want to
@@ -174,8 +175,7 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
     copy.forget(aContentHandler);
     rv = NS_OK;
   } else {
-    rv =
-        mDocShell->CreateContentViewer(aContentType, aRequest, aContentHandler);
+    rv = docShell->CreateContentViewer(aContentType, aRequest, aContentHandler);
     if (NS_SUCCEEDED(rv) && reuseCV) {
       mExistingJPEGStreamListener = *aContentHandler;
     } else {
