@@ -27,7 +27,7 @@ button {
   border: none;
   position: relative;
   display: block;
-  font-size: inherit;
+  font: inherit;
   padding: 4px 8px;
   padding-inline-start: 32px;
   text-align: start;
@@ -35,7 +35,7 @@ button {
 }
 
 button:dir(rtl) {
-  background-position-x: right 14px;
+  background-position-x: right 8px;
 }
 
 :host([badged]) button::after {

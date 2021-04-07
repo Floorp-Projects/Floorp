@@ -368,6 +368,13 @@ checkbox {
   min-height: 30px !important;
 }
 
+.typeIcon,
+.actionIcon,
+.actionsMenu::part(icon) {
+  height: 16px;
+  width: 16px;
+}
+
 .typeIcon {
   margin-inline: 10px 9px !important;
 }
