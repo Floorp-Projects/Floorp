@@ -30,8 +30,7 @@ add_task(async function() {
     in: 0.521,
   };
 
-  const node = await getNodeFrontInFrame(selector, "#frame", inspector);
-  await selectNode(node, inspector);
+  await selectNodeInFrames(["#frame", selector], inspector);
 
   info("Check that font editor shows font-size value in original units");
   const fontSize = getPropertyValue(viewDoc, property);

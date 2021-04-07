@@ -26,7 +26,7 @@ add_task(async function() {
 
   // Use context menu with root frame selected in toolbox
   await testContextMenuWithinIframe(testActor, async inspector => {
-    return getNodeFrontInFrame("#in-frame", "iframe", inspector);
+    return getNodeFrontInFrames(["iframe", "#in-frame"], inspector);
   });
 
   // Use context menu with inner frame selected in toolbox

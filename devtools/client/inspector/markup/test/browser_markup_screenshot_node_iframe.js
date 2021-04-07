@@ -19,8 +19,7 @@ add_task(async function() {
   const { inspector, toolbox } = await openInspectorForURL(encodeURI(TEST_URL));
 
   info("Select the red node");
-  const redNode = await getNodeFrontInFrame("div", "#same-origin", inspector);
-  await selectNode(redNode, inspector);
+  await selectNodeInFrames(["#same-origin", "div"], inspector);
 
   info(
     "Take a screenshot of the red div in the same origin iframe node and verify it looks as expected"
@@ -32,9 +31,8 @@ add_task(async function() {
     b: 0,
   });
 
-  // info("Select the green node");
-  const greenNode = await getNodeFrontInFrame("div", "#remote", inspector);
-  await selectNode(greenNode, inspector);
+  info("Select the green node");
+  await selectNodeInFrames(["#remote", "div"], inspector);
   info(
     "Take a screenshot of the green div in the remote iframe node and verify it looks as expected"
   );

@@ -28,9 +28,10 @@ add_task(async function() {
   });
   await ToolboxTask.importFunctions({
     getNodeFront,
+    getNodeFrontInFrames,
     getRuleViewLinkByIndex,
     selectNode,
-    // selectNodeInFrames depends on selectNode and getNodeFront.
+    // selectNodeInFrames depends on selectNode, getNodeFront, getNodeFrontInFrames.
     selectNodeInFrames,
   });
 
