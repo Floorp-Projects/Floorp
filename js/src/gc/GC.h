@@ -24,7 +24,6 @@ class JSTracer;
 
 namespace js {
 
-class AccessorShape;
 class FatInlineAtom;
 class NormalAtom;
 

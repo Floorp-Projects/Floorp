@@ -106,9 +106,6 @@
  * trees are more space-efficient than alternatives.  This was removed in bug
  * 631138; see that bug for the full details.
  *
- * For getters/setters, an AccessorShape is allocated. This is a slightly fatter
- * type with extra fields for the getter/setter data.
- *
  * Because many Shapes have similar data, there is actually a secondary type
  * called a BaseShape that holds some of a Shape's data.  Many shapes can share
  * a single BaseShape.
@@ -631,7 +628,6 @@ class MOZ_RAII AutoKeepShapeCaches {
  * earlier property, however.
  */
 
-class AccessorShape;
 class Shape;
 struct StackBaseShape;
 
@@ -853,10 +849,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
     // Property stored in per-object dictionary, not shared property tree.
     IN_DICTIONARY = 1 << 29,
-
-    // This shape is an AccessorShape, a fat Shape that can store
-    // getter/setter information.
-    ACCESSOR_SHAPE = 1 << 30,
   };
 
   // Flags stored in mutableFlags.
@@ -1018,16 +1010,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
       info->shapesMallocHeapTreeChildren +=
           children.toShapeSet()->shallowSizeOfIncludingThis(mallocSizeOf);
     }
-  }
-
-  bool isAccessorShape() const {
-    MOZ_ASSERT_IF(immutableFlags & ACCESSOR_SHAPE,
-                  getAllocKind() == gc::AllocKind::ACCESSOR_SHAPE);
-    return immutableFlags & ACCESSOR_SHAPE;
-  }
-  AccessorShape& asAccessorShape() const {
-    MOZ_ASSERT(isAccessorShape());
-    return *(AccessorShape*)this;
   }
 
   const GCPtrShape& previous() const { return parent; }
@@ -1324,9 +1306,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 #endif
   }
 };
-
-/* Fat Shape used for accessor properties. */
-class AccessorShape : public Shape {};
 
 struct EmptyShape : public js::Shape {
   EmptyShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed)

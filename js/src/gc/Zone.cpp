@@ -175,7 +175,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       propertyTree_(this, this),
       baseShapes_(this, this),
       initialShapes_(this, this),
-      nurseryShapes_(this),
       finalizationRegistries_(this, this),
       finalizationRecordMap_(this, this),
       jitZone_(this, nullptr),
