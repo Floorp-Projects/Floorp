@@ -1187,6 +1187,7 @@ var gIdentityHandler = {
 
   onPopupShown(event) {
     if (event.target == this._identityPopup) {
+      PopupNotifications.suppressWhileOpen(this._identityPopup);
       window.addEventListener("focus", this, true);
     }
   },

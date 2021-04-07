@@ -859,7 +859,7 @@ description#identity-popup-content-verifier,
 
 #protections-popup:not([hasException])[toast] #protections-popup-toast-panel-tp-on-desc,
 #protections-popup[hasException][toast] #protections-popup-toast-panel-tp-off-desc {
-  display: unset;
+  display: revert;
 }
 
 #protections-popup-siteNotWorkingView-header,

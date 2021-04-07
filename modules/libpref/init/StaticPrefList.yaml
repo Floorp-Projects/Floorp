@@ -1133,7 +1133,7 @@
 # Enable Proton restyle. Requires restart.
 - name: browser.proton.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
