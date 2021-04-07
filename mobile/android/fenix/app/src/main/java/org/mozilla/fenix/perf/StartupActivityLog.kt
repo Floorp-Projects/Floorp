@@ -23,6 +23,10 @@ private val logger = Logger("StartupActivityLog")
  * A record of the [Activity] created, started, and stopped events as well as [Application]
  * foreground and background events. See [log] for the log. This class is expected to be
  * registered in [Application.onCreate] by calling [registerInAppOnCreate].
+ *
+ * To prevent this list from growing infinitely, we clear the list when the application is stopped.
+ * This is acceptable from the current requirements: we never need to inspect more than the current
+ * start up.
  */
 class StartupActivityLog {
 
@@ -66,8 +70,9 @@ class StartupActivityLog {
         }
 
         override fun onStop(owner: LifecycleOwner) {
-            _log.add(LogEntry.AppStopped)
             logEntries()
+            _log.clear() // Optimization: see class kdoc for details.
+            _log.add(LogEntry.AppStopped)
         }
     }
 

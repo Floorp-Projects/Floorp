@@ -50,15 +50,20 @@ class StartupActivityLogTest {
     @Test // we test start and stop individually due to the clear-on-stop behavior.
     fun `WHEN app observer start is called THEN it is added directly to the log`() {
         assertTrue(log.log.isEmpty())
-        val expected = mutableListOf<LogEntry>()
 
         appObserver.onStart(mockk())
-        expected.add(LogEntry.AppStarted)
-        assertEquals(expected, log.log)
+        assertEquals(listOf(LogEntry.AppStarted), log.log)
+
+        appObserver.onStart(mockk())
+        assertEquals(listOf(LogEntry.AppStarted, LogEntry.AppStarted), log.log)
+    }
+
+    @Test // we test start and stop individually due to the clear-on-stop behavior.
+    fun `WHEN app observer stop is called THEN it is added directly to the log`() {
+        assertTrue(log.log.isEmpty())
 
         appObserver.onStop(mockk())
-        expected.add(LogEntry.AppStopped)
-        assertEquals(expected, log.log)
+        assertEquals(listOf(LogEntry.AppStopped), log.log)
     }
 
     @Test
@@ -79,6 +84,19 @@ class StartupActivityLogTest {
         activityCallbacks.onActivityStopped(mockk())
         expected.add(LogEntry.StoppedActivityLogEntry(activityClass))
         assertEquals(expected, log.log)
+    }
+
+    @Test
+    fun `WHEN app STOPPED is called THEN the log is emptied expect for the stop event`() {
+        assertTrue(log.log.isEmpty())
+
+        activityCallbacks.onActivityCreated(mockk(), null)
+        activityCallbacks.onActivityStarted(mockk())
+        appObserver.onStart(mockk())
+        assertEquals(3, log.log.size)
+
+        appObserver.onStop(mockk())
+        assertEquals(listOf(LogEntry.AppStopped), log.log)
     }
 
     @Test
