@@ -62,8 +62,6 @@ nsresult MediaEngineSource::FocusOnSelectedSource() {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-void MediaEngineSource::Shutdown() {}
-
 nsresult MediaEngineSource::TakePhoto(MediaEnginePhotoCallback* aCallback) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
