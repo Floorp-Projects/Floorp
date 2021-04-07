@@ -12,8 +12,10 @@ serde_json = { version = "1.0" }
 uuid = { version = "0.8.1", features = ["v4"] }
 winapi = { version = "0.3", features = [
     "combaseapi",
+    "handleapi",
     "impl-default",
     "knownfolders",
+    "memoryapi",
     "psapi",
     "shlobj",
     "winerror",
