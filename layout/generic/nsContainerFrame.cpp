@@ -2389,7 +2389,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
 
   if (!isAutoISize) {
     iSize = ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                              boxSizingToMarginEdgeISize, styleISize, aFlags)
+                              boxSizingToMarginEdgeISize, styleISize,
+                              aSizeOverrides, aFlags)
                 .mISize;
   } else if (MOZ_UNLIKELY(isGridItem) &&
              !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisBlock
@@ -2421,10 +2422,10 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
 
   if (!maxISizeCoord.IsNone() &&
       !(isFlexItem && flexMainAxis == eLogicalAxisInline)) {
-    maxISize =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, maxISizeCoord, aFlags)
-            .mISize;
+    maxISize = ComputeISizeValue(aRenderingContext, aWM, aCBSize,
+                                 boxSizingAdjust, boxSizingToMarginEdgeISize,
+                                 maxISizeCoord, aSizeOverrides, aFlags)
+                   .mISize;
   } else {
     maxISize = nscoord_MAX;
   }
@@ -2437,10 +2438,10 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
 
   if (!minISizeCoord.IsAuto() &&
       !(isFlexItem && flexMainAxis == eLogicalAxisInline)) {
-    minISize =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, minISizeCoord, aFlags)
-            .mISize;
+    minISize = ComputeISizeValue(aRenderingContext, aWM, aCBSize,
+                                 boxSizingAdjust, boxSizingToMarginEdgeISize,
+                                 minISizeCoord, aSizeOverrides, aFlags)
+                   .mISize;
   } else {
     // Treat "min-width: auto" as 0.
     // NOTE: Technically, "auto" is supposed to behave like "min-content" on
