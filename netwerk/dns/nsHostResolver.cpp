@@ -197,12 +197,7 @@ size_t nsHostKey::SizeOfExcludingThis(
 NS_IMPL_ISUPPORTS0(nsHostRecord)
 
 nsHostRecord::nsHostRecord(const nsHostKey& key)
-    : nsHostKey(key),
-      mEffectiveTRRMode(nsIRequest::TRR_DEFAULT_MODE),
-      mTRRQuery("nsHostRecord.mTRRQuery"),
-      mResolving(0),
-      negative(false),
-      mDoomed(false) {}
+    : nsHostKey(key), mTRRQuery("nsHostRecord.mTRRQuery") {}
 
 void nsHostRecord::Invalidate() { mDoomed = true; }
 
@@ -290,15 +285,7 @@ static size_t SizeOfResolveHostCallbackListExcludingHead(
 
 NS_IMPL_ISUPPORTS_INHERITED(AddrHostRecord, nsHostRecord, AddrHostRecord)
 
-AddrHostRecord::AddrHostRecord(const nsHostKey& key)
-    : nsHostRecord(key),
-      addr_info_lock("AddrHostRecord.addr_info_lock"),
-      addr_info_gencnt(0),
-      addr_info(nullptr),
-      addr(nullptr),
-      mResolverType(DNSResolverType::Native),
-      mTRRSuccess(0),
-      mNativeSuccess(0) {}
+AddrHostRecord::AddrHostRecord(const nsHostKey& key) : nsHostRecord(key) {}
 
 AddrHostRecord::~AddrHostRecord() {
   mCallbacks.clear();
@@ -511,10 +498,7 @@ NS_IMPL_ISUPPORTS_INHERITED(TypeHostRecord, nsHostRecord, TypeHostRecord,
                             nsIDNSTXTRecord, nsIDNSHTTPSSVCRecord)
 
 TypeHostRecord::TypeHostRecord(const nsHostKey& key)
-    : nsHostRecord(key),
-      DNSHTTPSSVCRecordBase(key.host),
-      mResultsLock("TypeHostRecord.mResultsLock"),
-      mAllRecordsExcluded(false) {}
+    : nsHostRecord(key), DNSHTTPSSVCRecordBase(key.host) {}
 
 TypeHostRecord::~TypeHostRecord() { mCallbacks.clear(); }
 
@@ -692,14 +676,7 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
     : mMaxCacheEntries(maxCacheEntries),
       mDefaultCacheLifetime(defaultCacheEntryLifetime),
       mDefaultGracePeriod(defaultGracePeriod),
-      mLock("nsHostResolver.mLock"),
-      mIdleTaskCV(mLock, "nsHostResolver.mIdleTaskCV"),
-      mEvictionQSize(0),
-      mShutdown(true),
-      mNumIdleTasks(0),
-      mActiveTaskCount(0),
-      mActiveAnyThreadCount(0),
-      mPendingCount(0) {
+      mIdleTaskCV(mLock, "nsHostResolver.mIdleTaskCV") {
   mCreationTime = PR_Now();
 
   mLongIdleTimeout = TimeDuration::FromSeconds(LongIdleTimeoutSeconds);
@@ -2157,7 +2134,6 @@ void nsHostResolver::CancelAsyncRequest(
   nsHostKey key(host, aTrrServer, aType, flags, af,
                 (aOriginAttributes.mPrivateBrowsingId > 0), originSuffix);
   RefPtr<nsHostRecord> rec = mRecordDB.Get(key);
-
   if (!rec) {
     return;
   }
