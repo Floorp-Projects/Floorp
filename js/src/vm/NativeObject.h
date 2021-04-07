@@ -1086,13 +1086,19 @@ class NativeObject : public JSObject {
   }
 
   // Returns the GetterSetter for an accessor property.
+  GetterSetter* getGetterSetter(uint32_t slot) const {
+    return getSlot(slot).toGCThing()->as<GetterSetter>();
+  }
   GetterSetter* getGetterSetter(Shape* shape) const {
     MOZ_ASSERT(shape->isAccessorDescriptor());
-    return getSlot(shape->slot()).toGCThing()->as<GetterSetter>();
+    return getGetterSetter(shape->slot());
   }
 
   // Returns the (possibly nullptr) getter or setter object. The shape must be
   // for an accessor property.
+  JSObject* getGetter(uint32_t slot) const {
+    return getGetterSetter(slot)->getter();
+  }
   JSObject* getGetter(Shape* shape) const {
     return getGetterSetter(shape)->getter();
   }

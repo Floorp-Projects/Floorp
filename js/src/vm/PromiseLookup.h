@@ -34,7 +34,8 @@ class MOZ_NON_TEMPORARY_CLASS PromiseLookup final {
      *  Promise.prototype's shape (promiseProtoShape_)
      *      To ensure that Promise.prototype has not been modified.
      *
-     *  Promise's shape for the @@species getter. (promiseSpeciesShape_)
+     *  Promise's slot number for the @@species getter
+     *  (promiseSpeciesGetterSlot_)
      *      To quickly retrieve the @@species getter for Promise.
      *
      *  Promise's slot number for resolve (promiseResolveSlot_)
@@ -55,11 +56,11 @@ class MOZ_NON_TEMPORARY_CLASS PromiseLookup final {
   // Shape of matching Promise object.
   MOZ_INIT_OUTSIDE_CTOR Shape* promiseConstructorShape_;
 
-  // Accessor Shape containing the @@species property.
-  MOZ_INIT_OUTSIDE_CTOR Shape* promiseSpeciesShape_;
-
   // Shape of matching Promise.prototype object.
   MOZ_INIT_OUTSIDE_CTOR Shape* promiseProtoShape_;
+
+  // Slot number for the @@species property on the Promise constructor.
+  MOZ_INIT_OUTSIDE_CTOR uint32_t promiseSpeciesGetterSlot_;
 
   // Slots Promise.resolve, Promise.prototype.constructor, and
   // Promise.prototype.then.
@@ -126,7 +127,7 @@ class MOZ_NON_TEMPORARY_CLASS PromiseLookup final {
 
   // Return true if the accessor shape contains the given native.
   static bool isAccessorPropertyNative(JSContext* cx, NativeObject* holder,
-                                       Shape* shape, JSNative native);
+                                       uint32_t getterSlot, JSNative native);
 
  public:
   /** Construct a |PromiseSpeciesLookup| in the uninitialized state. */
