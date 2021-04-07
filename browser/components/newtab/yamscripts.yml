@@ -12,23 +12,23 @@ scripts:
   # mochitest somewhere.
   mochitest-debug: (cd $npm_package_config_mc_dir && ./mach mochitest --jsdebugger browser/components/newtab/test/browser)
 
-# bundle: Build all assets for activity stream
+  # bundle: Build all assets for activity stream
   bundle:
     webpack: webpack --config webpack.system-addon.config.js
     css: node-sass content-src/styles -o css && node-sass content-src/aboutwelcome -o aboutwelcome/content
     welcomeBundle: webpack --config webpack.aboutwelcome.config.js
     html: rimraf prerendered && node ./bin/render-activity-stream-html.js
 
-# buildmc: Used to do stuff when this code was in GitHub, now just an
-# alias in case it's baked into anyone's brain.
+  # buildmc: Used to do stuff when this code was in GitHub, now just an
+  # alias in case it's baked into anyone's brain.
   buildmc:
     bundle: => bundle
 
-# watchmc:  Automatically rebuild when files are changed. NOTE: Includes sourcemaps, do not use for profiling/perf testing.
+  # watchmc:  Automatically rebuild when files are changed. NOTE: Includes sourcemaps, do not use for profiling/perf testing.
   watchmc:
     _parallel: true
-    webpack: =>bundle:webpack -- --env.development -w
-    welcomeBundle: =>bundle:welcomeBundle -- --env.development -w
+    webpack: =>bundle:webpack -- --env development -w
+    welcomeBundle: =>bundle:welcomeBundle -- --env development -w
     css: =>bundle:css && =>bundle:css -- --source-map-embed --source-map-contents -w
 
   testmc:
@@ -40,7 +40,7 @@ scripts:
 
   debugcoverage: open logs/coverage/index.html
 
-# lint: Run various linters with mach or local dev dependencies
+  # lint: Run various linters with mach or local dev dependencies
   lint:
     codespell: (cd $npm_package_config_mc_root && ./mach lint -l codespell $npm_package_config_newtab_path)
     eslint: (cd $npm_package_config_mc_root && ./mach lint -l eslint $npm_package_config_newtab_path)
@@ -48,10 +48,10 @@ scripts:
     license: (cd $npm_package_config_mc_root && ./mach lint -l license $npm_package_config_newtab_path)
     sasslint: sass-lint -v -q
 
-# test: Run all tests once
+  # test: Run all tests once
   test: =>testmc
 
-# tdd: Run content tests continuously
+  # tdd: Run content tests continuously
   tdd: =>tddmc
 
   # Utility scripts for use when vendoring in Node packages
