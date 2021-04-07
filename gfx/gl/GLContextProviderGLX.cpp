@@ -735,7 +735,7 @@ static bool AreCompatibleVisuals(Visual* one, Visual* two) {
 }
 
 already_AddRefed<GLContext> CreateForWidget(Display* aXDisplay, Window aXWindow,
-                                            bool aWebRender,
+                                            bool aHardwareWebRender,
                                             bool aForceAccelerated) {
   if (!sGLXLibrary.EnsureInitialized()) {
     return nullptr;
@@ -759,12 +759,13 @@ already_AddRefed<GLContext> CreateForWidget(Display* aXDisplay, Window aXWindow,
   GLXFBConfig config;
   int visid;
   if (!GLContextGLX::FindFBConfigForWindow(aXDisplay, xscreen, aXWindow, &cfgs,
-                                           &config, &visid, aWebRender)) {
+                                           &config, &visid,
+                                           aHardwareWebRender)) {
     return nullptr;
   }
 
   CreateContextFlags flags;
-  if (aWebRender) {
+  if (aHardwareWebRender) {
     flags = CreateContextFlags::NONE;  // WR needs GL3.2+
   } else {
     flags = CreateContextFlags::REQUIRE_COMPAT_PROFILE;
@@ -774,7 +775,7 @@ already_AddRefed<GLContext> CreateForWidget(Display* aXDisplay, Window aXWindow,
 }
 
 already_AddRefed<GLContext> GLContextProviderGLX::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aWebRender,
+    CompositorWidget* aCompositorWidget, bool aHardwareWebRender,
     bool aForceAccelerated) {
   if (!aCompositorWidget) {
     MOZ_ASSERT(false);
@@ -784,7 +785,7 @@ already_AddRefed<GLContext> GLContextProviderGLX::CreateForCompositorWidget(
   MOZ_ASSERT(compWidget);
 
   return CreateForWidget(compWidget->XDisplay(), compWidget->XWindow(),
-                         aWebRender, aForceAccelerated);
+                         aHardwareWebRender, aForceAccelerated);
 }
 
 static bool ChooseConfig(GLXLibrary* glx, Display* display, int screen,

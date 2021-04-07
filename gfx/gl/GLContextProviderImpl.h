@@ -40,8 +40,8 @@ class GL_CONTEXT_PROVIDER_NAME {
    * @return Context to use for the window
    */
   static already_AddRefed<GLContext> CreateForCompositorWidget(
-      mozilla::widget::CompositorWidget* aCompositorWidget, bool aWebRender,
-      bool aForceAccelerated);
+      mozilla::widget::CompositorWidget* aCompositorWidget,
+      bool aHardwareWebRender, bool aForceAccelerated);
 
   /// Just create a context. We'll add offscreen stuff ourselves.
   static already_AddRefed<GLContext> CreateHeadless(
