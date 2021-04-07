@@ -170,6 +170,9 @@ auto ScrollbarDrawingMac::GetThumbRect(const Rect& aRect,
     if (aParams.overlay) {
       faceColor = aParams.onDarkBackground ? NS_RGBA(255, 255, 255, 128)
                                            : NS_RGBA(0, 0, 0, 128);
+    } else if (aParams.onDarkBackground) {
+      faceColor = aParams.rolledOver ? NS_RGBA(158, 158, 158, 255)
+                                     : NS_RGBA(117, 117, 117, 255);
     } else {
       faceColor = aParams.rolledOver ? NS_RGBA(125, 125, 125, 255)
                                      : NS_RGBA(194, 194, 194, 255);
@@ -240,7 +243,8 @@ bool ScrollbarDrawingMac::GetScrollbarTrackRects(const Rect& aRect,
       trackColor = aParams.onDarkBackground ? NS_RGBA(201, 201, 201, 38)
                                             : NS_RGBA(250, 250, 250, 191);
     } else {
-      trackColor = NS_RGBA(250, 250, 250, 255);
+      trackColor = aParams.onDarkBackground ? NS_RGBA(46, 46, 46, 255)
+                                            : NS_RGBA(250, 250, 250, 255);
     }
   }
 
@@ -317,8 +321,13 @@ bool ScrollbarDrawingMac::GetScrollCornerRects(const Rect& aRect,
 
   float width = aRect.width;
   float height = aRect.height;
-  nscolor trackColor =
-      aParams.custom ? aParams.trackColor : NS_RGBA(250, 250, 250, 255);
+  nscolor trackColor;
+  if (aParams.custom) {
+    trackColor = aParams.trackColor;
+  } else {
+    trackColor = aParams.onDarkBackground ? NS_RGBA(46, 46, 46, 255)
+                                          : NS_RGBA(250, 250, 250, 255);
+  }
   ScrollbarTrackDecorationColors colors =
       ComputeScrollbarTrackDecorationColors(trackColor);
   struct {
