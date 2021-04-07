@@ -36,10 +36,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyGetter(this, "gTabBrowserBundle", () => {
-  return Services.strings.createBundle(
-    "chrome://browser/locale/tabbrowser.properties"
-  );
+XPCOMUtils.defineLazyGetter(this, "gTabBrowserLocalization", () => {
+  return new Localization(["browser/tabbrowser.ftl"], true);
 });
 
 /**
@@ -407,13 +405,19 @@ class PromptParent extends JSWindowActorParent {
       allowTabFocusByPromptPrincipal &&
       args.modalType === Services.prompt.MODAL_TYPE_CONTENT
     ) {
-      let allowTabswitchCheckboxLabel = gTabBrowserBundle.formatStringFromName(
-        "tabs.allowTabFocusByPromptForSite",
-        [allowTabFocusByPromptPrincipal.URI.host]
-      );
-
-      args.allowFocusCheckbox = true;
-      args.checkLabel = allowTabswitchCheckboxLabel;
+      let [allowFocusMsg] = gTabBrowserLocalization.formatMessagesSync([
+        {
+          id: "tabbrowser-allow-dialogs-to-get-focus",
+          args: {
+            domain: allowTabFocusByPromptPrincipal.URI.host,
+          },
+        },
+      ]);
+      let labelAttr = allowFocusMsg.attributes.find(a => a.name == "label");
+      if (labelAttr) {
+        args.allowFocusCheckbox = true;
+        args.checkLabel = labelAttr.value;
+      }
     }
   }
 }
