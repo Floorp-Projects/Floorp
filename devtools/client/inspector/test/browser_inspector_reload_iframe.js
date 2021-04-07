@@ -16,22 +16,20 @@ const HTML = `
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector } = await openInspectorForURL(TEST_URI);
 
-  const nodeFront = await getNodeFrontInFrame("#in-frame", "iframe", inspector);
-  await selectNode(nodeFront, inspector);
+  await selectNodeInFrames(["iframe", "#in-frame"], inspector);
 
   const markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
-  await testActor.eval("location.reload()");
+  await navigateTo(TEST_URI);
 
   info("Waiting for markupview to load after reload.");
   await markupLoaded;
 
-  const reloadedNodeFront = await getNodeFrontInFrame(
-    "#in-frame",
-    "iframe",
+  const reloadedNodeFront = await getNodeFrontInFrames(
+    ["iframe", "#in-frame"],
     inspector
   );
 

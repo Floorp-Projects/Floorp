@@ -49,17 +49,7 @@ add_task(async function() {
   await selectNode(inspector.walker.rootNode, inspector);
 
   info("Selecting an element from the nested iframe directly");
-  const innerFrameFront = await getNodeFrontInFrame(
-    "iframe",
-    "iframe",
-    inspector
-  );
-  const innerFrameDivFront = await getNodeFrontInFrame(
-    "div",
-    innerFrameFront,
-    inspector
-  );
-  await selectNode(innerFrameDivFront, inspector);
+  await selectNodeInFrames(["iframe", "iframe", "div"], inspector);
 
   is(
     inspector.breadcrumbs.nodeHierarchy.length,

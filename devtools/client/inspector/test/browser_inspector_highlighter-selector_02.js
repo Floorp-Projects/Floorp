@@ -56,7 +56,7 @@ add_task(async function() {
 
     let contextNode;
     if (inIframe) {
-      contextNode = await getNodeFrontInFrame("body", "iframe", inspector);
+      contextNode = await getNodeFrontInFrames(["iframe", "body"], inspector);
     } else {
       contextNode = await getNodeFront("body", inspector);
     }

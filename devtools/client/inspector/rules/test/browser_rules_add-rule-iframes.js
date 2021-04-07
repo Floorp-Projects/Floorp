@@ -18,13 +18,11 @@ add_task(async function() {
   await addNewRuleAndDismissEditor(inspector, view, "div", 1);
   await addNewProperty(view, 1, "color", "red");
 
-  const innerFrameDiv1 = await getNodeFrontInFrame("div", "#frame1", inspector);
-  await selectNode(innerFrameDiv1, inspector);
+  await selectNodeInFrames(["#frame1", "div"], inspector);
   await addNewRuleAndDismissEditor(inspector, view, "div", 1);
   await addNewProperty(view, 1, "color", "blue");
 
-  const innerFrameDiv2 = await getNodeFrontInFrame("div", "#frame2", inspector);
-  await selectNode(innerFrameDiv2, inspector);
+  await selectNodeInFrames(["#frame2", "div"], inspector);
   await addNewRuleAndDismissEditor(inspector, view, "div", 1);
   await addNewProperty(view, 1, "color", "green");
 });

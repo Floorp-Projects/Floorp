@@ -64,11 +64,10 @@ add_task(async function() {
     );
 
     info("Selecting an element inside iframe.");
-    const iframe = await getNodeFront("#deleteIframe", inspector);
-    const div = await getNodeFrontInFrame("#deleteInIframe", iframe, inspector);
-    await selectNode(div, inspector);
+    await selectNodeInFrames(["#deleteIframe", "#deleteInIframe"], inspector);
 
-    info("Deleting selected node via javascript.");
+    info("Deleting parent iframe node via javascript.");
+    const iframe = await getNodeFront("#deleteIframe", inspector);
     await inspector.walker.removeNode(iframe);
 
     info("Waiting for inspector to update.");

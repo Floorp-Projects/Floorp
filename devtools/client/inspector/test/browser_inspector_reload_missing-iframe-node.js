@@ -39,8 +39,7 @@ add_task(async function() {
   );
 
   info("Select node inside iframe.");
-  const nodeFront = await getNodeFrontInFrame("#in-frame", "iframe", inspector);
-  await selectNode(nodeFront, inspector);
+  await selectNodeInFrames(["iframe", "#in-frame"], inspector);
 
   const markupLoaded = inspector.once("markuploaded");
 
