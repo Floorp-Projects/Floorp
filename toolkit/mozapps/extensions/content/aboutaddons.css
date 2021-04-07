@@ -735,7 +735,7 @@ button.tab-button:-moz-focusring {
 }
 
 panel-list {
-  font-size: 13px;
+  font: menu;
 }
 
 @media (max-width: 830px) {
