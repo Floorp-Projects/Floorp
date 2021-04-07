@@ -25,7 +25,6 @@ let searchDiscoveryTests = [
     text: "rel may contain additional rels separated by spaces",
   },
   { href: "https://not.mozilla.com", text: "HTTPS ok" },
-  { href: "ftp://not.mozilla.com", text: "FTP ok" },
   { href: "data:text/foo,foo", pass: false, text: "data URI not permitted" },
   { href: "javascript:alert(0)", pass: false, text: "JS URI not permitted" },
   {
