@@ -7,11 +7,28 @@ const TEST_URL = `about:preferences`;
 
 // Test that the "Screenshot Node" feature works in about:preferences (See Bug 1691349).
 
+function hexToCSS(hex) {
+  if (!hex) {
+    return null;
+  }
+  const rgba = InspectorUtils.colorToRGBA(hex);
+  info(`rgba: '${JSON.stringify(rgba)}'`);
+  // Drop off the 'a' component since the color will be opaque
+  return `rgb(${rgba.r}, ${rgba.g}, ${rgba.b})`;
+}
+
 add_task(async function() {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   info("Select the main content node");
   await selectNode(".main-content", inspector);
+
+  let inContentPageBackgroundColor = await getComputedStyleProperty(
+    ":root",
+    null,
+    "--in-content-page-background"
+  );
+  inContentPageBackgroundColor = inContentPageBackgroundColor.trim();
 
   info("Take a screenshot of the element and verify it looks as expected");
   const image = await takeNodeScreenshot(inspector);
@@ -21,7 +38,7 @@ add_task(async function() {
     image,
     x: 0,
     y: 0,
-    expectedColor: `rgb(249, 249, 250)`,
+    expectedColor: hexToCSS(inContentPageBackgroundColor),
     label: "The screenshot was taken",
   });
 
