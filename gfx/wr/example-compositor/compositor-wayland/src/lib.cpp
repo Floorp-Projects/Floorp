@@ -159,6 +159,10 @@ WLWindow* com_wl_create_window(int width, int height, bool enable_compositor,
   assert(display->display);
 
   init_wl_registry(window);
+  if (enable_compositor && !display->viewporter) {
+    fprintf(stderr, "Native compositor mode requires wp_viewporter support\n");
+    window->closed = true;
+  }
 
   window->eglDisplay =
       eglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR, display->display, NULL);
@@ -740,7 +744,6 @@ static void init_wl_registry(WLWindow* window) {
   wl_display_roundtrip(display->display);
 
   assert(display->compositor);
-  assert(display->viewporter);
   assert(display->wm_base);
   assert(display->subcompositor);
 }
