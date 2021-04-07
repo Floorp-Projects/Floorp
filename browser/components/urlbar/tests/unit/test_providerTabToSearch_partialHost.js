@@ -64,7 +64,7 @@ add_task(async function setup() {
         }),
         makeSearchResult(context, {
           engineName: engine.name,
-          engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+          engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
           uri: "en.example.",
           providesSearchMode: true,
           query: "",
@@ -107,7 +107,7 @@ add_task(async function setup() {
         }),
         makeSearchResult(context, {
           engineName: engine2.name,
-          engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+          engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
           uri: "www.it.mochi.",
           providesSearchMode: true,
           query: "",

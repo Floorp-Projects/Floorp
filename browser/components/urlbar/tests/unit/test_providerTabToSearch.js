@@ -48,7 +48,7 @@ add_task(async function basic() {
       }),
       makeSearchResult(context, {
         engineName: testEngine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           testEngine.getResultDomain()
         ),
@@ -138,7 +138,7 @@ add_task(async function ignoreWww() {
       }),
       makeSearchResult(context, {
         engineName: testEngine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           testEngine.getResultDomain()
         ),
@@ -174,7 +174,7 @@ add_task(async function ignoreWww() {
       }),
       makeSearchResult(context, {
         engineName: wwwTestEngine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           wwwTestEngine.getResultDomain()
         ),
@@ -202,7 +202,7 @@ add_task(async function ignoreWww() {
       }),
       makeSearchResult(context, {
         engineName: wwwTestEngine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           wwwTestEngine.getResultDomain()
         ),
@@ -261,7 +261,7 @@ add_task(async function conflictingEngines() {
       }),
       makeSearchResult(context, {
         engineName: fooTestEngine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           fooTestEngine.getResultDomain()
         ),
@@ -293,7 +293,7 @@ add_task(async function conflictingEngines() {
       }),
       makeSearchResult(context, {
         engineName: fooBarTestEngine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           fooBarTestEngine.getResultDomain()
         ),
@@ -335,7 +335,7 @@ add_task(async function multipleEnginesForHostname() {
       }),
       makeSearchResult(context, {
         engineName: testEngine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           testEngine.getResultDomain()
         ),
@@ -366,7 +366,7 @@ add_task(async function test_casing() {
       }),
       makeSearchResult(context, {
         engineName: testEngine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(
           testEngine.getResultDomain()
         ),
@@ -402,7 +402,7 @@ add_task(async function test_publicSuffix() {
       }),
       makeSearchResult(context, {
         engineName: engine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(engine.getResultDomain()),
         providesSearchMode: true,
         query: "",
@@ -477,7 +477,7 @@ add_task(async function test_disabledEngine() {
       }),
       makeSearchResult(context, {
         engineName: engine.name,
-        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
         uri: UrlbarUtils.stripPublicSuffixFromHost(engine.getResultDomain()),
         providesSearchMode: true,
         query: "",
