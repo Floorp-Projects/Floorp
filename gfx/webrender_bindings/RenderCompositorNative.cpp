@@ -418,7 +418,7 @@ UniquePtr<RenderCompositor> RenderCompositorNativeOGL::Create(
   RefPtr<gl::GLContext> gl = RenderThread::Get()->SingletonGL();
   if (!gl) {
     gl = gl::GLContextProvider::CreateForCompositorWidget(
-        aWidget, /* aWebRender */ true, /* aForceAccelerated */ true);
+        aWidget, /* aHardwareWebRender */ true, /* aForceAccelerated */ true);
     RenderThread::MaybeEnableGLDebugMessage(gl);
   }
   if (!gl || !gl->MakeCurrent()) {

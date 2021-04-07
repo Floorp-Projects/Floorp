@@ -17,14 +17,14 @@ static class GLContextProviderGLX sGLContextProviderGLX;
 static class GLContextProviderEGL sGLContextProviderEGL;
 
 already_AddRefed<GLContext> GLContextProviderX11::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aWebRender,
+    CompositorWidget* aCompositorWidget, bool aHardwareWebRender,
     bool aForceAccelerated) {
   if (!gfxVars::UseEGL()) {
     return sGLContextProviderGLX.CreateForCompositorWidget(
-        aCompositorWidget, aWebRender, aForceAccelerated);
+        aCompositorWidget, aHardwareWebRender, aForceAccelerated);
   } else {
     return sGLContextProviderEGL.CreateForCompositorWidget(
-        aCompositorWidget, aWebRender, aForceAccelerated);
+        aCompositorWidget, aHardwareWebRender, aForceAccelerated);
   }
 }
 
