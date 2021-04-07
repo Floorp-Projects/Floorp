@@ -1188,7 +1188,23 @@ static void LinkEnclosingLazyScript(const CompilationStencil& stencil,
       if (!inner.is<JSObject>()) {
         continue;
       }
-      inner.as<JSObject>().as<JSFunction>().setEnclosingLazyScript(script);
+      JSFunction* innerFun = &inner.as<JSObject>().as<JSFunction>();
+
+      MOZ_ASSERT(innerFun->hasBaseScript(),
+                 "inner function should have base script");
+      if (!innerFun->hasBaseScript()) {
+        continue;
+      }
+
+      // Check for the case that the inner function has the base script flag,
+      // but still doesn't have the actual base script pointer.
+      // `baseScript` method asserts the pointer itself, so no extra MOZ_ASSERT
+      // here.
+      if (!innerFun->baseScript()) {
+        continue;
+      }
+
+      innerFun->setEnclosingLazyScript(script);
     }
   }
 }
