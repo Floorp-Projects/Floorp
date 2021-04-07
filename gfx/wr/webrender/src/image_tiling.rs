@@ -93,9 +93,6 @@ pub fn repetitions(
     visible_rect: &LayoutRect,
     stride: LayoutSize,
 ) -> RepetitionIterator {
-    assert!(stride.width > 0.0);
-    assert!(stride.height > 0.0);
-
     let visible_rect = match prim_rect.intersection(&visible_rect) {
         Some(rect) => rect,
         None => {
@@ -111,6 +108,9 @@ pub fn repetitions(
             }
         }
     };
+
+    assert!(stride.width > 0.0);
+    assert!(stride.height > 0.0);
 
     let nx = if visible_rect.origin.x > prim_rect.origin.x {
         f32::floor((visible_rect.origin.x - prim_rect.origin.x) / stride.width)
