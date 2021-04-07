@@ -647,6 +647,17 @@ PopupNotifications.prototype = {
   },
 
   /**
+   * Called by the consumer to indicate that the open panel should
+   * temporarily be hidden while the given panel is showing.
+   */
+  suppressWhileOpen(panel) {
+    this._hidePanel().catch(Cu.reportError);
+    panel.addEventListener("popuphidden", aEvent => {
+      this._update();
+    });
+  },
+
+  /**
    * Called by the consumer to indicate that a browser's location has changed,
    * so that we can update the active notifications accordingly.
    */
