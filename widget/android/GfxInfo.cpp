@@ -668,8 +668,8 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       }
       return NS_OK;
     }
-  }
 #endif
+  }
 
   return GfxInfoBase::GetFeatureStatusImpl(
       aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
