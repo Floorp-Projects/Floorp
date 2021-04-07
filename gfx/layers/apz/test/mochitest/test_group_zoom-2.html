@@ -27,6 +27,8 @@ var prefs = [
   // Prevent the dynamic toolbar from interfering with main-thread scroll
   // offset values.
   ["browser.chrome.dynamictoolbar", false],
+  // This group fails with proton enabled. See bug 1703646.
+  ["browser.proton.enabled", false],
   // Explicitly enable pinch-zooming, so this test can run on desktop
   // even though zooming isn't enabled by default on desktop yet.
   ["apz.allow_zooming", true],
