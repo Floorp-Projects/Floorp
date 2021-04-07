@@ -222,11 +222,10 @@ class WebrtcVideoConduit
 
   WebrtcVideoConduit(RefPtr<WebrtcCallWrapper> aCall,
                      nsCOMPtr<nsISerialEventTarget> aStsThread,
-                     std::string aPCHandle);
+                     Options aOptions, std::string aPCHandle);
   virtual ~WebrtcVideoConduit();
 
-  MediaConduitErrorCode InitMain();
-  virtual MediaConduitErrorCode Init();
+  MediaConduitErrorCode Init();
 
   std::vector<uint32_t> GetLocalSSRCs() override;
   bool SetLocalSSRCs(const std::vector<uint32_t>& ssrcs,
@@ -375,34 +374,28 @@ class WebrtcVideoConduit
   // Accessed under mMutex.
   unsigned int mSendingFramerate;
 
-  // Written on main thread at creation,
-  // then written or read on any thread under mTransportMonitor.
-  bool mVideoLatencyTestEnable = false;
-
   // Accessed from any thread under mTransportMonitor.
   uint64_t mVideoLatencyAvg = 0;
 
+  const bool mVideoLatencyTestEnable;
+
   // All in bps.
-  // All written on main thread and guarded by mMutex, except for reads on main.
-  int mMinBitrate = 0;
-  int mStartBitrate = 0;
-  int mPrefMaxBitrate = 0;
+  const int mMinBitrate;
+  const int mStartBitrate;
+  const int mPrefMaxBitrate;
+  const int mMinBitrateEstimate;
+
+  // Max bitrate in bps as provided by negotiation. Call thread only.
   int mNegotiatedMaxBitrate = 0;
-  int mMinBitrateEstimate = 0;
 
   // Set to true to force denoising on.
-  // Written at creation, then read anywhere.
-  bool mDenoising = false;
+  const bool mDenoising;
 
   // Set to true to ignore sink wants (scaling due to bwe and cpu usage).
-  // Written at creation, then read anywhere.
-  bool mLockScaling = false;
+  const bool mLockScaling;
 
-  // Written at creation, then read anywhere.
-  uint8_t mSpatialLayers = 1;
-
-  // Written at creation, then read anywhere.
-  uint8_t mTemporalLayers = 1;
+  const uint8_t mSpatialLayers;
+  const uint8_t mTemporalLayers;
 
   static const unsigned int sAlphaNum = 7;
   static const unsigned int sAlphaDen = 8;
