@@ -53,7 +53,14 @@
 #  include "nsWindowsDllInterceptor.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WindowsVersion.h"
-#  include "psapi.h"  // For PERFORMANCE_INFORAMTION
+#  include "psapi.h"  // For PERFORMANCE_INFORMATION and K32GetPerformanceInfo()
+#  if defined(__MINGW32__) || defined(__MINGW64__)
+// Add missing constants and types for mingw builds
+#    define HREPORT HANDLE
+#    define PWER_SUBMIT_RESULT WER_SUBMIT_RESULT*
+#    define WER_MAX_PREFERRED_MODULES_BUFFER (256)
+#  endif               // defined(__MINGW32__) || defined(__MINGW64__)
+#  include "werapi.h"  // For WerRegisterRuntimeExceptionModule()
 #elif defined(XP_MACOSX)
 #  include "breakpad-client/mac/crash_generation/client_info.h"
 #  include "breakpad-client/mac/crash_generation/crash_generation_server.h"
@@ -1917,6 +1924,46 @@ static void TeardownAnnotationFacilities() {
   ShutdownThreadAnnotation();
 }
 
+#ifdef XP_WIN
+
+bool GetRuntimeExceptionModulePath(wchar_t* aPath, const size_t aLength) {
+  const wchar_t* kModuleName = L"mozwer.dll";
+  DWORD res = GetModuleFileName(nullptr, aPath, aLength);
+  if ((res > 0) && (res != aLength)) {
+    wchar_t* last_backslash = wcsrchr(aPath, L'\\');
+    if (last_backslash) {
+      *(last_backslash + 1) = L'\0';
+      if (wcscat_s(aPath, aLength, kModuleName) == 0) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+#endif  // XP_WIN
+
+void RegisterRuntimeExceptionModule(void) {
+#ifdef XP_WIN
+  const size_t kPathLength = MAX_PATH + 1;
+  wchar_t path[kPathLength] = {};
+  if (GetRuntimeExceptionModulePath(path, kPathLength)) {
+    Unused << WerRegisterRuntimeExceptionModule(path, nullptr);
+  }
+#endif  // XP_WIN
+}
+
+void UnregisterRuntimeExceptionModule(void) {
+#ifdef XP_WIN
+  const size_t kPathLength = MAX_PATH + 1;
+  wchar_t path[kPathLength] = {};
+  if (GetRuntimeExceptionModulePath(path, kPathLength)) {
+    Unused << WerUnregisterRuntimeExceptionModule(path, nullptr);
+  }
+#endif  // XP_WIN
+}
+
 nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   if (gExceptionHandler) return NS_ERROR_ALREADY_INITIALIZED;
 
@@ -1936,6 +1983,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   // the crash reporter client
   doReport = ShouldReport();
 
+  RegisterRuntimeExceptionModule();
   InitializeAnnotationFacilities();
 
 #if !defined(MOZ_WIDGET_ANDROID)
@@ -2214,9 +2262,7 @@ static nsresult GetOrInit(nsIFile* aDir, const nsACString& filename,
 // and just setting this to "the time when this version was first run".
 static nsresult InitInstallTime(nsACString& aInstallTime) {
   time_t t = time(nullptr);
-  char buf[16];
-  SprintfLiteral(buf, "%ld", t);
-  aInstallTime = buf;
+  aInstallTime = nsPrintfCString("%" PRIu64, static_cast<uint64_t>(t));
 
   return NS_OK;
 }
