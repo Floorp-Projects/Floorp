@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabstray
 
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.lib.state.Action
+import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
@@ -147,8 +148,10 @@ internal object TabsTrayReducer {
  * dispatched to the store.
  */
 class TabsTrayStore(
-    initialState: TabsTrayState = TabsTrayState()
+    initialState: TabsTrayState = TabsTrayState(),
+    middlewares: List<Middleware<TabsTrayState, TabsTrayAction>> = emptyList()
 ) : Store<TabsTrayState, TabsTrayAction>(
     initialState,
-    TabsTrayReducer::reduce
+    TabsTrayReducer::reduce,
+    middlewares
 )
