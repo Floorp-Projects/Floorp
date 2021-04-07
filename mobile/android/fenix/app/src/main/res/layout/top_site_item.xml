@@ -30,7 +30,7 @@
         android:gravity="center"
         android:singleLine="true"
         android:textColor="@color/top_site_title_text"
-        android:textSize="10sp"
+        android:textSize="12sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/favicon_image"
