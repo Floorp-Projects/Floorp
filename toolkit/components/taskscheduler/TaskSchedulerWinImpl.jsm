@@ -83,6 +83,23 @@ var _TaskSchedulerWinImpl = {
     }
   },
 
+  taskExists(id) {
+    const taskFolderName = this._taskFolderName();
+
+    let allTasks;
+    try {
+      allTasks = WinTaskSvc.getFolderTasks(taskFolderName);
+    } catch (ex) {
+      if (ex.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
+        // Folder doesn't exist, so neither do tasks within it.
+        return false;
+      }
+      throw ex;
+    }
+
+    return allTasks.includes(this._formatTaskName(id));
+  },
+
   _formatTaskDefinitionXML(command, intervalSeconds, options) {
     const startTime = new Date(Date.now() + intervalSeconds * 1000);
     const xmlns = "http://schemas.microsoft.com/windows/2004/02/mit/task";
