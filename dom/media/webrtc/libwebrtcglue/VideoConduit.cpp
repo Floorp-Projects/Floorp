@@ -289,7 +289,7 @@ bool operator!=(const rtc::VideoSinkWants& aThis,
  */
 RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
     RefPtr<WebrtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
-    std::string aPCHandle) {
+    Options aOptions, std::string aPCHandle) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCall, "missing required parameter: aCall");
   CSFLogVerbose(LOGTAG, "%s", __FUNCTION__);
@@ -298,8 +298,8 @@ RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
     return nullptr;
   }
 
-  auto obj =
-      MakeRefPtr<WebrtcVideoConduit>(aCall, aStsThread, std::move(aPCHandle));
+  auto obj = MakeRefPtr<WebrtcVideoConduit>(
+      aCall, aStsThread, std::move(aOptions), std::move(aPCHandle));
   if (obj->Init() != kMediaConduitNoError) {
     CSFLogError(LOGTAG, "%s VideoConduit Init Failed ", __FUNCTION__);
     return nullptr;
@@ -310,7 +310,7 @@ RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
 
 WebrtcVideoConduit::WebrtcVideoConduit(
     RefPtr<WebrtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
-    std::string aPCHandle)
+    Options aOptions, std::string aPCHandle)
     : mTransportMonitor("WebrtcVideoConduit"),
       mStsThread(aStsThread),
       mMutex("WebrtcVideoConduit::mMutex"),
@@ -322,6 +322,15 @@ WebrtcVideoConduit::WebrtcVideoConduit(
       mEngineTransmitting(false),
       mEngineReceiving(false),
       mSendingFramerate(DEFAULT_VIDEO_MAX_FRAMERATE),
+      mVideoLatencyTestEnable(aOptions.mVideoLatencyTestEnable),
+      mMinBitrate(aOptions.mMinBitrate),
+      mStartBitrate(aOptions.mStartBitrate),
+      mPrefMaxBitrate(aOptions.mPrefMaxBitrate),
+      mMinBitrateEstimate(aOptions.mMinBitrateEstimate),
+      mDenoising(aOptions.mDenoising),
+      mLockScaling(aOptions.mLockScaling),
+      mSpatialLayers(aOptions.mSpatialLayers),
+      mTemporalLayers(aOptions.mTemporalLayers),
       mActiveCodecMode(webrtc::VideoCodecMode::kRealtimeVideo),
       mCodecMode(webrtc::VideoCodecMode::kRealtimeVideo),
       mCall(aCall),
@@ -869,93 +878,17 @@ webrtc::Call::Stats WebrtcVideoConduit::GetCallStats() const {
   return mCall->Call()->GetStats();
 }
 
-MediaConduitErrorCode WebrtcVideoConduit::InitMain() {
+MediaConduitErrorCode WebrtcVideoConduit::Init() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsresult rv;
-  nsCOMPtr<nsIPrefService> prefs =
-      do_GetService("@mozilla.org/preferences-service;1", &rv);
-  if (!NS_WARN_IF(NS_FAILED(rv))) {
-    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+  CSFLogDebug(LOGTAG, "%s this=%p", __FUNCTION__, this);
 
-    if (branch) {
-      int32_t temp;
-      Unused << NS_WARN_IF(NS_FAILED(branch->GetBoolPref(
-          "media.video.test_latency", &mVideoLatencyTestEnable)));
-      if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
-              "media.peerconnection.video.min_bitrate", &temp)))) {
-        if (temp >= 0) {
-          mMinBitrate = KBPS(temp);
-        }
-      }
-      if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
-              "media.peerconnection.video.start_bitrate", &temp)))) {
-        if (temp >= 0) {
-          mStartBitrate = KBPS(temp);
-        }
-      }
-      if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
-              "media.peerconnection.video.max_bitrate", &temp)))) {
-        if (temp >= 0) {
-          mPrefMaxBitrate = KBPS(temp);
-        }
-      }
-      if (mMinBitrate != 0 && mMinBitrate < kViEMinCodecBitrate_bps) {
-        mMinBitrate = kViEMinCodecBitrate_bps;
-      }
-      if (mStartBitrate < mMinBitrate) {
-        mStartBitrate = mMinBitrate;
-      }
-      if (mPrefMaxBitrate && mStartBitrate > mPrefMaxBitrate) {
-        mStartBitrate = mPrefMaxBitrate;
-      }
-      // XXX We'd love if this was a live param for testing adaptation/etc
-      // in automation
-      if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
-              "media.peerconnection.video.min_bitrate_estimate", &temp)))) {
-        if (temp >= 0) {
-          mMinBitrateEstimate = temp;  // bps!
-        }
-      }
-      if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
-              "media.peerconnection.video.svc.spatial", &temp)))) {
-        if (temp >= 0) {
-          mSpatialLayers = temp;
-        }
-      }
-      if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
-              "media.peerconnection.video.svc.temporal", &temp)))) {
-        if (temp >= 0) {
-          mTemporalLayers = temp;
-        }
-      }
-      Unused << NS_WARN_IF(NS_FAILED(branch->GetBoolPref(
-          "media.peerconnection.video.denoising", &mDenoising)));
-      Unused << NS_WARN_IF(NS_FAILED(branch->GetBoolPref(
-          "media.peerconnection.video.lock_scaling", &mLockScaling)));
-    }
-  }
 #ifdef MOZ_WIDGET_ANDROID
   if (mozilla::camera::VideoEngine::SetAndroidObjects() != 0) {
     CSFLogError(LOGTAG, "%s: could not set Android objects", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
 #endif  // MOZ_WIDGET_ANDROID
-  return kMediaConduitNoError;
-}
-
-/**
- * Performs initialization of the MANDATORY components of the Video Engine
- */
-MediaConduitErrorCode WebrtcVideoConduit::Init() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  CSFLogDebug(LOGTAG, "%s this=%p", __FUNCTION__, this);
-  MediaConduitErrorCode result;
-  result = InitMain();
-  if (result != kMediaConduitNoError) {
-    return result;
-  }
 
   CSFLogDebug(LOGTAG, "%s Initialization Done", __FUNCTION__);
   return kMediaConduitNoError;

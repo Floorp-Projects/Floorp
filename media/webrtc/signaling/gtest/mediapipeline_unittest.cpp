@@ -25,6 +25,7 @@
 #include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
 #include "MediaStreamTrack.h"
+#include "TaskQueueWrapper.h"
 #include "transportflow.h"
 #include "transportlayerloopback.h"
 #include "transportlayerdtls.h"

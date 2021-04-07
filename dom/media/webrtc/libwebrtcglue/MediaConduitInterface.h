@@ -6,18 +6,14 @@
 #define MEDIA_CONDUIT_ABSTRACTION_
 
 #include <vector>
-#include <set>
 #include <functional>
 #include <map>
 
 #include "CodecConfig.h"
 #include "ImageContainer.h"
-#include "jsapi/PeerConnectionCtx.h"
 #include "jsapi/RTCStatsReport.h"
 #include "MediaConduitErrors.h"
 #include "mozilla/media/MediaUtils.h"
-#include "mozilla/RefCounted.h"
-#include "TaskQueueWrapper.h"
 #include "VideoTypes.h"
 #include "WebrtcVideoCodecFactory.h"
 #include "RtcpEventObserver.h"
@@ -25,7 +21,6 @@
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
 
 // libwebrtc includes
-#include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/video_frame_buffer.h"
 #include "call/call.h"
 
@@ -319,6 +314,19 @@ class VideoDecoder : public CodecPluginID {
  */
 class VideoSessionConduit : public MediaSessionConduit {
  public:
+  struct Options {
+    bool mVideoLatencyTestEnable = false;
+    // All in bps.
+    int mMinBitrate = 0;
+    int mStartBitrate = 0;
+    int mPrefMaxBitrate = 0;
+    int mMinBitrateEstimate = 0;
+    bool mDenoising = false;
+    bool mLockScaling = false;
+    uint8_t mSpatialLayers = 1;
+    uint8_t mTemporalLayers = 1;
+  };
+
   /**
    * Factory function to create and initialize a Video Conduit Session
    * @param  webrtc::Call instance shared by paired audio and video
@@ -328,7 +336,8 @@ class VideoSessionConduit : public MediaSessionConduit {
    */
   static RefPtr<VideoSessionConduit> Create(
       RefPtr<WebrtcCallWrapper> aCall,
-      nsCOMPtr<nsISerialEventTarget> aStsThread, std::string aPCHandle);
+      nsCOMPtr<nsISerialEventTarget> aStsThread, Options aOptions,
+      std::string aPCHandle);
 
   enum FrameRequestType {
     FrameRequestNone,
