@@ -119,7 +119,7 @@ internal class MediaSessionServiceDelegate(
             MediaSession.PlaybackState.PLAYING -> {
                 audioFocus.request(state.id)
                 emitStatePlayFact()
-                startForegroundNotification()
+                startForegroundNotificationIfNeeded()
             }
             MediaSession.PlaybackState.PAUSED -> {
                 emitStatePauseFact()
@@ -153,10 +153,14 @@ internal class MediaSessionServiceDelegate(
     }
 
     private fun startForegroundNotification() {
+        val notification = notification.createDummy(mediaSession)
+        service.startForeground(notificationId, notification)
+        isForegroundService = true
+    }
+
+    private fun startForegroundNotificationIfNeeded() {
         if (!isForegroundService) {
-            val notification = notification.createDummy(mediaSession)
-            service.startForeground(notificationId, notification)
-            isForegroundService = true
+            startForegroundNotification()
         }
     }
 

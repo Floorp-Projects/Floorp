@@ -114,6 +114,43 @@ class MediaSessionServiceDelegateTest {
     }
 
     @Test
+    fun `launch intent will always call startForeground`() {
+        val controller: MediaSession.Controller = mock()
+        val initialState = BrowserState(
+            tabs = listOf(createTab(
+                "https://www.mozilla.org",
+                mediaSessionState = MediaSessionState(
+                    controller,
+                    playbackState = MediaSession.PlaybackState.PLAYING
+                )
+            ))
+        )
+        val store = BrowserStore(initialState)
+        val service: AbstractMediaSessionService = mock()
+        val delegate = spy(MediaSessionServiceDelegate(testContext, service, store))
+
+        delegate.onCreate()
+
+        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
+        verify(service, never()).stopSelf()
+        verify(delegate, never()).shutdown()
+        verify(controller, never()).pause()
+        assertTrue(delegate.isForegroundService)
+
+        delegate.onStartCommand(AbstractMediaSessionService.launchIntent(
+            testContext,
+            service::class.java
+        ))
+        verify(service, times(2)).startForeground(ArgumentMatchers.anyInt(), any())
+
+        delegate.onStartCommand(AbstractMediaSessionService.launchIntent(
+            testContext,
+            service::class.java
+        ))
+        verify(service, times(3)).startForeground(ArgumentMatchers.anyInt(), any())
+    }
+
+    @Test
     fun `pause intent will pause playing media session`() {
         val controller: MediaSession.Controller = mock()
         val initialState = BrowserState(
@@ -208,7 +245,7 @@ class MediaSessionServiceDelegateTest {
             service::class.java
         ))
 
-        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
+        verify(service, times(2)).startForeground(ArgumentMatchers.anyInt(), any())
 
         delegate.onStartCommand(AbstractMediaSessionService.pauseIntent(
             testContext,
@@ -216,7 +253,7 @@ class MediaSessionServiceDelegateTest {
         ))
         verify(controller).pause()
         mediaSessionCallback.onPause()
-        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
+        verify(service, times(2)).startForeground(ArgumentMatchers.anyInt(), any())
 
         mediaSessionCallback.onPlay()
         verify(controller, times(1)).play()
