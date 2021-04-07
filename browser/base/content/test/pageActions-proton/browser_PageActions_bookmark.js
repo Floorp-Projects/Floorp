@@ -1,13 +1,6 @@
 "use strict";
 
 add_task(async function starButtonCtrlClick() {
-  // On macOS, ctrl-click shouldn't open the panel because this normally opens
-  // the context menu. This happens via the `contextmenu` event which is created
-  // by widget code, our simulated clicks do not do so, so we can't test it.
-  if (AppConstants.platform == "macosx") {
-    return;
-  }
-
   // Open a unique page.
   let url = "http://example.com/browser_page_action_star_button";
   await BrowserTestUtils.withNewTab(url, async () => {
