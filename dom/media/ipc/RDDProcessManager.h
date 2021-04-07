@@ -75,6 +75,8 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
   void CleanShutdown();
   void DestroyProcess();
 
+  bool IsShutdown() const;
+
   DISALLOW_COPY_AND_ASSIGN(RDDProcessManager);
 
   class Observer final : public nsIObserver {
