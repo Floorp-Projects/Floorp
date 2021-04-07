@@ -12,6 +12,7 @@ import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
+import mozilla.components.support.ktx.android.util.dpToPx
 
 /**
  * A browser menu item with image and label and a custom checkbox.
@@ -71,16 +72,28 @@ class BrowserMenuImageTextCheckboxButton(
             ContextCompat.getDrawable(button.context, secondaryStateIconResource)
         }
         buttonDrawableIcon?.setTint(tintColor)
+        val displayMetrics = button.context.resources.displayMetrics
+
+        buttonDrawableIcon?.setBounds(
+            0,
+            0,
+            CHECKBOX_ICON_SIZE_DP.dpToPx(displayMetrics),
+            CHECKBOX_ICON_SIZE_DP.dpToPx(displayMetrics)
+        )
 
         button.apply {
             text = buttonText
             setTextColor(tintColor)
-            buttonDrawable = buttonDrawableIcon
+            setCompoundDrawables(buttonDrawableIcon, null, null, null)
 
             setOnCheckedChangeListener { _, isChecked ->
                 onCheckedChangedListener(isChecked)
                 menu.dismiss()
             }
         }
+    }
+
+    companion object {
+        private const val CHECKBOX_ICON_SIZE_DP = 19
     }
 }
