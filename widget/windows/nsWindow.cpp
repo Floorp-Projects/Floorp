@@ -6991,26 +6991,19 @@ nsIntPoint nsWindow::GetTouchCoordinates(WPARAM wParam, LPARAM lParam) {
   return ret;
 }
 
-// Determine if the touch device that originated |aOSEvent| needs to have
-// touch events representing a two-finger gesture converted to pan
-// gesture events.
-// We only do this for touch devices with a specific name and identifiers.
-bool TouchDeviceNeedsPanGestureConversion(PTOUCHINPUT aOSEvent,
-                                          uint32_t aTouchCount) {
-  if (aTouchCount == 0) {
-    return false;
-  }
-  HANDLE source = aOSEvent[0].hSource;
+// Helper function for TouchDeviceNeedsPanGestureConversion(PTOUCHINPUT,
+// uint32_t).
+static bool TouchDeviceNeedsPanGestureConversion(HANDLE aSource) {
   std::string deviceName;
   UINT dataSize = 0;
   // The first call just queries how long the name string will be.
-  GetRawInputDeviceInfoA(source, RIDI_DEVICENAME, nullptr, &dataSize);
+  GetRawInputDeviceInfoA(aSource, RIDI_DEVICENAME, nullptr, &dataSize);
   if (!dataSize || dataSize > 0x10000) {
     return false;
   }
   deviceName.resize(dataSize);
   // The second call actually populates the string.
-  UINT result = GetRawInputDeviceInfoA(source, RIDI_DEVICENAME, &deviceName[0],
+  UINT result = GetRawInputDeviceInfoA(aSource, RIDI_DEVICENAME, &deviceName[0],
                                        &dataSize);
   if (result == UINT_MAX) {
     return false;
@@ -7032,7 +7025,7 @@ bool TouchDeviceNeedsPanGestureConversion(PTOUCHINPUT aOSEvent,
   deviceInfo.cbSize = sizeof(deviceInfo);
   dataSize = sizeof(deviceInfo);
   result =
-      GetRawInputDeviceInfoA(source, RIDI_DEVICEINFO, &deviceInfo, &dataSize);
+      GetRawInputDeviceInfoA(aSource, RIDI_DEVICEINFO, &deviceInfo, &dataSize);
   if (result == UINT_MAX) {
     return false;
   }
@@ -7044,12 +7037,33 @@ bool TouchDeviceNeedsPanGestureConversion(PTOUCHINPUT aOSEvent,
          deviceInfo.hid.usUsagePage == 13 && deviceInfo.hid.usUsage == 4;
 }
 
+// Determine if the touch device that originated |aOSEvent| needs to have
+// touch events representing a two-finger gesture converted to pan
+// gesture events.
+// We only do this for touch devices with a specific name and identifiers.
+static bool TouchDeviceNeedsPanGestureConversion(PTOUCHINPUT aOSEvent,
+                                                 uint32_t aTouchCount) {
+  if (aTouchCount == 0) {
+    return false;
+  }
+  HANDLE source = aOSEvent[0].hSource;
+
+  // Cache the result of this computation for each touch device.
+  // Touch devices are identified by the HANDLE stored in the hSource
+  // field of TOUCHINPUT.
+  static std::map<HANDLE, bool> sResultCache;
+  auto [iter, inserted] = sResultCache.emplace(source, false);
+  if (inserted) {
+    iter->second = TouchDeviceNeedsPanGestureConversion(source);
+  }
+  return iter->second;
+}
+
 Maybe<PanGestureInput> nsWindow::ConvertTouchToPanGesture(
     const MultiTouchInput& aTouchInput, PTOUCHINPUT aOSEvent) {
-  // The first time this function is called, perform some checks on the
-  // touch device that originated the touch event, to see if it's a device
+  // Checks if the touch device that originated the touch event is one
   // for which we want to convert the touch events to pang gesture events.
-  static bool shouldConvert = TouchDeviceNeedsPanGestureConversion(
+  bool shouldConvert = TouchDeviceNeedsPanGestureConversion(
       aOSEvent, aTouchInput.mTouches.Length());
   if (!shouldConvert) {
     return Nothing();
