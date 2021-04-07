@@ -16,6 +16,7 @@
 #include "mozilla/widget/idle-inhibit-unstable-v1-client-protocol.h"
 #include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
 #include "mozilla/widget/primary-selection-unstable-v1-client-protocol.h"
+#include "mozilla/widget/viewporter-client-protocol.h"
 
 namespace mozilla {
 namespace widget {
@@ -61,6 +62,7 @@ class nsWaylandDisplay {
   zwp_idle_inhibit_manager_v1* GetIdleInhibitManager(void) {
     return mIdleInhibitManager;
   }
+  wp_viewporter* GetViewporter(void) { return mViewporter; };
 
   bool IsMainThreadDisplay() { return mEventQueue == nullptr; }
 
@@ -74,6 +76,7 @@ class nsWaylandDisplay {
   void SetPrimarySelectionDeviceManager(
       zwp_primary_selection_device_manager_v1* aPrimarySelectionDeviceManager);
   void SetIdleInhibitManager(zwp_idle_inhibit_manager_v1* aIdleInhibitManager);
+  void SetViewporter(wp_viewporter* aViewporter);
 
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
 
@@ -93,6 +96,7 @@ class nsWaylandDisplay {
   zwp_primary_selection_device_manager_v1* mPrimarySelectionDeviceManagerZwpV1;
   zwp_idle_inhibit_manager_v1* mIdleInhibitManager;
   wl_registry* mRegistry;
+  wp_viewporter* mViewporter;
   bool mExplicitSync;
 };
 
