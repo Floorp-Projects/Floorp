@@ -12,6 +12,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.selection.SelectionInteractor
 import org.mozilla.fenix.tabstray.TabsTrayAction
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TrayPagerAdapter
 import org.mozilla.fenix.tabstray.ext.numberOfGridColumns
@@ -41,17 +42,30 @@ interface BrowserTrayInteractor : SelectionInteractor<Tab>, UserInteractionHandl
  */
 class DefaultBrowserTrayInteractor(
     private val store: TabsTrayStore,
-    private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
-    private val removeUseCases: TabsUseCases.RemoveTabUseCase,
+    private val trayInteractor: TabsTrayInteractor,
+    private val selectTab: TabsUseCases.SelectTabUseCase,
     private val settings: Settings,
-    private val trayInteractor: TabsTrayInteractor
+    private val metrics: MetricController
 ) : BrowserTrayInteractor {
+
+    private val selectTabWrapper by lazy {
+        SelectTabUseCaseWrapper(metrics, selectTab) {
+            trayInteractor.navigateToBrowser()
+        }
+    }
+
+    private val removeTabWrapper by lazy {
+        RemoveTabUseCaseWrapper(metrics) {
+            // Handle removal from the interactor where we can also handle "undo" visuals.
+            trayInteractor.tabRemoved(it)
+        }
+    }
 
     /**
      * See [SelectionInteractor.open]
      */
     override fun open(item: Tab) {
-        selectTabUseCase.invoke(item.id)
+        selectTabWrapper.invoke(item.id)
         trayInteractor.navigateToBrowser()
     }
 
@@ -59,7 +73,7 @@ class DefaultBrowserTrayInteractor(
      * See [BrowserTrayInteractor.close].
      */
     override fun close(tab: Tab) {
-        removeUseCases.invoke(tab.id)
+        removeTabWrapper.invoke(tab.id)
     }
 
     /**

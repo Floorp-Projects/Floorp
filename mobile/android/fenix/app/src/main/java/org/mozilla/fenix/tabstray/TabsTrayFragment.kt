@@ -28,8 +28,6 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
-import org.mozilla.fenix.tabstray.browser.RemoveTabUseCaseWrapper
-import org.mozilla.fenix.tabstray.browser.SelectTabUseCaseWrapper
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
@@ -40,23 +38,6 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
     private val tabCounterBinding = ViewBoundFeatureWrapper<TabCounterBinding>()
-
-    private val selectTabUseCase by lazy {
-        SelectTabUseCaseWrapper(
-            requireComponents.analytics.metrics,
-            requireComponents.useCases.tabsUseCases.selectTab
-        ) {
-            navigateToBrowser()
-        }
-    }
-
-    private val removeUseCases by lazy {
-        RemoveTabUseCaseWrapper(
-            requireComponents.analytics.metrics
-        ) {
-            tabRemoved(it)
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,12 +67,12 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        browserTrayInteractor = DefaultBrowserTrayInteractor(
+        val browserTrayInteractor = DefaultBrowserTrayInteractor(
             tabsTrayStore,
-            selectTabUseCase,
-            removeUseCases,
+            this@TabsTrayFragment,
+            requireComponents.useCases.tabsUseCases.selectTab,
             requireComponents.settings,
-            this
+            requireComponents.analytics.metrics
         )
 
         val navigationInteractor =
