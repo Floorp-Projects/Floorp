@@ -66,13 +66,13 @@ class NativeDNSResolverOverride : public nsINativeDNSResolverOverride {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSINATIVEDNSRESOLVEROVERRIDE
  public:
-  NativeDNSResolverOverride() : mLock("NativeDNSResolverOverride") {}
+  NativeDNSResolverOverride() = default;
 
   static already_AddRefed<nsINativeDNSResolverOverride> GetSingleton();
 
  private:
   virtual ~NativeDNSResolverOverride() = default;
-  mozilla::RWLock mLock;
+  mozilla::RWLock mLock{"NativeDNSResolverOverride"};
 
   nsTHashMap<nsCStringHashKey, nsTArray<PRNetAddr>> mOverrides;
   nsTHashMap<nsCStringHashKey, nsCString> mCnames;
