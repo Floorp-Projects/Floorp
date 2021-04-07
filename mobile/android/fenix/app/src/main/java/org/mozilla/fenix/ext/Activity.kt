@@ -58,7 +58,7 @@ fun Activity.breadcrumb(
 }
 
 /**
- *  Opens Android's Manage Default Apps Settings if possible.
+ * Opens Android's Manage Default Apps Settings if possible.
  */
 fun Activity.openSetDefaultBrowserOption() {
     when {
