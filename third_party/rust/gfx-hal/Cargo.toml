@@ -20,7 +20,7 @@ path = "src/lib.rs"
 
 [dependencies]
 bitflags = "1.0"
-naga = { git = "https://github.com/gfx-rs/naga", tag = "gfx-12" }
+naga = { git = "https://github.com/gfx-rs/naga", tag = "gfx-20" }
 raw-window-handle = "0.3"
 serde = { version = "1", features = ["serde_derive"], optional = true }
 thiserror = "1"

@@ -26,6 +26,23 @@ fn parse_types() {
 }
 
 #[test]
+fn parse_type_inference() {
+    parse_str(
+        "
+        fn foo() {
+            const a = 2u;
+            const b: u32 = a;
+        }",
+    )
+    .unwrap();
+    assert!(parse_str(
+        "
+        fn foo() { const c : i32 = 2.0; }",
+    )
+    .is_err());
+}
+
+#[test]
 fn parse_type_cast() {
     parse_str(
         "
@@ -53,7 +70,11 @@ fn parse_struct() {
     parse_str(
         "
         [[block]] struct Foo { x: i32; };
-        struct Bar { [[span(16)]] x: vec2<i32>; };
+        struct Bar {
+            [[size(16)]] x: vec2<i32>;
+            [[align(16)]] y: f32;
+            [[size(32), align(8)]] z: vec3<f32>;
+        };
         struct Empty {};
         var s: [[access(read_write)]] Foo;
     ",
@@ -206,6 +227,19 @@ fn parse_texture_load() {
 }
 
 #[test]
+fn parse_texture_store() {
+    parse_str(
+        "
+        var t: [[access(write)]] texture_storage_2d<rgba8unorm>;
+        fn foo() {
+            textureStore(t, vec2<i32>(10, 20), vec4<f32>(0.0, 1.0, 2.0, 3.0));
+        }
+    ",
+    )
+    .unwrap();
+}
+
+#[test]
 fn parse_texture_query() {
     parse_str(
         "
@@ -239,4 +273,16 @@ fn parse_expressions() {
         const y: vec2<f32> = select(vec2<f32>(1.0, 1.0), vec2<f32>(x, x), vec2<bool>(x < 0.5, x > 0.5));
         const z: bool = !(0.0 == 1.0);
     }").unwrap();
+}
+
+#[test]
+fn parse_pointers() {
+    parse_str(
+        "fn foo() {
+        var x: f32 = 1.0;
+        const px = &x;
+        const py = frexp(0.5, px);
+    }",
+    )
+    .unwrap();
 }

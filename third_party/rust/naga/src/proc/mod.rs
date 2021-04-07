@@ -1,19 +1,14 @@
 //! Module processing functionality.
 
-pub mod analyzer;
-mod interface;
 mod layouter;
 mod namer;
 mod terminator;
 mod typifier;
-mod validator;
 
-pub use interface::{Interface, Visitor};
-pub use layouter::{Alignment, Layouter};
+pub use layouter::{Alignment, Layouter, TypeLayout};
 pub use namer::{EntryPointIndex, NameKey, Namer};
 pub use terminator::ensure_block_returns;
-pub use typifier::{ResolveContext, ResolveError, Typifier, TypifyError};
-pub use validator::{ValidationError, Validator};
+pub use typifier::{ResolveContext, ResolveError, TypeResolution};
 
 impl From<super::StorageFormat> for super::ScalarKind {
     fn from(format: super::StorageFormat) -> Self {
@@ -135,6 +130,56 @@ impl super::MathFunction {
             // bits
             Self::CountOneBits => 1,
             Self::ReverseBits => 1,
+        }
+    }
+}
+
+impl crate::Expression {
+    /// Returns true if the expression is considered emitted at the start of a function.
+    pub fn needs_pre_emit(&self) -> bool {
+        match *self {
+            Self::Constant(_)
+            | Self::FunctionArgument(_)
+            | Self::GlobalVariable(_)
+            | Self::LocalVariable(_) => true,
+            _ => false,
+        }
+    }
+}
+
+impl crate::SampleLevel {
+    pub fn implicit_derivatives(&self) -> bool {
+        match *self {
+            Self::Auto | Self::Bias(_) => true,
+            Self::Zero | Self::Exact(_) | Self::Gradient { .. } => false,
+        }
+    }
+}
+
+impl crate::Constant {
+    pub fn to_array_length(&self) -> Option<u32> {
+        use std::convert::TryInto;
+        match self.inner {
+            crate::ConstantInner::Scalar { value, width: _ } => match value {
+                crate::ScalarValue::Uint(value) => value.try_into().ok(),
+                // Accept a signed integer size to avoid
+                // requiring an explicit uint
+                // literal. Type inference should make
+                // this unnecessary.
+                crate::ScalarValue::Sint(value) => value.try_into().ok(),
+                _ => None,
+            },
+            // caught by type validation
+            crate::ConstantInner::Composite { .. } => None,
+        }
+    }
+}
+
+impl crate::Binding {
+    pub fn to_built_in(&self) -> Option<crate::BuiltIn> {
+        match *self {
+            Self::BuiltIn(bi) => Some(bi),
+            Self::Location(..) => None,
         }
     }
 }

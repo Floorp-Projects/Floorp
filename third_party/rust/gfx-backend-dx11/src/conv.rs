@@ -10,7 +10,7 @@ use hal::{
     IndexType,
 };
 
-use spirv_cross::spirv;
+use spirv_cross::{hlsl, spirv};
 
 use winapi::{
     shared::{
@@ -828,7 +828,11 @@ pub fn map_filter(
             .unwrap_or(0)
 }
 
-pub fn map_image_usage(usage: image::Usage, format_desc: FormatDesc) -> D3D11_BIND_FLAG {
+pub fn map_image_usage(
+    usage: image::Usage,
+    format_desc: FormatDesc,
+    feature_level: u32,
+) -> D3D11_BIND_FLAG {
     let mut bind = 0;
 
     if usage.intersects(image::Usage::TRANSFER_SRC | image::Usage::SAMPLED | image::Usage::STORAGE)
@@ -842,7 +846,11 @@ pub fn map_image_usage(usage: image::Usage, format_desc: FormatDesc) -> D3D11_BI
             bind |= D3D11_BIND_RENDER_TARGET;
         }
 
-        if usage.intersects(image::Usage::TRANSFER_DST | image::Usage::STORAGE) {
+        // Only add unordered access on the image if we could use compute shaders to copy.
+        let transfer_compute =
+            usage.intersects(image::Usage::TRANSFER_DST) && feature_level >= D3D_FEATURE_LEVEL_11_0;
+        let storage = usage.intersects(image::Usage::STORAGE);
+        if transfer_compute || storage {
             bind |= D3D11_BIND_UNORDERED_ACCESS;
         }
     }
@@ -852,4 +860,15 @@ pub fn map_image_usage(usage: image::Usage, format_desc: FormatDesc) -> D3D11_BI
     }
 
     bind
+}
+
+pub fn map_feature_level_to_shader_model(feature: u32) -> hlsl::ShaderModel {
+    match feature {
+        D3D_FEATURE_LEVEL_9_1 | D3D_FEATURE_LEVEL_9_2 => hlsl::ShaderModel::V4_0L9_1,
+        D3D_FEATURE_LEVEL_9_3 => hlsl::ShaderModel::V4_0L9_3,
+        D3D_FEATURE_LEVEL_10_0 => hlsl::ShaderModel::V4_0,
+        D3D_FEATURE_LEVEL_10_1 => hlsl::ShaderModel::V4_1,
+        D3D_FEATURE_LEVEL_11_0 | D3D_FEATURE_LEVEL_11_1 => hlsl::ShaderModel::V5_0,
+        _ => unimplemented!(),
+    }
 }

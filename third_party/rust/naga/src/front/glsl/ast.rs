@@ -1,9 +1,8 @@
-use super::{constants::ConstantSolver, error::ErrorKind};
+use super::{super::Typifier, constants::ConstantSolver, error::ErrorKind};
 use crate::{
-    proc::{ResolveContext, Typifier},
-    Arena, BinaryOperator, Binding, Constant, Expression, FastHashMap, Function, FunctionArgument,
-    GlobalVariable, Handle, Interpolation, LocalVariable, Module, RelationalFunction, ShaderStage,
-    Statement, StorageClass, Type, UnaryOperator,
+    proc::ResolveContext, Arena, BinaryOperator, Binding, Constant, Expression, FastHashMap,
+    Function, FunctionArgument, GlobalVariable, Handle, Interpolation, LocalVariable, Module,
+    RelationalFunction, ResourceBinding, ShaderStage, Statement, StorageClass, Type, UnaryOperator,
 };
 
 #[derive(Debug)]
@@ -71,12 +70,12 @@ impl<'a> Program<'a> {
         left: &ExpressionRule,
         right: &ExpressionRule,
     ) -> Result<ExpressionRule, ErrorKind> {
-        let left_is_vector = match self.resolve_type(left.expression)? {
+        let left_is_vector = match *self.resolve_type(left.expression)? {
             crate::TypeInner::Vector { .. } => true,
             _ => false,
         };
 
-        let right_is_vector = match self.resolve_type(right.expression)? {
+        let right_is_vector = match *self.resolve_type(right.expression)? {
             crate::TypeInner::Vector { .. } => true,
             _ => false,
         };
@@ -224,6 +223,7 @@ impl ExpressionRule {
 #[derive(Debug)]
 pub enum TypeQualifier {
     StorageQualifier(StorageQualifier),
+    ResourceBinding(ResourceBinding),
     Binding(Binding),
     Interpolation(Interpolation),
 }
@@ -250,11 +250,14 @@ pub struct FunctionCall {
 #[derive(Debug, Clone, Copy)]
 pub enum StorageQualifier {
     StorageClass(StorageClass),
+    Input,
+    Output,
     Const,
 }
 
 #[derive(Debug, Clone)]
 pub enum StructLayout {
     Binding(Binding),
+    Resource(ResourceBinding),
     PushConstant,
 }

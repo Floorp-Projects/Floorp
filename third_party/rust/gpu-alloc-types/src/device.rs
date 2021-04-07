@@ -84,7 +84,7 @@ pub trait MemoryDevice<M> {
     /// # Safety
     ///
     /// `memory_type` must be valid index for memory type associated with this device.
-    /// Retreiving this information is implementation specific.
+    /// Retrieving this information is implementation specific.
     ///
     /// `flags` must be supported by the device.
     unsafe fn allocate_memory(

@@ -3,11 +3,11 @@ use crate::native as n;
 use ash::vk;
 
 use hal::{
-    buffer, command, format, image,
+    buffer, command, format, image, memory,
     memory::Segment,
     pass, pso, query,
     window::{CompositeAlphaMode, PresentMode},
-    Features, IndexType,
+    IndexType,
 };
 
 use std::mem;
@@ -154,6 +154,10 @@ pub fn map_pipeline_stage(stage: pso::PipelineStage) -> vk::PipelineStageFlags {
 
 pub fn map_buffer_usage(usage: buffer::Usage) -> vk::BufferUsageFlags {
     vk::BufferUsageFlags::from_raw(usage.bits())
+}
+
+pub fn map_buffer_create_flags(sparse: memory::SparseFlags) -> vk::BufferCreateFlags {
+    vk::BufferCreateFlags::from_raw(sparse.bits())
 }
 
 pub fn map_image_usage(usage: image::Usage) -> vk::ImageUsageFlags {
@@ -378,6 +382,7 @@ pub fn map_query_result_flags(flags: query::ResultFlags) -> vk::QueryResultFlags
 pub fn map_image_features(
     features: vk::FormatFeatureFlags,
     supports_transfer_bits: bool,
+    supports_sampler_filter_minmax: bool,
 ) -> format::ImageFeature {
     let mut mapped_flags = format::ImageFeature::empty();
     if features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE) {
@@ -386,7 +391,9 @@ pub fn map_image_features(
     if features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_LINEAR) {
         mapped_flags |= format::ImageFeature::SAMPLED_LINEAR;
     }
-    if features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_MINMAX) {
+    if supports_sampler_filter_minmax
+        && features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_MINMAX)
+    {
         mapped_flags |= format::ImageFeature::SAMPLED_MINMAX;
     }
 
@@ -434,127 +441,6 @@ pub fn map_image_features(
 
 pub fn map_buffer_features(features: vk::FormatFeatureFlags) -> format::BufferFeature {
     format::BufferFeature::from_bits_truncate(features.as_raw())
-}
-
-pub(crate) fn map_device_features(
-    features: Features,
-    imageless_framebuffers: bool,
-) -> crate::DeviceCreationFeatures {
-    crate::DeviceCreationFeatures {
-        // vk::PhysicalDeviceFeatures is a struct composed of Bool32's while
-        // Features is a bitfield so we need to map everything manually
-        core: vk::PhysicalDeviceFeatures::builder()
-            .robust_buffer_access(features.contains(Features::ROBUST_BUFFER_ACCESS))
-            .full_draw_index_uint32(features.contains(Features::FULL_DRAW_INDEX_U32))
-            .image_cube_array(features.contains(Features::IMAGE_CUBE_ARRAY))
-            .independent_blend(features.contains(Features::INDEPENDENT_BLENDING))
-            .geometry_shader(features.contains(Features::GEOMETRY_SHADER))
-            .tessellation_shader(features.contains(Features::TESSELLATION_SHADER))
-            .sample_rate_shading(features.contains(Features::SAMPLE_RATE_SHADING))
-            .dual_src_blend(features.contains(Features::DUAL_SRC_BLENDING))
-            .logic_op(features.contains(Features::LOGIC_OP))
-            .multi_draw_indirect(features.contains(Features::MULTI_DRAW_INDIRECT))
-            .draw_indirect_first_instance(features.contains(Features::DRAW_INDIRECT_FIRST_INSTANCE))
-            .depth_clamp(features.contains(Features::DEPTH_CLAMP))
-            .depth_bias_clamp(features.contains(Features::DEPTH_BIAS_CLAMP))
-            .fill_mode_non_solid(features.contains(Features::NON_FILL_POLYGON_MODE))
-            .depth_bounds(features.contains(Features::DEPTH_BOUNDS))
-            .wide_lines(features.contains(Features::LINE_WIDTH))
-            .large_points(features.contains(Features::POINT_SIZE))
-            .alpha_to_one(features.contains(Features::ALPHA_TO_ONE))
-            .multi_viewport(features.contains(Features::MULTI_VIEWPORTS))
-            .sampler_anisotropy(features.contains(Features::SAMPLER_ANISOTROPY))
-            .texture_compression_etc2(features.contains(Features::FORMAT_ETC2))
-            .texture_compression_astc_ldr(features.contains(Features::FORMAT_ASTC_LDR))
-            .texture_compression_bc(features.contains(Features::FORMAT_BC))
-            .occlusion_query_precise(features.contains(Features::PRECISE_OCCLUSION_QUERY))
-            .pipeline_statistics_query(features.contains(Features::PIPELINE_STATISTICS_QUERY))
-            .vertex_pipeline_stores_and_atomics(
-                features.contains(Features::VERTEX_STORES_AND_ATOMICS),
-            )
-            .fragment_stores_and_atomics(features.contains(Features::FRAGMENT_STORES_AND_ATOMICS))
-            .shader_tessellation_and_geometry_point_size(
-                features.contains(Features::SHADER_TESSELLATION_AND_GEOMETRY_POINT_SIZE),
-            )
-            .shader_image_gather_extended(features.contains(Features::SHADER_IMAGE_GATHER_EXTENDED))
-            .shader_storage_image_extended_formats(
-                features.contains(Features::SHADER_STORAGE_IMAGE_EXTENDED_FORMATS),
-            )
-            .shader_storage_image_multisample(
-                features.contains(Features::SHADER_STORAGE_IMAGE_MULTISAMPLE),
-            )
-            .shader_storage_image_read_without_format(
-                features.contains(Features::SHADER_STORAGE_IMAGE_READ_WITHOUT_FORMAT),
-            )
-            .shader_storage_image_write_without_format(
-                features.contains(Features::SHADER_STORAGE_IMAGE_WRITE_WITHOUT_FORMAT),
-            )
-            .shader_uniform_buffer_array_dynamic_indexing(
-                features.contains(Features::SHADER_UNIFORM_BUFFER_ARRAY_DYNAMIC_INDEXING),
-            )
-            .shader_sampled_image_array_dynamic_indexing(
-                features.contains(Features::SHADER_SAMPLED_IMAGE_ARRAY_DYNAMIC_INDEXING),
-            )
-            .shader_storage_buffer_array_dynamic_indexing(
-                features.contains(Features::SHADER_STORAGE_BUFFER_ARRAY_DYNAMIC_INDEXING),
-            )
-            .shader_storage_image_array_dynamic_indexing(
-                features.contains(Features::SHADER_STORAGE_IMAGE_ARRAY_DYNAMIC_INDEXING),
-            )
-            .shader_clip_distance(features.contains(Features::SHADER_CLIP_DISTANCE))
-            .shader_cull_distance(features.contains(Features::SHADER_CULL_DISTANCE))
-            .shader_float64(features.contains(Features::SHADER_FLOAT64))
-            .shader_int64(features.contains(Features::SHADER_INT64))
-            .shader_int16(features.contains(Features::SHADER_INT16))
-            .shader_resource_residency(features.contains(Features::SHADER_RESOURCE_RESIDENCY))
-            .shader_resource_min_lod(features.contains(Features::SHADER_RESOURCE_MIN_LOD))
-            .sparse_binding(features.contains(Features::SPARSE_BINDING))
-            .sparse_residency_buffer(features.contains(Features::SPARSE_RESIDENCY_BUFFER))
-            .sparse_residency_image2_d(features.contains(Features::SPARSE_RESIDENCY_IMAGE_2D))
-            .sparse_residency_image3_d(features.contains(Features::SPARSE_RESIDENCY_IMAGE_3D))
-            .sparse_residency2_samples(features.contains(Features::SPARSE_RESIDENCY_2_SAMPLES))
-            .sparse_residency4_samples(features.contains(Features::SPARSE_RESIDENCY_4_SAMPLES))
-            .sparse_residency8_samples(features.contains(Features::SPARSE_RESIDENCY_8_SAMPLES))
-            .sparse_residency16_samples(features.contains(Features::SPARSE_RESIDENCY_16_SAMPLES))
-            .sparse_residency_aliased(features.contains(Features::SPARSE_RESIDENCY_ALIASED))
-            .variable_multisample_rate(features.contains(Features::VARIABLE_MULTISAMPLE_RATE))
-            .inherited_queries(features.contains(Features::INHERITED_QUERIES))
-            .build(),
-        descriptor_indexing: if features.intersects(Features::DESCRIPTOR_INDEXING_MASK) {
-            Some(
-                vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder()
-                    .shader_sampled_image_array_non_uniform_indexing(
-                        features.contains(Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING),
-                    )
-                    .shader_storage_image_array_non_uniform_indexing(
-                        features.contains(Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING),
-                    )
-                    .runtime_descriptor_array(features.contains(Features::UNSIZED_DESCRIPTOR_ARRAY))
-                    .build(),
-            )
-        } else {
-            None
-        },
-        mesh_shaders: if features.intersects(Features::MESH_SHADER_MASK) {
-            Some(
-                vk::PhysicalDeviceMeshShaderFeaturesNV::builder()
-                    .task_shader(features.contains(Features::TASK_SHADER))
-                    .mesh_shader(features.contains(Features::MESH_SHADER))
-                    .build(),
-            )
-        } else {
-            None
-        },
-        imageless_framebuffers: if imageless_framebuffers {
-            Some(
-                vk::PhysicalDeviceImagelessFramebufferFeaturesKHR::builder()
-                    .imageless_framebuffer(imageless_framebuffers)
-                    .build(),
-            )
-        } else {
-            None
-        },
-    }
 }
 
 pub fn map_memory_range<'a>((memory, segment): (&'a n::Memory, Segment)) -> vk::MappedMemoryRange {
@@ -637,6 +523,13 @@ pub fn map_viewport(vp: &pso::Viewport, flip_y: bool, shift_y: bool) -> vk::View
 
 pub fn map_view_capabilities(caps: image::ViewCapabilities) -> vk::ImageCreateFlags {
     vk::ImageCreateFlags::from_raw(caps.bits())
+}
+
+pub fn map_view_capabilities_sparse(
+    sparse: memory::SparseFlags,
+    caps: image::ViewCapabilities,
+) -> vk::ImageCreateFlags {
+    vk::ImageCreateFlags::from_raw(sparse.bits() | caps.bits())
 }
 
 pub fn map_present_mode(mode: PresentMode) -> vk::PresentModeKHR {

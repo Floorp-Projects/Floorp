@@ -326,8 +326,8 @@ enum GPUTextureFormat {
     "rgba32float",
 
     // Depth and stencil formats
-    "stencil8",
-    "depth16unorm",
+    //"stencil8", //TODO
+    //"depth16unorm",
     "depth24plus",
     "depth24plus-stencil8",
     "depth32float",
@@ -350,10 +350,10 @@ enum GPUTextureFormat {
     "bc7-rgba-unorm-srgb",
 
     // "depth24unorm-stencil8" feature
-    "depth24unorm-stencil8",
+    //"depth24unorm-stencil8",
 
     // "depth32float-stencil8" feature
-    "depth32float-stencil8",
+    //"depth32float-stencil8",
 };
 
 typedef [EnforceRange] unsigned long GPUTextureUsageFlags;
@@ -741,6 +741,8 @@ dictionary GPUPrimitiveState {
     GPUIndexFormat stripIndexFormat;
     GPUFrontFace frontFace = "ccw";
     GPUCullMode cullMode = "none";
+    // Enable depth clamping (requires "depth-clamping" feature)
+    boolean clampDepth = false;
 };
 
 dictionary GPUMultisampleState {
@@ -840,9 +842,6 @@ dictionary GPUDepthStencilState {
     GPUDepthBias depthBias = 0;
     float depthBiasSlopeScale = 0;
     float depthBiasClamp = 0;
-
-    // Enable depth clamping (requires "depth-clamping" feature)
-    boolean clampDepth = false;
 };
 
 dictionary GPURenderPipelineDescriptor : GPUPipelineDescriptorBase {
@@ -875,15 +874,15 @@ enum GPUStoreOp {
     "clear"
 };
 
-dictionary GPURenderPassColorAttachmentDescriptor {
+dictionary GPURenderPassColorAttachment {
     required GPUTextureView view;
     GPUTextureView resolveTarget;
 
     required (GPULoadOp or GPUColor) loadValue;
-    GPUStoreOp storeOp = "store";
+    required GPUStoreOp storeOp;
 };
 
-dictionary GPURenderPassDepthStencilAttachmentDescriptor {
+dictionary GPURenderPassDepthStencilAttachment {
     required GPUTextureView view;
 
     required (GPULoadOp or float) depthLoadValue;
@@ -894,25 +893,26 @@ dictionary GPURenderPassDepthStencilAttachmentDescriptor {
 };
 
 dictionary GPURenderPassDescriptor : GPUObjectDescriptorBase {
-    required sequence<GPURenderPassColorAttachmentDescriptor> colorAttachments;
-    GPURenderPassDepthStencilAttachmentDescriptor depthStencilAttachment;
+    required sequence<GPURenderPassColorAttachment> colorAttachments;
+    GPURenderPassDepthStencilAttachment depthStencilAttachment;
     GPUQuerySet occlusionQuerySet;
 };
 
-dictionary GPUTextureDataLayout {
+dictionary GPUImageDataLayout {
     GPUSize64 offset = 0;
     required GPUSize32 bytesPerRow;
     GPUSize32 rowsPerImage = 0;
 };
 
-dictionary GPUBufferCopyView : GPUTextureDataLayout {
+dictionary GPUImageCopyBuffer : GPUImageDataLayout {
     required GPUBuffer buffer;
 };
 
-dictionary GPUTextureCopyView {
+dictionary GPUImageCopyTexture {
     required GPUTexture texture;
     GPUIntegerCoordinate mipLevel = 0;
     GPUOrigin3D origin;
+    GPUTextureAspect aspect = "all";
 };
 
 dictionary GPUImageBitmapCopyView {
@@ -939,24 +939,24 @@ interface GPUCommandEncoder {
         GPUSize64 size);
 
     void copyBufferToTexture(
-        GPUBufferCopyView source,
-        GPUTextureCopyView destination,
+        GPUImageCopyBuffer source,
+        GPUImageCopyTexture destination,
         GPUExtent3D copySize);
 
     void copyTextureToBuffer(
-        GPUTextureCopyView source,
-        GPUBufferCopyView destination,
+        GPUImageCopyTexture source,
+        GPUImageCopyBuffer destination,
         GPUExtent3D copySize);
 
     void copyTextureToTexture(
-        GPUTextureCopyView source,
-        GPUTextureCopyView destination,
+        GPUImageCopyTexture source,
+        GPUImageCopyTexture destination,
         GPUExtent3D copySize);
 
     /*
     void copyImageBitmapToTexture(
         GPUImageBitmapCopyView source,
-        GPUTextureCopyView destination,
+        GPUImageCopyTexture destination,
         GPUExtent3D copySize);
     */
 
@@ -1137,9 +1137,9 @@ interface GPUQueue {
 
     [Throws]
     void writeTexture(
-      GPUTextureCopyView destination,
+      GPUImageCopyTexture destination,
       BufferSource data,
-      GPUTextureDataLayout dataLayout,
+      GPUImageDataLayout dataLayout,
       GPUExtent3D size);
 };
 GPUQueue includes GPUObjectBase;

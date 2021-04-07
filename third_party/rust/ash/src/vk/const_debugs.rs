@@ -42,7 +42,36 @@ impl fmt::Debug for AccelerationStructureBuildTypeKHR {
         }
     }
 }
-impl fmt::Debug for AccelerationStructureMemoryRequirementsTypeKHR {
+impl fmt::Debug for AccelerationStructureCompatibilityKHR {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::COMPATIBLE => Some("COMPATIBLE"),
+            Self::INCOMPATIBLE => Some("INCOMPATIBLE"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for AccelerationStructureCreateFlagsKHR {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        const KNOWN: &[(Flags, &str)] = &[
+            (
+                AccelerationStructureCreateFlagsKHR::DEVICE_ADDRESS_CAPTURE_REPLAY.0,
+                "DEVICE_ADDRESS_CAPTURE_REPLAY",
+            ),
+            (
+                AccelerationStructureCreateFlagsKHR::RESERVED_2_NV.0,
+                "RESERVED_2_NV",
+            ),
+        ];
+        debug_flags(f, KNOWN, self.0)
+    }
+}
+impl fmt::Debug for AccelerationStructureMemoryRequirementsTypeNV {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let name = match *self {
             Self::OBJECT => Some("OBJECT"),
@@ -62,6 +91,7 @@ impl fmt::Debug for AccelerationStructureTypeKHR {
         let name = match *self {
             Self::TOP_LEVEL => Some("TOP_LEVEL"),
             Self::BOTTOM_LEVEL => Some("BOTTOM_LEVEL"),
+            Self::GENERIC => Some("GENERIC"),
             _ => None,
         };
         if let Some(x) = name {
@@ -113,7 +143,6 @@ impl fmt::Debug for AccessFlags {
             (AccessFlags::MEMORY_READ.0, "MEMORY_READ"),
             (AccessFlags::MEMORY_WRITE.0, "MEMORY_WRITE"),
             (AccessFlags::RESERVED_30_KHR.0, "RESERVED_30_KHR"),
-            (AccessFlags::RESERVED_31_KHR.0, "RESERVED_31_KHR"),
             (AccessFlags::RESERVED_28_KHR.0, "RESERVED_28_KHR"),
             (AccessFlags::RESERVED_29_KHR.0, "RESERVED_29_KHR"),
             (
@@ -202,6 +231,7 @@ impl fmt::Debug for AttachmentStoreOp {
         let name = match *self {
             Self::STORE => Some("STORE"),
             Self::DONT_CARE => Some("DONT_CARE"),
+            Self::NONE_QCOM => Some("NONE_QCOM"),
             _ => None,
         };
         if let Some(x) = name {
@@ -329,6 +359,8 @@ impl fmt::Debug for BorderColor {
             Self::INT_OPAQUE_BLACK => Some("INT_OPAQUE_BLACK"),
             Self::FLOAT_OPAQUE_WHITE => Some("FLOAT_OPAQUE_WHITE"),
             Self::INT_OPAQUE_WHITE => Some("INT_OPAQUE_WHITE"),
+            Self::FLOAT_CUSTOM_EXT => Some("FLOAT_CUSTOM_EXT"),
+            Self::INT_CUSTOM_EXT => Some("INT_CUSTOM_EXT"),
             _ => None,
         };
         if let Some(x) = name {
@@ -344,6 +376,7 @@ impl fmt::Debug for BufferCreateFlags {
             (BufferCreateFlags::SPARSE_BINDING.0, "SPARSE_BINDING"),
             (BufferCreateFlags::SPARSE_RESIDENCY.0, "SPARSE_RESIDENCY"),
             (BufferCreateFlags::SPARSE_ALIASED.0, "SPARSE_ALIASED"),
+            (BufferCreateFlags::RESERVED_5_NV.0, "RESERVED_5_NV"),
             (BufferCreateFlags::PROTECTED.0, "PROTECTED"),
             (
                 BufferCreateFlags::DEVICE_ADDRESS_CAPTURE_REPLAY.0,
@@ -387,7 +420,18 @@ impl fmt::Debug for BufferUsageFlags {
                 BufferUsageFlags::CONDITIONAL_RENDERING_EXT.0,
                 "CONDITIONAL_RENDERING_EXT",
             ),
-            (BufferUsageFlags::RAY_TRACING_KHR.0, "RAY_TRACING_KHR"),
+            (
+                BufferUsageFlags::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR.0,
+                "ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR",
+            ),
+            (
+                BufferUsageFlags::ACCELERATION_STRUCTURE_STORAGE_KHR.0,
+                "ACCELERATION_STRUCTURE_STORAGE_KHR",
+            ),
+            (
+                BufferUsageFlags::SHADER_BINDING_TABLE_KHR.0,
+                "SHADER_BINDING_TABLE_KHR",
+            ),
             (BufferUsageFlags::RESERVED_18_QCOM.0, "RESERVED_18_QCOM"),
             (
                 BufferUsageFlags::SHADER_DEVICE_ADDRESS.0,
@@ -426,8 +470,26 @@ impl fmt::Debug for BuildAccelerationStructureFlagsKHR {
                 BuildAccelerationStructureFlagsKHR::LOW_MEMORY.0,
                 "LOW_MEMORY",
             ),
+            (
+                BuildAccelerationStructureFlagsKHR::RESERVED_5_NV.0,
+                "RESERVED_5_NV",
+            ),
         ];
         debug_flags(f, KNOWN, self.0)
+    }
+}
+impl fmt::Debug for BuildAccelerationStructureModeKHR {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::BUILD => Some("BUILD"),
+            Self::UPDATE => Some("UPDATE"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
     }
 }
 impl fmt::Debug for ChromaLocation {
@@ -766,13 +828,14 @@ impl fmt::Debug for DebugReportObjectTypeEXT {
             Self::COMMAND_POOL => Some("COMMAND_POOL"),
             Self::SURFACE_KHR => Some("SURFACE_KHR"),
             Self::SWAPCHAIN_KHR => Some("SWAPCHAIN_KHR"),
-            Self::DEBUG_REPORT_CALLBACK => Some("DEBUG_REPORT_CALLBACK"),
+            Self::DEBUG_REPORT_CALLBACK_EXT => Some("DEBUG_REPORT_CALLBACK_EXT"),
             Self::DISPLAY_KHR => Some("DISPLAY_KHR"),
             Self::DISPLAY_MODE_KHR => Some("DISPLAY_MODE_KHR"),
-            Self::VALIDATION_CACHE => Some("VALIDATION_CACHE"),
+            Self::VALIDATION_CACHE_EXT => Some("VALIDATION_CACHE_EXT"),
             Self::SAMPLER_YCBCR_CONVERSION => Some("SAMPLER_YCBCR_CONVERSION"),
             Self::DESCRIPTOR_UPDATE_TEMPLATE => Some("DESCRIPTOR_UPDATE_TEMPLATE"),
             Self::ACCELERATION_STRUCTURE_KHR => Some("ACCELERATION_STRUCTURE_KHR"),
+            Self::ACCELERATION_STRUCTURE_NV => Some("ACCELERATION_STRUCTURE_NV"),
             _ => None,
         };
         if let Some(x) = name {
@@ -841,6 +904,7 @@ impl fmt::Debug for DescriptorBindingFlags {
                 DescriptorBindingFlags::VARIABLE_DESCRIPTOR_COUNT.0,
                 "VARIABLE_DESCRIPTOR_COUNT",
             ),
+            (DescriptorBindingFlags::RESERVED_4_QCOM.0, "RESERVED_4_QCOM"),
         ];
         debug_flags(f, KNOWN, self.0)
     }
@@ -851,6 +915,10 @@ impl fmt::Debug for DescriptorPoolCreateFlags {
             (
                 DescriptorPoolCreateFlags::FREE_DESCRIPTOR_SET.0,
                 "FREE_DESCRIPTOR_SET",
+            ),
+            (
+                DescriptorPoolCreateFlags::HOST_ONLY_VALVE.0,
+                "HOST_ONLY_VALVE",
             ),
             (
                 DescriptorPoolCreateFlags::UPDATE_AFTER_BIND.0,
@@ -872,6 +940,10 @@ impl fmt::Debug for DescriptorSetLayoutCreateFlags {
             (
                 DescriptorSetLayoutCreateFlags::PUSH_DESCRIPTOR_KHR.0,
                 "PUSH_DESCRIPTOR_KHR",
+            ),
+            (
+                DescriptorSetLayoutCreateFlags::HOST_ONLY_POOL_VALVE.0,
+                "HOST_ONLY_POOL_VALVE",
             ),
             (
                 DescriptorSetLayoutCreateFlags::UPDATE_AFTER_BIND_POOL.0,
@@ -897,6 +969,8 @@ impl fmt::Debug for DescriptorType {
             Self::INPUT_ATTACHMENT => Some("INPUT_ATTACHMENT"),
             Self::INLINE_UNIFORM_BLOCK_EXT => Some("INLINE_UNIFORM_BLOCK_EXT"),
             Self::ACCELERATION_STRUCTURE_KHR => Some("ACCELERATION_STRUCTURE_KHR"),
+            Self::ACCELERATION_STRUCTURE_NV => Some("ACCELERATION_STRUCTURE_NV"),
+            Self::MUTABLE_VALVE => Some("MUTABLE_VALVE"),
             _ => None,
         };
         if let Some(x) = name {
@@ -978,9 +1052,38 @@ impl fmt::Debug for DeviceGroupPresentModeFlagsKHR {
         debug_flags(f, KNOWN, self.0)
     }
 }
+impl fmt::Debug for DeviceMemoryReportEventTypeEXT {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::ALLOCATE => Some("ALLOCATE"),
+            Self::FREE => Some("FREE"),
+            Self::IMPORT => Some("IMPORT"),
+            Self::UNIMPORT => Some("UNIMPORT"),
+            Self::ALLOCATION_FAILED => Some("ALLOCATION_FAILED"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for DeviceMemoryReportFlagsEXT {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        const KNOWN: &[(Flags, &str)] = &[];
+        debug_flags(f, KNOWN, self.0)
+    }
+}
 impl fmt::Debug for DeviceQueueCreateFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[(DeviceQueueCreateFlags::PROTECTED.0, "PROTECTED")];
+        debug_flags(f, KNOWN, self.0)
+    }
+}
+impl fmt::Debug for DirectFBSurfaceCreateFlagsEXT {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        const KNOWN: &[(Flags, &str)] = &[];
         debug_flags(f, KNOWN, self.0)
     }
 }
@@ -1067,6 +1170,8 @@ impl fmt::Debug for DriverId {
             Self::GOOGLE_SWIFTSHADER => Some("GOOGLE_SWIFTSHADER"),
             Self::GGP_PROPRIETARY => Some("GGP_PROPRIETARY"),
             Self::BROADCOM_PROPRIETARY => Some("BROADCOM_PROPRIETARY"),
+            Self::MESA_LLVMPIPE => Some("MESA_LLVMPIPE"),
+            Self::MOLTENVK => Some("MOLTENVK"),
             _ => None,
         };
         if let Some(x) = name {
@@ -1091,10 +1196,26 @@ impl fmt::Debug for DynamicState {
             Self::VIEWPORT_W_SCALING_NV => Some("VIEWPORT_W_SCALING_NV"),
             Self::DISCARD_RECTANGLE_EXT => Some("DISCARD_RECTANGLE_EXT"),
             Self::SAMPLE_LOCATIONS_EXT => Some("SAMPLE_LOCATIONS_EXT"),
+            Self::RAY_TRACING_PIPELINE_STACK_SIZE_KHR => {
+                Some("RAY_TRACING_PIPELINE_STACK_SIZE_KHR")
+            }
             Self::VIEWPORT_SHADING_RATE_PALETTE_NV => Some("VIEWPORT_SHADING_RATE_PALETTE_NV"),
             Self::VIEWPORT_COARSE_SAMPLE_ORDER_NV => Some("VIEWPORT_COARSE_SAMPLE_ORDER_NV"),
             Self::EXCLUSIVE_SCISSOR_NV => Some("EXCLUSIVE_SCISSOR_NV"),
+            Self::FRAGMENT_SHADING_RATE_KHR => Some("FRAGMENT_SHADING_RATE_KHR"),
             Self::LINE_STIPPLE_EXT => Some("LINE_STIPPLE_EXT"),
+            Self::CULL_MODE_EXT => Some("CULL_MODE_EXT"),
+            Self::FRONT_FACE_EXT => Some("FRONT_FACE_EXT"),
+            Self::PRIMITIVE_TOPOLOGY_EXT => Some("PRIMITIVE_TOPOLOGY_EXT"),
+            Self::VIEWPORT_WITH_COUNT_EXT => Some("VIEWPORT_WITH_COUNT_EXT"),
+            Self::SCISSOR_WITH_COUNT_EXT => Some("SCISSOR_WITH_COUNT_EXT"),
+            Self::VERTEX_INPUT_BINDING_STRIDE_EXT => Some("VERTEX_INPUT_BINDING_STRIDE_EXT"),
+            Self::DEPTH_TEST_ENABLE_EXT => Some("DEPTH_TEST_ENABLE_EXT"),
+            Self::DEPTH_WRITE_ENABLE_EXT => Some("DEPTH_WRITE_ENABLE_EXT"),
+            Self::DEPTH_COMPARE_OP_EXT => Some("DEPTH_COMPARE_OP_EXT"),
+            Self::DEPTH_BOUNDS_TEST_ENABLE_EXT => Some("DEPTH_BOUNDS_TEST_ENABLE_EXT"),
+            Self::STENCIL_TEST_ENABLE_EXT => Some("STENCIL_TEST_ENABLE_EXT"),
+            Self::STENCIL_OP_EXT => Some("STENCIL_OP_EXT"),
             _ => None,
         };
         if let Some(x) = name {
@@ -1113,14 +1234,8 @@ impl fmt::Debug for EventCreateFlags {
 impl fmt::Debug for ExternalFenceFeatureFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
-            (
-                ExternalFenceFeatureFlags::EXTERNAL_FENCE_FEATURE_EXPORTABLE.0,
-                "EXTERNAL_FENCE_FEATURE_EXPORTABLE",
-            ),
-            (
-                ExternalFenceFeatureFlags::EXTERNAL_FENCE_FEATURE_IMPORTABLE.0,
-                "EXTERNAL_FENCE_FEATURE_IMPORTABLE",
-            ),
+            (ExternalFenceFeatureFlags::EXPORTABLE.0, "EXPORTABLE"),
+            (ExternalFenceFeatureFlags::IMPORTABLE.0, "IMPORTABLE"),
         ];
         debug_flags(f, KNOWN, self.0)
     }
@@ -1128,21 +1243,20 @@ impl fmt::Debug for ExternalFenceFeatureFlags {
 impl fmt::Debug for ExternalFenceHandleTypeFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
+            (ExternalFenceHandleTypeFlags::OPAQUE_FD.0, "OPAQUE_FD"),
+            (ExternalFenceHandleTypeFlags::OPAQUE_WIN32.0, "OPAQUE_WIN32"),
             (
-                ExternalFenceHandleTypeFlags::EXTERNAL_FENCE_HANDLE_TYPE_OPAQUE_FD.0,
-                "EXTERNAL_FENCE_HANDLE_TYPE_OPAQUE_FD",
+                ExternalFenceHandleTypeFlags::OPAQUE_WIN32_KMT.0,
+                "OPAQUE_WIN32_KMT",
+            ),
+            (ExternalFenceHandleTypeFlags::SYNC_FD.0, "SYNC_FD"),
+            (
+                ExternalFenceHandleTypeFlags::RESERVED_4_NV.0,
+                "RESERVED_4_NV",
             ),
             (
-                ExternalFenceHandleTypeFlags::EXTERNAL_FENCE_HANDLE_TYPE_OPAQUE_WIN32.0,
-                "EXTERNAL_FENCE_HANDLE_TYPE_OPAQUE_WIN32",
-            ),
-            (
-                ExternalFenceHandleTypeFlags::EXTERNAL_FENCE_HANDLE_TYPE_OPAQUE_WIN32_KMT.0,
-                "EXTERNAL_FENCE_HANDLE_TYPE_OPAQUE_WIN32_KMT",
-            ),
-            (
-                ExternalFenceHandleTypeFlags::EXTERNAL_FENCE_HANDLE_TYPE_SYNC_FD.0,
-                "EXTERNAL_FENCE_HANDLE_TYPE_SYNC_FD",
+                ExternalFenceHandleTypeFlags::RESERVED_5_NV.0,
+                "RESERVED_5_NV",
             ),
         ];
         debug_flags(f, KNOWN, self.0)
@@ -1152,17 +1266,11 @@ impl fmt::Debug for ExternalMemoryFeatureFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
             (
-                ExternalMemoryFeatureFlags::EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY.0,
-                "EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY",
+                ExternalMemoryFeatureFlags::DEDICATED_ONLY.0,
+                "DEDICATED_ONLY",
             ),
-            (
-                ExternalMemoryFeatureFlags::EXTERNAL_MEMORY_FEATURE_EXPORTABLE.0,
-                "EXTERNAL_MEMORY_FEATURE_EXPORTABLE",
-            ),
-            (
-                ExternalMemoryFeatureFlags::EXTERNAL_MEMORY_FEATURE_IMPORTABLE.0,
-                "EXTERNAL_MEMORY_FEATURE_IMPORTABLE",
-            ),
+            (ExternalMemoryFeatureFlags::EXPORTABLE.0, "EXPORTABLE"),
+            (ExternalMemoryFeatureFlags::IMPORTABLE.0, "IMPORTABLE"),
         ];
         debug_flags(f, KNOWN, self.0)
     }
@@ -1171,24 +1279,54 @@ impl fmt::Debug for ExternalMemoryFeatureFlagsNV {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
             (
-                ExternalMemoryFeatureFlagsNV::EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_NV.0,
-                "EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_NV",
+                ExternalMemoryFeatureFlagsNV::DEDICATED_ONLY.0,
+                "DEDICATED_ONLY",
             ),
-            (
-                ExternalMemoryFeatureFlagsNV::EXTERNAL_MEMORY_FEATURE_EXPORTABLE_NV.0,
-                "EXTERNAL_MEMORY_FEATURE_EXPORTABLE_NV",
-            ),
-            (
-                ExternalMemoryFeatureFlagsNV::EXTERNAL_MEMORY_FEATURE_IMPORTABLE_NV.0,
-                "EXTERNAL_MEMORY_FEATURE_IMPORTABLE_NV",
-            ),
+            (ExternalMemoryFeatureFlagsNV::EXPORTABLE.0, "EXPORTABLE"),
+            (ExternalMemoryFeatureFlagsNV::IMPORTABLE.0, "IMPORTABLE"),
         ];
         debug_flags(f, KNOWN, self.0)
     }
 }
 impl fmt::Debug for ExternalMemoryHandleTypeFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        const KNOWN : & [ ( Flags , & str ) ] = & [ ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32 . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE_KMT . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE_KMT" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_HEAP . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_HEAP" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_ANDROID . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_ANDROID_HARDWARE_BUFFER_ANDROID" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_HOST_ALLOCATION . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_HOST_ALLOCATION" ) , ( ExternalMemoryHandleTypeFlags :: EXTERNAL_MEMORY_HANDLE_TYPE_HOST_MAPPED_FOREIGN_MEMORY . 0 , "EXTERNAL_MEMORY_HANDLE_TYPE_HOST_MAPPED_FOREIGN_MEMORY" ) ] ;
+        const KNOWN: &[(Flags, &str)] = &[
+            (ExternalMemoryHandleTypeFlags::OPAQUE_FD.0, "OPAQUE_FD"),
+            (
+                ExternalMemoryHandleTypeFlags::OPAQUE_WIN32.0,
+                "OPAQUE_WIN32",
+            ),
+            (
+                ExternalMemoryHandleTypeFlags::OPAQUE_WIN32_KMT.0,
+                "OPAQUE_WIN32_KMT",
+            ),
+            (
+                ExternalMemoryHandleTypeFlags::D3D11_TEXTURE.0,
+                "D3D11_TEXTURE",
+            ),
+            (
+                ExternalMemoryHandleTypeFlags::D3D11_TEXTURE_KMT.0,
+                "D3D11_TEXTURE_KMT",
+            ),
+            (ExternalMemoryHandleTypeFlags::D3D12_HEAP.0, "D3D12_HEAP"),
+            (
+                ExternalMemoryHandleTypeFlags::D3D12_RESOURCE.0,
+                "D3D12_RESOURCE",
+            ),
+            (ExternalMemoryHandleTypeFlags::DMA_BUF_EXT.0, "DMA_BUF_EXT"),
+            (
+                ExternalMemoryHandleTypeFlags::ANDROID_HARDWARE_BUFFER_ANDROID.0,
+                "ANDROID_HARDWARE_BUFFER_ANDROID",
+            ),
+            (
+                ExternalMemoryHandleTypeFlags::HOST_ALLOCATION_EXT.0,
+                "HOST_ALLOCATION_EXT",
+            ),
+            (
+                ExternalMemoryHandleTypeFlags::HOST_MAPPED_FOREIGN_MEMORY_EXT.0,
+                "HOST_MAPPED_FOREIGN_MEMORY_EXT",
+            ),
+        ];
         debug_flags(f, KNOWN, self.0)
     }
 }
@@ -1196,20 +1334,20 @@ impl fmt::Debug for ExternalMemoryHandleTypeFlagsNV {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
             (
-                ExternalMemoryHandleTypeFlagsNV::EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_NV.0,
-                "EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_NV",
+                ExternalMemoryHandleTypeFlagsNV::OPAQUE_WIN32.0,
+                "OPAQUE_WIN32",
             ),
             (
-                ExternalMemoryHandleTypeFlagsNV::EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_NV.0,
-                "EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_NV",
+                ExternalMemoryHandleTypeFlagsNV::OPAQUE_WIN32_KMT.0,
+                "OPAQUE_WIN32_KMT",
             ),
             (
-                ExternalMemoryHandleTypeFlagsNV::EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_IMAGE_NV.0,
-                "EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_IMAGE_NV",
+                ExternalMemoryHandleTypeFlagsNV::D3D11_IMAGE.0,
+                "D3D11_IMAGE",
             ),
             (
-                ExternalMemoryHandleTypeFlagsNV::EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_IMAGE_KMT_NV.0,
-                "EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_IMAGE_KMT_NV",
+                ExternalMemoryHandleTypeFlagsNV::D3D11_IMAGE_KMT.0,
+                "D3D11_IMAGE_KMT",
             ),
         ];
         debug_flags(f, KNOWN, self.0)
@@ -1218,14 +1356,8 @@ impl fmt::Debug for ExternalMemoryHandleTypeFlagsNV {
 impl fmt::Debug for ExternalSemaphoreFeatureFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
-            (
-                ExternalSemaphoreFeatureFlags::EXTERNAL_SEMAPHORE_FEATURE_EXPORTABLE.0,
-                "EXTERNAL_SEMAPHORE_FEATURE_EXPORTABLE",
-            ),
-            (
-                ExternalSemaphoreFeatureFlags::EXTERNAL_SEMAPHORE_FEATURE_IMPORTABLE.0,
-                "EXTERNAL_SEMAPHORE_FEATURE_IMPORTABLE",
-            ),
+            (ExternalSemaphoreFeatureFlags::EXPORTABLE.0, "EXPORTABLE"),
+            (ExternalSemaphoreFeatureFlags::IMPORTABLE.0, "IMPORTABLE"),
         ];
         debug_flags(f, KNOWN, self.0)
     }
@@ -1233,25 +1365,27 @@ impl fmt::Debug for ExternalSemaphoreFeatureFlags {
 impl fmt::Debug for ExternalSemaphoreHandleTypeFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
+            (ExternalSemaphoreHandleTypeFlags::OPAQUE_FD.0, "OPAQUE_FD"),
             (
-                ExternalSemaphoreHandleTypeFlags::EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_FD.0,
-                "EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_FD",
+                ExternalSemaphoreHandleTypeFlags::OPAQUE_WIN32.0,
+                "OPAQUE_WIN32",
             ),
             (
-                ExternalSemaphoreHandleTypeFlags::EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32.0,
-                "EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32",
+                ExternalSemaphoreHandleTypeFlags::OPAQUE_WIN32_KMT.0,
+                "OPAQUE_WIN32_KMT",
             ),
             (
-                ExternalSemaphoreHandleTypeFlags::EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_KMT.0,
-                "EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_KMT",
+                ExternalSemaphoreHandleTypeFlags::D3D12_FENCE.0,
+                "D3D12_FENCE",
+            ),
+            (ExternalSemaphoreHandleTypeFlags::SYNC_FD.0, "SYNC_FD"),
+            (
+                ExternalSemaphoreHandleTypeFlags::RESERVED_5_NV.0,
+                "RESERVED_5_NV",
             ),
             (
-                ExternalSemaphoreHandleTypeFlags::EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D12_FENCE.0,
-                "EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D12_FENCE",
-            ),
-            (
-                ExternalSemaphoreHandleTypeFlags::EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD.0,
-                "EXTERNAL_SEMAPHORE_HANDLE_TYPE_SYNC_FD",
+                ExternalSemaphoreHandleTypeFlags::RESERVED_6_NV.0,
+                "RESERVED_6_NV",
             ),
         ];
         debug_flags(f, KNOWN, self.0)
@@ -1494,6 +1628,38 @@ impl fmt::Debug for Format {
             Self::ASTC_10X10_SFLOAT_BLOCK_EXT => Some("ASTC_10X10_SFLOAT_BLOCK_EXT"),
             Self::ASTC_12X10_SFLOAT_BLOCK_EXT => Some("ASTC_12X10_SFLOAT_BLOCK_EXT"),
             Self::ASTC_12X12_SFLOAT_BLOCK_EXT => Some("ASTC_12X12_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_3X3X3_UNORM_BLOCK_EXT => Some("ASTC_3X3X3_UNORM_BLOCK_EXT"),
+            Self::ASTC_3X3X3_SRGB_BLOCK_EXT => Some("ASTC_3X3X3_SRGB_BLOCK_EXT"),
+            Self::ASTC_3X3X3_SFLOAT_BLOCK_EXT => Some("ASTC_3X3X3_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_4X3X3_UNORM_BLOCK_EXT => Some("ASTC_4X3X3_UNORM_BLOCK_EXT"),
+            Self::ASTC_4X3X3_SRGB_BLOCK_EXT => Some("ASTC_4X3X3_SRGB_BLOCK_EXT"),
+            Self::ASTC_4X3X3_SFLOAT_BLOCK_EXT => Some("ASTC_4X3X3_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_4X4X3_UNORM_BLOCK_EXT => Some("ASTC_4X4X3_UNORM_BLOCK_EXT"),
+            Self::ASTC_4X4X3_SRGB_BLOCK_EXT => Some("ASTC_4X4X3_SRGB_BLOCK_EXT"),
+            Self::ASTC_4X4X3_SFLOAT_BLOCK_EXT => Some("ASTC_4X4X3_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_4X4X4_UNORM_BLOCK_EXT => Some("ASTC_4X4X4_UNORM_BLOCK_EXT"),
+            Self::ASTC_4X4X4_SRGB_BLOCK_EXT => Some("ASTC_4X4X4_SRGB_BLOCK_EXT"),
+            Self::ASTC_4X4X4_SFLOAT_BLOCK_EXT => Some("ASTC_4X4X4_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_5X4X4_UNORM_BLOCK_EXT => Some("ASTC_5X4X4_UNORM_BLOCK_EXT"),
+            Self::ASTC_5X4X4_SRGB_BLOCK_EXT => Some("ASTC_5X4X4_SRGB_BLOCK_EXT"),
+            Self::ASTC_5X4X4_SFLOAT_BLOCK_EXT => Some("ASTC_5X4X4_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_5X5X4_UNORM_BLOCK_EXT => Some("ASTC_5X5X4_UNORM_BLOCK_EXT"),
+            Self::ASTC_5X5X4_SRGB_BLOCK_EXT => Some("ASTC_5X5X4_SRGB_BLOCK_EXT"),
+            Self::ASTC_5X5X4_SFLOAT_BLOCK_EXT => Some("ASTC_5X5X4_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_5X5X5_UNORM_BLOCK_EXT => Some("ASTC_5X5X5_UNORM_BLOCK_EXT"),
+            Self::ASTC_5X5X5_SRGB_BLOCK_EXT => Some("ASTC_5X5X5_SRGB_BLOCK_EXT"),
+            Self::ASTC_5X5X5_SFLOAT_BLOCK_EXT => Some("ASTC_5X5X5_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_6X5X5_UNORM_BLOCK_EXT => Some("ASTC_6X5X5_UNORM_BLOCK_EXT"),
+            Self::ASTC_6X5X5_SRGB_BLOCK_EXT => Some("ASTC_6X5X5_SRGB_BLOCK_EXT"),
+            Self::ASTC_6X5X5_SFLOAT_BLOCK_EXT => Some("ASTC_6X5X5_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_6X6X5_UNORM_BLOCK_EXT => Some("ASTC_6X6X5_UNORM_BLOCK_EXT"),
+            Self::ASTC_6X6X5_SRGB_BLOCK_EXT => Some("ASTC_6X6X5_SRGB_BLOCK_EXT"),
+            Self::ASTC_6X6X5_SFLOAT_BLOCK_EXT => Some("ASTC_6X6X5_SFLOAT_BLOCK_EXT"),
+            Self::ASTC_6X6X6_UNORM_BLOCK_EXT => Some("ASTC_6X6X6_UNORM_BLOCK_EXT"),
+            Self::ASTC_6X6X6_SRGB_BLOCK_EXT => Some("ASTC_6X6X6_SRGB_BLOCK_EXT"),
+            Self::ASTC_6X6X6_SFLOAT_BLOCK_EXT => Some("ASTC_6X6X6_SFLOAT_BLOCK_EXT"),
+            Self::A4R4G4B4_UNORM_PACK16_EXT => Some("A4R4G4B4_UNORM_PACK16_EXT"),
+            Self::A4B4G4R4_UNORM_PACK16_EXT => Some("A4B4G4R4_UNORM_PACK16_EXT"),
             Self::G8B8G8R8_422_UNORM => Some("G8B8G8R8_422_UNORM"),
             Self::B8G8R8G8_422_UNORM => Some("B8G8R8G8_422_UNORM"),
             Self::G8_B8_R8_3PLANE_420_UNORM => Some("G8_B8_R8_3PLANE_420_UNORM"),
@@ -1567,8 +1733,63 @@ impl fmt::Debug for Format {
 }
 impl fmt::Debug for FormatFeatureFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        const KNOWN : & [ ( Flags , & str ) ] = & [ ( FormatFeatureFlags :: SAMPLED_IMAGE . 0 , "SAMPLED_IMAGE" ) , ( FormatFeatureFlags :: STORAGE_IMAGE . 0 , "STORAGE_IMAGE" ) , ( FormatFeatureFlags :: STORAGE_IMAGE_ATOMIC . 0 , "STORAGE_IMAGE_ATOMIC" ) , ( FormatFeatureFlags :: UNIFORM_TEXEL_BUFFER . 0 , "UNIFORM_TEXEL_BUFFER" ) , ( FormatFeatureFlags :: STORAGE_TEXEL_BUFFER . 0 , "STORAGE_TEXEL_BUFFER" ) , ( FormatFeatureFlags :: STORAGE_TEXEL_BUFFER_ATOMIC . 0 , "STORAGE_TEXEL_BUFFER_ATOMIC" ) , ( FormatFeatureFlags :: VERTEX_BUFFER . 0 , "VERTEX_BUFFER" ) , ( FormatFeatureFlags :: COLOR_ATTACHMENT . 0 , "COLOR_ATTACHMENT" ) , ( FormatFeatureFlags :: COLOR_ATTACHMENT_BLEND . 0 , "COLOR_ATTACHMENT_BLEND" ) , ( FormatFeatureFlags :: DEPTH_STENCIL_ATTACHMENT . 0 , "DEPTH_STENCIL_ATTACHMENT" ) , ( FormatFeatureFlags :: BLIT_SRC . 0 , "BLIT_SRC" ) , ( FormatFeatureFlags :: BLIT_DST . 0 , "BLIT_DST" ) , ( FormatFeatureFlags :: SAMPLED_IMAGE_FILTER_LINEAR . 0 , "SAMPLED_IMAGE_FILTER_LINEAR" ) , ( FormatFeatureFlags :: SAMPLED_IMAGE_FILTER_CUBIC_IMG . 0 , "SAMPLED_IMAGE_FILTER_CUBIC_IMG" ) , ( FormatFeatureFlags :: RESERVED_27_KHR . 0 , "RESERVED_27_KHR" ) , ( FormatFeatureFlags :: RESERVED_28_KHR . 0 , "RESERVED_28_KHR" ) , ( FormatFeatureFlags :: RESERVED_25_KHR . 0 , "RESERVED_25_KHR" ) , ( FormatFeatureFlags :: RESERVED_26_KHR . 0 , "RESERVED_26_KHR" ) , ( FormatFeatureFlags :: ACCELERATION_STRUCTURE_VERTEX_BUFFER_KHR . 0 , "ACCELERATION_STRUCTURE_VERTEX_BUFFER_KHR" ) , ( FormatFeatureFlags :: FRAGMENT_DENSITY_MAP_EXT . 0 , "FRAGMENT_DENSITY_MAP_EXT" ) , ( FormatFeatureFlags :: TRANSFER_SRC . 0 , "TRANSFER_SRC" ) , ( FormatFeatureFlags :: TRANSFER_DST . 0 , "TRANSFER_DST" ) , ( FormatFeatureFlags :: MIDPOINT_CHROMA_SAMPLES . 0 , "MIDPOINT_CHROMA_SAMPLES" ) , ( FormatFeatureFlags :: SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER . 0 , "SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER" ) , ( FormatFeatureFlags :: SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER . 0 , "SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER" ) , ( FormatFeatureFlags :: SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT . 0 , "SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT" ) , ( FormatFeatureFlags :: SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE . 0 , "SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE" ) , ( FormatFeatureFlags :: DISJOINT . 0 , "DISJOINT" ) , ( FormatFeatureFlags :: COSITED_CHROMA_SAMPLES . 0 , "COSITED_CHROMA_SAMPLES" ) , ( FormatFeatureFlags :: SAMPLED_IMAGE_FILTER_MINMAX . 0 , "SAMPLED_IMAGE_FILTER_MINMAX" ) ] ;
+        const KNOWN : & [(Flags , & str)] = & [(FormatFeatureFlags :: SAMPLED_IMAGE . 0 , "SAMPLED_IMAGE") , (FormatFeatureFlags :: STORAGE_IMAGE . 0 , "STORAGE_IMAGE") , (FormatFeatureFlags :: STORAGE_IMAGE_ATOMIC . 0 , "STORAGE_IMAGE_ATOMIC") , (FormatFeatureFlags :: UNIFORM_TEXEL_BUFFER . 0 , "UNIFORM_TEXEL_BUFFER") , (FormatFeatureFlags :: STORAGE_TEXEL_BUFFER . 0 , "STORAGE_TEXEL_BUFFER") , (FormatFeatureFlags :: STORAGE_TEXEL_BUFFER_ATOMIC . 0 , "STORAGE_TEXEL_BUFFER_ATOMIC") , (FormatFeatureFlags :: VERTEX_BUFFER . 0 , "VERTEX_BUFFER") , (FormatFeatureFlags :: COLOR_ATTACHMENT . 0 , "COLOR_ATTACHMENT") , (FormatFeatureFlags :: COLOR_ATTACHMENT_BLEND . 0 , "COLOR_ATTACHMENT_BLEND") , (FormatFeatureFlags :: DEPTH_STENCIL_ATTACHMENT . 0 , "DEPTH_STENCIL_ATTACHMENT") , (FormatFeatureFlags :: BLIT_SRC . 0 , "BLIT_SRC") , (FormatFeatureFlags :: BLIT_DST . 0 , "BLIT_DST") , (FormatFeatureFlags :: SAMPLED_IMAGE_FILTER_LINEAR . 0 , "SAMPLED_IMAGE_FILTER_LINEAR") , (FormatFeatureFlags :: SAMPLED_IMAGE_FILTER_CUBIC_IMG . 0 , "SAMPLED_IMAGE_FILTER_CUBIC_IMG") , (FormatFeatureFlags :: RESERVED_27_KHR . 0 , "RESERVED_27_KHR") , (FormatFeatureFlags :: RESERVED_28_KHR . 0 , "RESERVED_28_KHR") , (FormatFeatureFlags :: RESERVED_25_KHR . 0 , "RESERVED_25_KHR") , (FormatFeatureFlags :: RESERVED_26_KHR . 0 , "RESERVED_26_KHR") , (FormatFeatureFlags :: ACCELERATION_STRUCTURE_VERTEX_BUFFER_KHR . 0 , "ACCELERATION_STRUCTURE_VERTEX_BUFFER_KHR") , (FormatFeatureFlags :: FRAGMENT_DENSITY_MAP_EXT . 0 , "FRAGMENT_DENSITY_MAP_EXT") , (FormatFeatureFlags :: FRAGMENT_SHADING_RATE_ATTACHMENT_KHR . 0 , "FRAGMENT_SHADING_RATE_ATTACHMENT_KHR") , (FormatFeatureFlags :: TRANSFER_SRC . 0 , "TRANSFER_SRC") , (FormatFeatureFlags :: TRANSFER_DST . 0 , "TRANSFER_DST") , (FormatFeatureFlags :: MIDPOINT_CHROMA_SAMPLES . 0 , "MIDPOINT_CHROMA_SAMPLES") , (FormatFeatureFlags :: SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER . 0 , "SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER") , (FormatFeatureFlags :: SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER . 0 , "SAMPLED_IMAGE_YCBCR_CONVERSION_SEPARATE_RECONSTRUCTION_FILTER") , (FormatFeatureFlags :: SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT . 0 , "SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT") , (FormatFeatureFlags :: SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE . 0 , "SAMPLED_IMAGE_YCBCR_CONVERSION_CHROMA_RECONSTRUCTION_EXPLICIT_FORCEABLE") , (FormatFeatureFlags :: DISJOINT . 0 , "DISJOINT") , (FormatFeatureFlags :: COSITED_CHROMA_SAMPLES . 0 , "COSITED_CHROMA_SAMPLES") , (FormatFeatureFlags :: SAMPLED_IMAGE_FILTER_MINMAX . 0 , "SAMPLED_IMAGE_FILTER_MINMAX")] ;
         debug_flags(f, KNOWN, self.0)
+    }
+}
+impl fmt::Debug for FragmentShadingRateCombinerOpKHR {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::KEEP => Some("KEEP"),
+            Self::REPLACE => Some("REPLACE"),
+            Self::MIN => Some("MIN"),
+            Self::MAX => Some("MAX"),
+            Self::MUL => Some("MUL"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for FragmentShadingRateNV {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::TYPE_1_INVOCATION_PER_PIXEL => Some("TYPE_1_INVOCATION_PER_PIXEL"),
+            Self::TYPE_1_INVOCATION_PER_1X2_PIXELS => Some("TYPE_1_INVOCATION_PER_1X2_PIXELS"),
+            Self::TYPE_1_INVOCATION_PER_2X1_PIXELS => Some("TYPE_1_INVOCATION_PER_2X1_PIXELS"),
+            Self::TYPE_1_INVOCATION_PER_2X2_PIXELS => Some("TYPE_1_INVOCATION_PER_2X2_PIXELS"),
+            Self::TYPE_1_INVOCATION_PER_2X4_PIXELS => Some("TYPE_1_INVOCATION_PER_2X4_PIXELS"),
+            Self::TYPE_1_INVOCATION_PER_4X2_PIXELS => Some("TYPE_1_INVOCATION_PER_4X2_PIXELS"),
+            Self::TYPE_1_INVOCATION_PER_4X4_PIXELS => Some("TYPE_1_INVOCATION_PER_4X4_PIXELS"),
+            Self::TYPE_2_INVOCATIONS_PER_PIXEL => Some("TYPE_2_INVOCATIONS_PER_PIXEL"),
+            Self::TYPE_4_INVOCATIONS_PER_PIXEL => Some("TYPE_4_INVOCATIONS_PER_PIXEL"),
+            Self::TYPE_8_INVOCATIONS_PER_PIXEL => Some("TYPE_8_INVOCATIONS_PER_PIXEL"),
+            Self::TYPE_16_INVOCATIONS_PER_PIXEL => Some("TYPE_16_INVOCATIONS_PER_PIXEL"),
+            Self::NO_INVOCATIONS => Some("NO_INVOCATIONS"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for FragmentShadingRateTypeNV {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::FRAGMENT_SIZE => Some("FRAGMENT_SIZE"),
+            Self::ENUMS => Some("ENUMS"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
     }
 }
 impl fmt::Debug for FramebufferCreateFlags {
@@ -1698,6 +1919,7 @@ impl fmt::Debug for ImageCreateFlags {
                 "SAMPLE_LOCATIONS_COMPATIBLE_DEPTH_EXT",
             ),
             (ImageCreateFlags::SUBSAMPLED_EXT.0, "SUBSAMPLED_EXT"),
+            (ImageCreateFlags::RESERVED_15_NV.0, "RESERVED_15_NV"),
             (ImageCreateFlags::ALIAS.0, "ALIAS"),
             (
                 ImageCreateFlags::SPLIT_INSTANCE_BIND_REGIONS.0,
@@ -1828,10 +2050,16 @@ impl fmt::Debug for ImageUsageFlags {
 }
 impl fmt::Debug for ImageViewCreateFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        const KNOWN: &[(Flags, &str)] = &[(
-            ImageViewCreateFlags::FRAGMENT_DENSITY_MAP_DYNAMIC_EXT.0,
-            "FRAGMENT_DENSITY_MAP_DYNAMIC_EXT",
-        )];
+        const KNOWN: &[(Flags, &str)] = &[
+            (
+                ImageViewCreateFlags::FRAGMENT_DENSITY_MAP_DYNAMIC_EXT.0,
+                "FRAGMENT_DENSITY_MAP_DYNAMIC_EXT",
+            ),
+            (
+                ImageViewCreateFlags::FRAGMENT_DENSITY_MAP_DEFERRED_EXT.0,
+                "FRAGMENT_DENSITY_MAP_DEFERRED_EXT",
+            ),
+        ];
         debug_flags(f, KNOWN, self.0)
     }
 }
@@ -2093,9 +2321,11 @@ impl fmt::Debug for ObjectType {
             Self::DEBUG_UTILS_MESSENGER_EXT => Some("DEBUG_UTILS_MESSENGER_EXT"),
             Self::ACCELERATION_STRUCTURE_KHR => Some("ACCELERATION_STRUCTURE_KHR"),
             Self::VALIDATION_CACHE_EXT => Some("VALIDATION_CACHE_EXT"),
+            Self::ACCELERATION_STRUCTURE_NV => Some("ACCELERATION_STRUCTURE_NV"),
             Self::PERFORMANCE_CONFIGURATION_INTEL => Some("PERFORMANCE_CONFIGURATION_INTEL"),
             Self::DEFERRED_OPERATION_KHR => Some("DEFERRED_OPERATION_KHR"),
             Self::INDIRECT_COMMANDS_LAYOUT_NV => Some("INDIRECT_COMMANDS_LAYOUT_NV"),
+            Self::PRIVATE_DATA_SLOT_EXT => Some("PRIVATE_DATA_SLOT_EXT"),
             Self::SAMPLER_YCBCR_CONVERSION => Some("SAMPLER_YCBCR_CONVERSION"),
             Self::DESCRIPTOR_UPDATE_TEMPLATE => Some("DESCRIPTOR_UPDATE_TEMPLATE"),
             _ => None,
@@ -2120,7 +2350,7 @@ impl fmt::Debug for PeerMemoryFeatureFlags {
 }
 impl fmt::Debug for PerformanceConfigurationTypeINTEL {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let name = match * self { Self :: PERFORMANCE_CONFIGURATION_TYPE_COMMAND_QUEUE_METRICS_DISCOVERY_ACTIVATED_INTEL => Some ( "PERFORMANCE_CONFIGURATION_TYPE_COMMAND_QUEUE_METRICS_DISCOVERY_ACTIVATED_INTEL" ) , _ => None , } ;
+        let name = match * self { Self :: PERFORMANCE_CONFIGURATION_TYPE_COMMAND_QUEUE_METRICS_DISCOVERY_ACTIVATED_INTEL => Some ("PERFORMANCE_CONFIGURATION_TYPE_COMMAND_QUEUE_METRICS_DISCOVERY_ACTIVATED_INTEL") , _ => None , } ;
         if let Some(x) = name {
             f.write_str(x)
         } else {
@@ -2292,10 +2522,14 @@ impl fmt::Debug for PipelineBindPoint {
 }
 impl fmt::Debug for PipelineCacheCreateFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        const KNOWN: &[(Flags, &str)] = &[(
-            PipelineCacheCreateFlags::EXTERNALLY_SYNCHRONIZED_EXT.0,
-            "EXTERNALLY_SYNCHRONIZED_EXT",
-        )];
+        const KNOWN: &[(Flags, &str)] = &[
+            (PipelineCacheCreateFlags::RESERVED_1_EXT.0, "RESERVED_1_EXT"),
+            (
+                PipelineCacheCreateFlags::EXTERNALLY_SYNCHRONIZED_EXT.0,
+                "EXTERNALLY_SYNCHRONIZED_EXT",
+            ),
+            (PipelineCacheCreateFlags::RESERVED_2_EXT.0, "RESERVED_2_EXT"),
+        ];
         debug_flags(f, KNOWN, self.0)
     }
 }
@@ -2377,6 +2611,10 @@ impl fmt::Debug for PipelineCreateFlags {
             (
                 PipelineCreateFlags::RAY_TRACING_SKIP_AABBS_KHR.0,
                 "RAY_TRACING_SKIP_AABBS_KHR",
+            ),
+            (
+                PipelineCreateFlags::RAY_TRACING_SHADER_GROUP_HANDLE_CAPTURE_REPLAY_KHR.0,
+                "RAY_TRACING_SHADER_GROUP_HANDLE_CAPTURE_REPLAY_KHR",
             ),
             (PipelineCreateFlags::DEFER_COMPILE_NV.0, "DEFER_COMPILE_NV"),
             (
@@ -2570,12 +2808,12 @@ impl fmt::Debug for PipelineStageFlags {
                 "CONDITIONAL_RENDERING_EXT",
             ),
             (
-                PipelineStageFlags::RAY_TRACING_SHADER_KHR.0,
-                "RAY_TRACING_SHADER_KHR",
-            ),
-            (
                 PipelineStageFlags::ACCELERATION_STRUCTURE_BUILD_KHR.0,
                 "ACCELERATION_STRUCTURE_BUILD_KHR",
+            ),
+            (
+                PipelineStageFlags::RAY_TRACING_SHADER_KHR.0,
+                "RAY_TRACING_SHADER_KHR",
             ),
             (
                 PipelineStageFlags::SHADING_RATE_IMAGE_NV.0,
@@ -2690,6 +2928,12 @@ impl fmt::Debug for PrimitiveTopology {
         }
     }
 }
+impl fmt::Debug for PrivateDataSlotCreateFlagsEXT {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        const KNOWN: &[(Flags, &str)] = &[];
+        debug_flags(f, KNOWN, self.0)
+    }
+}
 impl fmt::Debug for QueryControlFlags {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[(QueryControlFlags::PRECISE.0, "PRECISE")];
@@ -2794,6 +3038,9 @@ impl fmt::Debug for QueryType {
             }
             Self::ACCELERATION_STRUCTURE_SERIALIZATION_SIZE_KHR => {
                 Some("ACCELERATION_STRUCTURE_SERIALIZATION_SIZE_KHR")
+            }
+            Self::ACCELERATION_STRUCTURE_COMPACTED_SIZE_NV => {
+                Some("ACCELERATION_STRUCTURE_COMPACTED_SIZE_NV")
             }
             Self::PERFORMANCE_QUERY_INTEL => Some("PERFORMANCE_QUERY_INTEL"),
             _ => None,
@@ -2914,7 +3161,6 @@ impl fmt::Debug for Result {
             Self::ERROR_INCOMPATIBLE_DISPLAY_KHR => Some("ERROR_INCOMPATIBLE_DISPLAY_KHR"),
             Self::ERROR_VALIDATION_FAILED_EXT => Some("ERROR_VALIDATION_FAILED_EXT"),
             Self::ERROR_INVALID_SHADER_NV => Some("ERROR_INVALID_SHADER_NV"),
-            Self::ERROR_INCOMPATIBLE_VERSION_KHR => Some("ERROR_INCOMPATIBLE_VERSION_KHR"),
             Self::ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT => {
                 Some("ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT")
             }
@@ -2926,9 +3172,7 @@ impl fmt::Debug for Result {
             Self::THREAD_DONE_KHR => Some("THREAD_DONE_KHR"),
             Self::OPERATION_DEFERRED_KHR => Some("OPERATION_DEFERRED_KHR"),
             Self::OPERATION_NOT_DEFERRED_KHR => Some("OPERATION_NOT_DEFERRED_KHR"),
-            Self::ERROR_PIPELINE_COMPILE_REQUIRED_EXT => {
-                Some("ERROR_PIPELINE_COMPILE_REQUIRED_EXT")
-            }
+            Self::PIPELINE_COMPILE_REQUIRED_EXT => Some("PIPELINE_COMPILE_REQUIRED_EXT"),
             Self::ERROR_OUT_OF_POOL_MEMORY => Some("ERROR_OUT_OF_POOL_MEMORY"),
             Self::ERROR_INVALID_EXTERNAL_HANDLE => Some("ERROR_INVALID_EXTERNAL_HANDLE"),
             Self::ERROR_FRAGMENTATION => Some("ERROR_FRAGMENTATION"),
@@ -3107,6 +3351,22 @@ impl fmt::Debug for ShaderFloatControlsIndependence {
             Self::TYPE_32_ONLY => Some("TYPE_32_ONLY"),
             Self::ALL => Some("ALL"),
             Self::NONE => Some("NONE"),
+            _ => None,
+        };
+        if let Some(x) = name {
+            f.write_str(x)
+        } else {
+            self.0.fmt(f)
+        }
+    }
+}
+impl fmt::Debug for ShaderGroupShaderKHR {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match *self {
+            Self::GENERAL => Some("GENERAL"),
+            Self::CLOSEST_HIT => Some("CLOSEST_HIT"),
+            Self::ANY_HIT => Some("ANY_HIT"),
+            Self::INTERSECTION => Some("INTERSECTION"),
             _ => None,
         };
         if let Some(x) = name {
@@ -3388,6 +3648,7 @@ impl fmt::Debug for StructureType {
                 Some("PIPELINE_RASTERIZATION_STATE_STREAM_CREATE_INFO_EXT")
             }
             Self::IMAGE_VIEW_HANDLE_INFO_NVX => Some("IMAGE_VIEW_HANDLE_INFO_NVX"),
+            Self::IMAGE_VIEW_ADDRESS_PROPERTIES_NVX => Some("IMAGE_VIEW_ADDRESS_PROPERTIES_NVX"),
             Self::TEXTURE_LOD_GATHER_FORMAT_PROPERTIES_AMD => {
                 Some("TEXTURE_LOD_GATHER_FORMAT_PROPERTIES_AMD")
             }
@@ -3519,8 +3780,8 @@ impl fmt::Debug for StructureType {
             Self::DISPLAY_MODE_PROPERTIES_2_KHR => Some("DISPLAY_MODE_PROPERTIES_2_KHR"),
             Self::DISPLAY_PLANE_INFO_2_KHR => Some("DISPLAY_PLANE_INFO_2_KHR"),
             Self::DISPLAY_PLANE_CAPABILITIES_2_KHR => Some("DISPLAY_PLANE_CAPABILITIES_2_KHR"),
-            Self::IOS_SURFACE_CREATE_INFO_M => Some("IOS_SURFACE_CREATE_INFO_M"),
-            Self::MACOS_SURFACE_CREATE_INFO_M => Some("MACOS_SURFACE_CREATE_INFO_M"),
+            Self::IOS_SURFACE_CREATE_INFO_MVK => Some("IOS_SURFACE_CREATE_INFO_MVK"),
+            Self::MACOS_SURFACE_CREATE_INFO_MVK => Some("MACOS_SURFACE_CREATE_INFO_MVK"),
             Self::DEBUG_UTILS_OBJECT_NAME_INFO_EXT => Some("DEBUG_UTILS_OBJECT_NAME_INFO_EXT"),
             Self::DEBUG_UTILS_OBJECT_TAG_INFO_EXT => Some("DEBUG_UTILS_OBJECT_TAG_INFO_EXT"),
             Self::DEBUG_UTILS_LABEL_EXT => Some("DEBUG_UTILS_LABEL_EXT"),
@@ -3581,17 +3842,11 @@ impl fmt::Debug for StructureType {
             Self::PIPELINE_COVERAGE_TO_COLOR_STATE_CREATE_INFO_NV => {
                 Some("PIPELINE_COVERAGE_TO_COLOR_STATE_CREATE_INFO_NV")
             }
-            Self::BIND_ACCELERATION_STRUCTURE_MEMORY_INFO_KHR => {
-                Some("BIND_ACCELERATION_STRUCTURE_MEMORY_INFO_KHR")
-            }
             Self::WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR => {
                 Some("WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR")
             }
             Self::ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR => {
                 Some("ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR")
-            }
-            Self::ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR => {
-                Some("ACCELERATION_STRUCTURE_CREATE_GEOMETRY_TYPE_INFO_KHR")
             }
             Self::ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR => {
                 Some("ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR")
@@ -3608,11 +3863,9 @@ impl fmt::Debug for StructureType {
             Self::ACCELERATION_STRUCTURE_GEOMETRY_KHR => {
                 Some("ACCELERATION_STRUCTURE_GEOMETRY_KHR")
             }
-            Self::ACCELERATION_STRUCTURE_INFO_KHR => Some("ACCELERATION_STRUCTURE_INFO_KHR"),
-            Self::ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_KHR => {
-                Some("ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_KHR")
+            Self::ACCELERATION_STRUCTURE_VERSION_INFO_KHR => {
+                Some("ACCELERATION_STRUCTURE_VERSION_INFO_KHR")
             }
-            Self::ACCELERATION_STRUCTURE_VERSION_KHR => Some("ACCELERATION_STRUCTURE_VERSION_KHR"),
             Self::COPY_ACCELERATION_STRUCTURE_INFO_KHR => {
                 Some("COPY_ACCELERATION_STRUCTURE_INFO_KHR")
             }
@@ -3622,11 +3875,23 @@ impl fmt::Debug for StructureType {
             Self::COPY_MEMORY_TO_ACCELERATION_STRUCTURE_INFO_KHR => {
                 Some("COPY_MEMORY_TO_ACCELERATION_STRUCTURE_INFO_KHR")
             }
-            Self::PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR => {
-                Some("PHYSICAL_DEVICE_RAY_TRACING_FEATURES_KHR")
+            Self::PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR => {
+                Some("PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR")
             }
-            Self::PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR => {
-                Some("PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_KHR")
+            Self::PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR => {
+                Some("PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR")
+            }
+            Self::ACCELERATION_STRUCTURE_CREATE_INFO_KHR => {
+                Some("ACCELERATION_STRUCTURE_CREATE_INFO_KHR")
+            }
+            Self::ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR => {
+                Some("ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR")
+            }
+            Self::PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR => {
+                Some("PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR")
+            }
+            Self::PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR => {
+                Some("PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR")
             }
             Self::RAY_TRACING_PIPELINE_CREATE_INFO_KHR => {
                 Some("RAY_TRACING_PIPELINE_CREATE_INFO_KHR")
@@ -3634,11 +3899,11 @@ impl fmt::Debug for StructureType {
             Self::RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR => {
                 Some("RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR")
             }
-            Self::ACCELERATION_STRUCTURE_CREATE_INFO_KHR => {
-                Some("ACCELERATION_STRUCTURE_CREATE_INFO_KHR")
-            }
             Self::RAY_TRACING_PIPELINE_INTERFACE_CREATE_INFO_KHR => {
                 Some("RAY_TRACING_PIPELINE_INTERFACE_CREATE_INFO_KHR")
+            }
+            Self::PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR => {
+                Some("PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR")
             }
             Self::PIPELINE_COVERAGE_MODULATION_STATE_CREATE_INFO_NV => {
                 Some("PIPELINE_COVERAGE_MODULATION_STATE_CREATE_INFO_NV")
@@ -3652,7 +3917,6 @@ impl fmt::Debug for StructureType {
             Self::DRM_FORMAT_MODIFIER_PROPERTIES_LIST_EXT => {
                 Some("DRM_FORMAT_MODIFIER_PROPERTIES_LIST_EXT")
             }
-            Self::DRM_FORMAT_MODIFIER_PROPERTIES_EXT => Some("DRM_FORMAT_MODIFIER_PROPERTIES_EXT"),
             Self::PHYSICAL_DEVICE_IMAGE_DRM_FORMAT_MODIFIER_INFO_EXT => {
                 Some("PHYSICAL_DEVICE_IMAGE_DRM_FORMAT_MODIFIER_INFO_EXT")
             }
@@ -3668,6 +3932,12 @@ impl fmt::Debug for StructureType {
             Self::VALIDATION_CACHE_CREATE_INFO_EXT => Some("VALIDATION_CACHE_CREATE_INFO_EXT"),
             Self::SHADER_MODULE_VALIDATION_CACHE_CREATE_INFO_EXT => {
                 Some("SHADER_MODULE_VALIDATION_CACHE_CREATE_INFO_EXT")
+            }
+            Self::PHYSICAL_DEVICE_PORTABILITY_SUBSET_FEATURES_KHR => {
+                Some("PHYSICAL_DEVICE_PORTABILITY_SUBSET_FEATURES_KHR")
+            }
+            Self::PHYSICAL_DEVICE_PORTABILITY_SUBSET_PROPERTIES_KHR => {
+                Some("PHYSICAL_DEVICE_PORTABILITY_SUBSET_PROPERTIES_KHR")
             }
             Self::PIPELINE_VIEWPORT_SHADING_RATE_IMAGE_STATE_CREATE_INFO_NV => {
                 Some("PIPELINE_VIEWPORT_SHADING_RATE_IMAGE_STATE_CREATE_INFO_NV")
@@ -3690,6 +3960,12 @@ impl fmt::Debug for StructureType {
             Self::GEOMETRY_NV => Some("GEOMETRY_NV"),
             Self::GEOMETRY_TRIANGLES_NV => Some("GEOMETRY_TRIANGLES_NV"),
             Self::GEOMETRY_AABB_NV => Some("GEOMETRY_AABB_NV"),
+            Self::BIND_ACCELERATION_STRUCTURE_MEMORY_INFO_NV => {
+                Some("BIND_ACCELERATION_STRUCTURE_MEMORY_INFO_NV")
+            }
+            Self::WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_NV => {
+                Some("WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_NV")
+            }
             Self::ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV => {
                 Some("ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV")
             }
@@ -3776,7 +4052,9 @@ impl fmt::Debug for StructureType {
             Self::PHYSICAL_DEVICE_SHADER_INTEGER_FUNCTIONS_2_FEATURES_INTEL => {
                 Some("PHYSICAL_DEVICE_SHADER_INTEGER_FUNCTIONS_2_FEATURES_INTEL")
             }
-            Self::QUERY_POOL_CREATE_INFO_INTEL => Some("QUERY_POOL_CREATE_INFO_INTEL"),
+            Self::QUERY_POOL_PERFORMANCE_QUERY_CREATE_INFO_INTEL => {
+                Some("QUERY_POOL_PERFORMANCE_QUERY_CREATE_INFO_INTEL")
+            }
             Self::INITIALIZE_PERFORMANCE_API_INFO_INTEL => {
                 Some("INITIALIZE_PERFORMANCE_API_INFO_INTEL")
             }
@@ -3800,6 +4078,9 @@ impl fmt::Debug for StructureType {
             Self::IMAGEPIPE_SURFACE_CREATE_INFO_FUCHSIA => {
                 Some("IMAGEPIPE_SURFACE_CREATE_INFO_FUCHSIA")
             }
+            Self::PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES_KHR => {
+                Some("PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES_KHR")
+            }
             Self::METAL_SURFACE_CREATE_INFO_EXT => Some("METAL_SURFACE_CREATE_INFO_EXT"),
             Self::PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_FEATURES_EXT => {
                 Some("PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_FEATURES_EXT")
@@ -3819,11 +4100,29 @@ impl fmt::Debug for StructureType {
             Self::PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES_EXT => {
                 Some("PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES_EXT")
             }
+            Self::FRAGMENT_SHADING_RATE_ATTACHMENT_INFO_KHR => {
+                Some("FRAGMENT_SHADING_RATE_ATTACHMENT_INFO_KHR")
+            }
+            Self::PIPELINE_FRAGMENT_SHADING_RATE_STATE_CREATE_INFO_KHR => {
+                Some("PIPELINE_FRAGMENT_SHADING_RATE_STATE_CREATE_INFO_KHR")
+            }
+            Self::PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR => {
+                Some("PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_PROPERTIES_KHR")
+            }
+            Self::PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR => {
+                Some("PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR")
+            }
+            Self::PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_KHR => {
+                Some("PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_KHR")
+            }
             Self::PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_2_AMD => {
                 Some("PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_2_AMD")
             }
             Self::PHYSICAL_DEVICE_COHERENT_MEMORY_FEATURES_AMD => {
                 Some("PHYSICAL_DEVICE_COHERENT_MEMORY_FEATURES_AMD")
+            }
+            Self::PHYSICAL_DEVICE_SHADER_IMAGE_ATOMIC_INT64_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_SHADER_IMAGE_ATOMIC_INT64_FEATURES_EXT")
             }
             Self::PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT => {
                 Some("PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT")
@@ -3887,10 +4186,15 @@ impl fmt::Debug for StructureType {
             Self::PHYSICAL_DEVICE_LINE_RASTERIZATION_PROPERTIES_EXT => {
                 Some("PHYSICAL_DEVICE_LINE_RASTERIZATION_PROPERTIES_EXT")
             }
+            Self::PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_FEATURES_EXT")
+            }
             Self::PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT => {
                 Some("PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT")
             }
-            Self::DEFERRED_OPERATION_INFO_KHR => Some("DEFERRED_OPERATION_INFO_KHR"),
+            Self::PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT")
+            }
             Self::PHYSICAL_DEVICE_PIPELINE_EXECUTABLE_PROPERTIES_FEATURES_KHR => {
                 Some("PHYSICAL_DEVICE_PIPELINE_EXECUTABLE_PROPERTIES_FEATURES_KHR")
             }
@@ -3936,7 +4240,38 @@ impl fmt::Debug for StructureType {
             Self::RENDER_PASS_TRANSFORM_BEGIN_INFO_QCOM => {
                 Some("RENDER_PASS_TRANSFORM_BEGIN_INFO_QCOM")
             }
+            Self::PHYSICAL_DEVICE_DEVICE_MEMORY_REPORT_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_DEVICE_MEMORY_REPORT_FEATURES_EXT")
+            }
+            Self::DEVICE_DEVICE_MEMORY_REPORT_CREATE_INFO_EXT => {
+                Some("DEVICE_DEVICE_MEMORY_REPORT_CREATE_INFO_EXT")
+            }
+            Self::DEVICE_MEMORY_REPORT_CALLBACK_DATA_EXT => {
+                Some("DEVICE_MEMORY_REPORT_CALLBACK_DATA_EXT")
+            }
+            Self::PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT")
+            }
+            Self::PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT => {
+                Some("PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT")
+            }
+            Self::SAMPLER_CUSTOM_BORDER_COLOR_CREATE_INFO_EXT => {
+                Some("SAMPLER_CUSTOM_BORDER_COLOR_CREATE_INFO_EXT")
+            }
+            Self::PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_PROPERTIES_EXT => {
+                Some("PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_PROPERTIES_EXT")
+            }
+            Self::PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT")
+            }
             Self::PIPELINE_LIBRARY_CREATE_INFO_KHR => Some("PIPELINE_LIBRARY_CREATE_INFO_KHR"),
+            Self::PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES_EXT")
+            }
+            Self::DEVICE_PRIVATE_DATA_CREATE_INFO_EXT => {
+                Some("DEVICE_PRIVATE_DATA_CREATE_INFO_EXT")
+            }
+            Self::PRIVATE_DATA_SLOT_CREATE_INFO_EXT => Some("PRIVATE_DATA_SLOT_CREATE_INFO_EXT"),
             Self::PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT => {
                 Some("PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT")
             }
@@ -3947,6 +4282,53 @@ impl fmt::Debug for StructureType {
                 Some("DEVICE_DIAGNOSTICS_CONFIG_CREATE_INFO_NV")
             }
             Self::RESERVED_QCOM => Some("RESERVED_QCOM"),
+            Self::PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES_KHR => {
+                Some("PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES_KHR")
+            }
+            Self::PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_PROPERTIES_NV => {
+                Some("PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_PROPERTIES_NV")
+            }
+            Self::PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_FEATURES_NV => {
+                Some("PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_FEATURES_NV")
+            }
+            Self::PIPELINE_FRAGMENT_SHADING_RATE_ENUM_STATE_CREATE_INFO_NV => {
+                Some("PIPELINE_FRAGMENT_SHADING_RATE_ENUM_STATE_CREATE_INFO_NV")
+            }
+            Self::PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_FEATURES_EXT")
+            }
+            Self::PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_PROPERTIES_EXT => {
+                Some("PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_PROPERTIES_EXT")
+            }
+            Self::COPY_COMMAND_TRANSFORM_INFO_QCOM => Some("COPY_COMMAND_TRANSFORM_INFO_QCOM"),
+            Self::PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES_EXT")
+            }
+            Self::PHYSICAL_DEVICE_WORKGROUP_MEMORY_EXPLICIT_LAYOUT_FEATURES_KHR => {
+                Some("PHYSICAL_DEVICE_WORKGROUP_MEMORY_EXPLICIT_LAYOUT_FEATURES_KHR")
+            }
+            Self::COPY_BUFFER_INFO_2_KHR => Some("COPY_BUFFER_INFO_2_KHR"),
+            Self::COPY_IMAGE_INFO_2_KHR => Some("COPY_IMAGE_INFO_2_KHR"),
+            Self::COPY_BUFFER_TO_IMAGE_INFO_2_KHR => Some("COPY_BUFFER_TO_IMAGE_INFO_2_KHR"),
+            Self::COPY_IMAGE_TO_BUFFER_INFO_2_KHR => Some("COPY_IMAGE_TO_BUFFER_INFO_2_KHR"),
+            Self::BLIT_IMAGE_INFO_2_KHR => Some("BLIT_IMAGE_INFO_2_KHR"),
+            Self::RESOLVE_IMAGE_INFO_2_KHR => Some("RESOLVE_IMAGE_INFO_2_KHR"),
+            Self::BUFFER_COPY_2_KHR => Some("BUFFER_COPY_2_KHR"),
+            Self::IMAGE_COPY_2_KHR => Some("IMAGE_COPY_2_KHR"),
+            Self::IMAGE_BLIT_2_KHR => Some("IMAGE_BLIT_2_KHR"),
+            Self::BUFFER_IMAGE_COPY_2_KHR => Some("BUFFER_IMAGE_COPY_2_KHR"),
+            Self::IMAGE_RESOLVE_2_KHR => Some("IMAGE_RESOLVE_2_KHR"),
+            Self::PHYSICAL_DEVICE_4444_FORMATS_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_4444_FORMATS_FEATURES_EXT")
+            }
+            Self::DIRECTFB_SURFACE_CREATE_INFO_EXT => Some("DIRECTFB_SURFACE_CREATE_INFO_EXT"),
+            Self::PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_VALVE => {
+                Some("PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_VALVE")
+            }
+            Self::MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_VALVE => {
+                Some("MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_VALVE")
+            }
+            Self::SCREEN_SURFACE_CREATE_INFO_QNX => Some("SCREEN_SURFACE_CREATE_INFO_QNX"),
             Self::PHYSICAL_DEVICE_SUBGROUP_PROPERTIES => {
                 Some("PHYSICAL_DEVICE_SUBGROUP_PROPERTIES")
             }
@@ -4233,12 +4615,12 @@ impl fmt::Debug for SubpassDescriptionFlags {
                 "PER_VIEW_POSITION_X_ONLY_NVX",
             ),
             (
-                SubpassDescriptionFlags::RESERVED_2_QCOM.0,
-                "RESERVED_2_QCOM",
+                SubpassDescriptionFlags::FRAGMENT_REGION_QCOM.0,
+                "FRAGMENT_REGION_QCOM",
             ),
             (
-                SubpassDescriptionFlags::RESERVED_3_QCOM.0,
-                "RESERVED_3_QCOM",
+                SubpassDescriptionFlags::SHADER_RESOLVE_QCOM.0,
+                "SHADER_RESOLVE_QCOM",
             ),
         ];
         debug_flags(f, KNOWN, self.0)
@@ -4423,6 +4805,7 @@ impl fmt::Debug for ValidationFeatureEnableEXT {
             Self::GPU_ASSISTED_RESERVE_BINDING_SLOT => Some("GPU_ASSISTED_RESERVE_BINDING_SLOT"),
             Self::BEST_PRACTICES => Some("BEST_PRACTICES"),
             Self::DEBUG_PRINTF => Some("DEBUG_PRINTF"),
+            Self::SYNCHRONIZATION_VALIDATION => Some("SYNCHRONIZATION_VALIDATION"),
             _ => None,
         };
         if let Some(x) = name {
@@ -4439,6 +4822,8 @@ impl fmt::Debug for VendorId {
             Self::VSI => Some("VSI"),
             Self::KAZAN => Some("KAZAN"),
             Self::CODEPLAY => Some("CODEPLAY"),
+            Self::MESA => Some("MESA"),
+            Self::POCL => Some("POCL"),
             _ => None,
         };
         if let Some(x) = name {

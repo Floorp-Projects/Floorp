@@ -214,7 +214,11 @@ impl pso::DescriptorPool<Backend> for DescriptorPool {
     {
         let sets_iter = descriptor_sets.map(|d| d.raw);
         inplace_or_alloc_from_iter(sets_iter, |sets| {
-            self.device.raw.free_descriptor_sets(self.raw, sets);
+            if !sets.is_empty() {
+                if let Err(e) = self.device.raw.free_descriptor_sets(self.raw, sets) {
+                    error!("free_descriptor_sets error {}", e);
+                }
+            }
         })
     }
 
