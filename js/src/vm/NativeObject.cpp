@@ -1144,12 +1144,12 @@ void NativeObject::freeSlot(JSContext* cx, uint32_t slot) {
 }
 
 /* static */
-Shape* NativeObject::addDataProperty(JSContext* cx, HandleNativeObject obj,
-                                     HandlePropertyName name, uint32_t slot,
-                                     unsigned attrs) {
+Shape* NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
+                                 HandlePropertyName name, uint32_t slot,
+                                 unsigned attrs) {
   MOZ_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
   RootedId id(cx, NameToId(name));
-  return addDataProperty(cx, obj, id, slot, attrs);
+  return addProperty(cx, obj, id, slot, attrs);
 }
 
 template <AllowGC allowGC>
@@ -1307,7 +1307,7 @@ static bool ChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     }
   }
 
-  Shape* shape = NativeObject::putDataProperty(cx, obj, id, attrs);
+  Shape* shape = NativeObject::putProperty(cx, obj, id, attrs);
   if (!shape) {
     return false;
   }
@@ -1371,15 +1371,15 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
       if (!gs) {
         return false;
       }
-      Shape* shape = NativeObject::addDataProperty(
-          cx, obj, id, SHAPE_INVALID_SLOT, desc.attributes());
+      Shape* shape = NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT,
+                                               desc.attributes());
       if (!shape) {
         return false;
       }
       obj->initSlot(shape->slot(), PrivateGCThingValue(gs));
     } else {
-      Shape* shape = NativeObject::addDataProperty(
-          cx, obj, id, SHAPE_INVALID_SLOT, desc.attributes());
+      Shape* shape = NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT,
+                                               desc.attributes());
       if (!shape) {
         return false;
       }
@@ -1392,8 +1392,7 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
         return false;
       }
     } else {
-      Shape* shape =
-          NativeObject::putDataProperty(cx, obj, id, desc.attributes());
+      Shape* shape = NativeObject::putProperty(cx, obj, id, desc.attributes());
       if (!shape) {
         return false;
       }
