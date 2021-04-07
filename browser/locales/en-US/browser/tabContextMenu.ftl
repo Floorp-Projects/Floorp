@@ -17,12 +17,12 @@ duplicate-tabs =
 # The following string is displayed on a menuitem that will close the tabs from the start of the tabstrip to the currently targeted tab (excluding the currently targeted and any other selected tabs).
 # In left-to-right languages this should use "Left" and in right-to-left languages this should use "Right".
 close-tabs-to-the-start =
-    .label = Close Tabs to the Left
+    .label = Close Tabs to Left
     .accesskey = l
 # The following string is displayed on a menuitem that will close the tabs from the end of the tabstrip to the currently targeted tab (excluding the currently targeted and any other selected tabs).
 # In left-to-right languages this should use "Right" and in right-to-left languages this should use "Left".
 close-tabs-to-the-end =
-    .label = Close Tabs to the Right
+    .label = Close Tabs to Right
     .accesskey = i
 close-other-tabs =
     .label = Close Other Tabs
