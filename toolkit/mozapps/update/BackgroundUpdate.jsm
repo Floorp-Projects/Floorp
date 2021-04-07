@@ -330,10 +330,15 @@ var BackgroundUpdate = {
       `${SLUG}: checking eligibility before scheduling background update task`
     );
 
-    const previousEnabled = Services.prefs.getBoolPref(
-      "app.update.background.previous.enabled",
-      false
-    );
+    let previousEnabled;
+    let successfullyReadPrevious;
+    try {
+      previousEnabled = await TaskScheduler.taskExists(this.taskId);
+      successfullyReadPrevious = true;
+    } catch (ex) {
+      successfullyReadPrevious = false;
+    }
+
     const previousReasons = Services.prefs.getCharPref(
       "app.update.background.previous.reasons",
       null
@@ -404,12 +409,6 @@ var BackgroundUpdate = {
     }
 
     let updatePreviousPrefs = () => {
-      // Squirrel away our previous values: keeping them allows us to witness both the rising edge
-      // (disabled -> enabled) and the falling (enabled -> disabled) edge.
-      Services.prefs.setBoolPref(
-        "app.update.background.previous.enabled",
-        !reasons.length
-      );
       if (reasons.length) {
         Services.prefs.setCharPref(
           "app.update.background.previous.reasons",
@@ -429,7 +428,7 @@ var BackgroundUpdate = {
           )}'`
         );
 
-        if (previousEnabled) {
+        if (!successfullyReadPrevious || previousEnabled) {
           await TaskScheduler.deleteTask(this.taskId);
           log.debug(
             `${SLUG}: witnessed falling (enabled -> disabled) edge; deleted task ${this.taskId}.`
@@ -441,7 +440,7 @@ var BackgroundUpdate = {
         return false;
       }
 
-      if (previousEnabled) {
+      if (successfullyReadPrevious && previousEnabled) {
         log.info(
           `${SLUG}: background update was previously enabled; not registering task.`
         );
