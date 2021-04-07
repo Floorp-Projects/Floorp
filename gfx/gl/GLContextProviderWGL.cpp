@@ -444,14 +444,14 @@ static RefPtr<GLContext> CreateForWidget(const HWND window,
 }
 
 already_AddRefed<GLContext> GLContextProviderWGL::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aWebRender,
+    CompositorWidget* aCompositorWidget, bool aHardwareWebRender,
     bool aForceAccelerated) {
   if (!aCompositorWidget) {
     MOZ_ASSERT(false);
     return nullptr;
   }
-  return CreateForWidget(aCompositorWidget->AsWindows()->GetHwnd(), aWebRender,
-                         aForceAccelerated)
+  return CreateForWidget(aCompositorWidget->AsWindows()->GetHwnd(),
+                         aHardwareWebRender, aForceAccelerated)
       .forget();
 }
 

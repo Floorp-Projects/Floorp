@@ -18,14 +18,14 @@ static class GLContextProviderX11 sGLContextProviderX11;
 static class GLContextProviderEGL sGLContextProviderEGL;
 
 already_AddRefed<GLContext> GLContextProviderWayland::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aWebRender,
+    CompositorWidget* aCompositorWidget, bool aHardwareWebRender,
     bool aForceAccelerated) {
   if (GdkIsX11Display()) {
     return sGLContextProviderX11.CreateForCompositorWidget(
-        aCompositorWidget, aWebRender, aForceAccelerated);
+        aCompositorWidget, aHardwareWebRender, aForceAccelerated);
   } else {
     return sGLContextProviderEGL.CreateForCompositorWidget(
-        aCompositorWidget, aWebRender, aForceAccelerated);
+        aCompositorWidget, aHardwareWebRender, aForceAccelerated);
   }
 }
 

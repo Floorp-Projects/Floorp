@@ -220,12 +220,12 @@ Maybe<SymbolLoader> GLContextCGL::GetSymbolLoader() const {
 }
 
 already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aWebRender, bool aForceAccelerated) {
+    CompositorWidget* aCompositorWidget, bool aHardwareWebRender, bool aForceAccelerated) {
   CreateContextFlags flags = CreateContextFlags::ALLOW_OFFLINE_RENDERER;
   if (aForceAccelerated) {
     flags |= CreateContextFlags::FORCE_ENABLE_HARDWARE;
   }
-  if (!aWebRender) {
+  if (!aHardwareWebRender) {
     flags |= CreateContextFlags::REQUIRE_COMPAT_PROFILE;
   }
   nsCString failureUnused;
