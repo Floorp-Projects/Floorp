@@ -396,9 +396,6 @@ struct TraversalTracer : public JS::CallbackTracer {
 };
 
 void TraversalTracer::onChild(const JS::GCCellPtr& aThing) {
-  // Allow re-use of this tracer inside trace callback.
-  JS::AutoClearTracingContext actc(this);
-
   // Checking strings and symbols for being gray is rather slow, and we don't
   // need either of them for the cycle collector.
   if (aThing.is<JSString>() || aThing.is<JS::Symbol>()) {
@@ -424,7 +421,13 @@ void TraversalTracer::onChild(const JS::GCCellPtr& aThing) {
       mCb.NoteNextEdgeName(buffer);
     }
     mCb.NoteJSChild(aThing);
-  } else if (aThing.is<js::Shape>()) {
+    return;
+  }
+
+  // Allow re-use of this tracer inside trace callback.
+  JS::AutoClearTracingContext actc(this);
+
+  if (aThing.is<js::Shape>()) {
     // The maximum depth of traversal when tracing a Shape is unbounded, due to
     // the parent pointers on the shape.
     JS_TraceShapeCycleCollectorChildren(this, aThing);
