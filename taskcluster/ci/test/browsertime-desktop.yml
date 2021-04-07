@@ -78,7 +78,7 @@ browsertime-tp6:
                         firefox:
                             by-test-platform:
                                 linux.*shippable.*: [trunk, mozilla-beta]
-                                macos.*shippable.*: [trunk, mozilla-beta]
+                                macos.*shippable-qr.*: [trunk, mozilla-beta]
                                 windows10.*shippable.*: [trunk, mozilla-beta]
                                 default: []
                         default: []
@@ -143,7 +143,7 @@ browsertime-tp6-essential:
                     firefox:
                         by-test-platform:
                             linux.*shippable.*: ["trunk", "mozilla-beta"]
-                            macos.*shippable-qr.*: ["trunk", "mozilla-beta"]
+                            macos.*shippable.*: ["trunk", "mozilla-beta"]
                             windows10.*shippable.*: ["trunk", "mozilla-beta"]
                             default: []
                     default: []
