@@ -20,15 +20,14 @@ add_task(async function test_searchbar_a11y_tree() {
 
   // Make sure the popup has been rendered so it shows up in the a11y tree.
   let popup = document.getElementById("PopupSearchAutoComplete");
-  let promise = BrowserTestUtils.waitForEvent(popup, "popupshown", false);
+  let promise = Promise.all([
+    BrowserTestUtils.waitForEvent(popup, "popupshown", false),
+    waitForEvent(EVENT_SHOW, popup),
+  ]);
   searchbar.textbox.openPopup();
   await promise;
 
-  promise = BrowserTestUtils.waitForEvent(popup, "popuphidden", false);
-  searchbar.textbox.closePopup();
-  await promise;
-
-  const TREE = {
+  let TREE = {
     role: ROLE_EDITCOMBOBOX,
 
     children: [
@@ -49,6 +48,35 @@ add_task(async function test_searchbar_a11y_tree() {
         role: ROLE_GROUPING,
         // not testing the structure inside the result list
       },
+    ],
+  };
+
+  testAccessibleTree(searchbar, TREE);
+
+  promise = Promise.all([
+    BrowserTestUtils.waitForEvent(popup, "popuphidden", false),
+    waitForEvent(EVENT_HIDE, popup),
+  ]);
+  searchbar.textbox.closePopup();
+  await promise;
+
+  TREE = {
+    role: ROLE_EDITCOMBOBOX,
+
+    children: [
+      // input element
+      {
+        role: ROLE_ENTRY,
+        children: [],
+      },
+
+      // context menu
+      {
+        role: ROLE_COMBOBOX_LIST,
+        children: [],
+      },
+
+      // the result list should be removed from the tree on popuphidden
     ],
   };
 
