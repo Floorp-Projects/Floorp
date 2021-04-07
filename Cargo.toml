@@ -12,6 +12,7 @@ members = [
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
   "toolkit/crashreporter/rust_minidump_writer_linux",
+  "toolkit/crashreporter/mozwer-rust",
   "toolkit/library/gtest/rust",
   "toolkit/library/rust/",
   "toolkit/mozapps/defaultagent/rust",
