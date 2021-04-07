@@ -38,9 +38,13 @@ gcloud:
   performance-metrics: true
 
   test-targets:
-   # Let's start by running a single test, then if stable change to smoketest
-   - class org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest
-   # - class org.mozilla.fenix.ui.SmokeTest
+    - class org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest
+    - class org.mozilla.fenix.ui.HistoryTest#visitedUrlHistoryTest
+    - class org.mozilla.fenix.ui.SmokeTest#openMainMenuSettingsItemTest
+    - class org.mozilla.fenix.ui.SmokeTest#toggleSearchSuggestions
+    - class org.mozilla.fenix.ui.SmokeTest#deleteCollectionTest
+    - class org.mozilla.fenix.ui.SmokeTest#noHistoryInPrivateBrowsingTest
+    - class org.mozilla.fenix.ui.NoNetworkAccessStartupTests#noNetworkConnectionStartupTest
 
   device:
    - model: Pixel2
