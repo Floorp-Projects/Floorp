@@ -34,16 +34,7 @@ const tests = [
         keyboardShortcut: "",
         childCount: 1,
         indexInParent: 0,
-        states: [
-          // The focused state is an outdated state, since the toolbox should now
-          // have the focus and not the content page. See Bug 1702709.
-          "focused",
-          "readonly",
-          "focusable",
-          "opaque",
-          "enabled",
-          "sensitive",
-        ],
+        states: ["readonly", "focusable", "opaque", "enabled", "sensitive"],
       },
     },
   },
