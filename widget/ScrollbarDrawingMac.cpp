@@ -110,7 +110,8 @@ ScrollbarParams ScrollbarDrawingMac::ComputeScrollbarParams(
       aStyle.StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
   params.rtl = nsNativeTheme::IsFrameRTL(aFrame);
   params.horizontal = aIsHorizontal;
-  params.onDarkBackground = nsNativeTheme::IsDarkBackground(aFrame);
+  params.onDarkBackground = !StaticPrefs::widget_disable_dark_scrollbar() &&
+                            nsNativeTheme::IsDarkBackground(aFrame);
   // Don't use custom scrollbars for overlay scrollbars since they are
   // generally good enough for use cases of custom scrollbars.
   if (!params.overlay) {
