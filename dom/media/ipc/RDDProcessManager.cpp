@@ -28,6 +28,13 @@ using namespace layers;
 
 static StaticAutoPtr<RDDProcessManager> sRDDSingleton;
 
+static bool sXPCOMShutdown = false;
+
+bool RDDProcessManager::IsShutdown() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return sXPCOMShutdown || !sRDDSingleton;
+}
+
 RDDProcessManager* RDDProcessManager::Get() { return sRDDSingleton; }
 
 void RDDProcessManager::Initialize() {
@@ -71,6 +78,8 @@ RDDProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void RDDProcessManager::OnXPCOMShutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+  sXPCOMShutdown = true;
   nsContentUtils::UnregisterShutdownObserver(mObserver);
   Preferences::RemoveObserver(mObserver, "");
   CleanShutdown();
@@ -103,8 +112,7 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
 RefPtr<GenericNonExclusivePromise> RDDProcessManager::LaunchRDDProcess() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!Get()) {
-    // Shutdown?
+  if (IsShutdown()) {
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                        __func__);
   }
@@ -137,8 +145,7 @@ RefPtr<GenericNonExclusivePromise> RDDProcessManager::LaunchRDDProcess() {
   mLaunchRDDPromise = mProcess->LaunchPromise()->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [this](bool) {
-        if (!Get()) {
-          // Shutdown?
+        if (IsShutdown()) {
           return GenericNonExclusivePromise::CreateAndReject(
               NS_ERROR_NOT_AVAILABLE, __func__);
         }
@@ -188,8 +195,7 @@ auto RDDProcessManager::EnsureRDDProcessAndCreateBridge(
         return LaunchRDDProcess()->Then(
             GetMainThreadSerialEventTarget(), __func__,
             [aOtherProcess, this]() {
-              if (!Get()) {
-                // Shutdown?
+              if (IsShutdown()) {
                 return EnsureRDDPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                          __func__);
               }
