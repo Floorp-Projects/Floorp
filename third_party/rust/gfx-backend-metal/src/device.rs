@@ -146,19 +146,6 @@ pub struct Device {
 unsafe impl Send for Device {}
 unsafe impl Sync for Device {}
 
-impl Drop for Device {
-    fn drop(&mut self) {
-        if cfg!(feature = "auto-capture") {
-            info!("Metal capture stop");
-            let shared_capture_manager = CaptureManager::shared();
-            if let Some(default_capture_scope) = shared_capture_manager.default_capture_scope() {
-                default_capture_scope.end_scope();
-            }
-            shared_capture_manager.stop_capture();
-        }
-    }
-}
-
 bitflags! {
     /// Memory type bits.
     struct MemoryTypes: u32 {
@@ -265,16 +252,6 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
 
         let device = self.shared.device.lock();
 
-        if cfg!(feature = "auto-capture") {
-            info!("Metal capture start");
-            let shared_capture_manager = CaptureManager::shared();
-            let default_capture_scope =
-                shared_capture_manager.new_capture_scope_with_device(&*device);
-            shared_capture_manager.set_default_capture_scope(&default_capture_scope);
-            shared_capture_manager.start_capture_with_scope(&default_capture_scope);
-            default_capture_scope.begin_scope();
-        }
-
         assert_eq!(families.len(), 1);
         assert_eq!(families[0].1.len(), 1);
         let mut queue_group = QueueGroup::new(families[0].0.id());
@@ -301,9 +278,11 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             .cloned()
             .collect();
             let mut flags = spv::WriterFlags::empty();
-            if cfg!(debug_assertions) {
-                flags |= spv::WriterFlags::DEBUG;
-            }
+            flags.set(spv::WriterFlags::DEBUG, cfg!(debug_assertions));
+            flags.set(
+                spv::WriterFlags::ADJUST_COORDINATE_SPACE,
+                !requested_features.contains(hal::Features::NDC_Y_UP),
+            );
             spv::Options {
                 lang_version: (1, 0),
                 flags,
@@ -568,6 +547,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
 
                 ..hal::Limits::default() // TODO!
             },
+            downlevel: hal::DownlevelProperties::all_enabled(),
             performance_caveats: caveats,
             dynamic_pipeline_states: hal::DynamicStates::all(),
 
@@ -650,7 +630,8 @@ impl Device {
             entry_point_map.insert(
                 (stage, entry_point.name),
                 n::EntryPoint {
-                    internal_name: cleansed,
+                    //TODO: should we try to do better?
+                    internal_name: Ok(cleansed),
                     work_group_size: [
                         entry_point.work_group_size.x,
                         entry_point.work_group_size.y,
@@ -687,7 +668,7 @@ impl Device {
         naga_options: &naga::back::msl::Options,
     ) -> Result<n::ModuleInfo, String> {
         let (source, info) =
-            match naga::back::msl::write_string(&shader.module, &shader.analysis, naga_options) {
+            match naga::back::msl::write_string(&shader.module, &shader.info, naga_options) {
                 Ok(pair) => pair,
                 Err(e) => {
                     warn!("Naga: {:?}", e);
@@ -696,16 +677,16 @@ impl Device {
             };
 
         let mut entry_point_map = n::EntryPointMap::default();
-        for ((pair, ep), name) in shader
+        for (ep, internal_name) in shader
             .module
             .entry_points
             .iter()
             .zip(info.entry_point_names)
         {
             entry_point_map.insert(
-                pair.clone(),
+                (ep.stage, ep.name.clone()),
                 n::EntryPoint {
-                    internal_name: name,
+                    internal_name,
                     work_group_size: ep.workgroup_size,
                 },
             );
@@ -729,7 +710,11 @@ impl Device {
         let library = device
             .lock()
             .new_library_with_source(source.as_ref(), &options)
-            .map_err(|err| format!("{:?}", err))?;
+            .map_err(|err| {
+                warn!("Naga generated shader:\n{}", source);
+                warn!("Failed to compile: {}", err);
+                format!("{:?}", err)
+            })?;
 
         Ok(n::ModuleInfo {
             library,
@@ -760,7 +745,17 @@ impl Device {
             compiler_options.enable_point_size_builtin =
                 primitive_class == MTLPrimitiveTopologyClass::Point;
         }
-        let _ = primitive_class;
+        let options_clone;
+        let naga_options = match primitive_class {
+            MTLPrimitiveTopologyClass::Point => {
+                options_clone = naga::back::msl::Options {
+                    allow_point_size: true,
+                    ..layout.naga_options.clone()
+                };
+                &options_clone
+            }
+            _ => &layout.naga_options,
+        };
 
         let info = match pipeline_cache {
             #[cfg(feature = "cross")]
@@ -786,7 +781,7 @@ impl Device {
                 if ep.module.prefer_naga {
                     result = match ep.module.naga {
                         Ok(ref shader) => {
-                            Self::compile_shader_library_naga(device, shader, &layout.naga_options)
+                            Self::compile_shader_library_naga(device, shader, naga_options)
                         }
                         Err(ref e) => Err(e.clone()),
                     }
@@ -805,14 +800,14 @@ impl Device {
                 if result.is_err() && !ep.module.prefer_naga {
                     result = match ep.module.naga {
                         Ok(ref shader) => {
-                            Self::compile_shader_library_naga(device, shader, &layout.naga_options)
+                            Self::compile_shader_library_naga(device, shader, naga_options)
                         }
                         Err(ref e) => Err(e.clone()),
                     }
                 }
                 info_owned = result.map_err(|e| {
-                    error!("Error compiling the shader {:?}", e);
-                    pso::CreationError::Other
+                    let error = format!("Error compiling the shader {:?}", e);
+                    pso::CreationError::ShaderCreationError(stage.into(), error)
                 })?;
                 &info_owned
             }
@@ -823,7 +818,15 @@ impl Device {
         //TODO: avoid heap-allocating the string?
         let (name, wg_size) = match info.entry_point_map.get(&entry_key) {
             Some(p) => (
-                p.internal_name.as_str(),
+                match p.internal_name {
+                    Ok(ref name) => name.as_str(),
+                    Err(ref e) => {
+                        return Err(pso::CreationError::ShaderCreationError(
+                            stage.into(),
+                            format!("{}", e),
+                        ))
+                    }
+                },
                 metal::MTLSize {
                     width: p.work_group_size[0] as _,
                     height: p.work_group_size[1] as _,
@@ -847,8 +850,8 @@ impl Device {
             self.shared.private_caps.function_specialization,
         )
         .map_err(|e| {
-            error!("Invalid shader entry point '{}': {:?}", name, e);
-            pso::CreationError::Other
+            let error = format!("Invalid shader entry point '{}': {:?}", name, e);
+            pso::CreationError::ShaderCreationError(stage.into(), error)
         })?;
 
         Ok((lib, mtl_function, wg_size, info.rasterization_enabled))
@@ -1393,6 +1396,7 @@ impl hal::device::Device<Backend> for Device {
             binding_map,
             spirv_cross_compatibility: cfg!(feature = "cross"),
             fake_missing_bindings: false,
+            allow_point_size: false,
         };
 
         Ok(n::PipelineLayout {
@@ -1871,13 +1875,18 @@ impl hal::device::Device<Backend> for Device {
             #[cfg(feature = "cross")]
             spv: raw_data.to_vec(),
             naga: {
-                let parser =
-                    naga::front::spv::Parser::new(raw_data.iter().cloned(), &Default::default());
+                let options = naga::front::spv::Options {
+                    adjust_coordinate_space: !self.features.contains(hal::Features::NDC_Y_UP),
+                    flow_graph_dump_prefix: None,
+                };
+                let parser = naga::front::spv::Parser::new(raw_data.iter().cloned(), &options);
                 match parser.parse() {
                     Ok(module) => {
                         debug!("Naga module {:#?}", module);
-                        match naga::proc::Validator::new().validate(&module) {
-                            Ok(analysis) => Ok(d::NagaShader { module, analysis }),
+                        match naga::valid::Validator::new(naga::valid::ValidationFlags::empty())
+                            .validate(&module)
+                        {
+                            Ok(info) => Ok(d::NagaShader { module, info }),
                             Err(e) => Err(format!("Naga validation: {:?}", e)),
                         }
                     }
@@ -1894,11 +1903,7 @@ impl hal::device::Device<Backend> for Device {
         Ok(n::ShaderModule {
             prefer_naga: true,
             #[cfg(feature = "cross")]
-            spv: match naga::back::spv::write_vec(
-                &shader.module,
-                &shader.analysis,
-                &self.spv_options,
-            ) {
+            spv: match naga::back::spv::write_vec(&shader.module, &shader.info, &self.spv_options) {
                 Ok(spv) => spv,
                 Err(e) => {
                     return Err((d::ShaderError::CompilationFailed(format!("{}", e)), shader))
@@ -2453,6 +2458,7 @@ impl hal::device::Device<Backend> for Device {
         &self,
         size: u64,
         usage: buffer::Usage,
+        _sparse: memory::SparseFlags,
     ) -> Result<n::Buffer, buffer::CreationError> {
         debug!("create_buffer of size {} and usage {:?}", size, usage);
         Ok(n::Buffer::Unbound {
@@ -2650,6 +2656,7 @@ impl hal::device::Device<Backend> for Device {
         format: format::Format,
         tiling: image::Tiling,
         usage: image::Usage,
+        _sparse: memory::SparseFlags,
         view_caps: image::ViewCapabilities,
     ) -> Result<n::Image, image::CreationError> {
         debug!(
@@ -3245,6 +3252,23 @@ impl hal::device::Device<Backend> for Device {
         _name: &str,
     ) {
         // TODO
+    }
+
+    fn start_capture(&self) {
+        let device = self.shared.device.lock();
+        let shared_capture_manager = CaptureManager::shared();
+        let default_capture_scope = shared_capture_manager.new_capture_scope_with_device(&device);
+        shared_capture_manager.set_default_capture_scope(&default_capture_scope);
+        shared_capture_manager.start_capture_with_scope(&default_capture_scope);
+        default_capture_scope.begin_scope();
+    }
+
+    fn stop_capture(&self) {
+        let shared_capture_manager = CaptureManager::shared();
+        if let Some(default_capture_scope) = shared_capture_manager.default_capture_scope() {
+            default_capture_scope.end_scope();
+        }
+        shared_capture_manager.stop_capture();
     }
 }
 

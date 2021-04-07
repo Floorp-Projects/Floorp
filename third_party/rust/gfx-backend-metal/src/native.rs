@@ -29,7 +29,7 @@ use std::{
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct EntryPoint {
-    pub internal_name: String,
+    pub internal_name: Result<String, naga::back::msl::EntryPointError>,
     pub work_group_size: [u32; 3],
 }
 

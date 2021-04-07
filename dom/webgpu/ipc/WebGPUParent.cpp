@@ -579,15 +579,15 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     }
   }
 
-  const ffi::WGPUTextureCopyView texView = {
+  const ffi::WGPUImageCopyTexture texView = {
       aTextureId,
   };
-  const ffi::WGPUTextureDataLayout bufLayout = {
+  const ffi::WGPUImageDataLayout bufLayout = {
       0,
       data->mSourcePitch,
       0,
   };
-  const ffi::WGPUBufferCopyView bufView = {
+  const ffi::WGPUImageCopyBuffer bufView = {
       bufferId,
       bufLayout,
   };

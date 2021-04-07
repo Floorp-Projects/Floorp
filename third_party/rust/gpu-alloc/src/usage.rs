@@ -117,8 +117,8 @@ fn one_usage(usage: UsageFlags, memory_types: &[MemoryType]) -> MemoryForOneUsag
         .fold(0u32, |mask, index| mask | 1u32 << index);
 
     MemoryForOneUsage {
-        types,
         mask,
+        types,
         types_count,
     }
 }
@@ -142,7 +142,7 @@ fn compatible(usage: UsageFlags, flags: MemoryPropertyFlags) -> bool {
 fn priority(usage: UsageFlags, flags: MemoryPropertyFlags) -> u32 {
     type Flags = MemoryPropertyFlags;
 
-    // Higly prefer device local memory when `FAST_DEVICE_ACCESS` usage is specified
+    // Highly prefer device local memory when `FAST_DEVICE_ACCESS` usage is specified
     // or usage is empty.
     let device_local: bool = flags.contains(Flags::DEVICE_LOCAL)
         ^ (usage.is_empty() || usage.contains(UsageFlags::FAST_DEVICE_ACCESS));
@@ -162,6 +162,6 @@ fn priority(usage: UsageFlags, flags: MemoryPropertyFlags) -> u32 {
     let coherent: bool = flags.contains(Flags::HOST_COHERENT)
         ^ (usage.intersects(UsageFlags::UPLOAD | UsageFlags::DOWNLOAD));
 
-    // Each boolean is false if flags are prefered.
+    // Each boolean is false if flags are preferred.
     device_local as u32 * 4 + cached as u32 * 2 + coherent as u32
 }

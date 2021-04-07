@@ -34,7 +34,6 @@ pub enum Error {
     InvalidSign(spirv::Word),
     InvalidInnerType(spirv::Word),
     InvalidVectorSize(spirv::Word),
-    InvalidVariableClass(spirv::StorageClass),
     InvalidAccessType(spirv::Word),
     InvalidAccess(crate::Expression),
     InvalidAccessIndex(spirv::Word),
@@ -53,6 +52,7 @@ pub enum Error {
     IncompleteData,
     InvalidTerminator,
     InvalidEdgeClassification,
+    FunctionCallCycle(spirv::Word),
     // incomplete implementation error
     UnsupportedRowMajorMatrix,
     UnsupportedMatrixStride(spirv::Word),

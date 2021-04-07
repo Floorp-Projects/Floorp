@@ -9,27 +9,37 @@ This is an experimental shader translation library for the needs of gfx-rs proje
 
 ## Supported end-points
 
-Everything is still a work-in-progress, but some end-points are usable:
+Everything is still work-in-progress, but some end-points are usable:
 
-Front-end       |       Status       | Notes |
---------------- | ------------------ | ----- |
-SPIR-V (binary) | :white_check_mark: |       |
-WGSL            | :white_check_mark: |       |
-GLSL (Vulkan)   | :ok:               |       |
-Rust            |                    |       |
+Front-end       |       Status       | Feature | Notes |
+--------------- | ------------------ | ------- | ----- |
+SPIR-V (binary) | :white_check_mark: | spv-in  |       |
+WGSL            | :white_check_mark: | wgsl-in |       |
+GLSL            | :ok:               | glsl-in | Vulkan flavor is expected |
+Rust            |                    |         |       |
 
-Back-end        |       Status       | Notes |
---------------- | ------------------ | ----- |
-SPIR-V (binary) | :white_check_mark: |       |
-WGSL            |                    |       |
-Metal           | :white_check_mark: |       |
-HLSL            |                    |       |
-GLSL            | :ok:               |       |
-AIR             |                    |       |
-DXIL/DXIR       |                    |       |
-DXBC            |                    |       |
+Back-end        |       Status       | Feature  | Notes |
+--------------- | ------------------ | -------- | ----- |
+SPIR-V          | :white_check_mark: | spv-out  |       |
+WGSL            |                    |          |       |
+Metal           | :white_check_mark: | msl-out  |       |
+HLSL            | :construction:     | hlsl-out |       |
+GLSL            | :ok:               | glsl-out |       |
+AIR             |                    |          |       |
+DXIL/DXIR       |                    |          |       |
+DXBC            |                    |          |       |
+DOT (GraphViz)  | :ok:               | dot-out  | Not a shading language |
 
 :white_check_mark: = Primary support — :ok: = Secondary support — :construction: = Unsupported, but support in progress
+
+## Conversion tool
+
+Naga includes a default binary target "convert", which allows to test the conversion of different code paths.
+```bash
+cargo run --features spv-in -- my_shader.spv # dump the IR module to debug output
+cargo run --features spv-in,msl-out -- my_shader.spv my_shader.metal --flow-dir flow-dir # convert the SPV to Metal, also dump the SPIR-V flow graph to `flow-dir`
+cargo run --features wgsl-in,glsl-out -- my_shader.wgsl my_shader.vert --profile es310 # convert the WGSL to GLSL vertex stage under ES 3.20 profile
+```
 
 ## Development workflow
 

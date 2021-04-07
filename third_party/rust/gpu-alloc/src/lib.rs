@@ -33,6 +33,10 @@ mod slab;
 mod usage;
 mod util;
 
+// experimental sub-allocator for large transient allocations.
+#[cfg(feature = "freelist")]
+mod freelist;
+
 pub use {
     self::{allocator::*, block::MemoryBlock, config::*, error::*, usage::*},
     gpu_alloc_types::*,
@@ -47,7 +51,7 @@ pub struct Request {
     pub size: u64,
 
     /// Minimal alignment mask required.
-    /// Returnd block may have larger alignment,
+    /// Returned block may have larger alignment,
     /// use `MemoryBlock::align` to learn actual alignment of returned block.
     pub align_mask: u64,
 
@@ -62,14 +66,14 @@ pub struct Request {
     pub memory_types: u32,
 }
 
-/// Aligns `value` up to `align_maks`
+/// Aligns `value` up to `align_mask`
 /// Returns smallest integer not lesser than `value` aligned by `align_mask`.
 /// Returns `None` on overflow.
 pub(crate) fn align_up(value: u64, align_mask: u64) -> Option<u64> {
     Some(value.checked_add(align_mask)? & !align_mask)
 }
 
-/// Align `value` down to `align_maks`
+/// Align `value` down to `align_mask`
 /// Returns largest integer not bigger than `value` aligned by `align_mask`.
 pub(crate) fn align_down(value: u64, align_mask: u64) -> u64 {
     value & !align_mask
