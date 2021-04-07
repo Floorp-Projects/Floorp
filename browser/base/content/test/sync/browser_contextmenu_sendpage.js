@@ -3,6 +3,8 @@
 
 "use strict";
 
+const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+
 const fxaDevices = [
   {
     id: 1,
@@ -81,9 +83,16 @@ add_task(async function test_link_contextmenu() {
     "context-sendlinktodevice-popup"
   );
 
-  let expectedArray = [
-    "context-openlinkintab",
-    "context-openlinkinusercontext-menu",
+  let expectedArray = ["context-openlinkintab"];
+
+  if (
+    Services.prefs.getBoolPref("privacy.userContext.enabled") &&
+    ContextualIdentityService.getPublicIdentities().length
+  ) {
+    expectedArray.push("context-openlinkinusercontext-menu");
+  }
+
+  expectedArray.push(
     "context-openlink",
     "context-openlinkprivate",
     "context-sep-open",
@@ -94,10 +103,19 @@ add_task(async function test_link_contextmenu() {
     "context-sendlinktodevice",
     "context-sep-sendlinktodevice",
     "context-searchselect",
-    "frame-sep",
-    "context-inspect-a11y",
-    "context-inspect",
-  ];
+    "frame-sep"
+  );
+
+  if (
+    Services.prefs.getBoolPref("devtools.accessibility.enabled", true) &&
+    (Services.prefs.getBoolPref("devtools.everOpened", false) ||
+      Services.prefs.getIntPref("devtools.selfxss.count", 0) > 0)
+  ) {
+    expectedArray.push("context-inspect-a11y");
+  }
+
+  expectedArray.push("context-inspect");
+
   let menu = document.getElementById("contentAreaContextMenu");
 
   for (let i = 0, j = 0; i < menu.children.length; i++) {
@@ -105,8 +123,9 @@ add_task(async function test_link_contextmenu() {
     if (item.hidden) {
       continue;
     }
-    ok(
-      expectedArray[j] == item.id,
+    Assert.equal(
+      item.id,
+      expectedArray[j],
       "Ids in context menu match expected values"
     );
     j++;
