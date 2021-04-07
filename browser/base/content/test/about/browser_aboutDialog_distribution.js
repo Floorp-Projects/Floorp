@@ -18,7 +18,7 @@ add_task(async function verify_distribution_info_hides() {
 
   let aboutDialog = await waitForAboutDialog();
 
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => aboutDialog.document.getElementById("currentChannel").value != "",
     "Waiting for init to complete"
   );
@@ -43,7 +43,7 @@ add_task(async function verify_distribution_info_displays() {
 
   let aboutDialog = await waitForAboutDialog();
 
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => aboutDialog.document.getElementById("currentChannel").value != "",
     "Waiting for init to complete"
   );
