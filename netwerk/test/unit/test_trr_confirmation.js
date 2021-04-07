@@ -108,6 +108,7 @@ add_task(async function confirm_ok() {
     "Should be CONFIRM_TRYING_OK"
   );
   await new TRRDNSListener("example.com", { expectedAnswer: "1.2.3.4" });
+  equal(await trrServer.requestCount("example.com", "A"), 1);
   await waitForConfirmationState(CONFIRM_OK, 1000);
 
   await trrServer.registerDoHAnswers("confirm.example.com", "NS", {

@@ -247,6 +247,10 @@ class TRRServerCode {
     // value: array [answer1, answer2]
     global.dns_query_answers = {};
 
+    // key: domain
+    // value: a map containing {key: type, value: number of requests}
+    global.dns_query_counts = {};
+
     global.http2 = require("http2");
     global.server = global.http2.createSecureServer(options, global.handler);
 
@@ -256,6 +260,13 @@ class TRRServerCode {
     global.ip = require(`${__dirname}/../node-ip`);
 
     return global.server.address().port;
+  }
+
+  static getRequestCount(domain, type) {
+    if (!global.dns_query_counts[domain]) {
+      return 0;
+    }
+    return global.dns_query_counts[domain][type] || 0;
   }
 }
 
@@ -291,10 +302,15 @@ function trrQueryHandler(req, resp, url) {
 
   function processRequest(req, resp, payload) {
     let dnsQuery = global.dnsPacket.decode(payload);
-    let response =
-      global.dns_query_answers[
-        `${dnsQuery.questions[0].name}/${dnsQuery.questions[0].type}`
-      ] || {};
+    let domain = dnsQuery.questions[0].name;
+    let type = dnsQuery.questions[0].type;
+    let response = global.dns_query_answers[`${domain}/${type}`] || {};
+
+    if (!global.dns_query_counts[domain]) {
+      global.dns_query_counts[domain] = {};
+    }
+    global.dns_query_counts[domain][type] =
+      global.dns_query_counts[domain][type] + 1 || 1;
 
     let flags = global.dnsPacket.RECURSION_DESIRED;
     flags |= response.flags || 0;
@@ -398,5 +414,11 @@ class TRRServer {
       response
     )}`;
     return this.execute(text);
+  }
+
+  async requestCount(domain, type) {
+    return this.execute(
+      `TRRServerCode.getRequestCount("${domain}", "${type}")`
+    );
   }
 }
