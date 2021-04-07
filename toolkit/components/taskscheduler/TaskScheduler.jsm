@@ -144,4 +144,17 @@ var TaskScheduler = {
   async deleteAllTasks() {
     return gImpl.deleteAllTasks();
   },
+
+  /**
+   * Checks if a task exists.
+   *
+   * @param id
+   *        A string representing the identifier of the task to look for.
+   *
+   * @return
+   *        true if the task exists, otherwise false.
+   */
+  async taskExists(id) {
+    return gImpl.taskExists(id);
+  },
 };

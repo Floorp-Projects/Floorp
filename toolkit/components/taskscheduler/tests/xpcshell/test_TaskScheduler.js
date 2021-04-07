@@ -33,7 +33,20 @@ add_task(async function test_gen() {
       disabled: true,
     }
   );
+
+  Assert.equal(
+    await TaskScheduler.taskExists("FOO"),
+    true,
+    "Task should exist after we created it."
+  );
+
   await TaskScheduler.deleteTask("FOO");
+
+  Assert.equal(
+    await TaskScheduler.taskExists("FOO"),
+    false,
+    "Task should not exist after we deleted it."
+  );
 
   await Assert.rejects(
     TaskScheduler.registerTask("BAR", "123", 1, {
