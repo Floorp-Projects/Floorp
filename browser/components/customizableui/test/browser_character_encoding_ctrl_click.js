@@ -4,15 +4,6 @@
 "use strict";
 
 add_task(async function test_character_encoding_menu() {
-  // On macOS, ctrl-click shouldn't open the panel because this normally opens
-  // the context menu. This happens via the `contextmenu` event which is created
-  // by widget code, so our simulated clicks do not do so, so we can't test
-  // anything on macOS.
-  if (AppConstants.platform == "macosx") {
-    ok(true, "The test is ignored on Mac");
-    return;
-  }
-
   CustomizableUI.addWidgetToArea(
     "characterencoding-button",
     CustomizableUI.AREA_NAVBAR,
