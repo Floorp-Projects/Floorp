@@ -1275,17 +1275,6 @@ const browsingContextTargetPrototype = {
     ) {
       this._setPaintFlashingEnabled(options.paintFlashing);
     }
-    if (typeof options.colorSchemeSimulation !== "undefined") {
-      this._setColorSchemeSimulation(options.colorSchemeSimulation);
-    }
-    if (typeof options.printSimulationEnabled !== "undefined") {
-      this._setPrintSimulationEnabled(options.printSimulationEnabled);
-    }
-    if (typeof options.serviceWorkersTestingEnabled !== "undefined") {
-      this._setServiceWorkersTestingEnabled(
-        options.serviceWorkersTestingEnabled
-      );
-    }
     if (typeof options.restoreFocus == "boolean") {
       this._restoreFocus = options.restoreFocus;
     }
@@ -1302,18 +1291,7 @@ const browsingContextTargetPrototype = {
   _restoreTargetConfiguration() {
     this._restoreJavascript();
     this._setCacheDisabled(false);
-    this._setServiceWorkersTestingEnabled(false);
     this._setPaintFlashingEnabled(false);
-    this._setPrintSimulationEnabled(false);
-
-    if (this._resetColorSchemeSimulationOnDestroy) {
-      // Restore the color scheme simulation only if it was explicitly updated
-      // by this target actor. This will avoid side effects caused when destroying
-      // additional targets (eg RDM target, WebExtension target, …).
-      // TODO: We may want to review other configuration values to see if we should use
-      // the same pattern (Bug 1701553).
-      this._setColorSchemeSimulation(null);
-    }
 
     if (this._restoreFocus && this.browsingContext?.isActive) {
       this.window.focus();
@@ -1361,36 +1339,6 @@ const browsingContextTargetPrototype = {
     }
 
     return this.docShell.allowJavascript;
-  },
-
-  /**
-   * Disable or enable the service workers testing features.
-   */
-  _setServiceWorkersTestingEnabled(enabled) {
-    if (this.browsingContext.serviceWorkersTestingEnabled != enabled) {
-      this.browsingContext.serviceWorkersTestingEnabled = enabled;
-    }
-  },
-
-  /**
-   * Disable or enable the print simulation.
-   */
-  _setPrintSimulationEnabled(enabled) {
-    const value = enabled ? "print" : "";
-    if (this.browsingContext.mediumOverride != value) {
-      this.browsingContext.mediumOverride = value;
-    }
-  },
-
-  /**
-   * Disable or enable the color-scheme simulation.
-   */
-  _setColorSchemeSimulation(override) {
-    const value = override || "none";
-    if (this.browsingContext.prefersColorSchemeOverride != value) {
-      this.browsingContext.prefersColorSchemeOverride = value;
-      this._resetColorSchemeSimulationOnDestroy = true;
-    }
   },
 
   /**
