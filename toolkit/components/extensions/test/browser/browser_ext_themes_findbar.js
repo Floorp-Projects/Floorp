@@ -3,6 +3,46 @@
 // This test checks whether applied WebExtension themes that attempt to change
 // the toolbar and toolbar_field properties also theme the findbar.
 
+function getBorderColors(element) {
+  let computedStyle = window.getComputedStyle(element);
+  let {
+    borderLeftColor,
+    borderRightColor,
+    borderTopColor,
+    borderBottomColor,
+  } = computedStyle;
+  return {
+    borderLeftColor,
+    borderRightColor,
+    borderTopColor,
+    borderBottomColor,
+  };
+}
+
+function testBorderColorsUnchanged(element, expected) {
+  let computedStyle = window.getComputedStyle(element);
+  Assert.equal(
+    computedStyle.borderLeftColor,
+    expected.borderLeftColor,
+    "Element left border color should be unchanged."
+  );
+  Assert.equal(
+    computedStyle.borderRightColor,
+    expected.borderRightColor,
+    "Element right border color should be unchanged."
+  );
+  Assert.equal(
+    computedStyle.borderTopColor,
+    expected.borderTopColor,
+    "Element top border color should be unchanged."
+  );
+  Assert.equal(
+    computedStyle.borderBottomColor,
+    expected.borderBottomColor,
+    "Element bottom border color should be unchanged."
+  );
+}
+
 add_task(async function test_support_toolbar_properties_on_findbar() {
   const TOOLBAR_COLOR = "#ff00ff";
   const TOOLBAR_TEXT_COLOR = "#9400ff";
@@ -61,6 +101,11 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
 });
 
 add_task(async function test_support_toolbar_field_properties_on_findbar() {
+  let findbar_prev_button = gFindBar.getElement("find-previous");
+  let findbar_next_button = gFindBar.getElement("find-next");
+  let prev_button_orig_borders = getBorderColors(findbar_prev_button);
+  let next_button_orig_borders = getBorderColors(findbar_next_button);
+
   const TOOLBAR_FIELD_COLOR = "#ff00ff";
   const TOOLBAR_FIELD_TEXT_COLOR = "#9400ff";
   const TOOLBAR_FIELD_BORDER_COLOR = "#ffffff";
@@ -86,10 +131,6 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
 
   let findbar_textbox = gFindBar.getElement("findbar-textbox");
 
-  let findbar_prev_button = gFindBar.getElement("find-previous");
-
-  let findbar_next_button = gFindBar.getElement("find-next");
-
   info(
     "Checking findbar textbox background is set as toolbar field background color"
   );
@@ -106,8 +147,13 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
     "Findbar textbox text color should be the same as toolbar field text color."
   );
   testBorderColor(findbar_textbox, TOOLBAR_FIELD_BORDER_COLOR);
-  testBorderColor(findbar_prev_button, TOOLBAR_FIELD_BORDER_COLOR);
-  testBorderColor(findbar_next_button, TOOLBAR_FIELD_BORDER_COLOR);
+  if (!gProton) {
+    testBorderColor(findbar_prev_button, TOOLBAR_FIELD_BORDER_COLOR);
+    testBorderColor(findbar_next_button, TOOLBAR_FIELD_BORDER_COLOR);
+  } else {
+    testBorderColorsUnchanged(findbar_prev_button, prev_button_orig_borders);
+    testBorderColorsUnchanged(findbar_next_button, next_button_orig_borders);
+  }
 
   await extension.unload();
 });

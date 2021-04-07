@@ -7,3 +7,12 @@
 .searchbar-engine-one-off-item:-moz-focusring {
   outline: none;
 }
+
+@media (-moz-proton-urlbar) and (-moz-os-version: windows-win10) {
+  #PopupSearchAutoComplete {
+    /* A border is necessary because the shadow is bottom-right */
+    border-color: var(--menu-border-color);
+    border-radius: var(--arrowpanel-border-radius);
+    -moz-window-shadow: cliprounded;
+  }
+}

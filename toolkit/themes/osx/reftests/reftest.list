@@ -1,5 +1,5 @@
 # This folder is registered in the chrome manifest at layout/tools/reftest/jar.mn.
-defaults pref(widget.non-native-theme.enabled,false) # These are tests for the native theme.
+defaults pref(widget.non-native-theme.enabled,false) pref(browser.proton.enabled,false) # These are tests for the native theme with Proton disabled (for now - see bug 1703630)
 
 skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/radiosize.xhtml chrome://reftest/content/osx-theme/radiosize-ref.xhtml
 skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/checkboxsize.xhtml chrome://reftest/content/osx-theme/checkboxsize-ref.xhtml
