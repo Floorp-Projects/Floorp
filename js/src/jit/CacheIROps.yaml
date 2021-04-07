@@ -530,7 +530,7 @@
   args:
     obj: ObjId
     id: IdField
-    shape: ShapeField
+    getterSetter: GetterSetterField
 
 - name: GuardInt32IsNonNegative
   shared: true

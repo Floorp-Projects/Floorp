@@ -23,6 +23,7 @@
 #include "js/shadow/Object.h"  // JS::shadow::Object
 #include "js/shadow/Zone.h"    // JS::shadow::Zone
 #include "js/Value.h"
+#include "vm/GetterSetter.h"
 #include "vm/JSObject.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
@@ -865,6 +866,13 @@ class NativeObject : public JSObject {
     return hasFlag(ObjectFlag::HasInterestingSymbol);
   }
 
+  static bool setHadGetterSetterChange(JSContext* cx, HandleNativeObject obj) {
+    return setFlag(cx, obj, ObjectFlag::HadGetterSetterChange);
+  }
+  bool hadGetterSetterChange() const {
+    return hasFlag(ObjectFlag::HadGetterSetterChange);
+  }
+
   /*
    * Grow or shrink slots immediately before changing the slot span.
    * The number of allocated slots is not stored explicitly, and changes to
@@ -1088,20 +1096,46 @@ class NativeObject : public JSObject {
     getSlotAddressUnchecked(slot)->init(this, HeapSlot::Slot, slot, value);
   }
 
+  // Returns the GetterSetter for an accessor property.
+  GetterSetter* getGetterSetter(Shape* shape) const {
+    MOZ_ASSERT(shape->isAccessorDescriptor());
+    return getSlot(shape->slot()).toGCThing()->as<GetterSetter>();
+  }
+
   // Returns the (possibly nullptr) getter or setter object. The shape must be
   // for an accessor property.
-  JSObject* getGetter(Shape* shape) const { return shape->getterObject(); }
-  JSObject* getSetter(Shape* shape) const { return shape->setterObject(); }
+  JSObject* getGetter(Shape* shape) const {
+    return getGetterSetter(shape)->getter();
+  }
+  JSObject* getSetter(Shape* shape) const {
+    return getGetterSetter(shape)->setter();
+  }
 
   // Returns true if the property has a non-nullptr getter or setter object. The
   // shape can be any property shape.
-  bool hasGetter(Shape* shape) const { return shape->hasGetterObject(); }
-  bool hasSetter(Shape* shape) const { return shape->hasSetterObject(); }
+  bool hasGetter(Shape* shape) const {
+    return shape->hasGetterValue() && getGetter(shape);
+  }
+  bool hasSetter(Shape* shape) const {
+    return shape->hasSetterValue() && getSetter(shape);
+  }
 
   // If the property has a non-nullptr getter/setter, return it as ObjectValue.
   // Else return |undefined|. The shape must be for an accessor property.
-  Value getGetterValue(Shape* shape) const { return shape->getterValue(); }
-  Value getSetterValue(Shape* shape) const { return shape->setterValue(); }
+  Value getGetterValue(Shape* shape) const {
+    MOZ_ASSERT(shape->hasGetterValue());
+    if (JSObject* getterObj = getGetter(shape)) {
+      return ObjectValue(*getterObj);
+    }
+    return UndefinedValue();
+  }
+  Value getSetterValue(Shape* shape) const {
+    MOZ_ASSERT(shape->hasSetterValue());
+    if (JSObject* setterObj = getSetter(shape)) {
+      return ObjectValue(*setterObj);
+    }
+    return UndefinedValue();
+  }
 
   // MAX_FIXED_SLOTS is the biggest number of fixed slots our GC
   // size classes will give an object.
