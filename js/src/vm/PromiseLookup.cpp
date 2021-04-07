@@ -50,9 +50,9 @@ bool js::PromiseLookup::isDataPropertyNative(JSContext* cx, NativeObject* obj,
 
 bool js::PromiseLookup::isAccessorPropertyNative(JSContext* cx,
                                                  NativeObject* holder,
-                                                 Shape* shape,
+                                                 uint32_t getterSlot,
                                                  JSNative native) {
-  JSObject* getter = holder->getGetter(shape);
+  JSObject* getter = holder->getGetter(getterSlot);
   return getter && IsNativeFunction(getter, native) &&
          getter->as<JSFunction>().realm() == cx->realm();
 }
@@ -121,7 +121,8 @@ void js::PromiseLookup::initialize(JSContext* cx) {
 
   // Get the referred value, ensure it holds the canonical Promise[@@species]
   // function.
-  if (!isAccessorPropertyNative(cx, promiseCtor, speciesShape,
+  uint32_t speciesGetterSlot = speciesShape->slot();
+  if (!isAccessorPropertyNative(cx, promiseCtor, speciesGetterSlot,
                                 Promise_static_species)) {
     return;
   }
@@ -148,8 +149,8 @@ void js::PromiseLookup::initialize(JSContext* cx) {
 
   state_ = State::Initialized;
   promiseConstructorShape_ = promiseCtor->lastProperty();
-  promiseSpeciesShape_ = speciesShape;
   promiseProtoShape_ = promiseProto->lastProperty();
+  promiseSpeciesGetterSlot_ = speciesGetterSlot;
   promiseResolveSlot_ = resolveShape->slot();
   promiseProtoConstructorSlot_ = ctorShape->slot();
   promiseProtoThenSlot_ = thenShape->slot();
@@ -193,7 +194,7 @@ bool js::PromiseLookup::isPromiseStateStillSane(JSContext* cx) {
   }
 
   // Ensure the species getter contains the canonical @@species function.
-  if (!isAccessorPropertyNative(cx, promiseCtor, promiseSpeciesShape_,
+  if (!isAccessorPropertyNative(cx, promiseCtor, promiseSpeciesGetterSlot_,
                                 Promise_static_species)) {
     return false;
   }
