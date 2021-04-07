@@ -439,6 +439,9 @@
 
 @media (prefers-contrast) {
   #urlbar-search-mode-indicator-close {
+    /* fill should match the urlbar text because background-color is set to
+       Field below for non-proton themes. */
+    fill: FieldText;
     fill-opacity: 1.0;
   }
   @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
