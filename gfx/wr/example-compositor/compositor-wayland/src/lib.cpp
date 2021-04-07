@@ -81,7 +81,7 @@ struct Surface {
   int tile_width;
   int tile_height;
   bool is_opaque;
-  std::unordered_map<TileKey, Tile, TileKeyHasher> tiles;
+  std::unordered_map<TileKey, Tile*, TileKeyHasher> tiles;
 };
 
 struct WLDisplay {
@@ -135,7 +135,8 @@ struct WLWindow {
 
   // Maps WR surface IDs to each OS surface
   std::unordered_map<uint64_t, Surface> surfaces;
-  std::vector<Tile> destroyedTiles;
+  std::vector<Tile*> destroyedTiles;
+  std::vector<Tile*> hiddenTiles;
 };
 
 extern "C" {
@@ -248,13 +249,23 @@ bool com_wl_tick(WLWindow* window) {
   return !window->closed;
 }
 
+static void unmap_hidden_tiles(WLWindow* window) {
+  for (Tile* tile : window->hiddenTiles) {
+    if (tile->subsurface) {
+      wl_subsurface_destroy(tile->subsurface);
+      tile->subsurface = nullptr;
+    }
+  }
+  window->hiddenTiles.clear();
+}
+
 static void clean_up_tiles(WLWindow* window) {
-  for (Tile tile : window->destroyedTiles) {
-    eglDestroySurface(window->eglDisplay, tile.egl_surface);
-    wl_egl_window_destroy(tile.egl_window);
-    wp_viewport_destroy(tile.viewport);
-    wl_subsurface_destroy(tile.subsurface);
-    wl_surface_destroy(tile.surface);
+  for (Tile* tile : window->destroyedTiles) {
+    eglDestroySurface(window->eglDisplay, tile->egl_surface);
+    wl_egl_window_destroy(tile->egl_window);
+    wp_viewport_destroy(tile->viewport);
+    wl_surface_destroy(tile->surface);
+    delete tile;
   }
   window->destroyedTiles.clear();
 }
@@ -280,9 +291,9 @@ void com_wl_swap_buffers(WLWindow* window) {
 
       for (auto tile_it = surface->tiles.begin();
            tile_it != surface->tiles.end(); ++tile_it) {
-        Tile* tile = &tile_it->second;
+        Tile* tile = tile_it->second;
 
-        if (!tile->damage_rects.empty()) {
+        if (!tile->damage_rects.empty() && tile->is_visible) {
           eglMakeCurrent(window->eglDisplay, tile->egl_surface,
                          tile->egl_surface, window->eglContext);
           eglSwapInterval(window->eglDisplay, 0);
@@ -303,6 +314,7 @@ void com_wl_swap_buffers(WLWindow* window) {
       }
     }
     wl_surface_commit(window->surface);
+    unmap_hidden_tiles(window);
     clean_up_tiles(window);
 
     int ret = 0;
@@ -363,47 +375,47 @@ void com_wl_create_tile(WLWindow* window, uint64_t surface_id, int x, int y) {
   TileKey key(x, y);
   assert(surface->tiles.count(key) == 0);
 
-  Tile tile;
-  tile.surface_id = surface_id;
-  tile.x = x;
-  tile.y = y;
-  tile.is_visible = true;
+  Tile* tile = new Tile;
+  tile->surface_id = surface_id;
+  tile->x = x;
+  tile->y = y;
+  tile->is_visible = false;
 
-  tile.surface = wl_compositor_create_surface(display->compositor);
-  tile.subsurface = wl_subcompositor_get_subsurface(
-      display->subcompositor, tile.surface, window->surface);
-  tile.viewport = wp_viewporter_get_viewport(display->viewporter, tile.surface);
+  tile->surface = wl_compositor_create_surface(display->compositor);
+  tile->viewport =
+      wp_viewporter_get_viewport(display->viewporter, tile->surface);
 
   if (surface->is_opaque) {
     struct wl_region* region =
         wl_compositor_create_region(window->display->compositor);
     wl_region_add(region, 0, 0, INT32_MAX, INT32_MAX);
-    wl_surface_set_opaque_region(tile.surface, region);
+    wl_surface_set_opaque_region(tile->surface, region);
     wl_region_destroy(region);
   }
 
-  tile.egl_window = wl_egl_window_create(tile.surface, surface->tile_width,
-                                         surface->tile_height);
-  tile.egl_surface = eglCreateWindowSurface(window->eglDisplay, window->config,
-                                            tile.egl_window, NULL);
-  assert(tile.egl_surface != EGL_NO_SURFACE);
+  tile->egl_window = wl_egl_window_create(tile->surface, surface->tile_width,
+                                          surface->tile_height);
+  tile->egl_surface = eglCreateWindowSurface(window->eglDisplay, window->config,
+                                             tile->egl_window, NULL);
+  assert(tile->egl_surface != EGL_NO_SURFACE);
 
   surface->tiles.emplace(key, tile);
 }
 
-static void show_tile(WLWindow* window, uint64_t surface_id, int x, int y) {
-  Surface* surface = &window->surfaces.at(surface_id);
-  TileKey key(x, y);
-  Tile* tile = &surface->tiles[key];
-
+static void show_tile(WLWindow* window, Tile* tile) {
   if (tile->is_visible) {
+    assert(tile->subsurface);
     return;
   }
 
+  tile->subsurface = wl_subcompositor_get_subsurface(
+      window->display->subcompositor, tile->surface, window->surface);
+
   /* This is not comprehensive yet, see hide_tile() */
+  Surface* surface = &window->surfaces.at(tile->surface_id);
   for (auto tile_it = surface->tiles.begin(); tile_it != surface->tiles.end();
        ++tile_it) {
-    Tile* other_tile = &tile_it->second;
+    Tile* other_tile = tile_it->second;
 
     if (other_tile->is_visible) {
       wl_subsurface_place_above(tile->subsurface, other_tile->surface);
@@ -413,11 +425,7 @@ static void show_tile(WLWindow* window, uint64_t surface_id, int x, int y) {
   tile->is_visible = true;
 }
 
-static void hide_tile(WLWindow* window, uint64_t surface_id, int x, int y) {
-  Surface* surface = &window->surfaces.at(surface_id);
-  TileKey key(x, y);
-  Tile* tile = &surface->tiles[key];
-
+static void hide_tile(WLWindow* window, Tile* tile) {
   if (!tile->is_visible) {
     return;
   }
@@ -434,6 +442,7 @@ static void hide_tile(WLWindow* window, uint64_t surface_id, int x, int y) {
                          wl_fixed_from_int(1));
   wl_subsurface_place_below(tile->subsurface, window->surface);
   tile->is_visible = false;
+  window->hiddenTiles.push_back(tile);
 }
 
 void com_wl_destroy_tile(WLWindow* window, uint64_t surface_id, int x, int y) {
@@ -442,13 +451,12 @@ void com_wl_destroy_tile(WLWindow* window, uint64_t surface_id, int x, int y) {
   Surface* surface = &window->surfaces.at(surface_id);
   TileKey key(x, y);
   assert(surface->tiles.count(key) == 1);
-  Tile& tile = surface->tiles[key];
+  Tile* tile = surface->tiles[key];
 
-  hide_tile(window, surface_id, x, y);
-  wl_surface_commit(tile.surface);
+  hide_tile(window, tile);
+  wl_surface_commit(tile->surface);
 
   window->destroyedTiles.push_back(tile);
-
   surface->tiles.erase(key);
 }
 
@@ -458,7 +466,7 @@ void com_wl_destroy_surface(WLWindow* window, uint64_t surface_id) {
   Surface* surface = &window->surfaces.at(surface_id);
   for (auto tile_it = surface->tiles.begin(); tile_it != surface->tiles.end();
        tile_it = surface->tiles.begin()) {
-    Tile* tile = &tile_it->second;
+    Tile* tile = tile_it->second;
 
     com_wl_destroy_tile(window, surface_id, tile->x, tile->y);
   }
@@ -496,7 +504,7 @@ GLuint com_wl_bind_surface(WLWindow* window, uint64_t surface_id, int tile_x,
 
   TileKey key(tile_x, tile_y);
   assert(surface->tiles.count(key) == 1);
-  Tile* tile = &surface->tiles[key];
+  Tile* tile = surface->tiles[key];
 
   tile->damage_rects.push_back(dirty_x0);
   tile->damage_rects.push_back(dirty_y0);
@@ -528,7 +536,7 @@ void com_wl_add_surface(WLWindow* window, uint64_t surface_id, int offset_x,
 
   for (auto tile_it = surface->tiles.begin(); tile_it != surface->tiles.end();
        ++tile_it) {
-    Tile* tile = &tile_it->second;
+    Tile* tile = tile_it->second;
 
     int pos_x = MAX((tile->x * surface->tile_width) + offset_x, clip_x);
     int pos_y = MAX((tile->y * surface->tile_height) + offset_y, clip_y);
@@ -543,7 +551,7 @@ void com_wl_add_surface(WLWindow* window, uint64_t surface_id, int offset_x,
     view_h = MIN(window->geometry.height - pos_y, view_h);
 
     if (view_w > 0 && view_h > 0) {
-      show_tile(window, surface_id, tile->x, tile->y);
+      show_tile(window, tile);
 
       wl_subsurface_set_position(tile->subsurface, pos_x, pos_y);
       wp_viewport_set_source(tile->viewport, wl_fixed_from_double(view_x),
@@ -551,7 +559,7 @@ void com_wl_add_surface(WLWindow* window, uint64_t surface_id, int offset_x,
                              wl_fixed_from_double(view_w),
                              wl_fixed_from_double(view_h));
     } else {
-      hide_tile(window, surface_id, tile->x, tile->y);
+      hide_tile(window, tile);
     }
   }
 }
@@ -568,7 +576,7 @@ void com_wl_end_transaction(WLWindow* window) {
       struct wl_surface* next_surface = nullptr;
       for (auto tile_it = surface->tiles.begin();
            tile_it != surface->tiles.end(); ++tile_it) {
-        Tile* tile = &tile_it->second;
+        Tile* tile = tile_it->second;
 
         if (tile->is_visible) {
           wl_subsurface_place_above(tile->subsurface, prev_surface);
