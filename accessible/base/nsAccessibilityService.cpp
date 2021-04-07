@@ -1063,6 +1063,24 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
       }
     }
 
+    if (content->IsXULElement(nsGkAtoms::panel)) {
+      // We filter here instead of in the XUL map because
+      // if we filter there and return null, we still end up
+      // creating a generic accessible at the end of this function.
+      // Doing the filtering here ensures we never create accessibles
+      // for panels whose popups aren't visible.
+      nsMenuPopupFrame* popupFrame = do_QueryFrame(frame);
+      if (!popupFrame) {
+        return nullptr;
+      }
+
+      nsPopupState popupState = popupFrame->PopupState();
+      if (popupState == ePopupHiding || popupState == ePopupInvisible ||
+          popupState == ePopupClosed) {
+        return nullptr;
+      }
+    }
+
 #ifdef MOZ_XUL
     // Prefer to use XUL to decide if and what kind of accessible to create.
     const XULMarkupMapInfo* xulMap =
