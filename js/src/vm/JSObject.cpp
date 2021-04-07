@@ -3273,6 +3273,9 @@ void JSObject::dump(js::GenericPrinter& out) const {
     if (nobj->hadElementsAccess()) {
       out.put(" had_elements_access");
     }
+    if (nobj->hadGetterSetterChange()) {
+      out.put(" had_getter_setter_change");
+    }
     if (nobj->isIndexed()) {
       out.put(" indexed");
     }

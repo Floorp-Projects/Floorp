@@ -236,14 +236,6 @@ void StackShape::trace(JSTracer* trc) {
   }
 
   TraceRoot(trc, (jsid*)&propid, "StackShape id");
-
-  if (getter) {
-    TraceRoot(trc, &getter, "StackShape getter");
-  }
-
-  if (setter) {
-    TraceRoot(trc, &setter, "StackShape setter");
-  }
 }
 
 void StackBaseShape::trace(JSTracer* trc) { proto.trace(trc); }

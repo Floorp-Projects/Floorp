@@ -101,18 +101,6 @@ void gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape) {
 
     // Don't trace the propid because the CC doesn't care about jsid.
 
-    if (shape->hasGetterObject()) {
-      JSObject* tmp = shape->getterObject();
-      TraceEdgeInternal(trc, &tmp, "getter");
-      MOZ_ASSERT(tmp == shape->getterObject());
-    }
-
-    if (shape->hasSetterObject()) {
-      JSObject* tmp = shape->setterObject();
-      TraceEdgeInternal(trc, &tmp, "setter");
-      MOZ_ASSERT(tmp == shape->setterObject());
-    }
-
     shape = shape->previous();
   } while (shape);
 }

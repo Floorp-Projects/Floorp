@@ -108,20 +108,13 @@ template <MaybeAdding Adding>
 
 inline Shape* Shape::new_(JSContext* cx, Handle<StackShape> other,
                           uint32_t nfixed) {
-  Shape* shape = other.isAccessorShape() ? js::Allocate<AccessorShape>(cx)
-                                         : js::Allocate<Shape>(cx);
+  Shape* shape = js::Allocate<Shape>(cx);
   if (!shape) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  if (other.isAccessorShape()) {
-    new (shape) AccessorShape(other, nfixed);
-  } else {
-    new (shape) Shape(other, nfixed);
-  }
-
-  return shape;
+  return new (shape) Shape(other, nfixed);
 }
 
 inline void Shape::updateBaseShapeAfterMovingGC() {
@@ -131,70 +124,9 @@ inline void Shape::updateBaseShapeAfterMovingGC() {
   }
 }
 
-static inline void GetterSetterPreWriteBarrier(AccessorShape* shape) {
-  if (shape->hasGetterObject()) {
-    PreWriteBarrier(shape->getterObject());
-  }
-  if (shape->hasSetterObject()) {
-    PreWriteBarrier(shape->setterObject());
-  }
-}
-
-static inline void GetterSetterPostWriteBarrier(AccessorShape* shape) {
-  // If the shape contains any nursery pointers then add it to a vector on the
-  // zone that we fixup on minor GC. Prevent this vector growing too large
-  // since we don't tolerate OOM here.
-
-  static const size_t MaxShapeVectorLength = 5000;
-
-  MOZ_ASSERT(shape);
-
-  gc::StoreBuffer* sb = nullptr;
-  if (shape->hasGetterObject()) {
-    sb = shape->getterObject()->storeBuffer();
-  }
-  if (!sb && shape->hasSetterObject()) {
-    sb = shape->setterObject()->storeBuffer();
-  }
-  if (!sb) {
-    return;
-  }
-
-  auto& nurseryShapes = shape->zone()->nurseryShapes();
-
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!nurseryShapes.append(shape)) {
-      oomUnsafe.crash("GetterSetterPostWriteBarrier");
-    }
-  }
-
-  if (nurseryShapes.length() == 1) {
-    sb->putGeneric(NurseryShapesRef(shape->zone()));
-  } else if (nurseryShapes.length() == MaxShapeVectorLength) {
-    sb->setAboutToOverflow(JS::GCReason::FULL_SHAPE_BUFFER);
-  }
-}
-
-inline AccessorShape::AccessorShape(const StackShape& other, uint32_t nfixed)
-    : Shape(other, nfixed), getter_(other.getter), setter_(other.setter) {
-  MOZ_ASSERT(getAllocKind() == gc::AllocKind::ACCESSOR_SHAPE);
-  GetterSetterPostWriteBarrier(this);
-}
-
-inline AccessorShape::AccessorShape(BaseShape* base, ObjectFlags objectFlags,
-                                    uint32_t nfixed)
-    : Shape(base, objectFlags, nfixed), getter_(nullptr), setter_(nullptr) {
-  MOZ_ASSERT(getAllocKind() == gc::AllocKind::ACCESSOR_SHAPE);
-}
-
 inline void Shape::initDictionaryShape(const StackShape& child, uint32_t nfixed,
                                        DictionaryShapeLink next) {
-  if (child.isAccessorShape()) {
-    new (this) AccessorShape(child, nfixed);
-  } else {
-    new (this) Shape(child, nfixed);
-  }
+  new (this) Shape(child, nfixed);
   this->immutableFlags |= IN_DICTIONARY;
 
   MOZ_ASSERT(dictNext.isNone());

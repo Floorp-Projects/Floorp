@@ -1926,12 +1926,8 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
 }
 
 bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
-                               Shape* propShape) {
+                               GetterSetter* getterSetter) {
   AutoUnsafeCallWithABI unsafe;
-
-  MOZ_ASSERT(propShape->propid() == id);
-
-  MOZ_ASSERT(propShape->hasGetterObject() || propShape->hasSetterObject());
 
   // Window objects may require outerizing (passing the WindowProxy to the
   // getter/setter), so we don't support them here.
@@ -1943,14 +1939,15 @@ bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
 
   while (true) {
     if (Shape* shape = nobj->lastProperty()->search(cx, id)) {
-      if (shape == propShape) {
+      if (!shape->isAccessorDescriptor()) {
+        return false;
+      }
+      GetterSetter* actualGetterSetter = nobj->getGetterSetter(shape);
+      if (actualGetterSetter == getterSetter) {
         return true;
       }
-      if (shape->getterOrUndefined() == propShape->getterOrUndefined() &&
-          shape->setterOrUndefined() == propShape->setterOrUndefined()) {
-        return true;
-      }
-      return false;
+      return (actualGetterSetter->getter() == getterSetter->getter() &&
+              actualGetterSetter->setter() == getterSetter->setter());
     }
 
     // Property not found. Watch out for Class hooks.
