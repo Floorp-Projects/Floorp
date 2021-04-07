@@ -853,6 +853,7 @@ fn prepare_interned_prim_for_render(
                 }
                 else
                 {
+                    let mut prev_segment_start_point = None;
                     let mut segment_start_point = prim_start_offset;
                     while segment_start_point < prim_end_offset {
 
@@ -881,6 +882,13 @@ fn prepare_interned_prim_for_render(
                         );
 
                         segment_start_point = repeat_end + gradient_offset_base;
+
+                        // Break out of the loop if we aren't making progress
+                        if prev_segment_start_point == Some(segment_start_point) {
+                            debug_assert!(segment_start_point.approx_eq(&prim_end_offset));
+                            break;
+                        }
+                        prev_segment_start_point = Some(segment_start_point)
                     }
                 }
             }
