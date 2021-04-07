@@ -35,8 +35,7 @@ namespace mozilla {
 namespace net {
 
 Http2Stream::Http2Stream(nsAHttpTransaction* httpTransaction,
-                         Http2Session* session, int32_t priority,
-                         uint64_t windowId)
+                         Http2Session* session, int32_t priority, uint64_t bcId)
     : mStreamID(0),
       mSession(session),
       mSegmentReader(nullptr),
@@ -48,7 +47,7 @@ Http2Stream::Http2Stream(nsAHttpTransaction* httpTransaction,
       mAllHeadersReceived(0),
       mQueued(0),
       mSocketTransport(session->SocketTransport()),
-      mCurrentForegroundTabOuterContentWindowId(windowId),
+      mCurrentTopBrowsingContextId(bcId),
       mTransactionTabId(0),
       mTransaction(httpTransaction),
       mChunkSize(session->SendingChunkSize()),
@@ -104,7 +103,7 @@ Http2Stream::Http2Stream(nsAHttpTransaction* httpTransaction,
   SetPriority(static_cast<uint32_t>(httpPriority));
 
   if (trans) {
-    mTransactionTabId = trans->TopLevelOuterContentWindowId();
+    mTransactionTabId = trans->TopBrowsingContextId();
   }
 }
 
@@ -1286,7 +1285,7 @@ void Http2Stream::UpdatePriorityDependency() {
   mPriorityDependency = GetPriorityDependencyFromTransaction(trans);
 
   if (gHttpHandler->ActiveTabPriority() &&
-      mTransactionTabId != mCurrentForegroundTabOuterContentWindowId &&
+      mTransactionTabId != mCurrentTopBrowsingContextId &&
       mPriorityDependency != Http2Session::kUrgentStartGroupID) {
     LOG3(
         ("Http2Stream::UpdatePriorityDependency %p "
@@ -1303,7 +1302,7 @@ void Http2Stream::UpdatePriorityDependency() {
        this, mPriorityDependency));
 }
 
-void Http2Stream::TopLevelOuterContentWindowIdChanged(uint64_t windowId) {
+void Http2Stream::TopBrowsingContextIdChanged(uint64_t id) {
   if (!mStreamID) {
     // For pushed streams, we ignore the direct call from the session and
     // instead let it come to the internal function from the pushed stream, so
@@ -1311,19 +1310,18 @@ void Http2Stream::TopLevelOuterContentWindowIdChanged(uint64_t windowId) {
     return;
   }
 
-  TopLevelOuterContentWindowIdChangedInternal(windowId);
+  TopBrowsingContextIdChangedInternal(id);
 }
 
-void Http2Stream::TopLevelOuterContentWindowIdChangedInternal(
-    uint64_t windowId) {
+void Http2Stream::TopBrowsingContextIdChangedInternal(uint64_t id) {
   MOZ_ASSERT(gHttpHandler->ActiveTabPriority());
 
   LOG3(
-      ("Http2Stream::TopLevelOuterContentWindowIdChanged "
-       "%p windowId=%" PRIx64 "\n",
-       this, windowId));
+      ("Http2Stream::TopBrowsingContextIdChangedInternal "
+       "%p bcId=%" PRIx64 "\n",
+       this, id));
 
-  mCurrentForegroundTabOuterContentWindowId = windowId;
+  mCurrentTopBrowsingContextId = id;
 
   if (!mSession->UseH2Deps()) {
     return;
@@ -1335,10 +1333,10 @@ void Http2Stream::TopLevelOuterContentWindowIdChangedInternal(
     return;
   }
 
-  if (mTransactionTabId != mCurrentForegroundTabOuterContentWindowId) {
+  if (mTransactionTabId != mCurrentTopBrowsingContextId) {
     mPriorityDependency = Http2Session::kBackgroundGroupID;
     LOG3(
-        ("Http2Stream::TopLevelOuterContentWindowIdChanged %p "
+        ("Http2Stream::TopBrowsingContextIdChangedInternal %p "
          "move into background group.\n",
          this));
 
@@ -1351,7 +1349,7 @@ void Http2Stream::TopLevelOuterContentWindowIdChangedInternal(
 
     mPriorityDependency = GetPriorityDependencyFromTransaction(trans);
     LOG3(
-        ("Http2Stream::TopLevelOuterContentWindowIdChanged %p "
+        ("Http2Stream::TopBrowsingContextIdChangedInternal %p "
          "depends on stream 0x%X\n",
          this, mPriorityDependency));
   }

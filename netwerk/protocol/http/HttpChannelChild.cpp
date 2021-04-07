@@ -1620,6 +1620,13 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
   // target.
   SetEventTarget();
 
+  if (browserChild) {
+    MOZ_ASSERT(browserChild->WebNavigation());
+    if (BrowsingContext* bc = browserChild->GetBrowsingContext()) {
+      mTopBrowsingContextId = bc->Top()->Id();
+    }
+  }
+
   HttpChannelConnectArgs connectArgs(registrarId);
   if (!gNeckoChild->SendPHttpChannelConstructor(
           this, browserChild, IPC::SerializedLoadContext(this), connectArgs)) {
@@ -2165,7 +2172,9 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
         navigationStartTimeStamp =
             navigationTiming->GetNavigationStartTimeStamp();
       }
-      mTopLevelOuterContentWindowId = document->OuterWindowID();
+    }
+    if (BrowsingContext* bc = browserChild->GetBrowsingContext()) {
+      mTopBrowsingContextId = bc->Top()->Id();
     }
   }
   SetTopLevelContentWindowId(contentWindowId);
@@ -2241,11 +2250,11 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.integrityMetadata() = mIntegrityMetadata;
 
   openArgs.contentWindowId() = contentWindowId;
-  openArgs.topLevelOuterContentWindowId() = mTopLevelOuterContentWindowId;
+  openArgs.topBrowsingContextId() = mTopBrowsingContextId;
 
   LOG(("HttpChannelChild::ContinueAsyncOpen this=%p gid=%" PRIu64
-       " topwinid=%" PRIx64,
-       this, mChannelId, mTopLevelOuterContentWindowId));
+       " top bid=%" PRIx64,
+       this, mChannelId, mTopBrowsingContextId));
 
   if (browserChild && !browserChild->IPCOpen()) {
     return NS_ERROR_FAILURE;

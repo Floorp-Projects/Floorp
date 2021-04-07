@@ -78,7 +78,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
       mPruningNoTraffic(false),
       mTimeoutTickArmed(false),
       mTimeoutTickNext(1),
-      mCurrentTopLevelOuterContentWindowId(0),
+      mCurrentTopBrowsingContextId(0),
       mThrottlingInhibitsReading(false),
       mActiveTabTransactionsExist(false),
       mActiveTabUnthrottledTransactionsExist(false) {
@@ -991,12 +991,12 @@ void nsHttpConnectionMgr::PreparePendingQForDispatching(
   // Only need to dispatch transactions for either focused or
   // non-focused window because considerAll is false.
   if (!considerAll) {
-    ent->AppendPendingQForFocusedWindow(mCurrentTopLevelOuterContentWindowId,
-                                        pendingQ, maxFocusedWindowConnections);
+    ent->AppendPendingQForFocusedWindow(mCurrentTopBrowsingContextId, pendingQ,
+                                        maxFocusedWindowConnections);
 
     if (pendingQ.IsEmpty()) {
-      ent->AppendPendingQForNonFocusedWindows(
-          mCurrentTopLevelOuterContentWindowId, pendingQ, availableConnections);
+      ent->AppendPendingQForNonFocusedWindows(mCurrentTopBrowsingContextId,
+                                              pendingQ, availableConnections);
     }
     return;
   }
@@ -1005,13 +1005,13 @@ void nsHttpConnectionMgr::PreparePendingQForDispatching(
       availableConnections - maxFocusedWindowConnections;
   nsTArray<RefPtr<PendingTransactionInfo>> remainingPendingQ;
 
-  ent->AppendPendingQForFocusedWindow(mCurrentTopLevelOuterContentWindowId,
-                                      pendingQ, maxFocusedWindowConnections);
+  ent->AppendPendingQForFocusedWindow(mCurrentTopBrowsingContextId, pendingQ,
+                                      maxFocusedWindowConnections);
 
   if (maxNonFocusedWindowConnections) {
-    ent->AppendPendingQForNonFocusedWindows(
-        mCurrentTopLevelOuterContentWindowId, remainingPendingQ,
-        maxNonFocusedWindowConnections);
+    ent->AppendPendingQForNonFocusedWindows(mCurrentTopBrowsingContextId,
+                                            remainingPendingQ,
+                                            maxNonFocusedWindowConnections);
   }
 
   // If the slots for either focused or non-focused window are not filled up
@@ -1019,11 +1019,11 @@ void nsHttpConnectionMgr::PreparePendingQForDispatching(
   // for the other slot (with preference for the focused window).
   if (remainingPendingQ.Length() < maxNonFocusedWindowConnections) {
     ent->AppendPendingQForFocusedWindow(
-        mCurrentTopLevelOuterContentWindowId, pendingQ,
+        mCurrentTopBrowsingContextId, pendingQ,
         maxNonFocusedWindowConnections - remainingPendingQ.Length());
   } else if (pendingQ.Length() < maxFocusedWindowConnections) {
     ent->AppendPendingQForNonFocusedWindows(
-        mCurrentTopLevelOuterContentWindowId, remainingPendingQ,
+        mCurrentTopBrowsingContextId, remainingPendingQ,
         maxFocusedWindowConnections - pendingQ.Length());
   }
 
@@ -2540,12 +2540,10 @@ class UINT64Wrapper : public ARefBase {
   virtual ~UINT64Wrapper() = default;
 };
 
-nsresult nsHttpConnectionMgr::UpdateCurrentTopLevelOuterContentWindowId(
-    uint64_t aWindowId) {
-  RefPtr<UINT64Wrapper> windowIdWrapper = new UINT64Wrapper(aWindowId);
-  return PostEvent(
-      &nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId, 0,
-      windowIdWrapper);
+nsresult nsHttpConnectionMgr::UpdateCurrentTopBrowsingContextId(uint64_t aId) {
+  RefPtr<UINT64Wrapper> idWrapper = new UINT64Wrapper(aId);
+  return PostEvent(&nsHttpConnectionMgr::OnMsgUpdateCurrentTopBrowsingContextId,
+                   0, idWrapper);
 }
 
 void nsHttpConnectionMgr::SetThrottlingEnabled(bool aEnable) {
@@ -2592,9 +2590,9 @@ void nsHttpConnectionMgr::LogActiveTransactions(char operation) {
   nsTArray<RefPtr<nsHttpTransaction>>* trs = nullptr;
   uint32_t au, at, bu = 0, bt = 0;
 
-  trs = mActiveTransactions[false].Get(mCurrentTopLevelOuterContentWindowId);
+  trs = mActiveTransactions[false].Get(mCurrentTopBrowsingContextId);
   au = trs ? trs->Length() : 0;
-  trs = mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId);
+  trs = mActiveTransactions[true].Get(mCurrentTopBrowsingContextId);
   at = trs ? trs->Length() : 0;
 
   for (const auto& data : mActiveTransactions[false].Values()) {
@@ -2617,7 +2615,7 @@ void nsHttpConnectionMgr::LogActiveTransactions(char operation) {
 void nsHttpConnectionMgr::AddActiveTransaction(nsHttpTransaction* aTrans) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
+  uint64_t tabId = aTrans->TopBrowsingContextId();
   bool throttled = aTrans->EligibleForThrottling();
 
   nsTArray<RefPtr<nsHttpTransaction>>* transactions =
@@ -2629,11 +2627,10 @@ void nsHttpConnectionMgr::AddActiveTransaction(nsHttpTransaction* aTrans) {
 
   LOG(("nsHttpConnectionMgr::AddActiveTransaction    t=%p tabid=%" PRIx64
        "(%d) thr=%d",
-       aTrans, tabId, tabId == mCurrentTopLevelOuterContentWindowId,
-       throttled));
+       aTrans, tabId, tabId == mCurrentTopBrowsingContextId, throttled));
   LogActiveTransactions('+');
 
-  if (tabId == mCurrentTopLevelOuterContentWindowId) {
+  if (tabId == mCurrentTopBrowsingContextId) {
     mActiveTabTransactionsExist = true;
     if (!throttled) {
       mActiveTabUnthrottledTransactionsExist = true;
@@ -2659,8 +2656,8 @@ void nsHttpConnectionMgr::RemoveActiveTransaction(
     nsHttpTransaction* aTrans, Maybe<bool> const& aOverride) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
-  bool forActiveTab = tabId == mCurrentTopLevelOuterContentWindowId;
+  uint64_t tabId = aTrans->TopBrowsingContextId();
+  bool forActiveTab = tabId == mCurrentTopBrowsingContextId;
   bool throttled = aOverride.valueOr(aTrans->EligibleForThrottling());
 
   nsTArray<RefPtr<nsHttpTransaction>>* transactions =
@@ -2739,8 +2736,7 @@ void nsHttpConnectionMgr::RemoveActiveTransaction(
     // active tab we can wake the throttled transactions for the active tab.
     if (forActiveTab && !throttled) {
       LOG(("  resuming throttled for active tab"));
-      ResumeReadOf(
-          mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId));
+      ResumeReadOf(mActiveTransactions[true].Get(mCurrentTopBrowsingContextId));
     }
     return;
   }
@@ -2797,8 +2793,8 @@ bool nsHttpConnectionMgr::ShouldThrottle(nsHttpTransaction* aTrans) {
     }
   }
 
-  uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
-  bool forActiveTab = tabId == mCurrentTopLevelOuterContentWindowId;
+  uint64_t tabId = aTrans->TopBrowsingContextId();
+  bool forActiveTab = tabId == mCurrentTopBrowsingContextId;
   bool throttled = aTrans->EligibleForThrottling();
 
   bool stop = [=]() {
@@ -2879,8 +2875,7 @@ bool nsHttpConnectionMgr::IsConnEntryUnderPressure(
     return false;
   }
 
-  return ent->PendingQueueLengthForWindow(
-             mCurrentTopLevelOuterContentWindowId) > 0;
+  return ent->PendingQueueLengthForWindow(mCurrentTopBrowsingContextId) > 0;
 }
 
 bool nsHttpConnectionMgr::IsThrottleTickerNeeded() {
@@ -3071,8 +3066,7 @@ void nsHttpConnectionMgr::ResumeReadOf(
         hashtable,
     bool excludeForActiveTab) {
   for (const auto& entry : hashtable) {
-    if (excludeForActiveTab &&
-        entry.GetKey() == mCurrentTopLevelOuterContentWindowId) {
+    if (excludeForActiveTab && entry.GetKey() == mCurrentTopBrowsingContextId) {
       // These have never been throttled (never stopped reading)
       continue;
     }
@@ -3089,8 +3083,8 @@ void nsHttpConnectionMgr::ResumeReadOf(
   }
 }
 
-void nsHttpConnectionMgr::NotifyConnectionOfWindowIdChange(
-    uint64_t previousWindowId) {
+void nsHttpConnectionMgr::NotifyConnectionOfBrowsingContextIdChange(
+    uint64_t previousId) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   nsTArray<RefPtr<nsHttpTransaction>>* transactions = nullptr;
@@ -3111,61 +3105,56 @@ void nsHttpConnectionMgr::NotifyConnectionOfWindowIdChange(
       };
 
   // Get unthrottled transactions with the previous and current window id.
-  transactions = mActiveTransactions[false].Get(previousWindowId);
+  transactions = mActiveTransactions[false].Get(previousId);
   addConnectionHelper(transactions);
-  transactions =
-      mActiveTransactions[false].Get(mCurrentTopLevelOuterContentWindowId);
+  transactions = mActiveTransactions[false].Get(mCurrentTopBrowsingContextId);
   addConnectionHelper(transactions);
 
   // Get throttled transactions with the previous and current window id.
-  transactions = mActiveTransactions[true].Get(previousWindowId);
+  transactions = mActiveTransactions[true].Get(previousId);
   addConnectionHelper(transactions);
-  transactions =
-      mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId);
+  transactions = mActiveTransactions[true].Get(mCurrentTopBrowsingContextId);
   addConnectionHelper(transactions);
 
   for (const auto& conn : connections) {
-    conn->TopLevelOuterContentWindowIdChanged(
-        mCurrentTopLevelOuterContentWindowId);
+    conn->TopBrowsingContextIdChanged(mCurrentTopBrowsingContextId);
   }
 }
 
-void nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId(
+void nsHttpConnectionMgr::OnMsgUpdateCurrentTopBrowsingContextId(
     int32_t aLoading, ARefBase* param) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  uint64_t winId = static_cast<UINT64Wrapper*>(param)->GetValue();
+  uint64_t id = static_cast<UINT64Wrapper*>(param)->GetValue();
 
-  if (mCurrentTopLevelOuterContentWindowId == winId) {
+  if (mCurrentTopBrowsingContextId == id) {
     // duplicate notification
     return;
   }
 
   bool activeTabWasLoading = mActiveTabTransactionsExist;
 
-  uint64_t previousWindowId = mCurrentTopLevelOuterContentWindowId;
-  mCurrentTopLevelOuterContentWindowId = winId;
+  uint64_t previousId = mCurrentTopBrowsingContextId;
+  mCurrentTopBrowsingContextId = id;
 
   if (gHttpHandler->ActiveTabPriority()) {
-    NotifyConnectionOfWindowIdChange(previousWindowId);
+    NotifyConnectionOfBrowsingContextIdChange(previousId);
   }
 
   LOG(
-      ("nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId"
+      ("nsHttpConnectionMgr::OnMsgUpdateCurrentTopBrowsingContextId"
        " id=%" PRIx64 "\n",
-       mCurrentTopLevelOuterContentWindowId));
+       mCurrentTopBrowsingContextId));
 
   nsTArray<RefPtr<nsHttpTransaction>>* transactions = nullptr;
 
   // Update the "Exists" caches and resume any transactions that now deserve it,
   // changing the active tab changes the conditions for throttling.
-  transactions =
-      mActiveTransactions[false].Get(mCurrentTopLevelOuterContentWindowId);
+  transactions = mActiveTransactions[false].Get(mCurrentTopBrowsingContextId);
   mActiveTabUnthrottledTransactionsExist = !!transactions;
 
   if (!mActiveTabUnthrottledTransactionsExist) {
-    transactions =
-        mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId);
+    transactions = mActiveTransactions[true].Get(mCurrentTopBrowsingContextId);
   }
   mActiveTabTransactionsExist = !!transactions;
 

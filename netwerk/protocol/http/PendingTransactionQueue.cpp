@@ -20,9 +20,8 @@ namespace mozilla {
 namespace net {
 
 static uint64_t TabIdForQueuing(nsAHttpTransaction* transaction) {
-  return gHttpHandler->ActiveTabPriority()
-             ? transaction->TopLevelOuterContentWindowId()
-             : 0;
+  return gHttpHandler->ActiveTabPriority() ? transaction->TopBrowsingContextId()
+                                           : 0;
 }
 
 // This function decides the transaction's order in the pending queue.
@@ -51,9 +50,8 @@ void PendingTransactionQueue::InsertTransactionNormal(
     bool aInsertAsFirstForTheSamePriority /*= false*/) {
   LOG(
       ("PendingTransactionQueue::InsertTransactionNormal"
-       " trans=%p, windowId=%" PRIu64 "\n",
-       info->Transaction(),
-       info->Transaction()->TopLevelOuterContentWindowId()));
+       " trans=%p, bid=%" PRIu64 "\n",
+       info->Transaction(), info->Transaction()->TopBrowsingContextId()));
 
   uint64_t windowId = TabIdForQueuing(info->Transaction());
   nsTArray<RefPtr<PendingTransactionInfo>>* const infoArray =

@@ -70,15 +70,15 @@ class HttpTransactionShell : public nsISupports {
   //        the dispatch target were notifications should be sent.
   // @param callbacks
   //        the notification callbacks to be given to PSM.
-  // @param topLevelOuterContentWindowId
-  //        indicate the top level outer content window in which
+  // @param topBrowsingContextId
+  //        indicate the id of the top browsing context in which
   //        this transaction is being loaded.
   [[nodiscard]] nsresult virtual Init(
       uint32_t caps, nsHttpConnectionInfo* connInfo,
       nsHttpRequestHead* reqHeaders, nsIInputStream* reqBody,
       uint64_t reqContentLength, bool reqBodyIncludesHeaders,
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,
-      nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId,
+      nsITransportEventSink* eventsink, uint64_t topBrowsingContextId,
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,
       uint32_t classOfService, uint32_t initialRwin,
       bool responseTimeoutEnabled, uint64_t channelId,
@@ -170,7 +170,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       nsHttpRequestHead* reqHeaders, nsIInputStream* reqBody,                  \
       uint64_t reqContentLength, bool reqBodyIncludesHeaders,                  \
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,        \
-      nsITransportEventSink* eventsink, uint64_t topLevelOuterContentWindowId, \
+      nsITransportEventSink* eventsink, uint64_t topBrowsingContextId,         \
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,  \
       uint32_t classOfService, uint32_t initialRwin,                           \
       bool responseTimeoutEnabled, uint64_t channelId,                         \

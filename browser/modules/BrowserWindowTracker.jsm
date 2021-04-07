@@ -25,20 +25,20 @@ const WINDOW_EVENTS = ["activate", "unload"];
 const DEBUG = false;
 
 // Variables
-var _lastTopLevelWindowID = 0;
+var _lastTopBrowsingContextID = 0;
 var _trackedWindows = [];
 
 // Global methods
 function debug(s) {
   if (DEBUG) {
-    dump("-*- UpdateTopLevelContentWindowIDHelper: " + s + "\n");
+    dump("-*- UpdateTopBrowsingContextIDHelper: " + s + "\n");
   }
 }
 
-function _updateCurrentContentOuterWindowID(browser) {
+function _updateCurrentBrowsingContextID(browser) {
   if (
-    !browser.outerWindowID ||
-    browser.outerWindowID === _lastTopLevelWindowID ||
+    !browser.browsingContext ||
+    browser.browsingContext.id === _lastTopBrowsingContextID ||
     browser.ownerGlobal != _trackedWindows[0]
   ) {
     return;
@@ -47,18 +47,18 @@ function _updateCurrentContentOuterWindowID(browser) {
   debug(
     "Current window uri=" +
       (browser.currentURI && browser.currentURI.spec) +
-      " id=" +
-      browser.outerWindowID
+      " browsing context id=" +
+      browser.browsingContext.id
   );
 
-  _lastTopLevelWindowID = browser.outerWindowID;
-  let windowIDWrapper = Cc["@mozilla.org/supports-PRUint64;1"].createInstance(
+  _lastTopBrowsingContextID = browser.browsingContext.id;
+  let idWrapper = Cc["@mozilla.org/supports-PRUint64;1"].createInstance(
     Ci.nsISupportsPRUint64
   );
-  windowIDWrapper.data = _lastTopLevelWindowID;
+  idWrapper.data = _lastTopBrowsingContextID;
   Services.obs.notifyObservers(
-    windowIDWrapper,
-    "net:current-toplevel-outer-content-windowid"
+    idWrapper,
+    "net:current-top-browsing-context-id"
   );
 }
 
@@ -69,11 +69,11 @@ function _handleEvent(event) {
         event.target.ownerGlobal.gBrowser.selectedBrowser ===
         event.target.linkedBrowser
       ) {
-        _updateCurrentContentOuterWindowID(event.target.linkedBrowser);
+        _updateCurrentBrowsingContextID(event.target.linkedBrowser);
       }
       break;
     case "TabSelect":
-      _updateCurrentContentOuterWindowID(event.target.linkedBrowser);
+      _updateCurrentBrowsingContextID(event.target.linkedBrowser);
       break;
     case "activate":
       WindowHelper.onActivate(event.target);
@@ -119,7 +119,7 @@ var WindowHelper = {
     _trackWindowOrder(window);
 
     // Update the selected tab's content outer window ID.
-    _updateCurrentContentOuterWindowID(window.gBrowser.selectedBrowser);
+    _updateCurrentBrowsingContextID(window.gBrowser.selectedBrowser);
   },
 
   removeWindow(window) {
@@ -143,7 +143,7 @@ var WindowHelper = {
     _untrackWindowOrder(window);
     _trackWindowOrder(window);
 
-    _updateCurrentContentOuterWindowID(window.gBrowser.selectedBrowser);
+    _updateCurrentBrowsingContextID(window.gBrowser.selectedBrowser);
   },
 };
 
@@ -174,7 +174,7 @@ this.BrowserWindowTracker = {
 
   windowCreated(browser) {
     if (browser === browser.ownerGlobal.gBrowser.selectedBrowser) {
-      _updateCurrentContentOuterWindowID(browser);
+      _updateCurrentBrowsingContextID(browser);
     }
   },
 

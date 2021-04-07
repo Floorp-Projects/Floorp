@@ -317,7 +317,7 @@ struct HttpChannelOpenArgs
   nsString                    integrityMetadata;
   uint64_t                    contentWindowId;
   PreferredAlternativeDataTypeParams[] preferredAlternativeTypes;
-  uint64_t                    topLevelOuterContentWindowId;
+  uint64_t                    topBrowsingContextId;
   TimeStamp                   launchServiceWorkerStart;
   TimeStamp                   launchServiceWorkerEnd;
   TimeStamp                   dispatchFetchEventStart;

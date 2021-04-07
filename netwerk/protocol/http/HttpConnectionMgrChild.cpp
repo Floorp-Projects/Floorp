@@ -49,9 +49,9 @@ HttpConnectionMgrChild::RecvDoShiftReloadConnectionCleanupWithConnInfo(
 }
 
 mozilla::ipc::IPCResult
-HttpConnectionMgrChild::RecvUpdateCurrentTopLevelOuterContentWindowId(
-    const uint64_t& aWindowId) {
-  mConnMgr->UpdateCurrentTopLevelOuterContentWindowId(aWindowId);
+HttpConnectionMgrChild::RecvUpdateCurrentTopBrowsingContextId(
+    const uint64_t& aId) {
+  mConnMgr->UpdateCurrentTopBrowsingContextId(aId);
   return IPC_OK();
 }
 

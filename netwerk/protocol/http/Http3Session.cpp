@@ -73,8 +73,8 @@ Http3Session::Http3Session()
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3Session::Http3Session [this=%p]", this));
 
-  mCurrentForegroundTabOuterContentWindowId =
-      gHttpHandler->ConnMgr()->CurrentTopLevelOuterContentWindowId();
+  mCurrentTopBrowsingContextId =
+      gHttpHandler->ConnMgr()->CurrentTopBrowsingContextId();
   mThroughCaptivePortal = gHttpHandler->GetThroughCaptivePortal();
 }
 
@@ -1402,13 +1402,13 @@ void Http3Session::DontReuse() {
   }
 }
 
-void Http3Session::TopLevelOuterContentWindowIdChanged(uint64_t windowId) {
+void Http3Session::TopBrowsingContextIdChanged(uint64_t id) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  mCurrentForegroundTabOuterContentWindowId = windowId;
+  mCurrentTopBrowsingContextId = id;
 
   for (const auto& stream : mStreamTransactionHash.Values()) {
-    stream->TopLevelOuterContentWindowIdChanged(windowId);
+    stream->TopBrowsingContextIdChanged(id);
   }
 }
 

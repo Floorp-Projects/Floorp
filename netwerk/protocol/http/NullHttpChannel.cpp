@@ -74,12 +74,12 @@ NullHttpChannel::SetTopLevelContentWindowId(uint64_t aWindowId) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetTopLevelOuterContentWindowId(uint64_t* aWindowId) {
+NullHttpChannel::GetTopBrowsingContextId(uint64_t*) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetTopLevelOuterContentWindowId(uint64_t aWindowId) {
+NullHttpChannel::SetTopBrowsingContextId(uint64_t) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

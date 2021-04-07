@@ -22,7 +22,7 @@ child:
   async __delete__();
 
   async DoShiftReloadConnectionCleanupWithConnInfo(HttpConnectionInfoCloneArgs aArgs);
-  async UpdateCurrentTopLevelOuterContentWindowId(uint64_t aWindowId);
+  async UpdateCurrentTopBrowsingContextId(uint64_t aId);
   async AddTransaction(PHttpTransaction aTrans, int32_t aPriority);
   async AddTransactionWithStickyConn(PHttpTransaction aTrans, int32_t aPriority,
                                      PHttpTransaction aTransWithStickyConn);

@@ -55,7 +55,7 @@ class NullHttpTransaction : public nsAHttpTransaction {
   // nsHalfOpenSocket could be either nsHttpTransaction or NullHttpTransaction.
   // NullHttpTransaction will be activated on the connection immediately after
   // creation and be never put in a pending queue, so it's OK to just return 0.
-  uint64_t TopLevelOuterContentWindowId() override { return 0; }
+  uint64_t TopBrowsingContextId() override { return 0; }
 
   TimingStruct Timings() { return mTimings; }
 
