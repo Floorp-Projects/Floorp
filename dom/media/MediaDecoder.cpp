@@ -874,11 +874,12 @@ MediaDecoder::PositionUpdate MediaDecoder::GetPositionUpdateReason(
   // If current position is earlier than previous position and we didn't do
   // seek, that means we looped back to the start position, which currently
   // happens on audio only.
-  if (mLooping && !mSeekRequest.Exists() && aCurPos < aPrevPos) {
+  const bool notSeeking = !mSeekRequest.Exists();
+  if (mLooping && notSeeking && aCurPos < aPrevPos) {
     return PositionUpdate::eSeamlessLoopingSeeking;
   }
-  return aPrevPos != aCurPos ? PositionUpdate::ePeriodicUpdate
-                             : PositionUpdate::eOther;
+  return aPrevPos != aCurPos && notSeeking ? PositionUpdate::ePeriodicUpdate
+                                           : PositionUpdate::eOther;
 }
 
 void MediaDecoder::UpdateLogicalPositionInternal() {
