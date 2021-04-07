@@ -122,7 +122,6 @@ class MOZ_STACK_CLASS ElemOpEmitter {
   enum class Kind {
     Get,
     Call,
-    Set,
     Delete,
     PostIncrement,
     PreIncrement,
