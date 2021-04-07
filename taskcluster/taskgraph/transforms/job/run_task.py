@@ -33,9 +33,11 @@ run_task_schema = Schema(
             description="Path to run command in. If a checkout is present, the path "
             "to the checkout will be interpolated with the key `checkout`",
         ): text_type,
-        # The sparse checkout profile to use. Value is the filename relative to the
-        # directory where sparse profiles are defined (build/sparse-profiles/).
+        # The sparse checkout profile to use. Value is the filename relative to
+        # "sparse-profile-prefix" which defaults to "build/sparse-profiles/".
         Required("sparse-profile"): Any(text_type, None),
+        # The relative path to the sparse profile.
+        Optional("sparse-profile-prefix"): text_type,
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
         Required("comm-checkout"): bool,
@@ -68,9 +70,11 @@ def common_setup(config, job, taskdesc, command):
         )
 
     if run["sparse-profile"]:
-        command.append(
-            "--gecko-sparse-profile=build/sparse-profiles/%s" % run["sparse-profile"]
+        sparse_profile_prefix = run.pop(
+            "sparse-profile-prefix", "build/sparse-profiles"
         )
+        sparse_profile_path = path.join(sparse_profile_prefix, run["sparse-profile"])
+        command.append("--gecko-sparse-profile={}".format(sparse_profile_path))
 
     taskdesc["worker"].setdefault("env", {})["MOZ_SCM_LEVEL"] = config.params["level"]
 
