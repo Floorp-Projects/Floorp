@@ -512,11 +512,14 @@ inline void gfxSparseBitSet::Union(const SharedBitSet& aBitset) {
       mBlockIndex[i] = uint16_t(mBlocks.Length() - 1);
       continue;
     }
-    // else set existing target block to the union of both
-    uint32_t* dst = reinterpret_cast<uint32_t*>(&mBlocks[mBlockIndex[i]].mBits);
-    const uint32_t* src =
-        reinterpret_cast<const uint32_t*>(&blocks[blockIndex[i]].mBits);
-    for (uint32_t j = 0; j < BLOCK_SIZE / 4; ++j) {
+    // Else set existing target block to the union of both.
+    // Note that blocks in SharedBitSet may not be 4-byte aligned, so we don't
+    // try to optimize by casting to uint32_t* here and processing 4 bytes at
+    // once, as this could result in misaligned access.
+    uint8_t* dst = reinterpret_cast<uint8_t*>(&mBlocks[mBlockIndex[i]].mBits);
+    const uint8_t* src =
+        reinterpret_cast<const uint8_t*>(&blocks[blockIndex[i]].mBits);
+    for (uint32_t j = 0; j < BLOCK_SIZE; ++j) {
       dst[j] |= src[j];
     }
   }
