@@ -6,22 +6,6 @@
 
 const BASE_URL = "http://mochi.test:8888/browser/dom/base/test/";
 
-async function newFocusedWindow(trigger) {
-  let winPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
-  let delayedStartupPromise = BrowserTestUtils.waitForNewWindow();
-
-  await trigger();
-
-  let win = await winPromise;
-  // New windows get focused after the first paint, see bug 1262946
-  await BrowserTestUtils.waitForContentEvent(
-    win.gBrowser.selectedBrowser,
-    "MozAfterPaint"
-  );
-  await delayedStartupPromise;
-  return win;
-}
-
 add_task(async function bug1691214() {
   await BrowserTestUtils.withNewTab(
     BASE_URL + "file_bug1691214.html",
