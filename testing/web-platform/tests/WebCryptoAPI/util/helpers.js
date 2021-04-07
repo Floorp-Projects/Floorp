@@ -194,7 +194,7 @@ function allValidUsages(validUsages, emptyIsValid, mandatoryUsages) {
         mandatoryUsages = [];
     }
 
-    var okaySubsets = [];
+    okaySubsets = [];
     allNonemptySubsetsOf(validUsages).forEach(function(subset) {
         if (mandatoryUsages.length === 0) {
             okaySubsets.push(subset);
