@@ -19,6 +19,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.newtabpage.enabled",
   false
 );
+
+/* Work around the pref callback being run after the document has been unlinked.
+   See bug 1543537. */
+var docWeak = Cu.getWeakReference(document);
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "SHOW_OTHER_BOOKMARKS",
@@ -26,9 +30,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true,
   (aPref, aPrevVal, aNewVal) => {
     BookmarkingUI.maybeShowOtherBookmarksFolder();
-    document
-      .getElementById("PlacesToolbar")
-      ?._placesView?.updateNodesVisibility();
+    let doc = docWeak.get();
+    if (!doc) {
+      return;
+    }
+    doc.getElementById("PlacesToolbar")?._placesView?.updateNodesVisibility();
   }
 );
 ChromeUtils.defineModuleGetter(
