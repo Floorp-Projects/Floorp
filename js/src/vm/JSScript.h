@@ -524,6 +524,9 @@ class ScriptSource {
                       CompressedData<char16_t>>
       pendingCompressed_;
 
+  // True if an associated SourceCompressionTask was ever created.
+  bool hadCompressionTask_ = false;
+
   // The filename of this script.
   mozilla::Maybe<SharedImmutableString> filename_;
 
@@ -884,6 +887,10 @@ class ScriptSource {
                                         size_t length);
 
   [[nodiscard]] bool tryCompressOffThread(JSContext* cx);
+
+  // Called by the SourceCompressionTask constructor to indicate such a task was
+  // ever created.
+  void noteSourceCompressionTask() { hadCompressionTask_ = true; }
 
   // *Trigger* the conversion of this ScriptSource from containing uncompressed
   // |Unit|-encoded source to containing compressed source.  Conversion may not
