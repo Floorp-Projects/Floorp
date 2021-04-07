@@ -89,5 +89,5 @@ if CONFIG['MOZ_USING_WASM_SANDBOXING']:
 if CONFIG['MOZ_ENABLE_DBUS']:
     gkrust_features += ['with_dbus']
 
-if CONFIG['MOZ_OXIDIZED_BREAKPAD']:
+if CONFIG["MOZ_CRASHREPORTER"] and CONFIG['MOZ_OXIDIZED_BREAKPAD']:
     gkrust_features += ['oxidized_breakpad']
