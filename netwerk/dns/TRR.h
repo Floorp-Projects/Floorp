@@ -116,10 +116,10 @@ class TRR : public Runnable,
   void StoreIPHintAsDNSRecord(const struct SVCB& aSVCBRecord);
 
   nsCOMPtr<nsIChannel> mChannel;
-  enum TrrType mType;
+  enum TrrType mType { TRRTYPE_A };
   UniquePtr<DNSPacket> mPacket;
   bool mFailed = false;
-  bool mPB;
+  bool mPB = false;
   DOHresp mDNS;
   nsresult mChannelStatus = NS_OK;
 

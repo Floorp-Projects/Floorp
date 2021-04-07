@@ -60,7 +60,7 @@ class ChildDNSService final : public nsPIDNSService, public nsIObserver {
   // We need to remember pending dns requests to be able to cancel them.
   nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<DNSRequestSender>>>
       mPendingRequests;
-  Mutex mPendingRequestsLock;
+  Mutex mPendingRequestsLock{"DNSPendingRequestsLock"};
   RefPtr<TRRServiceParent> mTRRServiceParent;
 };
 
