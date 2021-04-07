@@ -609,13 +609,19 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, NS_CAPTIVE_PORTAL_CONNECTIVITY)) {
     nsAutoCString data = NS_ConvertUTF16toUTF8(aData);
     LOG(("TRRservice captive portal was %s\n", data.get()));
-    HandleConfirmationEvent(ConfirmationEvent::CaptivePortalConnectivity);
-
-    mCaptiveIsPassed = true;
     nsCOMPtr<nsICaptivePortalService> cps = do_QueryInterface(aSubject);
     if (cps) {
-      cps->GetState(&mConfirmation.mCaptivePortalStatus);
+      mConfirmation.mCaptivePortalStatus = cps->State();
     }
+
+    // If we were previously in a captive portal, this event means we will
+    // need to trigger confirmation again. Otherwise it's just a periodical
+    // captive-portal check that completed and we don't need to react to it.
+    if (!mCaptiveIsPassed) {
+      HandleConfirmationEvent(ConfirmationEvent::CaptivePortalConnectivity);
+    }
+
+    mCaptiveIsPassed = true;
   } else if (!strcmp(aTopic, kClearPrivateData) || !strcmp(aTopic, kPurge)) {
     // flush the TRR blocklist
     auto bl = mTRRBLStorage.Lock();
