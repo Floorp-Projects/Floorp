@@ -985,6 +985,8 @@
     <string name="share_link_all_apps_subheader">Όλες οι ενέργειες</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Πρόσφατη χρήση</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Σύνδεση για συγχρονισμό</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Σύνδεση στο Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->

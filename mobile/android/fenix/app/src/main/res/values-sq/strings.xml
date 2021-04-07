@@ -18,10 +18,6 @@
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Skedat tuaja private do të shfaqen këtu.</string>
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 skedë e hapur. Prekeni që të ndërroni skeda.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -181,6 +177,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Përshtatni pamjen e Lexuesit</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Shtoni</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Përpunoni</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">S’arrihet të lidhet. Skemë URL jo e pranuar.</string>
@@ -971,8 +972,12 @@
     <string name="share_link_all_apps_subheader">Krejt veprimet</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Përdorur së fundi</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">Futur si %1$s</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Që të njëkohësoni, bëni hyrjen </string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Që të Njëkohësoni, bëni hyrjen</string>
+    <string name="sync_sign_in">Për Njëkohësim, bëni hyrjen</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Dërgoje te krejt pajisjet</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1164,9 +1169,6 @@
     <string name="onboarding_header">Mirë se vini te %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Keni tashmë një llogari?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Njihuni me %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Shihni ç’ka të re</string>
     <!-- text for the "what's new" onboarding card description
@@ -1174,10 +1176,10 @@
     <string name="onboarding_whats_new_description">Keni pyetje rreth %s-it të rikonceptuar? Doni të dini se ç’është ndryshuar?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Merrni përgjigje këtu</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Filloni të njëkohësoni faqerojtës, fjalëkalime, etj, me llogarinë tuaj Firefox.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Njëkohësoni Firefox-in mes pajisjesh</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Mësoni më tepër</string>
+    <string name="onboarding_manual_sign_in_description">Sillni te Firefox-i në këtë pajisje faqerojtës, historik dhe fjalëkalime.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1186,8 +1188,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Po, futmë</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Po hyhet…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Hyni në Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Regjistrohuni</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Qëndro i dalë</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1195,26 +1197,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">S’u arrit të hyhej</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Privatësi e vetvetishme</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Rregullimet e privatësisë dhe sigurisë bllokojnë gjurmues, malware, dhe shoqëri që ju ndjekin.</string>
+    <string name="onboarding_tracking_protection_header_3">Privatësi gjithnjë në punë</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox-i ndal automatikisht shoqëri t’ju ndjekin fshehtazi nëpër internet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standarde (parazgjedhje)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Bllokon më pak gjurmues. Faqet do të ngarkohen normalisht.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">I baraspeshuar për privatësi dhe funksionim. Faqet do të ngarkohen normalisht.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strikte (e këshilluar)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strikte</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Bllokon më shumë gjurmues, reklama dhe flluska. Faqet ngarkohen më shpejt, por disa anë mund të mos punojnë.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Zini një pozicion</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Bllokon më shumë gjurmues, ndaj faqet ngarkohen më shpejt, por disa anë, pjesë e faqes, mund të mos punojnë.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Zgjidhni vendosjen e panelit tuaj</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Provoni shfletim me një dorë, me panelin në fund, ose ngjiteni sipër.</string>
+    <string name="onboarding_toolbar_placement_description_1">Vendoseni panelin diku ku e përdorni kollaj. Mbajeni në fund, ose kalojeni në krye.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Shfletoni privatisht</string>
     <!-- text for the private browsing onboarding card description
@@ -1227,7 +1226,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Privatësia juaj</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">E kemi hartuar %s për t’ju dhënë kontroll mbi ç’ndani me të tjerë në internet dhe ç’ndani me ne.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lexoni shënimin tonë mbi privatësinë</string>
@@ -1242,7 +1241,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Zgjidhni temën tuaj</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Kurseni pak bateri dhe shikimin tuaj, duke aktivizuar mënyrën e errët.</string>
+    <string name="onboarding_theme_picker_description_2">Kurseni pak bateri dhe shikimin tuaj, me mënyrën e errët.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Vetvetiu</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1299,13 +1298,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standarde (parazgjedhje)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Bllokon më pak gjurmues. Faqet do të ngarkohen normalisht.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">I baraspeshuar për privatësi dhe funksionim. Faqet do të ngarkohen normalisht.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ç’bllokohet nga mbrojtje standarde kundër gjurmimit</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strikte</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Bllokon më shumë gjurmues, reklama dhe flluska. Faqet ngarkohen më shpejt, por disa anë mund të mos punojnë.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Bllokon më shumë gjurmues, ndaj faqet ngarkohen më shpejt, por disa anë, pjesë e faqes, mund të mos punojnë.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ç’bllokohet nga mbrojtje strikte kundër gjurmimit</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1454,7 +1453,7 @@
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Rilidhu</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Bëni hyrjen që të Njëkohësoni</string>
+    <string name="preferences_passwords_sync_logins_sign_in">Për Njëkohësim, bëni hyrjen</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Kredenciale hyrjesh të ruajtur</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1541,6 +1540,36 @@
     <string name="saved_logins_sort_strategy_last_used">Përdorur së fundi</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Renditni menu kredencialesh</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Karta krediti</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Ruaj dhe plotësoni vetvetiu të dhëna kartash</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Të dhënat janë të fshehtëzuara</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Njëkohëso të dhëna kartash mes pajisjesh</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Shtoni kartë krediti</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Shtoni kartë</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Numër Karte</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Datë Skadimi</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Emër në Kartë</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Nofkë Karte</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Fshije kartën</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Ruaje</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Ruaje</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Anuloje</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Shtoni motor kërkimesh</string>
@@ -1677,7 +1706,7 @@
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Shihni një listë skedash nga pajisje tuajat të tjera.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
-    <string name="synced_tabs_sign_in_button">Bëni hyrjen që të sjëkohësoni</string>
+    <string name="synced_tabs_sign_in_button">Për njëkohësim, bëni hyrjen</string>
 
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">S’ka skeda të hapura</string>

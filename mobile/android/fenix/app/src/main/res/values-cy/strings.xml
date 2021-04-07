@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Bydd eich tabiau preifat i’w gweld yma.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 tab agored. Tapio i newid tabiau.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -182,6 +178,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Cyfaddasu’r golwg defnyddiwr</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Ychwanegu</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Golygu</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Methu cysylltu. Cynllun URL anadnabyddadwy.</string>
@@ -974,6 +975,10 @@
     <string name="share_link_all_apps_subheader">Pob gweithred</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Defnyddiwyd yn ddiweddar</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">Mewngofnodwyd fel %1$s</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Mewngofnodi i gydweddu</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Mewngofnodi i Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1165,9 +1170,6 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="onboarding_header">Croeso i %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">A oes gennych chi gyfrif yn barod?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Dod i adnabod %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Beth sy’n newydd</string>
     <!-- text for the "what's new" onboarding card description
@@ -1175,10 +1177,10 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="onboarding_whats_new_description">Oes gennych gwestiynau am y %s wedi’u hailgynllunio? Eisiau gwybod beth sydd wedi newid?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Cewch atebion yma</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Cychwynnwch gydweddu nodau tudalen, cyfrineiriau, a rhagor gyda’ch cyfrif Firefox.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Cydweddu Firefox rhwng dyfeisiau</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Dysgu rhagor</string>
+    <string name="onboarding_manual_sign_in_description">Dewch â nodau tudalen, hanes, a chyfrineiriau i Firefox ar y ddyfais hon.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1187,8 +1189,8 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="onboarding_firefox_account_auto_signin_confirm">Iawn, mewngofnodwch fi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Yn mewngofnodi…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Mewngofnodi i Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Ymuno</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Cadw wedi allgofnodi</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1197,26 +1199,23 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="onboarding_firefox_account_automatic_signin_failed">Wedi methu mewngofnodi</string>
 
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Preifatrwydd awtomatig</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Mae gosodiadau preifatrwydd a diogelwch yn rhwystro tracwyr, meddalwedd faleisus, a chwmnïau sy’n eich dilyn.</string>
+    <string name="onboarding_tracking_protection_header_3">Preifatrwydd bob amser</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Mae Firefox yn atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we, yn awtomatig.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Safonol (rhagosodedig)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Yn rhwystro llai o dracwyr. Bydd tudalennau’n llwytho’n arferol.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Cydbwysedd rhwng diogelwch a pherfformiad. Bydd tudalennau’n llwytho fel arfer.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Llym (argymell)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Llym</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Yn rhwystro rhagor o dracwyr, hysbysebion, a llamlenni. Mae tudalennau’n llwytho’n gyflymach, ond efallai na fydd rhywfaint o’u hymarferoldeb yn gweithio.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Gwneud safiad</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Yn rhwystro mwy o dracwyr fel bod tudalennau’n llwytho’n gyflymach, ond gall dorri rhai swyddogaethau ar y dudalen.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Dewiswch leoliad eich bar offer</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Rhowch gynnig ar bori un llaw gyda’r bar offer gwaelod neu ei symud i’r brig.</string>
+    <string name="onboarding_toolbar_placement_description_1">Rhowch y bar offer o fewn cyrraedd hawdd. Cadwch ef ar y gwaelod, neu ei symud i’r brig.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Pori’n breifat</string>
     <!-- text for the private browsing onboarding card description
@@ -1229,7 +1228,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Eich preifatrwydd</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Rydym wedi cynllunio %s i roi rheolaeth i chi dros yr hyn rydych chi’n ei rannu ar-lein a’r hyn rydych chi’n ei rannu gyda ni.
     </string>
     <!-- Text for the button to read the privacy notice -->
@@ -1245,7 +1244,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Dewis eich thema</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Arbedwch ychydig o fatri a’ch golwg trwy alluogi’r modd tywyll.</string>
+    <string name="onboarding_theme_picker_description_2">Arbedwch ychydig o fatri a’ch golwg trwy alluogi’r modd tywyll.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Awtomatig</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1300,13 +1299,13 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Safonol (rhagosodedig)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Yn rhwystro llai o dracwyr. Bydd tudalennau’n llwytho’n arferol.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Cydbwysedd rhwng diogelwch a pherfformiad. Bydd tudalennau’n llwytho fel arfer.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Beth sydd wedi’i rwystro gan ddiogelu tracio safonol</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Llym</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Yn rhwystro rhagor o dracwyr, hysbysebion, a llamlenni. Mae tudalennau’n llwytho’n gyflymach, ond efallai na fydd rhywfaint o’u hymarferoldeb yn gweithio.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Yn rhwystro mwy o dracwyr fel bod tudalennau’n llwytho’n gyflymach, ond gall dorri rhai swyddogaethau ar y dudalen.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Beth sydd wedi’i rwystro gan ddiogelu tracio llym</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1553,6 +1552,25 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="preferences_credit_cards_sync_cards_across_devices">Cydweddu cardiau ar draws dyfeisiau</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Ychwanegu cerdyn credyd</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Ychwanegu cerdyn</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Rhif y Cerdyn</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Dyddiad Dod i Ben</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Enw ar y Cerdyn</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Llysenw Cerdyn</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Dileu cerdyn</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Cadw</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Cadw</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Diddymu</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ychwanegu peiriant chwilio</string>

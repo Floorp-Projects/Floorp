@@ -994,6 +994,10 @@
     <string name="share_link_all_apps_subheader">Všechny akce</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Naposledy použité</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">Jste přihlášeni jako %1$s</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Přihlásit se k synchronizaci</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Přihlásit ke službě Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->

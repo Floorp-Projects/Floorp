@@ -22,10 +22,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">プライベートタブがここに表示されます。</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">開いているタブ 1 個。タップしてタブを切り替えます。</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -187,6 +183,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">リーダービューをカスタマイズ</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">追加</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">編集</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">接続できません。認識できない URL スキームです。</string>
@@ -990,6 +991,10 @@
     <string name="share_link_all_apps_subheader">すべての操作</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">最近使用</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">%1$s としてログイン</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">ログインして同期</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync にログイン</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1186,9 +1191,6 @@
     <string name="onboarding_header">%s へようこそ！</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">アカウントをお持ちですか？</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s を知ろう</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">新機能の紹介</string>
     <!-- text for the "what's new" onboarding card description
@@ -1196,10 +1198,10 @@
     <string name="onboarding_whats_new_description">再設計された %s について、どこが新しくなったのか知りたいですか？</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">その答えはこちらにあります</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Firefox アカウントでブックマークやパスワード、他の設定を同期しましょう。</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">端末間で Firefox を同期</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">詳細情報</string>
+    <string name="onboarding_manual_sign_in_description">この端末の Firefox とブックマーク、履歴、パスワードを同期します</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1208,8 +1210,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">はい、ログインします</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">ログイン中...</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Firefox にログイン</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">アカウント登録</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">ログアウトする</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1217,26 +1219,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ログインに失敗しました</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">自動プライバシー保護</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">プライバシーとセキュリティの設定で、あなたを追跡するトラッカー、マルウェア、企業をブロックします。</string>
+    <string name="onboarding_tracking_protection_header_3">プライバシー重視</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox はウェブ上であなたを密かに追跡する組織を自動的に遮断します。</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">標準 (既定)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">トラッカーのブロックを少なくします。ページが正常に読み込まれます。</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">プライバシーと性能をバランスよく。ページが正しく読み込まれます。</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">厳格 (推奨)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">厳格</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">より多くのトラッカー、広告、ポップアップをブロックします。ページの読み込みが速くなりますが、一部の機能が動作しない場合があります。</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">ツールバーをお好みの配置に</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">より多くのトラッカーをブロックするとページの読み込みが速くなりますが、一部のページは正しく機能しなくなる可能性があります。</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">ツールバーの配置を選べます</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">ツールバーを下部に置いて片手での操作をお試しください。上部にも移動できます。</string>
+    <string name="onboarding_toolbar_placement_description_1">ツールバーを簡単に手の届く位置に置きましょう。画面下または上に移動できます。</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">プライベートなブラウジング</string>
     <!-- text for the private browsing onboarding card description
@@ -1249,7 +1248,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">あなたのプライバシー</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">%s は、あなたがオンラインで共有するものと、私たちと共有するものをコントロールできるように設計されています。</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">個人情報保護方針を読む</string>
@@ -1264,7 +1263,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">テーマを選んでください</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">ダークモードによって、バッテリーを節約し、目にも優しい配色にします。</string>
+    <string name="onboarding_theme_picker_description_2">ダークモードでバッテリーを節約し、目に優しい配色にします。</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">自動設定</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1319,13 +1318,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">標準 (既定)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">トラッカーのブロックを少なくします。ページが正常に読み込まれます。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">プライバシーと性能をバランスよく。ページが正しく読み込まれます。</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">標準のトラッキング防止でブロックされるもの</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">厳格</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">より多くのトラッカー、広告、ポップアップをブロックします。ページの読み込みが速くなりますが、一部の機能が動作しない場合があります。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">より多くのトラッカーをブロックするとページの読み込みが速くなりますが、一部のページは正しく機能しなくなる可能性があります。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">厳格なトラッキング防止でブロックされるもの</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1565,6 +1564,34 @@
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">クレジットカード</string>
+
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">カード情報を保存して自動入力する</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">データは暗号化されています</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">端末間でカード情報を同期する</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">クレジットカードを追加</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">カードの追加</string>
+
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">カード番号</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">有効期限</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">カード名義</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">カードのニックネーム</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">カードを削除</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">保存</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">保存</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">キャンセル</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">検索エンジンの追加</string>
