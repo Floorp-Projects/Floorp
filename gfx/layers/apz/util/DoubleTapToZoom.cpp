@@ -64,7 +64,11 @@ static already_AddRefed<dom::Element> ElementFromPoint(
 
 static bool ShouldZoomToElement(const nsCOMPtr<dom::Element>& aElement) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
-    if (frame->StyleDisplay()->IsInlineFlow()) {
+    if (frame->StyleDisplay()->IsInlineFlow() &&
+        // Replaced elements are suitable zoom targets because they act like
+        // inline-blocks instead of inline. (textarea's are the specific reason
+        // we do this)
+        !frame->IsFrameOfType(nsIFrame::eReplaced)) {
       return false;
     }
   }
