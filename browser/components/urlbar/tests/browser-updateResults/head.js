@@ -89,6 +89,87 @@ function makeSuggestedIndexResult(suggestedIndex, resultSpan = 1) {
   );
 }
 
+/**
+ * Makes an array of results for the suggestedIndex tests. The array will
+ * include a heuristic followed by the specified results.
+ *
+ * @param {number} [count]
+ *   The number of results to return other than the heuristic. This and
+ *   `type` must be given together.
+ * @param {UrlbarUtils.RESULT_TYPE} [type]
+ *   The type of results to return other than the heuristic. This and `count`
+ *   must be given together.
+ * @param {array} [specs]
+ *   If you want a mix of result types instead of only one type, then use this
+ *   param instead of `count` and `type`. Each item in this array must be an
+ *   object with the following properties:
+ *   * {number} count
+ *     The number of results to return for the given `type`.
+ *   * {UrlbarUtils.RESULT_TYPE} type
+ *     The type of results.
+ * @returns {array}
+ *   An array of results.
+ */
+function makeProviderResults({ count = 0, type = undefined, specs = [] }) {
+  if (count) {
+    specs.push({ count, type });
+  }
+
+  let query = "test";
+  let results = [
+    Object.assign(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.SEARCH,
+        UrlbarUtils.RESULT_SOURCE.SEARCH,
+        {
+          query,
+          engine: Services.search.defaultEngine.name,
+        }
+      ),
+      { heuristic: true }
+    ),
+  ];
+
+  for (let { count: specCount, type: specType } of specs) {
+    for (let i = 0; i < specCount; i++) {
+      let str = `${query} ${results.length}`;
+      switch (specType) {
+        case UrlbarUtils.RESULT_TYPE.SEARCH:
+          results.push(
+            new UrlbarResult(
+              UrlbarUtils.RESULT_TYPE.SEARCH,
+              UrlbarUtils.RESULT_SOURCE.SEARCH,
+              {
+                query,
+                suggestion: str,
+                lowerCaseSuggestion: str.toLowerCase(),
+                engine: Services.search.defaultEngine.name,
+              }
+            )
+          );
+          break;
+        case UrlbarUtils.RESULT_TYPE.URL:
+          results.push(
+            new UrlbarResult(
+              UrlbarUtils.RESULT_TYPE.URL,
+              UrlbarUtils.RESULT_SOURCE.HISTORY,
+              {
+                url: "http://example.com/" + i,
+                displayUrl: "http://example.com/" + i,
+                title: str,
+              }
+            )
+          );
+          break;
+        default:
+          throw new Error(`Unsupported makeProviderResults type: ${specType}`);
+      }
+    }
+  }
+
+  return results;
+}
+
 let gSuggestedIndexTaskIndex = 0;
 
 /**
@@ -136,9 +217,22 @@ function initSuggestedIndexTest() {
  * `duringUpdate` param. The important thing this checks is that the rows with
  * suggested indexes don't move around or appear in the wrong places.
  *
- * @param {number} search1.otherCount
+ * @param {number} [search1.otherCount]
  *   The number of results other than the heuristic and suggestedIndex results
- *   that the provider should return for search 1.
+ *   that the provider should return for search 1. This and `otherType` must be
+ *   given together.
+ * @param {UrlbarUtils.RESULT_TYPE} [search1.otherType]
+ *   The type of results other than the heuristic and suggestedIndex results
+ *   that the provider should return for search 1. This and `otherCount` must be
+ *   given together.
+ * @param {array} [search1.other]
+ *   If you want the provider to return a mix of result types instead of only
+ *   one type, then use this param instead of `otherCount` and `otherType`. Each
+ *   item in this array must be an object with the following properties:
+ *   * {number} count
+ *     The number of results to return for the given `type`.
+ *   * {UrlbarUtils.RESULT_TYPE} type
+ *     The type of results.
  * @param {number} search1.viewCount
  *   The total number of results expected in the view after search 1 finishes,
  *   including the heuristic and suggestedIndex results.
@@ -172,35 +266,23 @@ function initSuggestedIndexTest() {
  *     Whether the rows are expected to be hidden. Defaults to false.
  */
 async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
-  // We'll use this test provider to test specific results.
-  let provider = new DelayingTestProvider();
+  // We use this test provider to test specific results. It has an Infinity
+  // priority so that it provides all results in our test searches, including
+  // the heuristic. That lets us avoid any potential races with the built-in
+  // providers; testing them is not important here.
+  let provider = new DelayingTestProvider({ priority: Infinity });
   UrlbarProvidersManager.registerProvider(provider);
   registerCleanupFunction(() => {
     UrlbarProvidersManager.unregisterProvider(provider);
   });
 
-  let maxResults = UrlbarPrefs.get("maxRichResults");
-
-  let query = "test";
-  let queryStrings = [];
-  for (let i = 0; i < maxResults; i++) {
-    queryStrings.push(`${query} ${i}`);
-  }
-
-  // Set up the first search. First, add search suggestions to the provider.
-  provider._results = queryStrings.slice(0, search1.otherCount).map(
-    suggestion =>
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.SEARCH,
-        UrlbarUtils.RESULT_SOURCE.SEARCH,
-        {
-          query,
-          suggestion,
-          lowerCaseSuggestion: suggestion.toLocaleLowerCase(),
-          engine: Services.search.defaultEngine.name,
-        }
-      )
-  );
+  // Set up the first search. First, add the non-suggestedIndex results to the
+  // provider.
+  provider._results = makeProviderResults({
+    specs: search1.other,
+    count: search1.otherCount,
+    type: search1.otherType,
+  });
 
   // Set up `suggestedIndexes`. It's an array with [suggestedIndex, resultSpan]
   // tuples.
@@ -217,7 +299,7 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
     ]);
   }
 
-  // Add suggestedIndex results to the provider.
+  // Add the suggestedIndex results to the provider.
   for (let [suggestedIndex, resultSpan] of search1.suggestedIndexes) {
     provider._results.push(
       makeSuggestedIndexResult(suggestedIndex, resultSpan)
@@ -228,7 +310,7 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
   provider.finishQueryPromise = Promise.resolve();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: query,
+    value: "test",
   });
 
   // Sanity check the results.
@@ -240,8 +322,8 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
   for (let [suggestedIndex, resultSpan] of search1.suggestedIndexes) {
     let index =
       suggestedIndex >= 0
-        ? Math.min(suggestedIndex, search1.viewCount - 1)
-        : search1.viewCount + suggestedIndex;
+        ? Math.min(search1.viewCount - 1, suggestedIndex)
+        : Math.max(0, search1.viewCount + suggestedIndex);
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
     Assert.equal(
       result.element.row.result.suggestedIndex,
@@ -255,14 +337,12 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
     );
   }
 
-  // Set up the second search. First, add history results to the provider.
-  provider._results = queryStrings.slice(0, search2.otherCount).map(str => {
-    let url = "http://example.com/" + str;
-    return new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.URL,
-      UrlbarUtils.RESULT_SOURCE.HISTORY,
-      { url, title: str, displayUrl: url }
-    );
+  // Set up the second search. First, add the non-suggestedIndex results to the
+  // provider.
+  provider._results = makeProviderResults({
+    specs: search2.other,
+    count: search2.otherCount,
+    type: search2.otherType,
   });
 
   // Set up `suggestedIndexes`. It's an array with [suggestedIndex, resultSpan]
@@ -280,12 +360,17 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
     ]);
   }
 
-  // Add suggestedIndex results to the provider.
+  // Add the suggestedIndex results to the provider.
   for (let [suggestedIndex, resultSpan] of search2.suggestedIndexes) {
     provider._results.push(
       makeSuggestedIndexResult(suggestedIndex, resultSpan)
     );
   }
+
+  let rowCountDuringUpdate = duringUpdate.reduce(
+    (count, rowState) => count + rowState.count,
+    0
+  );
 
   // Don't allow the search to finish until we check the updated rows. We'll
   // accomplish that by adding a mutation observer to observe completion of the
@@ -296,13 +381,23 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
       observer.disconnect();
       resolve();
     });
-    // If the last row during the update is expected to become stale, wait for
-    // the stale attribute to be set on it. Otherwise new rows will be appended,
-    // so wait for them.
     if (lastRowState.stale) {
+      // The last row during the update is expected to become stale. Wait for
+      // the stale attribute to be set on it. We'll actually just wait for any
+      // attribute.
       let { children } = gURLBar.view._rows;
       observer.observe(children[children.length - 1], { attributes: true });
+    } else if (search1.viewCount == rowCountDuringUpdate) {
+      // No rows are expected to be added during the view update, so it must be
+      // the case that some rows will be updated for results in the the second
+      // search. Wait for any change to an existing row.
+      observer.observe(gURLBar.view._rows, {
+        subtree: true,
+        attributes: true,
+        characterData: true,
+      });
     } else {
+      // Rows are expected to be added during the update. Wait for them.
       observer.observe(gURLBar.view._rows, { childList: true });
     }
   });
@@ -314,7 +409,7 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
   );
   let queryPromise = UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: query,
+    value: "test",
   });
 
   // Wait for the update to finish.
@@ -324,7 +419,7 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
   // because it waits for the search to finish.
   Assert.equal(
     gURLBar.view._rows.children.length,
-    duringUpdate.reduce((count, rowState) => count + rowState.count, 0),
+    rowCountDuringUpdate,
     "Row count during update"
   );
   let rowIndex = 0;
@@ -395,15 +490,15 @@ async function doSuggestedIndexTest({ search1, search2, duringUpdate }) {
   resolveQuery();
   await queryPromise;
 
-  // Check the rows now that the search is done. First, build a map from real
-  // indexes to suggested index. e.g., if a suggestedIndex = -1, then the real
-  // index = the result count - 1.
+  // Check the rows now that the second search is done. First, build a map from
+  // real indexes to suggested index. e.g., if a suggestedIndex = -1, then the
+  // real index = the result count - 1.
   let suggestedIndexesByRealIndex = new Map();
   for (let [suggestedIndex, resultSpan] of search2.suggestedIndexes) {
     let realIndex =
       suggestedIndex >= 0
         ? Math.min(suggestedIndex, search2.viewCount - 1)
-        : search2.viewCount + suggestedIndex;
+        : Math.max(0, search2.viewCount + suggestedIndex);
     suggestedIndexesByRealIndex.set(realIndex, [suggestedIndex, resultSpan]);
   }
 
