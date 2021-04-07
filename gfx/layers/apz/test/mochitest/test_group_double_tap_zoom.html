@@ -19,11 +19,15 @@ var doubletap_prefs = [
 
 var subtests = [
   {"file": "helper_touchscreen_doubletap_zoom.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_img.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_textarea.html", "prefs": doubletap_prefs},
 ];
 
 if (getPlatform() == "mac") {
   subtests.push(
-    {"file": "helper_touchpad_doubletap_zoom.html", "prefs": doubletap_prefs}
+    {"file": "helper_touchpad_doubletap_zoom.html", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_img.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_textarea.html?touchpad", "prefs": doubletap_prefs},
   );
 }
 
