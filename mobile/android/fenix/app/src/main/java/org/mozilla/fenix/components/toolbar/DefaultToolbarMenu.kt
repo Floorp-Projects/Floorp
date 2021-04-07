@@ -38,10 +38,14 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.experiments.ExperimentBranch
+import org.mozilla.fenix.experiments.Experiments
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.withExperiment
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.utils.BrowsersCache
 
 /**
  * Builds the toolbar object used with the 3-dot menu in the browser fragment.
@@ -357,6 +361,7 @@ open class DefaultToolbarMenu(
             BrowserMenuDivider(),
             reportSiteIssuePlaceholder,
             findInPage,
+            getSetDefaultBrowserItem(),
             addToTopSites,
             addToHomescreen.apply { visible = ::canAddToHomescreen },
             installToHomescreen.apply { visible = ::canInstall },
@@ -592,6 +597,23 @@ open class DefaultToolbarMenu(
             isCurrentUrlBookmarked = bookmarksStorage
                 .getBookmarksWithUrl(newUrl)
                 .any { it.url == newUrl }
+        }
+    }
+    private fun getSetDefaultBrowserItem(): BrowserMenuImageText? {
+        val experiments = context.components.analytics.experiments
+        val browsers = BrowsersCache.all(context)
+
+        return experiments.withExperiment(Experiments.DEFAULT_BROWSER) { experimentBranch ->
+            if (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_TOOLBAR_MENU && !browsers.isDefaultBrowser) {
+                return@withExperiment BrowserMenuImageText(
+                    label = context.getString(R.string.preferences_set_as_default_browser),
+                    imageResource = R.mipmap.ic_launcher
+                ) {
+                    onItemTapped.invoke(ToolbarMenu.Item.SetDefaultBrowser)
+                }
+            } else {
+                null
+            }
         }
     }
 }

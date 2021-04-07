@@ -41,6 +41,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
+import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.utils.Do
 import org.mozilla.fenix.utils.Settings
@@ -338,6 +339,9 @@ class DefaultBrowserToolbarMenuController(
                     BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
                 )
             }
+            is ToolbarMenu.Item.SetDefaultBrowser -> {
+                activity.openSetDefaultBrowserOption()
+            }
         }
     }
 
@@ -387,6 +391,7 @@ class DefaultBrowserToolbarMenuController(
             is ToolbarMenu.Item.History -> Event.BrowserMenuItemTapped.Item.HISTORY
             is ToolbarMenu.Item.Downloads -> Event.BrowserMenuItemTapped.Item.DOWNLOADS
             is ToolbarMenu.Item.NewTab -> Event.BrowserMenuItemTapped.Item.NEW_TAB
+            is ToolbarMenu.Item.SetDefaultBrowser -> Event.BrowserMenuItemTapped.Item.SET_DEFAULT_BROWSER
         }
 
         metrics.track(Event.BrowserMenuItemTapped(eventItem))
