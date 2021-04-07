@@ -13,24 +13,35 @@ use std::convert::TryInto;
 use std::ffi::OsString;
 use std::fs::{read_to_string, File};
 use std::io::{BufRead, BufReader, Write};
-use std::mem::size_of;
-use std::os::windows::ffi::OsStringExt;
+use std::mem::{size_of, zeroed};
+use std::os::windows::ffi::{OsStrExt, OsStringExt};
 use std::os::windows::io::AsRawHandle;
 use std::path::{Path, PathBuf};
 use std::ptr::{null, null_mut};
 use std::slice::from_raw_parts;
 use uuid::Uuid;
-use winapi::shared::minwindef::{BOOL, DWORD, FALSE, MAX_PATH, PBOOL, PDWORD, TRUE};
+use winapi::shared::basetsd::{SIZE_T, ULONG_PTR};
+use winapi::shared::minwindef::{
+    BOOL, BYTE, DWORD, FALSE, MAX_PATH, PBOOL, PDWORD, PULONG, TRUE, ULONG, WORD,
+};
+use winapi::shared::ntdef::{NTSTATUS, STRING, UNICODE_STRING};
+use winapi::shared::ntstatus::STATUS_SUCCESS;
 use winapi::shared::winerror::{E_UNEXPECTED, S_OK};
 use winapi::um::combaseapi::CoTaskMemFree;
+use winapi::um::handleapi::CloseHandle;
 use winapi::um::knownfolders::FOLDERID_RoamingAppData;
-use winapi::um::processthreadsapi::{GetProcessId, GetThreadId, TerminateProcess};
+use winapi::um::memoryapi::ReadProcessMemory;
+use winapi::um::processthreadsapi::{
+    CreateProcessW, GetProcessId, GetThreadId, TerminateProcess, PROCESS_INFORMATION, STARTUPINFOW,
+};
 use winapi::um::psapi::K32GetModuleFileNameExW;
 use winapi::um::shlobj::SHGetKnownFolderPath;
-use winapi::um::winbase::VerifyVersionInfoW;
+use winapi::um::winbase::{
+    VerifyVersionInfoW, CREATE_NO_WINDOW, CREATE_UNICODE_ENVIRONMENT, NORMAL_PRIORITY_CLASS,
+};
 use winapi::um::winnt::{
     VerSetConditionMask, CONTEXT, DWORDLONG, EXCEPTION_POINTERS, EXCEPTION_RECORD, HANDLE, HRESULT,
-    LPOSVERSIONINFOEXW, OSVERSIONINFOEXW, PCWSTR, PEXCEPTION_POINTERS, PVOID, PWSTR,
+    LIST_ENTRY, LPOSVERSIONINFOEXW, OSVERSIONINFOEXW, PCWSTR, PEXCEPTION_POINTERS, PVOID, PWSTR,
     VER_GREATER_EQUAL, VER_MAJORVERSION, VER_MINORVERSION, VER_SERVICEPACKMAJOR,
     VER_SERVICEPACKMINOR,
 };
@@ -93,6 +104,7 @@ fn out_of_process_exception_event_callback(
 ) -> Result<(), ()> {
     let process = unsafe { (*exception_information).hProcess };
 
+    let mut environment = read_environment_block(process)?;
     let application_path = get_application_path(process)?;
     let mut install_path = application_path.clone();
     install_path.pop();
@@ -109,6 +121,7 @@ fn out_of_process_exception_event_callback(
     crash_report.write_minidump(exception_information)?;
     crash_report.write_extra_file()?;
     crash_report.write_event_file()?;
+    launch_crash_reporter_client(&application_path, &mut environment, &crash_report);
 
     Ok(())
 }
@@ -177,6 +190,49 @@ fn get_install_time(crash_reports_path: &Path, build_id: &str) -> Result<String,
     let file_name = "InstallTime".to_owned() + build_id;
     let file_path = crash_reports_path.join(file_name);
     read_to_string(file_path).map_err(|_e| ())
+}
+
+fn launch_crash_reporter_client(
+    application_path: &Path,
+    environment: &mut Vec<u16>,
+    crash_report: &CrashReport,
+) {
+    // Prepare the command line
+    let mut install_path: PathBuf = application_path.into();
+    install_path.pop();
+    let client_path = install_path.join("crashreporter.exe");
+
+    let mut cmd_line = OsString::from("\"");
+    cmd_line.push(client_path);
+    cmd_line.push("\" \"");
+    cmd_line.push(crash_report.get_minidump_path());
+    cmd_line.push("\"\0");
+    let mut cmd_line: Vec<u16> = cmd_line.encode_wide().collect();
+
+    let mut pi: PROCESS_INFORMATION = Default::default();
+    let mut si = STARTUPINFOW {
+        cb: size_of::<STARTUPINFOW>().try_into().unwrap(),
+        ..Default::default()
+    };
+
+    unsafe {
+        if CreateProcessW(
+            null_mut(),
+            cmd_line.as_mut_ptr(),
+            null_mut(),
+            null_mut(),
+            FALSE,
+            NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT,
+            environment.as_mut_ptr() as *mut _,
+            null_mut(),
+            &mut si,
+            &mut pi,
+        ) != 0
+        {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -417,6 +473,79 @@ fn is_windows8_or_later() -> bool {
     }
 }
 
+fn read_environment_block(process: HANDLE) -> Result<Vec<u16>, ()> {
+    let mut pbi: PROCESS_BASIC_INFORMATION = unsafe { zeroed() };
+    let mut length: ULONG = 0;
+    let result = unsafe {
+        NtQueryInformationProcess(
+            process,
+            ProcessBasicInformation,
+            &mut pbi as *mut _ as _,
+            size_of::<PROCESS_BASIC_INFORMATION>().try_into().unwrap(),
+            &mut length,
+        )
+    };
+
+    if result != STATUS_SUCCESS {
+        return Err(());
+    }
+
+    // Read the process environment block
+    let mut peb: PEB = unsafe { zeroed() };
+    let mut num_bytes: SIZE_T = 0;
+
+    let result = unsafe {
+        ReadProcessMemory(
+            process,
+            pbi.PebBaseAddress as *mut _,
+            &mut peb as *mut _ as _,
+            size_of::<PEB>(),
+            &mut num_bytes,
+        )
+    };
+
+    if result == 0 {
+        return Err(());
+    }
+
+    // Read the user process parameters
+    let mut upp: RTL_USER_PROCESS_PARAMETERS = unsafe { zeroed() };
+
+    let result = unsafe {
+        ReadProcessMemory(
+            process,
+            peb.ProcessParameters as *mut _,
+            &mut upp as *mut _ as _,
+            size_of::<RTL_USER_PROCESS_PARAMETERS>(),
+            &mut num_bytes,
+        )
+    };
+
+    if result == 0 {
+        return Err(());
+    }
+
+    // Read the environment
+    let buffer = upp.Environment;
+    let length = upp.EnvironmentSize;
+    let mut environment: Vec<u16> = vec![Default::default(); ((length / 2) + 1) as _];
+    let result = unsafe {
+        ReadProcessMemory(
+            process,
+            buffer,
+            environment.as_mut_ptr() as _,
+            length as _,
+            &mut num_bytes,
+        )
+    };
+
+    if result == 0 {
+        Err(())
+    } else {
+        Ok(environment)
+    }
+}
+
 /******************************************************************************
  * The stuff below should be migrated to the winapi crate, see bug 1696414    *
  ******************************************************************************/
@@ -544,4 +673,102 @@ extern "system" {
         UserStreamParam: PMINIDUMP_USER_STREAM_INFORMATION,
         CallbackParam: PMINIDUMP_CALLBACK_INFORMATION,
     ) -> BOOL;
+}
+
+// From um/winternl.h
+
+STRUCT! {#[allow(non_snake_case)] struct PEB_LDR_DATA {
+    Reserved1: [BYTE; 8],
+    Reserved2: [PVOID; 3],
+    InMemoryOrderModuleList: LIST_ENTRY,
+}}
+
+#[allow(non_camel_case_types)]
+pub type PPEB_LDR_DATA = *mut PEB_LDR_DATA;
+
+STRUCT! {#[allow(non_snake_case)] struct RTL_DRIVE_LETTER_CURDIR {
+    Flags: WORD,
+    Length: WORD,
+    TimeStamp: ULONG,
+    DosPath: STRING,
+}}
+
+STRUCT! {#[allow(non_snake_case)] struct RTL_USER_PROCESS_PARAMETERS {
+    Reserved1: [BYTE; 16],
+    Reserved2: [PVOID; 10],
+    ImagePathName: UNICODE_STRING,
+    CommandLine: UNICODE_STRING,
+    // Everything below this point is undocumented
+    Environment: PVOID,
+    StartingX: ULONG,
+    StartingY: ULONG,
+    CountX: ULONG,
+    CountY: ULONG,
+    CountCharsX: ULONG,
+    CountCharsY: ULONG,
+    FillAttribute: ULONG,
+    WindowFlags: ULONG,
+    ShowWindowFlags: ULONG,
+    WindowTitle: UNICODE_STRING,
+    DesktopInfo: UNICODE_STRING,
+    ShellInfo: UNICODE_STRING,
+    RuntimeData: UNICODE_STRING,
+    CurrentDirectores: [RTL_DRIVE_LETTER_CURDIR; 32],
+    EnvironmentSize: ULONG,
+}}
+
+#[allow(non_camel_case_types)]
+pub type PRTL_USER_PROCESS_PARAMETERS = *mut RTL_USER_PROCESS_PARAMETERS;
+
+FN! {stdcall PPS_POST_PROCESS_INIT_ROUTINE() -> ()}
+
+STRUCT! {#[allow(non_snake_case)] struct PEB {
+    Reserved1: [BYTE; 2],
+    BeingDebugged: BYTE,
+    Reserved2: [BYTE; 1],
+    Reserved3: [PVOID; 2],
+    Ldr: PPEB_LDR_DATA,
+    ProcessParameters: PRTL_USER_PROCESS_PARAMETERS,
+    Reserved4: [PVOID; 3],
+    AtlThunkSListPtr: PVOID,
+    Reserved5: PVOID,
+    Reserved6: ULONG,
+    Reserved7: PVOID,
+    Reserved8: ULONG,
+    AtlThunkSListPtr32: ULONG,
+    Reserved9: [PVOID; 45],
+    Reserved10: [BYTE; 96],
+    PostProcessInitRoutine: PPS_POST_PROCESS_INIT_ROUTINE,
+    Reserved11: [BYTE; 128],
+    Reserved12: [PVOID; 1],
+    SessionId: ULONG,
+}}
+
+#[allow(non_camel_case_types)]
+pub type PPEB = *mut PEB;
+
+STRUCT! {#[allow(non_snake_case)] struct PROCESS_BASIC_INFORMATION {
+    Reserved1: PVOID,
+    PebBaseAddress: PPEB,
+    Reserved2: [PVOID; 2],
+    UniqueProcessId: ULONG_PTR,
+    Reserved3: PVOID,
+}}
+
+ENUM! {enum PROCESSINFOCLASS {
+    ProcessBasicInformation = 0,
+    ProcessDebugPort = 7,
+    ProcessWow64Information = 26,
+    ProcessImageFileName = 27,
+    ProcessBreakOnTermination = 29,
+}}
+
+extern "system" {
+    pub fn NtQueryInformationProcess(
+        ProcessHandle: HANDLE,
+        ProcessInformationClass: PROCESSINFOCLASS,
+        ProcessInformation: PVOID,
+        ProcessInformationLength: ULONG,
+        ReturnLength: PULONG,
+    ) -> NTSTATUS;
 }
