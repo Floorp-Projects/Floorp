@@ -15,6 +15,7 @@ types.addDictType("target-configuration.configuration", {
   cacheDisabled: "nullable:boolean",
   colorSchemeSimulation: "nullable:string",
   javascriptEnabled: "nullable:boolean",
+  overrideDPPX: "nullable:number",
   paintFlashing: "nullable:boolean",
   printSimulationEnabled: "nullable:boolean",
   restoreFocus: "nullable:boolean",

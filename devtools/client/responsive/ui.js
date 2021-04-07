@@ -313,7 +313,7 @@ class ResponsiveUI {
     // settings are left in a customized state.
     if (!isTabContentDestroying) {
       let reloadNeeded = false;
-      await this.updateDPPX();
+      await this.updateDPPX(null);
       reloadNeeded |=
         (await this.updateUserAgent()) && this.reloadOnChange("userAgent");
       reloadNeeded |=
@@ -554,7 +554,7 @@ class ResponsiveUI {
 
   async onRemoveDeviceAssociation() {
     let reloadNeeded = false;
-    await this.updateDPPX();
+    await this.updateDPPX(null);
     reloadNeeded |=
       (await this.updateUserAgent()) && this.reloadOnChange("userAgent");
     reloadNeeded |=
@@ -814,17 +814,13 @@ class ResponsiveUI {
   /**
    * Set or clear the emulated device pixel ratio.
    *
-   * @return boolean
-   *         Whether a reload is needed to apply the change.
-   *         (This is always immediate, so it's always false.)
+   * @param {Number|null} dppx: The ratio to simulate. Set to null to disable the
+   *                      simulation and roll back to the original ratio
    */
-  async updateDPPX(dppx) {
-    if (!dppx) {
-      await this.responsiveFront.clearDPPXOverride();
-      return false;
-    }
-    await this.responsiveFront.setDPPXOverride(dppx);
-    return false;
+  async updateDPPX(dppx = null) {
+    await this.commands.targetConfigurationCommand.updateConfiguration({
+      overrideDPPX: dppx,
+    });
   }
 
   /**

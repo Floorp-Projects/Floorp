@@ -16,6 +16,7 @@ const { TARGET_CONFIGURATION } = SUPPORTED_DATA;
 const Services = require("Services");
 
 // List of options supported by this target configuration actor.
+/* eslint sort-keys: "error" */
 const SUPPORTED_OPTIONS = {
   // Disable network request caching.
   cacheDisabled: true,
@@ -23,6 +24,8 @@ const SUPPORTED_OPTIONS = {
   colorSchemeSimulation: true,
   // Enable JavaScript
   javascriptEnabled: true,
+  // Force a custom device pixel ratio (used in RDM). Set to null to restore origin ratio.
+  overrideDPPX: true,
   // Enable paint flashing mode.
   paintFlashing: true,
   // Enable print simulation mode.
@@ -32,6 +35,7 @@ const SUPPORTED_OPTIONS = {
   // Enable service worker testing over HTTP (instead of HTTPS only).
   serviceWorkersTestingEnabled: true,
 };
+/* eslint-disable sort-keys */
 
 /**
  * This actor manages the configuration flags which apply to DevTools targets.
@@ -158,6 +162,9 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
         case "serviceWorkersTestingEnabled":
           this._setServiceWorkersTestingEnabled(value);
           break;
+        case "overrideDPPX":
+          this._setDPPXOverride(value);
+          break;
       }
     }
   },
@@ -177,6 +184,12 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     // the same pattern (Bug 1701553).
     if (this._resetColorSchemeSimulationOnDestroy) {
       this._setColorSchemeSimulation(null);
+    }
+
+    // Restore the origin device pixel ratio only if it was explicitly updated by this
+    // specific actor.
+    if (this._initialDPPXOverride !== undefined) {
+      this._setDPPXOverride(this._initialDPPXOverride);
     }
   },
 
@@ -207,6 +220,23 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (this._browsingContext.prefersColorSchemeOverride != value) {
       this._browsingContext.prefersColorSchemeOverride = value;
       this._resetColorSchemeSimulationOnDestroy = true;
+    }
+  },
+
+  /* DPPX override */
+  _setDPPXOverride(dppx) {
+    if (this._browsingContext.overrideDPPX === dppx) {
+      return;
+    }
+
+    if (!dppx && this._initialDPPXOverride) {
+      dppx = this._initialDPPXOverride;
+    } else if (dppx !== undefined && this._initialDPPXOverride === undefined) {
+      this._initialDPPXOverride = this._browsingContext.overrideDPPX;
+    }
+
+    if (dppx !== undefined) {
+      this._browsingContext.overrideDPPX = dppx;
     }
   },
 
