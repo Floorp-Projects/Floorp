@@ -80,8 +80,6 @@ High-level components for building browser(-like) apps.
 
 * ⚪ [**Menu 2**](components/browser/menu2/README.md) - A generic menu with customizable items primarily for browser toolbars.
 
-* 🔵 [**Search**](components/browser/search/README.md) - Search plugins and companion code to load, parse and use them.
-
 * 🔵 [**Session**](components/browser/session/README.md) - A generic representation of a browser session.
 
 * 🔵 [**Session-Storage**](components/browser/session-storage/README.md) - Component for saving and restoring the browser state.

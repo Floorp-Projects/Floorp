@@ -8,32 +8,52 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.search.SearchEngineManager
-import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
-import mozilla.components.browser.search.provider.localization.SearchLocalization
-import mozilla.components.browser.search.provider.localization.SearchLocalizationProvider
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.state.action.SearchAction
+import mozilla.components.browser.state.search.RegionState
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.search.middleware.SearchMiddleware
+import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.robolectric.testContext
+import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
 class SearchEngineMigrationTest {
-    private val context
-        get() = ApplicationProvider.getApplicationContext<Context>()
+    private lateinit var originalLocale: Locale
+
+    @Before
+    fun setUp() {
+        originalLocale = Locale.getDefault()
+    }
+
+    @After
+    fun tearDown() {
+        if (Locale.getDefault() != originalLocale) {
+            Locale.setDefault(originalLocale)
+        }
+    }
 
     @Test
     fun `default Google with en_US_US list`() {
-        val (searchEngineManager, result) = migrate(
+        val (store, result) = migrate(
             fennecDefault = "Google",
             language = "en",
             country = "US",
             region = "US"
         )
 
-        assertEquals("Google", searchEngineManager.defaultSearchEngine?.name)
-        assertEquals("Google", searchEngineManager.getDefaultSearchEngine(context).name)
+        val defaultEngine = store.state.search.selectedOrDefaultSearchEngine
+        assertNotNull(defaultEngine)
+        assertEquals("Google", defaultEngine?.name)
         assertIsSuccess(
             SearchEngineMigrationResult.Success.SearchEngineMigrated,
             result
@@ -42,15 +62,16 @@ class SearchEngineMigrationTest {
 
     @Test
     fun `default DuckDuckGo with en_US_US list`() {
-        val (searchEngineManager, result) = migrate(
+        val (store, result) = migrate(
             fennecDefault = "DuckDuckGo",
             language = "en",
             country = "US",
             region = "US"
         )
 
-        assertEquals("DuckDuckGo", searchEngineManager.defaultSearchEngine?.name)
-        assertEquals("DuckDuckGo", searchEngineManager.getDefaultSearchEngine(context).name)
+        val defaultEngine = store.state.search.selectedOrDefaultSearchEngine
+        assertNotNull(defaultEngine)
+        assertEquals("DuckDuckGo", defaultEngine?.name)
         assertIsSuccess(
             SearchEngineMigrationResult.Success.SearchEngineMigrated,
             result
@@ -59,15 +80,16 @@ class SearchEngineMigrationTest {
 
     @Test
     fun `default Bing with de_DE_DE list`() {
-        val (searchEngineManager, result) = migrate(
+        val (store, result) = migrate(
             fennecDefault = "Bing",
             language = "de",
             country = "DE",
             region = "DE"
         )
 
-        assertEquals("Bing", searchEngineManager.defaultSearchEngine?.name)
-        assertEquals("Bing", searchEngineManager.getDefaultSearchEngine(context).name)
+        val defaultEngine = store.state.search.selectedOrDefaultSearchEngine
+        assertNotNull(defaultEngine)
+        assertEquals("Bing", defaultEngine?.name)
         assertIsSuccess(
             SearchEngineMigrationResult.Success.SearchEngineMigrated,
             result
@@ -76,15 +98,16 @@ class SearchEngineMigrationTest {
 
     @Test
     fun `default Qwant with de_DE_DE list`() {
-        val (searchEngineManager, result) = migrate(
+        val (store, result) = migrate(
             fennecDefault = "Qwant",
             language = "de",
             country = "DE",
             region = "DE"
         )
 
-        assertEquals("Qwant", searchEngineManager.defaultSearchEngine?.name)
-        assertEquals("Qwant", searchEngineManager.getDefaultSearchEngine(context).name)
+        val defaultEngine = store.state.search.selectedOrDefaultSearchEngine
+        assertNotNull(defaultEngine)
+        assertEquals("Qwant", defaultEngine?.name)
         assertIsSuccess(
             SearchEngineMigrationResult.Success.SearchEngineMigrated,
             result
@@ -93,16 +116,17 @@ class SearchEngineMigrationTest {
 
     @Test
     fun `default Qwant with en_US_US list`() {
-        val (searchEngineManager, result) = migrate(
+        val (store, result) = migrate(
             fennecDefault = "Qwant",
             language = "en",
             country = "US",
             region = "US"
         )
 
-        // Quant is not in the en_US_US list and therefore no default was set
-        assertNull(searchEngineManager.defaultSearchEngine?.name)
-        assertEquals("Google", searchEngineManager.getDefaultSearchEngine(context).name)
+        // Qwant is not in the en_US_US list and therefore no default was set
+        val defaultEngine = store.state.search.selectedOrDefaultSearchEngine
+        assertNotNull(defaultEngine)
+        assertEquals("Google", defaultEngine?.name)
         assertIsFailure(
             SearchEngineMigrationResult.Failure.NoMatch,
             result
@@ -111,15 +135,16 @@ class SearchEngineMigrationTest {
 
     @Test
     fun `default null with en_US_US list`() {
-        val (searchEngineManager, result) = migrate(
+        val (store, result) = migrate(
             fennecDefault = null,
             language = "en",
             country = "US",
             region = "US"
         )
 
-        assertEquals(null, searchEngineManager.defaultSearchEngine?.name)
-        assertEquals("Google", searchEngineManager.getDefaultSearchEngine(context).name)
+        val defaultEngine = store.state.search.selectedOrDefaultSearchEngine
+        assertNotNull(defaultEngine)
+        assertEquals("Google", defaultEngine?.name)
         assertIsFailure(
             SearchEngineMigrationResult.Failure.NoDefault,
             result
@@ -154,9 +179,9 @@ private fun migrate(
     language: String,
     country: String,
     region: String
-): Pair<SearchEngineManager, Result<SearchEngineMigrationResult>> {
+): Pair<BrowserStore, Result<SearchEngineMigrationResult>> {
     return runBlocking {
-        val searchEngineManager = searchEngineManagerFor(
+        val store = storeFor(
             language,
             country,
             region
@@ -173,23 +198,38 @@ private fun migrate(
 
         val result = SearchEngineMigration.migrate(
             ApplicationProvider.getApplicationContext(),
-            searchEngineManager
+            store
         )
 
-        Pair(searchEngineManager, result)
+        store.waitUntilIdle()
+
+        Pair(store, result)
     }
 }
 
-private fun searchEngineManagerFor(language: String, country: String, region: String): SearchEngineManager {
-    val localizationProvider = object : SearchLocalizationProvider {
-        override suspend fun determineRegion() = SearchLocalization(language, country, region)
-    }
+private fun storeFor(language: String, country: String, region: String): BrowserStore {
+    val dispatcher = TestCoroutineDispatcher()
 
-    val searchEngineProvider = AssetsSearchEngineProvider(localizationProvider)
+    Locale.setDefault(Locale(language, country))
 
-    return SearchEngineManager(
-        providers = listOf(
-            searchEngineProvider
+    val store = BrowserStore(
+        middleware = listOf(
+            SearchMiddleware(testContext, ioDispatcher = dispatcher)
         )
     )
+
+    store.dispatch(SearchAction.SetRegionAction(
+        RegionState(region, region)
+    )).joinBlocking()
+
+    // First we wait for the InitAction that may still need to be processed.
+    store.waitUntilIdle()
+
+    // Now we wait for the Middleware that may need to asynchronously process an action the test dispatched
+    dispatcher.advanceUntilIdle()
+
+    // Since the Middleware may have dispatched an action, we now wait for the store again.
+    store.waitUntilIdle()
+
+    return store
 }

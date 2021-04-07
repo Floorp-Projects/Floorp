@@ -211,10 +211,6 @@ projects:
     path: components/browser/menu2
     description: 'An immutable customizable menu for browsers.'
     publish: true
-  browser-search:
-    path: components/browser/search
-    description: 'Search plugins and companion code to load, parse and use them.'
-    publish: true
   browser-session:
     path: components/browser/session
     description: 'An abstract layer hiding the actual browser engine implementation.'

@@ -17,8 +17,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.storage.RecoverableBrowserState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
@@ -228,7 +228,7 @@ class FennecMigrator private constructor(
     private val bookmarksStorage: Lazy<PlacesBookmarksStorage>?,
     private val loginsStorage: Lazy<SyncableLoginsStorage>?,
     private val tabsUseCases: TabsUseCases?,
-    private val searchEngineManager: SearchEngineManager?,
+    private val store: BrowserStore?,
     private val accountManager: Lazy<FxaAccountManager>?,
     private val fxaExpectChinaServers: Boolean,
     private val engine: Engine?,
@@ -246,12 +246,12 @@ class FennecMigrator private constructor(
      * Data migration builder. Allows configuring which migrations to run, their versions and relative order.
      */
     class Builder(private val context: Context, private val crashReporter: CrashReporting) {
+        private var store: BrowserStore? = null
         private var historyStorage: Lazy<PlacesHistoryStorage>? = null
         private var bookmarksStorage: Lazy<PlacesBookmarksStorage>? = null
         private var loginsStorage: Lazy<SyncableLoginsStorage>? = null
         private var loginsStorageKey: String? = null
         private var tabsUseCases: TabsUseCases? = null
-        private var searchEngineManager: SearchEngineManager? = null
         private var accountManager: Lazy<FxaAccountManager>? = null
         private var fxaExpectChinaServers: Boolean = false
         private var engine: Engine? = null
@@ -365,15 +365,13 @@ class FennecMigrator private constructor(
         /**
          * Enable default search engine migration.
          *
-         * @param searchEngineManager An instance of [SearchEngineManager] used for restoring the
-         * migrated default search engine.
          * @param version Version of the migration; defaults to the current version.
          */
         fun migrateSearchEngine(
-            searchEngineManager: SearchEngineManager,
+            store: BrowserStore,
             version: Int = Migration.SearchEngine.currentVersion
         ): Builder {
-            this.searchEngineManager = searchEngineManager
+            this.store = store
             migrations.add(VersionedMigration(Migration.SearchEngine, version))
             return this
         }
@@ -448,7 +446,7 @@ class FennecMigrator private constructor(
                 bookmarksStorage,
                 loginsStorage,
                 tabsUseCases,
-                searchEngineManager,
+                store,
                 accountManager,
                 fxaExpectChinaServers,
                 engine,
@@ -1117,11 +1115,10 @@ class FennecMigrator private constructor(
 
     @SuppressWarnings("TooGenericExceptionCaught", "NestedBlockDepth")
     private suspend fun migrateSearchEngine(): Result<SearchEngineMigrationResult> {
-        val manager = searchEngineManager
-            ?: throw AssertionError("Migrating search engines without search engine manager set")
+        val store = store ?: throw AssertionError("Migrating search engines without browser store set")
 
         return try {
-            val result = SearchEngineMigration.migrate(context, manager)
+            val result = SearchEngineMigration.migrate(context, store)
 
             if (result is Result.Failure<SearchEngineMigrationResult>) {
                 val migrationFailureWrapper = result.throwables.first() as SearchEngineMigrationException

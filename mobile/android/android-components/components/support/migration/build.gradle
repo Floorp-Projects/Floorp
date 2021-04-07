@@ -48,7 +48,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 dependencies {
     implementation project(':concept-engine')
 
-    implementation project(':browser-search')
     implementation project(':browser-session-storage')
     implementation project(':browser-state')
     implementation project(':browser-storage-sync')
@@ -67,12 +66,14 @@ dependencies {
     implementation project(':feature-intent')
     implementation project(':feature-top-sites')
     implementation project(':feature-tabs')
+    implementation project(':feature-search')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
     testImplementation project(":browser-session")
     testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit

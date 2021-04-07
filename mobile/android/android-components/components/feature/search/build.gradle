@@ -25,7 +25,7 @@ android {
             resources {
                 // We want to access the assets from unit tests. With this configuration we can just
                 // read the files directly and do not need to rely on Robolectric.
-                srcDir "${rootDir}/components/browser/search/src/main/assets/"
+                srcDir "${projectDir}/src/main/assets/"
             }
         }
     }
@@ -39,8 +39,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 dependencies {
-    api project(':browser-search')
-
     implementation project(":feature-tabs")
     implementation project(':browser-state')
     implementation project(':concept-engine')

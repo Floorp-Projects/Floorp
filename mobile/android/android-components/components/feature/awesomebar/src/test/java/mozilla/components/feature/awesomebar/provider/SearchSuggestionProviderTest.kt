@@ -7,13 +7,14 @@ package mozilla.components.feature.awesomebar.provider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.Response
 import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
+import mozilla.components.feature.search.ext.createSearchEngine
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
@@ -31,10 +32,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import java.io.IOException
 
 private const val GOOGLE_MOCK_RESPONSE = "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
 private const val GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES = "[\"firefox\",[\"firefox\",\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
@@ -48,14 +49,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString())
-                .`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
 
@@ -108,14 +107,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString())
-                .`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
 
@@ -172,14 +169,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString())
-                .`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
 
@@ -216,14 +211,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString())
-                .`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
 
@@ -255,13 +248,14 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
             val engineIcon = testContext.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
 
-            doReturn(engineIcon).`when`(searchEngine).icon
-            doReturn("/").`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = engineIcon,
+                suggestUrl = server.url("/").toString()
+            )
 
             val provider = SearchSuggestionProvider(searchEngine, mock(), HttpURLConnectionClient())
             try {
@@ -281,13 +275,14 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
             val engineIcon = testContext.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
 
-            doReturn(engineIcon).`when`(searchEngine).icon
-            doReturn("/").`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = engineIcon,
+                suggestUrl = server.url("/").toString()
+            )
 
             val paramIcon = testContext.getDrawable(R.drawable.mozac_ic_search)!!.toBitmap()
 
@@ -321,9 +316,11 @@ class SearchSuggestionProviderTest {
     @Test
     fun `Provider should return default suggestion for search engine that cannot provide suggestion`() =
         runBlocking {
-            val searchEngine: SearchEngine = mock()
-            doReturn(false).`when`(searchEngine).canProvideSearchSuggestions
-
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = "https://localhost/?q={searchTerms}",
+                icon = mock()
+            )
             val provider = SearchSuggestionProvider(searchEngine, mock(), mock())
 
             val suggestions = provider.onInputChanged("fire")
@@ -342,14 +339,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setResponseCode(404).setBody("error"))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString())
-                .`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
 
@@ -372,18 +367,22 @@ class SearchSuggestionProviderTest {
     @Test
     fun `Provider doesn't fail if fetch throws exception`() {
         runBlocking {
-            val searchEngine: SearchEngine = mock()
-            doReturn("/").`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
-
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = "https://localhost/?q={searchTerms}",
+                icon = mock(),
+                suggestUrl = "https://localhost/suggestions"
+            )
             val useCase: SearchUseCases.SearchUseCase = mock()
 
+            val client = object : Client() {
+                override fun fetch(request: Request): Response {
+                    throw IOException()
+                }
+            }
+
             val provider =
-                SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
+                SearchSuggestionProvider(searchEngine, useCase, client)
             val suggestions = provider.onInputChanged("fire")
             assertEquals(1, suggestions.size)
 
@@ -405,14 +404,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString())
-                    .`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
 
@@ -450,14 +447,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString())
-                    .`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
 
@@ -496,14 +491,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString()).`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-            doReturn("/searchurl?fire").`when`(searchEngine).buildSearchUrl("fire")
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val engine: Engine = mock()
             val provider = SearchSuggestionProvider(
@@ -520,7 +513,8 @@ class SearchSuggestionProviderTest {
                 val suggestions = provider.onInputChanged("fire")
                 assertEquals(3, suggestions.size)
                 assertEquals("fire", suggestions[0].title)
-                verify(engine, times(1)).speculativeConnect("/searchurl?fire")
+                verify(engine, times(1))
+                    .speculativeConnect(server.url("/search?q=fire").toString())
             } finally {
                 server.shutdown()
             }
@@ -534,18 +528,16 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString()).`when`(searchEngine).buildSuggestionsURL("fire")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-            doReturn("/searchurl?fire").`when`(searchEngine).buildSearchUrl("fire")
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
             val engine: Engine = mock()
             val provider = SearchSuggestionProvider(
-                testContext,
-                searchEngineManager.toDefaultSearchEngineProvider(testContext),
+                searchEngine,
                 mock(),
                 HttpURLConnectionClient(),
                 engine = engine
@@ -558,7 +550,8 @@ class SearchSuggestionProviderTest {
                 val suggestion = suggestions[0]
                 assertEquals(11, suggestion.chips.size)
                 assertEquals("fire", suggestion.chips[0].title)
-                verify(engine, times(1)).speculativeConnect("/searchurl?fire")
+                verify(engine, times(1))
+                    .speculativeConnect(server.url("/search?q=fire").toString())
             } finally {
                 server.shutdown()
             }
@@ -572,14 +565,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString())
-                .`when`(searchEngine).buildSuggestionsURL("firefox")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
 
@@ -616,14 +607,12 @@ class SearchSuggestionProviderTest {
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
 
-            val searchEngine: SearchEngine = mock()
-            doReturn(server.url("/").toString())
-                .`when`(searchEngine).buildSuggestionsURL("firefox")
-            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
-            doReturn("google").`when`(searchEngine).name
-
-            val searchEngineManager: SearchEngineManager = mock()
-            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngineAsync(any(), any())
+            val searchEngine = createSearchEngine(
+                name = "Test",
+                url = server.url("/search?q={searchTerms}").toString(),
+                icon = mock(),
+                suggestUrl = server.url("/").toString()
+            )
 
             val useCase: SearchUseCases.SearchUseCase = mock()
 

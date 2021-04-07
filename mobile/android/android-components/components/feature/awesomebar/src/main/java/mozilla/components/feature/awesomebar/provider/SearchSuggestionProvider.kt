@@ -7,10 +7,8 @@ package mozilla.components.feature.awesomebar.provider
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.search.DefaultSearchEngineProvider
-import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.search.SearchEngineManager
-import mozilla.components.browser.search.suggestions.SearchSuggestionClient
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
@@ -18,6 +16,8 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.feature.awesomebar.facts.emitSearchSuggestionClickedFact
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.search.ext.buildSearchUrl
+import mozilla.components.feature.search.suggestions.SearchSuggestionClient
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.sanitizeURL
 import java.io.IOException
@@ -81,11 +81,11 @@ class SearchSuggestionProvider private constructor(
     )
 
     /**
-     * Creates a [SearchSuggestionProvider] using the default engine as returned by the provided
-     * [SearchEngineManager].
+     * Creates a [SearchSuggestionProvider] using the default engine as provided by the given
+     * [BrowserStore].
      *
      * @param context the activity or application context, required to load search engines.
-     * @param searchEngineManager The search engine manager to look up search engines.
+     * @param store The [BrowserStore] to look up search engines.
      * @param searchUseCase The use case to invoke for searches.
      * @param fetchClient The HTTP client for requesting suggestions from the search engine.
      * @param limit The maximum number of suggestions that should be returned. It needs to be >= 1.
@@ -98,7 +98,7 @@ class SearchSuggestionProvider private constructor(
      */
     constructor(
         context: Context,
-        defaultSearchEngineProvider: DefaultSearchEngineProvider,
+        store: BrowserStore,
         searchUseCase: SearchUseCases.SearchUseCase,
         fetchClient: Client,
         limit: Int = 15,
@@ -108,7 +108,7 @@ class SearchSuggestionProvider private constructor(
         showDescription: Boolean = true,
         filterExactMatch: Boolean = false
     ) : this (
-        SearchSuggestionClient(context, defaultSearchEngineProvider) { url -> fetch(fetchClient, url) },
+        SearchSuggestionClient(context, store) { url -> fetch(fetchClient, url) },
         searchUseCase,
         limit,
         mode,

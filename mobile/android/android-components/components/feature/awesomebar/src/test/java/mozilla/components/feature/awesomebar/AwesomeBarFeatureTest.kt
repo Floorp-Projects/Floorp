@@ -7,21 +7,21 @@ package mozilla.components.feature.awesomebar
 import android.content.res.Resources
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.search.SearchEngine
-import mozilla.components.browser.search.SearchEngineManager
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
-import mozilla.components.browser.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -126,14 +126,13 @@ class AwesomeBarFeatureTest {
 
         verify(awesomeBar, never()).addProviders(any())
 
-        val context = testContext
-        val searchEngineManager: SearchEngineManager = mock()
-        val searchEngineProvider = searchEngineManager.toDefaultSearchEngineProvider(context)
-        feature.addSearchProvider(context, searchEngineProvider, mock(), mock())
+        val store: BrowserStore = mock()
+        feature.addSearchProvider(testContext, store = store, searchUseCase = mock(), fetchClient = mock())
 
         val provider = argumentCaptor<SearchSuggestionProvider>()
         verify(awesomeBar).addProviders(provider.capture())
-        assertSame(searchEngineProvider, provider.value.client.defaultSearchEngineProvider)
+        assertSame(store, provider.value.client.store)
+        assertNull(provider.value.client.searchEngine)
     }
 
     @Test

@@ -15,7 +15,6 @@ import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.media.fullscreen.MediaSessionFullscreenFeature
 import mozilla.components.feature.search.SearchFeature
-import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
@@ -75,12 +74,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 components.tabsUseCases.selectTab
             )
             .addSearchActionProvider(
-                components.store.toDefaultSearchEngineProvider(),
+                components.store,
                 searchUseCase = components.searchUseCases.defaultSearch
             )
             .addSearchProvider(
                 requireContext(),
-                components.store.toDefaultSearchEngineProvider(),
+                components.store,
                 components.searchUseCases.defaultSearch,
                 fetchClient = components.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,

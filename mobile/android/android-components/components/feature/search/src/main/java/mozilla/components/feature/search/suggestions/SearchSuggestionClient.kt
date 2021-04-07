@@ -2,11 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.search.suggestions
+package mozilla.components.feature.search.suggestions
 
 import android.content.Context
-import mozilla.components.browser.search.DefaultSearchEngineProvider
-import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.search.ext.buildSuggestionsURL
+import mozilla.components.feature.search.ext.canProvideSearchSuggestions
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONException
 import java.io.IOException
@@ -24,18 +27,18 @@ class SearchSuggestionClient {
     private val fetcher: SearchSuggestionFetcher
     private val logger = Logger("SearchSuggestionClient")
 
-    val defaultSearchEngineProvider: DefaultSearchEngineProvider?
+    val store: BrowserStore?
     var searchEngine: SearchEngine? = null
         private set
 
     internal constructor(
         context: Context?,
-        defaultSearchEngineProvider: DefaultSearchEngineProvider?,
+        store: BrowserStore?,
         searchEngine: SearchEngine?,
         fetcher: SearchSuggestionFetcher
     ) {
         this.context = context
-        this.defaultSearchEngineProvider = defaultSearchEngineProvider
+        this.store = store
         this.searchEngine = searchEngine
         this.fetcher = fetcher
     }
@@ -45,9 +48,9 @@ class SearchSuggestionClient {
 
     constructor(
         context: Context,
-        defaultSearchEngineProvider: DefaultSearchEngineProvider,
+        store: BrowserStore,
         fetcher: SearchSuggestionFetcher
-    ) : this (context, defaultSearchEngineProvider, null, fetcher)
+    ) : this (context, store, null, fetcher)
 
     /**
      * Exception types for errors caught while getting a list of suggestions
@@ -60,10 +63,10 @@ class SearchSuggestionClient {
      */
     suspend fun getSuggestions(query: String): List<String>? {
         val searchEngine = searchEngine ?: run {
-            requireNotNull(defaultSearchEngineProvider)
+            requireNotNull(store)
             requireNotNull(context)
 
-            val searchEngine = defaultSearchEngineProvider.retrieveDefaultSearchEngine()
+            val searchEngine = store.state.search.selectedOrDefaultSearchEngine
             if (searchEngine == null) {
                 logger.warn("No default search engine for fetching suggestions")
                 return emptyList()

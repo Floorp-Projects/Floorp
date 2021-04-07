@@ -28,7 +28,7 @@ class SearchEngineKtTest {
 
         assertEquals(
             "https://www.startpage.com/sp/search?q=Hello%20World",
-            searchEngine.legacy().buildSearchUrl("Hello World")
+            searchEngine.buildSearchUrl("Hello World")
         )
     }
 
@@ -42,7 +42,7 @@ class SearchEngineKtTest {
 
         assertEquals(
             "https://www.ecosia.org/search?q=Hello%20World",
-            searchEngine.legacy().buildSearchUrl("Hello World")
+            searchEngine.buildSearchUrl("Hello World")
         )
     }
 }

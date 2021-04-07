@@ -4,15 +4,15 @@
 
 package mozilla.components.feature.search
 
-import mozilla.components.browser.search.DefaultSearchEngineProvider
-import mozilla.components.browser.search.SearchEngine as LegacySearchEngine
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.log.logger.Logger
 
@@ -21,7 +21,6 @@ import mozilla.components.support.base.log.logger.Logger
  */
 class SearchUseCases(
     store: BrowserStore,
-    defaultSearchEngineProvider: DefaultSearchEngineProvider,
     tabsUseCases: TabsUseCases
 ) {
     interface SearchUseCase {
@@ -30,15 +29,14 @@ class SearchUseCases(
          */
         fun invoke(
             searchTerms: String,
-            searchEngine: LegacySearchEngine? = null,
+            searchEngine: SearchEngine? = null,
             parentSessionId: String? = null
         )
     }
 
     class DefaultSearchUseCase(
         private val store: BrowserStore,
-        private val tabsUseCases: TabsUseCases,
-        private val defaultSearchEngineProvider: DefaultSearchEngineProvider
+        private val tabsUseCases: TabsUseCases
     ) : SearchUseCase {
         private val logger = Logger("DefaultSearchUseCase")
 
@@ -47,7 +45,7 @@ class SearchUseCases(
          */
         override fun invoke(
             searchTerms: String,
-            searchEngine: LegacySearchEngine?,
+            searchEngine: SearchEngine?,
             parentSessionId: String?
         ) {
             invoke(searchTerms, store.state.selectedTabId, searchEngine)
@@ -64,11 +62,11 @@ class SearchUseCases(
         operator fun invoke(
             searchTerms: String,
             sessionId: String? = store.state.selectedTabId,
-            searchEngine: LegacySearchEngine? = null
+            searchEngine: SearchEngine? = null
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
-            } ?: defaultSearchEngineProvider.getDefaultSearchEngine()?.buildSearchUrl(searchTerms)
+            } ?: store.state.search.selectedOrDefaultSearchEngine?.buildSearchUrl(searchTerms)
 
             if (searchUrl == null) {
                 logger.warn("No default search engine available to perform search")
@@ -102,14 +100,13 @@ class SearchUseCases(
     class NewTabSearchUseCase(
         private val store: BrowserStore,
         private val tabsUseCases: TabsUseCases,
-        private val defaultSearchEngineProvider: DefaultSearchEngineProvider,
         private val isPrivate: Boolean
     ) : SearchUseCase {
         private val logger = Logger("NewTabSearchUseCase")
 
         override fun invoke(
             searchTerms: String,
-            searchEngine: LegacySearchEngine?,
+            searchEngine: SearchEngine?,
             parentSessionId: String?
         ) {
             invoke(
@@ -130,7 +127,7 @@ class SearchUseCases(
          * @param private whether or not the new session should be private, defaults to false.
          * @param source the source of the new session.
          * @param searchEngine Search Engine to use, or the default search engine if none is provided
-         * @param parentSession optional parent session to attach this new search session to
+         * @param parentSessionId optional parent session to attach this new search session to
          */
         @Suppress("LongParameterList")
         operator fun invoke(
@@ -138,12 +135,12 @@ class SearchUseCases(
             source: SessionState.Source,
             selected: Boolean = true,
             private: Boolean = false,
-            searchEngine: LegacySearchEngine? = null,
+            searchEngine: SearchEngine? = null,
             parentSessionId: String? = null
         ) {
             val searchUrl = searchEngine?.let {
                 searchEngine.buildSearchUrl(searchTerms)
-            } ?: defaultSearchEngineProvider.getDefaultSearchEngine()?.buildSearchUrl(searchTerms)
+            } ?: store.state.search.selectedOrDefaultSearchEngine?.buildSearchUrl(searchTerms)
 
             if (searchUrl == null) {
                 logger.warn("No default search engine available to perform search")
@@ -263,15 +260,15 @@ class SearchUseCases(
     }
 
     val defaultSearch: DefaultSearchUseCase by lazy {
-        DefaultSearchUseCase(store, tabsUseCases, defaultSearchEngineProvider)
+        DefaultSearchUseCase(store, tabsUseCases)
     }
 
     val newTabSearch: NewTabSearchUseCase by lazy {
-        NewTabSearchUseCase(store, tabsUseCases, defaultSearchEngineProvider, false)
+        NewTabSearchUseCase(store, tabsUseCases, false)
     }
 
     val newPrivateTabSearch: NewTabSearchUseCase by lazy {
-        NewTabSearchUseCase(store, tabsUseCases, defaultSearchEngineProvider, true)
+        NewTabSearchUseCase(store, tabsUseCases, true)
     }
 
     val addSearchEngine: AddNewSearchEngineUseCase by lazy {

@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.search.suggestions
+package mozilla.components.feature.search.suggestions
 
-import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.ktx.android.org.json.asSequence
 import org.json.JSONArray
 import org.json.JSONObject

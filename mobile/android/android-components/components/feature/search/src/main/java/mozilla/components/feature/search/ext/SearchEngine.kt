@@ -5,47 +5,12 @@
 package mozilla.components.feature.search.ext
 
 import android.graphics.Bitmap
-import android.net.Uri
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.feature.search.internal.SearchUrlBuilder
+import mozilla.components.feature.search.storage.SearchEngineReader
+import java.io.InputStream
 import java.lang.IllegalArgumentException
 import java.util.UUID
-
-/**
- * Converts a [SearchEngine] (from `browser-state`) to the legacy `SearchEngine` type from
- * `browser-search`.
- *
- * This method is a temporary workaround to allow applications to switch to the new API slowly.
- * Once all consuming apps have been migrated this extension will be removed and all components
- * will be migrated to use only the new [SearchEngine] class.
- *
- * https://github.com/mozilla-mobile/android-components/issues/8686
- */
-fun SearchEngine.legacy() = mozilla.components.browser.search.SearchEngine(
-    identifier = id,
-    name = name,
-    icon = icon,
-    resultsUris = resultUrls.map { Uri.parse(it) },
-    suggestUri = suggestUrl?.let { Uri.parse(it) }
-)
-
-/**
- * Converts a custom legacy `SearchEngine` from `browser-search` to a [SearchEngine] (from
- * `browser-state`).
- *
- * This method is a temporary workaround to allow applications to migrate their existing custom
- * search engines to the new type. Once all consuming apps have been migrated this extension will
- * be removed and all components will be migrated to use only the new [SearchEngine] class.
- *
- * https://github.com/mozilla-mobile/android-components/issues/8686
- */
-fun mozilla.components.browser.search.SearchEngine.migrate() = SearchEngine(
-    id = identifier,
-    name = name,
-    icon = icon,
-    type = SearchEngine.Type.CUSTOM,
-    resultUrls = resultsUris.map { it.toString() },
-    suggestUrl = suggestUri?.toString()
-)
 
 /**
  * Creates a custom [SearchEngine].
@@ -53,7 +18,8 @@ fun mozilla.components.browser.search.SearchEngine.migrate() = SearchEngine(
 fun createSearchEngine(
     name: String,
     url: String,
-    icon: Bitmap
+    icon: Bitmap,
+    suggestUrl: String? = null
 ): SearchEngine {
     if (!url.contains("{searchTerms}")) {
         throw IllegalArgumentException("URL does not contain search terms placeholder")
@@ -64,6 +30,39 @@ fun createSearchEngine(
         name = name,
         icon = icon,
         type = SearchEngine.Type.CUSTOM,
-        resultUrls = listOf(url)
+        resultUrls = listOf(url),
+        suggestUrl = suggestUrl
     )
+}
+
+/**
+ * Whether this [SearchEngine] has a [SearchEngine.suggestUrl] set and can provide search
+ * suggestions.
+ */
+val SearchEngine.canProvideSearchSuggestions: Boolean
+    get() = suggestUrl != null
+
+/**
+ * Creates an URL to retrieve search suggestions for the provided [query].
+ */
+fun SearchEngine.buildSuggestionsURL(query: String): String? {
+    val builder = SearchUrlBuilder(this)
+    return builder.buildSuggestionUrl(query)
+}
+
+/**
+ * Builds a URL to search for the given search terms with this search engine.
+ */
+fun SearchEngine.buildSearchUrl(searchTerm: String): String {
+    val builder = SearchUrlBuilder(this)
+    return builder.buildSearchUrl(searchTerm)
+}
+
+/**
+ * Parses a [SearchEngine] from the given [stream].
+ */
+@Deprecated("Only for migrating legacy search engines. Will eventually be removed.")
+fun parseLegacySearchEngine(id: String, stream: InputStream): SearchEngine {
+    val reader = SearchEngineReader(SearchEngine.Type.CUSTOM)
+    return reader.loadStream(id, stream)
 }
