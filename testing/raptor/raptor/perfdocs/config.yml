@@ -10,7 +10,6 @@ suites:
         description: "Tests for page-load performance. The links direct to the actual websites that are being tested. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium)"
         tests:
             amazon: "BT, FF, CH, CU"
-            apple: "BT, FF, CH, CU"
             bing-search: "BT, FF, CH, CU"
             buzzfeed: "BT, FF, CH, CU"
             cnn: "BT, FF, CH, CU"
@@ -22,7 +21,6 @@ suites:
             google-docs: "BT, FF, CH, CU"
             google-mail: "BT, FF, CH, CU"
             google-search: "BT, FF, CH, CU"
-            google-sheets: "BT, FF, CH, CU"
             google-slides: "BT, FF, CH, CU"
             imdb: "BT, FF, CH, CU"
             imgur: "BT, FF, CH, CU"
@@ -42,8 +40,6 @@ suites:
             wikia: "BT, FF, CH, CU"
             wikipedia: "BT, FF, CH, CU"
             yahoo-mail: "BT, FF, CH, CU"
-            yahoo-news: "BT, FF, CH, CU"
-            yandex: "BT, FF, CH, CU"
             youtube: "BT, FF, CH, CU"
     mobile:
         description: "Page-load performance test suite on Android. The links direct to the actual websites that are being tested. (WX: WebExtension, BT: Browsertime, GV: Geckoview, RB: Refbrow, FE: Fenix, CH-M: Chrome mobile)"
