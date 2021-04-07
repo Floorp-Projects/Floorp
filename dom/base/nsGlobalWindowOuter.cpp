@@ -4783,50 +4783,60 @@ void nsGlobalWindowOuter::EnsureReflowFlushAndPaint() {
 }
 
 // static
-void nsGlobalWindowOuter::MakeScriptDialogTitle(
-    nsAString& aOutTitle, nsIPrincipal* aSubjectPrincipal) {
+void nsGlobalWindowOuter::MakeMessageWithPrincipal(
+    nsAString& aOutMessage, nsIPrincipal* aSubjectPrincipal, bool aUseHostPort,
+    const char* aNullMessage, const char* aContentMessage,
+    const char* aFallbackMessage) {
   MOZ_ASSERT(aSubjectPrincipal);
 
-  aOutTitle.Truncate();
+  aOutMessage.Truncate();
 
   // Try to get a host from the running principal -- this will do the
   // right thing for javascript: and data: documents.
 
-  nsAutoCString prepath;
+  nsAutoCString contentDesc;
 
   if (aSubjectPrincipal->GetIsNullPrincipal()) {
     nsContentUtils::GetLocalizedString(
-        nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
-        "ScriptDlgNullPrincipalHeading", aOutTitle);
+        nsContentUtils::eCOMMON_DIALOG_PROPERTIES, aNullMessage, aOutMessage);
   } else {
     auto* addonPolicy = BasePrincipal::Cast(aSubjectPrincipal)->AddonPolicy();
     if (addonPolicy) {
       nsContentUtils::FormatLocalizedString(
-          aOutTitle, nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
-          "ScriptDlgHeading", addonPolicy->Name());
+          aOutMessage, nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
+          aContentMessage, addonPolicy->Name());
     } else {
-      nsresult rv = aSubjectPrincipal->GetExposablePrePath(prepath);
-      if (NS_SUCCEEDED(rv) && !prepath.IsEmpty()) {
-        NS_ConvertUTF8toUTF16 ucsPrePath(prepath);
+      nsresult rv = NS_ERROR_FAILURE;
+      if (aUseHostPort) {
+        nsCOMPtr<nsIURI> uri = aSubjectPrincipal->GetURI();
+        if (uri) {
+          rv = uri->GetDisplayHostPort(contentDesc);
+        }
+      }
+      if (!aUseHostPort || NS_FAILED(rv)) {
+        rv = aSubjectPrincipal->GetExposablePrePath(contentDesc);
+      }
+      if (NS_SUCCEEDED(rv) && !contentDesc.IsEmpty()) {
+        NS_ConvertUTF8toUTF16 ucsPrePath(contentDesc);
         nsContentUtils::FormatLocalizedString(
-            aOutTitle, nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
-            "ScriptDlgHeading", ucsPrePath);
+            aOutMessage, nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
+            aContentMessage, ucsPrePath);
       }
     }
   }
 
-  if (aOutTitle.IsEmpty()) {
+  if (aOutMessage.IsEmpty()) {
     // We didn't find a host so use the generic heading
     nsContentUtils::GetLocalizedString(
-        nsContentUtils::eCOMMON_DIALOG_PROPERTIES, "ScriptDlgGenericHeading",
-        aOutTitle);
+        nsContentUtils::eCOMMON_DIALOG_PROPERTIES, aFallbackMessage,
+        aOutMessage);
   }
 
   // Just in case
-  if (aOutTitle.IsEmpty()) {
+  if (aOutMessage.IsEmpty()) {
     NS_WARNING(
         "could not get ScriptDlgGenericHeading string from string bundle");
-    aOutTitle.AssignLiteral("[Script]");
+    aOutMessage.AssignLiteral("[Script]");
   }
 }
 
@@ -4904,7 +4914,9 @@ bool nsGlobalWindowOuter::AlertOrConfirm(bool aAlert, const nsAString& aMessage,
   EnsureReflowFlushAndPaint();
 
   nsAutoString title;
-  MakeScriptDialogTitle(title, &aSubjectPrincipal);
+  MakeMessageWithPrincipal(title, &aSubjectPrincipal, false,
+                           "ScriptDlgNullPrincipalHeading", "ScriptDlgHeading",
+                           "ScriptDlgGenericHeading");
 
   // Remove non-terminating null characters from the
   // string. See bug #310037.
@@ -4938,8 +4950,9 @@ bool nsGlobalWindowOuter::AlertOrConfirm(bool aAlert, const nsAString& aMessage,
   if (ShouldPromptToBlockDialogs()) {
     bool disallowDialog = false;
     nsAutoString label;
-    nsContentUtils::GetLocalizedString(
-        nsContentUtils::eCOMMON_DIALOG_PROPERTIES, "ScriptDialogLabel", label);
+    MakeMessageWithPrincipal(
+        label, &aSubjectPrincipal, true, "ScriptDialogLabelNullPrincipal",
+        "ScriptDialogLabelContentPrincipal", "ScriptDialogLabelNullPrincipal");
 
     aError = aAlert
                  ? prompt->AlertCheck(title.get(), final.get(), label.get(),
@@ -4993,7 +5006,9 @@ void nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
   EnsureReflowFlushAndPaint();
 
   nsAutoString title;
-  MakeScriptDialogTitle(title, &aSubjectPrincipal);
+  MakeMessageWithPrincipal(title, &aSubjectPrincipal, false,
+                           "ScriptDlgNullPrincipalHeading", "ScriptDlgHeading",
+                           "ScriptDlgGenericHeading");
 
   // Remove non-terminating null characters from the
   // string. See bug #310037.
