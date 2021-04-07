@@ -272,6 +272,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
 
         fill_link_from_clipboard.setOnClickListener {
+            requireComponents.analytics.metrics.track(Event.ClipboardSuggestionClicked)
             view.hideKeyboard()
             toolbarView.view.clearFocus()
             (activity as HomeActivity)
