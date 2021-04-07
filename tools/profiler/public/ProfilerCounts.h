@@ -110,6 +110,14 @@ class BaseProfilerCount {
 #  endif
   }
 
+  void Clear() {
+    *mCounter = 0;
+    // We don't reset *mNumber or mPrevNumber.  We encode numbers as
+    // positive deltas, and currently we only care about the deltas (for
+    // e.g. heatmaps).  If we ever need to clear mNumber as well, we can an
+    // alternative method (Reset()) to do so.
+  }
+
   // We don't define ++ and Add() here, since the static defines directly
   // increment the atomic counters, and the subclasses implement ++ and
   // Add() directly.
