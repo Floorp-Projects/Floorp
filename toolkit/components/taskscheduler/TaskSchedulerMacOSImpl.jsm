@@ -213,6 +213,12 @@ var _TaskSchedulerMacOSImpl = {
     log.debug(`deleteAllTasks: returning ${JSON.stringify(result)}`);
   },
 
+  async taskExists(id) {
+    const label = this._formatLabelForThisApp(id);
+    const path = this._formatPlistPath(label);
+    return IOUtils.exists(path);
+  },
+
   /**
    * Turn an object into a macOS plist.
    *
