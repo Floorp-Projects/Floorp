@@ -142,9 +142,11 @@ toolbar .toolbarbutton-1 {
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
   appearance: none;
-  margin: 4px;
-  padding: var(--toolbarbutton-inner-padding) calc(var(--toolbarbutton-inner-padding) - 4px);
-  border-radius: var(--tab-border-radius);
+  background-clip: padding-box;
+  border: 4px solid transparent;
+  border-radius: calc(var(--tab-border-radius) + 4px);
+  margin: 0;
+  padding: var(--toolbarbutton-inner-padding) calc(var(--toolbarbutton-inner-padding) - 6px);
 }
 } /*** END proton ***/
 

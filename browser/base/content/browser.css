@@ -915,6 +915,7 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
 
 #fullscreen-and-pointerlock-wrapper {
   position: fixed;
+  z-index: 2147483647 !important;
   width: 100vw;
   height: 100vh;
   top: 0;
@@ -923,7 +924,6 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
 
 .pointerlockfswarning {
   position: fixed;
-  z-index: 2147483647 !important;
   visibility: visible;
   transition: transform 300ms ease-in;
   /* To center the warning box horizontally,

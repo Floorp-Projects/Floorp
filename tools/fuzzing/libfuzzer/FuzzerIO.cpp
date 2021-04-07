@@ -82,7 +82,9 @@ void ReadDirToVectorOfUnits(const char *Path, Vector<Unit> *V,
                             long *Epoch, size_t MaxSize, bool ExitOnError) {
   long E = Epoch ? *Epoch : 0;
   Vector<std::string> Files;
-  ListFilesInDirRecursive(Path, Epoch, &Files, /*TopDir*/true);
+  int Res = ListFilesInDirRecursive(Path, Epoch, &Files, /*TopDir*/true);
+  if (ExitOnError && Res != 0)
+    exit(Res);
   size_t NumLoaded = 0;
   for (size_t i = 0; i < Files.size(); i++) {
     auto &X = Files[i];
@@ -97,12 +99,15 @@ void ReadDirToVectorOfUnits(const char *Path, Vector<Unit> *V,
 }
 
 
-void GetSizedFilesFromDir(const std::string &Dir, Vector<SizedFile> *V) {
+int GetSizedFilesFromDir(const std::string &Dir, Vector<SizedFile> *V) {
   Vector<std::string> Files;
-  ListFilesInDirRecursive(Dir, 0, &Files, /*TopDir*/true);
+  int Res = ListFilesInDirRecursive(Dir, 0, &Files, /*TopDir*/true);
+  if (Res != 0)
+    return Res;
   for (auto &File : Files)
     if (size_t Size = FileSize(File))
       V->push_back({File, Size});
+  return 0;
 }
 
 std::string DirPlusFile(const std::string &DirPath,

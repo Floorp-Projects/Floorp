@@ -177,14 +177,16 @@ struct GlobalEnv {
     return Job;
   }
 
-  void RunOneMergeJob(FuzzJob *Job) {
+  int RunOneMergeJob(FuzzJob *Job) {
     auto Stats = ParseFinalStatsFromLog(Job->LogPath);
     NumRuns += Stats.number_of_executed_units;
 
     Vector<SizedFile> TempFiles, MergeCandidates;
     // Read all newly created inputs and their feature sets.
     // Choose only those inputs that have new features.
-    GetSizedFilesFromDir(Job->CorpusDir, &TempFiles);
+    int Res = GetSizedFilesFromDir(Job->CorpusDir, &TempFiles);
+    if (Res != 0)
+      return Res;
     std::sort(TempFiles.begin(), TempFiles.end());
     for (auto &F : TempFiles) {
       auto FeatureFile = F.File;
@@ -207,12 +209,14 @@ struct GlobalEnv {
            Stats.average_exec_per_sec, NumOOMs, NumTimeouts, NumCrashes,
            secondsSinceProcessStartUp(), Job->JobId, Job->DftTimeInSeconds);
 
-    if (MergeCandidates.empty()) return;
+    if (MergeCandidates.empty()) return 0;
 
     Vector<std::string> FilesToAdd;
     Set<uint32_t> NewFeatures, NewCov;
     CrashResistantMerge(Args, {}, MergeCandidates, &FilesToAdd, Features,
                         &NewFeatures, Cov, &NewCov, Job->CFPath, false);
+    if (Fuzzer::isGracefulExitRequested())
+      return 0;
     for (auto &Path : FilesToAdd) {
       auto U = FileToVector(Path);
       auto NewPath = DirPlusFile(MainCorpusDir, Hash(U));
@@ -226,7 +230,7 @@ struct GlobalEnv {
         if (TPC.PcIsFuncEntry(TE))
           PrintPC("  NEW_FUNC: %p %F %L\n", "",
                   TPC.GetNextInstructionPc(TE->PC));
-
+    return 0;
   }
 
 
@@ -280,7 +284,7 @@ void WorkerThread(JobQueue *FuzzQ, JobQueue *MergeQ) {
 }
 
 // This is just a skeleton of an experimental -fork=1 feature.
-void FuzzWithFork(Random &Rand, const FuzzingOptions &Options,
+int FuzzWithFork(Random &Rand, const FuzzingOptions &Options,
                   const Vector<std::string> &Args,
                   const Vector<std::string> &CorpusDirs, int NumJobs) {
   Printf("INFO: -fork=%d: fuzzing in separate process(s)\n", NumJobs);
@@ -294,8 +298,12 @@ void FuzzWithFork(Random &Rand, const FuzzingOptions &Options,
   Env.DataFlowBinary = Options.CollectDataFlow;
 
   Vector<SizedFile> SeedFiles;
-  for (auto &Dir : CorpusDirs)
-    GetSizedFilesFromDir(Dir, &SeedFiles);
+  int Res;
+  for (auto &Dir : CorpusDirs) {
+    Res = GetSizedFilesFromDir(Dir, &SeedFiles);
+    if (Res != 0)
+      return Res;
+  }
   std::sort(SeedFiles.begin(), SeedFiles.end());
   Env.TempDir = TempPath("FuzzWithFork", ".dir");
   Env.DFTDir = DirPlusFile(Env.TempDir, "DFT");
@@ -310,9 +318,14 @@ void FuzzWithFork(Random &Rand, const FuzzingOptions &Options,
     Env.MainCorpusDir = CorpusDirs[0];
 
   auto CFPath = DirPlusFile(Env.TempDir, "merge.txt");
-  CrashResistantMerge(Env.Args, {}, SeedFiles, &Env.Files, {}, &Env.Features,
+  Res = CrashResistantMerge(Env.Args, {}, SeedFiles, &Env.Files, {}, &Env.Features,
                       {}, &Env.Cov,
                       CFPath, false);
+  if (Res != 0)
+    return Res;
+  if (Fuzzer::isGracefulExitRequested())
+    return 0;
+
   RemoveFile(CFPath);
   Printf("INFO: -fork=%d: %zd seed inputs, starting to fuzz in %s\n", NumJobs,
          Env.Files.size(), Env.TempDir.c_str());
@@ -345,9 +358,14 @@ void FuzzWithFork(Random &Rand, const FuzzingOptions &Options,
       StopJobs();
       break;
     }
-    Fuzzer::MaybeExitGracefully();
+    if (Fuzzer::MaybeExitGracefully())
+      return 0;
 
-    Env.RunOneMergeJob(Job.get());
+    Res = Env.RunOneMergeJob(Job.get());
+    if (Res != 0)
+      return Res;
+    if (Fuzzer::isGracefulExitRequested())
+      return 0;
 
     // Continue if our crash is one of the ignorred ones.
     if (Options.IgnoreTimeouts && ExitCode == Options.TimeoutExitCode)
@@ -403,7 +421,7 @@ void FuzzWithFork(Random &Rand, const FuzzingOptions &Options,
   // Use the exit code from the last child process.
   Printf("INFO: exiting: %d time: %zds\n", ExitCode,
          Env.secondsSinceProcessStartUp());
-  exit(ExitCode);
+  return ExitCode;
 }
 
 } // namespace fuzzer

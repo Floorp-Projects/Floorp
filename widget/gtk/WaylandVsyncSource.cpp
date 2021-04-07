@@ -206,7 +206,6 @@ void WaylandVsyncSource::WaylandDisplay::Shutdown() {
   mIsShutdown = true;
   mVsyncEnabled = false;
   ClearFrameCallback();
-  wl_display_roundtrip(mDisplay);
 }
 
 }  // namespace mozilla

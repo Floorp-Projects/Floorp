@@ -228,6 +228,7 @@
   appearance: none;
   margin: var(--panel-separator-margin);
   padding: 0;
+  border: 0;
   border-top: 1px solid var(--panel-separator-color);
   color: inherit;
 }

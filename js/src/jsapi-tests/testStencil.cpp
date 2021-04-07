@@ -15,7 +15,8 @@
 #include "js/OffThreadScriptCompilation.h"
 #include "js/Transcoding.h"
 #include "jsapi-tests/tests.h"
-#include "vm/Monitor.h"  // js::Monitor, js::AutoLockMonitor
+#include "vm/HelperThreadState.h"  // js::RunPendingSourceCompressions
+#include "vm/Monitor.h"            // js::Monitor, js::AutoLockMonitor
 
 BEGIN_TEST(testStencil_Basic) {
   const char* chars =
@@ -140,6 +141,12 @@ END_TEST(testStencil_NonSyntactic)
 
 BEGIN_TEST(testStencil_MultiGlobal) {
   const char* chars =
+      "/**************************************/"
+      "/**************************************/"
+      "/**************************************/"
+      "/**************************************/"
+      "/**************************************/"
+      "/**************************************/"
       "function f() { return 42; }"
       "f();";
 
@@ -154,6 +161,11 @@ BEGIN_TEST(testStencil_MultiGlobal) {
   CHECK(RunInNewGlobal(cx, stencil));
   CHECK(RunInNewGlobal(cx, stencil));
   CHECK(RunInNewGlobal(cx, stencil));
+
+  // Start any pending SourceCompressionTasks now to confirm nothing fell apart
+  // when using a JS::Stencil multiple times.
+  CHECK(strlen(chars) > js::ScriptSource::MinimumCompressibleLength);
+  js::RunPendingSourceCompressions(cx->runtime());
 
   return true;
 }

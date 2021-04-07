@@ -714,16 +714,16 @@
   flex-wrap: wrap;
 }
 
+.urlbarView:not([noresults]) > .search-one-offs:not([hidden]) {
+  border-top: 1px solid var(--panel-separator-color);
+}
+
 @media (-moz-proton-urlbar) {
 #urlbar .search-one-offs:not([hidden]) {
   padding-block: 10px;
   border-top-color: var(--urlbar-separator-color);
 }
 } /*** END proton ***/
-
-.urlbarView[noresults] > .search-one-offs {
-  border-top: none;
-}
 
 #urlbar .search-panel-one-offs-container {
   /* Make sure horizontally we can fit four buttons, empty space, settings. */
@@ -844,7 +844,6 @@
   border: 1px solid var(--arrowpanel-border-color);
   /* Remove the top border since the panel is flush with the input. */
   border-top-width: 0;
-  border-radius: var(--arrowpanel-border-radius);
   /* override autocomplete.css padding */
   padding: var(--panel-subview-body-padding) !important;
 }

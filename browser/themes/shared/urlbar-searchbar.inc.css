@@ -1034,10 +1034,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left::after {
   display: none;
 }
 
-#urlbar .search-one-offs {
-  border-top: 1px solid var(--panel-separator-color);
-}
-
 moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left::after {
   /* These differ from the urlbar and searchbar because the context menu
      may not have enough space */

@@ -2318,6 +2318,11 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 
+  // If source compression was already attempted, do not queue a new task.
+  if (hadCompressionTask_) {
+    return true;
+  }
+
   if (!hasUncompressedSource()) {
     // This excludes compressed, missing, and retrievable source.
     return true;
