@@ -1479,8 +1479,7 @@ NS_IMETHODIMP
 nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
                                        const nsRect& aRect,
-                                       const nsRect& aDirtyRect,
-                                       DrawOverflow) {
+                                       const nsRect& aDirtyRect, DrawOverflow) {
   if (IsWidgetScrollbarPart(aAppearance)) {
     if (MayDrawCustomScrollbarPart(aContext, aFrame, aAppearance, aRect,
                                    aDirtyRect)) {
@@ -4005,7 +4004,10 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
       ctx->ClosePath();
       // And paint the arrow.
       nscolor arrowColor =
-          nsNativeBasicTheme::GetScrollbarArrowColor(buttonColor);
+          nsNativeBasicTheme::GetScrollbarArrowColor(buttonColor)
+              .valueOrFrom([&] {
+                ScrollbarUtil::GetScrollbarThumbColor(aFrame, eventStates);
+              });
       ctx->SetColor(sRGBColor::FromABGR(arrowColor));
       ctx->Fill();
       break;
