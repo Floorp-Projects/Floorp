@@ -210,9 +210,24 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
   if (mStarted) {
     mDocument->EndLoad();
 
+    // Gather telemetry only for top-level content navigations in order to
+    // avoid noise from ad iframes.
+    bool topLevel = false;
+    if (BrowsingContext* bc = mDocument->GetBrowsingContext()) {
+      topLevel = bc->IsTopContent();
+    }
+
+    // Gather telemetry only for text/html and text/plain (excluding CSS, JS,
+    // etc. being viewed as text.)
+    nsAutoString contentType;
+    mDocument->GetContentType(contentType);
+    bool htmlOrPlain = contentType.EqualsLiteral(u"text/html") ||
+                       contentType.EqualsLiteral(u"text/plain");
+
     // Gather chardetng telemetry
     MOZ_ASSERT(mDocument->IsHTMLDocument());
-    if (!aTerminated && !mDocument->AsHTMLDocument()->IsViewSource()) {
+    if (htmlOrPlain && topLevel && !aTerminated &&
+        !mDocument->AsHTMLDocument()->IsViewSource()) {
       // We deliberately measure only normally-completed (non-aborted) loads
       // that are not View Source loads. This seems like a better place for
       // checking normal completion than anything in nsHtml5StreamParser.
