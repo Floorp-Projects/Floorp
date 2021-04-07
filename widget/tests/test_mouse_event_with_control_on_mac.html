@@ -63,6 +63,11 @@ function waitAndCheckMouseEvents(aTarget, aExpectedEvents) {
 
 add_task(async function Init() {
   await SimpleTest.promiseFocus();
+
+  let target = document.getElementById("target");
+  target.addEventListener("click", function() {
+    ok(false, `should not receive click event`);
+  });
 });
 
 add_task(async function TestMouseClickWithControl() {
@@ -73,8 +78,7 @@ add_task(async function TestMouseClickWithControl() {
   let target = document.getElementById("target");
   let promise = waitAndCheckMouseEvents(target, [["mousedown", 0, true],
                                                  ["contextmenu", 0, true],
-                                                 ["mouseup", 0, true],
-                                                 ["click", 0, true]]);
+                                                 ["mouseup", 0, true]]);
   synthesizeNativeMouseEvent({
     type: "click",
     target,
