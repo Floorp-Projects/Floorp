@@ -61,7 +61,9 @@ function getHandlers(t, specifier, expected) {
     handlers[Handler.DynamicImportReject] = () => expect_log(t, []);
   } else if (expected === Result.PARSE_ERROR) {
     let error_occurred = false;
-    handlers[Handler.WindowErrorEvent] = () => { error_occurred = true; };
+    handlers[Handler.WindowErrorEvent] = () => {
+      error_occurred = true;
+    };
     handlers[Handler.ScriptLoadEvent] = t.step_func(() => {
       // Even if a parse error occurs, load event is fired (after
       // window.onerror is called), so trigger the load handler only if
