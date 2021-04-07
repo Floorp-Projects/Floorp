@@ -961,8 +961,8 @@ class UrlbarView {
       if (this._isElementVisible(row)) {
         visibleSpanCount += UrlbarUtils.getSpanForResult(row.result);
       }
-      // As long as we haven't encountered a new suggestedIndex result that
-      // couldn't be placed in the right spot, continue updating rows.
+      // Continue updating rows as long as we haven't encountered a new
+      // suggestedIndex result that couldn't replace a current result.
       if (!seenMisplacedSuggestedIndex) {
         seenSearchSuggestion =
           seenSearchSuggestion ||
@@ -1000,14 +1000,20 @@ class UrlbarView {
       let row = this._createRow();
       let result = results[resultIndex];
       this._updateRow(row, result);
-      // We still need to check whether the new result has a suggestedIndex and
-      // can't be placed in the right spot.
       if (!seenMisplacedSuggestedIndex && result.hasSuggestedIndex) {
-        let targetIndex =
+        // We need to check whether the new suggestedIndex result will end up at
+        // its right index if we append it here. The "right" index is the final
+        // index the result will occupy once the update is done and all stale
+        // rows have been removed. We could use a more flexible definition, but
+        // we use this strict one in order to avoid all perceived flicker and
+        // movement of suggestedIndex results. Once stale rows are removed, the
+        // final number of rows in the view will be the new result count, so we
+        // base our arithmetic here on it.
+        let finalIndex =
           result.suggestedIndex >= 0
-            ? Math.min(this._rows.children.length, result.suggestedIndex)
-            : Math.max(0, this._rows.children.length + result.suggestedIndex);
-        if (this._rows.children.length != targetIndex) {
+            ? Math.min(results.length - 1, result.suggestedIndex)
+            : Math.max(0, results.length + result.suggestedIndex);
+        if (this._rows.children.length != finalIndex) {
           seenMisplacedSuggestedIndex = true;
         }
       }
