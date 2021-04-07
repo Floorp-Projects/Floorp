@@ -478,13 +478,12 @@ interface nsIHttpChannel : nsIIdentChannel
     [infallible] readonly attribute nsIHttpChannel_FlashPluginState flashPluginState;
 
     /**
-     * ID of the top-level outer content window. Identifies this channel's
-     * top-level window it comes from.
+     * ID of the top-level browsing context for this channel.
      *
      * NOTE: The setter of this attribute is currently for xpcshell test only.
      *       Don't alter it otherwise.
      */
-    [must_use] attribute uint64_t topLevelOuterContentWindowId;
+    [must_use] attribute uint64_t topBrowsingContextId;
 
     /**
      * In e10s, the information that the CORS response blocks the load is in the

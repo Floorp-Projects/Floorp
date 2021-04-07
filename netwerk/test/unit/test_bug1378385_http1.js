@@ -65,7 +65,7 @@ function serverStopListener() {
 function createHttpRequest(windowId, requestId, priority) {
   let uri = baseURL;
   var chan = make_channel(uri);
-  chan.topLevelOuterContentWindowId = windowId;
+  chan.topBrowsingContextId = windowId;
   chan.QueryInterface(Ci.nsISupportsPriority).priority = priority;
   var listner = new HttpResponseListener(requestId);
   chan.setRequestHeader("X-ID", requestId, false);

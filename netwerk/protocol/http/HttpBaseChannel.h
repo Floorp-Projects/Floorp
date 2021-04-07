@@ -233,8 +233,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetChannelId(uint64_t aChannelId) override;
   NS_IMETHOD GetTopLevelContentWindowId(uint64_t* aContentWindowId) override;
   NS_IMETHOD SetTopLevelContentWindowId(uint64_t aContentWindowId) override;
-  NS_IMETHOD GetTopLevelOuterContentWindowId(uint64_t* aWindowId) override;
-  NS_IMETHOD SetTopLevelOuterContentWindowId(uint64_t aWindowId) override;
+  NS_IMETHOD GetTopBrowsingContextId(uint64_t* aId) override;
+  NS_IMETHOD SetTopBrowsingContextId(uint64_t aId) override;
 
   NS_IMETHOD GetFlashPluginState(
       nsIHttpChannel::FlashPluginState* aState) override;
@@ -748,7 +748,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // ID of the top-level document's inner window this channel is being
   // originated from.
   uint64_t mContentWindowId;
-  uint64_t mTopLevelOuterContentWindowId;
+  uint64_t mTopBrowsingContextId;
   int64_t mAltDataLength;
   uint64_t mChannelId;
   uint64_t mReqContentLength;
@@ -959,7 +959,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   void AddAsNonTailRequest();
   void RemoveAsNonTailRequest();
 
-  void EnsureTopLevelOuterContentWindowId();
+  void EnsureTopBrowsingContextId();
 
   void InitiateORBTelemetry();
 

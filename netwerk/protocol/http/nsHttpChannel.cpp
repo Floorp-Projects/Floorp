@@ -1466,7 +1466,7 @@ nsresult nsHttpChannel::SetupTransaction() {
     };
   }
 
-  EnsureTopLevelOuterContentWindowId();
+  EnsureTopBrowsingContextId();
   EnsureRequestContext();
 
   HttpTrafficCategory category = CreateTrafficCategory();
@@ -1481,7 +1481,7 @@ nsresult nsHttpChannel::SetupTransaction() {
   rv = mTransaction->Init(
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
       LoadUploadStreamHasHeaders(), GetCurrentEventTarget(), callbacks, this,
-      mTopLevelOuterContentWindowId, category, mRequestContext, mClassOfService,
+      mTopBrowsingContextId, category, mRequestContext, mClassOfService,
       mInitialRwin, LoadResponseTimeoutEnabled(), mChannelId,
       std::move(observer), std::move(pushCallback), mTransWithPushedStream,
       mPushedStreamId);

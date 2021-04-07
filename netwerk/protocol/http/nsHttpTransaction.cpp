@@ -130,7 +130,7 @@ nsHttpTransaction::nsHttpTransaction()
       mForTakeResponseTrailers(nullptr),
       mResponseTrailersTaken(false),
       mRestarted(false),
-      mTopLevelOuterContentWindowId(0),
+      mTopBrowsingContextId(0),
       mSubmittedRatePacing(false),
       mPassedRatePacing(false),
       mSynchronousRatePaceRequest(false),
@@ -267,7 +267,7 @@ nsresult nsHttpTransaction::Init(
     nsIInputStream* requestBody, uint64_t requestContentLength,
     bool requestBodyHasHeaders, nsIEventTarget* target,
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
-    uint64_t topLevelOuterContentWindowId, HttpTrafficCategory trafficCategory,
+    uint64_t topBrowsingContextId, HttpTrafficCategory trafficCategory,
     nsIRequestContext* requestContext, uint32_t classOfService,
     uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
     TransactionObserverFunc&& transactionObserver,
@@ -285,8 +285,7 @@ nsresult nsHttpTransaction::Init(
   mChannelId = channelId;
   mTransactionObserver = std::move(transactionObserver);
   mOnPushCallback = std::move(aOnPushCallback);
-  mTopLevelOuterContentWindowId = topLevelOuterContentWindowId;
-  LOG(("  window-id = %" PRIx64, mTopLevelOuterContentWindowId));
+  mTopBrowsingContextId = topBrowsingContextId;
 
   mTrafficCategory = trafficCategory;
 
@@ -983,8 +982,8 @@ nsresult nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
   }
 
   if (mThrottlingReadAllowance == 0) {  // depleted
-    if (gHttpHandler->ConnMgr()->CurrentTopLevelOuterContentWindowId() !=
-        mTopLevelOuterContentWindowId) {
+    if (gHttpHandler->ConnMgr()->CurrentTopBrowsingContextId() !=
+        mTopBrowsingContextId) {
       nsHttp::NotifyActiveTabLoadOptimization();
     }
 

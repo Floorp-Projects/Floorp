@@ -152,8 +152,8 @@ Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
 
   mPingThreshold = gHttpHandler->SpdyPingThreshold();
   mPreviousPingThreshold = mPingThreshold;
-  mCurrentForegroundTabOuterContentWindowId =
-      gHttpHandler->ConnMgr()->CurrentTopLevelOuterContentWindowId();
+  mCurrentTopBrowsingContextId =
+      gHttpHandler->ConnMgr()->CurrentTopBrowsingContextId();
 
   mEnableWebsockets = gHttpHandler->IsH2WebsocketsEnabled();
 
@@ -527,9 +527,8 @@ bool Http2Session::AddStream(nsAHttpTransaction* aHttpTransaction,
     return true;
   }
 
-  RefPtr<Http2Stream> refStream =
-      new Http2Stream(aHttpTransaction, this, aPriority,
-                      mCurrentForegroundTabOuterContentWindowId);
+  RefPtr<Http2Stream> refStream = new Http2Stream(
+      aHttpTransaction, this, aPriority, mCurrentTopBrowsingContextId);
 
   LOG3(("Http2Session::AddStream session=%p stream=%p serial=%" PRIu64 " "
         "NextID=0x%X (tentative)",
@@ -1898,9 +1897,9 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   RefPtr<Http2PushTransactionBuffer> transactionBuffer =
       new Http2PushTransactionBuffer();
   transactionBuffer->SetConnection(self);
-  RefPtr<Http2PushedStream> pushedStream(new Http2PushedStream(
-      transactionBuffer, self, associatedStream, promisedID,
-      self->mCurrentForegroundTabOuterContentWindowId));
+  RefPtr<Http2PushedStream> pushedStream(
+      new Http2PushedStream(transactionBuffer, self, associatedStream,
+                            promisedID, self->mCurrentTopBrowsingContextId));
 
   rv = pushedStream->ConvertPushHeaders(&self->mDecompressor,
                                         self->mDecompressBuffer,
@@ -4502,13 +4501,13 @@ bool Http2Session::RealJoinConnection(const nsACString& hostname, int32_t port,
   return joinedReturn;
 }
 
-void Http2Session::TopLevelOuterContentWindowIdChanged(uint64_t windowId) {
+void Http2Session::TopBrowsingContextIdChanged(uint64_t id) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  mCurrentForegroundTabOuterContentWindowId = windowId;
+  mCurrentTopBrowsingContextId = id;
 
   for (const auto& stream : mStreamTransactionHash.Values()) {
-    stream->TopLevelOuterContentWindowIdChanged(windowId);
+    stream->TopBrowsingContextIdChanged(id);
   }
 }
 
