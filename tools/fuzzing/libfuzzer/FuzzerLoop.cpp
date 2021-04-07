@@ -254,12 +254,20 @@ void Fuzzer::ExitCallback() {
   _Exit(Options.ErrorExitCode);
 }
 
-void Fuzzer::MaybeExitGracefully() {
-  if (!F->GracefulExitRequested) return;
+bool Fuzzer::MaybeExitGracefully() {
+  if (!F->GracefulExitRequested) return false;
   Printf("==%lu== INFO: libFuzzer: exiting as requested\n", GetPid());
   RmDirRecursive(TempPath("FuzzWithFork", ".dir"));
   F->PrintFinalStats();
-  _Exit(0);
+  return true;
+}
+
+void Fuzzer::GracefullyExit() {
+  F->GracefulExitRequested = true;
+}
+
+bool Fuzzer::isGracefulExitRequested() {
+  return F->GracefulExitRequested;
 }
 
 void Fuzzer::InterruptCallback() {
@@ -663,7 +671,7 @@ void Fuzzer::TryDetectingAMemoryLeak(const uint8_t *Data, size_t Size,
   }
 }
 
-void Fuzzer::MutateAndTestOne() {
+bool Fuzzer::MutateAndTestOne() {
   MD.StartMutationSequence();
 
   auto &II = Corpus.ChooseUnitToMutate(MD.GetRand());
@@ -685,7 +693,7 @@ void Fuzzer::MutateAndTestOne() {
   for (int i = 0; i < Options.MutateDepth; i++) {
     if (TotalNumberOfRuns >= Options.MaxNumberOfRuns)
       break;
-    MaybeExitGracefully();
+    if (MaybeExitGracefully()) return true;
     size_t NewSize = 0;
     if (II.HasFocusFunction && !II.DataFlowTraceForFocusFunction.empty() &&
         Size <= CurrentMaxMutationLen)
@@ -719,6 +727,7 @@ void Fuzzer::MutateAndTestOne() {
   }
 
   II.NeedsEnergyUpdate = true;
+  return false;
 }
 
 void Fuzzer::PurgeAllocator() {
@@ -736,7 +745,7 @@ void Fuzzer::PurgeAllocator() {
   LastAllocatorPurgeAttemptTime = system_clock::now();
 }
 
-void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
+int Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
   const size_t kMaxSaneLen = 1 << 20;
   const size_t kMinDefaultLen = 4096;
   size_t MaxSize = 0;
@@ -795,16 +804,23 @@ void Fuzzer::ReadAndExecuteSeedCorpora(Vector<SizedFile> &CorporaFiles) {
   if (Corpus.empty() && Options.MaxNumberOfRuns) {
     Printf("ERROR: no interesting inputs were found. "
            "Is the code instrumented for coverage? Exiting.\n");
-    exit(1);
+    return 1;
   }
+  return 0;
 }
 
-void Fuzzer::Loop(Vector<SizedFile> &CorporaFiles) {
+int Fuzzer::Loop(Vector<SizedFile> &CorporaFiles) {
   auto FocusFunctionOrAuto = Options.FocusFunction;
-  DFT.Init(Options.DataFlowTrace, &FocusFunctionOrAuto, CorporaFiles,
+  int Res = DFT.Init(Options.DataFlowTrace, &FocusFunctionOrAuto, CorporaFiles,
            MD.GetRand());
-  TPC.SetFocusFunction(FocusFunctionOrAuto);
-  ReadAndExecuteSeedCorpora(CorporaFiles);
+  if (Res != 0)
+    return Res;
+  Res = TPC.SetFocusFunction(FocusFunctionOrAuto);
+  if (Res != 0)
+    return Res;
+  Res = ReadAndExecuteSeedCorpora(CorporaFiles);
+  if (Res != 0)
+    return Res;
   DFT.Clear();  // No need for DFT any more.
   TPC.SetPrintNewPCs(Options.PrintNewCovPcs);
   TPC.SetPrintNewFuncs(Options.PrintNewCovFuncs);
@@ -842,13 +858,15 @@ void Fuzzer::Loop(Vector<SizedFile> &CorporaFiles) {
     }
 
     // Perform several mutations and runs.
-    MutateAndTestOne();
+    if (MutateAndTestOne())
+      return 0;
 
     PurgeAllocator();
   }
 
   PrintStats("DONE  ", "\n");
   MD.PrintRecommendedDictionary();
+  return 0;
 }
 
 void Fuzzer::MinimizeCrashLoop(const Unit &U) {
