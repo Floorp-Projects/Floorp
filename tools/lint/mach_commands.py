@@ -30,10 +30,7 @@ thunderbird_excludes = os.path.join("comm", "tools", "lint", "GlobalExclude.txt"
 if os.path.exists(thunderbird_excludes):
     EXCLUSION_FILES_OPTIONAL.append(thunderbird_excludes)
 
-GLOBAL_EXCLUDES = [
-    "node_modules",
-    "tools/lint/test/files",
-]
+GLOBAL_EXCLUDES = ["node_modules", "tools/lint/test/files", ".hg", ".git"]
 
 
 def setup_argument_parser():
