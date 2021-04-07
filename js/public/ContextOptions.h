@@ -49,7 +49,7 @@ class JS_PUBLIC_API ContextOptions {
         fuzzing_(false),
         privateClassFields_(false),
         privateClassMethods_(false),
-        topLevelAwait_(false) {
+        topLevelAwait_(true) {
   }
 
   bool asmJS() const { return asmJS_; }

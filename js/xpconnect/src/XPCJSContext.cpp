@@ -975,6 +975,9 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sWeakRefsExposeCleanupSome = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
 
+  bool topLevelAwaitEnabled =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.top_level_await");
+
   // Require private fields disabled outside of nightly.
   bool privateFieldsEnabled = false;
   bool privateMethodsEnabled = false;
@@ -985,13 +988,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_fields");
   privateMethodsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_methods");
-#endif
-
-  // Require top level await disabled outside of nightly.
-  bool topLevelAwaitEnabled = false;
-#ifdef NIGHTLY_BUILD
-  topLevelAwaitEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.top_level_await");
 #endif
 
 #ifdef JS_GC_ZEAL
