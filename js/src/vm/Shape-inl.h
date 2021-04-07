@@ -347,7 +347,7 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
   return foundShape;
 }
 
-/* static */ MOZ_ALWAYS_INLINE Shape* NativeObject::addDataProperty(
+/* static */ MOZ_ALWAYS_INLINE Shape* NativeObject::addProperty(
     JSContext* cx, HandleNativeObject obj, HandleId id, uint32_t slot,
     unsigned attrs) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
@@ -365,7 +365,7 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
     entry = &table->search<MaybeAdding::Adding>(id, keep);
   }
 
-  return addDataPropertyInternal(cx, obj, id, slot, attrs, table, entry, keep);
+  return addPropertyInternal(cx, obj, id, slot, attrs, table, entry, keep);
 }
 
 MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(Shape* last, jsid id,
