@@ -6148,9 +6148,9 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   const bool isAutoISize = styleISize.IsAuto();
   // Compute inline-axis size
   if (!isAutoISize) {
-    auto iSizeResult =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, styleISize, aFlags);
+    auto iSizeResult = ComputeISizeValue(
+        aRenderingContext, aWM, aCBSize, boxSizingAdjust,
+        boxSizingToMarginEdgeISize, styleISize, aSizeOverrides, aFlags);
     result.ISize(aWM) = iSizeResult.mISize;
     aspectRatioUsage = iSizeResult.mAspectRatioUsage;
   } else if (aspectRatio &&
@@ -6224,20 +6224,20 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   const auto& maxISizeCoord = stylePos->MaxISize(aWM);
   nscoord maxISize = NS_UNCONSTRAINEDSIZE;
   if (!maxISizeCoord.IsNone() && !isFlexItemInlineAxisMainAxis) {
-    maxISize =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, maxISizeCoord, aFlags)
-            .mISize;
+    maxISize = ComputeISizeValue(aRenderingContext, aWM, aCBSize,
+                                 boxSizingAdjust, boxSizingToMarginEdgeISize,
+                                 maxISizeCoord, aSizeOverrides, aFlags)
+                   .mISize;
     result.ISize(aWM) = std::min(maxISize, result.ISize(aWM));
   }
 
   const auto& minISizeCoord = stylePos->MinISize(aWM);
   nscoord minISize;
   if (!minISizeCoord.IsAuto() && !isFlexItemInlineAxisMainAxis) {
-    minISize =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, minISizeCoord, aFlags)
-            .mISize;
+    minISize = ComputeISizeValue(aRenderingContext, aWM, aCBSize,
+                                 boxSizingAdjust, boxSizingToMarginEdgeISize,
+                                 minISizeCoord, aSizeOverrides, aFlags)
+                   .mISize;
   } else if (MOZ_UNLIKELY(
                  aFlags.contains(ComputeSizeFlag::IApplyAutoMinSize))) {
     // This implements "Implied Minimum Size of Grid Items".
@@ -6433,15 +6433,21 @@ nscoord nsIFrame::ShrinkWidthToFit(gfxContext* aRenderingContext,
 
 Maybe<nscoord> nsIFrame::ComputeInlineSizeFromAspectRatio(
     WritingMode aWM, const LogicalSize& aCBSize,
-    const LogicalSize& aContentEdgeToBoxSizing, ComputeSizeFlags aFlags) const {
+    const LogicalSize& aContentEdgeToBoxSizing,
+    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) const {
   // FIXME: Bug 1670151: Use GetAspectRatio() to cover replaced elements (and
   // then we can drop the check of eSupportsAspectRatio).
-  const AspectRatio aspectRatio = StylePosition()->mAspectRatio.ToLayoutRatio();
+  const AspectRatio aspectRatio =
+      aSizeOverrides.mAspectRatio
+          ? *aSizeOverrides.mAspectRatio
+          : StylePosition()->mAspectRatio.ToLayoutRatio();
   if (!IsFrameOfType(eSupportsAspectRatio) || !aspectRatio) {
     return Nothing();
   }
 
-  const StyleSize& styleBSize = StylePosition()->BSize(aWM);
+  const StyleSize& styleBSize = aSizeOverrides.mStyleBSize
+                                    ? *aSizeOverrides.mStyleBSize
+                                    : StylePosition()->BSize(aWM);
   if (aFlags.contains(ComputeSizeFlag::UseAutoBSize) ||
       nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM))) {
     return Nothing();
@@ -6459,7 +6465,8 @@ nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
     gfxContext* aRenderingContext, const WritingMode aWM,
     const LogicalSize& aContainingBlockSize,
     const LogicalSize& aContentEdgeToBoxSizing, nscoord aBoxSizingToMarginEdge,
-    ExtremumLength aSize, ComputeSizeFlags aFlags) {
+    ExtremumLength aSize, const StyleSizeOverrides& aSizeOverrides,
+    ComputeSizeFlags aFlags) {
   // If 'this' is a container for font size inflation, then shrink
   // wrapping inside of it should not apply font size inflation.
   AutoMaybeDisableFontInflation an(this);
@@ -6470,7 +6477,8 @@ nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
       aSize == ExtremumLength::MozAvailable
           ? Nothing()
           : ComputeInlineSizeFromAspectRatio(aWM, aContainingBlockSize,
-                                             aContentEdgeToBoxSizing, aFlags);
+                                             aContentEdgeToBoxSizing,
+                                             aSizeOverrides, aFlags);
   nscoord result;
   switch (aSize) {
     case ExtremumLength::MaxContent:
