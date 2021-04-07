@@ -102,6 +102,7 @@ arg_writer_info = {
     "UInt32Imm": ("uint32_t", "writeUInt32Imm"),
     "JSNativeImm": ("JSNative", "writeJSNativeImm"),
     "StaticStringImm": ("const char*", "writeStaticStringImm"),
+    "AllocKindImm": ("gc::AllocKind", "writeAllocKindImm"),
 }
 
 
@@ -197,6 +198,7 @@ arg_reader_info = {
     "UInt32Imm": ("uint32_t", "", "reader.uint32Immediate()"),
     "JSNativeImm": ("JSNative", "", "reinterpret_cast<JSNative>(reader.pointer())"),
     "StaticStringImm": ("const char*", "", "reinterpret_cast<char*>(reader.pointer())"),
+    "AllocKindImm": ("gc::AllocKind", "", "reader.allocKind()"),
 }
 
 
@@ -278,6 +280,7 @@ arg_spewer_method = {
     "UInt32Imm": "spewUInt32Imm",
     "JSNativeImm": "spewJSNativeImm",
     "StaticStringImm": "spewStaticStringImm",
+    "AllocKindImm": "spewAllocKindImm",
 }
 
 
@@ -410,6 +413,7 @@ arg_length = {
     "UInt32Imm": 4,
     "JSNativeImm": "sizeof(uintptr_t)",
     "StaticStringImm": "sizeof(uintptr_t)",
+    "AllocKindImm": 1,
 }
 
 

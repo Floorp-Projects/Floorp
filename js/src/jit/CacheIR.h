@@ -742,6 +742,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint8_t(kind));
   }
 
+  void writeAllocKindImm(gc::AllocKind kind) {
+    static_assert(unsigned(gc::AllocKind::LIMIT) <= UINT8_MAX);
+    buffer_.writeByte(uint8_t(kind));
+  }
+
   uint32_t newOperandId() { return nextOperandId_++; }
 
   CacheIRWriter(const CacheIRWriter&) = delete;
@@ -1142,6 +1147,7 @@ class MOZ_RAII CacheIRReader {
   wasm::ValType::Kind wasmValType() {
     return wasm::ValType::Kind(buffer_.readByte());
   }
+  gc::AllocKind allocKind() { return gc::AllocKind(buffer_.readByte()); }
 
   Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
   uint32_t rttValueKey() { return buffer_.readByte(); }
@@ -1920,6 +1926,8 @@ class MOZ_RAII NewObjectIRGenerator : public IRGenerator {
                        ICState::Mode, JSOp op, HandleObject templateObj);
 
   AttachDecision tryAttachStub();
+  AttachDecision tryAttachPlainObject();
+  AttachDecision tryAttachTemplateObject();
 };
 
 // Retrieve Xray JIT info set by the embedder.
