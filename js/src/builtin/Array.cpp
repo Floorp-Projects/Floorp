@@ -869,8 +869,7 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     RootedShape lengthShape(cx, arr->lookup(cx, id));
     MOZ_ASSERT(lengthShape->isCustomDataProperty());
     unsigned attrs = lengthShape->attributes() | JSPROP_READONLY;
-    if (!NativeObject::putAccessorProperty(cx, arr, id, nullptr, nullptr,
-                                           attrs)) {
+    if (!NativeObject::changeCustomDataPropAttributes(cx, arr, id, attrs)) {
       return false;
     }
   }
@@ -979,9 +978,8 @@ static bool AddLengthProperty(JSContext* cx, HandleArrayObject obj) {
   }
 
   RootedId lengthId(cx, NameToId(cx->names().length));
-  return NativeObject::addAccessorProperty(
-      cx, obj, lengthId, nullptr, nullptr,
-      JSPROP_CUSTOM_DATA_PROP | JSPROP_PERMANENT);
+  return NativeObject::addCustomDataProperty(
+      cx, obj, lengthId, JSPROP_CUSTOM_DATA_PROP | JSPROP_PERMANENT);
 }
 
 static bool IsArrayConstructor(const JSObject* obj) {

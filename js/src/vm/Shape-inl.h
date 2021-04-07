@@ -368,28 +368,6 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
   return addDataPropertyInternal(cx, obj, id, slot, attrs, table, entry, keep);
 }
 
-/* static */ MOZ_ALWAYS_INLINE Shape* NativeObject::addAccessorProperty(
-    JSContext* cx, HandleNativeObject obj, HandleId id, HandleObject getter,
-    HandleObject setter, unsigned attrs) {
-  MOZ_ASSERT(!JSID_IS_VOID(id));
-  MOZ_ASSERT_IF(!id.isPrivateName(), obj->uninlinedNonProxyIsExtensible());
-  MOZ_ASSERT(!obj->containsPure(id));
-
-  AutoKeepShapeCaches keep(cx);
-  ShapeTable* table = nullptr;
-  ShapeTable::Entry* entry = nullptr;
-  if (obj->inDictionaryMode()) {
-    table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-    if (!table) {
-      return nullptr;
-    }
-    entry = &table->search<MaybeAdding::Adding>(id, keep);
-  }
-
-  return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, table,
-                                     entry, keep);
-}
-
 MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(Shape* last, jsid id,
                                                            unsigned attrs,
                                                            JSContext* cx) {
