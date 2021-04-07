@@ -115,6 +115,10 @@ void nsWaylandDisplay::SetIdleInhibitManager(
   mIdleInhibitManager = aIdleInhibitManager;
 }
 
+void nsWaylandDisplay::SetViewporter(wp_viewporter* aViewporter) {
+  mViewporter = aViewporter;
+}
+
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
@@ -175,6 +179,11 @@ static void global_registry_handler(void* data, wl_registry* registry,
     wl_proxy_set_queue((struct wl_proxy*)subcompositor,
                        display->GetEventQueue());
     display->SetSubcompositor(subcompositor);
+  } else if (strcmp(interface, "wp_viewporter") == 0) {
+    auto* viewporter = WaylandRegistryBind<wp_viewporter>(
+        registry, id, &wp_viewporter_interface, 1);
+    wl_proxy_set_queue((struct wl_proxy*)viewporter, display->GetEventQueue());
+    display->SetViewporter(viewporter);
   }
 }
 
@@ -277,6 +286,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper)
       mPrimarySelectionDeviceManagerZwpV1(nullptr),
       mIdleInhibitManager(nullptr),
       mRegistry(nullptr),
+      mViewporter(nullptr),
       mExplicitSync(false) {
   if (!aLighWrapper) {
     mRegistry = wl_display_get_registry(mDisplay);
