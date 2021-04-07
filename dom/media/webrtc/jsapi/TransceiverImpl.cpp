@@ -143,7 +143,46 @@ void TransceiverImpl::InitAudio() {
 }
 
 void TransceiverImpl::InitVideo() {
-  mConduit = VideoSessionConduit::Create(mCallWrapper, mStsThread, mPCHandle);
+  VideoSessionConduit::Options options;
+  options.mVideoLatencyTestEnable =
+      Preferences::GetBool("media.video.test_latency", false);
+  options.mMinBitrate = std::max(
+      0,
+      Preferences::GetInt("media.peerconnection.video.min_bitrate", 0) * 1000);
+  options.mStartBitrate = std::max(
+      0, Preferences::GetInt("media.peerconnection.video.start_bitrate", 0) *
+             1000);
+  options.mPrefMaxBitrate = std::max(
+      0,
+      Preferences::GetInt("media.peerconnection.video.max_bitrate", 0) * 1000);
+  if (options.mMinBitrate != 0 &&
+      options.mMinBitrate < kViEMinCodecBitrate_bps) {
+    options.mMinBitrate = kViEMinCodecBitrate_bps;
+  }
+  if (options.mStartBitrate < options.mMinBitrate) {
+    options.mStartBitrate = options.mMinBitrate;
+  }
+  if (options.mPrefMaxBitrate &&
+      options.mStartBitrate > options.mPrefMaxBitrate) {
+    options.mStartBitrate = options.mPrefMaxBitrate;
+  }
+  // XXX We'd love if this was a live param for testing adaptation/etc
+  // in automation
+  options.mMinBitrateEstimate =
+      std::max(0, Preferences::GetInt(
+                      "media.peerconnection.video.min_bitrate_estimate", 0) *
+                      1000);
+  options.mSpatialLayers = std::max(
+      1, Preferences::GetInt("media.peerconnection.video.svc.spatial", 0));
+  options.mTemporalLayers = std::max(
+      1, Preferences::GetInt("media.peerconnection.video.svc.temporal", 0));
+  options.mDenoising =
+      Preferences::GetBool("media.peerconnection.video.denoising", false);
+  options.mLockScaling =
+      Preferences::GetBool("media.peerconnection.video.lock_scaling", false);
+
+  mConduit = VideoSessionConduit::Create(mCallWrapper, mStsThread,
+                                         std::move(options), mPCHandle);
 
   if (!mConduit) {
     MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__
