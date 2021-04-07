@@ -12,10 +12,13 @@
 #include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
 #include "SharedBuffer.h"
+#include "Tracing.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkerTypes.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -31,6 +34,9 @@ extern LazyLogModule gMediaDecoderLog;
 #define LOG_DS(type, fmt, ...)    \
   MOZ_LOG(gMediaDecoderLog, type, \
           ("DecodedStream=%p " fmt, this, ##__VA_ARGS__))
+
+#define PLAYBACK_PROFILER_MARKER(markerString) \
+  PROFILER_MARKER_TEXT(FUNCTION_SIGNATURE, MEDIA_PLAYBACK, {}, markerString)
 
 /*
  * A container class to make it easier to pass the playback info all the
@@ -413,6 +419,12 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isNothing(), "playback already started.");
 
+  AUTO_PROFILER_LABEL(FUNCTION_SIGNATURE, MEDIA_PLAYBACK);
+  if (profiler_can_accept_markers()) {
+    nsPrintfCString markerString("StartTime=%" PRId64,
+                                 aStartTime.ToMicroseconds());
+    PLAYBACK_PROFILER_MARKER(markerString);
+  }
   LOG_DS(LogLevel::Debug, "Start() mStartTime=%" PRId64,
          aStartTime.ToMicroseconds());
 
@@ -516,6 +528,7 @@ void DecodedStream::Stop() {
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isSome(), "playback not started.");
 
+  TRACE();
   LOG_DS(LogLevel::Debug, "Stop()");
 
   DisconnectListener();
@@ -557,6 +570,7 @@ void DecodedStream::DestroyData(UniquePtr<DecodedStreamData>&& aData) {
     return;
   }
 
+  TRACE();
   mOutputListener.Disconnect();
 
   NS_DispatchToMainThread(
@@ -572,12 +586,20 @@ void DecodedStream::SetPlaying(bool aPlaying) {
     return;
   }
 
+  if (profiler_can_accept_markers()) {
+    nsPrintfCString markerString("Playing=%s", aPlaying ? "true" : "false");
+    PLAYBACK_PROFILER_MARKER(markerString);
+  }
   LOG_DS(LogLevel::Debug, "playing (%d) -> (%d)", mPlaying.Ref(), aPlaying);
   mPlaying = aPlaying;
 }
 
 void DecodedStream::SetVolume(double aVolume) {
   AssertOwnerThread();
+  if (profiler_can_accept_markers()) {
+    nsPrintfCString markerString("Volume=%f", aVolume);
+    PLAYBACK_PROFILER_MARKER(markerString);
+  }
   mVolume = aVolume;
   if (mData && mData->mAudioTrack) {
     mData->mAudioTrack->SetVolume(static_cast<float>(aVolume));
@@ -586,11 +608,20 @@ void DecodedStream::SetVolume(double aVolume) {
 
 void DecodedStream::SetPlaybackRate(double aPlaybackRate) {
   AssertOwnerThread();
+  if (profiler_can_accept_markers()) {
+    nsPrintfCString markerString("PlaybackRate=%f", aPlaybackRate);
+    PLAYBACK_PROFILER_MARKER(markerString);
+  }
   mPlaybackRate = aPlaybackRate;
 }
 
 void DecodedStream::SetPreservesPitch(bool aPreservesPitch) {
   AssertOwnerThread();
+  if (profiler_can_accept_markers()) {
+    nsPrintfCString markerString("PreservesPitch=%s",
+                                 aPreservesPitch ? "true" : "false");
+    PLAYBACK_PROFILER_MARKER(markerString);
+  }
   mPreservesPitch = aPreservesPitch;
 }
 
@@ -663,6 +694,7 @@ void DecodedStream::SendAudio(const PrincipalHandle& aPrincipalHandle) {
     return;
   }
 
+  TRACE();
   AudioSegment output;
   uint32_t rate = mInfo.mAudio.mRate;
   AutoTArray<RefPtr<AudioData>, 10> audio;
@@ -744,6 +776,7 @@ void DecodedStream::ResetAudio() {
     return;
   }
 
+  TRACE();
   TrackTime cleared = mData->mAudioTrack->ClearFutureData();
   mData->mAudioTrackWritten -= cleared;
   if (const RefPtr<AudioData>& v = mAudioQueue.PeekFront()) {
@@ -766,6 +799,7 @@ void DecodedStream::ResetVideo(const PrincipalHandle& aPrincipalHandle) {
     return;
   }
 
+  TRACE();
   TrackTime cleared = mData->mVideoTrack->ClearFutureData();
   mData->mVideoTrackWritten -= cleared;
   if (mData->mHaveSentFinishVideo && cleared > 0) {
@@ -815,6 +849,7 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
     return;
   }
 
+  TRACE();
   VideoSegment output;
   AutoTArray<RefPtr<VideoData>, 10> video;
 
@@ -941,6 +976,7 @@ void DecodedStream::SendData() {
 
 TimeUnit DecodedStream::GetEndTime(TrackType aType) const {
   AssertOwnerThread();
+  TRACE();
   if (aType == TrackInfo::kAudioTrack && mInfo.HasAudio() && mData) {
     auto t = mStartTime.ref() +
              FramesToTimeUnit(mData->mAudioFramesWritten, mInfo.mAudio.mRate);
@@ -955,6 +991,7 @@ TimeUnit DecodedStream::GetEndTime(TrackType aType) const {
 
 TimeUnit DecodedStream::GetPosition(TimeStamp* aTimeStamp) const {
   AssertOwnerThread();
+  TRACE();
   // This is only called after MDSM starts playback. So mStartTime is
   // guaranteed to be something.
   MOZ_ASSERT(mStartTime.isSome());
@@ -974,6 +1011,11 @@ void DecodedStream::NotifyOutput(int64_t aTime) {
   mLastOutputTime = time;
   auto currentTime = GetPosition();
 
+  if (profiler_can_accept_markers()) {
+    nsPrintfCString markerString("OutputTime=%" PRId64,
+                                 currentTime.ToMicroseconds());
+    PLAYBACK_PROFILER_MARKER(markerString);
+  }
   LOG_DS(LogLevel::Verbose, "time is now %" PRId64,
          currentTime.ToMicroseconds());
 
@@ -989,6 +1031,7 @@ void DecodedStream::NotifyOutput(int64_t aTime) {
 
 void DecodedStream::PlayingChanged() {
   AssertOwnerThread();
+  TRACE();
 
   if (!mPlaying) {
     // On seek or pause we discard future frames.
