@@ -943,7 +943,7 @@ class NativeObject : public JSObject {
   static MOZ_ALWAYS_INLINE Shape* getChildDataProperty(
       JSContext* cx, HandleNativeObject obj, HandleShape parent,
       MutableHandle<StackShape> child);
-  static MOZ_ALWAYS_INLINE Shape* getChildAccessorProperty(
+  static MOZ_ALWAYS_INLINE Shape* getChildCustomDataProperty(
       JSContext* cx, HandleNativeObject obj, HandleShape parent,
       MutableHandle<StackShape> child);
 
@@ -961,9 +961,8 @@ class NativeObject : public JSObject {
                                                   HandleId id, uint32_t slot,
                                                   unsigned attrs);
 
-  static MOZ_ALWAYS_INLINE Shape* addAccessorProperty(
-      JSContext* cx, HandleNativeObject obj, HandleId id, HandleObject getter,
-      HandleObject setter, unsigned attrs);
+  static Shape* addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
+                                      HandleId id, unsigned attrs);
 
   static Shape* addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj,
                                           HandleId id);
@@ -977,9 +976,9 @@ class NativeObject : public JSObject {
   static Shape* putDataProperty(JSContext* cx, HandleNativeObject obj,
                                 HandleId id, unsigned attrs);
 
-  static Shape* putAccessorProperty(JSContext* cx, HandleNativeObject obj,
-                                    HandleId id, HandleObject getter,
-                                    HandleObject setter, unsigned attrs);
+  static Shape* changeCustomDataPropAttributes(JSContext* cx,
+                                               HandleNativeObject obj,
+                                               HandleId id, unsigned attrs);
 
   /* Remove the property named by id from this object. */
   static bool removeProperty(JSContext* cx, HandleNativeObject obj, jsid id);
@@ -997,11 +996,6 @@ class NativeObject : public JSObject {
                                         unsigned attrs, ShapeTable* table,
                                         ShapeTable::Entry* entry,
                                         const AutoKeepShapeCaches& keep);
-
-  static Shape* addAccessorPropertyInternal(
-      JSContext* cx, HandleNativeObject obj, HandleId id, HandleObject getter,
-      HandleObject setter, unsigned attrs, ShapeTable* table,
-      ShapeTable::Entry* entry, const AutoKeepShapeCaches& keep);
 
   [[nodiscard]] static bool fillInAfterSwap(JSContext* cx,
                                             HandleNativeObject obj,
