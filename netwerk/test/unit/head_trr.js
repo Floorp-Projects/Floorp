@@ -108,6 +108,7 @@ class TRRDNSListener {
         trrServer: args[4] ?? "",
         expectEarlyFail: args[5] ?? "",
         flags: args[6] ?? 0,
+        type: args[7] ?? Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
       };
     }
     this.expectedAnswer = this.options.expectedAnswer ?? undefined;
@@ -116,6 +117,7 @@ class TRRDNSListener {
     this.promise = new Promise(resolve => {
       this.resolve = resolve;
     });
+    this.type = this.options.type ?? Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT;
     let trrServer = this.options.trrServer || "";
 
     const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
@@ -134,7 +136,7 @@ class TRRDNSListener {
     try {
       this.request = gDNS.asyncResolve(
         this.name,
-        Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
+        this.type,
         this.options.flags || 0,
         this.resolverInfo,
         this,
@@ -162,6 +164,12 @@ class TRRDNSListener {
     }
 
     Assert.equal(inStatus, Cr.NS_OK, "Checking status");
+
+    if (this.type != Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT) {
+      this.resolve([inRequest, inRecord, inStatus]);
+      return;
+    }
+
     inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
     let answer = inRecord.getNextAddrAsString();
     Assert.equal(
