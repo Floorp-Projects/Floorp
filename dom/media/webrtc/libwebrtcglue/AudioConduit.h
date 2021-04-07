@@ -206,20 +206,22 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // Accessed on any thread under mTransportMonitor.
   RefPtr<TransportInterface> mReceiverTransport;
 
-  // Const so can be accessed on any thread. Most methods are called on
-  // main thread.
+  // Const so can be accessed on any thread. Most methods are called on the Call
+  // thread.
   const RefPtr<WebrtcCallWrapper> mCall;
 
-  // Accessed only on main thread.
+  // Accessed only on the Call thread.
   webrtc::AudioReceiveStream::Config mRecvStreamConfig;
 
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread.
   webrtc::AudioReceiveStream* mRecvStream;
 
-  // Accessed only on main thread.
+  // Accessed only on the Call thread.
   webrtc::AudioSendStream::Config mSendStreamConfig;
 
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread.
   webrtc::AudioSendStream* mSendStream;
 
   // accessed on creation, and when receiving packets
@@ -229,18 +231,23 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   RtpPacketQueue mRtpPacketQueue;
 
   // If true => mSendStream started and not stopped
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread.
   bool mSendStreamRunning;
   // If true => mRecvStream started and not stopped
-  // Written only on main thread. Guarded by mMutex, except for reads on main.
+  // Written only on the Call thread. Guarded by mMutex, except for reads on the
+  // Call thread.
   bool mRecvStreamRunning;
 
-  // Accessed only on main thread.
+  // Accessed only on the Call thread.
   bool mDtmfEnabled;
   int mDtmfPayloadType = -1;
   int mDtmfPayloadFrequency = -1;
 
   Mutex mMutex;
+
+  // Call worker thread. All access to mCall->Call() happens here.
+  const RefPtr<AbstractThread> mCallThread;
 
   // Socket transport service thread. Any thread.
   const nsCOMPtr<nsISerialEventTarget> mStsThread;
