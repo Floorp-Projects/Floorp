@@ -142,9 +142,19 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
         mouseEvent.mRefPoint.y = input.mOrigin.y;
         mouseEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
         mouseEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
+#ifdef XP_MACOSX
+        // It's not assumed that the click event has already been prevented,
+        // except mousedown event with ctrl key is pressed where we prevent
+        // click event from widget on Mac platform.
+        MOZ_ASSERT_IF(!mouseEvent.IsControl() ||
+                          mouseEvent.mMessage != eMouseDown ||
+                          mouseEvent.mButton != MouseButton::ePrimary,
+                      !mouseEvent.mClickEventPrevented);
+#else
         MOZ_ASSERT(
             !mouseEvent.mClickEventPrevented,
             "It's not assumed that the click event has already been prevented");
+#endif
         mouseEvent.mClickEventPrevented |= input.mPreventClickEvent;
         MOZ_ASSERT_IF(mouseEvent.mClickEventPrevented,
                       mouseEvent.mMessage == eMouseDown ||
