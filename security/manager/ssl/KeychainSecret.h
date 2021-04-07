@@ -17,7 +17,11 @@ class ScopedCFType {
  public:
   explicit ScopedCFType(T value) : mValue(value) {}
 
-  ~ScopedCFType() { CFRelease((CFTypeRef)mValue); }
+  ~ScopedCFType() {
+    if (mValue) {
+      CFRelease((CFTypeRef)mValue);
+    }
+  }
 
   T get() { return mValue; }
 
