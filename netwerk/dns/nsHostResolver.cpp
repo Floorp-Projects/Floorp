@@ -2157,26 +2157,30 @@ void nsHostResolver::CancelAsyncRequest(
   nsHostKey key(host, aTrrServer, aType, flags, af,
                 (aOriginAttributes.mPrivateBrowsingId > 0), originSuffix);
   RefPtr<nsHostRecord> rec = mRecordDB.Get(key);
-  if (rec) {
-    nsHostRecord* recPtr = nullptr;
 
-    for (const RefPtr<nsResolveHostCallback>& c : rec->mCallbacks) {
-      if (c->EqualsAsyncListener(aListener)) {
-        RefPtr<nsResolveHostCallback> callback = c;
-        c->remove();
-        recPtr = rec;
-        callback->OnResolveHostComplete(this, recPtr, status);
-        break;
-      }
+  if (!rec) {
+    return;
+  }
+
+  for (RefPtr<nsResolveHostCallback> c : rec->mCallbacks) {
+    if (c->EqualsAsyncListener(aListener)) {
+      c->remove();
+      c->OnResolveHostComplete(this, rec.get(), status);
+      break;
     }
+  }
 
-    // If there are no more callbacks, remove the hash table entry
-    if (recPtr && recPtr->mCallbacks.isEmpty()) {
-      mRecordDB.Remove(*static_cast<nsHostKey*>(recPtr));
-      // If record is on a Queue, remove it and then deref it
-      if (recPtr->isInList()) {
-        recPtr->remove();
+  // If there are no more callbacks, remove the hash table entry
+  if (rec->mCallbacks.isEmpty()) {
+    mRecordDB.Remove(*static_cast<nsHostKey*>(rec.get()));
+    // If record is on a Queue, remove it
+    if (rec->isInList()) {
+      // if the queue this record is in is the eviction queue
+      // then we should also update mEvictionQSize
+      if (mEvictionQ.contains(rec)) {
+        mEvictionQSize--;
       }
+      rec->remove();
     }
   }
 }
