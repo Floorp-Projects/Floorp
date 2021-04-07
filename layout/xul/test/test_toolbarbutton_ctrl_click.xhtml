@@ -27,8 +27,7 @@ function test_resizer_ctrl_click()
   toolbarbutton.addEventListener("click", function(aEvent) {
     // Delay check for command event, because it is fired after click event.
     setTimeout(() => {
-      is(isCommandFired, AppConstants.platform != "macosx",
-         "Check if command event is fired");
+      ok(isCommandFired, "Check if command event is fired");
       SimpleTest.finish();
     }, 0);
   });
