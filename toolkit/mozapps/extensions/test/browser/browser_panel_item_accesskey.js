@@ -3,6 +3,14 @@
 
 "use strict";
 
+add_task(async function setup() {
+  // Disable Proton for this test due to crashes seen when
+  // attempting to enable Proton on autoland
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.proton.enabled", false]],
+  });
+});
+
 add_task(async function testPanelItemWithAccesskey() {
   let win = await loadInitialView("extension");
   let doc = win.document;
