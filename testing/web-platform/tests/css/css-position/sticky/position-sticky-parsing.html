@@ -11,7 +11,8 @@ should be allowed." />
 <body></body>
 
 <script>
-const displayTypes = [
+// Sticky is valid for all elements except table-column-group and table-column.
+const VALID_STICKY_DISPLAY_TYPES = [
   'block',
   'inline',
   'run-in',
@@ -29,10 +30,6 @@ const displayTypes = [
   'table-row',
   'table-cell',
   'table-caption',
-  // Sticky does not apply to table-column or table-column-group, but the
-  // computed value should still be sticky.
-  'table-column',
-  'table-column-group',
   'ruby-base',
   'ruby-text',
   'ruby-base-container',
@@ -41,8 +38,13 @@ const displayTypes = [
   'none',
 ];
 
+const INVALID_STICKY_DISPLAY_TYPES = [
+  'table-column-group',
+  'table-column',
+];
+
 test(() => {
-  for (displayValue of displayTypes) {
+  for (displayValue of VALID_STICKY_DISPLAY_TYPES) {
     let div = document.createElement('div');
     let style = `position: sticky; display: ${displayValue};`;
     div.setAttribute('style', style);
@@ -55,5 +57,17 @@ test(() => {
     }
     document.body.removeChild(div);
   }
+
+  for (displayValue of INVALID_STICKY_DISPLAY_TYPES) {
+    let div = document.createElement('div');
+    let style = `position: sticky; display: ${displayValue};`;
+    div.setAttribute('style', style);
+    document.body.appendChild(div);
+
+    assert_not_equals(getComputedStyle(div).position, 'sticky',
+        `Expected sticky to be invalid for display: ${displayValue}`);
+    document.body.removeChild(div);
+  }
 }, 'The value of sticky for the position property should be parsed correctly');
 </script>
+
