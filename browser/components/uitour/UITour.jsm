@@ -123,9 +123,12 @@ var UITour = {
           let id = UITour.protonEnabled
             ? "appMenu-fxa-label2"
             : "appMenu-fxa-label";
-          // Use the sync setup icon.
-          let statusButton = aDocument.getElementById(id);
-          return statusButton.icon;
+          let statusButton = PanelMultiView.getViewNode(aDocument, id);
+          if (!UITour.protonEnabled) {
+            // Use the sync setup icon.
+            return statusButton.querySelector(".toolbarbutton-icon");
+          }
+          return statusButton;
         },
         // This is a fake widgetName starting with the "appMenu-" prefix so we know
         // to automatically open the appMenu when annotating this target.
