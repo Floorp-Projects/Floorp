@@ -645,8 +645,7 @@ class NativeObject : public JSObject {
   static Shape* replaceWithNewEquivalentShape(JSContext* cx,
                                               HandleNativeObject obj,
                                               Shape* existingShape,
-                                              Shape* newShape = nullptr,
-                                              bool accessorShape = false);
+                                              Shape* newShape = nullptr);
 
   /*
    * Remove the last property of an object, provided that it is safe to do so

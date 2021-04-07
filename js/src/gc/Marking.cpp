@@ -1146,13 +1146,6 @@ void GCMarker::traverse(BaseScript* thing) {
 }
 }  // namespace js
 
-namespace js {
-template <>
-void GCMarker::traverse(AccessorShape* thing) {
-  MOZ_CRASH("AccessorShape must be marked as a Shape");
-}
-}  // namespace js
-
 #ifdef DEBUG
 void GCMarker::setCheckAtomMarking(bool check) {
   MOZ_ASSERT(check != checkAtomMarking);

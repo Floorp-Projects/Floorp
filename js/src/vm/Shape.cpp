@@ -969,9 +969,8 @@ Shape* NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj,
     // the last property of the dictionary (unless the modified property
     // is also the last property).
     bool updateLast = (shape == obj->lastProperty());
-    shape = NativeObject::replaceWithNewEquivalentShape(
-        cx, obj, shape, nullptr,
-        /* accessorShape = */ false);
+    shape =
+        NativeObject::replaceWithNewEquivalentShape(cx, obj, shape, nullptr);
     if (!shape) {
       return nullptr;
     }
@@ -1074,8 +1073,7 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
     // is also the last property).
     bool updateLast = (shape == obj->lastProperty());
     shape =
-        NativeObject::replaceWithNewEquivalentShape(cx, obj, shape, nullptr,
-                                                    /* accessorShape = */ true);
+        NativeObject::replaceWithNewEquivalentShape(cx, obj, shape, nullptr);
     if (!shape) {
       return nullptr;
     }
@@ -1268,8 +1266,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 Shape* NativeObject::replaceWithNewEquivalentShape(JSContext* cx,
                                                    HandleNativeObject obj,
                                                    Shape* oldShape,
-                                                   Shape* newShape,
-                                                   bool accessorShape) {
+                                                   Shape* newShape) {
   MOZ_ASSERT(cx->isInsideCurrentZone(oldShape));
   MOZ_ASSERT_IF(oldShape != obj->lastProperty(),
                 obj->inDictionaryMode() &&
