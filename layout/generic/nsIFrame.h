@@ -4419,6 +4419,7 @@ class nsIFrame : public nsQueryFrame {
   Maybe<nscoord> ComputeInlineSizeFromAspectRatio(
       mozilla::WritingMode aWM, const mozilla::LogicalSize& aCBSize,
       const mozilla::LogicalSize& aContentEdgeToBoxSizing,
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
       mozilla::ComputeSizeFlags aFlags) const;
 
  public:
@@ -4792,6 +4793,7 @@ class nsIFrame : public nsQueryFrame {
       const mozilla::LogicalSize& aContainingBlockSize,
       const mozilla::LogicalSize& aContentEdgeToBoxSizing,
       nscoord aBoxSizingToMarginEdge, ExtremumLength aSize,
+      const mozilla::StyleSizeOverrides& aSizeOverrides,
       mozilla::ComputeSizeFlags aFlags);
 
   /**
@@ -4809,6 +4811,7 @@ class nsIFrame : public nsQueryFrame {
       const mozilla::LogicalSize& aContainingBlockSize,
       const mozilla::LogicalSize& aContentEdgeToBoxSizing,
       nscoord aBoxSizingToMarginEdge, const SizeOrMaxSize& aSize,
+      const mozilla::StyleSizeOverrides& aSizeOverrides = {},
       mozilla::ComputeSizeFlags aFlags = {}) {
     if (aSize.IsLengthPercentage()) {
       return {ComputeISizeValue(aWM, aContainingBlockSize,
@@ -4820,7 +4823,7 @@ class nsIFrame : public nsQueryFrame {
     return ComputeISizeValue(aRenderingContext, aWM, aContainingBlockSize,
                              aContentEdgeToBoxSizing, aBoxSizingToMarginEdge,
                              length.valueOr(ExtremumLength::MinContent),
-                             aFlags);
+                             aSizeOverrides, aFlags);
   }
 
   DisplayItemDataArray* DisplayItemData() const {
