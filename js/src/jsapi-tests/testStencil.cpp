@@ -16,7 +16,7 @@
 #include "js/Transcoding.h"
 #include "jsapi-tests/tests.h"
 #include "vm/HelperThreadState.h"  // js::RunPendingSourceCompressions
-#include "vm/Monitor.h"  // js::Monitor, js::AutoLockMonitor
+#include "vm/Monitor.h"            // js::Monitor, js::AutoLockMonitor
 
 BEGIN_TEST(testStencil_Basic) {
   const char* chars =
