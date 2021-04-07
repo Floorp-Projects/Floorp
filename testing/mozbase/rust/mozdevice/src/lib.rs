@@ -514,7 +514,8 @@ impl Device {
         let response = std::str::from_utf8(&bytes)?;
         debug!("execute_host_command: << {:?}", response);
 
-        Ok(response.to_owned())
+        // Unify new lines by removing possible carriage returns
+        Ok(response.replace("\r\n", "\n"))
     }
 
     pub fn enable_run_as_for_path(&self, path: &Path) -> bool {
