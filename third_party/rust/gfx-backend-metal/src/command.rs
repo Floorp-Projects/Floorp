@@ -585,6 +585,7 @@ impl State {
         })
     }
 
+    #[must_use]
     fn build_depth_stencil(&mut self) -> Option<pso::DepthStencilDesc> {
         let mut desc = match self.render_pso {
             Some(ref rp) => rp.ds_desc,
@@ -2626,6 +2627,12 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
         if let Some(framebuffer) = info.framebuffer {
             self.state.target.extent = framebuffer.extent;
+            self.state.active_scissor = MTLScissorRect {
+                x: 0,
+                y: 0,
+                width: framebuffer.extent.width as u64,
+                height: framebuffer.extent.height as u64,
+            };
         }
         if let Some(sp) = info.subpass {
             let subpass = &sp.main_pass.subpasses[sp.index as usize];
@@ -2640,6 +2647,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                 let aspects = rat.format.unwrap().surface_desc().aspects;
                 self.state.target.aspects |= aspects;
             }
+            self.state.active_depth_stencil_desc = pso::DepthStencilDesc::default();
 
             match inner.sink {
                 Some(CommandSink::Deferred {
@@ -2661,7 +2669,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
                     ));
                 }
                 _ => {
-                    warn!("Unexpected inheritance info on a primary command buffer");
+                    panic!("Unexpected inheritance info on a primary command buffer");
                 }
             }
         }
@@ -3073,6 +3081,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
         // reset all the affected states
         let device_lock = &self.shared.device;
+        self.state.active_depth_stencil_desc = pso::DepthStencilDesc::default();
         let com_ds = match self.state.build_depth_stencil() {
             Some(desc) => {
                 ds_state = ds_store.get(desc, device_lock);
@@ -3635,19 +3644,12 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
 
         let ds_store = &self.shared.service_pipes.depth_stencil_states;
         let ds_state;
-        let com_ds = if sin
-            .combined_aspects
-            .intersects(Aspects::DEPTH | Aspects::STENCIL)
-        {
-            match self.state.build_depth_stencil() {
-                Some(desc) => {
-                    ds_state = ds_store.get(desc, &self.shared.device);
-                    Some(soft::RenderCommand::SetDepthStencilState(&**ds_state))
-                }
-                None => None,
+        let com_ds = match self.state.build_depth_stencil() {
+            Some(desc) => {
+                ds_state = ds_store.get(desc, &self.shared.device);
+                Some(soft::RenderCommand::SetDepthStencilState(&**ds_state))
             }
-        } else {
-            None
+            None => None,
         };
 
         let init_commands = self
@@ -4773,11 +4775,11 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             let mut pre = inner.sink().pre_render();
             // Note: the whole range is re-uploaded, which may be inefficient
             if stages.contains(pso::ShaderStageFlags::VERTEX) {
-                let pc = layout.push_constants.vs.unwrap();
+                let pc = layout.push_constants.vs.expect("Vertex stage specified, but layout doesn't contain vertex stage push constants.");
                 pre.issue(self.state.push_vs_constants(pc));
             }
             if stages.contains(pso::ShaderStageFlags::FRAGMENT) {
-                let pc = layout.push_constants.ps.unwrap();
+                let pc = layout.push_constants.ps.expect("Fragment stage specified, but layout doesn't contain fragment stage push constants.");
                 pre.issue(self.state.push_ps_constants(pc));
             }
         }

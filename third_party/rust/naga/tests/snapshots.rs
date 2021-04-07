@@ -5,6 +5,7 @@ bitflags::bitflags! {
         const SPIRV = 0x4;
         const METAL = 0x8;
         const GLSL = 0x10;
+        const DOT = 0x20;
     }
 }
 
@@ -40,13 +41,14 @@ struct BindTarget {
 
 #[derive(Default, serde::Deserialize)]
 struct Parameters {
-    #[serde(default)]
-    #[allow(dead_code)]
-    spv_flow_dump_prefix: String,
     #[cfg_attr(not(feature = "spv-out"), allow(dead_code))]
     spv_version: (u8, u8),
     #[cfg_attr(not(feature = "spv-out"), allow(dead_code))]
     spv_capabilities: naga::FastHashSet<spirv::Capability>,
+    #[cfg_attr(not(feature = "spv-out"), allow(dead_code))]
+    spv_debug: bool,
+    #[cfg_attr(not(feature = "spv-out"), allow(dead_code))]
+    spv_adjust_coordinate_space: bool,
     #[cfg_attr(not(feature = "msl-out"), allow(dead_code))]
     mtl_bindings: naga::FastHashMap<BindSource, BindTarget>,
 }
@@ -59,13 +61,15 @@ fn with_snapshot_settings<F: FnOnce() -> ()>(snapshot_assertion: F) {
     settings.bind(|| snapshot_assertion());
 }
 
-#[allow(unused_variables)]
+#[allow(dead_code, unused_variables)]
 fn check_targets(module: &naga::Module, name: &str, targets: Targets) {
     let params = match std::fs::read_to_string(format!("tests/in/{}{}", name, ".param.ron")) {
         Ok(string) => ron::de::from_str(&string).expect("Couldn't find param file"),
         Err(_) => Parameters::default(),
     };
-    let analysis = naga::proc::Validator::new().validate(module).unwrap();
+    let info = naga::valid::Validator::new(naga::valid::ValidationFlags::all())
+        .validate(module)
+        .unwrap();
 
     #[cfg(feature = "serialize")]
     {
@@ -78,7 +82,7 @@ fn check_targets(module: &naga::Module, name: &str, targets: Targets) {
         }
         if targets.contains(Targets::ANALYSIS) {
             let config = ron::ser::PrettyConfig::default().with_new_line("\n".to_string());
-            let output = ron::ser::to_string_pretty(&analysis, config).unwrap();
+            let output = ron::ser::to_string_pretty(&info, config).unwrap();
             with_snapshot_settings(|| {
                 insta::assert_snapshot!(format!("{}.info.ron", name), output);
             });
@@ -88,21 +92,30 @@ fn check_targets(module: &naga::Module, name: &str, targets: Targets) {
     #[cfg(feature = "spv-out")]
     {
         if targets.contains(Targets::SPIRV) {
-            check_output_spv(module, &analysis, name, &params);
+            check_output_spv(module, &info, name, &params);
         }
     }
     #[cfg(feature = "msl-out")]
     {
         if targets.contains(Targets::METAL) {
-            check_output_msl(module, &analysis, name, &params);
+            check_output_msl(module, &info, name, &params);
         }
     }
     #[cfg(feature = "glsl-out")]
     {
         if targets.contains(Targets::GLSL) {
-            for &(stage, ref ep_name) in module.entry_points.keys() {
-                check_output_glsl(module, &analysis, name, stage, ep_name);
+            for ep in module.entry_points.iter() {
+                check_output_glsl(module, &info, name, ep.stage, &ep.name);
             }
+        }
+    }
+    #[cfg(feature = "dot-out")]
+    {
+        if targets.contains(Targets::DOT) {
+            let string = naga::back::dot::write(module, Some(&info)).unwrap();
+            with_snapshot_settings(|| {
+                insta::assert_snapshot!(format!("{}.dot", name), string);
+            });
         }
     }
 }
@@ -110,20 +123,27 @@ fn check_targets(module: &naga::Module, name: &str, targets: Targets) {
 #[cfg(feature = "spv-out")]
 fn check_output_spv(
     module: &naga::Module,
-    analysis: &naga::proc::analyzer::Analysis,
+    info: &naga::valid::ModuleInfo,
     name: &str,
     params: &Parameters,
 ) {
     use naga::back::spv;
     use rspirv::binary::Disassemble;
 
+    let mut flags = spv::WriterFlags::empty();
+    if params.spv_debug {
+        flags |= spv::WriterFlags::DEBUG;
+    }
+    if params.spv_adjust_coordinate_space {
+        flags |= spv::WriterFlags::ADJUST_COORDINATE_SPACE;
+    }
     let options = spv::Options {
         lang_version: params.spv_version,
-        flags: spv::WriterFlags::DEBUG,
+        flags,
         capabilities: params.spv_capabilities.clone(),
     };
 
-    let spv = spv::write_vec(module, analysis, &options).unwrap();
+    let spv = spv::write_vec(module, info, &options).unwrap();
 
     let dis = rspirv::dr::load_words(spv)
         .expect("Produced invalid SPIR-V")
@@ -136,7 +156,7 @@ fn check_output_spv(
 #[cfg(feature = "msl-out")]
 fn check_output_msl(
     module: &naga::Module,
-    analysis: &naga::proc::analyzer::Analysis,
+    info: &naga::valid::ModuleInfo,
     name: &str,
     params: &Parameters,
 ) {
@@ -167,9 +187,10 @@ fn check_output_msl(
         binding_map,
         spirv_cross_compatibility: false,
         fake_missing_bindings: false,
+        allow_point_size: true,
     };
 
-    let (msl, _) = msl::write_string(module, analysis, &options).unwrap();
+    let (msl, _) = msl::write_string(module, info, &options).unwrap();
 
     with_snapshot_settings(|| {
         insta::assert_snapshot!(format!("{}.msl", name), msl);
@@ -179,7 +200,7 @@ fn check_output_msl(
 #[cfg(feature = "glsl-out")]
 fn check_output_glsl(
     module: &naga::Module,
-    analysis: &naga::proc::analyzer::Analysis,
+    info: &naga::valid::ModuleInfo,
     name: &str,
     stage: naga::ShaderStage,
     ep_name: &str,
@@ -193,7 +214,7 @@ fn check_output_glsl(
     };
 
     let mut buffer = Vec::new();
-    let mut writer = glsl::Writer::new(&mut buffer, module, analysis, &options).unwrap();
+    let mut writer = glsl::Writer::new(&mut buffer, module, info, &options).unwrap();
     writer.write().unwrap();
 
     let string = String::from_utf8(buffer).unwrap();
@@ -216,7 +237,10 @@ fn convert_wgsl(name: &str, targets: Targets) {
 #[cfg(feature = "wgsl-in")]
 #[test]
 fn convert_wgsl_quad() {
-    convert_wgsl("quad", Targets::SPIRV | Targets::METAL | Targets::GLSL);
+    convert_wgsl(
+        "quad",
+        Targets::SPIRV | Targets::METAL | Targets::GLSL | Targets::DOT,
+    );
 }
 
 #[cfg(feature = "wgsl-in")]
@@ -249,7 +273,14 @@ fn convert_wgsl_collatz() {
 #[cfg(feature = "wgsl-in")]
 #[test]
 fn convert_wgsl_shadow() {
-    convert_wgsl("shadow", Targets::SPIRV | Targets::METAL);
+    convert_wgsl("shadow", Targets::SPIRV | Targets::METAL | Targets::GLSL);
+}
+
+#[cfg(feature = "wgsl-in")]
+#[test]
+fn convert_wgsl_image_copy() {
+    //SPIR-V is blocked by https://github.com/gfx-rs/naga/issues/646
+    convert_wgsl("image-copy", Targets::METAL);
 }
 
 #[cfg(feature = "wgsl-in")]
@@ -259,29 +290,40 @@ fn convert_wgsl_texture_array() {
 }
 
 #[cfg(feature = "spv-in")]
-fn convert_spv(name: &str, targets: Targets) {
+fn convert_spv(name: &str, adjust_coordinate_space: bool, targets: Targets) {
     let module = naga::front::spv::parse_u8_slice(
         &std::fs::read(format!("tests/in/{}{}", name, ".spv")).expect("Couldn't find spv file"),
-        &Default::default(),
+        &naga::front::spv::Options {
+            adjust_coordinate_space,
+            flow_graph_dump_prefix: None,
+        },
     )
     .unwrap();
     check_targets(&module, name, targets);
-    naga::proc::Validator::new().validate(&module).unwrap();
+    naga::valid::Validator::new(naga::valid::ValidationFlags::all())
+        .validate(&module)
+        .unwrap();
+}
+
+#[cfg(feature = "spv-in")]
+#[test]
+fn convert_spv_quad_vert() {
+    convert_spv("quad-vert", false, Targets::METAL);
 }
 
 #[cfg(feature = "spv-in")]
 #[test]
 fn convert_spv_shadow() {
-    convert_spv("shadow", Targets::IR | Targets::ANALYSIS);
+    convert_spv("shadow", true, Targets::IR | Targets::ANALYSIS);
 }
 
 #[cfg(feature = "glsl-in")]
 fn convert_glsl(
     name: &str,
     entry_points: naga::FastHashMap<String, naga::ShaderStage>,
-    targets: Targets,
+    _targets: Targets,
 ) {
-    let module = naga::front::glsl::parse_str(
+    let _module = naga::front::glsl::parse_str(
         &std::fs::read_to_string(format!("tests/in/{}{}", name, ".glsl"))
             .expect("Couldn't find glsl file"),
         &naga::front::glsl::Options {
@@ -290,7 +332,8 @@ fn convert_glsl(
         },
     )
     .unwrap();
-    check_targets(&module, name, targets);
+    //TODO
+    //check_targets(&module, name, targets);
 }
 
 #[cfg(feature = "glsl-in")]

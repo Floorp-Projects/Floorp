@@ -12,9 +12,9 @@ use {
 pub(crate) struct BuddyBlock<M> {
     pub memory: Arc<M>,
     pub ptr: Option<NonNull<u8>>,
+    pub offset: u64,
     pub size: u64,
     pub chunk: usize,
-    pub offset: u64,
     pub index: usize,
 }
 

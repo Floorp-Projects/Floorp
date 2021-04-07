@@ -1,6 +1,7 @@
 use crate::entry::EntryCustom;
 use libloading::Library;
 use std::error::Error;
+use std::ffi::OsStr;
 use std::fmt;
 use std::ptr;
 use std::sync::Arc;
@@ -39,6 +40,12 @@ impl Error for LoadingError {
 }
 
 impl EntryCustom<Arc<Library>> {
+    /// Load default Vulkan library for the current platform
+    ///
+    /// # Safety
+    /// `dlopen`ing native libraries is inherently unsafe. The safety guidelines
+    /// for [`Library::new`] and [`Library::get`] apply here.
+    ///
     /// ```rust,no_run
     /// use ash::{vk, Entry, version::EntryV1_0};
     /// # fn main() -> Result<(), Box<std::error::Error>> {
@@ -54,12 +61,19 @@ impl EntryCustom<Arc<Library>> {
     /// let instance = unsafe { entry.create_instance(&create_info, None)? };
     /// # Ok(()) }
     /// ```
-    pub fn new() -> Result<Entry, LoadingError> {
-        let lib = Library::new(&LIB_PATH)
-            .map_err(LoadingError)
-            .map(Arc::new)?;
+    pub unsafe fn new() -> Result<Entry, LoadingError> {
+        Self::with_library(&LIB_PATH)
+    }
 
-        Ok(Self::new_custom(lib, |vk_lib, name| unsafe {
+    /// Load Vulkan library at `path`
+    ///
+    /// # Safety
+    /// `dlopen`ing native libraries is inherently unsafe. The safety guidelines
+    /// for [`Library::new`] and [`Library::get`] apply here.
+    pub unsafe fn with_library(path: &impl AsRef<OsStr>) -> Result<Entry, LoadingError> {
+        let lib = Library::new(path).map_err(LoadingError).map(Arc::new)?;
+
+        Ok(Self::new_custom(lib, |vk_lib, name| {
             vk_lib
                 .get(name.to_bytes_with_nul())
                 .map(|symbol| *symbol)

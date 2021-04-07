@@ -88,6 +88,21 @@ bitflags!(
     }
 );
 
+bitflags!(
+    /// Buffer create flags.
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+    pub struct CreateFlags: u32 {
+        /// Specifies the view will be backed using sparse memory binding.
+        const SPARSE_BINDING = 0x0000_0001;
+        /// Specifies the view can be partially backed with sparse memory binding.
+        /// Must have `SPARSE_BINDING` enabled.
+        const SPARSE_RESIDENCY = 0x0000_0002;
+        /// Specifies the view will be backed using sparse memory binding with memory bindings that
+        /// might alias other data. Must have `SPARSE_BINDING` enabled.
+        const SPARSE_ALIASED = 0x0000_0004;
+    }
+);
+
 impl Usage {
     /// Returns if the buffer can be used in transfer operations.
     pub fn can_transfer(&self) -> bool {
