@@ -176,9 +176,9 @@ class Http2Stream : public nsAHttpSegmentReader,
 
   nsresult GetOriginAttributes(mozilla::OriginAttributes* oa);
 
-  virtual void TopLevelOuterContentWindowIdChanged(uint64_t windowId);
-  void TopLevelOuterContentWindowIdChangedInternal(
-      uint64_t windowId);  // For use by pushed streams only
+  virtual void TopBrowsingContextIdChanged(uint64_t id);
+  void TopBrowsingContextIdChangedInternal(
+      uint64_t id);  // For use by pushed streams only
 
  protected:
   virtual ~Http2Stream();
@@ -244,7 +244,7 @@ class Http2Stream : public nsAHttpSegmentReader,
 
   uint8_t mPriorityWeight;       // h2 weight
   uint32_t mPriorityDependency;  // h2 stream id this one depends on
-  uint64_t mCurrentForegroundTabOuterContentWindowId;
+  uint64_t mCurrentTopBrowsingContextId;
   uint64_t mTransactionTabId;
 
  private:

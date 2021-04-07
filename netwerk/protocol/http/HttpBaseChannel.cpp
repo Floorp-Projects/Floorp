@@ -179,7 +179,7 @@ HttpBaseChannel::HttpBaseChannel()
       mEncodedBodySize(0),
       mRequestContextID(0),
       mContentWindowId(0),
-      mTopLevelOuterContentWindowId(0),
+      mTopBrowsingContextId(0),
       mAltDataLength(-1),
       mChannelId(0),
       mReqContentLength(0U),
@@ -1471,16 +1471,14 @@ NS_IMETHODIMP HttpBaseChannel::GetTopLevelContentWindowId(uint64_t* aWindowId) {
   return NS_OK;
 }
 
-NS_IMETHODIMP HttpBaseChannel::SetTopLevelOuterContentWindowId(
-    uint64_t aWindowId) {
-  mTopLevelOuterContentWindowId = aWindowId;
+NS_IMETHODIMP HttpBaseChannel::SetTopBrowsingContextId(uint64_t aId) {
+  mTopBrowsingContextId = aId;
   return NS_OK;
 }
 
-NS_IMETHODIMP HttpBaseChannel::GetTopLevelOuterContentWindowId(
-    uint64_t* aWindowId) {
-  EnsureTopLevelOuterContentWindowId();
-  *aWindowId = mTopLevelOuterContentWindowId;
+NS_IMETHODIMP HttpBaseChannel::GetTopBrowsingContextId(uint64_t* aId) {
+  EnsureTopBrowsingContextId();
+  *aId = mTopBrowsingContextId;
   return NS_OK;
 }
 
@@ -4459,8 +4457,7 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
 
   // When on the parent process, the channel can't attempt to get it itself.
   // When on the child process, it would be waste to query it again.
-  rv = httpChannel->SetTopLevelOuterContentWindowId(
-      mTopLevelOuterContentWindowId);
+  rv = httpChannel->SetTopBrowsingContextId(mTopBrowsingContextId);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Not setting this flag would break carrying permissions down to the child
@@ -5191,25 +5188,17 @@ bool HttpBaseChannel::EnsureRequestContext() {
   return true;
 }
 
-void HttpBaseChannel::EnsureTopLevelOuterContentWindowId() {
-  if (mTopLevelOuterContentWindowId) {
+void HttpBaseChannel::EnsureTopBrowsingContextId() {
+  if (mTopBrowsingContextId) {
     return;
   }
 
-  nsCOMPtr<nsILoadContext> loadContext;
-  GetCallback(loadContext);
-  if (!loadContext) {
-    return;
-  }
+  RefPtr<dom::BrowsingContext> bc;
+  MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetBrowsingContext(getter_AddRefs(bc)));
 
-  nsCOMPtr<mozIDOMWindowProxy> topWindow;
-  loadContext->GetTopWindow(getter_AddRefs(topWindow));
-  if (!topWindow) {
-    return;
+  if (bc && bc->Top()) {
+    mTopBrowsingContextId = bc->Top()->Id();
   }
-
-  mTopLevelOuterContentWindowId =
-      nsPIDOMWindowOuter::From(topWindow)->WindowID();
 }
 
 void HttpBaseChannel::InitiateORBTelemetry() {

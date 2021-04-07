@@ -79,7 +79,7 @@ already_AddRefed<HttpConnectionBase> ConnectionHandle::HttpConnection() {
   return rv.forget();
 }
 
-void ConnectionHandle::TopLevelOuterContentWindowIdChanged(uint64_t windowId) {
+void ConnectionHandle::TopBrowsingContextIdChanged(uint64_t id) {
   // Do nothing.
 }
 

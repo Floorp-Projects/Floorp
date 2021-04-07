@@ -57,10 +57,10 @@ function serverStopListener() {
   server.stop();
 }
 
-function createHttpRequest(windowId, requestId) {
+function createHttpRequest(browsingContextId, requestId) {
   let uri = baseURL;
   var chan = make_channel(uri);
-  chan.topLevelOuterContentWindowId = windowId;
+  chan.topBrowsingContextId = browsingContextId;
   var listner = new HttpResponseListener(requestId);
   chan.setRequestHeader("X-ID", requestId, false);
   chan.setRequestHeader("Cache-control", "no-store", false);
@@ -199,8 +199,5 @@ function run_test() {
   var obsvc = Cc["@mozilla.org/observer-service;1"].getService(
     Ci.nsIObserverService
   );
-  obsvc.notifyObservers(
-    windowIdWrapper,
-    "net:current-toplevel-outer-content-windowid"
-  );
+  obsvc.notifyObservers(windowIdWrapper, "net:current-top-browsing-context-id");
 }

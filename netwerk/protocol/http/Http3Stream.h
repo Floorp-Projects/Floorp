@@ -33,7 +33,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
   nsresult TryActivating();
 
   // TODO priorities
-  void TopLevelOuterContentWindowIdChanged(uint64_t windowId){};
+  void TopBrowsingContextIdChanged(uint64_t id){};
 
   [[nodiscard]] nsresult ReadSegments(nsAHttpSegmentReader*);
   [[nodiscard]] nsresult WriteSegments(nsAHttpSegmentWriter*, uint32_t,

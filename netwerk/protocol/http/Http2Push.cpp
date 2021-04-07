@@ -333,23 +333,23 @@ nsresult Http2PushedStream::GetBufferedData(char* buf, uint32_t count,
   return rv;
 }
 
-void Http2PushedStream::TopLevelOuterContentWindowIdChanged(uint64_t windowId) {
+void Http2PushedStream::TopBrowsingContextIdChanged(uint64_t id) {
   if (mConsumerStream) {
     // Pass through to our sink, who will handle things appropriately.
-    mConsumerStream->TopLevelOuterContentWindowIdChangedInternal(windowId);
+    mConsumerStream->TopBrowsingContextIdChanged(id);
     return;
   }
 
   MOZ_ASSERT(gHttpHandler->ActiveTabPriority());
 
-  mCurrentForegroundTabOuterContentWindowId = windowId;
+  mCurrentTopBrowsingContextId = id;
 
   if (!mSession->UseH2Deps()) {
     return;
   }
 
   uint32_t oldDependency = mPriorityDependency;
-  if (mTransactionTabId != mCurrentForegroundTabOuterContentWindowId) {
+  if (mTransactionTabId != mCurrentTopBrowsingContextId) {
     mPriorityDependency = Http2Session::kBackgroundGroupID;
     nsHttp::NotifyActiveTabLoadOptimization();
   } else {

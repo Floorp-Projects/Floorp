@@ -68,7 +68,7 @@ class Http2PushedStream final : public Http2Stream {
   // overload of Http2Stream
   virtual bool HasSink() override { return !!mConsumerStream; }
   virtual void SetPushComplete() override { mPushCompleted = true; }
-  virtual void TopLevelOuterContentWindowIdChanged(uint64_t) override;
+  virtual void TopBrowsingContextIdChanged(uint64_t) override;
 
   nsCString& GetRequestString() { return mRequestString; }
   nsCString& GetResourceUrl() { return mResourceUrl; }
