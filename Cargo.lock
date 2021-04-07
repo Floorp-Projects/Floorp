@@ -3276,6 +3276,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mozwer_s"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "rust-ini",
+ "serde",
+ "serde_json",
+ "uuid",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "mp4parse"
 version = "0.11.5"
 source = "git+https://github.com/mozilla/mp4parse-rust?rev=94c3b1f368c82aefcbf51967f6aa296a9ccceb69#94c3b1f368c82aefcbf51967f6aa296a9ccceb69"

@@ -1,0 +1,10 @@
+RustLibrary("mozwer_s")
+
+OS_LIBS += [
+    "dbghelp",
+    "kernel32",
+    "ole32",
+    "shell32",
+    "userenv",
+    "ws2_32",
+]
