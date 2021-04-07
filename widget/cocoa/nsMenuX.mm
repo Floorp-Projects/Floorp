@@ -439,7 +439,13 @@ bool nsMenuX::Close() {
   bool wasOpen = mIsOpenForGecko;
 
   if (mIsOpen) {
-    [mNativeMenu cancelTracking];
+    // Close the menu.
+    // We usually don't get here during normal Firefox usage: If the user closes the menu by
+    // clicking an item, or by clicking outside the menu, or by pressing escape, then the menu gets
+    // closed by macOS, and not by a call to nsMenuX::Close().
+    // If we do get here, it's usually because we're running an automated test. Close the menu
+    // without the fade-out animation so that we don't unnecessarily slow down the automated tests.
+    [mNativeMenu cancelTrackingWithoutAnimation];
   }
 
   FlushMenuClosedRunnable();
