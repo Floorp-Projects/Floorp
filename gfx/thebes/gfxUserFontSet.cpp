@@ -269,7 +269,7 @@ void gfxUserFontEntry::GetFamilyNameAndURIForLogging(uint32_t aSrcIndex,
   aFamilyName = mFamilyName;
 
   aURI.Truncate();
-  if (aSrcIndex == mSrcList.Length()) {
+  if (aSrcIndex >= mSrcList.Length()) {
     aURI.AppendLiteral("(end of source list)");
   } else {
     if (mSrcList[aSrcIndex].mURI) {
