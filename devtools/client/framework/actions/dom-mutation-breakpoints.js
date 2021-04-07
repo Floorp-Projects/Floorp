@@ -11,6 +11,9 @@ const {
 
 exports.registerWalkerListeners = registerWalkerListeners;
 function registerWalkerListeners(store, walker) {
+  if (!walker) {
+    return;
+  }
   walker.on("mutations", mutations => handleWalkerMutations(mutations, store));
 }
 
