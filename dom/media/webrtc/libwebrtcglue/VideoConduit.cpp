@@ -1194,7 +1194,10 @@ void WebrtcVideoConduit::SelectSendResolution(unsigned short width,
       ConstrainPreservingAspectRatio(max_width, max_height, &width, &height);
     }
 
-    int max_fs = mVideoBroadcaster.wants().max_pixel_count;
+    int max_fs = std::numeric_limits<int>::max();
+    if (!mLockScaling) {
+      max_fs = mVideoBroadcaster.wants().max_pixel_count;
+    }
     // Limit resolution to max-fs
     if (mCurSendCodecConfig->mEncodingConstraints.maxFs) {
       // max-fs is in macroblocks, convert to pixels
