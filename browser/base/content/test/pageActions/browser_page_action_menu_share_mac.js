@@ -111,7 +111,7 @@ add_task(async function shareURLAddressBar() {
     await contextMenuPromise;
 
     // Wait for the Share button to be added
-    await BrowserTestUtils.waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       return document.getElementById("pageAction-urlbar-shareURL");
     }, "Waiting for the share url button to be added to url bar");
 
