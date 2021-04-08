@@ -74,15 +74,15 @@ class StartupActivityLogTest {
         val activityClass = mockk<Activity>()::class.java // mockk can't mock Class<...>
 
         activityCallbacks.onActivityCreated(mockk(), null)
-        expected.add(LogEntry.CreatedActivityLogEntry(activityClass))
+        expected.add(LogEntry.ActivityCreated(activityClass))
         assertEquals(expected, log.log)
 
         activityCallbacks.onActivityStarted(mockk())
-        expected.add(LogEntry.StartedActivityLogEntry(activityClass))
+        expected.add(LogEntry.ActivityStarted(activityClass))
         assertEquals(expected, log.log)
 
         activityCallbacks.onActivityStopped(mockk())
-        expected.add(LogEntry.StoppedActivityLogEntry(activityClass))
+        expected.add(LogEntry.ActivityStopped(activityClass))
         assertEquals(expected, log.log)
     }
 

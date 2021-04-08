@@ -55,9 +55,9 @@ class StartupActivityLog {
         val transformedEntries = log.map { when (it) {
             is LogEntry.AppStarted -> "App-STARTED"
             is LogEntry.AppStopped -> "App-STOPPED"
-            is LogEntry.CreatedActivityLogEntry -> "${it.activityClass.simpleName}-CREATED"
-            is LogEntry.StartedActivityLogEntry -> "${it.activityClass.simpleName}-STARTED"
-            is LogEntry.StoppedActivityLogEntry -> "${it.activityClass.simpleName}-STOPPED"
+            is LogEntry.ActivityCreated -> "${it.activityClass.simpleName}-CREATED"
+            is LogEntry.ActivityStarted -> "${it.activityClass.simpleName}-STARTED"
+            is LogEntry.ActivityStopped -> "${it.activityClass.simpleName}-STOPPED"
         } }
 
         loggerArg.debug(transformedEntries.toString())
@@ -79,15 +79,15 @@ class StartupActivityLog {
     @VisibleForTesting(otherwise = PRIVATE)
     inner class StartupLogActivityLifecycleCallbacks : DefaultActivityLifecycleCallbacks {
         override fun onActivityCreated(activity: Activity, bundle: Bundle?) {
-            _log.add(LogEntry.CreatedActivityLogEntry(activity::class.java))
+            _log.add(LogEntry.ActivityCreated(activity::class.java))
         }
 
         override fun onActivityStarted(activity: Activity) {
-            _log.add(LogEntry.StartedActivityLogEntry(activity::class.java))
+            _log.add(LogEntry.ActivityStarted(activity::class.java))
         }
 
         override fun onActivityStopped(activity: Activity) {
-            _log.add(LogEntry.StoppedActivityLogEntry(activity::class.java))
+            _log.add(LogEntry.ActivityStopped(activity::class.java))
         }
     }
 
@@ -98,8 +98,8 @@ class StartupActivityLog {
         object AppStarted : LogEntry()
         object AppStopped : LogEntry()
 
-        data class CreatedActivityLogEntry(val activityClass: Class<out Activity>) : LogEntry()
-        data class StartedActivityLogEntry(val activityClass: Class<out Activity>) : LogEntry()
-        data class StoppedActivityLogEntry(val activityClass: Class<out Activity>) : LogEntry()
+        data class ActivityCreated(val activityClass: Class<out Activity>) : LogEntry()
+        data class ActivityStarted(val activityClass: Class<out Activity>) : LogEntry()
+        data class ActivityStopped(val activityClass: Class<out Activity>) : LogEntry()
     }
 }

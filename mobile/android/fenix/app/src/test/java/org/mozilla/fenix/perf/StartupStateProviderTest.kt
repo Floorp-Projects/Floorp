@@ -43,8 +43,8 @@ class StartupStateProviderTest {
     fun `GIVEN the app started for an activity WHEN we launched to HomeActivity directly THEN start up is cold`() {
         // These entries mimic observed behavior.
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertTrue(provider.isColdStartForStartedActivity(homeActivityClass))
@@ -54,9 +54,9 @@ class StartupStateProviderTest {
     fun `GIVEN the app started for an activity WHEN we launched to HA through a non-drawing IntentRA THEN start up is cold`() {
         // These entries mimic observed behavior.
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(irActivityClass),
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertTrue(provider.isColdStartForStartedActivity(homeActivityClass))
@@ -66,12 +66,12 @@ class StartupStateProviderTest {
     fun `GIVEN the app started for an activity WHEN we launched HA through a drawing IntentRA THEN start up is not cold`() {
         // These entries mimic observed behavior for local code changes.
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(irActivityClass),
-            LogEntry.StartedActivityLogEntry(irActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityStarted(irActivityClass),
             LogEntry.AppStarted,
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
-            LogEntry.StoppedActivityLogEntry(irActivityClass)
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.ActivityStopped(irActivityClass)
         ))
         assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
     }
@@ -81,12 +81,12 @@ class StartupStateProviderTest {
         // We're making an assumption about how this would work based on previous observed patterns.
         // AIUI, we should never have more than one HomeActivity.
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted,
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
-            LogEntry.StoppedActivityLogEntry(homeActivityClass)
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.ActivityStopped(homeActivityClass)
         ))
         assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
     }
@@ -96,9 +96,9 @@ class StartupStateProviderTest {
         // These entries are from observed behavior.
         logEntries.addAll(listOf(
             LogEntry.AppStopped,
-            LogEntry.StoppedActivityLogEntry(homeActivityClass),
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
@@ -109,8 +109,8 @@ class StartupStateProviderTest {
         // These entries are from observed behavior.
         logEntries.addAll(listOf(
             LogEntry.AppStopped,
-            LogEntry.StoppedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
@@ -121,13 +121,13 @@ class StartupStateProviderTest {
         // While the entries are from observed behavior, this log shouldn't occur in the wild due to
         // our log optimizations. However, just in case the behavior changes, we check for it.
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted,
             LogEntry.AppStopped,
-            LogEntry.StoppedActivityLogEntry(homeActivityClass),
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
@@ -138,12 +138,12 @@ class StartupStateProviderTest {
         // This shouldn't occur in the wild due to the optimization but, just in case the behavior changes,
         // we check for it.
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted,
             LogEntry.AppStopped,
-            LogEntry.StoppedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
@@ -156,30 +156,30 @@ class StartupStateProviderTest {
         // Since we've never observed this, there are multiple ways the events could
         // theoretically be ordered: we try a few.
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(irActivityClass),
-            LogEntry.StartedActivityLogEntry(irActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityStarted(irActivityClass),
             LogEntry.AppStarted,
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass)
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass)
         ))
         assertIsNotCold()
 
         logEntries.clear()
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(irActivityClass),
-            LogEntry.StartedActivityLogEntry(irActivityClass),
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityStarted(irActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertIsNotCold()
 
         logEntries.clear()
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(irActivityClass),
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(irActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(irActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertIsNotCold()
@@ -193,7 +193,7 @@ class StartupStateProviderTest {
     @Test
     fun `GIVEN the app started for an activity WHEN an activity hasn't started yet THEN start up is not cold`() {
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(homeActivityClass)
+            LogEntry.ActivityCreated(homeActivityClass)
         ))
         assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
     }
@@ -207,17 +207,17 @@ class StartupStateProviderTest {
 
         // These are normally the success paths.
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertIsNotCold()
 
         logEntries.clear()
         logEntries.addAll(listOf(
-            LogEntry.CreatedActivityLogEntry(irActivityClass),
-            LogEntry.CreatedActivityLogEntry(homeActivityClass),
-            LogEntry.StartedActivityLogEntry(homeActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
         assertIsNotCold()
