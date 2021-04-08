@@ -43,7 +43,7 @@ import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModif
 import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     private var fabView: View? = null
@@ -57,6 +57,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     private val floatingActionButtonBinding = ViewBoundFeatureWrapper<FloatingActionButtonBinding>()
     private val selectionBannerBinding = ViewBoundFeatureWrapper<SelectionBannerBinding>()
     private val selectionHandleBinding = ViewBoundFeatureWrapper<SelectionHandleBinding>()
+    private val tabsTrayCtaBinding = ViewBoundFeatureWrapper<TabsTrayInfoBannerBinding>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -135,6 +136,19 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             this,
             browserTrayInteractor,
             syncedTabsTrayInteractor
+        )
+
+        tabsTrayCtaBinding.set(
+            feature = TabsTrayInfoBannerBinding(
+                context = view.context,
+                store = requireComponents.core.store,
+                infoBannerView = view.info_banner,
+                settings = requireComponents.settings,
+                navigationInteractor = navigationInteractor,
+                metrics = requireComponents.analytics.metrics
+            ),
+            owner = this,
+            view = view
         )
 
         tabLayoutMediator.set(
