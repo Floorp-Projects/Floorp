@@ -54,11 +54,19 @@ class CreditCardsSettingFragment : PreferenceFragmentCompat() {
         )
     }
 
+    @Suppress("MaxLineLength")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
             getPreferenceKey(R.string.pref_key_credit_cards_add_credit_card) -> {
                 val directions =
-                    CreditCardsSettingFragmentDirections.actionCreditCardsSettingFragmentToCreditCardEditorFragment()
+                    CreditCardsSettingFragmentDirections
+                        .actionCreditCardsSettingFragmentToCreditCardEditorFragment()
+                findNavController().navigate(directions)
+            }
+            getPreferenceKey(R.string.pref_key_credit_cards_manage_saved_cards) -> {
+                val directions =
+                    CreditCardsSettingFragmentDirections
+                        .actionCreditCardsSettingFragmentToCreditCardsManagementFragment()
                 findNavController().navigate(directions)
             }
         }

@@ -27,7 +27,7 @@
         android:id="@+id/action_global_search_dialog"
         app:destination="@id/searchDialogFragment"
         app:popUpTo="@id/searchDialogFragment"
-        app:popUpToInclusive="true"/>
+        app:popUpToInclusive="true" />
 
     <action
         android:id="@+id/action_global_recently_closed"
@@ -117,7 +117,7 @@
         android:id="@+id/action_global_tabTrayDialogFragment"
         app:destination="@id/tabTrayDialogFragment"
         app:popUpTo="@id/tabTrayDialogFragment"
-        app:popUpToInclusive="true"/>
+        app:popUpToInclusive="true" />
     <action
         android:id="@+id/action_global_tabsTrayFragment"
         app:destination="@id/tabsTrayFragment"
@@ -790,7 +790,7 @@
             app:argType="string" />
         <argument
             android:name="permissionHighlights"
-            app:argType="mozilla.components.browser.state.state.content.PermissionHighlightsState"/>
+            app:argType="mozilla.components.browser.state.state.content.PermissionHighlightsState" />
     </dialog>
     <fragment
         android:id="@+id/accountProblemFragment"
@@ -1051,10 +1051,29 @@
                 app:exitAnim="@anim/slide_out_left"
                 app:popEnterAnim="@anim/slide_in_left"
                 app:popExitAnim="@anim/slide_out_right" />
+            <action
+                android:id="@+id/action_creditCardsSettingFragment_to_creditCardsManagementFragment"
+                app:destination="@id/creditCardsManagementFragment"
+                app:enterAnim="@anim/slide_in_right"
+                app:exitAnim="@anim/slide_out_left"
+                app:popEnterAnim="@anim/slide_in_left"
+                app:popExitAnim="@anim/slide_out_right" />
         </fragment>
         <fragment
             android:id="@+id/creditCardEditorFragment"
             android:name="org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment"
             android:label="@string/credit_cards_add_card" />
+        <fragment
+            android:id="@+id/creditCardsManagementFragment"
+            android:name="org.mozilla.fenix.settings.creditcards.CreditCardsManagementFragment"
+            android:label="@string/credit_cards_saved_cards">
+            <action
+                android:id="@+id/action_creditCardsManagementFragment_to_creditCardEditorFragment"
+                app:destination="@id/creditCardEditorFragment"
+                app:enterAnim="@anim/slide_in_right"
+                app:exitAnim="@anim/slide_out_left"
+                app:popEnterAnim="@anim/slide_in_left"
+                app:popExitAnim="@anim/slide_out_right" />
+        </fragment>
     </navigation>
 </navigation>

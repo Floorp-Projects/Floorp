@@ -179,6 +179,8 @@
     <string name="pref_key_credit_cards_sync_cards_across_devices" translatable="false">pref_key_credit_cards_sync_cards_across_devices</string>
     <!-- Key for the "Add credit card" preference in the "Credit cards" fragment -->
     <string name="pref_key_credit_cards_add_credit_card" translatable="false">pref_key_credit_cards_add_credit_card</string>
+    <!-- Key for the "Manage saved cards" preference in the "Credit cards" fragment -->
+    <string name="pref_key_credit_cards_manage_saved_cards" translatable="false">pref_key_credit_cards_manage_saved_cards</string>
 
     <!-- Privacy Settings -->
     <string name="pref_key_open_links_in_a_private_tab" translatable="false">pref_key_open_links_in_a_private_tab</string>
