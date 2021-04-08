@@ -3,6 +3,36 @@
     {
       "stash": {
         "blocked": [
+          "{d4c5ecc6-b0ad-4642-8a47-f67c0d1ae22f}:2.0.0",
+          "{bd2c5f82-e5ff-4bb1-8fa5-dc834d32d232}:1.0.4",
+          "{3d84edc3-5e40-4615-9847-d8dfdc9c2151}:2.0.0",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.8.2",
+          "{09cff2d2-25be-4a39-ba74-036e87263996}:1.0.0",
+          "{bd2c5f82-e5ff-4bb1-8fa5-dc834d32d232}:1.0.3",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.8.1",
+          "{fcdbd12f-0595-40a0-b8df-87583c703aec}:1.0.9",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.0",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.8",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.3",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.4",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.6",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.2",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.5",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.1",
+          "{2e83de0e-ead6-4643-b2f3-ba95e3edc50b}:2.0.7",
+          "{d4c5ecc6-b0ad-4642-8a47-f67c0d1ae22f}:2.0.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1617724186297,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1617798908238,
+      "id": "996583aa-0c54-4a08-9111-d8cd7da98e81",
+      "last_modified": 1617799066364
+    },
+    {
+      "stash": {
+        "blocked": [
           "{c33c69a7-f889-647c-9d9b-7694be8035bc}:1.0.0",
           "{c22c69a7-f889-447c-9d6b-7694be8035bc}:1.2.0",
           "{9371d531-4dc1-4537-a9e7-dbffd5fe8238}:1.0.0",
