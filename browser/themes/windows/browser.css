@@ -42,14 +42,16 @@
     --toolbar-non-lwt-textcolor: #0c0c0d;
     --toolbar-non-lwt-bgimage: none;
 
-    --toolbarbutton-icon-fill-opacity: .7;
-
     --panel-separator-color: hsla(210,4%,10%,.14);
 
     --chrome-content-separator-color: #e1e1e2;
   }
 
   @media not (-moz-proton) {
+  :root {
+    --toolbarbutton-icon-fill-opacity: .7;
+  }
+
   #navigator-toolbox {
     --tabs-border-color: rgba(0,0,0,.3);
   }

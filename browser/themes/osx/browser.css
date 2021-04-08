@@ -14,7 +14,7 @@
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
   --toolbarbutton-border-radius: 4px;
-  --toolbarbutton-icon-fill-opacity: .7;
+  --toolbarbutton-icon-fill-opacity: 1;
 
   --panel-separator-color: hsla(210,4%,10%,.14);
 
@@ -33,6 +33,10 @@
 }
 
 @media not (-moz-proton) {
+:root {
+  --toolbarbutton-icon-fill-opacity: .7;
+}
+
 #navigator-toolbox {
   appearance: none;
   --tabs-border-color: rgba(0,0,0,.2);

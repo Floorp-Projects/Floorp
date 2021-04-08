@@ -28,7 +28,13 @@
   /* Set default fill for icons in the identity block.
      Individual icons can override this. */
   fill: currentColor;
+}
+
+@media not (-moz-proton) {
+#identity-box,
+#tracking-protection-icon-container {
   fill-opacity: .6;
+}
 }
 
 @media not (-moz-proton-urlbar) {
@@ -236,7 +242,12 @@
 
 #urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] #identity-icon {
   list-style-image: url(chrome://global/skin/icons/search-glass.svg);
+}
+
+@media not (-moz-proton) {
+#urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] #identity-icon {
   fill-opacity: .4;
+}
 }
 
 #urlbar[actiontype="extension"] > #urlbar-input-container > #identity-box #identity-icon {
