@@ -107,8 +107,10 @@
     --focus-outline-color: #00DDFF;
   }
 }
+} /*** END proton ***/
 
-:root[lwt-toolbar-field-brighttext] {
+@media (-moz-proton-urlbar) {
+:root[lwt-toolbar-field-focus-brighttext] {
   --lwt-popup-brighttext-url-color: #00ddff;
 }
 } /*** END proton ***/
