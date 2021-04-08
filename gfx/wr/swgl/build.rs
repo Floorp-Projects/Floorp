@@ -188,7 +188,9 @@ fn main() {
             build.flag("/fp:fast")
                  .flag("-Xclang")
                  .flag("-mrecip=none");
-        } else {
+        } else if tool.is_like_clang() {
+            // gcc only supports -mrecip=none on some targets so to keep
+            // things simple we don't use -ffast-math with gcc at all
             build.flag("-ffast-math")
                  .flag("-mrecip=none");
         }
