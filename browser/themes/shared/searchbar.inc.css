@@ -260,10 +260,10 @@
 
 .search-setting-button[selected] {
   background-color: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
+  color: var(--autocomplete-popup-highlight-color) !important;
 }
 .search-setting-button[selected]:hover {
-  color: var(--autocomplete-popup-highlight-color);
+  color: var(--autocomplete-popup-highlight-color) !important;
 }
 
 .search-setting-button-compact > .button-box > .button-icon {
