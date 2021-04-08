@@ -29,6 +29,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/WebrtcProxyConfig.h"
 #include "MediaManager.h"
+#include "libwebrtcglue/WebrtcCallWrapper.h"
 #include "libwebrtcglue/WebrtcGmpVideoCodec.h"
 
 namespace mozilla {
@@ -659,10 +660,10 @@ nsresult PeerConnectionMedia::AddTransceiver(
     webrtc::WebRtcKeyValueConfig* aTrials,
     RefPtr<TransceiverImpl>* aTransceiverImpl) {
   if (!mCall) {
-    mCall = WebRtcCallWrapper::Create(
+    mCall = WebrtcCallWrapper::Create(
         mParent->GetTimestampMaker(),
         MakeUnique<media::ShutdownBlockingTicket>(
-            u"WebRtcCallWrapper shutdown blocker"_ns,
+            u"WebrtcCallWrapper shutdown blocker"_ns,
             NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
         aSharedWebrtcState, aTrials);
   }

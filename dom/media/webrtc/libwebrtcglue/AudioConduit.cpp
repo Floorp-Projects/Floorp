@@ -8,6 +8,7 @@
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/Telemetry.h"
 #include "transport/runnable_utils.h"
+#include "WebrtcCallWrapper.h"
 
 // libwebrtc includes
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
@@ -37,7 +38,7 @@ using LocalDirection = MediaSessionConduitLocalDirection;
  * Factory Method for AudioConduit
  */
 RefPtr<AudioSessionConduit> AudioSessionConduit::Create(
-    RefPtr<WebRtcCallWrapper> aCall,
+    RefPtr<WebrtcCallWrapper> aCall,
     nsCOMPtr<nsISerialEventTarget> aStsThread) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   MOZ_ASSERT(NS_IsMainThread());
@@ -51,6 +52,25 @@ void WebrtcAudioConduit::DeleteStreams() {
   DeleteSendStream();
   DeleteRecvStream();
 }
+
+WebrtcAudioConduit::WebrtcAudioConduit(
+    RefPtr<WebrtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread)
+    : mTransportMonitor("WebrtcAudioConduit"),
+      mTransmitterTransport(nullptr),
+      mReceiverTransport(nullptr),
+      mCall(aCall),
+      mRecvStreamConfig(),
+      mRecvStream(nullptr),
+      mSendStreamConfig(
+          this)  // 'this' is stored but not  dereferenced in the constructor.
+      ,
+      mSendStream(nullptr),
+      mRecvSSRC(0),
+      mSendStreamRunning(false),
+      mRecvStreamRunning(false),
+      mDtmfEnabled(false),
+      mMutex("WebrtcAudioConduit::mMutex"),
+      mStsThread(aStsThread) {}
 
 /**
  * Destruction defines for our super-classes
@@ -585,6 +605,10 @@ void WebrtcAudioConduit::ReceivedRTCPPacket(const uint8_t* data, int len) {
 Maybe<DOMHighResTimeStamp> WebrtcAudioConduit::LastRtcpReceived() const {
   ASSERT_ON_THREAD(mStsThread);
   return mLastRtcpReceived;
+}
+
+DOMHighResTimeStamp WebrtcAudioConduit::GetNow() const {
+  return mCall->GetNow();
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::StopTransmitting() {
