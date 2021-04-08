@@ -89,6 +89,10 @@ dialog[subdialog] .dialogRow:not([hidden]) {
 
 dialog[subdialog] #infoContainer {
   max-height: 100%;
+}
+
+dialog[subdialog] #infoContainer,
+dialog[subdialog] #checkboxContainer {
   /* Needed to ensure text wrapping happens correctly. Without this, when
    * text wraps unexpectedly, the overall dialog height is off by the height
    * of a line of text. */
