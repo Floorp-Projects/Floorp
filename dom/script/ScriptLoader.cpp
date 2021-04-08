@@ -3132,29 +3132,16 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
         LOG(("ScriptLoadRequest (%p):   module has error to rethrow",
              aRequest));
         JS::Rooted<JS::Value> error(cx, moduleScript->ErrorToRethrow());
+        JS_SetPendingException(cx, error);
+        // For a dynamic import, the promise is rejected.  Otherwise an error
+        // is either reported by AutoEntryScript.
         if (!JS::ContextOptionsRef(cx).topLevelAwait()) {
-          JS_SetPendingException(cx, error);
-          // For a dynamic import, the promise is rejected.  Otherwise an error
-          // is either reported by AutoEntryScript.
           if (request->IsDynamicImport()) {
             FinishDynamicImport_NoTLA(cx, request, NS_OK);
           }
         } else {
-          ErrorResult err;
-          RefPtr<Promise> aPromise = Promise::Create(globalObject, err);
-          if (NS_WARN_IF(err.Failed())) {
-            return err.StealNSResult();
-          }
-          aPromise->MaybeReject(error);
-          JS::Rooted<JSObject*> aEvaluationPromise(cx, aPromise->PromiseObj());
           if (request->IsDynamicImport()) {
-            FinishDynamicImport(cx, request, NS_OK, aEvaluationPromise);
-          } else {
-            if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
-              LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
-              // For a dynamic import, the promise is rejected.  Otherwise an
-              // error is either reported by AutoEntryScript.
-            }
+            FinishDynamicImport(cx, request, NS_OK, nullptr);
           }
         }
         return NS_OK;
