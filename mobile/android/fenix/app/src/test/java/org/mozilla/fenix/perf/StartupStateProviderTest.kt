@@ -203,9 +203,29 @@ class StartupStateProviderTest {
             LogEntry.ActivityCreated(homeActivityClass),
             LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
-        ))
 
-        // TODO: add VIEW.
+        // truncated VIEW: open non-drawing IntentReceiverActivity, then HomeActivity.
+        ), listOf(
+            LogEntry.AppStopped,
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted
+
+        // untruncated VIEW: open non-drawing IntentReceiverActivity, then HomeActivity.
+        ), listOf(
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted,
+            LogEntry.AppStopped,
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted
+        ))
 
         forEachStartEntry(warmStartEntries, block)
     }
@@ -231,9 +251,27 @@ class StartupStateProviderTest {
             LogEntry.ActivityStopped(homeActivityClass),
             LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
-        ))
 
-        // TODO: add VIEW.
+        // truncated VIEW: open non-drawing IntentReceiverActivity, then HomeActivity.
+        ), listOf(
+            LogEntry.AppStopped,
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted
+
+        // untruncated VIEW: open non-drawing IntentReceiverActivity, then HomeActivity.
+        ), listOf(
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted,
+            LogEntry.AppStopped,
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted
+        ))
 
         forEachStartEntry(hotStartEntries, block)
     }
