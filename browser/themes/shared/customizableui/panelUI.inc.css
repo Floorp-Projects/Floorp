@@ -2671,6 +2671,10 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-profiler-presets {
+  margin: 8px 15px;
+}
+@media not (-moz-proton) {
+#PanelUI-profiler-presets {
   appearance: none;
   position: relative; /* Ensure there is a stacking context for the dropdown arrow. */
   width: 100%;
@@ -2683,7 +2687,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   padding-inline: 4px;
   text-decoration: none;
   font-size: 12px;
-  margin: 8px 15px;
 }
 
 /* This is dark-mode specific styling. */
@@ -2740,6 +2743,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #PanelUI-profiler-presets:-moz-locale-dir(rtl)::after {
   left: 22px;
 }
+} /*** END !Proton ***/
 
 #PanelUI-profiler-content-custom-button {
   appearance: none;
