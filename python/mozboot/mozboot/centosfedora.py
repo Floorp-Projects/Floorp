@@ -34,7 +34,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             "alsa-lib-devel",
             "dbus-glib-devel",
             "glibc-static",
-            "gtk2-devel",  # It is optional in Fedora 20's GNOME Software
             # Development group.
             "libstdc++-static",
             "libXt-devel",
