@@ -61,6 +61,27 @@ class StartupStateProviderTest {
     }
 
     @Test
+    fun `GIVEN the app started for an activity WHEN is cold start THEN warm start is false`() {
+        forEachColdStartEntries { index ->
+            assertFalse("$index", provider.isWarmStartForStartedActivity(homeActivityClass))
+        }
+    }
+
+    @Test
+    fun `GIVEN the app started for an activity WHEN is warm start THEN warm start is true`() {
+        forEachWarmStartEntries { index ->
+            assertTrue("$index", provider.isWarmStartForStartedActivity(homeActivityClass))
+        }
+    }
+
+    @Test
+    fun `GIVEN the app started for an activity WHEN is hot start THEN warm start is false` () {
+        forEachHotStartEntries { index ->
+            assertFalse("$index", provider.isWarmStartForStartedActivity(homeActivityClass))
+        }
+    }
+
+    @Test
     fun `GIVEN the app started for an activity WHEN we launched HA through a drawing IntentRA THEN start up is not cold`() {
         // These entries mimic observed behavior for local code changes.
         logEntries.addAll(listOf(
@@ -72,6 +93,22 @@ class StartupStateProviderTest {
             LogEntry.ActivityStopped(irActivityClass)
         ))
         assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
+    }
+
+    @Test
+    fun `GIVEN the app started for an activity WHEN we launched HA through a drawing IntentRA THEN start up is not warm`() {
+        // These entries mimic observed behavior for local code changes.
+        logEntries.addAll(listOf(
+            LogEntry.AppStopped,
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityStarted(irActivityClass),
+            LogEntry.AppStarted,
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.ActivityStopped(irActivityClass)
+        ))
+        assertFalse(provider.isWarmStartForStartedActivity(homeActivityClass))
     }
 
     @Test
@@ -122,6 +159,26 @@ class StartupStateProviderTest {
     @Test
     fun `GIVEN the app has not been stopped WHEN is cold short circuit is called THEN it returns false`() {
         assertFalse(provider.shouldShortCircuitColdStart())
+    }
+
+    @Test
+    fun `GIVEN the app has not been stopped WHEN an activity has not been created THEN it's not a warm start`() {
+        assertFalse(provider.isWarmStartForStartedActivity(homeActivityClass))
+    }
+
+    @Test
+    fun `GIVEN the app has been stopped WHEN an activity has not been created THEN it's not a warm start`() {
+        logEntries.add(LogEntry.AppStopped)
+        assertFalse(provider.isWarmStartForStartedActivity(homeActivityClass))
+    }
+
+    @Test
+    fun `GIVEN the app has been stopped WHEN an activity has not been started THEN it's not a warm start`() {
+        logEntries.addAll(listOf(
+            LogEntry.AppStopped,
+            LogEntry.ActivityCreated(homeActivityClass)
+        ))
+        assertFalse(provider.isWarmStartForStartedActivity(homeActivityClass))
     }
 
     private fun forEachColdStartEntries(block: (index: Int) -> Unit) {
