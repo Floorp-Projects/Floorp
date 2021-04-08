@@ -33,7 +33,7 @@ nsITheme::Transparency nsNativeBasicThemeGTK::GetWidgetTransparency(
       const auto useSystemColors = ShouldUseSystemColors(*pc->Document());
       const auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
       auto trackColor =
-          ComputeScrollbarColor(aFrame, *style, docState, useSystemColors);
+          ComputeScrollbarTrackColor(aFrame, *style, docState, useSystemColors);
       return trackColor.a == 1.0 ? eOpaque : eTransparent;
     }
   }
