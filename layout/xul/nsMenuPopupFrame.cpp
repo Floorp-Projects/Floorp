@@ -767,6 +767,7 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
   mXPos = aXPos;
   mYPos = aYPos;
   mAdjustOffsetForContextMenu = false;
+  mIsNativeMenu = false;
   mVFlip = false;
   mHFlip = false;
   mAlignmentOffset = 0;
@@ -905,6 +906,7 @@ void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
   mPosition = POPUPPOSITION_UNKNOWN;
   mIsContextMenu = aIsContextMenu;
   mAdjustOffsetForContextMenu = aIsContextMenu;
+  mIsNativeMenu = false;
   mAnchorType = MenuPopupAnchorType_Point;
   mPositionedOffset = 0;
 }
@@ -923,6 +925,7 @@ void nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
   mPosition = POPUPPOSITION_UNKNOWN;
   mIsContextMenu = true;
   mAdjustOffsetForContextMenu = true;
+  mIsNativeMenu = true;
   mAnchorType = MenuPopupAnchorType_Point;
   mPositionedOffset = 0;
 }

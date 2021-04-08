@@ -286,6 +286,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   bool IsVisible() {
     return mPopupState == ePopupVisible || mPopupState == ePopupShown;
   }
+  bool IsNativeMenu() { return mIsNativeMenu; }
 
   // Return true if the popup is for a menulist.
   bool IsMenuList();
@@ -668,6 +669,10 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // the flip modes that were used when the popup was opened
   bool mHFlip;
   bool mVFlip;
+
+  // Whether the most recent initialization of this menupopup happened via
+  // InitializePopupAsNativeContextMenu.
+  bool mIsNativeMenu = false;
 
   // Whether we have a pending `popuppositioned` event.
   bool mPendingPositionedEvent = false;
