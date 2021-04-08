@@ -4207,6 +4207,9 @@ perf.startup:
       The hope is that these cases will not have a significant impact on the end
       results but, if they appear to, we can replace it with a more complex
       implementation.
+      <br><br>
+      Around April 8, 2021 the implementation was refactored. Functionally, it
+      should be the same but it's noted just in case there are bugs.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/18426
     data_reviews:
@@ -4231,6 +4234,9 @@ perf.startup:
       <br><br>
       See the `cold_main_app_to_first_frame` probe docs for other possible
       known issues and more details.
+      <br><br>
+      Around April 8, 2021 the implementation was refactored. Functionally, it
+      should be the same but it's noted just in case there are bugs.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/18426
     data_reviews:
@@ -4253,6 +4259,9 @@ perf.startup:
       <br><br>
       See the `cold_main_app_to_first_frame` probe docs for known issues and
       more details.
+      <br><br>
+      Around April 8, 2021 the implementation was refactored. Functionally, it
+      should be the same but it's noted just in case there are bugs.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/18426
     data_reviews:
