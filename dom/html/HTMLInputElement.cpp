@@ -1127,7 +1127,7 @@ nsresult HTMLInputElement::Clone(dom::NodeInfo* aNodeInfo,
 
   it->DoneCreatingElement();
 
-  it->mLastValueChangeWasInteractive = mLastValueChangeWasInteractive;
+  it->SetLastValueChangeWasInteractive(mLastValueChangeWasInteractive);
   it.forget(aResult);
   return NS_OK;
 }
@@ -2738,15 +2738,29 @@ nsresult HTMLInputElement::SetValueInternal(
 }
 
 nsresult HTMLInputElement::SetValueChanged(bool aValueChanged) {
-  bool valueChangedBefore = mValueChanged;
-
+  if (mValueChanged == aValueChanged) {
+    return NS_OK;
+  }
   mValueChanged = aValueChanged;
+  ValueChangedOrLastValueChangeWasInteractiveChanged();
+  return NS_OK;
+}
 
-  if (valueChangedBefore != aValueChanged) {
+void HTMLInputElement::SetLastValueChangeWasInteractive(bool aWasInteractive) {
+  if (aWasInteractive == mLastValueChangeWasInteractive) {
+    return;
+  }
+  mLastValueChangeWasInteractive = aWasInteractive;
+  ValueChangedOrLastValueChangeWasInteractiveChanged();
+}
+
+void HTMLInputElement::ValueChangedOrLastValueChangeWasInteractiveChanged() {
+  const bool wasValid = IsValid();
+  UpdateTooLongValidityState();
+  UpdateTooShortValidityState();
+  if (wasValid != IsValid()) {
     UpdateState(true);
   }
-
-  return NS_OK;
 }
 
 void HTMLInputElement::SetCheckedChanged(bool aCheckedChanged) {
@@ -5578,7 +5592,7 @@ HTMLInputElement::Reset() {
   // We should be able to reset all dirty flags regardless of the type.
   SetCheckedChanged(false);
   SetValueChanged(false);
-  mLastValueChangeWasInteractive = false;
+  SetLastValueChangeWasInteractive(false);
 
   switch (GetValueMode()) {
     case VALUE_MODE_VALUE: {
@@ -6019,8 +6033,7 @@ bool HTMLInputElement::RestoreState(PresState* aState) {
         SetValueInternal(inputState.get_TextContentData().value(),
                          ValueSetterOption::SetValueChanged);
         if (inputState.get_TextContentData().lastValueChangeWasInteractive()) {
-          mLastValueChangeWasInteractive = true;
-          UpdateState(true);
+          SetLastValueChangeWasInteractive(true);
         }
       }
       break;
