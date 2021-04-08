@@ -130,7 +130,7 @@ already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
     // Only construct a MacIOSurface object when we find one that isn't
     // in-use, since the constructor adds a usage ref.
     if (!result && !::IOSurfaceIsInUse(surf.get())) {
-      result = new MacIOSurface(surf, 1.0, false, aYUVColorSpace);
+      result = new MacIOSurface(surf, false, aYUVColorSpace);
     }
 
     mSurfaces.AppendElement(surf);

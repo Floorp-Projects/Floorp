@@ -475,28 +475,24 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext, MacIOSurfac
   }
 
   void* ioData = surf->GetBaseAddress();
-  double scaleFactor = surf->GetContentsScaleFactor();
-  size_t intScaleFactor = ceil(surf->GetContentsScaleFactor());
   CGDataProviderRef dataProvider =
-      ::CGDataProviderCreateWithData(ioData, ioData, ioHeight * intScaleFactor * (bytesPerRow)*4,
+      ::CGDataProviderCreateWithData(ioData, ioData, ioHeight * (bytesPerRow)*4,
                                      nullptr);  // No release callback
   if (!dataProvider) {
     surf->Unlock();
     return NS_ERROR_FAILURE;
   }
 
-  CGImageRef cgImage =
-      ::CGImageCreate(ioWidth * intScaleFactor, ioHeight * intScaleFactor, 8, 32, bytesPerRow,
-                      aColorSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
-                      dataProvider, nullptr, true, kCGRenderingIntentDefault);
+  CGImageRef cgImage = ::CGImageCreate(ioWidth, ioHeight, 8, 32, bytesPerRow, aColorSpace,
+                                       kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
+                                       dataProvider, nullptr, true, kCGRenderingIntentDefault);
   ::CGDataProviderRelease(dataProvider);
   if (!cgImage) {
     surf->Unlock();
     return NS_ERROR_FAILURE;
   }
-  CGImageRef subImage = ::CGImageCreateWithImageInRect(
-      cgImage, ::CGRectMake(aX * scaleFactor, aY * scaleFactor, aWidth * scaleFactor,
-                            aHeight * scaleFactor));
+  CGImageRef subImage =
+      ::CGImageCreateWithImageInRect(cgImage, ::CGRectMake(aX, aY, aWidth, aHeight));
   if (!subImage) {
     ::CGImageRelease(cgImage);
     surf->Unlock();
@@ -504,9 +500,7 @@ nsresult nsCARenderer::DrawSurfaceToCGContext(CGContextRef aContext, MacIOSurfac
   }
 
   ::CGContextScaleCTM(aContext, 1.0f, -1.0f);
-  ::CGContextDrawImage(aContext,
-                       CGRectMake(aX * scaleFactor, (-(CGFloat)aY - (CGFloat)aHeight) * scaleFactor,
-                                  aWidth * scaleFactor, aHeight * scaleFactor),
+  ::CGContextDrawImage(aContext, CGRectMake(aX, -(CGFloat)aY - (CGFloat)aHeight, aWidth, aHeight),
                        subImage);
 
   ::CGImageRelease(subImage);
