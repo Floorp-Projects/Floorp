@@ -14,8 +14,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
 
 /**
- * For interacting with UI that is specifically for [TabsTrayFragment[]] and other browser
- * tab tray views.
+ * An interactor that helps with navigating to different parts of the app from the tabs tray.
  */
 interface NavigationInteractor {
 
