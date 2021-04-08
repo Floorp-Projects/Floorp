@@ -26,7 +26,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
  protected:
   static bool SystemWantsDarkTheme();
-  static nscolor ProcessSelectionBackground(nscolor aColor);
+  static nscolor ProcessSelectionBackground(nscolor aColor,
+                                            ColorScheme aScheme);
 };
 
 #endif  // nsLookAndFeel_h_
