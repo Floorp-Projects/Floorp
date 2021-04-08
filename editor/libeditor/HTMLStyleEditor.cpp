@@ -983,7 +983,6 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   // XXX Chrome resets block style and creates `<span>` elements for each
   //     line in this case.
   if (!splitResult.GetNextNode()) {
-    MOZ_ASSERT(IsCSSEnabled());
     return EditResult(aPoint);
   }
 
