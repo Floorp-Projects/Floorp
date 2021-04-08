@@ -39,12 +39,17 @@ impl NumberFormat {
     pub fn format(&self, input: f64) -> String {
         unsafe {
             let mut byte_count = 0;
-            let buffer =
-                ffi::FluentBuiltInNumberFormatterFormat(self.raw.as_ptr(), input, &mut byte_count);
+            let mut capacity = 0;
+            let buffer = ffi::FluentBuiltInNumberFormatterFormat(
+                self.raw.as_ptr(),
+                input,
+                &mut byte_count,
+                &mut capacity,
+            );
             if buffer.is_null() {
                 return String::new();
             }
-            String::from_raw_parts(buffer, byte_count as usize, byte_count as usize)
+            String::from_raw_parts(buffer, byte_count, capacity)
         }
     }
 }
