@@ -98,7 +98,6 @@ struct LoadInfoArgs
   bool                        browserWouldUpgradeInsecureRequests;
   bool                        forceAllowDataURI;
   bool                        allowInsecureRedirectToDataURI;
-  bool                        bypassCORSChecks;
   bool                        skipContentPolicyCheckForWebRequest;
   bool                        originalFrameSrcLoad;
   bool                        forceInheritPrincipalDropped;
@@ -176,11 +175,6 @@ struct ParentLoadInfoForwarderArgs
   // the parent and needs to be mirrored to the child so that security
   // checks can pass.
   bool allowInsecureRedirectToDataURI;
-
-  // WebExtextensions WebRequest API allows extentions to redirect a channel
-  // Before the CORS-preflight was fetched, which can lead into unexpeced CORS blocks.
-  // We can set this to skip the Cors Checks for the old Channel.
-  bool bypassCORSChecks;
 
   // The ServiceWorker controller that may be set in the parent when
   // interception occurs.
