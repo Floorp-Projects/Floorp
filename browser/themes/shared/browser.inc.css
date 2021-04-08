@@ -108,7 +108,7 @@
   }
 }
 
-:root[lwt-toolbar-field-brighttext] {
+:root[lwt-toolbar-field-focus-brighttext] {
   --lwt-popup-brighttext-url-color: #00ddff;
 }
 } /*** END proton ***/
