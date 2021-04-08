@@ -405,12 +405,16 @@ class PromptParent extends JSWindowActorParent {
       allowTabFocusByPromptPrincipal &&
       args.modalType === Services.prompt.MODAL_TYPE_CONTENT
     ) {
+      let domain = allowTabFocusByPromptPrincipal.addonPolicy?.name;
+      try {
+        domain ||= allowTabFocusByPromptPrincipal.URI.displayHostPort;
+      } catch (ex) {
+        domain ||= allowTabFocusByPromptPrincipal.URI.prePath;
+      }
       let [allowFocusMsg] = gTabBrowserLocalization.formatMessagesSync([
         {
           id: "tabbrowser-allow-dialogs-to-get-focus",
-          args: {
-            domain: allowTabFocusByPromptPrincipal.URI.host,
-          },
+          args: { domain },
         },
       ]);
       let labelAttr = allowFocusMsg.attributes.find(a => a.name == "label");
