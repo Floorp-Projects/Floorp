@@ -56,6 +56,9 @@ export default class ImportSummaryDialog extends HTMLElement {
       this._error,
       "about-logins-import-dialog-items-error"
     );
+    this._noChange.querySelector(".result-meta").hidden =
+      report.no_change === 0;
+    this._error.querySelector(".result-meta").hidden = report.error === 0;
     this._genericDialog.show();
     window.AboutLoginsUtils.setFocus(this._genericDialog._dismissButton);
   }
