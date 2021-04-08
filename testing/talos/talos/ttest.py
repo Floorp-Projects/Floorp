@@ -235,8 +235,8 @@ class TTest(object):
                             command, env=os.environ.copy(), stdout=subprocess.PIPE
                         )
                         output, stderr = mtio.communicate()
-                        for line in output.split("\n"):
-                            if line.strip() == "":
+                        for line in output.split(b"\n"):
+                            if line.strip() == b"":
                                 continue
 
                             print(line)
