@@ -45,7 +45,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <thread>
 #include <utility>
 #ifdef XP_UNIX
 #  include <sys/mman.h>
@@ -8064,7 +8063,7 @@ static void BufferStreamMain(BufferStreamJob* job) {
       break;
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(delayMillis));
+    ThisThread::SleepMilliseconds(delayMillis);
 
     chunkSize = std::min(chunkSize, byteLength - byteOffset);
 
