@@ -40,7 +40,9 @@ add_task(async function test_tls1_frame() {
       // awkwardly wait for the current window global to update to the error page.
       // would be nice to do just about anything else here...
       await TestUtils.waitForCondition(
-        () => bc.currentWindowGlobal && bc.currentWindowGlobal.documentURI.spec != "about:blank",
+        () =>
+          bc.currentURI && bc.currentURI.spec != "about:blank" &&
+          bc.currentWindowGlobal && bc.currentWindowGlobal.documentURI.spec != "about:blank",
         "waiting for current window global to be non-initial");
 
       info(`currentWindowGlobal has updated in the parent!`);
@@ -51,7 +53,7 @@ add_task(async function test_tls1_frame() {
     });
 
   info(`docURI=${docURI}, curURI=${curURI}`);
-  is("https://tls1.example.com/", curURI, "curURI has expected value");
+  is(curURI, "https://tls1.example.com/", "curURI has expected value");
   ok(docURI.startsWith("about:neterror"), "documentURI starts with about:neterror");
 });
 
