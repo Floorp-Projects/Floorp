@@ -70,10 +70,10 @@ PropertyName* js::EnvironmentCoordinateNameSlow(JSScript* script,
   jsid id = r.front().propidRaw();
 
   /* Beware nameless destructuring formal. */
-  if (!JSID_IS_ATOM(id)) {
+  if (!id.isAtom()) {
     return script->runtimeFromAnyThread()->commonNames->empty;
   }
-  return JSID_TO_ATOM(id)->asPropertyName();
+  return id.toAtom()->asPropertyName();
 }
 
 /*****************************************************************************/
@@ -669,19 +669,19 @@ WithEnvironmentObject* WithEnvironmentObject::createNonSyntactic(
 }
 
 static inline bool IsUnscopableDotName(JSContext* cx, HandleId id) {
-  return JSID_IS_ATOM(id, cx->names().dotThis);
+  return id.isAtom(cx->names().dotThis);
 }
 
 #ifdef DEBUG
 static bool IsInternalDotName(JSContext* cx, HandleId id) {
-  return JSID_IS_ATOM(id, cx->names().dotThis) ||
-         JSID_IS_ATOM(id, cx->names().dotGenerator) ||
-         JSID_IS_ATOM(id, cx->names().dotInitializers) ||
-         JSID_IS_ATOM(id, cx->names().dotFieldKeys) ||
-         JSID_IS_ATOM(id, cx->names().dotStaticInitializers) ||
-         JSID_IS_ATOM(id, cx->names().dotStaticFieldKeys) ||
-         JSID_IS_ATOM(id, cx->names().dotArgs) ||
-         JSID_IS_ATOM(id, cx->names().starNamespaceStar);
+  return id.isAtom(cx->names().dotThis) ||
+         id.isAtom(cx->names().dotGenerator) ||
+         id.isAtom(cx->names().dotInitializers) ||
+         id.isAtom(cx->names().dotFieldKeys) ||
+         id.isAtom(cx->names().dotStaticInitializers) ||
+         id.isAtom(cx->names().dotStaticFieldKeys) ||
+         id.isAtom(cx->names().dotArgs) ||
+         id.isAtom(cx->names().starNamespaceStar);
 }
 #endif
 
@@ -1172,8 +1172,8 @@ RuntimeLexicalErrorObject* RuntimeLexicalErrorObject::create(
 
 static void ReportRuntimeLexicalErrorId(JSContext* cx, unsigned errorNumber,
                                         HandleId id) {
-  if (JSID_IS_ATOM(id)) {
-    RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
+  if (id.isAtom()) {
+    RootedPropertyName name(cx, id.toAtom()->asPropertyName());
     ReportRuntimeLexicalError(cx, errorNumber, name);
     return;
   }
@@ -1703,7 +1703,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         RootedScope scope(cx, getEnvironmentScope(*env));
         uint32_t index = 0;
         for (BindingIter bi(scope); bi; bi++) {
-          if (JSID_IS_ATOM(id, bi.name())) {
+          if (id.isAtom(bi.name())) {
             break;
           }
           MOZ_ASSERT(!bi.isLast());
@@ -1733,7 +1733,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       MOZ_ASSERT(scope->is<WasmInstanceScope>());
       uint32_t index = 0;
       for (BindingIter bi(scope); bi; bi++) {
-        if (JSID_IS_ATOM(id, bi.name())) {
+        if (id.isAtom(bi.name())) {
           break;
         }
         MOZ_ASSERT(!bi.isLast());
