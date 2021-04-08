@@ -1,6 +1,6 @@
 [package]
 name = "mozprofile"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Mozilla"]
 description = "Library for working with Mozilla profiles."
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozprofile"
