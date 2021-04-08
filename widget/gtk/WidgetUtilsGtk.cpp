@@ -4,13 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WidgetUtilsGtk.h"
+
+#include "mozilla/UniquePtr.h"
+#include "nsReadableUtils.h"
 #include "nsWindow.h"
+
 #include <gtk/gtk.h>
 #include <dlfcn.h>
+#include <glib.h>
 
-namespace mozilla {
-
-namespace widget {
+namespace mozilla::widget {
 
 int32_t WidgetUtilsGTK::IsTouchDeviceSupportPresent() {
   int32_t result = 0;
@@ -73,6 +76,17 @@ bool GdkIsWaylandDisplay() {
 
 bool GdkIsX11Display() { return GdkIsX11Display(gdk_display_get_default()); }
 
-}  // namespace widget
+nsTArray<nsCString> ParseTextURIList(const nsACString& aData) {
+  UniquePtr<char[]> data(ToNewCString(aData));
+  gchar** uris = g_uri_list_extract_uris(data.get());
 
-}  // namespace mozilla
+  nsTArray<nsCString> result;
+  for (size_t i = 0; i < g_strv_length(uris); i++) {
+    result.AppendElement(nsCString(uris[i]));
+  }
+
+  g_strfreev(uris);
+  return result;
+}
+
+}  // namespace mozilla::widget

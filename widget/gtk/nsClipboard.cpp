@@ -21,12 +21,14 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsImageToPixbuf.h"
 #include "nsStringStream.h"
+#include "nsIFileURL.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/TimeStamp.h"
 #include "gfxPlatformGtk.h"
+#include "WidgetUtilsGtk.h"
 
 #include "imgIContainer.h"
 
@@ -44,6 +46,8 @@ const int kClipboardTimeout = 500000;
 // detect the HTML as UTF-8 encoded.
 static const char kHTMLMarkupPrefix[] =
     R"(<meta http-equiv="content-type" content="text/html; charset=utf-8">)";
+
+static const char kURIListMime[] = "text/uri-list";
 
 // Callback when someone asks us for the data
 void clipboard_get_cb(GtkClipboard* aGtkClipboard,
@@ -315,6 +319,36 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
       return NS_OK;
     }
 
+    if (flavorStr.EqualsLiteral(kFileMime)) {
+      LOGCLIP(("    Getting %s file clipboard data\n", flavorStr.get()));
+
+      uint32_t clipboardDataLength;
+      const char* clipboardData = mContext->GetClipboardData(
+          kURIListMime, aWhichClipboard, &clipboardDataLength);
+      if (!clipboardData) {
+        LOGCLIP(("    text/uri-list type is missing\n"));
+        continue;
+      }
+
+      nsDependentCSubstring data(clipboardData, clipboardDataLength);
+      nsTArray<nsCString> uris = mozilla::widget::ParseTextURIList(data);
+      if (!uris.IsEmpty()) {
+        nsCOMPtr<nsIURI> fileURI;
+        NS_NewURI(getter_AddRefs(fileURI), uris[0]);
+        if (nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(fileURI, &rv)) {
+          nsCOMPtr<nsIFile> file;
+          rv = fileURL->GetFile(getter_AddRefs(file));
+          if (NS_SUCCEEDED(rv)) {
+            aTransferable->SetTransferData(flavorStr.get(), file);
+            LOGCLIP(("    successfully set file to clipboard\n"));
+          }
+        }
+      }
+
+      mContext->ReleaseClipboardData(clipboardData);
+      return NS_OK;
+    }
+
     LOGCLIP(("    Getting %s MIME clipboard data\n", flavorStr.get()));
 
     uint32_t clipboardDataLength;
@@ -444,6 +478,12 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                !strcmp(atom_name, kJPEGImageMime)) {
         *_retval = true;
         LOGCLIP(("    has image/jpg\n"));
+      }
+      // application/x-moz-file should be treated like text/uri-list
+      else if (flavor.EqualsLiteral(kFileMime) &&
+               !strcmp(atom_name, kURIListMime)) {
+        *_retval = true;
+        LOGCLIP(("    has text/uri-list treating as application/x-moz-file"));
       }
 
       g_free(atom_name);
