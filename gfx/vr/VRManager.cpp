@@ -1396,8 +1396,9 @@ bool VRManager::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
       const auto& desc = aTexture.get_SurfaceDescriptorMacIOSurface();
       layer.textureType = VRLayerTextureType::LayerTextureType_MacIOSurface;
       layer.textureHandle = desc.surfaceId();
-      RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(
-          desc.surfaceId(), !desc.isOpaque(), desc.yUVColorSpace());
+      RefPtr<MacIOSurface> surf =
+          MacIOSurface::LookupSurface(desc.surfaceId(), desc.scaleFactor(),
+                                      !desc.isOpaque(), desc.yUVColorSpace());
       if (surf) {
         layer.textureSize.width = surf->GetDevicePixelWidth();
         layer.textureSize.height = surf->GetDevicePixelHeight();

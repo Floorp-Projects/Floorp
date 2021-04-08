@@ -54,7 +54,7 @@ UniquePtr<SharedSurface_IOSurface> SharedSurface_IOSurface::Create(
     const SharedSurfaceDesc& desc) {
   const auto& size = desc.size;
   const RefPtr<MacIOSurface> ioSurf =
-      MacIOSurface::CreateIOSurface(size.width, size.height, true);
+      MacIOSurface::CreateIOSurface(size.width, size.height, 1.0, true);
   if (!ioSurf) {
     NS_WARNING("Failed to create MacIOSurface.");
     return nullptr;
@@ -92,7 +92,8 @@ Maybe<layers::SurfaceDescriptor>
 SharedSurface_IOSurface::ToSurfaceDescriptor() {
   const bool isOpaque = false;  // RGBA
   return Some(layers::SurfaceDescriptorMacIOSurface(
-      mIOSurf->GetIOSurfaceID(), isOpaque, mIOSurf->GetYUVColorSpace()));
+      mIOSurf->GetIOSurfaceID(), mIOSurf->GetContentsScaleFactor(), isOpaque,
+      mIOSurf->GetYUVColorSpace()));
 }
 
 }  // namespace gl
