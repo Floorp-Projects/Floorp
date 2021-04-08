@@ -3,7 +3,7 @@ Change log
 
 All notable changes to this program are documented in this file.
 
-0.29.0  (2021-01-14, `cf6956a5ec8e`)
+0.29.1  (2021-04-08)
 --------------------
 
 ### Known problems
@@ -17,6 +17,70 @@ All notable changes to this program are documented in this file.
   Whilst we are working on a repackaging fix for this problem, you can
   find more details on how to work around this issue in the [macOS
   notarization] section of the documentation.
+
+- _Android:_
+
+  Marionette will only be enabled in GeckoView based applications when the
+  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
+  for Android releases.
+
+### Added
+
+- When testing GeckoView based applications on Android it's now enough to
+  specify the `androidPackage` capability. The appropriate activity name,
+  and required intent arguments will now automatically be used for
+  applications released by Mozilla.
+
+- Native AArch64 (M1) builds of geckodriver for MacOS are now available. These
+  are currently shipped as Tier2 due to missing test infrastructure. Please let
+  us know if you experience issues.
+
+### Fixed
+
+- Fixed a stack overflow crash in thread 'webdriver dispatcher' when
+  handling certain device errors.
+
+- Fixed an application crash due to missing permissions on unrooted devices
+  by changing the location of the test related files, e.g the profile folder.
+  Therefore the deprecated &#x2D;&#x2D;android-storage command line argument
+  now defaults to the `sdcard` option, which changed its location to
+  `$EXTERNAL_STORAGE/Android/data/%androidPackage%/files/`. With this change
+  proper support for unrooted devices running Android 10+ has been added.
+
+  _Note_: Do not use the &#x2D;&#x2D;android-storage command line argument
+  anymore unless there is a strong reason. It will be removed in a future
+  release.
+
+
+0.29.0  (2021-01-14, `cf6956a5ec8e`)
+------------------------------------
+
+### Known problems
+
+- _macOS 10.15 (Catalina):_
+
+  Due to the requirement from Apple that all programs must be
+  notarized, geckodriver will not work on Catalina if you manually
+  download it through another notarized program, such as Firefox.
+
+  Whilst we are working on a repackaging fix for this problem, you can
+  find more details on how to work around this issue in the [macOS
+  notarization] section of the documentation.
+
+- _Android:_
+
+  Marionette will only be enabled in GeckoView based applications when the
+  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
+  for Android releases.
+
+  In some cases geckodriver could crash due to a stack overflow when handling
+  certain device errors.
+
+  On unrooted Android 10+ devices startup crashes of the application can be
+  experienced due to an inappropriate location of test related files, e.g the
+  profile folder.
 
 ### Added
 
@@ -30,7 +94,7 @@ All notable changes to this program are documented in this file.
   Firefox aka [Fission] will be not available.
 
 0.28.0  (2020-11-03, `c00d2b6acd3f`)
---------------------
+------------------------------------
 
 ### Known problems
 
@@ -43,6 +107,20 @@ All notable changes to this program are documented in this file.
   Whilst we are working on a repackaging fix for this problem, you can
   find more details on how to work around this issue in the [macOS
   notarization] section of the documentation.
+
+- _Android:_
+
+  Marionette will only be enabled in GeckoView based applications when the
+  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
+  for Android releases.
+
+  In some cases geckodriver could crash due to a stack overflow when handling
+  certain device errors.
+
+  On unrooted Android 10+ devices startup crashes of the application can be
+  experienced due to an inappropriate location of test related files, e.g the
+  profile folder.
 
 ### Added
 
@@ -66,7 +144,7 @@ All notable changes to this program are documented in this file.
   and querying its attributes are no longer needed, and have been removed.
 
 0.27.0  (2020-07-27, `7b8c4f32cdde`)
---------------------
+------------------------------------
 
 ### Security Fixes
 
@@ -92,10 +170,20 @@ All notable changes to this program are documented in this file.
   find more details on how to work around this issue in the [macOS
   notarization] section of the documentation.
 
+- _Android:_
+
+  Marionette will only be enabled in GeckoView based applications when the
+  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
+  for Android releases.
+
+  In some cases geckodriver could crash due to a stack overflow when handling
+  certain device errors.
+
 ### Added
 
 - To set environment variables for the launched Firefox for Android,
-  it is now possible to add an `env` object on `moz:firefoxOptions`
+  it is now possible to add an `env` object on [`moz:firefoxOptions`]
   (note: this is not supported for Firefox Desktop)
 
 - Support for print-to-PDF
@@ -126,7 +214,7 @@ All notable changes to this program are documented in this file.
 - Windows and Linux binaries are again statically linked.
 
 0.26.0  (2019-10-12, `e9783a644016'`)
-------------------------------------
+-------------------------------------
 
 Note that with this release the minimum recommended Firefox version
 has changed to Firefox ≥60.
@@ -148,6 +236,16 @@ has changed to Firefox ≥60.
   You must still have the [Microsoft Visual Studio redistributable
   runtime] installed on your system for the binary to run.  This
   is a known bug which we weren't able fix for this release.
+
+- _Android:_
+
+  Marionette will only be enabled in GeckoView based applications when the
+  Firefox preference `devtools.debugger.remote-enabled` is set to `True` via
+  [`moz:firefoxOptions`]. This will be fixed in one of the upcoming Firefox
+  for Android releases.
+
+  In some cases geckodriver could crash due to a stack overflow when handling
+  certain device errors.
 
 ### Added
 
@@ -522,7 +620,7 @@ Firefox and Selenium versions have changed:
 
 - Firefox will now be started with the `-foreground` and `-no-remote`
   flags if they have not already been specified by the user in
-  `moz:firefoxOptions`.
+  [`moz:firefoxOptions`].
 
   `-foreground` will ensure the application window gets focus when
   Firefox is started, and `-no-remote` will prevent remote commands
@@ -732,7 +830,7 @@ Note that with geckodriver 0.19.0 the following versions are recommended:
 
 - To pick up a prepared profile from the filesystem, it is now possible
   to pass `["-profile", "/path/to/profile"]` in the `args` array on
-  `moz:firefoxOptions`
+  [`moz:firefoxOptions`]
 
 - geckodriver now recommends Firefox 53 and greater
 
@@ -882,7 +980,7 @@ and greater.
 - Fix broken unmarshaling of _Get Timeouts_ response format from Firefox
   52 and earlier (fixed by [Jason Juang])
 
-- Allow preferences in `moz:firefoxOptions` to be both positive- and
+- Allow preferences in [`moz:firefoxOptions`] to be both positive- and
   negative integers (fixed by [Jason Juang])
 
 - Allow IPv6 hostnames in the proxy configuration object
@@ -1035,7 +1133,7 @@ and greater.
   `/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute` to
   return an anonymous element by a name and attribute query
 
-- Introduced a `moz:firefoxOptions` capability to customise a Firefox
+- Introduced a [`moz:firefoxOptions`] capability to customise a Firefox
   session:
 
   - The `binary`, `args`, and `profile` entries on this dictionary
@@ -1054,7 +1152,7 @@ and greater.
 ### Changed
 
 - `firefox_binary`, `firefox_args`, and `firefox_profile` capabilities
-  removed in favour of the `moz:firefoxOptions` dictionary detailed above
+  removed in favour of the [`moz:firefoxOptions`] dictionary detailed above
   and in the [README]
 
 - Removed `--no-e10s` flag, and geckodriver will from now rely on the

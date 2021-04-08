@@ -60,9 +60,9 @@ If a feature was added but removed before release, there is no reason
 to list it as a change.
 
 It is good practice to also include relevant information from the
-[webdriver] and [rust-mozrunner] crates, since these are the two most
-important dependencies of geckodriver and a lot of its functionality
-is implemented there.
+[webdriver], [rust-mozrunner], and [rust-mozdevice] crates, since these
+are the most important dependencies of geckodriver and a lot of its
+functionality is implemented there.
 
 We follow the writing style of the existing change log, with
 one section per version (with a release date), with subsections
@@ -73,8 +73,9 @@ to make the file readable in a text editor as well as rendered HTML.
 fmt(1) does a splendid job at text formatting.
 
 [CHANGES.md]: https://searchfox.org/mozilla-central/source/testing/geckodriver/CHANGES.md
+[webdriver]: https://searchfox.org/mozilla-central/source/testing/webdriver
 [rust-mozrunner]: https://searchfox.org/mozilla-central/source/testing/mozbase/rust/mozrunner
-
+[rust-mozdevice]: https://searchfox.org/mozilla-central/source/testing/mozbase/rust/mozdevice
 
 Update libraries
 ----------------
