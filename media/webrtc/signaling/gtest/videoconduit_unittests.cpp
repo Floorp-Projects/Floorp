@@ -12,6 +12,7 @@
 
 #include "VideoConduit.h"
 #include "RtpRtcpConfig.h"
+#include "WebrtcCallWrapper.h"
 #include "WebrtcGmpVideoCodec.h"
 
 #include "api/video/video_sink_interface.h"
@@ -42,7 +43,7 @@ class VideoConduitTest : public ::testing::Test {
  public:
   VideoConduitTest()
       : mCall(new MockCall()),
-        mCallWrapper(WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall))),
+        mCallWrapper(WebrtcCallWrapper::Create(UniquePtr<MockCall>(mCall))),
         mVideoConduit(MakeRefPtr<WebrtcVideoConduit>(
             mCallWrapper, GetCurrentSerialEventTarget(), "")) {
     NSS_NoDB_Init(nullptr);
@@ -72,7 +73,7 @@ class VideoConduitTest : public ::testing::Test {
   }
 
   MockCall* const mCall;
-  const RefPtr<WebRtcCallWrapper> mCallWrapper;
+  const RefPtr<WebrtcCallWrapper> mCallWrapper;
   const RefPtr<mozilla::WebrtcVideoConduit> mVideoConduit;
 };
 

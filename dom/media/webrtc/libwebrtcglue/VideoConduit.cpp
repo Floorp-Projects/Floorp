@@ -22,6 +22,7 @@
 #include "nsServiceManagerUtils.h"
 #include "RtpRtcpConfig.h"
 #include "VideoStreamFactory.h"
+#include "WebrtcCallWrapper.h"
 #include "WebrtcGmpVideoCodec.h"
 
 // libwebrtc includes
@@ -287,7 +288,7 @@ bool operator!=(const rtc::VideoSinkWants& aThis,
  * Factory Method for VideoConduit
  */
 RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
-    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
+    RefPtr<WebrtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
     std::string aPCHandle) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCall, "missing required parameter: aCall");
@@ -308,7 +309,7 @@ RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
 }
 
 WebrtcVideoConduit::WebrtcVideoConduit(
-    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
+    RefPtr<WebrtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread,
     std::string aPCHandle)
     : mTransportMonitor("WebrtcVideoConduit"),
       mStsThread(aStsThread),
@@ -1505,6 +1506,10 @@ void WebrtcVideoConduit::ReceivedRTCPPacket(const uint8_t* data, int len) {
 Maybe<DOMHighResTimeStamp> WebrtcVideoConduit::LastRtcpReceived() const {
   ASSERT_ON_THREAD(mStsThread);
   return mLastRtcpReceived;
+}
+
+DOMHighResTimeStamp WebrtcVideoConduit::GetNow() const {
+  return mCall->GetNow();
 }
 
 MediaConduitErrorCode WebrtcVideoConduit::StopTransmitting() {

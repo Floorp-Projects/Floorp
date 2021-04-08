@@ -29,7 +29,7 @@ class MediaPipelineTransmit;
 class MediaPipeline;
 class MediaPipelineFilter;
 class MediaTransportHandler;
-class WebRtcCallWrapper;
+class WebrtcCallWrapper;
 class JsepTrackNegotiatedDetails;
 
 namespace dom {
@@ -62,7 +62,7 @@ class TransceiverImpl : public nsISupports,
                   nsISerialEventTarget* aMainThread,
                   nsISerialEventTarget* aStsThread,
                   dom::MediaStreamTrack* aSendTrack,
-                  WebRtcCallWrapper* aCallWrapper);
+                  WebrtcCallWrapper* aCallWrapper);
 
   bool IsValid() const { return !!mConduit; }
 
@@ -164,7 +164,7 @@ class TransceiverImpl : public nsISupports,
   nsCOMPtr<nsISerialEventTarget> mStsThread;
   RefPtr<dom::MediaStreamTrack> mSendTrack;
   // state for webrtc.org that is shared between all transceivers
-  RefPtr<WebRtcCallWrapper> mCallWrapper;
+  RefPtr<WebrtcCallWrapper> mCallWrapper;
   RefPtr<MediaSessionConduit> mConduit;
   RefPtr<MediaPipelineTransmit> mTransmitPipeline;
   // The spec says both RTCRtpReceiver and RTCRtpSender have a slot for

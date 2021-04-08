@@ -8,6 +8,7 @@
 #include "gtest/gtest.h"
 
 #include "AudioConduit.h"
+#include "WebrtcCallWrapper.h"
 
 #include "MockCall.h"
 
@@ -19,7 +20,7 @@ class AudioConduitTest : public ::testing::Test {
  public:
   AudioConduitTest()
       : mCall(new MockCall()),
-        mCallWrapper(WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall))),
+        mCallWrapper(WebrtcCallWrapper::Create(UniquePtr<MockCall>(mCall))),
         mAudioConduit(MakeRefPtr<WebrtcAudioConduit>(
             mCallWrapper, GetCurrentSerialEventTarget())) {}
 
@@ -29,7 +30,7 @@ class AudioConduitTest : public ::testing::Test {
   }
 
   MockCall* const mCall;
-  const RefPtr<WebRtcCallWrapper> mCallWrapper;
+  const RefPtr<WebrtcCallWrapper> mCallWrapper;
   const RefPtr<WebrtcAudioConduit> mAudioConduit;
 };
 

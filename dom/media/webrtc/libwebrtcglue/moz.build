@@ -24,6 +24,7 @@ UNIFIED_SOURCES += [
     "TaskQueueWrapper.cpp",
     "VideoConduit.cpp",
     "VideoStreamFactory.cpp",
+    "WebrtcCallWrapper.cpp",
     "WebrtcGmpVideoCodec.cpp",
     "WebrtcMediaDataDecoderCodec.cpp",
     "WebrtcMediaDataEncoderCodec.cpp",

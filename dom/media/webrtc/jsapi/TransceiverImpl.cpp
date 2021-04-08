@@ -53,7 +53,7 @@ TransceiverImpl::TransceiverImpl(
     const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
     JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
     nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aSendTrack,
-    WebRtcCallWrapper* aCallWrapper)
+    WebrtcCallWrapper* aCallWrapper)
     : mWindow(aWindow),
       mPCHandle(aPCHandle),
       mTransportHandler(aTransportHandler),
