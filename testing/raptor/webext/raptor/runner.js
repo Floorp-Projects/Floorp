@@ -130,7 +130,7 @@ async function getTestSettings() {
   results.subtest_lower_is_better = settings.subtest_lower_is_better === true;
 
   if (settings.gecko_profile === true) {
-    results.extra_options = ["gecko_profile"];
+    results.extra_options = ["gecko-profile"];
 
     geckoProfiling = true;
     geckoEntries = settings.gecko_profile_entries;
