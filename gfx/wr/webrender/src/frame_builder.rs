@@ -74,6 +74,7 @@ pub struct FrameBuilderConfig {
     pub max_depth_ids: i32,
     pub max_target_size: i32,
     pub force_invalidation: bool,
+    pub is_software: bool,
 }
 
 /// A set of common / global resources that are retained between
