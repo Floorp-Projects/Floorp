@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bug 1702001: Https-only mode does not reload pages after clicking "Continue to HTTP Site", when url contains navigation </title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+/*
+ * Description of the test:
+ *
+ *   Load a page including a fragment portion which does not support https and make
+ *   sure that exempting the page from https-only-mode does not result in a fragment
+ *   navigation.
+ */
+
+
+ function resolveAfter6Seconds() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, 6000);
+  });
+}
+
+SimpleTest.requestFlakyTimeout("We need to wait for the HTTPS-Only error page to appear");
+SimpleTest.waitForExplicitFinish();
+
+let winTest = null;
+let TEST_URL = "http://example.com/tests/dom/security/test/https-only/file_insecure_reload.sjs#nav";
+
+// verify that https-only page appeared
+async function verifyErrorPage() {
+  let errorPageL10nId = "about-httpsonly-title-alert";
+  let body = content.document.body;
+  let innerHTML = content.document.body.innerHTML;
+  ok(innerHTML.includes(errorPageL10nId), "the error page should be shown for ");
+  let button = content.document.getElementById("openInsecure");
+  // Click "Continue to HTTP Site"
+  ok(button, "button exist");
+  if(button) {
+    button.click();
+  }
+}
+// verify that you entered the page and are not still displaying
+// the https-only error page
+async function receiveMessage(event) {
+  // read event
+  let result = event.data.result;
+  is(result, "you entered the http page", "The requested page should be shown");
+  window.removeEventListener("message",receiveMessage);
+  winTest.close();
+  SimpleTest.finish();
+}
+
+
+async function runTest() {
+  //Test: With https-only mode activated
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_only_mode", true],
+  ]});
+  winTest = window.open(TEST_URL);
+  await resolveAfter6Seconds();
+  await SpecialPowers.spawn(winTest,[],verifyErrorPage);
+}
+window.addEventListener("message", receiveMessage);
+runTest();
+
+</script>
+</body>
+</html>
