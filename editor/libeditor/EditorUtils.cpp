@@ -149,19 +149,19 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
     return aDirectionAndAmount;
   }
 
-  const RefPtr<Selection>& selection = aEditorBase.SelectionRefPtr();
-  if (NS_WARN_IF(!selection->RangeCount())) {
+  if (NS_WARN_IF(!aEditorBase.SelectionRef().RangeCount())) {
     return Err(NS_ERROR_FAILURE);
   }
 
   // At this point, the anchor-focus ranges must match for bidi information.
   // See `EditorBase::AutoCaretBidiLevelManager`.
-  MOZ_ASSERT(selection->GetAnchorFocusRange()->StartRef() ==
+  MOZ_ASSERT(aEditorBase.SelectionRef().GetAnchorFocusRange()->StartRef() ==
              mAnchorFocusRange->StartRef());
-  MOZ_ASSERT(selection->GetAnchorFocusRange()->EndRef() ==
+  MOZ_ASSERT(aEditorBase.SelectionRef().GetAnchorFocusRange()->EndRef() ==
              mAnchorFocusRange->EndRef());
 
-  RefPtr<nsFrameSelection> frameSelection = selection->GetFrameSelection();
+  RefPtr<nsFrameSelection> frameSelection =
+      aEditorBase.SelectionRef().GetFrameSelection();
   if (NS_WARN_IF(!frameSelection)) {
     return Err(NS_ERROR_NOT_INITIALIZED);
   }

@@ -317,7 +317,7 @@ nsresult EditorBase::Init(Document& aDocument, Element* aRoot,
     return NS_ERROR_FAILURE;
   }
 
-  SelectionRefPtr()->AddSelectionListener(this);
+  SelectionRef().AddSelectionListener(this);
 
   // Make sure that the editor will be destroyed properly
   mDidPreDestroy = false;
@@ -662,12 +662,12 @@ bool EditorBase::IsSelectionEditable() {
   if (IsTextEditor()) {
     // XXX we just check that the anchor node is editable at the moment
     //     we should check that all nodes in the selection are editable
-    nsCOMPtr<nsINode> anchorNode = SelectionRefPtr()->GetAnchorNode();
+    nsCOMPtr<nsINode> anchorNode = SelectionRef().GetAnchorNode();
     return anchorNode && anchorNode->IsContent() && anchorNode->IsEditable();
   }
 
-  nsINode* anchorNode = SelectionRefPtr()->GetAnchorNode();
-  nsINode* focusNode = SelectionRefPtr()->GetFocusNode();
+  nsINode* anchorNode = SelectionRef().GetAnchorNode();
+  nsINode* focusNode = SelectionRef().GetFocusNode();
   if (!anchorNode || !focusNode) {
     return false;
   }
@@ -675,16 +675,15 @@ bool EditorBase::IsSelectionEditable() {
   // Per the editing spec as of June 2012: we have to have a selection whose
   // start and end nodes are editable, and which share an ancestor editing
   // host.  (Bug 766387.)
-  bool isSelectionEditable = SelectionRefPtr()->RangeCount() &&
+  bool isSelectionEditable = SelectionRef().RangeCount() &&
                              anchorNode->IsEditable() &&
                              focusNode->IsEditable();
   if (!isSelectionEditable) {
     return false;
   }
 
-  nsINode* commonAncestor = SelectionRefPtr()
-                                ->GetAnchorFocusRange()
-                                ->GetClosestCommonInclusiveAncestor();
+  nsINode* commonAncestor =
+      SelectionRef().GetAnchorFocusRange()->GetClosestCommonInclusiveAncestor();
   while (commonAncestor && !commonAncestor->IsEditable()) {
     commonAncestor = commonAncestor->GetParentNode();
   }
@@ -760,7 +759,7 @@ nsresult EditorBase::GetSelection(SelectionType aSelectionType,
     return NS_ERROR_INVALID_ARG;
   }
   if (IsEditActionDataAvailable()) {
-    *aSelection = do_AddRef(SelectionRefPtr()).take();
+    *aSelection = do_AddRef(&SelectionRef()).take();
     return NS_OK;
   }
   nsISelectionController* selectionController = GetSelectionController();
@@ -846,7 +845,7 @@ nsresult EditorBase::DoTransactionInternal(nsITransaction* aTransaction) {
     // XXX: re-entry during initial reflow. - kin
 
     // get the selection and start a batch change
-    SelectionBatcher selectionBatcher(SelectionRefPtr());
+    SelectionBatcher selectionBatcher(SelectionRef());
 
     if (mTransactionManager) {
       RefPtr<TransactionManager> transactionManager(mTransactionManager);
@@ -981,7 +980,7 @@ void EditorBase::BeginPlaceholderTransaction(nsStaticAtom& aTransactionName) {
     mPlaceholderTransaction = nullptr;
     mPlaceholderName = &aTransactionName;
     mSelState.emplace();
-    mSelState->SaveSelection(*SelectionRefPtr());
+    mSelState->SaveSelection(SelectionRef());
     // Composition transaction can modify multiple nodes and it merges text
     // node for ime into single text node.
     // So if current selection is into IME text node, it might be failed
@@ -1007,7 +1006,7 @@ void EditorBase::EndPlaceholderTransaction(
     // caret drawing code. We only enable this cache here; at other times,
     // we have no way to know whether reflow invalidates it
     // See bugs 35296 and 199412.
-    SelectionRefPtr()->SetCanCacheFrameOffset(true);
+    SelectionRef().SetCanCacheFrameOffset(true);
 
     // time to turn off the batch
     EndUpdateViewBatch();
@@ -1025,7 +1024,7 @@ void EditorBase::EndPlaceholderTransaction(
     }
 
     // cached for frame offset are Not available now
-    SelectionRefPtr()->SetCanCacheFrameOffset(false);
+    SelectionRef().SetCanCacheFrameOffset(false);
 
     if (mSelState) {
       // we saved the selection state, but never got to hand it to placeholder
@@ -1119,8 +1118,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   nsCOMPtr<nsINode> firstNode = GetFirstEditableNode(rootElement);
   if (!firstNode) {
     // just the root node, set selection to inside the root
-    nsresult rv =
-        MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(rootElement, 0);
+    nsresult rv = SelectionRef().CollapseInLimiter(rootElement, 0);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Selection::CollapseInLimiter() failed");
     return rv;
@@ -1128,8 +1126,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
 
   if (firstNode->IsText()) {
     // If firstNode is text, set selection to beginning of the text node.
-    nsresult rv =
-        MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(firstNode, 0);
+    nsresult rv = SelectionRef().CollapseInLimiter(firstNode, 0);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Selection::CollapseInLimiter() failed");
     return rv;
@@ -1144,7 +1141,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   MOZ_ASSERT(
       parent->ComputeIndexOf(firstNode) == 0,
       "How come the first node isn't the left most child in its parent?");
-  nsresult rv = MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(parent, 0);
+  nsresult rv = SelectionRef().CollapseInLimiter(parent, 0);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Selection::CollapseInLimiter() failed");
   return rv;
@@ -1185,9 +1182,8 @@ nsresult EditorBase::CollapseSelectionToEnd() const {
   }
 
   uint32_t length = lastContent->Length();
-  nsresult rv =
-      MOZ_KnownLive(SelectionRefPtr())
-          ->CollapseInLimiter(lastContent, static_cast<int32_t>(length));
+  nsresult rv = SelectionRef().CollapseInLimiter(lastContent,
+                                                 static_cast<int32_t>(length));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Selection::CollapseInLimiter() failed");
   return rv;
@@ -1915,7 +1911,7 @@ bool EditorBase::ArePreservingSelection() {
 void EditorBase::PreserveSelectionAcrossActions() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  SavedSelectionRef().SaveSelection(*SelectionRefPtr());
+  SavedSelectionRef().SaveSelection(SelectionRef());
   RangeUpdaterRef().RegisterSelectionState(SavedSelectionRef());
 }
 
@@ -1926,7 +1922,7 @@ nsresult EditorBase::RestorePreservedSelection() {
     return NS_ERROR_FAILURE;
   }
   DebugOnly<nsresult> rvIgnored =
-      SavedSelectionRef().RestoreSelection(*SelectionRefPtr());
+      SavedSelectionRef().RestoreSelection(SelectionRef());
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "SelectionState::RestoreSelection() failed, but ignored");
@@ -2719,9 +2715,8 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
     return error.StealNSResult();
   }
 
-  DebugOnly<nsresult> rvIgnored =
-      MOZ_KnownLive(SelectionRefPtr())
-          ->CollapseInLimiter(MOZ_KnownLive(&aTextNode), aString.Length());
+  DebugOnly<nsresult> rvIgnored = SelectionRef().CollapseInLimiter(
+      MOZ_KnownLive(&aTextNode), aString.Length());
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -3252,8 +3247,8 @@ nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
   }
 
   // Set selection.
-  MOZ_KnownLive(SelectionRefPtr())
-      ->CollapseInLimiter(EditorRawDOMPoint(rootElement, 0), ignoredError);
+  SelectionRef().CollapseInLimiter(EditorRawDOMPoint(rootElement, 0),
+                                   ignoredError);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -3268,7 +3263,7 @@ void EditorBase::BeginUpdateViewBatch() {
 
   if (!mUpdateCount) {
     // Turn off selection updates and notifications.
-    SelectionRefPtr()->StartBatchChanges();
+    SelectionRef().StartBatchChanges();
   }
 
   mUpdateCount++;
@@ -3288,7 +3283,7 @@ void EditorBase::EndUpdateViewBatch() {
   }
 
   // Turn selection updating and notifications back on.
-  SelectionRefPtr()->EndBatchChanges();
+  SelectionRef().EndBatchChanges();
 
   HTMLEditor* htmlEditor = AsHTMLEditor();
   if (!htmlEditor) {
@@ -3602,7 +3597,7 @@ bool EditorBase::FlushPendingNotificationsIfToHandleDeletionWithFrameSelection(
     return false;
   }
   if (!EditorUtils::IsFrameSelectionRequiredToExtendSelection(
-          aDirectionAndAmount, *SelectionRefPtr())) {
+          aDirectionAndAmount, SelectionRef())) {
     return true;
   }
   // Although AutoRangeArray::ExtendAnchorFocusRangeFor() will use
@@ -3667,7 +3662,7 @@ nsresult EditorBase::DeleteSelectionAsAction(
   // selection to the  start and then create a new selection.
   // Platforms that use "selection-style" caret positioning just delete the
   // existing selection without extending it.
-  if (!SelectionRefPtr()->IsCollapsed()) {
+  if (!SelectionRef().IsCollapsed()) {
     switch (aDirectionAndAmount) {
       case eNextWord:
       case ePreviousWord:
@@ -3678,7 +3673,7 @@ nsresult EditorBase::DeleteSelectionAsAction(
           break;
         }
         ErrorResult error;
-        MOZ_KnownLive(SelectionRefPtr())->CollapseToStart(error);
+        SelectionRef().CollapseToStart(error);
         if (NS_WARN_IF(Destroyed())) {
           error.SuppressException();
           return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
@@ -3703,7 +3698,7 @@ nsresult EditorBase::DeleteSelectionAsAction(
   // only the range information but keep range information.  See discussion
   // of the spec issue for the detail:
   // https://github.com/w3c/input-events/issues/82
-  if (!SelectionRefPtr()->IsCollapsed()) {
+  if (!SelectionRef().IsCollapsed()) {
     switch (editAction) {
       case EditAction::eDeleteWordBackward:
       case EditAction::eDeleteToBeginningOfSoftLine:
@@ -3783,7 +3778,7 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
   //     refer `Selection`.  It may be modified by mutation event listeners
   //     so that we should remove the empty text node when we make it empty.
   EditorDOMPoint atNewStartOfSelection(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
+      EditorBase::GetStartPoint(SelectionRef()));
   if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
     // XXX And also it seems that we don't need to return error here.
     //     Why don't we just ignore?  `Selection::RemoveAllRanges()` may
@@ -3808,7 +3803,7 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
     // We prevent the caret from sticking on the left of previous `<br>`
     // element (i.e. the end of previous line) after this deletion. Bug 92124.
     ErrorResult error;
-    SelectionRefPtr()->SetInterlinePosition(true, error);
+    SelectionRef().SetInterlinePosition(true, error);
     if (error.Failed()) {
       NS_WARNING("Selection::SetInterlinePosition(true) failed");
       return error.StealNSResult();
@@ -3827,7 +3822,7 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  AutoRangeArray rangesToDelete(*SelectionRefPtr());
+  AutoRangeArray rangesToDelete(SelectionRef());
   if (NS_WARN_IF(rangesToDelete.Ranges().IsEmpty())) {
     NS_ASSERTION(
         false,
@@ -3999,12 +3994,12 @@ nsresult EditorBase::DeleteRangesWithTransaction(
     return NS_OK;
   }
 
-  if (!SelectionRefPtr()->IsCollapsed()) {
+  if (!SelectionRef().IsCollapsed()) {
     NS_WARNING("Selection was changed by mutation event listeners");
     return NS_OK;
   }
 
-  nsINode* anchorNode = SelectionRefPtr()->GetAnchorNode();
+  nsINode* anchorNode = SelectionRef().GetAnchorNode();
   if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!anchorNode->IsContent()) ||
       NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(*anchorNode)) ||
       anchorNode->Length() > 0) {
@@ -4041,8 +4036,7 @@ nsresult EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode) {
   }
 
   ErrorResult err;
-  MOZ_KnownLive(SelectionRefPtr())
-      ->AddRangeAndSelectFramesAndNotifyListeners(*range, err);
+  SelectionRef().AddRangeAndSelectFramesAndNotifyListeners(*range, err);
   NS_WARNING_ASSERTION(!err.Failed(), "Failed to add range to Selection");
   return err.StealNSResult();
 }
@@ -4051,7 +4045,7 @@ nsresult EditorBase::ClearSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   ErrorResult error;
-  MOZ_KnownLive(SelectionRefPtr())->RemoveAllRanges(error);
+  SelectionRef().RemoveAllRanges(error);
   NS_WARNING_ASSERTION(!error.Failed(), "Selection::RemoveAllRanges() failed");
   return error.StealNSResult();
 }
@@ -4187,7 +4181,7 @@ nsresult EditorBase::HandleInlineSpellCheck(
     return NS_OK;
   }
   nsresult rv = mInlineSpellChecker->SpellCheckAfterEditorChange(
-      GetTopLevelEditSubAction(), *SelectionRefPtr(),
+      GetTopLevelEditSubAction(), SelectionRef(),
       aPreviouslySelectedStart.GetContainer(),
       aPreviouslySelectedStart.Offset(),
       aRange ? aRange->GetStartContainer() : nullptr,
@@ -4208,7 +4202,7 @@ void EditorBase::InitializeSelectionAncestorLimit(
     nsIContent& aAncestorLimit) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  SelectionRefPtr()->SetAncestorLimiter(&aAncestorLimit);
+  SelectionRef().SetAncestorLimiter(&aAncestorLimit);
 }
 
 nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
@@ -4231,7 +4225,7 @@ nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
   if (NS_WARN_IF(!caret)) {
     return NS_ERROR_FAILURE;
   }
-  caret->SetSelection(SelectionRefPtr());
+  caret->SetSelection(&SelectionRef());
   DebugOnly<nsresult> rvIgnored =
       selectionController->SetCaretReadOnly(IsReadonly());
   NS_WARNING_ASSERTION(
@@ -4267,7 +4261,7 @@ nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
   if (selectionRootContent->GetParent()) {
     InitializeSelectionAncestorLimit(*selectionRootContent);
   } else {
-    SelectionRefPtr()->SetAncestorLimiter(nullptr);
+    SelectionRef().SetAncestorLimiter(nullptr);
   }
 
   // If there is composition when this is called, we may need to restore IME
@@ -4276,7 +4270,7 @@ nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
   if (mComposition && mComposition->IsMovingToNewTextNode()) {
     // We need to look for the new text node from current selection.
     // XXX If selection is changed during reframe, this doesn't work well!
-    const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
@@ -4314,7 +4308,7 @@ nsresult EditorBase::FinalizeSelection() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  SelectionRefPtr()->SetAncestorLimiter(nullptr);
+  SelectionRef().SetAncestorLimiter(nullptr);
 
   if (NS_WARN_IF(!GetPresShell())) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -4774,7 +4768,7 @@ EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
 
   // XXX Not sure whether this requires strong reference here.
   RefPtr<nsFrameSelection> frameSelection =
-      aEditorBase.SelectionRefPtr()->GetFrameSelection();
+      aEditorBase.SelectionRef().GetFrameSelection();
   if (NS_WARN_IF(!frameSelection)) {
     mFailed = true;
     return;
@@ -4812,7 +4806,7 @@ void EditorBase::AutoCaretBidiLevelManager::MaybeUpdateCaretBidiLevel(
     return;
   }
   RefPtr<nsFrameSelection> frameSelection =
-      aEditorBase.SelectionRefPtr()->GetFrameSelection();
+      aEditorBase.SelectionRef().GetFrameSelection();
   MOZ_ASSERT(frameSelection);
   frameSelection->SetCaretBidiLevelAndMaybeSchedulePaint(
       mNewCaretBidiLevel.value());
@@ -4829,7 +4823,7 @@ void EditorBase::UndefineCaretBidiLevel() const {
    * So we set the caret Bidi level to UNDEFINED here, and the caret code will
    * set it correctly later
    */
-  nsFrameSelection* frameSelection = SelectionRefPtr()->GetFrameSelection();
+  nsFrameSelection* frameSelection = SelectionRef().GetFrameSelection();
   if (frameSelection) {
     frameSelection->UndefineCaretBidiLevel();
   }
@@ -4954,8 +4948,8 @@ NS_IMETHODIMP EditorBase::SetNewlineHandling(int32_t aNewlineHandling) {
 bool EditorBase::IsSelectionRangeContainerNotContent() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); i++) {
-    const nsRange* range = SelectionRefPtr()->GetRangeAt(i);
+  for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
+    const nsRange* range = SelectionRef().GetRangeAt(i);
     MOZ_ASSERT(range);
     if (!range || !range->GetStartContainer() ||
         !range->GetStartContainer()->IsContent() || !range->GetEndContainer() ||
@@ -5369,7 +5363,7 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
     // If the edit action will delete selected ranges, compute the range
     // strictly.
     if (MayEditActionDeleteAroundCollapsedSelection(mEditAction) ||
-        (!textEditor->SelectionRefPtr()->IsCollapsed() &&
+        (!textEditor->SelectionRef().IsCollapsed() &&
          MayEditActionDeleteSelection(mEditAction))) {
       if (!textEditor
                ->FlushPendingNotificationsIfToHandleDeletionWithFrameSelection(
@@ -5379,7 +5373,7 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
         return NS_ERROR_EDITOR_DESTROYED;
       }
 
-      AutoRangeArray rangesToDelete(*textEditor->SelectionRefPtr());
+      AutoRangeArray rangesToDelete(textEditor->SelectionRef());
       if (!rangesToDelete.Ranges().IsEmpty()) {
         nsresult rv = MOZ_KnownLive(textEditor->AsHTMLEditor())
                           ->ComputeTargetRanges(aDeleteDirectionAndAmount,
@@ -5408,10 +5402,10 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
     }
     // Otherwise, just set target ranges to selection ranges.
     else if (MayHaveTargetRangesOnHTMLEditor(inputType)) {
-      if (uint32_t rangeCount = textEditor->SelectionRefPtr()->RangeCount()) {
+      if (uint32_t rangeCount = textEditor->SelectionRef().RangeCount()) {
         mTargetRanges.SetCapacity(rangeCount);
         for (uint32_t i = 0; i < rangeCount; i++) {
-          const nsRange* range = textEditor->SelectionRefPtr()->GetRangeAt(i);
+          const nsRange* range = textEditor->SelectionRef().GetRangeAt(i);
           if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
             continue;
           }

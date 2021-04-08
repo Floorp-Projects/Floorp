@@ -3046,7 +3046,7 @@ class HTMLEditor final : public TextEditor,
     MOZ_ASSERT(IsEditActionDataAvailable());
     MOZ_ASSERT(!aRv.Failed());
 
-    MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(aPoint, aRv);
+    SelectionRef().CollapseInLimiter(aPoint, aRv);
     if (NS_WARN_IF(Destroyed())) {
       aRv = NS_ERROR_EDITOR_DESTROYED;
       return;

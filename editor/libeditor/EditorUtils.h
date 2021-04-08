@@ -720,13 +720,10 @@ class MOZ_RAII AutoTransactionBatchExternal final {
  *****************************************************************************/
 class MOZ_STACK_CLASS AutoSelectionRangeArray final {
  public:
-  explicit AutoSelectionRangeArray(dom::Selection* aSelection) {
-    if (!aSelection) {
-      return;
-    }
-    uint32_t rangeCount = aSelection->RangeCount();
+  explicit AutoSelectionRangeArray(dom::Selection& aSelection) {
+    uint32_t rangeCount = aSelection.RangeCount();
     for (uint32_t i = 0; i < rangeCount; i++) {
-      mRanges.AppendElement(*aSelection->GetRangeAt(i));
+      mRanges.AppendElement(*aSelection.GetRangeAt(i));
     }
   }
 
