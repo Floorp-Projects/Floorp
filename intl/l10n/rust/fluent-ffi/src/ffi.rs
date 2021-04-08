@@ -136,7 +136,8 @@ extern "C" {
     pub fn FluentBuiltInNumberFormatterFormat(
         formatter: *const RawNumberFormatter,
         input: f64,
-        out_count: &mut u32,
+        out_count: &mut usize,
+        out_capacity: &mut usize,
     ) -> *mut u8;
     pub fn FluentBuiltInNumberFormatterDestroy(formatter: *mut RawNumberFormatter);
 
