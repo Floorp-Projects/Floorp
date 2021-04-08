@@ -976,6 +976,8 @@
     <string name="share_link_all_apps_subheader">Tüm eylemler</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Son kullanılanlar</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">%1$s adresiyle giriş yaptınız</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Eşitlemek için giriş yap</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1209,6 +1211,8 @@
     <string name="onboarding_tracking_protection_strict_button">Sıkı (önerilen)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Sıkı</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Sayfaların daha hızlı yüklenmesi için daha fazla takipçiyi engeller ancak bazı sayfa işlevleri bozulabilir.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Araç çubuğu konumunu seçin</string>
     <!-- text for the toolbar position card description -->
@@ -1301,6 +1305,8 @@
     <string name="preference_enhanced_tracking_protection_standard_info_button">Standart izlenme korumasında neler engellenir?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Sıkı</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Sayfaların daha hızlı yüklenmesi için daha fazla takipçiyi engeller ancak bazı sayfa işlevleri bozulabilir.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Sıkı izlenme korumasında neler engellenir?</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

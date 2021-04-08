@@ -986,6 +986,8 @@
     <string name="share_link_all_apps_subheader">Vsa dejanja</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Nedavno uporabljene</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Prijava v sinhronizacijo</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Prijava v Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1186,6 +1188,8 @@
     <string name="onboarding_whats_new_description">Imate vprašanja o preoblikovanem %su? Želite izvedeti, kaj se je spremenilo?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Tukaj poiščite odgovore</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Sinhronizirajte Firefox med napravami</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->

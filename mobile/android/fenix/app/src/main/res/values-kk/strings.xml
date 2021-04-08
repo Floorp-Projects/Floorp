@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Сіздің жекелік беттеріңіз осында көрсетілетін болады.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 ашық бет. Беттерді ауыстыру үшін шертіңіз.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -178,6 +174,11 @@
     <string name="browser_menu_read_appearance">Сыртқы түрі</string>
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Оқу режимін баптау</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Қосу</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Түзету</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Байланысу мүмкін емес. URL схемасы белгісіз.</string>
@@ -965,6 +966,10 @@
     <string name="share_link_all_apps_subheader">Барлық әрекеттер</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Жуырда қолданылған</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">%1$s ретінде кірген</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Синхрондау ішіне кіру</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Синхрондау ішіне кіру</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1159,9 +1164,6 @@
     <string name="onboarding_header">%s өніміне қош келдіңіз!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Тіркелгіңіз бар ма?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s өнімімен таныс болыңыз</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Жаңалықтарын біліңіз</string>
     <!-- text for the "what's new" onboarding card description
@@ -1169,10 +1171,10 @@
     <string name="onboarding_whats_new_description">Қайта жасалған %s туралы сұрақтарыңыз бар ма? Не өзгертілгенін білуді қалайсыз ба?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Осы жерден жауап алыңыз</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Firefox тіркелгісімен бетбелгілер, парольдер және т.б. синхрондауды бастаңыз.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Firefox-ты құрылғылар арасында синхрондау</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Көбірек білу</string>
+    <string name="onboarding_manual_sign_in_description">Осы құрылғыдағы Firefox-қа бетбелгілер, шолу тарихын және парольдерді әкелу.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1181,8 +1183,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Иә, авторизациялау</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Кіру…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Firefox ішіне кіру</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Тіркелу</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Жүйеге кірмей тұра беру</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1191,26 +1193,23 @@
     <string name="onboarding_firefox_account_automatic_signin_failed">Кіру сәтсіз аяқталды</string>
 
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Автоматты жекелік</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Жекелік және қауіпсіздік баптаулары сіздің соңыңыздан еретін трекерлер, зиянкес бағдарламалар және компанияларды бұғаттайды.</string>
+    <string name="onboarding_tracking_protection_header_3">Үздіксіз құпиялылық</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox компанияларды интернетте сізді жасырын түрде бақылауын автоматты түрде тоқтатады.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартты (бастапқы)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Азырақ трекерлерді бұғаттайды. Беттер қалыпты түрде жүктеледі.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Жекелік және өнімділік теңгерімі. Беттер әдеттегідей жүктеледі.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Қатаң (ұсынылады)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Қатаң</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Көбірек трекерлер, жарнама және қалқымалы терезелерді бұғаттайды. Беттер жылдамырақ жүктеледі, бірақ, кейбір мүмкіндіктер жұмыс істемеуі мүмкін.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Таңдауыңызды жасаңыз</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Беттерді тезірек жүктеу үшін көбірек трекерлерді блоктайды, бірақ кейбір беттер функционалдылығы бұзылуы мүмкін.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Құралдар панелінің орналасуын таңдау</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Төмендегі құралдар панелі көмегімен бір қолмен шолуды қолданып көріңіз, немесе оны жоғарыға жылжытыңыз.</string>
+    <string name="onboarding_toolbar_placement_description_1">Құралдар панелін қолжетімді жерге орнату. Оны төменгі жағында ұстаңыз немесе оны жоғарыға қарай жылжытыңыз.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Жекелік түрде шолыңыз</string>
     <!-- text for the private browsing onboarding card description
@@ -1223,7 +1222,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Сіздің жекелігіңіз</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Біз %s өнімін сіз желіде және бізбен немен бөлісетіңізді басқаруды өз қолыңызға беретіндей етіп жасадық.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Біздің жекелік ескертуімізді оқыңыз</string>
@@ -1237,7 +1236,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Теманы таңдау</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Күңгірт режимді іске қосу арқылы батареяны және көздің көру қабілетін үнемдеңіз.</string>
+    <string name="onboarding_theme_picker_description_2">Күңгірт режимді көмегімен батареяны және көздің көру қабілетін үнемдеңіз.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Автоматты түрде</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1294,14 +1293,14 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартты (бастапқы)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Азырақ трекерлерді бұғаттайды. Беттер қалыпты түрде жүктеледі.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Жекелік және өнімділік теңгерімі. Беттер әдеттегідей жүктеледі.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Бақылаудан қалыпты қорғаныс нені бұғаттайды</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Қатаң</string>
 
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Көбірек трекерлер, жарнама және қалқымалы терезелерді бұғаттайды. Беттер жылдамырақ жүктеледі, бірақ, кейбір мүмкіндіктер жұмыс істемеуі мүмкін.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Беттерді тезірек жүктеу үшін көбірек трекерлерді блоктайды, бірақ кейбір беттер функционалдылығы бұзылуы мүмкін.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Бақылаудан қатаң қорғаныс нені бұғаттайды</string>
 
@@ -1548,6 +1547,25 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">Карталарды құрылғылар арасында синхрондау</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Несиелік картаны қосу</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Картаны қосу</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Карта нөмірі</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Мерзімнің біту күні</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Картадағы аты</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Картаның бүркеншік аты</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Картаны өшіру</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Сақтау</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Сақтау</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Бас тарту</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Іздеу жүйесін қосу</string>

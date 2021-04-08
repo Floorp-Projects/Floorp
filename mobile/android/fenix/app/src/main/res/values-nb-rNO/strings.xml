@@ -529,7 +529,7 @@
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Økter</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Skjermdumper</string>
+    <string name="library_screenshots">Skjermbilder</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Nedlastinger</string>
     <!-- Option in library to open Bookmarks page -->

@@ -19,10 +19,6 @@
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">ستظهر الألسنة الخاصة هنا.</string>
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">بايدو</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">لسان واحد مفتوح. انقر لتبديل الألسنة.</string>
 
@@ -184,6 +180,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">خصّص منظور القارئ</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">أضِف</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">حرّر</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">تعذّر الاتصال، لم أتعرّف على مخطّط المسار.</string>
@@ -978,6 +979,10 @@
     <string name="share_link_all_apps_subheader">كل الإجراءات</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">المستخدمة حديثًا</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">ولجت باسم %1$s</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">لِج كي تبدأ المزامنة</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">لِج إلى «المزامنة»</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1168,9 +1173,6 @@
     <string name="onboarding_header">مرحبًا بك في %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">ألديك حساب؟</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">تعرف على %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">اعرف ما الجديد</string>
     <!-- text for the "what's new" onboarding card description
@@ -1178,10 +1180,8 @@
     <string name="onboarding_whats_new_description">ألديك أسئلة عن متصفّح %s الذي أعدنا تصميمه؟ أتريد معرفة ما تغيّر؟</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ستجد هنا إجابات أسئلتك</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">اشرع الآن بمزامنة العلامات وكلمات السر وغيرها الكثير عبر حساب Firefox.</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">اطّلع على المزيد</string>
+    <string name="onboarding_manual_sign_in_description">اسحب العلامات والتأريخ وكلمات السر إلى Firefox على هذا الجهاز.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1190,8 +1190,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">نعم، سألج بنفس الحساب</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">تَلج الآن…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">لِج إلى Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">سجّل حسابًا</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">لا تلج</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1199,26 +1199,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">فشل الولوج</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">خصوصية تلقائية</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">تحجب إعدادات الخصوصية والأمان المتعقّبات والبرمجيات الخبيثة والشركات التي تحاول تعقّبك.</string>
+    <string name="onboarding_tracking_protection_header_3">خصوصية دائمة</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">يُوقف Firefox تلقائيًا الشركات من تعقّبك خفيةً في أرجاء الوِب.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">القياسي (المبدئي)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">احجب عددًا أقل من المتعقّبات. ستُحمّل الصفحات كما الطبيعي.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">يوازن بين الخصوصية والأداء. ستتحمّل الصفحات كالعادة.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">صارم (مستحسن)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">صارم</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">احجب متعقّبات وإعلانات ومنبثقات أكثر. ستُحمّل الصفحات بسرعة أكبر، ولكن قد لا تعمل بعض المزايا.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">اختر جهةً</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">يحجب متعقّبات أكثر فتتحمّل الصفحات أسرع، ولكن قد تعطب بعض المزايا في الصفحات.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">اختر مكان شريط الأدوات كما تريد</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">جرّب التصفّح بيد واحدة باستعمال شريط الأدوات بالأسفل، أو انقله إلى أعلى.</string>
+    <string name="onboarding_toolbar_placement_description_1">ضَع شريط الأدوات في متناول اليد. أبقِه في الأسفل، أو انقله إلى الأعلى.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">تصفّح بخصوصية</string>
     <!-- text for the private browsing onboarding card description
@@ -1231,7 +1228,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">خصوصيتك</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">صمّمنا لك %s لتقدر على التحكّم فيما تُشاركه عبر الشبكة، وما تُشاركه معنا.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">اقرأ تنويه الخصوصية</string>
@@ -1246,7 +1243,7 @@
     <string name="onboarding_theme_picker_header">اختر السمة</string>
 
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">وفّر طاقة الطارية واحمِ نظرك بتفعيل الوضع الداكن.</string>
+    <string name="onboarding_theme_picker_description_2">وفّر طاقة البطارية واحمِ نظرك مع الوضع الداكن.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">آلي</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1303,13 +1300,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">القياسي (المبدئي)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">احجب عددًا أقل من المتعقّبات. ستُحمّل الصفحات كما الطبيعي.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">يوازن بين الخصوصية والأداء. ستتحمّل الصفحات كالعادة.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ما يحجبه أسلوب الحماية ضد التعقّب المعياري</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">صارم</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">احجب متعقّبات وإعلانات ومنبثقات أكثر. ستُحمّل الصفحات بسرعة أكبر، ولكن قد لا تعمل بعض المزايا.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">يحجب متعقّبات أكثر فتتحمّل الصفحات أسرع، ولكن قد تعطب بعض المزايا في الصفحات.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ما يحجبه أسلوب الحماية ضد التعقّب الصارم</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1556,6 +1553,25 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">زامِن البطاقات بين الأجهزة</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">أضِف بطاقة ائتمان</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">أضِف بطاقة</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">رقم البطاقة</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">تاريخ الانتهاء</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">الاسم على البطاقة</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">الاسم المستعار للبطاقة</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">احذف البطاقة</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">احفظ</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">احفظ</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">ألغِ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">أضِف محرك بحث</string>

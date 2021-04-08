@@ -13,6 +13,10 @@
     <string name="content_description_disable_private_browsing_button">Хосусый гизү режимын сүндерү</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Эзләү яки адрес язу</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 ачык таб. Табларны күчерү өчен басыгыз.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s ачык таб. Табларны күчерү өчен басыгыз.</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d сайланган</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -21,6 +25,8 @@
     <string name="tab_tray_add_new_collection_name">Исем</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Җыентыкны сайлау</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Күп сайлау режимыннан чыгу</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Сайланган табларны җыентыкка өстәү</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
@@ -29,15 +35,25 @@
     <string name="tab_tray_item_unselected_multiselect_content_description">%1$s сайланмаган</string>
 
 
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Күп сайлау режимнан чыгу</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Күп сайлау режимына кердек, җыентыкка сакланасы табларны сайлагыз</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Сайланган</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozilla тарафыннан җитештерелә.</string>
 
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Сез хосусый сессиядә</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Сессияне бетерү</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Өй экраннан хосусый табларны ачу өчен ярлык өстәгез.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Ярлык өстәү</string>
     <!-- Text for the negative button -->
@@ -49,6 +65,8 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Яшерү</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Камера куллануга рөхсәт кирәк. Android көйләүләренә кереп, &quot;рөхсәтләр&quot; дигән битне ачып, &quot;рөхсәт итү&quot; дигәнгә басыгыз.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Көйләүләргә күчү</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
@@ -70,6 +88,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Яңа хосусый таб</string>
 
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Еш кулланылучылар</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Ачык битләр</string>
@@ -89,6 +110,8 @@
     <string name="browser_menu_add_ons">Кушымчалар</string>
     <!-- Browser menu button that opens the addon extensions manager -->
     <string name="browser_menu_extensions">Киңәйтүләр</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Монда кушымчалар юк</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ярдәм</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -105,12 +128,18 @@
     <string name="browser_menu_install_on_homescreen">Урнаштыру</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">Синхронланган таблар</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Яңадан синхронлау</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Биттән табу</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Хосусый таб</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Җыентыкка саклау</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Уртаклашу</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Уртаклашу...</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">%1$s белән ачу</string>
@@ -121,11 +150,17 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">%1$s нигезендә</string>
 
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Уку режимы</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Уку режимын ябу</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Кушымтада ачу</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Тышкы күренеш</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Уку режимын яраклаштыру</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Өстәү</string>
     <!-- Browser menu label for editing a bookmark -->
@@ -154,6 +189,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Күбрәк белү</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s ярдәмендә эзләү</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Яңа Firefox табын ачу</string>
@@ -162,6 +200,9 @@
 
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Интернетта эзләү</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Тавышлы эзләү</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -180,6 +221,8 @@
     <string name="preferences_search_address_bar">Адрес юлы</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Ярдәм</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Google Play-да бәяләү</string>
     <!-- Preference for giving feedback about Fenix -->
     <string name="preferences_feedback">Фикер һәм тәкъдимнәр җибәрү</string>
     <!-- Preference linking to about page for Fenix
@@ -207,6 +250,8 @@
     <string name="preferences_open_links_in_a_private_tab">Сылтаманы xосусый биттә ачу</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Хосусый гизү режимында скриншотларны рөхсәт итү</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Хосусый гизү ярлыгын өстәү</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Кулайлык</string>
     <!-- Preference category for account information -->
