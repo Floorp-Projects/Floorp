@@ -82,10 +82,10 @@ tr:is([selected], :hover) > td > .action-icon {
   border-radius: 4px;
 }
 .action-icon:hover::before {
-  background-color: var(--in-content-button-background-hover);
+  background-color: color-mix(in srgb, currentColor 15%, transparent);
 }
 .action-icon:hover:active::before {
-  background-color: var(--in-content-button-background-active);
+  background-color: color-mix(in srgb, currentColor 30%, transparent);
 }
 
 /* icons */
