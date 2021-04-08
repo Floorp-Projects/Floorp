@@ -6,6 +6,9 @@
 
 #include "mozilla/Assertions.h"
 
+#include <chrono>
+#include <thread>
+
 #include "js/Utility.h"
 #include "threading/posix/ThreadPlatformData.h"
 #include "threading/Thread.h"
@@ -134,6 +137,10 @@ void ThisThread::GetName(char* nameBuffer, size_t len) {
   if (rv) {
     nameBuffer[0] = '\0';
   }
+}
+
+void ThisThread::SleepMilliseconds(size_t ms) {
+  std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 }  // namespace js
