@@ -273,7 +273,7 @@ class EditorBase : public nsIEditor,
       SelectionType aSelectionType = SelectionType::eNormal) const {
     if (aSelectionType == SelectionType::eNormal &&
         IsEditActionDataAvailable()) {
-      return SelectionRefPtr().get();
+      return &SelectionRef();
     }
     nsISelectionController* sc = GetSelectionController();
     if (!sc) {
@@ -927,11 +927,14 @@ class EditorBase : public nsIEditor,
 
     bool IsCanceled() const { return mBeforeInputEventCanceled; }
 
-    const RefPtr<Selection>& SelectionRefPtr() const {
+    /**
+     * Returns a `Selection` for normal selection.  The lifetime is guaranteed
+     * during alive this instance in the stack.
+     */
+    MOZ_KNOWN_LIVE Selection& SelectionRef() const {
       MOZ_ASSERT(!mSelection ||
                  (mSelection->GetType() == SelectionType::eNormal));
-
-      return mSelection;
+      return *mSelection;
     }
 
     nsIPrincipal* GetPrincipal() const { return mPrincipal; }
@@ -1310,19 +1313,17 @@ class EditorBase : public nsIEditor,
   }
 
   /**
-   * SelectionRefPtr() returns cached Selection.  This is pretty faster than
+   * SelectionRef() returns cached normal Selection.  This is pretty faster than
    * EditorBase::GetSelection() if available.
-   * Note that this never returns nullptr unless public methods ignore
-   * result of AutoEditActionDataSetter::CanHandle() and keep handling edit
-   * action but any methods should stop handling edit action if it returns
-   * false.
+   * Note that this never crash unless public methods ignore the result of
+   * AutoEditActionDataSetter::CanHandle() and keep handling edit action but any
+   * methods should stop handling edit action if it returns false.
    */
-  const RefPtr<Selection>& SelectionRefPtr() const {
+  MOZ_KNOWN_LIVE Selection& SelectionRef() const {
     MOZ_ASSERT(mEditActionData);
-    MOZ_ASSERT(mEditActionData->SelectionRefPtr()->GetType() ==
+    MOZ_ASSERT(mEditActionData->SelectionRef().GetType() ==
                SelectionType::eNormal);
-
-    return mEditActionData->SelectionRefPtr();
+    return mEditActionData->SelectionRef();
   }
 
   nsIPrincipal* GetEditActionPrincipal() const {

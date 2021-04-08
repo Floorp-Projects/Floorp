@@ -1084,7 +1084,7 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   MOZ_ASSERT(aStripWrappers == nsIEditor::eStrip ||
              aStripWrappers == nsIEditor::eNoStrip);
 
-  if (!SelectionRefPtr()->RangeCount()) {
+  if (!SelectionRef().RangeCount()) {
     return EditActionHandled(NS_ERROR_EDITOR_NO_EDITABLE_RANGE);
   }
 
@@ -1104,7 +1104,7 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   }
 
   // First check for table selection mode.  If so, hand off to table editor.
-  if (HTMLEditUtils::IsInTableCellSelectionMode(*SelectionRefPtr())) {
+  if (HTMLEditUtils::IsInTableCellSelectionMode(SelectionRef())) {
     nsresult rv = DeleteTableCellContentsWithTransaction();
     if (NS_WARN_IF(Destroyed())) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
@@ -1115,7 +1115,7 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
     return EditActionHandled(rv);
   }
 
-  AutoRangeArray rangesToDelete(*SelectionRefPtr());
+  AutoRangeArray rangesToDelete(SelectionRef());
   rangesToDelete.EnsureOnlyEditableRanges(*editingHost);
   if (rangesToDelete.Ranges().IsEmpty()) {
     NS_WARNING(
@@ -1136,7 +1136,7 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   //     listeners can do anything so that we should just return NS_OK instead
   //     of returning error.
   EditorDOMPoint atNewStartOfSelection(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
+      EditorBase::GetStartPoint(SelectionRef()));
   if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
     return EditActionHandled(NS_ERROR_FAILURE);
   }
@@ -1211,7 +1211,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
     // yet, ancestor isn't set.  So we must set root element of editor to
     // ancestor temporarily.
     AutoSetTemporaryAncestorLimiter autoSetter(
-        aHTMLEditor, *aHTMLEditor.SelectionRefPtr(), *startPoint.GetContainer(),
+        aHTMLEditor, aHTMLEditor.SelectionRef(), *startPoint.GetContainer(),
         &aRangesToDelete);
 
     Result<nsIEditor::EDirection, nsresult> extendResult =
@@ -1302,16 +1302,16 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
             return NS_ERROR_FAILURE;
           }
           AutoHideSelectionChanges blockSelectionListeners(
-              aHTMLEditor.SelectionRefPtr());
+              aHTMLEditor.SelectionRef());
           nsresult rv = aHTMLEditor.CollapseSelectionTo(newCaretPosition);
           if (NS_FAILED(rv)) {
             NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
             return NS_ERROR_FAILURE;
           }
-          if (NS_WARN_IF(!aHTMLEditor.SelectionRefPtr()->RangeCount())) {
+          if (NS_WARN_IF(!aHTMLEditor.SelectionRef().RangeCount())) {
             return NS_ERROR_UNEXPECTED;
           }
-          aRangesToDelete.Initialize(*aHTMLEditor.SelectionRefPtr());
+          aRangesToDelete.Initialize(aHTMLEditor.SelectionRef());
           AutoDeleteRangesHandler anotherHandler(this);
           rv = anotherHandler.ComputeRangesToDelete(
               aHTMLEditor, aDirectionAndAmount, aRangesToDelete);
@@ -1470,7 +1470,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
     // yet, ancestor isn't set.  So we must set root element of editor to
     // ancestor temporarily.
     AutoSetTemporaryAncestorLimiter autoSetter(
-        aHTMLEditor, *aHTMLEditor.SelectionRefPtr(), *startPoint.GetContainer(),
+        aHTMLEditor, aHTMLEditor.SelectionRef(), *startPoint.GetContainer(),
         &aRangesToDelete);
 
     // Calling `ExtendAnchorFocusRangeFor()` and
@@ -1583,13 +1583,13 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
                 "DeleteContentNodeAndJoinTextNodesAroundIt() failed");
             return EditActionHandled(rv);
           }
-          if (aHTMLEditor.SelectionRefPtr()->RangeCount() != 1) {
+          if (aHTMLEditor.SelectionRef().RangeCount() != 1) {
             NS_WARNING(
                 "Selection was unexpected after removing an invisible `<br>` "
                 "element");
             return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
           }
-          AutoRangeArray rangesToDelete(*aHTMLEditor.SelectionRefPtr());
+          AutoRangeArray rangesToDelete(aHTMLEditor.SelectionRef());
           caretPoint = Some(aRangesToDelete.GetStartPointOfFirstRange());
           if (!caretPoint.ref().IsSet()) {
             NS_WARNING(
@@ -1990,9 +1990,8 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedRanges(
   const EditorDOMPoint& newCaretPosition = result.inspect();
   MOZ_ASSERT(newCaretPosition.IsSetAndValid());
 
-  DebugOnly<nsresult> rvIgnored =
-      MOZ_KnownLive(aHTMLEditor.SelectionRefPtr())
-          ->CollapseInLimiter(newCaretPosition.ToRawRangeBoundary());
+  DebugOnly<nsresult> rvIgnored = aHTMLEditor.SelectionRef().CollapseInLimiter(
+      newCaretPosition.ToRawRangeBoundary());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "Selection::Collapse() failed, but ignored");
   return EditActionHandled();
@@ -2023,7 +2022,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
     }
   }
   EditorDOMPoint newCaretPosition =
-      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr());
+      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef());
   if (!newCaretPosition.IsSet()) {
     NS_WARNING("There was no selection range");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -2064,7 +2063,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
       }
     }
   } else {
-    RefPtr<const nsRange> range = aHTMLEditor.SelectionRefPtr()->GetRangeAt(0);
+    RefPtr<const nsRange> range = aHTMLEditor.SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!range) ||
         NS_WARN_IF(range->GetStartContainer() !=
                    aPointToDelete.GetContainer()) ||
@@ -2134,7 +2133,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
       "failed, but ignored");
 
   EditorDOMPoint newCaretPosition =
-      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr());
+      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef());
   if (!newCaretPosition.IsSet()) {
     NS_WARNING("There was no selection range");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -2195,7 +2194,7 @@ HTMLEditor::AutoDeleteRangesHandler::ShouldDeleteHRElement(
 
   ErrorResult error;
   bool interLineIsRight =
-      aHTMLEditor.SelectionRefPtr()->GetInterlinePosition(error);
+      aHTMLEditor.SelectionRef().GetInterlinePosition(error);
   if (error.Failed()) {
     NS_WARNING("Selection::GetInterlinePosition() failed");
     nsresult rv = error.StealNSResult();
@@ -2296,7 +2295,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteHRElement(
   }
 
   IgnoredErrorResult ignoredError;
-  aHTMLEditor.SelectionRefPtr()->SetInterlinePosition(false, ignoredError);
+  aHTMLEditor.SelectionRef().SetInterlinePosition(false, ignoredError);
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
       "Selection::SetInterlinePosition(false) failed, but ignored");
@@ -2397,7 +2396,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAtomicContent(
   }
 
   EditorDOMPoint newCaretPosition =
-      EditorBase::GetStartPoint(*aHTMLEditor.SelectionRefPtr());
+      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef());
   if (!newCaretPosition.IsSet()) {
     NS_WARNING("There was no selection range");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -2573,7 +2572,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     return NS_OK;
   }
 
-  AutoHideSelectionChanges hideSelectionChanges(aHTMLEditor.SelectionRefPtr());
+  AutoHideSelectionChanges hideSelectionChanges(aHTMLEditor.SelectionRef());
 
   // If it's ignored, it didn't modify the DOM tree.  In this case, user must
   // want to delete nearest leaf node in the other block element.
@@ -2594,7 +2593,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionTo() failed");
   if (NS_SUCCEEDED(rv)) {
-    aRangesToDelete.Initialize(*aHTMLEditor.SelectionRefPtr());
+    aRangesToDelete.Initialize(aHTMLEditor.SelectionRef());
     AutoDeleteRangesHandler anotherHandler(mDeleteRangesHandlerConst);
     rv = anotherHandler.ComputeRangesToDelete(aHTMLEditor, aDirectionAndAmount,
                                               aRangesToDelete);
@@ -2713,7 +2712,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
         NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
         return result.SetResult(rv);
       }
-      AutoRangeArray rangesToDelete(*aHTMLEditor.SelectionRefPtr());
+      AutoRangeArray rangesToDelete(aHTMLEditor.SelectionRef());
       AutoDeleteRangesHandler anotherHandler(mDeleteRangesHandler);
       result = anotherHandler.Run(aHTMLEditor, aDirectionAndAmount,
                                   aStripWrappers, rangesToDelete);
@@ -2882,7 +2881,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteNonCollapsedRanges(
 
   if (aRangesToDelete.Ranges().Length() == 1) {
     nsFrameSelection* frameSelection =
-        aHTMLEditor.SelectionRefPtr()->GetFrameSelection();
+        aHTMLEditor.SelectionRef().GetFrameSelection();
     if (NS_WARN_IF(!frameSelection)) {
       return NS_ERROR_FAILURE;
     }
@@ -2969,7 +2968,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
   // XXX Why do we extend selection only when there is only one range?
   if (aRangesToDelete.Ranges().Length() == 1) {
     nsFrameSelection* frameSelection =
-        aHTMLEditor.SelectionRefPtr()->GetFrameSelection();
+        aHTMLEditor.SelectionRef().GetFrameSelection();
     if (NS_WARN_IF(!frameSelection)) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
