@@ -47,6 +47,13 @@ class StartupStateProviderTest {
     }
 
     @Test
+    fun `GIVEN the app started for an activity WHEN warm start THEN cold start is false`() {
+        forEachWarmStartEntries { index ->
+            assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
+        }
+    }
+
+    @Test
     fun `GIVEN the app started for an activity WHEN we launched HA through a drawing IntentRA THEN start up is not cold`() {
         // These entries mimic observed behavior for local code changes.
         logEntries.addAll(listOf(
@@ -76,41 +83,11 @@ class StartupStateProviderTest {
     }
 
     @Test
-    fun `GIVEN the app started for an activity and we're truncating the log for optimization WHEN warm start THEN start up is not cold`() {
-        // These entries are from observed behavior.
-        logEntries.addAll(listOf(
-            LogEntry.AppStopped,
-            LogEntry.ActivityStopped(homeActivityClass),
-            LogEntry.ActivityCreated(homeActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass),
-            LogEntry.AppStarted
-        ))
-        assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
-    }
-
-    @Test
     fun `GIVEN the app started for an activity and we're truncating the log for optimization WHEN hot start THEN start up is not cold`() {
         // These entries are from observed behavior.
         logEntries.addAll(listOf(
             LogEntry.AppStopped,
             LogEntry.ActivityStopped(homeActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass),
-            LogEntry.AppStarted
-        ))
-        assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
-    }
-
-    @Test
-    fun `GIVEN the app started for an activity and we're not truncating the log for optimization WHEN warm start THEN start up is not cold`() {
-        // While the entries are from observed behavior, this log shouldn't occur in the wild due to
-        // our log optimizations. However, just in case the behavior changes, we check for it.
-        logEntries.addAll(listOf(
-            LogEntry.ActivityCreated(homeActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass),
-            LogEntry.AppStarted,
-            LogEntry.AppStopped,
-            LogEntry.ActivityStopped(homeActivityClass),
-            LogEntry.ActivityCreated(homeActivityClass),
             LogEntry.ActivityStarted(homeActivityClass),
             LogEntry.AppStarted
         ))
@@ -222,6 +199,36 @@ class StartupStateProviderTest {
         ))
 
         forEachStartEntry(coldStartEntries, block)
+    }
+
+    private fun forEachWarmStartEntries(block: (index: Int) -> Unit) {
+        // These entries mimic observed behavior. We test both truncated (i.e. the current behavior
+        // with the optimization to prevent an infinite log) and untruncated (the behavior without
+        // such an optimization).
+        //
+        // truncated MAIN: open HomeActivity directly.
+        val warmStartEntries = listOf(listOf(
+            LogEntry.AppStopped,
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted
+
+        // untruncated MAIN: open HomeActivity directly.
+        ), listOf(
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted,
+            LogEntry.AppStopped,
+            LogEntry.ActivityStopped(homeActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted
+        ))
+
+        // TODO: add VIEW.
+
+        forEachStartEntry(warmStartEntries, block)
     }
 
     private fun forEachStartEntry(entries: List<List<LogEntry>>, block: (index: Int) -> Unit) {
