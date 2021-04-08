@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping an element that doesn't fill the width of the viewport as maximum zoom centers it</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function doubleTapOn(element, x, y) {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let transformEndPromise = promiseTransformEnd();
+
+  if (useTouchpad) {
+    synthesizeNativeTouchpadDoubleTap(element, x, y);
+  } else {
+    synthesizeNativeTap(element, x, y);
+    synthesizeNativeTap(element, x, y);
+  }
+
+  // Wait for the APZ:TransformEnd to fire
+  await transformEndPromise;
+
+  // Flush state so we can query an accurate resolution
+  await promiseOnlyApzControllerFlushed();
+}
+
+async function test() {
+  var resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // Check that double-tapping once zooms in
+  await doubleTapOn(document.getElementById("target"), 10, 10);
+  var prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > 2*prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  info("window.innerWidth " + window.innerWidth); // value when writing this test: 1280
+  info("visualViewport.offsetLeft " + visualViewport.offsetLeft); //value when writing this test: 625 with bug, 537 with fix
+  info("visualViewport.width " + visualViewport.width); // value when writing this test: 253
+  // the left hand edge of the div is at window.innerWidth/2
+  // we want approximately half of the visual viewport width to be to the left of that point.
+  // we have to remove the 50 pixels for the width of the div from that first though.
+  // we multiply that by 80% to factor in the 15 pixel margin we give the zoomed-to element
+  // (we don't hard code 15 though since we might want to tweak that)
+  ok(visualViewport.offsetLeft < window.innerWidth/2 - 0.8*(visualViewport.width-50)/2, "moved over far enough");
+  // and then have a sanity check that it's not too small.
+  // using the same 20% factor as before but in the other direction.
+  ok(visualViewport.offsetLeft > window.innerWidth/2 - 1.2*(visualViewport.width-50)/2, "but not too far");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+
+<div id="target" style="background: blue; width: 50px; height: 50px; position: absolute; left: 50vw;"></div>
+
+</body>
+</html>
