@@ -62,7 +62,9 @@ struct AnimationEventInfo {
                   aScheduledEventTimeStamp -
                       TimeDuration::FromSeconds(aElapsedTime),
                   aScheduledEventTimeStamp),
-              MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())),
+              aAnimation->GetOwner()
+                  ? MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())
+                  : MarkerInnerWindowId::NoId()),
           markerText);
     }
   }
@@ -101,7 +103,9 @@ struct AnimationEventInfo {
                   aScheduledEventTimeStamp -
                       TimeDuration::FromSeconds(aElapsedTime),
                   aScheduledEventTimeStamp),
-              MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())),
+              aAnimation->GetOwner()
+                  ? MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())
+                  : MarkerInnerWindowId::NoId()),
           markerText);
     }
   }
