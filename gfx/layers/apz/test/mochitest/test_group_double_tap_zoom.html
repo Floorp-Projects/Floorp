@@ -17,10 +17,16 @@ var doubletap_prefs = [
   ["apz.mac.enable_double_tap_zoom_touchpad_gesture", true],
 ];
 
+var visualviewport_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["dom.visualviewport.enabled", true],
+];
+
 var subtests = [
   {"file": "helper_touchscreen_doubletap_zoom.html", "prefs": doubletap_prefs},
   {"file": "helper_doubletap_zoom_img.html", "prefs": doubletap_prefs},
   {"file": "helper_doubletap_zoom_textarea.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_horizontal_center.html", "prefs": visualviewport_and_doubletap_prefs},
 ];
 
 if (getPlatform() == "mac") {
@@ -28,6 +34,7 @@ if (getPlatform() == "mac") {
     {"file": "helper_touchpad_doubletap_zoom.html", "prefs": doubletap_prefs},
     {"file": "helper_doubletap_zoom_img.html?touchpad", "prefs": doubletap_prefs},
     {"file": "helper_doubletap_zoom_textarea.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_horizontal_center.html?touchpad", "prefs": visualviewport_and_doubletap_prefs},
   );
 }
 
