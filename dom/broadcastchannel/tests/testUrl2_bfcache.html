@@ -1,1 +1,12 @@
-<script>onpageshow = function(e) { opener.page2Shown(e); };</script>
+<script>
+onpageshow = function(e) {
+  var bc2 = new BroadcastChannel("testUrl2_bfcache");
+  bc2.onmessage = function(event) {
+    if (event.data == "back") {
+      bc2.close();
+      history.back();
+    }
+  };
+  bc2.postMessage({type: e.type, persisted: e.persisted});
+};
+</script>
