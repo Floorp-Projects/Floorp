@@ -857,14 +857,15 @@ class PromptFeatureTest {
 
         val promptRequest = PromptRequest.Popup(
             "http://www.popuptest.com/",
-            { onConfirmWasCalled = true }
+            { onConfirmWasCalled = true },
+            { }
         ) {}
 
         feature.start()
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
-        feature.onConfirm(tabId, null)
+        feature.onConfirm(tabId, true)
         store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onConfirmWasCalled)
@@ -881,15 +882,15 @@ class PromptFeatureTest {
             PromptFeature(fragment = fragment, store = store, fragmentManager = fragmentManager) { }
         var onCancelWasCalled = false
 
-        val promptRequest = PromptRequest.Popup("http://www.popuptest.com/", { }) {
+        val promptRequest = PromptRequest.Popup("http://www.popuptest.com/", onAllow = { }, onDeny = {
             onCancelWasCalled = true
-        }
+        })
 
         feature.start()
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
-        feature.onCancel(tabId)
+        feature.onCancel(tabId, true)
         store.waitUntilIdle()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onCancelWasCalled)
@@ -1064,6 +1065,33 @@ class PromptFeatureTest {
 
         assertTrue(feature.promptAbuserDetector.shouldShowMoreDialogs)
         verify(fragmentManager).beginTransaction()
+    }
+
+    @Test
+    fun `User can stop further popups from being displayed on the current page`() {
+        val feature = PromptFeature(
+            activity = Robolectric.setupActivity(Activity::class.java),
+            store = store,
+            fragmentManager = fragmentManager) { }
+
+        var onDenyCalled = false
+        val onDeny = { onDenyCalled = true }
+        val popupPrompt = PromptRequest.Popup("https://firefox.com", onAllow = { }, onDeny = onDeny)
+
+        feature.start()
+        assertTrue(feature.promptAbuserDetector.shouldShowMoreDialogs)
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, popupPrompt)).joinBlocking()
+        verify(fragmentManager, times(1)).beginTransaction()
+        feature.onCancel(tabId, true)
+        assertFalse(feature.promptAbuserDetector.shouldShowMoreDialogs)
+        assertTrue(onDenyCalled)
+
+        onDenyCalled = false
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, popupPrompt)).joinBlocking()
+        verify(fragmentManager, times(1)).beginTransaction()
+        assertFalse(feature.promptAbuserDetector.shouldShowMoreDialogs)
+        assertTrue(onDenyCalled)
     }
 
     @Test

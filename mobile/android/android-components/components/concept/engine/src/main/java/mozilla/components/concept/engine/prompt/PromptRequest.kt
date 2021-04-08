@@ -241,8 +241,9 @@ sealed class PromptRequest {
     data class Popup(
         val targetUri: String,
         val onAllow: () -> Unit,
-        val onDeny: () -> Unit
-    ) : PromptRequest()
+        val onDeny: () -> Unit,
+        override val onDismiss: () -> Unit = { onDeny() }
+    ) : PromptRequest(), Dismissible
 
     /**
      * Value type that represents a request for showing a

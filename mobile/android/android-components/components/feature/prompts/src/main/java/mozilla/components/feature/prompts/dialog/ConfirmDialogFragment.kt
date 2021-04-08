@@ -19,7 +19,7 @@ internal const val KEY_NEGATIVE_BUTTON = "KEY_NEGATIVE_BUTTON"
  * deny it (Positive and Negative buttons]. When the positive button is pressed the
  * feature.onConfirm function will be called otherwise the feature.onCancel function will be called.
  */
-internal class ConfirmDialogFragment : PromptDialogFragment() {
+internal class ConfirmDialogFragment : AbstractPromptTextDialogFragment() {
 
     @VisibleForTesting
     internal val positiveButtonText: String by lazy { safeArguments.getString(KEY_POSITIVE_BUTTON)!! }
@@ -30,32 +30,34 @@ internal class ConfirmDialogFragment : PromptDialogFragment() {
         val builder = AlertDialog.Builder(requireContext())
             .setCancelable(false)
             .setTitle(title)
-            .setMessage(message)
             .setNegativeButton(negativeButtonText) { _, _ ->
-                feature?.onCancel(sessionId)
+                feature?.onCancel(sessionId, userSelectionNoMoreDialogs)
             }
             .setPositiveButton(positiveButtonText) { _, _ ->
                 onPositiveClickAction()
             }
-        return builder.create()
+        return setCustomMessageView(builder)
+            .create()
     }
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        feature?.onCancel(sessionId)
+        feature?.onCancel(sessionId, userSelectionNoMoreDialogs)
     }
 
     private fun onPositiveClickAction() {
-        feature?.onConfirm(sessionId, null)
+        feature?.onConfirm(sessionId, userSelectionNoMoreDialogs)
     }
 
     companion object {
+        @Suppress("LongParameterList")
         fun newInstance(
             sessionId: String? = null,
             title: String,
             message: String,
             positiveButtonText: String,
-            negativeButtonText: String
+            negativeButtonText: String,
+            hasShownManyDialogs: Boolean = false
         ): ConfirmDialogFragment {
 
             val fragment = ConfirmDialogFragment()
@@ -67,6 +69,7 @@ internal class ConfirmDialogFragment : PromptDialogFragment() {
                 putString(KEY_MESSAGE, message)
                 putString(KEY_POSITIVE_BUTTON, positiveButtonText)
                 putString(KEY_NEGATIVE_BUTTON, negativeButtonText)
+                putBoolean(KEY_MANY_ALERTS, hasShownManyDialogs)
             }
 
             fragment.arguments = arguments

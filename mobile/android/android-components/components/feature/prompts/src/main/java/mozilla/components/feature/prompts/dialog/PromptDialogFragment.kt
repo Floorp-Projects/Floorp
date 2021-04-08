@@ -53,8 +53,9 @@ internal interface Prompter {
      * value from the session indicated by [sessionId].
      *
      * @param sessionId this is the id of the session which requested the prompt.
+     * @param value an optional value provided by the dialog as a result of cancelling the action.
      */
-    fun onCancel(sessionId: String)
+    fun onCancel(sessionId: String, value: Any? = null)
 
     /**
      * Invoked when the user confirms the action on the dialog. This consumes

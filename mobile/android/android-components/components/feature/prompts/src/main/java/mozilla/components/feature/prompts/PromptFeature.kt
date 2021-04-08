@@ -349,13 +349,18 @@ class PromptFeature private constructor(
      * value from the session indicated by [sessionId].
      *
      * @param sessionId this is the id of the session which requested the prompt.
+     * @param value an optional value provided by the dialog as a result of canceling the action.
      */
-    override fun onCancel(sessionId: String) {
+    override fun onCancel(sessionId: String, value: Any?) {
         store.consumePromptFrom(sessionId, activePrompt) {
             when (it) {
                 is BeforeUnload -> it.onStay()
+                is Popup -> {
+                    val shouldNotShowMoreDialogs = value as Boolean
+                    promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
+                    it.onDeny()
+                }
                 is Dismissible -> it.onDismiss()
-                is Popup -> it.onDeny()
             }
         }
     }
@@ -382,7 +387,11 @@ class PromptFeature private constructor(
                     is SingleChoice -> it.onConfirm(value as Choice)
                     is MenuChoice -> it.onConfirm(value as Choice)
                     is BeforeUnload -> it.onLeave()
-                    is Popup -> it.onAllow()
+                    is Popup -> {
+                        val shouldNotShowMoreDialogs = value as Boolean
+                        promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
+                        it.onAllow()
+                    }
                     is MultipleChoice -> it.onConfirm(value as Array<Choice>)
 
                     is Authentication -> {
@@ -581,7 +590,8 @@ class PromptFeature private constructor(
                     title = title,
                     message = promptRequest.targetUri,
                     positiveButtonText = positiveLabel,
-                    negativeButtonText = negativeLabel
+                    negativeButtonText = negativeLabel,
+                    hasShownManyDialogs = promptAbuserDetector.areDialogsBeingAbused()
                 )
             }
             is BeforeUnload -> {
@@ -672,11 +682,10 @@ class PromptFeature private constructor(
             is Color,
             is Authentication,
             is BeforeUnload,
-            is Popup,
             is SaveLoginPrompt,
             is SelectLoginPrompt,
             is Share -> true
-            is Alert, is TextPrompt, is Confirm, is Repost -> promptAbuserDetector.shouldShowMoreDialogs
+            is Alert, is TextPrompt, is Confirm, is Repost, is Popup -> promptAbuserDetector.shouldShowMoreDialogs
         }
     }
 

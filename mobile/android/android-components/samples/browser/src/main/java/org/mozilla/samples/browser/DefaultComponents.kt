@@ -53,6 +53,7 @@ import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.feature.media.MediaSessionFeature
 import mozilla.components.feature.media.middleware.RecordingDevicesMiddleware
+import mozilla.components.feature.prompts.PromptMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppInterceptor
 import mozilla.components.feature.pwa.WebAppShortcutManager
@@ -161,7 +162,8 @@ open class DefaultComponents(private val applicationContext: Context) {
             ),
             SearchMiddleware(applicationContext),
             RecordingDevicesMiddleware(applicationContext),
-            LastAccessMiddleware()
+            LastAccessMiddleware(),
+            PromptMiddleware()
         ) + EngineMiddleware.create(engine, ::findSessionById))
     }
 
