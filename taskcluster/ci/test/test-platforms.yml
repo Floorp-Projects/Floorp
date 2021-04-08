@@ -395,17 +395,8 @@ macosx1015-64-qr/opt:
 macosx1015-64-qr/debug:
     build-platform: macosx64/debug
     test-sets:
+        - macosx1015-64-qr-tests
         - web-platform-tests
-
-macosx1014-64/debug:
-    build-platform: macosx64/debug
-    test-sets:
-        - macosx1014-64-tests
-
-macosx1014-64-devedition/opt:
-    build-platform: macosx64-devedition/opt
-    test-sets:
-        - macosx1014-64-tests
 
 macosx1014-64-qr/opt:
     build-platform: macosx64/opt
