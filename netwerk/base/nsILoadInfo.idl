@@ -718,11 +718,6 @@ interface nsILoadInfo : nsISupports
    */
   [infallible] attribute boolean allowInsecureRedirectToDataURI;
 
-   /**
-   * If true, CORS checks will be skipped.
-   */
-  [infallible] attribute boolean bypassCORSChecks;
-
   /**
    * If true, the content policy security check is excluded from web requests.
    */
