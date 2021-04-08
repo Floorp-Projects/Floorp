@@ -293,11 +293,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             # logging options
             "--gecko-log=-",  # output from the gecko process redirected to stdout
             "--log-raw=-",  # structured log for output parser redirected to stdout
-            # additional reports helpful for Jenkins and inpection via Treeherder
-            "--log-html",
-            os.path.join(dirs["abs_blob_upload_dir"], "report.html"),
-            "--log-xunit",
-            os.path.join(dirs["abs_blob_upload_dir"], "report.xml"),
             # Enable tracing output to log transmission protocol
             "-vv",
         ]
