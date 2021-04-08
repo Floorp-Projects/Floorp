@@ -708,6 +708,10 @@ case "$target" in
     MOZ_FIX_LINK_PATHS="-L${DIST}/bin"
     ;;
 
+*-wasi*)
+    MOZ_FIX_LINK_PATHS=
+    ;;
+
 esac
 
 CFLAGS="$CFLAGS $DSO_PIC_CFLAGS"

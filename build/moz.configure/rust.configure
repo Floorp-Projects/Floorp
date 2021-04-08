@@ -239,7 +239,7 @@ def rust_supported_targets(rustc):
     data = {}
     for t in out:
         try:
-            info = split_triplet(t)
+            info = split_triplet(t, allow_wasi=True)
         except ValueError:
             if t.startswith("thumb"):
                 cpu, rest = t.split("-", 1)
@@ -251,7 +251,7 @@ def rust_supported_targets(rustc):
             else:
                 continue
             try:
-                info = split_triplet(retry)
+                info = split_triplet(retry, allow_wasi=True)
             except ValueError:
                 continue
         key = (info.cpu, info.endianness, info.os)

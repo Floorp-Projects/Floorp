@@ -49,3 +49,10 @@ OBJDIR_FILES.js.src.shell += ["!/dist/bin/js-gdb.py"]
 
 # People expect the js shell to wind up in the top-level JS dir.
 OBJDIR_FILES.js.src += ["!/dist/bin/js%s" % CONFIG["BIN_SUFFIX"]]
+
+# Stack size on Wasm/WASI
+# ==================================
+# Increase the default stack size (64KB) to 1MB.
+# Also make the stack grow towards 0 so that if SpiderMonkey's stack limiter is buggy, overflow will likely trap.
+if CONFIG["OS_ARCH"] == "WASI":
+    LDFLAGS += ["-Wl,-z,stack-size=1048576", "-Wl,--stack-first"]
