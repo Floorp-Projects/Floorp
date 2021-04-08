@@ -896,7 +896,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     override fun getSystemService(name: String): Any? {
-        if (LAYOUT_INFLATER_SERVICE == name) {
+        // Issue #17759 had a crash with the PerformanceInflater.kt on Android 5.0 and 5.1
+        // when using the TimePicker. Since the inflater was created for performance monitoring
+        // purposes and that we test on new android versions, this means that any difference in
+        // inflation will be caught on those devices.
+        if (LAYOUT_INFLATER_SERVICE == name && Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
             if (inflater == null) {
                 inflater = PerformanceInflater(LayoutInflater.from(baseContext), this)
             }
