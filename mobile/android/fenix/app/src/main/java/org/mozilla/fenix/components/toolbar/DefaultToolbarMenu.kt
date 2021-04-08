@@ -520,7 +520,7 @@ open class DefaultToolbarMenu(
         },
         primaryStateIconResource = R.drawable.ic_bookmark_outline,
         secondaryStateIconResource = R.drawable.ic_bookmark_filled,
-        tintColorResource = accentBrightTextColor(),
+        tintColorResource = menuItemButtonTintColor(),
         primaryLabel = context.getString(R.string.browser_menu_add),
         secondaryLabel = context.getString(R.string.browser_menu_edit),
         isInPrimaryState = { !isCurrentUrlBookmarked }
@@ -571,7 +571,7 @@ open class DefaultToolbarMenu(
 
     @ColorRes
     @VisibleForTesting
-    internal fun accentBrightTextColor() = ThemeManager.resolveAttribute(R.attr.accentBright, context)
+    internal fun menuItemButtonTintColor() = ThemeManager.resolveAttribute(R.attr.menuItemButtonTintColor, context)
 
     @VisibleForTesting
     internal fun registerForIsBookmarkedUpdates() {

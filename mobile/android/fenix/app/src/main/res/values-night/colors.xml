@@ -53,6 +53,7 @@
     <color name="select_login_header_normal_theme">@color/accent_high_contrast_dark_theme</color>
     <color name="preference_section_header_normal_theme">@color/preference_section_header_dark_theme</color>
     <color name="notification_accent_color_normal_theme">@color/accent_high_contrast_dark_theme</color>
+    <color name="menu_item_button_normal_theme">@color/accent_high_contrast_dark_theme</color>
 
     <color name="mozac_widget_favicon_background_normal_theme">@color/mozac_widget_favicon_background_dark_theme</color>
     <color name="mozac_widget_favicon_border_normal_theme">@color/mozac_widget_favicon_border_dark_theme</color>

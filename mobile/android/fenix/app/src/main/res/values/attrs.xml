@@ -28,6 +28,9 @@
     <attr name="menuCategoryText" format="reference"/>
     <attr name="preferenceSectionHeader" format="reference"/>
 
+    <!-- Color used in DefaultToolbarMenu for buttons placed at the end of menu items -->
+    <attr name="menuItemButtonTintColor" format="reference"/>
+
     <!-- Misc -->
     <attr name="homeBackground" format="reference"/>
     <attr name="bottomBarBackground" format="reference"/>
