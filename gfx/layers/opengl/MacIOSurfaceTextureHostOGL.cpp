@@ -19,9 +19,9 @@ MacIOSurfaceTextureHostOGL::MacIOSurfaceTextureHostOGL(
     TextureFlags aFlags, const SurfaceDescriptorMacIOSurface& aDescriptor)
     : TextureHost(aFlags) {
   MOZ_COUNT_CTOR(MacIOSurfaceTextureHostOGL);
-  mSurface = MacIOSurface::LookupSurface(
-      aDescriptor.surfaceId(), aDescriptor.scaleFactor(),
-      !aDescriptor.isOpaque(), aDescriptor.yUVColorSpace());
+  mSurface = MacIOSurface::LookupSurface(aDescriptor.surfaceId(),
+                                         !aDescriptor.isOpaque(),
+                                         aDescriptor.yUVColorSpace());
   if (!mSurface) {
     gfxCriticalNote << "Failed to look up MacIOSurface";
   }
