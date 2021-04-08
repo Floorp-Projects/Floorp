@@ -1575,6 +1575,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       }
 
       try {
+        LOG(`state=${self.state}, line=${line}`)
         // 5.1 WebVTT file parsing.
         if (self.state === "INITIAL") {
           parseSignatureMayThrow(line);
