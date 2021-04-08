@@ -5,6 +5,7 @@
 package mozilla.components.concept.sync
 
 import android.content.Context
+import androidx.annotation.MainThread
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.support.base.observer.Observable
 
@@ -50,6 +51,7 @@ interface DeviceConstellation : Observable<AccountEventsObserver> {
      * Allows monitoring state of the device constellation via [DeviceConstellationObserver].
      * Use this to be notified of changes to the current device or other devices.
      */
+    @MainThread
     fun registerDeviceObserver(observer: DeviceConstellationObserver, owner: LifecycleOwner, autoPause: Boolean)
 
     /**

@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa
 
 import android.content.Context
+import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
@@ -118,6 +119,7 @@ class FxaDeviceConstellation(
         }
     }
 
+    @MainThread
     override fun registerDeviceObserver(
         observer: DeviceConstellationObserver,
         owner: LifecycleOwner,

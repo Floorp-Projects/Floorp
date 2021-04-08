@@ -5,6 +5,7 @@
 package mozilla.components.support.base.observer
 
 import android.view.View
+import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Lifecycle.Event.ON_DESTROY
 import androidx.lifecycle.Lifecycle.Event.ON_PAUSE
@@ -47,6 +48,7 @@ open class ObserverRegistry<T> : Observable<T> {
     }
 
     @Synchronized
+    @MainThread
     override fun register(observer: T, owner: LifecycleOwner, autoPause: Boolean) {
         // Don't register if the owner is already destroyed
         if (owner.lifecycle.currentState == DESTROYED) {
@@ -63,6 +65,10 @@ open class ObserverRegistry<T> : Observable<T> {
 
         lifecycleObservers[observer] = lifecycleObserver
 
+        // In newer AndroidX versions of the lifecycle lib, the default requirement is for
+        // lifecycleRegistry to be only touched on the main thread. We don't know if `onwer`'s
+        // lifecycle registry was created with or without this requirement, but assume so since
+        // that's the default and also the reasonable thing to do.
         owner.lifecycle.addObserver(lifecycleObserver)
     }
 
@@ -185,7 +191,14 @@ open class ObserverRegistry<T> : Observable<T> {
         @OnLifecycleEvent(ON_DESTROY)
         fun onDestroy() = registry.unregister(observer)
 
-        fun remove() = owner.lifecycle.removeObserver(this)
+        @MainThread
+        fun remove() {
+            // In newer AndroidX versions of the lifecycle lib, the default requirement is for
+            // lifecycleRegistry to be only touched on the main thread. We don't know if `onwer`'s
+            // lifecycle registry was created with or without this requirement, but assume so since
+            // that's the default and also the reasonable thing to do.
+            owner.lifecycle.removeObserver(this)
+        }
     }
 
     /**
