@@ -373,8 +373,8 @@ class MOZ_RAII AutoTransactionSender {
  public:
   AutoTransactionSender(WebRenderAPI* aApi, TransactionBuilder* aTxn)
       : mApi(aApi), mTxn(aTxn) {
-    MOZ_ASSERT(mApi);
-    MOZ_ASSERT(aTxn);
+    MOZ_RELEASE_ASSERT(mApi);
+    MOZ_RELEASE_ASSERT(aTxn);
   }
 
   ~AutoTransactionSender() { mApi->SendTransaction(*mTxn); }
