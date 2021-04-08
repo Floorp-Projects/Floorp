@@ -719,7 +719,8 @@ html|a:-moz-focusring,
 .text-link:-moz-focusring {
   outline: 2px solid var(--in-content-focus-outline-color);
   outline-offset: 1px;
-  -moz-outline-radius: 2px;
+  -moz-outline-radius: 4px;
+  border-radius: 4px;
 }
 
 /* Checkboxes and radio buttons */
