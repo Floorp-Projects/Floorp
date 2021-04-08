@@ -131,6 +131,9 @@
       // children.
       testName("box_children", "14");
 
+      // Button labelled by a text child.
+      testName("button_text", "Text");
+
       // ARIA role option is presented allowing the name calculation from
       // the visible children (bug 443081)
       testName("lb_opt1_children_hidden", "i am visible");
@@ -299,6 +302,7 @@
 
   <!-- name from children -->
   <box id="box_children" role="button">14</box>
+  <button id="button_text">Text</button>
 
   <!-- name from children, hidden children -->
   <vbox role="listbox" tabindex="0">

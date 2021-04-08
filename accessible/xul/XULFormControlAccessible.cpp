@@ -125,10 +125,16 @@ LocalAccessible* XULButtonAccessible::ContainerWidget() const {
 }
 
 bool XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const {
-  // In general XUL button has not accessible children. Nevertheless menu
-  // buttons can have popup accessibles (@type="menu" or columnpicker).
-  return aEl->IsXULElement(nsGkAtoms::menupopup) ||
-         aEl->IsXULElement(nsGkAtoms::popup);
+  // In general XUL buttons should not have accessible children. However:
+  return
+      //   menu buttons can have popup accessibles (@type="menu" or
+      //   columnpicker).
+      aEl->IsXULElement(nsGkAtoms::menupopup) ||
+      aEl->IsXULElement(nsGkAtoms::popup) ||
+      // A XUL button can be labelled by a child text node, so we need to allow
+      // that as a child so it will be picked up when computing name from
+      // subtree.
+      aEl->IsText();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
