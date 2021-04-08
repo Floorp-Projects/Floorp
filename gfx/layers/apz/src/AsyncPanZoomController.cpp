@@ -5482,6 +5482,14 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
       }
     }
 
+    // Horizontally center the zoomed element in the screen.
+    if (!zoomOut && (sizeAfterZoom.width > aRect.Width())) {
+      aRect.MoveByX(-(sizeAfterZoom.width - aRect.Width()) * 0.5f);
+      if (aRect.X() < 0.0f) {
+        aRect.MoveToX(0.0f);
+      }
+    }
+
     // If either of these conditions are met, the page will be
     // overscrolled after zoomed
     if (aRect.Y() + sizeAfterZoom.height > cssPageRect.Height()) {
