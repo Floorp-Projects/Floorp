@@ -494,7 +494,7 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
 
 void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
                                    nsIFrame* aParentMenu, bool aSizedToPopup) {
-  if (IsLeaf()) {
+  if (IsLeaf() || IsNativeMenu()) {
     return;
   }
 
