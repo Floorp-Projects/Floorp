@@ -288,16 +288,6 @@ TRRLoadInfo::GetAllowInsecureRedirectToDataURI(
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::SetBypassCORSChecks(bool aBypassCORSChecks) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetBypassCORSChecks(bool* aBypassCORSChecks) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::SetSkipContentPolicyCheckForWebRequest(bool aSkip) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

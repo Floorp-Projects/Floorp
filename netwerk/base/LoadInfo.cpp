@@ -552,7 +552,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
           rhs.mBrowserWouldUpgradeInsecureRequests),
       mForceAllowDataURI(rhs.mForceAllowDataURI),
       mAllowInsecureRedirectToDataURI(rhs.mAllowInsecureRedirectToDataURI),
-      mBypassCORSChecks(rhs.mBypassCORSChecks),
       mSkipContentPolicyCheckForWebRequest(
           rhs.mSkipContentPolicyCheckForWebRequest),
       mOriginalFrameSrcLoad(rhs.mOriginalFrameSrcLoad),
@@ -615,7 +614,7 @@ LoadInfo::LoadInfo(
     bool aUpgradeInsecureRequests, bool aBrowserUpgradeInsecureRequests,
     bool aBrowserDidUpgradeInsecureRequests,
     bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
-    bool aAllowInsecureRedirectToDataURI, bool aBypassCORSChecks,
+    bool aAllowInsecureRedirectToDataURI,
     bool aSkipContentPolicyCheckForWebRequest, bool aOriginalFrameSrcLoad,
     bool aForceInheritPrincipalDropped, uint64_t aInnerWindowID,
     uint64_t aBrowsingContextID, uint64_t aFrameBrowsingContextID,
@@ -663,7 +662,6 @@ LoadInfo::LoadInfo(
           aBrowserWouldUpgradeInsecureRequests),
       mForceAllowDataURI(aForceAllowDataURI),
       mAllowInsecureRedirectToDataURI(aAllowInsecureRedirectToDataURI),
-      mBypassCORSChecks(aBypassCORSChecks),
       mSkipContentPolicyCheckForWebRequest(
           aSkipContentPolicyCheckForWebRequest),
       mOriginalFrameSrcLoad(aOriginalFrameSrcLoad),
@@ -1198,18 +1196,6 @@ NS_IMETHODIMP
 LoadInfo::GetAllowInsecureRedirectToDataURI(
     bool* aAllowInsecureRedirectToDataURI) {
   *aAllowInsecureRedirectToDataURI = mAllowInsecureRedirectToDataURI;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetBypassCORSChecks(bool aBypassCORSChecks) {
-  mBypassCORSChecks = aBypassCORSChecks;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetBypassCORSChecks(bool* aBypassCORSChecks) {
-  *aBypassCORSChecks = mBypassCORSChecks;
   return NS_OK;
 }
 
