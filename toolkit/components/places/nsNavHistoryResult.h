@@ -186,6 +186,9 @@ class nsNavHistoryResult final
   // parameter as true, when changes to 0, that means finishing all batch
   // processes, batching() is called with false.
   uint32_t mBatchInProgress;
+
+  // Stop all observers upon unlinking.
+  void StopObservingOnUnlink();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)

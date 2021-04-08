@@ -3407,13 +3407,10 @@ nsNavHistorySeparatorResultNode::nsNavHistorySeparatorResultNode()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResult)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
-  tmp->StopObserving();
+  tmp->StopObservingOnUnlink();
+
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mObservers)
-  for (auto it = tmp->mBookmarkFolderObservers.Iter(); !it.Done(); it.Next()) {
-    delete it.Data();
-    it.Remove();
-  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMobilePrefObservers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAllBookmarksObservers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHistoryObservers)
@@ -3479,10 +3476,6 @@ nsNavHistoryResult::nsNavHistoryResult(
 }
 
 nsNavHistoryResult::~nsNavHistoryResult() {
-  AutoTArray<PlacesEventType, 1> events;
-  events.AppendElement(PlacesEventType::Purge_caches);
-  PlacesObservers::RemoveListener(events, this);
-
   // Delete all heap-allocated bookmark folder observer arrays.
   for (auto it = mBookmarkFolderObservers.Iter(); !it.Done(); it.Next()) {
     delete it.Data();
@@ -3519,6 +3512,19 @@ void nsNavHistoryResult::StopObserving() {
   }
 
   PlacesObservers::RemoveListener(events, this);
+}
+
+void nsNavHistoryResult::StopObservingOnUnlink() {
+  StopObserving();
+
+  AutoTArray<PlacesEventType, 1> events;
+  events.AppendElement(PlacesEventType::Purge_caches);
+  PlacesObservers::RemoveListener(events, this);
+
+  for (auto it = mBookmarkFolderObservers.Iter(); !it.Done(); it.Next()) {
+    delete it.Data();
+    it.Remove();
+  }
 }
 
 bool nsNavHistoryResult::CanSkipHistoryDetailsNotifications() const {
