@@ -1,6 +1,6 @@
 [package]
 name = "mozdevice"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Mozilla"]
 description = "Client library for the Android Debug Bridge (adb)"
 keywords = ["mozilla", "firefox", "geckoview", "android", "adb"]
