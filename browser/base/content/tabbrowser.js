@@ -6887,25 +6887,35 @@ var TabContextMenu = {
 
     // Disable "Close Tabs to the Left/Right" if there are no tabs
     // preceding/following it.
-    document.getElementById(
+    let closeTabsToTheStartItem = document.getElementById(
       "context_closeTabsToTheStart"
-    ).disabled = !gBrowser.getTabsToTheStartFrom(this.contextTab).length;
-    document.getElementById(
+    );
+    let noTabsToStart = !gBrowser.getTabsToTheStartFrom(this.contextTab).length;
+    closeTabsToTheStartItem.disabled = noTabsToStart;
+    let closeTabsToTheEndItem = document.getElementById(
       "context_closeTabsToTheEnd"
-    ).disabled = !gBrowser.getTabsToTheEndFrom(this.contextTab).length;
+    );
+    let noTabsToEnd = !gBrowser.getTabsToTheEndFrom(this.contextTab).length;
+    closeTabsToTheEndItem.disabled = noTabsToEnd;
 
     // Disable "Close other Tabs" if there are no unpinned tabs.
     let unpinnedTabsToClose = multiselectionContext
       ? gBrowser.visibleTabs.filter(t => !t.multiselected && !t.pinned).length
       : gBrowser.visibleTabs.filter(t => t != this.contextTab && !t.pinned)
           .length;
-    document.getElementById("context_closeOtherTabs").disabled =
-      unpinnedTabsToClose < 1;
+    let closeOtherTabsItem = document.getElementById("context_closeOtherTabs");
+    closeOtherTabsItem.disabled = unpinnedTabsToClose < 1;
 
     // Update the close item with how many tabs will close.
     document
       .getElementById("context_closeTab")
       .setAttribute("data-l10n-args", tabCountInfo);
+
+    // Disable "Close Multiple Tabs" if all sub menuitems are disabled
+    document.getElementById("context_closeTabOptions").disabled =
+      closeTabsToTheStartItem.disabled &&
+      closeTabsToTheEndItem.disabled &&
+      closeOtherTabsItem.disabled;
 
     // Hide "Bookmark Tab" for multiselection.
     // Update its state if visible.
