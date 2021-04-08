@@ -427,12 +427,15 @@ void AddrHostRecord::ResolveComplete() {
   }
 
   if (nsHostResolver::Mode() == nsIDNSService::MODE_TRRFIRST) {
-    Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_TRR_FIRST,
+    Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_TRR_FIRST2,
+                          TRRService::ProviderKey(),
                           static_cast<uint32_t>(mTRRSkippedReason));
 
-    if (mNativeSuccess) {
-      Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_DNS_WORKED,
-                            static_cast<uint32_t>(mTRRSkippedReason));
+    if (!mTRRSuccess) {
+      Telemetry::Accumulate(
+          mNativeSuccess ? Telemetry::TRR_SKIP_REASON_NATIVE_SUCCESS
+                         : Telemetry::TRR_SKIP_REASON_NATIVE_FAILED,
+          TRRService::ProviderKey(), static_cast<uint32_t>(mTRRSkippedReason));
     }
   }
 
