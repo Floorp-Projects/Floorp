@@ -87,6 +87,12 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "ConditionVariable_windows.cpp",
         "Mutex_windows.cpp",
     ]
+# WASI hasn't supported cond vars and mutexes yet so noop implementation is used.
+elif CONFIG["OS_ARCH"] == "WASI":
+    SOURCES += [
+        "ConditionVariable_noop.cpp",
+        "Mutex_noop.cpp",
+    ]
 else:
     SOURCES += [
         "ConditionVariable_posix.cpp",

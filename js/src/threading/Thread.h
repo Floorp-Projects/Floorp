@@ -157,6 +157,10 @@ void SetName(const char* name);
 // 'nameBuffer', including the terminating NUL.
 void GetName(char* nameBuffer, size_t len);
 
+// Causes the current thread to sleep until the
+// number of real-time milliseconds specified have elapsed.
+void SleepMilliseconds(size_t ms);
+
 }  // namespace ThisThread
 
 namespace detail {

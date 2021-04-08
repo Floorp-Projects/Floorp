@@ -24,7 +24,6 @@
 #include "mozilla/Unused.h"
 
 #include <algorithm>
-#include <thread>
 
 #include "util/Memory.h"
 #include "util/Text.h"
@@ -1340,7 +1339,7 @@ bool ModuleGenerator::finishTier2(const Module& module) {
   if (MOZ_UNLIKELY(JitOptions.wasmDelayTier2)) {
     // Introduce an artificial delay when testing wasmDelayTier2, since we
     // want to exercise both tier1 and tier2 code in this case.
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    ThisThread::SleepMilliseconds(500);
   }
 
   return module.finishTier2(*linkData_, std::move(codeTier));

@@ -9,7 +9,7 @@
 #ifndef mozilla_ThreadLocal_h
 #define mozilla_ThreadLocal_h
 
-#if !defined(XP_WIN)
+#if !defined(XP_WIN) && !defined(__wasi__)
 #  include <pthread.h>
 #endif
 
@@ -120,6 +120,28 @@ class ThreadLocalKeyStorage {
   unsigned long mKey;
 };
 #  endif
+#elif defined(__wasi__)
+// There are no threads on WASI, so we just use a global variable.
+template <typename T>
+class ThreadLocalKeyStorage {
+ public:
+  constexpr ThreadLocalKeyStorage() : mInited(false) {}
+
+  inline bool initialized() const { return mInited; }
+
+  inline void init() { mInited = true; }
+
+  inline T get() const { return mVal; }
+
+  inline bool set(const T aValue) {
+    mVal = aValue;
+    return true;
+  }
+
+ private:
+  bool mInited;
+  T mVal;
+};
 #else
 template <typename T>
 class ThreadLocalKeyStorage {

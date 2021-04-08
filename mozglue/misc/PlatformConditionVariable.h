@@ -14,7 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/PlatformMutex.h"
 #include "mozilla/TimeStamp.h"
-#ifndef XP_WIN
+#if !defined(XP_WIN) && !defined(__wasi__)
 #  include <pthread.h>
 #endif
 
@@ -54,7 +54,7 @@ class ConditionVariableImpl {
 
   PlatformData* platformData();
 
-#ifndef XP_WIN
+#if !defined(XP_WIN) && !defined(__wasi__)
   void* platformData_[sizeof(pthread_cond_t) / sizeof(void*)];
   static_assert(sizeof(pthread_cond_t) / sizeof(void*) != 0 &&
                     sizeof(pthread_cond_t) % sizeof(void*) == 0,
