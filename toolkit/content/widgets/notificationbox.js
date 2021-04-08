@@ -587,7 +587,7 @@
         this.messageImage = this.shadowRoot.querySelector(".icon");
 
         messageContent.append(this.messageText, this.buttonContainer);
-        this.shadowRoot.addEventListener("click", this);
+        this.shadowRoot.addEventListener("command", this);
       }
 
       disconnectedCallback() {
