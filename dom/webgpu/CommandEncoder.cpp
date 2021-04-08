@@ -22,8 +22,8 @@ GPU_IMPL_CYCLE_COLLECTION(CommandEncoder, mParent, mBridge)
 GPU_IMPL_JS_WRAP(CommandEncoder)
 
 void CommandEncoder::ConvertTextureDataLayoutToFFI(
-    const dom::GPUImageDataLayout& aLayout,
-    ffi::WGPUImageDataLayout* aLayoutFFI) {
+    const dom::GPUTextureDataLayout& aLayout,
+    ffi::WGPUTextureDataLayout* aLayoutFFI) {
   *aLayoutFFI = {};
   aLayoutFFI->offset = aLayout.mOffset;
   aLayoutFFI->bytes_per_row = aLayout.mBytesPerRow;
@@ -31,13 +31,12 @@ void CommandEncoder::ConvertTextureDataLayoutToFFI(
 }
 
 void CommandEncoder::ConvertTextureCopyViewToFFI(
-    const dom::GPUImageCopyTexture& aCopy,
-    ffi::WGPUImageCopyTexture* aViewFFI) {
+    const dom::GPUTextureCopyView& aView, ffi::WGPUTextureCopyView* aViewFFI) {
   *aViewFFI = {};
-  aViewFFI->texture = aCopy.mTexture->mId;
-  aViewFFI->mip_level = aCopy.mMipLevel;
-  if (aCopy.mOrigin.WasPassed()) {
-    const auto& origin = aCopy.mOrigin.Value();
+  aViewFFI->texture = aView.mTexture->mId;
+  aViewFFI->mip_level = aView.mMipLevel;
+  if (aView.mOrigin.WasPassed()) {
+    const auto& origin = aView.mOrigin.Value();
     if (origin.IsRangeEnforcedUnsignedLongSequence()) {
       const auto& seq = origin.GetAsRangeEnforcedUnsignedLongSequence();
       aViewFFI->origin.x = seq.Length() > 0 ? seq[0] : 0;
@@ -72,18 +71,18 @@ void CommandEncoder::ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
   }
 }
 
-static ffi::WGPUImageCopyBuffer ConvertBufferCopyView(
-    const dom::GPUImageCopyBuffer& aCopy) {
-  ffi::WGPUImageCopyBuffer view = {};
-  view.buffer = aCopy.mBuffer->mId;
-  CommandEncoder::ConvertTextureDataLayoutToFFI(aCopy, &view.layout);
+static ffi::WGPUBufferCopyView ConvertBufferCopyView(
+    const dom::GPUBufferCopyView& aView) {
+  ffi::WGPUBufferCopyView view = {};
+  view.buffer = aView.mBuffer->mId;
+  CommandEncoder::ConvertTextureDataLayoutToFFI(aView, &view.layout);
   return view;
 }
 
-static ffi::WGPUImageCopyTexture ConvertTextureCopyView(
-    const dom::GPUImageCopyTexture& aCopy) {
-  ffi::WGPUImageCopyTexture view = {};
-  CommandEncoder::ConvertTextureCopyViewToFFI(aCopy, &view);
+static ffi::WGPUTextureCopyView ConvertTextureCopyView(
+    const dom::GPUTextureCopyView& aView) {
+  ffi::WGPUTextureCopyView view = {};
+  CommandEncoder::ConvertTextureCopyViewToFFI(aView, &view);
   return view;
 }
 
@@ -124,8 +123,8 @@ void CommandEncoder::CopyBufferToBuffer(const Buffer& aSource,
 }
 
 void CommandEncoder::CopyBufferToTexture(
-    const dom::GPUImageCopyBuffer& aSource,
-    const dom::GPUImageCopyTexture& aDestination,
+    const dom::GPUBufferCopyView& aSource,
+    const dom::GPUTextureCopyView& aDestination,
     const dom::GPUExtent3D& aCopySize) {
   if (mValid) {
     ipc::ByteBuf bb;
@@ -136,8 +135,8 @@ void CommandEncoder::CopyBufferToTexture(
   }
 }
 void CommandEncoder::CopyTextureToBuffer(
-    const dom::GPUImageCopyTexture& aSource,
-    const dom::GPUImageCopyBuffer& aDestination,
+    const dom::GPUTextureCopyView& aSource,
+    const dom::GPUBufferCopyView& aDestination,
     const dom::GPUExtent3D& aCopySize) {
   if (mValid) {
     ipc::ByteBuf bb;
@@ -148,8 +147,8 @@ void CommandEncoder::CopyTextureToBuffer(
   }
 }
 void CommandEncoder::CopyTextureToTexture(
-    const dom::GPUImageCopyTexture& aSource,
-    const dom::GPUImageCopyTexture& aDestination,
+    const dom::GPUTextureCopyView& aSource,
+    const dom::GPUTextureCopyView& aDestination,
     const dom::GPUExtent3D& aCopySize) {
   if (mValid) {
     ipc::ByteBuf bb;

@@ -24,32 +24,29 @@ unsafe impl<M> Sync for LinearBlock<M> where M: Sync {}
 unsafe impl<M> Send for LinearBlock<M> where M: Send {}
 
 #[derive(Debug)]
-struct ActiveChunk<M> {
+struct Chunk<M> {
     memory: Arc<M>,
     offset: u64,
     ptr: Option<NonNull<u8>>,
 }
 
-impl<M> ActiveChunk<M> {
-    fn exhaust(self) -> Chunk<M> {
-        Chunk {
+impl<M> Chunk<M> {
+    fn exhaust(self) -> ExhaustedChunk<M> {
+        ExhaustedChunk {
             memory: self.memory,
-            ptr: self.ptr,
         }
     }
 }
 
 #[derive(Debug)]
-struct Chunk<M> {
+struct ExhaustedChunk<M> {
     memory: Arc<M>,
-    ptr: Option<NonNull<u8>>,
 }
 
 #[derive(Debug)]
 pub(crate) struct LinearAllocator<M> {
-    active: Option<ActiveChunk<M>>,
-    prepared: Option<Chunk<M>>,
-    exhausted: VecDeque<Option<Chunk<M>>>,
+    ready: Option<Chunk<M>>,
+    exhausted: VecDeque<Option<ExhaustedChunk<M>>>,
     offset: u64,
     chunk_size: u64,
     memory_type: u32,
@@ -73,8 +70,7 @@ where
         debug_assert_eq!(align_down(chunk_size, atom_mask), chunk_size);
 
         LinearAllocator {
-            active: None,
-            prepared: None,
+            ready: None,
             exhausted: VecDeque::new(),
             offset: 0,
             chunk_size: min(chunk_size, isize::max_value()),
@@ -99,86 +95,80 @@ where
             "GpuAllocator must not request allocations equal or greater to chunks size"
         );
 
-        let size = align_up(size, self.atom_mask).expect(
-            "Any value not greater than chunk size (which is aligned) has to fit for alignment",
-        );
+        let size = align_up(size, self.atom_mask)
+            .expect("Any value not greater than aligned chunk size must fit for alignment");
 
         let align_mask = align_mask | self.atom_mask;
         let host_visible = self.host_visible();
 
-        match &mut self.active {
-            Some(active) if fits(self.chunk_size, active.offset, size, align_mask) => {
-                let chunks_index = self.offset + self.exhausted.len() as u64;
+        match &mut self.ready {
+            Some(ready) if fits(self.chunk_size, ready.offset, size, align_mask) => {
+                let chunks_offset = self.offset;
+                let exhausted = self.exhausted.len() as u64;
                 Ok(Self::alloc_from_chunk(
-                    active,
+                    ready,
                     self.chunk_size,
-                    chunks_index,
+                    chunks_offset,
+                    exhausted,
                     size,
                     align_mask,
                 ))
             }
 
-            active => {
+            ready => {
                 self.exhausted
-                    .extend(active.take().map(ActiveChunk::exhaust).map(Some));
+                    .extend(ready.take().map(Chunk::exhaust).map(Some));
 
-                let active = match self.prepared.take() {
-                    Some(chunk) => active.get_or_insert(ActiveChunk {
-                        ptr: chunk.ptr,
-                        memory: chunk.memory,
-                        offset: 0,
-                    }),
-                    None => {
-                        if *allocations_remains == 0 {
-                            return Err(AllocationError::TooManyObjects);
+                if *allocations_remains == 0 {
+                    return Err(AllocationError::TooManyObjects);
+                }
+
+                let mut memory =
+                    device.allocate_memory(self.chunk_size, self.memory_type, flags)?;
+
+                *allocations_remains -= 1;
+                heap.alloc(self.chunk_size);
+
+                let ptr = if host_visible {
+                    match device.map_memory(&mut memory, 0, self.chunk_size) {
+                        Ok(ptr) => Some(ptr),
+                        Err(DeviceMapError::MapFailed) => {
+                            #[cfg(feature = "tracing")]
+                            tracing::error!(
+                                "Failed to map host-visible memory in linear allocator"
+                            );
+                            device.deallocate_memory(memory);
+                            *allocations_remains += 1;
+                            heap.dealloc(self.chunk_size);
+
+                            return Err(AllocationError::OutOfHostMemory);
                         }
-
-                        let mut memory =
-                            device.allocate_memory(self.chunk_size, self.memory_type, flags)?;
-
-                        *allocations_remains -= 1;
-                        heap.alloc(self.chunk_size);
-
-                        let ptr = if host_visible {
-                            match device.map_memory(&mut memory, 0, self.chunk_size) {
-                                Ok(ptr) => Some(ptr),
-                                Err(DeviceMapError::MapFailed) => {
-                                    #[cfg(feature = "tracing")]
-                                    tracing::error!(
-                                        "Failed to map host-visible memory in linear allocator"
-                                    );
-                                    device.deallocate_memory(memory);
-                                    *allocations_remains += 1;
-                                    heap.dealloc(self.chunk_size);
-
-                                    return Err(AllocationError::OutOfHostMemory);
-                                }
-                                Err(DeviceMapError::OutOfDeviceMemory) => {
-                                    return Err(AllocationError::OutOfDeviceMemory);
-                                }
-                                Err(DeviceMapError::OutOfHostMemory) => {
-                                    return Err(AllocationError::OutOfHostMemory);
-                                }
-                            }
-                        } else {
-                            None
-                        };
-
-                        let memory = Arc::new(memory);
-
-                        active.get_or_insert(ActiveChunk {
-                            ptr,
-                            memory,
-                            offset: 0,
-                        })
+                        Err(DeviceMapError::OutOfDeviceMemory) => {
+                            return Err(AllocationError::OutOfDeviceMemory);
+                        }
+                        Err(DeviceMapError::OutOfHostMemory) => {
+                            return Err(AllocationError::OutOfHostMemory);
+                        }
                     }
+                } else {
+                    None
                 };
 
-                let chunks_index = self.offset + self.exhausted.len() as u64;
+                let memory = Arc::new(memory);
+
+                let ready = ready.get_or_insert(Chunk {
+                    ptr,
+                    memory,
+                    offset: 0,
+                });
+
+                let chunks_offset = self.offset;
+                let exhausted = self.exhausted.len() as u64;
                 Ok(Self::alloc_from_chunk(
-                    active,
+                    ready,
                     self.chunk_size,
-                    chunks_index,
+                    chunks_offset,
+                    exhausted,
                     size,
                     align_mask,
                 ))
@@ -205,7 +195,7 @@ where
                 }
 
                 if chunk_offset == self.exhausted.len() {
-                    let chunk = self.active.as_mut().expect(
+                    let chunk = self.ready.as_mut().expect(
                         "Chunk index is out of bounds. Probably incorrect allocator instance",
                     );
                     drop(block);
@@ -219,17 +209,11 @@ where
                     drop(block);
 
                     if is_arc_unique(&mut chunk.memory) {
-                        if self.prepared.is_some() {
-                            let memory = self.exhausted[chunk_offset].take().unwrap().memory;
-                            let memory = arc_unwrap(memory);
-                            device.deallocate_memory(memory);
-                            *allocations_remains += 1;
-                            heap.dealloc(self.chunk_size);
-                        } else {
-                            // Keep one free chunk prepared.
-                            let chunk = self.exhausted[chunk_offset].take().unwrap();
-                            self.prepared = Some(chunk);
-                        }
+                        let memory = self.exhausted[chunk_offset].take().unwrap().memory;
+                        let memory = arc_unwrap(memory);
+                        device.deallocate_memory(memory);
+                        *allocations_remains += 1;
+                        heap.dealloc(self.chunk_size);
 
                         if chunk_offset == 0 {
                             while let Some(None) = self.exhausted.get(0) {
@@ -248,24 +232,7 @@ where
 
     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self, device)))]
     pub unsafe fn cleanup(&mut self, device: &impl MemoryDevice<M>) {
-        if let Some(mut chunk) = self.active.take() {
-            debug_assert!(
-                is_arc_unique(&mut chunk.memory),
-                "All blocks must be deallocated before cleanup"
-            );
-
-            match Arc::try_unwrap(chunk.memory) {
-                Ok(memory) => device.deallocate_memory(memory),
-                #[cfg(feature = "tracing")]
-                Err(_) => {
-                    tracing::error!("Cleanup before all memory blocks are deallocated");
-                }
-                #[cfg(not(feature = "tracing"))]
-                _ => {}
-            }
-        }
-
-        if let Some(mut chunk) = self.prepared.take() {
+        if let Some(mut chunk) = self.ready.take() {
             debug_assert!(
                 is_arc_unique(&mut chunk.memory),
                 "All blocks must be deallocated before cleanup"
@@ -293,9 +260,10 @@ where
     }
 
     unsafe fn alloc_from_chunk(
-        chunk: &mut ActiveChunk<M>,
+        chunk: &mut Chunk<M>,
         chunk_size: u64,
-        chunks_index: u64,
+        chunks_offset: u64,
+        exhausted: u64,
         size: u64,
         align_mask: u64,
     ) -> LinearBlock<M> {
@@ -304,8 +272,8 @@ where
             "Must be checked in caller"
         );
 
-        let offset = align_up(chunk.offset, align_mask)
-            .expect("ActiveChunk must be checked to fit allocation");
+        let offset =
+            align_up(chunk.offset, align_mask).expect("Chunk must be checked to fit allocation");
 
         debug_assert!(
             offset
@@ -323,7 +291,7 @@ where
                 .map(|ptr| NonNull::new_unchecked(ptr.as_ptr().offset(offset as isize))),
             offset,
             size,
-            chunk: chunks_index,
+            chunk: chunks_offset + exhausted,
         }
     }
 }

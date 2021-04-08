@@ -88,13 +88,13 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
   }
 }
 
-void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
+void Queue::WriteTexture(const dom::GPUTextureCopyView& aDestination,
                          const dom::ArrayBufferViewOrArrayBuffer& aData,
-                         const dom::GPUImageDataLayout& aDataLayout,
+                         const dom::GPUTextureDataLayout& aDataLayout,
                          const dom::GPUExtent3D& aSize, ErrorResult& aRv) {
-  ffi::WGPUImageCopyTexture copyView = {};
+  ffi::WGPUTextureCopyView copyView = {};
   CommandEncoder::ConvertTextureCopyViewToFFI(aDestination, &copyView);
-  ffi::WGPUImageDataLayout dataLayout = {};
+  ffi::WGPUTextureDataLayout dataLayout = {};
   CommandEncoder::ConvertTextureDataLayoutToFFI(aDataLayout, &dataLayout);
   dataLayout.offset = 0;  // our Shmem has the contents starting from 0.
   ffi::WGPUExtent3d extent = {};

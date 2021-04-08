@@ -32,9 +32,13 @@ impl DebugUtils {
         device: vk::Device,
         name_info: &vk::DebugUtilsObjectNameInfoEXT,
     ) -> VkResult<()> {
-        self.debug_utils_fn
-            .set_debug_utils_object_name_ext(device, name_info)
-            .into()
+        let err_code = self
+            .debug_utils_fn
+            .set_debug_utils_object_name_ext(device, name_info);
+        match err_code {
+            vk::Result::SUCCESS => Ok(()),
+            _ => Err(err_code),
+        }
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetDebugUtilsObjectTagEXT.html>"]
@@ -43,9 +47,13 @@ impl DebugUtils {
         device: vk::Device,
         tag_info: &vk::DebugUtilsObjectTagInfoEXT,
     ) -> VkResult<()> {
-        self.debug_utils_fn
-            .set_debug_utils_object_tag_ext(device, tag_info)
-            .into()
+        let err_code = self
+            .debug_utils_fn
+            .set_debug_utils_object_tag_ext(device, tag_info);
+        match err_code {
+            vk::Result::SUCCESS => Ok(()),
+            _ => Err(err_code),
+        }
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginDebugUtilsLabelEXT.html>"]
@@ -106,14 +114,16 @@ impl DebugUtils {
         allocator: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::DebugUtilsMessengerEXT> {
         let mut messenger = mem::zeroed();
-        self.debug_utils_fn
-            .create_debug_utils_messenger_ext(
-                self.handle,
-                create_info,
-                allocator.as_raw_ptr(),
-                &mut messenger,
-            )
-            .result_with_success(messenger)
+        let err_code = self.debug_utils_fn.create_debug_utils_messenger_ext(
+            self.handle,
+            create_info,
+            allocator.as_raw_ptr(),
+            &mut messenger,
+        );
+        match err_code {
+            vk::Result::SUCCESS => Ok(messenger),
+            _ => Err(err_code),
+        }
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyDebugUtilsMessengerEXT.html>"]

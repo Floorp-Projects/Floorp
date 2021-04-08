@@ -15,20 +15,11 @@ struct Relevant;
 impl Drop for Relevant {
     #[cfg(feature = "tracing")]
     fn drop(&mut self) {
-        #[cfg(feature = "std")]
-        {
-            if std::thread::panicking() {
-                return;
-            }
-        }
         tracing::error!("Memory block wasn't deallocated");
     }
 
     #[cfg(all(not(feature = "tracing"), feature = "std"))]
     fn drop(&mut self) {
-        if std::thread::panicking() {
-            return;
-        }
         eprintln!("Memory block wasn't deallocated")
     }
 
@@ -98,12 +89,6 @@ pub(crate) enum MemoryBlockFlavor<M> {
         ptr: Option<NonNull<u8>>,
         memory: Arc<M>,
     },
-    #[cfg(feature = "freelist")]
-    FreeList {
-        chunk: u64,
-        ptr: Option<NonNull<u8>>,
-        memory: Arc<M>,
-    },
 }
 
 impl<M> MemoryBlock<M> {
@@ -114,9 +99,6 @@ impl<M> MemoryBlock<M> {
             MemoryBlockFlavor::Dedicated { memory } => memory,
             MemoryBlockFlavor::Buddy { memory, .. } => &**memory,
             MemoryBlockFlavor::Linear { memory, .. } => &**memory,
-
-            #[cfg(feature = "freelist")]
-            MemoryBlockFlavor::FreeList { memory, .. } => &**memory,
         }
     }
 
@@ -201,18 +183,8 @@ impl<M> MemoryBlock<M> {
                     }
                 }
             }
-
             MemoryBlockFlavor::Linear { ptr: Some(ptr), .. }
             | MemoryBlockFlavor::Buddy { ptr: Some(ptr), .. } => {
-                if !acquire_mapping(&mut self.mapped) {
-                    return Err(MapError::AlreadyMapped);
-                }
-                let offset_isize = isize::try_from(offset)
-                    .expect("Buddy and linear block should fit host address space");
-                ptr.as_ptr().offset(offset_isize)
-            }
-            #[cfg(feature = "freelist")]
-            MemoryBlockFlavor::FreeList { ptr: Some(ptr), .. } => {
                 if !acquire_mapping(&mut self.mapped) {
                     return Err(MapError::AlreadyMapped);
                 }
@@ -247,9 +219,6 @@ impl<M> MemoryBlock<M> {
             }
             MemoryBlockFlavor::Linear { .. } => {}
             MemoryBlockFlavor::Buddy { .. } => {}
-
-            #[cfg(feature = "freelist")]
-            MemoryBlockFlavor::FreeList { .. } => {}
         }
         true
     }
