@@ -10,6 +10,7 @@
 
 #  include "mozilla/Sprintf.h"
 
+#  include "util/GetPidProvider.h"  // getpid()
 #  include "util/Text.h"
 #  include "vm/JSContext.h"
 #  include "vm/JSScript.h"

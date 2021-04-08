@@ -11,18 +11,12 @@
 #  include "mozilla/Sprintf.h"
 
 #  include <algorithm>
-
-#  ifdef XP_WIN
-#    include <process.h>
-#    define getpid _getpid
-#  else
-#    include <unistd.h>
-#  endif
 #  include <stdarg.h>
 
 #  include "jsmath.h"
 
 #  include "js/ScalarType.h"  // js::Scalar::Type
+#  include "util/GetPidProvider.h"
 #  include "util/Text.h"
 #  include "vm/JSFunction.h"
 #  include "vm/JSObject.h"
