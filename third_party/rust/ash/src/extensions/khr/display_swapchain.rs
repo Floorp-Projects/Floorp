@@ -42,7 +42,10 @@ impl DisplaySwapchain {
             swapchains.as_mut_ptr(),
         );
         swapchains.set_len(create_infos.len());
-        err_code.result_with_success(swapchains)
+        match err_code {
+            vk::Result::SUCCESS => Ok(swapchains),
+            _ => Err(err_code),
+        }
     }
 
     pub fn fp(&self) -> &vk::KhrDisplaySwapchainFn {

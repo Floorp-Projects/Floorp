@@ -7,24 +7,22 @@ from SPIR-V's descriptor sets, we require a separate mapping provided in the opt
 This mapping may have one or more resource end points for each descriptor set + index
 pair.
 
-## Entry points
+## Outputs
 
-Even though MSL and our IR appear to be similar in that the entry points in both can
-accept arguments and return values, the restrictions are different.
-MSL allows the varyings to be either in separate arguments, or inside a single
-`[[stage_in]]` struct. We gather input varyings and form this artificial structure.
-We also add all the (non-Private) globals into the arguments.
-
-At the beginning of the entry point, we assign the local constants and re-compose
-the arguments as they are declared on IR side, so that the rest of the logic can
-pretend that MSL doesn't have all the restrictions it has.
-
-For the result type, if it's a structure, we re-compose it with a temporary value
-holding the result.
+In Metal, built-in shader outputs can not be nested into structures within
+the output struct. If there is a structure in the outputs, and it contains any built-ins,
+we move them up to the root output structure that we define ourselves.
 !*/
 
-use crate::{arena::Handle, valid::ModuleInfo, FastHashMap};
-use std::fmt::{Error as FmtError, Write};
+use crate::{
+    arena::Handle,
+    proc::{analyzer::Analysis, TypifyError},
+    FastHashMap,
+};
+use std::{
+    io::{Error as IoError, Write},
+    string::FromUtf8Error,
+};
 
 mod keywords;
 mod writer;
@@ -61,7 +59,13 @@ enum ResolvedBinding {
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(transparent)]
-    Format(#[from] FmtError),
+    IO(#[from] IoError),
+    #[error(transparent)]
+    Utf8(#[from] FromUtf8Error),
+    #[error(transparent)]
+    Type(#[from] TypifyError),
+    #[error("bind source for {0:?} is missing from the map")]
+    MissingBindTarget(BindSource),
     #[error("bind target {0:?} is empty")]
     UnimplementedBindTarget(BindTarget),
     #[error("composing of {0:?} is not implemented yet")]
@@ -74,12 +78,6 @@ pub enum Error {
     FeatureNotImplemented(String),
     #[error("module is not valid")]
     Validation,
-}
-
-#[derive(Clone, Debug, PartialEq, thiserror::Error)]
-pub enum EntryPointError {
-    #[error("mapping of {0:?} is missing")]
-    MissingBinding(BindSource),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -100,9 +98,6 @@ pub struct Options {
     pub spirv_cross_compatibility: bool,
     /// Don't panic on missing bindings, instead generate invalid MSL.
     pub fake_missing_bindings: bool,
-    /// Allow `BuiltIn::PointSize` in the vertex shader.
-    /// Metal doesn't like this for non-point primitive topologies.
-    pub allow_point_size: bool,
 }
 
 impl Default for Options {
@@ -111,21 +106,21 @@ impl Default for Options {
             lang_version: (1, 0),
             binding_map: BindingMap::default(),
             spirv_cross_compatibility: false,
-            fake_missing_bindings: true,
-            allow_point_size: true,
+            fake_missing_bindings: false,
         }
     }
 }
 
 impl Options {
-    fn resolve_local_binding(
+    fn resolve_binding(
         &self,
-        binding: &crate::Binding,
+        stage: crate::ShaderStage,
+        var: &crate::GlobalVariable,
         mode: LocationMode,
     ) -> Result<ResolvedBinding, Error> {
-        match *binding {
-            crate::Binding::BuiltIn(built_in) => Ok(ResolvedBinding::BuiltIn(built_in)),
-            crate::Binding::Location(index, _) => match mode {
+        match var.binding {
+            Some(crate::Binding::BuiltIn(built_in)) => Ok(ResolvedBinding::BuiltIn(built_in)),
+            Some(crate::Binding::Location(index)) => match mode {
                 LocationMode::VertexInput => Ok(ResolvedBinding::Attribute(index)),
                 LocationMode::FragmentOutput => Ok(ResolvedBinding::Color(index)),
                 LocationMode::Intermediate => Ok(ResolvedBinding::User {
@@ -144,26 +139,25 @@ impl Options {
                     Err(Error::Validation)
                 }
             },
-        }
-    }
-
-    fn resolve_global_binding(
-        &self,
-        stage: crate::ShaderStage,
-        res_binding: &crate::ResourceBinding,
-    ) -> Result<ResolvedBinding, EntryPointError> {
-        let source = BindSource {
-            stage,
-            group: res_binding.group,
-            binding: res_binding.binding,
-        };
-        match self.binding_map.get(&source) {
-            Some(target) => Ok(ResolvedBinding::Resource(target.clone())),
-            None if self.fake_missing_bindings => Ok(ResolvedBinding::User {
-                prefix: "fake",
-                index: 0,
-            }),
-            None => Err(EntryPointError::MissingBinding(source)),
+            Some(crate::Binding::Resource { group, binding }) => {
+                let source = BindSource {
+                    stage,
+                    group,
+                    binding,
+                };
+                match self.binding_map.get(&source) {
+                    Some(target) => Ok(ResolvedBinding::Resource(target.clone())),
+                    None if self.fake_missing_bindings => Ok(ResolvedBinding::User {
+                        prefix: "fake",
+                        index: 0,
+                    }),
+                    None => Err(Error::MissingBindTarget(source)),
+                }
+            }
+            None => {
+                log::error!("Missing binding for {:?}", var.name);
+                Err(Error::Validation)
+            }
         }
     }
 }
@@ -174,19 +168,21 @@ impl ResolvedBinding {
             ResolvedBinding::BuiltIn(built_in) => {
                 use crate::BuiltIn as Bi;
                 let name = match built_in {
-                    Bi::Position => "position",
                     // vertex
                     Bi::BaseInstance => "base_instance",
                     Bi::BaseVertex => "base_vertex",
                     Bi::ClipDistance => "clip_distance",
                     Bi::InstanceIndex => "instance_id",
                     Bi::PointSize => "point_size",
+                    Bi::Position => "position",
                     Bi::VertexIndex => "vertex_id",
                     // fragment
+                    Bi::FragCoord => "position",
                     Bi::FragDepth => "depth(any)",
                     Bi::FrontFacing => "front_facing",
                     Bi::SampleIndex => "sample_id",
-                    Bi::SampleMask => "sample_mask",
+                    Bi::SampleMaskIn => "sample_mask",
+                    Bi::SampleMaskOut => "sample_mask",
                     // compute
                     Bi::GlobalInvocationId => "thread_position_in_grid",
                     Bi::LocalInvocationId => "thread_position_in_threadgroup",
@@ -228,24 +224,17 @@ impl ResolvedBinding {
 /// for the use of the result.
 pub struct TranslationInfo {
     /// Mapping of the entry point names. Each item in the array
-    /// corresponds to an entry point index.
-    ///
-    ///Note: Some entry points may fail translation because of missing bindings.
-    pub entry_point_names: Vec<Result<String, EntryPointError>>,
+    /// corresponds to an entry point in `module.entry_points.iter()`.
+    pub entry_point_names: Vec<String>,
 }
 
 pub fn write_string(
     module: &crate::Module,
-    info: &ModuleInfo,
+    analysis: &Analysis,
     options: &Options,
 ) -> Result<(String, TranslationInfo), Error> {
-    let mut w = writer::Writer::new(String::new());
-    let info = w.write(module, info, options)?;
-    Ok((w.finish(), info))
-}
-
-#[test]
-fn test_error_size() {
-    use std::mem::size_of;
-    assert_eq!(size_of::<Error>(), 32);
+    let mut w = writer::Writer::new(Vec::new());
+    let info = w.write(module, analysis, options)?;
+    let string = String::from_utf8(w.finish())?;
+    Ok((string, info))
 }

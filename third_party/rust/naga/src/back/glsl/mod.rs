@@ -44,8 +44,7 @@
 pub use features::Features;
 
 use crate::{
-    proc::{EntryPointIndex, NameKey, Namer, TypeResolution},
-    valid::{FunctionInfo, ModuleInfo},
+    proc::{analyzer::Analysis, NameKey, Namer, ResolveContext, Typifier, TypifyError},
     Arena, ArraySize, BinaryOperator, Binding, BuiltIn, Bytes, ConservativeDepth, Constant,
     ConstantInner, DerivativeAxis, Expression, FastHashMap, Function, GlobalVariable, Handle,
     ImageClass, Interpolation, LocalVariable, Module, RelationalFunction, ScalarKind, ScalarValue,
@@ -83,7 +82,7 @@ pub enum Version {
 impl Version {
     /// Returns true if self is `Version::Embedded` (i.e. is a es version)
     fn is_es(&self) -> bool {
-        match *self {
+        match self {
             Version::Desktop(_) => false,
             Version::Embedded(_) => true,
         }
@@ -96,15 +95,10 @@ impl Version {
     /// As an invalid version number will never be added to the supported version list
     /// so this also checks for version validity
     fn is_supported(&self) -> bool {
-        match *self {
-            Version::Desktop(v) => SUPPORTED_CORE_VERSIONS.contains(&v),
-            Version::Embedded(v) => SUPPORTED_ES_VERSIONS.contains(&v),
+        match self {
+            Version::Desktop(v) => SUPPORTED_CORE_VERSIONS.contains(v),
+            Version::Embedded(v) => SUPPORTED_ES_VERSIONS.contains(v),
         }
-    }
-
-    /// Checks if the version supports explicit `layout(location=)` qualifiers.
-    fn supports_explicit_locations(&self) -> bool {
-        *self >= Version::Embedded(310) || *self >= Version::Desktop(410)
     }
 }
 
@@ -120,7 +114,7 @@ impl PartialOrd for Version {
 
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
+        match self {
             Version::Desktop(v) => write!(f, "{} core", v),
             Version::Embedded(v) => write!(f, "{} es", v),
         }
@@ -139,22 +133,6 @@ pub struct Options {
     /// If no entry point that matches is found a error will be thrown while creating a new instance
     /// of [`Writer`](struct.Writer.html)
     pub entry_point: String,
-}
-
-impl Default for Options {
-    fn default() -> Self {
-        Options {
-            version: Version::Embedded(320),
-            shader_stage: ShaderStage::Compute,
-            entry_point: "main".to_string(),
-        }
-    }
-}
-
-/// Structure that contains a reflection info
-pub struct ReflectionInfo {
-    pub texture_mapping: FastHashMap<String, TextureMapping>,
-    pub uniforms: FastHashMap<Handle<GlobalVariable>, String>,
 }
 
 /// Structure that connects a texture to a sampler or not
@@ -181,20 +159,20 @@ enum FunctionType {
     /// A regular function and it's handle
     Function(Handle<Function>),
     /// A entry point and it's index
-    EntryPoint(EntryPointIndex),
+    EntryPoint(crate::proc::EntryPointIndex),
 }
 
 /// Helper structure that stores data needed when writing the function
-struct FunctionCtx<'a> {
+struct FunctionCtx<'a, 'b> {
     /// The current function being written
     func: FunctionType,
-    /// Analysis about the function
-    info: &'a FunctionInfo,
     /// The expression arena of the current function being written
     expressions: &'a Arena<Expression>,
+    /// A typifier that has already resolved all expressions in the function being written
+    typifier: &'b Typifier,
 }
 
-impl<'a> FunctionCtx<'a> {
+impl<'a, 'b> FunctionCtx<'a, 'b> {
     /// Helper method that generates a [`NameKey`](crate::proc::NameKey) for a local in the current function
     fn name_key(&self, local: Handle<LocalVariable>) -> NameKey {
         match self.func {
@@ -203,14 +181,16 @@ impl<'a> FunctionCtx<'a> {
         }
     }
 
-    /// Helper method that generates a [`NameKey`](crate::proc::NameKey) for a function argument.
+    /// Helper method that retrieves the name of the argument in the current function
     ///
     /// # Panics
+    /// - If the function is an entry point
     /// - If the function arguments are less or equal to `arg`
-    fn argument_key(&self, arg: u32) -> NameKey {
+    /// - If `names` hasn't been filled properly
+    fn get_arg<'c>(&self, arg: u32, names: &'c FastHashMap<NameKey, String>) -> &'c str {
         match self.func {
-            FunctionType::Function(handle) => NameKey::FunctionArgument(handle, arg),
-            FunctionType::EntryPoint(ep_index) => NameKey::EntryPointArgument(ep_index, arg),
+            FunctionType::Function(handle) => &names[&NameKey::FunctionArgument(handle, arg)],
+            FunctionType::EntryPoint(_) => unreachable!(),
         }
     }
 }
@@ -229,38 +209,6 @@ impl IdGenerator {
     }
 }
 
-/// Helper wrapper used to get a name for a varying
-///
-/// Varying have different naming schemes depending on their binding:
-/// - Varyings with builtin bindings get the from [`glsl_built_in`](glsl_built_in)
-/// - Varyings with location bindings are named `_location_X` where `X` is the location
-struct VaryingName<'a> {
-    binding: &'a Binding,
-    stage: ShaderStage,
-    output: bool,
-}
-impl fmt::Display for VaryingName<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self.binding {
-            Binding::Location(location, _) => {
-                let prefix = match (self.stage, self.output) {
-                    (ShaderStage::Compute, _) => unreachable!(),
-                    // pipeline to vertex
-                    (ShaderStage::Vertex, false) => "p2vs",
-                    // vertex to fragment
-                    (ShaderStage::Vertex, true) | (ShaderStage::Fragment, false) => "vs2fs",
-                    // fragment to pipeline
-                    (ShaderStage::Fragment, true) => "fs2p",
-                };
-                write!(f, "_{}_location{}", prefix, location,)
-            }
-            Binding::BuiltIn(built_in) => {
-                write!(f, "{}", glsl_built_in(built_in, self.output))
-            }
-        }
-    }
-}
-
 /// Shorthand result used internally by the backend
 type BackendResult = Result<(), Error>;
 
@@ -270,6 +218,9 @@ pub enum Error {
     /// A error occurred while writing to the output
     #[error("I/O error")]
     IoError(#[from] IoError),
+    /// The [`Module`](crate::Module) failed type resolution
+    #[error("Type error")]
+    Type(#[from] TypifyError),
     /// The specified [`Version`](Version) doesn't have all required [`Features`](super)
     ///
     /// Contains the missing [`Features`](Features)
@@ -307,7 +258,7 @@ pub struct Writer<'a, W> {
     /// The module being written
     module: &'a Module,
     /// The module analysis.
-    info: &'a ModuleInfo,
+    analysis: &'a Analysis,
     /// The output writer
     out: W,
     /// User defined configuration to be used
@@ -319,16 +270,12 @@ pub struct Writer<'a, W> {
     /// A map with all the names needed for writing the module
     /// (generated by a [`Namer`](crate::proc::Namer))
     names: FastHashMap<NameKey, String>,
-    /// A map with all the names needed for reflections
-    reflection_names: FastHashMap<Handle<Type>, String>,
     /// The selected entry point
     entry_point: &'a crate::EntryPoint,
     /// The index of the selected entry point
-    entry_point_idx: EntryPointIndex,
+    entry_point_idx: crate::proc::EntryPointIndex,
     /// Used to generate a unique number for blocks
     block_id: IdGenerator,
-    /// Set of expressions that have associated temporary variables
-    cached_expressions: FastHashMap<Handle<Expression>, String>,
 }
 
 impl<'a, W: Write> Writer<'a, W> {
@@ -341,7 +288,7 @@ impl<'a, W: Write> Writer<'a, W> {
     pub fn new(
         out: W,
         module: &'a Module,
-        info: &'a ModuleInfo,
+        analysis: &'a Analysis,
         options: &'a Options,
     ) -> Result<Self, Error> {
         // Check if the requested version is supported
@@ -351,10 +298,13 @@ impl<'a, W: Write> Writer<'a, W> {
         }
 
         // Try to find the entry point and corresponding index
-        let ep_idx = module
+        let (ep_idx, (_, ep)) = module
             .entry_points
             .iter()
-            .position(|ep| options.shader_stage == ep.stage && options.entry_point == ep.name)
+            .enumerate()
+            .find(|(_, ((stage, name), _))| {
+                options.shader_stage == *stage && &options.entry_point == name
+            })
             .ok_or(Error::EntryPointNotFound)?;
 
         // Generate a map with names required to write the module
@@ -364,18 +314,16 @@ impl<'a, W: Write> Writer<'a, W> {
         // Build the instance
         let mut this = Self {
             module,
-            info,
+            analysis,
             out,
             options,
 
             features: FeaturesManager::new(),
             names,
-            reflection_names: FastHashMap::default(),
-            entry_point: &module.entry_points[ep_idx],
+            entry_point: ep,
             entry_point_idx: ep_idx as u16,
 
             block_id: IdGenerator::default(),
-            cached_expressions: FastHashMap::default(),
         };
 
         // Find all features required to print this module
@@ -391,7 +339,7 @@ impl<'a, W: Write> Writer<'a, W> {
     ///
     /// # Panics
     /// Might panic if the module is invalid
-    pub fn write(&mut self) -> Result<ReflectionInfo, Error> {
+    pub fn write(&mut self) -> Result<FastHashMap<String, TextureMapping>, Error> {
         // We use `writeln!(self.out)` throughout the write to add newlines
         // to make the output more readable
 
@@ -412,16 +360,6 @@ impl<'a, W: Write> Writer<'a, W> {
         if es {
             writeln!(self.out)?;
             writeln!(self.out, "precision highp float;")?;
-            writeln!(self.out)?;
-        }
-
-        if self.options.shader_stage == ShaderStage::Compute {
-            let workgroup_size = self.entry_point.workgroup_size;
-            writeln!(
-                self.out,
-                "layout(local_size_x = {}, local_size_y = {}, local_size_z = {}) in;",
-                workgroup_size[0], workgroup_size[1], workgroup_size[2]
-            )?;
             writeln!(self.out)?;
         }
 
@@ -453,20 +391,13 @@ impl<'a, W: Write> Writer<'a, W> {
                 ref members,
             } = ty.inner
             {
-                // No needed to write a struct that also should be written as a global variable
-                let is_global_struct = self
-                    .module
-                    .global_variables
-                    .iter()
-                    .any(|e| e.1.ty == handle);
-
-                if !is_global_struct {
-                    self.write_struct(false, handle, members)?
-                }
+                self.write_struct(handle, members)?
             }
         }
 
-        let ep_info = self.info.get_entry_point(self.entry_point_idx as usize);
+        let ep_info = self
+            .analysis
+            .get_entry_point(self.options.shader_stage, &self.options.entry_point);
 
         // Write the globals
         //
@@ -475,6 +406,12 @@ impl<'a, W: Write> Writer<'a, W> {
         // different classes)
         for (handle, global) in self.module.global_variables.iter() {
             if ep_info[handle].is_empty() {
+                continue;
+            }
+
+            // Skip builtins
+            // TODO: Write them if they have modifiers
+            if let Some(crate::Binding::BuiltIn(_)) = global.binding {
                 continue;
             }
 
@@ -518,11 +455,9 @@ impl<'a, W: Write> Writer<'a, W> {
 
                     // Finally write the name and end the global with a `;`
                     // The leading space is important
-                    let global_name = self.get_global_name(handle, global);
-                    writeln!(self.out, " {};", global_name)?;
-                    writeln!(self.out)?;
+                    writeln!(self.out, " {};", self.get_global_name(handle, global))?;
 
-                    self.reflection_names.insert(global.ty, global_name);
+                    writeln!(self.out)?;
                 }
                 // glsl has no concept of samplers so we just ignore it
                 TypeInner::Sampler { .. } => continue,
@@ -530,29 +465,19 @@ impl<'a, W: Write> Writer<'a, W> {
                 _ => self.write_global(handle, global)?,
             }
         }
-
-        for arg in self.entry_point.function.arguments.iter() {
-            self.write_varying(arg.binding.as_ref(), arg.ty, false)?;
-        }
-        if let Some(ref result) = self.entry_point.function.result {
-            self.write_varying(result.binding.as_ref(), result.ty, true)?;
-        }
-        writeln!(self.out)?;
-
         // Write all regular functions
         for (handle, function) in self.module.functions.iter() {
             // Check that the function doesn't use globals that aren't supported
             // by the current entry point
-            if !ep_info.dominates_global_use(&self.info[handle]) {
+            if !ep_info.dominates_global_use(&self.analysis[handle]) {
                 continue;
             }
 
             // We also `clone` to satisfy the borrow checker
             let name = self.names[&NameKey::Function(handle)].clone();
-            let fun_info = &self.info[handle];
 
             // Write the function
-            self.write_function(FunctionType::Function(handle), function, fun_info, &name)?;
+            self.write_function(FunctionType::Function(handle), function, name)?;
 
             writeln!(self.out)?;
         }
@@ -560,44 +485,30 @@ impl<'a, W: Write> Writer<'a, W> {
         self.write_function(
             FunctionType::EntryPoint(self.entry_point_idx),
             &self.entry_point.function,
-            ep_info,
             "main",
         )?;
 
-        // Add newline at the end of file
-        writeln!(self.out)?;
-
-        // Collect all relection info and return it to the user
-        self.collect_reflection_info()
+        // Collect all of the texture mappings and return them to the user
+        self.collect_texture_mapping()
     }
 
-    /// Helper method used to write value types
+    /// Helper method used to write non image/sampler types
     ///
     /// # Notes
     /// Adds no trailing or leading whitespace
     ///
     /// # Panics
-    /// - If type is either a image, a sampler, a pointer, or a struct
+    /// - If type is either a image or sampler
     /// - If it's an Array with a [`ArraySize::Constant`](crate::ArraySize::Constant) with a
     /// constant that isn't [`Uint`](crate::ConstantInner::Uint)
-    fn write_value_type(&mut self, inner: &TypeInner) -> BackendResult {
-        match *inner {
+    fn write_type(&mut self, ty: Handle<Type>) -> BackendResult {
+        match self.module.types[ty].inner {
             // Scalars are simple we just get the full name from `glsl_scalar`
-            TypeInner::Scalar { kind, width }
-            | TypeInner::ValuePointer {
-                size: None,
-                kind,
-                width,
-                class: _,
-            } => write!(self.out, "{}", glsl_scalar(kind, width)?.full)?,
+            TypeInner::Scalar { kind, width } => {
+                write!(self.out, "{}", glsl_scalar(kind, width)?.full)?
+            }
             // Vectors are just `gvecN` where `g` is the scalar prefix and `N` is the vector size
-            TypeInner::Vector { size, kind, width }
-            | TypeInner::ValuePointer {
-                size: Some(size),
-                kind,
-                width,
-                class: _,
-            } => write!(
+            TypeInner::Vector { size, kind, width } => write!(
                 self.out,
                 "{}vec{}",
                 glsl_scalar(kind, width)?.prefix,
@@ -619,10 +530,12 @@ impl<'a, W: Write> Writer<'a, W> {
                 columns as u8,
                 rows as u8
             )?,
-            // GLSL arrays are written as `type name[size]`
-            // Current code is written arrays only as `[size]`
-            // Base `type` and `name` should be written outside
-            TypeInner::Array { base: _, size, .. } => {
+            // glsl has no pointer types so just write types as normal and loads are skipped
+            TypeInner::Pointer { base, .. } => self.write_type(base)?,
+            // Arrays are written as `base[size]`
+            TypeInner::Array { base, size, .. } => {
+                self.write_type(base)?;
+
                 write!(self.out, "[")?;
 
                 // Write the array size
@@ -643,45 +556,50 @@ impl<'a, W: Write> Writer<'a, W> {
 
                 write!(self.out, "]")?
             }
-            // Panic if either Image, Sampler, Pointer, or a Struct is being written
+            // glsl structs are written as just the struct name if it isn't a block
+            //
+            // If it's a block we need to write `block_name { members }` where `block_name` must be
+            // unique between blocks and structs so we add `_block_ID` where `ID` is a `IdGenerator`
+            // generated number so it's unique and `members` are the same as in a struct
+            TypeInner::Struct { block, ref members } => {
+                // Get the struct name
+                let name = &self.names[&NameKey::Type(ty)];
+
+                if block {
+                    // Write the block name, it's just the struct name appended with `_block_ID`
+                    writeln!(self.out, "{}_block_{} {{", name, self.block_id.generate())?;
+
+                    // Write the block members
+                    for (idx, member) in members.iter().enumerate() {
+                        // Add a tab for indentation (readability only)
+                        write!(self.out, "{}", INDENT)?;
+                        // Write the member type
+                        self.write_type(member.ty)?;
+
+                        // Finish the member with the name, a semicolon and a newline
+                        // The leading space is important
+                        writeln!(
+                            self.out,
+                            " {};",
+                            &self.names[&NameKey::StructMember(ty, idx as u32)]
+                        )?;
+                    }
+
+                    // Close braces
+                    write!(self.out, "}}")?
+                } else {
+                    // Write the struct name
+                    write!(self.out, "{}", name)?
+                }
+            }
+            // Panic if either Image or Sampler is being written
             //
             // Write all variants instead of `_` so that if new variants are added a
             // no exhaustiveness error is thrown
-            TypeInner::Pointer { .. }
-            | TypeInner::Struct { .. }
-            | TypeInner::Image { .. }
-            | TypeInner::Sampler { .. } => unreachable!(),
+            TypeInner::Image { .. } | TypeInner::Sampler { .. } => unreachable!(),
         }
 
         Ok(())
-    }
-
-    /// Helper method used to write non image/sampler types
-    ///
-    /// # Notes
-    /// Adds no trailing or leading whitespace
-    ///
-    /// # Panics
-    /// - If type is either a image or sampler
-    /// - If it's an Array with a [`ArraySize::Constant`](crate::ArraySize::Constant) with a
-    /// constant that isn't [`Uint`](crate::ConstantInner::Uint)
-    fn write_type(&mut self, ty: Handle<Type>) -> BackendResult {
-        match self.module.types[ty].inner {
-            // glsl has no pointer types so just write types as normal and loads are skipped
-            TypeInner::Pointer { base, .. } => self.write_type(base),
-            TypeInner::Struct {
-                block: true,
-                ref members,
-            } => self.write_struct(true, ty, members),
-            // glsl structs are written as just the struct name if it isn't a block
-            TypeInner::Struct { block: false, .. } => {
-                // Get the struct name
-                let name = &self.names[&NameKey::Type(ty)];
-                write!(self.out, "{}", name)?;
-                Ok(())
-            }
-            ref other => self.write_value_type(other),
-        }
     }
 
     /// Helper method to write a image type
@@ -716,7 +634,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
         write!(
             self.out,
-            "highp {}{}{}{}{}{}",
+            "{}{}{}{}{}{}",
             glsl_scalar(kind, 4)?.prefix,
             base,
             glsl_dimension(dim),
@@ -751,6 +669,22 @@ impl<'a, W: Write> Writer<'a, W> {
             write!(self.out, "writeonly ")?;
         }
 
+        // Write the interpolation modifier if needed
+        //
+        // We ignore all interpolation modifiers that aren't used in input globals in fragment
+        // shaders or output globals in vertex shaders
+        //
+        // TODO: Should this throw an error?
+        if let Some(interpolation) = global.interpolation {
+            match (self.options.shader_stage, global.class) {
+                (ShaderStage::Fragment, StorageClass::Input)
+                | (ShaderStage::Vertex, StorageClass::Output) => {
+                    write!(self.out, "{} ", glsl_interpolation(interpolation)?)?;
+                }
+                _ => (),
+            };
+        }
+
         // Write the storage class
         // Trailing space is important
         write!(self.out, "{} ", glsl_storage_class(global.class))?;
@@ -771,95 +705,61 @@ impl<'a, W: Write> Writer<'a, W> {
     ///
     /// Globals have different naming schemes depending on their binding:
     /// - Globals without bindings use the name from the [`Namer`](crate::proc::Namer)
+    /// - Globals with builtin bindings get the from [`glsl_built_in`](glsl_built_in)
+    /// - Globals with location bindings are named `_location_X` where `X` is the location
     /// - Globals with resource binding are named `_group_X_binding_Y` where `X`
     ///   is the group and `Y` is the binding
     fn get_global_name(&self, handle: Handle<GlobalVariable>, global: &GlobalVariable) -> String {
         match global.binding {
-            Some(ref br) => {
-                format!("_group_{}_binding_{}", br.group, br.binding)
+            Some(Binding::Location(location)) => {
+                format!(
+                    "_location_{}{}",
+                    location,
+                    match (self.options.shader_stage, global.class) {
+                        (ShaderStage::Fragment, StorageClass::Input) => "_vs",
+                        (ShaderStage::Vertex, StorageClass::Output) => "_vs",
+                        _ => "",
+                    }
+                )
             }
+            Some(Binding::Resource { group, binding }) => {
+                format!("_group_{}_binding_{}", group, binding)
+            }
+            Some(Binding::BuiltIn(built_in)) => glsl_built_in(built_in).to_string(),
             None => self.names[&NameKey::GlobalVariable(handle)].clone(),
         }
-    }
-
-    /// Writes the varying declaration.
-    fn write_varying(
-        &mut self,
-        binding: Option<&Binding>,
-        ty: Handle<Type>,
-        output: bool,
-    ) -> Result<(), Error> {
-        match self.module.types[ty].inner {
-            crate::TypeInner::Struct {
-                block: _,
-                ref members,
-            } => {
-                for member in members {
-                    self.write_varying(member.binding.as_ref(), member.ty, output)?;
-                }
-            }
-            _ => {
-                let (location, interpolation) = match binding {
-                    Some(&Binding::Location(location, interpolation)) => (location, interpolation),
-                    _ => return Ok(()),
-                };
-                // Write the interpolation modifier if needed
-                //
-                // We ignore all interpolation modifiers that aren't used in input globals in fragment
-                // shaders or output globals in vertex shaders
-                if let Some(interp) = interpolation {
-                    if self.options.shader_stage == ShaderStage::Fragment {
-                        write!(self.out, "{} ", glsl_interpolation(interp))?;
-                    }
-                }
-
-                // Write the storage class
-                if self.options.version.supports_explicit_locations() {
-                    write!(
-                        self.out,
-                        "layout(location = {}) {} ",
-                        location,
-                        if output { "out" } else { "in" }
-                    )?;
-                } else {
-                    write!(self.out, "{} ", if output { "out" } else { "in" })?;
-                }
-                // Write the type
-                // `write_type` adds no leading or trailing spaces
-                self.write_type(ty)?;
-
-                // Finally write the global name and end the global with a `;` and a newline
-                // Leading space is important
-                let vname = VaryingName {
-                    binding: &Binding::Location(location, None),
-                    stage: self.entry_point.stage,
-                    output,
-                };
-                writeln!(self.out, " {};", vname)?;
-            }
-        }
-        Ok(())
     }
 
     /// Helper method used to write functions (both entry points and regular functions)
     ///
     /// # Notes
     /// Adds a newline
-    fn write_function(
+    fn write_function<N: AsRef<str>>(
         &mut self,
         ty: FunctionType,
         func: &Function,
-        info: &FunctionInfo,
-        name: &str,
+        name: N,
     ) -> BackendResult {
+        // Create a new typifier and resolve all types for the current function
+        let mut typifier = Typifier::new();
+        typifier.resolve_all(
+            &func.expressions,
+            &self.module.types,
+            &ResolveContext {
+                constants: &self.module.constants,
+                global_vars: &self.module.global_variables,
+                local_vars: &func.local_variables,
+                functions: &self.module.functions,
+                arguments: &func.arguments,
+            },
+        )?;
+
         // Create a function context for the function being written
         let ctx = FunctionCtx {
             func: ty,
-            info,
             expressions: &func.expressions,
+            typifier: &typifier,
         };
-
-        self.cached_expressions.clear();
 
         // Write the function header
         //
@@ -874,80 +774,33 @@ impl<'a, W: Write> Writer<'a, W> {
         // Start by writing the return type if any otherwise write void
         // This is the only place where `void` is a valid type
         // (though it's more a keyword than a type)
-        if let FunctionType::EntryPoint(_) = ctx.func {
-            write!(self.out, "void")?;
-        } else if let Some(ref result) = func.result {
-            self.write_type(result.ty)?;
+        if let Some(ty) = func.return_type {
+            self.write_type(ty)?;
         } else {
             write!(self.out, "void")?;
         }
 
         // Write the function name and open parentheses for the argument list
-        write!(self.out, " {}(", name)?;
+        write!(self.out, " {}(", name.as_ref())?;
 
         // Write the comma separated argument list
         //
         // We need access to `Self` here so we use the reference passed to the closure as an
         // argument instead of capturing as that would cause a borrow checker error
-        let arguments = match ctx.func {
-            FunctionType::EntryPoint(_) => &[][..],
-            FunctionType::Function(_) => &func.arguments,
-        };
-        self.write_slice(arguments, |this, i, arg| {
+        self.write_slice(&func.arguments, |this, i, arg| {
             // Write the argument type
             // `write_type` adds no trailing spaces
             this.write_type(arg.ty)?;
 
             // Write the argument name
             // The leading space is important
-            write!(this.out, " {}", &this.names[&ctx.argument_key(i)])?;
+            write!(this.out, " {}", ctx.get_arg(i, &this.names))?;
 
             Ok(())
         })?;
 
         // Close the parentheses and open braces to start the function body
         writeln!(self.out, ") {{")?;
-
-        // Compose the function arguments from globals, in case of an entry point.
-        if let FunctionType::EntryPoint(ep_index) = ctx.func {
-            let stage = self.module.entry_points[ep_index as usize].stage;
-            for (index, arg) in func.arguments.iter().enumerate() {
-                write!(self.out, "{}", INDENT)?;
-                self.write_type(arg.ty)?;
-                let name = &self.names[&NameKey::EntryPointArgument(ep_index, index as u32)];
-                write!(self.out, " {}", name)?;
-                write!(self.out, " = ")?;
-                match self.module.types[arg.ty].inner {
-                    crate::TypeInner::Struct {
-                        block: _,
-                        ref members,
-                    } => {
-                        self.write_type(arg.ty)?;
-                        write!(self.out, "(")?;
-                        for (index, member) in members.iter().enumerate() {
-                            let varying_name = VaryingName {
-                                binding: member.binding.as_ref().unwrap(),
-                                stage,
-                                output: false,
-                            };
-                            if index != 0 {
-                                write!(self.out, ", ")?;
-                            }
-                            write!(self.out, "{}", varying_name)?;
-                        }
-                        writeln!(self.out, ");")?;
-                    }
-                    _ => {
-                        let varying_name = VaryingName {
-                            binding: arg.binding.as_ref().unwrap(),
-                            stage,
-                            output: false,
-                        };
-                        writeln!(self.out, "{};", varying_name)?;
-                    }
-                }
-            }
-        }
 
         // Write all function locals
         // Locals are `type name (= init)?;` where the init part (including the =) are optional
@@ -1065,12 +918,7 @@ impl<'a, W: Write> Writer<'a, W> {
     ///
     /// # Notes
     /// Ends in a newline
-    fn write_struct(
-        &mut self,
-        block: bool,
-        handle: Handle<Type>,
-        members: &[StructMember],
-    ) -> BackendResult {
+    fn write_struct(&mut self, handle: Handle<Type>, members: &[StructMember]) -> BackendResult {
         // glsl structs are written as in C
         // `struct name() { members };`
         //  | `struct` is a keyword
@@ -1078,65 +926,29 @@ impl<'a, W: Write> Writer<'a, W> {
         //  | `members` is a semicolon separated list of `type name`
         //      | `type` is the member type
         //      | `name` is the member name
-        let name = &self.names[&NameKey::Type(handle)];
 
-        // If struct is a block we need to write `block_name { members }` where `block_name` must be
-        // unique between blocks and structs so we add `_block_ID` where `ID` is a `IdGenerator`
-        // generated number so it's unique and `members` are the same as in a struct
-        if block {
-            // Write the block name, it's just the struct name appended with `_block_ID`
-            let block_name = format!("{}_block_{}", name, self.block_id.generate());
-            writeln!(self.out, "{} {{", block_name)?;
-
-            self.reflection_names.insert(handle, block_name);
-        } else {
-            writeln!(self.out, "struct {} {{", name)?;
-        }
+        writeln!(self.out, "struct {} {{", self.names[&NameKey::Type(handle)])?;
 
         for (idx, member) in members.iter().enumerate() {
             // The indentation is only for readability
             write!(self.out, "{}", INDENT)?;
 
-            match self.module.types[member.ty].inner {
-                TypeInner::Array { base, .. } => {
-                    // GLSL arrays are written as `type name[size]`
-                    // Write `type` and `name`
-                    let ty_name = &self.names[&NameKey::Type(base)];
-                    write!(self.out, "{}", ty_name)?;
-                    write!(
-                        self.out,
-                        " {}",
-                        &self.names[&NameKey::StructMember(handle, idx as u32)]
-                    )?;
-                    // Write [size]
-                    self.write_type(member.ty)?;
-                    // Newline is important
-                    writeln!(self.out, ";")?;
-                }
-                _ => {
-                    // Write the member type
-                    // Adds no trailing space
-                    self.write_type(member.ty)?;
+            // Write the member type
+            // Adds no trailing space
+            self.write_type(member.ty)?;
 
-                    // Write the member name and put a semicolon
-                    // The leading space is important
-                    // All members must have a semicolon even the last one
-                    writeln!(
-                        self.out,
-                        " {};",
-                        &self.names[&NameKey::StructMember(handle, idx as u32)]
-                    )?;
-                }
-            }
+            // Write the member name and put a semicolon
+            // The leading space is important
+            // All members must have a semicolon even the last one
+            writeln!(
+                self.out,
+                " {};",
+                self.names[&NameKey::StructMember(handle, idx as u32)]
+            )?;
         }
 
-        write!(self.out, "}}")?;
-
-        if !block {
-            writeln!(self.out, ";")?;
-            // Add a newline for readability
-            writeln!(self.out)?;
-        }
+        writeln!(self.out, "}};")?;
+        writeln!(self.out)?;
 
         Ok(())
     }
@@ -1148,45 +960,17 @@ impl<'a, W: Write> Writer<'a, W> {
     fn write_stmt(
         &mut self,
         sta: &Statement,
-        ctx: &FunctionCtx<'_>,
+        ctx: &FunctionCtx<'_, '_>,
         indent: usize,
     ) -> BackendResult {
+        // The indentation is only for readability
+        write!(self.out, "{}", INDENT.repeat(indent))?;
+
         match *sta {
-            // This is where we can generate intermediate constants for some expression types.
-            Statement::Emit(ref range) => {
-                for handle in range.clone() {
-                    let min_ref_count = ctx.expressions[handle].bake_ref_count();
-                    if min_ref_count <= ctx.info[handle].ref_count {
-                        write!(self.out, "{}", INDENT.repeat(indent))?;
-                        match ctx.info[handle].ty {
-                            TypeResolution::Handle(ty_handle) => {
-                                match self.module.types[ty_handle].inner {
-                                    TypeInner::Struct { .. } => {
-                                        let ty_name = &self.names[&NameKey::Type(ty_handle)];
-                                        write!(self.out, "{}", ty_name)?;
-                                    }
-                                    _ => {
-                                        self.write_type(ty_handle)?;
-                                    }
-                                }
-                            }
-                            TypeResolution::Value(ref inner) => {
-                                self.write_value_type(inner)?;
-                            }
-                        }
-                        let name = format!("_expr{}", handle.index());
-                        write!(self.out, " {} = ", name)?;
-                        self.write_expr(handle, ctx)?;
-                        writeln!(self.out, ";")?;
-                        self.cached_expressions.insert(handle, name);
-                    }
-                }
-            }
             // Blocks are simple we just need to write the block statements between braces
             // We could also just print the statements but this is more readable and maps more
             // closely to the IR
             Statement::Block(ref block) => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
                 writeln!(self.out, "{{")?;
                 for sta in block.iter() {
                     // Increase the indentation to help with readability
@@ -1207,7 +991,6 @@ impl<'a, W: Write> Writer<'a, W> {
                 ref accept,
                 ref reject,
             } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
                 write!(self.out, "if(")?;
                 self.write_expr(condition, ctx)?;
                 writeln!(self.out, ") {{")?;
@@ -1252,7 +1035,6 @@ impl<'a, W: Write> Writer<'a, W> {
                 ref default,
             } => {
                 // Start the switch
-                write!(self.out, "{}", INDENT.repeat(indent))?;
                 write!(self.out, "switch(")?;
                 self.write_expr(selector, ctx)?;
                 writeln!(self.out, ") {{")?;
@@ -1300,7 +1082,6 @@ impl<'a, W: Write> Writer<'a, W> {
                 ref body,
                 ref continuing,
             } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
                 writeln!(self.out, "while(true) {{")?;
 
                 for sta in body.iter().chain(continuing.iter()) {
@@ -1311,78 +1092,25 @@ impl<'a, W: Write> Writer<'a, W> {
             }
             // Break, continue and return as written as in C
             // `break;`
-            Statement::Break => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
-                writeln!(self.out, "break;")?
-            }
+            Statement::Break => writeln!(self.out, "break;")?,
             // `continue;`
-            Statement::Continue => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
-                writeln!(self.out, "continue;")?
-            }
+            Statement::Continue => writeln!(self.out, "continue;")?,
             // `return expr;`, `expr` is optional
             Statement::Return { value } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
-                match ctx.func {
-                    FunctionType::Function(_) => {
-                        write!(self.out, "return")?;
-                        // Write the expression to be returned if needed
-                        if let Some(expr) = value {
-                            write!(self.out, " ")?;
-                            self.write_expr(expr, ctx)?;
-                        }
-                        writeln!(self.out, ";")?;
-                    }
-                    FunctionType::EntryPoint(ep_index) => {
-                        let ep = &self.module.entry_points[ep_index as usize];
-                        if let Some(ref result) = ep.function.result {
-                            let value = value.unwrap();
-                            match self.module.types[result.ty].inner {
-                                crate::TypeInner::Struct {
-                                    block: _,
-                                    ref members,
-                                } => {
-                                    for (index, member) in members.iter().enumerate() {
-                                        let varying_name = VaryingName {
-                                            binding: member.binding.as_ref().unwrap(),
-                                            stage: ep.stage,
-                                            output: true,
-                                        };
-                                        write!(self.out, "{} = ", varying_name)?;
-                                        self.write_expr(value, ctx)?;
-                                        let field_name = &self.names
-                                            [&NameKey::StructMember(result.ty, index as u32)];
-                                        writeln!(self.out, ".{};", field_name)?;
-                                        write!(self.out, "{}", INDENT.repeat(indent))?;
-                                    }
-                                }
-                                _ => {
-                                    let name = VaryingName {
-                                        binding: result.binding.as_ref().unwrap(),
-                                        stage: ep.stage,
-                                        output: true,
-                                    };
-                                    write!(self.out, "{} = ", name)?;
-                                    self.write_expr(value, ctx)?;
-                                    writeln!(self.out, ";")?;
-                                    write!(self.out, "{}", INDENT.repeat(indent))?;
-                                }
-                            }
-                        }
-                        writeln!(self.out, "return;")?;
-                    }
+                write!(self.out, "return")?;
+                // Write the expression to be returned if needed
+                if let Some(expr) = value {
+                    write!(self.out, " ")?;
+                    self.write_expr(expr, ctx)?;
                 }
+                writeln!(self.out, ";")?;
             }
             // This is one of the places were glsl adds to the syntax of C in this case the discard
             // keyword which ceases all further processing in a fragment shader, it's called OpKill
             // in spir-v that's why it's called `Statement::Kill`
-            Statement::Kill => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
-                writeln!(self.out, "discard;")?
-            }
+            Statement::Kill => writeln!(self.out, "discard;")?,
             // Stores in glsl are just variable assignments written as `pointer = value;`
             Statement::Store { pointer, value } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
                 self.write_expr(pointer, ctx)?;
                 write!(self.out, " = ")?;
                 self.write_expr(value, ctx)?;
@@ -1395,9 +1123,8 @@ impl<'a, W: Write> Writer<'a, W> {
                 array_index,
                 value,
             } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
                 // This will only panic if the module is invalid
-                let dim = match *ctx.info[image].ty.inner_with(&self.module.types) {
+                let dim = match *ctx.typifier.get(image, &self.module.types) {
                     TypeInner::Image { dim, .. } => dim,
                     _ => unreachable!(),
                 };
@@ -1414,16 +1141,7 @@ impl<'a, W: Write> Writer<'a, W> {
             Statement::Call {
                 function,
                 ref arguments,
-                result,
             } => {
-                write!(self.out, "{}", INDENT.repeat(indent))?;
-                if let Some(expr) = result {
-                    let name = format!("_expr{}", expr.index());
-                    let result = self.module.functions[function].result.as_ref().unwrap();
-                    self.write_type(result.ty)?;
-                    write!(self.out, " {} = ", name)?;
-                    self.cached_expressions.insert(expr, name);
-                }
                 write!(self.out, "{}(", &self.names[&NameKey::Function(function)])?;
                 self.write_slice(arguments, |this, _, arg| this.write_expr(*arg, ctx))?;
                 writeln!(self.out, ");")?
@@ -1437,11 +1155,7 @@ impl<'a, W: Write> Writer<'a, W> {
     ///
     /// # Notes
     /// Doesn't add any newlines or leading/trailing spaces
-    fn write_expr(&mut self, expr: Handle<Expression>, ctx: &FunctionCtx<'_>) -> BackendResult {
-        if let Some(name) = self.cached_expressions.get(&expr) {
-            write!(self.out, "{}", name)?;
-            return Ok(());
-        }
+    fn write_expr(&mut self, expr: Handle<Expression>, ctx: &FunctionCtx<'_, '_>) -> BackendResult {
         match ctx.expressions[expr] {
             // `Access` is applied to arrays, vectors and matrices and is written as indexing
             Expression::Access { base, index } => {
@@ -1456,25 +1170,14 @@ impl<'a, W: Write> Writer<'a, W> {
             Expression::AccessIndex { base, index } => {
                 self.write_expr(base, ctx)?;
 
-                let base_ty_res = &ctx.info[base].ty;
-                let mut resolved = base_ty_res.inner_with(&self.module.types);
-                let base_ty_handle = match *resolved {
-                    TypeInner::Pointer { base, class: _ } => {
-                        resolved = &self.module.types[base].inner;
-                        Some(base)
-                    }
-                    _ => base_ty_res.handle(),
-                };
-
-                match *resolved {
+                match *ctx.typifier.get(base, &self.module.types) {
                     TypeInner::Vector { .. }
                     | TypeInner::Matrix { .. }
-                    | TypeInner::Array { .. }
-                    | TypeInner::ValuePointer { .. } => write!(self.out, "[{}]", index)?,
+                    | TypeInner::Array { .. } => write!(self.out, "[{}]", index)?,
                     TypeInner::Struct { .. } => {
                         // This will never panic in case the type is a `Struct`, this is not true
                         // for other types so we can only check while inside this match arm
-                        let ty = base_ty_handle.unwrap();
+                        let ty = ctx.typifier.get_handle(base).unwrap();
 
                         write!(
                             self.out,
@@ -1500,7 +1203,7 @@ impl<'a, W: Write> Writer<'a, W> {
             }
             // Function arguments are written as the argument name
             Expression::FunctionArgument(pos) => {
-                write!(self.out, "{}", &self.names[&ctx.argument_key(pos)])?
+                write!(self.out, "{}", ctx.get_arg(pos, &self.names))?
             }
             // Global variables need some special work for their name but
             // `get_global_name` does the work for us
@@ -1534,24 +1237,12 @@ impl<'a, W: Write> Writer<'a, W> {
             } => {
                 //TODO: handle MS
 
-                // textureLod on sampler2DArrayShadow and samplerCubeShadow does not exist in GLSL.
-                // To emulate this, we will have to use textureGrad with a constant gradient of 0.
-                let workaround_lod_array_shadow_as_grad =
-                    array_index.is_some() && depth_ref.is_some();
-
                 //Write the function to be used depending on the sample level
                 let fun_name = match level {
                     crate::SampleLevel::Auto | crate::SampleLevel::Bias(_) => "texture",
-                    crate::SampleLevel::Zero | crate::SampleLevel::Exact(_) => {
-                        if workaround_lod_array_shadow_as_grad {
-                            "textureGrad"
-                        } else {
-                            "textureLod"
-                        }
-                    }
+                    crate::SampleLevel::Zero | crate::SampleLevel::Exact(_) => "textureLod",
                     crate::SampleLevel::Gradient { .. } => "textureGrad",
                 };
-
                 write!(self.out, "{}(", fun_name)?;
 
                 // Write the image that will be used
@@ -1561,7 +1252,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
                 // We need to get the coordinates vector size to later build a vector that's `size + 1`
                 // if `depth_ref` is some, if it isn't a vector we panic as that's not a valid expression
-                let size = match *ctx.info[coordinate].ty.inner_with(&self.module.types) {
+                let size = match *ctx.typifier.get(coordinate, &self.module.types) {
                     TypeInner::Vector { size, .. } => size,
                     _ => unreachable!(),
                 };
@@ -1591,23 +1282,9 @@ impl<'a, W: Write> Writer<'a, W> {
                     // Auto needs no more arguments
                     crate::SampleLevel::Auto => (),
                     // Zero needs level set to 0
-                    crate::SampleLevel::Zero => {
-                        if workaround_lod_array_shadow_as_grad {
-                            write!(self.out, ", vec2(0, 0), vec2(0,0)")?;
-                        } else {
-                            write!(self.out, ", 0")?;
-                        }
-                    }
+                    crate::SampleLevel::Zero => write!(self.out, ", 0")?,
                     // Exact and bias require another argument
-                    crate::SampleLevel::Exact(expr) => {
-                        if workaround_lod_array_shadow_as_grad {
-                            write!(self.out, ", vec2(0, 0), vec2(0,0)")?;
-                        } else {
-                            write!(self.out, ", ")?;
-                            self.write_expr(expr, ctx)?;
-                        }
-                    }
-                    crate::SampleLevel::Bias(expr) => {
+                    crate::SampleLevel::Exact(expr) | crate::SampleLevel::Bias(expr) => {
                         write!(self.out, ", ")?;
                         self.write_expr(expr, ctx)?;
                     }
@@ -1637,7 +1314,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 index,
             } => {
                 // This will only panic if the module is invalid
-                let (dim, class) = match *ctx.info[image].ty.inner_with(&self.module.types) {
+                let (dim, class) = match *ctx.typifier.get(image, &self.module.types) {
                     TypeInner::Image {
                         dim,
                         arrayed: _,
@@ -1670,7 +1347,7 @@ impl<'a, W: Write> Writer<'a, W> {
             // - textureSamples/imageSamples
             Expression::ImageQuery { image, query } => {
                 // This will only panic if the module is invalid
-                let (dim, class) = match *ctx.info[image].ty.inner_with(&self.module.types) {
+                let (dim, class) = match *ctx.typifier.get(image, &self.module.types) {
                     TypeInner::Image {
                         dim,
                         arrayed: _,
@@ -1744,26 +1421,25 @@ impl<'a, W: Write> Writer<'a, W> {
                     "({} ",
                     match op {
                         UnaryOperator::Negate => "-",
-                        UnaryOperator::Not =>
-                            match *ctx.info[expr].ty.inner_with(&self.module.types) {
-                                TypeInner::Scalar {
-                                    kind: ScalarKind::Sint,
-                                    ..
-                                } => "~",
-                                TypeInner::Scalar {
-                                    kind: ScalarKind::Uint,
-                                    ..
-                                } => "~",
-                                TypeInner::Scalar {
-                                    kind: ScalarKind::Bool,
-                                    ..
-                                } => "!",
-                                ref other =>
-                                    return Err(Error::Custom(format!(
-                                        "Cannot apply not to type {:?}",
-                                        other
-                                    ))),
-                            },
+                        UnaryOperator::Not => match *ctx.typifier.get(expr, &self.module.types) {
+                            TypeInner::Scalar {
+                                kind: ScalarKind::Sint,
+                                ..
+                            } => "~",
+                            TypeInner::Scalar {
+                                kind: ScalarKind::Uint,
+                                ..
+                            } => "~",
+                            TypeInner::Scalar {
+                                kind: ScalarKind::Bool,
+                                ..
+                            } => "!",
+                            ref other =>
+                                return Err(Error::Custom(format!(
+                                    "Cannot apply not to type {:?}",
+                                    other
+                                ))),
+                        },
                     }
                 )?;
 
@@ -1778,9 +1454,9 @@ impl<'a, W: Write> Writer<'a, W> {
             Expression::Binary { op, left, right } => {
                 // Holds `Some(function_name)` if the binary operation is
                 // implemented as a function call
-                let function = if let (&TypeInner::Vector { .. }, &TypeInner::Vector { .. }) = (
-                    ctx.info[left].ty.inner_with(&self.module.types),
-                    ctx.info[right].ty.inner_with(&self.module.types),
+                let function = if let (TypeInner::Vector { .. }, TypeInner::Vector { .. }) = (
+                    ctx.typifier.get(left, &self.module.types),
+                    ctx.typifier.get(right, &self.module.types),
                 ) {
                     match op {
                         BinaryOperator::Less => Some("lessThan"),
@@ -1902,9 +1578,7 @@ impl<'a, W: Write> Writer<'a, W> {
                     Mf::Acos => "acos",
                     Mf::Asin => "asin",
                     Mf::Atan => "atan",
-                    // glsl doesn't have atan2 function
-                    // use two-argument variation of the atan function
-                    Mf::Atan2 => "atan",
+                    Mf::Atan2 => "atan2",
                     // decomposition
                     Mf::Ceil => "ceil",
                     Mf::Floor => "floor",
@@ -1962,15 +1636,15 @@ impl<'a, W: Write> Writer<'a, W> {
             // Else the function name is one of the glsl provided bitcast functions
             Expression::As {
                 expr,
-                kind: target_kind,
+                kind,
                 convert,
             } => {
-                let inner = ctx.info[expr].ty.inner_with(&self.module.types);
+                let inner = ctx.typifier.get(expr, &self.module.types);
                 if convert {
                     // this is similar to `write_type`, but with the target kind
                     match *inner {
                         TypeInner::Scalar { kind: _, width } => {
-                            write!(self.out, "{}", glsl_scalar(target_kind, width)?.full)?
+                            write!(self.out, "{}", glsl_scalar(kind, width)?.full)?
                         }
                         TypeInner::Vector {
                             size,
@@ -1979,7 +1653,7 @@ impl<'a, W: Write> Writer<'a, W> {
                         } => write!(
                             self.out,
                             "{}vec{}",
-                            glsl_scalar(target_kind, width)?.prefix,
+                            glsl_scalar(kind, width)?.prefix,
                             size as u8
                         )?,
                         ref other => unreachable!("unexpected cast of {:?}", other),
@@ -1989,18 +1663,15 @@ impl<'a, W: Write> Writer<'a, W> {
                     write!(
                         self.out,
                         "{}",
-                        match (source_kind, target_kind) {
+                        match (source_kind, kind) {
                             (ScalarKind::Float, ScalarKind::Sint) => "floatBitsToInt",
                             (ScalarKind::Float, ScalarKind::Uint) => "floatBitsToUInt",
                             (ScalarKind::Sint, ScalarKind::Float) => "intBitsToFloat",
                             (ScalarKind::Uint, ScalarKind::Float) => "uintBitsToFloat",
-                            // There is no way to bitcast between Uint/Sint in glsl. Use constructor conversion
-                            (ScalarKind::Uint, ScalarKind::Sint) => "int",
-                            (ScalarKind::Sint, ScalarKind::Uint) => "uint",
                             _ => {
                                 return Err(Error::Custom(format!(
                                     "Cannot bitcast {:?} to {:?}",
-                                    source_kind, target_kind
+                                    source_kind, kind
                                 )));
                             }
                         }
@@ -2011,7 +1682,15 @@ impl<'a, W: Write> Writer<'a, W> {
                 self.write_expr(expr, ctx)?;
                 write!(self.out, ")")?
             }
-            Expression::Call(_function) => unreachable!(),
+            // A `Call` is written `name(arguments)` where `arguments` is a comma separated expressions list
+            Expression::Call {
+                function,
+                ref arguments,
+            } => {
+                write!(self.out, "{}(", &self.names[&NameKey::Function(function)])?;
+                self.write_slice(arguments, |this, _, arg| this.write_expr(*arg, ctx))?;
+                write!(self.out, ")")?
+            }
             // `ArrayLength` is written as `expr.length()` and we convert it to a uint
             Expression::ArrayLength(expr) => {
                 write!(self.out, "uint(")?;
@@ -2051,20 +1730,20 @@ impl<'a, W: Write> Writer<'a, W> {
         Ok(())
     }
 
-    /// Helper method used to produce the reflection info that's returned to the user
+    /// Helper method used to produce the images mapping that's returned to the user
     ///
     /// It takes an iterator of [`Function`](crate::Function) references instead of
     /// [`Handle`](crate::arena::Handle) because [`EntryPoint`](crate::EntryPoint) isn't in any
     /// [`Arena`](crate::arena::Arena) and we need to traverse it
-    fn collect_reflection_info(&self) -> Result<ReflectionInfo, Error> {
+    fn collect_texture_mapping(&self) -> Result<FastHashMap<String, TextureMapping>, Error> {
         use std::collections::hash_map::Entry;
-        let info = self.info.get_entry_point(self.entry_point_idx as usize);
+        let info = self
+            .analysis
+            .get_entry_point(self.options.shader_stage, &self.options.entry_point);
         let mut mappings = FastHashMap::default();
-        let mut uniforms = FastHashMap::default();
 
         for sampling in info.sampling_set.iter() {
-            let global = self.module.global_variables[sampling.image].clone();
-            let tex_name = self.reflection_names[&global.ty].clone();
+            let tex_name = self.names[&NameKey::GlobalVariable(sampling.image)].clone();
 
             match mappings.entry(tex_name) {
                 Entry::Vacant(v) => {
@@ -2087,21 +1766,19 @@ impl<'a, W: Write> Writer<'a, W> {
                 continue;
             }
             match self.module.types[var.ty].inner {
-                crate::TypeInner::Struct { .. } => match var.class {
-                    StorageClass::Uniform | StorageClass::Storage => {
-                        let name = self.reflection_names[&var.ty].clone();
-                        uniforms.insert(handle, name);
-                    }
-                    _ => (),
-                },
+                crate::TypeInner::Image { .. } => (),
                 _ => continue,
+            }
+            let tex_name = self.names[&NameKey::GlobalVariable(handle)].clone();
+            if let Entry::Vacant(e) = mappings.entry(tex_name) {
+                e.insert(TextureMapping {
+                    texture: handle,
+                    sampler: None,
+                });
             }
         }
 
-        Ok(ReflectionInfo {
-            texture_mapping: mappings,
-            uniforms,
-        })
+        Ok(mappings)
     }
 }
 
@@ -2150,33 +1827,23 @@ fn glsl_scalar(kind: ScalarKind, width: Bytes) -> Result<ScalarString<'static>, 
 }
 
 /// Helper function that returns the glsl variable name for a builtin
-fn glsl_built_in(built_in: BuiltIn, output: bool) -> &'static str {
+fn glsl_built_in(built_in: BuiltIn) -> &'static str {
     match built_in {
-        BuiltIn::Position => {
-            if output {
-                "gl_Position"
-            } else {
-                "gl_FragCoord"
-            }
-        }
         // vertex
-        BuiltIn::BaseInstance => "uint(gl_BaseInstance)",
-        BuiltIn::BaseVertex => "uint(gl_BaseVertex)",
+        BuiltIn::Position => "gl_Position",
+        BuiltIn::BaseInstance => "gl_BaseInstance",
+        BuiltIn::BaseVertex => "gl_BaseVertex",
         BuiltIn::ClipDistance => "gl_ClipDistance",
-        BuiltIn::InstanceIndex => "uint(gl_InstanceID)",
+        BuiltIn::InstanceIndex => "gl_InstanceID",
         BuiltIn::PointSize => "gl_PointSize",
-        BuiltIn::VertexIndex => "uint(gl_VertexID)",
+        BuiltIn::VertexIndex => "gl_VertexID",
         // fragment
+        BuiltIn::FragCoord => "gl_FragCoord",
         BuiltIn::FragDepth => "gl_FragDepth",
         BuiltIn::FrontFacing => "gl_FrontFacing",
         BuiltIn::SampleIndex => "gl_SampleID",
-        BuiltIn::SampleMask => {
-            if output {
-                "gl_SampleMask"
-            } else {
-                "gl_SampleMaskIn"
-            }
-        }
+        BuiltIn::SampleMaskIn => "gl_SampleMaskIn",
+        BuiltIn::SampleMaskOut => "gl_SampleMask",
         // compute
         BuiltIn::GlobalInvocationId => "gl_GlobalInvocationID",
         BuiltIn::LocalInvocationId => "gl_LocalInvocationID",
@@ -2190,6 +1857,8 @@ fn glsl_built_in(built_in: BuiltIn, output: bool) -> &'static str {
 fn glsl_storage_class(class: StorageClass) -> &'static str {
     match class {
         StorageClass::Function => "",
+        StorageClass::Input => "in",
+        StorageClass::Output => "out",
         StorageClass::Private => "",
         StorageClass::Storage => "buffer",
         StorageClass::Uniform => "uniform",
@@ -2200,14 +1869,18 @@ fn glsl_storage_class(class: StorageClass) -> &'static str {
 }
 
 /// Helper function that returns the string corresponding to the glsl interpolation qualifier
-fn glsl_interpolation(interpolation: Interpolation) -> &'static str {
-    match interpolation {
+///
+/// # Errors
+/// If [`Patch`](crate::Interpolation::Patch) is passed, as it isn't supported in glsl
+fn glsl_interpolation(interpolation: Interpolation) -> Result<&'static str, Error> {
+    Ok(match interpolation {
         Interpolation::Perspective => "smooth",
         Interpolation::Linear => "noperspective",
         Interpolation::Flat => "flat",
         Interpolation::Centroid => "centroid",
         Interpolation::Sample => "sample",
-    }
+        Interpolation::Patch => return Err(Error::PatchInterpolationNotSupported),
+    })
 }
 
 /// Helper function that returns the glsl dimension string of [`ImageDimension`](crate::ImageDimension)

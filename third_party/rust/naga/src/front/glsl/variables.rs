@@ -1,4 +1,7 @@
-use crate::{Expression, Handle, Type, TypeInner, VectorSize};
+use crate::{
+    Binding, BuiltIn, Expression, GlobalVariable, Handle, ScalarKind, StorageAccess, StorageClass,
+    Type, TypeInner, VectorSize,
+};
 
 use super::ast::*;
 use super::error::ErrorKind;
@@ -17,7 +20,7 @@ impl Program<'_> {
         }
         match name {
             "gl_Position" => {
-                /*let h = self.module.global_variables.append(GlobalVariable {
+                let h = self.module.global_variables.append(GlobalVariable {
                     name: Some(name.into()),
                     class: StorageClass::Output,
                     binding: Some(Binding::BuiltIn(BuiltIn::Position)),
@@ -37,17 +40,12 @@ impl Program<'_> {
                 let exp = self
                     .context
                     .expressions
-                    .append(Expression::GlobalVariable(h));*/
-                let exp = self
-                    .context
-                    .expressions
-                    .append(Expression::FunctionArgument(0)); //TODO
+                    .append(Expression::GlobalVariable(h));
                 self.context.lookup_global_var_exps.insert(name.into(), exp);
 
                 Ok(Some(exp))
             }
             "gl_VertexIndex" => {
-                /* TODO
                 let h = self.module.global_variables.append(GlobalVariable {
                     name: Some(name.into()),
                     class: StorageClass::Input,
@@ -73,11 +71,6 @@ impl Program<'_> {
                     kind: ScalarKind::Sint,
                     convert: true,
                 });
-                */
-                let expr = self
-                    .context
-                    .expressions
-                    .append(Expression::FunctionArgument(0)); //TODO
                 self.context
                     .lookup_global_var_exps
                     .insert(name.into(), expr);
@@ -85,7 +78,6 @@ impl Program<'_> {
                 Ok(Some(expr))
             }
             "gl_InstanceIndex" => {
-                /* TODO
                 let h = self.module.global_variables.append(GlobalVariable {
                     name: Some(name.into()),
                     class: StorageClass::Input,
@@ -111,11 +103,6 @@ impl Program<'_> {
                     kind: ScalarKind::Sint,
                     convert: true,
                 });
-                */
-                let expr = self
-                    .context
-                    .expressions
-                    .append(Expression::FunctionArgument(0)); //TODO
                 self.context
                     .lookup_global_var_exps
                     .insert(name.into(), expr);

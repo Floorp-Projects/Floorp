@@ -16,10 +16,8 @@ use winapi::{
 use std::{cmp, fmt, iter, mem, ops::Range, ptr, sync::Arc};
 
 use crate::{
-    conv, descriptors_cpu, device, internal,
-    pool::{CommandAllocatorIndex, PoolShared},
-    resource as r, validate_line_width, Backend, Device, Shared, MAX_DESCRIPTOR_SETS,
-    MAX_VERTEX_BUFFERS,
+    conv, descriptors_cpu, device, internal, pool::PoolShared, resource as r, validate_line_width,
+    Backend, Device, Shared, MAX_DESCRIPTOR_SETS, MAX_VERTEX_BUFFERS,
 };
 
 // Fixed size of the root signature.
@@ -381,9 +379,7 @@ pub struct CommandBuffer {
     //Note: this is going to be NULL instead of `Option` to avoid
     // `unwrap()` on every operation. This is not idiomatic.
     pub(crate) raw: native::GraphicsCommandList,
-    //Note: this is NULL when the command buffer is reset, and no
-    // allocation is used for the `raw` list.
-    allocator_index: Option<CommandAllocatorIndex>,
+    allocator: Option<native::CommandAllocator>,
     phase: Phase,
     shared: Arc<Shared>,
     pool_shared: Arc<PoolShared>,
@@ -474,7 +470,7 @@ impl CommandBuffer {
     pub(crate) fn new(shared: &Arc<Shared>, pool_shared: &Arc<PoolShared>) -> Self {
         CommandBuffer {
             raw: native::GraphicsCommandList::null(),
-            allocator_index: None,
+            allocator: None,
             shared: Arc::clone(shared),
             pool_shared: Arc::clone(pool_shared),
             phase: Phase::Initial,
@@ -504,7 +500,10 @@ impl CommandBuffer {
 
     pub(crate) unsafe fn destroy(
         self,
-    ) -> Option<(CommandAllocatorIndex, Option<native::GraphicsCommandList>)> {
+    ) -> (
+        Option<native::CommandAllocator>,
+        Option<native::GraphicsCommandList>,
+    ) {
         let list = match self.phase {
             Phase::Initial => None,
             Phase::Recording => {
@@ -522,7 +521,7 @@ impl CommandBuffer {
         for resource in &self.retained_resources {
             resource.destroy();
         }
-        self.allocator_index.map(|index| (index, list))
+        (self.allocator, list)
     }
 
     pub(crate) unsafe fn as_raw_list(&self) -> *mut d3d12::ID3D12CommandList {
@@ -1195,11 +1194,11 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         self.reset(true);
         self.phase = Phase::Recording;
         self.begin_flags = flags;
-        let (allocator_index, list) = self.pool_shared.acquire();
+        let (allocator, list) = self.pool_shared.acquire();
 
-        assert!(self.allocator_index.is_none());
+        assert!(self.allocator.is_none());
         assert_eq!(self.raw, native::GraphicsCommandList::null());
-        self.allocator_index = Some(allocator_index);
+        self.allocator = Some(allocator);
         self.raw = list;
 
         if !self.raw_name.is_empty() {
@@ -1212,23 +1211,25 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         assert_eq!(self.phase, Phase::Recording);
         self.phase = Phase::Executable;
         self.pool_shared
-            .release_allocator(self.allocator_index.unwrap());
+            .release_allocator(self.allocator.take().unwrap());
     }
 
-    unsafe fn reset(&mut self, _release_resources: bool) {
+    unsafe fn reset(&mut self, release_resources: bool) {
         if self.phase == Phase::Recording {
             self.raw.close();
-            self.pool_shared
-                .release_allocator(self.allocator_index.unwrap());
         }
         if self.phase != Phase::Initial {
             // Reset the name so it won't get used later for an unnamed `CommandBuffer`.
             const EMPTY_NAME: u16 = 0;
             self.raw.SetName(&EMPTY_NAME);
 
-            let allocator_index = self.allocator_index.take().unwrap();
-            self.pool_shared.release_list(self.raw, allocator_index);
+            self.pool_shared.release_list(self.raw);
             self.raw = native::GraphicsCommandList::null();
+        }
+        if release_resources {
+            if let Some(allocator) = self.allocator.take() {
+                self.pool_shared.release_allocator(allocator);
+            }
         }
         self.phase = Phase::Initial;
 

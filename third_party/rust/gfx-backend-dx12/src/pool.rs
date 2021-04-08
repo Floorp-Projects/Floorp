@@ -6,59 +6,11 @@ use winapi::shared::winerror;
 use crate::{command::CommandBuffer, Backend, Shared};
 use hal::{command, pool};
 
-const REUSE_COUNT: usize = 64;
-
-pub type CommandAllocatorIndex = thunderdome::Index;
-
-struct AllocatorEntry {
-    raw: native::CommandAllocator,
-    active_lists: usize,
-    total_lists: usize,
-}
-
-#[derive(Default)]
-struct CommandManager {
-    allocators: thunderdome::Arena<AllocatorEntry>,
-    free_allocators: Vec<CommandAllocatorIndex>,
-    lists: Vec<native::GraphicsCommandList>,
-}
-
-impl CommandManager {
-    fn acquire(&mut self, index: CommandAllocatorIndex) -> native::CommandAllocator {
-        let entry = &mut self.allocators[index];
-        assert!(entry.total_lists < REUSE_COUNT);
-        entry.active_lists += 1;
-        entry.total_lists += 1;
-        return entry.raw;
-    }
-
-    fn release_allocator(&mut self, index: CommandAllocatorIndex) {
-        let entry = &mut self.allocators[index];
-        if entry.total_lists >= REUSE_COUNT {
-            debug!("Cooling command allocator {:?}", index);
-        } else {
-            self.free_allocators.push(index);
-        }
-    }
-
-    fn release_list(&mut self, list: native::GraphicsCommandList, index: CommandAllocatorIndex) {
-        //pre-condition: list must be closed
-        let entry = &mut self.allocators[index];
-        entry.active_lists -= 1;
-        if entry.active_lists == 0 && entry.total_lists >= REUSE_COUNT {
-            debug!("Re-warming command allocator {:?}", index);
-            entry.raw.reset();
-            entry.total_lists = 0;
-            self.free_allocators.push(index);
-        }
-        self.lists.push(list);
-    }
-}
-
 pub struct PoolShared {
     device: native::Device,
     list_type: native::CmdListType,
-    manager: Mutex<CommandManager>,
+    allocators: Mutex<Vec<native::CommandAllocator>>,
+    lists: Mutex<Vec<native::GraphicsCommandList>>,
 }
 
 impl fmt::Debug for PoolShared {
@@ -69,36 +21,29 @@ impl fmt::Debug for PoolShared {
 }
 
 impl PoolShared {
-    pub fn acquire(&self) -> (CommandAllocatorIndex, native::GraphicsCommandList) {
-        let mut man_guard = self.manager.lock();
-        let allocator_index = match man_guard.free_allocators.pop() {
-            Some(index) => index,
+    pub fn acquire(&self) -> (native::CommandAllocator, native::GraphicsCommandList) {
+        let allocator = match self.allocators.lock().pop() {
+            Some(allocator) => allocator,
             None => {
-                let (raw, hr) = self.device.create_command_allocator(self.list_type);
+                let (allocator, hr) = self.device.create_command_allocator(self.list_type);
                 assert_eq!(
                     winerror::S_OK,
                     hr,
                     "error on command allocator creation: {:x}",
                     hr
                 );
-                man_guard.allocators.insert(AllocatorEntry {
-                    raw,
-                    active_lists: 0,
-                    total_lists: 0,
-                })
+                allocator
             }
         };
-        let raw = man_guard.acquire(allocator_index);
-
-        let list = match man_guard.lists.pop() {
+        let list = match self.lists.lock().pop() {
             Some(list) => {
-                list.reset(raw, native::PipelineState::null());
+                list.reset(allocator, native::PipelineState::null());
                 list
             }
             None => {
                 let (command_list, hr) = self.device.create_graphics_command_list(
                     self.list_type,
-                    raw,
+                    allocator,
                     native::PipelineState::null(),
                     0,
                 );
@@ -111,19 +56,16 @@ impl PoolShared {
                 command_list
             }
         };
-        (allocator_index, list)
+        (allocator, list)
     }
 
-    pub fn release_allocator(&self, allocator_index: CommandAllocatorIndex) {
-        self.manager.lock().release_allocator(allocator_index);
+    pub fn release_allocator(&self, allocator: native::CommandAllocator) {
+        self.allocators.lock().push(allocator);
     }
 
-    pub fn release_list(
-        &self,
-        list: native::GraphicsCommandList,
-        allocator_index: CommandAllocatorIndex,
-    ) {
-        self.manager.lock().release_list(list, allocator_index);
+    pub fn release_list(&self, list: native::GraphicsCommandList) {
+        //pre-condition: list must be closed
+        self.lists.lock().push(list);
     }
 }
 
@@ -146,7 +88,8 @@ impl CommandPool {
         let pool_shared = Arc::new(PoolShared {
             device,
             list_type,
-            manager: Mutex::default(),
+            allocators: Mutex::default(),
+            lists: Mutex::default(),
         });
         CommandPool {
             shared: Arc::clone(shared),
@@ -157,7 +100,6 @@ impl CommandPool {
 
 impl pool::CommandPool<Backend> for CommandPool {
     unsafe fn reset(&mut self, _release_resources: bool) {
-        //TODO: reset all the allocators?
         //do nothing. The allocated command buffers would not know
         // that this happened, but they should be ready to
         // process `begin` as if they are in `Initial` state.
@@ -173,14 +115,12 @@ impl pool::CommandPool<Backend> for CommandPool {
     where
         I: Iterator<Item = CommandBuffer>,
     {
-        let mut man_guard = self.pool_shared.manager.lock();
+        let mut allocators = self.pool_shared.allocators.lock();
+        let mut lists = self.pool_shared.lists.lock();
         for cbuf in cbufs {
-            if let Some((index, list)) = cbuf.destroy() {
-                man_guard.release_allocator(index);
-                if let Some(list) = list {
-                    man_guard.release_list(list, index);
-                }
-            }
+            let (allocator, list) = cbuf.destroy();
+            allocators.extend(allocator);
+            lists.extend(list);
         }
     }
 }
