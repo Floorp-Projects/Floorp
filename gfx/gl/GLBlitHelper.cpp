@@ -682,8 +682,8 @@ const DrawBlitProg* GLBlitHelper::CreateDrawBlitProg(
 #ifdef XP_MACOSX
 static RefPtr<MacIOSurface> LookupSurface(
     const layers::SurfaceDescriptorMacIOSurface& sd) {
-  return MacIOSurface::LookupSurface(sd.surfaceId(), sd.scaleFactor(),
-                                     !sd.isOpaque(), sd.yUVColorSpace());
+  return MacIOSurface::LookupSurface(sd.surfaceId(), !sd.isOpaque(),
+                                     sd.yUVColorSpace());
 }
 #endif
 
@@ -1266,8 +1266,7 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
         TSurfaceDescriptorMacIOSurface: {
       const auto& subdesc = subdescUnion.get_SurfaceDescriptorMacIOSurface();
       RefPtr<MacIOSurface> surface = MacIOSurface::LookupSurface(
-          subdesc.surfaceId(), subdesc.scaleFactor(), !subdesc.isOpaque(),
-          subdesc.yUVColorSpace());
+          subdesc.surfaceId(), !subdesc.isOpaque(), subdesc.yUVColorSpace());
       MOZ_ASSERT(surface);
       if (!surface) {
         return false;
