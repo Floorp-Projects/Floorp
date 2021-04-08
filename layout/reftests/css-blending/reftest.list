@@ -6,7 +6,7 @@ fuzzy-if(geckoview&&webrender&&device,3-3,5-5) == blend-difference-stacking.html
 
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-10000) fuzzy-if(skiaContent,0-1,0-30000) == background-blending-alpha.html background-blending-alpha-ref.html
 == background-blending-gradient-color.html background-blending-gradient-color-ref.html
-fuzzy-if(azureSkiaGL,0-3,0-7597) fuzzy-if(cocoaWidget,0-3,0-7597) fuzzy-if(d2d,0-1,0-3800) fuzzy-if(d3d11,0-1,0-4200) fuzzy-if(skiaContent,0-2,0-9450) fuzzy-if(webrender&&!geckoview,1-1,2400-6200) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
+fuzzy-if(azureSkiaGL,0-3,0-7597) fuzzy-if(cocoaWidget,0-3,0-7597) fuzzy-if(d2d,0-1,0-3800) fuzzy-if(d3d11,0-1,0-4200) fuzzy-if(skiaContent,0-2,0-9450) fuzzy-if(webrender&&!geckoview,0-1,0-6200) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
 fuzzy-if(azureSkiaGL,0-2,0-7174) == background-blending-gradient-image.html background-blending-gradient-color-ref.html
 fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-10000) == background-blending-image-color-jpg.html background-blending-image-color-ref.html
 == background-blending-image-color-png.html background-blending-image-color-ref.html
