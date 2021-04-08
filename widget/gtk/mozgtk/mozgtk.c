@@ -646,21 +646,6 @@ STUB(gtk_color_chooser_get_rgba)
 STUB(gtk_color_chooser_set_use_alpha)
 #endif
 
-#ifdef GTK2_SYMBOLS
-STUB(gdk_drawable_get_screen)
-STUB(gdk_rgb_get_colormap)
-STUB(gdk_rgb_get_visual)
-STUB(gdk_window_lookup)
-STUB(gdk_window_set_back_pixmap)
-STUB(gdk_x11_colormap_foreign_new)
-STUB(gdk_x11_colormap_get_xcolormap)
-STUB(gdk_x11_drawable_get_xdisplay)
-STUB(gdk_x11_drawable_get_xid)
-STUB(gdk_x11_window_get_drawable_impl)
-STUB(gdkx_visual_get)
-STUB(gtk_object_get_type)
-#endif
-
 #ifndef GTK3_SYMBOLS
 // Only define the following workaround when using GTK3, which we detect
 // by checking if GTK3 stubs are not provided.
