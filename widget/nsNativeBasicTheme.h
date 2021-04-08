@@ -167,7 +167,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                    Overlay) override;
   static nscolor AdjustUnthemedScrollbarThumbColor(nscolor, EventStates);
   static nscolor GetScrollbarButtonColor(nscolor aTrackColor, EventStates);
-  static nscolor GetScrollbarArrowColor(nscolor aButtonColor);
+  static mozilla::Maybe<nscolor> GetScrollbarArrowColor(nscolor aButtonColor);
 
   nscoord GetCheckboxRadioPrefSize() override;
 
@@ -211,12 +211,13 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   std::array<sRGBColor, 3> ComputeFocusRectColors(UseSystemColors);
 
   static bool ShouldUseDarkScrollbar(nsIFrame*, const ComputedStyle&);
-  virtual sRGBColor ComputeScrollbarColor(nsIFrame*, const ComputedStyle&,
-                                          const EventStates& aDocumentState,
-                                          UseSystemColors);
-  virtual sRGBColor ComputeScrollbarThumbColor(
-      nsIFrame*, const ComputedStyle&, const EventStates& aElementState,
-      const EventStates& aDocumentState, UseSystemColors);
+  sRGBColor ComputeScrollbarTrackColor(nsIFrame*, const ComputedStyle&,
+                                       const EventStates& aDocumentState,
+                                       UseSystemColors);
+  sRGBColor ComputeScrollbarThumbColor(nsIFrame*, const ComputedStyle&,
+                                       const EventStates& aElementState,
+                                       const EventStates& aDocumentState,
+                                       UseSystemColors);
   // Returned colors are button, arrow.
   std::pair<sRGBColor, sRGBColor> ComputeScrollbarButtonColors(
       nsIFrame*, StyleAppearance, const ComputedStyle&,
