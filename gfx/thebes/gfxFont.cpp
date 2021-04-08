@@ -587,8 +587,9 @@ void gfxShapedText::SetupClusterBoundaries(uint32_t aOffset,
     }
   }
 
+  const char16_t kIdeographicSpace = 0x3000;
   while (!iter.AtEnd()) {
-    if (*iter == char16_t(' ')) {
+    if (*iter == char16_t(' ') || *iter == kIdeographicSpace) {
       glyphs->SetIsSpace();
     }
     // advance iter to the next cluster-start (or end of text)
