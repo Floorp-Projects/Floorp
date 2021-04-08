@@ -1350,7 +1350,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       }
 
       // This parser is line-based. Let's see if we have a line to parse.
-      let isPrevLineBlank = false;
       while (/\r\n|\n|\r/.test(this.buffer)) {
         let buffer = this.buffer;
         let pos = 0;
@@ -1370,19 +1369,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
         // Spec defined replacement.
         line = line.replace(/[\u0000]/g, "\uFFFD");
 
-        // Detect the comment. We parse line on the fly, so we only check if the
-        // comment block is preceded by a blank line and won't check if it's
-        // followed by another blank line.
-        // https://www.w3.org/TR/webvtt1/#introduction-comments
-        // TODO (1703895): according to the spec, the comment represents as a
-        // comment block, so we need to refactor the parser in order to better
-        // handle the comment block.
-        if (isPrevLineBlank && /^NOTE($|[ \t])/.test(line)) {
-          LOG("Ignore comment that starts with 'NOTE'");
-        } else {
+        if (!/^NOTE($|[ \t])/.test(line)) {
           this.parseLine(line);
         }
-        isPrevLineBlank = emptyOrOnlyContainsWhiteSpaces(line);
       }
 
       return this;
@@ -1575,7 +1564,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       }
 
       try {
-        LOG(`state=${self.state}, line=${line}`)
         // 5.1 WebVTT file parsing.
         if (self.state === "INITIAL") {
           parseSignatureMayThrow(line);
