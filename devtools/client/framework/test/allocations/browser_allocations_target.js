@@ -56,6 +56,9 @@ async function testScript(tab) {
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   await target.destroy();
+
+  // destroy the descriptor to also destroy the dedicated client.
+  await descriptor.destroy();
 }
 
 add_task(async function() {
