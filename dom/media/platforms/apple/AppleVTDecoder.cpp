@@ -438,17 +438,6 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
       IOSurfaceSetValue(surface.get(), CFSTR("IOSurfaceYCbCrMatrix"),
                         CFSTR("ITU_R_709_2"));
     }
-    // Override the color space to be the same as the main display, so that
-    // CoreAnimation won't try to do any color correction (from the IOSurface
-    // space, to the display). In the future we may want to try specifying this
-    // correctly, but probably only once we do the same for videos drawn through
-    // our gfx code.
-    auto colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
-        CGDisplayCopyColorSpace(CGMainDisplayID()));
-    auto colorData = CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(
-        CGColorSpaceCopyICCProfile(colorSpace.get()));
-    IOSurfaceSetValue(surface.get(), CFSTR("IOSurfaceColorSpace"),
-                      colorData.get());
 
     RefPtr<MacIOSurface> macSurface = new MacIOSurface(std::move(surface));
     macSurface->SetYUVColorSpace(mColorSpace);
