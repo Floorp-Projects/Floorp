@@ -58,14 +58,17 @@ pub trait EntryV1_0 {
         unsafe {
             let mut num = 0;
             self.fp_v1_0()
-                .enumerate_instance_layer_properties(&mut num, ptr::null_mut())
-                .result()?;
+                .enumerate_instance_layer_properties(&mut num, ptr::null_mut());
+
             let mut v = Vec::with_capacity(num as usize);
             let err_code = self
                 .fp_v1_0()
                 .enumerate_instance_layer_properties(&mut num, v.as_mut_ptr());
             v.set_len(num as usize);
-            err_code.result_with_success(v)
+            match err_code {
+                vk::Result::SUCCESS => Ok(v),
+                _ => Err(err_code),
+            }
         }
     }
 
@@ -73,9 +76,11 @@ pub trait EntryV1_0 {
     fn enumerate_instance_extension_properties(&self) -> VkResult<Vec<vk::ExtensionProperties>> {
         unsafe {
             let mut num = 0;
-            self.fp_v1_0()
-                .enumerate_instance_extension_properties(ptr::null(), &mut num, ptr::null_mut())
-                .result()?;
+            self.fp_v1_0().enumerate_instance_extension_properties(
+                ptr::null(),
+                &mut num,
+                ptr::null_mut(),
+            );
             let mut data = Vec::with_capacity(num as usize);
             let err_code = self.fp_v1_0().enumerate_instance_extension_properties(
                 ptr::null(),
@@ -83,7 +88,10 @@ pub trait EntryV1_0 {
                 data.as_mut_ptr(),
             );
             data.set_len(num as usize);
-            err_code.result_with_success(data)
+            match err_code {
+                vk::Result::SUCCESS => Ok(data),
+                _ => Err(err_code),
+            }
         }
     }
 
@@ -111,14 +119,14 @@ impl<L> EntryV1_0 for EntryCustom<L> {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> Result<Self::Instance, InstanceError> {
         let mut instance: vk::Instance = mem::zeroed();
-        self.fp_v1_0()
-            .create_instance(
-                create_info,
-                allocation_callbacks.as_raw_ptr(),
-                &mut instance,
-            )
-            .result()
-            .map_err(InstanceError::VkError)?;
+        let err_code = self.fp_v1_0().create_instance(
+            create_info,
+            allocation_callbacks.as_raw_ptr(),
+            &mut instance,
+        );
+        if err_code != vk::Result::SUCCESS {
+            return Err(InstanceError::VkError(err_code));
+        }
         Ok(Instance::load(&self.static_fn, instance))
     }
     fn fp_v1_0(&self) -> &vk::EntryFnV1_0 {
@@ -138,9 +146,11 @@ pub trait EntryV1_1: EntryV1_0 {
     fn enumerate_instance_version(&self) -> VkResult<u32> {
         unsafe {
             let mut api_version = 0;
-            self.fp_v1_1()
-                .enumerate_instance_version(&mut api_version)
-                .result_with_success(api_version)
+            let err_code = self.fp_v1_1().enumerate_instance_version(&mut api_version);
+            match err_code {
+                vk::Result::SUCCESS => Ok(api_version),
+                _ => Err(err_code),
+            }
         }
     }
 }
@@ -218,8 +228,11 @@ impl<L> EntryCustom<L> {
                 )
             };
             if let Some(enumerate_instance_version) = enumerate_instance_version {
-                (enumerate_instance_version)(&mut api_version)
-                    .result_with_success(Some(api_version))
+                let err_code = (enumerate_instance_version)(&mut api_version);
+                match err_code {
+                    vk::Result::SUCCESS => Ok(Some(api_version)),
+                    _ => Err(err_code),
+                }
             } else {
                 Ok(None)
             }

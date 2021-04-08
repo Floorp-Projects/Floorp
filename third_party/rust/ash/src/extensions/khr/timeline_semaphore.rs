@@ -34,9 +34,14 @@ impl TimelineSemaphore {
         semaphore: vk::Semaphore,
     ) -> VkResult<u64> {
         let mut value = 0;
-        self.timeline_semaphore_fn
-            .get_semaphore_counter_value_khr(device, semaphore, &mut value)
-            .result_with_success(value)
+        let err_code = self
+            .timeline_semaphore_fn
+            .get_semaphore_counter_value_khr(device, semaphore, &mut value);
+
+        match err_code {
+            vk::Result::SUCCESS => Ok(value),
+            _ => Err(err_code),
+        }
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWaitSemaphores.html>"]
@@ -46,9 +51,14 @@ impl TimelineSemaphore {
         wait_info: &vk::SemaphoreWaitInfo,
         timeout: u64,
     ) -> VkResult<()> {
-        self.timeline_semaphore_fn
-            .wait_semaphores_khr(device, wait_info, timeout)
-            .into()
+        let err_code = self
+            .timeline_semaphore_fn
+            .wait_semaphores_khr(device, wait_info, timeout);
+
+        match err_code {
+            vk::Result::SUCCESS => Ok(()),
+            _ => Err(err_code),
+        }
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSignalSemaphore.html>"]
@@ -57,9 +67,14 @@ impl TimelineSemaphore {
         device: vk::Device,
         signal_info: &vk::SemaphoreSignalInfo,
     ) -> VkResult<()> {
-        self.timeline_semaphore_fn
-            .signal_semaphore_khr(device, signal_info)
-            .into()
+        let err_code = self
+            .timeline_semaphore_fn
+            .signal_semaphore_khr(device, signal_info);
+
+        match err_code {
+            vk::Result::SUCCESS => Ok(()),
+            _ => Err(err_code),
+        }
     }
 
     pub fn fp(&self) -> &vk::KhrTimelineSemaphoreFn {

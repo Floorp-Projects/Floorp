@@ -73,14 +73,16 @@ impl Swapchain {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SwapchainKHR> {
         let mut swapchain = mem::zeroed();
-        self.swapchain_fn
-            .create_swapchain_khr(
-                self.handle,
-                create_info,
-                allocation_callbacks.as_raw_ptr(),
-                &mut swapchain,
-            )
-            .result_with_success(swapchain)
+        let err_code = self.swapchain_fn.create_swapchain_khr(
+            self.handle,
+            create_info,
+            allocation_callbacks.as_raw_ptr(),
+            &mut swapchain,
+        );
+        match err_code {
+            vk::Result::SUCCESS => Ok(swapchain),
+            _ => Err(err_code),
+        }
     }
 
     /// On success, returns whether the swapchain is suboptimal for the surface.
@@ -104,9 +106,12 @@ impl Swapchain {
         swapchain: vk::SwapchainKHR,
     ) -> VkResult<Vec<vk::Image>> {
         let mut count = 0;
-        self.swapchain_fn
-            .get_swapchain_images_khr(self.handle, swapchain, &mut count, ptr::null_mut())
-            .result()?;
+        self.swapchain_fn.get_swapchain_images_khr(
+            self.handle,
+            swapchain,
+            &mut count,
+            ptr::null_mut(),
+        );
 
         let mut v = Vec::with_capacity(count as usize);
         let err_code = self.swapchain_fn.get_swapchain_images_khr(
@@ -116,7 +121,10 @@ impl Swapchain {
             v.as_mut_ptr(),
         );
         v.set_len(count as usize);
-        err_code.result_with_success(v)
+        match err_code {
+            vk::Result::SUCCESS => Ok(v),
+            _ => Err(err_code),
+        }
     }
 
     pub fn fp(&self) -> &vk::KhrSwapchainFn {
