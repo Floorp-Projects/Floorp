@@ -59,6 +59,12 @@
       is(input.accessKey, (MAC ? "⌃⌥i" : "Alt+Shift+i"),
          "Wrong accessKey on input");
 
+      // Test accessKey on HTML element inside shadow DOM.
+      let shadowButton = getAccessible(
+        document.getElementById("buttonShadow").shadowRoot.firstElementChild);
+      is(shadowButton.accessKey, (MAC ? "⌃⌥t" : "Alt+Shift+t"),
+         "Wrong accessKey on shadow button");
+
       gQueue = new eventQueue();
       gQueue.push(new openMenu("menu", "menuitem"));
       gQueue.invoke(); // Will call SimpleTest.finish();
@@ -86,6 +92,17 @@
     <vbox flex="1">
       <label control="input" accesskey="i">input</label>
       <html:input id="input"/>
+
+      <html:div id="buttonShadow"/>
+      <script>
+      <![CDATA[
+        let host = document.getElementById("buttonShadow");
+        let shadow = host.attachShadow({mode: "open"});
+        let button = document.createElement("button");
+        button.setAttribute("accesskey", "t");
+        shadow.append(button);
+      ]]>
+      </script>
 
       <keyset>
         <key key="l" modifiers="control" id="key1"/>
