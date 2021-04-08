@@ -32,7 +32,7 @@ var TalosContentProfiler;
   var currentTest = "unknown";
 
   // Profiler settings.
-  var interval, entries, threadsArray, profileDir;
+  var interval, entries, featuresArray, threadsArray, profileDir;
 
   /**
    * Emits a TalosContentProfiler prefixed event and then returns a Promise
@@ -123,6 +123,7 @@ var TalosContentProfiler;
      *   The following properties on the object are respected:
      *     gecko_profile_interval (int)
      *     gecko_profile_entries (int)
+     *     gecko_profile_features (string, comma separated list of features to enable)
      *     gecko_profile_threads (string, comma separated list of threads to filter with)
      *     gecko_profile_dir (string)
      */
@@ -135,11 +136,14 @@ var TalosContentProfiler;
           Number.isFinite(obj.gecko_profile_interval * 1) &&
           "gecko_profile_entries" in obj &&
           Number.isFinite(obj.gecko_profile_entries * 1) &&
+          "gecko_profile_features" in obj &&
+          typeof obj.gecko_profile_features == "string" &&
           "gecko_profile_threads" in obj &&
           typeof obj.gecko_profile_threads == "string"
         ) {
           interval = obj.gecko_profile_interval;
           entries = obj.gecko_profile_entries;
+          featuresArray = obj.gecko_profile_features.split(",");
           threadsArray = obj.gecko_profile_threads.split(",");
           profileDir = obj.gecko_profile_dir;
           initted = true;
@@ -180,6 +184,7 @@ var TalosContentProfiler;
         return sendEventAndWait("Profiler:Begin", {
           interval,
           entries,
+          featuresArray,
           threadsArray,
         });
       }

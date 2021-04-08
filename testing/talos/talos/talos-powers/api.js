@@ -119,7 +119,7 @@ TalosPowersService.prototype = {
     Services.profiler.StartProfiler(
       data.entries,
       data.interval,
-      ["js", "leaf", "stackwalk", "threads", "cpu"],
+      data.featuresArray,
       data.threadsArray
     );
 
