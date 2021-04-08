@@ -21,17 +21,22 @@ import org.mozilla.fenix.home.OnboardingState
 
 // This method got a little complex with the addition of the tab tray feature flag
 // When we remove the tabs from the home screen this will get much simpler again.
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongParameterList")
 private fun normalModeAdapterItems(
     topSites: List<TopSite>,
     collections: List<TabCollection>,
     expandedCollections: Set<Long>,
     tip: Tip?,
-    showCollectionsPlaceholder: Boolean
+    showCollectionsPlaceholder: Boolean,
+    showSetAsDefaultBrowserCard: Boolean
 ): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
 
     tip?.let { items.add(AdapterItem.TipItem(it)) }
+
+    if (showSetAsDefaultBrowserCard) {
+        items.add(AdapterItem.ExperimentDefaultBrowserCard)
+    }
 
     if (topSites.isNotEmpty()) {
         items.add(AdapterItem.TopSitePager(topSites))
@@ -110,7 +115,8 @@ private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
         collections,
         expandedCollections,
         tip,
-        showCollectionPlaceholder
+        showCollectionPlaceholder,
+        showSetAsDefaultBrowserCard
     )
     is Mode.Private -> privateModeAdapterItems()
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)

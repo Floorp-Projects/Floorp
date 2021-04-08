@@ -225,7 +225,8 @@ class HomeFragment : Fragment() {
                             )
                         ).getTip()
                     },
-                    showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome
+                    showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
+                    showSetAsDefaultBrowserCard = components.settings.shouldShowSetAsDefaultBrowserCard()
                 )
             )
         }

@@ -128,7 +128,8 @@ class DefaultSessionControlControllerTest {
             expandedCollections = emptySet(),
             mode = Mode.Normal,
             topSites = emptyList(),
-            showCollectionPlaceholder = true
+            showCollectionPlaceholder = true,
+            showSetAsDefaultBrowserCard = true
         )
 
         every { navController.currentDestination } returns mockk {

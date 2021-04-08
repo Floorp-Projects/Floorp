@@ -48,7 +48,8 @@ data class HomeFragmentState(
     val mode: Mode,
     val topSites: List<TopSite>,
     val tip: Tip? = null,
-    val showCollectionPlaceholder: Boolean
+    val showCollectionPlaceholder: Boolean,
+    val showSetAsDefaultBrowserCard: Boolean
 ) : State
 
 sealed class HomeFragmentAction : Action {
@@ -69,6 +70,7 @@ sealed class HomeFragmentAction : Action {
     data class TopSitesChange(val topSites: List<TopSite>) : HomeFragmentAction()
     data class RemoveTip(val tip: Tip) : HomeFragmentAction()
     object RemoveCollectionsPlaceholder : HomeFragmentAction()
+    object RemoveSetDefaultBrowserCard : HomeFragmentAction()
 }
 
 private fun homeFragmentStateReducer(
@@ -102,5 +104,6 @@ private fun homeFragmentStateReducer(
         is HomeFragmentAction.RemoveCollectionsPlaceholder -> {
             state.copy(showCollectionPlaceholder = false)
         }
+        is HomeFragmentAction.RemoveSetDefaultBrowserCard -> state.copy(showSetAsDefaultBrowserCard = false)
     }
 }

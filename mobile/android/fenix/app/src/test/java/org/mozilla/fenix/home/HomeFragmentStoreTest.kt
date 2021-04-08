@@ -55,7 +55,8 @@ class HomeFragmentStoreTest {
             expandedCollections = emptySet(),
             mode = currentMode.getCurrentMode(),
             topSites = emptyList(),
-            showCollectionPlaceholder = true
+            showCollectionPlaceholder = true,
+            showSetAsDefaultBrowserCard = true
         )
 
         homeFragmentStore = HomeFragmentStore(homeFragmentState)

@@ -190,6 +190,18 @@ interface TopSiteInteractor {
     fun onTopSiteMenuOpened()
 }
 
+interface ExperimentCardInteractor {
+    /**
+     * Called when set default browser button is clicked
+     */
+    fun onSetDefaultBrowserClicked()
+
+    /**
+     * Called when close button on experiment card
+     */
+    fun onCloseExperimentCardClicked()
+}
+
 /**
  * Interactor for the Home screen.
  * Provides implementations for the CollectionInteractor, OnboardingInteractor,
@@ -199,7 +211,7 @@ interface TopSiteInteractor {
 class SessionControlInteractor(
     private val controller: SessionControlController
 ) : CollectionInteractor, OnboardingInteractor, TopSiteInteractor, TipInteractor,
-    TabSessionInteractor, ToolbarInteractor {
+    TabSessionInteractor, ToolbarInteractor, ExperimentCardInteractor {
     override fun onCollectionAddTabTapped(collection: TabCollection) {
         controller.handleCollectionAddTabTapped(collection)
     }
@@ -294,5 +306,13 @@ class SessionControlInteractor(
 
     override fun onTopSiteMenuOpened() {
         controller.handleMenuOpened()
+    }
+
+    override fun onSetDefaultBrowserClicked() {
+        controller.handleSetDefaultBrowser()
+    }
+
+    override fun onCloseExperimentCardClicked() {
+        controller.handleCloseExperimentCard()
     }
 }
