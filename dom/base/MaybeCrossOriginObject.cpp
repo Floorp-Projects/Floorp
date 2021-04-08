@@ -269,13 +269,26 @@ bool MaybeCrossOriginObjectMixins::EnsureHolder(
   // our objects are per-Realm singletons, we are basically using "obj" itself
   // as part of the key.
   //
-  // To represent the current settings, we use the current-Realm
-  // Object.prototype.  We can't use the current global, because we can't get a
-  // useful cross-compartment wrapper for it; such wrappers would always go
+  // To represent the current settings, we use a dedicated key object of the
+  // current-Realm.
+  //
+  // We can't use the current global, because we can't get a useful
+  // cross-compartment wrapper for it; such wrappers would always go
   // through a WindowProxy and would not be guarantee to keep pointing to a
   // single Realm when unwrapped.  We want to grab this key before we start
   // changing Realms.
-  JS::Rooted<JSObject*> key(cx, JS::GetRealmObjectPrototype(cx));
+  //
+  // Also we can't use arbitrary object (e.g.: Object.prototype), because at
+  // this point those compartments are not same-origin, and don't have access to
+  // each other, and the object retrieved here will be wrapped by a security
+  // wrapper below, and the wrapper will be stored into the cache
+  // (see Compartment::wrap).  Those compartments can get access later by
+  // modifying `document.domain`, and wrapping objects after that point
+  // shouldn't result in a security wrapper.  Wrap operation looks up the
+  // existing wrapper in the cache, that contains the security wrapper created
+  // here.  We should use unique/private object here, so that this doesn't
+  // affect later wrap operation.
+  JS::Rooted<JSObject*> key(cx, JS::GetRealmWeakMapKey(cx));
   if (!key) {
     return false;
   }
