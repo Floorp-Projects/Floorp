@@ -1521,11 +1521,11 @@ nsresult nsFtpState::Init(nsFtpChannel* channel) {
     // now unescape it... %xx reduced inline to resulting character
     int32_t len = NS_UnescapeURL(fwdPtr);
     mPath.Assign(fwdPtr, len);
-
-#ifdef DEBUG
-    if (mPath.FindCharInSet(CRLF) >= 0)
-      NS_ERROR("NewURI() should've prevented this!!!");
-#endif
+    if (mPath.FindCharInSet(CRLF) != kNotFound ||
+        mPath.FindChar('\0') != kNotFound) {
+      mPath.Truncate();
+      return NS_ERROR_MALFORMED_URI;
+    }
   }
 
   // pull any username and/or password out of the uri
