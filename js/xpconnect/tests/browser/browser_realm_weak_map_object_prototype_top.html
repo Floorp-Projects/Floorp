@@ -1,0 +1,12 @@
+<script type="text/javascript">
+document.domain = "mochi.test";
+function check() {
+  // Ensure frame's Object.prototype is accessible.
+  if (document.getElementById("frame").contentWindow.Object.prototype.toString.call({}) == "[object Object]") {
+    document.getElementById("result").textContent = "OK";
+  }
+}
+</script>
+<iframe id="frame" src="http://test2.mochi.test:8888/browser/js/xpconnect/tests/browser/browser_realm_weak_map_object_prototype_frame.html">
+</iframe>
+<span id="result"></span>

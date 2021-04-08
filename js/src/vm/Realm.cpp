@@ -786,6 +786,10 @@ JS_PUBLIC_API JSObject* JS::GetRealmIteratorPrototype(JSContext* cx) {
   return GlobalObject::getOrCreateIteratorPrototype(cx, cx->global());
 }
 
+JS_PUBLIC_API JSObject* JS::GetRealmWeakMapKey(JSContext* cx) {
+  return GlobalObject::getOrCreateRealmWeakMapKey(cx, cx->global());
+}
+
 JS_PUBLIC_API Realm* JS::GetFunctionRealm(JSContext* cx, HandleObject objArg) {
   // https://tc39.github.io/ecma262/#sec-getfunctionrealm
   // 7.3.22 GetFunctionRealm ( obj )

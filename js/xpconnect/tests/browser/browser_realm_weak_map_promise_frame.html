@@ -1,0 +1,17 @@
+<script type="text/javascript">
+// Access to the top-level window property before getting access.
+// This will create an entry in cross-origin realm weak map.
+try {
+  window.top.P;
+} catch (e) {}
+
+document.domain = "mochi.test";
+
+// Ensure that frame's Object.prototype is accessible from top-level frame
+// when getting incumbent global object inside Promise handling.
+window.top.P.then(v => {
+  if (v == 10) {
+    window.top.document.getElementById("result").textContent = "OK";
+  }
+});
+</script>
