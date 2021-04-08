@@ -4005,7 +4005,11 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
       ctx->ClosePath();
       // And paint the arrow.
       nscolor arrowColor =
-          nsNativeBasicTheme::GetScrollbarArrowColor(buttonColor);
+          nsNativeBasicTheme::GetScrollbarArrowColor(buttonColor)
+              .valueOrFrom([&] {
+                return ScrollbarUtil::GetScrollbarThumbColor(aFrame,
+                                                             eventStates);
+              });
       ctx->SetColor(sRGBColor::FromABGR(arrowColor));
       ctx->Fill();
       break;
