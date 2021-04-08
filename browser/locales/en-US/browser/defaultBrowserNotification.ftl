@@ -7,3 +7,9 @@ default-browser-notification-message = <strong>Set { -brand-short-name } as your
 default-browser-notification-button =
     .label = Set as default
     .accesskey = S
+
+default-browser-prompt-title = Make { -brand-short-name } your default browser?
+default-browser-prompt-message = Get speed, safety, and privacy every time you browser.
+default-browser-prompt-checkbox-label = Don’t ask again
+default-browser-prompt-button-primary = Set as default browser
+default-browser-prompt-button-secondary = Not now
