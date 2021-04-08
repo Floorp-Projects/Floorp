@@ -696,6 +696,8 @@ class Selection final : public nsSupportsWeakReference,
 
   friend struct AutoUserInitiated;
   struct MOZ_RAII AutoUserInitiated {
+    explicit AutoUserInitiated(Selection& aSelectionRef)
+        : AutoUserInitiated(&aSelectionRef) {}
     explicit AutoUserInitiated(Selection* aSelection)
         : mSavedValue(aSelection->mUserInitiated) {
       aSelection->mUserInitiated = true;
@@ -926,6 +928,8 @@ class MOZ_STACK_CLASS SelectionBatcher final {
   RefPtr<Selection> mSelection;
 
  public:
+  explicit SelectionBatcher(Selection& aSelectionRef)
+      : SelectionBatcher(&aSelectionRef) {}
   explicit SelectionBatcher(Selection* aSelection) {
     mSelection = aSelection;
     if (mSelection) {
@@ -941,25 +945,27 @@ class MOZ_STACK_CLASS SelectionBatcher final {
 };
 
 class MOZ_RAII AutoHideSelectionChanges final {
- private:
-  RefPtr<Selection> mSelection;
-
  public:
   explicit AutoHideSelectionChanges(const nsFrameSelection* aFrame);
 
-  explicit AutoHideSelectionChanges(Selection* aSelection)
-      : mSelection(aSelection) {
-    mSelection = aSelection;
-    if (mSelection) {
-      mSelection->AddSelectionChangeBlocker();
-    }
-  }
+  explicit AutoHideSelectionChanges(Selection& aSelectionRef)
+      : AutoHideSelectionChanges(&aSelectionRef) {}
 
   ~AutoHideSelectionChanges() {
     if (mSelection) {
       mSelection->RemoveSelectionChangeBlocker();
     }
   }
+
+ private:
+  explicit AutoHideSelectionChanges(Selection* aSelection)
+      : mSelection(aSelection) {
+    if (mSelection) {
+      mSelection->AddSelectionChangeBlocker();
+    }
+  }
+
+  RefPtr<Selection> mSelection;
 };
 
 }  // namespace dom

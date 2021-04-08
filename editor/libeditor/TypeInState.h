@@ -97,7 +97,7 @@ class TypeInState final {
   TypeInState();
   void Reset();
 
-  nsresult UpdateSelState(dom::Selection* aSelection);
+  nsresult UpdateSelState(dom::Selection& aSelection);
 
   /**
    * PreHandleMouseEvent() is called when `HTMLEditorEventListener` receives

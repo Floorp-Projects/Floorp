@@ -206,7 +206,7 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "EditorBase::CommitComposition() failed, but ignored");
 
-  if (SelectionRefPtr()->IsCollapsed()) {
+  if (SelectionRef().IsCollapsed()) {
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
     mTypeInState->SetProp(&aProperty, aAttribute, aAttributeValue);
@@ -245,7 +245,7 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
     // XXX This is different from `SetCSSBackgroundColorWithTransaction()`.
     //     It refers `Selection::GetRangeAt()` in each time.  The result may
     //     be different if mutation event listener changes the `Selection`.
-    AutoSelectionRangeArray arrayOfRanges(SelectionRefPtr());
+    AutoSelectionRangeArray arrayOfRanges(SelectionRef());
     for (auto& range : arrayOfRanges.mRanges) {
       // Adjust range to include any ancestors whose children are entirely
       // selected
@@ -1456,8 +1456,8 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
   *aFirst = false;
   bool first = true;
 
-  bool isCollapsed = SelectionRefPtr()->IsCollapsed();
-  RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
+  bool isCollapsed = SelectionRef().IsCollapsed();
+  RefPtr<nsRange> range = SelectionRef().GetRangeAt(0);
   // XXX: Should be a while loop, to get each separate range
   // XXX: ERROR_HANDLING can currentItem be null?
   if (range) {
@@ -1857,7 +1857,7 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
   }
   removeStyles.AppendElement(HTMLStyle(aProperty, aAttribute));
 
-  if (SelectionRefPtr()->IsCollapsed()) {
+  if (SelectionRef().IsCollapsed()) {
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
     if (removeStyles[0].mProperty) {
@@ -1911,7 +1911,7 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
       //     AutoSelectionRangeArray just grabs the ranges in `Selection`.
       //     Therefore, modifying each range may notify selection listener.  So
       //     perhaps, we should clone each range here instead.
-      AutoSelectionRangeArray arrayOfRanges(SelectionRefPtr());
+      AutoSelectionRangeArray arrayOfRanges(SelectionRef());
       for (auto& range : arrayOfRanges.mRanges) {
         if (style.mProperty == nsGkAtoms::name) {
           // Promote range if it starts or end in a named anchor and we want to
@@ -2220,14 +2220,14 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
                        "EditorBase::CommitComposition() failed, but ignored");
 
   // If selection is collapsed, set typing state
-  if (SelectionRefPtr()->IsCollapsed()) {
+  if (SelectionRef().IsCollapsed()) {
     nsAtom& atom = aDir == FontSize::incr ? *nsGkAtoms::big : *nsGkAtoms::small;
 
     // Let's see in what kind of element the selection is
-    if (NS_WARN_IF(!SelectionRefPtr()->RangeCount())) {
+    if (NS_WARN_IF(!SelectionRef().RangeCount())) {
       return NS_OK;
     }
-    RefPtr<const nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
+    RefPtr<const nsRange> firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange) ||
         NS_WARN_IF(!firstRange->GetStartContainer())) {
       return NS_OK;
@@ -2266,7 +2266,7 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   // Loop through the ranges in the selection
-  AutoSelectionRangeArray arrayOfRanges(SelectionRefPtr());
+  AutoSelectionRangeArray arrayOfRanges(SelectionRef());
   for (auto& range : arrayOfRanges.mRanges) {
     // Adjust range to include any ancestors with entirely selected children
     nsresult rv = PromoteInlineRange(*range);

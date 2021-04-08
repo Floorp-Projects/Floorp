@@ -105,7 +105,7 @@ nsresult TextEditor::PrepareToInsertContent(
   }
 
   IgnoredErrorResult error;
-  MOZ_KnownLive(SelectionRefPtr())->CollapseInLimiter(pointToInsert, error);
+  SelectionRef().CollapseInLimiter(pointToInsert, error);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -257,7 +257,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // selection (bail) and whether user wants to copy selection or delete it.
   if (sourceNode && sourceNode->IsEditable() && srcdoc == document) {
     bool isPointInSelection = EditorUtils::IsPointInSelection(
-        *SelectionRefPtr(), *droppedAt.GetContainer(), droppedAt.Offset());
+        SelectionRef(), *droppedAt.GetContainer(), droppedAt.Offset());
     if (isPointInSelection) {
       // If source document and destination document is same and dropping
       // into one of selected ranges, we don't need to do nothing.
@@ -328,7 +328,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
                                              ScrollSelectionIntoView::Yes);
 
   // Don't dispatch "selectionchange" event until inserting all contents.
-  SelectionBatcher selectionBatcher(SelectionRefPtr());
+  SelectionBatcher selectionBatcher(SelectionRef());
 
   // Track dropped point with nsRange because we shouldn't insert the
   // dropped content into different position even if some event listeners
@@ -396,9 +396,8 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   // JS.  And also this does not notify selection listeners (nor
   // "selectionchange") since we created SelectionBatcher above.
   ErrorResult error;
-  MOZ_KnownLive(SelectionRefPtr())
-      ->SetStartAndEnd(droppedAt.ToRawRangeBoundary(),
-                       droppedAt.ToRawRangeBoundary(), error);
+  SelectionRef().SetStartAndEnd(droppedAt.ToRawRangeBoundary(),
+                                droppedAt.ToRawRangeBoundary(), error);
   if (error.Failed()) {
     NS_WARNING("Selection::SetStartAndEnd() failed");
     editActionData.Abort();
@@ -536,7 +535,7 @@ nsresult TextEditor::DeleteSelectionByDragAsAction(bool aDispatchInputEvent) {
   // `AutoEditActionDataSetter` needs to manage event state separately.
   bool requestedByAnotherEditor = GetEditAction() != EditAction::eDrop;
   AutoEditActionDataSetter editActionData(*this, EditAction::eDeleteByDrag);
-  MOZ_ASSERT(!SelectionRefPtr()->IsCollapsed());
+  MOZ_ASSERT(!SelectionRef().IsCollapsed());
   nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
