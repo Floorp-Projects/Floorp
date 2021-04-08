@@ -12,6 +12,8 @@ const FONT_PREVIEW_FONT_SIZE = 40;
 const FONT_PREVIEW_FILLSTYLE = "black";
 // Offset (in px) to avoid cutting off text edges of italic fonts.
 const FONT_PREVIEW_OFFSET = 4;
+// Factor used to resize the canvas in order to get better text quality.
+const FONT_PREVIEW_OVERSAMPLING_FACTOR = 2;
 
 /**
  * Helper function for getting an image preview of the given font.
@@ -29,6 +31,7 @@ const FONT_PREVIEW_OFFSET = 4;
 function getFontPreviewData(font, doc, options) {
   options = options || {};
   const previewText = options.previewText || FONT_PREVIEW_TEXT;
+  const previewTextLines = previewText.split("\n");
   const previewFontSize = options.previewFontSize || FONT_PREVIEW_FONT_SIZE;
   const fillStyle = options.fillStyle || FONT_PREVIEW_FILLSTYLE;
   const fontStyle = options.fontStyle || "";
@@ -41,23 +44,46 @@ function getFontPreviewData(font, doc, options) {
   // Get the correct preview text measurements and set the canvas dimensions
   ctx.font = fontValue;
   ctx.fillStyle = fillStyle;
-  const textWidth = Math.round(ctx.measureText(previewText).width);
+  const previewTextLinesWidths = previewTextLines.map(
+    previewTextLine => ctx.measureText(previewTextLine).width
+  );
+  const textWidth = Math.round(Math.max(...previewTextLinesWidths));
 
-  canvas.width = textWidth * 2 + FONT_PREVIEW_OFFSET * 4;
-  canvas.height = previewFontSize * 3;
+  // The canvas width is calculated as the width of the longest line plus
+  // an offset at the left and right of it.
+  // The canvas height is calculated as the font size multiplied by the
+  // number of lines plus an offset at the top and bottom.
+  //
+  // In order to get better text quality, we oversample the canvas.
+  // That means, after the width and height are calculated, we increase
+  // both sizes by some factor.
+  const simpleCanvasWidth = textWidth + FONT_PREVIEW_OFFSET * 2;
+  canvas.width = simpleCanvasWidth * FONT_PREVIEW_OVERSAMPLING_FACTOR;
+  canvas.height =
+    (previewFontSize * previewTextLines.length + FONT_PREVIEW_OFFSET * 2) *
+    FONT_PREVIEW_OVERSAMPLING_FACTOR;
 
   // we have to reset these after changing the canvas size
   ctx.font = fontValue;
   ctx.fillStyle = fillStyle;
 
   // Oversample the canvas for better text quality
+  ctx.scale(FONT_PREVIEW_OVERSAMPLING_FACTOR, FONT_PREVIEW_OVERSAMPLING_FACTOR);
+
   ctx.textBaseline = "top";
-  ctx.scale(2, 2);
-  ctx.fillText(
-    previewText,
-    FONT_PREVIEW_OFFSET,
-    Math.round(previewFontSize / 3)
-  );
+  ctx.textAlign = "center";
+  const horizontalTextPosition = simpleCanvasWidth / 2;
+  let verticalTextPosition = FONT_PREVIEW_OFFSET;
+  for (let i = 0; i < previewTextLines.length; i++) {
+    ctx.fillText(
+      previewTextLines[i],
+      horizontalTextPosition,
+      verticalTextPosition
+    );
+
+    // Move vertical text position one line down
+    verticalTextPosition += previewFontSize;
+  }
 
   const dataURL = canvas.toDataURL("image/png");
 
