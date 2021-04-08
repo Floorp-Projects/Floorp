@@ -490,7 +490,9 @@ open class DefaultToolbarMenu(
     val settingsItem = BrowserMenuHighlightableItem(
         label = context.getString(R.string.browser_menu_settings),
         startImageResource = R.drawable.ic_settings,
-        iconTintColorResource = primaryTextColor(),
+        iconTintColorResource = if (hasAccountProblem)
+            ThemeManager.resolveAttribute(R.attr.syncDisconnected, context) else
+            primaryTextColor,
         textColorResource = if (hasAccountProblem)
             ThemeManager.resolveAttribute(R.attr.primaryText, context) else
             primaryTextColor,
