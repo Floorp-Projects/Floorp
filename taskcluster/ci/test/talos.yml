@@ -45,6 +45,7 @@ job-defaults:
                             windows7-32.*: []
                             (linux|windows10|macos)(?!.*shippable).*: []
                             default: ['mozilla-beta', 'trunk']
+    python-3: true
 
 talos-bcv:
     description: "Talos basic compositor video"
@@ -645,6 +646,7 @@ talos-xperf:
             by-test-platform:
                 windows.*:
                     - talos/windows_vm_config.py
+    python-3: false
 
 talos-realworld-webextensions:
     description: "Talos tests with realworld WebExtensions"
