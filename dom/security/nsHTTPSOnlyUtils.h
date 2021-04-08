@@ -112,7 +112,7 @@ class nsHTTPSOnlyUtils {
 
   /**
    * Checks if two URIs are same origin modulo the difference that
-   * aHTTPSchemeURI uses an http scheme.
+   * aHTTPSchemeURI uses and http scheme.
    * @param aHTTPSSchemeURI nsIURI using scheme of https
    * @param aOtherURI nsIURI using scheme of http
    * @param aLoadInfo nsILoadInfo of the request
