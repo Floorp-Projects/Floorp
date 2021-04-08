@@ -5403,6 +5403,9 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 
       // Thread operations
       case uint16_t(Op::ThreadPrefix): {
+        // Though thread ops can be used on nonshared memories, we make them
+        // unavailable if shared memory has been disabled in the prefs, for
+        // maximum predictability and safety and consistency with JS.
         if (f.moduleEnv().sharedMemoryEnabled() == Shareable::False) {
           return f.iter().unrecognizedOpcode(&op);
         }
