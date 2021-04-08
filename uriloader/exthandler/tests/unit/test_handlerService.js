@@ -234,8 +234,6 @@ function run_test() {
   var handlerTypes = ["nonexistent/type", "nonexistent/type2"];
   if (haveDefaultHandlersVersion) {
     handlerTypes.push("mailto");
-    handlerTypes.push("irc");
-    handlerTypes.push("ircs");
   }
   for (let handler of handlerSvc.enumerate()) {
     Assert.notEqual(handlerTypes.indexOf(handler.type), -1);

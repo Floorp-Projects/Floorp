@@ -906,26 +906,6 @@ pref("gecko.handlerService.schemes.mailto.2.uriTemplate", "chrome://browser-regi
 pref("gecko.handlerService.schemes.mailto.3.name", "chrome://browser-region/locale/region.properties");
 pref("gecko.handlerService.schemes.mailto.3.uriTemplate", "chrome://browser-region/locale/region.properties");
 
-// irc
-pref("gecko.handlerService.schemes.irc.0.name", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.irc.0.uriTemplate", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.irc.1.name", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.irc.1.uriTemplate", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.irc.2.name", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.irc.2.uriTemplate", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.irc.3.name", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.irc.3.uriTemplate", "chrome://browser-region/locale/region.properties");
-
-// ircs
-pref("gecko.handlerService.schemes.ircs.0.name", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.ircs.0.uriTemplate", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.ircs.1.name", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.ircs.1.uriTemplate", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.ircs.2.name", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.ircs.2.uriTemplate", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.ircs.3.name", "chrome://browser-region/locale/region.properties");
-pref("gecko.handlerService.schemes.ircs.3.uriTemplate", "chrome://browser-region/locale/region.properties");
-
 pref("browser.geolocation.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/geolocation/");
 pref("browser.xr.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/xr/");
 
