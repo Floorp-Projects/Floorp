@@ -769,16 +769,17 @@ class MediaDecoderStateMachine::DecodingState
 };
 
 /**
- * Purpose: decode audio/video data for playback when media is in seamless
+ * Purpose: decode audio data for playback when media is in seamless
  * looping, we will adjust media time to make samples time monotonically
- * increasing.
+ * increasing. Note, it's currently used for audio-only, but we should make it
+ * work on video as well in bug 1262276.
  *
  * Transition to:
  *   DORMANT if playback is paused for a while.
  *   SEEKING if any seek request.
  *   SHUTDOWN if any decode error.
  *   BUFFERING if playback can't continue due to lack of decoded data.
- *   COMPLETED when having decoded all audio/video data.
+ *   COMPLETED when having decoded all audio data.
  *   DECODING when media stop seamless looping
  */
 class MediaDecoderStateMachine::LoopingDecodingState
