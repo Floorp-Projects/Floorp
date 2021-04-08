@@ -300,8 +300,10 @@ var UpdateUtils = {
   readUpdateConfigSetting(prefName) {
     if (!(prefName in this.PER_INSTALLATION_PREFS)) {
       return Promise.reject(
-        `UpdateUtils.readUpdateConfigSetting: Unknown per-installation ` +
-          `pref '${prefName}'`
+        new Error(
+          `UpdateUtils.readUpdateConfigSetting: Unknown per-installation ` +
+            `pref '${prefName}'`
+        )
       );
     }
 
@@ -379,15 +381,19 @@ var UpdateUtils = {
   writeUpdateConfigSetting(prefName, value, options) {
     if (!(prefName in this.PER_INSTALLATION_PREFS)) {
       return Promise.reject(
-        `UpdateUtils.writeUpdateConfigSetting: Unknown per-installation ` +
-          `pref '${prefName}'`
+        new Error(
+          `UpdateUtils.writeUpdateConfigSetting: Unknown per-installation ` +
+            `pref '${prefName}'`
+        )
       );
     }
 
     if (this.appUpdateSettingIsLocked(prefName)) {
       return Promise.reject(
-        `UpdateUtils.writeUpdateConfigSetting: Unable to change value of ` +
-          `setting '${prefName}' because it is locked by policy`
+        new Error(
+          `UpdateUtils.writeUpdateConfigSetting: Unable to change value of ` +
+            `setting '${prefName}' because it is locked by policy`
+        )
       );
     }
 
@@ -400,8 +406,10 @@ var UpdateUtils = {
 
     if (!prefTypeFns.isValid(value)) {
       return Promise.reject(
-        `UpdateUtils.writeUpdateConfigSetting: Attempted to change pref ` +
-          `'${prefName} to invalid value: ${JSON.stringify(value)}`
+        new Error(
+          `UpdateUtils.writeUpdateConfigSetting: Attempted to change pref ` +
+            `'${prefName} to invalid value: ${JSON.stringify(value)}`
+        )
       );
     }
 
@@ -474,7 +482,9 @@ var UpdateUtils = {
   appUpdateSettingIsLocked(prefName) {
     if (!(prefName in UpdateUtils.PER_INSTALLATION_PREFS)) {
       return Promise.reject(
-        `UpdateUtils.appUpdateSettingIsLocked: Unknown per-installation pref '${prefName}'`
+        new Error(
+          `UpdateUtils.appUpdateSettingIsLocked: Unknown per-installation pref '${prefName}'`
+        )
       );
     }
 
