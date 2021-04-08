@@ -94,7 +94,6 @@ http3:
             --xpcshell-nodejs ${MOZ_FETCHES_DIR}/node/bin/node
             --xpcshell-cycles 13
             --xpcshell-xre-path ${MOZ_FETCHES_DIR}/firefox
-            --verbose
 
 livesites:
     description: Live site performance testing
