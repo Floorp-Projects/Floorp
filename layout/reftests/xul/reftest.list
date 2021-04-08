@@ -13,8 +13,8 @@ skip-if(!cocoaWidget) fails-if(webrender&&cocoaWidget&&nativeThemePref) == chrom
 != chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-notref.xhtml
 == chrome://reftest/content/xul/text-crop.xhtml chrome://reftest/content/xul/text-crop-ref.xhtml
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == chrome://reftest/content/xul/text-small-caps-1.xhtml chrome://reftest/content/xul/text-small-caps-1-ref.xhtml
-fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,350-1050) == chrome://reftest/content/xul/inactive-fixed-bg-bug1205630.xhtml inactive-fixed-bg-bug1205630-ref.html
-fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,450-1100) == chrome://reftest/content/xul/inactive-fixed-bg-bug1272525.xhtml inactive-fixed-bg-bug1272525-ref.html
+fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,0-1050) == chrome://reftest/content/xul/inactive-fixed-bg-bug1205630.xhtml inactive-fixed-bg-bug1205630-ref.html
+fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,0-1100) == chrome://reftest/content/xul/inactive-fixed-bg-bug1272525.xhtml inactive-fixed-bg-bug1272525-ref.html
 
 # Tests for XUL <image> with 'object-fit' & 'object-position':
 # These tests should be very similar to tests in our w3c-css/submitted/images3
