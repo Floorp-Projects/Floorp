@@ -265,9 +265,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    * aTarget should not keep a reference to the returned surface because that
    * will cause a cycle.
    *
-   * This function is static so that it can be accessed from
-   * PluginInstanceChild (where we can't call gfxPlatform::GetPlatform()
-   * because the prefs service can only be accessed from the main process).
+   * This function is static so that it can be accessed from outside the main
+   * process.
    *
    * aIsPlugin is used to tell the backend that they can optimize this surface
    * specifically because it's used for a plugin. This is mostly for Skia.
