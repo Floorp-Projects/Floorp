@@ -293,7 +293,6 @@ pub fn map_rasterizer(rasterizer: &pso::Rasterizer, multisample: bool) -> D3D12_
         ForcedSampleCount: 0,         // TODO: currently not supported
         AntialiasedLineEnable: FALSE, // TODO: currently not supported
         ConservativeRaster: if rasterizer.conservative {
-            // TODO: check support
             D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON
         } else {
             D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
@@ -661,18 +660,6 @@ pub fn map_image_flags(usage: image::Usage, features: ImageFeature) -> D3D12_RES
     }
 
     flags
-}
-
-pub fn map_execution_model(model: spirv::ExecutionModel) -> ShaderStage {
-    match model {
-        spirv::ExecutionModel::Vertex => ShaderStage::Vertex,
-        spirv::ExecutionModel::Fragment => ShaderStage::Fragment,
-        spirv::ExecutionModel::Geometry => ShaderStage::Geometry,
-        spirv::ExecutionModel::GlCompute => ShaderStage::Compute,
-        spirv::ExecutionModel::TessellationControl => ShaderStage::Hull,
-        spirv::ExecutionModel::TessellationEvaluation => ShaderStage::Domain,
-        spirv::ExecutionModel::Kernel => panic!("Kernel is not a valid execution model"),
-    }
 }
 
 pub fn map_stage(stage: ShaderStage) -> spirv::ExecutionModel {

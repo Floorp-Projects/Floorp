@@ -49,17 +49,16 @@ impl InstanceV1_0 for Instance {
         physical_device: vk::PhysicalDevice,
         create_info: &vk::DeviceCreateInfo,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
-    ) -> Result<Self::Device, vk::Result> {
+    ) -> VkResult<Self::Device> {
         let mut device: vk::Device = mem::zeroed();
-        let err_code = self.fp_v1_0().create_device(
-            physical_device,
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut device,
-        );
-        if err_code != vk::Result::SUCCESS {
-            return Err(err_code);
-        }
+        self.fp_v1_0()
+            .create_device(
+                physical_device,
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut device,
+            )
+            .result()?;
         Ok(Device::load(&self.instance_fn_1_0, device))
     }
     fn handle(&self) -> vk::Instance {
@@ -92,14 +91,11 @@ pub trait InstanceV1_2: InstanceV1_1 {
 pub trait InstanceV1_1: InstanceV1_0 {
     fn fp_v1_1(&self) -> &vk::InstanceFnV1_1;
 
-    unsafe fn enumerate_physical_device_groups_len(&self) -> usize {
+    unsafe fn enumerate_physical_device_groups_len(&self) -> VkResult<usize> {
         let mut group_count = mem::zeroed();
-        self.fp_v1_1().enumerate_physical_device_groups(
-            self.handle(),
-            &mut group_count,
-            ptr::null_mut(),
-        );
-        group_count as usize
+        self.fp_v1_1()
+            .enumerate_physical_device_groups(self.handle(), &mut group_count, ptr::null_mut())
+            .result_with_success(group_count as usize)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumeratePhysicalDeviceGroups.html>"]
@@ -109,16 +105,9 @@ pub trait InstanceV1_1: InstanceV1_0 {
     ) -> VkResult<()> {
         unsafe {
             let mut group_count = out.len() as u32;
-            let err_code = self.fp_v1_1().enumerate_physical_device_groups(
-                self.handle(),
-                &mut group_count,
-                out.as_mut_ptr(),
-            );
-            if err_code == vk::Result::SUCCESS {
-                Ok(())
-            } else {
-                Err(err_code)
-            }
+            self.fp_v1_1()
+                .enumerate_physical_device_groups(self.handle(), &mut group_count, out.as_mut_ptr())
+                .into()
         }
     }
 
@@ -160,16 +149,13 @@ pub trait InstanceV1_1: InstanceV1_0 {
         format_info: &vk::PhysicalDeviceImageFormatInfo2,
         image_format_prop: &mut vk::ImageFormatProperties2,
     ) -> VkResult<()> {
-        let err_code = self.fp_v1_1().get_physical_device_image_format_properties2(
-            physical_device,
-            format_info,
-            image_format_prop,
-        );
-        if err_code == vk::Result::SUCCESS {
-            Ok(())
-        } else {
-            Err(err_code)
-        }
+        self.fp_v1_1()
+            .get_physical_device_image_format_properties2(
+                physical_device,
+                format_info,
+                image_format_prop,
+            )
+            .into()
     }
 
     unsafe fn get_physical_device_queue_family_properties2_len(
@@ -304,7 +290,7 @@ pub trait InstanceV1_0 {
         physical_device: vk::PhysicalDevice,
         create_info: &vk::DeviceCreateInfo,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
-    ) -> Result<Self::Device, vk::Result>;
+    ) -> VkResult<Self::Device>;
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceProcAddr.html>"]
     unsafe fn get_device_proc_addr(
@@ -347,20 +333,17 @@ pub trait InstanceV1_0 {
         flags: vk::ImageCreateFlags,
     ) -> VkResult<vk::ImageFormatProperties> {
         let mut image_format_prop = mem::zeroed();
-        let err_code = self.fp_v1_0().get_physical_device_image_format_properties(
-            physical_device,
-            format,
-            typ,
-            tiling,
-            usage,
-            flags,
-            &mut image_format_prop,
-        );
-        if err_code == vk::Result::SUCCESS {
-            Ok(image_format_prop)
-        } else {
-            Err(err_code)
-        }
+        self.fp_v1_0()
+            .get_physical_device_image_format_properties(
+                physical_device,
+                format,
+                typ,
+                tiling,
+                usage,
+                flags,
+                &mut image_format_prop,
+            )
+            .result_with_success(image_format_prop)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceMemoryProperties.html>"]
@@ -421,7 +404,8 @@ pub trait InstanceV1_0 {
     unsafe fn enumerate_physical_devices(&self) -> VkResult<Vec<vk::PhysicalDevice>> {
         let mut num = mem::zeroed();
         self.fp_v1_0()
-            .enumerate_physical_devices(self.handle(), &mut num, ptr::null_mut());
+            .enumerate_physical_devices(self.handle(), &mut num, ptr::null_mut())
+            .result()?;
         let mut physical_devices = Vec::<vk::PhysicalDevice>::with_capacity(num as usize);
         let err_code = self.fp_v1_0().enumerate_physical_devices(
             self.handle(),
@@ -429,24 +413,18 @@ pub trait InstanceV1_0 {
             physical_devices.as_mut_ptr(),
         );
         physical_devices.set_len(num as usize);
-        match err_code {
-            vk::Result::SUCCESS => Ok(physical_devices),
-            _ => Err(err_code),
-        }
+        err_code.result_with_success(physical_devices)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumerateDeviceExtensionProperties.html>"]
     unsafe fn enumerate_device_extension_properties(
         &self,
         device: vk::PhysicalDevice,
-    ) -> Result<Vec<vk::ExtensionProperties>, vk::Result> {
+    ) -> VkResult<Vec<vk::ExtensionProperties>> {
         let mut num = 0;
-        self.fp_v1_0().enumerate_device_extension_properties(
-            device,
-            ptr::null(),
-            &mut num,
-            ptr::null_mut(),
-        );
+        self.fp_v1_0()
+            .enumerate_device_extension_properties(device, ptr::null(), &mut num, ptr::null_mut())
+            .result()?;
         let mut data = Vec::with_capacity(num as usize);
         let err_code = self.fp_v1_0().enumerate_device_extension_properties(
             device,
@@ -455,9 +433,6 @@ pub trait InstanceV1_0 {
             data.as_mut_ptr(),
         );
         data.set_len(num as usize);
-        match err_code {
-            vk::Result::SUCCESS => Ok(data),
-            _ => Err(err_code),
-        }
+        err_code.result_with_success(data)
     }
 }

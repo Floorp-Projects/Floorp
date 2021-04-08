@@ -15,7 +15,7 @@ pub enum AllocationError {
     /// Deallocating host memory may increase chance that another allocation would succeed.
     OutOfHostMemory,
 
-    /// Allocation request cannot be fullfilled as no available memory types allowed
+    /// Allocation request cannot be fulfilled as no available memory types allowed
     /// by `Request.memory_types` mask is compatible with `request.usage`.
     NoCompatibleMemoryTypes,
 

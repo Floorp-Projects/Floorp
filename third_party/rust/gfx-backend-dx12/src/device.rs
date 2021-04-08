@@ -47,23 +47,23 @@ fn wide_cstr(name: &str) -> Vec<u16> {
 
 /// Emit error during shader module creation. Used if we don't expect an error
 /// but might panic due to an exception in SPIRV-Cross.
-fn gen_unexpected_error(err: SpirvErrorCode) -> pso::CreationError {
+fn gen_unexpected_error(stage: ShaderStage, err: SpirvErrorCode) -> pso::CreationError {
     let msg = match err {
         SpirvErrorCode::CompilationError(msg) => msg,
         SpirvErrorCode::Unhandled => "Unexpected error".into(),
     };
-    error!("SPIR-V unexpected error {:?}", msg);
-    pso::CreationError::Other
+    let error = format!("SPIR-V unexpected error {:?}", msg);
+    pso::CreationError::ShaderCreationError(stage.to_flag(), error)
 }
 
 /// Emit error during shader module creation. Used if we execute an query command.
-fn gen_query_error(err: SpirvErrorCode) -> pso::CreationError {
+fn gen_query_error(stage: ShaderStage, err: SpirvErrorCode) -> pso::CreationError {
     let msg = match err {
         SpirvErrorCode::CompilationError(msg) => msg,
         SpirvErrorCode::Unhandled => "Unknown query error".into(),
     };
-    error!("SPIR-V query error {:?}", msg);
-    pso::CreationError::Other
+    let error = format!("SPIR-V query error {:?}", msg);
+    pso::CreationError::ShaderCreationError(stage.to_flag(), error)
 }
 
 #[derive(Clone, Debug)]
@@ -141,8 +141,11 @@ pub(crate) fn compile_shader(
         unsafe {
             error.destroy();
         }
-        error!("D3DCompile error {:x}: {}", hr, message);
-        Err(pso::CreationError::Other)
+        let error = format!("D3DCompile error {:x}: {}", hr, message);
+        Err(pso::CreationError::ShaderCreationError(
+            stage.to_flag(),
+            error,
+        ))
     } else {
         Ok(shader_data)
     }
@@ -240,7 +243,10 @@ impl GraphicsPipelineStateSubobjectStream {
 }
 
 impl Device {
-    fn parse_spirv(raw_data: &[u32]) -> Result<spirv::Ast<hlsl::Target>, pso::CreationError> {
+    fn parse_spirv(
+        stage: ShaderStage,
+        raw_data: &[u32],
+    ) -> Result<spirv::Ast<hlsl::Target>, pso::CreationError> {
         let module = spirv::Module::from_words(raw_data);
 
         spirv::Ast::parse(&module).map_err(|err| {
@@ -248,8 +254,8 @@ impl Device {
                 SpirvErrorCode::CompilationError(msg) => msg,
                 SpirvErrorCode::Unhandled => "Unknown parsing error".into(),
             };
-            error!("SPIR-V parsing failed: {:?}", msg);
-            pso::CreationError::Other
+            let error = format!("SPIR-V parsing failed: {:?}", msg);
+            pso::CreationError::ShaderCreationError(stage.to_flag(), error)
         })
     }
 
@@ -267,22 +273,25 @@ impl Device {
     pub(crate) fn introspect_spirv_vertex_semantic_remapping(
         raw_data: &[u32],
     ) -> Result<auxil::FastHashMap<u32, Option<(u32, u32)>>, pso::CreationError> {
+        const SHADER_STAGE: ShaderStage = ShaderStage::Vertex;
         // This is inefficient as we already parse it once before. This is a temporary workaround only called
         // on vertex shaders. If this becomes permanent or shows up in profiles, deduplicate these as first course of action.
-        let ast = Self::parse_spirv(raw_data)?;
+        let ast = Self::parse_spirv(SHADER_STAGE, raw_data)?;
 
         let mut map = auxil::FastHashMap::default();
 
         let inputs = ast
             .get_shader_resources()
-            .map_err(gen_query_error)?
+            .map_err(|err| gen_query_error(SHADER_STAGE, err))?
             .stage_inputs;
         for input in inputs {
             let idx = ast
                 .get_decoration(input.id, spirv::Decoration::Location)
-                .map_err(gen_query_error)?;
+                .map_err(|err| gen_query_error(SHADER_STAGE, err))?;
 
-            let ty = ast.get_type(input.type_id).map_err(gen_query_error)?;
+            let ty = ast
+                .get_type(input.type_id)
+                .map_err(|err| gen_query_error(SHADER_STAGE, err))?;
 
             match ty {
                 spirv::Type::Boolean { columns, .. }
@@ -295,21 +304,27 @@ impl Device {
                 {
                     for col in 0..columns {
                         if let Some(_) = map.insert(idx + col, Some((idx, col))) {
-                            error!(
+                            let error = format!(
                                 "Shader has overlapping input attachments at location {}",
                                 idx
                             );
-                            return Err(pso::CreationError::Other);
+                            return Err(pso::CreationError::ShaderCreationError(
+                                SHADER_STAGE.to_flag(),
+                                error,
+                            ));
                         }
                     }
                 }
                 _ => {
                     if let Some(_) = map.insert(idx, None) {
-                        error!(
+                        let error = format!(
                             "Shader has overlapping input attachments at location {}",
                             idx
                         );
-                        return Err(pso::CreationError::Other);
+                        return Err(pso::CreationError::ShaderCreationError(
+                            SHADER_STAGE.to_flag(),
+                            error,
+                        ));
                     }
                 }
             }
@@ -319,6 +334,7 @@ impl Device {
     }
 
     fn patch_spirv_resources(
+        stage: ShaderStage,
         ast: &mut spirv::Ast<hlsl::Target>,
         layout: &r::PipelineLayout,
     ) -> Result<(), pso::CreationError> {
@@ -328,19 +344,21 @@ impl Device {
         } else {
             1
         };
-        let shader_resources = ast.get_shader_resources().map_err(gen_query_error)?;
+        let shader_resources = ast
+            .get_shader_resources()
+            .map_err(|err| gen_query_error(stage, err))?;
 
         if space_offset != 0 {
             for image in &shader_resources.separate_images {
                 let set = ast
                     .get_decoration(image.id, spirv::Decoration::DescriptorSet)
-                    .map_err(gen_query_error)?;
+                    .map_err(|err| gen_query_error(stage, err))?;
                 ast.set_decoration(
                     image.id,
                     spirv::Decoration::DescriptorSet,
                     space_offset + set,
                 )
-                .map_err(gen_unexpected_error)?;
+                .map_err(|err| gen_unexpected_error(stage, err))?;
             }
         }
 
@@ -348,61 +366,61 @@ impl Device {
             for uniform_buffer in &shader_resources.uniform_buffers {
                 let set = ast
                     .get_decoration(uniform_buffer.id, spirv::Decoration::DescriptorSet)
-                    .map_err(gen_query_error)?;
+                    .map_err(|err| gen_query_error(stage, err))?;
                 ast.set_decoration(
                     uniform_buffer.id,
                     spirv::Decoration::DescriptorSet,
                     space_offset + set,
                 )
-                .map_err(gen_unexpected_error)?;
+                .map_err(|err| gen_unexpected_error(stage, err))?;
             }
         }
 
         for storage_buffer in &shader_resources.storage_buffers {
             let set = ast
                 .get_decoration(storage_buffer.id, spirv::Decoration::DescriptorSet)
-                .map_err(gen_query_error)?;
+                .map_err(|err| gen_query_error(stage, err))?;
             let binding = ast
                 .get_decoration(storage_buffer.id, spirv::Decoration::Binding)
-                .map_err(gen_query_error)?;
+                .map_err(|err| gen_query_error(stage, err))?;
             if space_offset != 0 {
                 ast.set_decoration(
                     storage_buffer.id,
                     spirv::Decoration::DescriptorSet,
                     space_offset + set,
                 )
-                .map_err(gen_unexpected_error)?;
+                .map_err(|err| gen_unexpected_error(stage, err))?;
             }
             if !layout.elements[set as usize]
                 .mutable_bindings
                 .contains(&binding)
             {
                 ast.set_decoration(storage_buffer.id, spirv::Decoration::NonWritable, 1)
-                    .map_err(gen_unexpected_error)?
+                    .map_err(|err| gen_unexpected_error(stage, err))?
             }
         }
 
         for image in &shader_resources.storage_images {
             let set = ast
                 .get_decoration(image.id, spirv::Decoration::DescriptorSet)
-                .map_err(gen_query_error)?;
+                .map_err(|err| gen_query_error(stage, err))?;
             let binding = ast
                 .get_decoration(image.id, spirv::Decoration::Binding)
-                .map_err(gen_query_error)?;
+                .map_err(|err| gen_query_error(stage, err))?;
             if space_offset != 0 {
                 ast.set_decoration(
                     image.id,
                     spirv::Decoration::DescriptorSet,
                     space_offset + set,
                 )
-                .map_err(gen_unexpected_error)?;
+                .map_err(|err| gen_unexpected_error(stage, err))?;
             }
             if !layout.elements[set as usize]
                 .mutable_bindings
                 .contains(&binding)
             {
                 ast.set_decoration(image.id, spirv::Decoration::NonWritable, 1)
-                    .map_err(gen_unexpected_error)?
+                    .map_err(|err| gen_unexpected_error(stage, err))?
             }
         }
 
@@ -410,13 +428,13 @@ impl Device {
             for sampler in &shader_resources.separate_samplers {
                 let set = ast
                     .get_decoration(sampler.id, spirv::Decoration::DescriptorSet)
-                    .map_err(gen_query_error)?;
+                    .map_err(|err| gen_query_error(stage, err))?;
                 ast.set_decoration(
                     sampler.id,
                     spirv::Decoration::DescriptorSet,
                     space_offset + set,
                 )
-                .map_err(gen_unexpected_error)?;
+                .map_err(|err| gen_unexpected_error(stage, err))?;
             }
         }
 
@@ -424,13 +442,13 @@ impl Device {
             for image in &shader_resources.sampled_images {
                 let set = ast
                     .get_decoration(image.id, spirv::Decoration::DescriptorSet)
-                    .map_err(gen_query_error)?;
+                    .map_err(|err| gen_query_error(stage, err))?;
                 ast.set_decoration(
                     image.id,
                     spirv::Decoration::DescriptorSet,
                     space_offset + set,
                 )
-                .map_err(gen_unexpected_error)?;
+                .map_err(|err| gen_unexpected_error(stage, err))?;
             }
         }
 
@@ -438,13 +456,13 @@ impl Device {
             for input in &shader_resources.subpass_inputs {
                 let set = ast
                     .get_decoration(input.id, spirv::Decoration::DescriptorSet)
-                    .map_err(gen_query_error)?;
+                    .map_err(|err| gen_query_error(stage, err))?;
                 ast.set_decoration(
                     input.id,
                     spirv::Decoration::DescriptorSet,
                     space_offset + set,
                 )
-                .map_err(gen_unexpected_error)?;
+                .map_err(|err| gen_unexpected_error(stage, err))?;
             }
         }
 
@@ -488,16 +506,16 @@ impl Device {
             })
             .collect();
         ast.set_compiler_options(&compile_options)
-            .map_err(gen_unexpected_error)?;
+            .map_err(|err| gen_unexpected_error(stage, err))?;
         ast.set_root_constant_layout(root_constant_layout)
-            .map_err(gen_unexpected_error)?;
+            .map_err(|err| gen_unexpected_error(stage, err))?;
         ast.compile().map_err(|err| {
             let msg = match err {
                 SpirvErrorCode::CompilationError(msg) => msg,
                 SpirvErrorCode::Unhandled => "Unknown compile error".into(),
             };
-            error!("SPIR-V compile failed: {}", msg);
-            pso::CreationError::Other
+            let error = format!("SPIR-V compile failed: {}", msg);
+            pso::CreationError::ShaderCreationError(stage.to_flag(), error)
         })
     }
 
@@ -520,10 +538,10 @@ impl Device {
                     .ok_or(pso::CreationError::MissingEntryPoint(source.entry.into()))
             }
             r::ShaderModule::Spirv(ref raw_data) => {
-                let mut ast = Self::parse_spirv(raw_data)?;
+                let mut ast = Self::parse_spirv(stage, raw_data)?;
                 spirv_cross_specialize_ast(&mut ast, &source.specialization)
                     .map_err(pso::CreationError::InvalidSpecialization)?;
-                Self::patch_spirv_resources(&mut ast, layout)?;
+                Self::patch_spirv_resources(stage, &mut ast, layout)?;
 
                 let execution_model = conv::map_stage(stage);
                 let shader_model = hlsl::ShaderModel::V5_1;
@@ -539,7 +557,7 @@ impl Device {
 
                 let real_name = ast
                     .get_cleansed_entry_point_name(source.entry, execution_model)
-                    .map_err(gen_query_error)?;
+                    .map_err(|err| gen_query_error(stage, err))?;
 
                 let shader = compile_shader(
                     stage,
@@ -706,7 +724,7 @@ impl Device {
         Ok(())
     }
 
-    fn view_image_as_render_target(
+    pub(crate) fn view_image_as_render_target(
         &self,
         info: &ViewInfo,
     ) -> Result<descriptors_cpu::Handle, image::ViewCreationError> {
@@ -783,7 +801,11 @@ impl Device {
                 }
             }
             image::ViewKind::D3 | image::ViewKind::Cube | image::ViewKind::CubeArray => {
-                unimplemented!()
+                warn!(
+                    "3D and cube views are not supported for the image, kind: {:?}",
+                    info.kind
+                );
+                return Err(image::ViewCreationError::BadKind(info.view_kind));
             }
         };
 
@@ -794,7 +816,7 @@ impl Device {
         Ok(())
     }
 
-    fn view_image_as_depth_stencil(
+    pub(crate) fn view_image_as_depth_stencil(
         &self,
         info: &ViewInfo,
     ) -> Result<descriptors_cpu::Handle, image::ViewCreationError> {
@@ -911,7 +933,7 @@ impl Device {
                 }
             }
             image::ViewKind::Cube | image::ViewKind::CubeArray => {
-                error!(
+                warn!(
                     "Cube views are not supported for the image, kind: {:?}",
                     info.kind
                 );
@@ -1143,6 +1165,109 @@ impl Device {
             usage: config.image_usage,
             acquired_count: 0,
         }
+    }
+
+    pub(crate) fn bind_image_resource(
+        &self,
+        resource: native::WeakPtr<d3d12::ID3D12Resource>,
+        image: &mut r::Image,
+        place: r::Place,
+    ) {
+        let image_unbound = image.expect_unbound();
+        let num_layers = image_unbound.kind.num_layers();
+
+        //TODO: the clear_Xv is incomplete. We should support clearing images created without XXX_ATTACHMENT usage.
+        // for this, we need to check the format and force the `RENDER_TARGET` flag behind the user's back
+        // if the format supports being rendered into, allowing us to create clear_Xv
+        let info = ViewInfo {
+            resource,
+            kind: image_unbound.kind,
+            caps: image::ViewCapabilities::empty(),
+            view_kind: match image_unbound.kind {
+                image::Kind::D1(..) => image::ViewKind::D1Array,
+                image::Kind::D2(..) => image::ViewKind::D2Array,
+                image::Kind::D3(..) => image::ViewKind::D3,
+            },
+            format: image_unbound.desc.Format,
+            component_mapping: IDENTITY_MAPPING,
+            levels: 0..1,
+            layers: 0..0,
+        };
+        let format_properties = self
+            .format_properties
+            .resolve(image_unbound.format as usize)
+            .properties;
+        let props = match image_unbound.tiling {
+            image::Tiling::Optimal => format_properties.optimal_tiling,
+            image::Tiling::Linear => format_properties.linear_tiling,
+        };
+        let can_clear_color = image_unbound
+            .usage
+            .intersects(image::Usage::TRANSFER_DST | image::Usage::COLOR_ATTACHMENT)
+            && props.contains(format::ImageFeature::COLOR_ATTACHMENT);
+        let can_clear_depth = image_unbound
+            .usage
+            .intersects(image::Usage::TRANSFER_DST | image::Usage::DEPTH_STENCIL_ATTACHMENT)
+            && props.contains(format::ImageFeature::DEPTH_STENCIL_ATTACHMENT);
+        let aspects = image_unbound.format.surface_desc().aspects;
+
+        *image = r::Image::Bound(r::ImageBound {
+            resource,
+            place,
+            surface_type: image_unbound.format.base_format().0,
+            kind: image_unbound.kind,
+            mip_levels: image_unbound.mip_levels,
+            usage: image_unbound.usage,
+            default_view_format: image_unbound.view_format,
+            view_caps: image_unbound.view_caps,
+            descriptor: image_unbound.desc,
+            clear_cv: if aspects.contains(Aspects::COLOR) && can_clear_color {
+                let format = image_unbound.view_format.unwrap();
+                (0..num_layers)
+                    .map(|layer| {
+                        self.view_image_as_render_target(&ViewInfo {
+                            format,
+                            layers: layer..layer + 1,
+                            ..info.clone()
+                        })
+                        .unwrap()
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            },
+            clear_dv: if aspects.contains(Aspects::DEPTH) && can_clear_depth {
+                let format = image_unbound.dsv_format.unwrap();
+                (0..num_layers)
+                    .map(|layer| {
+                        self.view_image_as_depth_stencil(&ViewInfo {
+                            format,
+                            layers: layer..layer + 1,
+                            ..info.clone()
+                        })
+                        .unwrap()
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            },
+            clear_sv: if aspects.contains(Aspects::STENCIL) && can_clear_depth {
+                let format = image_unbound.dsv_format.unwrap();
+                (0..num_layers)
+                    .map(|layer| {
+                        self.view_image_as_depth_stencil(&ViewInfo {
+                            format,
+                            layers: layer..layer + 1,
+                            ..info.clone()
+                        })
+                        .unwrap()
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            },
+            requirements: image_unbound.requirements,
+        });
     }
 }
 
@@ -2162,8 +2287,11 @@ impl d::Device<B> for Device {
                 baked_states,
             })
         } else {
-            error!("Failed to build shader: {:x}", hr);
-            Err(pso::CreationError::Other)
+            let error = format!("Failed to build shader: {:x}", hr);
+            Err(pso::CreationError::ShaderCreationError(
+                pso::ShaderStageFlags::GRAPHICS,
+                error,
+            ))
         }
     }
 
@@ -2202,8 +2330,11 @@ impl d::Device<B> for Device {
                 shared: Arc::clone(&desc.layout.shared),
             })
         } else {
-            error!("Failed to build shader: {:x}", hr);
-            Err(pso::CreationError::Other)
+            let error = format!("Failed to build shader: {:x}", hr);
+            Err(pso::CreationError::ShaderCreationError(
+                pso::ShaderStageFlags::COMPUTE,
+                error,
+            ))
         }
     }
 
@@ -2229,6 +2360,7 @@ impl d::Device<B> for Device {
         &self,
         mut size: u64,
         usage: buffer::Usage,
+        _sparse: memory::SparseFlags,
     ) -> Result<r::Buffer, buffer::CreationError> {
         if usage.contains(buffer::Usage::UNIFORM) {
             // Constant buffer view sizes need to be aligned.
@@ -2452,6 +2584,7 @@ impl d::Device<B> for Device {
         format: format::Format,
         tiling: image::Tiling,
         usage: image::Usage,
+        sparse: memory::SparseFlags,
         view_caps: image::ViewCapabilities,
     ) -> Result<r::Image, image::CreationError> {
         assert!(mip_levels <= kind.compute_num_levels());
@@ -2464,15 +2597,22 @@ impl d::Device<B> for Device {
         let extent = kind.extent();
 
         let format_info = self.format_properties.resolve(format as usize);
-        let (layout, features) = match tiling {
-            image::Tiling::Optimal => (
-                d3d12::D3D12_TEXTURE_LAYOUT_UNKNOWN,
+        let (layout, features) = if sparse.contains(memory::SparseFlags::SPARSE_BINDING) {
+            (
+                d3d12::D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE,
                 format_info.properties.optimal_tiling,
-            ),
-            image::Tiling::Linear => (
-                d3d12::D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-                format_info.properties.linear_tiling,
-            ),
+            )
+        } else {
+            match tiling {
+                image::Tiling::Optimal => (
+                    d3d12::D3D12_TEXTURE_LAYOUT_UNKNOWN,
+                    format_info.properties.optimal_tiling,
+                ),
+                image::Tiling::Linear => (
+                    d3d12::D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+                    format_info.properties.linear_tiling,
+                ),
+            }
         };
         if format_info.sample_count_mask & kind.num_samples() == 0 {
             return Err(image::CreationError::Samples(kind.num_samples()));
@@ -2592,8 +2732,6 @@ impl d::Device<B> for Device {
         offset: u64,
         image: &mut r::Image,
     ) -> Result<(), d::BindError> {
-        use self::image::Usage;
-
         let image_unbound = image.expect_unbound();
         if image_unbound.requirements.type_mask & (1 << memory.type_id) == 0 {
             error!(
@@ -2607,7 +2745,6 @@ impl d::Device<B> for Device {
         }
 
         let mut resource = native::Resource::null();
-        let num_layers = image_unbound.kind.num_layers();
 
         assert_eq!(
             winerror::S_OK,
@@ -2626,102 +2763,14 @@ impl d::Device<B> for Device {
             resource.SetName(name.as_ptr());
         }
 
-        let info = ViewInfo {
+        self.bind_image_resource(
             resource,
-            kind: image_unbound.kind,
-            caps: image::ViewCapabilities::empty(),
-            view_kind: match image_unbound.kind {
-                image::Kind::D1(..) => image::ViewKind::D1Array,
-                image::Kind::D2(..) => image::ViewKind::D2Array,
-                image::Kind::D3(..) => image::ViewKind::D3,
-            },
-            format: image_unbound.desc.Format,
-            component_mapping: IDENTITY_MAPPING,
-            levels: 0..1,
-            layers: 0..0,
-        };
-
-        //TODO: the clear_Xv is incomplete. We should support clearing images created without XXX_ATTACHMENT usage.
-        // for this, we need to check the format and force the `RENDER_TARGET` flag behind the user's back
-        // if the format supports being rendered into, allowing us to create clear_Xv
-        let format_properties = self
-            .format_properties
-            .resolve(image_unbound.format as usize)
-            .properties;
-        let props = match image_unbound.tiling {
-            image::Tiling::Optimal => format_properties.optimal_tiling,
-            image::Tiling::Linear => format_properties.linear_tiling,
-        };
-        let can_clear_color = image_unbound
-            .usage
-            .intersects(Usage::TRANSFER_DST | Usage::COLOR_ATTACHMENT)
-            && props.contains(format::ImageFeature::COLOR_ATTACHMENT);
-        let can_clear_depth = image_unbound
-            .usage
-            .intersects(Usage::TRANSFER_DST | Usage::DEPTH_STENCIL_ATTACHMENT)
-            && props.contains(format::ImageFeature::DEPTH_STENCIL_ATTACHMENT);
-        let aspects = image_unbound.format.surface_desc().aspects;
-
-        *image = r::Image::Bound(r::ImageBound {
-            resource: resource,
-            place: r::Place::Heap {
+            image,
+            r::Place::Heap {
                 raw: memory.heap.clone(),
                 offset,
             },
-            surface_type: image_unbound.format.base_format().0,
-            kind: image_unbound.kind,
-            mip_levels: image_unbound.mip_levels,
-            usage: image_unbound.usage,
-            default_view_format: image_unbound.view_format,
-            view_caps: image_unbound.view_caps,
-            descriptor: image_unbound.desc,
-            clear_cv: if aspects.contains(Aspects::COLOR) && can_clear_color {
-                let format = image_unbound.view_format.unwrap();
-                (0..num_layers)
-                    .map(|layer| {
-                        self.view_image_as_render_target(&ViewInfo {
-                            format,
-                            layers: layer..layer + 1,
-                            ..info.clone()
-                        })
-                        .unwrap()
-                    })
-                    .collect()
-            } else {
-                Vec::new()
-            },
-            clear_dv: if aspects.contains(Aspects::DEPTH) && can_clear_depth {
-                let format = image_unbound.dsv_format.unwrap();
-                (0..num_layers)
-                    .map(|layer| {
-                        self.view_image_as_depth_stencil(&ViewInfo {
-                            format,
-                            layers: layer..layer + 1,
-                            ..info.clone()
-                        })
-                        .unwrap()
-                    })
-                    .collect()
-            } else {
-                Vec::new()
-            },
-            clear_sv: if aspects.contains(Aspects::STENCIL) && can_clear_depth {
-                let format = image_unbound.dsv_format.unwrap();
-                (0..num_layers)
-                    .map(|layer| {
-                        self.view_image_as_depth_stencil(&ViewInfo {
-                            format,
-                            layers: layer..layer + 1,
-                            ..info.clone()
-                        })
-                        .unwrap()
-                    })
-                    .collect()
-            } else {
-                Vec::new()
-            },
-            requirements: image_unbound.requirements,
-        });
+        );
 
         Ok(())
     }
@@ -3724,6 +3773,14 @@ impl d::Device<B> for Device {
     unsafe fn set_pipeline_layout_name(&self, pipeline_layout: &mut r::PipelineLayout, name: &str) {
         let cwstr = wide_cstr(name);
         pipeline_layout.shared.signature.SetName(cwstr.as_ptr());
+    }
+
+    fn start_capture(&self) {
+        //TODO
+    }
+
+    fn stop_capture(&self) {
+        //TODO
     }
 }
 

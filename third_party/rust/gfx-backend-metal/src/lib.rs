@@ -169,6 +169,9 @@ impl hal::queue::QueueFamily for QueueFamily {
     fn id(&self) -> QueueFamilyId {
         QueueFamilyId(0)
     }
+    fn supports_sparse_binding(&self) -> bool {
+        false
+    }
 }
 
 #[derive(Debug)]

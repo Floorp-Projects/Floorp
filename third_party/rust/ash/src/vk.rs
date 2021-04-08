@@ -1,4 +1,8 @@
-#![allow(clippy::too_many_arguments, clippy::cognitive_complexity, clippy::wrong_self_convention)]
+#![allow(
+    clippy::too_many_arguments,
+    clippy::cognitive_complexity,
+    clippy::wrong_self_convention
+)]
 #[macro_use]
 mod macros;
 pub use macros::*;

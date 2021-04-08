@@ -1,10 +1,15 @@
-use ash::{version::DeviceV1_0, vk};
+use ash::{
+    version::{DeviceV1_0, DeviceV1_2},
+    vk,
+};
 use smallvec::SmallVec;
 use std::{collections::hash_map::Entry, ffi::CString, mem, ops::Range, slice, sync::Arc};
 
 use inplace_it::inplace_or_alloc_from_iter;
 
-use crate::{conv, native as n, Backend, DebugMessenger, RawDevice, ROUGH_MAX_ATTACHMENT_COUNT};
+use crate::{
+    conv, native as n, Backend, DebugMessenger, ExtensionFn, RawDevice, ROUGH_MAX_ATTACHMENT_COUNT,
+};
 use hal::{
     buffer, command as com,
     format::Aspects,
@@ -815,6 +820,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .mesh_shaders
             .as_ref()
             .expect("Draw command not supported. You must request feature MESH_SHADER.")
+            .unwrap_extension()
             .cmd_draw_mesh_tasks(self.raw, task_count, first_task);
     }
 
@@ -830,6 +836,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .mesh_shaders
             .as_ref()
             .expect("Draw command not supported. You must request feature MESH_SHADER.")
+            .unwrap_extension()
             .cmd_draw_mesh_tasks_indirect(self.raw, buffer.raw, offset, draw_count, stride);
     }
 
@@ -847,6 +854,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
             .mesh_shaders
             .as_ref()
             .expect("Draw command not supported. You must request feature MESH_SHADER.")
+            .unwrap_extension()
             .cmd_draw_mesh_tasks_indirect_count(
                 self.raw,
                 buffer.raw,
@@ -867,20 +875,36 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         max_draw_count: DrawCount,
         stride: buffer::Stride,
     ) {
-        self.device
+        match self
+            .device
             .extension_fns
             .draw_indirect_count
             .as_ref()
             .expect("Feature DRAW_INDIRECT_COUNT must be enabled to call draw_indirect_count")
-            .cmd_draw_indirect_count(
-                self.raw,
-                buffer.raw,
-                offset,
-                count_buffer.raw,
-                count_buffer_offset,
-                max_draw_count,
-                stride,
-            );
+        {
+            ExtensionFn::Extension(t) => {
+                t.cmd_draw_indirect_count(
+                    self.raw,
+                    buffer.raw,
+                    offset,
+                    count_buffer.raw,
+                    count_buffer_offset,
+                    max_draw_count,
+                    stride,
+                );
+            }
+            ExtensionFn::Promoted => {
+                self.device.raw.cmd_draw_indirect_count(
+                    self.raw,
+                    buffer.raw,
+                    offset,
+                    count_buffer.raw,
+                    count_buffer_offset,
+                    max_draw_count,
+                    stride,
+                );
+            }
+        }
     }
 
     unsafe fn draw_indexed_indirect_count(
@@ -892,22 +916,36 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         max_draw_count: DrawCount,
         stride: buffer::Stride,
     ) {
-        self.device
+        match self
+            .device
             .extension_fns
             .draw_indirect_count
             .as_ref()
-            .expect(
-                "Feature DRAW_INDIRECT_COUNT must be enabled to call draw_indexed_indirect_count",
-            )
-            .cmd_draw_indexed_indirect_count(
-                self.raw,
-                buffer.raw,
-                offset,
-                count_buffer.raw,
-                count_buffer_offset,
-                max_draw_count,
-                stride,
-            );
+            .expect("Feature DRAW_INDIRECT_COUNT must be enabled to call draw_indirect_count")
+        {
+            ExtensionFn::Extension(t) => {
+                t.cmd_draw_indexed_indirect_count(
+                    self.raw,
+                    buffer.raw,
+                    offset,
+                    count_buffer.raw,
+                    count_buffer_offset,
+                    max_draw_count,
+                    stride,
+                );
+            }
+            ExtensionFn::Promoted => {
+                self.device.raw.cmd_draw_indexed_indirect_count(
+                    self.raw,
+                    buffer.raw,
+                    offset,
+                    count_buffer.raw,
+                    count_buffer_offset,
+                    max_draw_count,
+                    stride,
+                );
+            }
+        }
     }
 
     unsafe fn set_event(&mut self, event: &n::Event, stage_mask: pso::PipelineStage) {
@@ -989,8 +1027,7 @@ impl com::CommandBuffer<Backend> for CommandBuffer {
         stride: buffer::Stride,
         flags: query::ResultFlags,
     ) {
-        //TODO: use safer wrapper
-        self.device.raw.fp_v1_0().cmd_copy_query_pool_results(
+        self.device.raw.cmd_copy_query_pool_results(
             self.raw,
             pool.0,
             queries.start,
