@@ -560,6 +560,19 @@ add_task(async function test_getTypeFromExtension() {
 function assertAllHandlerInfosMatchDefaultHandlers() {
   let handlerInfos = HandlerServiceTestUtils.getAllHandlerInfos();
 
+  for (let type of ["irc", "ircs"]) {
+    HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
+      type,
+      preferredActionOSDependent: true,
+      possibleApplicationHandlers: [
+        {
+          name: "Mibbit",
+          uriTemplate: "https://www.mibbit.com/?url=%s",
+        },
+      ],
+    });
+  }
+
   HandlerServiceTestUtils.assertHandlerInfoMatches(handlerInfos.shift(), {
     type: "mailto",
     preferredActionOSDependent: true,
