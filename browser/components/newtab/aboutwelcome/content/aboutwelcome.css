@@ -359,7 +359,7 @@ body {
       .onboardingContainer .steps .indicator.current {
         opacity: 1; }
   .onboardingContainer.proton {
-    background: url("chrome://activity-stream/content/data/content/assets/proton-bkg.avif") center/cover no-repeat fixed; }
+    background: linear-gradient(69.76deg, #15141A 2.07%, rgba(21, 20, 26, 0) 65.58%) center/cover no-repeat fixed; }
     .onboardingContainer.proton .screen {
       flex-flow: row nowrap; }
     .onboardingContainer.proton .section-main {

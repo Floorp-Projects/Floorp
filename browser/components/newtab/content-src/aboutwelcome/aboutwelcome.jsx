@@ -75,6 +75,7 @@ class AboutWelcome extends React.PureComponent {
         message_id={props.messageId}
         utm_term={props.UTMTerm}
         design={props.design}
+        background_url={props.background_url}
       />
     );
   }
