@@ -238,7 +238,8 @@ var BackgroundUpdate = {
     let binary = Services.dirsvc.get("XREExeF", Ci.nsIFile);
     let args = [
       "--MOZ_LOG",
-      "prependheader,timestamp,append,maxsize:1,Dump:5",
+      // Note: `maxsize:1` means 1Mb total size, trimmed to 512kb on overflow.
+      "sync,prependheader,timestamp,append,maxsize:1,Dump:5",
       "--MOZ_LOG_FILE",
       // The full path might hit command line length limits, but also makes it
       // much easier to find the relevant log file when starting from the
