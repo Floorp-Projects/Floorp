@@ -403,34 +403,32 @@ macosx1100-64-qr-failures-tests:
     - mochitest-browser-chrome-apple-silicon
 
 macosx1015-64-qr-tests:
+    - crashtest
     - reftest
+    - mochitest-plain
+    - mochitest-plain-gpu
+    - mochitest-remote
+    - mochitest-chrome
+    - mochitest-chrome-gpu
+    - mochitest-a11y
 
 # debug only
 macosx1015-64-tests:
+    - crashtest
     - reftest
     - web-platform-tests-reftest
 
-macosx1014-64-tests:
-    - crashtest
-
 macosx1014-64-qr-tests:
     - cppunit
-    - crashtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     - gtest
     - jittest
     - jsreftest
     - marionette
-    - mochitest-a11y
     - mochitest-browser-chrome
-    - mochitest-chrome
-    - mochitest-chrome-gpu
     - mochitest-devtools-chrome
-    - mochitest-plain
-    - mochitest-plain-gpu
     - mochitest-media
-    - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
