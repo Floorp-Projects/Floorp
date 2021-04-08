@@ -73,3 +73,63 @@ macosx64-plain/debug:
             - macosx64-rust
     optimization:
         skip-unless-expanded: null
+
+macosx64-rusttests/opt:
+    description: "MacOS X x64 Rust Tests Opt"
+    index:
+        job-name: macosx64-rusttests-opt
+    treeherder:
+        platform: macosx64/opt
+        symbol: BR
+        tier: 1
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: rusttests
+    run:
+        actions: [build]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_macosx.py
+            - builds/releng_sub_mac_configs/rusttests.py
+        extra-config:
+            mozconfig_platform: macosx64
+        mozconfig-variant: rusttests
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - macosx64-rust
+            - macosx64-cbindgen
+            - macosx64-nasm
+            - macosx64-node
+    optimization:
+        test-inclusive: [rusttests]
+
+macosx64-rusttests/debug:
+    description: "MacOS X x64 Rust Tests Debug"
+    index:
+        job-name: macosx64-rusttests-debug
+    treeherder:
+        platform: macosx64/debug
+        symbol: BR
+        tier: 1
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: rusttests
+    run:
+        actions: [build]
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_macosx.py
+            - builds/releng_sub_mac_configs/rusttests.py
+        extra-config:
+            mozconfig_platform: macosx64
+        mozconfig-variant: rusttests-debug
+    run-on-projects: ['trunk']
+    fetches:
+        toolchain:
+            - macosx64-rust
+            - macosx64-cbindgen
+            - macosx64-nasm
+            - macosx64-node
+    optimization:
+        test-inclusive: [rusttests]
