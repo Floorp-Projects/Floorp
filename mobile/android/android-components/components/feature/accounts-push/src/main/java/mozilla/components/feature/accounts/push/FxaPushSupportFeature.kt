@@ -12,6 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.base.crash.CrashReporting
@@ -157,7 +158,9 @@ internal class AccountObserver(
         // registration could happen after onDevicesUpdate has been called, without having to tie this
         // into the account "auth lifecycle".
         // See https://github.com/mozilla-mobile/android-components/issues/8766
-        account.deviceConstellation().registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
+        GlobalScope.launch(Dispatchers.Main) {
+            account.deviceConstellation().registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
+        }
     }
 
     override fun onLoggedOut() {
