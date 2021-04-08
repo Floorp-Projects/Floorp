@@ -45,7 +45,6 @@ import os
 import re
 import io
 import json
-import shutil
 import sys
 import tarfile
 import tempfile
@@ -3245,14 +3244,6 @@ inline constexpr MeasureUnit simpleMeasureUnits[] = {
                 "\n"
             )
         )
-
-    shutil.copyfile(
-        sanctioned_cpp_file,
-        os.path.join(
-            js_src_builtin_intl_dir,
-            "../../../../intl/components/src/MeasureUnitGenerated.h",
-        ),
-    )
 
     writeUnitTestFiles(all_units, sanctioned_units)
 
