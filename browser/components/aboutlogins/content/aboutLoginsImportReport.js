@@ -51,6 +51,10 @@ function importReportDataHandler(event) {
         "about-logins-import-report-error",
         { count: report.error }
       );
+      detailedDuplicateCount.querySelector(".not-imported").hidden =
+        report.no_change === 0;
+      detailedErrorsCount.querySelector(".not-imported").hidden =
+        report.error === 0;
 
       detailsLoginsList.innerHTML = "";
       let fragment = document.createDocumentFragment();
