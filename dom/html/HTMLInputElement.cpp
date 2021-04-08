@@ -2742,7 +2742,11 @@ nsresult HTMLInputElement::SetValueChanged(bool aValueChanged) {
     return NS_OK;
   }
   mValueChanged = aValueChanged;
-  ValueChangedOrLastValueChangeWasInteractiveChanged();
+  UpdateTooLongValidityState();
+  UpdateTooShortValidityState();
+  // We need to do this unconditionally because the validity ui bits depend on
+  // this.
+  UpdateState(true);
   return NS_OK;
 }
 
@@ -2751,10 +2755,6 @@ void HTMLInputElement::SetLastValueChangeWasInteractive(bool aWasInteractive) {
     return;
   }
   mLastValueChangeWasInteractive = aWasInteractive;
-  ValueChangedOrLastValueChangeWasInteractiveChanged();
-}
-
-void HTMLInputElement::ValueChangedOrLastValueChangeWasInteractiveChanged() {
   const bool wasValid = IsValid();
   UpdateTooLongValidityState();
   UpdateTooShortValidityState();
