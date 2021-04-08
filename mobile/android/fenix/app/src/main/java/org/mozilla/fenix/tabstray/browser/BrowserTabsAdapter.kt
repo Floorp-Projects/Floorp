@@ -113,6 +113,6 @@ class BrowserTabsAdapter(
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        selectedItemAdapterBinding.start()
+        selectedItemAdapterBinding.stop()
     }
 }
