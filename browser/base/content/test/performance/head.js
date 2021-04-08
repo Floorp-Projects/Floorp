@@ -774,7 +774,12 @@ async function runUrlbarTest(
   };
 
   let urlbarRect = URLBar.textbox.getBoundingClientRect();
-  const SHADOW_SIZE = 4;
+  const SHADOW_SIZE = Services.prefs.getBoolPref(
+    "browser.proton.urlbar.enabled",
+    false
+  )
+    ? 10
+    : 4;
   let expectedRects = {
     filter: rects => {
       // We put text into the urlbar so expect its textbox to change.
