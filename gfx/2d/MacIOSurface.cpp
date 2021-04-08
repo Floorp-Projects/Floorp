@@ -19,10 +19,8 @@
 using namespace mozilla;
 
 MacIOSurface::MacIOSurface(CFTypeRefPtr<IOSurfaceRef> aIOSurfaceRef,
-                           double aContentsScaleFactor, bool aHasAlpha,
-                           gfx::YUVColorSpace aColorSpace)
+                           bool aHasAlpha, gfx::YUVColorSpace aColorSpace)
     : mIOSurfaceRef(std::move(aIOSurfaceRef)),
-      mContentsScaleFactor(aContentsScaleFactor),
       mHasAlpha(aHasAlpha),
       mColorSpace(aColorSpace) {
   IncrementUseCount();
@@ -59,10 +57,9 @@ void SetSizeProperties(const CFTypeRefPtr<CFMutableDictionaryRef>& aDict,
 }
 
 /* static */
-already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
-    int aWidth, int aHeight, double aContentsScaleFactor, bool aHasAlpha) {
-  if (aContentsScaleFactor <= 0) return nullptr;
-
+already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(int aWidth,
+                                                             int aHeight,
+                                                             bool aHasAlpha) {
   auto props = CFTypeRefPtr<CFMutableDictionaryRef>::WrapUnderCreateRule(
       ::CFDictionaryCreateMutable(kCFAllocatorDefault, 4,
                                   &kCFTypeDictionaryKeyCallBacks,
@@ -73,9 +70,6 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
   MOZ_ASSERT((size_t)aHeight <= GetMaxHeight());
 
   int32_t bytesPerElem = 4;
-  size_t intScaleFactor = ceil(aContentsScaleFactor);
-  aWidth *= intScaleFactor;
-  aHeight *= intScaleFactor;
   SetSizeProperties(props, aWidth, aHeight, bytesPerElem);
 
   AddDictionaryInt(props, kIOSurfacePixelFormat,
@@ -95,7 +89,7 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
   }
 
   RefPtr<MacIOSurface> ioSurface =
-      new MacIOSurface(std::move(surfaceRef), aContentsScaleFactor, aHasAlpha);
+      new MacIOSurface(std::move(surfaceRef), aHasAlpha);
 
   return ioSurface.forget();
 }
@@ -197,7 +191,7 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateNV12Surface(
                     colorData.get());
 
   RefPtr<MacIOSurface> ioSurface =
-      new MacIOSurface(std::move(surfaceRef), 1.0, false, aColorSpace);
+      new MacIOSurface(std::move(surfaceRef), false, aColorSpace);
 
   return ioSurface.forget();
 }
@@ -259,24 +253,21 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateYUV422Surface(
                     colorData.get());
 
   RefPtr<MacIOSurface> ioSurface =
-      new MacIOSurface(std::move(surfaceRef), 1.0, false, aColorSpace);
+      new MacIOSurface(std::move(surfaceRef), false, aColorSpace);
 
   return ioSurface.forget();
 }
 
 /* static */
 already_AddRefed<MacIOSurface> MacIOSurface::LookupSurface(
-    IOSurfaceID aIOSurfaceID, double aContentsScaleFactor, bool aHasAlpha,
-    gfx::YUVColorSpace aColorSpace) {
-  if (aContentsScaleFactor <= 0) return nullptr;
-
+    IOSurfaceID aIOSurfaceID, bool aHasAlpha, gfx::YUVColorSpace aColorSpace) {
   CFTypeRefPtr<IOSurfaceRef> surfaceRef =
       CFTypeRefPtr<IOSurfaceRef>::WrapUnderCreateRule(
           ::IOSurfaceLookup(aIOSurfaceID));
   if (!surfaceRef) return nullptr;
 
-  RefPtr<MacIOSurface> ioSurface = new MacIOSurface(
-      std::move(surfaceRef), aContentsScaleFactor, aHasAlpha, aColorSpace);
+  RefPtr<MacIOSurface> ioSurface =
+      new MacIOSurface(std::move(surfaceRef), aHasAlpha, aColorSpace);
 
   return ioSurface.forget();
 }
@@ -294,13 +285,11 @@ void* MacIOSurface::GetBaseAddressOfPlane(size_t aPlaneIndex) const {
 }
 
 size_t MacIOSurface::GetWidth(size_t plane) const {
-  size_t intScaleFactor = ceil(mContentsScaleFactor);
-  return GetDevicePixelWidth(plane) / intScaleFactor;
+  return GetDevicePixelWidth(plane);
 }
 
 size_t MacIOSurface::GetHeight(size_t plane) const {
-  size_t intScaleFactor = ceil(mContentsScaleFactor);
-  return GetDevicePixelHeight(plane) / intScaleFactor;
+  return GetDevicePixelHeight(plane);
 }
 
 size_t MacIOSurface::GetPlaneCount() const {

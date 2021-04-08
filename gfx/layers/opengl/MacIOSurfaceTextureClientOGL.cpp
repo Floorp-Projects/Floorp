@@ -41,7 +41,7 @@ MacIOSurfaceTextureData* MacIOSurfaceTextureData::Create(const IntSize& aSize,
   }
 
   RefPtr<MacIOSurface> surf = MacIOSurface::CreateIOSurface(
-      aSize.width, aSize.height, 1.0, aFormat == SurfaceFormat::B8G8R8A8);
+      aSize.width, aSize.height, aFormat == SurfaceFormat::B8G8R8A8);
   if (!surf) {
     return nullptr;
   }
