@@ -1147,6 +1147,7 @@ impl Renderer {
             max_depth_ids: device.max_depth_ids(),
             max_target_size: max_internal_texture_size,
             force_invalidation: false,
+            is_software,
         };
         info!("WR {:?}", config);
 
