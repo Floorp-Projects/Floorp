@@ -33,6 +33,7 @@
 #include "mtransport_test_utils.h"
 #include "SharedBuffer.h"
 #include "MediaTransportHandler.h"
+#include "WebrtcCallWrapper.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -262,10 +263,10 @@ class TestAgent {
             webrtc::AudioDecoderFactory* aAudioDecoderFactory,
             webrtc::WebRtcKeyValueConfig* aTrials)
       : audio_config_(109, "opus", 48000, 2, false),
-        call_(WebRtcCallWrapper::Create(
+        call_(WebrtcCallWrapper::Create(
             dom::RTCStatsTimestampMaker(),
             MakeUnique<media::ShutdownBlockingTicket>(
-                u"WebRtcCallWrapper shutdown blocker"_ns,
+                u"WebrtcCallWrapper shutdown blocker"_ns,
                 NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
             aModuleThread, aAudioStateConfig, aAudioDecoderFactory, aTrials)),
         audio_conduit_(
@@ -344,7 +345,7 @@ class TestAgent {
 
  protected:
   AudioCodecConfig audio_config_;
-  RefPtr<WebRtcCallWrapper> call_;
+  RefPtr<WebrtcCallWrapper> call_;
   RefPtr<MediaSessionConduit> audio_conduit_;
   RefPtr<FakeAudioTrack> audio_track_;
   // TODO(bcampen@mozilla.com): Right now this does not let us test RTCP in

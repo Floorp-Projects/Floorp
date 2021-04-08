@@ -47,6 +47,7 @@ enum class MediaSessionConduitLocalDirection : int { kSend, kRecv };
 class VideoSessionConduit;
 class AudioSessionConduit;
 class RtpRtcpConfig;
+class WebrtcCallWrapper;
 
 using RtpExtList = std::vector<webrtc::RtpExtension>;
 
@@ -291,157 +292,6 @@ class MediaSessionConduit {
       mSourcesCache;
 };
 
-// Wrap the webrtc.org Call class adding mozilla add/ref support.
-class WebRtcCallWrapper {
- public:
-  typedef webrtc::Call::Config Config;
-
-  static RefPtr<WebRtcCallWrapper> Create(
-      const dom::RTCStatsTimestampMaker& aTimestampMaker,
-      UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-      SharedWebrtcState* aSharedState, webrtc::WebRtcKeyValueConfig* aTrials) {
-    auto current = TaskQueueWrapper::MainAsCurrent();
-    return Create(aTimestampMaker, std::move(aShutdownTicket),
-                  aSharedState->GetModuleThread(),
-                  aSharedState->mAudioStateConfig,
-                  aSharedState->mAudioDecoderFactory, aTrials);
-  }
-
-  static RefPtr<WebRtcCallWrapper> Create(
-      const dom::RTCStatsTimestampMaker& aTimestampMaker,
-      UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-      webrtc::SharedModuleThread* aModuleThread,
-      const webrtc::AudioState::Config& aAudioStateConfig,
-      webrtc::AudioDecoderFactory* aAudioDecoderFactory,
-      webrtc::WebRtcKeyValueConfig* aTrials) {
-    auto current = TaskQueueWrapper::MainAsCurrent();
-    auto eventLog = MakeUnique<webrtc::RtcEventLogNull>();
-    webrtc::Call::Config config(eventLog.get());
-    config.audio_state = webrtc::AudioState::Create(aAudioStateConfig);
-    auto taskQueueFactory =
-        MakeUnique<SharedThreadPoolWebRtcTaskQueueFactory>();
-    config.task_queue_factory = taskQueueFactory.get();
-    config.trials = aTrials;
-    auto videoBitrateAllocatorFactory = WrapUnique(
-        webrtc::CreateBuiltinVideoBitrateAllocatorFactory().release());
-    return new WebRtcCallWrapper(
-        aAudioDecoderFactory, std::move(videoBitrateAllocatorFactory),
-        WrapUnique(webrtc::Call::Create(config, aModuleThread)),
-        std::move(eventLog), std::move(taskQueueFactory), aTimestampMaker,
-        std::move(aShutdownTicket));
-  }
-
-  static RefPtr<WebRtcCallWrapper> Create(UniquePtr<webrtc::Call> aCall) {
-    return new WebRtcCallWrapper(std::move(aCall));
-  }
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRtcCallWrapper)
-
-  // Don't allow copying/assigning.
-  WebRtcCallWrapper(const WebRtcCallWrapper&) = delete;
-  void operator=(const WebRtcCallWrapper&) = delete;
-
-  webrtc::Call* Call() const {
-    MOZ_ASSERT(NS_IsMainThread());
-    return mCall.get();
-  }
-
-  bool UnsetRemoteSSRC(uint32_t ssrc) {
-    MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
-    for (auto conduit : mConduits) {
-      if (!conduit->UnsetRemoteSSRC(ssrc)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  // Idempotent.
-  void RegisterConduit(MediaSessionConduit* conduit) {
-    MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
-    mConduits.insert(conduit);
-  }
-
-  // Idempotent.
-  void UnregisterConduit(MediaSessionConduit* conduit) {
-    MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
-    mConduits.erase(conduit);
-  }
-
-  DOMHighResTimeStamp GetNow() const { return mTimestampMaker.GetNow(); }
-
-  // Allow destroying the Call instance on the Call worker thread.
-  //
-  // Note that shutdown is blocked until the Call instance is destroyed.
-  //
-  // This CallWrapper is designed to be sharable, and is held by several objects
-  // that are cycle-collectable. TaskQueueWrapper that the Call instances use
-  // for worker threads are based off SharedThreadPools, and will block
-  // xpcom-shutdown-threads until destroyed. The Call instance however will hold
-  // on to its worker threads until destruction.
-  //
-  // If the last ref to this CallWrapper is held to cycle collector shutdown we
-  // end up in a deadlock where cycle collector shutdown is required to destroy
-  // the SharedThreadPool that is blocking xpcom-shutdown-threads from finishing
-  // and triggering cycle collector shutdown.
-  //
-  // It would be nice to have the invariant where this class is immutable to the
-  // degree that mCall is const, but given the above that is not possible.
-  void Destroy() {
-    MOZ_ASSERT(NS_IsMainThread());
-    auto current = TaskQueueWrapper::MainAsCurrent();
-    mCall = nullptr;
-    mShutdownTicket = nullptr;
-  }
-
-  const dom::RTCStatsTimestampMaker& GetTimestampMaker() const {
-    return mTimestampMaker;
-  }
-
- protected:
-  virtual ~WebRtcCallWrapper() { MOZ_ASSERT(!mCall); }
-
- private:
-  WebRtcCallWrapper(RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
-                    UniquePtr<webrtc::VideoBitrateAllocatorFactory>
-                        aVideoBitrateAllocatorFactory,
-                    UniquePtr<webrtc::Call> aCall,
-                    UniquePtr<webrtc::RtcEventLog> aEventLog,
-                    UniquePtr<webrtc::TaskQueueFactory> aTaskQueueFactory,
-                    const dom::RTCStatsTimestampMaker& aTimestampMaker,
-                    UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket)
-      : mTimestampMaker(aTimestampMaker),
-        mShutdownTicket(std::move(aShutdownTicket)),
-        mAudioDecoderFactory(std::move(aAudioDecoderFactory)),
-        mVideoBitrateAllocatorFactory(std::move(aVideoBitrateAllocatorFactory)),
-        mEventLog(std::move(aEventLog)),
-        mTaskQueueFactory(std::move(aTaskQueueFactory)),
-        mCall(std::move(aCall)) {}
-
-  explicit WebRtcCallWrapper(UniquePtr<webrtc::Call> aCall)
-      : mCall(std::move(aCall)) {
-    MOZ_ASSERT(mCall);
-  }
-
-  // Allows conduits to know about one another, to avoid remote SSRC
-  // collisions.
-  std::set<MediaSessionConduit*> mConduits;
-  dom::RTCStatsTimestampMaker mTimestampMaker;
-  UniquePtr<media::ShutdownBlockingTicket> mShutdownTicket;
-
- public:
-  const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
-  const UniquePtr<webrtc::VideoBitrateAllocatorFactory>
-      mVideoBitrateAllocatorFactory;
-  const UniquePtr<webrtc::RtcEventLog> mEventLog;
-  const UniquePtr<webrtc::TaskQueueFactory> mTaskQueueFactory;
-
- private:
-  // Main thread only, as it's the Call worker thread.
-  UniquePtr<webrtc::Call> mCall;
-};
-
 // Abstract base classes for external encoder/decoder.
 
 // Interface to help signal PluginIDs
@@ -477,7 +327,7 @@ class VideoSessionConduit : public MediaSessionConduit {
    *         of failure
    */
   static RefPtr<VideoSessionConduit> Create(
-      RefPtr<WebRtcCallWrapper> aCall,
+      RefPtr<WebrtcCallWrapper> aCall,
       nsCOMPtr<nsISerialEventTarget> aStsThread, std::string aPCHandle);
 
   enum FrameRequestType {
@@ -603,7 +453,7 @@ class AudioSessionConduit : public MediaSessionConduit {
    *         of failure
    */
   static RefPtr<AudioSessionConduit> Create(
-      RefPtr<WebRtcCallWrapper> aCall,
+      RefPtr<WebrtcCallWrapper> aCall,
       nsCOMPtr<nsISerialEventTarget> aStsThread);
 
   virtual ~AudioSessionConduit() {}

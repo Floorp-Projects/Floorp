@@ -133,7 +133,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void AlpnNegotiated_m(bool aPrivacyRequested);
 
   // TODO: Move to PeerConnectionImpl
-  RefPtr<WebRtcCallWrapper> mCall;
+  RefPtr<WebrtcCallWrapper> mCall;
 
   // mtransport objects
   RefPtr<MediaTransportHandler> mTransportHandler;
