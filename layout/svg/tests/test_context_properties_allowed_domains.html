@@ -1,0 +1,86 @@
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1699892 - SVG context properties for allowed domains</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+
+    /**
+     * Returns a Promise that resolves when target fires a load event.
+     */
+    function waitForLoad(target) {
+      return new Promise(resolve => {
+        target.addEventListener("load", () => {
+          if (event.target == target) {
+            resolve();
+          }}, { once: true });
+      });
+    }
+
+    /**
+     * Given an iframe, loads src in it, and waits for the load event
+     * for the iframe to fire. Then it snapshots the iframe and returns
+     * the snapshot.
+     *
+     * src can be a URL starting with http, or is otherwise assumed to be
+     * a srcdoc string.
+     */
+    async function loadSrcImageAndSnapshot(frame, src) {
+      frame.removeAttribute("src");
+      frame.removeAttribute("srcdoc");
+
+      if (!src.startsWith("http")) {
+        frame.srcdoc = src;
+      } else {
+        frame.src = src;
+      }
+      await waitForLoad(frame);
+      return await snapshotWindow(frame, false);
+    }
+
+    add_task(async () => {
+      const ALLOWED_DOMAIN = "example.org";
+      const DISALLOWED_DOMAIN = "example.com";
+
+      const CONTEXT_FILL_SVG = "tests/layout/svg/tests/file_context_fill_fallback_red.html";
+      const ALLOWED = `http://${ALLOWED_DOMAIN}/${CONTEXT_FILL_SVG}`;
+      const DISALLOWED = `http://${DISALLOWED_DOMAIN}/${CONTEXT_FILL_SVG}`;
+
+      await SpecialPowers.pushPrefEnv({
+        set: [["svg.context-properties.content.allowed-domains", ALLOWED_DOMAIN]]
+      });
+
+      let frame = document.getElementById("frame");
+
+      // When the context properties are allowed, we expect a green square. When they are
+      // not allowed, we expected a red square.
+
+      let redReference = await loadSrcImageAndSnapshot(
+        frame,
+        `<div style="width: 100px; height: 100px; background: red"></div>`
+      );
+
+      let greenReference = await loadSrcImageAndSnapshot(
+        frame,
+        `<div style="width: 100px; height: 100px; background: green"></div>`
+      );
+
+      let allowedSnapshot = await loadSrcImageAndSnapshot(frame, ALLOWED);
+      let disallowedSnapshot = await loadSrcImageAndSnapshot(frame, DISALLOWED);
+
+      let result = compareSnapshots(redReference, greenReference, false);
+      ok(result[0], "First, ensure that red and green do not match.");
+
+      result = compareSnapshots(allowedSnapshot, greenReference, true);
+      ok(result[0], "The allowed domain should show green.");
+
+      result = compareSnapshots(disallowedSnapshot, redReference, true);
+      ok(result[0], "The disallowed domain should show red.");
+    });
+  </script>
+</head>
+<body>
+<iframe id="frame"></iframe>
+</body>
+</html>
