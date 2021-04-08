@@ -8826,15 +8826,17 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
       // HTTPS-Only Mode is enabled and the two URIs are same-origin (modulo the
       // fact that the new URI is currently http), then set mSameExceptHashes to
       // true and only perform a fragment navigation.
-      nsCOMPtr<nsIChannel> docChannel = GetCurrentDocChannel();
-      nsCOMPtr<nsILoadInfo> loadInfo;
-      if (docChannel) {
-        loadInfo = docChannel->LoadInfo();
-      }
-      if (!aState.mSameExceptHashes &&
-          nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(
-              currentExposableURI, aLoadState->URI(), loadInfo)) {
-        aState.mSameExceptHashes = true;
+      if (!aState.mSameExceptHashes) {
+        nsCOMPtr<nsIChannel> docChannel = GetCurrentDocChannel();
+        if (docChannel) {
+          nsCOMPtr<nsILoadInfo> docLoadInfo = docChannel->LoadInfo();
+          if (!docLoadInfo->GetLoadErrorPage()) {
+            if (nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(
+                    currentExposableURI, aLoadState->URI(), docLoadInfo)) {
+              aState.mSameExceptHashes = true;
+            }
+          }
+        }
       }
     }
   }
