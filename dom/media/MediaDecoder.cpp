@@ -179,6 +179,7 @@ void MediaDecoder::NotifyOwnerActivityChanged(bool aIsOwnerInvisible,
 void MediaDecoder::Pause() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  LOG("Pause");
   if (mPlayState == PLAY_STATE_LOADING || IsEnded()) {
     mNextState = PLAY_STATE_PAUSED;
     return;
@@ -568,6 +569,7 @@ void MediaDecoder::Play() {
   MOZ_ASSERT(NS_IsMainThread());
 
   NS_ASSERTION(mDecoderStateMachine != nullptr, "Should have state machine.");
+  LOG("Play");
   if (mPlaybackRate == 0) {
     return;
   }
@@ -589,6 +591,7 @@ void MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType) {
 
   MOZ_ASSERT(aTime >= 0.0, "Cannot seek to a negative value.");
 
+  LOG("Seek");
   auto time = TimeUnit::FromSeconds(aTime);
 
   mLogicalPosition = aTime;
@@ -846,6 +849,8 @@ void MediaDecoder::ChangeState(PlayState aState) {
   if (mPlayState != aState) {
     DDLOG(DDLogCategory::Property, "play_state", ToPlayStateStr(aState));
   }
+  LOG("Play state changes from %s to %s", ToPlayStateStr(mPlayState),
+      ToPlayStateStr(aState));
   mPlayState = aState;
   UpdateTelemetryHelperBasedOnPlayState(aState);
 }
