@@ -119,6 +119,10 @@ try_task_config_schema = Schema(
         Optional("disable-pgo"): bool,
         Optional("env"): {text_type: text_type},
         Optional("gecko-profile"): bool,
+        Optional("gecko-profile-interval"): float,
+        Optional("gecko-profile-entries"): int,
+        Optional("gecko-profile-features"): text_type,
+        Optional("gecko-profile-threads"): text_type,
         Optional(
             "perftest-options",
             description="Options passed from `mach perftest` to try.",
