@@ -191,7 +191,7 @@ notification[type="critical"] > hbox > .messageImage {
   background-color: var(--notification-primary-button-background-active);
 }
 
-@media (-moz-proton-infobars) {
+@media (-moz-proton) {
 .notificationbox-stack {
   background-color: var(--toolbar-bgcolor);
   width: 100%;
