@@ -21,7 +21,7 @@ KNOWN_TEST_MODIFIERS = [
     "condprof-settled",
     "fission",
     "live",
-    "gecko_profile",
+    "gecko-profile",
     "cold",
     "webrender",
 ]
@@ -83,7 +83,7 @@ class PerftestResultsHandler(object):
             if self.live_sites:
                 extra_options.append("live")
             if self.gecko_profile:
-                extra_options.append("gecko_profile")
+                extra_options.append("gecko-profile")
             if self.cold:
                 extra_options.append("cold")
             if self.webrender_enabled:
