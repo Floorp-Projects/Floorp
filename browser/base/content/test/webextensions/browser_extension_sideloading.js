@@ -41,7 +41,7 @@ function promiseEvent(eventEmitter, event) {
 }
 
 function getAddonElement(managerWindow, addonId) {
-  return BrowserTestUtils.waitForCondition(
+  return TestUtils.waitForCondition(
     () =>
       managerWindow.document.querySelector(`addon-card[addon-id="${addonId}"]`),
     `Found entry for sideload extension addon "${addonId}" in HTML about:addons`
@@ -167,7 +167,7 @@ add_task(async function test_sideloading() {
   const VIEW = "addons://list/extension";
   let win = gBrowser.selectedBrowser.contentWindow;
 
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () => !win.gViewController.isLoading,
     "about:addons view is fully loaded"
   );
