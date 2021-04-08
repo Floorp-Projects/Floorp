@@ -138,21 +138,58 @@ TestRunner._timeoutFactor = 1;
 TestRunner.jscovDirPrefix = "";
 var coverageCollector = {};
 
+function record(succeeded, expectedFail, msg) {
+  let successInfo;
+  let failureInfo;
+  if (expectedFail) {
+    successInfo = {
+      status: "PASS",
+      expected: "FAIL",
+      message: "TEST-UNEXPECTED-PASS",
+    };
+    failureInfo = {
+      status: "FAIL",
+      expected: "FAIL",
+      message: "TEST-KNOWN-FAIL",
+    };
+  } else {
+    successInfo = {
+      status: "PASS",
+      expected: "PASS",
+      message: "TEST-PASS",
+    };
+    failureInfo = {
+      status: "FAIL",
+      expected: "PASS",
+      message: "TEST-UNEXPECTED-FAIL",
+    };
+  }
+
+  let result = succeeded ? successInfo : failureInfo;
+
+  TestRunner.structuredLogger.testStatus(
+    TestRunner.currentTestURL,
+    msg,
+    result.status,
+    result.expected,
+    "",
+    ""
+  );
+}
+
 TestRunner._checkForHangs = function() {
   function reportError(win, msg) {
-    if ("SimpleTest" in win) {
-      if (TestRunner.timeoutAsPass) {
-        win.SimpleTest.record(false, msg, "", "", false);
-      } else {
-        win.SimpleTest.ok(false, msg);
-      }
+    if (testInXOriginFrame() || "SimpleTest" in win) {
+      record(false, TestRunner.timeoutAsPass, msg);
     } else if ("W3CTest" in win) {
       win.W3CTest.logFailure(msg);
     }
   }
 
   async function killTest(win) {
-    if ("SimpleTest" in win) {
+    if (testInXOriginFrame()) {
+      win.postMessage("SimpleTest:timeout", "*");
+    } else if ("SimpleTest" in win) {
       await win.SimpleTest.timeout();
       win.SimpleTest.finish();
     } else if ("W3CTest" in win) {
@@ -163,9 +200,10 @@ TestRunner._checkForHangs = function() {
   if (TestRunner._currentTest < TestRunner._urls.length) {
     var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
     if (runtime >= TestRunner.timeout * TestRunner._timeoutFactor) {
+      let testIframe = $("testframe");
       var frameWindow =
-        $("testframe").contentWindow.wrappedJSObject ||
-        $("testframe").contentWindow;
+        (!testInXOriginFrame() && testIframe.contentWindow.wrappedJSObject) ||
+        testIframe.contentWindow;
       // TODO : Do this in a way that reports that the test ended with a status "TIMEOUT"
       reportError(frameWindow, "Test timed out.");
 
