@@ -11,15 +11,10 @@
 
 #include <stdio.h>
 #include <utility>
-#ifdef XP_WIN
-#  include <process.h>
-#  define getpid _getpid
-#else
-#  include <unistd.h>
-#endif
 
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "gc/Zone.h"
+#include "util/GetPidProvider.h"  // getpid()
 #include "util/Text.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSScript.h"

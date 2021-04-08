@@ -20,6 +20,7 @@
 #include "js/Printf.h"
 #include "js/TraceLoggerAPI.h"
 #include "threading/LockGuard.h"
+#include "util/GetPidProvider.h"  // getpid()
 #include "util/Text.h"
 #include "vm/Activation.h"  // js::ActivationIterator
 #include "vm/FrameIter.h"   // js::JitFrameIter
