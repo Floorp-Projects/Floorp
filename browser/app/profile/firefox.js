@@ -2557,3 +2557,10 @@ pref("first-startup.timeout", 30000);
   pref("app.normandy.test-prefs.integer", 0);
   pref("app.normandy.test-prefs.string", "");
 #endif
+
+// Mozilla-controlled domains that are allowed to use non-standard
+// context properties for SVG images for use in the browser UI. Please
+// keep this list short. This preference (and SVG `context-` keyword support)
+// are expected to go away once a standardized alternative becomes
+// available.
+pref("svg.context-properties.content.allowed-domains", "profile.accounts.firefox.com,profile.stage.mozaws.net");
