@@ -1227,23 +1227,6 @@ metrics:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2021-08-11"
-  activity_state_provider_error:
-    type: boolean
-    description: |
-      The `StartupActivityStateProvider...onActivityStarted` was unexpectedly
-      called twice. We can use this metric to validate our assumptions about
-      how these APIs are called. This probe can be removed once we validate
-      these assumptions.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/18426
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/18632#issue-600193452
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - perf-android-fe@mozilla.com
-      - mcomella@mozilla.com
-    expires: "2021-08-11"
 
 preferences:
   show_search_suggestions:

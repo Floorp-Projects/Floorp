@@ -275,8 +275,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         components.performance.coldStartupDurationTelemetry.onHomeActivityOnCreate(
             components.performance.visualCompletenessQueue,
-            components.appStartReasonProvider,
-            components.startupActivityStateProvider,
+            components.startupStateProvider,
             safeIntent,
             rootContainer
         )
