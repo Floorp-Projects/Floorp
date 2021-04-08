@@ -21,7 +21,7 @@ function getExpectedTargets() {
     "library",
     "logins",
     "pageAction-bookmark",
-    ...(UrlbarPrefs.get("browser.proton.urlbar.enabled")
+    ...(gProton
       ? []
       : [
           "pageAction-copyURL",
