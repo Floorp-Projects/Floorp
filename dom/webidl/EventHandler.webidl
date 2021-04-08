@@ -157,6 +157,12 @@ interface mixin WindowEventHandlers {
            attribute EventHandler onunload;
 };
 
+// https://w3c.github.io/gamepad/#extensions-to-the-windoweventhandlers-interface-mixin
+partial interface mixin WindowEventHandlers {
+  attribute EventHandler ongamepadconnected;
+  attribute EventHandler ongamepaddisconnected;
+};
+
 interface mixin DocumentAndElementEventHandlers {
   attribute EventHandler oncopy;
   attribute EventHandler oncut;
