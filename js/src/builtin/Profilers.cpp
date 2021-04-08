@@ -14,6 +14,8 @@
 #include <iterator>
 #include <stdarg.h>
 
+#include "util/GetPidProvider.h"  // getpid()
+
 #ifdef MOZ_CALLGRIND
 #  include <valgrind/callgrind.h>
 #endif
@@ -22,11 +24,6 @@
 #  ifdef MOZ_INSTRUMENTS
 #    include "devtools/Instruments.h"
 #  endif
-#endif
-
-#ifdef XP_WIN
-#  include <process.h>
-#  define getpid _getpid
 #endif
 
 #include "js/CharacterEncoding.h"

@@ -26,6 +26,7 @@
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
 #include "util/DifferentialTesting.h"
+#include "util/GetPidProvider.h"  // getpid()
 #include "util/Poison.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSONPrinter.h"
@@ -36,13 +37,6 @@
 #include "gc/Marking-inl.h"
 #include "gc/Zone-inl.h"
 #include "vm/NativeObject-inl.h"
-
-#ifdef XP_WIN
-#  include <process.h>
-#  define getpid _getpid
-#else
-#  include <unistd.h>
-#endif
 
 using namespace js;
 using namespace gc;

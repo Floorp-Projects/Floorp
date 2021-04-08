@@ -39,6 +39,7 @@
 #include "js/Wrapper.h"
 #include "shell/jsshell.h"
 #include "shell/StringUtils.h"
+#include "util/GetPidProvider.h"  // getpid()
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "util/Windows.h"
@@ -52,6 +53,8 @@
 #    define PATH_MAX (MAX_PATH > _MAX_DIR ? MAX_PATH : _MAX_DIR)
 #  endif
 #  define getcwd _getcwd
+#elif defined(__wasi__)
+// Nothing.
 #else
 #  include <libgen.h>
 #endif
@@ -1021,6 +1024,7 @@ static bool os_kill(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+#  ifndef __wasi__
 static bool os_waitpid(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1067,6 +1071,7 @@ static bool os_waitpid(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setObject(*info);
   return true;
 }
+#  endif  // !__wasi__
 #endif
 
 // clang-format off
@@ -1094,11 +1099,13 @@ static const JSFunctionSpecWithHelp os_functions[] = {
 "  Send a signal to the given pid. The default signal is SIGINT. The signal\n"
 "  passed in must be numeric, if given."),
 
+#  ifndef __wasi__
     JS_FN_HELP("waitpid", os_waitpid, 1, 0,
 "waitpid(pid[, nohang])",
 "  Calls waitpid(). 'nohang' is a boolean indicating whether to pass WNOHANG.\n"
 "  The return value is an object containing a 'pid' field, if a process was waitable\n"
 "  and an 'exitStatus' field if a pid exited."),
+#  endif  // !__wasi__
 #endif
 
     JS_FS_HELP_END
