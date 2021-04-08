@@ -285,11 +285,15 @@ var BackgroundUpdate = {
           `to per-installation pref default "app.update.background.enabled": ${scheduling}`
       );
     } catch (e) {
-      if (
-        !(e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_UNEXPECTED)
-      ) {
-        throw e;
+      if (e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_UNEXPECTED) {
+        // The preference doesn't exist.
+        return;
       }
+      console.warn(
+        `ignoring failure to mirror per-profile pref "app.update.background.scheduling.enabled" default ` +
+          `to per-installation pref default "app.update.background.enabled"`,
+        e
+      );
     }
   },
 
