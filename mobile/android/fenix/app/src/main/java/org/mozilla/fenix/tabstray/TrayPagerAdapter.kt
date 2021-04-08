@@ -34,12 +34,13 @@ class TrayPagerAdapter(
 
         return when (viewType) {
             NormalBrowserTabViewHolder.LAYOUT_ID -> NormalBrowserTabViewHolder(
-                store,
                 itemView,
+                store,
                 interactor
             )
             PrivateBrowserTabViewHolder.LAYOUT_ID -> PrivateBrowserTabViewHolder(
                 itemView,
+                store,
                 interactor
             )
             SyncedTabViewHolder.LAYOUT_ID -> SyncedTabViewHolder(

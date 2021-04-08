@@ -9,6 +9,7 @@ import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
+import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList
 
 /**
@@ -16,13 +17,15 @@ import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList
  */
 abstract class BaseBrowserTabViewHolder(
     containerView: View,
-    interactor: TabsTrayInteractor
+    interactor: TabsTrayInteractor,
+    tabsTrayStore: TabsTrayStore
 ) : AbstractTrayViewHolder(containerView) {
 
-    protected val trayList: BaseBrowserTrayList = itemView.findViewById(R.id.tray_list_item)
+    private val trayList: BaseBrowserTrayList = itemView.findViewById(R.id.tray_list_item)
 
     init {
         trayList.interactor = interactor
+        trayList.tabsTrayStore = tabsTrayStore
     }
 
     @CallSuper

@@ -17,10 +17,10 @@ import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
  * View holder for the normal tabs tray list.
  */
 class NormalBrowserTabViewHolder(
-    private val store: TabsTrayStore,
     containerView: View,
+    private val store: TabsTrayStore,
     interactor: TabsTrayInteractor
-) : BaseBrowserTabViewHolder(containerView, interactor), SelectionHolder<Tab> {
+) : BaseBrowserTabViewHolder(containerView, interactor, store), SelectionHolder<Tab> {
 
     /**
      * Holds the list of selected tabs.
