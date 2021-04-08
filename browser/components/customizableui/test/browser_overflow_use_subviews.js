@@ -16,17 +16,14 @@ registerCleanupFunction(stopOverflowing);
 
 /**
  * This checks that subview-compatible items show up as subviews rather than
- * re-anchored panels. If we ever remove the developer widget, please
+ * re-anchored panels. If we ever remove the library widget, please
  * replace this test with another subview - don't remove it.
  */
-add_task(async function check_developer_subview_in_overflow() {
+add_task(async function check_library_subview_in_overflow() {
   kOverflowPanel.setAttribute("animate", "false");
   gOriginalWidth = window.outerWidth;
 
-  CustomizableUI.addWidgetToArea(
-    "developer-button",
-    CustomizableUI.AREA_NAVBAR
-  );
+  CustomizableUI.addWidgetToArea("library-button", CustomizableUI.AREA_NAVBAR);
 
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   ok(
@@ -45,20 +42,16 @@ add_task(async function check_developer_subview_in_overflow() {
   chevron.click();
   await shownPanelPromise;
 
-  let button = document.getElementById("developer-button");
+  let button = document.getElementById("library-button");
   button.click();
 
-  let developerView = document.getElementById("PanelUI-developer");
-  await BrowserTestUtils.waitForEvent(developerView, "ViewShown");
+  let libraryView = document.getElementById("appMenu-libraryView");
+  await BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
   let hasSubviews = !!kOverflowPanel.querySelector("panelmultiview");
   let expectedPanel = hasSubviews
     ? kOverflowPanel
     : document.getElementById("customizationui-widget-panel");
-  is(
-    developerView.closest("panel"),
-    expectedPanel,
-    "Should be inside the panel"
-  );
+  is(libraryView.closest("panel"), expectedPanel, "Should be inside the panel");
   expectedPanel.hidePopup();
   await Promise.resolve(); // wait for popup to hide fully.
   await stopOverflowing();
