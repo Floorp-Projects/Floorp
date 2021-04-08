@@ -92,8 +92,7 @@ Maybe<layers::SurfaceDescriptor>
 SharedSurface_IOSurface::ToSurfaceDescriptor() {
   const bool isOpaque = false;  // RGBA
   return Some(layers::SurfaceDescriptorMacIOSurface(
-      mIOSurf->GetIOSurfaceID(), mIOSurf->GetContentsScaleFactor(), isOpaque,
-      mIOSurf->GetYUVColorSpace()));
+      mIOSurf->GetIOSurfaceID(), isOpaque, mIOSurf->GetYUVColorSpace()));
 }
 
 }  // namespace gl
