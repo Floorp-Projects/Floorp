@@ -108,7 +108,12 @@ export const MultiStageAboutWelcome = props => {
 
   return (
     <React.Fragment>
-      <div className={`outer-wrapper onboardingContainer ${props.design}`}>
+      <div
+        className={`outer-wrapper onboardingContainer ${props.design}`}
+        style={{
+          backgroundImage: `url(${props.background_url})`,
+        }}
+      >
         {props.screens.map(screen => {
           return index === screen.order ? (
             <WelcomeScreen
