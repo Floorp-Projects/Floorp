@@ -1771,9 +1771,9 @@ pref("browser.contentblocking.report.show_mobile_app", true);
 // Enable the vpn card by default.
 pref("browser.contentblocking.report.vpn.enabled", true);
 // Only show vpn card to certain regions. Comma separated string of two letter ISO 3166-1 country codes.
-pref("browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb");
+pref("browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb,de,fr");
 // Comma separated string of mozilla vpn supported platforms.
-pref("browser.contentblocking.report.vpn_platforms", "win");
+pref("browser.contentblocking.report.vpn_platforms", "win,mac,linux");
 pref("browser.contentblocking.report.hide_vpn_banner", false);
 pref("browser.contentblocking.report.vpn_sub_id", "sub_HrfCZF7VPHzZkA");
 
