@@ -1,4 +1,4 @@
-use auxil::{FastHashMap, ShaderStage};
+use auxil::{FastHashMap, FastHashSet, ShaderStage};
 use hal::{command, image, pso};
 
 use winapi::{
@@ -17,7 +17,7 @@ use std::{mem, ptr};
 
 use parking_lot::Mutex;
 use smallvec::SmallVec;
-use spirv_cross;
+use spirv_cross::{self, hlsl::ShaderModel};
 
 use crate::{conv, shader, Buffer, Image, RenderPassCache};
 
@@ -103,6 +103,31 @@ impl ConstantBuffer {
     }
 }
 
+#[derive(Debug)]
+struct MissingComputeInternal {
+    // Image<->Image not covered by `CopySubresourceRegion`
+    cs_copy_image_shaders: FastHashSet<(dxgiformat::DXGI_FORMAT, dxgiformat::DXGI_FORMAT)>,
+    // Image -> Buffer and Buffer -> Image shaders
+    cs_copy_buffer_shaders: FastHashSet<dxgiformat::DXGI_FORMAT>,
+}
+
+#[derive(Debug)]
+struct ComputeInternal {
+    // Image<->Image not covered by `CopySubresourceRegion`
+    cs_copy_image_shaders: FastHashMap<
+        (dxgiformat::DXGI_FORMAT, dxgiformat::DXGI_FORMAT),
+        ComPtr<d3d11::ID3D11ComputeShader>,
+    >,
+    // Image -> Buffer and Buffer -> Image shaders
+    cs_copy_buffer_shaders: FastHashMap<dxgiformat::DXGI_FORMAT, ComputeCopyBuffer>,
+}
+
+#[derive(Debug)]
+enum PossibleComputeInternal {
+    Available(ComputeInternal),
+    Missing(MissingComputeInternal),
+}
+
 // Holds everything we need for fallback implementations of features that are not in DX.
 //
 // TODO: make struct fields more modular and group them up in structs depending on if it is a
@@ -131,13 +156,8 @@ pub struct Internal {
     ps_blit_2d_int: ComPtr<d3d11::ID3D11PixelShader>,
     ps_blit_2d_float: ComPtr<d3d11::ID3D11PixelShader>,
 
-    // Image<->Image not covered by `CopySubresourceRegion`
-    cs_copy_image_shaders: FastHashMap<
-        (dxgiformat::DXGI_FORMAT, dxgiformat::DXGI_FORMAT),
-        ComPtr<d3d11::ID3D11ComputeShader>,
-    >,
-    // Image -> Buffer and Buffer -> Image shaders
-    cs_copy_buffer_shaders: FastHashMap<dxgiformat::DXGI_FORMAT, ComputeCopyBuffer>,
+    // all compute shader based workarounds, so they can be None when running on an older version without compute shaders.
+    compute_internal: PossibleComputeInternal,
 
     // internal constant buffer that is used by internal shaders
     internal_buffer: Mutex<ConstantBuffer>,
@@ -152,19 +172,21 @@ pub struct Internal {
     /// Command lists are not supported by graphics card and are being emulated.
     /// Requires various workarounds to make things work correctly.
     pub command_list_emulation: bool,
+
+    pub device_features: hal::Features,
+    pub device_feature_level: u32,
+
+    pub downlevel: hal::DownlevelProperties,
 }
 
-fn compile_blob(src: &[u8], entrypoint: &str, stage: ShaderStage) -> ComPtr<d3dcommon::ID3DBlob> {
+fn compile_blob(
+    src: &[u8],
+    entrypoint: &str,
+    stage: ShaderStage,
+    shader_model: ShaderModel,
+) -> ComPtr<d3dcommon::ID3DBlob> {
     unsafe {
-        ComPtr::from_raw(
-            shader::compile_hlsl_shader(
-                stage,
-                spirv_cross::hlsl::ShaderModel::V5_0,
-                entrypoint,
-                src,
-            )
-            .unwrap(),
-        )
+        ComPtr::from_raw(shader::compile_hlsl_shader(stage, shader_model, entrypoint, src).unwrap())
     }
 }
 
@@ -172,8 +194,9 @@ fn compile_vs(
     device: &ComPtr<d3d11::ID3D11Device>,
     src: &[u8],
     entrypoint: &str,
+    shader_model: ShaderModel,
 ) -> ComPtr<d3d11::ID3D11VertexShader> {
-    let bytecode = compile_blob(src, entrypoint, ShaderStage::Vertex);
+    let bytecode = compile_blob(src, entrypoint, ShaderStage::Vertex, shader_model);
     let mut shader = ptr::null_mut();
     let hr = unsafe {
         device.CreateVertexShader(
@@ -192,8 +215,9 @@ fn compile_ps(
     device: &ComPtr<d3d11::ID3D11Device>,
     src: &[u8],
     entrypoint: &str,
+    shader_model: ShaderModel,
 ) -> ComPtr<d3d11::ID3D11PixelShader> {
-    let bytecode = compile_blob(src, entrypoint, ShaderStage::Fragment);
+    let bytecode = compile_blob(src, entrypoint, ShaderStage::Fragment, shader_model);
     let mut shader = ptr::null_mut();
     let hr = unsafe {
         device.CreatePixelShader(
@@ -212,8 +236,9 @@ fn compile_cs(
     device: &ComPtr<d3d11::ID3D11Device>,
     src: &[u8],
     entrypoint: &str,
+    shader_model: ShaderModel,
 ) -> ComPtr<d3d11::ID3D11ComputeShader> {
-    let bytecode = compile_blob(src, entrypoint, ShaderStage::Compute);
+    let bytecode = compile_blob(src, entrypoint, ShaderStage::Compute, shader_model);
     let mut shader = ptr::null_mut();
     let hr = unsafe {
         device.CreateComputeShader(
@@ -229,7 +254,12 @@ fn compile_cs(
 }
 
 impl Internal {
-    pub fn new(device: &ComPtr<d3d11::ID3D11Device>) -> Self {
+    pub fn new(
+        device: &ComPtr<d3d11::ID3D11Device>,
+        device_features: hal::Features,
+        device_feature_level: u32,
+        downlevel: hal::DownlevelProperties,
+    ) -> Self {
         let internal_buffer = {
             let desc = d3d11::D3D11_BUFFER_DESC {
                 ByteWidth: mem::size_of::<BufferImageCopyInfo>() as _,
@@ -373,227 +403,378 @@ impl Internal {
             )
         };
 
-        let clear_shaders = include_bytes!("../shaders/clear.hlsl");
-        let copy_shaders = include_bytes!("../shaders/copy.hlsl");
-        let blit_shaders = include_bytes!("../shaders/blit.hlsl");
+        let compute_shaders = if device_feature_level >= d3dcommon::D3D_FEATURE_LEVEL_11_0 {
+            true
+        } else {
+            // FL10 does support compute shaders but we need typed UAVs, which FL10 compute shaders don't support, so we might as well not have them.
+            false
+        };
 
-        let mut cs_copy_image_shaders = FastHashMap::default();
-        cs_copy_image_shaders.insert(
-            (
+        let shader_model = conv::map_feature_level_to_shader_model(device_feature_level);
+
+        let compute_internal = if compute_shaders {
+            let copy_shaders = include_bytes!("../shaders/copy.hlsl");
+            let mut cs_copy_image_shaders = FastHashMap::default();
+            cs_copy_image_shaders.insert(
+                (
+                    dxgiformat::DXGI_FORMAT_R8G8_UINT,
+                    dxgiformat::DXGI_FORMAT_R16_UINT,
+                ),
+                compile_cs(
+                    device,
+                    copy_shaders,
+                    "cs_copy_image2d_r8g8_image2d_r16",
+                    shader_model,
+                ),
+            );
+            cs_copy_image_shaders.insert(
+                (
+                    dxgiformat::DXGI_FORMAT_R16_UINT,
+                    dxgiformat::DXGI_FORMAT_R8G8_UINT,
+                ),
+                compile_cs(
+                    device,
+                    copy_shaders,
+                    "cs_copy_image2d_r16_image2d_r8g8",
+                    shader_model,
+                ),
+            );
+            cs_copy_image_shaders.insert(
+                (
+                    dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
+                    dxgiformat::DXGI_FORMAT_R32_UINT,
+                ),
+                compile_cs(
+                    device,
+                    copy_shaders,
+                    "cs_copy_image2d_r8g8b8a8_image2d_r32",
+                    shader_model,
+                ),
+            );
+            cs_copy_image_shaders.insert(
+                (
+                    dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
+                    dxgiformat::DXGI_FORMAT_R16G16_UINT,
+                ),
+                compile_cs(
+                    device,
+                    copy_shaders,
+                    "cs_copy_image2d_r8g8b8a8_image2d_r16g16",
+                    shader_model,
+                ),
+            );
+            cs_copy_image_shaders.insert(
+                (
+                    dxgiformat::DXGI_FORMAT_R16G16_UINT,
+                    dxgiformat::DXGI_FORMAT_R32_UINT,
+                ),
+                compile_cs(
+                    device,
+                    copy_shaders,
+                    "cs_copy_image2d_r16g16_image2d_r32",
+                    shader_model,
+                ),
+            );
+            cs_copy_image_shaders.insert(
+                (
+                    dxgiformat::DXGI_FORMAT_R16G16_UINT,
+                    dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
+                ),
+                compile_cs(
+                    device,
+                    copy_shaders,
+                    "cs_copy_image2d_r16g16_image2d_r8g8b8a8",
+                    shader_model,
+                ),
+            );
+            cs_copy_image_shaders.insert(
+                (
+                    dxgiformat::DXGI_FORMAT_R32_UINT,
+                    dxgiformat::DXGI_FORMAT_R16G16_UINT,
+                ),
+                compile_cs(
+                    device,
+                    copy_shaders,
+                    "cs_copy_image2d_r32_image2d_r16g16",
+                    shader_model,
+                ),
+            );
+            cs_copy_image_shaders.insert(
+                (
+                    dxgiformat::DXGI_FORMAT_R32_UINT,
+                    dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
+                ),
+                compile_cs(
+                    device,
+                    copy_shaders,
+                    "cs_copy_image2d_r32_image2d_r8g8b8a8",
+                    shader_model,
+                ),
+            );
+
+            let mut cs_copy_buffer_shaders = FastHashMap::default();
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_R32G32B32A32_UINT,
+                ComputeCopyBuffer {
+                    d1_from_buffer: None,
+                    d2_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image2d_r32g32b32a32",
+                        shader_model,
+                    )),
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_r32g32b32a32_buffer",
+                        shader_model,
+                    ),
+                    scale: (1, 1),
+                },
+            );
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_R32G32_UINT,
+                ComputeCopyBuffer {
+                    d1_from_buffer: None,
+                    d2_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image2d_r32g32",
+                        shader_model,
+                    )),
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_r32g32_buffer",
+                        shader_model,
+                    ),
+                    scale: (1, 1),
+                },
+            );
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_R32_UINT,
+                ComputeCopyBuffer {
+                    d1_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image1d_r32",
+                        shader_model,
+                    )),
+                    d2_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image2d_r32",
+                        shader_model,
+                    )),
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_r32_buffer",
+                        shader_model,
+                    ),
+                    scale: (1, 1),
+                },
+            );
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_R16G16B16A16_UINT,
+                ComputeCopyBuffer {
+                    d1_from_buffer: None,
+                    d2_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image2d_r16g16b16a16",
+                        shader_model,
+                    )),
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_r16g16b16a16_buffer",
+                        shader_model,
+                    ),
+                    scale: (1, 1),
+                },
+            );
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_R16G16_UINT,
+                ComputeCopyBuffer {
+                    d1_from_buffer: None,
+                    d2_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image2d_r16g16",
+                        shader_model,
+                    )),
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_r16g16_buffer",
+                        shader_model,
+                    ),
+                    scale: (1, 1),
+                },
+            );
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_R16_UINT,
+                ComputeCopyBuffer {
+                    d1_from_buffer: None,
+                    d2_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image2d_r16",
+                        shader_model,
+                    )),
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_r16_buffer",
+                        shader_model,
+                    ),
+                    scale: (2, 1),
+                },
+            );
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_B8G8R8A8_UNORM,
+                ComputeCopyBuffer {
+                    d1_from_buffer: None,
+                    d2_from_buffer: None,
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_b8g8r8a8_buffer",
+                        shader_model,
+                    ),
+                    scale: (1, 1),
+                },
+            );
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
+                ComputeCopyBuffer {
+                    d1_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image1d_r8g8b8a8",
+                        shader_model,
+                    )),
+                    d2_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image2d_r8g8b8a8",
+                        shader_model,
+                    )),
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_r8g8b8a8_buffer",
+                        shader_model,
+                    ),
+                    scale: (1, 1),
+                },
+            );
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_R8G8_UINT,
+                ComputeCopyBuffer {
+                    d1_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image1d_r8g8",
+                        shader_model,
+                    )),
+                    d2_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image2d_r8g8",
+                        shader_model,
+                    )),
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_r8g8_buffer",
+                        shader_model,
+                    ),
+                    scale: (2, 1),
+                },
+            );
+            cs_copy_buffer_shaders.insert(
+                dxgiformat::DXGI_FORMAT_R8_UINT,
+                ComputeCopyBuffer {
+                    d1_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image1d_r8",
+                        shader_model,
+                    )),
+                    d2_from_buffer: Some(compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_buffer_image2d_r8",
+                        shader_model,
+                    )),
+                    d2_into_buffer: compile_cs(
+                        device,
+                        copy_shaders,
+                        "cs_copy_image2d_r8_buffer",
+                        shader_model,
+                    ),
+                    scale: (4, 1),
+                },
+            );
+
+            PossibleComputeInternal::Available(ComputeInternal {
+                cs_copy_buffer_shaders,
+                cs_copy_image_shaders,
+            })
+        } else {
+            let mut cs_copy_image_shaders = FastHashSet::default();
+            cs_copy_image_shaders.insert((
                 dxgiformat::DXGI_FORMAT_R8G8_UINT,
                 dxgiformat::DXGI_FORMAT_R16_UINT,
-            ),
-            compile_cs(device, copy_shaders, "cs_copy_image2d_r8g8_image2d_r16"),
-        );
-        cs_copy_image_shaders.insert(
-            (
+            ));
+            cs_copy_image_shaders.insert((
                 dxgiformat::DXGI_FORMAT_R16_UINT,
                 dxgiformat::DXGI_FORMAT_R8G8_UINT,
-            ),
-            compile_cs(device, copy_shaders, "cs_copy_image2d_r16_image2d_r8g8"),
-        );
-        cs_copy_image_shaders.insert(
-            (
+            ));
+            cs_copy_image_shaders.insert((
                 dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
                 dxgiformat::DXGI_FORMAT_R32_UINT,
-            ),
-            compile_cs(device, copy_shaders, "cs_copy_image2d_r8g8b8a8_image2d_r32"),
-        );
-        cs_copy_image_shaders.insert(
-            (
+            ));
+            cs_copy_image_shaders.insert((
                 dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
                 dxgiformat::DXGI_FORMAT_R16G16_UINT,
-            ),
-            compile_cs(
-                device,
-                copy_shaders,
-                "cs_copy_image2d_r8g8b8a8_image2d_r16g16",
-            ),
-        );
-        cs_copy_image_shaders.insert(
-            (
+            ));
+            cs_copy_image_shaders.insert((
                 dxgiformat::DXGI_FORMAT_R16G16_UINT,
                 dxgiformat::DXGI_FORMAT_R32_UINT,
-            ),
-            compile_cs(device, copy_shaders, "cs_copy_image2d_r16g16_image2d_r32"),
-        );
-        cs_copy_image_shaders.insert(
-            (
+            ));
+            cs_copy_image_shaders.insert((
                 dxgiformat::DXGI_FORMAT_R16G16_UINT,
                 dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
-            ),
-            compile_cs(
-                device,
-                copy_shaders,
-                "cs_copy_image2d_r16g16_image2d_r8g8b8a8",
-            ),
-        );
-        cs_copy_image_shaders.insert(
-            (
+            ));
+            cs_copy_image_shaders.insert((
                 dxgiformat::DXGI_FORMAT_R32_UINT,
                 dxgiformat::DXGI_FORMAT_R16G16_UINT,
-            ),
-            compile_cs(device, copy_shaders, "cs_copy_image2d_r32_image2d_r16g16"),
-        );
-        cs_copy_image_shaders.insert(
-            (
+            ));
+            cs_copy_image_shaders.insert((
                 dxgiformat::DXGI_FORMAT_R32_UINT,
                 dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
-            ),
-            compile_cs(device, copy_shaders, "cs_copy_image2d_r32_image2d_r8g8b8a8"),
-        );
+            ));
 
-        let mut cs_copy_buffer_shaders = FastHashMap::default();
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_R32G32B32A32_UINT,
-            ComputeCopyBuffer {
-                d1_from_buffer: None,
-                d2_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image2d_r32g32b32a32",
-                )),
-                d2_into_buffer: compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_image2d_r32g32b32a32_buffer",
-                ),
-                scale: (1, 1),
-            },
-        );
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_R32G32_UINT,
-            ComputeCopyBuffer {
-                d1_from_buffer: None,
-                d2_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image2d_r32g32",
-                )),
-                d2_into_buffer: compile_cs(device, copy_shaders, "cs_copy_image2d_r32g32_buffer"),
-                scale: (1, 1),
-            },
-        );
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_R32_UINT,
-            ComputeCopyBuffer {
-                d1_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image1d_r32",
-                )),
-                d2_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image2d_r32",
-                )),
-                d2_into_buffer: compile_cs(device, copy_shaders, "cs_copy_image2d_r32_buffer"),
-                scale: (1, 1),
-            },
-        );
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_R16G16B16A16_UINT,
-            ComputeCopyBuffer {
-                d1_from_buffer: None,
-                d2_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image2d_r16g16b16a16",
-                )),
-                d2_into_buffer: compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_image2d_r16g16b16a16_buffer",
-                ),
-                scale: (1, 1),
-            },
-        );
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_R16G16_UINT,
-            ComputeCopyBuffer {
-                d1_from_buffer: None,
-                d2_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image2d_r16g16",
-                )),
-                d2_into_buffer: compile_cs(device, copy_shaders, "cs_copy_image2d_r16g16_buffer"),
-                scale: (1, 1),
-            },
-        );
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_R16_UINT,
-            ComputeCopyBuffer {
-                d1_from_buffer: None,
-                d2_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image2d_r16",
-                )),
-                d2_into_buffer: compile_cs(device, copy_shaders, "cs_copy_image2d_r16_buffer"),
-                scale: (2, 1),
-            },
-        );
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_B8G8R8A8_UNORM,
-            ComputeCopyBuffer {
-                d1_from_buffer: None,
-                d2_from_buffer: None,
-                d2_into_buffer: compile_cs(device, copy_shaders, "cs_copy_image2d_b8g8r8a8_buffer"),
-                scale: (1, 1),
-            },
-        );
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT,
-            ComputeCopyBuffer {
-                d1_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image1d_r8g8b8a8",
-                )),
-                d2_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image2d_r8g8b8a8",
-                )),
-                d2_into_buffer: compile_cs(device, copy_shaders, "cs_copy_image2d_r8g8b8a8_buffer"),
-                scale: (1, 1),
-            },
-        );
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_R8G8_UINT,
-            ComputeCopyBuffer {
-                d1_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image1d_r8g8",
-                )),
-                d2_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image2d_r8g8",
-                )),
-                d2_into_buffer: compile_cs(device, copy_shaders, "cs_copy_image2d_r8g8_buffer"),
-                scale: (2, 1),
-            },
-        );
-        cs_copy_buffer_shaders.insert(
-            dxgiformat::DXGI_FORMAT_R8_UINT,
-            ComputeCopyBuffer {
-                d1_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image1d_r8",
-                )),
-                d2_from_buffer: Some(compile_cs(
-                    device,
-                    copy_shaders,
-                    "cs_copy_buffer_image2d_r8",
-                )),
-                d2_into_buffer: compile_cs(device, copy_shaders, "cs_copy_image2d_r8_buffer"),
-                scale: (4, 1),
-            },
-        );
+            let mut cs_copy_buffer_shaders = FastHashSet::default();
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_R32G32B32A32_UINT);
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_R32G32_UINT);
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_R32_UINT);
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_R16G16B16A16_UINT);
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_R16G16_UINT);
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_R16_UINT);
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_B8G8R8A8_UNORM);
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_R8G8B8A8_UINT);
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_R8G8_UINT);
+            cs_copy_buffer_shaders.insert(dxgiformat::DXGI_FORMAT_R8_UINT);
+
+            PossibleComputeInternal::Missing(MissingComputeInternal {
+                cs_copy_image_shaders,
+                cs_copy_buffer_shaders,
+            })
+        };
 
         let mut threading_capability: d3d11::D3D11_FEATURE_DATA_THREADING =
             unsafe { mem::zeroed() };
@@ -611,28 +792,55 @@ impl Internal {
             info!("D3D11 command list emulation is active");
         }
 
+        let clear_shaders = include_bytes!("../shaders/clear.hlsl");
+        let blit_shaders = include_bytes!("../shaders/blit.hlsl");
+
         Internal {
-            vs_partial_clear: compile_vs(device, clear_shaders, "vs_partial_clear"),
-            ps_partial_clear_float: compile_ps(device, clear_shaders, "ps_partial_clear_float"),
-            ps_partial_clear_uint: compile_ps(device, clear_shaders, "ps_partial_clear_uint"),
-            ps_partial_clear_int: compile_ps(device, clear_shaders, "ps_partial_clear_int"),
-            ps_partial_clear_depth: compile_ps(device, clear_shaders, "ps_partial_clear_depth"),
-            ps_partial_clear_stencil: compile_ps(device, clear_shaders, "ps_partial_clear_stencil"),
+            vs_partial_clear: compile_vs(device, clear_shaders, "vs_partial_clear", shader_model),
+            ps_partial_clear_float: compile_ps(
+                device,
+                clear_shaders,
+                "ps_partial_clear_float",
+                shader_model,
+            ),
+            ps_partial_clear_uint: compile_ps(
+                device,
+                clear_shaders,
+                "ps_partial_clear_uint",
+                shader_model,
+            ),
+            ps_partial_clear_int: compile_ps(
+                device,
+                clear_shaders,
+                "ps_partial_clear_int",
+                shader_model,
+            ),
+            ps_partial_clear_depth: compile_ps(
+                device,
+                clear_shaders,
+                "ps_partial_clear_depth",
+                shader_model,
+            ),
+            ps_partial_clear_stencil: compile_ps(
+                device,
+                clear_shaders,
+                "ps_partial_clear_stencil",
+                shader_model,
+            ),
             partial_clear_depth_stencil_state: depth_stencil_state,
             partial_clear_depth_state: depth_state,
             partial_clear_stencil_state: stencil_state,
 
-            vs_blit_2d: compile_vs(device, blit_shaders, "vs_blit_2d"),
+            vs_blit_2d: compile_vs(device, blit_shaders, "vs_blit_2d", shader_model),
 
             sampler_nearest,
             sampler_linear,
 
-            ps_blit_2d_uint: compile_ps(device, blit_shaders, "ps_blit_2d_uint"),
-            ps_blit_2d_int: compile_ps(device, blit_shaders, "ps_blit_2d_int"),
-            ps_blit_2d_float: compile_ps(device, blit_shaders, "ps_blit_2d_float"),
+            ps_blit_2d_uint: compile_ps(device, blit_shaders, "ps_blit_2d_uint", shader_model),
+            ps_blit_2d_int: compile_ps(device, blit_shaders, "ps_blit_2d_int", shader_model),
+            ps_blit_2d_float: compile_ps(device, blit_shaders, "ps_blit_2d_float", shader_model),
 
-            cs_copy_image_shaders,
-            cs_copy_buffer_shaders,
+            compute_internal,
 
             internal_buffer: Mutex::new(ConstantBuffer {
                 buffer: internal_buffer,
@@ -644,6 +852,11 @@ impl Internal {
                 d3d11::D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT as _],
 
             command_list_emulation,
+
+            device_features,
+            device_feature_level,
+
+            downlevel,
         }
     }
 
@@ -660,7 +873,23 @@ impl Internal {
             src.decomposed_format.copy_srv.unwrap(),
             dst.decomposed_format.copy_srv.unwrap(),
         );
-        if let Some(shader) = self.cs_copy_image_shaders.get(&key) {
+
+        let compute_shader_copy = if let PossibleComputeInternal::Available(ref compute_internal) =
+            self.compute_internal
+        {
+            compute_internal.cs_copy_image_shaders.get(&key)
+        } else if let PossibleComputeInternal::Missing(ref compute_internal) = self.compute_internal
+        {
+            if compute_internal.cs_copy_image_shaders.contains(&key) {
+                panic!("Tried to copy between images types ({:?} -> {:?}) that require Compute Shaders under FL9 or FL10", src.format, dst.format);
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        if let Some(shader) = compute_shader_copy {
             // Some formats cant go through default path, since they cant
             // be cast between formats of different component types (eg.
             // Rg16 <-> Rgba8)
@@ -783,11 +1012,19 @@ impl Internal {
             src.format,
             src.kind
         );
-        let shader = self
-            .cs_copy_buffer_shaders
-            .get(&src.decomposed_format.copy_srv.unwrap())
-            .unwrap()
-            .clone();
+
+        let shader = if let PossibleComputeInternal::Available(ref compute_internal) =
+            self.compute_internal
+        {
+            compute_internal
+                .cs_copy_buffer_shaders
+                .get(&src.decomposed_format.copy_srv.unwrap())
+                .unwrap_or_else(|| panic!("The DX11 backend does not currently support copying from an image of format {:?} to a buffer", src.format))
+                .clone()
+        } else {
+            // TODO(cwfitzgerald): Can we fall back to a inherent D3D11 method when copying to a CPU only buffer.
+            panic!("Tried to copy from an image to a buffer under FL9 or FL10");
+        };
 
         let srv = src.internal.copy_srv.clone().unwrap().as_raw();
         let uav = dst.internal.uav.unwrap();
@@ -891,18 +1128,32 @@ impl Internal {
             dst.format,
             dst.kind
         );
+
+        let compute_internal = match self.compute_internal {
+            PossibleComputeInternal::Available(ref available) => Some(available),
+            PossibleComputeInternal::Missing(_) => None,
+        };
+
         // NOTE: we have two separate paths for Buffer -> Image transfers. we need to special case
         //       uploads to compressed formats through `UpdateSubresource` since we cannot get a
         //       UAV of any compressed format.
 
         let format_desc = dst.format.base_format().0.desc();
-        if format_desc.is_compressed() {
+        let is_compressed = format_desc.is_compressed();
+        if format_desc.is_compressed() || compute_internal.is_none() {
             // we dont really care about non-4x4 block formats..
-            assert_eq!(format_desc.dim, (4, 4));
-            assert!(
-                !src.memory_ptr.is_null(),
-                "Only CPU to GPU upload of compressed texture is supported atm"
-            );
+            if is_compressed {
+                assert_eq!(format_desc.dim, (4, 4));
+                assert!(
+                    !src.memory_ptr.is_null(),
+                    "Only CPU to GPU upload of compressed texture is currently supported"
+                );
+            } else if compute_internal.is_none() {
+                assert!(
+                    !src.memory_ptr.is_null(),
+                    "Only CPU to GPU upload of textures is supported under FL9 or FL10"
+                );
+            }
 
             for info in regions {
                 let bytes_per_texel = format_desc.bits as u32 / 8;
@@ -916,8 +1167,9 @@ impl Internal {
                     back: info.image_offset.z as u32 + info.image_extent.depth,
                 };
 
-                let row_pitch = bytes_per_texel * info.image_extent.width / 4;
-                let depth_pitch = row_pitch * info.image_extent.height / 4;
+                let row_pitch =
+                    bytes_per_texel * info.image_extent.width / format_desc.dim.0 as u32;
+                let depth_pitch = row_pitch * info.image_extent.height / format_desc.dim.1 as u32;
 
                 for layer in info.image_layers.layers.clone() {
                     let layer_offset = layer - info.image_layers.layers.start;
@@ -939,10 +1191,11 @@ impl Internal {
                 }
             }
         } else {
-            let shader = self
+            let shader = compute_internal
+                .unwrap()
                 .cs_copy_buffer_shaders
                 .get(&dst.decomposed_format.copy_uav.unwrap())
-                .unwrap()
+                .unwrap_or_else(|| panic!("The DX11 backend does not currently support copying from a buffer to an image of format {:?}", dst.format))
                 .clone();
 
             let srv = src.internal.srv.unwrap();

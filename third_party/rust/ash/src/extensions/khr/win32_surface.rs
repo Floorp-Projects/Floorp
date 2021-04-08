@@ -34,16 +34,14 @@ impl Win32Surface {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SurfaceKHR> {
         let mut surface = mem::zeroed();
-        let err_code = self.win32_surface_fn.create_win32_surface_khr(
-            self.handle,
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut surface,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(surface),
-            _ => Err(err_code),
-        }
+        self.win32_surface_fn
+            .create_win32_surface_khr(
+                self.handle,
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut surface,
+            )
+            .result_with_success(surface)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceWin32PresentationSupportKHR.html"]

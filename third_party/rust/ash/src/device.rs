@@ -61,16 +61,14 @@ pub trait DeviceV1_2: DeviceV1_1 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::RenderPass> {
         let mut renderpass = mem::zeroed();
-        let err_code = self.fp_v1_2().create_render_pass2(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut renderpass,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(renderpass),
-            _ => Err(err_code),
-        }
+        self.fp_v1_2()
+            .create_render_pass2(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut renderpass,
+            )
+            .result_with_success(renderpass)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginRenderPass2.html>"]
@@ -122,13 +120,9 @@ pub trait DeviceV1_2: DeviceV1_1 {
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSemaphoreCounterValue.html>"]
     unsafe fn get_semaphore_counter_value(&self, semaphore: vk::Semaphore) -> VkResult<u64> {
         let mut value = 0;
-        let err_code =
-            self.fp_v1_2()
-                .get_semaphore_counter_value(self.handle(), semaphore, &mut value);
-        match err_code {
-            vk::Result::SUCCESS => Ok(value),
-            _ => Err(err_code),
-        }
+        self.fp_v1_2()
+            .get_semaphore_counter_value(self.handle(), semaphore, &mut value)
+            .result_with_success(value)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWaitSemaphores.html>"]
@@ -137,22 +131,16 @@ pub trait DeviceV1_2: DeviceV1_1 {
         wait_info: &vk::SemaphoreWaitInfo,
         timeout: u64,
     ) -> VkResult<()> {
-        let err_code = self
-            .fp_v1_2()
-            .wait_semaphores(self.handle(), wait_info, timeout);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_2()
+            .wait_semaphores(self.handle(), wait_info, timeout)
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSignalSemaphore.html>"]
     unsafe fn signal_semaphore(&self, signal_info: &vk::SemaphoreSignalInfo) -> VkResult<()> {
-        let err_code = self.fp_v1_2().signal_semaphore(self.handle(), signal_info);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_2()
+            .signal_semaphore(self.handle(), signal_info)
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferDeviceAddress.html>"]
@@ -186,28 +174,16 @@ pub trait DeviceV1_1: DeviceV1_0 {
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBindBufferMemory2.html>"]
     unsafe fn bind_buffer_memory2(&self, bind_infos: &[vk::BindBufferMemoryInfo]) -> VkResult<()> {
-        let err_code = self.fp_v1_1().bind_buffer_memory2(
-            self.handle(),
-            bind_infos.len() as _,
-            bind_infos.as_ptr(),
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_1()
+            .bind_buffer_memory2(self.handle(), bind_infos.len() as _, bind_infos.as_ptr())
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBindImageMemory2.html>"]
     unsafe fn bind_image_memory2(&self, bind_infos: &[vk::BindImageMemoryInfo]) -> VkResult<()> {
-        let err_code = self.fp_v1_1().bind_image_memory2(
-            self.handle(),
-            bind_infos.len() as _,
-            bind_infos.as_ptr(),
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_1()
+            .bind_image_memory2(self.handle(), bind_infos.len() as _, bind_infos.as_ptr())
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceGroupPeerMemoryFeatures.html>"]
@@ -322,16 +298,14 @@ pub trait DeviceV1_1: DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SamplerYcbcrConversion> {
         let mut ycbcr_conversion = mem::zeroed();
-        let err_code = self.fp_v1_1().create_sampler_ycbcr_conversion(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut ycbcr_conversion,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(ycbcr_conversion),
-            _ => Err(err_code),
-        }
+        self.fp_v1_1()
+            .create_sampler_ycbcr_conversion(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut ycbcr_conversion,
+            )
+            .result_with_success(ycbcr_conversion)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroySamplerYcbcrConversion.html>"]
@@ -354,16 +328,14 @@ pub trait DeviceV1_1: DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::DescriptorUpdateTemplate> {
         let mut descriptor_update_template = mem::zeroed();
-        let err_code = self.fp_v1_1().create_descriptor_update_template(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut descriptor_update_template,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(descriptor_update_template),
-            _ => Err(err_code),
-        }
+        self.fp_v1_1()
+            .create_descriptor_update_template(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut descriptor_update_template,
+            )
+            .result_with_success(descriptor_update_template)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyDescriptorUpdateTemplate.html>"]
@@ -456,16 +428,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::Event> {
         let mut event = mem::zeroed();
-        let err_code = self.fp_v1_0().create_event(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut event,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(event),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_event(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut event,
+            )
+            .result_with_success(event)
     }
 
     /// Returns true if the event was set, and false if the event was reset, otherwise it will
@@ -482,20 +452,12 @@ pub trait DeviceV1_0 {
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetEvent.html>"]
     unsafe fn set_event(&self, event: vk::Event) -> VkResult<()> {
-        let err_code = self.fp_v1_0().set_event(self.handle(), event);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0().set_event(self.handle(), event).into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkResetEvent.html>"]
     unsafe fn reset_event(&self, event: vk::Event) -> VkResult<()> {
-        let err_code = self.fp_v1_0().reset_event(self.handle(), event);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0().reset_event(self.handle(), event).into()
     }
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetEvent.html>"]
     unsafe fn cmd_set_event(
@@ -736,13 +698,15 @@ pub trait DeviceV1_0 {
         &self,
         pool: vk::DescriptorPool,
         descriptor_sets: &[vk::DescriptorSet],
-    ) {
-        self.fp_v1_0().free_descriptor_sets(
-            self.handle(),
-            pool,
-            descriptor_sets.len() as u32,
-            descriptor_sets.as_ptr(),
-        );
+    ) -> VkResult<()> {
+        self.fp_v1_0()
+            .free_descriptor_sets(
+                self.handle(),
+                pool,
+                descriptor_sets.len() as u32,
+                descriptor_sets.as_ptr(),
+            )
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkUpdateDescriptorSets.html>"]
@@ -767,16 +731,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::Sampler> {
         let mut sampler = mem::zeroed();
-        let err_code = self.fp_v1_0().create_sampler(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut sampler,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(sampler),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_sampler(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut sampler,
+            )
+            .result_with_success(sampler)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBlitImage.html>"]
@@ -942,10 +904,7 @@ pub trait DeviceV1_0 {
         );
 
         desc_set.set_len(create_info.descriptor_set_count as usize);
-        match err_code {
-            vk::Result::SUCCESS => Ok(desc_set),
-            _ => Err(err_code),
-        }
+        err_code.result_with_success(desc_set)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDescriptorSetLayout.html>"]
@@ -955,25 +914,19 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::DescriptorSetLayout> {
         let mut layout = mem::zeroed();
-        let err_code = self.fp_v1_0().create_descriptor_set_layout(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut layout,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(layout),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_descriptor_set_layout(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut layout,
+            )
+            .result_with_success(layout)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDeviceWaitIdle.html>"]
     unsafe fn device_wait_idle(&self) -> VkResult<()> {
-        let err_code = self.fp_v1_0().device_wait_idle(self.handle());
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0().device_wait_idle(self.handle()).into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDescriptorPool.html>"]
@@ -983,16 +936,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::DescriptorPool> {
         let mut pool = mem::zeroed();
-        let err_code = self.fp_v1_0().create_descriptor_pool(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut pool,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(pool),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_descriptor_pool(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut pool,
+            )
+            .result_with_success(pool)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkResetDescriptorPool.html>"]
@@ -1001,13 +952,9 @@ pub trait DeviceV1_0 {
         pool: vk::DescriptorPool,
         flags: vk::DescriptorPoolResetFlags,
     ) -> VkResult<()> {
-        let err_code = self
-            .fp_v1_0()
-            .reset_descriptor_pool(self.handle(), pool, flags);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .reset_descriptor_pool(self.handle(), pool, flags)
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkResetCommandPool.html>"]
@@ -1016,13 +963,9 @@ pub trait DeviceV1_0 {
         command_pool: vk::CommandPool,
         flags: vk::CommandPoolResetFlags,
     ) -> VkResult<()> {
-        let err_code = self
-            .fp_v1_0()
-            .reset_command_pool(self.handle(), command_pool, flags);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .reset_command_pool(self.handle(), command_pool, flags)
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkResetCommandBuffer.html>"]
@@ -1031,22 +974,16 @@ pub trait DeviceV1_0 {
         command_buffer: vk::CommandBuffer,
         flags: vk::CommandBufferResetFlags,
     ) -> VkResult<()> {
-        let err_code = self.fp_v1_0().reset_command_buffer(command_buffer, flags);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .reset_command_buffer(command_buffer, flags)
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkResetFences.html>"]
     unsafe fn reset_fences(&self, fences: &[vk::Fence]) -> VkResult<()> {
-        let err_code =
-            self.fp_v1_0()
-                .reset_fences(self.handle(), fences.len() as u32, fences.as_ptr());
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .reset_fences(self.handle(), fences.len() as u32, fences.as_ptr())
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindIndexBuffer.html>"]
@@ -1452,29 +1389,22 @@ pub trait DeviceV1_0 {
     ) -> VkResult<()> {
         let data_length = query_count as usize;
         assert!(
-            mem::size_of::<T>() <= mem::size_of::<u64>(),
-            "T can not be bigger than an u64"
-        );
-        assert!(
             data_length <= data.len(),
             "query_count was higher than the length of the slice"
         );
         let data_size = mem::size_of::<T>() * data_length;
-        let err_code = self.fp_v1_0().get_query_pool_results(
-            self.handle(),
-            query_pool,
-            first_query,
-            query_count,
-            data_size,
-            data.as_mut_ptr() as *mut _,
-            mem::size_of::<T>() as _,
-            flags,
-        );
-
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .get_query_pool_results(
+                self.handle(),
+                query_pool,
+                first_query,
+                query_count,
+                data_size,
+                data.as_mut_ptr() as *mut _,
+                mem::size_of::<T>() as _,
+                flags,
+            )
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginQuery.html>"]
@@ -1531,16 +1461,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::Semaphore> {
         let mut semaphore = mem::zeroed();
-        let err_code = self.fp_v1_0().create_semaphore(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut semaphore,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(semaphore),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_semaphore(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut semaphore,
+            )
+            .result_with_success(semaphore)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateGraphicsPipelines.html>"]
@@ -1596,16 +1524,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::Buffer> {
         let mut buffer = mem::zeroed();
-        let err_code = self.fp_v1_0().create_buffer(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut buffer,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(buffer),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_buffer(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut buffer,
+            )
+            .result_with_success(buffer)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreatePipelineLayout.html>"]
@@ -1615,16 +1541,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::PipelineLayout> {
         let mut pipeline_layout = mem::zeroed();
-        let err_code = self.fp_v1_0().create_pipeline_layout(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut pipeline_layout,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(pipeline_layout),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_pipeline_layout(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut pipeline_layout,
+            )
+            .result_with_success(pipeline_layout)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreatePipelineCache.html>"]
@@ -1634,17 +1558,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::PipelineCache> {
         let mut pipeline_cache = mem::zeroed();
-        let err_code = self.fp_v1_0().create_pipeline_cache(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut pipeline_cache,
-        );
-
-        match err_code {
-            vk::Result::SUCCESS => Ok(pipeline_cache),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_pipeline_cache(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut pipeline_cache,
+            )
+            .result_with_success(pipeline_cache)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPipelineCacheData.html>"]
@@ -1653,15 +1574,14 @@ pub trait DeviceV1_0 {
         pipeline_cache: vk::PipelineCache,
     ) -> VkResult<Vec<u8>> {
         let mut data_size: usize = 0;
-        let err_code = self.fp_v1_0().get_pipeline_cache_data(
-            self.handle(),
-            pipeline_cache,
-            &mut data_size,
-            ptr::null_mut(),
-        );
-        if err_code != vk::Result::SUCCESS {
-            return Err(err_code);
-        };
+        self.fp_v1_0()
+            .get_pipeline_cache_data(
+                self.handle(),
+                pipeline_cache,
+                &mut data_size,
+                ptr::null_mut(),
+            )
+            .result()?;
         let mut data: Vec<u8> = Vec::with_capacity(data_size);
         let err_code = self.fp_v1_0().get_pipeline_cache_data(
             self.handle(),
@@ -1670,10 +1590,7 @@ pub trait DeviceV1_0 {
             data.as_mut_ptr() as _,
         );
         data.set_len(data_size);
-        match err_code {
-            vk::Result::SUCCESS => Ok(data),
-            _ => Err(err_code),
-        }
+        err_code.result_with_success(data)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkMapMemory.html>"]
@@ -1685,13 +1602,9 @@ pub trait DeviceV1_0 {
         flags: vk::MemoryMapFlags,
     ) -> VkResult<*mut c_void> {
         let mut data: *mut c_void = ptr::null_mut();
-        let err_code =
-            self.fp_v1_0()
-                .map_memory(self.handle(), memory, offset, size, flags, &mut data);
-        match err_code {
-            vk::Result::SUCCESS => Ok(data),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .map_memory(self.handle(), memory, offset, size, flags, &mut data)
+            .result_with_success(data)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkUnmapMemory.html>"]
@@ -1704,28 +1617,16 @@ pub trait DeviceV1_0 {
         &self,
         ranges: &[vk::MappedMemoryRange],
     ) -> VkResult<()> {
-        let err_code = self.fp_v1_0().invalidate_mapped_memory_ranges(
-            self.handle(),
-            ranges.len() as u32,
-            ranges.as_ptr(),
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .invalidate_mapped_memory_ranges(self.handle(), ranges.len() as u32, ranges.as_ptr())
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkFlushMappedMemoryRanges.html>"]
     unsafe fn flush_mapped_memory_ranges(&self, ranges: &[vk::MappedMemoryRange]) -> VkResult<()> {
-        let err_code = self.fp_v1_0().flush_mapped_memory_ranges(
-            self.handle(),
-            ranges.len() as u32,
-            ranges.as_ptr(),
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .flush_mapped_memory_ranges(self.handle(), ranges.len() as u32, ranges.as_ptr())
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateFramebuffer.html>"]
@@ -1735,16 +1636,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::Framebuffer> {
         let mut framebuffer = mem::zeroed();
-        let err_code = self.fp_v1_0().create_framebuffer(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut framebuffer,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(framebuffer),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_framebuffer(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut framebuffer,
+            )
+            .result_with_success(framebuffer)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceQueue.html>"]
@@ -1787,16 +1686,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::RenderPass> {
         let mut renderpass = mem::zeroed();
-        let err_code = self.fp_v1_0().create_render_pass(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut renderpass,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(renderpass),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_render_pass(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut renderpass,
+            )
+            .result_with_success(renderpass)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBeginCommandBuffer.html>"]
@@ -1805,22 +1702,14 @@ pub trait DeviceV1_0 {
         command_buffer: vk::CommandBuffer,
         begin_info: &vk::CommandBufferBeginInfo,
     ) -> VkResult<()> {
-        let err_code = self
-            .fp_v1_0()
-            .begin_command_buffer(command_buffer, begin_info);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .begin_command_buffer(command_buffer, begin_info)
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEndCommandBuffer.html>"]
     unsafe fn end_command_buffer(&self, command_buffer: vk::CommandBuffer) -> VkResult<()> {
-        let err_code = self.fp_v1_0().end_command_buffer(command_buffer);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0().end_command_buffer(command_buffer).into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWaitForFences.html>"]
@@ -1830,17 +1719,15 @@ pub trait DeviceV1_0 {
         wait_all: bool,
         timeout: u64,
     ) -> VkResult<()> {
-        let err_code = self.fp_v1_0().wait_for_fences(
-            self.handle(),
-            fences.len() as u32,
-            fences.as_ptr(),
-            wait_all as u32,
-            timeout,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .wait_for_fences(
+                self.handle(),
+                fences.len() as u32,
+                fences.as_ptr(),
+                wait_all as u32,
+                timeout,
+            )
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetFenceStatus.html>"]
@@ -1855,11 +1742,7 @@ pub trait DeviceV1_0 {
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueueWaitIdle.html>"]
     unsafe fn queue_wait_idle(&self, queue: vk::Queue) -> VkResult<()> {
-        let err_code = self.fp_v1_0().queue_wait_idle(queue);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0().queue_wait_idle(queue).into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueueSubmit.html>"]
@@ -1869,13 +1752,9 @@ pub trait DeviceV1_0 {
         submits: &[vk::SubmitInfo],
         fence: vk::Fence,
     ) -> VkResult<()> {
-        let err_code =
-            self.fp_v1_0()
-                .queue_submit(queue, submits.len() as u32, submits.as_ptr(), fence);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .queue_submit(queue, submits.len() as u32, submits.as_ptr(), fence)
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateBufferView.html>"]
@@ -1885,16 +1764,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::BufferView> {
         let mut buffer_view = mem::zeroed();
-        let err_code = self.fp_v1_0().create_buffer_view(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut buffer_view,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(buffer_view),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_buffer_view(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut buffer_view,
+            )
+            .result_with_success(buffer_view)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyBufferView.html>"]
@@ -1917,16 +1794,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::ImageView> {
         let mut image_view = mem::zeroed();
-        let err_code = self.fp_v1_0().create_image_view(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut image_view,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(image_view),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_image_view(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut image_view,
+            )
+            .result_with_success(image_view)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAllocateCommandBuffers.html>"]
@@ -1941,10 +1816,7 @@ pub trait DeviceV1_0 {
             buffers.as_mut_ptr(),
         );
         buffers.set_len(create_info.command_buffer_count as usize);
-        match err_code {
-            vk::Result::SUCCESS => Ok(buffers),
-            _ => Err(err_code),
-        }
+        err_code.result_with_success(buffers)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateCommandPool.html>"]
@@ -1954,16 +1826,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::CommandPool> {
         let mut pool = mem::zeroed();
-        let err_code = self.fp_v1_0().create_command_pool(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut pool,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(pool),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_command_pool(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut pool,
+            )
+            .result_with_success(pool)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateQueryPool.html>"]
@@ -1973,16 +1843,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::QueryPool> {
         let mut pool = mem::zeroed();
-        let err_code = self.fp_v1_0().create_query_pool(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut pool,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(pool),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_query_pool(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut pool,
+            )
+            .result_with_success(pool)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateImage.html>"]
@@ -1992,16 +1860,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::Image> {
         let mut image = mem::zeroed();
-        let err_code = self.fp_v1_0().create_image(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut image,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(image),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_image(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut image,
+            )
+            .result_with_success(image)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetImageSubresourceLayout.html>"]
@@ -2043,16 +1909,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::DeviceMemory> {
         let mut memory = mem::zeroed();
-        let err_code = self.fp_v1_0().allocate_memory(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut memory,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(memory),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .allocate_memory(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut memory,
+            )
+            .result_with_success(memory)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateShaderModule.html>"]
@@ -2062,16 +1926,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::ShaderModule> {
         let mut shader = mem::zeroed();
-        let err_code = self.fp_v1_0().create_shader_module(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut shader,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(shader),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_shader_module(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut shader,
+            )
+            .result_with_success(shader)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateFence.html>"]
@@ -2081,16 +1943,14 @@ pub trait DeviceV1_0 {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::Fence> {
         let mut fence = mem::zeroed();
-        let err_code = self.fp_v1_0().create_fence(
-            self.handle(),
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut fence,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(fence),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .create_fence(
+                self.handle(),
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut fence,
+            )
+            .result_with_success(fence)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBindBufferMemory.html>"]
@@ -2100,13 +1960,9 @@ pub trait DeviceV1_0 {
         device_memory: vk::DeviceMemory,
         offset: vk::DeviceSize,
     ) -> VkResult<()> {
-        let err_code =
-            self.fp_v1_0()
-                .bind_buffer_memory(self.handle(), buffer, device_memory, offset);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .bind_buffer_memory(self.handle(), buffer, device_memory, offset)
+            .into()
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBindImageMemory.html>"]
@@ -2116,13 +1972,9 @@ pub trait DeviceV1_0 {
         device_memory: vk::DeviceMemory,
         offset: vk::DeviceSize,
     ) -> VkResult<()> {
-        let err_code =
-            self.fp_v1_0()
-                .bind_image_memory(self.handle(), image, device_memory, offset);
-        match err_code {
-            vk::Result::SUCCESS => Ok(()),
-            _ => Err(err_code),
-        }
+        self.fp_v1_0()
+            .bind_image_memory(self.handle(), image, device_memory, offset)
+            .into()
     }
 }
 

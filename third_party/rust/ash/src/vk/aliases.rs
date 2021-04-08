@@ -21,7 +21,6 @@ pub type DescriptorBindingFlagsEXT = DescriptorBindingFlags;
 pub type ResolveModeFlagsKHR = ResolveModeFlags;
 pub type DescriptorUpdateTemplateKHR = DescriptorUpdateTemplate;
 pub type SamplerYcbcrConversionKHR = SamplerYcbcrConversion;
-pub type AccelerationStructureNV = AccelerationStructureKHR;
 pub type DescriptorUpdateTemplateTypeKHR = DescriptorUpdateTemplateType;
 pub type PointClippingBehaviorKHR = PointClippingBehavior;
 pub type SemaphoreTypeKHR = SemaphoreType;
@@ -29,8 +28,6 @@ pub type CopyAccelerationStructureModeNV = CopyAccelerationStructureModeKHR;
 pub type AccelerationStructureTypeNV = AccelerationStructureTypeKHR;
 pub type GeometryTypeNV = GeometryTypeKHR;
 pub type RayTracingShaderGroupTypeNV = RayTracingShaderGroupTypeKHR;
-pub type AccelerationStructureMemoryRequirementsTypeNV =
-    AccelerationStructureMemoryRequirementsTypeKHR;
 pub type TessellationDomainOriginKHR = TessellationDomainOrigin;
 pub type SamplerYcbcrModelConversionKHR = SamplerYcbcrModelConversion;
 pub type SamplerYcbcrRangeKHR = SamplerYcbcrRange;
@@ -144,8 +141,6 @@ pub type PhysicalDeviceShaderAtomicInt64FeaturesKHR = PhysicalDeviceShaderAtomic
 pub type PhysicalDeviceDepthStencilResolvePropertiesKHR =
     PhysicalDeviceDepthStencilResolveProperties;
 pub type SubpassDescriptionDepthStencilResolveKHR = SubpassDescriptionDepthStencilResolve;
-pub type BindAccelerationStructureMemoryInfoNV = BindAccelerationStructureMemoryInfoKHR;
-pub type WriteDescriptorSetAccelerationStructureNV = WriteDescriptorSetAccelerationStructureKHR;
 pub type ImageStencilUsageCreateInfoEXT = ImageStencilUsageCreateInfo;
 pub type PhysicalDeviceScalarBlockLayoutFeaturesEXT = PhysicalDeviceScalarBlockLayoutFeatures;
 pub type PhysicalDeviceUniformBufferStandardLayoutFeaturesKHR =

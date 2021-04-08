@@ -8,6 +8,14 @@ There map `spv::Word` into a specific IR handle, plus potentially a bit of
 extra info, such as the related SPIR-V type ID.
 TODO: would be nice to find ways that avoid looking up as much
 
+## Inputs/Outputs
+
+We create a private variable for each input/output. The relevant inputs are
+populated at the start of an entry point. The outputs are saved at the end.
+
+The function associated with an entry point is wrapped in another function,
+such that we can handle any `Return` statements without problems.
+
 !*/
 #![allow(dead_code)]
 
@@ -28,19 +36,29 @@ use crate::{
 };
 
 use num_traits::cast::FromPrimitive;
+use petgraph::graphmap::GraphMap;
 use std::{convert::TryInto, num::NonZeroU32, path::PathBuf};
 
 pub const SUPPORTED_CAPABILITIES: &[spirv::Capability] = &[
     spirv::Capability::Shader,
     spirv::Capability::ClipDistance,
     spirv::Capability::CullDistance,
+    spirv::Capability::SampleRateShading,
+    spirv::Capability::DerivativeControl,
+    spirv::Capability::InterpolationFunction,
+    spirv::Capability::Matrix,
     spirv::Capability::ImageQuery,
+    spirv::Capability::Sampled1D,
     spirv::Capability::Image1D,
+    spirv::Capability::SampledCubeArray,
     spirv::Capability::ImageCubeArray,
     spirv::Capability::ImageMSArray,
     spirv::Capability::StorageImageExtendedFormats,
     spirv::Capability::Sampled1D,
     spirv::Capability::SampledCubeArray,
+    // tricky ones
+    spirv::Capability::UniformBufferArrayDynamicIndexing,
+    spirv::Capability::StorageBufferArrayDynamicIndexing,
 ];
 pub const SUPPORTED_EXTENSIONS: &[&str] = &[];
 pub const SUPPORTED_EXT_SETS: &[&str] = &["GLSL.std.450"];
@@ -67,15 +85,6 @@ impl Instruction {
     }
 }
 
-impl crate::Expression {
-    fn as_global_var(&self) -> Result<Handle<crate::GlobalVariable>, Error> {
-        match *self {
-            crate::Expression::GlobalVariable(handle) => Ok(handle),
-            _ => Err(Error::InvalidGlobalVar(self.clone())),
-        }
-    }
-}
-
 impl crate::TypeInner {
     fn can_comparison_sample(&self) -> bool {
         match *self {
@@ -94,10 +103,12 @@ impl crate::TypeInner {
 }
 
 /// OpPhi instruction.
-#[derive(Clone, Default, Debug)]
+#[derive(Debug)]
 struct PhiInstruction {
     /// SPIR-V's ID.
     id: u32,
+
+    pointer: Handle<crate::Expression>,
 
     /// Tuples of (variable, parent).
     variables: Vec<(u32, u32)>,
@@ -212,37 +223,31 @@ impl Decoration {
         }
     }
 
-    fn get_binding(&self, is_output: bool) -> Option<crate::Binding> {
-        //TODO: validate this better
+    fn resource_binding(&self) -> Option<crate::ResourceBinding> {
+        match *self {
+            Decoration {
+                desc_set: Some(group),
+                desc_index: Some(binding),
+                ..
+            } => Some(crate::ResourceBinding { group, binding }),
+            _ => None,
+        }
+    }
+
+    fn io_binding(&self) -> Result<crate::Binding, Error> {
         match *self {
             Decoration {
                 built_in: Some(built_in),
                 location: None,
-                desc_set: None,
-                desc_index: None,
                 ..
-            } => match map_builtin(built_in, is_output) {
-                Ok(built_in) => Some(crate::Binding::BuiltIn(built_in)),
-                Err(e) => {
-                    log::warn!("{:?}", e);
-                    None
-                }
-            },
+            } => map_builtin(built_in).map(crate::Binding::BuiltIn),
             Decoration {
                 built_in: None,
                 location: Some(loc),
-                desc_set: None,
-                desc_index: None,
+                interpolation,
                 ..
-            } => Some(crate::Binding::Location(loc)),
-            Decoration {
-                built_in: None,
-                location: None,
-                desc_set: Some(group),
-                desc_index: Some(binding),
-                ..
-            } => Some(crate::Binding::Resource { group, binding }),
-            _ => None,
+            } => Ok(crate::Binding::Location(loc, interpolation)),
+            _ => Err(Error::MissingDecoration(spirv::Decoration::Location)),
         }
     }
 }
@@ -276,7 +281,15 @@ struct LookupConstant {
 }
 
 #[derive(Debug)]
+enum Variable {
+    Global,
+    Input(crate::FunctionArgument),
+    Output(crate::FunctionResult),
+}
+
+#[derive(Debug)]
 struct LookupVariable {
+    inner: Variable,
     handle: Handle<crate::GlobalVariable>,
     type_id: spirv::Word,
 }
@@ -288,14 +301,33 @@ struct LookupExpression {
 }
 
 #[derive(Clone, Debug)]
-pub struct Assignment {
+struct Assignment {
     to: Handle<crate::Expression>,
     value: Handle<crate::Expression>,
 }
 
-#[derive(Clone, Debug, Default)]
+enum ExtendedClass {
+    Global(crate::StorageClass),
+    Input,
+    Output,
+}
+
+#[derive(Clone, Debug)]
 pub struct Options {
+    /// The IR coordinate space matches all the APIs except SPIR-V,
+    /// so by default we flip the Y coordinate of the `BuiltIn::Position`.
+    /// This flag can be used to avoid this.
+    pub adjust_coordinate_space: bool,
     pub flow_graph_dump_prefix: Option<PathBuf>,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Options {
+            adjust_coordinate_space: true,
+            flow_graph_dump_prefix: None,
+        }
+    }
 }
 
 pub struct Parser<I> {
@@ -318,11 +350,17 @@ pub struct Parser<I> {
     lookup_function_type: FastHashMap<spirv::Word, LookupFunctionType>,
     lookup_function: FastHashMap<spirv::Word, Handle<crate::Function>>,
     lookup_entry_point: FastHashMap<spirv::Word, EntryPoint>,
-    //Note: the key here is fully artificial, has nothing to do with the module
-    deferred_function_calls: FastHashMap<Handle<crate::Function>, spirv::Word>,
+    //Note: each `OpFunctionCall` gets a single entry here, indexed by the
+    // dummy `Handle<crate::Function>` of the call site.
+    deferred_function_calls: Vec<spirv::Word>,
     dummy_functions: Arena<crate::Function>,
+    // Graph of all function calls through the module.
+    // It's used to sort the functions (as nodes) topologically,
+    // so that in the IR any called function is already known.
+    function_call_graph: GraphMap<spirv::Word, (), petgraph::Directed>,
     options: Options,
     index_constants: Vec<Handle<crate::Constant>>,
+    index_constant_expressions: Vec<Handle<crate::Expression>>,
 }
 
 impl<I: Iterator<Item = u32>> Parser<I> {
@@ -346,10 +384,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             lookup_function_type: FastHashMap::default(),
             lookup_function: FastHashMap::default(),
             lookup_entry_point: FastHashMap::default(),
-            deferred_function_calls: FastHashMap::default(),
+            deferred_function_calls: Vec::default(),
             dummy_functions: Arena::new(),
+            function_call_graph: GraphMap::new(),
             options: options.clone(),
             index_constants: Vec::new(),
+            index_constant_expressions: Vec::new(),
         }
     }
 
@@ -437,9 +477,6 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             spirv::Decoration::Flat => {
                 dec.interpolation = Some(crate::Interpolation::Flat);
             }
-            spirv::Decoration::Patch => {
-                dec.interpolation = Some(crate::Interpolation::Patch);
-            }
             spirv::Decoration::Centroid => {
                 dec.interpolation = Some(crate::Interpolation::Centroid);
             }
@@ -524,6 +561,65 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         Ok(())
     }
 
+    fn parse_expr_shift_op(
+        &mut self,
+        expressions: &mut Arena<crate::Expression>,
+        op: crate::BinaryOperator,
+    ) -> Result<(), Error> {
+        let result_type_id = self.next()?;
+        let result_id = self.next()?;
+        let p1_id = self.next()?;
+        let p2_id = self.next()?;
+
+        let p1_lexp = self.lookup_expression.lookup(p1_id)?;
+        let p2_lexp = self.lookup_expression.lookup(p2_id)?;
+        // convert the shift to Uint
+        let p2_handle = expressions.append(crate::Expression::As {
+            expr: p2_lexp.handle,
+            kind: crate::ScalarKind::Uint,
+            convert: false,
+        });
+
+        let expr = crate::Expression::Binary {
+            op,
+            left: p1_lexp.handle,
+            right: p2_handle,
+        };
+        self.lookup_expression.insert(
+            result_id,
+            LookupExpression {
+                handle: expressions.append(expr),
+                type_id: result_type_id,
+            },
+        );
+        Ok(())
+    }
+
+    fn parse_expr_derivative(
+        &mut self,
+        expressions: &mut Arena<crate::Expression>,
+        axis: crate::DerivativeAxis,
+    ) -> Result<(), Error> {
+        let result_type_id = self.next()?;
+        let result_id = self.next()?;
+        let arg_id = self.next()?;
+
+        let arg_lexp = self.lookup_expression.lookup(arg_id)?;
+
+        let expr = crate::Expression::Derivative {
+            axis,
+            expr: arg_lexp.handle,
+        };
+        self.lookup_expression.insert(
+            result_id,
+            LookupExpression {
+                handle: expressions.append(expr),
+                type_id: result_type_id,
+            },
+        );
+        Ok(())
+    }
+
     fn insert_composite(
         &self,
         root_expr: Handle<crate::Expression>,
@@ -584,6 +680,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
     fn next_block(
         &mut self,
         block_id: spirv::Word,
+        function_id: spirv::Word,
         expressions: &mut Arena<crate::Expression>,
         local_arena: &mut Arena<crate::LocalVariable>,
         type_arena: &Arena<crate::Type>,
@@ -592,6 +689,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
     ) -> Result<ControlFlowNode, Error> {
         let mut block = Vec::new();
         let mut phis = Vec::new();
+        let mut emitter = super::Emitter::default();
+        emitter.start(expressions);
         let mut merge = None;
         let terminator = loop {
             use spirv::Op;
@@ -599,6 +698,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             log::debug!("\t\t{:?} [{}]", inst.op, inst.wc);
 
             match inst.op {
+                Op::Line => {
+                    inst.expect(4)?;
+                    let _file_id = self.next()?;
+                    let _row_id = self.next()?;
+                    let _col_id = self.next()?;
+                }
                 Op::Undef => {
                     inst.expect(3)?;
                     let _result_type_id = self.next()?;
@@ -607,14 +712,11 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::Variable => {
                     inst.expect_at_least(4)?;
+                    block.extend(emitter.finish(expressions));
+
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
-                    let storage = self.next()?;
-                    match spirv::StorageClass::from_u32(storage) {
-                        Some(spirv::StorageClass::Function) => (),
-                        Some(class) => return Err(Error::InvalidVariableClass(class)),
-                        None => return Err(Error::UnsupportedStorageClass(storage)),
-                    }
+                    let _storage_class = self.next()?;
                     let init = if inst.wc > 4 {
                         inst.expect(5)?;
                         let init_id = self.next()?;
@@ -623,6 +725,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     } else {
                         None
                     };
+
                     let name = self
                         .future_decor
                         .remove(&result_id)
@@ -630,11 +733,16 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     if let Some(ref name) = name {
                         log::debug!("\t\t\tid={} name={}", result_id, name);
                     }
+                    let lookup_ty = self.lookup_type.lookup(result_type_id)?;
                     let var_handle = local_arena.append(crate::LocalVariable {
                         name,
-                        ty: self.lookup_type.lookup(result_type_id)?.handle,
+                        ty: match type_arena[lookup_ty.handle].inner {
+                            crate::TypeInner::Pointer { base, .. } => base,
+                            _ => lookup_ty.handle,
+                        },
                         init,
                     });
+
                     self.lookup_expression.insert(
                         result_id,
                         LookupExpression {
@@ -643,9 +751,11 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                             type_id: result_type_id,
                         },
                     );
+                    emitter.start(expressions);
                 }
                 Op::Phi => {
                     inst.expect_at_least(3)?;
+                    block.extend(emitter.finish(expressions));
 
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
@@ -656,40 +766,53 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         ty: self.lookup_type.lookup(result_type_id)?.handle,
                         init: None,
                     });
-                    self.lookup_expression.insert(
-                        result_id,
-                        LookupExpression {
-                            handle: expressions
-                                .append(crate::Expression::LocalVariable(var_handle)),
-                            type_id: result_type_id,
-                        },
-                    );
+                    let pointer = expressions.append(crate::Expression::LocalVariable(var_handle));
 
+                    let in_count = (inst.wc - 3) / 2;
                     let mut phi = PhiInstruction {
                         id: result_id,
-                        ..Default::default()
+                        pointer,
+                        variables: Vec::with_capacity(in_count as usize),
                     };
-                    for _ in 0..(inst.wc - 3) / 2 {
-                        phi.variables.push((self.next()?, self.next()?));
+                    for _ in 0..in_count {
+                        let source_id = self.next()?;
+                        let value = self.next()?;
+                        phi.variables.push((source_id, value));
                     }
 
                     phis.push(phi);
+                    emitter.start(expressions);
+
+                    // Associate the lookup with an actual value, which is emitted
+                    // into the current block.
+                    self.lookup_expression.insert(
+                        result_id,
+                        LookupExpression {
+                            handle: expressions.append(crate::Expression::Load { pointer }),
+                            type_id: result_type_id,
+                        },
+                    );
                 }
                 Op::AccessChain => {
                     struct AccessExpression {
                         base_handle: Handle<crate::Expression>,
                         type_id: spirv::Word,
                     }
+
                     inst.expect_at_least(4)?;
+
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
                     let base_id = self.next()?;
                     log::trace!("\t\t\tlooking up expr {:?}", base_id);
                     let mut acex = {
-                        let expr = self.lookup_expression.lookup(base_id)?;
+                        // the base type has to be a pointer,
+                        // so we derefernce it here for the traversal
+                        let lexp = self.lookup_expression.lookup(base_id)?;
+                        let lty = self.lookup_type.lookup(lexp.type_id)?;
                         AccessExpression {
-                            base_handle: expr.handle,
-                            type_id: expr.type_id,
+                            base_handle: lexp.handle,
+                            type_id: lty.base_id.ok_or(Error::InvalidAccessType(lexp.type_id))?,
                         }
                     };
                     for _ in 4..inst.wc {
@@ -706,7 +829,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                                 kind: crate::ScalarKind::Sint,
                                 ..
                             } => (),
-                            _ => return Err(Error::UnsupportedType(index_type_handle)),
+                            ref other => {
+                                log::warn!("access index type {:?}", other);
+                                return Err(Error::UnsupportedType(index_type_handle));
+                            }
                         }
                         log::trace!("\t\t\tlooking up type {:?}", acex.type_id);
                         let type_lookup = self.lookup_type.lookup(acex.type_id)?;
@@ -745,9 +871,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                                         .ok_or(Error::InvalidAccessType(acex.type_id))?,
                                 }
                             }
-                            crate::TypeInner::Array { .. }
-                            | crate::TypeInner::Vector { .. }
-                            | crate::TypeInner::Matrix { .. } => AccessExpression {
+                            _ => AccessExpression {
                                 base_handle: expressions.append(crate::Expression::Access {
                                     base: acex.base_handle,
                                     index: index_expr.handle,
@@ -756,7 +880,6 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                                     .base_id
                                     .ok_or(Error::InvalidAccessType(acex.type_id))?,
                             },
-                            _ => return Err(Error::UnsupportedType(type_lookup.handle)),
                         };
                     }
 
@@ -768,6 +891,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::VectorExtractDynamic => {
                     inst.expect(5)?;
+
                     let result_type_id = self.next()?;
                     let id = self.next()?;
                     let composite_id = self.next()?;
@@ -782,14 +906,11 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         _ => return Err(Error::InvalidVectorType(root_type_lookup.handle)),
                     };
 
-                    let mut index_expr =
-                        expressions.append(crate::Expression::Constant(self.index_constants[0]));
                     let mut handle = expressions.append(crate::Expression::Access {
                         base: root_lexp.handle,
-                        index: index_expr,
+                        index: self.index_constant_expressions[0],
                     });
-                    for &index in self.index_constants[1..num_components].iter() {
-                        index_expr = expressions.append(crate::Expression::Constant(index));
+                    for &index_expr in self.index_constant_expressions[1..num_components].iter() {
                         let access_expr = expressions.append(crate::Expression::Access {
                             base: root_lexp.handle,
                             index: index_expr,
@@ -816,6 +937,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::VectorInsertDynamic => {
                     inst.expect(6)?;
+
                     let result_type_id = self.next()?;
                     let id = self.next()?;
                     let composite_id = self.next()?;
@@ -832,8 +954,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         _ => return Err(Error::InvalidVectorType(root_type_lookup.handle)),
                     };
                     let mut components = Vec::with_capacity(num_components);
-                    for &index in self.index_constants[..num_components].iter() {
-                        let index_expr = expressions.append(crate::Expression::Constant(index));
+                    for &index_expr in self.index_constant_expressions[..num_components].iter() {
                         let access_expr = expressions.append(crate::Expression::Access {
                             base: root_lexp.handle,
                             index: index_expr,
@@ -865,6 +986,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::CompositeExtract => {
                     inst.expect_at_least(4)?;
+
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
                     let base_id = self.next()?;
@@ -884,7 +1006,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                             | crate::TypeInner::Matrix { .. } => type_lookup
                                 .base_id
                                 .ok_or(Error::InvalidAccessType(lexp.type_id))?,
-                            _ => return Err(Error::UnsupportedType(type_lookup.handle)),
+                            ref other => {
+                                log::warn!("composite type {:?}", other);
+                                return Err(Error::UnsupportedType(type_lookup.handle));
+                            }
                         };
                         lexp = LookupExpression {
                             handle: expressions.append(crate::Expression::AccessIndex {
@@ -905,6 +1030,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::CompositeInsert => {
                     inst.expect_at_least(5)?;
+
                     let result_type_id = self.next()?;
                     let id = self.next()?;
                     let object_id = self.next()?;
@@ -935,6 +1061,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::CompositeConstruct => {
                     inst.expect_at_least(3)?;
+
                     let result_type_id = self.next()?;
                     let id = self.next()?;
                     let mut components = Vec::with_capacity(inst.wc as usize - 2);
@@ -958,6 +1085,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::Load => {
                     inst.expect_at_least(4)?;
+
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
                     let pointer_id = self.next()?;
@@ -965,17 +1093,30 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         inst.expect(5)?;
                         let _memory_access = self.next()?;
                     }
-                    let base_expr = self.lookup_expression.lookup(pointer_id)?.clone();
+
+                    let base_lexp = self.lookup_expression.lookup(pointer_id)?;
+                    let type_lookup = self.lookup_type.lookup(base_lexp.type_id)?;
+                    let handle = match type_arena[type_lookup.handle].inner {
+                        crate::TypeInner::Image { .. } | crate::TypeInner::Sampler { .. } => {
+                            base_lexp.handle
+                        }
+                        _ => expressions.append(crate::Expression::Load {
+                            pointer: base_lexp.handle,
+                        }),
+                    };
+
                     self.lookup_expression.insert(
                         result_id,
                         LookupExpression {
-                            handle: base_expr.handle, // pass-through pointers
+                            handle,
                             type_id: result_type_id,
                         },
                     );
                 }
                 Op::Store => {
                     inst.expect_at_least(3)?;
+                    block.extend(emitter.finish(expressions));
+
                     let pointer_id = self.next()?;
                     let value_id = self.next()?;
                     if inst.wc != 3 {
@@ -988,6 +1129,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         pointer: base_expr.handle,
                         value: value_expr.handle,
                     });
+                    emitter.start(expressions);
                 }
                 // Arithmetic Instructions +, -, *, /, %
                 Op::SNegate | Op::FNegate => {
@@ -1024,6 +1166,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::Transpose => {
                     inst.expect(4)?;
+
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
                     let matrix_id = self.next()?;
@@ -1044,6 +1187,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::Dot => {
                     inst.expect(5)?;
+
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
                     let left_id = self.next()?;
@@ -1084,16 +1228,16 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 Op::ShiftRightLogical => {
                     inst.expect(5)?;
                     //TODO: convert input and result to usigned
-                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::ShiftRight)?;
+                    self.parse_expr_shift_op(expressions, crate::BinaryOperator::ShiftRight)?;
                 }
                 Op::ShiftRightArithmetic => {
                     inst.expect(5)?;
                     //TODO: convert input and result to signed
-                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::ShiftRight)?;
+                    self.parse_expr_shift_op(expressions, crate::BinaryOperator::ShiftRight)?;
                 }
                 Op::ShiftLeftLogical => {
                     inst.expect(5)?;
-                    self.parse_expr_binary_op(expressions, crate::BinaryOperator::ShiftLeft)?;
+                    self.parse_expr_shift_op(expressions, crate::BinaryOperator::ShiftLeft)?;
                 }
                 // Sampling
                 Op::Image => {
@@ -1254,6 +1398,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::FunctionCall => {
                     inst.expect_at_least(4)?;
+                    block.extend(emitter.finish(expressions));
+
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
                     let func_id = self.next()?;
@@ -1265,19 +1411,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     }
 
                     // We just need an unique handle here, nothing more.
-                    let function = self.dummy_functions.append(crate::Function::default());
-                    self.deferred_function_calls.insert(function, func_id);
+                    let function = self.add_call(function_id, func_id);
 
-                    if self.lookup_void_type == Some(result_type_id) {
-                        block.push(crate::Statement::Call {
-                            function,
-                            arguments,
-                        });
+                    let result = if self.lookup_void_type == Some(result_type_id) {
+                        None
                     } else {
-                        let expr_handle = expressions.append(crate::Expression::Call {
-                            function,
-                            arguments,
-                        });
+                        let expr_handle = expressions.append(crate::Expression::Call(function));
                         self.lookup_expression.insert(
                             result_id,
                             LookupExpression {
@@ -1285,7 +1424,14 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                                 type_id: result_type_id,
                             },
                         );
-                    }
+                        Some(expr_handle)
+                    };
+                    block.push(crate::Statement::Call {
+                        function,
+                        arguments,
+                        result,
+                    });
+                    emitter.start(expressions);
                 }
                 Op::ExtInst => {
                     use crate::MathFunction as Mf;
@@ -1293,6 +1439,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
                     let base_wc = 5;
                     inst.expect_at_least(base_wc)?;
+
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
                     let set_id = self.next()?;
@@ -1392,11 +1539,33 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     inst.expect(5)?;
                     self.parse_expr_binary_op(expressions, crate::BinaryOperator::LogicalAnd)?;
                 }
-                op if inst.op >= Op::IEqual && inst.op <= Op::FUnordGreaterThanEqual => {
+                Op::IEqual
+                | Op::INotEqual
+                | Op::UGreaterThan
+                | Op::SGreaterThan
+                | Op::UGreaterThanEqual
+                | Op::SGreaterThanEqual
+                | Op::ULessThan
+                | Op::SLessThan
+                | Op::ULessThanEqual
+                | Op::SLessThanEqual
+                | Op::FOrdEqual
+                | Op::FUnordEqual
+                | Op::FOrdNotEqual
+                | Op::FUnordNotEqual
+                | Op::FOrdLessThan
+                | Op::FUnordLessThan
+                | Op::FOrdGreaterThan
+                | Op::FUnordGreaterThan
+                | Op::FOrdLessThanEqual
+                | Op::FUnordLessThanEqual
+                | Op::FOrdGreaterThanEqual
+                | Op::FUnordGreaterThanEqual => {
                     inst.expect(5)?;
-                    self.parse_expr_binary_op(expressions, map_binary_operator(op)?)?;
+                    let operator = map_binary_operator(inst.op)?;
+                    self.parse_expr_binary_op(expressions, operator)?;
                 }
-                op if inst.op >= Op::Any && inst.op <= Op::IsNormal => {
+                Op::Any | Op::All | Op::IsNan | Op::IsInf | Op::IsFinite | Op::IsNormal => {
                     inst.expect(4)?;
                     let result_type_id = self.next()?;
                     let result_id = self.next()?;
@@ -1405,7 +1574,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     let arg_lexp = self.lookup_expression.lookup(arg_id)?;
 
                     let expr = crate::Expression::Relational {
-                        fun: map_relational_fun(op)?,
+                        fun: map_relational_fun(inst.op)?,
                         argument: arg_lexp.handle,
                     };
                     self.lookup_expression.insert(
@@ -1458,10 +1627,29 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 Op::Switch => {
                     inst.expect_at_least(3)?;
-
                     let selector = self.next()?;
-                    let selector = self.lookup_expression[&selector].handle;
                     let default = self.next()?;
+
+                    let selector_lexp = &self.lookup_expression[&selector];
+                    let selector_lty = self.lookup_type.lookup(selector_lexp.type_id)?;
+                    let selector = match type_arena[selector_lty.handle].inner {
+                        crate::TypeInner::Scalar {
+                            kind: crate::ScalarKind::Uint,
+                            width: _,
+                        } => {
+                            // IR expects a signed integer, so do a bitcast
+                            expressions.append(crate::Expression::As {
+                                kind: crate::ScalarKind::Sint,
+                                expr: selector_lexp.handle,
+                                convert: false,
+                            })
+                        }
+                        crate::TypeInner::Scalar {
+                            kind: crate::ScalarKind::Sint,
+                            width: _,
+                        } => selector_lexp.handle,
+                        ref other => unimplemented!("Unexpected selector {:?}", other),
+                    };
 
                     let mut targets = Vec::new();
                     for _ in 0..(inst.wc - 3) / 2 {
@@ -1502,10 +1690,20 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         continue_block_id,
                     });
                 }
+                Op::DPdx | Op::DPdxFine | Op::DPdxCoarse => {
+                    self.parse_expr_derivative(expressions, crate::DerivativeAxis::X)?;
+                }
+                Op::DPdy | Op::DPdyFine | Op::DPdyCoarse => {
+                    self.parse_expr_derivative(expressions, crate::DerivativeAxis::Y)?;
+                }
+                Op::Fwidth | Op::FwidthFine | Op::FwidthCoarse => {
+                    self.parse_expr_derivative(expressions, crate::DerivativeAxis::Width)?;
+                }
                 _ => return Err(Error::UnsupportedInstruction(self.state, inst.op)),
             }
         };
 
+        block.extend(emitter.finish(expressions));
         Ok(ControlFlowNode {
             id: block_id,
             ty: None,
@@ -1532,6 +1730,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     handle,
                 },
             );
+        }
+        // register special constants
+        self.index_constant_expressions.clear();
+        for &con_handle in self.index_constants.iter() {
+            let handle = expressions.append(crate::Expression::Constant(con_handle));
+            self.index_constant_expressions.push(handle);
         }
         // register constants
         for (&id, con) in self.lookup_constant.iter() {
@@ -1564,6 +1768,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         use crate::Statement as S;
         for statement in statements.iter_mut() {
             match *statement {
+                S::Emit(_) => {}
                 S::Block(ref mut block) => {
                     self.patch_function_call_statements(block)?;
                 }
@@ -1601,7 +1806,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 S::Call {
                     ref mut function, ..
                 } => {
-                    let fun_id = self.deferred_function_calls[function];
+                    let fun_id = self.deferred_function_calls[function.index()];
                     *function = *self.lookup_function.lookup(fun_id)?;
                 }
             }
@@ -1611,11 +1816,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
     fn patch_function_calls(&self, fun: &mut crate::Function) -> Result<(), Error> {
         for (_, expr) in fun.expressions.iter_mut() {
-            if let crate::Expression::Call {
-                ref mut function, ..
-            } = *expr
-            {
-                let fun_id = self.deferred_function_calls[function];
+            if let crate::Expression::Call(ref mut function) = *expr {
+                let fun_id = self.deferred_function_calls[function.index()];
                 *function = *self.lookup_function.lookup(fun_id)?;
             }
         }
@@ -1636,6 +1838,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             crate::Module::default()
         };
 
+        // register indexing constants
         self.index_constants.clear();
         for i in 0..4 {
             let handle = module.constants.append(crate::Constant {
@@ -1643,15 +1846,26 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 specialization: None,
                 inner: crate::ConstantInner::Scalar {
                     width: 4,
-                    value: crate::ScalarValue::Uint(i),
+                    value: crate::ScalarValue::Sint(i),
                 },
             });
             self.index_constants.push(handle);
         }
 
-        while let Ok(inst) = self.next_inst() {
+        self.dummy_functions = Arena::new();
+        self.lookup_function.clear();
+        self.function_call_graph.clear();
+
+        loop {
             use spirv::Op;
+
+            let inst = match self.next_inst() {
+                Ok(inst) => inst,
+                Err(Error::IncompleteData) => break,
+                Err(other) => return Err(other),
+            };
             log::debug!("\t{:?} [{}]", inst.op, inst.wc);
+
             match inst.op {
                 Op::Capability => self.parse_capability(inst),
                 Op::Extension => self.parse_extension(inst),
@@ -1693,6 +1907,33 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 }
                 _ => Err(Error::UnsupportedInstruction(self.state, inst.op)), //TODO
             }?;
+        }
+
+        log::info!("Patching...");
+        {
+            use std::mem::take;
+            let mut nodes = petgraph::algo::toposort(&self.function_call_graph, None)
+                .map_err(|cycle| Error::FunctionCallCycle(cycle.node_id()))?;
+            nodes.reverse(); // we need dominated first
+            let mut functions = take(&mut module.functions).into_inner();
+            for fun_id in nodes {
+                if fun_id > !(functions.len() as u32) {
+                    // skip all the fake IDs registered for the entry points
+                    continue;
+                }
+                let handle = self.lookup_function.get_mut(&fun_id).unwrap();
+                // take out the function from the old array
+                let fun = take(&mut functions[handle.index()]);
+                // add it to the newly formed arena, and adjust the lookup
+                *handle = module.functions.append(fun);
+            }
+        }
+        // patch all the function calls
+        for (_, fun) in module.functions.iter_mut() {
+            self.patch_function_calls(fun)?;
+        }
+        for ep in module.entry_points.iter_mut() {
+            self.patch_function_calls(&mut ep.function)?;
         }
 
         // Check all the images and samplers to have consistent comparison property.
@@ -1849,7 +2090,8 @@ impl<I: Iterator<Item = u32>> Parser<I> {
     fn parse_string(&mut self, inst: Instruction) -> Result<(), Error> {
         self.switch(ModuleState::Source, inst.op)?;
         inst.expect_at_least(3)?;
-        let (_name, _) = self.next_string(inst.wc - 1)?;
+        let _id = self.next()?;
+        let (_name, _) = self.next_string(inst.wc - 2)?;
         Ok(())
     }
 
@@ -1940,7 +2182,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let id = self.next()?;
         let inner = crate::TypeInner::Scalar {
             kind: crate::ScalarKind::Bool,
-            width: 1,
+            width: crate::BOOL_WIDTH,
         };
         self.lookup_type.insert(
             id,
@@ -2121,15 +2363,47 @@ impl<I: Iterator<Item = u32>> Parser<I> {
     fn parse_type_pointer(
         &mut self,
         inst: Instruction,
-        _module: &mut crate::Module,
+        module: &mut crate::Module,
     ) -> Result<(), Error> {
         self.switch(ModuleState::Type, inst.op)?;
         inst.expect(4)?;
         let id = self.next()?;
-        let _storage = self.next()?;
+        let storage_class = self.next()?;
         let type_id = self.next()?;
-        let type_lookup = self.lookup_type.lookup(type_id)?.clone();
-        self.lookup_type.insert(id, type_lookup); // don't register pointers in the IR
+
+        let decor = self.future_decor.remove(&id);
+        let base_lookup_ty = self.lookup_type.lookup(type_id)?;
+        let class = match module.types[base_lookup_ty.handle].inner {
+            crate::TypeInner::Pointer { class, .. }
+            | crate::TypeInner::ValuePointer { class, .. } => class,
+            _ if self
+                .lookup_storage_buffer_types
+                .contains(&base_lookup_ty.handle) =>
+            {
+                crate::StorageClass::Storage
+            }
+            _ => match map_storage_class(storage_class)? {
+                ExtendedClass::Global(class) => class,
+                ExtendedClass::Input | ExtendedClass::Output => crate::StorageClass::Private,
+            },
+        };
+
+        // Don't bother with pointer stuff for `Handle` types.
+        let lookup_ty = if class == crate::StorageClass::Handle {
+            base_lookup_ty.clone()
+        } else {
+            LookupType {
+                handle: module.types.append(crate::Type {
+                    name: decor.and_then(|dec| dec.name),
+                    inner: crate::TypeInner::Pointer {
+                        base: base_lookup_ty.handle,
+                        class,
+                    },
+                }),
+                base_id: Some(type_id),
+            }
+        };
+        self.lookup_type.insert(id, lookup_ty);
         Ok(())
     }
 
@@ -2206,7 +2480,6 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
         let mut members = Vec::with_capacity(inst.wc as usize - 2);
         let mut member_type_ids = Vec::with_capacity(members.capacity());
-        let mut host_shared = false;
         for i in 0..u32::from(inst.wc) - 2 {
             let type_id = self.next()?;
             member_type_ids.push(type_id);
@@ -2215,17 +2488,18 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 .future_member_decor
                 .remove(&(id, i))
                 .unwrap_or_default();
-            // this is a bit of a hack
-            host_shared |= decor.offset.is_some();
+            let binding = decor.io_binding().ok();
             members.push(crate::StructMember {
                 name: decor.name,
-                span: None, //TODO
                 ty,
+                binding,
+                size: None, //TODO
+                align: None,
             });
         }
 
         let inner = crate::TypeInner::Struct {
-            block: block_decor.is_some() || host_shared,
+            block: block_decor.is_some(),
             members,
         };
         let ty_handle = module.types.append(crate::Type {
@@ -2514,7 +2788,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 crate::ConstantInner::Composite { ty, components }
             }
             //TODO: handle matrices, arrays, and structures
-            _ => return Err(Error::UnsupportedType(type_lookup.handle)),
+            ref other => {
+                log::warn!("null constant type {:?}", other);
+                return Err(Error::UnsupportedType(type_lookup.handle));
+            }
         };
 
         self.lookup_constant.insert(
@@ -2548,10 +2825,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 handle: module.constants.append(crate::Constant {
                     name: self.future_decor.remove(&id).and_then(|dec| dec.name),
                     specialization: None, //TODO
-                    inner: crate::ConstantInner::Scalar {
-                        width: 1,
-                        value: crate::ScalarValue::Bool(value),
-                    },
+                    inner: crate::ConstantInner::boolean(value),
                 }),
                 type_id,
             },
@@ -2577,108 +2851,134 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         } else {
             None
         };
-        let lookup_type = self.lookup_type.lookup(type_id)?;
         let dec = self.future_decor.remove(&id).unwrap_or_default();
 
-        let class = {
-            use spirv::StorageClass as Sc;
-            match Sc::from_u32(storage_class) {
-                Some(Sc::Function) => crate::StorageClass::Function,
-                Some(Sc::Input) => crate::StorageClass::Input,
-                Some(Sc::Output) => crate::StorageClass::Output,
-                Some(Sc::Private) => crate::StorageClass::Private,
-                Some(Sc::UniformConstant) => crate::StorageClass::Handle,
-                Some(Sc::StorageBuffer) => crate::StorageClass::Storage,
-                Some(Sc::Uniform) => {
-                    if self
-                        .lookup_storage_buffer_types
-                        .contains(&lookup_type.handle)
-                    {
-                        crate::StorageClass::Storage
-                    } else {
-                        crate::StorageClass::Uniform
-                    }
-                }
-                Some(Sc::Workgroup) => crate::StorageClass::WorkGroup,
-                Some(Sc::PushConstant) => crate::StorageClass::PushConstant,
-                _ => return Err(Error::UnsupportedStorageClass(storage_class)),
+        let mut effective_ty = self.lookup_type.lookup(type_id)?.handle;
+        let is_storage = match module.types[effective_ty].inner {
+            crate::TypeInner::Pointer { base, class } => {
+                effective_ty = base;
+                class == crate::StorageClass::Storage
             }
-        };
-
-        let ty_inner = &module.types[lookup_type.handle].inner;
-        let is_storage = match *ty_inner {
-            crate::TypeInner::Struct { .. } => class == crate::StorageClass::Storage,
             crate::TypeInner::Image {
                 class: crate::ImageClass::Storage(_),
                 ..
             } => true,
             _ => false,
         };
-
-        let storage_access = if is_storage {
-            let mut access = crate::StorageAccess::all();
-            if dec.flags.contains(DecorationFlags::NON_READABLE) {
-                access ^= crate::StorageAccess::LOAD;
-            }
-            if dec.flags.contains(DecorationFlags::NON_WRITABLE) {
-                access ^= crate::StorageAccess::STORE;
-            }
-            access
+        let ext_class = if self.lookup_storage_buffer_types.contains(&effective_ty) {
+            ExtendedClass::Global(crate::StorageClass::Storage)
         } else {
-            crate::StorageAccess::empty()
+            map_storage_class(storage_class)?
         };
 
-        let binding = dec.get_binding(class == crate::StorageClass::Output);
-        let ty = match binding {
-            // SPIR-V only cares about some of the built-in types being integer.
-            // Naga requires them to be strictly unsigned, so we have to patch it.
-            Some(crate::Binding::BuiltIn(built_in)) => {
-                let scalar_kind = ty_inner.scalar_kind();
-                let needs_uint = match built_in {
-                    crate::BuiltIn::BaseInstance
-                    | crate::BuiltIn::BaseVertex
-                    | crate::BuiltIn::InstanceIndex
-                    | crate::BuiltIn::SampleIndex
-                    | crate::BuiltIn::VertexIndex => true,
-                    _ => false,
+        let (inner, var) = match ext_class {
+            ExtendedClass::Global(class) => {
+                let storage_access = if is_storage {
+                    let mut access = crate::StorageAccess::all();
+                    if dec.flags.contains(DecorationFlags::NON_READABLE) {
+                        access ^= crate::StorageAccess::LOAD;
+                    }
+                    if dec.flags.contains(DecorationFlags::NON_WRITABLE) {
+                        access ^= crate::StorageAccess::STORE;
+                    }
+                    access
+                } else {
+                    crate::StorageAccess::empty()
                 };
-                if needs_uint && scalar_kind == Some(crate::ScalarKind::Sint) {
-                    log::warn!("Treating {:?} as unsigned", built_in);
-                    module.types.fetch_or_append(crate::Type {
-                        name: None,
-                        inner: crate::TypeInner::Scalar {
+
+                let var = crate::GlobalVariable {
+                    binding: dec.resource_binding(),
+                    name: dec.name,
+                    class,
+                    ty: effective_ty,
+                    init,
+                    storage_access,
+                };
+                (Variable::Global, var)
+            }
+            ExtendedClass::Input => {
+                let binding = dec.io_binding()?;
+                if let crate::Binding::BuiltIn(built_in) = binding {
+                    let needs_inner_uint = match built_in {
+                        crate::BuiltIn::BaseInstance
+                        | crate::BuiltIn::BaseVertex
+                        | crate::BuiltIn::InstanceIndex
+                        | crate::BuiltIn::SampleIndex
+                        | crate::BuiltIn::VertexIndex
+                        | crate::BuiltIn::LocalInvocationIndex => Some(crate::TypeInner::Scalar {
                             kind: crate::ScalarKind::Uint,
                             width: 4,
-                        },
-                    })
-                } else {
-                    lookup_type.handle
+                        }),
+                        crate::BuiltIn::GlobalInvocationId
+                        | crate::BuiltIn::LocalInvocationId
+                        | crate::BuiltIn::WorkGroupId
+                        | crate::BuiltIn::WorkGroupSize => Some(crate::TypeInner::Vector {
+                            size: crate::VectorSize::Tri,
+                            kind: crate::ScalarKind::Uint,
+                            width: 4,
+                        }),
+                        _ => None,
+                    };
+                    if let (Some(inner), Some(crate::ScalarKind::Sint)) = (
+                        needs_inner_uint,
+                        module.types[effective_ty].inner.scalar_kind(),
+                    ) {
+                        log::warn!("Treating {:?} as unsigned", built_in);
+                        effective_ty = module
+                            .types
+                            .fetch_or_append(crate::Type { name: None, inner });
+                    }
                 }
+
+                let var = crate::GlobalVariable {
+                    name: dec.name.clone(),
+                    class: crate::StorageClass::Private,
+                    binding: None,
+                    ty: effective_ty,
+                    init: None,
+                    storage_access: crate::StorageAccess::empty(),
+                };
+                let inner = Variable::Input(crate::FunctionArgument {
+                    name: dec.name,
+                    ty: effective_ty,
+                    binding: Some(binding),
+                });
+                (inner, var)
             }
-            _ => lookup_type.handle,
+            ExtendedClass::Output => {
+                // For output interface blocks. this would be a structure.
+                let binding = dec.io_binding().ok();
+                let var = crate::GlobalVariable {
+                    name: dec.name,
+                    class: crate::StorageClass::Private,
+                    binding: None,
+                    ty: effective_ty,
+                    init: None,
+                    storage_access: crate::StorageAccess::empty(),
+                };
+                let inner = Variable::Output(crate::FunctionResult {
+                    ty: effective_ty,
+                    binding,
+                });
+                (inner, var)
+            }
         };
 
-        let var = crate::GlobalVariable {
-            name: dec.name,
-            class,
-            binding,
-            ty,
-            init,
-            interpolation: dec.interpolation,
-            storage_access,
-        };
         let handle = module.global_variables.append(var);
-        self.lookup_variable
-            .insert(id, LookupVariable { handle, type_id });
-
-        if module.types[lookup_type.handle]
-            .inner
-            .can_comparison_sample()
-        {
+        if module.types[effective_ty].inner.can_comparison_sample() {
             log::debug!("\t\ttracking {:?} for sampling properties", handle);
             self.handle_sampling
                 .insert(handle, image::SamplingFlags::empty());
         }
+
+        self.lookup_variable.insert(
+            id,
+            LookupVariable {
+                inner,
+                handle,
+                type_id,
+            },
+        );
         Ok(())
     }
 }

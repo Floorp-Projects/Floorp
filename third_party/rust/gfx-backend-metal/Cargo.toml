@@ -14,7 +14,6 @@ edition = "2018"
 
 [features]
 default = []
-auto-capture = []
 signpost = []
 cross = ["spirv_cross", "auxil", "naga/spv-out"]
 
@@ -53,7 +52,7 @@ optional = true
 
 [dependencies.naga]
 git = "https://github.com/gfx-rs/naga"
-tag = "gfx-12"
+tag = "gfx-20"
 features = ["spv-in", "msl-out"]
 
 # This forces docs.rs to build the crate on mac, otherwise the build fails

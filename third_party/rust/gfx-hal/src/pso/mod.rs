@@ -21,6 +21,9 @@ pub enum CreationError {
     /// Unknown other error.
     #[error("Implementation specific error occurred")]
     Other,
+    /// Shader module creation error.
+    #[error("{0:?} shader creation failed: {1:}")]
+    ShaderCreationError(ShaderStageFlags, String),
     /// Unsupported pipeline on hardware or implementation. Example: mesh shaders on DirectX 11.
     #[error("Pipeline kind is not supported")]
     UnsupportedPipeline,
