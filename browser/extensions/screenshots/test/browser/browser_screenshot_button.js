@@ -4,8 +4,6 @@
  */
 "use strict";
 
-// Avoid leaks by using tmp for imports...
-var tmp = {};
 ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
 
 add_task(async function testScreenshotButtonDisabled() {
