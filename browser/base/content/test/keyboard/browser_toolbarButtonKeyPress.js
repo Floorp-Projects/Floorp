@@ -3,6 +3,9 @@
 
 "use strict";
 
+const kDevPanelID =
+  gProton && gProtonDoorhangers ? "appmenu-moreTools" : "PanelUI-developer";
+
 /**
  * Test the behavior of key presses on various toolbar buttons.
  */
@@ -89,7 +92,7 @@ add_task(async function testDeveloperButtonPress() {
   let button = document.getElementById("developer-button");
   forceFocus(button);
   EventUtils.synthesizeKey(" ");
-  let view = document.getElementById("PanelUI-developer");
+  let view = document.getElementById(kDevPanelID);
   let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
   await focused;
   ok(true, "Focus inside Developer menu after toolbar button pressed");
@@ -110,7 +113,7 @@ add_task(async function testDeveloperButtonWrongKey() {
   forceFocus(button);
   EventUtils.synthesizeKey("KEY_Tab");
   await TestUtils.waitForTick();
-  let panel = document.getElementById("PanelUI-developer").closest("panel");
+  let panel = document.getElementById(kDevPanelID).closest("panel");
   ok(!panel || panel.state == "closed", "Developer menu not open after tab");
   CustomizableUI.reset();
 });
