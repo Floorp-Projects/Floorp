@@ -15,6 +15,7 @@
 #include "GeolocationPosition.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
+#include "prtime.h"
 
 namespace mozilla {
 namespace dom {
@@ -82,7 +83,9 @@ class GpsdLocationProvider::UpdateRunnable final : public Runnable {
   UpdateRunnable(
       const nsMainThreadPtrHandle<GpsdLocationProvider>& aLocationProvider,
       nsIDOMGeoPosition* aPosition)
-      : mLocationProvider(aLocationProvider), mPosition(aPosition) {
+      : Runnable("GpsdU"),
+        mLocationProvider(aLocationProvider),
+        mPosition(aPosition) {
     MOZ_ASSERT(mLocationProvider);
     MOZ_ASSERT(mPosition);
   }
@@ -109,7 +112,9 @@ class GpsdLocationProvider::NotifyErrorRunnable final : public Runnable {
   NotifyErrorRunnable(
       const nsMainThreadPtrHandle<GpsdLocationProvider>& aLocationProvider,
       int aError)
-      : mLocationProvider(aLocationProvider), mError(aError) {
+      : Runnable("GpsdNE"),
+        mLocationProvider(aLocationProvider),
+        mError(aError) {
     MOZ_ASSERT(mLocationProvider);
   }
 
@@ -141,11 +146,15 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
  public:
   PollRunnable(
       const nsMainThreadPtrHandle<GpsdLocationProvider>& aLocationProvider)
-      : mLocationProvider(aLocationProvider), mRunning(true) {
+      : Runnable("GpsdP"),
+        mLocationProvider(aLocationProvider),
+        mRunning(true) {
     MOZ_ASSERT(mLocationProvider);
   }
 
-  static bool IsSupported() { return GPSD_API_MAJOR_VERSION == 5; }
+  static bool IsSupported() {
+    return GPSD_API_MAJOR_VERSION >= 5 && GPSD_API_MAJOR_VERSION <= 10;
+  }
 
   bool IsRunning() const { return mRunning; }
 
@@ -158,7 +167,7 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
     int err;
 
     switch (GPSD_API_MAJOR_VERSION) {
-      case 5:
+      case 5 ... 10:
         err = PollLoop5();
         break;
       default:
@@ -178,7 +187,7 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
 
  protected:
   int PollLoop5() {
-#if GPSD_API_MAJOR_VERSION == 5
+#if GPSD_API_MAJOR_VERSION >= 5 && GPSD_API_MAJOR_VERSION <= 10
     static const int GPSD_WAIT_TIMEOUT_US =
         1000000; /* us to wait for GPS data */
 
@@ -207,6 +216,7 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
     while (IsRunning()) {
       errno = 0;
       auto hasGpsData = gps_waiting(&gpsData, GPSD_WAIT_TIMEOUT_US);
+      int status;
 
       if (errno) {
         err = ErrnoToError(errno);
@@ -216,7 +226,12 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
         continue; /* woke up from timeout */
       }
 
+#  if GPSD_API_MAJOR_VERSION >= 7
+      res = gps_read(&gpsData, nullptr, 0);
+#  else
+
       res = gps_read(&gpsData);
+#  endif
 
       if (res < 0) {
         err = ErrnoToError(errno);
@@ -225,14 +240,27 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
         continue; /* no data available */
       }
 
-      if (gpsData.status == STATUS_NO_FIX) {
+#  if GPSD_API_MAJOR_VERSION >= 10
+      status = gpsData.fix.status;
+#  else
+      status = gpsData.status;
+#  endif
+
+      if (status == STATUS_NO_FIX) {
         continue;
       }
 
       switch (gpsData.fix.mode) {
         case MODE_3D:
-          if (!IsNaN(gpsData.fix.altitude)) {
-            alt = gpsData.fix.altitude;
+          double galt;
+
+#  if GPSD_API_MAJOR_VERSION >= 9
+          galt = gpsData.fix.altMSL;
+#  else
+          galt = gpsData.fix.altitude;
+#  endif
+          if (!IsNaN(galt)) {
+            alt = galt;
           }
           [[fallthrough]];
         case MODE_2D:
@@ -248,9 +276,6 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
             hError = gpsData.fix.epx;
           } else if (!IsNaN(gpsData.fix.epy)) {
             hError = gpsData.fix.epy;
-          }
-          if (!IsNaN(gpsData.fix.altitude)) {
-            alt = gpsData.fix.altitude;
           }
           if (!IsNaN(gpsData.fix.epv)) {
             vError = gpsData.fix.epv;
@@ -363,7 +388,7 @@ GpsdLocationProvider::Startup() {
 
   RefPtr<PollRunnable> pollRunnable =
       MakeAndAddRef<PollRunnable>(nsMainThreadPtrHandle<GpsdLocationProvider>(
-          new nsMainThreadPtrHolder<GpsdLocationProvider>(this)));
+          new nsMainThreadPtrHolder<GpsdLocationProvider>("GpsdLP", this)));
 
   // Use existing poll thread...
   RefPtr<LazyIdleThread> pollThread = mPollThread;
