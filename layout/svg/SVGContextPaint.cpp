@@ -55,6 +55,10 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
   // extension developers coming to rely on image context paint either, we only
   // enable context-paint for extensions that are signed by Mozilla.
   //
+  // We also allow this for browser UI icons that are served up from
+  // Mozilla-controlled domains listed in the
+  // svg.context-properties.content.allowed-domains pref.
+  //
   nsAutoCString scheme;
   if (NS_SUCCEEDED(aURI->GetScheme(scheme)) &&
       (scheme.EqualsLiteral("chrome") || scheme.EqualsLiteral("resource") ||
@@ -63,6 +67,7 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
   }
   RefPtr<BasePrincipal> principal =
       BasePrincipal::CreateContentPrincipal(aURI, OriginAttributes());
+
   nsString addonId;
   if (NS_SUCCEEDED(principal->GetAddonId(addonId))) {
     if (StringEndsWith(addonId, u"@mozilla.org"_ns) ||
@@ -70,7 +75,11 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
       return true;
     }
   }
-  return false;
+
+  bool isInAllowList = false;
+  principal->IsURIInPrefList("svg.context-properties.content.allowed-domains",
+                             &isInAllowList);
+  return isInAllowList;
 }
 
 /**
