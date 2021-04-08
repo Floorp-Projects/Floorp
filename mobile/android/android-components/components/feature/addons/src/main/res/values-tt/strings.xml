@@ -8,16 +8,28 @@
     <string name="mozac_feature_addons_permissions_bookmarks_description">Кыстыргычларны уку һәм үзгәртү</string>
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">Браузер көйләүләрен уку һәм үзгәртү</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">Соңгы гизү тарихын, кукиларны һәм шуңа бәйле мәгълүматны чистарту</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Алмаш буферыннан мәгълүмат алу</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Мәгълүматны алмаш буферына кую</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">Файлларны йөкләп алу һәм браузерның йөкләү тарихын уку һәм үзгәртү</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Җиһазыгызга йөкләп алынган файлларны ачу</string>
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">Барлык ачык табларның текстын уку</string>
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">Урнашкан урыныгызга ирешү</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Гизү тарихына ирешү</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Сезгә искәртүләр күрсәтү</string>
     <!-- Description for pkcs11 permission. -->
     <string name="mozac_feature_addons_permissions_pkcs11_description">Криптографик аутентификация хезмәтләрен тәкъдим ителсен</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Браузерның прокси көйләүләре белән идарә итү</string>
     <!-- Description for sessions permission. -->
     <string name="mozac_feature_addons_permissions_sessions_description">Күптән түгел ябылган табларга ирешү</string>
     <!-- Description for tab_hide permission. -->
@@ -58,6 +70,8 @@
     <string name="mozac_feature_addons_unsupported_section">Әлегә танылмый</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
     <string name="mozac_feature_addons_disabled_section">Cүндерелгән</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">Нечкәлекләр</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Рөхсәтләр</string>
     <!-- This is button that remove (uninstall an add-on). -->
@@ -70,16 +84,22 @@
     <string name="mozac_feature_addons_install_addon_content_description">Кушымчаны урнаштыру</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Баш тарту</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
+    <string name="mozac_feature_addons_user_rating_count_2">Фикерләр: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Кушымчалар</string>
+    <!-- Label for add-ons sub menu item for add-ons manager-->
+    <string name="mozac_feature_addons_addons_manager">Кушымчалар менеджеры</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Рөхсәт итү</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">Кире кагу</string>
     <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
     <string name="mozac_feature_addons_updater_notification_title">%1$s өчен яңа яңарту бар</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d яңа рөхсәтләр таләп ителә</string>
     <!-- The content of the notification displayed when an add-on needs a new permission-->
     <string name="mozac_feature_addons_updater_notification_content_singular">Яңа рөхсәт кирәк</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
@@ -88,18 +108,28 @@
     <string name="mozac_feature_addons_supported_checker_notification_title">Яңа кушымча бар</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title_plural">Яңа кушымчалар бар</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">Кушымчаны йөкләп алу һәм тикшерү…</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s уңышлы урнаштырылды</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">%1$s кушымчасын урнаштырып булмады</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s уңышлы кабызылды</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">%1$s кушымчасын кабызып булмады</string>
     <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_disabled">%1$s уңышлы сүндерелде</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">%1$s кушымчасын сүндереп булмады</string>
     <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_uninstalled">%1$s уңышлы алып ташланды</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">%1$s кушымчасын бетереп булмады</string>
     <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s уңышлы бетерелде</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s кушымчасын бетереп булмады</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 кушымча</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
@@ -112,6 +142,8 @@
     <string name="mozac_feature_addons_updater_status_no_update_available">Яңартулар юк</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Хата</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">Яңарту турында мәгълүмат</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Соңгы омтылыш:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
