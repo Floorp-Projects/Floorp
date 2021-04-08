@@ -4,10 +4,6 @@
 // add and remove page actions and toggle them in the urlbar.  This does not
 // test the built-in page actions; browser_page_action_menu.js does that.
 
-const PROTON_PREF = "browser.proton.urlbar.enabled";
-
-let gProton;
-
 // Initialization.  Must run first.
 add_task(async function init() {
   // The page action urlbar button, and therefore the panel, is only shown when
@@ -17,25 +13,11 @@ add_task(async function init() {
     gBrowser,
     url: "http://example.com/",
   });
-
-  await disableNonReleaseActions();
   registerCleanupFunction(async () => {
     BrowserTestUtils.removeTab(tab);
   });
 
-  // Ensure screenshots is really disabled (bug 1498738)
-  const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
-  await addon.disable({ allowSystemAddons: true });
-
-  gProton = Services.prefs.getBoolPref(PROTON_PREF, false);
-  if (gProton) {
-    // Make the main button visible. It's not unless the window is narrow. This
-    // test isn't concerned with that behavior. We have other tests for that.
-    BrowserPageActions.mainButtonNode.style.visibility = "visible";
-    registerCleanupFunction(() => {
-      BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
-    });
-  }
+  await initPageActionsTest();
 });
 
 // Tests a simple non-built-in action without an iframe or subview.  Also
@@ -97,7 +79,7 @@ add_task(async function simple() {
 
   Assert.equal(action.getIconURL(), iconURL, "iconURL");
   Assert.equal(action.id, id, "id");
-  Assert.equal(action.pinnedToUrlbar, gProton, "pinnedToUrlbar");
+  Assert.equal(action.pinnedToUrlbar, gProtonUrlbar, "pinnedToUrlbar");
   Assert.equal(action.getDisabled(), false, "disabled");
   Assert.equal(action.getDisabled(window), false, "disabled in window");
   Assert.equal(action.getTitle(), title, "title");
@@ -123,7 +105,7 @@ add_task(async function simple() {
   );
   Assert.equal(
     onPlacedInUrlbarCallCount,
-    gProton ? 1 : 0,
+    gProtonUrlbar ? 1 : 0,
     "onPlacedInUrlbarCallCount after adding the action"
   );
   Assert.equal(
@@ -196,7 +178,7 @@ add_task(async function simple() {
 
   Assert.deepEqual(
     PageActions.actionsInUrlbar(window),
-    (gProton ? [action] : []).concat(initialActionsInUrlbar),
+    (gProtonUrlbar ? [action] : []).concat(initialActionsInUrlbar),
     "Actions in urlbar after adding the action"
   );
 
@@ -241,7 +223,7 @@ add_task(async function simple() {
   );
 
   let urlbarButtonNode = document.getElementById(urlbarButtonID);
-  Assert.equal(!!urlbarButtonNode, gProton, "urlbarButtonNode");
+  Assert.equal(!!urlbarButtonNode, gProtonUrlbar, "urlbarButtonNode");
 
   // Open the panel, click the action's button.
   await promiseOpenPageActionPanel();
@@ -792,7 +774,7 @@ add_task(async function insertBeforeActionID() {
   let panelButtonNode = document.getElementById(panelButtonID);
   Assert.notEqual(panelButtonNode, null, "panelButtonNode");
 
-  if (!gProton) {
+  if (!gProtonUrlbar) {
     let actionIndex = newActions.findIndex(a => a.id == id);
     Assert.equal(
       initialBookmarkSeparatorIndex,
@@ -1237,7 +1219,7 @@ add_task(async function transient() {
   Assert.equal(onPlacedInPanelCount, 0, "onPlacedInPanelCount should remain 0");
   Assert.equal(
     onBeforePlacedInWindowCount,
-    gProton ? 1 : 0,
+    gProtonUrlbar ? 1 : 0,
     "onBeforePlacedInWindowCount after adding transient action"
   );
 
