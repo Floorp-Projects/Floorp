@@ -7,7 +7,6 @@
 <html>
 <head>
   <title>Test hidden frames</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -73,6 +72,8 @@ function test1() {
 function test2() {
   is(f1.contentWindow.connectedEvents, 1, "right number of connection events in frame 1");
   is(f2.contentWindow.connectedEvents, 1, "right number of connection events in frame 2");
+  is(f1.contentWindow.idlConnected, 1, "right number of IDL connection events in frame 1");
+  is(f2.contentWindow.idlConnected, 1, "right number of IDL connection events in frame 2");
   GamepadService.removeGamepad(gamepad_index);
   SimpleTest.finish();
 }
