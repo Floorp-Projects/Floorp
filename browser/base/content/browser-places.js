@@ -29,11 +29,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.toolbars.bookmarks.showOtherBookmarks",
   true,
   (aPref, aPrevVal, aNewVal) => {
-    BookmarkingUI.maybeShowOtherBookmarksFolder();
     let doc = docWeak.get();
     if (!doc) {
       return;
     }
+    BookmarkingUI.maybeShowOtherBookmarksFolder();
     doc.getElementById("PlacesToolbar")?._placesView?.updateNodesVisibility();
   }
 );
