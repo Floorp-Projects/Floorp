@@ -40,26 +40,10 @@ class StartupStateProviderTest {
     }
 
     @Test
-    fun `GIVEN the app started for an activity WHEN we launched to HomeActivity directly THEN start up is cold`() {
-        // These entries mimic observed behavior.
-        logEntries.addAll(listOf(
-            LogEntry.ActivityCreated(homeActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass),
-            LogEntry.AppStarted
-        ))
-        assertTrue(provider.isColdStartForStartedActivity(homeActivityClass))
-    }
-
-    @Test
-    fun `GIVEN the app started for an activity WHEN we launched to HA through a non-drawing IntentRA THEN start up is cold`() {
-        // These entries mimic observed behavior.
-        logEntries.addAll(listOf(
-            LogEntry.ActivityCreated(irActivityClass),
-            LogEntry.ActivityCreated(homeActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass),
-            LogEntry.AppStarted
-        ))
-        assertTrue(provider.isColdStartForStartedActivity(homeActivityClass))
+    fun `GIVEN the app started for an activity WHEN is cold start THEN cold start is true`() {
+        forEachColdStartEntries { index ->
+            assertTrue("$index", provider.isColdStartForStartedActivity(homeActivityClass))
+        }
     }
 
     @Test
@@ -200,27 +184,13 @@ class StartupStateProviderTest {
 
     @Test
     fun `GIVEN the app did not start for an activity WHEN is cold is checked THEN it returns false`() {
-        fun assertIsNotCold() { assertFalse(provider.isColdStartForStartedActivity(homeActivityClass)) }
-
         every { startReasonProvider.reason } returns StartReason.NON_ACTIVITY
-        assertIsNotCold() // 🔥
 
-        // These are normally the success paths.
-        logEntries.addAll(listOf(
-            LogEntry.ActivityCreated(homeActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass),
-            LogEntry.AppStarted
-        ))
-        assertIsNotCold()
+        assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
 
-        logEntries.clear()
-        logEntries.addAll(listOf(
-            LogEntry.ActivityCreated(irActivityClass),
-            LogEntry.ActivityCreated(homeActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass),
-            LogEntry.AppStarted
-        ))
-        assertIsNotCold()
+        forEachColdStartEntries { index ->
+            assertFalse("$index", provider.isColdStartForStartedActivity(homeActivityClass))
+        }
     }
 
     @Test
@@ -232,5 +202,33 @@ class StartupStateProviderTest {
     @Test
     fun `GIVEN the app has not been stopped WHEN is cold short circuit is called THEN it returns false`() {
         assertFalse(provider.shouldShortCircuitColdStart())
+    }
+
+    private fun forEachColdStartEntries(block: (index: Int) -> Unit) {
+        // These entries mimic observed behavior.
+        //
+        // MAIN: open HomeActivity directly.
+        val coldStartEntries = listOf(listOf(
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted
+
+            // VIEW: open non-drawing IntentReceiverActivity, then HomeActivity.
+        ), listOf(
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.AppStarted
+        ))
+
+        forEachStartEntry(coldStartEntries, block)
+    }
+
+    private fun forEachStartEntry(entries: List<List<LogEntry>>, block: (index: Int) -> Unit) {
+        entries.forEachIndexed { index, startEntry ->
+            logEntries.clear()
+            logEntries.addAll(startEntry)
+            block(index)
+        }
     }
 }
