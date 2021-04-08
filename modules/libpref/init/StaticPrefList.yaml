@@ -10260,6 +10260,19 @@
   value: false
   mirror: always
 
+# Enables the 'context-fill' and 'context-stroke' keywords for particular
+# domains. We expect this list to be Mozilla-controlled properties, since the
+# 'context-*' keywords are not part of any spec. We expect to remove this
+# preference and the 'context-` keyword support entirely in the
+# not-too-distant future when a standardized alternative ships. This preference
+# is _not_ for allowing web content to use these keywords. For performance
+# reasons, the list of domains in this preference should remain short in
+# length.
+- name: svg.context-properties.content.allowed-domains
+  type: String
+  value: ""
+  mirror: never
+
 # Enable the use of display-lists for SVG hit-testing.
 - name: svg.display-lists.hit-testing.enabled
   type: bool
