@@ -928,11 +928,11 @@ option(
     "--with-sysroot",
     env="SYSROOT",
     nargs=1,
-    when=target_is_linux,
+    when=target_is_linux_or_wasi,
     help="Build using the given sysroot directory",
 )
 
-sysroot_input = depends("--with-sysroot", when=target_is_linux)(lambda x: x)
+sysroot_input = depends("--with-sysroot", when=target_is_linux_or_wasi)(lambda x: x)
 bootstrap_sysroot = depends(target_is_linux, sysroot_input)(
     lambda linux, input: linux and not input and input.origin == "default"
 )
@@ -1795,6 +1795,10 @@ def security_hardening_cflags(
     js_flags = []
     js_ldflags = []
 
+    # WASI compiler doesn't support security hardening cflags
+    if target.os == "WASI":
+        return
+
     # ----------------------------------------------------------
     # If hardening is explicitly enabled, or not explicitly disabled
     if hardening_flag.origin == "default" or hardening_flag:
@@ -2345,26 +2349,23 @@ def select_linker(
 set_config("LINKER_KIND", select_linker.KIND)
 
 
-@depends_if(select_linker, macos_sdk, sysroot_path, multiarch_dir)
-def linker_ldflags(linker, macos_sdk, sysroot_path, multiarch_dir):
+@depends_if(select_linker, target, macos_sdk, sysroot_path, multiarch_dir)
+@imports("os")
+def linker_ldflags(linker, target, macos_sdk, sysroot_path, multiarch_dir):
     flags = list((linker and linker.LINKER_FLAG) or [])
-    if macos_sdk:
+    if target.kernel == "Darwin":
         if linker and linker.KIND == "ld64":
             flags.append("-Wl,-syslibroot,%s" % macos_sdk)
         else:
             flags.append("-Wl,--sysroot=%s" % macos_sdk)
 
     if sysroot_path and multiarch_dir:
-        # Non-Debian-patched binutils linkers (both BFD and gold) don't lookup
-        # in multi-arch directories.
-        flags.append(
-            "-Wl,-rpath-link,%s" % os.path.join(sysroot_path, "lib", multiarch_dir)
-        )
-        flags.append(
-            "-Wl,-rpath-link,%s"
-            % os.path.join(sysroot_path, "usr", "lib", multiarch_dir)
-        )
-
+        for d in ("lib", "usr/lib"):
+            multiarch_lib_dir = os.path.join(sysroot_path, d, multiarch_dir)
+            if os.path.exists(multiarch_lib_dir):
+                # Non-Debian-patched binutils linkers (both BFD and gold) don't lookup
+                # in multi-arch directories.
+                flags.append("-Wl,-rpath-link,%s" % multiarch_lib_dir)
     return flags
 
 

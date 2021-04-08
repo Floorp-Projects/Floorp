@@ -672,7 +672,7 @@ option(
 @imports(_from="mozbuild.configure.constants", _import="Kernel")
 @imports(_from="mozbuild.configure.constants", _import="OS")
 @imports(_from="__builtin__", _import="ValueError")
-def split_triplet(triplet, allow_msvc=False):
+def split_triplet(triplet, allow_msvc=False, allow_wasi=False):
     # The standard triplet is defined as
     #   CPU_TYPE-VENDOR-OPERATING_SYSTEM
     # There is also a quartet form:
@@ -728,6 +728,8 @@ def split_triplet(triplet, allow_msvc=False):
         canonical_os = canonical_kernel = "OpenBSD"
     elif os.startswith("solaris"):
         canonical_os = canonical_kernel = "SunOS"
+    elif os.startswith("wasi") and allow_wasi:
+        canonical_os = canonical_kernel = "WASI"
     else:
         raise ValueError("Unknown OS: %s" % os)
 
@@ -780,6 +782,9 @@ def split_triplet(triplet, allow_msvc=False):
         endianness = "little"
     elif cpu == "sh4":
         canonical_cpu = "sh4"
+        endianness = "little"
+    elif cpu == "wasm32" and allow_wasi:
+        canonical_cpu = "wasm32"
         endianness = "little"
     else:
         raise ValueError("Unknown CPU type: %s" % cpu)
@@ -921,7 +926,7 @@ def real_target(value, host, shell, project, application):
             pass
 
     try:
-        return split_triplet(config_sub(shell, target))
+        return split_triplet(config_sub(shell, target), allow_wasi=(project == "js"))
     except ValueError as e:
         die(e)
 
@@ -1068,6 +1073,12 @@ def target_is_linux(target):
 
 
 set_define("XP_LINUX", target_is_linux)
+
+
+@depends(target)
+def target_is_linux_or_wasi(target):
+    if target.kernel in ("Linux", "WASI"):
+        return True
 
 
 @depends(target)
