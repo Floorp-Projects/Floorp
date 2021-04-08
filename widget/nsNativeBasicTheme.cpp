@@ -1894,8 +1894,8 @@ void nsNativeBasicTheme::PaintAutoStyleOutline(nsIFrame* aFrame,
   // to support arbitrary radii.
   RectCornerRadii outerRadii;
   if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
-    const Float widths[4] = {devPixelOffset, devPixelOffset, devPixelOffset,
-                             devPixelOffset};
+    const Float widths[4] = {width + devPixelOffset, width + devPixelOffset,
+                             width + devPixelOffset, width + devPixelOffset};
     nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, widths, &outerRadii);
 
     const auto dest = wr::ToLayoutRect(rect);
