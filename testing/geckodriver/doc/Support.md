@@ -22,7 +22,11 @@ and required versions of Selenium and Firefox:
     <th>max
   </tr>
  </thead>
-
+ <tr>
+  <td>0.29.1
+  <td>≥ 3.11 (3.14 Python)
+  <td>60
+  <td>n/a
  <tr>
   <td>0.29.0
   <td>≥ 3.11 (3.14 Python)

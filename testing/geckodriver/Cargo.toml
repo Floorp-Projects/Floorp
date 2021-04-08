@@ -1,6 +1,6 @@
 [package]
 name = "geckodriver"
-version = "0.29.0"
+version = "0.29.1"
 description = "Proxy for using WebDriver clients to interact with Gecko-based browsers."
 keywords = ["webdriver", "w3c", "httpd", "mozilla", "firefox"]
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver"
