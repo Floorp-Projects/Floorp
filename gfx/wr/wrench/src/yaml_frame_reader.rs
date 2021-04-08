@@ -235,8 +235,13 @@ fn generate_checkerboard_image(
         }
     }
 
+    let flags = match kind {
+        CheckerboardKind::BlackGrey => ImageDescriptorFlags::IS_OPAQUE,
+        CheckerboardKind::BlackTransparent => ImageDescriptorFlags::empty(),
+    };
+
     (
-        ImageDescriptor::new(width as i32, height as i32, ImageFormat::BGRA8, ImageDescriptorFlags::IS_OPAQUE),
+        ImageDescriptor::new(width as i32, height as i32, ImageFormat::BGRA8, flags),
         ImageData::new(pixels),
     )
 }
