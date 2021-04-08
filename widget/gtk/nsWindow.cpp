@@ -2220,9 +2220,10 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
     if (gRaiseWindows && owningWindow->mIsShown && owningWindow->mShell &&
         !gtk_window_is_active(GTK_WINDOW(owningWindow->mShell))) {
       if (!mIsX11Display &&
-          Preferences::GetBool("testing.browserTestHarness.running", false)) {
+          Preferences::GetBool("widget.wayland.focus-workaround.enabled",
+                               false)) {
         // Wayland does not support focus changes so we need to workaround it
-        // by window hide/show sequence but only when it's running in testsuite.
+        // by window hide/show sequence.
         owningWindow->NativeShow(false);
         owningWindow->NativeShow(true);
         return;
