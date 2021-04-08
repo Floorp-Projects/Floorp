@@ -19,10 +19,13 @@ enum class EditAction {
   // eNone indicates no edit action is being handled.
   eNone,
 
-  // eNotEditing indicates that something is retrieved or initializing
-  // something at creating, destroying or focus move etc, i.e., not edit
-  // action is being handled but editor is doing something.
+  // eNotEditing indicates that something is retrieved, doing something at
+  // destroying or focus move etc, i.e., not edit action is being handled but
+  // editor is doing something.
   eNotEditing,
+
+  // eInitializing indicates that the editor instance is being initialized.
+  eInitializing,
 
   // eInsertText indicates to insert some characters.
   eInsertText,
@@ -632,6 +635,7 @@ inline bool MayEditActionDeleteSelection(const EditAction aEditAction) {
   switch (aEditAction) {
     case EditAction::eNone:
     case EditAction::eNotEditing:
+    case EditAction::eInitializing:
       return false;
 
     // EditActions modifying around selection.

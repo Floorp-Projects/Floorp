@@ -1140,6 +1140,9 @@ class EditorBase : public nsIEditor,
         // If we're not handling edit action, we don't need to handle
         // "beforeinput" event.
         case EditAction::eNotEditing:
+        // If we're being initialized, we may need to create a padding <br>
+        // element, but it shouldn't cause `beforeinput` event.
+        case EditAction::eInitializing:
         // If raw level transaction API is used, the API user needs to handle
         // both "beforeinput" event and "input" event if it's necessary.
         case EditAction::eUnknown:

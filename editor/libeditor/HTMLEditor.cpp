@@ -292,9 +292,7 @@ nsresult HTMLEditor::Init(Document& aDoc, Element* aRoot,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // XXX `eNotEditing` is a lie since InitEditorContentAndSelection() may
-  //     insert padding `<br>`.
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInitializing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_FAILURE;
   }
