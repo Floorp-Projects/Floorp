@@ -153,6 +153,13 @@
 
     on_popupshowing(event) {
       if (this.isArrowPanel && event.target == this) {
+        if (this.isAnchored && this.anchorNode) {
+          let anchorRoot =
+            this.anchorNode.closest("toolbarbutton, .anchor-root") ||
+            this.anchorNode;
+          anchorRoot.setAttribute("open", "true");
+        }
+
         var arrow = this.shadowRoot.querySelector(".panel-arrow");
         arrow.hidden = !this.isAnchored;
         this.shadowRoot
@@ -202,13 +209,6 @@
       if (this.isArrowPanel && event.target == this) {
         this.removeAttribute("animating");
         this.setAttribute("panelopen", "true");
-
-        if (this.isAnchored && this.anchorNode) {
-          let anchorRoot =
-            this.anchorNode.closest("toolbarbutton, .anchor-root") ||
-            this.anchorNode;
-          anchorRoot.setAttribute("open", "true");
-        }
       }
 
       // Fire event for accessibility APIs
