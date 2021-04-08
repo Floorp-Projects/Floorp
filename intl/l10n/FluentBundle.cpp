@@ -7,10 +7,10 @@
 #include "FluentBundle.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/intl/NumberFormat.h"
 #include "nsIInputStream.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
-#include "unicode/numberformatter.h"
 #include "unicode/datefmt.h"
 
 using namespace mozilla::dom;
@@ -209,62 +209,95 @@ void FluentBundle::FormatPattern(JSContext* aCx, const FluentPattern& aPattern,
 extern "C" {
 ffi::RawNumberFormatter* FluentBuiltInNumberFormatterCreate(
     const nsCString* aLocale, const ffi::FluentNumberOptionsRaw* aOptions) {
-  auto grouping = aOptions->use_grouping
-                      ? UNumberGroupingStrategy::UNUM_GROUPING_AUTO
-                      : UNumberGroupingStrategy::UNUM_GROUPING_OFF;
-
-  auto formatter =
-      icu::number::NumberFormatter::with().grouping(grouping).integerWidth(
-          icu::number::IntegerWidth::zeroFillTo(
-              aOptions->minimum_integer_digits));
-
-  // JS uses ROUND_HALFUP strategy, ICU by default uses ROUND_HALFEVEN.
-  // See: http://userguide.icu-project.org/formatparse/numbers/rounding-modes
-  formatter = formatter.roundingMode(UNUM_ROUND_HALFUP);
-
-  if (aOptions->style == ffi::FluentNumberStyleRaw::Currency) {
-    UErrorCode ec = U_ZERO_ERROR;
-    formatter = formatter.unit(icu::CurrencyUnit(aOptions->currency.get(), ec));
-    MOZ_ASSERT(U_SUCCESS(ec), "Failed to format the currency unit.");
+  NumberFormatOptions options;
+  switch (aOptions->style) {
+    case ffi::FluentNumberStyleRaw::Decimal:
+      break;
+    case ffi::FluentNumberStyleRaw::Currency: {
+      std::string currency = aOptions->currency.get();
+      switch (aOptions->currency_display) {
+        case ffi::FluentNumberCurrencyDisplayStyleRaw::Symbol:
+          options.mCurrency = Some(std::make_pair(
+              currency, NumberFormatOptions::CurrencyDisplayStyle::Symbol));
+          break;
+        case ffi::FluentNumberCurrencyDisplayStyleRaw::Code:
+          options.mCurrency = Some(std::make_pair(
+              currency, NumberFormatOptions::CurrencyDisplayStyle::Code));
+          break;
+        case ffi::FluentNumberCurrencyDisplayStyleRaw::Name:
+          options.mCurrency = Some(std::make_pair(
+              currency, NumberFormatOptions::CurrencyDisplayStyle::Name));
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE();
+          break;
+      }
+    } break;
+    case ffi::FluentNumberStyleRaw::Percent:
+      options.mPercent = true;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+      break;
   }
-  if (aOptions->style == ffi::FluentNumberStyleRaw::Percent) {
-    formatter = formatter.unit(icu::NoUnit::percent())
-                    .scale(icu::number::Scale::powerOfTen(2));
-  }
+
+  options.mUseGrouping = aOptions->use_grouping;
+  options.mMinIntegerDigits = Some(aOptions->minimum_integer_digits);
 
   if (aOptions->minimum_significant_digits >= 0 ||
       aOptions->maximum_significant_digits >= 0) {
-    auto precision = icu::number::Precision::minMaxSignificantDigits(
-                         aOptions->minimum_significant_digits,
-                         aOptions->maximum_significant_digits)
-                         .minMaxFraction(aOptions->minimum_fraction_digits,
-                                         aOptions->maximum_fraction_digits);
-    formatter = formatter.precision(precision);
+    options.mSignificantDigits =
+        Some(std::make_pair(aOptions->minimum_significant_digits,
+                            aOptions->maximum_significant_digits));
   } else {
-    auto precision = icu::number::Precision::minMaxFraction(
-        aOptions->minimum_fraction_digits, aOptions->maximum_fraction_digits);
-    formatter = formatter.precision(precision);
+    options.mFractionDigits = Some(std::make_pair(
+        aOptions->minimum_fraction_digits, aOptions->maximum_fraction_digits));
   }
 
   return reinterpret_cast<ffi::RawNumberFormatter*>(
-      formatter.locale(aLocale->get()).clone().orphan());
+      new NumberFormat(aLocale->get(), options));
 }
 
 uint8_t* FluentBuiltInNumberFormatterFormat(
-    const ffi::RawNumberFormatter* aFormatter, double input,
-    uint32_t* aOutCount) {
-  auto formatter =
-      reinterpret_cast<const icu::number::LocalizedNumberFormatter*>(
-          aFormatter);
-  UErrorCode ec = U_ZERO_ERROR;
-  icu::number::FormattedNumber result = formatter->formatDouble(input, ec);
-  icu::UnicodeString str = result.toTempString(ec);
-  return reinterpret_cast<uint8_t*>(ToNewUTF8String(
-      nsDependentSubstring(str.getBuffer(), str.length()), aOutCount));
+    const ffi::RawNumberFormatter* aFormatter, double input, size_t* aOutCount,
+    size_t* aOutCapacity) {
+  const NumberFormat* nf = reinterpret_cast<const NumberFormat*>(aFormatter);
+
+  class Buffer {
+   public:
+    using CharType = uint8_t;
+
+    bool allocate(size_t size) {
+      mBuffer.reset(reinterpret_cast<CharType*>(malloc(size)));
+      mCapacity = size;
+      return true;
+    }
+
+    void* data() { return mBuffer.get(); }
+
+    size_t size() const { return mCapacity; }
+
+    void written(size_t amount) { mWritten = amount; }
+
+    size_t mWritten = 0;
+    size_t mCapacity = 0;
+    CharType* mData = nullptr;
+
+    struct FreePolicy {
+      void operator()(const void* ptr) { free(const_cast<void*>(ptr)); }
+    };
+
+    UniquePtr<CharType[], FreePolicy> mBuffer;
+  } buffer;
+
+  nf->format(input, buffer);
+  *aOutCount = buffer.mWritten;
+  *aOutCapacity = buffer.mCapacity;
+  return buffer.mBuffer.release();
 }
 
 void FluentBuiltInNumberFormatterDestroy(ffi::RawNumberFormatter* aFormatter) {
-  delete reinterpret_cast<icu::number::LocalizedNumberFormatter*>(aFormatter);
+  delete reinterpret_cast<NumberFormat*>(aFormatter);
 }
 
 /* DateTime */
