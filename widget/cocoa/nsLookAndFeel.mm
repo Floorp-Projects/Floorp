@@ -68,11 +68,18 @@ static nscolor GetColorFromNSColorWithCustomAlpha(NSColor* aColor, float alpha) 
 // color partially transparent causes the selection color to mix with the text's
 // regular background, so the end result will often have better contrast with
 // the text than an arbitrary opaque selection color.
-// The motivating example for this is the URL bar text field in the dark theme:
-// White text on a light blue selection color has very bad contrast, whereas
-// white text on dark blue (which what you get if you mix partially-transparent
-// light blue with the black textbox background) has much better contrast.
-nscolor nsLookAndFeel::ProcessSelectionBackground(nscolor aColor) {
+// The motivating example for this is the light selection color on dark web
+// pages: White text on a light blue selection color has very bad contrast,
+// whereas white text on dark blue (which what you get if you mix
+// partially-transparent light blue with the black textbox background) has much
+// better contrast.
+nscolor nsLookAndFeel::ProcessSelectionBackground(nscolor aColor, ColorScheme aScheme) {
+  if (aScheme == ColorScheme::Dark) {
+    // When we use a dark selection color, we do not change alpha because we do
+    // not use dark selection in content. The dark system color is appropriate for
+    // Firefox UI without needing to adjust its alpha.
+    return aColor;
+  }
   uint16_t hue, sat, value;
   uint8_t alpha;
   nscolor resultColor = aColor;
@@ -131,13 +138,14 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = NS_RGB(0x00, 0x00, 0x00);
       break;
     case ColorID::TextSelectBackground:
-      color = ProcessSelectionBackground(GetColorFromNSColor(NSColor.selectedTextBackgroundColor));
+      color = ProcessSelectionBackground(GetColorFromNSColor(NSColor.selectedTextBackgroundColor),
+                                         aScheme);
       break;
     // This is used to gray out the selection when it's not focused. Used with
     // nsISelectionController::SELECTION_DISABLED.
     case ColorID::TextSelectBackgroundDisabled:
-      color =
-          ProcessSelectionBackground(GetColorFromNSColor(NSColor.secondarySelectedControlColor));
+      color = ProcessSelectionBackground(GetColorFromNSColor(NSColor.secondarySelectedControlColor),
+                                         aScheme);
       break;
     case ColorID::Highlight:  // CSS2 color
     case ColorID::MozAccentColor:
