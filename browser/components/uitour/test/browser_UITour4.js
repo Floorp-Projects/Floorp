@@ -37,12 +37,6 @@ add_UITour_task(
 
     // Test switching the highlight to the copyURL button on the page action panel
     let appMenuHiddenPromise = promisePanelElementHidden(window, appMenu);
-
-    // This doesn't exist in Proton.
-    if (!UITour.targets.has("pageAction-copyURL")) {
-      return;
-    }
-
     let pageActionPanelShownPromise = promisePanelElementShown(
       window,
       pageActionPanel
@@ -103,52 +97,44 @@ add_UITour_task(
 
     let appMenu = window.PanelUI.panel;
     let pageActionPanel = BrowserPageActions.panelNode;
+
+    // Test showing info tooltip on the emailLink button on the page action panel
+    let pageActionPanelShownPromise = promisePanelElementShown(
+      window,
+      pageActionPanel
+    );
     let tooltipVisiblePromise = elementVisiblePromise(
       tooltip,
       "Should show info tooltip"
     );
+    await showInfoPromise("pageAction-emailLink", "title", "text");
+    await pageActionPanelShownPromise;
+    await tooltipVisiblePromise;
+    is(appMenu.state, "closed", "Shouldn't open the app menu");
+    is(
+      pageActionPanel.state,
+      "open",
+      "Should open the page action panel to show info on the copyURL button"
+    );
+    is(
+      getShowInfoTargetName(),
+      "pageAction-emailLink",
+      "Should show info tooltip on the emailLink button on the page action panel"
+    );
 
-    // This doesn't exist in Proton.
-    if (UITour.targets.has("pageAction-emailLink")) {
-      // Test showing info tooltip on the emailLink button on the page action panel
-      let pageActionPanelShownPromise = promisePanelElementShown(
-        window,
-        pageActionPanel
-      );
-      await showInfoPromise("pageAction-emailLink", "title", "text");
-      await pageActionPanelShownPromise;
-      await tooltipVisiblePromise;
-      is(appMenu.state, "closed", "Shouldn't open the app menu");
-      is(
-        pageActionPanel.state,
-        "open",
-        "Should open the page action panel to show info on the copyURL button"
-      );
-      is(
-        getShowInfoTargetName(),
-        "pageAction-emailLink",
-        "Should show info tooltip on the emailLink button on the page action panel"
-      );
-
-      // Test switching info tooltip to the addons button on the app menu
-      let appMenuShownPromise = promisePanelElementShown(window, appMenu);
-      let pageActionPanelHiddenPromise = promisePanelElementHidden(
-        window,
-        pageActionPanel
-      );
-
-      tooltipVisiblePromise = elementVisiblePromise(
-        tooltip,
-        "Should show info tooltip"
-      );
-      await showInfoPromise("addons", "title", "text");
-      await appMenuShownPromise;
-      await pageActionPanelHiddenPromise;
-    } else {
-      let appMenuShownPromise = promisePanelElementShown(window, appMenu);
-      await showInfoPromise("addons", "title", "text");
-      await appMenuShownPromise;
-    }
+    // Test switching info tooltip to the addons button on the app menu
+    let appMenuShownPromise = promisePanelElementShown(window, appMenu);
+    let pageActionPanelHiddenPromise = promisePanelElementHidden(
+      window,
+      pageActionPanel
+    );
+    tooltipVisiblePromise = elementVisiblePromise(
+      tooltip,
+      "Should show info tooltip"
+    );
+    await showInfoPromise("addons", "title", "text");
+    await appMenuShownPromise;
+    await pageActionPanelHiddenPromise;
     await tooltipVisiblePromise;
     is(
       appMenu.state,
@@ -193,44 +179,40 @@ add_UITour_task(
 
     let appMenu = window.PanelUI.panel;
     let pageActionPanel = BrowserPageActions.panelNode;
-    let pageActionPanelHiddenPromise = Promise.resolve();
 
-    // This doesn't exist in Proton.
-    if (UITour.targets.has("pageAction-sendToDevice")) {
-      // Test highlighting the sendToDevice button on the page action panel
-      let pageActionPanelShownPromise = promisePanelElementShown(
-        window,
-        pageActionPanel
-      );
-      let highlightVisiblePromise = elementVisiblePromise(
-        highlight,
-        "Should show highlight"
-      );
-      gContentAPI.showHighlight("pageAction-sendToDevice");
-      await pageActionPanelShownPromise;
-      await highlightVisiblePromise;
-      is(appMenu.state, "closed", "Shouldn't open the app menu");
-      is(
-        pageActionPanel.state,
-        "open",
-        "Should open the page action panel to highlight the sendToDevice button"
-      );
-      is(
-        getShowHighlightTargetName(),
-        "pageAction-sendToDevice",
-        "Should highlight the sendToDevice button on the page action panel"
-      );
-      pageActionPanelHiddenPromise = promisePanelElementHidden(
-        window,
-        pageActionPanel
-      );
-    }
+    // Test highlighting the sendToDevice button on the page action panel
+    let pageActionPanelShownPromise = promisePanelElementShown(
+      window,
+      pageActionPanel
+    );
+    let highlightVisiblePromise = elementVisiblePromise(
+      highlight,
+      "Should show highlight"
+    );
+    gContentAPI.showHighlight("pageAction-sendToDevice");
+    await pageActionPanelShownPromise;
+    await highlightVisiblePromise;
+    is(appMenu.state, "closed", "Shouldn't open the app menu");
+    is(
+      pageActionPanel.state,
+      "open",
+      "Should open the page action panel to highlight the sendToDevice button"
+    );
+    is(
+      getShowHighlightTargetName(),
+      "pageAction-sendToDevice",
+      "Should highlight the sendToDevice button on the page action panel"
+    );
 
     // Test showing info tooltip on the privateWindow button on the app menu
     let appMenuShownPromise = promisePanelElementShown(window, appMenu);
     let tooltipVisiblePromise = elementVisiblePromise(
       tooltip,
       "Should show info tooltip"
+    );
+    let pageActionPanelHiddenPromise = promisePanelElementHidden(
+      window,
+      pageActionPanel
     );
     let highlightHiddenPromise = elementHiddenPromise(
       highlight,
@@ -301,11 +283,6 @@ add_UITour_task(
       "Should show info tooltip on the privateWindow button on the app menu"
     );
 
-    // This doesn't exist in Proton.
-    if (!UITour.targets.has("pageAction-sendToDevice")) {
-      return;
-    }
-
     // Test highlighting the sendToDevice button on the page action panel
     let pageActionPanelShownPromise = promisePanelElementShown(
       window,
@@ -359,11 +336,6 @@ add_UITour_task(
 
 add_UITour_task(
   async function test_show_appMenu_and_highligh_buttonOnPageActionPanel() {
-    // This doesn't exist in Proton.
-    if (!UITour.targets.has("pageAction-sendToDevice")) {
-      return;
-    }
-
     let highlight = document.getElementById("UITourHighlight");
     is_element_hidden(highlight, "Highlight should initially be hidden");
 
@@ -447,17 +419,15 @@ add_UITour_task(
     let appMenu = window.PanelUI.panel;
     let pageActionPanel = BrowserPageActions.panelNode;
 
-    if (!gProton) {
-      // Test explicity asking for opening the page action panel
-      let pageActionPanelShownPromise = promisePanelElementShown(
-        window,
-        pageActionPanel
-      );
-      gContentAPI.showMenu("pageActionPanel");
-      await pageActionPanelShownPromise;
-      is(appMenu.state, "closed", "Shouldn't open the app menu");
-      is(pageActionPanel.state, "open", "Should open the page action panel");
-    }
+    // Test explicity asking for opening the page action panel
+    let pageActionPanelShownPromise = promisePanelElementShown(
+      window,
+      pageActionPanel
+    );
+    gContentAPI.showMenu("pageActionPanel");
+    await pageActionPanelShownPromise;
+    is(appMenu.state, "closed", "Shouldn't open the app menu");
+    is(pageActionPanel.state, "open", "Should open the page action panel");
 
     // Test showing info tooltip on the privateWindow button on the app menu
     let appMenuShownPromise = promisePanelElementShown(window, appMenu);
@@ -475,8 +445,8 @@ add_UITour_task(
     );
     is(
       pageActionPanel.state,
-      gProton ? "closed" : "open",
-      "Check state of the page action panel if it was opened explictly by api user."
+      "open",
+      "Shouldn't close the page action panel because it is opened explictly by api user."
     );
     is(
       getShowInfoTargetName(),
@@ -484,15 +454,13 @@ add_UITour_task(
       "Should show info tooltip on the privateWindow button on the app menu"
     );
 
-    if (!gProton) {
-      // Test hiding the page action panel wouldn't affect the info tooltip on the app menu
-      let pageActionPanelHiddenPromise = promisePanelElementHidden(
-        window,
-        pageActionPanel
-      );
-      gContentAPI.hideMenu("pageActionPanel");
-      await pageActionPanelHiddenPromise;
-    }
+    // Test hiding the page action panel wouldn't affect the info tooltip on the app menu
+    let pageActionPanelHiddenPromise = promisePanelElementHidden(
+      window,
+      pageActionPanel
+    );
+    gContentAPI.hideMenu("pageActionPanel");
+    await pageActionPanelHiddenPromise;
     is_element_visible(tooltip, "Tooltip should still be visible");
     is(appMenu.state, "open", "Shouldn't close the app menu");
     is(

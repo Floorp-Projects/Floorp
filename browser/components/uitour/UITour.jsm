@@ -282,7 +282,7 @@ var UITour = {
     ],
   ]),
 
-  nonProtonTargets: [
+  nonProtonURLBarTargets: [
     [
       "pageAction-copyURL",
       {
@@ -350,8 +350,8 @@ var UITour = {
     );
 
     // Add non-proton targets if necessary.
-    if (!UITour.protonEnabled) {
-      for (let [id, target] of this.nonProtonTargets) {
+    if (!Services.prefs.getBoolPref("browser.proton.urlbar.enabled", false)) {
+      for (let [id, target] of this.nonProtonURLBarTargets) {
         this.targets.set(id, target);
       }
     }
@@ -1170,10 +1170,7 @@ var UITour = {
     let shouldOpenPageActionPanel = false;
     if (this.targetIsInAppMenu(aTarget)) {
       shouldOpenAppMenu = true;
-    } else if (
-      this.targetIsInPageActionPanel(aTarget) &&
-      !UITour.protonEnabled
-    ) {
+    } else if (this.targetIsInPageActionPanel(aTarget)) {
       shouldOpenPageActionPanel = true;
       // Ensure the panel visibility so as to ensure the visibility of the target
       // element inside the panel otherwise we would be rejected in the below
@@ -1576,10 +1573,7 @@ var UITour = {
       aMenuBtn.openMenu(true);
     }
 
-    if (
-      aMenuName == "appMenu" ||
-      (aMenuName == "pageActionPanel" && !UITour.protonEnabled)
-    ) {
+    if (aMenuName == "appMenu" || aMenuName == "pageActionPanel") {
       let menu = {
         onPanelHidden: this.onPanelHidden,
       };
@@ -1657,7 +1651,7 @@ var UITour = {
       closeMenuButton(menuBtn);
     } else if (aMenuName == "urlbar") {
       aWindow.gURLBar.view.close();
-    } else if (aMenuName == "pageActionPanel" && !UITour.protonEnabled) {
+    } else if (aMenuName == "pageActionPanel") {
       aWindow.BrowserPageActions.panelNode.hidePopup();
     }
   },
