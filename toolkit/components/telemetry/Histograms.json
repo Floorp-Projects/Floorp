@@ -4327,27 +4327,41 @@
     "n_buckets": 50,
     "description": "Time in resolve queue waiting to getaddrinfo (msec)"
   },
-  "TRR_SKIP_REASON_TRR_FIRST": {
+  "TRR_SKIP_REASON_TRR_FIRST2": {
     "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com", "nhnt11@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
+    "keyed": true,
     "n_values": 50,
-    "bug_numbers": [1649143],
+    "bug_numbers": [1649143, 1699523],
     "releaseChannelCollection": "opt-out",
-    "description": "When in TRR-first mode, it lists the reason we may have skipped TRR"
+    "description": "When in TRR-first mode, it lists the reason we may have skipped TRR, keyed by the provider."
   },
-  "TRR_SKIP_REASON_DNS_WORKED": {
+  "TRR_SKIP_REASON_NATIVE_SUCCESS": {
     "record_in_processes": ["main", "socket"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com", "nhnt11@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
+    "keyed": true,
     "n_values": 50,
-    "bug_numbers": [1649143],
+    "bug_numbers": [1649143, 1699523],
     "releaseChannelCollection": "opt-out",
-    "description": "When in TRR-first mode if DNS succeeded, it lists the reason we may have skipped TRR"
+    "description": "When in TRR-first mode, if TRR was skipped and native succeeded, it lists the reason we may have skipped TRR, keyed by the provider."
+  },
+  "TRR_SKIP_REASON_NATIVE_FAILED": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com", "nhnt11@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 50,
+    "bug_numbers": [1699523],
+    "releaseChannelCollection": "opt-out",
+    "description": "When in TRR-first mode, if TRR was skipped and native failed, it lists the reason we may have skipped TRR, keyed by the provider."
   },
   "DNS_TRR_FIRST4": {
     "record_in_processes": ["main"],
