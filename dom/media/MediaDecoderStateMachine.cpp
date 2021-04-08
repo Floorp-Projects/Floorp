@@ -666,6 +666,12 @@ class MediaDecoderStateMachine::DecodingState
  protected:
   virtual void EnsureAudioDecodeTaskQueued();
 
+  virtual bool ShouldStopPrerolling() const {
+    return mIsPrerolling &&
+           (DonePrerollingAudio() || mMaster->IsWaitingAudioData()) &&
+           (DonePrerollingVideo() || mMaster->IsWaitingVideoData());
+  }
+
  private:
   void DispatchDecodeTasksIfNeeded();
   void EnsureVideoDecodeTaskQueued();
@@ -688,21 +694,19 @@ class MediaDecoderStateMachine::DecodingState
         sVideoQueueDefaultSize);
   }
 
-  bool DonePrerollingAudio() {
+  bool DonePrerollingAudio() const {
     return !mMaster->IsAudioDecoding() ||
            mMaster->GetDecodedAudioDuration() >= AudioPrerollThreshold();
   }
 
-  bool DonePrerollingVideo() {
+  bool DonePrerollingVideo() const {
     return !mMaster->IsVideoDecoding() ||
            static_cast<uint32_t>(mMaster->VideoQueue().GetSize()) >=
                VideoPrerollFrames();
   }
 
   void MaybeStopPrerolling() {
-    if (mIsPrerolling &&
-        (DonePrerollingAudio() || mMaster->IsWaitingAudioData()) &&
-        (DonePrerollingVideo() || mMaster->IsWaitingVideoData())) {
+    if (ShouldStopPrerolling()) {
       mIsPrerolling = false;
       // Check if we can start playback.
       mMaster->ScheduleStateMachine();
@@ -974,6 +978,13 @@ class MediaDecoderStateMachine::LoopingDecodingState
     // should mark audio queue as ended because we have got all data we need.
     return mAudioDataRequest.Exists() || mAudioSeekRequest.Exists() ||
            ShouldDiscardLoopedAudioData();
+  }
+
+  bool ShouldStopPrerolling() const override {
+    // When the data has reached EOS, that means the queue has been finished. If
+    // MDSM isn't playing now, then we would preroll some data in order to let
+    // new data to reopen the queue before starting playback again.
+    return !mIsReachingAudioEOS && DecodingState::ShouldStopPrerolling();
   }
 
   bool mIsReachingAudioEOS;
