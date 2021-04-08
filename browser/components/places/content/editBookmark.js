@@ -371,7 +371,7 @@ var gEditItemOverlay = {
         elt = document.querySelector("vbox:not([collapsed=true]) > input");
       }
       if (elt) {
-        elt.focus();
+        elt.focus({ preventScroll: true });
         elt.select();
       }
     };
