@@ -199,6 +199,21 @@ open class DefaultToolbarMenu(
     } ?: false
     // End of predicates //
 
+    val installToHomescreen = BrowserMenuHighlightableItem(
+        label = context.getString(R.string.browser_menu_install_on_homescreen),
+        startImageResource = R.drawable.ic_add_to_homescreen,
+        iconTintColorResource = primaryTextColor,
+        highlight = BrowserMenuHighlight.LowPriority(
+            label = context.getString(R.string.browser_menu_install_on_homescreen),
+            notificationTint = getColor(context, R.color.whats_new_notification_color)
+        ),
+        isHighlighted = {
+            !context.settings().installPwaOpened
+        }
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.InstallToHomeScreen)
+    }
+
     private val oldCoreMenuItems by lazy {
         val settings = BrowserMenuHighlightableItem(
             label = context.getString(R.string.browser_menu_settings),
@@ -251,21 +266,6 @@ open class DefaultToolbarMenu(
             iconTintColorResource = primaryTextColor
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
-        }
-
-        val installToHomescreen = BrowserMenuHighlightableItem(
-            label = context.getString(R.string.browser_menu_install_on_homescreen),
-            startImageResource = R.drawable.ic_add_to_homescreen,
-            iconTintColorResource = primaryTextColor,
-            highlight = BrowserMenuHighlight.LowPriority(
-                label = context.getString(R.string.browser_menu_install_on_homescreen),
-                notificationTint = getColor(context, R.color.whats_new_notification_color)
-            ),
-            isHighlighted = {
-                !context.settings().installPwaOpened
-            }
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.InstallToHomeScreen)
         }
 
         val findInPage = BrowserMenuImageText(
@@ -541,6 +541,7 @@ open class DefaultToolbarMenu(
                 reportSiteIssuePlaceholder,
                 BrowserMenuDivider(),
                 addToHomeScreenItem.apply { visible = ::canAddToHomescreen },
+                installToHomescreen.apply { visible = ::canInstall },
                 addToTopSitesItem,
                 saveToCollectionItem,
                 BrowserMenuDivider(),
