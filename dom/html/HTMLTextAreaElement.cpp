@@ -127,7 +127,7 @@ nsresult HTMLTextAreaElement::Clone(dom::NodeInfo* aNodeInfo,
     }
   }
 
-  it->mLastValueChangeWasInteractive = mLastValueChangeWasInteractive;
+  it->SetLastValueChangeWasInteractive(mLastValueChangeWasInteractive);
   it.forget(aResult);
   return NS_OK;
 }
@@ -320,10 +320,28 @@ nsresult HTMLTextAreaElement::SetValueChanged(bool aValueChanged) {
   }
 
   if (mValueChanged != previousValue) {
-    UpdateState(true);
+    ValueChangedOrLastValueChangeWasInteractiveChanged();
   }
 
   return NS_OK;
+}
+
+void HTMLTextAreaElement::ValueChangedOrLastValueChangeWasInteractiveChanged() {
+  const bool wasValid = IsValid();
+  UpdateTooLongValidityState();
+  UpdateTooShortValidityState();
+  if (wasValid != IsValid()) {
+    UpdateState(true);
+  }
+}
+
+void HTMLTextAreaElement::SetLastValueChangeWasInteractive(
+    bool aWasInteractive) {
+  if (aWasInteractive == mLastValueChangeWasInteractive) {
+    return;
+  }
+  mLastValueChangeWasInteractive = aWasInteractive;
+  ValueChangedOrLastValueChangeWasInteractiveChanged();
 }
 
 void HTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue,
@@ -733,8 +751,7 @@ bool HTMLTextAreaElement::RestoreState(PresState* aState) {
     SetValue(state.get_TextContentData().value(), rv);
     ENSURE_SUCCESS(rv, false);
     if (state.get_TextContentData().lastValueChangeWasInteractive()) {
-      mLastValueChangeWasInteractive = true;
-      UpdateState(true);
+      SetLastValueChangeWasInteractive(true);
     }
   }
   if (aState->disabledSet() && !aState->disabled()) {
@@ -928,7 +945,7 @@ void HTMLTextAreaElement::SetCustomValidity(const nsAString& aError) {
 
 bool HTMLTextAreaElement::IsTooLong() {
   if (!mValueChanged || !mLastValueChangeWasInteractive ||
-      !HasAttr(kNameSpaceID_None, nsGkAtoms::maxlength)) {
+      !HasAttr(nsGkAtoms::maxlength)) {
     return false;
   }
 
@@ -946,7 +963,7 @@ bool HTMLTextAreaElement::IsTooLong() {
 
 bool HTMLTextAreaElement::IsTooShort() {
   if (!mValueChanged || !mLastValueChangeWasInteractive ||
-      !HasAttr(kNameSpaceID_None, nsGkAtoms::minlength)) {
+      !HasAttr(nsGkAtoms::minlength)) {
     return false;
   }
 
