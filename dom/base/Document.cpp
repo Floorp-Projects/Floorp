@@ -6797,9 +6797,17 @@ void Document::SetBFCacheEntry(nsIBFCacheEntry* aEntry) {
 }
 
 bool Document::RemoveFromBFCacheSync() {
+  bool removed = false;
   if (nsCOMPtr<nsIBFCacheEntry> entry = GetBFCacheEntry()) {
     entry->RemoveFromBFCacheSync();
-    return true;
+    removed = true;
+  } else if (!IsCurrentActiveDocument()) {
+    // In the old bfcache implementation while the new page is loading, but
+    // before nsIContentViewer.show() has been called, the previous page doesn't
+    // yet have nsIBFCacheEntry. However, the previous page isn't the current
+    // active document anymore.
+    DisallowBFCaching();
+    removed = true;
   }
 
   if (XRE_IsContentProcess()) {
@@ -6813,11 +6821,11 @@ bool Document::RemoveFromBFCacheSync() {
         // the old session history implementation for the cases where
         // synchronous operation isn't safe.
         cc->SendRemoveFromBFCache(top);
-        return true;
+        removed = true;
       }
     }
   }
-  return false;
+  return removed;
 }
 
 static void SubDocClearEntry(PLDHashTable* table, PLDHashEntryHdr* entry) {

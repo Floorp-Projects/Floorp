@@ -1,1 +1,18 @@
-<script>onpageshow = function(e) { opener.page1Shown(e); };</script>
+<script>
+var bc = new BroadcastChannel("a");
+onpageshow = function(e) {
+  var bc1 = new BroadcastChannel("testUrl1_bfcache");
+  bc1.onmessage = function(event) {
+    if (event.data == "close") {
+      bc1.postMessage("closed");
+      bc1.close();
+      bc.close();
+      window.close();
+    } else if (event.data == "load") {
+      bc1.close();
+      location.href = "testUrl2_bfcache.html";
+    }
+  };
+  bc1.postMessage({type: e.type, persisted: e.persisted});
+};
+</script>
