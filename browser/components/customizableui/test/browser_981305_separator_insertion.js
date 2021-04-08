@@ -27,59 +27,62 @@ function insertTempItemsIntoMenu(parentMenu) {
   }
 }
 
-function checkSeparatorInsertion(menuId, buttonId, subviewId) {
-  return async function() {
-    info("Checking for duplicate separators in " + buttonId + " widget");
-    let menu = document.getElementById(menuId);
-    insertTempItemsIntoMenu(menu);
+async function checkSeparatorInsertion(menuId, buttonId, subviewId) {
+  info("Checking for duplicate separators in " + buttonId + " widget");
+  let menu = document.getElementById(menuId);
+  insertTempItemsIntoMenu(menu);
 
-    CustomizableUI.addWidgetToArea(
-      buttonId,
-      CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
-    );
+  CustomizableUI.addWidgetToArea(
+    buttonId,
+    CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
+  );
 
-    await waitForOverflowButtonShown();
+  await waitForOverflowButtonShown();
 
-    await document.getElementById("nav-bar").overflowable.show();
+  await document.getElementById("nav-bar").overflowable.show();
 
-    let button = document.getElementById(buttonId);
-    button.click();
-    let subview = document.getElementById(subviewId);
-    await BrowserTestUtils.waitForEvent(subview, "ViewShown");
+  let button = document.getElementById(buttonId);
+  button.click();
+  let subview = document.getElementById(subviewId);
+  await BrowserTestUtils.waitForEvent(subview, "ViewShown");
 
-    let subviewBody = subview.firstElementChild;
-    ok(subviewBody.firstElementChild, "Subview should have a kid");
-    is(
-      subviewBody.firstElementChild.localName,
-      "toolbarbutton",
-      "There should be no separators to start with"
-    );
+  let subviewBody = subview.firstElementChild;
+  ok(subviewBody.firstElementChild, "Subview should have a kid");
+  is(
+    subviewBody.firstElementChild.localName,
+    "toolbarbutton",
+    "There should be no separators to start with"
+  );
 
-    for (let kid of subviewBody.children) {
-      if (kid.localName == "menuseparator") {
-        ok(
-          kid.previousElementSibling &&
-            kid.previousElementSibling.localName != "menuseparator",
-          "Separators should never have another separator next to them, and should never be the first node."
-        );
-      }
+  for (let kid of subviewBody.children) {
+    if (kid.localName == "menuseparator") {
+      ok(
+        kid.previousElementSibling &&
+          kid.previousElementSibling.localName != "menuseparator",
+        "Separators should never have another separator next to them, and should never be the first node."
+      );
     }
+  }
 
-    let panelHiddenPromise = promiseOverflowHidden(window);
-    PanelUI.overflowPanel.hidePopup();
-    await panelHiddenPromise;
+  let panelHiddenPromise = promiseOverflowHidden(window);
+  PanelUI.overflowPanel.hidePopup();
+  await panelHiddenPromise;
 
-    CustomizableUI.reset();
-  };
+  CustomizableUI.reset();
 }
 
-add_task(
-  checkSeparatorInsertion(
+add_task(async function check_devtools_separator() {
+  const protonEnabled =
+    Services.prefs.getBoolPref("browser.proton.doorhangers.enabled", false) &&
+    Services.prefs.getBoolPref("browser.proton.enabled", false);
+  const panelviewId = protonEnabled ? "appmenu-moreTools" : "PanelUI-developer";
+
+  await checkSeparatorInsertion(
     "menuWebDeveloperPopup",
     "developer-button",
-    "PanelUI-developer"
-  )
-);
+    panelviewId
+  );
+});
 
 registerCleanupFunction(function() {
   for (let el of tempElements) {
