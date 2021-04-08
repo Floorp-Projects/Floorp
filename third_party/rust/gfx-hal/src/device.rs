@@ -12,7 +12,7 @@
 //! and is used to actually do things.
 
 use crate::{
-    buffer, format, image,
+    buffer, format, image, memory,
     memory::{Requirements, Segment},
     pass,
     pool::CommandPoolCreateFlags,
@@ -163,8 +163,8 @@ pub enum ShaderModuleDesc<'a> {
 pub struct NagaShader {
     /// Shader module IR.
     pub module: naga::Module,
-    /// Analysis of the module.
-    pub analysis: naga::proc::analyzer::Analysis,
+    /// Analysis information of the module.
+    pub info: naga::valid::ModuleInfo,
 }
 
 /// Logical device handle, responsible for creating and managing resources
@@ -376,6 +376,7 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
         &self,
         size: u64,
         usage: buffer::Usage,
+        sparse: memory::SparseFlags,
     ) -> Result<B::Buffer, buffer::CreationError>;
 
     /// Get memory requirements for the buffer
@@ -419,6 +420,7 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
         format: format::Format,
         tiling: image::Tiling,
         usage: image::Usage,
+        sparse: memory::SparseFlags,
         view_caps: image::ViewCapabilities,
     ) -> Result<B::Image, image::CreationError>;
 
@@ -710,4 +712,10 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
     /// Associate a name with a pipeline layout, for easier debugging in external tools or with
     /// validation layers that can print a friendly name when referring to objects in error messages
     unsafe fn set_pipeline_layout_name(&self, pipeline_layout: &mut B::PipelineLayout, name: &str);
+
+    /// Starts frame capture.
+    fn start_capture(&self);
+
+    /// Stops frame capture.
+    fn stop_capture(&self);
 }

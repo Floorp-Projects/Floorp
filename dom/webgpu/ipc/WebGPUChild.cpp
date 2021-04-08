@@ -24,6 +24,119 @@ static ffi::WGPUCompareFunction ConvertCompareFunction(
   return ffi::WGPUCompareFunction(UnderlyingValue(aCompare) + 1);
 }
 
+static ffi::WGPUTextureFormat ConvertTextureFormat(
+    const dom::GPUTextureFormat& aFormat) {
+  switch (aFormat) {
+    case dom::GPUTextureFormat::R8unorm:
+      return ffi::WGPUTextureFormat_R8Unorm;
+    case dom::GPUTextureFormat::R8snorm:
+      return ffi::WGPUTextureFormat_R8Snorm;
+    case dom::GPUTextureFormat::R8uint:
+      return ffi::WGPUTextureFormat_R8Uint;
+    case dom::GPUTextureFormat::R8sint:
+      return ffi::WGPUTextureFormat_R8Sint;
+    case dom::GPUTextureFormat::R16uint:
+      return ffi::WGPUTextureFormat_R16Uint;
+    case dom::GPUTextureFormat::R16sint:
+      return ffi::WGPUTextureFormat_R16Sint;
+    case dom::GPUTextureFormat::R16float:
+      return ffi::WGPUTextureFormat_R16Float;
+    case dom::GPUTextureFormat::Rg8unorm:
+      return ffi::WGPUTextureFormat_Rg8Unorm;
+    case dom::GPUTextureFormat::Rg8snorm:
+      return ffi::WGPUTextureFormat_Rg8Snorm;
+    case dom::GPUTextureFormat::Rg8uint:
+      return ffi::WGPUTextureFormat_Rg8Uint;
+    case dom::GPUTextureFormat::Rg8sint:
+      return ffi::WGPUTextureFormat_Rg8Sint;
+    case dom::GPUTextureFormat::R32uint:
+      return ffi::WGPUTextureFormat_R32Uint;
+    case dom::GPUTextureFormat::R32sint:
+      return ffi::WGPUTextureFormat_R32Sint;
+    case dom::GPUTextureFormat::R32float:
+      return ffi::WGPUTextureFormat_R32Float;
+    case dom::GPUTextureFormat::Rg16uint:
+      return ffi::WGPUTextureFormat_Rg16Uint;
+    case dom::GPUTextureFormat::Rg16sint:
+      return ffi::WGPUTextureFormat_Rg16Sint;
+    case dom::GPUTextureFormat::Rg16float:
+      return ffi::WGPUTextureFormat_Rg16Float;
+    case dom::GPUTextureFormat::Rgba8unorm:
+      return ffi::WGPUTextureFormat_Rgba8Unorm;
+    case dom::GPUTextureFormat::Rgba8unorm_srgb:
+      return ffi::WGPUTextureFormat_Rgba8UnormSrgb;
+    case dom::GPUTextureFormat::Rgba8snorm:
+      return ffi::WGPUTextureFormat_Rgba8Snorm;
+    case dom::GPUTextureFormat::Rgba8uint:
+      return ffi::WGPUTextureFormat_Rgba8Uint;
+    case dom::GPUTextureFormat::Rgba8sint:
+      return ffi::WGPUTextureFormat_Rgba8Sint;
+    case dom::GPUTextureFormat::Bgra8unorm:
+      return ffi::WGPUTextureFormat_Bgra8Unorm;
+    case dom::GPUTextureFormat::Bgra8unorm_srgb:
+      return ffi::WGPUTextureFormat_Bgra8UnormSrgb;
+    case dom::GPUTextureFormat::Rgb10a2unorm:
+      return ffi::WGPUTextureFormat_Rgb10a2Unorm;
+    case dom::GPUTextureFormat::Rg11b10float:
+      return ffi::WGPUTextureFormat_Rg11b10Float;
+    case dom::GPUTextureFormat::Rg32uint:
+      return ffi::WGPUTextureFormat_Rg32Uint;
+    case dom::GPUTextureFormat::Rg32sint:
+      return ffi::WGPUTextureFormat_Rg32Sint;
+    case dom::GPUTextureFormat::Rg32float:
+      return ffi::WGPUTextureFormat_Rg32Float;
+    case dom::GPUTextureFormat::Rgba16uint:
+      return ffi::WGPUTextureFormat_Rgba16Uint;
+    case dom::GPUTextureFormat::Rgba16sint:
+      return ffi::WGPUTextureFormat_Rgba16Sint;
+    case dom::GPUTextureFormat::Rgba16float:
+      return ffi::WGPUTextureFormat_Rgba16Float;
+    case dom::GPUTextureFormat::Rgba32uint:
+      return ffi::WGPUTextureFormat_Rgba32Uint;
+    case dom::GPUTextureFormat::Rgba32sint:
+      return ffi::WGPUTextureFormat_Rgba32Sint;
+    case dom::GPUTextureFormat::Rgba32float:
+      return ffi::WGPUTextureFormat_Rgba32Float;
+    case dom::GPUTextureFormat::Depth32float:
+      return ffi::WGPUTextureFormat_Depth32Float;
+    case dom::GPUTextureFormat::Bc1_rgba_unorm:
+      return ffi::WGPUTextureFormat_Bc1RgbaUnorm;
+    case dom::GPUTextureFormat::Bc1_rgba_unorm_srgb:
+      return ffi::WGPUTextureFormat_Bc1RgbaUnormSrgb;
+    case dom::GPUTextureFormat::Bc4_r_unorm:
+      return ffi::WGPUTextureFormat_Bc4RUnorm;
+    case dom::GPUTextureFormat::Bc4_r_snorm:
+      return ffi::WGPUTextureFormat_Bc4RSnorm;
+    case dom::GPUTextureFormat::Bc2_rgba_unorm:
+      return ffi::WGPUTextureFormat_Bc2RgbaUnorm;
+    case dom::GPUTextureFormat::Bc2_rgba_unorm_srgb:
+      return ffi::WGPUTextureFormat_Bc2RgbaUnormSrgb;
+    case dom::GPUTextureFormat::Bc3_rgba_unorm:
+      return ffi::WGPUTextureFormat_Bc3RgbaUnorm;
+    case dom::GPUTextureFormat::Bc3_rgba_unorm_srgb:
+      return ffi::WGPUTextureFormat_Bc3RgbaUnormSrgb;
+    case dom::GPUTextureFormat::Bc5_rg_unorm:
+      return ffi::WGPUTextureFormat_Bc5RgUnorm;
+    case dom::GPUTextureFormat::Bc5_rg_snorm:
+      return ffi::WGPUTextureFormat_Bc5RgSnorm;
+    case dom::GPUTextureFormat::Bc6h_rgb_ufloat:
+      return ffi::WGPUTextureFormat_Bc6hRgbUfloat;
+    case dom::GPUTextureFormat::Bc6h_rgb_float:
+      return ffi::WGPUTextureFormat_Bc6hRgbSfloat;
+    case dom::GPUTextureFormat::Bc7_rgba_unorm:
+      return ffi::WGPUTextureFormat_Bc7RgbaUnorm;
+    case dom::GPUTextureFormat::Bc7_rgba_unorm_srgb:
+      return ffi::WGPUTextureFormat_Bc7RgbaUnormSrgb;
+    case dom::GPUTextureFormat::Depth24plus:
+      return ffi::WGPUTextureFormat_Depth24Plus;
+    case dom::GPUTextureFormat::Depth24plus_stencil8:
+      return ffi::WGPUTextureFormat_Depth24PlusStencil8;
+    case dom::GPUTextureFormat::EndGuard_:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+  MOZ_CRASH("unexpected texture format enum");
+}
+
 static ffi::WGPUClient* initialize() {
   ffi::WGPUInfrastructure infra = ffi::wgpu_client_new();
   return infra.client;
@@ -150,7 +263,7 @@ RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
   desc.mip_level_count = aDesc.mMipLevelCount;
   desc.sample_count = aDesc.mSampleCount;
   desc.dimension = ffi::WGPUTextureDimension(aDesc.mDimension);
-  desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
+  desc.format = ConvertTextureFormat(aDesc.mFormat);
   desc.usage = aDesc.mUsage;
 
   ByteBuf bb;
@@ -174,7 +287,7 @@ RawId WebGPUChild::TextureCreateView(
 
   ffi::WGPUTextureFormat format = ffi::WGPUTextureFormat_Sentinel;
   if (aDesc.mFormat.WasPassed()) {
-    format = ffi::WGPUTextureFormat(aDesc.mFormat.Value());
+    format = ConvertTextureFormat(aDesc.mFormat.Value());
     desc.format = &format;
   }
   ffi::WGPUTextureViewDimension dimension =
@@ -186,7 +299,7 @@ RawId WebGPUChild::TextureCreateView(
 
   desc.aspect = ffi::WGPUTextureAspect(aDesc.mAspect);
   desc.base_mip_level = aDesc.mBaseMipLevel;
-  desc.level_count =
+  desc.mip_level_count =
       aDesc.mMipLevelCount.WasPassed() ? aDesc.mMipLevelCount.Value() : 0;
   desc.base_array_layer = aDesc.mBaseArrayLayer;
   desc.array_layer_count =
@@ -301,7 +414,7 @@ RawId WebGPUChild::DeviceCreateBindGroupLayout(
     if (entry.mStorageTexture.WasPassed()) {
       const auto& texture = entry.mStorageTexture.Value();
       data.dim = ffi::WGPUTextureViewDimension(texture.mViewDimension);
-      data.format = ffi::WGPUTextureFormat(texture.mFormat);
+      data.format = ConvertTextureFormat(texture.mFormat);
     }
     optional.AppendElement(data);
   }
@@ -530,7 +643,7 @@ static ffi::WGPUStencilFaceState ConvertStencilFaceState(
 static ffi::WGPUDepthStencilState ConvertDepthStencilState(
     const dom::GPUDepthStencilState& aDesc) {
   ffi::WGPUDepthStencilState desc = {};
-  desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
+  desc.format = ConvertTextureFormat(aDesc.mFormat);
   desc.depth_write_enabled = aDesc.mDepthWriteEnabled;
   desc.depth_compare = ConvertCompareFunction(aDesc.mDepthCompare);
   desc.stencil.front = ConvertStencilFaceState(aDesc.mStencilFront);
@@ -612,7 +725,7 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
     // so that we can have non-stale pointers into it.
     for (const auto& colorState : stage.mTargets) {
       ffi::WGPUColorTargetState desc = {};
-      desc.format = ffi::WGPUTextureFormat(colorState.mFormat);
+      desc.format = ConvertTextureFormat(colorState.mFormat);
       desc.write_mask = colorState.mWriteMask;
       colorStates.AppendElement(desc);
       ffi::WGPUBlendState bs = {};

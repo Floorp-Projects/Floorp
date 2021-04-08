@@ -4,6 +4,7 @@ use inplace_it::inplace_or_alloc_from_iter;
 use smallvec::SmallVec;
 
 use hal::{
+    memory,
     memory::{Requirements, Segment},
     pool::CommandPoolCreateFlags,
     pso::VertexInputRate,
@@ -36,6 +37,7 @@ struct GraphicsPipelineInfoBuf<'a> {
     tessellation_state: Option<vk::PipelineTessellationStateCreateInfo>,
     viewport_state: vk::PipelineViewportStateCreateInfo,
     rasterization_state: vk::PipelineRasterizationStateCreateInfo,
+    rasterization_conservative_state: vk::PipelineRasterizationConservativeStateCreateInfoEXT, // May be unused or may be pointed to by rasterization_state
     multisample_state: vk::PipelineMultisampleStateCreateInfo,
     depth_stencil_state: vk::PipelineDepthStencilStateCreateInfo,
     color_blend_state: vk::PipelineColorBlendStateCreateInfo,
@@ -188,32 +190,48 @@ impl<'a> GraphicsPipelineInfoBuf<'a> {
             }
         };
 
-        this.rasterization_state = vk::PipelineRasterizationStateCreateInfo::builder()
-            .flags(vk::PipelineRasterizationStateCreateFlags::empty())
-            .depth_clamp_enable(if desc.rasterizer.depth_clamping {
-                if device.features.contains(Features::DEPTH_CLAMP) {
-                    true
-                } else {
-                    warn!("Depth clamping was requested on a device with disabled feature");
-                    false
-                }
-            } else {
-                false
-            })
-            .rasterizer_discard_enable(
-                desc.fragment.is_none()
-                    && desc.depth_stencil.depth.is_none()
-                    && desc.depth_stencil.stencil.is_none(),
-            )
-            .polygon_mode(polygon_mode)
-            .cull_mode(conv::map_cull_face(desc.rasterizer.cull_face))
-            .front_face(conv::map_front_face(desc.rasterizer.front_face))
-            .depth_bias_enable(desc.rasterizer.depth_bias.is_some())
-            .depth_bias_constant_factor(depth_bias.const_factor)
-            .depth_bias_clamp(depth_bias.clamp)
-            .depth_bias_slope_factor(depth_bias.slope_factor)
-            .line_width(line_width)
-            .build();
+        this.rasterization_conservative_state =
+            vk::PipelineRasterizationConservativeStateCreateInfoEXT::builder()
+                .conservative_rasterization_mode(match desc.rasterizer.conservative {
+                    false => vk::ConservativeRasterizationModeEXT::DISABLED,
+                    true => vk::ConservativeRasterizationModeEXT::OVERESTIMATE,
+                })
+                .build();
+
+        this.rasterization_state = {
+            let mut rasterization_state_builder =
+                vk::PipelineRasterizationStateCreateInfo::builder()
+                    .flags(vk::PipelineRasterizationStateCreateFlags::empty())
+                    .depth_clamp_enable(if desc.rasterizer.depth_clamping {
+                        if device.features.contains(Features::DEPTH_CLAMP) {
+                            true
+                        } else {
+                            warn!("Depth clamping was requested on a device with disabled feature");
+                            false
+                        }
+                    } else {
+                        false
+                    })
+                    .rasterizer_discard_enable(
+                        desc.fragment.is_none()
+                            && desc.depth_stencil.depth.is_none()
+                            && desc.depth_stencil.stencil.is_none(),
+                    )
+                    .polygon_mode(polygon_mode)
+                    .cull_mode(conv::map_cull_face(desc.rasterizer.cull_face))
+                    .front_face(conv::map_front_face(desc.rasterizer.front_face))
+                    .depth_bias_enable(desc.rasterizer.depth_bias.is_some())
+                    .depth_bias_constant_factor(depth_bias.const_factor)
+                    .depth_bias_clamp(depth_bias.clamp)
+                    .depth_bias_slope_factor(depth_bias.slope_factor)
+                    .line_width(line_width);
+            if desc.rasterizer.conservative {
+                rasterization_state_builder = rasterization_state_builder
+                    .push_next(&mut this.rasterization_conservative_state);
+            }
+
+            rasterization_state_builder.build()
+        };
 
         this.tessellation_state = {
             if let pso::PrimitiveAssemblerDesc::Vertex {
@@ -945,7 +963,7 @@ impl d::Device<B> for super::Device {
         &self,
         shader: d::NagaShader,
     ) -> Result<n::ShaderModule, (d::ShaderError, d::NagaShader)> {
-        match naga::back::spv::write_vec(&shader.module, &shader.analysis, &self.naga_options) {
+        match naga::back::spv::write_vec(&shader.module, &shader.info, &self.naga_options) {
             Ok(spv) => self.create_shader_module(&spv).map_err(|e| (e, shader)),
             Err(e) => return Err((d::ShaderError::CompilationFailed(format!("{}", e)), shader)),
         }
@@ -1005,9 +1023,10 @@ impl d::Device<B> for super::Device {
         &self,
         size: u64,
         usage: buffer::Usage,
+        sparse: memory::SparseFlags,
     ) -> Result<n::Buffer, buffer::CreationError> {
         let info = vk::BufferCreateInfo::builder()
-            .flags(vk::BufferCreateFlags::empty()) // TODO:
+            .flags(conv::map_buffer_create_flags(sparse))
             .size(size)
             .usage(conv::map_buffer_usage(usage))
             .sharing_mode(vk::SharingMode::EXCLUSIVE); // TODO:
@@ -1081,9 +1100,10 @@ impl d::Device<B> for super::Device {
         format: format::Format,
         tiling: image::Tiling,
         usage: image::Usage,
+        sparse: memory::SparseFlags,
         view_caps: image::ViewCapabilities,
     ) -> Result<n::Image, image::CreationError> {
-        let flags = conv::map_view_capabilities(view_caps);
+        let flags = conv::map_view_capabilities_sparse(sparse, view_caps);
         let extent = conv::map_extent(kind.extent());
         let array_layers = kind.num_layers();
         let samples = kind.num_samples();
@@ -1850,6 +1870,14 @@ impl d::Device<B> for super::Device {
     unsafe fn set_pipeline_layout_name(&self, pipeline_layout: &mut n::PipelineLayout, name: &str) {
         self.shared
             .set_object_name(vk::ObjectType::PIPELINE_LAYOUT, pipeline_layout.raw, name)
+    }
+
+    fn start_capture(&self) {
+        //TODO: RenderDoc
+    }
+
+    fn stop_capture(&self) {
+        //TODO: RenderDoc
     }
 }
 

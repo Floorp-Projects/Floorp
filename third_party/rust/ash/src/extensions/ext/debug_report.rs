@@ -47,16 +47,14 @@ impl DebugReport {
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::DebugReportCallbackEXT> {
         let mut debug_cb = mem::zeroed();
-        let err_code = self.debug_report_fn.create_debug_report_callback_ext(
-            self.handle,
-            create_info,
-            allocation_callbacks.as_raw_ptr(),
-            &mut debug_cb,
-        );
-        match err_code {
-            vk::Result::SUCCESS => Ok(debug_cb),
-            _ => Err(err_code),
-        }
+        self.debug_report_fn
+            .create_debug_report_callback_ext(
+                self.handle,
+                create_info,
+                allocation_callbacks.as_raw_ptr(),
+                &mut debug_cb,
+            )
+            .result_with_success(debug_cb)
     }
 
     pub fn fp(&self) -> &vk::ExtDebugReportFn {

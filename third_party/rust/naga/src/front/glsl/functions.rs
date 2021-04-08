@@ -1,7 +1,7 @@
+use super::super::Typifier;
 use crate::{
-    proc::{ensure_block_returns, Typifier},
-    BinaryOperator, Block, EntryPoint, Expression, Function, MathFunction, RelationalFunction,
-    SampleLevel, TypeInner,
+    proc::ensure_block_returns, BinaryOperator, Block, EntryPoint, Expression, Function,
+    MathFunction, RelationalFunction, SampleLevel, TypeInner,
 };
 
 use super::{ast::*, error::ErrorKind};
@@ -188,13 +188,20 @@ impl Program<'_> {
                                 format!("Unknown function: {}", func_name).into(),
                             )
                         })?;
+                        let arguments: Vec<_> = fc.args.iter().map(|a| a.expression).collect();
+                        let mut statements: Vec<_> =
+                            fc.args.into_iter().flat_map(|a| a.statements).collect();
+                        let expression =
+                            self.context.expressions.append(Expression::Call(function));
+                        statements.push(crate::Statement::Call {
+                            function,
+                            arguments,
+                            result: Some(expression),
+                        });
                         Ok(ExpressionRule {
-                            expression: self.context.expressions.append(Expression::Call {
-                                function,
-                                arguments: fc.args.iter().map(|a| a.expression).collect(),
-                            }),
+                            expression,
                             sampler: None,
-                            statements: fc.args.into_iter().flat_map(|a| a.statements).collect(),
+                            statements,
                         })
                     }
                 }
@@ -288,14 +295,13 @@ impl Program<'_> {
             .ok_or_else(|| ErrorKind::SemanticError("Unnamed function".into()))?;
         let stage = self.entry_points.get(&name);
         if let Some(&stage) = stage {
-            self.module.entry_points.insert(
-                (stage, name),
-                EntryPoint {
-                    early_depth_test: None,
-                    workgroup_size: [0; 3], //TODO
-                    function: f,
-                },
-            );
+            self.module.entry_points.push(EntryPoint {
+                name,
+                stage,
+                early_depth_test: None,
+                workgroup_size: [0; 3], //TODO
+                function: f,
+            });
         } else {
             let handle = self.module.functions.append(f);
             self.lookup_function.insert(name, handle);

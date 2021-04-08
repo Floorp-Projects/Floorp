@@ -241,10 +241,21 @@ bitflags! {
         /// Allow descriptor arrays to be unsized in shaders
         const UNSIZED_DESCRIPTOR_ARRAY = 0x0800_0000_0000_0000;
         /// Mask for all the features associated with descriptor indexing.
-        const DESCRIPTOR_INDEXING_MASK = Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING.bits | Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING.bits | Features::UNSIZED_DESCRIPTOR_ARRAY.bits;
+        const DESCRIPTOR_INDEXING_MASK = Features::SAMPLED_TEXTURE_DESCRIPTOR_INDEXING.bits | Features::STORAGE_TEXTURE_DESCRIPTOR_INDEXING.bits | Features::UNSIZED_DESCRIPTOR_ARRAY.bits | Features::UNIFORM_BUFFER_DESCRIPTOR_INDEXING.bits | Features::STORAGE_BUFFER_DESCRIPTOR_INDEXING.bits;
 
         /// Enable draw_indirect_count and draw_indexed_indirect_count
         const DRAW_INDIRECT_COUNT = 0x1000_0000_0000_0000;
+
+        /// Support for conservative rasterization. Presence of this flag only indicates basic overestimation rasterization for triangles only.
+        /// (no guarantee on underestimation, overestimation, handling of degenerate primitives, fragment shader coverage reporting and uncertainty ranges)
+        const CONSERVATIVE_RASTERIZATION = 0x2000_0000_0000_0000;
+
+        /// Support for arrays of buffer descriptors
+        const BUFFER_DESCRIPTOR_ARRAY = 0x4000_0000_0000_0000;
+        /// Allow indexing uniform buffer descriptor arrays with dynamically non-uniform data
+        const UNIFORM_BUFFER_DESCRIPTOR_INDEXING = 0x8000_0000_0000_0000;
+        /// Allow indexing storage buffer descriptor arrays with dynamically non-uniform data
+        const STORAGE_BUFFER_DESCRIPTOR_INDEXING = 0x0001_0000_0000_0000_0000;
 
         // Bits for Vulkan Portability features
 
@@ -271,9 +282,9 @@ bitflags! {
         // Bits for Extensions
 
         /// Supports task shader stage.
-        const TASK_SHADER = 0x0000_0001 << 96;
+        const TASK_SHADER = 0x0001 << 96;
         /// Supports mesh shader stage.
-        const MESH_SHADER = 0x0000_0002 << 96;
+        const MESH_SHADER = 0x0002 << 96;
         /// Mask for all the features associated with mesh shader stages.
         const MESH_SHADER_MASK = Features::TASK_SHADER.bits | Features::MESH_SHADER.bits;
     }
@@ -329,6 +340,8 @@ pub struct PhysicalDeviceProperties {
     pub descriptor_indexing: DescriptorIndexingProperties,
     /// Mesh Shader properties.
     pub mesh_shader: MeshShaderProperties,
+    /// Downlevel properties.
+    pub downlevel: DownlevelProperties,
     /// Performance caveats.
     pub performance_caveats: PerformanceCaveats,
     /// Dynamic pipeline states.
@@ -556,6 +569,56 @@ pub struct MeshShaderProperties {
     /// The granularity with which mesh outputs qualified as per-primitive are allocated. The value can be used to
     /// compute the memory size used by the mesh shader, which must be less than or equal to
     pub mesh_output_per_primitive_granularity: u32,
+}
+
+/// Propterties to indicate when the backend does not support full vulkan compliance.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct DownlevelProperties {
+    /// Supports compute shaders.
+    pub compute_shaders: bool,
+    /// Which collections of features shaders support. Defined in terms of D3D's shader models.
+    pub shader_model: DownlevelShaderModel,
+    /// Supports creating storage images.
+    pub storage_images: bool,
+    /// Supports RODS
+    pub read_only_depth_stencil: bool,
+    /// Supports copies to/from device-local memory and device-local images.
+    pub device_local_image_copies: bool,
+    /// Supports textures with mipmaps which are non power of two.
+    pub non_power_of_two_mipmapped_textures: bool,
+}
+
+impl DownlevelProperties {
+    /// Enables all properties for a vulkan-complient backend.
+    pub fn all_enabled() -> Self {
+        Self {
+            compute_shaders: true,
+            shader_model: DownlevelShaderModel::ShaderModel5,
+            storage_images: true,
+            read_only_depth_stencil: true,
+            device_local_image_copies: true,
+            non_power_of_two_mipmapped_textures: true,
+        }
+    }
+}
+
+/// Collections of shader features shaders support if they support less than vulkan does.
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum DownlevelShaderModel {
+    /// Extremely limited shaders, including a total instruction limit.
+    ShaderModel2,
+    /// Missing minor features and storage images.
+    ShaderModel4,
+    /// Vulkan shaders are SM5
+    ShaderModel5,
+}
+
+impl Default for DownlevelShaderModel {
+    fn default() -> Self {
+        Self::ShaderModel2
+    }
 }
 
 /// An enum describing the type of an index value in a slice's index buffer

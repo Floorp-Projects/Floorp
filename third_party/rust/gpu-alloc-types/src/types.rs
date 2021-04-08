@@ -42,7 +42,7 @@ pub struct MemoryType {
     /// Heap index of the memory type.
     pub heap: u32,
 
-    /// Propety flags of the memory type.
+    /// Property flags of the memory type.
     pub props: MemoryPropertyFlags,
 }
 

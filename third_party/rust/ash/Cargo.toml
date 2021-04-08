@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "ash"
-version = "0.31.0"
+version = "0.32.1"
 authors = ["maik klein <maikklein@googlemail.com>"]
 description = "Vulkan bindings for Rust"
 documentation = "https://docs.rs/ash"
@@ -24,7 +24,7 @@ repository = "https://github.com/MaikKlein/ash"
 [package.metadata.release]
 no-dev-version = true
 [dependencies.libloading]
-version = "0.6.1"
+version = "0.7"
 optional = true
 
 [features]

@@ -17,6 +17,8 @@ pub trait QueueFamily: Debug + Any + Send + Sync {
     fn max_queues(&self) -> usize;
     /// Returns the queue family ID.
     fn id(&self) -> QueueFamilyId;
+    /// Returns true if the queue family supports sparse binding
+    fn supports_sparse_binding(&self) -> bool;
 }
 
 /// Identifier for a queue family of a physical device.

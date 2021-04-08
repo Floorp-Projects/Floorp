@@ -1,3 +1,6 @@
+/*! Standard Portable Intermediate Representation (SPIR-V) backend
+!*/
+
 mod helpers;
 mod instructions;
 mod layout;
@@ -10,7 +13,10 @@ use spirv::Word;
 
 bitflags::bitflags! {
     pub struct WriterFlags: u32 {
+        /// Include debug labels for everything.
         const DEBUG = 0x1;
+        /// Flip Y coordinate of `BuiltIn::Position` output.
+        const ADJUST_COORDINATE_SPACE = 0x2;
     }
 }
 
@@ -57,21 +63,27 @@ pub struct Options {
 
 impl Default for Options {
     fn default() -> Self {
+        let mut flags = WriterFlags::ADJUST_COORDINATE_SPACE;
+        if cfg!(debug_assertions) {
+            flags |= WriterFlags::DEBUG;
+        }
+        let mut capabilities = crate::FastHashSet::default();
+        capabilities.insert(Capability::Shader);
         Options {
             lang_version: (1, 0),
-            flags: WriterFlags::empty(),
-            capabilities: Default::default(),
+            flags,
+            capabilities,
         }
     }
 }
 
 pub fn write_vec(
     module: &crate::Module,
-    analysis: &crate::proc::analyzer::Analysis,
+    info: &crate::valid::ModuleInfo,
     options: &Options,
 ) -> Result<Vec<u32>, Error> {
     let mut words = Vec::new();
     let mut w = Writer::new(options)?;
-    w.write(module, analysis, &mut words)?;
+    w.write(module, info, &mut words)?;
     Ok(words)
 }
