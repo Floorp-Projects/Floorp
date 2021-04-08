@@ -132,10 +132,12 @@
 #PanelUI-menu-button[badge-status="update-other-instance"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  background-size: 10px;
 }
 
 #PanelUI-menu-button[badge-status="update-unsupported"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   background: #FFE900 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  background-size: 10px;
 }
 
 @media (-moz-proton) {
@@ -144,10 +146,14 @@
 .panel-banner-item[notificationid="update-manual"] > .toolbarbutton-icon,
 .panel-banner-item[notificationid="update-other-instance"] > .toolbarbutton-icon,
 .panel-banner-item[notificationid="update-restart"] > .toolbarbutton-icon {
-  background: var(--panel-banner-item-update-supported-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  background-color: var(--panel-banner-item-update-supported-bgcolor);
+  background-image: url(chrome://browser/skin/update-badge.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px;
   border-radius: 50%;
-  -moz-context-properties: stroke;
-  stroke: var(--arrowpanel-background);
+  -moz-context-properties: fill;
+  fill: var(--arrowpanel-background);
 }
 
 .panel-banner-item[notificationid="update-unsupported"] > .toolbarbutton-icon {
@@ -164,12 +170,22 @@
 .panel-banner-item[notificationid="update-manual"]::after,
 .panel-banner-item[notificationid="update-other-instance"]::after,
 .panel-banner-item[notificationid="update-restart"]::after {
-  background: var(--panel-banner-item-update-supported-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  background-color: var(--panel-banner-item-update-supported-bgcolor);
+  background-image: url(chrome://browser/skin/update-badge.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px;
   border-radius: 50%;
+  -moz-context-properties: fill;
+  fill: #fff;
 }
 
 .panel-banner-item[notificationid="update-unsupported"]::after {
-  background: var(--panel-banner-item-warning-icon-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  background-color: var(--panel-banner-item-warning-icon-bgcolor);
+  background-image: url(chrome://browser/skin/update-badge.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px;
   border-radius: 50%;
 }
 .panel-banner-item[notificationid^=update] {
