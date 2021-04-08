@@ -58,7 +58,6 @@ JSExecutionContext::JSExecutionContext(JSContext* aCx,
       mCx(aCx),
       mRealm(aCx, aGlobal),
       mRetValue(aCx),
-      mScopeChain(aCx),
       mScript(aCx),
       mRv(NS_OK),
       mSkip(false),
@@ -67,7 +66,6 @@ JSExecutionContext::JSExecutionContext(JSContext* aCx,
 #ifdef DEBUG
       ,
       mWantsReturnValue(false),
-      mExpectScopeChain(false),
       mScriptUsed(false)
 #endif
 {
@@ -84,40 +82,12 @@ JSExecutionContext::JSExecutionContext(JSContext* aCx,
   }
 }
 
-void JSExecutionContext::SetScopeChain(
-    JS::HandleVector<JSObject*> aScopeChain) {
-  if (mSkip) {
-    return;
-  }
-
-#ifdef DEBUG
-  mExpectScopeChain = true;
-#endif
-  // Now make sure to wrap the scope chain into the right compartment.
-  if (!mScopeChain.reserve(aScopeChain.length())) {
-    mSkip = true;
-    mRv = NS_ERROR_OUT_OF_MEMORY;
-    return;
-  }
-
-  for (size_t i = 0; i < aScopeChain.length(); ++i) {
-    JS::ExposeObjectToActiveJS(aScopeChain[i]);
-    mScopeChain.infallibleAppend(aScopeChain[i]);
-    if (!JS_WrapObject(mCx, mScopeChain[i])) {
-      mSkip = true;
-      mRv = NS_ERROR_OUT_OF_MEMORY;
-      return;
-    }
-  }
-}
-
 nsresult JSExecutionContext::JoinCompile(JS::OffThreadToken** aOffThreadToken) {
   if (mSkip) {
     return mRv;
   }
 
   MOZ_ASSERT(!mWantsReturnValue);
-  MOZ_ASSERT(!mExpectScopeChain);
   MOZ_ASSERT(!mScript);
 
   if (mEncodeBytecode) {
@@ -150,16 +120,6 @@ nsresult JSExecutionContext::InternalCompile(
 #endif
 
   MOZ_ASSERT(!mScript);
-
-  if (mScopeChain.length() != 0) {
-    // Serialized bytecode should not be mixed with non-syntactic mode.
-    // Currently, mScopeChain is only used by nsNPAPIPlugin which does not
-    // support bytecode caching. This will all be removed in Bug 1689348.
-    MOZ_ASSERT(!mEncodeBytecode);
-    MOZ_ASSERT(mExpectScopeChain);
-
-    aCompileOptions.setNonSyntacticScope(true);
-  }
 
   if (mEncodeBytecode) {
     mScript =
@@ -235,7 +195,6 @@ nsresult JSExecutionContext::JoinDecode(JS::OffThreadToken** aOffThreadToken) {
   }
 
   MOZ_ASSERT(!mWantsReturnValue);
-  MOZ_ASSERT(!mExpectScopeChain);
   mScript.set(JS::FinishOffThreadScriptDecoder(mCx, *aOffThreadToken));
   *aOffThreadToken = nullptr;  // Mark the token as having been finished.
   if (!mScript) {
@@ -266,8 +225,7 @@ nsresult JSExecutionContext::ExecScript() {
 
   MOZ_ASSERT(mScript);
 
-  if (!(mScopeChain.empty() ? JS_ExecuteScript(mCx, mScript)
-                            : JS_ExecuteScript(mCx, mScopeChain, mScript))) {
+  if (!JS_ExecuteScript(mCx, mScript)) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;
@@ -300,9 +258,7 @@ nsresult JSExecutionContext::ExecScript(
   MOZ_ASSERT(mScript);
   MOZ_ASSERT(mWantsReturnValue);
 
-  if (!(mScopeChain.empty()
-            ? JS_ExecuteScript(mCx, mScript, aRetValue)
-            : JS_ExecuteScript(mCx, mScopeChain, mScript, aRetValue))) {
+  if (!JS_ExecuteScript(mCx, mScript, aRetValue)) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;
