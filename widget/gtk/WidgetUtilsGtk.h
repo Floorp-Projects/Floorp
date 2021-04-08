@@ -16,11 +16,6 @@ class WidgetUtilsGTK {
  public:
   /* See WidgetUtils::IsTouchDeviceSupportPresent(). */
   static int32_t IsTouchDeviceSupportPresent();
-
-  /* When packaged as a snap, strict confinement needs to be accounted for.
-     See https://snapcraft.io/docs for details.
-     Return the snap's instance name, or null when not running as a snap. */
-  static const char* GetSnapInstanceName();
 };
 
 bool IsMainWindowTransparent();
