@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
+
 // Test that javascript dialog events are emitted by the page domain only if
 // the dialog is created for the window of the target.
 add_task(async function({ client }) {
@@ -25,13 +29,11 @@ add_task(async function({ client }) {
 
   // Create a promise that resolve when dialog prompt is created.
   // It will also take care of closing the dialog.
-  const onOtherPageDialog = new Promise(r => {
-    Services.obs.addObserver(function onDialogLoaded(promptContainer) {
-      Services.obs.removeObserver(onDialogLoaded, "tabmodal-dialog-loaded");
-      promptContainer.querySelector(".tabmodalprompt-button0").click();
-      r();
-    }, "tabmodal-dialog-loaded");
-  });
+  let onOtherPageDialog = PromptTestUtils.handleNextPrompt(
+    gBrowser.selectedBrowser,
+    { modalType: Services.prompt.MODAL_TYPE_CONTENT, promptType: "alert" },
+    { buttonNumClick: 0 }
+  );
 
   info("Trigger an alert in the second page");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
