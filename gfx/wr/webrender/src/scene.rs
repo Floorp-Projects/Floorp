@@ -309,6 +309,7 @@ impl BuiltScene {
                 max_depth_ids: 0,
                 max_target_size: 0,
                 force_invalidation: false,
+                is_software: false,
             },
         }
     }
