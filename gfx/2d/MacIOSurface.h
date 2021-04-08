@@ -56,9 +56,8 @@ class MacIOSurface final
   // of the MacIOSurface instance.
   // MacIOSurface holds a reference to the corresponding IOSurface.
 
-  static already_AddRefed<MacIOSurface> CreateIOSurface(
-      int aWidth, int aHeight, double aContentsScaleFactor = 1.0,
-      bool aHasAlpha = true);
+  static already_AddRefed<MacIOSurface> CreateIOSurface(int aWidth, int aHeight,
+                                                        bool aHasAlpha = true);
   static already_AddRefed<MacIOSurface> CreateNV12Surface(
       const IntSize& aYSize, const IntSize& aCbCrSize,
       YUVColorSpace aColorSpace, ColorRange aColorRange);
@@ -66,13 +65,11 @@ class MacIOSurface final
       const IntSize& aSize, YUVColorSpace aColorSpace, ColorRange aColorRange);
   static void ReleaseIOSurface(MacIOSurface* aIOSurface);
   static already_AddRefed<MacIOSurface> LookupSurface(
-      IOSurfaceID aSurfaceID, double aContentsScaleFactor = 1.0,
-      bool aHasAlpha = true,
+      IOSurfaceID aSurfaceID, bool aHasAlpha = true,
       mozilla::gfx::YUVColorSpace aColorSpace =
           mozilla::gfx::YUVColorSpace::Identity);
 
   explicit MacIOSurface(CFTypeRefPtr<IOSurfaceRef> aIOSurfaceRef,
-                        double aContentsScaleFactor = 1.0,
                         bool aHasAlpha = true,
                         mozilla::gfx::YUVColorSpace aColorSpace =
                             mozilla::gfx::YUVColorSpace::Identity);
@@ -92,7 +89,6 @@ class MacIOSurface final
   IntSize GetSize(size_t plane = 0) const {
     return IntSize(GetWidth(plane), GetHeight(plane));
   }
-  double GetContentsScaleFactor() const { return mContentsScaleFactor; }
   size_t GetDevicePixelWidth(size_t plane = 0) const;
   size_t GetDevicePixelHeight(size_t plane = 0) const;
   size_t GetBytesPerRow(size_t plane = 0) const;
@@ -142,7 +138,6 @@ class MacIOSurface final
 
  private:
   CFTypeRefPtr<IOSurfaceRef> mIOSurfaceRef;
-  const double mContentsScaleFactor;
   const bool mHasAlpha;
   YUVColorSpace mColorSpace = YUVColorSpace::Identity;
   bool mIsLocked = false;
