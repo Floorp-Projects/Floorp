@@ -38,7 +38,12 @@ class GeckoProfile(object):
 
         gecko_profile_interval = test_config.get("gecko_profile_interval", 1)
         gecko_profile_entries = test_config.get("gecko_profile_entries", 1000000)
-        gecko_profile_threads = "GeckoMain,Compositor"
+        gecko_profile_features = test_config.get(
+            "gecko_profile_features", "js,leaf,stackwalk,cpu,threads"
+        )
+        gecko_profile_threads = test_config.get(
+            "gecko_profile_threads", "GeckoMain,Compositor"
+        )
         if browser_config["enable_webrender"]:
             gecko_profile_threads += ",WR,Renderer"
 
@@ -67,6 +72,7 @@ class GeckoProfile(object):
             "gecko_profile_interval": gecko_profile_interval,
             "gecko_profile_entries": gecko_profile_entries,
             "gecko_profile_dir": gecko_profile_dir,
+            "gecko_profile_features": gecko_profile_features,
             "gecko_profile_threads": gecko_profile_threads,
         }
 
@@ -90,6 +96,7 @@ class GeckoProfile(object):
                 "MOZ_PROFILER_STARTUP_NO_BASE": "1",
                 "MOZ_PROFILER_STARTUP_INTERVAL": str(self.option("interval")),
                 "MOZ_PROFILER_STARTUP_ENTRIES": str(self.option("entries")),
+                "MOZ_PROFILER_STARTUP_FEATURES": str(self.option("features")),
                 "MOZ_PROFILER_STARTUP_FILTERS": str(self.option("threads")),
             }
         )
