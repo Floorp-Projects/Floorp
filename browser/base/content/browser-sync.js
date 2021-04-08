@@ -1077,13 +1077,12 @@ var gSync = {
         "account-disconnected"
       );
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
+      appMenuLabel.setAttribute("label", errorLabel);
       if (PanelUI.protonAppMenuEnabled) {
         appMenuLabel.classList.add("subviewbutton-nav");
         appMenuHeaderTitle.hidden = false;
         appMenuHeaderTitle.value = errorLabel;
         appMenuHeaderDescription.value = state.email;
-      } else {
-        appMenuLabel.setAttribute("label", errorLabel);
       }
       return;
     } else if (status == UIState.STATUS_NOT_VERIFIED) {
@@ -1096,13 +1095,12 @@ var gSync = {
         "account-finish-account-setup"
       );
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
+      appMenuLabel.setAttribute("label", unverifiedLabel);
       if (PanelUI.protonAppMenuEnabled) {
         appMenuLabel.classList.add("subviewbutton-nav");
         appMenuHeaderTitle.hidden = false;
         appMenuHeaderTitle.value = unverifiedLabel;
         appMenuHeaderDescription.value = state.email;
-      } else {
-        appMenuLabel.setAttribute("label", unverifiedLabel);
       }
       return;
     }
