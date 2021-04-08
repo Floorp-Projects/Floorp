@@ -25,11 +25,7 @@ exports.shutdownAccessibilityService = function() {
 };
 
 exports.openAccessibilityAndLog = function(label) {
-  return openToolboxAndLog(
-    `${label}.accessibility`,
-    "accessibility",
-    (toolbox, panel) => panel.panelWin.once(INITIALIZED_EVENT)
-  );
+  return openToolboxAndLog(`${label}.accessibility`, "accessibility");
 };
 
 exports.reloadAccessibilityAndLog = async function(label, toolbox) {

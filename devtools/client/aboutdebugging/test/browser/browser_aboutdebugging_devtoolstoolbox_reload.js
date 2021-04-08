@@ -61,25 +61,12 @@ async function testReloadAboutDevToolsToolbox(toolId) {
   const toolbox = getToolbox(devtoolsWindow);
   await toolbox.selectTool(toolId);
 
-  // The a11y panel finishes its initialization after selectTool resolves.
-  // TODO: The a11y panel init should only resolve when the UI is ready and all
-  // initial requests are completed. See Bug 1702078.
-  if (toolId === "accessibility") {
-    await waitForA11yPanel(toolbox);
-  }
-
   info("Wait for requests to settle before reloading");
   await toolbox.target.client.waitForRequestsToSettle();
 
   info("Reload about:devtools-toolbox page");
   devtoolsBrowser.reload();
-  const newToolbox = await gDevTools.once("toolbox-ready");
-
-  // Again, wait for the delayed a11y panel initialization.
-  if (toolId === "accessibility") {
-    await waitForA11yPanel(newToolbox);
-  }
-
+  await gDevTools.once("toolbox-ready");
   ok(true, "Toolbox is re-created again");
 
   // Check that about:devtools-toolbox is still selected tab. See Bug 1570692.
@@ -97,9 +84,4 @@ async function testReloadAboutDevToolsToolbox(toolId) {
 
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTab(tab);
-}
-
-async function waitForA11yPanel(toolbox) {
-  const panel = toolbox.getPanel("accessibility");
-  await panel._accessibilityViewInitialized;
 }
