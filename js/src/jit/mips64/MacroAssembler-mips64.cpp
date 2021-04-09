@@ -2564,7 +2564,7 @@ static void CompareExchange64(MacroAssembler& masm,
                               const Synchronization& sync, const T& mem,
                               Register64 expect, Register64 replace,
                               Register64 output) {
-  MOZ_ASSERT(oldval != output && newval != output);
+  MOZ_ASSERT(expect != output && replace != output);
   masm.computeEffectiveAddress(mem, SecondScratchReg);
 
   Label tryAgain;
