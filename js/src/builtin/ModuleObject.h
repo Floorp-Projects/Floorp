@@ -190,11 +190,11 @@ class ModuleNamespaceObject : public ProxyObject {
 
   static bool isInstance(HandleValue value);
   static ModuleNamespaceObject* create(JSContext* cx, HandleModuleObject module,
-                                       HandleObject exports,
+                                       HandleArrayObject exports,
                                        UniquePtr<IndirectBindingMap> bindings);
 
   ModuleObject& module();
-  JSObject& exports();
+  ArrayObject& exports();
   IndirectBindingMap& bindings();
 
   bool addBinding(JSContext* cx, HandleAtom exportedName,
