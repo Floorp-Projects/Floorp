@@ -38,7 +38,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   LightweightThemeConsumer:
@@ -613,6 +612,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.proton.doorhangers.enabled",
   false
 );
+
+/* Import aboutWelcomeFeature from Nimbus Experiment API
+   to access experiment values */
+XPCOMUtils.defineLazyGetter(this, "aboutWelcomeFeature", () => {
+  const { ExperimentFeature } = ChromeUtils.import(
+    "resource://nimbus/ExperimentAPI.jsm"
+  );
+  return new ExperimentFeature("aboutwelcome");
+});
 
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
@@ -2224,7 +2232,7 @@ var gBrowserInit = {
       // property set to true, if yes remove focus from urlbar for about:welcome
       const aboutWelcomeSkipUrlBarFocus =
         uriToLoad == "about:welcome" &&
-        NimbusFeatures.aboutwelcome.getValue()?.skipFocus;
+        aboutWelcomeFeature.getValue()?.skipFocus;
 
       if (
         (isBlankPageURL(uriToLoad) && !aboutWelcomeSkipUrlBarFocus) ||

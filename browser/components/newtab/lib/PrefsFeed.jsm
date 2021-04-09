@@ -14,12 +14,30 @@ const { Prefs } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  Region: "resource://gre/modules/Region.jsm",
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
+
+XPCOMUtils.defineLazyGetter(this, "aboutNewTabFeature", () => {
+  const { ExperimentFeature } = ChromeUtils.import(
+    "resource://nimbus/ExperimentAPI.jsm"
+  );
+  return new ExperimentFeature("newtab");
 });
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "Region",
+  "resource://gre/modules/Region.jsm"
+);
 
 this.PrefsFeed = class PrefsFeed {
   constructor(prefMap) {
@@ -65,7 +83,7 @@ this.PrefsFeed = class PrefsFeed {
    * Handler for when experiment data updates.
    */
   onExperimentUpdated(event, reason) {
-    const value = NimbusFeatures.newtab.getValue() || {};
+    const value = aboutNewTabFeature.getValue() || {};
     this.store.dispatch(
       ac.BroadcastToContent({
         type: at.PREF_CHANGED,
@@ -79,7 +97,7 @@ this.PrefsFeed = class PrefsFeed {
 
   init() {
     this._prefs.observeBranch(this);
-    NimbusFeatures.newtab.onUpdate(this.onExperimentUpdated);
+    aboutNewTabFeature.onUpdate(this.onExperimentUpdated);
 
     this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
 
@@ -154,7 +172,7 @@ this.PrefsFeed = class PrefsFeed {
     });
 
     // Add experiment values and default values
-    values.featureConfig = NimbusFeatures.newtab.getValue() || {};
+    values.featureConfig = aboutNewTabFeature.getValue() || {};
     this._setBoolPref(values, "logowordmark.alwaysVisible", false);
     this._setBoolPref(values, "feeds.section.topstories", false);
     this._setBoolPref(values, "discoverystream.enabled", false);
@@ -191,7 +209,7 @@ this.PrefsFeed = class PrefsFeed {
 
   removeListeners() {
     this._prefs.ignoreBranch(this);
-    NimbusFeatures.newtab.off(this.onExperimentUpdated);
+    aboutNewTabFeature.off(this.onExperimentUpdated);
     if (this.geo === "") {
       Services.obs.removeObserver(this, Region.REGION_TOPIC);
     }

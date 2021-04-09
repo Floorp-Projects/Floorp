@@ -15,7 +15,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  ExperimentFeature: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["TextDecoder"]);
@@ -53,13 +53,14 @@ class Suggestions {
     this._initPromise = Promise.resolve();
     this._rs = RemoteSettings(RS_COLLECTION);
     this.onFeatureUpdate = this.onFeatureUpdate.bind(this);
-    if (NimbusFeatures.urlbar.getValue().quickSuggestEnabled) {
+    this.urlbarExperimentFeature = new ExperimentFeature("urlbar");
+    if (this.urlbarExperimentFeature.getValue().quickSuggestEnabled) {
       this._initPromise = new Promise(resolve => (this._initResolve = resolve));
       Services.tm.idleDispatchToMainThread(
         this._setupRemoteSettings.bind(this)
       );
     } else {
-      NimbusFeatures.urlbar.onUpdate(this.onFeatureUpdate);
+      this.urlbarExperimentFeature.onUpdate(this.onFeatureUpdate);
     }
     return this._initPromise;
   }
@@ -154,7 +155,7 @@ class Suggestions {
    * Called if a Urlbar Experiment Feature is changed.
    */
   onFeatureUpdate() {
-    if (NimbusFeatures.urlbar.getValue().quickSuggestEnabled) {
+    if (this.urlbarExperimentFeature.getValue().quickSuggestEnabled) {
       this._setupRemoteSettings();
     }
   }
