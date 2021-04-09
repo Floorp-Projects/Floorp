@@ -1171,6 +1171,12 @@
   mirror: always
   rust: true
 
+- name: browser.proton.infobars.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 - name: browser.proton.places-tooltip.enabled
   type: RelaxedAtomicBool
   value: false
