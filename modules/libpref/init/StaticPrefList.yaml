@@ -8660,11 +8660,6 @@
   value: false
   mirror: always
 
-- name: network.data.max-uri-length-mobile
-  type: RelaxedAtomicUint32
-  value: 2 * 1024 * 1024
-  mirror: always
-
 # If we should attempt to race the cache and network.
 - name: network.http.rcwn.enabled
   type: bool
