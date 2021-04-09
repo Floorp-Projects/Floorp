@@ -613,6 +613,8 @@
     <string name="add_private_tab">Priwatny rajtark přidać</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Priwatny</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Synchronizować</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Wočinjene rajtarki</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -1557,6 +1559,8 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Kreditnu kartu přidać</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Składowane karty rjadować</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kartu přidać</string>
     <!-- The header for the card number of a credit card -->
@@ -1575,6 +1579,9 @@
     <string name="credit_cards_save_button">Składować</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Přetorhnyć</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Składowane karty</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pytawu přidać</string>

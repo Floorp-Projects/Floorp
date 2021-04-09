@@ -620,6 +620,8 @@
     <string name="add_private_tab">Προσθήκη ιδιωτικής καρτέλας</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Ιδιωτική</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Συγχρονισμός</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Ανοικτές καρτέλες</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -985,6 +987,8 @@
     <string name="share_link_all_apps_subheader">Όλες οι ενέργειες</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Πρόσφατη χρήση</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">Έγινε σύνδεση ως %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Σύνδεση για συγχρονισμό</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1192,6 +1196,10 @@
     <string name="onboarding_whats_new_description">Έχετε ερωτήσεις σχετικά με το επανασχεδιασμένο %s; Θέλετε να μάθετε τι έχει αλλάξει;</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Λάβετε απαντήσεις εδώ</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Συγχρονισμός Firefox μεταξύ συσκευών</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">Μεταφέρετε σελιδοδείκτες, ιστορικό και κωδικούς πρόσβασης στο Firefox αυτής της συσκευής.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1209,14 +1217,24 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Αποτυχία σύνδεσης</string>
 
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Μόνιμη προστασία απορρήτου</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string name="onboarding_tracking_protection_description_3">Το Firefox εμποδίζει την καταγραφή της διαδικτυακής δραστηριότητάς σας από εταιρείες.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Τυπική (προεπιλογή)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Ισορροπία μεταξύ ιδιωτικότητας και επιδόσεων. Οι σελίδες φορτώνονται κανονικά.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Αυστηρή (προτείνεται)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Αυστηρή</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Φραγή περισσότερων ιχνηλατών για ταχύτερη φόρτωση σελίδων. Ορισμένες λειτουργίες της σελίδας ενδέχεται να δυσλειτουργούν.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Επιλέξτε την τοποθεσία της γραμμής εργαλείων σας</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Τοποθετήστε τη γραμμή εργαλείων σε κοντινή απόσταση. Κρατήστε την στο κάτω μέρος, ή μετακινήστε την στο πάνω μέρος.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Ιδιωτική περιήγηση</string>
     <!-- text for the private browsing onboarding card description
@@ -1242,6 +1260,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Επιλογή θέματος</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Εξοικονομήστε μπαταρία και προστατέψτε τα μάτια σας με τη σκοτεινή λειτουργία.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Αυτόματο</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1297,10 +1317,14 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Μάθετε περισσότερα</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Τυπική (προεπιλογή)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Ισορροπία μεταξύ ιδιωτικότητας και επιδόσεων. Οι σελίδες φορτώνονται κανονικά.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Τι αποκλείει η τυπική προστασία από καταγραφή</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Αυστηρή</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Φραγή περισσότερων ιχνηλατών για ταχύτερη φόρτωση σελίδων. Ορισμένες λειτουργίες της σελίδας ενδέχεται να δυσλειτουργούν.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Τι αποκλείει η αυστηρή προστασία από καταγραφή</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1551,6 +1575,8 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Προσθήκη πιστωτικής κάρτας</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Διαχείριση αποθηκευμένων καρτών</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Προσθήκη κάρτας</string>
     <!-- The header for the card number of a credit card -->
@@ -1569,6 +1595,9 @@
     <string name="credit_cards_save_button">Αποθήκευση</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Ακύρωση</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Αποθηκευμένες κάρτες</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Προσθήκη μηχανής αναζήτησης</string>

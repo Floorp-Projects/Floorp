@@ -619,6 +619,8 @@
     <string name="add_private_tab">Přidat anonymní panel</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Anonymní</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Synchronizace</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Otevřené panely</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -1573,6 +1575,8 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Přidat platební kartu</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Správa uložených karet</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Přidat kartu</string>
     <!-- The header for the card number of a credit card -->
@@ -1591,6 +1595,9 @@
     <string name="credit_cards_save_button">Uložit</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Zrušit</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Uložené karty</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Přidat vyhledávač</string>

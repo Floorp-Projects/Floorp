@@ -625,6 +625,8 @@
     <string name="add_private_tab">사생활 보호 탭 추가</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">사생활 보호</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sync</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">탭 열기</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -1602,6 +1604,8 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">신용 카드 추가</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">저장된 카드 관리</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">카드 추가</string>
     <!-- The header for the card number of a credit card -->
@@ -1621,6 +1625,9 @@
     <string name="credit_cards_save_button">저장</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">취소</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">저장된 카드</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">검색 엔진 추가</string>

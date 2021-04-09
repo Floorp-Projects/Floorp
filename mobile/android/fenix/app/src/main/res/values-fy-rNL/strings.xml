@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Jo priveeljepblêden wurde hjir werjûn.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 iepen ljepblêd. Tik om tusken ljepblêden te wikseljen.</string>
 
@@ -185,6 +181,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Lêzerwerjefte oanpasse</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Tafoegje</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Bewurkje</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Net yn steat te ferbinen. Unkenbere URL-skema.</string>
@@ -973,6 +974,10 @@
     <string name="share_link_all_apps_subheader">Alle aksjes</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Koartlyn brûkt</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">Oanmeld as %1$s</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Oanmelde om te syngronisearjen</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Oanmelde by Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1165,9 +1170,6 @@
     <string name="onboarding_header">Wolkom by %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Hawwe jo al in account?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Kom yn \'e kunde mei %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Besjoch wat der nij is</string>
     <!-- text for the "what's new" onboarding card description
@@ -1175,10 +1177,10 @@
     <string name="onboarding_whats_new_description">Hawwe jo fragen oer it opnij ûntwurpen %s? Wolle jo witte wat der wizige is?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Hjir fine jo antwurden</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Start mei syngronisearjen fan blêdwizers, wachtwurden en mear mei jo Firefox-account.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Syngronisearje Firefox tusken apparaten</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Mear ynfo</string>
+    <string name="onboarding_manual_sign_in_description">Bring blêdwizers, skiednis en wachtwurden nei Firefox op dit apparaat.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1187,8 +1189,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja, my oanmelde</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Oanmelde…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Oanmelde by Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Registrearje</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Ofmeld bliuwe</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1196,26 +1198,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Oanmelden mislearre</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Automatyske privacy</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Privacy- en befeiligingsynstellingen blokkearje trackers, malware en bedriuwen dy\'t jo folgje.</string>
+    <string name="onboarding_tracking_protection_header_3">Privacy dy\'t altyd oan stiet</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox soarget der automatysk foar dat bedriuwen jo net stikem folgje op ynternet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standert (standert)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Blokkearret minder trackers. Siden wurde normaal laden.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Balansearre foar privacy en prestaasjes. Siden lade normaal.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strang (oanrekommandearre)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strang</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Blokkearret mear trackers, advertinsjes en pop-ups. Siden wurden flugger laden, mar guon funksjes wurkje mooglik net.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Nim in posysje</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Blokkearret mear trackers, sadat siden rapper laden wurde, mar guon funksjonaliteit op in side wurket mooglik net.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Kies jo arkbalkepleatsing</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Probearje sneupjen mei ien hân mei de arkbalke ûnderyn, of ferpleats dizze nei boppe.</string>
+    <string name="onboarding_toolbar_placement_description_1">Pleats de arkbalke binnen hânberik. Hâld him ûnderoan of ferpleats him nei boppe.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Sneup privee</string>
     <!-- text for the private browsing onboarding card description
@@ -1228,7 +1227,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Jo privacy</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Wy hawwe %s ûntwurpen om jo kontrôle te jaan oer wat jo online diele en wat jo mei ús diele.
     
     </string>
@@ -1245,7 +1244,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Kies jo tema</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Sparje jo batterij en jo eagen troch de donkere modus yn te skeakeljen.</string>
+    <string name="onboarding_theme_picker_description_2">Sparje jo batterij en jo eagen mei de donkere modus.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatysk</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1300,13 +1299,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standert (standert)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokkearret minder trackers. Siden wurde normaal laden.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Balansearre foar privacy en prestaasjes. Siden lade normaal.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Wat wurdt blokkearre troch standert beskerming tsjin folgjen</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strang</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokkearret mear trackers, advertinsjes en pop-ups. Siden wurden flugger laden, mar guon funksjes wurkje mooglik net.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokkearret mear trackers, sadat siden rapper laden wurde, mar guon funksjonaliteit op in side wurket mooglik net.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Wat wurdt blokkearre troch strange beskerming tsjin folgjen</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1553,6 +1552,26 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">Kaarten syngronisearje tusken apparaten</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Creditcard tafoegje</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Kaart tafoegje</string>
+
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Kaartnûmer</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Ferrindatum</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Namme op kaart</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Kaart-bynamme</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Kaart fuortsmite</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Bewarje</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Bewarje</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Annulearje</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Sykmasine tafoegje</string>
