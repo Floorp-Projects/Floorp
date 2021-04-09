@@ -178,7 +178,11 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
   void SetHasOngoingUpdate(bool aVal) { mHasOngoingUpdate = aVal; }
 
   void SetBrowsingContext(mozilla::dom::BrowsingContext* aRootBC) {
+    if (mRootBC == aRootBC) {
+      return;
+    }
     mRootBC = aRootBC;
+    UpdateRootBrowsingContextState();
   }
 
   int32_t GetIndexForReplace() {
