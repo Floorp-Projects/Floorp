@@ -267,6 +267,13 @@ def accept_raptor_android_build(platform):
         return True
 
 
+def filter_unsupported_artifact_builds(task, parameters):
+    val = task.attributes.get("supports-artifact-builds") is False and parameters[
+        "try_task_config"
+    ].get("use-artifact-builds", True)
+    return not val
+
+
 def _try_task_config(full_task_graph, parameters, graph_config):
     requested_tasks = parameters["try_task_config"]["tasks"]
     return list(set(requested_tasks) & full_task_graph.graph.nodes)
@@ -413,6 +420,7 @@ def target_tasks_try_auto(full_task_graph, parameters, graph_config):
         and filter_by_uncommon_try_tasks(t.label)
         and filter_by_regex(t.label, include_regexes, mode="include")
         and filter_by_regex(t.label, exclude_regexes, mode="exclude")
+        and filter_unsupported_artifact_builds(t, parameters)
     ]
 
 
