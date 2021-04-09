@@ -1835,7 +1835,10 @@ function setupEventListeners() {
           .enumerateObservers("restart-in-safe-mode")
           .hasMoreElements()
       ) {
-        Services.obs.notifyObservers(null, "restart-in-safe-mode");
+        Services.obs.notifyObservers(
+          window.docShell.chromeEventHandler.ownerGlobal,
+          "restart-in-safe-mode"
+        );
       } else {
         safeModeRestart();
       }
