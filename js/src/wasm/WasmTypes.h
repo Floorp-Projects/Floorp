@@ -1283,12 +1283,6 @@ struct FeatureArgs {
 
   static FeatureArgs build(JSContext* cx, const FeatureOptions& options);
 
-  FeatureArgs withRefTypes(bool refTypes) const {
-    FeatureArgs features = *this;
-    features.refTypes = refTypes;
-    return features;
-  }
-
 #define WASM_FEATURE(NAME, LOWER_NAME, ...) bool LOWER_NAME;
   JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE

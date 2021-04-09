@@ -1737,11 +1737,7 @@ inline bool OpIter<Policy>::readComparison(ValType operandType, Value* lhs,
 // The zero-ness of the value must be checked by the caller.
 template <typename Policy>
 inline bool OpIter<Policy>::readMemOrTableIndex(bool isMem, uint32_t* index) {
-#ifdef ENABLE_WASM_REFTYPES
   bool readByte = isMem;
-#else
-  bool readByte = true;
-#endif
   if (readByte) {
     uint8_t indexTmp;
     if (!readFixedU8(&indexTmp)) {

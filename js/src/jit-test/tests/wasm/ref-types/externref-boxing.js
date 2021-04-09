@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 // Moving a JS value through a wasm externref is a pair of boxing/unboxing
 // conversions that leaves the value unchanged.  There are many cases,
 // along these axes:

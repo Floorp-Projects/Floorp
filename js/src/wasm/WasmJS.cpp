@@ -2873,15 +2873,8 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   if (StringEqualsLiteral(elementLinearStr, "anyfunc") ||
       StringEqualsLiteral(elementLinearStr, "funcref")) {
     tableType = RefType::func();
-#ifdef ENABLE_WASM_REFTYPES
   } else if (StringEqualsLiteral(elementLinearStr, "externref")) {
-    if (!ReftypesAvailable(cx)) {
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_ELEMENT);
-      return false;
-    }
     tableType = RefType::extern_();
-#endif
 #ifdef ENABLE_WASM_GC
   } else if (StringEqualsLiteral(elementLinearStr, "eqref")) {
     if (!GcAvailable(cx)) {
@@ -2892,13 +2885,8 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     tableType = RefType::eq();
 #endif
   } else {
-#ifdef ENABLE_WASM_REFTYPES
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_ELEMENT_GENERALIZED);
-#else
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_ELEMENT);
-#endif
     return false;
   }
 
@@ -3369,14 +3357,10 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   } else if (SimdAvailable(cx) && StringEqualsLiteral(typeLinearStr, "v128")) {
     globalType = ValType::V128;
 #endif
-#ifdef ENABLE_WASM_REFTYPES
-  } else if (ReftypesAvailable(cx) &&
-             StringEqualsLiteral(typeLinearStr, "funcref")) {
+  } else if (StringEqualsLiteral(typeLinearStr, "funcref")) {
     globalType = RefType::func();
-  } else if (ReftypesAvailable(cx) &&
-             StringEqualsLiteral(typeLinearStr, "externref")) {
+  } else if (StringEqualsLiteral(typeLinearStr, "externref")) {
     globalType = RefType::extern_();
-#endif
 #ifdef ENABLE_WASM_GC
   } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "eqref")) {
     globalType = RefType::eq();

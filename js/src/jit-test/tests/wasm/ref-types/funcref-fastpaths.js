@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 // Test the fast paths along which funcref values flow between wasm and JS.
 // Currently, these paths always go from wasm into JS; never from JS into wasm.
 

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 // Generates a bunch of numbers-on-the-heap, and tries to ensure that they are
 // held live -- at least for a short while -- only by references from the wasm
 // evaluation stack.  Then assembles them in a list and checks that the list

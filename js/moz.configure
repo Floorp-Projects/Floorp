@@ -610,28 +610,13 @@ set_define(
     "WASM_CODEGEN_DEBUG", depends_if("--enable-wasm-codegen-debug")(lambda x: True)
 )
 
-# Support for WebAssembly reference types.
-# =====================================================
-
-option("--disable-wasm-reftypes", help="Disable WebAssembly reference types")
-
-
-@depends("--disable-wasm-reftypes")
-def enable_wasm_reftypes(value):
-    if value:
-        return True
-
-
-set_config("ENABLE_WASM_REFTYPES", enable_wasm_reftypes)
-set_define("ENABLE_WASM_REFTYPES", enable_wasm_reftypes)
-
 # Support for WebAssembly function-references.
 # ===========================
 
 
-@depends(milestone.is_nightly, "--disable-wasm-reftypes")
-def default_wasm_function_references(is_nightly, reftypes):
-    if is_nightly and reftypes:
+@depends(milestone.is_nightly)
+def default_wasm_function_references(is_nightly):
+    if is_nightly:
         return True
 
 
@@ -642,17 +627,10 @@ option(
 )
 
 
-@depends("--enable-wasm-function-references", "--disable-wasm-reftypes")
-def wasm_function_references(value, reftypes):
-    if not value:
-        return
-
-    if reftypes:
+@depends("--enable-wasm-function-references")
+def wasm_function_references(value):
+    if value:
         return True
-
-    die(
-        "--enable-wasm-function-references only possible without --disable-wasm-reftypes"
-    )
 
 
 set_config("ENABLE_WASM_FUNCTION_REFERENCES", wasm_function_references)

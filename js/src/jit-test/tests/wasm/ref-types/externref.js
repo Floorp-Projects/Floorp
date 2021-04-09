@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 // Dummy constructor.
 function Baguette(calories) {
     this.calories = calories;

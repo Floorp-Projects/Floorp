@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 setJitCompilerOption("baseline.warmup.trigger", 5);
 setJitCompilerOption("ion.warmup.trigger", 10);
 

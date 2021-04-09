@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 const {Module,Instance,Global,RuntimeError} = WebAssembly;
 
 const badWasmFunc = /can only pass WebAssembly exported functions to funcref/;

@@ -8704,13 +8704,11 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitMemFillCall(uint32_t lineOrBytecode);
   [[nodiscard]] bool emitMemFillInline();
   [[nodiscard]] bool emitMemOrTableInit(bool isMem);
-#ifdef ENABLE_WASM_REFTYPES
   [[nodiscard]] bool emitTableFill();
   [[nodiscard]] bool emitTableGet();
   [[nodiscard]] bool emitTableGrow();
   [[nodiscard]] bool emitTableSet();
   [[nodiscard]] bool emitTableSize();
-#endif
   [[nodiscard]] bool emitStructNewWithRtt();
   [[nodiscard]] bool emitStructNewDefaultWithRtt();
   [[nodiscard]] bool emitStructGet(FieldExtension extension);
@@ -13681,7 +13679,6 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
   return true;
 }
 
-#ifdef ENABLE_WASM_REFTYPES
 [[nodiscard]] bool BaseCompiler::emitTableFill() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
@@ -13772,7 +13769,6 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
   pushI32(tableIndex);
   return emitInstanceCall(lineOrBytecode, SASigTableSize);
 }
-#endif
 
 void BaseCompiler::emitGcNullCheck(RegRef rp) {
   Label ok;
@@ -16235,20 +16231,15 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitGetGlobal());
       case uint16_t(Op::SetGlobal):
         CHECK_NEXT(emitSetGlobal());
-#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::TableGet):
         CHECK_NEXT(emitTableGet());
       case uint16_t(Op::TableSet):
         CHECK_NEXT(emitTableSet());
-#endif
 
       // Select
       case uint16_t(Op::SelectNumeric):
         CHECK_NEXT(emitSelect(/*typed*/ false));
       case uint16_t(Op::SelectTyped):
-        if (!moduleEnv_.refTypesEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
         CHECK_NEXT(emitSelect(/*typed*/ true));
 
       // I32
@@ -16767,7 +16758,6 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(dispatchComparison(emitCompareRef, RefType::eq(),
                                       Assembler::Equal));
 #endif
-#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefFunc):
         CHECK_NEXT(emitRefFunc());
         break;
@@ -16777,7 +16767,6 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::RefIsNull):
         CHECK_NEXT(emitRefIsNull());
         break;
-#endif
 
 #ifdef ENABLE_WASM_GC
       // "GC" operations
@@ -17445,14 +17434,12 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitDataOrElemDrop(/*isData=*/false));
           case uint32_t(MiscOp::TableInit):
             CHECK_NEXT(emitMemOrTableInit(/*isMem=*/false));
-#ifdef ENABLE_WASM_REFTYPES
           case uint32_t(MiscOp::TableFill):
             CHECK_NEXT(emitTableFill());
           case uint32_t(MiscOp::TableGrow):
             CHECK_NEXT(emitTableGrow());
           case uint32_t(MiscOp::TableSize):
             CHECK_NEXT(emitTableSize());
-#endif
           default:
             break;
         }  // switch (op.b1)

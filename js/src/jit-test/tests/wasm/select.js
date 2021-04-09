@@ -163,100 +163,98 @@ wasmAssert(`
     { type: 'i64', func: '$f', args: ['i32.const -1'], expected: '0xc0010ff08badf00d' },
 ], {});
 
-if (wasmReftypesEnabled()) {
-    wasmFailValidateText(`(module
-        (func (param externref)
-          (select (local.get 0) (local.get 0) (i32.const 0))
-          drop
-        ))`,
-        /(untyped select)|(type mismatch: select only takes integral types)/);
+wasmFailValidateText(`(module
+    (func (param externref)
+      (select (local.get 0) (local.get 0) (i32.const 0))
+      drop
+    ))`,
+    /(untyped select)|(type mismatch: select only takes integral types)/);
 
-    wasmFailValidateText(`(module
-        (func (param funcref)
-          (select (local.get 0) (local.get 0) (i32.const 0))
-          drop
-        ))`,
-        /(untyped select)|(type mismatch: select only takes integral types)/);
+wasmFailValidateText(`(module
+    (func (param funcref)
+      (select (local.get 0) (local.get 0) (i32.const 0))
+      drop
+    ))`,
+    /(untyped select)|(type mismatch: select only takes integral types)/);
 
-    function testRefSelect(type, trueVal, falseVal) {
-        // Always true condition
-        var alwaysTrue = wasmEvalText(`
-        (module
-         (func (param i32 ${type} ${type}) (result ${type})
-          (select (result ${type})
-           local.get 1
-           local.get 2
-           (i32.const 1)
-          )
-         )
-         (export "" (func 0))
-        )
-        `, {}).exports[""];
+function testRefSelect(type, trueVal, falseVal) {
+    // Always true condition
+    var alwaysTrue = wasmEvalText(`
+    (module
+     (func (param i32 ${type} ${type}) (result ${type})
+      (select (result ${type})
+       local.get 1
+       local.get 2
+       (i32.const 1)
+      )
+     )
+     (export "" (func 0))
+    )
+    `, {}).exports[""];
 
-        assertEq(alwaysTrue(0, trueVal, falseVal), trueVal);
-        assertEq(alwaysTrue(1, trueVal, falseVal), trueVal);
-        assertEq(alwaysTrue(-1, trueVal, falseVal), trueVal);
+    assertEq(alwaysTrue(0, trueVal, falseVal), trueVal);
+    assertEq(alwaysTrue(1, trueVal, falseVal), trueVal);
+    assertEq(alwaysTrue(-1, trueVal, falseVal), trueVal);
 
-        // Always false condition
-        var alwaysFalse = wasmEvalText(`
-        (module
-         (func (param i32 ${type} ${type}) (result ${type})
-          (select (result ${type})
-           local.get 1
-           local.get 2
-           (i32.const 0)
-          )
-         )
-         (export "" (func 0))
-        )
-        `, {}).exports[""];
+    // Always false condition
+    var alwaysFalse = wasmEvalText(`
+    (module
+     (func (param i32 ${type} ${type}) (result ${type})
+      (select (result ${type})
+       local.get 1
+       local.get 2
+       (i32.const 0)
+      )
+     )
+     (export "" (func 0))
+    )
+    `, {}).exports[""];
 
-        assertEq(alwaysFalse(0, trueVal, falseVal), falseVal);
-        assertEq(alwaysFalse(1, trueVal, falseVal), falseVal);
-        assertEq(alwaysFalse(-1, trueVal, falseVal), falseVal);
+    assertEq(alwaysFalse(0, trueVal, falseVal), falseVal);
+    assertEq(alwaysFalse(1, trueVal, falseVal), falseVal);
+    assertEq(alwaysFalse(-1, trueVal, falseVal), falseVal);
 
-        // Variable condition
-        var f = wasmEvalText(`
-        (module
-         (func (param i32 ${type} ${type}) (result ${type})
-          (select (result ${type})
-            local.get 1
-            local.get 2
-           (local.get 0)
-          )
-         )
-         (export "" (func 0))
-        )
-        `, {}).exports[""];
+    // Variable condition
+    var f = wasmEvalText(`
+    (module
+     (func (param i32 ${type} ${type}) (result ${type})
+      (select (result ${type})
+        local.get 1
+        local.get 2
+       (local.get 0)
+      )
+     )
+     (export "" (func 0))
+    )
+    `, {}).exports[""];
 
-        assertEq(f(0, trueVal, falseVal), falseVal);
-        assertEq(f(1, trueVal, falseVal), trueVal);
-        assertEq(f(-1, trueVal, falseVal), trueVal);
+    assertEq(f(0, trueVal, falseVal), falseVal);
+    assertEq(f(1, trueVal, falseVal), trueVal);
+    assertEq(f(-1, trueVal, falseVal), trueVal);
 
-        wasmFullPass(`
-        (module
-         (func (param i32 ${type} ${type}) (result ${type})
-          (select (result ${type})
-           local.get 1
-           local.get 2
-           (local.get 0)
-          )
-         )
-         (export "run" (func 0))
-        )`,
-        trueVal,
-        {},
-        1,
-        trueVal,
-        falseVal);
-    }
-
-    testRefSelect('externref', {}, {});
-
-    let {export1, export2} = wasmEvalText(`(module
-        (func (export "export1"))
-        (func (export "export2"))
-    )`).exports;
-
-    testRefSelect('funcref', export1, export2);
+    wasmFullPass(`
+    (module
+     (func (param i32 ${type} ${type}) (result ${type})
+      (select (result ${type})
+       local.get 1
+       local.get 2
+       (local.get 0)
+      )
+     )
+     (export "run" (func 0))
+    )`,
+    trueVal,
+    {},
+    1,
+    trueVal,
+    falseVal);
 }
+
+testRefSelect('externref', {}, {});
+
+let {export1, export2} = wasmEvalText(`(module
+    (func (export "export1"))
+    (func (export "export2"))
+)`).exports;
+
+testRefSelect('funcref', export1, export2);

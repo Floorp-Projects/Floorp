@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmReftypesEnabled() || typeof WebAssembly.Global !== 'function'
+// |jit-test| skip-if: typeof WebAssembly.Global !== 'function'
 
 // Dummy object.
 function Baguette(calories) {

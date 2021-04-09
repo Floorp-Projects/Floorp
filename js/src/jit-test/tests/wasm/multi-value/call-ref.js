@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 let counter;
 function resetCounter() { counter = 0; }
 

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 // Tests wasm frame tracing.  Only tests for direct and indirect call chains
 // in wasm that lead to JS allocation.  Does not test any timeout or interrupt
 // related aspects.  The structure is
