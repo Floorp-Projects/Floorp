@@ -1716,6 +1716,11 @@ pub unsafe extern "C" fn wr_api_delete(dh: *mut DocumentHandle) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn wr_api_stop_render_backend(dh: &mut DocumentHandle) {
+    dh.api.stop_render_backend();
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn wr_api_shut_down(dh: &mut DocumentHandle) {
     dh.api.shut_down(true);
 }
