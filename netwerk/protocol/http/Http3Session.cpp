@@ -1634,6 +1634,7 @@ void Http3Session::SetSecInfo() {
   if (NS_SUCCEEDED(mHttp3Connection->GetSecInfo(&secInfo))) {
     mSocketControl->SetSSLVersionUsed(secInfo.version);
     mSocketControl->SetResumed(secInfo.resumed);
+    mSocketControl->SetNegotiatedNPN(secInfo.alpn);
 
     mSocketControl->SetInfo(secInfo.cipher, secInfo.version, secInfo.group,
                             secInfo.signature_scheme);
