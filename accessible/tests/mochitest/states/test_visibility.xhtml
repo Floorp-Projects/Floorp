@@ -4,6 +4,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="XUL elements visibility states testing">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -90,6 +91,15 @@
     addA11yLoadEvent(doTest);
   ]]>
   </script>
+  <html:style>
+  <![CDATA[
+     /* We want to control the height of the menu and which elements are visible,
+        and the Windows menu padding interferes with this. */
+     menupopup::part(arrowscrollbox) {
+       padding-block: 0 !important;
+     }
+     ]]>
+  </html:style>
 
   <hbox flex="1" style="overflow: auto;">
     <body xmlns="http://www.w3.org/1999/xhtml">
