@@ -15,13 +15,6 @@ const LoginInfo = new Components.Constructor(
   "init"
 );
 
-XPCOMUtils.defineLazyGetter(this, "autocompleteFeature", () => {
-  const { ExperimentFeature } = ChromeUtils.import(
-    "resource://nimbus/ExperimentAPI.jsm"
-  );
-  return new ExperimentFeature("password-autocomplete");
-});
-
 XPCOMUtils.defineLazyGetter(this, "LoginRelatedRealmsParent", () => {
   const { LoginRelatedRealmsParent } = ChromeUtils.import(
     "resource://gre/modules/LoginRelatedRealms.jsm"
@@ -33,6 +26,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   PasswordGenerator: "resource://gre/modules/PasswordGenerator.jsm",
@@ -341,7 +335,8 @@ class LoginManagerParent extends JSWindowActorParent {
         const profiles = await migrator.getSourceProfiles();
         if (
           profiles.length == 1 &&
-          autocompleteFeature.getValue()?.directMigrateSingleProfile
+          NimbusFeatures["password-autocomplete"].getValue()
+            ?.directMigrateSingleProfile
         ) {
           const loginAdded = new Promise(resolve => {
             const obs = (subject, topic, data) => {
