@@ -67,10 +67,6 @@ static void jsfuzz_uninit(JSContext* cx) {
   }
 }
 
-#ifdef LIBFUZZER
-static void jsfuzz_atexit() { JS_ShutDown(); }
-#endif
-
 int main(int argc, char* argv[]) {
   if (!JS_Init()) {
     fprintf(stderr, "Error: Call to jsfuzz_init() failed\n");
@@ -81,11 +77,6 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "Error: Call to jsfuzz_init() failed\n");
     return 1;
   }
-
-#ifdef LIBFUZZER
-  // This is required because libFuzzer can exit() in various cases
-  std::atexit(jsfuzz_atexit);
-#endif
 
   const char* fuzzerEnv = getenv("FUZZER");
   if (!fuzzerEnv) {
