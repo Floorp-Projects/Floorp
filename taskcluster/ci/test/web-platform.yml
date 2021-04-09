@@ -241,6 +241,7 @@ web-platform-tests-wdspec:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['trunk']
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
+                    linux.*64-asan/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
