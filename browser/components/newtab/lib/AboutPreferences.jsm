@@ -14,11 +14,8 @@ const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
 
-XPCOMUtils.defineLazyGetter(this, "aboutNewTabFeature", () => {
-  const { ExperimentFeature } = ChromeUtils.import(
-    "resource://nimbus/ExperimentAPI.jsm"
-  );
-  return new ExperimentFeature("newtab");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 // These "section" objects are formatted in a way to be similar to the ones from
@@ -151,7 +148,7 @@ this.AboutPreferences = class AboutPreferences {
       sections = this.handleDiscoverySettings(sections);
     }
 
-    const featureConfig = aboutNewTabFeature.getValue() || {};
+    const featureConfig = NimbusFeatures.newtab.getValue() || {};
 
     this.renderPreferences(window, [
       ...PREFS_BEFORE_SECTIONS(featureConfig),
