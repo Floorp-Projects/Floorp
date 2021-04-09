@@ -99,6 +99,7 @@ linux1804-64-asan/opt:
         - linux1804-tests
         - mochitest-webgpu
         - web-platform-tests
+        - web-platform-tests-wdspec-headless
 
 linux1804-64-tsan/opt:
     build-platform: linux64-tsan/opt

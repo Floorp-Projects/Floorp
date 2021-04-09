@@ -305,6 +305,7 @@ web-platform-tests-wdspec-headless:
                     linux.*64-qr/debug: ['trunk']
                     linux.*64(-shippable)?-qr/opt: ['trunk']
                     windows10-64(-shippable)?-qr/opt: ['trunk']
+                    linux.*64-asan/opt: ['trunk']
                     default: []
             default: built-projects
     tier:
