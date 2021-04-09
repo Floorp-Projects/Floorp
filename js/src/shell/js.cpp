@@ -4084,7 +4084,7 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
 #ifdef JS_CACHEIR_SPEW
-static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
+static bool CacheIRHealthReport(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   js::jit::CacheIRHealth cih;
@@ -4094,9 +4094,9 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
   // the environment variable is not set, AutoSpewChannel automatically
   // sets and unsets the proper channel for the duration of spewing
   // a health report.
-  AutoSpewChannel channel(cx, SpewChannel::RateMyCacheIR, script);
+  AutoSpewChannel channel(cx, SpewChannel::CacheIRHealthReport, script);
   if (!argc) {
-    // Calling RateMyCacheIR without any arguments will create health
+    // Calling CacheIRHealthReport without any arguments will create health
     // reports for all scripts in the zone.
     for (auto base = cx->zone()->cellIter<BaseScript>(); !base.done();
          base.next()) {
@@ -4105,7 +4105,7 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
       }
 
       script = base->asJSScript();
-      cih.rateScript(cx, script, js::jit::SpewContext::Shell);
+      cih.healthReportForScript(cx, script, js::jit::SpewContext::Shell);
     }
   } else {
     RootedValue value(cx, args.get(0));
@@ -4120,7 +4120,7 @@ static bool RateMyCacheIR(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    cih.rateScript(cx, script, js::jit::SpewContext::Shell);
+    cih.healthReportForScript(cx, script, js::jit::SpewContext::Shell);
   }
 
   args.rval().setUndefined();
@@ -9818,8 +9818,8 @@ TestAssertRecoveredOnBailout,
 "  size (in bytes)."),
 
 #ifdef JS_CACHEIR_SPEW
-  JS_FN_HELP("rateMyCacheIR", RateMyCacheIR, 0, 0,
-"rateMyCacheIR()",
+  JS_FN_HELP("cacheIRHealthReport", CacheIRHealthReport, 0, 0,
+"cacheIRHealthReport()",
 "  Show health rating of CacheIR stubs."),
 #endif
 

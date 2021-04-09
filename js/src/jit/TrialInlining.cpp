@@ -26,7 +26,7 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
   bool isRecursive = icScript->depth() > 0;
 
 #ifdef JS_CACHEIR_SPEW
-  if (cx->spewer().enabled(cx, script, SpewChannel::RateMyCacheIR)) {
+  if (cx->spewer().enabled(cx, script, SpewChannel::CacheIRHealthReport)) {
     for (uint32_t i = 0; i < icScript->numICEntries(); i++) {
       ICEntry& entry = icScript->icEntry(i);
 
@@ -39,7 +39,8 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
           uint32_t count = stub->enteredCount();
           if (count > 0 && sawNonZeroCount) {
             CacheIRHealth cih;
-            cih.rateIC(cx, &entry, script, SpewContext::TrialInlining);
+            cih.healthReportForIC(cx, &entry, script,
+                                  SpewContext::TrialInlining);
             break;
           }
 

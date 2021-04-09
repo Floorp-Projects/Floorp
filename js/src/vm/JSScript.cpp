@@ -4135,7 +4135,7 @@ void js::maybeSpewScriptFinalWarmUpCount(JSScript* script) {
     // spewer is not enabled, AutoSpewChannel automatically sets and unsets
     // the proper channel for the duration of spewing a health report's warm
     // up count.
-    AutoSpewChannel channel(cx, SpewChannel::RateMyCacheIR, script);
+    AutoSpewChannel channel(cx, SpewChannel::CacheIRHealthReport, script);
     jit::CacheIRHealth cih;
     cih.spewScriptFinalWarmUpCount(cx, scriptName, script, warmUpCount);
 

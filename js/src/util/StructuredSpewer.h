@@ -74,7 +74,7 @@ namespace js {
 #  define STRUCTURED_CHANNEL_LIST(_) \
     _(BaselineICStats)               \
     _(ScriptStats)                   \
-    _(RateMyCacheIR)
+    _(CacheIRHealthReport)
 
 // Structured spew channels
 enum class SpewChannel {
