@@ -332,8 +332,15 @@ Float SVGContentUtils::GetStrokeWidth(SVGElement* aElement,
     if (styleSVG->mStrokeWidth.IsContextValue()) {
       res = aContextPaint ? aContextPaint->GetStrokeWidth() : 1.0;
     } else {
-      res = SVGContentUtils::CoordToFloat(
-          aElement, styleSVG->mStrokeWidth.AsLengthPercentage());
+      auto& lp = styleSVG->mStrokeWidth.AsLengthPercentage();
+      if (lp.HasPercent() && aElement) {
+        auto counter =
+            aElement->IsSVGElement(nsGkAtoms::text)
+                ? UseCounter::eUseCounter_custom_PercentageStrokeWidthInSVGText
+                : UseCounter::eUseCounter_custom_PercentageStrokeWidthInSVG;
+        aElement->OwnerDoc()->SetUseCounter(counter);
+      }
+      res = SVGContentUtils::CoordToFloat(aElement, lp);
     }
   };
 
