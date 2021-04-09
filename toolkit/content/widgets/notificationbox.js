@@ -614,17 +614,6 @@
           link.href = filepath;
           this.shadowRoot.append(link);
         }
-        if (!this._rootConnected) {
-          this._rootConnected = true;
-          document.l10n.connectRoot(this.shadowRoot);
-        }
-      }
-
-      _insertNotificationFtl() {
-        if (!this._insertedNotificationFtl) {
-          this._insertedNotificationFtl = true;
-          this.addFtl(["toolkit/global/notification.ftl"]);
-        }
       }
 
       handleEvent(e) {
@@ -669,7 +658,6 @@
             if (!button.label && !localeId) {
               localeId = "notification-learnmore-default-label";
             }
-            this._insertNotificationFtl();
           }
 
           let buttonElem;
