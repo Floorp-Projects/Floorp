@@ -19,6 +19,7 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "MediaPipeline.h"
 #include "MediaPipelineFilter.h"
@@ -35,6 +36,8 @@
 #include "SharedBuffer.h"
 #include "MediaTransportHandler.h"
 #include "WebrtcCallWrapper.h"
+#include "PeerConnectionCtx.h"
+#include "WaitFor.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -45,6 +48,22 @@ MOZ_MTLOG_MODULE("transportbridge")
 static MtransportTestUtils* test_utils;
 
 namespace {
+class MainAsCurrent : public TaskQueueWrapper {
+ public:
+  MainAsCurrent()
+      : TaskQueueWrapper(MakeRefPtr<TaskQueue>(
+            do_AddRef(GetMainThreadEventTarget()), "MainAsCurrentTaskQueue")),
+        mSetter(this) {}
+  void Delete() override {
+    MOZ_RELEASE_ASSERT(!NS_IsMainThread(),
+                       "Releasing a main-thread-TaskQueue on main might hang");
+    TaskQueueWrapper::Delete();
+  }
+  ~MainAsCurrent() = default;
+
+ private:
+  CurrentTaskQueueSetter mSetter;
+};
 
 class FakeAudioTrack : public ProcessedMediaTrack {
  public:
@@ -259,18 +278,11 @@ class NoTrialsConfig : public webrtc::WebRtcKeyValueConfig {
 
 class TestAgent {
  public:
-  TestAgent(webrtc::SharedModuleThread* aModuleThread,
-            const webrtc::AudioState::Config& aAudioStateConfig,
-            webrtc::AudioDecoderFactory* aAudioDecoderFactory,
+  TestAgent(const RefPtr<SharedWebrtcState>& aSharedState,
             webrtc::WebRtcKeyValueConfig* aTrials)
       : audio_config_(109, "opus", 48000, 2, false),
-        call_(WebrtcCallWrapper::Create(
-            dom::RTCStatsTimestampMaker(),
-            MakeUnique<media::ShutdownBlockingTicket>(
-                u"WebrtcCallWrapper shutdown blocker"_ns,
-                NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
-            AbstractThread::MainThread(), aModuleThread, aAudioStateConfig,
-            aAudioDecoderFactory, aTrials)),
+        call_(WebrtcCallWrapper::Create(mozilla::dom::RTCStatsTimestampMaker(),
+                                        nullptr, aSharedState, aTrials)),
         audio_conduit_(
             AudioSessionConduit::Create(call_, test_utils->sts_target())),
         audio_pipeline_(),
@@ -359,16 +371,17 @@ class TestAgent {
 
 class TestAgentSend : public TestAgent {
  public:
-  TestAgentSend(webrtc::SharedModuleThread* aModuleThread,
-                const webrtc::AudioState::Config& aAudioStateConfig,
-                webrtc::AudioDecoderFactory* aAudioDecoderFactory,
+  TestAgentSend(const RefPtr<SharedWebrtcState>& aSharedState,
                 webrtc::WebRtcKeyValueConfig* aTrials)
-      : TestAgent(aModuleThread, aAudioStateConfig, aAudioDecoderFactory,
-                  aTrials) {
-    MediaConduitErrorCode err =
-        static_cast<AudioSessionConduit*>(audio_conduit_.get())
-            ->ConfigureSendMediaCodec(&audio_config_);
-    EXPECT_EQ(kMediaConduitNoError, err);
+      : TestAgent(aSharedState, aTrials) {
+    using Promise = MozPromise<MediaConduitErrorCode, bool, true>;
+    auto rv = WaitFor(InvokeAsync(call_->mCallThread, __func__, [&] {
+      return Promise::CreateAndResolve(
+          static_cast<AudioSessionConduit*>(audio_conduit_.get())
+              ->ConfigureSendMediaCodec(&audio_config_),
+          "TestAgentSend::ConfigureSendMediaCodec");
+    }));
+    EXPECT_EQ(kMediaConduitNoError, rv.unwrap());
 
     audio_track_ = new FakeAudioTrack();
   }
@@ -391,19 +404,20 @@ class TestAgentSend : public TestAgent {
 
 class TestAgentReceive : public TestAgent {
  public:
-  TestAgentReceive(webrtc::SharedModuleThread* aModuleThread,
-                   const webrtc::AudioState::Config& aAudioStateConfig,
-                   webrtc::AudioDecoderFactory* aAudioDecoderFactory,
+  TestAgentReceive(const RefPtr<SharedWebrtcState>& aSharedState,
                    webrtc::WebRtcKeyValueConfig* aTrials)
-      : TestAgent(aModuleThread, aAudioStateConfig, aAudioDecoderFactory,
-                  aTrials) {
+      : TestAgent(aSharedState, aTrials) {
     std::vector<UniquePtr<AudioCodecConfig>> codecs;
     codecs.emplace_back(new AudioCodecConfig(audio_config_));
 
-    MediaConduitErrorCode err =
-        static_cast<AudioSessionConduit*>(audio_conduit_.get())
-            ->ConfigureRecvMediaCodecs(codecs);
-    EXPECT_EQ(kMediaConduitNoError, err);
+    using Promise = MozPromise<MediaConduitErrorCode, bool, true>;
+    auto rv = WaitFor(InvokeAsync(call_->mCallThread, __func__, [&] {
+      return Promise::CreateAndResolve(
+          static_cast<AudioSessionConduit*>(audio_conduit_.get())
+              ->ConfigureRecvMediaCodecs(codecs),
+          "TestAgentReceive::ConfigureRecvMediaCodec");
+    }));
+    EXPECT_EQ(kMediaConduitNoError, rv.unwrap());
   }
 
   virtual void CreatePipeline(const std::string& aTransportId) {
@@ -453,19 +467,26 @@ webrtc::AudioState::Config CreateAudioStateConfig() {
 class MediaPipelineTest : public ::testing::Test {
  public:
   MediaPipelineTest()
-      : module_thread_(webrtc::SharedModuleThread::Create(
-            webrtc::ProcessThread::Create("SharedModThread"), nullptr)),
-        audio_state_config_(CreateAudioStateConfig()),
-        audio_decoder_factory_(webrtc::CreateBuiltinAudioDecoderFactory()),
+      : main_task_queue_(WrapUnique<TaskQueueWrapper>(new MainAsCurrent())),
+        shared_state_(MakeAndAddRef<SharedWebrtcState>(
+            AbstractThread::MainThread(), CreateAudioStateConfig(),
+            already_AddRefed(
+                webrtc::CreateBuiltinAudioDecoderFactory().release()))),
         trials_(new NoTrialsConfig()),
-        p1_(module_thread_.get(), audio_state_config_,
-            audio_decoder_factory_.get(), trials_.get()),
-        p2_(module_thread_.get(), audio_state_config_,
-            audio_decoder_factory_.get(), trials_.get()) {}
+        p1_(shared_state_, trials_.get()),
+        p2_(shared_state_, trials_.get()) {}
 
   ~MediaPipelineTest() {
     p1_.Shutdown();
     p2_.Shutdown();
+    // We release the MainAsCurrent TaskQueue wrapper off-main since it sits on
+    // top of main. It blocks the current thread during shutdown through
+    // TaskQueue::AwaitIdle, which will hang unless it's already idle.
+    NS_DispatchBackgroundTask(
+        NS_NewRunnableFunction(
+            "MainAsCurrent off-main deleter",
+            [tq = std::move(main_task_queue_)]() mutable { tq = nullptr; }),
+        NS_DISPATCH_SYNC);
   }
 
   static void SetUpTestCase() {
@@ -574,10 +595,10 @@ class MediaPipelineTest : public ::testing::Test {
   }
 
  protected:
-  const TaskQueueWrapper::MainAsCurrent main_as_current_;
-  const rtc::scoped_refptr<webrtc::SharedModuleThread> module_thread_;
-  const webrtc::AudioState::Config audio_state_config_;
-  const RefPtr<webrtc::AudioDecoderFactory> audio_decoder_factory_;
+  // main_task_queue has this type to make sure it goes through Delete() when
+  // we're destroyed.
+  UniquePtr<TaskQueueWrapper> main_task_queue_;
+  const RefPtr<SharedWebrtcState> shared_state_;
   const UniquePtr<webrtc::WebRtcKeyValueConfig> trials_;
   TestAgentSend p1_;
   TestAgentReceive p2_;

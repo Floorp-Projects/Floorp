@@ -14,7 +14,7 @@
 namespace mozilla {
 
 /**
- * A wrapper around Mozilla TaskQueues in the shape of libwebrtc a TaskQueue.
+ * A wrapper around Mozilla TaskQueues in the shape of a libwebrtc TaskQueue.
  *
  * Allows libwebrtc to use Mozilla threads where tooling, e.g. profiling, is set
  * up and just works.
@@ -25,26 +25,13 @@ namespace mozilla {
  */
 class TaskQueueWrapper : public webrtc::TaskQueueBase {
  public:
-  class MainAsCurrent {
-#ifdef RELEASE_OR_BETA
-#  error "We must not ship with this class. Main is not a worker thread."
-#endif
-   public:
-    MainAsCurrent() : mSetter(GetMainWorker()) {}
-    ~MainAsCurrent() = default;
-
-   private:
-    CurrentTaskQueueSetter mSetter;
-  };
-
-  static TaskQueueWrapper* GetMainWorker();
-
   explicit TaskQueueWrapper(RefPtr<TaskQueue> aTaskQueue)
       : mTaskQueue(std::move(aTaskQueue)) {}
   ~TaskQueueWrapper() = default;
 
   void Delete() override {
-    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(!mTaskQueue->IsOnCurrentThread(),
+               "TaskQueue::AwaitIdle must not be called on itself");
     // Must block this thread until shutdown is complete.
     {
       auto hasShutdown = mHasShutdown.Lock();

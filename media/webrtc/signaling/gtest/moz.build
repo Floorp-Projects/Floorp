@@ -21,6 +21,7 @@ if (
 ):
     LOCAL_INCLUDES += [
         "/dom/media",
+        "/dom/media/gtest",
         "/dom/media/webrtc",
         "/dom/media/webrtc/common",
         "/dom/media/webrtc/common/time_profiling",

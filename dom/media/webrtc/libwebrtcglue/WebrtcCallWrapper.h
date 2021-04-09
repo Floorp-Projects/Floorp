@@ -34,7 +34,7 @@ class WebrtcCallWrapper {
       const dom::RTCStatsTimestampMaker& aTimestampMaker,
       UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
       RefPtr<AbstractThread> aCallThread,
-      rtc::scoped_refptr<webrtc::SharedModuleThread> aModuleThread,
+      std::function<webrtc::SharedModuleThread*()> aModuleThreadGetter,
       const webrtc::AudioState::Config& aAudioStateConfig,
       webrtc::AudioDecoderFactory* aAudioDecoderFactory,
       webrtc::WebRtcKeyValueConfig* aTrials);

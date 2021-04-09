@@ -17,18 +17,19 @@ namespace mozilla {
     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
     const RefPtr<SharedWebrtcState>& aSharedState,
     webrtc::WebRtcKeyValueConfig* aTrials) {
-  return Create(aTimestampMaker, std::move(aShutdownTicket),
-                aSharedState->mCallWorkerThread.get(),
-                aSharedState->GetModuleThread(),
-                aSharedState->mAudioStateConfig,
-                aSharedState->mAudioDecoderFactory, aTrials);
+  return Create(
+      aTimestampMaker, std::move(aShutdownTicket),
+      aSharedState->mCallWorkerThread.get(),
+      [aSharedState] { return aSharedState->GetModuleThread(); },
+      aSharedState->mAudioStateConfig, aSharedState->mAudioDecoderFactory,
+      aTrials);
 }
 
 /* static */ RefPtr<WebrtcCallWrapper> WebrtcCallWrapper::Create(
     const dom::RTCStatsTimestampMaker& aTimestampMaker,
     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
     RefPtr<AbstractThread> aCallThread,
-    rtc::scoped_refptr<webrtc::SharedModuleThread> aModuleThread,
+    std::function<webrtc::SharedModuleThread*()> aModuleThreadGetter,
     const webrtc::AudioState::Config& aAudioStateConfig,
     webrtc::AudioDecoderFactory* aAudioDecoderFactory,
     webrtc::WebRtcKeyValueConfig* aTrials) {
@@ -47,9 +48,9 @@ namespace mozilla {
 
   wrapper->mCallThread->Dispatch(NS_NewRunnableFunction(
       __func__, [wrapper, config = std::move(config),
-                 moduleThread = std::move(aModuleThread)] {
+                 moduleThreadGetter = std::move(aModuleThreadGetter)] {
         wrapper->SetCall(
-            WrapUnique(webrtc::Call::Create(config, moduleThread)));
+            WrapUnique(webrtc::Call::Create(config, moduleThreadGetter())));
       }));
 
   return wrapper;
