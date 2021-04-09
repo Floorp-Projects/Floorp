@@ -7,7 +7,7 @@ const { PlacesTestUtils } = ChromeUtils.import(
 
 function promisePageActionPanelOpen(eventDict = {}) {
   let dwu = window.windowUtils;
-  return BrowserTestUtils.waitForCondition(() => {
+  return TestUtils.waitForCondition(() => {
     // Wait for the main page action button to become visible.  It's hidden for
     // some URIs, so depending on when this is called, it may not yet be quite
     // visible.  It's up to the caller to make sure it will be visible.
@@ -134,7 +134,7 @@ function promiseNodeVisible(node) {
     `promiseNodeVisible waiting, node.id=${node.id} node.localeName=${node.localName}\n`
   );
   let dwu = window.windowUtils;
-  return BrowserTestUtils.waitForCondition(() => {
+  return TestUtils.waitForCondition(() => {
     let bounds = dwu.getBoundsWithoutFlushing(node);
     if (bounds.width > 0 && bounds.height > 0) {
       info(
