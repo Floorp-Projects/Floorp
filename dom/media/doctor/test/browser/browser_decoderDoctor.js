@@ -94,9 +94,14 @@ async function test_decoder_doctor_notification(
         }
         ok(notification, "Got decoder-doctor-notification notification");
 
+        const protonInfobarsEnabled = Services.prefs.getBoolPref(
+          "browser.proton.infobars.enabled",
+          false
+        );
         is(
           notification.messageText.textContent,
-          notificationMessage + (gProton && isLink && label ? " " : ""),
+          notificationMessage +
+            (protonInfobarsEnabled && isLink && label ? " " : ""),
           "notification message should match expectation"
         );
 
