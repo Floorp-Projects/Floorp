@@ -85,7 +85,8 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
   void SetPrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
   void SetPrimaryDataOffer(zwp_primary_selection_offer_v1* aPrimaryDataOffer);
 
-  void TransferFastTrackClipboard(int aClipboardRequestNumber,
+  void TransferFastTrackClipboard(ClipboardDataType aDataType,
+                                  int aClipboardRequestNumber,
                                   GtkSelectionData* aSelectionData);
 
   virtual ~nsRetrievalContextWayland() override;

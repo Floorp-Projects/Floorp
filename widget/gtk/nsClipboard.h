@@ -23,6 +23,8 @@ extern mozilla::LazyLogModule gClipboardLog;
 #  define LOGCLIP(args)
 #endif /* MOZ_LOGGING */
 
+enum ClipboardDataType { CLIPBOARD_DATA, CLIPBOARD_TEXT, CLIPBOARD_TARGETS };
+
 class nsRetrievalContext {
  public:
   // Get actual clipboard content (GetClipboardData/GetClipboardText)

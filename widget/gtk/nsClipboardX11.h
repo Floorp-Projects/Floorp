@@ -10,8 +10,6 @@
 
 #include <gtk/gtk.h>
 
-enum ClipboardDataType { CLIPBOARD_DATA, CLIPBOARD_TEXT, CLIPBOARD_TARGETS };
-
 class nsRetrievalContextX11 : public nsRetrievalContext {
  public:
   enum State { INITIAL, COMPLETED, TIMED_OUT };
