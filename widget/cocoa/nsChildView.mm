@@ -1050,7 +1050,8 @@ nsresult nsChildView::SynthesizeNativeTouchpadDoubleTap(mozilla::LayoutDeviceInt
                                                         uint32_t aModifierFlags) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  DispatchDoubleTapGesture(TimeStamp::Now(), aPoint, static_cast<Modifiers>(aModifierFlags));
+  DispatchDoubleTapGesture(TimeStamp::Now(), aPoint - WidgetToScreenOffset(),
+                           static_cast<Modifiers>(aModifierFlags));
 
   return NS_OK;
 
