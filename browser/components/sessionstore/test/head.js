@@ -15,6 +15,10 @@ const HTTPROOT = ROOT.replace(
   "chrome://mochitests/content/",
   "http://example.com/"
 );
+const HTTPSROOT = ROOT.replace(
+  "chrome://mochitests/content/",
+  "https://example.com/"
+);
 
 const { SessionSaver } = ChromeUtils.import(
   "resource:///modules/sessionstore/SessionSaver.jsm"
@@ -715,4 +719,23 @@ function promiseOnHistoryReplaceEntry(browser) {
 
 function loadTestSubscript(filePath) {
   Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
+}
+
+function addCoopTask(aFile, aTest, aUrlRoot) {
+  async function taskToBeAdded() {
+    info(`File ${aFile} has COOP headers enabled`);
+    let filePath = `browser/browser/components/sessionstore/test/${aFile}`;
+    let url = aUrlRoot + `coopHeaderCommon.sjs?fileRoot=${filePath}`;
+    await aTest(url);
+  }
+  Object.defineProperty(taskToBeAdded, "name", { value: aTest.name });
+  add_task(taskToBeAdded);
+}
+
+function addNonCoopTask(aFile, aTest, aUrlRoot) {
+  async function taskToBeAdded() {
+    await aTest(aUrlRoot + aFile);
+  }
+  Object.defineProperty(taskToBeAdded, "name", { value: aTest.name });
+  add_task(taskToBeAdded);
 }

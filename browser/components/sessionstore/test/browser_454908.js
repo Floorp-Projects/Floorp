@@ -3,18 +3,36 @@
 
 "use strict";
 
-const URL = ROOT + "browser_454908_sample.html";
+if (gFissionBrowser) {
+  addCoopTask(
+    "browser_454908_sample.html",
+    test_dont_save_passwords,
+    HTTPSROOT
+  );
+}
+addNonCoopTask("browser_454908_sample.html", test_dont_save_passwords, ROOT);
+addNonCoopTask(
+  "browser_454908_sample.html",
+  test_dont_save_passwords,
+  HTTPROOT
+);
+addNonCoopTask(
+  "browser_454908_sample.html",
+  test_dont_save_passwords,
+  HTTPSROOT
+);
+
 const PASS = "pwd-" + Math.random();
 
 /**
  * Bug 454908 - Don't save/restore values of password fields.
  */
-add_task(async function test_dont_save_passwords() {
+async function test_dont_save_passwords(aURL) {
   // Make sure we do save form data.
   Services.prefs.clearUserPref("browser.sessionstore.privacy_level");
 
   // Add a tab with a password field.
-  let tab = BrowserTestUtils.addTab(gBrowser, URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, aURL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -44,4 +62,4 @@ add_task(async function test_dont_save_passwords() {
 
   // Cleanup.
   gBrowser.removeTab(tab);
-});
+}
