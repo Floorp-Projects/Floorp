@@ -136,6 +136,7 @@ bool WaylandDataOffer::RequestDataTransfer(const char* aMimeType, int fd) {
 static void data_offer_offer(void* data, struct wl_data_offer* wl_data_offer,
                              const char* type) {
   auto* offer = static_cast<DataOffer*>(data);
+  LOGCLIP(("Data offer %p add MIME %s\n", wl_data_offer, type));
   offer->AddMIMEType(type);
 }
 
@@ -194,6 +195,8 @@ bool PrimaryDataOffer::RequestDataTransfer(const char* aMimeType, int fd) {
 static void primary_data_offer(
     void* data, gtk_primary_selection_offer* primary_selection_offer,
     const char* mime_type) {
+  LOGCLIP(("Primary data offer %p add MIME %s\n", primary_selection_offer,
+           mime_type));
   auto* offer = static_cast<DataOffer*>(data);
   offer->AddMIMEType(mime_type);
 }
@@ -201,6 +204,8 @@ static void primary_data_offer(
 static void primary_data_offer(
     void* data, zwp_primary_selection_offer_v1* primary_selection_offer,
     const char* mime_type) {
+  LOGCLIP(("Primary data offer %p add MIME %s\n", primary_selection_offer,
+           mime_type));
   auto* offer = static_cast<DataOffer*>(data);
   offer->AddMIMEType(mime_type);
 }
@@ -530,8 +535,108 @@ nsRetrievalContextWayland::~nsRetrievalContextWayland(void) {
   g_hash_table_destroy(mActiveOffers);
 }
 
+struct FastTrackClipboard {
+  FastTrackClipboard(ClipboardDataType aDataType, int aClipboardRequestNumber,
+                     nsRetrievalContextWayland* aRetrievalContex)
+      : mClipboardRequestNumber(aClipboardRequestNumber),
+        mRetrievalContex(aRetrievalContex),
+        mDataType(aDataType) {}
+  int mClipboardRequestNumber;
+  nsRetrievalContextWayland* mRetrievalContex;
+  ClipboardDataType mDataType;
+};
+
+static void wayland_clipboard_contents_received(
+    GtkClipboard* clipboard, GtkSelectionData* selection_data, gpointer data) {
+  LOGCLIP(("wayland_clipboard_contents_received() selection_data = %p\n",
+           selection_data));
+  FastTrackClipboard* fastTrack = static_cast<FastTrackClipboard*>(data);
+  fastTrack->mRetrievalContex->TransferFastTrackClipboard(
+      fastTrack->mDataType, fastTrack->mClipboardRequestNumber, selection_data);
+  delete fastTrack;
+}
+
+void nsRetrievalContextWayland::TransferFastTrackClipboard(
+    ClipboardDataType aDataType, int aClipboardRequestNumber,
+    GtkSelectionData* aSelectionData) {
+  LOGCLIP(
+      ("nsRetrievalContextWayland::TransferFastTrackClipboard(), "
+       "aSelectionData = %p\n",
+       aSelectionData));
+
+  if (mClipboardRequestNumber != aClipboardRequestNumber) {
+    LOGCLIP(("    request number does not match!\n"));
+    NS_WARNING("Received obsoleted clipboard data!");
+  }
+  LOGCLIP(("    request number matches\n"));
+
+  int dataLength = gtk_selection_data_get_length(aSelectionData);
+  if (dataLength < 0) {
+    LOGCLIP(
+        ("    gtk_clipboard_request_contents() failed to get clipboard "
+         "data!\n"));
+    ReleaseClipboardData(mClipboardData);
+    return;
+  }
+
+  switch (aDataType) {
+    case CLIPBOARD_TARGETS: {
+      LOGCLIP(("    fastracking %d bytes of clipboard targets.\n", dataLength));
+      gint n_targets = 0;
+      GdkAtom* targets = nullptr;
+
+      if (!gtk_selection_data_get_targets(aSelectionData, &targets,
+                                          &n_targets) ||
+          !n_targets) {
+        ReleaseClipboardData(mClipboardData);
+      }
+
+      mClipboardData = reinterpret_cast<char*>(targets);
+      mClipboardDataLength = n_targets;
+      break;
+    }
+    case CLIPBOARD_DATA:
+    case CLIPBOARD_TEXT: {
+      LOGCLIP(("    fastracking %d bytes of data.\n", dataLength));
+      mClipboardDataLength = dataLength;
+      if (dataLength > 0) {
+        mClipboardData = reinterpret_cast<char*>(
+            g_malloc(sizeof(char) * (mClipboardDataLength + 1)));
+        memcpy(mClipboardData, gtk_selection_data_get_data(aSelectionData),
+               sizeof(char) * mClipboardDataLength);
+        mClipboardData[mClipboardDataLength] = '\0';
+        LOGCLIP(("    done, mClipboardData = %p\n", mClipboardData));
+      } else {
+        ReleaseClipboardData(mClipboardData);
+      }
+    }
+  }
+}
+
 GdkAtom* nsRetrievalContextWayland::GetTargets(int32_t aWhichClipboard,
                                                int* aTargetNum) {
+  /* If actual clipboard data is owned by us we don't need to go
+   * through Wayland but we ask Gtk+ to directly call data
+   * getter callback nsClipboard::SelectionGetEvent().
+   * see gtk_selection_convert() at gtk+/gtkselection.c.
+   */
+  GdkAtom selection = GetSelectionAtom(aWhichClipboard);
+  if (gdk_selection_owner_get(selection)) {
+    LOGCLIP(("  Asking for internal clipboard content.\n"));
+    mClipboardRequestNumber++;
+    gtk_clipboard_request_contents(
+        gtk_clipboard_get(selection), gdk_atom_intern("TARGETS", FALSE),
+        wayland_clipboard_contents_received,
+        new FastTrackClipboard(CLIPBOARD_TARGETS, mClipboardRequestNumber,
+                               this));
+    *aTargetNum = mClipboardDataLength;
+    GdkAtom* targets = static_cast<GdkAtom*>((void*)mClipboardData);
+    // We don't hold the target list internally but we transfer the ownership.
+    mClipboardData = nullptr;
+    mClipboardDataLength = 0;
+    return targets;
+  }
+
   if (GetSelectionAtom(aWhichClipboard) == GDK_SELECTION_CLIPBOARD) {
     if (mClipboardOffer) {
       return mClipboardOffer->GetTargets(aTargetNum);
@@ -544,62 +649,6 @@ GdkAtom* nsRetrievalContextWayland::GetTargets(int32_t aWhichClipboard,
 
   *aTargetNum = 0;
   return nullptr;
-}
-
-struct FastTrackClipboard {
-  FastTrackClipboard(int aClipboardRequestNumber,
-                     nsRetrievalContextWayland* aRetrievalContex)
-      : mClipboardRequestNumber(aClipboardRequestNumber),
-        mRetrievalContex(aRetrievalContex) {}
-
-  int mClipboardRequestNumber;
-  nsRetrievalContextWayland* mRetrievalContex;
-};
-
-static void wayland_clipboard_contents_received(
-    GtkClipboard* clipboard, GtkSelectionData* selection_data, gpointer data) {
-  LOGCLIP(("wayland_clipboard_contents_received() selection_data = %p\n",
-           selection_data));
-  FastTrackClipboard* fastTrack = static_cast<FastTrackClipboard*>(data);
-  fastTrack->mRetrievalContex->TransferFastTrackClipboard(
-      fastTrack->mClipboardRequestNumber, selection_data);
-  delete fastTrack;
-}
-
-void nsRetrievalContextWayland::TransferFastTrackClipboard(
-    int aClipboardRequestNumber, GtkSelectionData* aSelectionData) {
-  LOGCLIP(
-      ("nsRetrievalContextWayland::TransferFastTrackClipboard(), "
-       "aSelectionData = %p\n",
-       aSelectionData));
-
-  int dataLength = gtk_selection_data_get_length(aSelectionData);
-  if (dataLength < 0) {
-    LOGCLIP(
-        ("    gtk_clipboard_request_contents() failed to get clipboard "
-         "data!\n"));
-    ReleaseClipboardData(mClipboardData);
-    return;
-  }
-
-  if (mClipboardRequestNumber == aClipboardRequestNumber) {
-    LOGCLIP(("    request number matches\n"));
-    LOGCLIP(("    fastracking %d bytes of data.\n", dataLength));
-    mClipboardDataLength = dataLength;
-    if (dataLength > 0) {
-      mClipboardData = reinterpret_cast<char*>(
-          g_malloc(sizeof(char) * (mClipboardDataLength + 1)));
-      memcpy(mClipboardData, gtk_selection_data_get_data(aSelectionData),
-             sizeof(char) * mClipboardDataLength);
-      mClipboardData[mClipboardDataLength] = '\0';
-      LOGCLIP(("    done, mClipboardData = %p\n", mClipboardData));
-    } else {
-      ReleaseClipboardData(mClipboardData);
-    }
-  } else {
-    LOGCLIP(("    request number does not match!\n"));
-    NS_WARNING("Received obsoleted clipboard data!");
-  }
 }
 
 const char* nsRetrievalContextWayland::GetClipboardData(
@@ -622,7 +671,7 @@ const char* nsRetrievalContextWayland::GetClipboardData(
     gtk_clipboard_request_contents(
         gtk_clipboard_get(selection), gdk_atom_intern(aMimeType, FALSE),
         wayland_clipboard_contents_received,
-        new FastTrackClipboard(mClipboardRequestNumber, this));
+        new FastTrackClipboard(CLIPBOARD_DATA, mClipboardRequestNumber, this));
   } else {
     LOGCLIP(("  Asking for remote clipboard content.\n"));
     const auto& dataOffer =
