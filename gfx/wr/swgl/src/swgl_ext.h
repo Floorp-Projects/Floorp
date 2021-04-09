@@ -481,8 +481,9 @@ static int blendTextureNearestFast(S sampler, vec2 uv, int span,
   // Calculate the row pointer within the buffer, clamping to within valid row
   // bounds.
   P* row =
-      &sampler->buf[clamp(clampCoord(i.y, sampler->height), minUV.y, maxUV.y) *
-                    sampler->stride];
+      &((P*)sampler
+            ->buf)[clamp(clampCoord(i.y, sampler->height), minUV.y, maxUV.y) *
+                   sampler->stride];
   // Find clamped X bounds within the row.
   int minX = clamp(minUV.x, 0, sampler->width - 1);
   int maxX = clamp(maxUV.x, minX, sampler->width - 1);
@@ -518,7 +519,8 @@ static int blendTextureNearestFast(S sampler, vec2 uv, int span,
   // If we still have samples left above the valid sample bounds, then we again
   // need to fill this section with a constant clamped sample.
   if (curX < endX) {
-    auto src = applyColor(unpack(bit_cast<packed_type>(U32(row[maxX]))), color);
+    auto src =
+        applyColor(unpack(bit_cast<packed_type>(V4<P>(row[maxX]))), color);
     commit_solid_span<BLEND>(buf, src, endX - curX);
   }
   return span;

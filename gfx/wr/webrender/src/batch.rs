@@ -3383,7 +3383,7 @@ pub struct ClipBatchList {
     pub slow_rectangles: Vec<ClipMaskInstanceRect>,
     pub fast_rectangles: Vec<ClipMaskInstanceRect>,
     /// Image draws apply the image masking.
-    pub images: FastHashMap<TextureSource, Vec<ClipMaskInstanceImage>>,
+    pub images: FastHashMap<(TextureSource, Option<DeviceIntRect>), Vec<ClipMaskInstanceImage>>,
     pub box_shadows: FastHashMap<TextureSource, Vec<ClipMaskInstanceBoxShadow>>,
 }
 
@@ -3586,11 +3586,26 @@ impl ClipBatcher {
                 spatial_tree,
             );
 
-            let prim_transform_id = transforms.get_id(
-                root_spatial_node_index,
-                ROOT_SPATIAL_NODE_INDEX,
-                spatial_tree,
-            );
+            // For clip mask images, we need to map from the primitive's layout space to
+            // the target space, as the cs_clip_image shader needs to forward transform
+            // the local image bounds, rather than backwards transform the target bounds
+            // as in done in write_clip_tile_vertex.
+            let prim_transform_id = match clip_node.item.kind {
+                ClipItemKind::Image { .. } => {
+                    transforms.get_id(
+                        clip_instance.spatial_node_index,
+                        root_spatial_node_index,
+                        spatial_tree,
+                    )
+                }
+                _ => {
+                    transforms.get_id(
+                        root_spatial_node_index,
+                        ROOT_SPATIAL_NODE_INDEX,
+                        spatial_tree,
+                    )
+                }
+            };
 
             let common = ClipMaskInstanceCommon {
                 sub_rect: DeviceRect::new(
@@ -3612,7 +3627,14 @@ impl ClipBatcher {
                         tile: None,
                     };
 
-                    let mut add_image = |request: ImageRequest, local_tile_rect: LayoutRect, sub_rect: DeviceRect| {
+                    let map_local_to_world = SpaceMapper::new_with_target(
+                        ROOT_SPATIAL_NODE_INDEX,
+                        clip_instance.spatial_node_index,
+                        WorldRect::max_rect(),
+                        spatial_tree,
+                    );
+
+                    let mut add_image = |request: ImageRequest, tile_rect: LayoutRect, sub_rect: DeviceRect| {
                         let cache_item = match resource_cache.get_cached_image(request) {
                             Ok(item) => item,
                             Err(..) => {
@@ -3622,9 +3644,33 @@ impl ClipBatcher {
                             }
                         };
 
+                        // If the primitive transform is axis aligned, we can skip any need for scissoring
+                        // by clipping the local clip rect with the backwards transformed target bounds.
+                        // If it is not axis-aligned, then we pass the local clip rect through unmodified
+                        // to the shader and also set up a scissor rect for the overall target bounds to
+                        // ensure nothing is drawn outside the target.
+                        let (local_rect, scissor_rect) =
+                            if prim_transform_id.transform_kind() == TransformedRectKind::AxisAligned {
+                                let world_rect =
+                                    sub_rect.translate(actual_rect.origin.to_vector()) / global_device_pixel_scale;
+                                (map_local_to_world
+                                    .unmap(&world_rect)
+                                    .expect("bug: should always map as axis-aligned")
+                                    .intersection(&rect)
+                                    .unwrap_or_default(),
+                                 None)
+                            } else {
+                                (rect,
+                                 Some(common.sub_rect
+                                    .translate(task_origin.to_vector())
+                                    .round_out()
+                                    .to_i32()))
+                            };
+
+
                         self.get_batch_list(is_first_clip)
                             .images
-                            .entry(cache_item.texture_id)
+                            .entry((cache_item.texture_id, scissor_rect))
                             .or_insert_with(Vec::new)
                             .push(ClipMaskInstanceImage {
                                 common: ClipMaskInstanceCommon {
@@ -3632,8 +3678,8 @@ impl ClipBatcher {
                                     ..common
                                 },
                                 resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
-                                tile_rect: local_tile_rect,
-                                local_rect: rect,
+                                tile_rect,
+                                local_rect,
                             });
                     };
 
@@ -3642,12 +3688,6 @@ impl ClipBatcher {
                             let clip_spatial_node = &spatial_tree.spatial_nodes[clip_instance.spatial_node_index.0 as usize];
                             let clip_is_axis_aligned = clip_spatial_node.coordinate_system_id == CoordinateSystemId::root();
                             let sub_rect_bounds = actual_rect.size.into();
-                            let map_local_to_world = SpaceMapper::new_with_target(
-                                ROOT_SPATIAL_NODE_INDEX,
-                                clip_instance.spatial_node_index,
-                                WorldRect::max_rect(),
-                                spatial_tree,
-                            );
 
                             for tile in tiles {
                                 let tile_sub_rect = if clip_is_axis_aligned {
