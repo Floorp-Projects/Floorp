@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals catcher, assertIsBlankDocument */
+/* globals catcher, assertIsBlankDocument, browser */
 
 "use strict";
 
@@ -19,36 +19,42 @@ this.clipboard = (function() {
       element.style.width = "1px";
       element.style.height = "1px";
       element.style.display = "block";
-      element.addEventListener("load", catcher.watchFunction(() => {
-        try {
-          const doc = element.contentDocument;
-          assertIsBlankDocument(doc);
-          const el = doc.createElement("textarea");
-          doc.body.appendChild(el);
-          el.value = text;
-          if (!text) {
-            const exc = new Error("Clipboard copy given empty text");
-            exc.noPopup = true;
-            catcher.unhandled(exc);
+      element.addEventListener(
+        "load",
+        catcher.watchFunction(() => {
+          try {
+            const doc = element.contentDocument;
+            assertIsBlankDocument(doc);
+            const el = doc.createElement("textarea");
+            doc.body.appendChild(el);
+            el.value = text;
+            if (!text) {
+              const exc = new Error("Clipboard copy given empty text");
+              exc.noPopup = true;
+              catcher.unhandled(exc);
+            }
+            el.select();
+            if (doc.activeElement !== el) {
+              const unhandledTag = doc.activeElement
+                ? doc.activeElement.tagName
+                : "No active element";
+              const exc = new Error("Clipboard el.select failed");
+              exc.activeElement = unhandledTag;
+              exc.noPopup = true;
+              catcher.unhandled(exc);
+            }
+            const copied = doc.execCommand("copy");
+            if (!copied) {
+              catcher.unhandled(new Error("Clipboard copy failed"));
+            }
+            el.remove();
+            resolve(copied);
+          } finally {
+            element.remove();
           }
-          el.select();
-          if (doc.activeElement !== el) {
-            const unhandledTag = doc.activeElement ? doc.activeElement.tagName : "No active element";
-            const exc = new Error("Clipboard el.select failed");
-            exc.activeElement = unhandledTag;
-            exc.noPopup = true;
-            catcher.unhandled(exc);
-          }
-          const copied = doc.execCommand("copy");
-          if (!copied) {
-            catcher.unhandled(new Error("Clipboard copy failed"));
-          }
-          el.remove();
-          resolve(copied);
-        } finally {
-          element.remove();
-        }
-      }), {once: true});
+        }),
+        { once: true }
+      );
       document.body.appendChild(element);
     });
   };
