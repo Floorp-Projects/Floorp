@@ -14898,22 +14898,6 @@ static void CmpI64x2(MacroAssembler& masm, Assembler::Condition cond,
 }
 #  endif  // JS_CODEGEN_X86 || JS_CODEGEN_X64
 
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-static void CmpUI8x16(MacroAssembler& masm, Assembler::Condition cond,
-                      RegV128 rs, RegV128 rsd, RegV128 temp1, RegV128 temp2) {
-  masm.unsignedCompareInt8x16(cond, rs, rsd, temp1, temp2);
-}
-
-static void CmpUI16x8(MacroAssembler& masm, Assembler::Condition cond,
-                      RegV128 rs, RegV128 rsd, RegV128 temp1, RegV128 temp2) {
-  masm.unsignedCompareInt16x8(cond, rs, rsd, temp1, temp2);
-}
-
-static void CmpUI32x4(MacroAssembler& masm, Assembler::Condition cond,
-                      RegV128 rs, RegV128 rsd, RegV128 temp1, RegV128 temp2) {
-  masm.unsignedCompareInt32x4(cond, rs, rsd, temp1, temp2);
-}
-#  else
 static void CmpUI8x16(MacroAssembler& masm, Assembler::Condition cond,
                       RegV128 rs, RegV128 rsd) {
   masm.compareInt8x16(cond, rs, rsd);
@@ -14928,7 +14912,6 @@ static void CmpUI32x4(MacroAssembler& masm, Assembler::Condition cond,
                       RegV128 rs, RegV128 rsd) {
   masm.compareInt32x4(cond, rs, rsd);
 }
-#  endif
 
 static void CmpF32x4(MacroAssembler& masm, Assembler::Condition cond,
                      RegV128 rs, RegV128 rsd) {
