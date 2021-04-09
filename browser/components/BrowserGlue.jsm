@@ -1024,7 +1024,7 @@ BrowserGlue.prototype = {
         Services.console.reset();
         break;
       case "restart-in-safe-mode":
-        this._onSafeModeRestart();
+        this._onSafeModeRestart(subject);
         break;
       case "quit-application-requested":
         this._onQuitRequest(subject, data);
@@ -1419,7 +1419,7 @@ BrowserGlue.prototype = {
     }
   },
 
-  _onSafeModeRestart: function BG_onSafeModeRestart() {
+  async _onSafeModeRestart(window) {
     // prompt the user to confirm
     let productName = gBrandBundle.GetStringFromName("brandShortName");
     let strings = gBrowserBundle;
@@ -1438,8 +1438,9 @@ BrowserGlue.prototype = {
       Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL +
       Services.prompt.BUTTON_POS_0_DEFAULT;
 
-    let rv = Services.prompt.confirmEx(
-      null,
+    let rv = await Services.prompt.asyncConfirmEx(
+      window.browsingContext,
+      Ci.nsIPrompt.MODAL_TYPE_INTERNAL_WINDOW,
       promptTitle,
       promptMessage,
       buttonFlags,
@@ -1449,7 +1450,7 @@ BrowserGlue.prototype = {
       null,
       {}
     );
-    if (rv != 0) {
+    if (rv.get("buttonNumClicked") != 0) {
       return;
     }
 
