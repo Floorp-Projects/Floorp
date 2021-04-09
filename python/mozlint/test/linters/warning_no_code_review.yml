@@ -1,0 +1,12 @@
+---
+WarningNoCodeReviewLinter:
+    description: >-
+        Make sure the string foobar never appears in browser js
+        files because it is bad, but not too bad (just a warning)
+    rule: no-foobar-no-code-review
+    level: warning
+    include: ['.']
+    type: string
+    extensions: ['.js', 'jsm']
+    payload: foobar
+    code_review_warnings: false

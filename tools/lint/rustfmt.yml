@@ -19,4 +19,3 @@ rust:
         - 'tools/lint/rust/**'
     type: external
     payload: rust:lint
-    code_review_warnings: true
