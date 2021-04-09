@@ -568,7 +568,11 @@
       connectedCallback() {
         this.toggleAttribute("dismissable", true);
         this.closeButton.classList.add("notification-close");
-        this.shadowRoot.querySelector(".container").classList.add("infobar");
+
+        this.container = this.shadowRoot.querySelector(".container");
+        this.container.classList.add("infobar");
+        this.setAlertRole();
+
         let messageContent = this.shadowRoot.querySelector(".content");
         messageContent.classList.add("notification-content");
 
@@ -603,6 +607,17 @@
         this.control.removeNotification(this);
       }
 
+      setAlertRole() {
+        // Wait a little for this to render before setting the role for more
+        // consistent alerts to screen readers.
+        this.container.removeAttribute("role");
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            this.container.setAttribute("role", "alert");
+          });
+        });
+      }
+
       handleEvent(e) {
         if ("buttonInfo" in e.target) {
           let { buttonInfo } = e.target;
@@ -631,6 +646,7 @@
 
       set label(value) {
         this.messageText.textContent = value;
+        this.setAlertRole();
       }
 
       setButtons(buttons) {
