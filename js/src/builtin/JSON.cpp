@@ -529,6 +529,38 @@ static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
   return scx->sb.append('}');
 }
 
+// For JSON.stringify and JSON.parse with a reviver function, we need to know
+// the length of an object for which JS::IsArray returned true. This must be
+// either an ArrayObject or a proxy wrapping one.
+static MOZ_ALWAYS_INLINE bool GetLengthPropertyForArray(JSContext* cx,
+                                                        HandleObject obj,
+                                                        uint32_t* lengthp) {
+  if (MOZ_LIKELY(obj->is<ArrayObject>())) {
+    *lengthp = obj->as<ArrayObject>().length();
+    return true;
+  }
+
+  MOZ_ASSERT(obj->is<ProxyObject>());
+
+  uint64_t len = 0;
+  if (!GetLengthProperty(cx, obj, &len)) {
+    return false;
+  }
+
+  // A scripted proxy wrapping an array can return a length value larger than
+  // UINT32_MAX. Stringification will likely report an OOM in this case. Match
+  // other JS engines and report an early error in this case, although
+  // technically this is observable, for example when stringifying with a
+  // replacer function.
+  if (len > UINT32_MAX) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
+  *lengthp = uint32_t(len);
+  return true;
+}
+
 /* ES5 15.12.3 JA. */
 static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
   /*
@@ -553,7 +585,7 @@ static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
 
   /* Step 6. */
   uint32_t length;
-  if (!GetLengthProperty(cx, obj, &length)) {
+  if (!GetLengthPropertyForArray(cx, obj, &length)) {
     return false;
   }
 
@@ -745,7 +777,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
 
       /* Step 4b(iii)(2-3). */
       uint32_t len;
-      if (!GetLengthProperty(cx, replacer, &len)) {
+      if (!GetLengthPropertyForArray(cx, replacer, &len)) {
         return false;
       }
 
@@ -915,7 +947,7 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
     if (isArray) {
       /* Step 2a(ii). */
       uint32_t length;
-      if (!GetLengthProperty(cx, obj, &length)) {
+      if (!GetLengthPropertyForArray(cx, obj, &length)) {
         return false;
       }
 
