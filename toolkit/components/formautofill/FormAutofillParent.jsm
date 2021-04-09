@@ -217,7 +217,7 @@ let FormAutofillStatus = {
 
   onCloseWindow() {},
 
-  observe(subject, topic, data) {
+  async observe(subject, topic, data) {
     log.debug("observe:", topic, "with data:", data);
     switch (topic) {
       case "privacy-pane-loaded": {
@@ -243,7 +243,7 @@ let FormAutofillStatus = {
           break;
         }
 
-        this.updateSavedFieldNames();
+        await this.updateSavedFieldNames();
         break;
       }
 
