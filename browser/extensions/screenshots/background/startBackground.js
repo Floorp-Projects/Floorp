@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* globals browser, main, communication, manifest */
+
 /* This file handles:
      clicks on the WebExtension page action
      browser.contextMenus.onClicked
@@ -10,6 +11,7 @@
    and loads the rest of the background page in response to those events, forwarding
    the events to main.onClicked, main.onClickedContextMenu, or communication.onMessage
 */
+
 const startTime = Date.now();
 
 // Set up to be able to use fluent:
@@ -27,14 +29,16 @@ const startTime = Date.now();
 
 this.getStrings = async function(ids) {
   if (document.readyState != "complete") {
-    await new Promise(resolve => window.addEventListener("load", resolve, {once: true}));
+    await new Promise(resolve =>
+      window.addEventListener("load", resolve, { once: true })
+    );
   }
   await document.l10n.ready;
   return document.l10n.formatValues(ids);
-}
+};
 
 this.startBackground = (function() {
-  const exports = {startTime};
+  const exports = { startTime };
 
   const backgroundScripts = [
     "log.js",
@@ -54,40 +58,54 @@ this.startBackground = (function() {
     "background/main.js",
   ];
 
-  browser.experiments.screenshots.onScreenshotCommand.addListener(async (isContextMenuClick) => {
-    try {
-      let [[tab]] = await Promise.all([
-        browser.tabs.query({currentWindow: true, active: true}),
-        loadIfNecessary(),
-      ]);
-      isContextMenuClick ? main.onClickedContextMenu(tab) : main.onClicked(tab);
-    } catch (error) {
-      console.error("Error loading Screenshots:", error);
+  browser.experiments.screenshots.onScreenshotCommand.addListener(
+    async isContextMenuClick => {
+      try {
+        let [[tab]] = await Promise.all([
+          browser.tabs.query({ currentWindow: true, active: true }),
+          loadIfNecessary(),
+        ]);
+        isContextMenuClick
+          ? main.onClickedContextMenu(tab)
+          : main.onClicked(tab);
+      } catch (error) {
+        console.error("Error loading Screenshots:", error);
+      }
     }
-  });
+  );
 
-  browser.commands.onCommand.addListener((cmd) => {
+  browser.commands.onCommand.addListener(cmd => {
     if (cmd !== "take-screenshot") {
       return;
     }
-    loadIfNecessary().then(() => {
-      browser.tabs.query({currentWindow: true, active: true}).then((tabs) => {
-        const activeTab = tabs[0];
-        main.onCommand(activeTab);
-      }).catch((error) => {
-        throw error;
+    loadIfNecessary()
+      .then(() => {
+        browser.tabs
+          .query({ currentWindow: true, active: true })
+          .then(tabs => {
+            const activeTab = tabs[0];
+            main.onCommand(activeTab);
+          })
+          .catch(error => {
+            throw error;
+          });
+      })
+      .catch(error => {
+        console.error(
+          "Error toggling Screenshots via keyboard shortcut: ",
+          error
+        );
       });
-    }).catch((error) => {
-      console.error("Error toggling Screenshots via keyboard shortcut: ", error);
-    });
   });
 
   browser.runtime.onMessage.addListener((req, sender, sendResponse) => {
-    loadIfNecessary().then(() => {
-      return communication.onMessage(req, sender, sendResponse);
-    }).catch((error) => {
-      console.error("Error loading Screenshots:", error);
-    });
+    loadIfNecessary()
+      .then(() => {
+        return communication.onMessage(req, sender, sendResponse);
+      })
+      .catch(error => {
+        console.error("Error loading Screenshots:", error);
+      });
     return true;
   });
 
@@ -98,7 +116,7 @@ this.startBackground = (function() {
       return loadedPromise;
     }
     loadedPromise = Promise.resolve();
-    backgroundScripts.forEach((script) => {
+    backgroundScripts.forEach(script => {
       loadedPromise = loadedPromise.then(() => {
         return new Promise((resolve, reject) => {
           const tag = document.createElement("script");
@@ -106,7 +124,7 @@ this.startBackground = (function() {
           tag.onload = () => {
             resolve();
           };
-          tag.onerror = (error) => {
+          tag.onerror = error => {
             const exc = new Error(`Error loading script: ${error.message}`);
             exc.scriptName = script;
             reject(exc);
