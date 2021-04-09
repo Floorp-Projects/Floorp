@@ -29,14 +29,17 @@ XPCOMUtils.defineLazyGetter(this, "fetchSchema", async () => {
 
 const REMOTE_CONFIGURATION = Object.freeze({
   id: "aboutwelcome",
-  description: "Content for the about:welcome page",
   configurations: [
     {
+      slug: "non-matching-configuration",
+      description: "This configuration does not match because of targeting.",
       variables: { skipFocus: false, remoteValue: false },
       enabled: false,
       targeting: "false",
     },
     {
+      slug: "matching-configuration",
+      description: "This configuration will match targeting.",
       variables: { skipFocus: true, remoteValue: true },
       enabled: true,
       targeting: "true",
