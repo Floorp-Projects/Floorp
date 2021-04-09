@@ -2450,18 +2450,16 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.compareInt8x16(Assembler::GreaterThanOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I8x16LtU:
-      masm.unsignedCompareInt8x16(Assembler::Below, rhs, lhsDest, temp1, temp2);
+      masm.compareInt8x16(Assembler::Below, rhs, lhsDest);
       break;
     case wasm::SimdOp::I8x16GtU:
-      masm.unsignedCompareInt8x16(Assembler::Above, rhs, lhsDest, temp1, temp2);
+      masm.compareInt8x16(Assembler::Above, rhs, lhsDest);
       break;
     case wasm::SimdOp::I8x16LeU:
-      masm.unsignedCompareInt8x16(Assembler::BelowOrEqual, rhs, lhsDest, temp1,
-                                  temp2);
+      masm.compareInt8x16(Assembler::BelowOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I8x16GeU:
-      masm.unsignedCompareInt8x16(Assembler::AboveOrEqual, rhs, lhsDest, temp1,
-                                  temp2);
+      masm.compareInt8x16(Assembler::AboveOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I16x8Eq:
       masm.compareInt16x8(Assembler::Equal, rhs, lhsDest);
@@ -2482,18 +2480,16 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.compareInt16x8(Assembler::GreaterThanOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I16x8LtU:
-      masm.unsignedCompareInt16x8(Assembler::Below, rhs, lhsDest, temp1, temp2);
+      masm.compareInt16x8(Assembler::Below, rhs, lhsDest);
       break;
     case wasm::SimdOp::I16x8GtU:
-      masm.unsignedCompareInt16x8(Assembler::Above, rhs, lhsDest, temp1, temp2);
+      masm.compareInt16x8(Assembler::Above, rhs, lhsDest);
       break;
     case wasm::SimdOp::I16x8LeU:
-      masm.unsignedCompareInt16x8(Assembler::BelowOrEqual, rhs, lhsDest, temp1,
-                                  temp2);
+      masm.compareInt16x8(Assembler::BelowOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I16x8GeU:
-      masm.unsignedCompareInt16x8(Assembler::AboveOrEqual, rhs, lhsDest, temp1,
-                                  temp2);
+      masm.compareInt16x8(Assembler::AboveOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4Eq:
       masm.compareInt32x4(Assembler::Equal, rhs, lhsDest);
@@ -2514,18 +2510,16 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.compareInt32x4(Assembler::GreaterThanOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4LtU:
-      masm.unsignedCompareInt32x4(Assembler::Below, rhs, lhsDest, temp1, temp2);
+      masm.compareInt32x4(Assembler::Below, rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4GtU:
-      masm.unsignedCompareInt32x4(Assembler::Above, rhs, lhsDest, temp1, temp2);
+      masm.compareInt32x4(Assembler::Above, rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4LeU:
-      masm.unsignedCompareInt32x4(Assembler::BelowOrEqual, rhs, lhsDest, temp1,
-                                  temp2);
+      masm.compareInt32x4(Assembler::BelowOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4GeU:
-      masm.unsignedCompareInt32x4(Assembler::AboveOrEqual, rhs, lhsDest, temp1,
-                                  temp2);
+      masm.compareInt32x4(Assembler::AboveOrEqual, rhs, lhsDest);
       break;
     case wasm::SimdOp::I64x2Eq:
       masm.compareForEqualityInt64x2(Assembler::Equal, rhs, lhsDest);

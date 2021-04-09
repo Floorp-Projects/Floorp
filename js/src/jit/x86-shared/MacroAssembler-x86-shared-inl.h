@@ -2235,15 +2235,6 @@ void MacroAssembler::compareInt8x16(Assembler::Condition cond,
   MacroAssemblerX86Shared::compareInt8x16(cond, rhs, lhsDest);
 }
 
-void MacroAssembler::unsignedCompareInt8x16(Assembler::Condition cond,
-                                            FloatRegister rhs,
-                                            FloatRegister lhsDest,
-                                            FloatRegister temp1,
-                                            FloatRegister temp2) {
-  MacroAssemblerX86Shared::unsignedCompareInt8x16(lhsDest, Operand(rhs), cond,
-                                                  lhsDest, temp1, temp2);
-}
-
 void MacroAssembler::compareInt16x8(Assembler::Condition cond,
                                     FloatRegister rhs, FloatRegister lhsDest) {
   MacroAssemblerX86Shared::compareInt16x8(lhsDest, Operand(rhs), cond, lhsDest);
@@ -2257,15 +2248,6 @@ void MacroAssembler::compareInt16x8(Assembler::Condition cond,
   MacroAssemblerX86Shared::compareInt16x8(cond, rhs, lhsDest);
 }
 
-void MacroAssembler::unsignedCompareInt16x8(Assembler::Condition cond,
-                                            FloatRegister rhs,
-                                            FloatRegister lhsDest,
-                                            FloatRegister temp1,
-                                            FloatRegister temp2) {
-  MacroAssemblerX86Shared::unsignedCompareInt16x8(lhsDest, Operand(rhs), cond,
-                                                  lhsDest, temp1, temp2);
-}
-
 void MacroAssembler::compareInt32x4(Assembler::Condition cond,
                                     FloatRegister rhs, FloatRegister lhsDest) {
   MacroAssemblerX86Shared::compareInt32x4(lhsDest, Operand(rhs), cond, lhsDest);
@@ -2277,15 +2259,6 @@ void MacroAssembler::compareInt32x4(Assembler::Condition cond,
   MOZ_ASSERT(cond != Assembler::Condition::LessThan &&
              cond != Assembler::Condition::GreaterThanOrEqual);
   MacroAssemblerX86Shared::compareInt32x4(cond, rhs, lhsDest);
-}
-
-void MacroAssembler::unsignedCompareInt32x4(Assembler::Condition cond,
-                                            FloatRegister rhs,
-                                            FloatRegister lhsDest,
-                                            FloatRegister temp1,
-                                            FloatRegister temp2) {
-  MacroAssemblerX86Shared::unsignedCompareInt32x4(lhsDest, Operand(rhs), cond,
-                                                  lhsDest, temp1, temp2);
 }
 
 void MacroAssembler::compareForEqualityInt64x2(Assembler::Condition cond,
