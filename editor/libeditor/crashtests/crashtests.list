@@ -143,5 +143,6 @@ load 1655508.html
 load 1655988.html
 pref(dom.document.exec_command.nested_calls_allowed,true) load 1666556.html
 asserts(1) load 1677566.html # assertion in constructor of TextFragmentData (initialized for non-editable content)
+load 1691051.html
 load 1699866.html
 load 1701348.html
