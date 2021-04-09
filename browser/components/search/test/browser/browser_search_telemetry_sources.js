@@ -240,6 +240,14 @@ async function checkAboutPage(
       await BrowserTestUtils.browserStopped(tab.linkedBrowser, page);
 
       // Wait for the full load.
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          [
+            "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+            false,
+          ],
+        ],
+      });
       await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
         await ContentTaskUtils.waitForCondition(
           () => content.wrappedJSObject.gContentSearchController.defaultEngine
@@ -258,6 +266,7 @@ async function checkAboutPage(
     },
     async () => {
       BrowserTestUtils.removeTab(tab);
+      await SpecialPowers.popPrefEnv();
     }
   );
 }

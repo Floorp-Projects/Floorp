@@ -1473,11 +1473,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.spocs.personalized", tr
 pref("browser.newtabpage.activity-stream.feeds.section.topstories", true);
 
 // The pref controls if search hand-off is enabled for Activity Stream.
-#ifdef NIGHTLY_BUILD
-  pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", true);
-#else
-  pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
-#endif
+pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", true);
 
 pref("browser.newtabpage.activity-stream.logowordmark.alwaysVisible", false);
 

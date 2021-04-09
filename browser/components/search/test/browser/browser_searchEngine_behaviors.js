@@ -71,6 +71,14 @@ const SEARCH_ENGINE_DETAILS = [
 
 function promiseContentSearchReady(browser) {
   return SpecialPowers.spawn(browser, [], async function(args) {
+    SpecialPowers.pushPrefEnv({
+      set: [
+        [
+          "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+          false,
+        ],
+      ],
+    });
     await ContentTaskUtils.waitForCondition(
       () =>
         content.wrappedJSObject.gContentSearchController &&
