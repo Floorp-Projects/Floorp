@@ -44,20 +44,11 @@ class StartupStateProvider(
             return false
         }
 
-        val firstActivityStartedIndex = startupLog.log.indexOfFirst { it is LogEntry.ActivityStarted }
-        if (firstActivityStartedIndex < 0) {
-            return false // if no activities are started, then we haven't started up yet.
-        }
-
-        val firstActivityStartedAndAfter = startupLog.log.subList(firstActivityStartedIndex, startupLog.log.size)
-        val isFirstActivityStartedStillForegrounded = firstActivityStartedAndAfter == listOf(
+        val isLastStartedActivityStillStarted = startupLog.log.takeLast(2) == listOf(
             LogEntry.ActivityStarted(activityClass),
             LogEntry.AppStarted
         )
-
-        val hasAppBeenStopped = startupLog.log.contains(LogEntry.AppStopped)
-
-        return isFirstActivityStartedStillForegrounded && !hasAppBeenStopped
+        return !startupLog.log.contains(LogEntry.AppStopped) && isLastStartedActivityStillStarted
     }
 
     /**

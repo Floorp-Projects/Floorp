@@ -90,42 +90,6 @@ class StartupStateProviderTest {
     }
 
     @Test
-    fun `GIVEN the app started for an activity WHEN multiple activities are started but not stopped (maybe impossible) THEN start up is not cold`() {
-        fun assertIsNotCold() { assertFalse(provider.isColdStartForStartedActivity(homeActivityClass)) }
-
-        // Since we've never observed this, there are multiple ways the events could
-        // theoretically be ordered: we try a few.
-        logEntries.addAll(listOf(
-            LogEntry.ActivityCreated(irActivityClass),
-            LogEntry.ActivityStarted(irActivityClass),
-            LogEntry.AppStarted,
-            LogEntry.ActivityCreated(homeActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass)
-        ))
-        assertIsNotCold()
-
-        logEntries.clear()
-        logEntries.addAll(listOf(
-            LogEntry.ActivityCreated(irActivityClass),
-            LogEntry.ActivityStarted(irActivityClass),
-            LogEntry.ActivityCreated(homeActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass),
-            LogEntry.AppStarted
-        ))
-        assertIsNotCold()
-
-        logEntries.clear()
-        logEntries.addAll(listOf(
-            LogEntry.ActivityCreated(irActivityClass),
-            LogEntry.ActivityCreated(homeActivityClass),
-            LogEntry.ActivityStarted(irActivityClass),
-            LogEntry.ActivityStarted(homeActivityClass),
-            LogEntry.AppStarted
-        ))
-        assertIsNotCold()
-    }
-
-    @Test
     fun `GIVEN the app started for an activity WHEN an activity hasn't been created yet THEN start up is not cold`() {
         assertFalse(provider.isColdStartForStartedActivity(homeActivityClass))
     }
