@@ -1368,8 +1368,13 @@ bool DebuggerObject::CallData::setInstrumentationMethod() {
   }
   RootedObject kindsObj(cx, &args[1].toObject());
 
-  unsigned length = 0;
+  uint64_t length = 0;
   if (!GetLengthProperty(cx, kindsObj, &length)) {
+    return false;
+  }
+
+  if (length > UINT32_MAX) {
+    JS_ReportErrorASCII(cx, "Invalid length for instrumentation kinds array");
     return false;
   }
 
