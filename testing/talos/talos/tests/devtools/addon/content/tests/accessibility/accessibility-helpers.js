@@ -7,8 +7,6 @@
 const Services = require("Services");
 const { openToolboxAndLog, reloadPageAndLog } = require("damp-test/tests/head");
 
-const INITIALIZED_EVENT = "Accessibility:Initialized";
-
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
 exports.shutdownAccessibilityService = function() {
@@ -31,7 +29,7 @@ exports.openAccessibilityAndLog = function(label) {
 exports.reloadAccessibilityAndLog = async function(label, toolbox) {
   const onReload = async function() {
     let accessibility = await toolbox.getPanelWhenReady("accessibility");
-    await accessibility.panelWin.once(INITIALIZED_EVENT);
+    await accessibility.once("reloaded");
   };
 
   await reloadPageAndLog(`${label}.accessibility`, toolbox, onReload);
