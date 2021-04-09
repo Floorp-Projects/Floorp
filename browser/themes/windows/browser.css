@@ -535,7 +535,7 @@ menuitem.bookmark-item {
 %include ../shared/urlbar-searchbar.inc.css
 
 @media not (prefers-contrast) {
-  @media (-moz-proton-urlbar) {
+  @media (-moz-proton) {
   :root:not(:-moz-lwtheme) #urlbar:not([focused="true"]) {
     --urlbar-box-bgcolor: white;
   }
@@ -589,7 +589,7 @@ menuitem.bookmark-item {
   }
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 :root:not(:-moz-lwtheme) {
   --urlbar-popup-url-color: -moz-nativehyperlinktext;
 }

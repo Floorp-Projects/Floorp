@@ -5,7 +5,7 @@
 add_task(async function setup() {
   // The page action button is hidden by default for proton.
   // This tests the use of pageAction when the button is visible.
-  if (Services.prefs.getBoolPref("browser.proton.urlbar.enabled", false)) {
+  if (gProton) {
     BrowserPageActions.mainButtonNode.style.visibility = "visible";
     registerCleanupFunction(() => {
       BrowserPageActions.mainButtonNode.style.removeProperty("visibility");

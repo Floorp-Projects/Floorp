@@ -5,7 +5,7 @@
 
 "use strict";
 
-const PROTON_PREF = "browser.proton.urlbar.enabled";
+const PROTON_PREF = "browser.proton.enabled";
 const PERSISTED_ACTIONS_PREF = "browser.pageActions.persistedActions";
 const TEST_ACTION_ID = "browser_PageActions_proton";
 
