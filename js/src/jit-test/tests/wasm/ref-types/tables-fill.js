@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 const N = 8;
 
 function testTableFill(tbl_type, val_type, obj) {

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 // A stress test for stackmap creation as it relates to params and locals.
 
 function Stuff(n) {

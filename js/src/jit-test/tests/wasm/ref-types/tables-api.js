@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 // Test changes to the WebAssembly.Table API by reference-types
 
 function assertTableFilled(table, length, element) {

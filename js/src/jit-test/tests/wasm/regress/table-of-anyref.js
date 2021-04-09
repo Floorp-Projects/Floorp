@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 // Faulty prebarrier for tables.
 gczeal(4, 8);
 let ins = wasmEvalText(

@@ -60,7 +60,6 @@ for (let [name, enabled, test] of releasedFeaturesMaybeDisabledAnyway) {
 
 let releasedFeatures = [
   ['threads', wasmThreadsEnabled(), `(module (memory 1 1 shared))`],
-  ['reference-types', wasmReftypesEnabled(), `(module (func (param externref)))`],
 ];
 
 for (let [name, enabled, test] of releasedFeatures) {

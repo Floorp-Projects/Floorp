@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 load(libdir + "wasm-binary.js");
 
 const v2vSig = {args:[], ret:VoidCode};

@@ -594,11 +594,7 @@ static const unsigned NonVolatileRegsPushSize =
     NonVolatileRegs.fpus().getPushSizeInBytes();
 #endif
 
-#ifdef ENABLE_WASM_REFTYPES
 static const unsigned NumExtraPushed = 2;  // tls and argv
-#else
-static const unsigned NumExtraPushed = 1;  // argv
-#endif
 
 #ifdef JS_CODEGEN_ARM64
 static const unsigned WasmPushSize = 16;
@@ -824,9 +820,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
         WasmTlsReg);
   }
 
-#ifdef ENABLE_WASM_REFTYPES
   WasmPush(masm, WasmTlsReg);
-#endif
 
   // Save 'argv' on the stack so that we can recover it after the call.
   WasmPush(masm, argv);
@@ -884,9 +878,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   // Recover the 'argv' pointer which was saved before aligning the stack.
   WasmPop(masm, argv);
 
-#ifdef ENABLE_WASM_REFTYPES
   WasmPop(masm, WasmTlsReg);
-#endif
 
   // Store the register result, if any, in argv[0].
   // No spectre.index_masking is required, as the value leaves ReturnReg.

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-//
 // Exception tests that use reference types.
 
 load(libdir + "eqArrayHelper.js");
