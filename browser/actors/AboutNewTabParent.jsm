@@ -174,9 +174,7 @@ var DefaultBrowserNotification = {
         iconURL,
         priority,
         buttons,
-        callback,
-        null,
-        ["browser/defaultBrowserNotification.ftl"]
+        callback
       );
   },
 

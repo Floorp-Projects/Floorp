@@ -1046,10 +1046,7 @@ const gStoragePressureObserver = {
       NOTIFICATION_VALUE,
       null,
       gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH,
-      buttons,
-      null,
-      null,
-      ["branding/brand.ftl", "browser/preferences/preferences.ftl"]
+      buttons
     );
 
     // This seems to be necessary to get the buttons to display correctly
