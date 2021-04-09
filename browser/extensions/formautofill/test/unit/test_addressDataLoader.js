@@ -18,7 +18,7 @@ const SUPPORT_COUNTRIES_TESTCASES = [
 var AddressDataLoader, FormAutofillUtils;
 add_task(async function setup() {
   ({ AddressDataLoader, FormAutofillUtils } = ChromeUtils.import(
-    "resource://formautofill/FormAutofillUtils.jsm"
+    "resource://autofill/FormAutofillUtils.jsm"
   ));
 });
 

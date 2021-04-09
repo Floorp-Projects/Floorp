@@ -22,7 +22,7 @@ ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "formAutofillStorage",
-  "resource://formautofill/FormAutofillStorage.jsm"
+  "resource://autofill/FormAutofillStorage.jsm"
 );
 
 // A helper to sanitize address and creditcard records suitable for logging.
