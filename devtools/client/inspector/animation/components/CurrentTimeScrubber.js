@@ -6,16 +6,11 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const {
-  createFactory,
+  createRef,
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-
-const IndicationBar = createFactory(
-  require("devtools/client/inspector/animation/components/IndicationBar")
-);
 
 class CurrentTimeScrubber extends PureComponent {
   static get propTypes() {
@@ -31,23 +26,21 @@ class CurrentTimeScrubber extends PureComponent {
   constructor(props) {
     super(props);
 
+    this._ref = createRef();
+
     const { addAnimationsCurrentTimeListener } = props;
     this.onCurrentTimeUpdated = this.onCurrentTimeUpdated.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
 
-    this.state = {
-      // position for the scrubber
-      position: 0,
-    };
-
     addAnimationsCurrentTimeListener(this.onCurrentTimeUpdated);
   }
 
   componentDidMount() {
-    const el = ReactDOM.findDOMNode(this);
-    el.addEventListener("mousedown", this.onMouseDown);
+    const current = this._ref.current;
+    current.addEventListener("mousedown", this.onMouseDown);
+    this._scrubber = current.querySelector(".current-time-scrubber");
   }
 
   componentWillUnmount() {
@@ -59,17 +52,20 @@ class CurrentTimeScrubber extends PureComponent {
     const { timeScale } = this.props;
 
     const position = currentTime / timeScale.getDuration();
-    this.setState({ position });
+    // onCurrentTimeUpdated is bound to requestAnimationFrame.
+    // As to update the component too frequently has performance issue if React controlled,
+    // update raw component directly. See Bug 1699039.
+    this._scrubber.style.marginInlineStart = `${position * 100}%`;
   }
 
   onMouseDown(event) {
     event.stopPropagation();
-    const thisEl = ReactDOM.findDOMNode(this);
-    this.controllerArea = thisEl.getBoundingClientRect();
-    this.listenerTarget = DevToolsUtils.getTopWindow(thisEl.ownerGlobal);
+    const current = this._ref.current;
+    this.controllerArea = current.getBoundingClientRect();
+    this.listenerTarget = DevToolsUtils.getTopWindow(current.ownerGlobal);
     this.listenerTarget.addEventListener("mousemove", this.onMouseMove);
     this.listenerTarget.addEventListener("mouseup", this.onMouseUp);
-    this.decorationTarget = thisEl.closest(".animation-list-container");
+    this.decorationTarget = current.closest(".animation-list-container");
     this.decorationTarget.classList.add("active-scrubber");
 
     this.updateAnimationsCurrentTime(event.pageX, true);
@@ -122,16 +118,12 @@ class CurrentTimeScrubber extends PureComponent {
   }
 
   render() {
-    const { position } = this.state;
-
     return dom.div(
       {
         className: "current-time-scrubber-area",
+        ref: this._ref,
       },
-      IndicationBar({
-        className: "current-time-scrubber",
-        position,
-      })
+      dom.div({ className: "indication-bar current-time-scrubber" })
     );
   }
 }

@@ -19,7 +19,6 @@ DevToolsModules(
     "App.js",
     "CurrentTimeLabel.js",
     "CurrentTimeScrubber.js",
-    "IndicationBar.js",
     "KeyframesProgressBar.js",
     "NoAnimationPanel.js",
     "PauseResumeButton.js",
