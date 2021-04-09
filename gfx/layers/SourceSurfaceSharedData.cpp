@@ -45,13 +45,22 @@ void SourceSurfaceSharedDataWrapper::Init(
     MOZ_CRASH("Invalid shared memory handle!");
   }
 
-  EnsureMapped(len);
-
+  bool mapped = EnsureMapped(len);
   if ((sizeof(uintptr_t) <= 4 ||
        StaticPrefs::image_mem_shared_unmap_force_enabled_AtStartup()) &&
       len / 1024 >
           StaticPrefs::image_mem_shared_unmap_min_threshold_kb_AtStartup()) {
     mHandleLock.emplace("SourceSurfaceSharedDataWrapper::mHandleLock");
+
+    if (mapped) {
+      // Tracking at the initial mapping, and not just after the first use of
+      // the surface means we might get unmapped again before the next frame
+      // gets rendered if a low virtual memory condition persists.
+      SharedSurfacesParent::AddTracking(this);
+    }
+  } else if (!mapped) {
+    // We don't support unmapping for this surface, and we failed to map it.
+    NS_ABORT_OOM(len);
   } else {
     mBuf->CloseHandle();
   }
@@ -67,17 +76,19 @@ void SourceSurfaceSharedDataWrapper::Init(SourceSurfaceSharedData* aSurface) {
   mBuf = aSurface->mBuf;
 }
 
-void SourceSurfaceSharedDataWrapper::EnsureMapped(size_t aLength) {
+bool SourceSurfaceSharedDataWrapper::EnsureMapped(size_t aLength) {
   MOZ_ASSERT(!GetData());
 
   while (!mBuf->Map(aLength)) {
     nsTArray<RefPtr<SourceSurfaceSharedDataWrapper>> expired;
     if (!SharedSurfacesParent::AgeOneGeneration(expired)) {
-      NS_ABORT_OOM(aLength);
+      return false;
     }
     MOZ_ASSERT(!expired.Contains(this));
     SharedSurfacesParent::ExpireMap(expired);
   }
+
+  return true;
 }
 
 bool SourceSurfaceSharedDataWrapper::Map(MapType,
@@ -91,7 +102,9 @@ bool SourceSurfaceSharedDataWrapper::Map(MapType,
       SharedSurfacesParent::RemoveTracking(this);
       if (!dataPtr) {
         size_t len = GetAlignedDataLength();
-        EnsureMapped(len);
+        if (!EnsureMapped(len)) {
+          NS_ABORT_OOM(len);
+        }
         dataPtr = GetData();
       }
     }
