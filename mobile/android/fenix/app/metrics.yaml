@@ -5207,3 +5207,31 @@ android_keystore_experiment:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-09-01"
+
+set_default_newtab_experiment:
+  set_default_browser_clicked:
+    type: event
+    description: |
+      Set default browser was clicked from new tab screen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18853
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18895
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
+  close_experiment_card_clicked:
+    type: event
+    description: |
+      Close experiment card was clicked from new tab screen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18853
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18895
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"

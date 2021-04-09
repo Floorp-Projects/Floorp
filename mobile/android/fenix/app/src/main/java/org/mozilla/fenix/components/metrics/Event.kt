@@ -224,6 +224,10 @@ sealed class Event {
     object SearchSuggestionClicked : Event()
     object OpenedTabSuggestionClicked : Event()
 
+    // Set default browser experiment metrics
+    object SetDefaultBrowserClicked : Event()
+    object CloseExperimentCardClicked : Event()
+
     // Home menu interaction
     object HomeMenuSettingsItemClicked : Event()
 

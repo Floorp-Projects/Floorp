@@ -53,6 +53,7 @@ import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchSuggestions
 import org.mozilla.fenix.GleanMetrics.SearchWidget
+import org.mozilla.fenix.GleanMetrics.SetDefaultNewtabExperiment
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
@@ -812,6 +813,13 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.HomeMenuSettingsItemClicked -> EventWrapper<NoExtraKeys>(
             { HomeMenu.settingsItemClicked.record(it) }
+        )
+
+        is Event.CloseExperimentCardClicked -> EventWrapper<NoExtraKeys>(
+            { SetDefaultNewtabExperiment.closeExperimentCardClicked.record(it) }
+        )
+        is Event.SetDefaultBrowserClicked -> EventWrapper<NoExtraKeys>(
+            { SetDefaultNewtabExperiment.setDefaultBrowserClicked.record(it) }
         )
 
         // Don't record other events in Glean:
