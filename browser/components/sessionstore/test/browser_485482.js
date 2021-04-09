@@ -3,15 +3,36 @@
 
 "use strict";
 
-const URL = ROOT + "browser_485482_sample.html";
+if (gFissionBrowser) {
+  addCoopTask(
+    "browser_485482_sample.html",
+    test_xpath_exp_for_strange_documents,
+    HTTPSROOT
+  );
+}
+addNonCoopTask(
+  "browser_485482_sample.html",
+  test_xpath_exp_for_strange_documents,
+  ROOT
+);
+addNonCoopTask(
+  "browser_485482_sample.html",
+  test_xpath_exp_for_strange_documents,
+  HTTPSROOT
+);
+addNonCoopTask(
+  "browser_485482_sample.html",
+  test_xpath_exp_for_strange_documents,
+  HTTPROOT
+);
 
 /**
  * Bug 485482 - Make sure that we produce valid XPath expressions even for very
  * weird HTML documents.
  */
-add_task(async function test_xpath_exp_for_strange_documents() {
+async function test_xpath_exp_for_strange_documents(aURL) {
   // Load a page with weird tag names.
-  let tab = BrowserTestUtils.addTab(gBrowser, URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, aURL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -52,4 +73,4 @@ add_task(async function test_xpath_exp_for_strange_documents() {
   // Cleanup.
   gBrowser.removeTab(tab2);
   gBrowser.removeTab(tab);
-});
+}

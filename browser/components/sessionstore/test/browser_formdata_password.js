@@ -4,12 +4,21 @@
  * Ensures that <input>s that are/were type=password are not saved.
  */
 
-const URL =
-  "https://example.com/browser/browser/components/" +
-  "sessionstore/test/file_formdata_password.html";
+addCoopTask("file_formdata_password.html", test_hasBeenTypePassword, HTTPSROOT);
 
-add_task(async function test_hasBeenTypePassword() {
-  let tab = BrowserTestUtils.addTab(gBrowser, URL);
+addNonCoopTask(
+  "file_formdata_password.html",
+  test_hasBeenTypePassword,
+  HTTPROOT
+);
+addNonCoopTask(
+  "file_formdata_password.html",
+  test_hasBeenTypePassword,
+  HTTPSROOT
+);
+
+async function test_hasBeenTypePassword(aURL) {
+  let tab = BrowserTestUtils.addTab(gBrowser, aURL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -57,4 +66,4 @@ add_task(async function test_hasBeenTypePassword() {
       `Value should be ${expectedValue} for ${id}`
     );
   }
-});
+}

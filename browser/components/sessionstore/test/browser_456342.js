@@ -3,7 +3,26 @@
 
 "use strict";
 
-const URL = ROOT + "browser_456342_sample.xhtml";
+addCoopTask(
+  "browser_456342_sample.xhtml",
+  test_restore_nonstandard_input_values,
+  HTTPSROOT
+);
+addNonCoopTask(
+  "browser_456342_sample.xhtml",
+  test_restore_nonstandard_input_values,
+  ROOT
+);
+addNonCoopTask(
+  "browser_456342_sample.xhtml",
+  test_restore_nonstandard_input_values,
+  HTTPROOT
+);
+addNonCoopTask(
+  "browser_456342_sample.xhtml",
+  test_restore_nonstandard_input_values,
+  HTTPSROOT
+);
 
 const EXPECTED_IDS = new Set(["searchTerm"]);
 
@@ -17,9 +36,9 @@ const EXPECTED_XPATHS = new Set([
 /**
  * Bug 456342 - Restore values from non-standard input field types.
  */
-add_task(async function test_restore_nonstandard_input_values() {
+async function test_restore_nonstandard_input_values(aURL) {
   // Add tab with various non-standard input field types.
-  let tab = BrowserTestUtils.addTab(gBrowser, URL);
+  let tab = BrowserTestUtils.addTab(gBrowser, aURL);
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);
 
@@ -68,4 +87,4 @@ add_task(async function test_restore_nonstandard_input_values() {
     EXPECTED_XPATHS.size,
     "Check number of fields saved by xpath"
   );
-});
+}
