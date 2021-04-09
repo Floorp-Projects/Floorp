@@ -46,11 +46,7 @@
     --tab-selected-bgcolor: rgb(255,255,255);
     --tabs-border-color: transparent;
     --toolbar-color: rgb(21,20,26);
-  }
-  } /** END Proton **/
 
-  @media (-moz-proton-urlbar) {
-  :root:not(:-moz-lwtheme) {
     --urlbar-popup-action-color: rgb(21,20,26);
     --urlbar-popup-url-color: rgb(0,97,224);
 

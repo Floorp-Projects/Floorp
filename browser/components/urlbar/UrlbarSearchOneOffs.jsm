@@ -333,7 +333,7 @@ class UrlbarSearchOneOffs extends SearchOneOffs {
   _rebuildEngineList(engines) {
     super._rebuildEngineList(engines);
 
-    if (UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+    if (Services.prefs.getBoolPref("browser.proton.enabled", false)) {
       for (let engine of this._webEngines) {
         let button = this.document.createXULElement("button");
         button.id = this._buttonIDForEngine(engine);

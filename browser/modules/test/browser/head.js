@@ -12,10 +12,6 @@ ChromeUtils.defineModuleGetter(
 const SINGLE_TRY_TIMEOUT = 100;
 const NUMBER_OF_TRIES = 30;
 
-const PROTON_URLBAR_PREF = "browser.proton.urlbar.enabled";
-
-let gProtonUrlbar = Services.prefs.getBoolPref(PROTON_URLBAR_PREF, false);
-
 function waitForConditionPromise(
   condition,
   timeoutMsg,
@@ -332,8 +328,7 @@ async function initPageActionsTest() {
   const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
   await addon.disable({ allowSystemAddons: true });
 
-  gProtonUrlbar = Services.prefs.getBoolPref(PROTON_URLBAR_PREF, false);
-  if (gProtonUrlbar) {
+  if (gProton) {
     // Make the main button visible. It's not unless the window is narrow. This
     // test isn't concerned with that behavior. We have other tests for that.
     BrowserPageActions.mainButtonNode.style.visibility = "visible";
