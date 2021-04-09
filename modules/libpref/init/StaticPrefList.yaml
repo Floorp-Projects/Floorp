@@ -1149,7 +1149,7 @@
 
 - name: browser.proton.contextmenus.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
