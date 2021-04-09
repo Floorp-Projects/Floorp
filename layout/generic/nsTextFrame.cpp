@@ -2138,9 +2138,8 @@ static already_AddRefed<DrawTarget> CreateReferenceDrawTarget(
   return dt.forget();
 }
 
-static already_AddRefed<gfxTextRun> GetHyphenTextRun(const gfxTextRun* aTextRun,
-                                                     DrawTarget* aDrawTarget,
-                                                     nsTextFrame* aTextFrame) {
+static already_AddRefed<gfxTextRun> GetHyphenTextRun(nsTextFrame* aTextFrame,
+                                                     DrawTarget* aDrawTarget) {
   RefPtr<DrawTarget> dt = aDrawTarget;
   if (!dt) {
     dt = CreateReferenceDrawTarget(aTextFrame);
@@ -2149,8 +2148,10 @@ static already_AddRefed<gfxTextRun> GetHyphenTextRun(const gfxTextRun* aTextRun,
     }
   }
 
-  return aTextRun->GetFontGroup()->MakeHyphenTextRun(
-      dt, aTextRun->GetAppUnitsPerDevUnit());
+  RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(aTextFrame);
+  return fm->GetThebesFontGroup()->MakeHyphenTextRun(
+      dt, aTextFrame->PresContext()->AppUnitsPerDevPixel());
 }
 
 already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
@@ -6053,14 +6054,12 @@ bool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
   return true;
 }
 
-static void AddHyphenToMetrics(nsTextFrame* aTextFrame,
-                               const gfxTextRun* aBaseTextRun,
+static void AddHyphenToMetrics(nsTextFrame* aTextFrame, bool aIsRightToLeft,
                                gfxTextRun::Metrics* aMetrics,
                                gfxFont::BoundingBoxType aBoundingBoxType,
                                DrawTarget* aDrawTarget) {
   // Fix up metrics to include hyphen
-  RefPtr<gfxTextRun> hyphenTextRun =
-      GetHyphenTextRun(aBaseTextRun, aDrawTarget, aTextFrame);
+  RefPtr<gfxTextRun> hyphenTextRun = GetHyphenTextRun(aTextFrame, aDrawTarget);
   if (!hyphenTextRun) {
     return;
   }
@@ -6070,7 +6069,7 @@ static void AddHyphenToMetrics(nsTextFrame* aTextFrame,
   if (aTextFrame->GetWritingMode().IsLineInverted()) {
     hyphenMetrics.mBoundingBox.y = -hyphenMetrics.mBoundingBox.YMost();
   }
-  aMetrics->CombineWith(hyphenMetrics, aBaseTextRun->IsRightToLeft());
+  aMetrics->CombineWith(hyphenMetrics, aIsRightToLeft);
 }
 
 void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
@@ -6692,7 +6691,7 @@ void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
     shadowMetrics.mBoundingBox.y = -shadowMetrics.mBoundingBox.YMost();
   }
   if (HasAnyStateBits(TEXT_HYPHEN_BREAK)) {
-    AddHyphenToMetrics(this, mTextRun, &shadowMetrics,
+    AddHyphenToMetrics(this, mTextRun->IsRightToLeft(), &shadowMetrics,
                        gfxFont::LOOSE_INK_EXTENTS,
                        aParams.context->GetDrawTarget());
   }
@@ -6932,8 +6931,7 @@ void nsTextFrame::DrawTextRun(Range aRange, const gfx::Point& aTextBaselinePt,
   if (aParams.drawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
-    RefPtr<gfxTextRun> hyphenTextRun =
-        GetHyphenTextRun(mTextRun, nullptr, this);
+    RefPtr<gfxTextRun> hyphenTextRun = GetHyphenTextRun(this, nullptr);
     if (hyphenTextRun) {
       // For right-to-left text runs, the soft-hyphen is positioned at the left
       // of the text, minus its own width
@@ -9405,8 +9403,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
   if (usedHyphenation) {
     // Fix up metrics to include hyphen
-    AddHyphenToMetrics(this, mTextRun, &textMetrics, boundingBoxType,
-                       aDrawTarget);
+    AddHyphenToMetrics(this, mTextRun->IsRightToLeft(), &textMetrics,
+                       boundingBoxType, aDrawTarget);
     AddStateBits(TEXT_HYPHEN_BREAK | TEXT_HAS_NONCOLLAPSED_CHARACTERS);
   }
   if (textMetrics.mBoundingBox.IsEmpty()) {
