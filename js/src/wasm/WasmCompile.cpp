@@ -89,7 +89,6 @@ FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
   features.refTypes = wasm::ReftypesAvailable(cx);
   features.functionReferences = wasm::FunctionReferencesAvailable(cx);
   features.gcTypes = wasm::GcTypesAvailable(cx);
-  features.multiValue = wasm::MultiValuesAvailable(cx);
   features.v128 = wasm::SimdAvailable(cx) || wormholeOverride;
   features.hugeMemory = wasm::IsHugeMemoryEnabled();
   features.simdWormhole = wormholeOverride;
