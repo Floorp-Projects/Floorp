@@ -93,6 +93,11 @@ vec4 get_node_pos(vec2 pos, Transform transform) {
 
 #ifdef WR_FRAGMENT_SHADER
 
+// Assume transform bounds are set to a large scale to signal they are invalid.
+bool has_valid_transform_bounds() {
+    return vTransformBounds.w < 1.0e15;
+}
+
 float init_transform_fs(vec2 local_pos) {
     // Get signed distance from local rect bounds.
     float d = signed_distance_rect(

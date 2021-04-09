@@ -17,10 +17,6 @@
 
 uniform sampler2D sClipMask;
 
-vec2 clamp_rect(vec2 pt, RectWithSize rect) {
-    return clamp(pt, rect.p0, rect.p0 + rect.size);
-}
-
 #ifndef SWGL_CLIP_MASK
 // TODO: convert back to RectWithEndPoint if driver issues are resolved, if ever.
 flat varying vec4 vClipMaskUvBounds;
