@@ -508,6 +508,15 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
   // Test that things worked on a HTTP level
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aRequest);
   if (!http) {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+    nsCOMPtr<nsIURI> uri;
+    NS_GetFinalChannelURI(channel, getter_AddRefs(uri));
+    if (uri && uri->SchemeIs("moz-extension")) {
+      // moz-extension:-URLs do not support CORS, but can universally be read
+      // if an extension lists the resource in web_accessible_resources.
+      // Access will be checked in UpdateChannel.
+      return NS_OK;
+    }
     LogBlockedRequest(aRequest, "CORSRequestNotHttp", nullptr,
                       nsILoadInfo::BLOCKING_REASON_CORSREQUESTNOTHTTP,
                       topChannel);
@@ -880,6 +889,15 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  if (uri->SchemeIs("moz-extension")) {
+    // moz-extension:-URLs do not support CORS, but can universally be read
+    // if an extension lists the resource in web_accessible_resources.
+    // This is enforced via the CheckLoadURIWithPrincipal call above:
+    // moz-extension resources have the URI_DANGEROUS_TO_LOAD flag, unless
+    // listed in web_accessible_resources.
+    return NS_OK;
+  }
+
   if (!mHasBeenCrossSite &&
       NS_SUCCEEDED(mRequestingPrincipal->CheckMayLoad(uri, false)) &&
       (originalURI == uri ||
@@ -984,6 +1002,9 @@ nsresult nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel,
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);
   if (!http) {
+    // Note: A preflight is not needed for moz-extension:-requests either, but
+    // there is already a check for that in the caller of CheckPreflightNeeded,
+    // in UpdateChannel.
     LogBlockedRequest(aChannel, "CORSRequestNotHttp", nullptr,
                       nsILoadInfo::BLOCKING_REASON_CORSREQUESTNOTHTTP,
                       mHttpChannel);
