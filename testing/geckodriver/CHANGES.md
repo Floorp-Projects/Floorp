@@ -3,8 +3,8 @@ Change log
 
 All notable changes to this program are documented in this file.
 
-0.29.1  (2021-04-08)
---------------------
+0.29.1  (2021-04-09), `970ef713fe58`)
+-------------------------------------
 
 ### Known problems
 
