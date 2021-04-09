@@ -181,8 +181,7 @@ bool js::ToLength(JSContext* cx, HandleValue v, uint64_t* out) {
   return true;
 }
 
-static MOZ_ALWAYS_INLINE bool GetLengthProperty(JSContext* cx, HandleObject obj,
-                                                uint64_t* lengthp) {
+bool js::GetLengthProperty(JSContext* cx, HandleObject obj, uint64_t* lengthp) {
   if (obj->is<ArrayObject>()) {
     *lengthp = obj->as<ArrayObject>().length();
     return true;
@@ -202,6 +201,18 @@ static MOZ_ALWAYS_INLINE bool GetLengthProperty(JSContext* cx, HandleObject obj,
   }
 
   return ToLength(cx, value, lengthp);
+}
+
+// Fast path for array functions where the object is expected to be an array.
+static MOZ_ALWAYS_INLINE bool GetLengthPropertyInlined(JSContext* cx,
+                                                       HandleObject obj,
+                                                       uint64_t* lengthp) {
+  if (obj->is<ArrayObject>()) {
+    *lengthp = obj->as<ArrayObject>().length();
+    return true;
+  }
+
+  return GetLengthProperty(cx, obj, lengthp);
 }
 
 /*
@@ -1101,7 +1112,7 @@ JSString* js::ArrayToSource(JSContext* cx, HandleObject obj) {
   }
 
   uint64_t length;
-  if (!GetLengthProperty(cx, obj, &length)) {
+  if (!GetLengthPropertyInlined(cx, obj, &length)) {
     return nullptr;
   }
 
@@ -1325,7 +1336,7 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2.
   uint64_t length;
-  if (!GetLengthProperty(cx, obj, &length)) {
+  if (!GetLengthPropertyInlined(cx, obj, &length)) {
     return false;
   }
 
@@ -1592,7 +1603,7 @@ static bool array_reverse(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2.
   uint64_t len;
-  if (!GetLengthProperty(cx, obj, &len)) {
+  if (!GetLengthPropertyInlined(cx, obj, &len)) {
     return false;
   }
 
@@ -2112,7 +2123,7 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject obj(cx, &args.thisv().toObject());
 
   uint64_t length;
-  if (!GetLengthProperty(cx, obj, &length)) {
+  if (!GetLengthPropertyInlined(cx, obj, &length)) {
     return false;
   }
   if (length < 2) {
@@ -2305,7 +2316,7 @@ bool js::array_push(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2.
   uint64_t length;
-  if (!GetLengthProperty(cx, obj, &length)) {
+  if (!GetLengthPropertyInlined(cx, obj, &length)) {
     return false;
   }
 
@@ -2366,7 +2377,7 @@ bool js::array_pop(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2.
   uint64_t index;
-  if (!GetLengthProperty(cx, obj, &index)) {
+  if (!GetLengthPropertyInlined(cx, obj, &index)) {
     return false;
   }
 
@@ -2470,7 +2481,7 @@ bool js::array_shift(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2.
   uint64_t len;
-  if (!GetLengthProperty(cx, obj, &len)) {
+  if (!GetLengthPropertyInlined(cx, obj, &len)) {
     return false;
   }
 
@@ -2556,7 +2567,7 @@ static bool array_unshift(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2.
   uint64_t length;
-  if (!GetLengthProperty(cx, obj, &length)) {
+  if (!GetLengthPropertyInlined(cx, obj, &length)) {
     return false;
   }
 
@@ -2815,7 +2826,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
 
   /* Step 2. */
   uint64_t len;
-  if (!GetLengthProperty(cx, obj, &len)) {
+  if (!GetLengthPropertyInlined(cx, obj, &len)) {
     return false;
   }
 
@@ -3403,7 +3414,7 @@ bool js::array_slice(JSContext* cx, unsigned argc, Value* vp) {
 
   /* Step 2. */
   uint64_t length;
-  if (!GetLengthProperty(cx, obj, &length)) {
+  if (!GetLengthPropertyInlined(cx, obj, &length)) {
     return false;
   }
 
