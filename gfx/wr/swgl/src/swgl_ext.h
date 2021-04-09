@@ -409,18 +409,25 @@ static P* blendTextureLinearDispatch(S sampler, vec2 uv, int span,
     // requiring clamping. In case the filter oversamples the row by a step, we
     // subtract off a step from the width to leave some room.
     float insideDist =
-        min(max_uv.x, float((int(sampler->width) - swgl_StepSize) << 7)) -
+        min(max_uv.x, float((int(sampler->width) - swgl_StepSize) *
+                            swgl_LinearQuantizeScale)) -
         uv.x.x;
     if (uv_step.x > 0.0f && insideDist >= uv_step.x) {
-      int inside =
-          clamp(int(insideDist / uv_step.x) * swgl_StepSize, 0, int(end - buf));
+      int inside = int(end - buf);
       if (filter == LINEAR_FILTER_DOWNSCALE) {
+        inside =
+            min(inside, int(insideDist * (0.5f / swgl_LinearQuantizeScale)) &
+                            ~(swgl_StepSize - 1));
         blendTextureLinearDownscale<BLEND>(sampler, uv, inside, min_uv, max_uv,
                                            color, buf);
       } else if (filter == LINEAR_FILTER_UPSCALE) {
+        inside = min(inside, int(insideDist / uv_step.x) * swgl_StepSize);
         blendTextureLinearUpscale<BLEND>(sampler, uv, inside, uv_step, min_uv,
                                          max_uv, color, buf);
       } else {
+        inside =
+            min(inside, int(insideDist * (1.0f / swgl_LinearQuantizeScale)) &
+                            ~(swgl_StepSize - 1));
         blendTextureLinearFast<BLEND>(sampler, uv, inside, min_uv, max_uv,
                                       color, buf);
       }
