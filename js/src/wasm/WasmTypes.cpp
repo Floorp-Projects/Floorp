@@ -521,7 +521,8 @@ WasmValueBox* WasmValueBox::create(JSContext* cx, HandleValue val) {
   return obj;
 }
 
-bool wasm::BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef result) {
+bool wasm::BoxAnyRef(JSContext* cx, HandleValue val,
+                     MutableHandleAnyRef result) {
   if (val.isNull()) {
     result.set(AnyRef::null());
     return true;
@@ -1015,7 +1016,7 @@ TypeResult TypeContext::isTypeIndexEquivalent(uint32_t one, uint32_t two,
   }
 
 #  ifdef ENABLE_WASM_GC
-  if (features_.gcTypes) {
+  if (features_.gc) {
     // A struct may be equal to a struct
     if (isStructType(one) && isStructType(two)) {
       return isStructEquivalent(one, two, cache);
@@ -1159,7 +1160,7 @@ TypeResult TypeContext::isTypeIndexSubtypeOf(uint32_t one, uint32_t two,
   }
 
 #  ifdef ENABLE_WASM_GC
-  if (features_.gcTypes) {
+  if (features_.gc) {
     // Structs may be subtypes of structs
     if (isStructType(one) && isStructType(two)) {
       return isStructSubtypeOf(one, two, cache);

@@ -38,6 +38,7 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
+#include "js/WasmFeatures.h"
 #include "vm/MallocProvider.h"
 #include "vm/NativeObject.h"
 #include "wasm/WasmConstants.h"
@@ -1268,14 +1269,14 @@ struct FeatureOptions {
 
 struct FeatureArgs {
   FeatureArgs()
-      : sharedMemory(Shareable::False),
-        refTypes(false),
-        functionReferences(false),
-        gcTypes(false),
-        v128(false),
+      :
+#define WASM_FEATURE(NAME, LOWER_NAME, ...) LOWER_NAME(false),
+        JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
+            sharedMemory(Shareable::False),
         hugeMemory(false),
-        simdWormhole(false),
-        exceptions(false) {}
+        simdWormhole(false) {
+  }
   FeatureArgs(const FeatureArgs&) = default;
   FeatureArgs& operator=(const FeatureArgs&) = default;
   FeatureArgs(FeatureArgs&&) = default;
@@ -1288,14 +1289,13 @@ struct FeatureArgs {
     return features;
   }
 
+#define WASM_FEATURE(NAME, LOWER_NAME, ...) bool LOWER_NAME;
+  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
+
   Shareable sharedMemory;
-  bool refTypes;
-  bool functionReferences;
-  bool gcTypes;
-  bool v128;
   bool hugeMemory;
   bool simdWormhole;
-  bool exceptions;
 };
 
 // The LitVal class represents a single WebAssembly value of a given value

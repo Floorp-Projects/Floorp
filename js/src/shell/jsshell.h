@@ -116,24 +116,13 @@ extern bool enableWasmOptimizing;
 // Cranelift->Ion transition
 extern bool forceWasmIon;
 #endif
-extern bool enableWasmReftypes;
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-extern bool enableWasmFunctionReferences;
-#endif
-#ifdef ENABLE_WASM_GC
-extern bool enableWasmGc;
-#endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-extern bool enableWasmMultiValue;
-#endif
-#ifdef ENABLE_WASM_SIMD
-extern bool enableWasmSimd;
-#endif
+
+#define WASM_FEATURE(NAME, ...) extern bool enableWasm##NAME;
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE);
+#undef WASM_FEATURE
+
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
 extern bool enableWasmSimdWormhole;
-#endif
-#ifdef ENABLE_WASM_EXCEPTIONS
-extern bool enableWasmExceptions;
 #endif
 extern bool enableWasmVerbose;
 extern bool enableTestWasmAwaitTier2;

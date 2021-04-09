@@ -881,7 +881,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readUnreachable());
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
-        if (!env.gcTypesEnabled()) {
+        if (!env.gcEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
         switch (op.b1) {
@@ -1451,7 +1451,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 #endif
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq): {
-        if (!env.gcTypesEnabled()) {
+        if (!env.gcEnabled()) {
           return iter.unrecognizedOpcode(&op);
         }
         CHECK(iter.readComparison(RefType::eq(), &nothing, &nothing));
@@ -1857,7 +1857,7 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
 
 static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
                              TypeStateVector* typeState, uint32_t typeIndex) {
-  if (!env->gcTypesEnabled()) {
+  if (!env->gcEnabled()) {
     return d.fail("Structure types not enabled");
   }
 
@@ -1914,7 +1914,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
 
 static bool DecodeArrayType(Decoder& d, ModuleEnvironment* env,
                             TypeStateVector* typeState, uint32_t typeIndex) {
-  if (!env->gcTypesEnabled()) {
+  if (!env->gcEnabled()) {
     return d.fail("gc types not enabled");
   }
 
@@ -2607,7 +2607,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
     case uint16_t(Op::RefNull): {
       MOZ_ASSERT_IF(
           expected.isReference() && env->types.isStructType(expected.refType()),
-          env->gcTypesEnabled());
+          env->gcEnabled());
       RefType initType;
       if (!d.readHeapType(env->types, env->features, true, &initType)) {
         return false;

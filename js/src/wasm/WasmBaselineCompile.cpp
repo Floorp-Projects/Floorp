@@ -16761,7 +16761,7 @@ bool BaseCompiler::emitBody() {
 #endif
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefEq):
-        if (!moduleEnv_.gcTypesEnabled()) {
+        if (!moduleEnv_.gcEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(dispatchComparison(emitCompareRef, RefType::eq(),
@@ -16782,7 +16782,7 @@ bool BaseCompiler::emitBody() {
 #ifdef ENABLE_WASM_GC
       // "GC" operations
       case uint16_t(Op::GcPrefix): {
-        if (!moduleEnv_.gcTypesEnabled()) {
+        if (!moduleEnv_.gcEnabled()) {
           return iter_.unrecognizedOpcode(&op);
         }
         switch (op.b1) {

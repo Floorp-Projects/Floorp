@@ -213,6 +213,7 @@ EXPORTS.js += [
     "../public/ValueArray.h",
     "../public/Vector.h",
     "../public/Warnings.h",
+    "../public/WasmFeatures.h",
     "../public/WasmModule.h",
     "../public/WeakMapPtr.h",
     "../public/Wrapper.h",
