@@ -46,7 +46,7 @@ object Versions {
         const val coordinatorlayout = "1.1.0"
         const val core = "1.3.2"
         const val fragment = "1.2.5"
-        const val recyclerview = "1.1.0"
+        const val recyclerview = "1.2.0"
         const val test = "1.3.0"
         const val test_ext = "1.1.2"
         const val espresso = "3.3.0"

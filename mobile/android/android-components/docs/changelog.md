@@ -12,6 +12,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+
+* **browser-menu**:
+  * 🌟️ New StickyHeaderLinearLayoutManager and StickyFooterLinearLayoutManager that can be used to keep an item from being scrolled off-screen.
+
 * **browser-menu**:
   * 🚒 Bug fixed [issue #](https://github.com/mozilla-mobile/android-components/issues/10032) - Fix a recent issue with ExpandableLayout - user touches on an expanded menu might not have any effect on Samsung devices.
 
