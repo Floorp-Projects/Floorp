@@ -77,14 +77,9 @@ add_task(async function testAppShutdown() {
   await promiseStartupManager();
   await extension.awaitStartup();
 
-  // Get the action.  In non-proton its pinnedToUrlbar should remain false.
-  // In Proton there is no meatball menu, thus page actions are directly pinned
-  // to the urlbar.
+  // Get the action.  Its pinnedToUrlbar should remain false.
   action = PageActions.actionForID(actionID);
-  Assert.equal(
-    action.pinnedToUrlbar,
-    Services.prefs.getBoolPref("browser.proton.enabled", false)
-  );
+  Assert.equal(action.pinnedToUrlbar, false);
 
   // Now unload the extension and quit the app.
   await extension.unload();

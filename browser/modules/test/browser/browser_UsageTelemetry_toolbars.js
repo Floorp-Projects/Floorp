@@ -454,7 +454,7 @@ add_task(async function contextMenus() {
 
 add_task(async function pageActions() {
   // Built-in page actions are removed in Proton.
-  if (gProton) {
+  if (Services.prefs.getBoolPref("browser.proton.urlbar.enabled", false)) {
     return;
   }
 

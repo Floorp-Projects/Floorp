@@ -772,7 +772,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   }
 }
 
-@media (-moz-proton) {
+@media (-moz-proton-urlbar) {
   /* The page actions menu is hidden by default, it is only shown in small
      windows as the overflow target of multiple page action buttons */
   #pageActionButton {
@@ -791,7 +791,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
     display: none;
   }
 
-  @media (-moz-proton) {
+  @media (-moz-proton-urlbar) {
     #pageActionButton[multiple-children] {
       visibility: visible;
     }
@@ -1424,7 +1424,7 @@ toolbarpaletteitem > #stop-reload-button {
   visibility: visible;
 }
 
-@media not (-moz-proton) {
+@media not (-moz-proton-urlbar) {
 /* These pin/unpin menu options should be removed after Proton is released */
 #pageActionContextMenu[state=builtInPinned] > .pageActionContextMenuItem.builtInPinned,
 #pageActionContextMenu[state=builtInUnpinned] > .pageActionContextMenuItem.builtInUnpinned,
