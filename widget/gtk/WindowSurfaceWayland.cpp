@@ -16,6 +16,7 @@
 #include "nsTArray.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/WidgetUtils.h"
 
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -169,9 +170,17 @@ RefPtr<nsWaylandDisplay> WindowBackBuffer::GetWaylandDisplay() {
 
 static int WaylandAllocateShmMemory(int aSize) {
   int fd = -1;
+
+  nsCString shmPrefix("/");
+  const char* snapName = mozilla::widget::WidgetUtils::GetSnapInstanceName();
+  if (snapName != nullptr) {
+    shmPrefix.AppendPrintf("snap.%s.", snapName);
+  }
+  shmPrefix.Append("wayland.mozilla.ipc");
+
   do {
     static int counter = 0;
-    nsPrintfCString shmName("/wayland.mozilla.ipc.%d", counter++);
+    nsPrintfCString shmName("%s.%d", shmPrefix.get(), counter++);
     fd = shm_open(shmName.get(), O_CREAT | O_RDWR | O_EXCL, 0600);
     if (fd >= 0) {
       // We don't want to use leaked file

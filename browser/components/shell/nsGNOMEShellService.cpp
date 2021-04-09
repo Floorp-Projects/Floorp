@@ -23,6 +23,7 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/WidgetUtils.h"
 #include "mozilla/dom/Element.h"
 #if defined(MOZ_WIDGET_GTK)
 #  include "nsIImageToPixbuf.h"
@@ -72,17 +73,15 @@ static const MimeTypeAssociation appTypes[] = {
 #define kDesktopColorGSKey "primary-color"
 
 static bool IsRunningAsASnap() {
-  // SNAP holds the path to the snap, use SNAP_NAME
-  // which is easier to parse.
-  const char* snap_name = PR_GetEnv("SNAP_NAME");
+  const char* snapName = mozilla::widget::WidgetUtils::GetSnapInstanceName();
 
   // return early if not set.
-  if (snap_name == nullptr) {
+  if (snapName == nullptr) {
     return false;
   }
 
-  // snap_name as defined on https://snapcraft.io/firefox
-  return (strcmp(snap_name, "firefox") == 0);
+  // snapName as defined on https://snapcraft.io/firefox
+  return (strcmp(snapName, "firefox") == 0);
 }
 
 nsresult nsGNOMEShellService::Init() {
