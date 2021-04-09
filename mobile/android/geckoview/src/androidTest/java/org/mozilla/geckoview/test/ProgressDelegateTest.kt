@@ -464,47 +464,4 @@ class ProgressDelegateTest : BaseSessionTest() {
             }
         })
     }
-
-    private fun createDataUri(bytes: ByteArray,
-                              mimeType: String?): String {
-        return String.format("data:%s;base64,%s", mimeType ?: "",
-                Base64.encodeToString(bytes, Base64.NO_WRAP))
-    }
-
-    @Test(expected = UiThreadUtils.TimeoutException::class)
-    fun handlingLargeDataURIs() {
-        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 1)
-            override fun onPageStart(session: GeckoSession, url: String) {
-            }
-        });
-
-        val dataBytes = ByteArray(3 * 1024 * 1024)
-        val uri = createDataUri(dataBytes, "*/*")
-
-        sessionRule.session.loadTestPath(DATA_URI_PATH)
-        sessionRule.session.waitForPageStop()
-
-        sessionRule.session.evaluateJS("document.querySelector('#largeLink').href = \"$uri\"")
-        sessionRule.session.evaluateJS("document.querySelector('#largeLink').click()")
-        sessionRule.session.waitForPageStop()
-    }
-
-    @Test fun handlingSmallDataURIs() {
-        sessionRule.delegateUntilTestEnd(object : Callbacks.ProgressDelegate {
-            @AssertCalled(count = 2)
-            override fun onPageStart(session: GeckoSession, url: String) {
-            }
-        });
-
-        val dataBytes = this.getTestBytes("/assets/www/images/test.gif")
-        val uri = createDataUri(dataBytes, "image/*")
-
-        sessionRule.session.loadTestPath(DATA_URI_PATH)
-        sessionRule.session.waitForPageStop()
-
-        sessionRule.session.evaluateJS("document.querySelector('#smallLink').href = \"$uri\"")
-        sessionRule.session.evaluateJS("document.querySelector('#smallLink').click()")
-        sessionRule.session.waitForPageStop()
-    }
 }

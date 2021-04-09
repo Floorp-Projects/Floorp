@@ -4,11 +4,14 @@
 
 package org.mozilla.geckoview.test
 
+import android.graphics.Bitmap
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.util.Base64
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import java.io.ByteArrayOutputStream
+import java.util.concurrent.ThreadLocalRandom
 import org.hamcrest.Matchers.*
 import org.json.JSONObject
 import org.junit.Assume.assumeThat
@@ -2059,4 +2062,129 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
     }
 
+    @Test
+    fun loadLongDataUriToplevelDirect() {
+        val dataBytes = ByteArray(3 * 1024 * 1024)
+        val expectedUri = createDataUri(dataBytes, "*/*")
+        val loader = Loader().data(dataBytes, "*/*")
+
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                assertThat("URLs should match", request.uri, equalTo(expectedUri))
+                return GeckoResult.allow()
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onLoadError(session: GeckoSession, uri: String?,
+                                     error: WebRequestError): GeckoResult<String>? {
+                assertThat("Error category should match", error.category,
+                        equalTo(WebRequestError.ERROR_CATEGORY_URI))
+                assertThat("Error code should match", error.code,
+                        equalTo(WebRequestError.ERROR_DATA_URI_TOO_LONG))
+                assertThat("URLs should match", uri, equalTo(expectedUri))
+                return null
+            }
+        })
+
+        sessionRule.session.load(loader)
+        sessionRule.waitUntilCalled(Callbacks.NavigationDelegate::class, "onLoadError")
+    }
+
+    @Test
+    fun loadLongDataUriToplevelIndirect() {
+        val dataBytes = ByteArray(3 * 1024 * 1024)
+        val dataUri = createDataUri(dataBytes, "*/*")
+
+        sessionRule.session.loadTestPath(DATA_URI_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.NavigationDelegate {
+            @AssertCalled(false)
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                return GeckoResult.deny()
+            }
+        })
+
+        sessionRule.session.evaluateJS("document.querySelector('#largeLink').href = \"$dataUri\"")
+        sessionRule.session.evaluateJS("document.querySelector('#largeLink').click()")
+        sessionRule.session.waitForPageStop()
+    }
+
+    @Test
+    fun loadShortDataUriToplevelIndirect() {
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 2)
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                return GeckoResult.allow()
+            }
+
+            @AssertCalled(false)
+            override fun onLoadError(session: GeckoSession, uri: String?,
+                                     error: WebRequestError): GeckoResult<String>? {
+                return null
+            }
+        })
+
+        val dataBytes = this.getTestBytes("/assets/www/images/test.gif")
+        val uri = createDataUri(dataBytes, "image/*")
+
+        sessionRule.session.loadTestPath(DATA_URI_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.evaluateJS("document.querySelector('#smallLink').href = \"$uri\"")
+        sessionRule.session.evaluateJS("document.querySelector('#smallLink').click()")
+        sessionRule.session.waitForPageStop()
+    }
+
+    fun createLargeHighEntropyImageDataUri() : String {
+        val desiredMinSize = (2 * 1024 * 1024) + 1
+
+        val width = 768;
+        val height = 768;
+
+        val bitmap = Bitmap.createBitmap(ThreadLocalRandom.current().ints(width.toLong() * height.toLong()).toArray(),
+                                         width, height, Bitmap.Config.ARGB_8888)
+
+        val stream = ByteArrayOutputStream()
+        if (!bitmap.compress(Bitmap.CompressFormat.PNG, 0, stream)) {
+            throw Exception("Error compressing PNG")
+        }
+
+        val uri = createDataUri(stream.toByteArray(), "image/png")
+
+        if (uri.length < desiredMinSize) {
+            throw Exception("Test uri is too small, want at least " + desiredMinSize + ", got " + uri.length)
+        }
+
+        return uri
+    }
+
+    @Test
+    fun loadLongDataUriNonToplevel() {
+        val dataUri = createLargeHighEntropyImageDataUri()
+
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                return GeckoResult.allow()
+            }
+
+            @AssertCalled(false)
+            override fun onLoadError(session: GeckoSession, uri: String?,
+                                     error: WebRequestError): GeckoResult<String>? {
+                return null
+            }
+        })
+
+        sessionRule.session.loadTestPath(DATA_URI_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.evaluateJS("document.querySelector('#image').onload = () => { imageLoaded = true; }")
+        sessionRule.session.evaluateJS("document.querySelector('#image').src = \"$dataUri\"")
+        UiThreadUtils.waitForCondition({
+          sessionRule.session.evaluateJS("document.querySelector('#image').complete") as Boolean
+        }, sessionRule.env.defaultTimeoutMillis)
+        sessionRule.session.evaluateJS("if (!imageLoaded) throw imageLoaded")
+    }
 }
