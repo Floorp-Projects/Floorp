@@ -777,7 +777,7 @@ static bool CreateFilteredListFromArrayLike(JSContext* cx, HandleValue v,
   }
 
   // Step 3.
-  uint32_t len;
+  uint64_t len;
   if (!GetLengthProperty(cx, obj, &len)) {
     return false;
   }
@@ -785,10 +785,10 @@ static bool CreateFilteredListFromArrayLike(JSContext* cx, HandleValue v,
   // Steps 4-6.
   RootedValue next(cx);
   RootedId id(cx);
-  uint32_t index = 0;
+  uint64_t index = 0;
   while (index < len) {
     // Steps 6a-b.
-    if (!GetElement(cx, obj, obj, index, &next)) {
+    if (!GetElementLargeIndex(cx, obj, obj, index, &next)) {
       return false;
     }
 
