@@ -197,7 +197,7 @@ class MediaCache {
   // Find a cache entry for this data, and write the data into it
   void AllocateAndWriteBlock(
       AutoLock&, MediaCacheStream* aStream, int32_t aStreamBlockIndex,
-      MediaCacheStream::ReadMode aMode, Span<const uint8_t> aData1,
+      Span<const uint8_t> aData1,
       Span<const uint8_t> aData2 = Span<const uint8_t>());
 
   // mMonitor must be held; can be called on any thread
@@ -537,7 +537,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
       mPlaybackBytesPerSecond(10000),
       mPinCount(0),
       mNotifyDataEndedStatus(NS_ERROR_NOT_INITIALIZED),
-      mMetadataInPartialBlockBuffer(false),
       mIsPrivateBrowsing(aIsPrivateBrowsing) {}
 
 size_t MediaCacheStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -1665,7 +1664,6 @@ void MediaCache::InsertReadaheadBlock(AutoLock& aLock, BlockOwner* aBlockOwner,
 void MediaCache::AllocateAndWriteBlock(AutoLock& aLock,
                                        MediaCacheStream* aStream,
                                        int32_t aStreamBlockIndex,
-                                       MediaCacheStream::ReadMode aMode,
                                        Span<const uint8_t> aData1,
                                        Span<const uint8_t> aData2) {
   MOZ_ASSERT(sThread->IsOnCurrentThread());
@@ -1721,8 +1719,7 @@ void MediaCache::AllocateAndWriteBlock(AutoLock& aLock,
       bo.mLastUseTime = now;
       bo.mStream->mBlocks[aStreamBlockIndex] = blockIndex;
       if (aStreamBlockIndex * BLOCK_SIZE < bo.mStream->mStreamOffset) {
-        bo.mClass = aMode == MediaCacheStream::MODE_PLAYBACK ? PLAYED_BLOCK
-                                                             : METADATA_BLOCK;
+        bo.mClass = PLAYED_BLOCK;
         // This must be the most-recently-used block, since we
         // marked it as used now (which may be slightly bogus, but we'll
         // treat it as used for simplicity).
@@ -2012,21 +2009,14 @@ void MediaCacheStream::NotifyDataReceived(uint32_t aLoadID, uint32_t aCount,
     auto partial = Span<const uint8_t>(mPartialBlockBuffer.get(),
                                        OffsetInBlock(mChannelOffset));
 
-    if (partial.IsEmpty()) {
-      // We've just started filling this buffer so now is a good time
-      // to clear this flag.
-      mMetadataInPartialBlockBuffer = false;
-    }
-
     // The number of bytes needed to complete the partial block.
     size_t remaining = BLOCK_SIZE - partial.Length();
 
     if (source.Length() >= remaining) {
       // We have a whole block now to write it out.
       mMediaCache->AllocateAndWriteBlock(
-          lock, this, OffsetToBlockIndexUnchecked(mChannelOffset),
-          mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK,
-          partial, source.First(remaining));
+          lock, this, OffsetToBlockIndexUnchecked(mChannelOffset), partial,
+          source.First(remaining));
       source = source.From(remaining);
       mChannelOffset += remaining;
       cacheUpdated = true;
@@ -2074,9 +2064,7 @@ void MediaCacheStream::FlushPartialBlockInternal(AutoLock& aLock,
     memset(mPartialBlockBuffer.get() + blockOffset, 0,
            BLOCK_SIZE - blockOffset);
     auto data = Span<const uint8_t>(mPartialBlockBuffer.get(), BLOCK_SIZE);
-    mMediaCache->AllocateAndWriteBlock(
-        aLock, this, blockIndex,
-        mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK, data);
+    mMediaCache->AllocateAndWriteBlock(aLock, this, blockIndex, data);
   }
 
   // |mChannelOffset == 0| means download ends with no bytes received.
