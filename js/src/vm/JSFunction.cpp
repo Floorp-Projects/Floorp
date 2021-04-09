@@ -1144,7 +1144,7 @@ bool js::fun_apply(JSContext* cx, unsigned argc, Value* vp) {
     // Steps 4-5 (note erratum removing steps originally numbered 5 and 7 in
     // original version of ES5).
     RootedObject aobj(cx, &args[1].toObject());
-    uint32_t length;
+    uint64_t length;
     if (!GetLengthProperty(cx, aobj, &length)) {
       return false;
     }
