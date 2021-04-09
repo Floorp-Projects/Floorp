@@ -88,6 +88,8 @@ public class GeckoSession {
     // Window has been set due to another session being transferred to this one.
     private static final int WINDOW_TRANSFER_IN = 3;
 
+    private static final int DATA_URI_MAX_LENGTH = 2 * 1024 * 1024;
+
     private enum State implements NativeQueue.State {
         INITIAL(0),
         READY(1);
@@ -1738,6 +1740,12 @@ public class GeckoSession {
                     "Cannot specify both a referrer session and a referrer URI.");
         }
 
+        final NavigationDelegate navDelegate = mNavigationHandler.getDelegate();
+        final boolean isDataUriTooLong = !maybeCheckDataUriLength(request);
+        if (navDelegate == null && isDataUriTooLong) {
+            throw new IllegalArgumentException("data URI is too long");
+        }
+
         final int loadFlags = request.mIsDataUri
                 // If this is a data: load then we need to force allow it.
                 ? request.mLoadFlags | LOAD_FLAGS_FORCE_ALLOW_DATA_URI
@@ -1756,6 +1764,16 @@ public class GeckoSession {
 
         shouldLoadUri(loadRequest).getOrAccept(allowOrDeny -> {
             if (allowOrDeny == AllowOrDeny.DENY) {
+                return;
+            }
+
+            if (isDataUriTooLong) {
+                ThreadUtils.runOnUiThread(() -> {
+                    navDelegate.onLoadError(this, request.mUri,
+                                            new WebRequestError(WebRequestError.ERROR_DATA_URI_TOO_LONG,
+                                                                WebRequestError.ERROR_CATEGORY_URI,
+                                                                null));
+                });
                 return;
             }
 
@@ -6419,5 +6437,13 @@ public class GeckoSession {
         }
 
         return manifest;
+    }
+
+    private static boolean maybeCheckDataUriLength(final @NonNull Loader request) {
+        if (!request.mIsDataUri) {
+            return true;
+        }
+
+        return request.mUri.length() <= DATA_URI_MAX_LENGTH;
     }
 }
