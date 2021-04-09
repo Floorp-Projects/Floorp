@@ -177,7 +177,7 @@ class gfxFontconfigFontFamily final : public gfxFontFamily {
 
   // Families are constructed initially with just references to patterns.
   // When necessary, these are enumerated within FindStyleVariations.
-  void AddFontPattern(FcPattern* aFontPattern);
+  void AddFontPattern(FcPattern* aFontPattern, bool aSingleName);
 
   void SetFamilyContainsAppFonts(bool aContainsAppFonts) {
     mContainsAppFonts = aContainsAppFonts;
