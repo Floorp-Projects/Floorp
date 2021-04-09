@@ -58,7 +58,7 @@ class OSXSymbolDumper:
             return (
                 subprocess.Popen(["lipo", "-info", filename], stdout=subprocess.PIPE)
                 .communicate()[0]
-                .split(":")[2]
+                .split(b":")[2]
                 .strip()
                 .split()
             )
@@ -74,12 +74,12 @@ class OSXSymbolDumper:
                 return None
 
             module = stdout.splitlines()[0]
-            bits = module.split(" ", 4)
+            bits = module.split(b" ", 4)
             if len(bits) != 5:
                 return None
             _, platform, cpu_arch, actual_breakpad_id, debug_file = bits
 
-            if actual_breakpad_id != expected_breakpad_id:
+            if str(actual_breakpad_id, "utf-8") != expected_breakpad_id:
                 return None
 
             with open(output_filename, "wb") as f:
