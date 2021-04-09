@@ -34,8 +34,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "PROTON_INFOBARS_ENABLED",
-  "browser.proton.infobars.enabled",
+  "PROTON_ENABLED",
+  "browser.proton.enabled",
   false
 );
 
@@ -162,7 +162,7 @@ var DefaultBrowserNotification = {
 
     let iconPixels = win.devicePixelRatio > 1 ? "64" : "32";
     let iconURL = "chrome://branding/content/icon" + iconPixels + ".png";
-    const priority = PROTON_INFOBARS_ENABLED
+    const priority = PROTON_ENABLED
       ? win.gNotificationBox.PRIORITY_SYSTEM
       : win.gNotificationBox.PRIORITY_INFO_MEDIUM;
     let callback = this._onNotificationEvent.bind(this);

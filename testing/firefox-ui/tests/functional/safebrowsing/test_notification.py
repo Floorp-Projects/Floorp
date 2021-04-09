@@ -101,7 +101,7 @@ class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
 
     def check_get_me_out_of_here_button(self):
         with self.marionette.using_context("chrome"):
-            if self.marionette.get_pref("browser.proton.infobars.enabled"):
+            if self.marionette.get_pref("browser.proton.enabled"):
                 notification_box = self.marionette.find_element(
                     By.CSS_SELECTOR, 'vbox.notificationbox-stack[slot="selected"]'
                 )
@@ -125,7 +125,7 @@ class TestSafeBrowsingNotificationBar(WindowManagerMixin, MarionetteTestCase):
 
     def check_x_button(self):
         with self.marionette.using_context("chrome"):
-            if self.marionette.get_pref("browser.proton.infobars.enabled"):
+            if self.marionette.get_pref("browser.proton.enabled"):
                 notification_box = self.marionette.find_element(
                     By.CSS_SELECTOR, 'vbox.notificationbox-stack[slot="selected"]'
                 )

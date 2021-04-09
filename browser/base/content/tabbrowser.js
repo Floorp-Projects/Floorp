@@ -826,7 +826,7 @@
       if (!browser._notificationBox) {
         browser._notificationBox = new MozElements.NotificationBox(element => {
           element.setAttribute("notificationside", "top");
-          if (gProtonInfobarsEnabled) {
+          if (gProton) {
             element.setAttribute(
               "name",
               `tab-notification-box-${this._nextNotificationBoxId++}`
@@ -1112,7 +1112,7 @@
 
       this._appendStatusPanel();
 
-      if (gProtonInfobarsEnabled) {
+      if (gProton) {
         this._updateVisibleNotificationBox(newBrowser);
       }
 
