@@ -5,12 +5,4 @@ About
 ------
 
 Nimbus is an automated experimentation system.
-
-Learn more
----------------------
-
-.. toctree::
-  :maxdepth: 2
-
-  integration.md
-  testing.md
+Our API docs are hosted with the `Experimenter Docs <https://mozilla.github.io/experimenter-docs/desktop-feature-api>`_.
