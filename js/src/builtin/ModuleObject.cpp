@@ -386,7 +386,7 @@ bool ModuleNamespaceObject::isInstance(HandleValue value) {
 
 /* static */
 ModuleNamespaceObject* ModuleNamespaceObject::create(
-    JSContext* cx, HandleModuleObject module, HandleObject exports,
+    JSContext* cx, HandleModuleObject module, HandleArrayObject exports,
     UniquePtr<IndirectBindingMap> bindings) {
   RootedValue priv(cx, ObjectValue(*module));
   ProxyOptions options;
@@ -411,8 +411,8 @@ ModuleObject& ModuleNamespaceObject::module() {
   return GetProxyPrivate(this).toObject().as<ModuleObject>();
 }
 
-JSObject& ModuleNamespaceObject::exports() {
-  return GetProxyReservedSlot(this, ExportsSlot).toObject();
+ArrayObject& ModuleNamespaceObject::exports() {
+  return GetProxyReservedSlot(this, ExportsSlot).toObject().as<ArrayObject>();
 }
 
 IndirectBindingMap& ModuleNamespaceObject::bindings() {
@@ -655,10 +655,9 @@ bool ModuleNamespaceObject::ProxyHandler::delete_(
 bool ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(
     JSContext* cx, HandleObject proxy, MutableHandleIdVector props) const {
   Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
-  RootedObject exports(cx, &ns->exports());
-  uint32_t count;
-  if (!GetLengthProperty(cx, exports, &count) ||
-      !props.reserve(props.length() + count + 1)) {
+  Rooted<ArrayObject*> exports(cx, &ns->exports());
+  uint32_t count = exports->length();
+  if (!props.reserve(props.length() + count + 1)) {
     return false;
   }
 
@@ -1208,8 +1207,8 @@ ModuleNamespaceObject* ModuleObject::createNamespace(JSContext* cx,
     return nullptr;
   }
 
-  auto ns =
-      ModuleNamespaceObject::create(cx, self, exports, std::move(bindings));
+  auto ns = ModuleNamespaceObject::create(cx, self, exports.as<ArrayObject>(),
+                                          std::move(bindings));
   if (!ns) {
     return nullptr;
   }
