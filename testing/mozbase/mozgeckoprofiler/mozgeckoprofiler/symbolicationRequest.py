@@ -197,7 +197,7 @@ class SymbolicationRequest:
                     "forwarded": self.forwardCount + 1,
                     "version": requestVersion,
                 }
-                requestJson = json.dumps(requestObj)
+                requestJson = json.dumps(requestObj).encode()
                 headers = {"Content-Type": "application/json"}
                 requestHandle = Request(url, requestJson, headers)
                 try:
