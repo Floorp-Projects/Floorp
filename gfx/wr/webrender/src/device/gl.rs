@@ -974,6 +974,9 @@ pub struct Capabilities {
     /// Whether to enforce that texture uploads be batched regardless of what
     /// the pref says.
     pub requires_batched_texture_uploads: Option<bool>,
+    /// Whether we are able to ue glClear to clear regions of an alpha render target.
+    /// If false, we must use a shader to clear instead.
+    pub supports_alpha_target_clears: bool,
     /// Whether the driver can reliably upload data to R8 format textures.
     pub supports_r8_texture_upload: bool,
     /// Whether clip-masking is supported natively by the GL implementation
@@ -1696,6 +1699,12 @@ impl Device {
             requires_batched_texture_uploads = Some(true);
         }
 
+        // On Mali-Txxx devices we have observed crashes during draw calls when rendering
+        // to an alpha target immediately after using glClear to clear regions of it.
+        // Using a shader to clear the regions avoids the crash. See bug 1638593.
+        let is_mali_t = renderer_name.starts_with("Mali-T");
+        let supports_alpha_target_clears = !is_mali_t;
+
         // On Linux we we have seen uploads to R8 format textures result in
         // corruption on some AMD cards.
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=1687554#c13
@@ -1733,6 +1742,7 @@ impl Device {
                 supports_render_target_partial_update,
                 supports_shader_storage_object,
                 requires_batched_texture_uploads,
+                supports_alpha_target_clears,
                 supports_r8_texture_upload,
                 uses_native_clip_mask,
                 uses_native_antialiasing,
