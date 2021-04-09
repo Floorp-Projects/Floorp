@@ -110,15 +110,15 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mSCTListFromOCSPStapling(),
       mBuiltInRootsModule(SECMOD_FindModule(kRootModuleName)) {}
 
-static Result FindRootsWithSubject(UniqueSECMODModule& rootsModule,
-                                   SECItem subject,
-                                   /*out*/ nsTArray<nsTArray<uint8_t>>& roots) {
+static void FindRootsWithSubject(UniqueSECMODModule& rootsModule,
+                                 SECItem subject,
+                                 /*out*/ nsTArray<nsTArray<uint8_t>>& roots) {
   MOZ_ASSERT(rootsModule);
   for (int slotIndex = 0; slotIndex < rootsModule->slotCount; slotIndex++) {
     CERTCertificateList* rawResults = nullptr;
     if (PK11_FindRawCertsWithSubject(rootsModule->slots[slotIndex], &subject,
                                      &rawResults) != SECSuccess) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+      continue;
     }
     // rawResults == nullptr means we didn't find any matching certificates
     if (!rawResults) {
@@ -132,7 +132,6 @@ static Result FindRootsWithSubject(UniqueSECMODModule& rootsModule,
       roots.AppendElement(std::move(root));
     }
   }
-  return Success;
 }
 
 // A self-signed issuer certificate should never be necessary in order to build
@@ -249,14 +248,11 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
   // does something unexpected.
   nsTArray<nsTArray<uint8_t>> builtInRoots;
   if (mBuiltInRootsModule) {
-    Result rv = FindRootsWithSubject(mBuiltInRootsModule, encodedIssuerNameItem,
-                                     builtInRoots);
-    if (rv != Success) {
-      return rv;
-    }
+    FindRootsWithSubject(mBuiltInRootsModule, encodedIssuerNameItem,
+                         builtInRoots);
     for (const auto& root : builtInRoots) {
       Input rootInput;
-      rv = rootInput.Init(root.Elements(), root.Length());
+      Result rv = rootInput.Init(root.Elements(), root.Length());
       if (rv != Success) {
         continue;  // probably too big
       }
