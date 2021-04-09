@@ -33,13 +33,13 @@
   --urlbarView-item-inline-padding: calc(var(--urlbar-icon-padding) / 2 + 3px);
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 :root {
   --urlbar-popup-url-color: hsl(210, 77%, 47%);
 }
 } /*** END !proton ***/
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 :root:-moz-lwtheme {
   --urlbar-popup-url-color: rgb(0,97,224);
 }
@@ -55,7 +55,7 @@
   --urlbarView-button-background-active: rgba(249, 249, 250, 0.2);
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 :root {
   --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
 }
@@ -93,7 +93,7 @@
   border-inline: 1px solid transparent;
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .urlbarView {
   margin-inline: calc(4px + var(--identity-box-margin-inline));
   width: calc(100% - 2 * (4px + var(--identity-box-margin-inline)));
@@ -135,7 +135,7 @@
   padding-block: 2px;
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 :root:not([uidensity=compact]) .urlbarView-row:not([type=tip], [type=dynamic]) {
   min-height: 32px;
   padding-block: 4px;
@@ -153,7 +153,7 @@
   padding-block: 6px;
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 .urlbarView-row-inner {
   border-radius: var(--toolbarbutton-border-radius);
 }
@@ -178,7 +178,7 @@
   justify-content: start;
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 .urlbarView-row-inner,
 .urlbarView-no-wrap {
   align-items: center;
@@ -295,7 +295,7 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .urlbarView-favicon {
   /* 2px is from identity-block.inc.css */
   margin-inline-end: calc(var(--urlbar-icon-padding) / 2 + var(--identity-box-margin-inline) + 2px);
@@ -360,7 +360,7 @@
   stroke: rgb(50,49,60);
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   color: #0060df; /* Blue-60 */
 }
@@ -412,7 +412,7 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 .urlbarView-help {
   border-radius: var(--toolbarbutton-border-radius);
 }
@@ -482,7 +482,7 @@
   margin-inline-end: 4px;
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 .urlbarView-tip-button {
   border-radius: var(--toolbarbutton-border-radius);
 }
@@ -634,7 +634,7 @@
   display: none;
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 /* Switch-to-tab action text is styled as a chiclet. */
 .urlbarView-row:is([type=switchtab], [type=remotetab]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
   background-color: var(--urlbar-box-bgcolor);
@@ -695,7 +695,7 @@
   border-top: 1px solid var(--panel-separator-color);
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 #urlbar .search-one-offs:not([hidden]) {
   padding-block: 10px;
   border-top-color: var(--urlbar-separator-color);
@@ -727,7 +727,7 @@
   margin-inline-end: 8px;
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 #urlbar .searchbar-engine-one-off-item {
   border-radius: var(--toolbarbutton-border-radius);
 }
@@ -784,7 +784,7 @@
   fill-opacity: .9;
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .urlbarView-row[source="bookmarks"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
 #urlbar-engine-one-off-item-bookmarks {
   fill: #0060df; /* Blue-60 */
@@ -815,7 +815,7 @@
   border-color: var(--arrowpanel-border-color);
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 #PopupSearchAutoComplete {
   border: 1px solid var(--arrowpanel-border-color);
   /* Remove the top border since the panel is flush with the input. */

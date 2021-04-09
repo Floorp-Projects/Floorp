@@ -11,7 +11,7 @@
   --autocomplete-popup-background: #2A2A2E !important;
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 #urlbar:not([focused="true"]) {
   --urlbar-box-bgcolor: var(--lwt-toolbar-field-focus);
 }

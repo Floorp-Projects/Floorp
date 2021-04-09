@@ -1,10 +1,5 @@
 "use strict";
 
-let gProtonUrlbar = Services.prefs.getBoolPref(
-  "browser.proton.urlbar.enabled",
-  false
-);
-
 // This test checks whether applied WebExtension themes that attempt to change
 // popup properties are applied correctly to the autocomplete bar.
 const POPUP_COLOR = "#85A400";
@@ -13,10 +8,10 @@ const POPUP_TEXT_COLOR_BRIGHT = "#ffffff";
 const POPUP_SELECTED_COLOR = "#9400ff";
 const POPUP_SELECTED_TEXT_COLOR = "#09b9a6";
 
-const POPUP_URL_COLOR_DARK = gProtonUrlbar ? "#0061e0" : "#1c78d4";
-const POPUP_ACTION_COLOR_DARK = gProtonUrlbar ? "#15141a" : "#008f8a";
-const POPUP_URL_COLOR_BRIGHT = gProtonUrlbar ? "#00ddff" : "#74c0ff";
-const POPUP_ACTION_COLOR_BRIGHT = gProtonUrlbar ? "#bfbfc9" : "#30e60b";
+const POPUP_URL_COLOR_DARK = gProton ? "#0061e0" : "#1c78d4";
+const POPUP_ACTION_COLOR_DARK = gProton ? "#15141a" : "#008f8a";
+const POPUP_URL_COLOR_BRIGHT = gProton ? "#00ddff" : "#74c0ff";
+const POPUP_ACTION_COLOR_BRIGHT = gProton ? "#bfbfc9" : "#30e60b";
 
 const SEARCH_TERM = "urlbar-reflows-" + Date.now();
 

@@ -79,7 +79,7 @@ add_task(async function simple() {
 
   Assert.equal(action.getIconURL(), iconURL, "iconURL");
   Assert.equal(action.id, id, "id");
-  Assert.equal(action.pinnedToUrlbar, gProtonUrlbar, "pinnedToUrlbar");
+  Assert.equal(action.pinnedToUrlbar, gProton, "pinnedToUrlbar");
   Assert.equal(action.getDisabled(), false, "disabled");
   Assert.equal(action.getDisabled(window), false, "disabled in window");
   Assert.equal(action.getTitle(), title, "title");
@@ -105,7 +105,7 @@ add_task(async function simple() {
   );
   Assert.equal(
     onPlacedInUrlbarCallCount,
-    gProtonUrlbar ? 1 : 0,
+    gProton ? 1 : 0,
     "onPlacedInUrlbarCallCount after adding the action"
   );
   Assert.equal(
@@ -178,7 +178,7 @@ add_task(async function simple() {
 
   Assert.deepEqual(
     PageActions.actionsInUrlbar(window),
-    (gProtonUrlbar ? [action] : []).concat(initialActionsInUrlbar),
+    (gProton ? [action] : []).concat(initialActionsInUrlbar),
     "Actions in urlbar after adding the action"
   );
 
@@ -223,7 +223,7 @@ add_task(async function simple() {
   );
 
   let urlbarButtonNode = document.getElementById(urlbarButtonID);
-  Assert.equal(!!urlbarButtonNode, gProtonUrlbar, "urlbarButtonNode");
+  Assert.equal(!!urlbarButtonNode, gProton, "urlbarButtonNode");
 
   // Open the panel, click the action's button.
   await promiseOpenPageActionPanel();
@@ -774,7 +774,7 @@ add_task(async function insertBeforeActionID() {
   let panelButtonNode = document.getElementById(panelButtonID);
   Assert.notEqual(panelButtonNode, null, "panelButtonNode");
 
-  if (!gProtonUrlbar) {
+  if (!gProton) {
     let actionIndex = newActions.findIndex(a => a.id == id);
     Assert.equal(
       initialBookmarkSeparatorIndex,
@@ -1219,7 +1219,7 @@ add_task(async function transient() {
   Assert.equal(onPlacedInPanelCount, 0, "onPlacedInPanelCount should remain 0");
   Assert.equal(
     onBeforePlacedInWindowCount,
-    gProtonUrlbar ? 1 : 0,
+    gProton ? 1 : 0,
     "onBeforePlacedInWindowCount after adding transient action"
   );
 

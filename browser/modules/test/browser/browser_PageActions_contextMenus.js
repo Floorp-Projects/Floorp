@@ -45,7 +45,7 @@ add_task(async function contextMenu() {
   let contextMenuPromise;
   let menuItems;
 
-  if (!gProtonUrlbar) {
+  if (!gProton) {
     // Open the context menu on the action's button in the main panel.
     contextMenuPromise = promisePanelShown("pageActionContextMenu");
     EventUtils.synthesizeMouseAtCenter(panelButton, {
@@ -109,7 +109,7 @@ add_task(async function contextMenu() {
   );
 
   // Click the "manage extension" context menu item. about:addons should open.
-  let manageItemIndex = gProtonUrlbar ? 0 : 2;
+  let manageItemIndex = gProton ? 0 : 2;
   contextMenuPromise = promisePanelHidden("pageActionContextMenu");
   let aboutAddonsPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
@@ -128,7 +128,7 @@ add_task(async function contextMenu() {
 
   let urlbarButton;
 
-  if (!gProtonUrlbar) {
+  if (!gProton) {
     // Open the context menu on the action's urlbar button.
     urlbarButton = BrowserPageActions.urlbarButtonNodeForActionID(actionId);
     contextMenuPromise = promisePanelShown("pageActionContextMenu");
@@ -342,7 +342,7 @@ function makeContextMenuItemSpecs(actionInUrlbar = false) {
     { label: "Manage Extension\u2026" },
     { label: "Remove Extension" },
   ];
-  if (!gProtonUrlbar) {
+  if (!gProton) {
     items.unshift(
       {
         label: actionInUrlbar

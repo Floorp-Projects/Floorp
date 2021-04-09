@@ -24,7 +24,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BinarySearch: "resource://gre/modules/BinarySearch.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
 });
 
 const ACTION_ID_BOOKMARK = "bookmark";
@@ -36,7 +35,12 @@ const ACTION_ID_TRANSIENT_SEPARATOR = "transientSeparator";
 const PREF_PERSISTED_ACTIONS = "browser.pageActions.persistedActions";
 const PERSISTED_ACTIONS_CURRENT_VERSION = 1;
 
-const PROTON_PREF = "browser.proton.urlbar.enabled";
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "protonEnabled",
+  "browser.proton.enabled",
+  false
+);
 
 // Escapes the given raw URL string, and returns an equivalent CSS url()
 // value for it.
@@ -266,7 +270,7 @@ var PageActions = {
       this._persistedActions.ids.push(action.id);
     }
 
-    if (UrlbarPrefs.get(PROTON_PREF)) {
+    if (protonEnabled) {
       // Actions are always pinned to the urlbar in Proton except for panel
       // separators.
       action._pinnedToUrlbar = !action.__isSeparator;
@@ -442,7 +446,7 @@ var PageActions = {
   },
 
   _migratePersistedActionsProton(actions) {
-    if (UrlbarPrefs.get(PROTON_PREF)) {
+    if (protonEnabled) {
       if (actions?.idsInUrlbarPreProton) {
         // continue with Proton
       } else if (actions) {
@@ -1252,7 +1256,7 @@ PageActions._initBuiltInActions = function() {
     },
   ];
 
-  if (UrlbarPrefs.get(PROTON_PREF)) {
+  if (protonEnabled) {
     return;
   }
 
