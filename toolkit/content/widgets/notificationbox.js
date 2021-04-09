@@ -146,8 +146,7 @@
       aPriority,
       aButtons,
       aEventCallback,
-      aNotificationIs,
-      aFtlFilePaths
+      aNotificationIs
     ) {
       if (
         aPriority < this.PRIORITY_SYSTEM ||
@@ -179,9 +178,6 @@
         }
         newitem = document.createElement("notification-message");
         newitem.setAttribute("message-bar-type", "infobar");
-        if (aFtlFilePaths) {
-          newitem.addFtl(aFtlFilePaths);
-        }
       } else {
         newitem = document.createXULElement(
           "notification",
@@ -605,15 +601,6 @@
           return;
         }
         this.control.removeNotification(this);
-      }
-
-      addFtl(filepaths) {
-        for (let filepath of filepaths) {
-          let link = document.createElement("link");
-          link.setAttribute("rel", "localization");
-          link.href = filepath;
-          this.shadowRoot.append(link);
-        }
       }
 
       handleEvent(e) {
