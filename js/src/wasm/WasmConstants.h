@@ -1021,8 +1021,6 @@ static const unsigned MaxTableLimitField = UINT32_MAX;
 static const unsigned MaxTableLength = 10000000;
 static const unsigned MaxLocals = 50000;
 static const unsigned MaxParams = 1000;
-// The actual maximum results may be `1` if multi-value is not enabled. Check
-// `env->funcMaxResults()` to get the correct value for a module.
 static const unsigned MaxResults = 1000;
 static const unsigned MaxStructFields = 1000;
 static const unsigned MaxMemory32LimitField = 65536;

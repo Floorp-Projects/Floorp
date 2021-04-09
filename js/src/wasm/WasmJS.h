@@ -140,9 +140,6 @@ bool FunctionReferencesAvailable(JSContext* cx);
 // Experimental (ref T) types and structure types.
 bool GcTypesAvailable(JSContext* cx);
 
-// Multi-value block and function returns.
-bool MultiValuesAvailable(JSContext* cx);
-
 // Shared memory and atomics.
 bool ThreadsAvailable(JSContext* cx);
 

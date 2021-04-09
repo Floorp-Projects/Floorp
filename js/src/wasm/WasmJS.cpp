@@ -94,14 +94,6 @@ static inline bool IsFuzzingCranelift(JSContext* cx) {
 // These functions read flags and apply fuzzing intercession policies.  Never go
 // directly to the flags in code below, always go via these accessors.
 
-static inline bool WasmMultiValueFlag(JSContext* cx) {
-#ifdef ENABLE_WASM_MULTI_VALUE
-  return cx->options().wasmMultiValue();
-#else
-  return false;
-#endif
-}
-
 static inline bool WasmSimdFlag(JSContext* cx) {
 #ifdef ENABLE_WASM_SIMD
   if (IsFuzzingCranelift(cx)) {
@@ -392,10 +384,6 @@ bool wasm::GcTypesAvailable(JSContext* cx) {
   return WasmGcFlag(cx) && BaselineAvailable(cx);
 }
 
-bool wasm::MultiValuesAvailable(JSContext* cx) {
-  return WasmMultiValueFlag(cx) && AnyCompilerAvailable(cx);
-}
-
 bool wasm::SimdAvailable(JSContext* cx) {
   return WasmSimdFlag(cx) &&
          (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
@@ -435,9 +423,7 @@ bool wasm::ThreadsAvailable(JSContext* cx) {
 
 bool wasm::ExceptionsAvailable(JSContext* cx) {
   // Ion & Cranelift do not support Exceptions (for now).
-  // Exceptions require multi-value.
-  return WasmExceptionsFlag(cx) && MultiValuesAvailable(cx) &&
-         BaselineAvailable(cx);
+  return WasmExceptionsFlag(cx) && BaselineAvailable(cx);
 }
 
 bool wasm::HasPlatformSupport(JSContext* cx) {

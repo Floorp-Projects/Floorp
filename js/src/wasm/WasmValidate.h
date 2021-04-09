@@ -181,7 +181,6 @@ struct ModuleEnvironment {
   bool refTypesEnabled() const { return features.refTypes; }
   bool functionReferencesEnabled() const { return features.functionReferences; }
   bool gcTypesEnabled() const { return features.gcTypes; }
-  bool multiValueEnabled() const { return features.multiValue; }
   bool v128Enabled() const { return features.v128; }
   bool simdWormholeEnabled() const { return features.simdWormhole; }
   bool hugeMemoryEnabled() const { return !isAsmJS() && features.hugeMemory; }
@@ -190,9 +189,6 @@ struct ModuleEnvironment {
   bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
 
-  uint32_t funcMaxResults() const {
-    return multiValueEnabled() ? MaxResults : 1;
-  }
   bool funcIsImport(uint32_t funcIndex) const {
     return funcIndex < funcImportGlobalDataOffsets.length();
   }

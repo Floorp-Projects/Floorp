@@ -57,7 +57,6 @@ for (let [name, enabled, test] of releasedFeaturesMaybeDisabledAnyway) {
 }
 
 let releasedFeatures = [
-  ['multi-value', wasmMultiValueEnabled(), `(module (func (result i32 i32) i32.const 0 i32.const 0))`],
   ['threads', wasmThreadsEnabled(), `(module (memory 1 1 shared))`],
   ['reference-types', wasmReftypesEnabled(), `(module (func (param externref)))`],
 ];

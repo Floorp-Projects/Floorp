@@ -220,12 +220,8 @@ for (var bad of [0xff, 1, 0x3f])
     assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, bad, EndCode]})])])), CompileError, /(invalid .*block type)|(unknown type)/);
 
 const multiValueModule = moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:[BlockCode, 0, EndCode]})])]);
-if (wasmMultiValueEnabled()) {
-    // In this test module, 0 denotes a void-to-void block type.
-    assertEq(WebAssembly.validate(multiValueModule), true);
-} else {
-    assertErrorMessage(() => wasmEval(multiValueModule), CompileError, /(invalid .*block type)|(unknown type)/);
-}
+// In this test module, 0 denotes a void-to-void block type.
+assertEq(WebAssembly.validate(multiValueModule), true);
 
 // Ensure all invalid opcodes rejected
 for (let op of undefinedOpcodes) {
