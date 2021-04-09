@@ -140,7 +140,7 @@ downloads-cancel-download =
 # downloads fit in the available space, or when there are no downloads in
 # the panel at all.
 downloads-history =
-    .label = Show All Downloads
+    .label = Show all downloads
     .accesskey = S
 
 # This string is shown at the top of the Download Details Panel, to indicate
