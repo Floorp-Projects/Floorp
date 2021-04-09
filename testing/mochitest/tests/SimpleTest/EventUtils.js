@@ -1051,6 +1051,13 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
   }
 
   const rect = target?.getBoundingClientRect();
+  let resolution = 1.0;
+  try {
+    resolution = _getDOMWindowUtils(win.top).getResolution();
+  } catch (e) {
+    // XXX How to get mobile viewport scale on Fission+xorigin since
+    //     window.top access isn't allowed due to cross-origin?
+  }
   const scaleValue = (() => {
     if (scale === "inScreenPixels") {
       return 1.0;
@@ -1063,14 +1070,26 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
     }
     throw Error(`invalid scale value (${scale}) is specified`);
   })();
+  // XXX mozInnerScreen might be invalid value on mobile viewport (Bug 1701546),
+  //     so use window.top's mozInnerScreen. But this won't work fission+xorigin
+  //     with mobile viewport until mozInnerScreen returns valid value with
+  //     scale.
   const x = (() => {
     if (screenX != undefined) {
       return screenX * scaleValue;
     }
+    let winInnerOffsetX = win.mozInnerScreenX;
+    try {
+      winInnerOffsetX =
+        win.top.mozInnerScreenX +
+        (win.mozInnerScreenX - win.top.mozInnerScreenX) * resolution;
+    } catch (e) {
+      // XXX fission+xorigin test throws permission denied since win.top is
+      //     cross-origin.
+    }
     return (
-      ((atCenter ? rect.width / 2 : offsetX) +
-        win.mozInnerScreenX +
-        rect.left) *
+      (((atCenter ? rect.width / 2 : offsetX) + rect.left) * resolution +
+        winInnerOffsetX) *
       scaleValue
     );
   })();
@@ -1078,10 +1097,18 @@ function synthesizeNativeMouseEvent(aParams, aCallback = null) {
     if (screenY != undefined) {
       return screenY * scaleValue;
     }
+    let winInnerOffsetY = win.mozInnerScreenY;
+    try {
+      winInnerOffsetY =
+        win.top.mozInnerScreenY +
+        (win.mozInnerScreenY - win.top.mozInnerScreenY) * resolution;
+    } catch (e) {
+      // XXX fission+xorigin test throws permission denied since win.top is
+      //     cross-origin.
+    }
     return (
-      ((atCenter ? rect.height / 2 : offsetY) +
-        win.mozInnerScreenY +
-        rect.top) *
+      (((atCenter ? rect.height / 2 : offsetY) + rect.top) * resolution +
+        winInnerOffsetY) *
       scaleValue
     );
   })();

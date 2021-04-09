@@ -54,11 +54,6 @@ function starttest() {
       is(check, true, 'sendMouseEvent should dispatch click event');
 
       await (async function testSynthesizeNativeMouseEvent() {
-        if (navigator.appVersion.includes("Android")) {
-          todo(false,
-            `testSynthesizeNativeMouseEvent: does nothing on Android because its nsIWidget::SynthesizeNativeMouseEvent won't fire "mouseup"`);
-          return;
-        }
         let events = [];
         let listener = event => events.push(event);
         let preventDefault = event => event.preventDefault();
