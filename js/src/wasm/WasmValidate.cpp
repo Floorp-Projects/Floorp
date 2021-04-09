@@ -2721,6 +2721,10 @@ static bool DecodeEventSection(Decoder& d, ModuleEnvironment* env) {
     return true;
   }
 
+  if (!env->exceptionsEnabled()) {
+    return d.fail("exceptions not enabled");
+  }
+
   uint32_t numDefs;
   if (!d.readVarU32(&numDefs)) {
     return d.fail("expected number of events");
