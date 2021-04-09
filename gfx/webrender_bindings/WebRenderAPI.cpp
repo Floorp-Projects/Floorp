@@ -445,6 +445,8 @@ void WebRenderAPI::DestroyRenderer() {
   MOZ_RELEASE_ASSERT(!mRootApi);
 
   RenderThread::Get()->SetDestroyed(GetId());
+  // Call wr_api_stop_render_backend() before RemoveRenderer.
+  wr_api_stop_render_backend(mDocHandle);
 
   layers::SynchronousTask task("Destroy WebRenderAPI");
   auto event = MakeUnique<RemoveRenderer>(&task);

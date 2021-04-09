@@ -97,6 +97,7 @@ pub enum SceneBuilderRequest {
     SimulateLongSceneBuild(u32),
     ExternalEvent(ExternalEvent),
     WakeUp,
+    StopRenderBackend,
     ShutDown(Option<Sender<()>>),
     Flush(Sender<()>),
     SetFrameBuilderConfig(FrameBuilderConfig),
@@ -121,6 +122,7 @@ pub enum SceneBuilderResult {
     ClearNamespace(IdNamespace),
     GetGlyphDimensions(GlyphDimensionRequest),
     GetGlyphIndices(GlyphIndexRequest),
+    StopRenderBackend,
     ShutDown(Option<Sender<()>>),
     DocumentsForDebugger(String),
 
@@ -345,6 +347,9 @@ impl SceneBuilderThread {
                 }
                 Ok(SceneBuilderRequest::GetGlyphIndices(request)) => {
                     self.send(SceneBuilderResult::GetGlyphIndices(request));
+                }
+                Ok(SceneBuilderRequest::StopRenderBackend) => {
+                    self.send(SceneBuilderResult::StopRenderBackend);
                 }
                 Ok(SceneBuilderRequest::ShutDown(sync)) => {
                     self.send(SceneBuilderResult::ShutDown(sync));
