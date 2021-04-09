@@ -6,6 +6,14 @@ ignoreAllUncaughtExceptions();
 
 add_task(async function() {
   info("Check POST search engine support");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+        false,
+      ],
+    ],
+  });
 
   let currEngine = await Services.search.getDefault();
 
@@ -85,4 +93,5 @@ add_task(async function() {
       } catch (ex) {}
     }
   );
+  await SpecialPowers.popPrefEnv();
 });

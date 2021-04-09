@@ -7,6 +7,15 @@ ignoreAllUncaughtExceptions();
 add_task(async function() {
   info("Clicking suggestion list while composing");
 
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+        false,
+      ],
+    ],
+  });
+
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:home" },
     async function(browser) {
@@ -127,4 +136,5 @@ add_task(async function() {
       } catch (ex) {}
     }
   );
+  await SpecialPowers.popPrefEnv();
 });

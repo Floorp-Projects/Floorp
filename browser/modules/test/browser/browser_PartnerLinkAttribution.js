@@ -265,6 +265,14 @@ add_task(async function test_context_menu() {
 });
 
 add_task(async function test_about_newtab() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+        false,
+      ],
+    ],
+  });
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:newtab",
@@ -308,6 +316,7 @@ add_task(async function test_about_newtab() {
   );
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
   gRequests = [];
 });
 

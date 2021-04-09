@@ -57,6 +57,14 @@ if (code) {
 function promiseContentSearchReady(browser) {
   return SpecialPowers.spawn(browser, [], async function(args) {
     return new Promise(resolve => {
+      SpecialPowers.pushPrefEnv({
+        set: [
+          [
+            "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+            false,
+          ],
+        ],
+      });
       if (content.wrappedJSObject.gContentSearchController) {
         let searchController = content.wrappedJSObject.gContentSearchController;
         if (searchController.defaultEngine) {
