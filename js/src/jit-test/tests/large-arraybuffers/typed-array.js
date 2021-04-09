@@ -1,5 +1,6 @@
-var gb = 1 * 1024 * 1024 * 1024;
+load(libdir + "asserts.js");
 
+var gb = 1 * 1024 * 1024 * 1024;
 var ta = new Uint8Array(4 * gb + 10);
 
 function testSetFromTyped() {
@@ -193,3 +194,8 @@ function testArrayBufferSlice() {
     assertEq(ta2.toString(), "100,101,102");
 }
 testArrayBufferSlice();
+
+function testFromObjectTooLargeLength() {
+    assertThrowsInstanceOf(() => new Uint8Array({length: 9 * gb}), RangeError);
+}
+testFromObjectTooLargeLength();

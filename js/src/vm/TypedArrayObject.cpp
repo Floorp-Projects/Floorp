@@ -1370,7 +1370,7 @@ template <typename T>
   }
 
   // Step 9.
-  uint32_t len;
+  uint64_t len;
   if (!GetLengthProperty(cx, arrayLike, &len)) {
     return nullptr;
   }
@@ -1380,6 +1380,8 @@ template <typename T>
   if (!maybeCreateArrayBuffer(cx, len, nullptr, &buffer)) {
     return nullptr;
   }
+
+  MOZ_ASSERT(len <= maxByteLength() / BYTES_PER_ELEMENT);
 
   Rooted<TypedArrayObject*> obj(
       cx, makeInstance(cx, buffer, BufferSize(0), BufferSize(len), proto));
