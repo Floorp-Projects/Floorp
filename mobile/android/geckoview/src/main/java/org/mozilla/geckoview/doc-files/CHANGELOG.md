@@ -21,15 +21,26 @@ exclude: true
 - ⚠️ Deprecated [`NavigationDelegate.onLocationChange`][89.4], to be removed in v92. The
   new `onLocationChange` callback simply adds permissions information, migration of existing
   functionality should only require updating the function signature.
-- Added [`GeckoRuntimeSettings.setEnterpriseRootsEnabled`][89.1] which allows
+- Added [`GeckoRuntimeSettings.setEnterpriseRootsEnabled`][89.5] which allows
   GeckoView to add third party certificate roots from the Android OS CA store.
   ([bug 1678191]({{bugzilla}}1678191)).
+- ⚠️ [`GeckoSession.load`][89.6] now throws `IllegalArgumentException` if the
+  session has no [`GeckoSession.NavigationDelegate`][89.7] and the request's `data` URI is too long.
+  If a `GeckoSession` *does* have a `GeckoSession.NavigationDelegate` and `GeckoSession.load` is called
+  with a top-level `data` URI that is too long, [`NavigationDelgate.onLoadError`][89.8] will be called
+  with a [`WebRequestError`][89.9] containing error code [`WebRequestError.ERROR_DATA_URI_TOO_LONG`][89.10].
+  ([bug 1668952]({{bugzilla}}1668952))
 
 [89.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.ContentPermission.html
 [89.2]: {{javadoc_uri}}/StorageController.html#getPermissions-java.lang.String-
 [89.3]: {{javadoc_uri}}/StorageController.html#getAllPermissions--
 [89.4]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-
 [89.5]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setEnterpriseRootsEnabled-boolean-
+[89.6]: {{javadoc_uri}}/GeckoSession.html#load-org.mozilla.geckoview.GeckoSession.Loader-
+[89.7]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html
+[89.8]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLoadError-org.mozilla.geckoview.GeckoSession-java.lang.String-org.mozilla.geckoview.WebRequestError-
+[89.9]: {{javadoc_uri}}/WebRequestError.html
+[89.10]: {{javadoc_uri}}/WebRequestError.html#ERROR_DATA_URI_TOO_LONG
 
 ## v88
 - Added [`WebExtension.Download#update`][88.1] that can be used to
@@ -952,4 +963,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 03df1c68b161c8df9f9a1095fac75dc3446aefde
+[api-version]: 54e3c938e7dc86ffef9073ad454a5a5d605a272f
