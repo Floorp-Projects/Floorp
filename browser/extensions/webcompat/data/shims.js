@@ -152,11 +152,6 @@ const AVAILABLE_SHIMS = [
       "*://*.xx.fbcdn.net/*", // covers:
       // "*://scontent-.*-\d.xx.fbcdn.net/*",
       // "*://static.xx.fbcdn.net/rsrc.php/*",
-
-      "*://www.facebook.com/plugins/comments.php*",
-      "*://www.facebook.com/plugins/comments/async/*",
-      "*://www.facebook.com/plugins/feedback.php*",
-      "*://www.facebook.com/plugins/like_box.php*",
     ],
   },
   {
