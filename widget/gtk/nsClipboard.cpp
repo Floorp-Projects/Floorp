@@ -157,10 +157,11 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
   bool imagesAdded = false;
   for (uint32_t i = 0; i < flavors.Length(); i++) {
     nsCString& flavorStr = flavors[i];
+    LOGCLIP(("    processing target %s\n", flavorStr.get()));
 
     // Special case text/unicode since we can handle all of the string types.
     if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-      LOGCLIP(("    text targets\n"));
+      LOGCLIP(("    adding TEXT targets\n"));
       gtk_target_list_add_text_targets(list, 0);
       continue;
     }
@@ -169,7 +170,7 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
       // Don't bother adding image targets twice
       if (!imagesAdded) {
         // accept any writable image type
-        LOGCLIP(("    image targets\n"));
+        LOGCLIP(("    adding IMAGE targets\n"));
         gtk_target_list_add_image_targets(list, 0, TRUE);
         imagesAdded = true;
       }
@@ -177,6 +178,7 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
     }
 
     // Add this to our list of valid targets
+    LOGCLIP(("    adding OTHER target %s\n", flavorStr.get()));
     GdkAtom atom = gdk_atom_intern(flavorStr.get(), FALSE);
     gtk_target_list_add(list, atom, 0, 0);
   }
@@ -188,14 +190,17 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
   gint numTargets;
   GtkTargetEntry* gtkTargets =
       gtk_target_table_new_from_list(list, &numTargets);
-
-  LOGCLIP(("    gtk_target_table_new_from_list() = %p\n", (void*)gtkTargets));
+  if (!gtkTargets) {
+    LOGCLIP(("    gtk_clipboard_set_with_data() failed!\n"));
+    // Clear references to the any old data and let GTK know that it is no
+    // longer available.
+    EmptyClipboard(aWhichClipboard);
+    return NS_ERROR_FAILURE;
+  }
 
   // Set getcallback and request to store data after an application exit
-  if (gtkTargets &&
-      gtk_clipboard_set_with_data(gtkClipboard, gtkTargets, numTargets,
+  if (gtk_clipboard_set_with_data(gtkClipboard, gtkTargets, numTargets,
                                   clipboard_get_cb, clipboard_clear_cb, this)) {
-    LOGCLIP(("    gtk_clipboard_set_with_data() is ok\n"));
     // We managed to set-up the clipboard so update internal state
     // We have to set it now because gtk_clipboard_set_with_data() calls
     // clipboard_clear_cb() which reset our internal state
@@ -211,8 +216,6 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
     rv = NS_OK;
   } else {
     LOGCLIP(("    gtk_clipboard_set_with_data() failed!\n"));
-    // Clear references to the any old data and let GTK know that it is no
-    // longer available.
     EmptyClipboard(aWhichClipboard);
     rv = NS_ERROR_FAILURE;
   }
@@ -452,6 +455,22 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
     LOGCLIP(("    no targes at clipboard (null)\n"));
     return NS_OK;
   }
+
+#ifdef MOZ_LOGGING
+  LOGCLIP(("    Clipboard content (target nums %d):\n", targetNums));
+  for (int32_t j = 0; j < targetNums; j++) {
+    gchar* atom_name = gdk_atom_name(targets[j]);
+    if (!atom_name) {
+      LOGCLIP(("        failed to get MIME\n"));
+      continue;
+    }
+    LOGCLIP(("        MIME %s\n", atom_name));
+  }
+  LOGCLIP(("    Asking for content:\n"));
+  for (auto& flavor : aFlavorList) {
+    LOGCLIP(("        MIME %s\n", flavor.get()));
+  }
+#endif
 
   // Walk through the provided types and try to match it to a
   // provided type.
