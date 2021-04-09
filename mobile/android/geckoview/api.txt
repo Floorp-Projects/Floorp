@@ -2082,6 +2082,7 @@ package org.mozilla.geckoview {
     field public static final int ERROR_CONNECTION_REFUSED = 67;
     field public static final int ERROR_CONTENT_CRASHED = 68;
     field public static final int ERROR_CORRUPTED_CONTENT = 52;
+    field public static final int ERROR_DATA_URI_TOO_LONG = 117;
     field public static final int ERROR_FILE_ACCESS_DENIED = 101;
     field public static final int ERROR_FILE_NOT_FOUND = 85;
     field public static final int ERROR_INVALID_CONTENT_ENCODING = 84;
