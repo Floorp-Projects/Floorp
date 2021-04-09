@@ -55,7 +55,7 @@ describe("PrefsFeed", () => {
     overrider.set({
       PrivateBrowsingUtils: { enabled: true },
       Services: ServicesStub,
-      aboutNewTabFeature: new global.ExperimentFeature(),
+      NimbusFeatures: { newtab: new global.ExperimentFeature() },
     });
   });
   afterEach(() => {
@@ -84,7 +84,7 @@ describe("PrefsFeed", () => {
     assert.isTrue(data.isPrivateBrowsingEnabled);
   });
   it("should dispatch PREFS_INITIAL_VALUES with a .featureConfig", () => {
-    sandbox.stub(global.aboutNewTabFeature, "getValue").returns({
+    sandbox.stub(global.NimbusFeatures.newtab, "getValue").returns({
       prefsButtonIcon: "icon-foo",
     });
     feed.onAction({ type: at.INIT });
@@ -96,7 +96,7 @@ describe("PrefsFeed", () => {
     assert.deepEqual(data.featureConfig, { prefsButtonIcon: "icon-foo" });
   });
   it("should dispatch PREFS_INITIAL_VALUES with an empty object if no experiment is returned", () => {
-    sandbox.stub(global.aboutNewTabFeature, "getValue").returns(null);
+    sandbox.stub(global.NimbusFeatures.newtab, "getValue").returns(null);
     feed.onAction({ type: at.INIT });
     assert.equal(
       feed.store.dispatch.firstCall.args[0].type,
@@ -155,7 +155,7 @@ describe("PrefsFeed", () => {
     );
   });
   it("should send a PREF_CHANGED actions when onExperimentUpdated is called", () => {
-    sandbox.stub(global.aboutNewTabFeature, "getValue").returns({
+    sandbox.stub(global.NimbusFeatures.newtab, "getValue").returns({
       prefsButtonIcon: "icon-new",
     });
     feed.onExperimentUpdated();

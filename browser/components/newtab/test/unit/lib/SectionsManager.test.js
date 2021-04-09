@@ -43,7 +43,7 @@ describe("SectionsManager", () => {
     globals.set({
       Services: fakeServices,
       PlacesUtils: fakePlacesUtils,
-      aboutNewTabFeature: { getValue: sandbox.stub() },
+      NimbusFeatures: { newtab: { getValue: sandbox.stub() } },
     });
     // Redecorate SectionsManager to remove any listeners that have been added
     EventEmitter.decorate(SectionsManager);
@@ -521,7 +521,7 @@ describe("SectionsFeed", () => {
     SectionsManager.sections.clear();
     SectionsManager.initialized = false;
     globals = new GlobalOverrider();
-    globals.set("aboutNewTabFeature", { getValue: sandbox.stub() });
+    globals.set("NimbusFeatures", { newtab: { getValue: sandbox.stub() } });
     storage = {
       get: sandbox.stub().resolves(),
       set: sandbox.stub().resolves(),
