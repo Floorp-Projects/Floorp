@@ -99,6 +99,12 @@ class nsMenuX final : public nsMenuParentX,
   // Close the menu if it's open, and flush any pending popuphiding / popuphidden events.
   bool Close();
 
+  // Called from the menu delegate during menu:willHighlightItem:.
+  // If called with Nothing(), it means that no item is highlighted.
+  // The index only accounts for visible items, i.e. items for which there exists an NSMenuItem* in
+  // mNativeMenu.
+  void OnHighlightedItemChanged(const mozilla::Maybe<uint32_t>& aNewHighlightedIndex);
+
   void SetRebuild(bool aMenuEvent);
   void SetupIcon();
   nsIContent* Content() { return mContent; }
@@ -188,6 +194,10 @@ class nsMenuX final : public nsMenuParentX,
   MenuDelegate* mMenuDelegate = nil;  // [strong]
   // nsMenuX objects should always have a valid native menu item.
   NSMenuItem* mNativeMenuItem = nil;  // [strong]
+
+  // Nothing() if no item is highlighted. The index only accounts for visible items.
+  mozilla::Maybe<uint32_t> mHighlightedItemIndex;
+
   bool mIsEnabled = true;
   bool mNeedsRebuild = true;
 
