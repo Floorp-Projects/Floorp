@@ -10,12 +10,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { FormAutofill } = ChromeUtils.import(
-  "resource://formautofill/FormAutofill.jsm"
+  "resource://autofill/FormAutofill.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillUtils",
-  "resource://formautofill/FormAutofillUtils.jsm"
+  "resource://autofill/FormAutofillUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
