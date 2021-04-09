@@ -144,6 +144,17 @@ inline bool IsBaselineInterpreterEnabled() {
 }
 
 }  // namespace jit
+
+extern mozilla::Atomic<bool> fuzzingSafe;
+
+static inline bool IsFuzzing() {
+#ifdef FUZZING
+  return true;
+#else
+  return fuzzingSafe;
+#endif
+}
+
 }  // namespace js
 
 #endif /* jit_JitOptions_h */

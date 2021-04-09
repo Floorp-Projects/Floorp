@@ -149,7 +149,7 @@ using JS::SourceText;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
-mozilla::Atomic<bool> fuzzingSafe(false);
+mozilla::Atomic<bool> js::fuzzingSafe(false);
 
 // If disableOOMFunctions is set, disable functionality that causes artificial
 // OOM conditions.

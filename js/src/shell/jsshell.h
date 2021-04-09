@@ -162,7 +162,6 @@ extern RCFile* gErrFile;
 extern RCFile* gOutFile;
 extern bool reportWarnings;
 extern bool compileOnly;
-extern bool fuzzingSafe;
 extern bool disableOOMFunctions;
 extern bool defaultToSameCompartment;
 
