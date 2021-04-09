@@ -169,6 +169,9 @@ def write_test_settings_json(args, test_details, oskey):
     # write test settings json file with test details that the control
     # server will provide for the web ext
     test_url = transform_platform(test_details["test_url"], oskey)
+    # this is needed for raptor browsertime to pick up the replaced
+    # {platform} argument for motionmark tests
+    test_details["test_url"] = test_url
 
     test_settings = {
         "raptor-options": {
