@@ -1271,7 +1271,8 @@ nsresult CanonicalBrowsingContext::PendingRemotenessChange::FinishSubframe() {
   bool wasRemote = oldBrowser && oldBrowser->GetBrowsingContext() == target;
   if (wasRemote) {
     MOZ_DIAGNOSTIC_ASSERT(oldBrowser != embedderBrowser);
-    MOZ_DIAGNOSTIC_ASSERT(oldBrowser->GetBrowserBridgeParent());
+    MOZ_DIAGNOSTIC_ASSERT(oldBrowser->IsDestroyed() ||
+                          oldBrowser->GetBrowserBridgeParent());
 
     // `oldBrowser` will clear the `UnloadingHost` status once the actor has
     // been destroyed.
