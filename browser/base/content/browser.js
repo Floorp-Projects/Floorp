@@ -2853,6 +2853,7 @@ function BrowserHome(aEvent) {
         gBrowser.selectedBrowser.focus();
       }
       notifyObservers = true;
+      aEvent?.preventDefault();
       break;
     case "tabshifted":
     case "tab":
@@ -2871,11 +2872,20 @@ function BrowserHome(aEvent) {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
         csp: null,
       });
+      if (!loadInBackground) {
+        if (isBlankPageURL(homePage)) {
+          gURLBar.select();
+        } else {
+          gBrowser.selectedBrowser.focus();
+        }
+      }
+      aEvent?.preventDefault();
       break;
     case "window":
       // OpenBrowserWindow will trigger the observer event, so no need to do so here.
       notifyObservers = false;
       OpenBrowserWindow();
+      aEvent?.preventDefault();
       break;
   }
   if (notifyObservers) {
