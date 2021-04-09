@@ -3,7 +3,7 @@
 var AddressResult, CreditCardResult;
 add_task(async function setup() {
   ({ AddressResult, CreditCardResult } = ChromeUtils.import(
-    "resource://formautofill/ProfileAutoCompleteResult.jsm"
+    "resource://autofill/ProfileAutoCompleteResult.jsm"
   ));
 });
 

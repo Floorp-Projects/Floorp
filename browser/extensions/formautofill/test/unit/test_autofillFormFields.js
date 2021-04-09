@@ -13,7 +13,7 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
 var FormAutofillHandler, OSKeyStore;
 add_task(async function setup() {
   ({ FormAutofillHandler } = ChromeUtils.import(
-    "resource://formautofill/FormAutofillHandler.jsm"
+    "resource://autofill/FormAutofillHandler.jsm"
   ));
   ({ OSKeyStore } = ChromeUtils.import(
     "resource://gre/modules/OSKeyStore.jsm"
