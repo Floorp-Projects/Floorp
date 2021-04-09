@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals startBackground, analytics, communication, makeUuid, Raven, catcher, auth, log */
+/* globals startBackground, analytics, communication, makeUuid, Raven, catcher, auth, log, browser, getStrings */
 
 "use strict";
 
@@ -62,7 +62,7 @@ this.senderror = (function() {
   let lastErrorTime;
 
   exports.showError = async function(error) {
-    if (lastErrorTime && (Date.now() - lastErrorTime) < ERROR_TIME_LIMIT) {
+    if (lastErrorTime && Date.now() - lastErrorTime < ERROR_TIME_LIMIT) {
       return;
     }
     lastErrorTime = Date.now();
@@ -74,9 +74,9 @@ this.senderror = (function() {
 
     let item = messages[popupMessage];
     if (!("title" in item)) {
-      let keys = [{id: item.titleKey}];
+      let keys = [{ id: item.titleKey }];
       if ("infoKey" in item) {
-        keys.push({id: item.infoKey});
+        keys.push({ id: item.infoKey });
       }
 
       [item.title, item.info] = await getStrings(keys);
@@ -112,7 +112,7 @@ this.senderror = (function() {
       return;
     }
     if (!Raven.isSetup()) {
-      Raven.config(dsn, {allowSecretKey: true}).install();
+      Raven.config(dsn, { allowSecretKey: true }).install();
     }
     const exception = new Error(e.message);
     exception.stack = e.multilineStack || e.stack || undefined;
@@ -127,21 +127,33 @@ this.senderror = (function() {
     }
     const rest = {};
     for (const attr in e) {
-      if (!["name", "message", "stack", "multilineStack", "popupMessage", "version", "sentryPublicDSN", "help", "fromMakeError"].includes(attr)) {
+      if (
+        ![
+          "name",
+          "message",
+          "stack",
+          "multilineStack",
+          "popupMessage",
+          "version",
+          "sentryPublicDSN",
+          "help",
+          "fromMakeError",
+        ].includes(attr)
+      ) {
         rest[attr] = e[attr];
       }
     }
     rest.stack = exception.stack;
     Raven.captureException(exception, {
       logger: "addon",
-      tags: {category: e.popupMessage},
+      tags: { category: e.popupMessage },
       release: manifest.version,
       message: exception.message,
       extra: rest,
     });
   };
 
-  catcher.registerHandler((errorObj) => {
+  catcher.registerHandler(errorObj => {
     if (!errorObj.noPopup) {
       exports.showError(errorObj);
     }
