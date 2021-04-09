@@ -860,7 +860,12 @@ class EditorBase : public nsIEditor,
 #ifdef DEBUG
       mHasCanHandleChecked = true;
 #endif  // #ifdefn DEBUG
-      return mSelection && mEditorBase.IsInitialized();
+      // Don't allow to run new edit action until the top level edit action.
+      if (mEditAction != EditAction::eInitializing && mEditorWasDestroyed) {
+        NS_WARNING("Editor was destroyed during an edit action being handled");
+        return false;
+      }
+      return IsDataAvailable();
     }
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
     CanHandleAndMaybeDispatchBeforeInputEvent() {
@@ -868,6 +873,10 @@ class EditorBase : public nsIEditor,
         return NS_ERROR_NOT_INITIALIZED;
       }
       return MaybeDispatchBeforeInputEvent();
+    }
+
+    [[nodiscard]] bool IsDataAvailable() const {
+      return mSelection && mEditorBase.IsInitialized();
     }
 
     /**
@@ -1018,6 +1027,14 @@ class EditorBase : public nsIEditor,
     void Abort() { mAborted = true; }
     bool IsAborted() const { return mAborted; }
 
+    void OnEditorDestroy() {
+      mEditorWasDestroyed = true;
+      if (mParentData) {
+        mParentData->OnEditorDestroy();
+      }
+    }
+    bool HasEditorDestroyed() const { return mEditorWasDestroyed; }
+
     void SetTopLevelEditSubAction(EditSubAction aEditSubAction,
                                   EDirection aDirection = eNone) {
       mTopLevelEditSubAction = aEditSubAction;
@@ -1083,7 +1100,7 @@ class EditorBase : public nsIEditor,
       }
     }
     EditSubAction GetTopLevelEditSubAction() const {
-      MOZ_ASSERT(CanHandle());
+      MOZ_ASSERT(IsDataAvailable());
       return mTopLevelEditSubAction;
     }
     EDirection GetDirectionOfTopLevelEditSubAction() const {
@@ -1250,6 +1267,10 @@ class EditorBase : public nsIEditor,
     // Set to true when the edit action handler tries to dispatch a clipboard
     // event.
     bool mHasTriedToDispatchClipboardEvent;
+    // The editor instance may be destroyed once temporarily if `document.write`
+    // etc runs.  In such case, we should mark this flag of being handled
+    // edit action.
+    bool mEditorWasDestroyed;
 
 #ifdef DEBUG
     mutable bool mHasCanHandleChecked = false;
@@ -1303,7 +1324,7 @@ class EditorBase : public nsIEditor,
   }
 
   bool IsEditActionDataAvailable() const {
-    return mEditActionData && mEditActionData->CanHandle();
+    return mEditActionData && mEditActionData->IsDataAvailable();
   }
 
   bool IsTopLevelEditSubActionDataAvailable() const {
