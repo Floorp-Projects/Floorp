@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createRef,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -20,12 +23,10 @@ class CurrentTimeLabel extends PureComponent {
   constructor(props) {
     super(props);
 
+    this._ref = createRef();
+
     const { addAnimationsCurrentTimeListener } = props;
     this.onCurrentTimeUpdated = this.onCurrentTimeUpdated.bind(this);
-
-    this.state = {
-      currentTime: 0,
-    };
 
     addAnimationsCurrentTimeListener(this.onCurrentTimeUpdated);
   }
@@ -36,19 +37,16 @@ class CurrentTimeLabel extends PureComponent {
   }
 
   onCurrentTimeUpdated(currentTime) {
-    this.setState({ currentTime });
+    const { timeScale } = this.props;
+    const text = formatStopwatchTime(currentTime - timeScale.zeroPositionTime);
+    // onCurrentTimeUpdated is bound to requestAnimationFrame.
+    // As to update the component too frequently has performance issue if React controlled,
+    // update raw component directly. See Bug 1699039.
+    this._ref.current.textContent = text;
   }
 
   render() {
-    const { timeScale } = this.props;
-    const { currentTime } = this.state;
-
-    return dom.label(
-      {
-        className: "current-time-label",
-      },
-      formatStopwatchTime(currentTime - timeScale.zeroPositionTime)
-    );
+    return dom.label({ className: "current-time-label", ref: this._ref });
   }
 }
 

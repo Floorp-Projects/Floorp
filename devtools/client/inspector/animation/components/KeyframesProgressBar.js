@@ -5,15 +5,11 @@
 "use strict";
 
 const {
-  createFactory,
+  createRef,
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-
-const IndicationBar = createFactory(
-  require("devtools/client/inspector/animation/components/IndicationBar")
-);
 
 class KeyframesProgressBar extends PureComponent {
   static get propTypes() {
@@ -30,12 +26,9 @@ class KeyframesProgressBar extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.onCurrentTimeUpdated = this.onCurrentTimeUpdated.bind(this);
+    this._progressBarRef = createRef();
 
-    this.state = {
-      // position for the progress bar
-      position: 0,
-    };
+    this.onCurrentTimeUpdated = this.onCurrentTimeUpdated.bind(this);
   }
 
   componentDidMount() {
@@ -80,7 +73,10 @@ class KeyframesProgressBar extends PureComponent {
     const position = this.simulatedAnimation.effect.getComputedTiming()
       .progress;
 
-    this.setState({ position });
+    // onCurrentTimeUpdated is bound to requestAnimationFrame.
+    // As to update the component too frequently has performance issue if React controlled,
+    // update raw component directly. See Bug 1699039.
+    this._progressBarRef.current.style.marginInlineStart = `${position * 100}%`;
   }
 
   setupAnimation(props) {
@@ -98,15 +94,11 @@ class KeyframesProgressBar extends PureComponent {
   }
 
   render() {
-    const { position } = this.state;
-
     return dom.div(
-      {
-        className: "keyframes-progress-bar-area",
-      },
-      IndicationBar({
-        className: "keyframes-progress-bar",
-        position,
+      { className: "keyframes-progress-bar-area" },
+      dom.div({
+        className: "indication-bar keyframes-progress-bar",
+        ref: this._progressBarRef,
       })
     );
   }
