@@ -653,7 +653,12 @@ var gTests = [
   {
     desc: "Stop Sharing removes permissions",
     run: async function checkStopSharingRemovesPermissions() {
-      async function stopAndCheckPerm(aRequestAudio, aRequestVideo) {
+      async function stopAndCheckPerm(
+        aRequestAudio,
+        aRequestVideo,
+        aStopAudio = aRequestAudio,
+        aStopVideo = aRequestVideo
+      ) {
         let uri = gBrowser.selectedBrowser.documentURI;
 
         // Initially set both permissions to 'allow'.
@@ -677,32 +682,37 @@ var gTests = [
           10000000
         );
 
-        let indicator = promiseIndicatorWindow();
-        let observerPromise1 = expectObserverCalled("getUserMedia:request");
-        let observerPromise2 = expectObserverCalled(
-          "getUserMedia:response:allow"
-        );
-        let observerPromise3 = expectObserverCalled("recording-device-events");
-        // Start sharing what's been requested.
-        let promise = promiseMessage("ok");
-        await promiseRequestDevice(aRequestAudio, aRequestVideo);
-        await promise;
-        await observerPromise1;
-        await observerPromise2;
-        await observerPromise3;
+        if (aRequestAudio || aRequestVideo) {
+          let indicator = promiseIndicatorWindow();
+          let observerPromise1 = expectObserverCalled("getUserMedia:request");
+          let observerPromise2 = expectObserverCalled(
+            "getUserMedia:response:allow"
+          );
+          let observerPromise3 = expectObserverCalled(
+            "recording-device-events"
+          );
+          // Start sharing what's been requested.
+          let promise = promiseMessage("ok");
+          await promiseRequestDevice(aRequestAudio, aRequestVideo);
+          await promise;
+          await observerPromise1;
+          await observerPromise2;
+          await observerPromise3;
 
-        await indicator;
-        await checkSharingUI(
-          { video: aRequestVideo, audio: aRequestAudio },
-          undefined,
-          undefined,
-          {
-            video: { scope: SitePermissions.SCOPE_PERSISTENT },
-            audio: { scope: SitePermissions.SCOPE_PERSISTENT },
-          }
-        );
-
-        await stopSharing(aRequestVideo ? "camera" : "microphone");
+          await indicator;
+          await checkSharingUI(
+            { video: aRequestVideo, audio: aRequestAudio },
+            undefined,
+            undefined,
+            {
+              video: { scope: SitePermissions.SCOPE_PERSISTENT },
+              audio: { scope: SitePermissions.SCOPE_PERSISTENT },
+            }
+          );
+          await stopSharing(aStopVideo ? "camera" : "microphone");
+        } else {
+          await revokePermission(aStopVideo ? "camera" : "microphone");
+        }
 
         // Check that permissions have been removed as expected.
         let audioPerm = SitePermissions.getForPrincipal(
@@ -716,7 +726,12 @@ var gTests = [
           gBrowser.selectedBrowser
         );
 
-        if (aRequestAudio) {
+        if (
+          aRequestAudio ||
+          aRequestVideo ||
+          aStopAudio ||
+          (aStopVideo && aRequestAudio)
+        ) {
           Assert.deepEqual(
             audioPerm,
             {
@@ -762,7 +777,12 @@ var gTests = [
           "camera^myDevice2",
           gBrowser.selectedBrowser
         );
-        if (aRequestVideo) {
+        if (
+          aRequestAudio ||
+          aRequestVideo ||
+          aStopVideo ||
+          (aStopAudio && aRequestVideo)
+        ) {
           Assert.deepEqual(
             videoPerm,
             {
@@ -797,6 +817,7 @@ var gTests = [
             "camera device-specific permissions untouched"
           );
         }
+        await checkNotSharing();
 
         // Cleanup.
         await closeStream(true);
@@ -813,12 +834,20 @@ var gTests = [
         );
       }
 
-      info("request audio+video, stop sharing resets both");
+      info("request audio+video, stop sharing video resets both");
       await stopAndCheckPerm(true, true);
-      info("request audio, stop sharing resets audio only");
+      info("request audio only, stop sharing audio resets both");
       await stopAndCheckPerm(true, false);
-      info("request video, stop sharing resets video only");
+      info("request video only, stop sharing video resets both");
       await stopAndCheckPerm(false, true);
+      info("request audio only, stop sharing video resets both");
+      await stopAndCheckPerm(true, false, false, true);
+      info("request video only, stop sharing audio resets both");
+      await stopAndCheckPerm(false, true, true, false);
+      info("request neither, stop audio affects audio only");
+      await stopAndCheckPerm(false, false, true, false);
+      info("request neither, stop video affects video only");
+      await stopAndCheckPerm(false, false, false, true);
     },
   },
 
