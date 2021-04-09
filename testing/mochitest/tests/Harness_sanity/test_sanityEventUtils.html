@@ -48,6 +48,11 @@ function starttest() {
         check = true;
       }
 
+      if (navigator.appVersion.includes("Android")) {
+        // This is the workaround for test failure on debug build.
+        await SpecialPowers.pushPrefEnv({set: [["apz.zoom-to-focused-input.enabled", false]]});
+      }
+
       /* test send* functions */
       $("testMouseEvent").addEventListener("click", doCheck, {once: true});
       sendMouseEvent({type:'click'}, "testMouseEvent");
