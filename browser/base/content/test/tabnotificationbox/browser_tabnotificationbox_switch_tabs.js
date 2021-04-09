@@ -38,7 +38,23 @@ function createNotification({ browser, label, value, priority }) {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", true]],
+    set: [["browser.proton.infobars.enabled", true]],
+  });
+});
+
+add_task(async function testNotificationDeckIsLazy() {
+  let deck = document.getElementById("tab-notification-deck");
+  ok(!deck, "There is no tab notification deck");
+  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+    createNotification({
+      browser,
+      label: "First notification",
+      value: "first-notification",
+      priority: "PRIORITY_INFO_LOW",
+    });
+
+    deck = document.getElementById("tab-notification-deck");
+    ok(deck, "Creating a notification created the deck");
   });
 });
 
