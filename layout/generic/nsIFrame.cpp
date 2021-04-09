@@ -7193,7 +7193,9 @@ void nsIFrame::ClearInvalidationStateBits() {
 
 void nsIFrame::InvalidateFrame(uint32_t aDisplayItemKey,
                                bool aRebuildDisplayItems /* = true */) {
-  bool hasDisplayItem = !aDisplayItemKey || HasDisplayItem(aDisplayItemKey);
+  bool hasDisplayItem =
+      !aDisplayItemKey ||
+      FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
   InvalidateFrameInternal(this, hasDisplayItem, aRebuildDisplayItems);
 }
 
@@ -7203,7 +7205,9 @@ void nsIFrame::InvalidateFrameWithRect(const nsRect& aRect,
   if (aRect.IsEmpty()) {
     return;
   }
-  bool hasDisplayItem = !aDisplayItemKey || HasDisplayItem(aDisplayItemKey);
+  bool hasDisplayItem =
+      !aDisplayItemKey ||
+      FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
   bool alreadyInvalid = false;
   if (!HasAnyStateBits(NS_FRAME_NEEDS_PAINT)) {
     InvalidateFrameInternal(this, hasDisplayItem, aRebuildDisplayItems);
