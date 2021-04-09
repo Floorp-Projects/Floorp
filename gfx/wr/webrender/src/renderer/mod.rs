@@ -2185,16 +2185,17 @@ impl Renderer {
         let _gm = self.gpu_profiler.start_marker("end frame");
         self.gpu_profiler.end_frame();
 
-        if let Some(device_size) = device_size {
+        let debug_overlay = device_size.and_then(|device_size| {
             // Bind a surface to draw the debug / profiler information to.
-            if let Some(draw_target) = self.bind_debug_overlay(device_size) {
+            self.bind_debug_overlay(device_size).map(|draw_target| {
                 self.draw_render_target_debug(&draw_target);
                 self.draw_texture_cache_debug(&draw_target);
                 self.draw_gpu_cache_debug(device_size);
                 self.draw_zoom_debug(device_size);
                 self.draw_epoch_debug();
-            }
-        }
+                draw_target
+            })
+        });
 
         self.profile.end_time(profiler::RENDERER_TIME);
         self.profile.end_time_if_started(profiler::TOTAL_FRAME_CPU_TIME);
@@ -2270,9 +2271,11 @@ impl Renderer {
                 CompositorKind::Native { .. } => true,
                 CompositorKind::Draw { .. } => self.device.surface_origin_is_top_left(),
             };
+            // If there is a debug overlay, render it. Otherwise, just clear
+            // the debug renderer.
             debug_renderer.render(
                 &mut self.device,
-                device_size,
+                debug_overlay.and(device_size),
                 scale,
                 surface_origin_is_top_left,
             );
@@ -2282,7 +2285,7 @@ impl Renderer {
         self.texture_upload_pbo_pool.end_frame(&mut self.device);
         self.device.end_frame();
 
-        if device_size.is_some() {
+        if debug_overlay.is_some() {
             self.last_time = current_time;
 
             // Unbind the target for the debug overlay. No debug or profiler drawing
