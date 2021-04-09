@@ -928,10 +928,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #ifdef ENABLE_WASM_GC
   bool useWasmGc = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_gc");
 #endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-  bool useWasmMultiValue =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_multi_value");
-#endif
 #ifdef ENABLE_WASM_SIMD
   bool useWasmSimd = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_simd");
 #endif
@@ -1024,9 +1020,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #endif
 #ifdef ENABLE_WASM_GC
       .setWasmGc(useWasmGc)
-#endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-      .setWasmMultiValue(useWasmMultiValue)
 #endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(useWasmSimd)

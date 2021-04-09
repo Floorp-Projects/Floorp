@@ -1110,9 +1110,6 @@ pref("javascript.options.wasm_baselinejit",       true);
   pref("javascript.options.wasm_reftypes",        true);
   pref("javascript.options.wasm_gc",              false);
 #endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-  pref("javascript.options.wasm_multi_value",     true);
-#endif
 pref("javascript.options.parallel_parsing", true);
 pref("javascript.options.source_pragmas",    true);
 

@@ -602,9 +602,6 @@ bool shell::enableWasmFunctionReferences = false;
 #ifdef ENABLE_WASM_GC
 bool shell::enableWasmGc = false;
 #endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-bool shell::enableWasmMultiValue = true;
-#endif
 #ifdef ENABLE_WASM_SIMD
 bool shell::enableWasmSimd = true;
 #endif
@@ -10926,9 +10923,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_GC
   enableWasmGc = op.getBoolOption("wasm-gc");
 #endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-  enableWasmMultiValue = !op.getBoolOption("no-wasm-multi-value");
-#endif
 #ifdef ENABLE_WASM_SIMD
   enableWasmSimd = !op.getBoolOption("no-wasm-simd");
 #endif
@@ -10998,9 +10992,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
 #ifdef ENABLE_WASM_GC
       .setWasmGc(enableWasmGc)
-#endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-      .setWasmMultiValue(enableWasmMultiValue)
 #endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(enableWasmSimd)
@@ -11402,9 +11393,6 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #endif
 #ifdef ENABLE_WASM_GC
       .setWasmGc(enableWasmGc)
-#endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-      .setWasmMultiValue(enableWasmMultiValue)
 #endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(enableWasmSimd)
@@ -11924,12 +11912,6 @@ int main(int argc, char** argv, char** envp) {
                         "Enable experimental wasm GC features") ||
 #else
       !op.addBoolOption('\0', "wasm-gc", "No-op") ||
-#endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-      !op.addBoolOption('\0', "no-wasm-multi-value",
-                        "Disable wasm multi-value features") ||
-#else
-      !op.addBoolOption('\0', "no-wasm-multi-value", "No-op") ||
 #endif
 #ifdef ENABLE_WASM_SIMD
       !op.addBoolOption('\0', "no-wasm-simd",
@@ -12564,7 +12546,6 @@ int main(int argc, char** argv, char** envp) {
       // Feature selection options
       "--wasm-gc", "--wasm-simd-wormhole", "--wasm-exceptions",
       "--wasm-function-references", "--no-wasm-simd", "--no-wasm-reftypes",
-      "--no-wasm-multi-value",
       // Compiler selection options
       "--test-wasm-await-tier2",
 #ifdef JS_CODEGEN_ARM64

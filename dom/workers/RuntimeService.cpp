@@ -283,9 +283,6 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
 #ifdef ENABLE_WASM_GC
       .setWasmGc(GetWorkerPref<bool>("wasm_gc"_ns))
 #endif
-#ifdef ENABLE_WASM_MULTI_VALUE
-      .setWasmMultiValue(GetWorkerPref<bool>("wasm_multi_value"_ns))
-#endif
 #ifdef ENABLE_WASM_SIMD
       .setWasmSimd(GetWorkerPref<bool>("wasm_simd"_ns))
 #endif
