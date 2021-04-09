@@ -1177,6 +1177,10 @@ static void LinkEnclosingLazyScript(const CompilationStencil& stencil,
       continue;
     }
 
+    if (!fun->baseScript()) {
+      continue;
+    }
+
     if (fun->baseScript()->hasBytecode()) {
       continue;
     }
