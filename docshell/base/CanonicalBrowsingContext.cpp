@@ -175,14 +175,13 @@ void CanonicalBrowsingContext::ReplacedBy(
   }
   aNewContext->mWebProgress = std::move(mWebProgress);
 
-  // Bug 1698601 - We'll eventually want to copy this data over to the new
-  // context instead of clearing it completely.
+  bool hasRestoreData = !!mRestoreData && !mRestoreData->IsEmpty();
+  aNewContext->mRestoreData = std::move(mRestoreData);
+  aNewContext->mRequestedContentRestores = mRequestedContentRestores;
+  aNewContext->mCompletedContentRestores = mCompletedContentRestores;
   SetRestoreData(nullptr);
   mRequestedContentRestores = 0;
   mCompletedContentRestores = 0;
-  aNewContext->mRestoreData = nullptr;
-  aNewContext->mRequestedContentRestores = 0;
-  aNewContext->mCompletedContentRestores = 0;
 
   // Use the Transaction for the fields which need to be updated whether or not
   // the new context has been attached before.
@@ -191,7 +190,7 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetBrowserId(GetBrowserId());
   txn.SetHistoryID(GetHistoryID());
   txn.SetExplicitActive(GetExplicitActive());
-  txn.SetHasRestoreData(false);
+  txn.SetHasRestoreData(hasRestoreData);
   if (aNewContext->EverAttached()) {
     MOZ_ALWAYS_SUCCEEDS(txn.Commit(aNewContext));
   } else {
