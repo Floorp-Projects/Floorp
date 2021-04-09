@@ -101,7 +101,7 @@ void main(void) {
     float alpha = init_transform_fs(vLocalPos);
     vec2 source_uv = clamp(vClipMaskImageUv, vClipMaskUvInnerRect.xy, vClipMaskUvInnerRect.zw);
     float clip_alpha = texture(sColor0, source_uv).r; //careful: texture has type A8
-    oFragColor = vec4(alpha * clip_alpha, 1.0, 1.0, 1.0);
+    oFragColor = vec4(mix(1.0, clip_alpha, alpha), 0.0, 0.0, 1.0);
 }
 
 #ifdef SWGL_DRAW_SPAN
