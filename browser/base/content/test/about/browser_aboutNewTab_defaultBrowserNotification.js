@@ -154,7 +154,9 @@ add_task(async function clicking_button_on_notification_calls_setAsDefault() {
       !shellService.isDefaultBrowser(),
       "should not be default prior to clicking button"
     );
-    let button = notification.querySelector(".notification-button");
+    let button = notification.buttonContainer.querySelector(
+      ".notification-button"
+    );
     button.click();
     ok(
       shellService.isDefaultBrowser(),
@@ -248,8 +250,7 @@ add_task(async function clicking_dismiss_disables_default_browser_checking() {
       "Notification should be default browser"
     );
 
-    let closeButton = notification.querySelector(".close-icon");
-    closeButton.click();
+    notification.closeButton.click();
     ok(
       !Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser"),
       "checkDefaultBrowser bar pref should be false after dismissing notification"
