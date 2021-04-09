@@ -612,6 +612,8 @@ test_description_schema = Schema(
         # transforms need them. See bug 1700774.
         Optional("app"): text_type,
         Optional("subtest"): text_type,
+        # Define if a given task supports artifact builds or not, see bug 1695325.
+        Optional("supports-artifact-builds"): bool,
     }
 )
 
@@ -683,6 +685,7 @@ def set_defaults(config, tasks):
         task.setdefault("checkout", False)
         task.setdefault("require-signed-extensions", False)
         task.setdefault("variants", [])
+        task.setdefault("supports-artifact-builds", True)
 
         task["mozharness"].setdefault("extra-options", [])
         task["mozharness"].setdefault("requires-signed-builds", False)
@@ -1879,6 +1882,7 @@ def make_job_description(config, tasks):
                 "build_type": attr_build_type,
                 "test_platform": task["test-platform"],
                 "test_chunk": str(task["this-chunk"]),
+                "supports-artifact-builds": task["supports-artifact-builds"],
                 attr_try_name: try_name,
             }
         )

@@ -433,3 +433,8 @@ This build is an artifact build.
 This deliberately excludes builds that are implemented using the artifact build
 machinery, but are not primarily intended to short-circuit build time. In
 particular the Windows aarch64 builds are not marked this way.
+
+supports-artifact-builds
+========================
+
+If false, the task requires a compiled build and will not work with artifact builds.
