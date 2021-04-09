@@ -924,7 +924,12 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult;
     }
-    MOZ_ASSERT(splitNodeResult.Handled());
+    // If it's not handled, it means that `content` is not a splitable node
+    // like a void element even if it has some children, and the split point
+    // is middle of it.
+    if (!splitNodeResult.Handled()) {
+      continue;
+    }
     // Mark the final result as handled forcibly.
     result = SplitNodeResult(splitNodeResult.GetPreviousNode(),
                              splitNodeResult.GetNextNode());
