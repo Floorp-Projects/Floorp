@@ -88,7 +88,7 @@ function getStars(notice, protonEnabled) {
 for (let protonEnabled of [true, false]) {
   add_task(async function setup() {
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.proton.infobars.enabled", protonEnabled]],
+      set: [["browser.proton.enabled", protonEnabled]],
     });
     let win = await BrowserTestUtils.openNewWindowWithFlushedXULCacheForMozSupports();
     // Open a new tab to keep the window open.
