@@ -59,6 +59,7 @@ using mozilla::gfx::SurfaceFormat;
 #include "nsFocusManager.h"
 #include "nsUserIdleService.h"
 #include "nsLayoutUtils.h"
+#include "nsNetUtil.h"
 #include "nsViewManager.h"
 
 #include "WidgetUtils.h"
@@ -147,6 +148,8 @@ static const int32_t INPUT_RESULT_HANDLED_CONTENT =
     java::PanZoomController::INPUT_RESULT_HANDLED_CONTENT;
 static const int32_t INPUT_RESULT_IGNORED =
     java::PanZoomController::INPUT_RESULT_IGNORED;
+
+static const nsCString::size_type MAX_TOPLEVEL_DATA_URI_LEN = 2 * 1024 * 1024;
 
 namespace {
 template <class Instance, class Impl>
@@ -1880,9 +1883,14 @@ RefPtr<MozPromise<bool, bool, false>> nsWindow::OnLoadRequest(
   if (!geckoViewSupport) {
     return MozPromise<bool, bool, false>::CreateAndResolve(false, __func__);
   }
+
   nsAutoCString spec, triggeringSpec;
   if (aUri) {
     aUri->GetDisplaySpec(spec);
+    if (aIsTopLevel && mozilla::net::SchemeIsData(aUri) &&
+        spec.Length() > MAX_TOPLEVEL_DATA_URI_LEN) {
+      return MozPromise<bool, bool, false>::CreateAndResolve(false, __func__);
+    }
   }
 
   bool isNullPrincipal = false;
