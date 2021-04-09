@@ -23,7 +23,7 @@ describe("AboutPreferences Feed", () => {
       dispatch: sandbox.stub(),
       getState: () => ({ Sections, DiscoveryStream }),
     };
-    globals.set("aboutNewTabFeature", { getValue: sandbox.stub() });
+    globals.set("NimbusFeatures", { newtab: { getValue: sandbox.stub() } });
   });
   afterEach(() => {
     globals.restore();

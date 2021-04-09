@@ -19,7 +19,7 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ExperimentFeature: "resource://nimbus/ExperimentAPI.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -29,23 +29,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyGetter(this, "awExperimentFeature", () => {
-  return new ExperimentFeature("aboutwelcome");
-});
-
-// Note: newtab feature info is currently being loaded in PrefsFeed.jsm,
-// But we're recording exposure events here.
-XPCOMUtils.defineLazyGetter(this, "newtabExperimentFeature", () => {
-  return new ExperimentFeature("newtab");
-});
-
 class AboutNewTabChild extends JSWindowActorChild {
   handleEvent(event) {
     if (event.type == "DOMContentLoaded") {
       // If the separate about:welcome page is enabled, we can skip all of this,
       // since that mode doesn't load any of the Activity Stream bits.
       if (
-        awExperimentFeature.isEnabled({ defaultValue: true }) &&
+        NimbusFeatures.aboutwelcome.isEnabled({ defaultValue: true }) &&
         this.contentWindow.location.pathname.includes("welcome")
       ) {
         return;
@@ -91,8 +81,9 @@ class AboutNewTabChild extends JSWindowActorChild {
       ) {
         this.sendAsyncMessage("DefaultBrowserNotification");
 
-        // Send an exposure event to record when we have an experiment active
-        newtabExperimentFeature.recordExposureEvent();
+        // Note: newtab feature info is currently being loaded in PrefsFeed.jsm,
+        // But we're recording exposure events here.
+        NimbusFeatures.newtab.recordExposureEvent();
       }
     }
   }
