@@ -11,6 +11,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 #include "mozilla/SMILTypes.h"
 #include "mozilla/SVGContentUtils.h"
@@ -181,13 +182,15 @@ gfx::Matrix SVGViewportElement::GetViewBoxTransform() const {
     viewportHeight = mViewportHeight;
   }
 
-  if (viewportWidth <= 0.0f || viewportHeight <= 0.0f) {
+  if (!IsFinite(viewportWidth) || viewportWidth <= 0.0f ||
+      !IsFinite(viewportHeight) || viewportHeight <= 0.0f) {
     return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
   }
 
   SVGViewBox viewBox = GetViewBoxWithSynthesis(viewportWidth, viewportHeight);
 
-  if (viewBox.width <= 0.0f || viewBox.height <= 0.0f) {
+  if (!IsFinite(viewBox.width) || viewBox.width <= 0.0f ||
+      !IsFinite(viewBox.height) || viewBox.height <= 0.0f) {
     return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
   }
 
