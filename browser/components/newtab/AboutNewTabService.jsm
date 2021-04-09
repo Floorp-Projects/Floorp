@@ -41,11 +41,8 @@ const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "awExperimentFeature", () => {
-  const { ExperimentFeature } = ChromeUtils.import(
-    "resource://nimbus/ExperimentAPI.jsm"
-  );
-  return new ExperimentFeature("aboutwelcome");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 /**
@@ -449,7 +446,7 @@ class BaseAboutNewTabService {
      */
 
     if (
-      awExperimentFeature.isEnabled({
+      NimbusFeatures.aboutwelcome.isEnabled({
         defaultValue: true,
         sendExposureEvent: true,
       })
