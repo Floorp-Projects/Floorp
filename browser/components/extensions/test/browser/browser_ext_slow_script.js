@@ -63,7 +63,7 @@ add_task(async function test_slow_content_script() {
 
   ok(text.includes("\u201cSlow Script Extension\u201d"), "Label is correct");
 
-  let stopButton = notification.querySelector("[label='Stop']");
+  let stopButton = notification.buttonContainer.querySelector("[label='Stop']");
   stopButton.click();
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
