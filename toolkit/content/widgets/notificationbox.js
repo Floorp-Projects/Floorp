@@ -588,6 +588,7 @@
 
         messageContent.append(this.messageText, this.buttonContainer);
         this.shadowRoot.addEventListener("click", this);
+        this.shadowRoot.addEventListener("command", this);
       }
 
       disconnectedCallback() {
@@ -619,6 +620,10 @@
       }
 
       handleEvent(e) {
+        if (e.type == "click" && e.target.localName != "label") {
+          return;
+        }
+
         if ("buttonInfo" in e.target) {
           let { buttonInfo } = e.target;
           let { callback, popup } = buttonInfo;

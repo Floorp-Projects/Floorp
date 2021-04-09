@@ -7,6 +7,7 @@
 <window title="Notification Box" width="500" height="600"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
 
   <vbox id="nb"/>
   <menupopup id="menupopup" onpopupshown="this.hidePopup()" onpopuphidden="checkPopupClosed()">
@@ -29,6 +30,19 @@ var testtag_notificationbox_buttons = [
     accesskey: "u",
     callback: testtag_notificationbox_buttonpressed,
     popup: "menupopup"
+  }
+];
+
+var testtag_notificationbox_buttons_nopopup = [
+  {
+    label: "Button 1 No Popup",
+    accesskey: "u",
+    callback: testtag_notificationbox_button1pressed,
+  },
+  {
+    label: "Button 2 No Popup",
+    accesskey: "u",
+    callback: testtag_notificationbox_button2pressed,
   }
 ];
 
@@ -60,6 +74,10 @@ function testtag_notificationbox_buttonpressed(notification, button)
   SimpleTest.is(button.localName, "button");
   return false;
 }
+
+let buttonsPressedLog = "";
+function testtag_notificationbox_button1pressed(notification, button) { buttonsPressedLog += "button1"; return true; }
+function testtag_notificationbox_button2pressed(notification, button) { buttonsPressedLog += "button2"; return true; }
 
 function testtag_notificationbox(nb)
 {
@@ -328,6 +346,31 @@ var tests =
       SimpleTest.is(link.href, "about:mozilla", "link href is correct");
 
       SimpleTest.is(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
+    }
+  },
+  {
+    test(nb, ntf) {
+      // append a new notification
+      ntf = nb.appendNotification("Notification", "note", "happy.png",
+                                  nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons_nopopup);
+      return ntf;
+    },
+    result(nb, ntf) {
+      let buttons = nb.currentNotification.buttonContainer.querySelectorAll("* button");
+
+      buttons[0].focus();
+      synthesizeKey(" ", {});
+      SimpleTest.is(buttonsPressedLog, "button1", "button 1 with keyboard");
+      buttons[1].focus();
+      synthesizeKey(" ", {});
+      SimpleTest.is(buttonsPressedLog, "button1button2", "button 2 with keyboard");
+
+      synthesizeMouseAtCenter(buttons[0], {});
+      SimpleTest.is(buttonsPressedLog, "button1button2button1", "button 1 with mouse");
+      synthesizeMouseAtCenter(buttons[1], {});
+      SimpleTest.is(buttonsPressedLog, "button1button2button1button2", "button 2 with mouse");
+
+      nb.removeAllNotifications(true);
     }
   },
   {
