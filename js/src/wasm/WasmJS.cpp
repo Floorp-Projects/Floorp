@@ -76,20 +76,10 @@ using mozilla::Nothing;
 using mozilla::RangedPtr;
 using mozilla::Span;
 
-extern mozilla::Atomic<bool> fuzzingSafe;
-
 // About the fuzzer intercession points: If fuzzing has been selected and only a
 // single compiler has been selected then we will disable features that are not
 // supported by that single compiler.  This is strictly a concession to the
 // fuzzer infrastructure.
-
-static inline bool IsFuzzing() {
-#ifdef FUZZING
-  return true;
-#else
-  return fuzzingSafe;
-#endif
-}
 
 static inline bool IsFuzzingIon(JSContext* cx) {
   return IsFuzzing() && !cx->options().wasmBaseline() &&

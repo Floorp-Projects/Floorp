@@ -11118,9 +11118,9 @@ AttachDecision NewObjectIRGenerator::tryAttachTemplateObject() {
 AttachDecision NewObjectIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
-#ifdef FUZZING
-  TRY_ATTACH(tryAttachPlainObject());
-#endif
+  if (IsFuzzing()) {
+    TRY_ATTACH(tryAttachPlainObject());
+  }
   TRY_ATTACH(tryAttachTemplateObject());
 
   trackAttached(IRGenerator::NotAttached);
