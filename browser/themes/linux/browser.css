@@ -211,7 +211,7 @@ menuitem.bookmark-item {
   --autocomplete-popup-highlight-color: HighlightText;
 }
 
-@media not (-moz-proton) {
+@media not (-moz-proton-urlbar) {
 :root:not(:-moz-lwtheme) {
   --urlbar-popup-url-color: -moz-nativehyperlinktext;
 }
