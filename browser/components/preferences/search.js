@@ -27,7 +27,7 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "NimbusFeatures",
+  "ExperimentFeature",
   "resource://nimbus/ExperimentAPI.jsm"
 );
 
@@ -134,9 +134,10 @@ var gSearchPane = {
     this._updateSuggestionCheckboxes();
     this._showAddEngineButton();
     this._updateQuickSuggest = this._updateQuickSuggest.bind(this);
-    NimbusFeatures.urlbar.onUpdate(this._updateQuickSuggest);
+    this.urlbarExperimentFeature = new ExperimentFeature("urlbar");
+    this.urlbarExperimentFeature.onUpdate(this._updateQuickSuggest);
     window.addEventListener("unload", () => {
-      NimbusFeatures.urlbar.off(this._updateQuickSuggest);
+      this.urlbarExperimentFeature.off(this._updateQuickSuggest);
     });
     this._updateQuickSuggest(true);
   },
@@ -248,7 +249,7 @@ var gSearchPane = {
     let container = document.getElementById("showQuickSuggestContainer");
     let desc = document.getElementById("searchSuggestionsDesc");
 
-    if (!NimbusFeatures.urlbar.getValue().quickSuggestEnabled) {
+    if (!this.urlbarExperimentFeature.getValue().quickSuggestEnabled) {
       // The experiment is not enabled.  This is the default, so to avoid
       // accidentally messing anything up, only modify the doc if we're being
       // called due to a change in the experiment enabled status.

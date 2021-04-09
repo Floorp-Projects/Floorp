@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TippyTopProvider: "resource://activity-stream/lib/TippyTopProvider.jsm",
   AboutWelcomeDefaults:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -25,6 +24,13 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
     "resource://messaging-system/lib/Logger.jsm"
   );
   return new Logger("AboutWelcomeChild");
+});
+
+XPCOMUtils.defineLazyGetter(this, "aboutWelcomeFeature", () => {
+  const { ExperimentFeature } = ChromeUtils.import(
+    "resource://nimbus/ExperimentAPI.jsm"
+  );
+  return new ExperimentFeature("aboutwelcome");
 });
 
 XPCOMUtils.defineLazyGetter(this, "tippyTopProvider", () =>
@@ -216,7 +222,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
       ExperimentAPI.getExperimentMetaData({
         featureId: "aboutwelcome",
       }) || {};
-    let featureConfig = NimbusFeatures.aboutwelcome.getValue() || {};
+    let featureConfig = aboutWelcomeFeature.getValue() || {};
 
     if (experimentMetadata?.slug) {
       log.debug(
