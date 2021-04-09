@@ -4,7 +4,8 @@ fuzzy-if(cocoaWidget&&webrender&&!nativeThemePref,0-7,0-2) == chrome://reftest/c
 == chrome://reftest/content/xul/menuitem-key.xhtml chrome://reftest/content/xul/menuitem-key-ref.xhtml
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
 random-if(Android) fuzzy-if(webrender&&!nativeThemePref,0-2,0-8) == chrome://reftest/content/xul/menulist-shrinkwrap-1.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-1-ref.xhtml
-random-if(Android) fuzzy-if(webrender&&!nativeThemePref,0-2,0-8) == chrome://reftest/content/xul/menulist-shrinkwrap-2.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-2-ref.xhtml
+# Proton is disabled for this test due to bug 1704174
+pref(browser.proton.contextmenus.enabled,false) random-if(Android) fuzzy-if(webrender&&!nativeThemePref,0-2,0-8) == chrome://reftest/content/xul/menulist-shrinkwrap-2.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-2-ref.xhtml
 == chrome://reftest/content/xul/textbox-overflow-1.xhtml chrome://reftest/content/xul/textbox-overflow-1-ref.xhtml # for bug 749658
 # accesskeys are not normally displayed on Mac, so set a pref to enable them
 pref(ui.key.menuAccessKey,18) == chrome://reftest/content/xul/accesskey.xhtml chrome://reftest/content/xul/accesskey-ref.xhtml
