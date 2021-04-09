@@ -822,7 +822,11 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
     MOZ_ASSERT(sizeof(FloatRegisters::RegisterContent) == 8);
 #endif
     for (size_t i = 0; i < 4 && iter.more(); i++) {
-      src[i] = ARMFPRegister(*iter, 64);
+      FloatRegister reg = *iter;
+#ifdef ENABLE_WASM_SIMD
+      MOZ_RELEASE_ASSERT(reg.isDouble() || reg.isSingle());
+#endif
+      src[i] = ARMFPRegister(reg, 64);
       ++iter;
       adjustFrame(8);
     }
@@ -848,16 +852,13 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
 
   for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); ++iter) {
     FloatRegister reg = *iter;
-    diffF -= reg.size();
+#ifdef ENABLE_WASM_SIMD
+    MOZ_RELEASE_ASSERT(reg.isDouble() || reg.isSingle());
+#endif
+    diffF -= sizeof(double);
+    dest.offset -= sizeof(double);
     numFpu -= 1;
-    dest.offset -= reg.size();
-    if (reg.isDouble()) {
-      storeDouble(reg, dest);
-    } else if (reg.isSingle()) {
-      storeFloat32(reg, dest);
-    } else {
-      MOZ_CRASH("Unknown register type.");
-    }
+    storeDouble(reg, dest);
   }
   MOZ_ASSERT(numFpu == 0);
   // Padding to keep the stack aligned, taken from the x64 and mips64
@@ -877,8 +878,12 @@ void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
     uint32_t nextOffset = offset;
 
     for (size_t i = 0; i < 2 && iter.more(); i++) {
-      if (!ignore.has(*iter)) {
-        dest[i] = ARMFPRegister(*iter, 64);
+      FloatRegister reg = *iter;
+#ifdef ENABLE_WASM_SIMD
+      MOZ_RELEASE_ASSERT(reg.isDouble() || reg.isSingle());
+#endif
+      if (!ignore.has(reg)) {
+        dest[i] = ARMFPRegister(reg, 64);
       }
       ++iter;
       nextOffset += sizeof(double);
