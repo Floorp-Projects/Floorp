@@ -9,7 +9,7 @@
  * or disable DoH on different networks. DoHController is responsible for running
  * these at startup and upon network changes.
  */
-var EXPORTED_SYMBOLS = ["Heuristics"];
+var EXPORTED_SYMBOLS = ["Heuristics", "parentalControls"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -208,13 +208,10 @@ async function modifiedRoots() {
 }
 
 async function parentalControls() {
-  if (Cu.isInAutomation) {
-    return "enable_doh";
-  }
-
   if (gParentalControlsService.parentalControlsEnabled) {
     return "disable_doh";
   }
+
   return "enable_doh";
 }
 
