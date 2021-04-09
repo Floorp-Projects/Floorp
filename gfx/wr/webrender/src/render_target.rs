@@ -524,10 +524,7 @@ impl RenderTarget for AlphaRenderTarget {
                 );
             }
             RenderTaskKind::CacheMask(ref task_info) => {
-                if task_info.clear_to_one {
-                    self.one_clears.push(task_id);
-                }
-                self.clip_batcher.add(
+                let clear_to_one = self.clip_batcher.add(
                     task_info.clip_node_range,
                     task_info.root_spatial_node_index,
                     render_tasks,
@@ -544,6 +541,9 @@ impl RenderTarget for AlphaRenderTarget {
                     target_rect.origin.to_f32(),
                     task_info.actual_rect.origin,
                 );
+                if task_info.clear_to_one || clear_to_one {
+                    self.one_clears.push(task_id);
+                }
             }
             RenderTaskKind::ClipRegion(ref region_task) => {
                 if region_task.clear_to_one {

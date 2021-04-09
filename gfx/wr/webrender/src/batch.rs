@@ -3573,8 +3573,9 @@ impl ClipBatcher {
         global_device_pixel_scale: DevicePixelScale,
         task_origin: DevicePoint,
         screen_origin: DevicePoint,
-    ) {
+    ) -> bool {
         let mut is_first_clip = true;
+        let mut clear_to_one = false;
 
         for i in 0 .. clip_node_range.count {
             let clip_instance = clip_store.get_instance_from_range(&clip_node_range, i);
@@ -3683,10 +3684,11 @@ impl ClipBatcher {
                             });
                     };
 
+                    let clip_spatial_node = &spatial_tree.spatial_nodes[clip_instance.spatial_node_index.0 as usize];
+                    let clip_is_axis_aligned = clip_spatial_node.coordinate_system_id == CoordinateSystemId::root();
+
                     match clip_instance.visible_tiles {
                         Some(ref tiles) => {
-                            let clip_spatial_node = &spatial_tree.spatial_nodes[clip_instance.spatial_node_index.0 as usize];
-                            let clip_is_axis_aligned = clip_spatial_node.coordinate_system_id == CoordinateSystemId::root();
                             let sub_rect_bounds = actual_rect.size.into();
 
                             for tile in tiles {
@@ -3718,6 +3720,15 @@ impl ClipBatcher {
                         }
                     }
 
+                    // If this is the first clip and either there is a transform or the image rect
+                    // doesn't cover the entire task, then request a clear so that pixels outside
+                    // the image boundaries will be properly initialized.
+                    if is_first_clip &&
+                        (!clip_is_axis_aligned ||
+                         !(map_local_to_world.map(&rect).expect("bug: should always map as axis-aligned")
+                            * global_device_pixel_scale).contains_rect(&actual_rect)) {
+                        clear_to_one = true;
+                    }
                     true
                 }
                 ClipItemKind::BoxShadow { ref source }  => {
@@ -3759,7 +3770,7 @@ impl ClipBatcher {
                     if clip_instance.flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) {
                         false
                     } else {
-                        if !self.add_tiled_clip_mask(
+                        if self.add_tiled_clip_mask(
                             actual_rect,
                             rect,
                             clip_instance.spatial_node_index,
@@ -3769,6 +3780,8 @@ impl ClipBatcher {
                             &common,
                             is_first_clip,
                         ) {
+                            clear_to_one |= is_first_clip;
+                        } else {
                             self.get_batch_list(is_first_clip)
                                 .slow_rectangles
                                 .push(ClipMaskInstanceRect {
@@ -3800,6 +3813,8 @@ impl ClipBatcher {
 
             is_first_clip &= !added_clip;
         }
+
+        clear_to_one
     }
 }
 
