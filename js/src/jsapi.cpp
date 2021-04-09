@@ -432,37 +432,9 @@ JS::ContextOptions& JS::ContextOptions::setWasmCranelift(bool flag) {
   return *this;
 }
 
-JS::ContextOptions& JS::ContextOptions::setWasmFunctionReferences(bool flag) {
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  wasmFunctionReferences_ = flag;
-#endif
-  return *this;
-}
-
-JS::ContextOptions& JS::ContextOptions::setWasmGc(bool flag) {
-#ifdef ENABLE_WASM_GC
-  wasmGc_ = flag;
-#endif
-  return *this;
-}
-
-JS::ContextOptions& JS::ContextOptions::setWasmSimd(bool flag) {
-#ifdef ENABLE_WASM_SIMD
-  wasmSimd_ = flag;
-#endif
-  return *this;
-}
-
 JS::ContextOptions& JS::ContextOptions::setWasmSimdWormhole(bool flag) {
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
   wasmSimdWormhole_ = flag;
-#endif
-  return *this;
-}
-
-JS::ContextOptions& JS::ContextOptions::setWasmExceptions(bool flag) {
-#ifdef ENABLE_WASM_EXCEPTIONS
-  wasmExceptions_ = flag;
 #endif
   return *this;
 }

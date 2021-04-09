@@ -26,6 +26,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/ContextOptions.h"
 #include "js/LocaleSensitive.h"
+#include "js/WasmFeatures.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -275,17 +276,12 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmIon(GetWorkerPref<bool>("wasm_optimizingjit"_ns))
 #endif
       .setWasmBaseline(GetWorkerPref<bool>("wasm_baselinejit"_ns))
-      .setWasmReftypes(GetWorkerPref<bool>("wasm_reftypes"_ns))
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-      .setWasmFunctionReferences(
-          GetWorkerPref<bool>("wasm_function_references"_ns))
-#endif
-#ifdef ENABLE_WASM_GC
-      .setWasmGc(GetWorkerPref<bool>("wasm_gc"_ns))
-#endif
-#ifdef ENABLE_WASM_SIMD
-      .setWasmSimd(GetWorkerPref<bool>("wasm_simd"_ns))
-#endif
+      .setWasmVerbose(GetWorkerPref<bool>("wasm_verbose"_ns))
+#define WASM_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, FLAG_PRED, \
+                     SHELL, PREF)                                              \
+  .setWasm##NAME(GetWorkerPref<bool>("wasm_" PREF ""_ns))
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
 #  ifdef EARLY_BETA_OR_EARLIER
       .setWasmSimdWormhole(GetWorkerPref<bool>("wasm_simd_wormhole"_ns))
@@ -293,7 +289,6 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmSimdWormhole(false)
 #  endif
 #endif
-      .setWasmVerbose(GetWorkerPref<bool>("wasm_verbose"_ns))
       .setThrowOnAsmJSValidationFailure(
           GetWorkerPref<bool>("throw_on_asmjs_validation_failure"_ns))
       .setSourcePragmas(GetWorkerPref<bool>("source_pragmas"_ns))

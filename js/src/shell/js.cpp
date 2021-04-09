@@ -595,25 +595,20 @@ bool shell::enableWasmOptimizing = false;
 // 'false'; when we land for phase 2, we remove this flag.
 bool shell::forceWasmIon = false;
 #endif
-bool shell::enableWasmReftypes = true;
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-bool shell::enableWasmFunctionReferences = false;
-#endif
-#ifdef ENABLE_WASM_GC
-bool shell::enableWasmGc = false;
-#endif
-#ifdef ENABLE_WASM_SIMD
-bool shell::enableWasmSimd = true;
-#endif
+
+#define WASM_DEFAULT_FEATURE(NAME, ...) bool shell::enableWasm##NAME = true;
+#define WASM_EXPERIMENTAL_FEATURE(NAME, ...) \
+  bool shell::enableWasm##NAME = false;
+JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE);
+#undef WASM_DEFAULT_FEATURE
+#undef WASM_EXPERIMENTAL_FEATURE
+
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
 bool shell::enableWasmSimdWormhole = false;
 #endif
 bool shell::enableWasmVerbose = false;
 bool shell::enableTestWasmAwaitTier2 = false;
 bool shell::enableSourcePragmas = true;
-#ifdef ENABLE_WASM_EXCEPTIONS
-bool shell::enableWasmExceptions = false;
-#endif
 bool shell::enableAsyncStacks = false;
 bool shell::enableAsyncStackCaptureDebuggeeOnly = false;
 bool shell::enableStreams = false;
@@ -10916,21 +10911,18 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
-  enableWasmReftypes = !op.getBoolOption("no-wasm-reftypes");
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  enableWasmFunctionReferences = op.getBoolOption("wasm-function-references");
-#endif
-#ifdef ENABLE_WASM_GC
-  enableWasmGc = op.getBoolOption("wasm-gc");
-#endif
-#ifdef ENABLE_WASM_SIMD
-  enableWasmSimd = !op.getBoolOption("no-wasm-simd");
-#endif
+#define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
+                             FLAG_PRED, SHELL, ...)                         \
+  enableWasm##NAME = !op.getBoolOption("no-wasm-" SHELL);
+#define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
+                                  COMPILER_PRED, FLAG_PRED, SHELL, ...) \
+  enableWasm##NAME = op.getBoolOption("wasm-" SHELL);
+  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE);
+#undef WASM_DEFAULT_FEATURE
+#undef WASM_EXPERIMENTAL_FEATURE
+
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
   enableWasmSimdWormhole = op.getBoolOption("wasm-simd-wormhole");
-#endif
-#ifdef ENABLE_WASM_EXCEPTIONS
-  enableWasmExceptions = op.getBoolOption("wasm-exceptions");
 #endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
@@ -10986,21 +10978,13 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #else
       .setWasmIon(enableWasmOptimizing)
 #endif
-      .setWasmReftypes(enableWasmReftypes)
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-      .setWasmFunctionReferences(enableWasmFunctionReferences)
-#endif
-#ifdef ENABLE_WASM_GC
-      .setWasmGc(enableWasmGc)
-#endif
-#ifdef ENABLE_WASM_SIMD
-      .setWasmSimd(enableWasmSimd)
-#endif
+
+#define WASM_FEATURE(NAME, ...) .setWasm##NAME(enableWasm##NAME)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
+
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
       .setWasmSimdWormhole(enableWasmSimdWormhole)
-#endif
-#ifdef ENABLE_WASM_EXCEPTIONS
-      .setWasmExceptions(enableWasmExceptions)
 #endif
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
@@ -11391,19 +11375,13 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #else
       .setWasmIon(enableWasmOptimizing)
 #endif
-#ifdef ENABLE_WASM_GC
-      .setWasmGc(enableWasmGc)
-#endif
-#ifdef ENABLE_WASM_SIMD
-      .setWasmSimd(enableWasmSimd)
-#endif
+#define WASM_FEATURE(NAME, ...) .setWasm##NAME(enableWasm##NAME)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
+
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
       .setWasmSimdWormhole(enableWasmSimdWormhole)
 #endif
-#ifdef ENABLE_WASM_EXCEPTIONS
-      .setWasmExceptions(enableWasmExceptions)
-#endif
-      .setWasmReftypes(enableWasmReftypes)
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
       .setSourcePragmas(enableSourcePragmas);
@@ -11898,38 +11876,21 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2") ||
-      !op.addBoolOption('\0', "no-wasm-reftypes",
-                        "Disable wasm reference types features") ||
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-      !op.addBoolOption(
-          '\0', "wasm-function-references",
-          "Enable experimental wasm function-references features") ||
-#else
-      !op.addBoolOption('\0', "wasm-function-references", "No-op") ||
-#endif
-#ifdef ENABLE_WASM_GC
-      !op.addBoolOption('\0', "wasm-gc",
-                        "Enable experimental wasm GC features") ||
-#else
-      !op.addBoolOption('\0', "wasm-gc", "No-op") ||
-#endif
-#ifdef ENABLE_WASM_SIMD
-      !op.addBoolOption('\0', "no-wasm-simd",
-                        "Disable experimental wasm SIMD features") ||
-#else
-      !op.addBoolOption('\0', "no-wasm-simd", "No-op") ||
-#endif
+#define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
+                             FLAG_PRED, SHELL, ...)                         \
+  !op.addBoolOption('\0', "no-wasm-" SHELL, "Disable wasm " SHELL "feature.") ||
+#define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
+                                  COMPILER_PRED, FLAG_PRED, SHELL, ...) \
+  !op.addBoolOption('\0', "wasm-" SHELL,                                \
+                    "Enable experimental wasm " SHELL "feature.") ||
+      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE)
+#undef WASM_DEFAULT_FEATURE
+#undef WASM_EXPERIMENTAL_FEATURE
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
-      !op.addBoolOption('\0', "wasm-simd-wormhole",
-                        "Enable wasm SIMD wormhole (UTSL)") ||
+          !op.addBoolOption('\0', "wasm-simd-wormhole",
+                            "Enable wasm SIMD wormhole (UTSL)") ||
 #else
-      !op.addBoolOption('\0', "wasm-simd-wormhole", "No-op") ||
-#endif
-#ifdef ENABLE_WASM_EXCEPTIONS
-      !op.addBoolOption('\0', "wasm-exceptions",
-                        "Enable wasm exceptions features") ||
-#else
-      !op.addBoolOption('\0', "wasm-exceptions", "No-op") ||
+          !op.addBoolOption('\0', "wasm-simd-wormhole", "No-op") ||
 #endif
 #ifdef JS_CODEGEN_ARM64
       // Cranelift->Ion transition.  This disappears at Phase 2 of the landing.
@@ -12543,9 +12504,17 @@ int main(int argc, char** argv, char** envp) {
 
   // Also the following are to be propagated.
   const char* to_propagate[] = {
+#define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
+                             FLAG_PRED, SHELL, ...)                         \
+  "--no-wasm-" SHELL,
+#define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
+                                  COMPILER_PRED, FLAG_PRED, SHELL, ...) \
+  "--wasm-" SHELL,
+      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE)
+#undef WASM_DEFAULT_FEATURE
+#undef WASM_EXPERIMENTAL_FEATURE
       // Feature selection options
-      "--wasm-gc", "--wasm-simd-wormhole", "--wasm-exceptions",
-      "--wasm-function-references", "--no-wasm-simd", "--no-wasm-reftypes",
+      "--wasm-simd-wormhole",
       // Compiler selection options
       "--test-wasm-await-tier2",
 #ifdef JS_CODEGEN_ARM64

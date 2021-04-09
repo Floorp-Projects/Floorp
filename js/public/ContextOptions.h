@@ -11,12 +11,15 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
+#include "js/WasmFeatures.h"
+
 struct JS_PUBLIC_API JSContext;
 
 namespace JS {
 
 class JS_PUBLIC_API ContextOptions {
  public:
+  // clang-format off
   ContextOptions()
       : asmJS_(true),
         wasm_(true),
@@ -25,12 +28,12 @@ class JS_PUBLIC_API ContextOptions {
         wasmBaseline_(true),
         wasmIon_(true),
         wasmCranelift_(false),
-        wasmReftypes_(true),
-        wasmFunctionReferences_(false),
-        wasmGc_(false),
-        wasmSimd_(false),
+#define WASM_DEFAULT_FEATURE(NAME, ...) wasm##NAME##_(true),
+#define WASM_EXPERIMENTAL_FEATURE(NAME, ...) wasm##NAME##_(false),
+        JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE)
+#undef WASM_DEFAULT_FEATURE
+#undef WASM_EXPERIMENTAL_FEATURE
         wasmSimdWormhole_(false),
-        wasmExceptions_(false),
         testWasmAwaitTier2_(false),
         throwOnAsmJSValidationFailure_(false),
         disableIon_(false),
@@ -50,6 +53,7 @@ class JS_PUBLIC_API ContextOptions {
         privateClassMethods_(false),
         topLevelAwait_(true) {
   }
+  // clang-format on
 
   bool asmJS() const { return asmJS_; }
   ContextOptions& setAsmJS(bool flag) {
@@ -105,31 +109,18 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-  bool wasmReftypes() const { return wasmReftypes_; }
-  ContextOptions& setWasmReftypes(bool flag) {
-    wasmReftypes_ = flag;
-    return *this;
+#define WASM_FEATURE(NAME, ...)                     \
+  bool wasm##NAME() const { return wasm##NAME##_; } \
+  ContextOptions& setWasm##NAME(bool flag) {        \
+    wasm##NAME##_ = flag;                           \
+    return *this;                                   \
   }
-
-  bool wasmFunctionReferences() const { return wasmFunctionReferences_; }
-  // Defined out-of-line because it depends on a compile-time option
-  ContextOptions& setWasmFunctionReferences(bool flag);
-
-  bool wasmGc() const { return wasmGc_; }
-  // Defined out-of-line because it depends on a compile-time option
-  ContextOptions& setWasmGc(bool flag);
-
-  bool wasmSimd() const { return wasmSimd_; }
-  // Defined out-of-line because it depends on a compile-time option
-  ContextOptions& setWasmSimd(bool flag);
+  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
 
   bool wasmSimdWormhole() const { return wasmSimdWormhole_; }
   // Defined out-of-line because it depends on a compile-time option
   ContextOptions& setWasmSimdWormhole(bool flag);
-
-  bool wasmExceptions() const { return wasmExceptions_; }
-  // Defined out-of-line because it depends on a compile-time option
-  ContextOptions& setWasmExceptions(bool flag);
 
   bool throwOnAsmJSValidationFailure() const {
     return throwOnAsmJSValidationFailure_;
@@ -258,12 +249,10 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmBaseline_ : 1;
   bool wasmIon_ : 1;
   bool wasmCranelift_ : 1;
-  bool wasmReftypes_ : 1;
-  bool wasmFunctionReferences_ : 1;
-  bool wasmGc_ : 1;
-  bool wasmSimd_ : 1;
+#define WASM_FEATURE(NAME, ...) bool wasm##NAME##_ : 1;
+  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
   bool wasmSimdWormhole_ : 1;
-  bool wasmExceptions_ : 1;
   bool testWasmAwaitTier2_ : 1;
   bool throwOnAsmJSValidationFailure_ : 1;
   bool disableIon_ : 1;

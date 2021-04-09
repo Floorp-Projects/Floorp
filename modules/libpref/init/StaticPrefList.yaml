@@ -5675,6 +5675,15 @@
 #endif
   mirror: always
 
+#if defined(MOZ_AARCH64)
+# Cranelift->Ion transition.  Temporary switch.  When we land Phase 2
+# of the transition, this switch will disappear altogether.
+- name: javascript.options.wasm_force_ion
+  type: bool
+  value: false
+  mirror: always
+#endif
+
 # SIMD is supported only on x86 and x64, with arm64 support imminent.
 #if defined(ENABLE_WASM_SIMD)
 -   name: javascript.options.wasm_simd
@@ -5687,14 +5696,33 @@
     mirror: always
 #endif  // defined(ENABLE_WASM_SIMD)
 
-#if defined(MOZ_AARCH64)
-# Cranelift->Ion transition.  Temporary switch.  When we land Phase 2
-# of the transition, this switch will disappear altogether.
-- name: javascript.options.wasm_force_ion
-  type: bool
-  value: false
-  mirror: always
-#endif
+#if defined(ENABLE_WASM_REFTYPES)
+-   name: javascript.options.wasm_reftypes
+    type: bool
+    value: true
+    mirror: always
+#endif // defined(ENABLE_WASM_REFTYPES)
+
+#if defined(ENABLE_WASM_EXCEPTIONS)
+-   name: javascript.options.wasm_exceptions
+    type: bool
+    value: false
+    mirror: always
+#endif // defined(ENABLE_WASM_EXCEPTIONS)
+
+#if defined(ENABLE_WASM_FUNCTION_REFERENCES)
+-   name: javascript.options.wasm_function_references
+    type: bool
+    value: false
+    mirror: always
+#endif // defined(ENABLE_WASM_FUNCTION_REFERENCES)
+
+#if defined(ENABLE_WASM_GC)
+-   name: javascript.options.wasm_gc
+    type: bool
+    value: false
+    mirror: always
+#endif // defined(ENABLE_WASM_GC)
 
 #if defined(ENABLE_WASM_SIMD_WORMHOLE) && defined(EARLY_BETA_OR_EARLIER)
   # This is x64-only and it would break unified macOS builds if

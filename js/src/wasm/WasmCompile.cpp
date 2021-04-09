@@ -80,19 +80,25 @@ uint32_t wasm::ObservedCPUFeatures() {
 
 FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
   FeatureArgs features;
+
+#define WASM_FEATURE(NAME, LOWER_NAME, ...) \
+  features.LOWER_NAME = wasm::NAME##Available(cx);
+  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE);
+#undef WASM_FEATURE
+
+  features.sharedMemory =
+      wasm::ThreadsAvailable(cx) ? Shareable::True : Shareable::False;
+  features.hugeMemory = wasm::IsHugeMemoryEnabled();
+
   // See comments in WasmConstants.h regarding the meaning of the wormhole
   // options.
   bool wormholeOverride =
       wasm::SimdWormholeAvailable(cx) && options.simdWormhole;
-  features.sharedMemory =
-      wasm::ThreadsAvailable(cx) ? Shareable::True : Shareable::False;
-  features.refTypes = wasm::ReftypesAvailable(cx);
-  features.functionReferences = wasm::FunctionReferencesAvailable(cx);
-  features.gcTypes = wasm::GcTypesAvailable(cx);
-  features.v128 = wasm::SimdAvailable(cx) || wormholeOverride;
-  features.hugeMemory = wasm::IsHugeMemoryEnabled();
   features.simdWormhole = wormholeOverride;
-  features.exceptions = wasm::ExceptionsAvailable(cx);
+  if (wormholeOverride) {
+    features.v128 = true;
+  }
+
   return features;
 }
 
