@@ -13,6 +13,7 @@
 #include "nsIBidiKeyboard.h"
 #include "nsIStringBundle.h"
 #include "nsTArray.h"
+#include "prenv.h"
 #ifdef XP_WIN
 #  include "WinUtils.h"
 #endif
@@ -143,6 +144,15 @@ void WidgetUtils::GetBrandShortName(nsAString& aBrandName) {
   if (bundle) {
     bundle->GetStringFromName("brandShortName", aBrandName);
   }
+}
+
+const char* WidgetUtils::GetSnapInstanceName() {
+  char* instanceName = PR_GetEnv("SNAP_INSTANCE_NAME");
+  if (instanceName != nullptr) {
+    return instanceName;
+  }
+  // Compatibility for snapd <= 2.35:
+  return PR_GetEnv("SNAP_NAME");
 }
 
 }  // namespace widget
