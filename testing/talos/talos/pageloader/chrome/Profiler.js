@@ -31,11 +31,7 @@ var Profiler;
   var currentTest = "";
 
   // Profiling settings.
-  var profiler_interval,
-    profiler_entries,
-    profiler_threadsArray,
-    profiler_featuresArray,
-    profiler_dir;
+  var profiler_interval, profiler_entries, profiler_threadsArray, profiler_dir;
 
   /* eslint-disable mozilla/use-chromeutils-import */
   try {
@@ -66,7 +62,6 @@ var Profiler;
      * The following properties on the object are respected:
      *  - gecko_profile_interval
      *  - gecko_profile_entries
-     *  - gecko_profile_features
      *  - gecko_profile_threads
      *  - gecko_profile_dir
      */
@@ -79,14 +74,11 @@ var Profiler;
         Number.isFinite(obj.gecko_profile_interval * 1) &&
         "gecko_profile_entries" in obj &&
         Number.isFinite(obj.gecko_profile_entries * 1) &&
-        "gecko_profile_features" in obj &&
-        typeof obj.gecko_profile_features == "string" &&
         "gecko_profile_threads" in obj &&
         typeof obj.gecko_profile_threads == "string"
       ) {
         profiler_interval = obj.gecko_profile_interval;
         profiler_entries = obj.gecko_profile_entries;
-        profiler_featuresArray = obj.gecko_profile_features.split(",");
         profiler_threadsArray = obj.gecko_profile_threads.split(",");
         profiler_dir = obj.gecko_profile_dir;
         enabled = true;
@@ -103,7 +95,7 @@ var Profiler;
         _profiler.StartProfiler(
           profiler_entries,
           profiler_interval,
-          profiler_featuresArray,
+          ["js", "leaf", "stackwalk", "threads", "cpu"],
           profiler_threadsArray
         );
         _profiler.PauseSampling();
