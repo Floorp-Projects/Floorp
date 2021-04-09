@@ -6,22 +6,7 @@
 
 // Initialization.  Must run first.
 add_task(async function init() {
-  // The page action urlbar button, and therefore the panel, is only shown when
-  // the current tab is actionable -- i.e., a normal web page.  about:blank is
-  // not, so open a new tab first thing, and close it when this test is done.
-  let tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
-    url: "http://example.com/",
-  });
-
-  await disableNonReleaseActions();
-  registerCleanupFunction(async () => {
-    BrowserTestUtils.removeTab(tab);
-  });
-
-  // Ensure screenshots is really disabled (bug 1498738)
-  const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
-  await addon.disable({ allowSystemAddons: true });
+  await initPageActionsTest();
 });
 
 // Makes sure that urlbar nodes appear in the correct order in a new window.
@@ -114,10 +99,20 @@ add_task(async function urlbarOrderNewWindow() {
 // Stores version-0 (unversioned actually) persisted actions and makes sure that
 // migrating to version 1 works.
 add_task(async function migrate1() {
+  // Add a test action so we can test a non-built-in action below.
+  let actionId = "test-migrate1";
+  PageActions.addAction(
+    new PageActions.Action({
+      id: actionId,
+      title: "Test migrate1",
+      pinnedToUrlbar: true,
+    })
+  );
+
   // Add the bookmark action first to make sure it ends up last after migration.
-  // Also include a non-default action (copyURL) to make sure we're not
-  // accidentally testing default behavior.
-  let ids = [PageActions.ACTION_ID_BOOKMARK, "copyURL"];
+  // Also include a non-default action to make sure we're not accidentally
+  // testing default behavior.
+  let ids = [PageActions.ACTION_ID_BOOKMARK, actionId];
   let persisted = ids.reduce(
     (memo, id) => {
       memo.ids[id] = true;
@@ -137,12 +132,8 @@ add_task(async function migrate1() {
 
   Assert.equal(PageActions._persistedActions.version, 1, "Correct version");
 
-  // Need to set copyURL's _pinnedToUrlbar.  It won't be set since it's false by
-  // default and we reached directly into persisted storage above.
-  PageActions.actionForID("copyURL")._pinnedToUrlbar = true;
-
   // expected order
-  let orderedIDs = ["copyURL", PageActions.ACTION_ID_BOOKMARK];
+  let orderedIDs = [actionId, PageActions.ACTION_ID_BOOKMARK];
 
   // Check the ordering.
   Assert.deepEqual(
@@ -185,7 +176,7 @@ add_task(async function migrate1() {
   // Done, clean up.
   await BrowserTestUtils.closeWindow(win);
   Services.prefs.clearUserPref(PageActions.PREF_PERSISTED_ACTIONS);
-  PageActions.actionForID("copyURL").pinnedToUrlbar = false;
+  PageActions.actionForID(actionId).remove();
 });
 
 // Opens a new browser window and makes sure per-window state works right.
