@@ -89,4 +89,35 @@ class StartupStateProvider(
         )
         return isLastActivityCreatedStillStarted
     }
+
+    /**
+     * Returns true if the current startup state is HOT and the currently started activity is the
+     * first started activity for this start up (i.e. we can use it for performance measurements).
+     *
+     * This method must be called after the foreground activity is STARTED.
+     */
+    fun isHotStartForStartedActivity(activityClass: Class<out Activity>): Boolean {
+        // A hot start means:
+        // - the app was backgrounded and has since been started
+        // - the first started activity since the app was started is still active.
+        // - that activity was not created before being started
+        //
+        // For the activity log, we expect:
+        //   [... App-STOPPED, ... Activity-STARTED, App-STARTED]
+        // where:
+        // - App-STOPPED is the last STOPPED seen
+        // - App-CREATED is NOT called for this activity
+        // - we're assuming App-STARTED will only be last if one activity is started (as observed)
+        if (!startupLog.log.contains(LogEntry.AppStopped)) {
+            return false // if the app hasn't been stopped, it's not a hot start.
+        }
+        val afterLastStopped = startupLog.log.takeLastWhile { it != LogEntry.AppStopped }
+
+        val isLastActivityStartedStillStarted = afterLastStopped.takeLast(2) == listOf(
+            LogEntry.ActivityStarted(activityClass),
+            LogEntry.AppStarted
+        )
+        return !afterLastStopped.contains(LogEntry.ActivityCreated(activityClass)) &&
+            isLastActivityStartedStillStarted
+    }
 }
