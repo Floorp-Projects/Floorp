@@ -494,6 +494,13 @@ void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
   branchPtr(cond, SecondScratchReg, rhs, label);
 }
 
+void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
+                               Register rhs, Label* label) {
+  SecondScratchRegisterScope scratch(*this);
+  loadPtr(lhs, scratch);
+  branchPtr(cond, scratch, rhs, label);
+}
+
 void MacroAssembler::branchFloat(DoubleCondition cond, FloatRegister lhs,
                                  FloatRegister rhs, Label* label) {
   ma_bc1s(lhs, rhs, label, cond);
