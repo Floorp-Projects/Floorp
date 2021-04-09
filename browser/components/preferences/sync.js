@@ -92,7 +92,7 @@ var gSyncPane = {
 
     let cachedComputerName = Services.prefs.getStringPref(
       "identity.fxaccounts.account.device.name",
-      undefined
+      ""
     );
     if (cachedComputerName) {
       maybeAcct = true;
