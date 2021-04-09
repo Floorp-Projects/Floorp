@@ -26,6 +26,36 @@ class StartupStateProvider(
 ) {
 
     /**
+     * The restoration state of the application upon this most recent start up. See the
+     * [Fenix perf glossary](https://wiki.mozilla.org/index.php?title=Performance/Fenix/Glossary)
+     * for specific definitions.
+     */
+    enum class StartupState {
+        COLD, WARM, HOT,
+
+        /**
+         * A start up state where we weren't able to bucket it into the other categories.
+         * This includes, but is not limited to:
+         * - if the activity this is called from is not currently started
+         * - if the currently started activity is not the first started activity
+         */
+        UNKNOWN;
+    }
+
+    /**
+     * Returns the [StartupState] for the currently started activity. Note: the state will be
+     * [StartupState.UNKNOWN] if the currently started activity is not the first started activity.
+     *
+     * This method must be called after the foreground Activity is STARTED.
+     */
+    fun getStartupStateForStartedActivity(activityClass: Class<out Activity>): StartupState = when {
+        isColdStartForStartedActivity(activityClass) -> StartupState.COLD
+        isWarmStartForStartedActivity(activityClass) -> StartupState.WARM
+        isHotStartForStartedActivity(activityClass) -> StartupState.HOT
+        else -> StartupState.UNKNOWN
+    }
+
+    /**
      * Returns true if the current startup state is COLD and the currently started activity is the
      * first started activity (i.e. we can use it for performance measurements).
      *

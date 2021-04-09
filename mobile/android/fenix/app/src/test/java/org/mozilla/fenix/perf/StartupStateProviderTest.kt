@@ -7,6 +7,7 @@ package org.mozilla.fenix.perf
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -15,6 +16,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.perf.AppStartReasonProvider.StartReason
 import org.mozilla.fenix.perf.StartupActivityLog.LogEntry
+import org.mozilla.fenix.perf.StartupStateProvider.StartupState
 
 class StartupStateProviderTest {
 
@@ -235,6 +237,41 @@ class StartupStateProviderTest {
             LogEntry.ActivityCreated(homeActivityClass)
         ))
         assertFalse(provider.isHotStartForStartedActivity(homeActivityClass))
+    }
+
+    @Test
+    fun `GIVEN the app started for an activity WHEN it is a cold start THEN get startup state is cold`() {
+        forEachColdStartEntries { index ->
+            assertEquals("$index", StartupState.COLD, provider.getStartupStateForStartedActivity(homeActivityClass))
+        }
+    }
+
+    @Test
+    fun `WHEN it is a warm start THEN get startup state is warm`() {
+        forEachWarmStartEntries { index ->
+            assertEquals("$index", StartupState.WARM, provider.getStartupStateForStartedActivity(homeActivityClass))
+        }
+    }
+
+    @Test
+    fun `WHEN it is a hot start THEN get startup state is hot`() {
+        forEachHotStartEntries { index ->
+            assertEquals("$index", StartupState.HOT, provider.getStartupStateForStartedActivity(homeActivityClass))
+        }
+    }
+
+    @Test
+    fun `WHEN two activities are started THEN get startup state is unknown`() {
+        logEntries.addAll(listOf(
+            LogEntry.ActivityCreated(irActivityClass),
+            LogEntry.ActivityStarted(irActivityClass),
+            LogEntry.AppStarted,
+            LogEntry.ActivityCreated(homeActivityClass),
+            LogEntry.ActivityStarted(homeActivityClass),
+            LogEntry.ActivityStopped(irActivityClass)
+        ))
+
+        assertEquals(StartupState.UNKNOWN, provider.getStartupStateForStartedActivity(homeActivityClass))
     }
 
     private fun forEachColdStartEntries(block: (index: Int) -> Unit) {
