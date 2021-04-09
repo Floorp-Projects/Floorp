@@ -1,0 +1,13 @@
+<script>
+window.onload = () => {
+  b.style.setProperty("text-decoration", "overline underline line-through")
+  b.appendChild(a)
+  document.execCommand("selectAll", false)
+  window.getSelection().extend(b, 0)
+  document.execCommand("underline", false)
+}
+</script>
+<ins contenteditable="true">
+a
+<meta id="b"></meta>
+<font id="a">
