@@ -233,7 +233,16 @@ static bool LockD3DTexture(
       hr = mutex->AcquireSync(0, 10000);
     }
     if (hr == WAIT_TIMEOUT) {
-      gfxDevCrash(LogReason::D3DLockTimeout) << "D3D lock mutex timeout";
+      RefPtr<ID3D11Device> device;
+      aTexture->GetDevice(getter_AddRefs(device));
+      if (!device) {
+        gfxCriticalNote << "GFX: D3D11 lock mutex timeout - no device returned";
+      } else if (device->GetDeviceRemovedReason() != S_OK) {
+        gfxCriticalNote << "GFX: D3D11 lock mutex timeout - device removed";
+      } else {
+        gfxDevCrash(LogReason::D3DLockTimeout)
+            << "D3D lock mutex timeout - device not removed";
+      }
     } else if (hr == WAIT_ABANDONED) {
       gfxCriticalNote << "GFX: D3D11 lock mutex abandoned";
     }
