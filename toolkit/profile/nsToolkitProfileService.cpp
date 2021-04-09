@@ -6,6 +6,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/WidgetUtils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1833,14 +1834,15 @@ nsToolkitProfileService::CreateProfile(nsIFile* aRootDir,
  * get essentially the same benefits as dedicated profiles provides.
  */
 bool nsToolkitProfileService::IsSnapEnvironment() {
-  // Copied from IsRunningAsASnap() in
-  // browser/components/shell/nsGNOMEShellService.cpp
-  // TODO: factor out this common code in one place.
-  const char* snap_name = PR_GetEnv("SNAP_NAME");
-  if (snap_name == nullptr) {
+  const char* snapName = mozilla::widget::WidgetUtils::GetSnapInstanceName();
+
+  // return early if not set.
+  if (snapName == nullptr) {
     return false;
   }
-  return (strcmp(snap_name, "firefox") == 0);
+
+  // snapName as defined on https://snapcraft.io/firefox
+  return (strcmp(snapName, "firefox") == 0);
 }
 
 /**

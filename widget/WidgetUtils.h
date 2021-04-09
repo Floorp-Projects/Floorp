@@ -93,6 +93,11 @@ class WidgetUtils {
    * Get branchShortName from string bundle
    */
   static void GetBrandShortName(nsAString& aBrandName);
+
+  /* When packaged as a snap, strict confinement needs to be accounted for.
+     See https://snapcraft.io/docs for details.
+     Return the snap's instance name, or null when not running as a snap. */
+  static const char* GetSnapInstanceName();
 };
 
 }  // namespace widget
