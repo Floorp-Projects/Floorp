@@ -2521,30 +2521,31 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
       MOZ_ASSERT_UNREACHABLE("Non supported mouse event on Android");
       return NS_ERROR_INVALID_ARG;
   }
-  int32_t button;
-  switch (aButton) {
-    case MouseButton::ePrimary:
-      button = java::sdk::MotionEvent::BUTTON_PRIMARY;
-      break;
-    case MouseButton::eMiddle:
-      button = java::sdk::MotionEvent::BUTTON_TERTIARY;
-      break;
-    case MouseButton::eSecondary:
-      button = java::sdk::MotionEvent::BUTTON_SECONDARY;
-      break;
-    case MouseButton::eX1:
-      button = java::sdk::MotionEvent::BUTTON_BACK;
-      break;
-    case MouseButton::eX2:
-      button = java::sdk::MotionEvent::BUTTON_FORWARD;
-      break;
-    default:
-      if (aNativeMessage != NativeMouseMessage::ButtonDown &&
-          aNativeMessage != NativeMouseMessage::ButtonUp) {
-        button = 0;
+  int32_t button = 0;
+  if (aNativeMessage != NativeMouseMessage::ButtonUp) {
+    switch (aButton) {
+      case MouseButton::ePrimary:
+        button = java::sdk::MotionEvent::BUTTON_PRIMARY;
         break;
-      }
-      return NS_ERROR_INVALID_ARG;
+      case MouseButton::eMiddle:
+        button = java::sdk::MotionEvent::BUTTON_TERTIARY;
+        break;
+      case MouseButton::eSecondary:
+        button = java::sdk::MotionEvent::BUTTON_SECONDARY;
+        break;
+      case MouseButton::eX1:
+        button = java::sdk::MotionEvent::BUTTON_BACK;
+        break;
+      case MouseButton::eX2:
+        button = java::sdk::MotionEvent::BUTTON_FORWARD;
+        break;
+      default:
+        if (aNativeMessage == NativeMouseMessage::ButtonDown) {
+          MOZ_ASSERT_UNREACHABLE("Non supported mouse button type on Android");
+          return NS_ERROR_INVALID_ARG;
+        }
+        break;
+    }
   }
 
   // TODO (bug 1693237): Handle aModifierFlags.
