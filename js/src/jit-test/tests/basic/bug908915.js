@@ -11,7 +11,7 @@ var ignorelist = {
     'readline': true,
     'terminate': true,
     'nukeAllCCWs': true,
-    'rateMyCacheIR': true,
+    'cacheIRHealthReport': true,
 };
 
 function f(y) {}

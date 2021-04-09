@@ -630,10 +630,12 @@ static void MaybeTransition(JSContext* cx, BaselineFrame* frame,
                             ICFallbackStub* stub) {
   if (stub->state().maybeTransition()) {
 #ifdef JS_CACHEIR_SPEW
-    if (cx->spewer().enabled(cx, frame->script(), SpewChannel::RateMyCacheIR)) {
+    if (cx->spewer().enabled(cx, frame->script(),
+                             SpewChannel::CacheIRHealthReport)) {
       CacheIRHealth cih;
       RootedScript script(cx, frame->script());
-      cih.rateIC(cx, stub->icEntry(), script, SpewContext::Transition);
+      cih.healthReportForIC(cx, stub->icEntry(), script,
+                            SpewContext::Transition);
     }
 #endif
     stub->discardStubs(cx);

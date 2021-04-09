@@ -205,7 +205,7 @@ void CacheIRHealth::spewScriptFinalWarmUpCount(JSContext* cx,
                                                const char* filename,
                                                JSScript* script,
                                                uint32_t warmUpCount) {
-  AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, nullptr);
+  AutoStructuredSpewer spew(cx, SpewChannel::CacheIRHealthReport, nullptr);
   if (!spew) {
     return;
   }
@@ -244,9 +244,10 @@ static bool addScriptToFinalWarmUpCountMap(JSContext* cx, HandleScript script) {
   return true;
 }
 
-void CacheIRHealth::rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
-                           SpewContext context) {
-  AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, script);
+void CacheIRHealth::healthReportForIC(JSContext* cx, ICEntry* entry,
+                                      HandleScript script,
+                                      SpewContext context) {
+  AutoStructuredSpewer spew(cx, SpewChannel::CacheIRHealthReport, script);
   if (!spew) {
     return;
   }
@@ -268,14 +269,14 @@ void CacheIRHealth::rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
   MOZ_ASSERT(entryHappiness == Sad);
 }
 
-void CacheIRHealth::rateScript(JSContext* cx, HandleScript script,
-                               SpewContext context) {
+void CacheIRHealth::healthReportForScript(JSContext* cx, HandleScript script,
+                                          SpewContext context) {
   jit::JitScript* jitScript = script->maybeJitScript();
   if (!jitScript) {
     return;
   }
 
-  AutoStructuredSpewer spew(cx, SpewChannel::RateMyCacheIR, script);
+  AutoStructuredSpewer spew(cx, SpewChannel::CacheIRHealthReport, script);
   if (!spew) {
     return;
   }

@@ -33,15 +33,17 @@ class ICCacheIRStub;
 //
 // There are a few ways to generate a health report for a script:
 // 1. Simply running a JS program with the evironment variable
-//    SPEW=RateMyCacheIR. We generate a health report for a script whenever we
-//    reach the trial inlining threshold.
-//      ex) SPEW=RateMyCacheIR dist/bin/js jsprogram.js
-// 2. In the shell you can call rateMyCacheIR() with no arguments and a report
+//    SPEW=CacheIRHealthReport. We generate a health report for a script
+//    whenever we reach the trial inlining threshold.
+//      ex) SPEW=CacheIRHealthReport dist/bin/js jsprogram.js
+// 2. In the shell you can call cacheIRHealthReport() with no arguments and a
+// report
 //    will be generated for all scripts in the current zone.
-//      ex) rateMyCacheIR()
-// 3. You may also call rateMyCacheIR() on a particular function to see the
+//      ex) cacheIRHealthReport()
+// 3. You may also call cacheIRHealthReport() on a particular function to see
+// the
 //    health report associated with that function's script.
-//      ex) rateMyCacheIR(foo)
+//      ex) cacheIRHealthReport(foo)
 //
 // Once you have generated a health report, you may go to
 // https://carolinecullen.github.io/cacheirhealthreport/ to visualize the data
@@ -75,11 +77,12 @@ class CacheIRHealth {
   void spewScriptFinalWarmUpCount(JSContext* cx, const char* filename,
                                   JSScript* script, uint32_t warmUpCount);
   // Spew the health of a particular ICEntry only.
-  void rateIC(JSContext* cx, ICEntry* entry, HandleScript script,
-              SpewContext context);
+  void healthReportForIC(JSContext* cx, ICEntry* entry, HandleScript script,
+                         SpewContext context);
   // If a JitScript exists, spew the health of all ICEntries that exist
   // for the specified script.
-  void rateScript(JSContext* cx, HandleScript script, SpewContext context);
+  void healthReportForScript(JSContext* cx, HandleScript script,
+                             SpewContext context);
 };
 
 }  // namespace jit
