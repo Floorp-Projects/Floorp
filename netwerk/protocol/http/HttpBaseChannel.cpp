@@ -2256,6 +2256,10 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
     return NS_OK;
   }
 
+  if (mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()) {
+    return NS_OK;
+  }
+
   nsAutoCString content;
   Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Resource_Policy,
                                      content);
