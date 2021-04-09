@@ -13,8 +13,6 @@
 		227BF22C25C2EAD600DB0AB9 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 227BF22B25C2EAD600DB0AB9 /* Preview Assets.xcassets */; };
 		227BF23725C2EAD600DB0AB9 /* ios_sampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 227BF23625C2EAD600DB0AB9 /* ios_sampleTests.swift */; };
 		227BF24225C2EAD600DB0AB9 /* ios_sampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 227BF24125C2EAD600DB0AB9 /* ios_sampleUITests.swift */; };
-		227BF25425C2EBFE00DB0AB9 /* dummy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 227BF25325C2EBFE00DB0AB9 /* dummy.framework */; };
-		227BF25525C2EBFE00DB0AB9 /* dummy.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 227BF25325C2EBFE00DB0AB9 /* dummy.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,20 +31,6 @@
 			remoteInfo = "ios-sample";
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		227BF25625C2EBFE00DB0AB9 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				227BF25525C2EBFE00DB0AB9 /* dummy.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		227BF22125C2EAD500DB0AB9 /* ios-sample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ios-sample.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -69,7 +53,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				227BF25425C2EBFE00DB0AB9 /* dummy.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -167,7 +150,6 @@
 				227BF21D25C2EAD500DB0AB9 /* Sources */,
 				227BF21E25C2EAD500DB0AB9 /* Frameworks */,
 				227BF21F25C2EAD500DB0AB9 /* Resources */,
-				227BF25625C2EBFE00DB0AB9 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -448,7 +430,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"ios-sample/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
-				"FRAMEWORK_SEARCH_PATHS[arch=*]" = "$(PROJECT_DIR)/../../components/multiplatform/lib-dummy/build/xcode-frameworks";
 				INFOPLIST_FILE = "ios-sample/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -470,7 +451,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"ios-sample/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
-				"FRAMEWORK_SEARCH_PATHS[arch=*]" = "$(PROJECT_DIR)/../../components/multiplatform/lib-dummy/build/xcode-frameworks";
 				INFOPLIST_FILE = "ios-sample/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (

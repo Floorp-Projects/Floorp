@@ -3,14 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import SwiftUI
-import dummy
 
 struct ContentView: View {
     var body: some View {
-        let delegate = DummyDelegate()
-        let dummy = Dummy(delegate: delegate)
-        
-        Text(dummy.getValue())
+        Text("Sample app")
             .padding()
     }
 }

@@ -456,7 +456,3 @@ projects:
     description: 'A Gradle plugin to generate code for Glean metrics.'
     publish: true
     artifact-type: jar
-  multiplatform-lib-dummy:
-    path: components/multiplatform/lib-dummy
-    description: 'A dummy multiplatform library for testing purposes'
-    publish: false

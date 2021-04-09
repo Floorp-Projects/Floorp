@@ -76,7 +76,6 @@ treeherder:
         lib-push-amazon: lib-push-amazon
         lib-push-firebase: lib-push-firebase
         lib-state: lib-state
-        multiplatform-lib-dummy: multiplatform-lib-dummy
         samples-browser-beta: samples-browser-beta
         samples-browser-release: samples-browser-release
         samples-browser-system: samples-browser-system
