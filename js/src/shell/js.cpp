@@ -641,7 +641,6 @@ RCFile* shell::gErrFile = nullptr;
 RCFile* shell::gOutFile = nullptr;
 bool shell::reportWarnings = true;
 bool shell::compileOnly = false;
-bool shell::fuzzingSafe = false;
 bool shell::disableOOMFunctions = false;
 bool shell::defaultToSameCompartment = true;
 
