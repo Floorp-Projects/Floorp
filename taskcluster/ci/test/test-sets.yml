@@ -403,14 +403,27 @@ macosx1100-64-qr-failures-tests:
     - mochitest-browser-chrome-apple-silicon
 
 macosx1015-64-qr-tests:
+    - cppunit
     - crashtest
-    - reftest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
+    - gtest
+    - jittest
+    - jsreftest
+    - marionette
+    - mochitest-a11y
+    - mochitest-chrome
+    - mochitest-chrome-gpu
     - mochitest-plain
     - mochitest-plain-gpu
     - mochitest-remote
-    - mochitest-chrome
-    - mochitest-chrome-gpu
-    - mochitest-a11y
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
+    - mochitest-webgpu
+    - reftest
+    - telemetry-tests-client
 
 # debug only
 macosx1015-64-tests:
@@ -419,22 +432,9 @@ macosx1015-64-tests:
     - web-platform-tests-reftest
 
 macosx1014-64-qr-tests:
-    - cppunit
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
-    - gtest
-    - jittest
-    - jsreftest
-    - marionette
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - mochitest-media
-    - mochitest-webgl1-core
-    - mochitest-webgl1-ext
-    - mochitest-webgl2-core
-    - mochitest-webgl2-ext
-    - mochitest-webgpu
-    - telemetry-tests-client
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
