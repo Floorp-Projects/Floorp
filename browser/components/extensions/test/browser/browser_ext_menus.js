@@ -179,7 +179,7 @@ add_task(async function test_hiddenPageActionContextMenu() {
   // change the behavior, hiding them. Then this test won't be necessary anymore
   // since the user won't be able to open the context menu on disabled actions.
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.enabled", false]],
+    set: [["browser.proton.urlbar.enabled", false]],
   });
   const manifest = {
     page_action: {},

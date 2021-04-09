@@ -1153,6 +1153,12 @@
   mirror: always
   rust: true
 
+- name: browser.proton.urlbar.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 - name: browser.proton.modals.enabled
   type: RelaxedAtomicBool
   value: false

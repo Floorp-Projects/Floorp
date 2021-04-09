@@ -4206,7 +4206,9 @@ const BrowserSearch = {
    * has search engines.
    */
   updateOpenSearchBadge() {
-    if (gProton) {
+    // When removing browser.proton.urlbar.enabled change this to only check
+    // gProton.
+    if (gProton && gURLBar.addSearchEngineHelper) {
       gURLBar.addSearchEngineHelper.setEnginesFromBrowser(
         gBrowser.selectedBrowser
       );
