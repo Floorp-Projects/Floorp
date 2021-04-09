@@ -99,6 +99,7 @@ import org.mozilla.fenix.perf.NavGraphProvider
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.PerformanceInflater
 import org.mozilla.fenix.perf.ProfilerMarkers
+import org.mozilla.fenix.perf.StartupPathProvider
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.search.SearchDialogFragmentDirections
 import org.mozilla.fenix.session.PrivateNotificationService
@@ -170,6 +171,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     // Tracker for contextual menu (Copy|Search|Select all|etc...)
     private var actionMode: ActionMode? = null
+
+    private val startupPathProvider = StartupPathProvider()
 
     final override fun onCreate(savedInstanceState: Bundle?): Unit = PerfStartup.homeActivityOnCreate.measureNoInline {
         // DO NOT MOVE ANYTHING ABOVE THIS addMarker CALL.
@@ -262,6 +265,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         captureSnapshotTelemetryMetrics()
 
         startupTelemetryOnCreateCalled(intent.toSafeIntent(), savedInstanceState != null)
+        startupPathProvider.attachOnActivityOnCreate(lifecycle, intent)
 
         components.core.requestInterceptor.setNavigationController(navHost.navController)
 
@@ -272,6 +276,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         safeIntent: SafeIntent,
         hasSavedInstanceState: Boolean
     ) {
+        // This function gets overridden by subclasses.
         components.appStartupTelemetry.onHomeActivityOnCreate(
             safeIntent,
             hasSavedInstanceState,
@@ -472,6 +477,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         intent?.let {
             handleNewIntent(it)
         }
+        startupPathProvider.onIntentReceived(intent)
     }
 
     open fun handleNewIntent(intent: Intent) {
