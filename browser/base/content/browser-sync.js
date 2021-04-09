@@ -1435,10 +1435,6 @@ var gSync = {
           this.sendTabToDevice(t.url, to, t.title)
         )
       ).then(results => {
-        if (results.includes(true)) {
-          let action = PageActions.actionForID("sendToDevice");
-          showBrowserPageActionFeedback(action);
-        }
         fxAccounts.flushLogFile();
       });
     };
