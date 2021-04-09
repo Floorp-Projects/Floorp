@@ -121,6 +121,14 @@ add_task(async function testDeveloperButtonWrongKey() {
 // Test activation of the Page actions button from the keyboard.
 // The Page Actions menu should appear and focus should move inside it.
 add_task(async function testPageActionsButtonPress() {
+  // In Proton the page actions button is not normally visible, so we must
+  // unhide it.
+  if (gProton) {
+    BrowserPageActions.mainButtonNode.style.visibility = "visible";
+    registerCleanupFunction(() => {
+      BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
+    });
+  }
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     let button = document.getElementById("pageActionButton");
     forceFocus(button);
@@ -163,6 +171,10 @@ add_task(async function testBackForwardButtonPress() {
 // This is a page action button built at runtime by PageActions.
 // The Send Tab to Device menu should appear and focus should move inside it.
 add_task(async function testSendTabToDeviceButtonPress() {
+  // There's no Send to Device page action in proton.
+  if (gProton) {
+    return;
+  }
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     PageActions.actionForID("sendToDevice").pinnedToUrlbar = true;
     let button = document.getElementById("pageAction-urlbar-sendToDevice");

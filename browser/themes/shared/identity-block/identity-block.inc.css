@@ -10,7 +10,7 @@
   margin-inline-end: var(--identity-box-margin-inline);
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 #identity-box {
   margin-inline-start: var(--identity-box-margin-inline);
 }
@@ -37,7 +37,7 @@
 }
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 #identity-box[pageproxystate="invalid"] {
   margin-inline-end: calc(var(--identity-box-margin-inline) + 2px);
 }
@@ -68,7 +68,7 @@
   background-color: hsla(0,0%,70%,.3);
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .identity-box-button:hover:not([open=true]),
 .identity-box-button:hover:active,
 .identity-box-button[open=true],
@@ -91,7 +91,7 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .identity-box-button {
   padding-inline: calc(var(--urlbar-icon-padding) / 2);
   border-radius: 0;
@@ -127,7 +127,7 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-@media (-moz-proton-urlbar) {
+@media (-moz-proton) {
 #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
 #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
@@ -155,7 +155,7 @@
   pointer-events: none;
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 #identity-box[pageproxystate="valid"].notSecureText,
 #identity-box[pageproxystate="valid"].chromeUI,
 #identity-box[pageproxystate="valid"].extensionPage,
@@ -230,7 +230,7 @@
   }
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 #identity-box[pageproxystate="valid"].chromeUI #identity-icon {
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
@@ -335,7 +335,7 @@
   position: relative;
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 #tracking-protection-icon-container {
   border-radius: 0;
   /* Separator */

@@ -44,6 +44,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "protonEnabled",
+  "browser.proton.enabled",
+  false
+);
+
 const DEFAULT_FORM_HISTORY_NAME = "searchbar-history";
 const SEARCH_BUTTON_ID = "urlbar-search-button";
 
@@ -201,6 +208,10 @@ class UrlbarInput {
       return new UrlbarValueFormatter(this);
     });
 
+    XPCOMUtils.defineLazyGetter(this, "addSearchEngineHelper", () => {
+      return new AddSearchEngineHelper(this);
+    });
+
     // If the toolbar is not visible in this window or the urlbar is readonly,
     // we'll stop here, so that most properties of the input object are valid,
     // but we won't handle events.
@@ -260,9 +271,6 @@ class UrlbarInput {
 
     this._initCopyCutController();
     this._initPasteAndGo();
-    if (UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
-      this.addSearchEngineHelper = new AddSearchEngineHelper(this);
-    }
 
     // Tracks IME composition.
     this._compositionState = UrlbarUtils.COMPOSITION.NONE;
@@ -1411,7 +1419,7 @@ class UrlbarInput {
     this._hideFocus = false;
     if (this.focused) {
       this.setAttribute("focused", "true");
-      if (!UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+      if (!protonEnabled) {
         this.startLayoutExtend();
       }
     }
@@ -1651,7 +1659,7 @@ class UrlbarInput {
       return;
     }
     await this._updateLayoutBreakoutDimensions();
-    if (!UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+    if (!protonEnabled) {
       this.startLayoutExtend();
     }
   }
@@ -1665,7 +1673,7 @@ class UrlbarInput {
     ) {
       return;
     }
-    if (UrlbarPrefs.get("browser.proton.urlbar.enabled") && !this.view.isOpen) {
+    if (protonEnabled && !this.view.isOpen) {
       return;
     }
     // The Urlbar is unfocused or reduce motion is on and the view is closed.
@@ -1714,7 +1722,7 @@ class UrlbarInput {
     }
 
     if (
-      !UrlbarPrefs.get("browser.proton.urlbar.enabled") &&
+      !protonEnabled &&
       this.getAttribute("focused") == "true" &&
       (!this.window.gReduceMotion ||
         !this.window.matchMedia("(prefers-reduced-motion: reduce)").matches)
@@ -2732,7 +2740,7 @@ class UrlbarInput {
     });
 
     this.removeAttribute("focused");
-    if (!UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+    if (!protonEnabled) {
       this.endLayoutExtend();
     }
 
@@ -2811,7 +2819,7 @@ class UrlbarInput {
   }
 
   _on_contextmenu(event) {
-    if (UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+    if (protonEnabled) {
       this.addSearchEngineHelper.refreshContextMenu(event);
     }
 
@@ -2848,7 +2856,7 @@ class UrlbarInput {
       }
     }
 
-    if (!UrlbarPrefs.get("browser.proton.urlbar.enabled")) {
+    if (!protonEnabled) {
       this.startLayoutExtend();
     }
 
