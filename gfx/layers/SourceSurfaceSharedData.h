@@ -102,7 +102,7 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
     return mozilla::ipc::SharedMemory::PageAlignedSize(GetDataLength());
   }
 
-  void EnsureMapped(size_t aLength);
+  bool EnsureMapped(size_t aLength);
 
   // Protects mapping and unmapping of mBuf.
   Maybe<Mutex> mHandleLock;
