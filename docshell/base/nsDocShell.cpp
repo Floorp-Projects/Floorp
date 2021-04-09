@@ -10215,6 +10215,11 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     return NS_ERROR_UNEXPECTED;
   }
 
+  // Persist and sync layout history state before we load a new uri, as this
+  // might be our last chance to do so, in the content process.
+  PersistLayoutHistoryState();
+  SynchronizeLayoutHistoryState();
+
   nsresult rv;
   nsContentPolicyType contentPolicyType = DetermineContentType();
 
