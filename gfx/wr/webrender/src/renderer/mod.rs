@@ -760,6 +760,7 @@ pub struct Renderer {
     enable_clear_scissor: bool,
     enable_advanced_blend_barriers: bool,
     clear_caches_with_quads: bool,
+    clear_alpha_targets_with_quads: bool,
 
     debug: debug::LazyInitializedDebugRenderer,
     debug_flags: DebugFlags,
@@ -1108,6 +1109,8 @@ impl Renderer {
 
         let backend_notifier = notifier.clone();
 
+        let clear_alpha_targets_with_quads = !device.get_capabilities().supports_alpha_target_clears;
+
         let prefer_subpixel_aa = options.force_subpixel_aa || (options.enable_subpixel_aa && use_dual_source_blending);
         let default_font_render_mode = match (options.enable_aa, prefer_subpixel_aa) {
             (true, true) => FontRenderMode::Subpixel,
@@ -1324,6 +1327,7 @@ impl Renderer {
             enable_clear_scissor: options.enable_clear_scissor,
             enable_advanced_blend_barriers: !ext_blend_equation_advanced_coherent,
             clear_caches_with_quads: options.clear_caches_with_quads,
+            clear_alpha_targets_with_quads,
             last_time: 0,
             gpu_profiler,
             vaos,
@@ -3823,30 +3827,77 @@ impl Renderer {
             self.device.disable_depth_write();
             self.set_blend(false, FramebufferKind::Other);
 
-            // TODO(gw): Applying a scissor rect and minimal clear here
-            // is a very large performance win on the Intel and nVidia
-            // GPUs that I have tested with. It's possible it may be a
-            // performance penalty on other GPU types - we should test this
-            // and consider different code paths.
-
             let zero_color = [0.0, 0.0, 0.0, 0.0];
-            for &task_id in &target.zero_clears {
-                let rect = render_tasks[task_id].get_target_rect();
-                self.device.clear_target(
-                    Some(zero_color),
-                    None,
-                    Some(draw_target.to_framebuffer_rect(rect)),
-                );
-            }
-
             let one_color = [1.0, 1.0, 1.0, 1.0];
-            for &task_id in &target.one_clears {
-                let rect = render_tasks[task_id].get_target_rect();
-                self.device.clear_target(
-                    Some(one_color),
+
+            // On some Mali-T devices we have observed crashes in subsequent draw calls
+            // immediately after clearing the alpha render target regions with glClear().
+            // Using the shader to clear the regions avoids the crash. See bug 1638593.
+            if self.clear_alpha_targets_with_quads
+                && !(target.zero_clears.is_empty() && target.one_clears.is_empty())
+            {
+                let zeroes = target.zero_clears
+                    .iter()
+                    .map(|task_id| {
+                        let rect = render_tasks[*task_id].get_target_rect().to_f32();
+                        ClearInstance {
+                            rect: [
+                                rect.origin.x, rect.origin.y,
+                                rect.size.width, rect.size.height,
+                            ],
+                            color: zero_color,
+                        }
+                    });
+
+                let ones = target.one_clears
+                    .iter()
+                    .map(|task_id| {
+                        let rect = render_tasks[*task_id].get_target_rect().to_f32();
+                        ClearInstance {
+                            rect: [
+                                rect.origin.x, rect.origin.y,
+                                rect.size.width, rect.size.height,
+                            ],
+                            color: one_color,
+                        }
+                    });
+
+                let instances = zeroes.chain(ones).collect::<Vec<_>>();
+                self.shaders.borrow_mut().ps_clear.bind(
+                    &mut self.device,
+                    &projection,
                     None,
-                    Some(draw_target.to_framebuffer_rect(rect)),
+                    &mut self.renderer_errors,
                 );
+                self.draw_instanced_batch(
+                    &instances,
+                    VertexArrayKind::Clear,
+                    &BatchTextures::empty(),
+                    stats,
+                );
+            } else {
+                // TODO(gw): Applying a scissor rect and minimal clear here
+                // is a very large performance win on the Intel and nVidia
+                // GPUs that I have tested with. It's possible it may be a
+                // performance penalty on other GPU types - we should test this
+                // and consider different code paths.
+                for &task_id in &target.zero_clears {
+                    let rect = render_tasks[task_id].get_target_rect();
+                    self.device.clear_target(
+                        Some(zero_color),
+                        None,
+                        Some(draw_target.to_framebuffer_rect(rect)),
+                    );
+                }
+
+                for &task_id in &target.one_clears {
+                    let rect = render_tasks[task_id].get_target_rect();
+                    self.device.clear_target(
+                        Some(one_color),
+                        None,
+                        Some(draw_target.to_framebuffer_rect(rect)),
+                    );
+                }
             }
         }
 
