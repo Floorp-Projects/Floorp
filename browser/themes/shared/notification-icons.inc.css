@@ -4,16 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-@media (-moz-proton-doorhangers) {
-#notification-popup-box[open] {
-  background-color: var(--toolbarbutton-active-background);
+@media (-moz-proton) {
+#notification-popup-box {
+  height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
+  padding: var(--urlbar-icon-padding);
+  /* subtract identity-block.inc-css margin-inline-start */
+  padding-inline-start: calc(var(--urlbar-icon-padding) - 4px);
+  -moz-context-properties: fill;
+  fill: currentColor;
   color: inherit;
-  padding: 5px 0;
-  margin: -1px 0;
-  padding-inline-end: 5px;
   border-radius: var(--toolbarbutton-border-radius);
 }
+#notification-popup-box:hover {
+  background-color: hsla(0,0%,70%,.2);
 }
+#notification-popup-box:hover:active,
+#notification-popup-box[open] {
+  background-color: hsla(0,0%,70%,.3);
+}
+} /*** END proton ***/
 
 .popup-notification-icon,
 .permission-popup-permission-icon {
@@ -25,9 +34,16 @@
 .blocked-permission-icon:-moz-focusring,
 .notification-anchor-icon:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
-  outline-offset: 4px;
+  outline-offset: calc(var(--urlbar-icon-padding) - 2px);
   -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
+
+@media not (-moz-proton) {
+.blocked-permission-icon:-moz-focusring,
+.notification-anchor-icon:-moz-focusring {
+  outline-offset: 4px;
+}
+} /*** END !proton ***/
 
 /* This class can be used alone or in combination with the class defining the
    type of icon displayed. This rule must be defined before the others in order
@@ -242,13 +258,15 @@
 }
 } /** END Proton **/
 
-@media not (-moz-proton-doorhangers) {
+@media not (-moz-proton) {
 #notification-popup-box {
   padding: 5px 0;
   margin: -5px 0;
   padding-inline-end: 5px;
 }
+} /** END not Proton **/
 
+@media not (-moz-proton-doorhangers) {
 #webRTC-preview:not([hidden]) {
   border-radius: 4px;
   border: 1px solid var(--panel-separator-color);
