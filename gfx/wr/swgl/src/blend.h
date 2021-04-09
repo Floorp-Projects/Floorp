@@ -770,6 +770,22 @@ static ALWAYS_INLINE WideR8 blend_span(uint8_t* buf, WideR8 r, int len) {
                       len);
 }
 
+static ALWAYS_INLINE void commit_span(uint8_t* buf, PackedR8 r) {
+  unaligned_store(buf, r);
+}
+
+static ALWAYS_INLINE void commit_span(uint8_t* buf, PackedR8 r, int len) {
+  partial_store_span(buf, r, len);
+}
+
+static ALWAYS_INLINE PackedR8 blend_span(uint8_t* buf, PackedR8 r) {
+  return pack(blend_span(buf, unpack(r)));
+}
+
+static ALWAYS_INLINE PackedR8 blend_span(uint8_t* buf, PackedR8 r, int len) {
+  return pack(blend_span(buf, unpack(r), len));
+}
+
 template <bool BLEND, typename P, typename R>
 static ALWAYS_INLINE void commit_blend_span(P* buf, R r) {
   if (BLEND) {
