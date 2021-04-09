@@ -13,10 +13,6 @@
 #include "nsSimpleURI.h"
 #include "mozilla/dom/MimeType.h"
 
-#ifdef ANDROID
-#  include "mozilla/StaticPrefs_network.h"
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS(nsDataHandler, nsIProtocolHandler, nsISupportsWeakReference)
@@ -59,12 +55,6 @@ nsDataHandler::GetProtocolFlags(uint32_t* result) {
   nsCOMPtr<nsIURI> uri;
 
   const nsPromiseFlatCString& spec = PromiseFlatCString(aSpec);
-
-#ifdef ANDROID
-  // Due to heap limitations on mobile, limits the size of data URL
-  if (spec.Length() > StaticPrefs::network_data_max_uri_length_mobile())
-    return NS_ERROR_OUT_OF_MEMORY;
-#endif
 
   if (aBaseURI && !spec.IsEmpty() && spec[0] == '#') {
     // Looks like a reference instead of a fully-specified URI.
