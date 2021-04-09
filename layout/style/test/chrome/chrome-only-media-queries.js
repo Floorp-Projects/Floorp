@@ -27,7 +27,6 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-gtk-csd-close-button",
   "-moz-gtk-csd-reversed-placement",
   "-moz-proton",
-  "-moz-proton-urlbar",
   "-moz-proton-contextmenus",
   "-moz-proton-modals",
   "-moz-proton-doorhangers",

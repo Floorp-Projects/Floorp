@@ -947,7 +947,7 @@ var BrowserPageActions = {
     if (
       !action ||
       // In Proton, only extension actions provide a context menu.
-      (UrlbarPrefs.get("browser.proton.urlbar.enabled") && !action.extensionID)
+      (gProton && !action.extensionID)
     ) {
       this._contextAction = null;
       event.preventDefault();

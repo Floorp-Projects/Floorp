@@ -2220,7 +2220,6 @@ STATIC_ATOMS = [
     Atom("_moz_gtk_csd_reversed_placement", "-moz-gtk-csd-reversed-placement"),
     Atom("_moz_proton", "-moz-proton"),
     Atom("_moz_proton_contextmenus", "-moz-proton-contextmenus"),
-    Atom("_moz_proton_urlbar", "-moz-proton-urlbar"),
     Atom("_moz_proton_doorhangers", "-moz-proton-doorhangers"),
     Atom("_moz_proton_modals", "-moz-proton-modals"),
     Atom("_moz_proton_infobars", "-moz-proton-infobars"),

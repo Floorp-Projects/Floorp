@@ -46,7 +46,7 @@
   padding-inline: 8px;
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .search-panel-header {
   padding-block: 3px;
 }
@@ -87,7 +87,7 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .searchbar-engine-one-off-item {
   border-radius: 0;
   min-width: 48px;
@@ -129,7 +129,7 @@
   padding: 0 10px;
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .addengine-item {
   border-radius: 0;
 }
@@ -237,7 +237,7 @@
   display: none;
 }
 
-@media not (-moz-proton-urlbar) {
+@media not (-moz-proton) {
 .search-setting-button {
   border-top: 1px solid var(--panel-separator-color);
   border-radius: 0;

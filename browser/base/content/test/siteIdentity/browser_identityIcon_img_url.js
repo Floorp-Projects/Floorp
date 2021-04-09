@@ -35,7 +35,7 @@ const TEST_CASES = [
   {
     type: "chrome about page",
     testURL: "about:preferences",
-    img_url: UrlbarPrefs.get("browser.proton.urlbar.enabled")
+    img_url: gProton
       ? `url("chrome://branding/content/icon${
           window.devicePixelRatio > 1 ? 32 : 16
         }.png")`
