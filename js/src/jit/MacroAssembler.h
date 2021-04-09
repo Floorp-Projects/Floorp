@@ -418,6 +418,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Like PushRegsInMask, but instead of pushing the registers, store them to
   // |dest|. |dest| should point to the end of the reserved space, so the
   // first register will be stored at |dest.offset - sizeof(register)|.
+  // PushRegsInMask, PopRegsInMask{Ignore} and storeRegsInMask must use the
+  // same memory layout, and that also needs to be consistent with what
+  // FloatRegisterSet::getPushSizeInBytes claims.
   void storeRegsInMask(LiveRegisterSet set, Address dest, Register scratch)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
