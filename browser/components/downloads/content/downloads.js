@@ -1486,12 +1486,12 @@ XPCOMUtils.defineConstant(this, "DownloadsSummary", DownloadsSummary);
 
 /**
  * Manages events sent to to the footer vbox, which contains both the
- * DownloadsSummary as well as the "Show All Downloads" button.
+ * DownloadsSummary as well as the "Show all downloads" button.
  */
 var DownloadsFooter = {
   /**
    * Focuses the appropriate element within the footer. If the summary
-   * is visible, focus it. If not, focus the "Show All Downloads"
+   * is visible, focus it. If not, focus the "Show all downloads"
    * button.
    */
   focus() {
@@ -1506,7 +1506,7 @@ var DownloadsFooter = {
 
   /**
    * Sets whether or not the Downloads Summary should be displayed in the
-   * footer. If not, the "Show All Downloads" button is shown instead.
+   * footer. If not, the "Show all downloads" button is shown instead.
    */
   set showingSummary(aValue) {
     if (this._footerNode) {
