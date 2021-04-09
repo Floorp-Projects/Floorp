@@ -1106,10 +1106,6 @@ pref("javascript.options.wasm_trustedprincipals", true);
 pref("javascript.options.wasm_verbose",           false);
 pref("javascript.options.wasm_baselinejit",       true);
 
-#ifdef ENABLE_WASM_REFTYPES
-  pref("javascript.options.wasm_reftypes",        true);
-  pref("javascript.options.wasm_gc",              false);
-#endif
 pref("javascript.options.parallel_parsing", true);
 pref("javascript.options.source_pragmas",    true);
 

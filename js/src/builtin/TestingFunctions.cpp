@@ -830,36 +830,14 @@ static bool WasmThreadsEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool WasmReftypesEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::ReftypesAvailable(cx));
-  return true;
-}
-
-static bool WasmFunctionReferencesEnabled(JSContext* cx, unsigned argc,
-                                          Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::FunctionReferencesAvailable(cx));
-  return true;
-}
-
-static bool WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::GcTypesAvailable(cx));
-  return true;
-}
-
-static bool WasmExceptionsEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::ExceptionsAvailable(cx));
-  return true;
-}
-
-static bool WasmSimdEnabled(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::SimdAvailable(cx));
-  return true;
-}
+#define WASM_FEATURE(NAME, ...)                                              \
+  static bool Wasm##NAME##Enabled(JSContext* cx, unsigned argc, Value* vp) { \
+    CallArgs args = CallArgsFromVp(argc, vp);                                \
+    args.rval().setBoolean(wasm::NAME##Available(cx));                       \
+    return true;                                                             \
+  }
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE);
+#undef WASM_FEATURE
 
 static bool WasmSimdExperimentalEnabled(JSContext* cx, unsigned argc,
                                         Value* vp) {
@@ -6915,15 +6893,17 @@ gc::ZealModeHelpText),
 "  Returns a boolean indicating whether WebAssembly supports using a large"
 "  virtual memory reservation in order to elide bounds checks on this platform."),
 
+#define WASM_FEATURE(NAME, ...) \
+    JS_FN_HELP("wasm" #NAME "Enabled", Wasm##NAME##Enabled, 0, 0, \
+"wasm" #NAME "Enabled()", \
+"  Returns a boolean indicating whether the WebAssembly " #NAME " proposal is enabled."),
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
+
     JS_FN_HELP("wasmThreadsEnabled", WasmThreadsEnabled, 0, 0,
 "wasmThreadsEnabled()",
 "  Returns a boolean indicating whether the WebAssembly threads proposal is\n"
 "  supported on the current device."),
-
-    JS_FN_HELP("wasmSimdEnabled", WasmSimdEnabled, 0, 0,
-"wasmSimdEnabled()",
-"  Returns a boolean indicating whether WebAssembly SIMD is supported by the\n"
-"  compilers and runtime."),
 
     JS_FN_HELP("wasmSimdExperimentalEnabled", WasmSimdExperimentalEnabled, 0, 0,
 "wasmSimdExperimentalEnabled()",
@@ -6934,22 +6914,6 @@ gc::ZealModeHelpText),
 "wasmSimdWormholeEnabled()",
 "  Returns a boolean indicating whether WebAssembly SIMD wormhole instructions\n"
 "  are supported by the compilers and runtime."),
-
-    JS_FN_HELP("wasmReftypesEnabled", WasmReftypesEnabled, 1, 0,
-"wasmReftypesEnabled()",
-"  Returns a boolean indicating whether the WebAssembly reftypes proposal is enabled."),
-
-    JS_FN_HELP("wasmFunctionReferencesEnabled", WasmFunctionReferencesEnabled, 1, 0,
-"wasmFunctionReferencesEnabled()",
-"  Returns a boolean indicating whether the WebAssembly function-references proposal is enabled."),
-
-    JS_FN_HELP("wasmGcEnabled", WasmGcEnabled, 1, 0,
-"wasmGcEnabled()",
-"  Returns a boolean indicating whether the WebAssembly GC types proposal is enabled."),
-
-    JS_FN_HELP("wasmExceptionsEnabled", WasmExceptionsEnabled, 1, 0,
-"wasmExceptionsEnabled()",
-"  Returns a boolean indicating whether the WebAssembly exceptions proposal is enabled."),
 
 #if defined(ENABLE_WASM_SIMD) && defined(DEBUG)
     JS_FN_HELP("wasmSimdAnalysis", WasmSimdAnalysis, 1, 0,

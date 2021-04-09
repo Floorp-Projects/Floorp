@@ -42,6 +42,7 @@
 #include "js/ContextOptions.h"
 #include "js/MemoryMetrics.h"
 #include "js/OffThreadScriptCompilation.h"
+#include "js/WasmFeatures.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
@@ -919,18 +920,13 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #endif
   bool useWasmBaseline =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_baselinejit");
-  bool useWasmReftypes =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_reftypes");
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-  bool useWasmFunctionReferences =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_function_references");
-#endif
-#ifdef ENABLE_WASM_GC
-  bool useWasmGc = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_gc");
-#endif
-#ifdef ENABLE_WASM_SIMD
-  bool useWasmSimd = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_simd");
-#endif
+
+#define WASM_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, FLAG_PRED, \
+                     SHELL, PREF)                                              \
+  bool useWasm##NAME = Preferences::GetBool(JS_OPTIONS_DOT_STR PREF);
+  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
+
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
   bool useWasmSimdWormhole = false;
 #  ifdef EARLY_BETA_OR_EARLIER
@@ -1014,16 +1010,9 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setWasmIon(useWasmOptimizing)
 #endif
       .setWasmBaseline(useWasmBaseline)
-      .setWasmReftypes(useWasmReftypes)
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-      .setWasmFunctionReferences(useWasmFunctionReferences)
-#endif
-#ifdef ENABLE_WASM_GC
-      .setWasmGc(useWasmGc)
-#endif
-#ifdef ENABLE_WASM_SIMD
-      .setWasmSimd(useWasmSimd)
-#endif
+#define WASM_FEATURE(NAME, ...) .setWasm##NAME(useWasm##NAME)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
       .setWasmSimdWormhole(useWasmSimdWormhole)
 #endif

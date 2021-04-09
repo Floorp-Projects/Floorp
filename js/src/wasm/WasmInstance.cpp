@@ -1349,7 +1349,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   // Allocate in the global type sets for structural type checks
   if (!metadata().types.empty()) {
     // Transfer and allocate type objects for the struct types in the module
-    if (GcTypesAvailable(cx)) {
+    if (GcAvailable(cx)) {
       uint32_t baseIndex = 0;
       if (!cx->wasm().typeContext->transferTypes(metadata().types,
                                                  &baseIndex)) {
