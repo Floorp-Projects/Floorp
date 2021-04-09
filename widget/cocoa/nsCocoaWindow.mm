@@ -3227,9 +3227,15 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
       case nsIWidget::WindowAppearance::eLight:
         self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
         break;
-      case nsIWidget::WindowAppearance::eDark:
+      // eDark is currently disabled.
+      // The sheet window background always follows the sheetParent window's
+      // appearance. So we can only use the dark appearance if child sheet
+      // contents use text colors that are compatible with the dark appearance.
+      // But at the moment, sheet documents always use the Light ColorScheme for
+      // their system colors, resulting in black-on-dark text. See bug 1704016.
+      /*case nsIWidget::WindowAppearance::eDark:
         self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-        break;
+        break;*/
       default:
         // nil means "inherit effectiveAppearance from self.appearanceSource".
         self.appearance = nil;
