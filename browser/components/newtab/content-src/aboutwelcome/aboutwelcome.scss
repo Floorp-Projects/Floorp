@@ -8,6 +8,7 @@ $break-point-medium: 610px;
 $break-point-large: 866px;
 $break-point-widest: 1122px;
 $logo-size: 112px;
+$proton-break-point-smallest: 690px;
 
 html {
   height: 100%;
@@ -31,6 +32,15 @@ body {
   --welcome-button-background-hover-color: #003EAA;
   --welcome-button-background-active-color: #002275;
   --about-welcome-media-fade: linear-gradient(transparent, transparent 35%, #F9F9FA, #F9F9FA);
+  //Proton-specific variables
+  --proton-solid-L-fill: #FFF;
+  --proton-text-primary-color: #0C0C0D;
+  --proton-primary-button-color: #0060DF;
+  --proton-primary-button-text-color: #FFF;
+  --proton-secondary-button-color: #0060DF;
+  --proton-indicator-color: #606064;
+  --proton-indicator-active-color: #0090ED;
+  --proton-content-background-color: #FFF;
 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu',
   'Helvetica Neue', sans-serif;
@@ -54,6 +64,15 @@ body {
     --welcome-header-text-color-1: #7542E5;
     --welcome-button-box-shadow-color: #0A84FF;
     --about-welcome-media-fade: linear-gradient(transparent, transparent 35%, #1D1133, #1D1133);
+    //Proton-specific variables
+    --proton-solid-L-fill: #42414D;
+    --proton-text-primary-color: #FFF;
+    --proton-primary-button-color: #0DF;
+    --proton-primary-button-text-color: #000;
+    --proton-secondary-button-color: #0DF;
+    --proton-indicator-color: #FFF;
+    --proton-indicator-active-color: #0DF;
+    --proton-content-background-color: #42414D;
   }
 }
 
@@ -514,12 +533,13 @@ body {
     background: linear-gradient(69.76deg, #15141A 2.07%, rgba(21, 20, 26, 0) 65.58%) center / cover no-repeat fixed;
 
     .screen {
+      position: relative;
       flex-flow: row nowrap;
+      height: 100%;
+      overflow: hidden;
     }
 
     .section-main {
-      background-color: var(--newtab-card-background-color);
-      border-radius: 20px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -532,7 +552,7 @@ body {
       }
 
       h1 {
-        color: var(--newtab-text-primary-color);
+        color: var(--proton-text-primary-color);
         font-size: 24px;
         line-height: 36px;
         font-weight: normal;
@@ -550,8 +570,15 @@ body {
       padding: 80px 0 10px;
     }
 
-    .primary,
+    .primary {
+      background: var(--proton-primary-button-color);
+      color: var(--proton-primary-button-text-color);
+      font-size: 13px;
+      line-height: 16px;
+    }
+
     .secondary {
+      color: var(--proton-secondary-button-color);
       font-size: 13px;
       line-height: 16px;
     }
@@ -562,10 +589,10 @@ body {
       .indicator {
         width: 6px;
         height: 6px;
-        background: #E0E0E6;
+        background: var(--proton-indicator-color);
 
         &.current {
-          background: #0090ED;
+          background: var(--proton-indicator-active-color);
         }
       }
     }
@@ -573,7 +600,7 @@ body {
     .tiles-theme-section {
       border: var(--tiles-theme-section-border-width)
       solid
-      var(--newtab-card-background-color);
+      var(--proton-content-background-color);
     }
 
     .theme {
@@ -581,7 +608,7 @@ body {
       width: auto;
       min-width: 80px;
       height: initial;
-      background-color: var(--newtab-card-background-color);
+      background-color: var(--proton-content-background-color);
       box-shadow: none;
 
       &:focus,
@@ -637,20 +664,48 @@ body {
       }
     }
 
+    .noodle {
+      display: block;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+      position: absolute;
+    }
+
+    .outline-L {
+      background-image: url('chrome://activity-stream/content/data/content/assets/noodle-outline-L.svg');
+    }
+
+    .solid-L {
+      background-image: url('chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg');
+      -moz-context-properties: fill;
+      fill: var(--proton-solid-L-fill);
+    }
+
+    .purple-C {
+      background-image: url('chrome://activity-stream/content/data/content/assets/noodle-C.svg');
+    }
+
+    .yellow-circle {
+      width: 10px;
+      height: 10px;
+      background: #FFD567;
+      border-radius: 50%;
+    }
+
+    .orange-L {
+      background-image: url('chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg');
+      -moz-context-properties: fill;
+      fill: #FFA437;
+    }
 
     .screen-0 {
       /**
        * Proton welcome content is above white background noodle on first screen even when
        * using the RTL UI direction; below rule enforce that ordering.
        */
+      min-height: 600px;
+      min-width: 700px;
       direction: ltr;
-      @media (max-width: $break-point-large) {
-        width: 800px;
-      }
-
-      @media (max-width: $break-point-medium) {
-        width: 700px;
-      }
 
       .section-left {
         width: 50%;
@@ -699,24 +754,35 @@ body {
 
         .attrib-text {
           height: 18px;
-          width: 517px;
           margin-bottom: 25px;
           text-align: left;
           font-size: 12px;
           line-height: 18px;
           color: #F9F9FB;
           text-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
+
+          @media (max-width: 900px) {
+            width: 200px;
+          }
+
+          @media (max-width: 750px) {
+            width: 200px;
+            margin-inline-start: -50px;
+          }
         }
       }
 
-      // TBD: Update below section to show up above solid
-      // background noodle
       .section-main {
         z-index: 1;
-        height: 350px;
-        position: sticky;
-        top: 60%;
-        left: 80%;
+        width: 50%;
+
+        .main-content {
+          background: transparent;
+          position: absolute;
+          height: 350px;
+          bottom: -60px;
+          right: 20px;
+        }
 
         .brand-logo {
           margin-top: 0;
@@ -730,12 +796,111 @@ body {
           }
         }
       }
+
+      // Position of noodles on first screen
+      .outline-L {
+        width: 120px;
+        height: 135px;
+        bottom: 94px;
+        right: 420px;
+
+        @media (max-width: $proton-break-point-smallest) {
+          visibility: hidden;
+        }
+      }
+
+      .solid-L {
+        width: 1300px;
+        height: 1050px;
+        bottom: -390px;
+        right: -640px;
+        transform: rotate(-80deg);
+      }
+
+      .orange-L {
+        width: 466px;
+        height: 356px;
+        bottom: 280px;
+        right: -240px;
+      }
+
+      .purple-C {
+        width: 467px;
+        height: 382px;
+        bottom: -60px;
+        right: 160px;
+        transform: rotate(-40deg);
+      }
+
+      .yellow-circle {
+        bottom: 105px;
+        right: 600px;
+      }
     }
 
-    .screen-1,
-    .screen-2 {
-
+    .screen-1 {
       .section-main {
+        z-index: 1;
+        width: 504px;
+        height: 403px;
+        margin: auto;
+
+        @media (max-width: $break-point-large) {
+          width: 450px;
+          height: auto;
+        }
+
+        @media (max-width: $break-point-medium) {
+          width: 420px;
+          height: auto;
+        }
+      }
+
+      .main-content {
+        z-index: 1;
+        background-color: var(--proton-content-background-color);
+        border-radius: 20px;
+      }
+
+      //Position of noodles on second screen
+      .outline-L {
+        width: 80px;
+        height: 100px;
+        transform: rotate(10deg) translate(-30%, 160%);
+        z-index: 2;
+      }
+
+      .orange-L {
+        width: 448px;
+        height: 568px;
+        transform: rotate(-155deg) translate(12%, -21%);
+      }
+
+      .purple-C {
+        width: 294px;
+        height: 254px;
+        transform: translate(-20%, -62%);
+      }
+
+      .yellow-circle {
+        width: 165px;
+        height: 165px;
+        transform: translate(230%, -5%);
+        background: #FF7139;
+
+        @media (max-width: $break-point-large) {
+          transform: translate(205%, -5%);
+        }
+
+        @media (max-width: $break-point-medium) {
+          transform: translate(185%, -5%);
+        }
+      }
+    }
+
+    .screen-2 {
+      .section-main {
+        z-index: 1;
         width: 504px;
         height: 503px;
         margin: auto;
@@ -749,6 +914,48 @@ body {
           width: 420px;
           height: auto;
         }
+      }
+
+      .main-content {
+        z-index: 1;
+        background-color: var(--proton-content-background-color);
+        border-radius: 20px;
+      }
+
+      // Position of noodles on third screen
+      .outline-L {
+        width: 90px;
+        height: 110px;
+        transform: rotate(250deg) translate(-420%, 330%);
+        z-index: 2;
+
+        @media (max-width: $break-point-large) {
+          transform: rotate(250deg) translate(-400%, 280%);
+        }
+      }
+
+      .orange-L {
+        height: 800px;
+        width: 660px;
+        transform: rotate(35deg) translate(-10%, -7%);
+
+        @media (max-width: $break-point-large) {
+          height: 740px;
+          width: 600px;
+        }
+      }
+
+      .purple-C {
+        width: 392px;
+        height: 394px;
+        transform: rotate(260deg) translate(-34%, -35%);
+      }
+
+      .yellow-circle {
+        width: 165px;
+        height: 165px;
+        transform: translate(160%, 130%);
+        background: #FF7139;
       }
     }
   }
