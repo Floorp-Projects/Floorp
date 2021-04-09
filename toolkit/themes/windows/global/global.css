@@ -58,7 +58,7 @@
      system color scheme. Some of these occur in-content (for example
      about:preferences), but some do not (like the library/places window). */
   @media (prefers-color-scheme: dark) {
-    :host:not(:-moz-lwtheme),
+    :host(:not(:-moz-lwtheme)),
     :root:not(:-moz-lwtheme) {
       --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
       --menu-background-color: var(--dark-menu-background-color);
