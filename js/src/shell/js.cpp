@@ -8347,8 +8347,13 @@ static bool AddMarkObservers(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject observersArg(cx, &args[0].toObject());
-  uint32_t length;
+  uint64_t length;
   if (!GetLengthProperty(cx, observersArg, &length)) {
+    return false;
+  }
+
+  if (length > UINT32_MAX) {
+    JS_ReportErrorASCII(cx, "Invalid length for observers array");
     return false;
   }
 
