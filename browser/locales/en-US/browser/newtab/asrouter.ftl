@@ -154,20 +154,6 @@ cfr-whatsnew-fingerprinter-counter-body = { -brand-shorter-name } blocks many fi
 cfr-whatsnew-fingerprinter-counter-header-alt = Fingerprinters
 cfr-whatsnew-fingerprinter-counter-body-alt = { -brand-shorter-name } can block fingerprinters that secretly gather information about your device and actions to create an advertising profile of you.
 
-## Bookmark Sync
-
-cfr-doorhanger-sync-bookmarks-header = Get this bookmark on your phone
-cfr-doorhanger-sync-bookmarks-body = Take your bookmarks, passwords, history and more everywhere you’re signed into { -brand-product-name }.
-cfr-doorhanger-sync-bookmarks-ok-button = Turn on { -sync-brand-short-name }
-  .accesskey = T
-
-## Login Sync
-
-cfr-doorhanger-sync-logins-header = Never Lose a Password Again
-cfr-doorhanger-sync-logins-body = Securely store and sync your passwords to all your devices.
-cfr-doorhanger-sync-logins-ok-button = Turn on { -sync-brand-short-name }
-  .accesskey = T
-
 ## Social Tracking Protection
 
 cfr-doorhanger-socialtracking-ok-button = See Protections
