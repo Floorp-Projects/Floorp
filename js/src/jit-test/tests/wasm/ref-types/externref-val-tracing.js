@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 gczeal(14, 1);
 let { exports } = wasmEvalText(`(module
     (global $externref (import "glob" "externref") externref)

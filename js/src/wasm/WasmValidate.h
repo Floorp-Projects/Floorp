@@ -658,15 +658,8 @@ class Decoder {
       }
       case uint8_t(TypeCode::FuncRef):
       case uint8_t(TypeCode::ExternRef): {
-#ifdef ENABLE_WASM_REFTYPES
-        if (!features.refTypes) {
-          return fail("reference types not enabled");
-        }
         *type = RefType::fromTypeCode(TypeCode(code), true);
         return true;
-#else
-        break;
-#endif
       }
       case uint8_t(TypeCode::Ref):
       case uint8_t(TypeCode::NullableRef): {

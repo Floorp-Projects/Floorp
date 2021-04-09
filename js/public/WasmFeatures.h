@@ -47,11 +47,6 @@
 //      for experimental features.
 //
 
-#ifdef ENABLE_WASM_REFTYPES
-#  define WASM_REFTYPES_ENABLED 1
-#else
-#  define WASM_REFTYPES_ENABLED 0
-#endif
 #ifdef ENABLE_WASM_SIMD
 #  define WASM_SIMD_ENABLED 1
 #else
@@ -75,13 +70,6 @@
 
 // clang-format off
 #define JS_FOR_WASM_FEATURES(DEFAULT, EXPERIMENTAL)                           \
-  DEFAULT(/* capitalized name   */ Reftypes,                                  \
-          /* lower case name    */ refTypes,                                  \
-          /* compile predicate  */ WASM_REFTYPES_ENABLED,                     \
-          /* compiler predicate */ AnyCompilerAvailable(cx),                  \
-          /* flag predicate     */ true,                                      \
-          /* shell flag         */ "reftypes",                                \
-          /* preference name    */ "reftypes")                                \
   DEFAULT(/* capitalized name   */ Simd,                                      \
           /* lower case name    */ v128,                                      \
           /* compile predicate  */ WASM_SIMD_ENABLED,                         \
@@ -103,7 +91,7 @@
                /* compile predicate  */ WASM_FUNCTION_REFERENCES_ENABLED,     \
                /* compiler predicate */ BaselineAvailable(cx),                \
                /* flag predicate     */ !IsFuzzingIon(cx) &&                  \
-                   !IsFuzzingCranelift(cx) && WasmReftypesFlag(cx),           \
+                   !IsFuzzingCranelift(cx),                                   \
                /* shell flag         */ "function-references",                \
                /* preference name    */ "function_references")                \
   EXPERIMENTAL(/* capitalized name   */ Gc,                                   \

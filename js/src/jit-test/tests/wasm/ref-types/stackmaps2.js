@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmReftypesEnabled()
-
 // Tests wasm frame tracing in the presence of interrupt handlers that perform
 // allocation.  The structure is
 //

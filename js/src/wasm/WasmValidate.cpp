@@ -588,31 +588,20 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         uint32_t unused;
         CHECK(iter.readSetGlobal(&unused, &nothing));
       }
-#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::TableGet): {
-        if (!env.refTypesEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         uint32_t unusedTableIndex;
         CHECK(iter.readTableGet(&unusedTableIndex, &nothing));
       }
       case uint16_t(Op::TableSet): {
-        if (!env.refTypesEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         uint32_t unusedTableIndex;
         CHECK(iter.readTableSet(&unusedTableIndex, &nothing, &nothing));
       }
-#endif
       case uint16_t(Op::SelectNumeric): {
         StackType unused;
         CHECK(iter.readSelect(/*typed*/ false, &unused, &nothing, &nothing,
                               &nothing));
       }
       case uint16_t(Op::SelectTyped): {
-        if (!env.refTypesEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         StackType unused;
         CHECK(iter.readSelect(/*typed*/ true, &unused, &nothing, &nothing,
                               &nothing));
@@ -1404,30 +1393,19 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                           &unusedTableIndex, &nothing, &nothing,
                                           &nothing));
           }
-#ifdef ENABLE_WASM_REFTYPES
           case uint32_t(MiscOp::TableFill): {
-            if (!env.refTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
             uint32_t unusedTableIndex;
             CHECK(iter.readTableFill(&unusedTableIndex, &nothing, &nothing,
                                      &nothing));
           }
           case uint32_t(MiscOp::TableGrow): {
-            if (!env.refTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
             uint32_t unusedTableIndex;
             CHECK(iter.readTableGrow(&unusedTableIndex, &nothing, &nothing));
           }
           case uint32_t(MiscOp::TableSize): {
-            if (!env.refTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
             uint32_t unusedTableIndex;
             CHECK(iter.readTableSize(&unusedTableIndex));
           }
-#endif
           default:
             return iter.unrecognizedOpcode(&op);
         }
@@ -1457,25 +1435,17 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readComparison(RefType::eq(), &nothing, &nothing));
       }
 #endif
-#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefFunc): {
         uint32_t unusedIndex;
         CHECK(iter.readRefFunc(&unusedIndex));
       }
       case uint16_t(Op::RefNull): {
-        if (!env.refTypesEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         CHECK(iter.readRefNull());
       }
       case uint16_t(Op::RefIsNull): {
-        if (!env.refTypesEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         Nothing nothing;
         CHECK(iter.readRefIsNull(&nothing));
       }
-#endif
 #ifdef ENABLE_WASM_EXCEPTIONS
       case uint16_t(Op::Try):
         if (!env.exceptionsEnabled()) {
@@ -2111,11 +2081,8 @@ static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
                                      const TypeContext& types,
                                      TableDescVector* tables) {
   RefType tableElemType;
-  if (!d.readRefType(types, features.withRefTypes(true), &tableElemType)) {
+  if (!d.readRefType(types, features, &tableElemType)) {
     return false;
-  }
-  if (!features.refTypes && !tableElemType.isFunc()) {
-    return d.fail("expected 'funcref' element type");
   }
   if (!tableElemType.isNullable()) {
     return d.fail("non-nullable references not supported in tables");
@@ -2603,7 +2570,6 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       break;
     }
 #endif
-#ifdef ENABLE_WASM_REFTYPES
     case uint16_t(Op::RefNull): {
       MOZ_ASSERT_IF(
           expected.isReference() && env->types.isStructType(expected.refType()),
@@ -2632,7 +2598,6 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       *init = InitExpr::fromRefFunc(i);
       break;
     }
-#endif
     case uint16_t(Op::GetGlobal): {
       uint32_t i;
       const GlobalDescVector& globals = env->globals;

@@ -23,18 +23,13 @@ using namespace js::jit;
 using namespace js::wasm;
 
 #ifdef ENABLE_WASM_GC
-#  ifndef ENABLE_WASM_REFTYPES
-#    error "GC types require the reftypes feature"
+#  ifndef ENABLE_WASM_FUNCTION_REFERENCES
+#    error "GC types require the function-references feature"
 #  endif
 #endif
 
 #ifdef DEBUG
 
-#  ifdef ENABLE_WASM_REFTYPES
-#    define WASM_REF_OP(code) return code
-#  else
-#    define WASM_REF_OP(code) break
-#  endif
 #  ifdef ENABLE_WASM_FUNCTION_REFERENCES
 #    define WASM_FUNCTION_REFERENCES_OP(code) return code
 #  else
@@ -253,9 +248,9 @@ OpKind wasm::Classify(OpBytes op) {
     case Op::SetGlobal:
       return OpKind::SetGlobal;
     case Op::TableGet:
-      WASM_REF_OP(OpKind::TableGet);
+      return OpKind::TableGet;
     case Op::TableSet:
-      WASM_REF_OP(OpKind::TableSet);
+      return OpKind::TableSet;
     case Op::Call:
       return OpKind::Call;
     case Op::CallIndirect:
@@ -291,11 +286,11 @@ OpKind wasm::Classify(OpBytes op) {
     case Op::MemoryGrow:
       return OpKind::MemoryGrow;
     case Op::RefNull:
-      WASM_REF_OP(OpKind::RefNull);
+      return OpKind::RefNull;
     case Op::RefIsNull:
-      WASM_REF_OP(OpKind::Conversion);
+      return OpKind::Conversion;
     case Op::RefFunc:
-      WASM_REF_OP(OpKind::RefFunc);
+      return OpKind::RefFunc;
     case Op::RefAsNonNull:
       WASM_FUNCTION_REFERENCES_OP(OpKind::RefAsNonNull);
     case Op::BrOnNull:
@@ -631,11 +626,11 @@ OpKind wasm::Classify(OpBytes op) {
         case MiscOp::TableInit:
           return OpKind::MemOrTableInit;
         case MiscOp::TableFill:
-          WASM_REF_OP(OpKind::TableFill);
+          return OpKind::TableFill;
         case MiscOp::TableGrow:
-          WASM_REF_OP(OpKind::TableGrow);
+          return OpKind::TableGrow;
         case MiscOp::TableSize:
-          WASM_REF_OP(OpKind::TableSize);
+          return OpKind::TableSize;
       }
       break;
     }

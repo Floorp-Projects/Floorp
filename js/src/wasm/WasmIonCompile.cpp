@@ -4050,7 +4050,6 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
   return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 
-#ifdef ENABLE_WASM_REFTYPES
 // Note, table.{get,grow,set} on table(funcref) are currently rejected by the
 // verifier.
 
@@ -4356,7 +4355,6 @@ static bool EmitRefIsNull(FunctionCompiler& f) {
       f.compare(input, nullVal, JSOp::Eq, MCompare::Compare_RefOrNull));
   return true;
 }
-#endif  // ENABLE_WASM_REFTYPES
 
 #ifdef ENABLE_WASM_SIMD
 static bool EmitConstSimd128(FunctionCompiler& f) {
@@ -4654,9 +4652,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::SelectNumeric):
         CHECK(EmitSelect(f, /*typed*/ false));
       case uint16_t(Op::SelectTyped):
-        if (!f.moduleEnv().refTypesEnabled()) {
-          return f.iter().unrecognizedOpcode(&op);
-        }
         CHECK(EmitSelect(f, /*typed*/ true));
 
       // Locals and globals
@@ -4670,12 +4665,10 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitGetGlobal(f));
       case uint16_t(Op::SetGlobal):
         CHECK(EmitSetGlobal(f));
-#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::TableGet):
         CHECK(EmitTableGet(f));
       case uint16_t(Op::TableSet):
         CHECK(EmitTableSet(f));
-#endif
 
       // Memory-related operators
       case uint16_t(Op::I32Load):
@@ -5034,14 +5027,12 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitComparison(f, RefType::extern_(), JSOp::Eq,
                              MCompare::Compare_RefOrNull));
 #endif
-#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefFunc):
         CHECK(EmitRefFunc(f));
       case uint16_t(Op::RefNull):
         CHECK(EmitRefNull(f));
       case uint16_t(Op::RefIsNull):
         CHECK(EmitRefIsNull(f));
-#endif
 
       // Sign extensions
       case uint16_t(Op::I32Extend8S):
@@ -5387,14 +5378,12 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitDataOrElemDrop(f, /*isData=*/false));
           case uint32_t(MiscOp::TableInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
-#ifdef ENABLE_WASM_REFTYPES
           case uint32_t(MiscOp::TableFill):
             CHECK(EmitTableFill(f));
           case uint32_t(MiscOp::TableGrow):
             CHECK(EmitTableGrow(f));
           case uint32_t(MiscOp::TableSize):
             CHECK(EmitTableSize(f));
-#endif
           default:
             return f.iter().unrecognizedOpcode(&op);
         }
