@@ -35,7 +35,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
@@ -170,18 +169,18 @@ let FormAutofillStatus = {
     }
   },
 
-  updateSavedFieldNames() {
+  async updateSavedFieldNames() {
     log.debug("updateSavedFieldNames");
 
     let savedFieldNames;
+    const addressNames = await gFormAutofillStorage.addresses.getSavedFieldNames();
+
     // Don't access the credit cards store unless it is enabled.
     if (FormAutofill.isAutofillCreditCardsAvailable) {
-      savedFieldNames = new Set([
-        ...gFormAutofillStorage.addresses.getSavedFieldNames(),
-        ...gFormAutofillStorage.creditCards.getSavedFieldNames(),
-      ]);
+      const creditCardNames = await gFormAutofillStorage.creditCards.getSavedFieldNames();
+      savedFieldNames = new Set([...addressNames, ...creditCardNames]);
     } else {
-      savedFieldNames = gFormAutofillStorage.addresses.getSavedFieldNames();
+      savedFieldNames = addressNames;
     }
 
     Services.ppmm.sharedData.set(
@@ -297,6 +296,7 @@ class FormAutofillParent extends JSWindowActorParent {
     switch (name) {
       case "FormAutofill:InitStorage": {
         await gFormAutofillStorage.initialize();
+        await FormAutofillStatus.updateSavedFieldNames();
         break;
       }
       case "FormAutofill:GetRecords": {

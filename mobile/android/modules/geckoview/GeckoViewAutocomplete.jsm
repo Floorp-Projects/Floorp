@@ -148,6 +148,60 @@ const GeckoViewAutocomplete = {
   },
 
   /**
+   * Delegates credit card entry fetching to the attached LoginStorage
+   * GeckoView delegate.
+   *
+   * @return {Promise}
+   *         Resolves with an array of credit card objects or null.
+   *         Rejected if no delegate is attached.
+   *         Login object string properties:
+   *         { guid, name, number, expMonth, expYear, type }
+   */
+  fetchCreditCards() {
+    debug`fetchCreditCards`;
+
+    return Promise.resolve(null);
+  },
+
+  /**
+   * Delegates address entry fetching to the attached LoginStorage
+   * GeckoView delegate.
+   *
+   * @return {Promise}
+   *         Resolves with an array of address objects or null.
+   *         Rejected if no delegate is attached.
+   *         Login object string properties:
+   *         { guid, name, givenName, additionalName, familyName,
+   *           organization, streetAddress, addressLevel1, addressLevel2,
+   *           addressLevel3, postalCode, country, tel, email }
+   */
+  fetchAddresses() {
+    debug`fetchAddresses`;
+
+    return Promise.resolve(null);
+  },
+
+  /**
+   * Delegates credit card entry saving to the attached LoginStorage GeckoView delegate.
+   * Call this when a new or modified credit card entry has been submitted.
+   *
+   * @param aCreditCard The {CreditCard} to be saved.
+   */
+  onCreditCardSave(aCreditCard) {
+    debug`onLoginSave ${aCreditCard}`;
+  },
+
+  /**
+   * Delegates address entry saving to the attached LoginStorage GeckoView delegate.
+   * Call this when a new or modified address entry has been submitted.
+   *
+   * @param aAddress The {Address} to be saved.
+   */
+  onAddressSave(aAddress) {
+    debug`onLoginSave ${aAddress}`;
+  },
+
+  /**
    * Delegates login entry saving to the attached LoginStorage GeckoView delegate.
    * Call this when a new login entry or a new password for an existing login
    * entry has been submitted.
