@@ -5,6 +5,7 @@
 
 #include "nsMenuX.h"
 
+#include <_types/_uint32_t.h>
 #include <dlfcn.h>
 
 #include "mozilla/dom/Document.h"
@@ -134,6 +135,7 @@ nsMenuX::~nsMenuX() {
   // Make sure pending popuphiding/popuphidden events aren't dropped.
   FlushMenuClosedRunnable();
 
+  OnHighlightedItemChanged(Nothing());
   RemoveAll();
 
   mNativeMenu.delegate = nil;
@@ -354,6 +356,7 @@ nsEventStatus nsMenuX::MenuOpened() {
   }
 
   if (mNeedsRebuild) {
+    OnHighlightedItemChanged(Nothing());
     RemoveAll();
     RebuildMenu();
   }
@@ -411,6 +414,9 @@ void nsMenuX::MenuClosedAsync() {
     mPendingAsyncMenuCloseRunnable = nullptr;
   }
 
+  // Make sure no item is highlighted.
+  OnHighlightedItemChanged(Nothing());
+
   nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
   nsCOMPtr<nsIContent> dispatchTo = popupContent ? popupContent : mContent;
 
@@ -453,6 +459,30 @@ bool nsMenuX::Close() {
   return wasOpen;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void nsMenuX::OnHighlightedItemChanged(const Maybe<uint32_t>& aNewHighlightedIndex) {
+  if (mHighlightedItemIndex == aNewHighlightedIndex) {
+    return;
+  }
+
+  if (mHighlightedItemIndex) {
+    Maybe<nsMenuX::MenuChild> target = GetVisibleItemAt(*mHighlightedItemIndex);
+    if (target && target->is<RefPtr<nsMenuItemX>>()) {
+      bool handlerCalledPreventDefault;  // but we don't actually care
+      target->as<RefPtr<nsMenuItemX>>()->DispatchDOMEvent(u"DOMMenuItemInactive"_ns,
+                                                          &handlerCalledPreventDefault);
+    }
+  }
+  if (aNewHighlightedIndex) {
+    Maybe<nsMenuX::MenuChild> target = GetVisibleItemAt(*aNewHighlightedIndex);
+    if (target && target->is<RefPtr<nsMenuItemX>>()) {
+      bool handlerCalledPreventDefault;  // but we don't actually care
+      target->as<RefPtr<nsMenuItemX>>()->DispatchDOMEvent(u"DOMMenuItemActive"_ns,
+                                                          &handlerCalledPreventDefault);
+    }
+  }
+  mHighlightedItemIndex = aNewHighlightedIndex;
 }
 
 void nsMenuX::RebuildMenu() {
@@ -788,18 +818,14 @@ void nsMenuX::Dump(uint32_t aIndent) const {
   return self;
 }
 
-- (void)menu:(NSMenu*)menu willHighlightItem:(NSMenuItem*)item {
-  if (!menu || !item || !mGeckoMenu) {
+- (void)menu:(NSMenu*)aMenu willHighlightItem:(NSMenuItem*)aItem {
+  if (!aMenu || !mGeckoMenu) {
     return;
   }
 
-  Maybe<nsMenuX::MenuChild> target =
-      mGeckoMenu->GetVisibleItemAt((uint32_t)[menu indexOfItem:item]);
-  if (target && target->is<RefPtr<nsMenuItemX>>()) {
-    bool handlerCalledPreventDefault;  // but we don't actually care
-    target->as<RefPtr<nsMenuItemX>>()->DispatchDOMEvent(u"DOMMenuItemActive"_ns,
-                                                        &handlerCalledPreventDefault);
-  }
+  Maybe<uint32_t> index =
+      aItem ? Some(static_cast<uint32_t>([aMenu indexOfItem:aItem])) : Nothing();
+  mGeckoMenu->OnHighlightedItemChanged(index);
 }
 
 - (void)menuWillOpen:(NSMenu*)menu {
