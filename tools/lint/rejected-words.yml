@@ -64,7 +64,6 @@ avoid-blacklist-and-whitelist:
         - browser/components/urlbar/tests/unit/test_providerHeuristicFallback.js
         - browser/components/urlbar/tests/unit/test_search_suggestions.js
         - browser/components/urlbar/tests/unit/test_tokenizer.js
-        - browser/extensions/formautofill/FormAutofillSync.jsm
         - browser/extensions/screenshots/background/main.js
         - browser/modules/SitePermissions.jsm
         - browser/tools/mozscreenshots/mozscreenshots/extension/configurations/PermissionPrompts.jsm
@@ -348,6 +347,7 @@ avoid-blacklist-and-whitelist:
         - toolkit/components/crashes/tests/xpcshell/test_crash_manager.js
         - toolkit/components/extensions/Extension.jsm
         - toolkit/components/extensions/test/xpcshell/test_WebExtensionPolicy.js
+        - toolkit/components/formautofill/FormAutofillSync.jsm
         - toolkit/components/remotepagemanager/RemotePageManagerParent.jsm
         - toolkit/components/reputationservice/ApplicationReputation.cpp
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
