@@ -537,36 +537,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gFxaSendLoginUrl",
-  "identity.fxaccounts.service.sendLoginUrl",
-  false,
-  (aPref, aOldVal, aNewVal) => {
-    updateFxaToolbarMenu(gFxaToolbarEnabled);
-  }
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gFxaMonitorLoginUrl",
-  "identity.fxaccounts.service.monitorLoginUrl",
-  null,
-  (aPref, aOldVal, aNewVal) => {
-    updateFxaToolbarMenu(gFxaToolbarEnabled);
-  }
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gFxaDeviceName",
-  "identity.fxaccounts.account.device.name",
-  false,
-  (aPref, aOldVal, aNewVal) => {
-    updateFxaToolbarMenu(gFxaToolbarEnabled);
-  }
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "gAddonAbuseReportEnabled",
   "extensions.abuseReport.enabled",
   false

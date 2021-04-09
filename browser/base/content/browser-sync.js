@@ -1257,35 +1257,6 @@ var gSync = {
     this.openFxAManagePage(entryPoint);
   },
 
-  async openSendFromFxaMenu(panel) {
-    this.emitFxaToolbarTelemetry("open_send", panel);
-    this.launchFxaService(gFxaSendLoginUrl);
-  },
-
-  async openMonitorFromFxaMenu(panel) {
-    this.emitFxaToolbarTelemetry("open_monitor", panel);
-    this.launchFxaService(gFxaMonitorLoginUrl);
-  },
-
-  launchFxaService(serviceUrl, panel) {
-    let entryPoint = "fxa_discoverability_native";
-    if (this.isPanelInsideAppMenu(panel)) {
-      entryPoint = "fxa_app_menu";
-    }
-
-    const url = new URL(serviceUrl);
-    url.searchParams.set("utm_source", "fxa-toolbar");
-    url.searchParams.set("utm_medium", "referral");
-    url.searchParams.set("entrypoint", entryPoint);
-
-    const state = UIState.get();
-    if (state.status == UIState.STATUS_SIGNED_IN) {
-      url.searchParams.set("email", state.email);
-    }
-
-    switchToTabHavingURI(url, true, { replaceQueryString: true });
-  },
-
   // Returns true if we managed to send the tab to any targets, false otherwise.
   async sendTabToDevice(url, targets, title) {
     const fxaCommandsDevices = [];
