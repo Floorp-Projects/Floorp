@@ -582,22 +582,6 @@ async function stopSharing(
     1,
     aFrameBC
   );
-  aWindow.gPermissionPanel._identityPermissionBox.click();
-  let popup = aWindow.gPermissionPanel._permissionPopup;
-  // If the popup gets hidden before being shown, by stray focus/activate
-  // events, don't bother failing the test. It's enough to know that we
-  // started showing the popup.
-  let hiddenEvent = BrowserTestUtils.waitForEvent(popup, "popuphidden");
-  let shownEvent = BrowserTestUtils.waitForEvent(popup, "popupshown");
-  await Promise.race([hiddenEvent, shownEvent]);
-  let doc = aWindow.document;
-  let permissions = doc.getElementById("permission-popup-permission-list");
-  let cancelButton = permissions.querySelector(
-    ".permission-popup-permission-icon." +
-      aType +
-      "-icon ~ " +
-      ".permission-popup-permission-remove-button"
-  );
   let observerPromise1 = expectObserverCalled(
     "getUserMedia:revoke",
     1,
@@ -615,12 +599,41 @@ async function stopSharing(
     );
   }
 
-  cancelButton.click();
-  popup.hidePopup();
-
+  await revokePermission(aType, aShouldKeepSharing, aFrameBC, aWindow);
   await promiseRecordingEvent;
   await observerPromise1;
   await observerPromise2;
+
+  if (!aShouldKeepSharing) {
+    await checkNotSharing();
+  }
+}
+
+async function revokePermission(
+  aType = "camera",
+  aShouldKeepSharing = false,
+  aFrameBC,
+  aWindow = window
+) {
+  aWindow.gPermissionPanel._identityPermissionBox.click();
+  let popup = aWindow.gPermissionPanel._permissionPopup;
+  // If the popup gets hidden before being shown, by stray focus/activate
+  // events, don't bother failing the test. It's enough to know that we
+  // started showing the popup.
+  let hiddenEvent = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+  let shownEvent = BrowserTestUtils.waitForEvent(popup, "popupshown");
+  await Promise.race([hiddenEvent, shownEvent]);
+  let doc = aWindow.document;
+  let permissions = doc.getElementById("permission-popup-permission-list");
+  let cancelButton = permissions.querySelector(
+    ".permission-popup-permission-icon." +
+      aType +
+      "-icon ~ " +
+      ".permission-popup-permission-remove-button"
+  );
+
+  cancelButton.click();
+  popup.hidePopup();
 
   if (!aShouldKeepSharing) {
     await checkNotSharing();
