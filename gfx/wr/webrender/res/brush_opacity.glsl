@@ -54,7 +54,7 @@ void brush_vs(
 
     v_uv_sample_bounds = vec4(uv0 + vec2(0.5), uv1 - vec2(0.5)) / texture_size.xyxy;
 
-    v_opacity = float(prim_user_data.y) / 65536.0;
+    v_opacity = clamp(float(prim_user_data.y) / 65536.0, 0.0, 1.0);
 }
 #endif
 
