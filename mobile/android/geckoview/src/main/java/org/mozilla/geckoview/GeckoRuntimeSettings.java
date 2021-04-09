@@ -527,9 +527,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     /* package */ final Pref<Boolean> mHttpsOnlyPrivateMode = new Pref<Boolean>(
         "dom.security.https_only_mode_pbm", false);
     /* package */ final Pref<Integer> mProcessCount = new Pref<>(
-            "dom.ipc.processCount", BuildConfig.RELEASE_OR_BETA
-                ? 1
-                : BuildConfig.MOZ_ANDROID_CONTENT_SERVICE_COUNT);
+            "dom.ipc.processCount", BuildConfig.RELEASE_OR_BETA ? 1 : 2);
 
     /* package */ int mPreferredColorScheme = COLOR_SCHEME_SYSTEM;
 
