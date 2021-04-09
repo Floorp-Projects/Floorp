@@ -1258,7 +1258,7 @@
 #if !defined(ANDROID)
   value: true
 #else
-  value: false # Blocked by DocumentChannel, see Bug 1589982.
+  value: @IS_NIGHTLY_BUILD@
 #endif
   mirror: always
 
@@ -1269,7 +1269,7 @@
 #if !defined(ANDROID)
   value: true
 #else
-  value: false # Blocked by DocumentChannel, see Bug 1589982.
+  value: @IS_NIGHTLY_BUILD@
 #endif
   mirror: always
 
@@ -2588,7 +2588,7 @@
 #if !defined(ANDROID)
   value: true
 #else
-  value: false # Blocked by DocumentChannel, see Bug 1589982.
+  value: @IS_NIGHTLY_BUILD@
 #endif
   mirror: once
 
