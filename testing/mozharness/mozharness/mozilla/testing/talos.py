@@ -60,13 +60,6 @@ TalosErrorList = PythonErrorList + [
     },
 ]
 
-GeckoProfilerSettings = (
-    "gecko_profile_interval",
-    "gecko_profile_entries",
-    "gecko_profile_features",
-    "gecko_profile_threads",
-)
-
 # TODO: check for running processes on script invocation
 
 
@@ -175,31 +168,6 @@ class Talos(
                 },
             ],
             [
-                ["--gecko-profile-entries"],
-                {
-                    "dest": "gecko_profile_entries",
-                    "type": "int",
-                    "help": "How many samples to take with the profiler",
-                },
-            ],
-            [
-                ["--gecko-profile-features"],
-                {
-                    "dest": "gecko_profile_features",
-                    "type": "str",
-                    "default": None,
-                    "help": "The features to enable in the profiler (comma-separated)",
-                },
-            ],
-            [
-                ["--gecko-profile-threads"],
-                {
-                    "dest": "gecko_profile_threads",
-                    "type": "str",
-                    "help": "Comma-separated list of threads to sample.",
-                },
-            ],
-            [
                 ["--disable-e10s"],
                 {
                     "dest": "e10s",
@@ -278,22 +246,10 @@ class Talos(
         self.repo_path = self.config.get("repo_path")
         self.obj_path = self.config.get("obj_path")
         self.tests = None
-        extra_opts = self.config.get("talos_extra_options", [])
-        self.gecko_profile = (
-            self.config.get("gecko_profile") or "--gecko-profile" in extra_opts
-        )
-        for setting in GeckoProfilerSettings:
-            value = self.config.get(setting)
-            arg = "--" + setting.replace("_", "-")
-            if value is None:
-                try:
-                    value = extra_opts[extra_opts.index(arg) + 1]
-                except ValueError:
-                    pass  # Not found
-            setattr(self, setting, value)
-            if not self.gecko_profile:
-                self.warning("enabling Gecko profiler for %s setting" % setting)
-                self.gecko_profile = True
+        self.gecko_profile = self.config.get(
+            "gecko_profile"
+        ) or "--gecko-profile" in self.config.get("talos_extra_options", [])
+        self.gecko_profile_interval = self.config.get("gecko_profile_interval")
         self.pagesets_name = None
         self.benchmark_zip = None
         self.webextensions_zip = None
@@ -307,11 +263,10 @@ class Talos(
         # finally, if gecko_profile is set, we add that to the talos options
         if self.gecko_profile:
             gecko_results.append("--gecko-profile")
-            for setting in GeckoProfilerSettings:
-                value = getattr(self, setting, None)
-                if value:
-                    arg = "--" + setting.replace("_", "-")
-                    gecko_results.extend([arg, str(value)])
+            if self.gecko_profile_interval:
+                gecko_results.extend(
+                    ["--gecko-profile-interval", str(self.gecko_profile_interval)]
+                )
         return gecko_results
 
     def query_abs_dirs(self):

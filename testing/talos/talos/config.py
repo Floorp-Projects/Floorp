@@ -23,8 +23,7 @@ DEFAULTS = dict(
     buildid="testbuildid",
     init_url="getInfo.html",
     env={"NO_EM_RESTART": "1"},
-    # base data for all tests. Note that any None here will end up converted to
-    # an empty string in useBaseTestDefaults.
+    # base data for all tests
     basetest=dict(
         cycles=1,
         profile_path="${talos}/base_profile",
@@ -68,8 +67,6 @@ GLOBAL_OVERRIDES = (
     "gecko_profile",
     "gecko_profile_interval",
     "gecko_profile_entries",
-    "gecko_profile_features",
-    "gecko_profile_threads",
     "tpcycles",
     "tppagecycles",
     "tpmanifest",

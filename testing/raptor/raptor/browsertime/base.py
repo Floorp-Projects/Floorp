@@ -308,37 +308,20 @@ class Browsertime(Perftest):
             ] = self.results_handler.result_dir_for_test(test)
             self._init_gecko_profiling(test)
             browsertime_options.append("--firefox.geckoProfiler")
-            for option, browser_time_option, default in (
-                (
-                    "gecko_profile_features",
+            browsertime_options.extend(
+                [
                     "--firefox.geckoProfilerParams.features",
                     "js,leaf,stackwalk,cpu,threads",
-                ),
-                (
-                    "gecko_profile_threads",
-                    "--firefox.geckoProfilerParams.threads",
-                    "GeckoMain,Compositor",
-                ),
-                (
-                    "gecko_profile_interval",
-                    "--firefox.geckoProfilerParams.interval",
-                    None,
-                ),
-                (
-                    "gecko_profile_entries",
-                    "--firefox.geckoProfilerParams.bufferSize",
-                    None,
-                ),
+                ]
+            )
+
+            for option, browser_time_option in (
+                ("gecko_profile_interval", "--firefox.geckoProfilerParams.interval"),
+                ("gecko_profile_entries", "--firefox.geckoProfilerParams.bufferSize"),
             ):
-                # 0 is a valid value. The setting may be present but set to None.
                 value = self.config.get(option)
                 if value is None:
                     value = test.get(option)
-                if value is None:
-                    value = default
-                if option == "gecko_profile_threads":
-                    extra = self.config.get("gecko_profile_extra_threads", [])
-                    value = ",".join(value.split(",") + extra)
                 if value is not None:
                     browsertime_options.extend([browser_time_option, str(value)])
 
