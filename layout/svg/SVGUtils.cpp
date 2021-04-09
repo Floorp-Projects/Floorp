@@ -1513,19 +1513,13 @@ bool SVGUtils::HasStroke(nsIFrame* aFrame, SVGContextPaint* aContextPaint) {
 
 float SVGUtils::GetStrokeWidth(nsIFrame* aFrame,
                                SVGContextPaint* aContextPaint) {
-  const nsStyleSVG* style = aFrame->StyleSVG();
-  if (style->mStrokeWidth.IsContextValue()) {
-    return aContextPaint ? aContextPaint->GetStrokeWidth() : 1.0f;
-  }
-
   nsIContent* content = aFrame->GetContent();
   if (content->IsText()) {
     content = content->GetParent();
   }
 
-  SVGElement* ctx = static_cast<SVGElement*>(content);
-  return SVGContentUtils::CoordToFloat(
-      ctx, style->mStrokeWidth.AsLengthPercentage());
+  auto* ctx = SVGElement::FromNode(content);
+  return SVGContentUtils::GetStrokeWidth(ctx, aFrame->Style(), aContextPaint);
 }
 
 void SVGUtils::SetupStrokeGeometry(nsIFrame* aFrame, gfxContext* aContext,
