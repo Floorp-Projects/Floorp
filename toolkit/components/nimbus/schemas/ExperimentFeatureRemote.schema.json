@@ -9,15 +9,19 @@
           "type": "string",
           "description": "Feature name for which the defaults are provided."
         },
-        "description": {
-          "type": "string",
-          "description": "Where the configuration is used"
-        },
         "configurations": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
+              "slug": {
+                "type": "string",
+                "description": "Configuration identifier that will be included in Telemetry."
+              },
+              "description": {
+                "type": "string",
+                "description": "Configuration description."
+              },
               "variables": {
                 "type": "object",
                 "description": "Key value pairs that should match the feature manifest definition."
@@ -35,12 +39,12 @@
                 "description": "Explanation for configuration and targeting"
               }
             },
-            "required": ["variables", "enabled", "targeting"],
+            "required": ["variables", "enabled", "targeting", "slug"],
             "additionalProperties": false
           }
         }
       },
-      "required": ["id", "configurations", "description"],
+      "required": ["id", "configurations"],
       "additionalProperties": false
     }
   }
