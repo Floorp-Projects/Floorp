@@ -130,6 +130,16 @@ add_task(async function test_context_menu() {
 });
 
 add_task(async function test_about_newtab() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        [
+          "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+        ],
+        false,
+      ],
+    ],
+  });
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
@@ -190,4 +200,5 @@ add_task(async function test_about_newtab() {
   );
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });

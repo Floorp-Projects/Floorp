@@ -8,6 +8,15 @@ add_task(async function() {
   // See browser_contentSearchUI.js for comprehensive content search UI tests.
   info("Search suggestion smoke test");
 
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+        false,
+      ],
+    ],
+  });
+
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:home" },
     async function(browser) {
@@ -75,4 +84,5 @@ add_task(async function() {
       } catch (ex) {}
     }
   );
+  await SpecialPowers.popPrefEnv();
 });
