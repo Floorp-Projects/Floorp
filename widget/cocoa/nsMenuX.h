@@ -78,6 +78,8 @@ class nsMenuX final : public nsMenuParentX,
   // references to this object can be dropped during the handling of the DOM event.
   bool OnOpen();
 
+  void PopupShowingEventWasSentAndApprovedExternally() { DidFirePopupShowing(); }
+
   // Called from the menu delegate during menuWillOpen.
   // Fires the popupshown event.
   // When calling this method, the caller must hold a strong reference to this object, because other
@@ -158,6 +160,7 @@ class nsMenuX final : public nsMenuParentX,
   void LoadSubMenu(nsIContent* aMenuContent);
   GeckoNSMenu* CreateMenuWithGeckoString(nsString& aMenuTitle);
   void UnregisterCommands();
+  void DidFirePopupShowing();
 
   // Calculates the index at which aChild's NSMenuItem should be inserted into our NSMenu.
   // The order of NSMenuItems in the NSMenu is the same as the order of menu children in

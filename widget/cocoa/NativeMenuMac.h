@@ -29,7 +29,7 @@ class NativeMenuMac : public NativeMenu,
   explicit NativeMenuMac(mozilla::dom::Element* aElement);
 
   // NativeMenu
-  bool ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) override;
+  void ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) override;
   bool Close() override;
   RefPtr<dom::Element> Element() override;
   void AddObserver(NativeMenu::Observer* aObserver) override {
