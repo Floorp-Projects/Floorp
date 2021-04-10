@@ -11,17 +11,17 @@ const CACHED_STYLESHEETS = new WeakMap();
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofill",
-  "resource://autofill/FormAutofill.jsm"
+  "resource://formautofill/FormAutofill.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillStatus",
-  "resource://autofill/FormAutofillParent.jsm"
+  "resource://formautofill/FormAutofillParent.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillParent",
-  "resource://autofill/FormAutofillParent.jsm"
+  "resource://formautofill/FormAutofillParent.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -181,10 +181,10 @@ this.formautofill = class extends ExtensionAPI {
 
     ChromeUtils.registerWindowActor("FormAutofill", {
       parent: {
-        moduleURI: "resource://autofill/FormAutofillParent.jsm",
+        moduleURI: "resource://formautofill/FormAutofillParent.jsm",
       },
       child: {
-        moduleURI: "resource://autofill/FormAutofillChild.jsm",
+        moduleURI: "resource://formautofill/FormAutofillChild.jsm",
         events: {
           focusin: {},
           DOMFormBeforeSubmit: {},

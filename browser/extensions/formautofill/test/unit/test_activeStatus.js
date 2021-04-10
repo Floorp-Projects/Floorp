@@ -8,7 +8,7 @@ let FormAutofillStatus;
 
 add_task(async function setup() {
   ({ FormAutofillStatus } = ChromeUtils.import(
-    "resource://autofill/FormAutofillParent.jsm"
+    "resource://formautofill/FormAutofillParent.jsm"
   ));
 });
 
@@ -27,7 +27,6 @@ add_task(async function test_activeStatus_init() {
 
   // Initialize profile storage
   await FormAutofillStatus.formAutofillStorage.initialize();
-  await FormAutofillStatus.updateSavedFieldNames();
   // Upon first initializing profile storage, status should be computed.
   Assert.equal(FormAutofillStatus.updateStatus.called, true);
   Assert.equal(Services.ppmm.sharedData.get("FormAutofill:enabled"), false);
@@ -108,14 +107,14 @@ add_task(async function test_activeStatus_computeStatus() {
     "getSavedFieldNames"
   );
   FormAutofillStatus.formAutofillStorage.addresses.getSavedFieldNames.returns(
-    Promise.resolve(new Set())
+    new Set()
   );
   sinon.stub(
     FormAutofillStatus.formAutofillStorage.creditCards,
     "getSavedFieldNames"
   );
   FormAutofillStatus.formAutofillStorage.creditCards.getSavedFieldNames.returns(
-    Promise.resolve(new Set())
+    new Set()
   );
 
   // pref is enabled and profile is empty.
@@ -138,9 +137,9 @@ add_task(async function test_activeStatus_computeStatus() {
   Assert.equal(FormAutofillStatus.computeStatus(), false);
 
   FormAutofillStatus.formAutofillStorage.addresses.getSavedFieldNames.returns(
-    Promise.resolve(new Set(["given-name"]))
+    new Set(["given-name"])
   );
-  await FormAutofillStatus.observe(null, "formautofill-storage-changed", "add");
+  FormAutofillStatus.observe(null, "formautofill-storage-changed", "add");
 
   // pref is enabled and profile is not empty.
   Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", true);
