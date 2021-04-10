@@ -38,7 +38,7 @@ function createNotification({ browser, label, value, priority }) {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.infobars.enabled", true]],
+    set: [["browser.proton.enabled", true]],
   });
 });
 
