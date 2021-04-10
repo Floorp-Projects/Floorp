@@ -42,22 +42,6 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function testNotificationDeckIsLazy() {
-  let deck = document.getElementById("tab-notification-deck");
-  ok(!deck, "There is no tab notification deck");
-  await BrowserTestUtils.withNewTab("about:blank", async browser => {
-    createNotification({
-      browser,
-      label: "First notification",
-      value: "first-notification",
-      priority: "PRIORITY_INFO_LOW",
-    });
-
-    deck = document.getElementById("tab-notification-deck");
-    ok(deck, "Creating a notification created the deck");
-  });
-});
-
 add_task(async function testNotificationInBackgroundTab() {
   let firstTab = gBrowser.selectedTab;
 
