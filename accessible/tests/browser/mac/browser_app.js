@@ -125,7 +125,7 @@ add_task(async () => {
       // 5. Accessibility announcements dialog (#a11y-announcement)
       // 6. Tab notification deck (#tab-notification-deck) (proton only)
       let baseRootChildCount = Services.prefs.getBoolPref(
-        "browser.proton.enabled",
+        "browser.proton.infobars.enabled",
         false
       )
         ? 6
