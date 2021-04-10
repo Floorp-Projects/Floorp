@@ -19,6 +19,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
+#include "mozilla/ViewportUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -138,6 +139,9 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
   CSSRect rect =
       nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame);
 
+  CSSPoint point = CSSPoint::FromAppUnits(
+      ViewportUtils::VisualToLayout(CSSPoint::ToAppUnits(aPoint), presShell));
+
   // If the element is taller than the visible area of the page scale
   // the height of the |rect| so that it has the same aspect ratio as
   // the root frame.  The clipped |rect| is centered on the y value of
@@ -148,7 +152,7 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
     if (widthRatio < 0.9 && targetHeight < rect.Height()) {
       const CSSPoint scrollPoint =
           CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
-      float newY = aPoint.y + scrollPoint.y - (targetHeight * 0.5f);
+      float newY = point.y + scrollPoint.y - (targetHeight * 0.5f);
       if ((newY + targetHeight) > rect.YMost()) {
         rect.MoveByY(rect.Height() - targetHeight);
       } else if (newY > rect.Y()) {
