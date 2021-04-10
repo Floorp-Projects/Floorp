@@ -247,14 +247,6 @@ enum class StyleShapeSourceType : uint8_t {
   Path,  // SVG path function
 };
 
-// text-justify
-enum class StyleTextJustify : uint8_t {
-  None,
-  Auto,
-  InterWord,
-  InterCharacter,
-};
-
 // user-focus
 enum class StyleUserFocus : uint8_t {
   None,

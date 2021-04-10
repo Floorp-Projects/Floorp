@@ -149,6 +149,7 @@ include = [
   "TextDecorationLine",
   "TextUnderlinePosition",
   "TextTransform",
+  "TextJustify",
   "TextOverflow",
   "RubyPosition",
   "MozListReversed",
