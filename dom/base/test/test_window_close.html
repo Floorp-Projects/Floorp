@@ -41,6 +41,9 @@
     var loadTypes = ["withouthistory", "withhistory"];
 
     async function start() {
+      // If Fission is disabled, the pref is no-op.
+      await SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]});
+
       for (let test of tests) {
         await SpecialPowers.pushPrefEnv({ set: [["dom.allow_scripts_to_close_windows", false]]});
         if (test.type == windowopen) {
@@ -77,7 +80,6 @@
           }
         }
       }
-
       SimpleTest.finish();
     }
 
