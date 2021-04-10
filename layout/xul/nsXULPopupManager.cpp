@@ -697,12 +697,18 @@ void nsXULPopupManager::ShowMenu(nsIContent* aMenu, bool aSelectFirstItem,
   popupFrame->InitializePopup(aMenu, nullptr, position, 0, 0,
                               MenuPopupAnchorType_Node, true);
 
+  nsCOMPtr<nsIContent> popupContent = popupFrame->GetContent();
   if (aAsynchronous) {
-    nsCOMPtr<nsIRunnable> event = new nsXULPopupShowingEvent(
-        popupFrame->GetContent(), parentIsContextMenu, aSelectFirstItem);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableFunction("FirePopupShowingEvent", [=]() {
+          nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+          if (pm) {
+            pm->FirePopupShowingEvent(popupContent, parentIsContextMenu,
+                                      aSelectFirstItem, nullptr);
+          }
+        });
     aMenu->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
   } else {
-    nsCOMPtr<nsIContent> popupContent = popupFrame->GetContent();
     FirePopupShowingEvent(popupContent, parentIsContextMenu, aSelectFirstItem,
                           nullptr);
   }
@@ -2726,17 +2732,6 @@ nsresult nsXULPopupManager::KeyPress(KeyboardEvent* aKeyEvent) {
   }
 
   return NS_OK;  // I am consuming event
-}
-
-NS_IMETHODIMP
-nsXULPopupShowingEvent::Run() {
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm) {
-    pm->FirePopupShowingEvent(mPopup, mIsContextMenu, mSelectFirstItem,
-                              nullptr);
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
