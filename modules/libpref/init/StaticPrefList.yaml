@@ -4489,7 +4489,7 @@
 
 - name: gfx.e10s.font-list.shared
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: once
 
 # Whether to load fonts (e.g. Twemoji Mozilla) bundled with the application:
