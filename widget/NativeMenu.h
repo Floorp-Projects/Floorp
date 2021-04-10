@@ -20,8 +20,9 @@ class NativeMenu {
   NS_INLINE_DECL_REFCOUNTING(NativeMenu)
 
   // Show this menu as a context menu at the specified position.
-  // Returns false if the popupshowing handler does not want this popup to open.
-  virtual bool ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) = 0;
+  // This call assumes that the popupshowing event for the root popup has
+  // already been sent and "approved", i.e. preventDefault() was not called.
+  virtual void ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) = 0;
 
   // Close the menu and synchronously fire popuphiding / popuphidden events.
   // Returns false if the menu wasn't open.
