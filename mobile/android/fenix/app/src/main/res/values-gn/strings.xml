@@ -620,6 +620,8 @@
     <string name="add_private_tab">Embojuaju tendayke ñemigua</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Ñemigua</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Mbojuehe</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Embojuruja tendayke</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -1231,8 +1233,12 @@
     <string name="onboarding_tracking_protection_strict_button">Mbaretépe (jeroviaháva)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Mbaretépe</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Ejoko tapykuehoha kuatiarogue henyhẽ pya’évape g̃uarã, hákatu ojavykuaáva peteĩva kuatiarogue rembiapoite.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Eiporavo tembipuru renda oĩha</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Emoĩ tembipuru renda nde ykére. Eguereko yvy gotyo, térã emongu’e yvate gotyo.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Eikundaha ñemi</string>
     <!-- text for the private browsing onboarding card description
@@ -1260,6 +1266,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Eiporavo ne téma</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Eipuru’ive batería ha emombytu’u nde resa iñypytũvévape.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ijeheguietéva</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1315,10 +1323,14 @@
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Ypyguaite (ijypygua)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Imbytéva ñemo’ã ha tembiapokuépe g̃uarã. Umi kuatiarogue henyhẽta hekoitépe.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mba’e umi ojokóva tapykuehoha moãha ypyguáva renondépe</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Mbaretépe</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Ejoko tapykuehoha kuatiarogue henyhẽ pya’eve hag̃ua, hákatu ojavykuaa peteĩva kuatiarogue rembiapoite.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mba’e umi ojokóva tapykuehoha mo’ãha imbaretéva</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1574,6 +1586,8 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Embojuaju kuatia’atã ñemurã</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Eñangareko kuatia’atã ñongatupyrére</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Embojuaju kuatia’atã</string>
     <!-- The header for the card number of a credit card -->
@@ -1592,6 +1606,9 @@
     <string name="credit_cards_save_button">Ñongatu</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Heja</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Kuatia’atã ñongatupyre</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Embojuaju hekaha</string>

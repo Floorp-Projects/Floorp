@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">మీ అంతరంగిక ట్యాబులు ఇక్కడ కనిపిస్తాయి.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">బైదు</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 తెరిచివున్న ట్యాబు. ట్యాబుల మధ్య మారడానికి తాకండి.</string>
 
@@ -122,6 +118,8 @@
     <string name="browser_menu_edit_bookmark">ఇష్టాంశాన్ని సవరించు</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">పొడగింతలు</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">పొడగింతలు</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">ఇక్కడ పొడగింతలేమీ లేవు</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -167,6 +165,12 @@
     <string name="browser_menu_open_app_link">అనువర్తనంలో తెరువు</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">రూపురేఖలు</string>
+
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">చేర్చు</string>
+
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">మార్చు</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -509,6 +513,8 @@
 
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">కొత్త ట్యాబు</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">పేజీలో వెతుకు</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">సింకైన ట్యాబులు</string>
     <!-- Option in Library to open Reading List -->
@@ -556,6 +562,8 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ఒక నెల తరువాత</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">మానవీయంగా మూసివేయండి</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
     <string name="close_tabs_after_one_day_summary">ఒక రోజు తర్వాత మూసివేయి</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
@@ -864,15 +872,15 @@
     <string name="tracking_protection_on">చేతనం</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">అచేతనం</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ఆడియో, వీడియోలను అనుమతించు</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">ఆడియో, వీడియోలను సెల్యులార్ డేటాని వాడుతున్నప్పుడు మాత్రమే నిరోధించు</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">ఆడియో, వీడియోలు వై-ఫైలో ఉన్నప్పుడు మాత్రమే ఆడతాయి</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">ఆడియోను మాత్రమే నిరోధించు</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">ఆడియో, వీడియోలను నిరోధించు</string>
 
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
@@ -1136,9 +1144,6 @@
     <string name="onboarding_header">%sకి స్వాగతం!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">ఇప్పటికే ఖాతా ఉందా?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s గురించి తెలుసుకోండి</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">కొత్తవేమిటో చూడండి</string>
     <!-- text for the "what's new" onboarding card description
@@ -1146,43 +1151,22 @@
     <string name="onboarding_whats_new_description">పునఃరూపకల్పన చేసిన %s గురించి ప్రశ్నలు ఉన్నాయా? ఏమి మార్చబడిందో తెలుసుకోవాలనుకుంటున్నారా?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ఇక్కడ సమాధానాలు పొందండి</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">మీ Firefox ఖాతాతో ఇష్టాంశాలను, సంకేతపదాలను, ఇంకా మరెన్నిటినో సింక్రనించుకోవడం మొదలుపెట్టండి.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">ఇంకా తెలుసుకోండి</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">అవును, నన్ను ప్రవేశింపజేయి</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">ప్రవేశింపజేస్తూంది…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Firefox లోనికి ప్రవేశించండి</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">నిష్క్రమించే ఉండు</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">సింక్ చేతనంగా ఉంది</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ప్రవేశం విఫలమైంది</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">స్వయంచాలక గోప్యత</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">మిమ్మల్ని అనుసరించే ట్రాకర్లను, మాల్‌వేర్లను, కంపెనీలను అంతరంగిక, భద్రతా అమరికలు నిరోధిస్తాయి.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ప్రామాణికం (అప్రమేయం)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">తక్కువ ట్రాకర్లను నిరోధిస్తుంది. పేజీలు మామూలుగానే తెరుచుకుంటాయి.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">కఠినం (సిఫార్సు చేయబడింది)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">కఠినం</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">ఎక్కువ ట్రాకర్లను, ప్రకటనలను, పాప్అప్లను నిరోధిస్తుంది. పేజీలు వేగంగా తెరుచుకుంటాయి, కానీ కొన్ని సౌలభ్యాలు పనిచేయకపోవచ్చు.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">ఒక పక్షాన నిలబడండి</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">పనిముట్ల పట్టీని అడుగున ఉంచి ఒక-చేతి విహరణను ప్రయత్నించండి లేదా పైన అమర్చుకోండి.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">అంతరంగికంగా విహరించండి</string>
     <!-- text for the private browsing onboarding card description
@@ -1206,8 +1190,6 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">మీ అలంకారాన్ని ఎంచుకోండి</string>
 
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">నల్లని రీతిని చేనించుకోవడం ద్వరా కొంత బ్యాటరీని, మీ కంటిచూపును కాపాడుకోండి.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ఆటోమెటిక్</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1263,14 +1245,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ఇంకా తెలుసుకోండి</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ప్రామాణికం (అప్రమేయం)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">తక్కువ ట్రాకర్లను నిరోధిస్తుంది. పేజీలు మామూలుగానే తెరుచుకుంటాయి.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ప్రామాణిక ట్రాకింగ్ సంరక్షణ ద్వారా నిరోధించబడినవి</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">కఠినం</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">ఎక్కువ ట్రాకర్లను, ప్రకటనలను, పాప్అప్లను నిరోధిస్తుంది. పేజీలు వేగంగా తెరుచుకుంటాయి, కానీ కొన్ని సౌలభ్యాలు పనిచేయకపోవచ్చు.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">కఠిన ట్రాకింగ్ సంరక్షణ ద్వారా నిరోధించబడినవి</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1509,6 +1487,32 @@
     <string name="saved_logins_sort_strategy_last_used">చివరి వాడుక</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ప్రవేశాల క్రమబద్ధీకరణ మెనూ</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">క్రెడిట్ కార్డులు</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">క్రెడిట్ కార్డును చేర్చు</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">కార్డును చేర్చు</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">కార్డు నెంబరు</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">కాలంచెల్లు తేదీ</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">కార్డు మీద పేరు</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">కార్డు మారుపేరు</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">కార్డును తొలగించు</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">భద్రపరుచు</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">భద్రపరుచు</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">రద్దుచేయి</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">భద్రపరచిన కార్డులు</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">శోధన యంత్రం చేర్పు</string>

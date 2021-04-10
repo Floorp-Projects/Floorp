@@ -1568,6 +1568,8 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Lisää luottokortti</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Hallinnoi tallennettuja kortteja</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Lisää kortti</string>
     <!-- The header for the card number of a credit card -->
@@ -1586,6 +1588,9 @@
     <string name="credit_cards_save_button">Tallenna</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Peruuta</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Tallennetut kortit</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Lisää hakukone</string>

@@ -611,6 +611,8 @@
     <string name="add_private_tab">Gizli sekme ekle</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Gizli</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Eşitle</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Açık sekmeler</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -977,7 +979,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Son kullanılanlar</string>
     <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">%1$s adresiyle giriş yaptınız</string>
+    <string name="sync_signed_as">Kullanıcı: %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Eşitlemek için giriş yap</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1554,6 +1556,8 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Kredi kartı ekle</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Kayıtlı kartları yönet</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kart ekle</string>
     <!-- The header for the card number of a credit card -->
@@ -1572,6 +1576,9 @@
     <string name="credit_cards_save_button">Kaydet</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">İptal</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Kayıtlı kartlar</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Arama motoru ekle</string>
