@@ -794,23 +794,22 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
 
   popupFrame->InitializePopupAsNativeContextMenu(triggerContent, aXPos, aYPos);
 
-  // Show the menu. ShowAsContextMenu synchronously fires a popupshowing event.
-  // Make sure mOpeningPopup is set to aPopup during the event, so that
-  // document.popupNode can find the popup.
-  mOpeningPopup = aPopup;
-  bool succeeded = menu->ShowAsContextMenu(DesktopPoint(aXPos, aYPos));
-  mOpeningPopup = nullptr;
+  nsEventStatus status =
+      FirePopupShowingEvent(aPopup, popupFrame->PresContext(), aTriggerEvent);
 
-  if (!succeeded) {
-    // preventDefault() was called on the popupshowing event.
+  // if the event was cancelled, don't open the popup, reset its state back
+  // to closed and clear its trigger content.
+  if (status == nsEventStatus_eConsumeNoDefault) {
     if (nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true)) {
       popupFrame->SetPopupState(ePopupClosed);
+      popupFrame->ClearTriggerContent();
     }
     return true;
   }
 
   mNativeMenu = menu;
   mNativeMenu->AddObserver(this);
+  mNativeMenu->ShowAsContextMenu(DesktopPoint(aXPos, aYPos));
 
   // While the native menu is open, it consumes mouseup events.
   // Clear any :active state and mouse capture now so that we don't get stuck in

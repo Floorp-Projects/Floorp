@@ -616,25 +616,27 @@ bool nsMenuX::OnOpen() {
     return false;
   }
 
+  DidFirePopupShowing();
+
+  return true;
+}
+
+void nsMenuX::DidFirePopupShowing() {
   mDidFirePopupshowingAndIsApprovedToOpen = true;
 
   // If the open is going to succeed we need to walk our menu items, checking to
   // see if any of them have a command attribute. If so, several attributes
   // must potentially be updated.
 
-  // Get new popup content first since it might have changed as a result of the
-  // eXULPopupShowing event above.
-  popupContent = GetMenuPopupContent();
+  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
   if (!popupContent) {
-    return true;
+    return;
   }
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
     pm->UpdateMenuItems(popupContent);
   }
-
-  return true;
 }
 
 // Find the |menupopup| child in the |popup| representing this menu. It should be one
