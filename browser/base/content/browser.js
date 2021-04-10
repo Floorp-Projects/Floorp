@@ -6499,6 +6499,13 @@ function setToolbarVisibility(
   };
   let event = new CustomEvent("toolbarvisibilitychange", eventParams);
   toolbar.dispatchEvent(event);
+
+  if (
+    toolbar.getAttribute("type") == "menubar" &&
+    CustomizationHandler.isCustomizing()
+  ) {
+    gCustomizeMode._updateDragSpaceCheckbox();
+  }
 }
 
 function updateToggleControlLabel(control) {
