@@ -143,7 +143,8 @@ class Page extends ContentProcessDomain {
     }
   }
 
-  async reload({ ignoreCache }) {
+  async reload(options = {}) {
+    const { ignoreCache } = options;
     let flags = LOAD_FLAGS_NONE;
     if (ignoreCache) {
       flags |= LOAD_FLAGS_BYPASS_CACHE;

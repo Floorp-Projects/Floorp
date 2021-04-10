@@ -86,17 +86,19 @@ class Input extends Domain {
     await this.executeInChild("_waitForContentEvent", eventId);
   }
 
-  async dispatchMouseEvent({ type, button, x, y, modifiers, clickCount }) {
+  async dispatchMouseEvent(options = {}) {
+    const { button, x, y, modifiers, clickCount } = options;
     const { alt, ctrl, meta, shift } = Input.Modifier;
 
-    if (type == "mousePressed") {
+    let type;
+    if (options.type == "mousePressed") {
       type = "mousedown";
-    } else if (type == "mouseReleased") {
+    } else if (options.type == "mouseReleased") {
       type = "mouseup";
-    } else if (type == "mouseMoved") {
+    } else if (options.type == "mouseMoved") {
       type = "mousemove";
     } else {
-      throw new Error(`Mouse type is not supported: ${type}`);
+      throw new Error(`Mouse type is not supported: ${options.type}`);
     }
 
     if (type === "mousedown" && button === "right") {
