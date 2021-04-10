@@ -570,6 +570,10 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 }
 } /*** END !proton ***/
 
+#TabsToolbar > .toolbar-items {
+  padding-top: var(--space-above-tabbar);
+}
+
 @media not (-moz-proton) {
 #TabsToolbar:not(:-moz-lwtheme) {
   color: #333;
