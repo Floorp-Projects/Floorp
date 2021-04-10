@@ -24,6 +24,9 @@
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">Файлны ачып булмады</string>
 
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">%1$s файлларын ачу өчен кушымта табылмады</string>
+
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Туктату</string>
     <!-- Button that resumes the download when pressed -->
@@ -39,4 +42,6 @@
     <string name="mozac_feature_downloads_button_close">Ябу</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s кушымтасын ачу мөмкин түгел</string>
-    </resources>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Файлларны йөкләп алу өчен файллардан һәм медиадан файдалану рөхсәте кирәк. Android көйләүләренә кереп, &quot;рөхсәтләр&quot; дигән битне ачып, &quot;рөхсәт итү&quot; дигәнгә басыгыз.</string>
+</resources>

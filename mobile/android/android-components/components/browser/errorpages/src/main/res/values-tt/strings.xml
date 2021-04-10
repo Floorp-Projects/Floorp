@@ -3,6 +3,9 @@
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Янәдән тырышып карау</string>
 
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Сорауны тәмамлап булмый</string>
+
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Хәвефсез бәйләнеш кору хатасы</string>
 
@@ -23,6 +26,9 @@
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Кире кайту (киңәш ителә)</string>
 
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Рискны кабул итү һәм дәвам итү</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Бәйләнеш өзелде</string>
 
@@ -38,6 +44,9 @@
         <li>Һичбер сәхифә дә ачылмаса җиһазыгызның мобиль Интернет яисә Wi-Fi бәйләнешен тикшерегез.</li>
       </ul>
     ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Сервердан көтелмәгән җавап</string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Сәхифә икенче сәхифәгә дөрес юнәлтми</string>
@@ -82,6 +91,9 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Файл табылмады</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Файлдан файдалануга рөхсәт бирелмәде</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Прокси-сервер табылмады</string>
