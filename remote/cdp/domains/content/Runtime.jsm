@@ -120,7 +120,9 @@ class Runtime extends ContentProcessDomain {
     }
   }
 
-  releaseObject({ objectId }) {
+  releaseObject(options = {}) {
+    const { objectId } = options;
+
     let context = null;
     for (const ctx of this.contexts.values()) {
       if (ctx.hasRemoteObject(objectId)) {
@@ -279,7 +281,9 @@ class Runtime extends ContentProcessDomain {
     return context.evaluate(expression, awaitPromise, returnByValue);
   }
 
-  getProperties({ objectId, ownProperties }) {
+  getProperties(options = {}) {
+    const { objectId, ownProperties } = options;
+
     for (const ctx of this.contexts.values()) {
       const debuggerObj = ctx.getRemoteObject(objectId);
       if (debuggerObj) {
