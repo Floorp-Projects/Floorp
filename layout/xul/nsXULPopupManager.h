@@ -696,7 +696,8 @@ class nsXULPopupManager final : public nsIDOMEventListener,
                          nsPopupType aPopupType, bool aDeselectMenu);
 
   /**
-   * Fire a popupshowing event on the popup and then open the popup.
+   * Trigger frame construction and reflow in the popup, fire a popupshowing
+   * event on the popup and then open the popup.
    *
    * aPopup - the popup to open
    * aIsContextMenu - true for context menus
@@ -705,9 +706,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    *                 This is currently used to propagate the
    *                 inputSource attribute. May be null.
    */
-  void FirePopupShowingEvent(nsIContent* aPopup, bool aIsContextMenu,
-                             bool aSelectFirstItem,
-                             mozilla::dom::Event* aTriggerEvent);
+  void BeginShowingPopup(nsIContent* aPopup, bool aIsContextMenu,
+                         bool aSelectFirstItem,
+                         mozilla::dom::Event* aTriggerEvent);
 
   /**
    * Fire a popuphiding event and then hide the popup. This will be called
