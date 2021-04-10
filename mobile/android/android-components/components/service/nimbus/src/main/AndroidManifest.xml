@@ -3,4 +3,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="mozilla.components.service.nimbus">
+
+    <application android:supportsRtl="true" />
 </manifest>

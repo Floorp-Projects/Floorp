@@ -4,7 +4,7 @@
 
 package mozilla.components.service.nimbus.ui
 
-import org.mozilla.experiments.nimbus.EnrolledExperiment
+import org.mozilla.experiments.nimbus.AvailableExperiment
 
 /**
  * Provides methods for handling the experiment items in the Nimbus experiments manager.
@@ -13,7 +13,7 @@ interface NimbusExperimentsAdapterDelegate {
     /**
      * Handler for when an experiment item is clicked.
      *
-     * @param experiment The [EnrolledExperiment] that was clicked.
+     * @param experiment The [AvailableExperiment] that was clicked.
      */
-    fun onExperimentItemClicked(experiment: EnrolledExperiment) = Unit
+    fun onExperimentItemClicked(experiment: AvailableExperiment) = Unit
 }

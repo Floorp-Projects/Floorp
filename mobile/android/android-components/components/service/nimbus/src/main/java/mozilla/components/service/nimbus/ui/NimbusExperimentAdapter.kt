@@ -10,15 +10,15 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import mozilla.components.service.nimbus.R
-import org.mozilla.experiments.nimbus.EnrolledExperiment
+import org.mozilla.experiments.nimbus.AvailableExperiment
 
 /**
  * An adapter for displaying nimbus experiment items.
  */
 class NimbusExperimentAdapter(
     private val nimbusExperimentsDelegate: NimbusExperimentsAdapterDelegate,
-    experiments: List<EnrolledExperiment>
-) : ListAdapter<EnrolledExperiment, NimbusExperimentItemViewHolder>(DiffCallback) {
+    experiments: List<AvailableExperiment>
+) : ListAdapter<AvailableExperiment, NimbusExperimentItemViewHolder>(DiffCallback) {
 
     init {
         submitList(experiments)
@@ -39,11 +39,11 @@ class NimbusExperimentAdapter(
         holder.bind(getItem(position))
     }
 
-    private object DiffCallback : DiffUtil.ItemCallback<EnrolledExperiment>() {
-        override fun areContentsTheSame(oldItem: EnrolledExperiment, newItem: EnrolledExperiment) =
-            oldItem.slug == newItem.slug
+    private object DiffCallback : DiffUtil.ItemCallback<AvailableExperiment>() {
+        override fun areContentsTheSame(oldItem: AvailableExperiment, newItem: AvailableExperiment) =
+            oldItem == newItem
 
-        override fun areItemsTheSame(oldItem: EnrolledExperiment, newItem: EnrolledExperiment) =
+        override fun areItemsTheSame(oldItem: AvailableExperiment, newItem: AvailableExperiment) =
             oldItem.slug == newItem.slug
     }
 }

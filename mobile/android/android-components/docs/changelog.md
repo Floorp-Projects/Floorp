@@ -59,6 +59,9 @@ permalink: /changelog/
     }
     ```
 
+* **service-nimbus**
+  * Added UI components for displaying a list of branches and the selected branch related to a Nimbus experiments.
+
 # 75.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v74.0.0...v75.0.0)

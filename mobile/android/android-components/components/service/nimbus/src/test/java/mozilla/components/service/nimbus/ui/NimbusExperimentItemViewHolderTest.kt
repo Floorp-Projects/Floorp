@@ -13,20 +13,19 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
-import org.mozilla.experiments.nimbus.EnrolledExperiment
-import java.util.UUID
+import org.mozilla.experiments.nimbus.AvailableExperiment
 
 @RunWith(AndroidJUnit4::class)
 class NimbusExperimentItemViewHolderTest {
 
-    private val experiment = EnrolledExperiment(
+    private val experiment = AvailableExperiment(
         slug = "secure-gold",
-        branchSlug = "control",
         userFacingDescription = "This is a test experiment for diagnostic purposes.",
         userFacingName = "Diagnostic test experiment",
-        enrollmentId = UUID.randomUUID().toString(),
-        featureIds = listOf("secure-gold")
+        branches = emptyList(),
+        referenceBranch = null
     )
+
     private lateinit var nimbusExperimentsDelegate: NimbusExperimentsAdapterDelegate
     private lateinit var titleView: TextView
     private lateinit var summaryView: TextView
@@ -39,7 +38,7 @@ class NimbusExperimentItemViewHolderTest {
     }
 
     @Test
-    fun `sets text on view`() {
+    fun `GIVEN a experiment WHEN bind is called THEN title and summary text is set`() {
         val view = View(testContext)
         val holder =
             NimbusExperimentItemViewHolder(view, nimbusExperimentsDelegate, titleView, summaryView)
@@ -50,7 +49,7 @@ class NimbusExperimentItemViewHolderTest {
     }
 
     @Test
-    fun `sets click listener`() {
+    fun `WHEN item is clicked THEN delegate is called`() {
         val view = View(testContext)
         val holder =
             NimbusExperimentItemViewHolder(view, nimbusExperimentsDelegate, titleView, summaryView)

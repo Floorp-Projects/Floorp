@@ -7,7 +7,7 @@ package mozilla.components.service.nimbus.ui
 import android.view.View
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import org.mozilla.experiments.nimbus.EnrolledExperiment
+import org.mozilla.experiments.nimbus.AvailableExperiment
 
 /**
  * A view holder for displaying Nimbus experiment items.
@@ -19,7 +19,7 @@ class NimbusExperimentItemViewHolder(
     private val summaryView: TextView
 ) : RecyclerView.ViewHolder(view) {
 
-    internal fun bind(experiment: EnrolledExperiment) {
+    internal fun bind(experiment: AvailableExperiment) {
         titleView.text = experiment.userFacingName
         summaryView.text = experiment.userFacingDescription
 
