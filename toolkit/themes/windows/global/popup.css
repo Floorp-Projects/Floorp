@@ -81,10 +81,58 @@ panel[type="arrow"][side="bottom"] {
   margin-inline: -20px;
 }
 
+@media (-moz-proton) {
+#identity-popup[type="arrow"][side="top"],
+#notification-popup[type="arrow"][side="top"],
+#identity-popup[type="arrow"][side="bottom"],
+#notification-popup[type="arrow"][side="bottom"] {
+  margin-inline: -16px;
+}
+
+#permission-popup[type="arrow"][side="top"],
+#permission-popup[type="arrow"][side="bottom"] {
+  margin-inline: calc(-24px - 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[type="arrow"][side="top"],
+#protections-popup[type="arrow"][side="bottom"] {
+  margin-inline: calc(-20px + 2 * var(--urlbar-container-padding));
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
+  margin-inline: -13px;
+}
+} /** END Proton **/
+
 panel[type="arrow"][side="left"],
 panel[type="arrow"][side="right"] {
   margin-block: -20px;
 }
+
+@media (-moz-proton) {
+#identity-popup[type="arrow"][side="left"],
+#identity-popup[type="arrow"][side="right"],
+#notification-popup[type="arrow"][side="left"],
+#notification-popup[type="arrow"][side="right"] {
+  margin-block: -16px;
+}
+
+#permission-popup[type="arrow"][side="left"],
+#permission-popup[type="arrow"][side="right"] {
+  margin-block: calc(-24px - 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[type="arrow"][side="left"],
+#protections-popup[type="arrow"][side="right"] {
+  margin-block: calc(-20px + 2 * var(--urlbar-container-padding));
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="left"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
+  margin-block: -13px;
+}
+} /** END Proton **/
 
 .panel-arrowcontent {
   padding: var(--arrowpanel-padding);
