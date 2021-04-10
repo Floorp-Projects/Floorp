@@ -4106,6 +4106,309 @@ static bool EnableTraceLogger(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+// ShapeSnapshot holds information about an object's properties. This is used
+// for checking object and shape changes between two points in time.
+class ShapeSnapshot {
+  GCPtr<JSObject*> object_;
+  GCPtr<Shape*> shape_;
+  GCPtr<BaseShape*> baseShape_;
+  ObjectFlags objectFlags_;
+
+  GCVector<HeapPtr<Value>, 8> slots_;
+
+  struct PropertyInfo {
+    HeapPtr<Shape*> propShape;
+    HeapPtr<JS::PropertyKey> key;
+    uint32_t slot;
+    uint8_t attrs;
+
+    explicit PropertyInfo(Shape* shape)
+        : propShape(shape),
+          key(shape->propid()),
+          slot(shape->maybeSlot()),
+          attrs(propShape->attributes()) {}
+    void trace(JSTracer* trc) {
+      TraceEdge(trc, &propShape, "propShape");
+      TraceEdge(trc, &key, "key");
+    }
+    bool operator==(const PropertyInfo& other) const {
+      return propShape == other.propShape && key == other.key &&
+             slot == other.slot && attrs == other.attrs;
+    }
+    bool operator!=(const PropertyInfo& other) const {
+      return !operator==(other);
+    }
+  };
+  GCVector<PropertyInfo, 8> properties_;
+
+ public:
+  explicit ShapeSnapshot(JSContext* cx) : slots_(cx), properties_(cx) {}
+  void checkSelf(JSContext* cx) const;
+  void check(JSContext* cx, const ShapeSnapshot& other) const;
+  bool init(JSObject* obj);
+  void trace(JSTracer* trc);
+
+  JSObject* object() const { return object_; }
+};
+
+// A JSObject that holds a ShapeSnapshot.
+class ShapeSnapshotObject : public NativeObject {
+  static constexpr size_t SnapshotSlot = 0;
+  static constexpr size_t ReservedSlots = 1;
+
+ public:
+  static const JSClassOps classOps_;
+  static const JSClass class_;
+
+  ShapeSnapshot& snapshot() const {
+    void* ptr = getSlot(SnapshotSlot).toPrivate();
+    MOZ_ASSERT(ptr);
+    return *static_cast<ShapeSnapshot*>(ptr);
+  }
+
+  static ShapeSnapshotObject* create(JSContext* cx, HandleObject obj);
+
+  static void finalize(JSFreeOp* fop, JSObject* obj) {
+    js_delete(&obj->as<ShapeSnapshotObject>().snapshot());
+  }
+  static void trace(JSTracer* trc, JSObject* obj) {
+    obj->as<ShapeSnapshotObject>().snapshot().trace(trc);
+  }
+};
+
+/*static */ const JSClassOps ShapeSnapshotObject::classOps_ = {
+    nullptr,                        // addProperty
+    nullptr,                        // delProperty
+    nullptr,                        // enumerate
+    nullptr,                        // newEnumerate
+    nullptr,                        // resolve
+    nullptr,                        // mayResolve
+    ShapeSnapshotObject::finalize,  // finalize
+    nullptr,                        // call
+    nullptr,                        // hasInstance
+    nullptr,                        // construct
+    ShapeSnapshotObject::trace,     // trace
+};
+
+/*static */ const JSClass ShapeSnapshotObject::class_ = {
+    "ShapeSnapshotObject",
+    JSCLASS_HAS_RESERVED_SLOTS(ShapeSnapshotObject::ReservedSlots) |
+        JSCLASS_BACKGROUND_FINALIZE,
+    &ShapeSnapshotObject::classOps_};
+
+bool ShapeSnapshot::init(JSObject* obj) {
+  object_ = obj;
+  shape_ = obj->shape();
+  baseShape_ = shape_->base();
+  objectFlags_ = shape_->objectFlags();
+
+  if (obj->is<NativeObject>()) {
+    NativeObject* nobj = &obj->as<NativeObject>();
+
+    // Snapshot the slot values.
+    size_t slotSpan = nobj->slotSpan();
+    if (!slots_.growBy(slotSpan)) {
+      return false;
+    }
+    for (size_t i = 0; i < slotSpan; i++) {
+      slots_[i] = nobj->getSlot(i);
+    }
+
+    // Snapshot property information.
+    Shape* propShape = shape_;
+    while (!propShape->isEmptyShape()) {
+      if (!properties_.append(PropertyInfo(propShape))) {
+        return false;
+      }
+      propShape = propShape->previous();
+    }
+  }
+
+  return true;
+}
+
+void ShapeSnapshot::trace(JSTracer* trc) {
+  TraceEdge(trc, &object_, "object");
+  TraceEdge(trc, &shape_, "shape");
+  TraceEdge(trc, &baseShape_, "baseShape");
+  slots_.trace(trc);
+  properties_.trace(trc);
+}
+
+void ShapeSnapshot::checkSelf(JSContext* cx) const {
+  // Assertions based on a single snapshot.
+
+  // Non-dictionary shapes must not be mutated.
+  if (!shape_->inDictionary()) {
+    MOZ_RELEASE_ASSERT(shape_->base() == baseShape_);
+    MOZ_RELEASE_ASSERT(shape_->objectFlags() == objectFlags_);
+  }
+
+  for (const PropertyInfo& prop : properties_) {
+    Shape* propShape = prop.propShape;
+
+    // Skip if the Shape no longer matches the snapshotted data. This can
+    // only happen for non-configurable dictionary properties.
+    if (PropertyInfo(propShape) != prop) {
+      MOZ_RELEASE_ASSERT(propShape->inDictionary());
+      MOZ_RELEASE_ASSERT(!(prop.attrs & JSPROP_PERMANENT));
+      continue;
+    }
+
+    // Ensure ObjectFlags depending on property information are set if needed.
+    ObjectFlags expectedFlags =
+        GetObjectFlagsForNewProperty(shape_, prop.key, prop.attrs, cx);
+    MOZ_RELEASE_ASSERT(expectedFlags == objectFlags_);
+
+    // Accessors must have a PrivateGCThingValue(GetterSetter*) slot value.
+    if (propShape->isAccessorDescriptor()) {
+      Value slotVal = slots_[prop.slot];
+      MOZ_RELEASE_ASSERT(slotVal.isPrivateGCThing());
+      MOZ_RELEASE_ASSERT(slotVal.toGCThing()->is<GetterSetter>());
+    }
+
+    // Data properties must not have a PrivateGCThingValue slot value.
+    if (propShape->isDataProperty()) {
+      Value slotVal = slots_[prop.slot];
+      MOZ_RELEASE_ASSERT(!slotVal.isPrivateGCThing());
+    }
+  }
+}
+
+void ShapeSnapshot::check(JSContext* cx, const ShapeSnapshot& later) const {
+  checkSelf(cx);
+  later.checkSelf(cx);
+
+  if (object_ != later.object_) {
+    // Snapshots are for different objects. Assert dictionary shapes aren't
+    // shared.
+    if (object_->is<NativeObject>()) {
+      NativeObject* nobj = &object_->as<NativeObject>();
+      if (nobj->inDictionaryMode()) {
+        MOZ_RELEASE_ASSERT(shape_ != later.shape_);
+      }
+    }
+    return;
+  }
+
+  // We have two snapshots for the same object. Check the shape information
+  // wasn't changed in invalid ways.
+
+  // If the Shape is still the same, the object must have the same BaseShape,
+  // ObjectFlags and property information.
+  if (shape_ == later.shape_) {
+    MOZ_RELEASE_ASSERT(objectFlags_ == later.objectFlags_);
+    MOZ_RELEASE_ASSERT(baseShape_ == later.baseShape_);
+    MOZ_RELEASE_ASSERT(slots_.length() == later.slots_.length());
+    MOZ_RELEASE_ASSERT(properties_.length() == later.properties_.length());
+
+    for (size_t i = 0; i < properties_.length(); i++) {
+      MOZ_RELEASE_ASSERT(properties_[i] == later.properties_[i]);
+      // Non-configurable accessor properties and non-configurable, non-writable
+      // data properties shouldn't have had their slot mutated.
+      Shape* propShape = properties_[i].propShape;
+      if (!propShape->configurable()) {
+        if (propShape->isAccessorDescriptor() ||
+            (propShape->isDataProperty() && !propShape->writable())) {
+          size_t slot = propShape->slot();
+          MOZ_RELEASE_ASSERT(slots_[slot] == later.slots_[slot]);
+        }
+      }
+    }
+  }
+
+  // Object flags should not be lost. The exception is the Indexed flag, it
+  // can be cleared when densifying elements, so clear that flag first.
+  {
+    ObjectFlags flags = objectFlags_;
+    ObjectFlags flagsLater = later.objectFlags_;
+    flags.clearFlag(ObjectFlag::Indexed);
+    flagsLater.clearFlag(ObjectFlag::Indexed);
+    MOZ_RELEASE_ASSERT((flags.toRaw() & flagsLater.toRaw()) == flags.toRaw());
+  }
+
+  // If the HadGetterSetterChange flag wasn't set, all GetterSetter slots must
+  // be unchanged.
+  if (!later.objectFlags_.hasFlag(ObjectFlag::HadGetterSetterChange)) {
+    for (size_t i = 0; i < slots_.length(); i++) {
+      if (slots_[i].isPrivateGCThing() &&
+          slots_[i].toGCThing()->is<GetterSetter>()) {
+        MOZ_RELEASE_ASSERT(i < later.slots_.length());
+        MOZ_RELEASE_ASSERT(later.slots_[i] == slots_[i]);
+      }
+    }
+  }
+}
+
+// static
+ShapeSnapshotObject* ShapeSnapshotObject::create(JSContext* cx,
+                                                 HandleObject obj) {
+  Rooted<UniquePtr<ShapeSnapshot>> snapshot(cx,
+                                            cx->make_unique<ShapeSnapshot>(cx));
+  if (!snapshot || !snapshot->init(obj)) {
+    return nullptr;
+  }
+
+  auto* snapshotObj = NewObjectWithGivenProto<ShapeSnapshotObject>(cx, nullptr);
+  if (!snapshotObj) {
+    return nullptr;
+  }
+  snapshotObj->initReservedSlot(SnapshotSlot, PrivateValue(snapshot.release()));
+  return snapshotObj;
+}
+
+static bool CreateShapeSnapshot(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.get(0).isObject()) {
+    JS_ReportErrorASCII(cx, "createShapeSnapshot requires an object argument");
+    return false;
+  }
+
+  RootedObject obj(cx, &args[0].toObject());
+  auto* res = ShapeSnapshotObject::create(cx, obj);
+  if (!res) {
+    return false;
+  }
+
+  res->snapshot().check(cx, res->snapshot());
+
+  args.rval().setObject(*res);
+  return true;
+}
+
+static bool CheckShapeSnapshot(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.get(0).isObject() ||
+      !args[0].toObject().is<ShapeSnapshotObject>()) {
+    JS_ReportErrorASCII(cx, "checkShapeSnapshot requires a snapshot argument");
+    return false;
+  }
+
+  // Get the object to use from the snapshot if the second argument is not an
+  // object.
+  RootedObject obj(cx);
+  if (args.get(1).isObject()) {
+    obj = &args[1].toObject();
+  } else {
+    auto& snapshot = args[0].toObject().as<ShapeSnapshotObject>().snapshot();
+    obj = snapshot.object();
+  }
+
+  RootedObject otherSnapshot(cx, ShapeSnapshotObject::create(cx, obj));
+  if (!otherSnapshot) {
+    return false;
+  }
+
+  auto& snapshot1 = args[0].toObject().as<ShapeSnapshotObject>().snapshot();
+  auto& snapshot2 = otherSnapshot->as<ShapeSnapshotObject>().snapshot();
+  snapshot1.check(cx, snapshot2);
+
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool DisableTraceLogger(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
@@ -7078,6 +7381,16 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
     JS_FN_HELP("helperThreadCount", HelperThreadCount, 0, 0,
 "helperThreadCount()",
 "  Returns the number of helper threads available for off-thread tasks."),
+
+    JS_FN_HELP("createShapeSnapshot", CreateShapeSnapshot, 1, 0,
+"createShapeSnapshot(obj)",
+"  Returns an object containing a shape snapshot for use with\n"
+"  checkShapeSnapshot.\n"),
+
+    JS_FN_HELP("checkShapeSnapshot", CheckShapeSnapshot, 2, 0,
+"checkShapeSnapshot(snapshot, [obj])",
+"  Check shape invariants based on the given snapshot and optional object.\n"
+"  If there's no object argument, the snapshot's object is used.\n"),
 
     JS_FN_HELP("enableShapeConsistencyChecks", EnableShapeConsistencyChecks, 0, 0,
 "enableShapeConsistencyChecks()",
