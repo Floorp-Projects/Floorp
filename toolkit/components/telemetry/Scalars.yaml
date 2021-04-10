@@ -5879,40 +5879,6 @@ networking:
     record_in_processes:
       - 'main'
 
-  ftp_opened_channels_listings:
-    bug_numbers:
-      - 1579507
-    description: >
-      Number of FTP channels opened for directory listings.
-    expires: "77"
-    keyed: false
-    kind: uint
-    notification_emails:
-      - mnovotny@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
-    release_channel_collection: opt-out
-
-  ftp_opened_channels_files:
-    bug_numbers:
-      - 1579507
-    description: >
-      Number of FTP channels opened for files.
-    expires: "77"
-    keyed: false
-    kind: uint
-    notification_emails:
-      - mnovotny@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
-    release_channel_collection: opt-out
-
   http3_enabled:
     bug_numbers:
       - 1652104
