@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["FormAutofillUtils", "AddressDataLoader"];
 
-const ADDRESS_METADATA_PATH = "resource://autofill/addressmetadata/";
+const ADDRESS_METADATA_PATH = "resource://formautofill/addressmetadata/";
 const ADDRESS_REFERENCES = "addressReferences.js";
 const ADDRESS_REFERENCES_EXT = "addressReferencesExt.js";
 
@@ -61,7 +61,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
+  "resource://formautofill/FormAutofill.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",

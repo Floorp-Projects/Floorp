@@ -7,7 +7,7 @@
 var FormAutofillHandler;
 add_task(async function setup() {
   ({ FormAutofillHandler } = ChromeUtils.import(
-    "resource://autofill/FormAutofillHandler.jsm"
+    "resource://formautofill/FormAutofillHandler.jsm"
   ));
 });
 

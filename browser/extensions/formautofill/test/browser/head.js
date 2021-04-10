@@ -200,7 +200,7 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
   /* eslint no-shadow: ["error", { "allow": ["selector", "previouslyFocused", "previouslyIdentified"] }] */
 
   const { FormAutofillParent } = ChromeUtils.import(
-    "resource://autofill/FormAutofillParent.jsm"
+    "resource://formautofill/FormAutofillParent.jsm"
   );
 
   // If the input is previously focused, no more notifications will be

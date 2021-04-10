@@ -15,17 +15,17 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofill",
-  "resource://autofill/FormAutofill.jsm"
+  "resource://formautofill/FormAutofill.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillContent",
-  "resource://autofill/FormAutofillContent.jsm"
+  "resource://formautofill/FormAutofillContent.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillUtils",
-  "resource://autofill/FormAutofillUtils.jsm"
+  "resource://formautofill/FormAutofillUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -191,10 +191,6 @@ class FormAutofillChild extends JSWindowActorChild {
       }
       case "FormAutofill:ClearForm": {
         FormAutofillContent.clearForm();
-        break;
-      }
-      case "FormAutofill:FillForm": {
-        FormAutofillContent.activeHandler.autofillFormFields(message.data);
         break;
       }
     }
