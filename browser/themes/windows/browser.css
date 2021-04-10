@@ -112,16 +112,21 @@
       height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
     }
     :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"] {
-      height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
+      height: calc(var(--tab-min-height) + var(--space-above-tabbar) - var(--tabs-navbar-shadow-size));
     }
   }
+}
+
+:root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .toolbar-items,
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
+  padding-top: var(--space-above-tabbar);
 }
 
 /* Add 4px extra margin on top of the tabs toolbar on Windows 7. */
 @media (-moz-os-version: windows-win7) {
   :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .toolbar-items,
   :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
-    padding-top: 4px;
+    padding-top: calc(var(--space-above-tabbar) + 4px);
   }
 }
 
