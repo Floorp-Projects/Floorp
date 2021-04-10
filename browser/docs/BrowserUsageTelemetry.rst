@@ -41,7 +41,6 @@ For the purposes of this telemetry a set of areas are defined:
 
   * ``menu-bar`` - The main menu.
   * ``menu-toolbar`` - The normally hidden toolbar that holds the main menu.
-  * ``drag-space`` - The optional drag space.
   * ``titlebar`` - The optional title bar.
   * ``tabs-bar`` - The area where tabs are displayed.
   * ``bookmarks-bar`` - The bookmarks toolbar.

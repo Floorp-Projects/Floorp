@@ -766,16 +766,14 @@
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide=true]) + #TabsToolbar,
 %endif
-:root:not([tabsintitlebar]),
-:root[extradragspace] {
+:root:not([tabsintitlebar]) {
   --tabs-top-border-width: 1px;
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide=true]) + #TabsToolbar .tabbrowser-tab > .tab-stack > .tab-background,
 %endif
-:root:not([tabsintitlebar]) .tab-background,
-:root[extradragspace] .tab-background {
+:root:not([tabsintitlebar]) .tab-background {
   border-top-style: solid;
 }
 } /*** END !proton ***/
@@ -964,9 +962,9 @@
 }
 
 %ifdef MENUBAR_CAN_AUTOHIDE
-:root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] + #TabsToolbar .tabbrowser-tab::after,
+:root[tabsintitlebar] #toolbar-menubar[autohide=true] + #TabsToolbar .tabbrowser-tab::after,
 %else
-:root[tabsintitlebar]:not([extradragspace]) .tabbrowser-tab::after,
+:root[tabsintitlebar] .tabbrowser-tab::after,
 %endif
 /* Show full height tab separators on hover and multiselection. */
 .tabbrowser-tab:hover::after,

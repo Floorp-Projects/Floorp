@@ -79,7 +79,6 @@ function organizeToolbars(state = {}) {
       pageActionsInUrlBar: [],
 
       // Areas to show or hide.
-      dragSpaceVisible: false,
       titlebarVisible: false,
       menubarVisible: false,
       personalToolbarVisible: false,
@@ -112,10 +111,6 @@ function organizeToolbars(state = {}) {
     targetState.personalToolbarVisible
   );
 
-  Services.prefs.setBoolPref(
-    "browser.tabs.extraDragSpace",
-    !targetState.titlebarVisible && targetState.dragSpaceVisible
-  );
   Services.prefs.setBoolPref(
     "browser.tabs.drawInTitlebar",
     !targetState.titlebarVisible
@@ -169,7 +164,6 @@ add_task(async function widgetPositions() {
   BrowserUsageTelemetry._recordUITelemetry();
 
   assertVisibilityScalars([
-    "drag-space_pinned_off",
     "menu-toolbar_pinned_off",
     "titlebar_pinned_off",
     "bookmarks-bar_pinned_off",
@@ -203,14 +197,12 @@ add_task(async function widgetPositions() {
       "library-button",
     ],
 
-    dragSpaceVisible: true,
     personalToolbarVisible: true,
   });
 
   BrowserUsageTelemetry._recordUITelemetry();
 
   assertVisibilityScalars([
-    "drag-space_pinned_on",
     "menu-toolbar_pinned_off",
     "titlebar_pinned_off",
     "bookmarks-bar_pinned_on",
@@ -259,7 +251,6 @@ add_task(async function customizeMode() {
     BrowserUsageTelemetry._recordUITelemetry();
 
     assertVisibilityScalars([
-      "drag-space_pinned_off",
       "menu-toolbar_pinned_off",
       "titlebar_pinned_off",
       "bookmarks-bar_pinned_off",
@@ -381,7 +372,6 @@ add_task(async function contextMenus() {
     BrowserUsageTelemetry._recordUITelemetry();
 
     assertVisibilityScalars([
-      "drag-space_pinned_off",
       "menu-toolbar_pinned_off",
       "titlebar_pinned_off",
       "bookmarks-bar_pinned_off",
@@ -481,7 +471,6 @@ add_task(async function pageActions() {
     BrowserUsageTelemetry._recordUITelemetry();
 
     assertVisibilityScalars([
-      "drag-space_pinned_off",
       "menu-toolbar_pinned_off",
       "titlebar_pinned_off",
       "bookmarks-bar_pinned_off",
@@ -588,7 +577,6 @@ add_task(async function extensions() {
     BrowserUsageTelemetry._recordUITelemetry();
 
     assertVisibilityScalars([
-      "drag-space_pinned_off",
       "menu-toolbar_pinned_off",
       "titlebar_pinned_off",
       "bookmarks-bar_pinned_off",
@@ -615,7 +603,6 @@ add_task(async function extensions() {
     BrowserUsageTelemetry._recordUITelemetry();
 
     assertVisibilityScalars([
-      "drag-space_pinned_off",
       "menu-toolbar_pinned_off",
       "titlebar_pinned_off",
       "bookmarks-bar_pinned_off",
@@ -637,7 +624,6 @@ add_task(async function extensions() {
     BrowserUsageTelemetry._recordUITelemetry();
 
     assertVisibilityScalars([
-      "drag-space_pinned_off",
       "menu-toolbar_pinned_off",
       "titlebar_pinned_off",
       "bookmarks-bar_pinned_off",
@@ -685,7 +671,6 @@ add_task(async function extensions() {
     BrowserUsageTelemetry._recordUITelemetry();
 
     assertVisibilityScalars([
-      "drag-space_pinned_off",
       "menu-toolbar_pinned_off",
       "titlebar_pinned_off",
       "bookmarks-bar_pinned_off",
