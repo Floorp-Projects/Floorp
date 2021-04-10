@@ -7,6 +7,9 @@
 // This is loaded into chrome windows with the subscript loader. If you need to
 // define globals, wrap in a block to prevent leaking onto `window`.
 {
+  const { XPCOMUtils } = ChromeUtils.import(
+    "resource://gre/modules/XPCOMUtils.jsm"
+  );
   const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
   );
@@ -24,15 +27,24 @@
       this._insertElementFn = insertElementFn;
       this._animating = false;
       this.currentNotification = null;
+
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "gProton",
+        "browser.proton.enabled",
+        false
+      );
     }
 
     get stack() {
       if (!this._stack) {
         let stack;
-        stack = document.createXULElement(gProton ? "vbox" : "legacy-stack");
+        stack = document.createXULElement(
+          this.gProton ? "vbox" : "legacy-stack"
+        );
         stack._notificationBox = this;
         stack.className = "notificationbox-stack";
-        if (!gProton) {
+        if (!this.gProton) {
           stack.appendChild(document.createXULElement("spacer"));
         }
         stack.addEventListener("transitionend", event => {
@@ -168,7 +180,7 @@
 
       // Create the Custom Element and connect it to the document immediately.
       var newitem;
-      if (gProton && !aNotificationIs) {
+      if (this.gProton && !aNotificationIs) {
         if (!customElements.get("notification-message")) {
           // There's some weird timing stuff when this element is created at
           // script load time, we don't need it until now anyway so be lazy.
@@ -200,7 +212,7 @@
       }
       newitem.setAttribute("value", aValue);
 
-      if (aImage && !gProton) {
+      if (aImage && !this.gProton) {
         newitem.messageImage.setAttribute("src", aImage);
       }
       newitem.eventCallback = aEventCallback;
@@ -241,7 +253,7 @@
       if (!aItem.parentNode) {
         return;
       }
-      if (gProton) {
+      if (this.gProton) {
         this.currentNotification = aItem;
         this.removeCurrentNotification(aSkipAnimation);
       } else if (aItem == this.currentNotification) {
