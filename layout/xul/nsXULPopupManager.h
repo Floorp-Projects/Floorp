@@ -761,6 +761,13 @@ class nsXULPopupManager final : public nsIDOMEventListener,
       mozilla::dom::Document* aDocument, bool aIsTooltip);
 
   /**
+   * Fire a popupshowing event for aPopup.
+   */
+  nsEventStatus FirePopupShowingEvent(nsIContent* aPopup,
+                                      nsPresContext* aPresContext,
+                                      mozilla::dom::Event* aTriggerEvent);
+
+  /**
    * Set mouse capturing for the current popup. This traps mouse clicks that
    * occur outside the popup so that it can be closed up. aOldPopup should be
    * set to the popup that was previously the current popup.
