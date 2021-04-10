@@ -662,6 +662,7 @@ enum ProgramSourceType {
 pub struct ProgramSourceInfo {
     base_filename: &'static str,
     features: Vec<&'static str>,
+    full_name: Rc<String>,
     source_type: ProgramSourceType,
     digest: ProgramSourceDigest,
 }
@@ -686,11 +687,11 @@ impl ProgramSourceInfo {
         // Hash the renderer name.
         hasher.write(device.capabilities.renderer_name.as_bytes());
 
-        let full_name = &Self::make_full_name(name, features);
+        let full_name = Rc::new(Self::make_full_name(name, features));
 
         let optimized_source = if device.use_optimized_shaders {
-            OPTIMIZED_SHADERS.get(&(gl_version, full_name)).or_else(|| {
-                warn!("Missing optimized shader source for {}", full_name);
+            OPTIMIZED_SHADERS.get(&(gl_version, &full_name)).or_else(|| {
+                warn!("Missing optimized shader source for {}", &full_name);
                 None
             })
         } else {
@@ -762,6 +763,7 @@ impl ProgramSourceInfo {
         ProgramSourceInfo {
             base_filename: name,
             features: features.to_vec(),
+            full_name,
             source_type,
             digest: hasher.into(),
         }
@@ -801,8 +803,8 @@ impl ProgramSourceInfo {
         }
     }
 
-    fn full_name(&self) -> String {
-        Self::make_full_name(self.base_filename, &self.features)
+    fn full_name(&self) -> &Rc<String> {
+        &self.full_name
     }
 }
 
@@ -1060,7 +1062,7 @@ pub struct Device {
     // device state
     bound_textures: [gl::GLuint; 16],
     bound_program: gl::GLuint,
-    bound_program_name: String,
+    bound_program_name: Rc<String>,
     bound_vao: gl::GLuint,
     bound_read_fbo: (FBOId, DeviceIntPoint),
     bound_draw_fbo: FBOId,
@@ -1762,7 +1764,7 @@ impl Device {
 
             bound_textures: [0; 16],
             bound_program: 0,
-            bound_program_name: String::new(),
+            bound_program_name: Rc::new(String::new()),
             bound_vao: 0,
             bound_read_fbo: (FBOId(0), DeviceIntPoint::zero()),
             bound_draw_fbo: FBOId(0),
@@ -2383,7 +2385,7 @@ impl Device {
         if self.bound_program != program.id {
             self.gl.use_program(program.id);
             self.bound_program = program.id;
-            self.bound_program_name = program.source_info.full_name();
+            self.bound_program_name = program.source_info.full_name().clone();
             self.program_mode_id = UniformLocation(program.u_mode);
         }
         true
