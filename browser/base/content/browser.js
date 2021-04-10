@@ -397,7 +397,7 @@ XPCOMUtils.defineLazyGetter(this, "gHighPriorityNotificationBox", () => {
   return new MozElements.NotificationBox(element => {
     element.classList.add("global-notificationbox");
     element.setAttribute("notificationside", "top");
-    if (gProton) {
+    if (gProtonInfobarsEnabled) {
       // With Proton enabled all notification boxes are at the top, built into the browser chrome.
       let tabNotifications = document.getElementById("tab-notification-deck");
       gNavToolbox.insertBefore(element, tabNotifications);
@@ -409,7 +409,7 @@ XPCOMUtils.defineLazyGetter(this, "gHighPriorityNotificationBox", () => {
 
 // Regular notification bars shown at the bottom of the window.
 XPCOMUtils.defineLazyGetter(this, "gNotificationBox", () => {
-  return gProton
+  return gProtonInfobarsEnabled
     ? gHighPriorityNotificationBox
     : new MozElements.NotificationBox(element => {
         element.classList.add("global-notificationbox");
@@ -556,6 +556,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
       doc.documentElement.toggleAttribute("proton", newValue);
     }
   }
+);
+
+/* Temporary pref while the Proton infobars work stabilizes. */
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gProtonInfobarsEnabled",
+  "browser.proton.infobars.enabled",
+  false
 );
 
 /* Temporary pref while the dust settles around the updated tooltip design

@@ -72,10 +72,7 @@ add_task(async function test_opening_blocked_popups() {
   // Show the menu.
   let popupShown = BrowserTestUtils.waitForEvent(window, "popupshown");
   let popupFilled = waitForBlockedPopups(2);
-  EventUtils.synthesizeMouseAtCenter(
-    notification.buttonContainer.querySelector("button"),
-    {}
-  );
+  notification.querySelector("button").doCommand();
   let popup_event = await popupShown;
   let menu = popup_event.target;
   is(menu.id, "blockedPopupOptions", "Blocked popup menu shown");
