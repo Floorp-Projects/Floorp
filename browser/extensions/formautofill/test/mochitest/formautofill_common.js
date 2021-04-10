@@ -10,7 +10,7 @@ let defaultTextColor;
 let expectingPopup = null;
 
 const { FormAutofillUtils } = SpecialPowers.Cu.import(
-  "resource://autofill/FormAutofillUtils.jsm"
+  "resource://formautofill/FormAutofillUtils.jsm"
 );
 
 async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {

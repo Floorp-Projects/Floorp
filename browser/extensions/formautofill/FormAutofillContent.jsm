@@ -22,7 +22,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 ChromeUtils.defineModuleGetter(
   this,
   "AddressResult",
-  "resource://autofill/ProfileAutoCompleteResult.jsm"
+  "resource://formautofill/ProfileAutoCompleteResult.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -32,22 +32,22 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "CreditCardResult",
-  "resource://autofill/ProfileAutoCompleteResult.jsm"
+  "resource://formautofill/ProfileAutoCompleteResult.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofill",
-  "resource://autofill/FormAutofill.jsm"
+  "resource://formautofill/FormAutofill.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillHandler",
-  "resource://autofill/FormAutofillHandler.jsm"
+  "resource://formautofill/FormAutofillHandler.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillUtils",
-  "resource://autofill/FormAutofillUtils.jsm"
+  "resource://formautofill/FormAutofillUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -63,12 +63,6 @@ ChromeUtils.defineModuleGetter(
   this,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "DELEGATE_AUTOCOMPLETE",
-  "toolkit.autocomplete.delegate",
-  false
 );
 
 const formFillController = Cc[
@@ -696,8 +690,6 @@ var FormAutofillContent = {
         "updateActiveElement: checking if empty field is cc-*: ",
         this.activeFieldDetail?.fieldName
       );
-      // This restricts popups to credit card fields and may need adjustment
-      // when enabling address support for the GeckoView backend.
       if (this.activeFieldDetail?.fieldName?.startsWith("cc-")) {
         if (Services.cpmm.sharedData.get("FormAutofill:enabled")) {
           this.debug("updateActiveElement: opening pop up");
@@ -775,7 +767,7 @@ var FormAutofillContent = {
       String(element.ownerDocument.location)
     );
 
-    if (DELEGATE_AUTOCOMPLETE || !this.savedFieldNames) {
+    if (!this.savedFieldNames) {
       this.debug("identifyAutofillFields: savedFieldNames are not known yet");
       let actor = getActorFromWindow(element.ownerGlobal);
       if (actor) {

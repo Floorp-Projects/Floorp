@@ -35,16 +35,18 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
 const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
+  "resource://formautofill/FormAutofill.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CreditCard: "resource://gre/modules/CreditCard.jsm",
-  FormAutofillPreferences: "resource://autofill/FormAutofillPreferences.jsm",
-  FormAutofillDoorhanger: "resource://autofill/FormAutofillDoorhanger.jsm",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
+  FormAutofillPreferences:
+    "resource://formautofill/FormAutofillPreferences.jsm",
+  FormAutofillDoorhanger: "resource://formautofill/FormAutofillDoorhanger.jsm",
+  FormAutofillUtils: "resource://formautofill/FormAutofillUtils.jsm",
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
 
@@ -169,18 +171,18 @@ let FormAutofillStatus = {
     }
   },
 
-  async updateSavedFieldNames() {
+  updateSavedFieldNames() {
     log.debug("updateSavedFieldNames");
 
     let savedFieldNames;
-    const addressNames = await gFormAutofillStorage.addresses.getSavedFieldNames();
-
     // Don't access the credit cards store unless it is enabled.
     if (FormAutofill.isAutofillCreditCardsAvailable) {
-      const creditCardNames = await gFormAutofillStorage.creditCards.getSavedFieldNames();
-      savedFieldNames = new Set([...addressNames, ...creditCardNames]);
+      savedFieldNames = new Set([
+        ...gFormAutofillStorage.addresses.getSavedFieldNames(),
+        ...gFormAutofillStorage.creditCards.getSavedFieldNames(),
+      ]);
     } else {
-      savedFieldNames = addressNames;
+      savedFieldNames = gFormAutofillStorage.addresses.getSavedFieldNames();
     }
 
     Services.ppmm.sharedData.set(
@@ -217,7 +219,7 @@ let FormAutofillStatus = {
 
   onCloseWindow() {},
 
-  async observe(subject, topic, data) {
+  observe(subject, topic, data) {
     log.debug("observe:", topic, "with data:", data);
     switch (topic) {
       case "privacy-pane-loaded": {
@@ -243,7 +245,7 @@ let FormAutofillStatus = {
           break;
         }
 
-        await this.updateSavedFieldNames();
+        this.updateSavedFieldNames();
         break;
       }
 
@@ -260,7 +262,7 @@ let FormAutofillStatus = {
 // Once storage is loaded we need to update saved field names and inform content processes.
 XPCOMUtils.defineLazyGetter(this, "gFormAutofillStorage", () => {
   let { formAutofillStorage } = ChromeUtils.import(
-    "resource://autofill/FormAutofillStorage.jsm"
+    "resource://formautofill/FormAutofillStorage.jsm"
   );
   log.debug("Loading formAutofillStorage");
 
@@ -296,7 +298,6 @@ class FormAutofillParent extends JSWindowActorParent {
     switch (name) {
       case "FormAutofill:InitStorage": {
         await gFormAutofillStorage.initialize();
-        await FormAutofillStatus.updateSavedFieldNames();
         break;
       }
       case "FormAutofill:GetRecords": {

@@ -7,10 +7,10 @@
 var PhoneNumber, PhoneNumberNormalizer;
 add_task(async function setup() {
   ({ PhoneNumber } = ChromeUtils.import(
-    "resource://autofill/phonenumberutils/PhoneNumber.jsm"
+    "resource://formautofill/phonenumberutils/PhoneNumber.jsm"
   ));
   ({ PhoneNumberNormalizer } = ChromeUtils.import(
-    "resource://autofill/phonenumberutils/PhoneNumberNormalizer.jsm"
+    "resource://formautofill/phonenumberutils/PhoneNumberNormalizer.jsm"
   ));
 });
 

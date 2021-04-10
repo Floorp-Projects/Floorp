@@ -12,12 +12,12 @@ var EXPORTED_SYMBOLS = ["PhoneNumber"];
 ChromeUtils.defineModuleGetter(
   this,
   "PHONE_NUMBER_META_DATA",
-  "resource://autofill/phonenumberutils/PhoneNumberMetaData.jsm"
+  "resource://formautofill/phonenumberutils/PhoneNumberMetaData.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "PhoneNumberNormalizer",
-  "resource://autofill/phonenumberutils/PhoneNumberNormalizer.jsm"
+  "resource://formautofill/phonenumberutils/PhoneNumberNormalizer.jsm"
 );
 var PhoneNumber = (function(dataBase) {
   const MAX_PHONE_NUMBER_LENGTH = 50;
