@@ -1423,6 +1423,52 @@ void nsXULPopupManager::ExecuteMenu(nsIContent* aMenu,
   aMenu->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
 }
 
+nsEventStatus nsXULPopupManager::FirePopupShowingEvent(
+    nsIContent* aPopup, nsPresContext* aPresContext, Event* aTriggerEvent) {
+  nsCOMPtr<nsIContent> popup = aPopup;  // keep a strong reference to the popup
+
+  // cache the popup so that document.popupNode can retrieve the trigger node
+  // during the popupshowing event. It will be cleared below after the event
+  // has fired.
+  mOpeningPopup = aPopup;
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetMouseEvent event(true, eXULPopupShowing, nullptr,
+                         WidgetMouseEvent::eReal);
+
+  // coordinates are relative to the root widget
+  nsPresContext* rootPresContext = aPresContext->GetRootPresContext();
+  if (rootPresContext) {
+    rootPresContext->PresShell()->GetViewManager()->GetRootWidget(
+        getter_AddRefs(event.mWidget));
+  } else {
+    event.mWidget = nullptr;
+  }
+
+  if (aTriggerEvent) {
+    WidgetMouseEventBase* mouseEvent =
+        aTriggerEvent->WidgetEventPtr()->AsMouseEventBase();
+    if (mouseEvent) {
+      event.mInputSource = mouseEvent->mInputSource;
+    }
+  }
+
+  event.mRefPoint = mCachedMousePoint;
+  event.mModifiers = mCachedModifiers;
+  EventDispatcher::Dispatch(popup, aPresContext, &event, nullptr, &status);
+
+  mCachedMousePoint = LayoutDeviceIntPoint(0, 0);
+  mOpeningPopup = nullptr;
+
+  mCachedModifiers = 0;
+
+  // clear these as they are no longer valid
+  mRangeParentContent = nullptr;
+  mRangeOffset = 0;
+
+  return status;
+}
+
 void nsXULPopupManager::BeginShowingPopup(nsIContent* aPopup,
                                           bool aIsContextMenu,
                                           bool aSelectFirstItem,
@@ -1445,41 +1491,8 @@ void nsXULPopupManager::BeginShowingPopup(nsIContent* aPopup,
 
   nsPopupType popupType = popupFrame->PopupType();
 
-  // cache the popup so that document.popupNode can retrieve the trigger node
-  // during the popupshowing event. It will be cleared below after the event
-  // has fired.
-  mOpeningPopup = aPopup;
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetMouseEvent event(true, eXULPopupShowing, nullptr,
-                         WidgetMouseEvent::eReal);
-
-  // coordinates are relative to the root widget
-  nsPresContext* rootPresContext =
-      presShell->GetPresContext()->GetRootPresContext();
-  if (rootPresContext) {
-    rootPresContext->PresShell()->GetViewManager()->GetRootWidget(
-        getter_AddRefs(event.mWidget));
-  } else {
-    event.mWidget = nullptr;
-  }
-
-  if (aTriggerEvent) {
-    WidgetMouseEventBase* mouseEvent =
-        aTriggerEvent->WidgetEventPtr()->AsMouseEventBase();
-    if (mouseEvent) {
-      event.mInputSource = mouseEvent->mInputSource;
-    }
-  }
-
-  event.mRefPoint = mCachedMousePoint;
-  event.mModifiers = mCachedModifiers;
-  EventDispatcher::Dispatch(popup, presContext, &event, nullptr, &status);
-
-  mCachedMousePoint = LayoutDeviceIntPoint(0, 0);
-  mOpeningPopup = nullptr;
-
-  mCachedModifiers = 0;
+  nsEventStatus status =
+      FirePopupShowingEvent(aPopup, presContext, aTriggerEvent);
 
   // if a panel, blur whatever has focus so that the panel can take the focus.
   // This is done after the popupshowing event in case that event is cancelled.
@@ -1505,10 +1518,6 @@ void nsXULPopupManager::BeginShowingPopup(nsIContent* aPopup,
       }
     }
   }
-
-  // clear these as they are no longer valid
-  mRangeParentContent = nullptr;
-  mRangeOffset = 0;
 
   aPopup->OwnerDoc()->FlushPendingNotifications(FlushType::Frames);
 
