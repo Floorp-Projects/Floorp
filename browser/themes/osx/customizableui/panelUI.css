@@ -23,6 +23,26 @@
 }
 } /** END not Proton **/
 
+@media (-moz-proton) {
+#downloadsPanel,
+#widget-overflow,
+#appMenu-popup,
+#customizationui-widget-panel,
+#identity-popup,
+#permission-popup,
+#protections-popup {
+  margin-top: -1px; /* Overrides value from panelUI.inc.css */
+}
+
+#BMB_bookmarksPopup {
+  margin-top: -4px; /* Overrides value from panelUI.inc.css */
+}
+
+#notification-popup {
+  margin-top: 5px; /* Overrides value from panelUI.inc.css */
+}
+} /** END Proton **/
+
 panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   width: 42px; /* 18px toolbarbutton padding + 16px icon + 8px label padding start */
 }

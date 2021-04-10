@@ -33,6 +33,55 @@ panel[type="arrow"] {
 
 panel[type="arrow"][side="top"],
 panel[type="arrow"][side="bottom"] {
+  margin-inline: -16px;
+}
+
+#identity-popup[type="arrow"][side="top"],
+#identity-popup[type="arrow"][side="bottom"],
+#notification-popup[type="arrow"][side="top"],
+#notification-popup[type="arrow"][side="bottom"],
+#permission-popup[type="arrow"][side="top"],
+#permission-popup[type="arrow"][side="bottom"] {
+  margin-inline: calc(-12px - 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[type="arrow"][side="top"],
+#protections-popup[type="arrow"][side="bottom"] {
+  margin-inline: calc(-16px + 2 * var(--urlbar-container-padding));
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
+  margin-inline: -8px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-block: -16px;
+}
+
+#identity-popup[type="arrow"][side="left"],
+#identity-popup[type="arrow"][side="right"],
+#notification-popup[type="arrow"][side="left"],
+#notification-popup[type="arrow"][side="right"],
+#permission-popup[type="arrow"][side="left"],
+#permission-popup[type="arrow"][side="right"] {
+  margin-block: calc(-12px - 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[viewId="PanelUI-profiler"][type="arrow"][side="left"],
+#protections-popup[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
+  margin-block: calc(-16px + 2 * var(--urlbar-container-padding));
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="left"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
+  margin-block: -8px;
+}
+
+@media not (-moz-proton) {
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
   margin-inline: -25px;
 }
 
@@ -40,6 +89,7 @@ panel[type="arrow"][side="left"],
 panel[type="arrow"][side="right"] {
   margin-block: -25px;
 }
+} /** END not Proton **/
 
 .panel-arrowcontent {
   appearance: none;

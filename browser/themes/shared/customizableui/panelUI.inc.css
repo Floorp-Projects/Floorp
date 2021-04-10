@@ -248,6 +248,27 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
   overflow-y: hidden;
 }
 
+#downloadsPanel,
+#widget-overflow,
+#appMenu-popup,
+#customizationui-widget-panel,
+#identity-popup,
+#permission-popup,
+#protections-popup {
+  margin-top: -4px;
+}
+
+#BMB_bookmarksPopup {
+  margin-top: -8px;
+}
+
+@media (-moz-proton) {
+#notification-popup {
+  margin-top: 2px;
+}
+} /** END Proton **/
+
+@media not (-moz-proton) {
 /* This section is to anchor all the drop down panels at the same height, shift the
   panel`s top margin according to its positioning and the uidensity of the window. */
 #downloadsPanel,
@@ -277,12 +298,6 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
   margin-top: -1px;
 }
 
-/* The BMB_bookmarksPopup is unique because it is built into the
-   bookmarks-menu-button, resulting in many edge cases. */
-#BMB_bookmarksPopup {
-  margin-top: -8px;
-}
-
 :root:not([uidensity]) #nav-bar #BMB_bookmarksPopup {
   margin-top: -11px;
 }
@@ -304,6 +319,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 :root[uidensity=touch] #PersonalToolbar #BMB_bookmarksPopup {
   margin-top: -5px;
 }
+} /** END not Proton **/
 
 .panel-subview-body {
   overflow-y: auto;
