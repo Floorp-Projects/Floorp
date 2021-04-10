@@ -52,7 +52,9 @@ class Target extends Domain {
     return { browserContextId: identity.userContextId };
   }
 
-  disposeBrowserContext({ browserContextId }) {
+  disposeBrowserContext(options = {}) {
+    const { browserContextId } = options;
+
     ContextualIdentityService.remove(browserContextId);
     ContextualIdentityService.closeContainerTabs(browserContextId);
   }
@@ -72,7 +74,8 @@ class Target extends Domain {
     return { targetInfos };
   }
 
-  setDiscoverTargets({ discover }) {
+  setDiscoverTargets(options = {}) {
+    const { discover } = options;
     const { targetList } = this.session.target;
     if (discover) {
       targetList.on("target-created", this._onTargetCreated);
@@ -86,7 +89,8 @@ class Target extends Domain {
     }
   }
 
-  async createTarget({ browserContextId }) {
+  async createTarget(options = {}) {
+    const { browserContextId } = options;
     const { targetList } = this.session.target;
     const onTarget = targetList.once("target-created");
     const tab = TabManager.addTab({ userContextId: browserContextId });
@@ -99,7 +103,8 @@ class Target extends Domain {
     return { targetId: target.id };
   }
 
-  closeTarget({ targetId }) {
+  closeTarget(options = {}) {
+    const { targetId } = options;
     const { targetList } = this.session.target;
     const target = targetList.getById(targetId);
 
@@ -110,7 +115,8 @@ class Target extends Domain {
     TabManager.removeTab(target.tab);
   }
 
-  async activateTarget({ targetId }) {
+  async activateTarget(options = {}) {
+    const { targetId } = options;
     const { targetList, window } = this.session.target;
     const target = targetList.getById(targetId);
 
@@ -123,7 +129,8 @@ class Target extends Domain {
     TabManager.selectTab(target.tab);
   }
 
-  attachToTarget({ targetId }) {
+  attachToTarget(options = {}) {
+    const { targetId } = options;
     const { targetList } = this.session.target;
     const target = targetList.getById(targetId);
 
@@ -149,7 +156,8 @@ class Target extends Domain {
 
   setAutoAttach() {}
 
-  sendMessageToTarget({ sessionId, message }) {
+  sendMessageToTarget(options = {}) {
+    const { sessionId, message } = options;
     const { connection } = this.session;
     connection.sendMessageToTarget(sessionId, message);
   }

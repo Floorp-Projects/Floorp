@@ -32,7 +32,16 @@ class Security extends Domain {
     this.setIgnoreCertificateErrors({ ignore: false });
   }
 
-  setIgnoreCertificateErrors({ ignore }) {
+  /**
+   * Enable/disable whether all certificate errors should be ignored
+   *
+   * @param {Object} options
+   * @param {boolean=} options.ignore
+   *    if true, all certificate errors will be ignored.
+   */
+  setIgnoreCertificateErrors(options = {}) {
+    const { ignore } = options;
+
     if (ignore) {
       // make it possible to register certificate overrides for domains
       // that use HSTS or HPKP

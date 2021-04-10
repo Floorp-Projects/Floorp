@@ -109,7 +109,8 @@ class DOM extends ContentProcessDomain {
     }
   }
 
-  getContentQuads({ objectId }) {
+  getContentQuads(options = {}) {
+    const { objectId } = options;
     const Runtime = this.session.domains.get("Runtime");
     const debuggerObj = Runtime._getRemoteObject(objectId);
     if (!debuggerObj) {
@@ -135,7 +136,8 @@ class DOM extends ContentProcessDomain {
     return { quads };
   }
 
-  getBoxModel({ objectId }) {
+  getBoxModel(options = {}) {
+    const { objectId } = options;
     const Runtime = this.session.domains.get("Runtime");
     const debuggerObj = Runtime._getRemoteObject(objectId);
     if (!debuggerObj) {

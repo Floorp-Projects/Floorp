@@ -419,14 +419,17 @@ class Page extends Domain {
    * prompt) for this page. This will always close the dialog, either accepting
    * or rejecting it, with the optional prompt filled.
    *
-   * @param {Object}
-   *        - {Boolean} accept: For "confirm", "prompt", "beforeunload" dialogs
-   *          true will accept the dialog, false will cancel it. For "alert"
-   *          dialogs, true or false closes the dialog in the same way.
-   *        - {String} promptText: for "prompt" dialogs, used to fill the prompt
-   *          input.
+   * @param {Object} options
+   * @param {boolean=} options.accept
+   *    for "confirm", "prompt", "beforeunload" dialogs true will accept
+   *    the dialog, false will cancel it. For "alert" dialogs, true or
+   *    false closes the dialog in the same way.
+   * @param {string=} options.promptText
+   *    for "prompt" dialogs, used to fill the prompt input.
    */
-  async handleJavaScriptDialog({ accept, promptText }) {
+  async handleJavaScriptDialog(options = {}) {
+    const { accept, promptText } = options;
+
     if (!this.enabled) {
       throw new Error("Page domain is not enabled");
     }
