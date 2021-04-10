@@ -209,27 +209,6 @@ class nsMenuChainItem {
   void Detach(nsMenuChainItem** aRoot);
 };
 
-// this class is used for dispatching popupshowing events asynchronously.
-class nsXULPopupShowingEvent : public mozilla::Runnable {
- public:
-  nsXULPopupShowingEvent(nsIContent* aPopup, bool aIsContextMenu,
-                         bool aSelectFirstItem)
-      : mozilla::Runnable("nsXULPopupShowingEvent"),
-        mPopup(aPopup),
-        mIsContextMenu(aIsContextMenu),
-        mSelectFirstItem(aSelectFirstItem) {
-    NS_ASSERTION(aPopup,
-                 "null popup supplied to nsXULPopupShowingEvent constructor");
-  }
-
-  NS_IMETHOD Run() override;
-
- private:
-  nsCOMPtr<nsIContent> mPopup;
-  bool mIsContextMenu;
-  bool mSelectFirstItem;
-};
-
 // this class is used for dispatching popuphiding events asynchronously.
 class nsXULPopupHidingEvent : public mozilla::Runnable {
  public:
@@ -264,8 +243,8 @@ class nsXULPopupPositionedEvent : public mozilla::Runnable {
  public:
   explicit nsXULPopupPositionedEvent(nsIContent* aPopup)
       : mozilla::Runnable("nsXULPopupPositionedEvent"), mPopup(aPopup) {
-    NS_ASSERTION(aPopup,
-                 "null popup supplied to nsXULPopupShowingEvent constructor");
+    NS_ASSERTION(
+        aPopup, "null popup supplied to nsXULPopupPositionedEvent constructor");
   }
 
   NS_IMETHOD Run() override;
@@ -321,7 +300,6 @@ class nsXULPopupManager final : public nsIDOMEventListener,
                                 public nsIObserver,
                                 public mozilla::widget::NativeMenu::Observer {
  public:
-  friend class nsXULPopupShowingEvent;
   friend class nsXULPopupHidingEvent;
   friend class nsXULPopupPositionedEvent;
   friend class nsXULMenuCommandEvent;
