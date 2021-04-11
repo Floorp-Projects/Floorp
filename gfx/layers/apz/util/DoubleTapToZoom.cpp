@@ -63,7 +63,9 @@ static already_AddRefed<dom::Element> ElementFromPoint(
   return nullptr;
 }
 
-static bool ShouldZoomToElement(const nsCOMPtr<dom::Element>& aElement) {
+static bool ShouldZoomToElement(
+    const nsCOMPtr<dom::Element>& aElement,
+    const RefPtr<dom::Document>& aRootContentDocument) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
     if (frame->StyleDisplay()->IsInlineFlow() &&
         // Replaced elements are suitable zoom targets because they act like
@@ -72,6 +74,13 @@ static bool ShouldZoomToElement(const nsCOMPtr<dom::Element>& aElement) {
         !frame->IsFrameOfType(nsIFrame::eReplaced)) {
       return false;
     }
+  }
+  // Trying to zoom to the html element will just end up scrolling to the start
+  // of the document, return false and we'll run out of elements and just
+  // zoomout (without scrolling to the start).
+  if (aElement->OwnerDoc() == aRootContentDocument &&
+      aElement->IsHTMLElement(nsGkAtoms::html)) {
+    return false;
   }
   if (aElement->IsAnyOfHTMLElements(nsGkAtoms::li, nsGkAtoms::q)) {
     return false;
@@ -122,7 +131,7 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
     return zoomOut;
   }
 
-  while (element && !ShouldZoomToElement(element)) {
+  while (element && !ShouldZoomToElement(element, aRootContentDocument)) {
     element = element->GetParentElement();
   }
 
