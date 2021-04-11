@@ -136,6 +136,7 @@
   text-transform: none;
   unicode-bidi: isolate;
   font-variant-numeric: tabular-nums;
+  white-space: pre;
 }
 
 /* SVG documents don't always load this file but they do have links.
