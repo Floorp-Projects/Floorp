@@ -4970,7 +4970,7 @@ class IDLAttribute(IDLInterfaceMember):
         self.readonly = readonly
         self.inherit = inherit
         self._static = static
-        self.lenientThis = False
+        self.legacyLenientThis = False
         self._unforgeable = False
         self.stringifier = stringifier
         self.slotIndices = None
@@ -5201,29 +5201,29 @@ class IDLAttribute(IDLInterfaceMember):
             )
         ):
             raise WebIDLError("Throwing things can't be [StoreInSlot]", [attr.location])
-        elif identifier == "LenientThis":
+        elif identifier == "LegacyLenientThis":
             if not attr.noArguments():
                 raise WebIDLError(
-                    "[LenientThis] must take no arguments", [attr.location]
+                    "[LegacyLenientThis] must take no arguments", [attr.location]
                 )
             if self.isStatic():
                 raise WebIDLError(
-                    "[LenientThis] is only allowed on non-static " "attributes",
+                    "[LegacyLenientThis] is only allowed on non-static " "attributes",
                     [attr.location, self.location],
                 )
             if self.getExtendedAttribute("CrossOriginReadable"):
                 raise WebIDLError(
-                    "[LenientThis] is not allowed in combination "
+                    "[LegacyLenientThis] is not allowed in combination "
                     "with [CrossOriginReadable]",
                     [attr.location, self.location],
                 )
             if self.getExtendedAttribute("CrossOriginWritable"):
                 raise WebIDLError(
-                    "[LenientThis] is not allowed in combination "
+                    "[LegacyLenientThis] is not allowed in combination "
                     "with [CrossOriginWritable]",
                     [attr.location, self.location],
                 )
-            self.lenientThis = True
+            self.legacyLenientThis = True
         elif identifier == "Unforgeable":
             if self.isStatic():
                 raise WebIDLError(
@@ -5361,9 +5361,9 @@ class IDLAttribute(IDLInterfaceMember):
                     "[%s] is only allowed on non-static " "attributes" % identifier,
                     [attr.location, self.location],
                 )
-            if self.getExtendedAttribute("LenientThis"):
+            if self.getExtendedAttribute("LegacyLenientThis"):
                 raise WebIDLError(
-                    "[LenientThis] is not allowed in combination "
+                    "[LegacyLenientThis] is not allowed in combination "
                     "with [%s]" % identifier,
                     [attr.location, self.location],
                 )
@@ -5457,8 +5457,8 @@ class IDLAttribute(IDLInterfaceMember):
         self.type.resolveType(parentScope)
         IDLObjectWithIdentifier.resolve(self, parentScope)
 
-    def hasLenientThis(self):
-        return self.lenientThis
+    def hasLegacyLenientThis(self):
+        return self.legacyLenientThis
 
     def isMaplikeOrSetlikeAttr(self):
         """

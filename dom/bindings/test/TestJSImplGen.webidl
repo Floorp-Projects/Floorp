@@ -797,7 +797,7 @@ interface TestJSImplInterface {
   void conditionalOnSecureContext8();
 
   // Miscellania
-  [LenientThis] attribute long attrWithLenientThis;
+  [LegacyLenientThis] attribute long attrWithLenientThis;
   // FIXME: Bug 863954 Unforgeable things get all confused when
   // non-JS-implemented interfaces inherit from JS-implemented ones or vice
   // versa.
@@ -809,7 +809,7 @@ interface TestJSImplInterface {
   //   stringifier;
   void passRenamedInterface(TestRenamedInterface arg);
   [PutForwards=writableByte] readonly attribute TestJSImplInterface putForwardsAttr;
-  [PutForwards=writableByte, LenientThis] readonly attribute TestJSImplInterface putForwardsAttr2;
+  [PutForwards=writableByte, LegacyLenientThis] readonly attribute TestJSImplInterface putForwardsAttr2;
   [PutForwards=writableByte, ChromeOnly] readonly attribute TestJSImplInterface putForwardsAttr3;
   [Throws] void throwingMethod();
   [Throws] attribute boolean throwingAttr;

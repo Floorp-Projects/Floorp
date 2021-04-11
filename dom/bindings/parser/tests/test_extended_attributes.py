@@ -28,22 +28,24 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
     parser.parse(
         """
-        interface TestLenientThis {
-          [LenientThis] attribute byte b;
+        interface TestLegacyLenientThis {
+          [LegacyLenientThis] attribute byte b;
         };
     """
     )
 
     results = parser.finish()
-    harness.ok(results[0].members[0].hasLenientThis(), "Should have a lenient this")
+    harness.ok(
+        results[0].members[0].hasLegacyLenientThis(), "Should have a lenient this"
+    )
 
     parser = parser.reset()
     threw = False
     try:
         parser.parse(
             """
-            interface TestLenientThis2 {
-              [LenientThis=something] attribute byte b;
+            interface TestLegacyLenientThis2 {
+              [LegacyLenientThis=something] attribute byte b;
             };
         """
         )
@@ -51,7 +53,7 @@ def WebIDLTest(parser, harness):
     except:
         threw = True
 
-    harness.ok(threw, "[LenientThis] must take no arguments")
+    harness.ok(threw, "[LegacyLenientThis] must take no arguments")
 
     parser = parser.reset()
     parser.parse(
