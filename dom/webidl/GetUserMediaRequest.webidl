@@ -21,7 +21,7 @@ enum GetUserMediaRequestType {
     "recording-device-stopped"
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface GetUserMediaRequest {
   readonly attribute GetUserMediaRequestType type;

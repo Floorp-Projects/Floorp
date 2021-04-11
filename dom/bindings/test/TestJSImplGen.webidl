@@ -874,7 +874,7 @@ interface TestCImplementedInterface : TestJSImplInterface {
 interface TestCImplementedInterface2 {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  JSImplementation="@mozilla.org/test-js-impl-interface;2",
  Exposed=Window]
 interface TestJSImplNoInterfaceObject {

@@ -18,7 +18,7 @@ dictionary FontFaceSetIteratorResult
 };
 
 // To implement FontFaceSet's iterator until we can use setlike.
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface FontFaceSetIterator {
   [Throws] FontFaceSetIteratorResult next();

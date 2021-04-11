@@ -75,6 +75,6 @@ dictionary ProcessActorChildOptions : ProcessActorSidedOptions {
    *
    * Unlike for JSWindowActor, observers are always invoked, and do not need to
    * pass an inner or outer window as subject.
-   **/
+   */
   sequence<ByteString> observers;
 };

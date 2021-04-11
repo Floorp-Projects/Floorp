@@ -13,7 +13,7 @@
 // TODO: This is an 'exception', not an interface, by virtue of needing to be
 // passed as a promise rejection-reason. Revisit if DOMException grows a customArg
 
-[ExceptionClass, NoInterfaceObject,
+[ExceptionClass, LegacyNoInterfaceObject,
  Exposed=Window]
 interface MediaStreamError {
   readonly attribute DOMString  name;

@@ -6,7 +6,7 @@
  * http://w3c.github.io/webrtc-pc/ (with https://github.com/w3c/webrtc-pc/pull/178)
  */
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface RTCIdentityProviderRegistrar {
   void register(RTCIdentityProvider idp);

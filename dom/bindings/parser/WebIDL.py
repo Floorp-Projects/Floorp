@@ -1006,7 +1006,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
             if not self.hasInterfaceObject():
                 raise WebIDLError(
                     "Interface %s unexpectedly has [LegacyWindowAlias] "
-                    "and [NoInterfaceObject] together" % self.identifier.name,
+                    "and [LegacyNoInterfaceObject] together" % self.identifier.name,
                     [self.location],
                 )
             if not self.isExposedInWindow():
@@ -1120,13 +1120,13 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                 )
 
             # Interfaces which have interface objects can't inherit
-            # from [NoInterfaceObject] interfaces.
+            # from [LegacyNoInterfaceObject] interfaces.
             if self.parent.getExtendedAttribute(
-                "NoInterfaceObject"
-            ) and not self.getExtendedAttribute("NoInterfaceObject"):
+                "LegacyNoInterfaceObject"
+            ) and not self.getExtendedAttribute("LegacyNoInterfaceObject"):
                 raise WebIDLError(
                     "Interface %s does not have "
-                    "[NoInterfaceObject] but inherits from "
+                    "[LegacyNoInterfaceObject] but inherits from "
                     "interface %s which does"
                     % (self.identifier.name, self.parent.identifier.name),
                     [self.location, self.parent.location],
@@ -1161,7 +1161,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         if ctor is not None:
             if not self.hasInterfaceObject():
                 raise WebIDLError(
-                    "Can't have both a constructor and [NoInterfaceObject]",
+                    "Can't have both a constructor and [LegacyNoInterfaceObject]",
                     [self.location, ctor.location],
                 )
 
@@ -1821,10 +1821,11 @@ class IDLInterface(IDLInterfaceOrNamespace):
                     "TreatNonObjectAsNull cannot be specified on interfaces",
                     [attr.location, self.location],
                 )
-            elif identifier == "NoInterfaceObject":
+            elif identifier == "LegacyNoInterfaceObject":
                 if not attr.noArguments():
                     raise WebIDLError(
-                        "[NoInterfaceObject] must take no arguments", [attr.location]
+                        "[LegacyNoInterfaceObject] must take no arguments",
+                        [attr.location],
                     )
 
                 self._noInterfaceObject = True
@@ -8646,7 +8647,7 @@ class Parser(Tokenizer):
                     classNameOverride=classNameOverride,
                 )
                 itr_iface.addExtendedAttributes(
-                    [simpleExtendedAttr("NoInterfaceObject")]
+                    [simpleExtendedAttr("LegacyNoInterfaceObject")]
                 )
                 # Make sure the exposure set for the iterator interface is the
                 # same as the exposure set for the iterable interface, because

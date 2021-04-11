@@ -7,7 +7,7 @@
  * https://w3c.github.io/webappsec-feature-policy/#idl-index
  */
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface FeaturePolicy {
   boolean allowsFeature(DOMString feature, optional DOMString origin);

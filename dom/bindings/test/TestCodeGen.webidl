@@ -160,8 +160,7 @@ interface OnlyForUseInConstructor {
  NamedConstructor=Test4(record<DOMString, record<DOMString, any>> arg1),
  NamedConstructor=Test5(record<DOMString, sequence<record<DOMString, record<DOMString, sequence<sequence<any>>>>>> arg1),
  NamedConstructor=Test6(sequence<record<ByteString, sequence<sequence<record<ByteString, record<USVString, any>>>>>> arg1),
- Exposed=Window,
- ]
+ Exposed=Window]
 interface TestInterface {
   constructor();
   constructor(DOMString str);
