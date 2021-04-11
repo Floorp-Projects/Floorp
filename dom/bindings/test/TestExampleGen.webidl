@@ -778,7 +778,7 @@ interface TestExampleInterface {
   void conditionalOnSecureContext8();
 
   // Miscellania
-  [LenientThis] attribute long attrWithLenientThis;
+  [LegacyLenientThis] attribute long attrWithLenientThis;
   [Unforgeable] readonly attribute long unforgeableAttr;
   [Unforgeable, ChromeOnly] readonly attribute long unforgeableAttr2;
   [Unforgeable] long unforgeableMethod();
@@ -786,7 +786,7 @@ interface TestExampleInterface {
   stringifier;
   void passRenamedInterface(TestRenamedInterface arg);
   [PutForwards=writableByte] readonly attribute TestExampleInterface putForwardsAttr;
-  [PutForwards=writableByte, LenientThis] readonly attribute TestExampleInterface putForwardsAttr2;
+  [PutForwards=writableByte, LegacyLenientThis] readonly attribute TestExampleInterface putForwardsAttr2;
   [PutForwards=writableByte, ChromeOnly] readonly attribute TestExampleInterface putForwardsAttr3;
   [Throws] void throwingMethod();
   [Throws] attribute boolean throwingAttr;
