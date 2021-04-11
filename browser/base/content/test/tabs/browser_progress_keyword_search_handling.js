@@ -52,7 +52,7 @@ add_task(async function test_unknown_host() {
     await searchPromise;
     ok(kButton.hasAttribute("displaystop"), "Should be showing stop");
 
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => !kButton.hasAttribute("displaystop")
     );
     ok(
@@ -80,7 +80,7 @@ add_task(async function test_unknown_host_without_search() {
     gURLBar.select();
     EventUtils.synthesizeKey("KEY_Enter");
     await searchPromise;
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => !kButton.hasAttribute("displaystop")
     );
     ok(
