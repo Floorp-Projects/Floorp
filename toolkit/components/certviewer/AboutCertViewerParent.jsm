@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["AboutCertViewerParent"];
 
-const TYPE_UNKNOWN = 0;
 const TYPE_CA = 1;
 const TYPE_USER = 2;
 const TYPE_EMAIL = 4;
@@ -15,7 +14,6 @@ const TYPE_SERVER = 8;
 class AboutCertViewerParent extends JSWindowActorParent {
   getCertificates() {
     let certs = {
-      [TYPE_UNKNOWN]: [],
       [TYPE_CA]: [],
       [TYPE_USER]: [],
       [TYPE_EMAIL]: [],

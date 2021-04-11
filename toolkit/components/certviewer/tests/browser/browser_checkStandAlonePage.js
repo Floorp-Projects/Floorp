@@ -3,7 +3,6 @@
 
 "use strict";
 
-const TYPE_UNKNOWN = 0;
 const TYPE_CA = 1;
 const TYPE_USER = 2;
 const TYPE_EMAIL = 4;
@@ -18,11 +17,6 @@ add_task(async function test_dbItemDisplayed() {
   });
 
   let categories = [
-    {
-      type: TYPE_UNKNOWN,
-      tabName: "Unknown",
-      id: "unkonwn",
-    },
     {
       type: TYPE_CA,
       tabName: "Authorities",

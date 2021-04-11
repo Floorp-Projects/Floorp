@@ -7,7 +7,6 @@
 import { InfoGroupContainer } from "./info-group-container.js";
 import { CertificateTabsSection } from "./certificate-tabs-section.js";
 
-const TYPE_UNKNOWN = 0;
 const TYPE_CA = 1;
 const TYPE_USER = 2;
 const TYPE_EMAIL = 4;
@@ -67,12 +66,6 @@ export class AboutCertificateSection extends HTMLElement {
       certs.push({
         name: "certificate-viewer-tab-ca",
         data: srcCerts[TYPE_CA],
-      });
-    }
-    if (srcCerts[TYPE_UNKNOWN].length) {
-      certs.push({
-        name: "certificate-viewer-tab-unkonwn",
-        data: srcCerts[TYPE_UNKNOWN],
       });
     }
 
