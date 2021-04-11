@@ -160,6 +160,7 @@ namespace mozilla {
 LazyLogModule gMediaManagerLog("MediaManager");
 #define LOG(...) MOZ_LOG(gMediaManagerLog, LogLevel::Debug, (__VA_ARGS__))
 
+class GetUserMediaStreamTask;
 class LocalTrackSource;
 
 using dom::CallerType;
@@ -1254,43 +1255,114 @@ RefPtr<MediaManager::BadConstraintsPromise> MediaManager::SelectSettings(
  * Describes a requested task that handles response from the UI and sends
  * results back to the DOM.
  */
-class GetUserMediaTask final {
+class GetUserMediaTask {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GetUserMediaTask)
-
-  GetUserMediaTask(const MediaStreamConstraints& aConstraints,
-                   MozPromiseHolder<MediaManager::StreamPromise>&& aHolder,
-                   uint64_t aWindowID,
-                   RefPtr<GetUserMediaWindowListener> aWindowListener,
-                   RefPtr<DeviceListener> aAudioDeviceListener,
-                   RefPtr<DeviceListener> aVideoDeviceListener,
-                   const MediaEnginePrefs& aPrefs,
-                   const ipc::PrincipalInfo& aPrincipalInfo, bool aIsChrome,
-                   RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aMediaDeviceSet,
-                   bool aShouldFocusSource)
-      : mConstraints(aConstraints),
-        mHolder(std::move(aHolder)),
+  GetUserMediaTask(uint64_t aWindowID, const ipc::PrincipalInfo& aPrincipalInfo,
+                   bool aIsChrome,
+                   RefPtr<MediaManager::MediaDeviceSetRefCnt> aMediaDeviceSet)
+      : mPrincipalInfo(aPrincipalInfo),
         mWindowID(aWindowID),
+        mIsChrome(aIsChrome),
+        mMediaDeviceSet(std::move(aMediaDeviceSet)) {}
+
+  virtual void Denied(MediaMgrError::Name aName,
+                      const nsCString& aMessage = ""_ns) = 0;
+
+  virtual GetUserMediaStreamTask* AsGetUserMediaStreamTask() { return nullptr; }
+
+  uint64_t GetWindowID() { return mWindowID; }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    size_t amount = aMallocSizeOf(this);
+    // Assume mWindowListener is owned by MediaManager.
+    // Assume mAudioDeviceListener and mVideoDeviceListener are owned by
+    // mWindowListener.
+    // Assume PrincipalInfo string buffers are shared.
+    // Member types without support for accounting of pointees:
+    //   MozPromiseHolder, RefPtr<MediaDevice>.
+    // We don't have a good way to account for lambda captures for MozPromise
+    // callbacks.
+    return amount;
+  }
+
+ protected:
+  virtual ~GetUserMediaTask() = default;
+
+  // Call GetPrincipalKey again, if not private browing, this time with
+  // persist = true, to promote deviceIds to persistent, in case they're not
+  // already. Fire'n'forget.
+  void PersistPrincipalKey() {
+    if (IsPrincipalInfoPrivate(mPrincipalInfo)) {
+      return;
+    }
+    media::GetPrincipalKey(mPrincipalInfo, true)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [](const media::PrincipalKeyPromise::ResolveOrRejectValue& aValue) {
+              if (aValue.IsReject()) {
+                LOG("Failed get Principal key. Persisting of deviceIds "
+                    "will be broken");
+              }
+            });
+  }
+
+ private:
+  const ipc::PrincipalInfo mPrincipalInfo;
+
+ protected:
+  const uint64_t mWindowID;
+  const bool mIsChrome;
+
+ public:
+  const RefPtr<MediaManager::MediaDeviceSetRefCnt> mMediaDeviceSet;
+};
+
+/**
+ * Describes a requested task that handles response from the UI to a
+ * getUserMedia() request and sends results back to content.  If the request
+ * is allowed and device initialization succeeds, then the MozPromise is
+ * resolved with a DOMMediaStream having a track or tracks for the approved
+ * device or devices.
+ */
+class GetUserMediaStreamTask final : public GetUserMediaTask {
+ public:
+  GetUserMediaStreamTask(
+      const MediaStreamConstraints& aConstraints,
+      MozPromiseHolder<MediaManager::StreamPromise>&& aHolder,
+      uint64_t aWindowID, RefPtr<GetUserMediaWindowListener> aWindowListener,
+      RefPtr<DeviceListener> aAudioDeviceListener,
+      RefPtr<DeviceListener> aVideoDeviceListener,
+      const MediaEnginePrefs& aPrefs, const ipc::PrincipalInfo& aPrincipalInfo,
+      bool aIsChrome,
+      RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aMediaDeviceSet,
+      bool aShouldFocusSource)
+      : GetUserMediaTask(aWindowID, aPrincipalInfo, aIsChrome,
+                         std::move(aMediaDeviceSet)),
+        mConstraints(aConstraints),
+        mHolder(std::move(aHolder)),
         mWindowListener(std::move(aWindowListener)),
         mAudioDeviceListener(std::move(aAudioDeviceListener)),
         mVideoDeviceListener(std::move(aVideoDeviceListener)),
         mPrefs(aPrefs),
-        mPrincipalInfo(aPrincipalInfo),
-        mIsChrome(aIsChrome),
         mShouldFocusSource(aShouldFocusSource),
-        mDeviceChosen(false),
-        mMediaDeviceSet(aMediaDeviceSet),
         mManager(MediaManager::GetInstance()) {}
 
-  void Allowed() {
+  void Allowed(RefPtr<MediaDevice> aAudioDevice,
+               RefPtr<MediaDevice> aVideoDevice) {
+    MOZ_ASSERT(aAudioDevice || aVideoDevice);
+    mAudioDevice = std::move(aAudioDevice);
+    mVideoDevice = std::move(aVideoDevice);
     // Reuse the same thread to save memory.
     MediaManager::Dispatch(
-        NewRunnableMethod("GetUserMediaTask::AllocateDevices", this,
-                          &GetUserMediaTask::AllocateDevices));
+        NewRunnableMethod("GetUserMediaStreamTask::AllocateDevices", this,
+                          &GetUserMediaStreamTask::AllocateDevices));
   }
 
+  GetUserMediaStreamTask* AsGetUserMediaStreamTask() override { return this; }
+
  private:
-  ~GetUserMediaTask() {
+  ~GetUserMediaStreamTask() override {
     if (!mHolder.IsEmpty()) {
       Fail(MediaMgrError::Name::NotAllowedError);
     }
@@ -1321,8 +1393,7 @@ class GetUserMediaTask final {
    */
   void AllocateDevices() {
     MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(mDeviceChosen);
-    LOG("GetUserMediaTask::Run()");
+    LOG("GetUserMediaStreamTask::AllocateDevices()");
 
     // Allocate a video or audio device and return a MediaStream via
     // PrepareDOMStream().
@@ -1389,44 +1460,17 @@ class GetUserMediaTask final {
       return;
     }
     NS_DispatchToMainThread(
-        NewRunnableMethod("GetUserMediaTask::PrepareDOMStream", this,
-                          &GetUserMediaTask::PrepareDOMStream));
+        NewRunnableMethod("GetUserMediaStreamTask::PrepareDOMStream", this,
+                          &GetUserMediaStreamTask::PrepareDOMStream));
   }
 
  public:
-  void Denied(MediaMgrError::Name aName, const nsCString& aMessage = ""_ns) {
+  void Denied(MediaMgrError::Name aName, const nsCString& aMessage) override {
     MOZ_ASSERT(NS_IsMainThread());
     Fail(aName, aMessage);
   }
 
   const MediaStreamConstraints& GetConstraints() { return mConstraints; }
-
-  nsresult SetAudioDevice(RefPtr<MediaDevice> aAudioDevice) {
-    mAudioDevice = std::move(aAudioDevice);
-    mDeviceChosen = true;
-    return NS_OK;
-  }
-
-  nsresult SetVideoDevice(RefPtr<MediaDevice> aVideoDevice) {
-    mVideoDevice = std::move(aVideoDevice);
-    mDeviceChosen = true;
-    return NS_OK;
-  }
-
-  uint64_t GetWindowID() { return mWindowID; }
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
-    size_t amount = aMallocSizeOf(this);
-    // Assume mWindowListener is owned by MediaManager.
-    // Assume mAudioDeviceListener and mVideoDeviceListener are owned by
-    // mWindowListener.
-    // Assume PrincipalInfo string buffers are shared.
-    // Member types without support for accounting of pointees:
-    //   MozPromiseHolder, RefPtr<MediaDevice>.
-    // We don't have a good way to account for lambda captures for MozPromise
-    // callbacks.
-    return amount;
-  }
 
  private:
   void PrepareDOMStream();
@@ -1434,23 +1478,13 @@ class GetUserMediaTask final {
   const MediaStreamConstraints mConstraints;
 
   MozPromiseHolder<MediaManager::StreamPromise> mHolder;
-  const uint64_t mWindowID;
   const RefPtr<GetUserMediaWindowListener> mWindowListener;
   const RefPtr<DeviceListener> mAudioDeviceListener;
   const RefPtr<DeviceListener> mVideoDeviceListener;
   RefPtr<MediaDevice> mAudioDevice;
   RefPtr<MediaDevice> mVideoDevice;
   const MediaEnginePrefs mPrefs;
-  ipc::PrincipalInfo mPrincipalInfo;
-  const bool mIsChrome;
   const bool mShouldFocusSource;
-
-  bool mDeviceChosen;
-
- public:
-  RefPtr<MediaManager::MediaDeviceSetRefCnt> mMediaDeviceSet;
-
- private:
   RefPtr<MediaManager> mManager;  // get ref to this when creating the runnable
 };
 
@@ -1460,9 +1494,9 @@ class GetUserMediaTask final {
  *
  * All of this must be done on the main thread!
  */
-void GetUserMediaTask::PrepareDOMStream() {
+void GetUserMediaStreamTask::PrepareDOMStream() {
   MOZ_ASSERT(NS_IsMainThread());
-  LOG("GetUserMediaTask::PrepareDOMStream()");
+  LOG("GetUserMediaStreamTask::PrepareDOMStream()");
   nsGlobalWindowInner* window =
       nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
 
@@ -1596,8 +1630,8 @@ void GetUserMediaTask::PrepareDOMStream() {
           GetMainThreadSerialEventTarget(), __func__,
           [manager = mManager, windowListener = mWindowListener,
            firstFramePromise] {
-            LOG("GetUserMediaTask::PrepareDOMStream: starting success callback "
-                "following InitializeAsync()");
+            LOG("GetUserMediaStreamTask::PrepareDOMStream: starting success "
+                "callback following InitializeAsync()");
             // Initiating and starting devices succeeded.
             windowListener->ChromeAffectingStateChanged();
             manager->SendPendingGUMRequest();
@@ -1623,8 +1657,8 @@ void GetUserMediaTask::PrepareDOMStream() {
           },
           [audio = mAudioDeviceListener,
            video = mVideoDeviceListener](RefPtr<MediaMgrError>&& aError) {
-            LOG("GetUserMediaTask::PrepareDOMStream: starting failure callback "
-                "following InitializeAsync()");
+            LOG("GetUserMediaStreamTask::PrepareDOMStream: starting failure "
+                "callback following InitializeAsync()");
             if (audio) {
               audio->Stop();
             }
@@ -1646,19 +1680,7 @@ void GetUserMediaTask::PrepareDOMStream() {
             }
           });
 
-  if (!IsPrincipalInfoPrivate(mPrincipalInfo)) {
-    // Call GetPrincipalKey again, this time w/persist = true, to promote
-    // deviceIds to persistent, in case they're not already. Fire'n'forget.
-    media::GetPrincipalKey(mPrincipalInfo, true)
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [](const media::PrincipalKeyPromise::ResolveOrRejectValue& aValue) {
-              if (aValue.IsReject()) {
-                LOG("Failed get Principal key. Persisting of deviceIds "
-                    "will be broken");
-              }
-            });
-  }
+  PersistPrincipalKey();
 }
 
 /* static */
@@ -2768,8 +2790,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             MozPromiseHolder<StreamPromise> holder;
             RefPtr<StreamPromise> p = holder.Ensure(__func__);
 
-            // Pass callbacks and listeners along to GetUserMediaTask.
-            auto task = MakeRefPtr<GetUserMediaTask>(
+            // Pass callbacks and listeners along to GetUserMediaStreamTask.
+            auto task = MakeRefPtr<GetUserMediaStreamTask>(
                 c, std::move(holder), windowID, std::move(windowListener),
                 std::move(audioListener), std::move(videoListener), prefs,
                 principalInfo, isChrome, std::move(devices), focusSource);
@@ -3647,56 +3669,61 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    if (aSubject) {
-      // A particular device or devices were chosen by the user.
-      // NOTE: does not allow setting a device to null; assumes nullptr
-      nsCOMPtr<nsIArray> array(do_QueryInterface(aSubject));
-      MOZ_ASSERT(array);
-      uint32_t len = 0;
-      array->GetLength(&len);
-      bool videoFound = false, audioFound = false;
-      for (uint32_t i = 0; i < len; i++) {
-        nsCOMPtr<nsIMediaDevice> device;
-        array->QueryElementAt(i, NS_GET_IID(nsIMediaDevice),
-                              getter_AddRefs(device));
-        MOZ_ASSERT(device);  // shouldn't be returning anything else...
-        if (!device) {
-          continue;
-        }
-
-        // Casting here is safe because a MediaDevice is created
-        // only in Gecko side, JS can only query for an instance.
-        MediaDevice* dev = static_cast<MediaDevice*>(device.get());
-        if (dev->mKind == MediaDeviceKind::Videoinput) {
-          if (!videoFound) {
-            task->SetVideoDevice(dev);
-            videoFound = true;
-          }
-        } else if (dev->mKind == MediaDeviceKind::Audioinput) {
-          if (!audioFound) {
-            task->SetAudioDevice(dev);
-            audioFound = true;
-          }
-        } else {
-          MOZ_CRASH("Unexpected device kind");
-        }
-      }
-      bool needVideo = IsOn(task->GetConstraints().mVideo);
-      bool needAudio = IsOn(task->GetConstraints().mAudio);
-      MOZ_ASSERT(needVideo || needAudio);
-
-      if ((needVideo && !videoFound) || (needAudio && !audioFound)) {
-        task->Denied(MediaMgrError::Name::NotAllowedError);
-        return NS_OK;
-      }
-    }
-
     if (sHasShutdown) {
       task->Denied(MediaMgrError::Name::AbortError, "In shutdown"_ns);
       return NS_OK;
     }
-    task->Allowed();
-    return NS_OK;
+    if (NS_WARN_IF(!aSubject)) {
+      return NS_ERROR_FAILURE;  // ignored
+    }
+    // A particular device or devices were chosen by the user.
+    // NOTE: does not allow setting a device to null; assumes nullptr
+    nsCOMPtr<nsIArray> array(do_QueryInterface(aSubject));
+    MOZ_ASSERT(array);
+    uint32_t len = 0;
+    array->GetLength(&len);
+    RefPtr<MediaDevice> audioInput;
+    RefPtr<MediaDevice> videoInput;
+    for (uint32_t i = 0; i < len; i++) {
+      nsCOMPtr<nsIMediaDevice> device;
+      array->QueryElementAt(i, NS_GET_IID(nsIMediaDevice),
+                            getter_AddRefs(device));
+      MOZ_ASSERT(device);  // shouldn't be returning anything else...
+      if (!device) {
+        continue;
+      }
+
+      // Casting here is safe because a MediaDevice is created
+      // only in Gecko side, JS can only query for an instance.
+      MediaDevice* dev = static_cast<MediaDevice*>(device.get());
+      if (dev->mKind == MediaDeviceKind::Videoinput) {
+        if (!videoInput) {
+          videoInput = dev;
+        }
+      } else if (dev->mKind == MediaDeviceKind::Audioinput) {
+        if (!audioInput) {
+          audioInput = dev;
+        }
+      } else {
+        MOZ_CRASH("Unexpected device kind");
+      }
+    }
+
+    if (GetUserMediaStreamTask* streamTask = task->AsGetUserMediaStreamTask()) {
+      bool needVideo = IsOn(streamTask->GetConstraints().mVideo);
+      bool needAudio = IsOn(streamTask->GetConstraints().mAudio);
+      MOZ_ASSERT(needVideo || needAudio);
+
+      if ((needVideo && !videoInput) || (needAudio && !audioInput)) {
+        task->Denied(MediaMgrError::Name::NotAllowedError);
+        return NS_OK;
+      }
+      streamTask->Allowed(std::move(audioInput), std::move(videoInput));
+      return NS_OK;
+    }
+
+    NS_WARNING("Unknown task type in getUserMedia");
+    return NS_ERROR_FAILURE;
 
   } else if (IsGUMResponseNoAccess(aTopic, gumNoAccessError)) {
     nsString key(aData);
