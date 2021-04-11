@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping on a scrollbar does not scroll to top</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function doubleTapOn(element, x, y) {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let transformEndPromise = promiseTransformEnd();
+
+  if (useTouchpad) {
+    synthesizeNativeTouchpadDoubleTap(element, x, y);
+  } else {
+    synthesizeNativeTap(element, x, y);
+    synthesizeNativeTap(element, x, y);
+  }
+
+  // Wait for the APZ:TransformEnd to fire
+  await transformEndPromise;
+
+  // Flush state so we can query an accurate resolution
+  await promiseApzFlushedRepaints();
+}
+
+async function test() {
+  var resolution = getResolution();
+  var start_resolution = resolution;
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // Check that double-tapping once zooms in
+  await doubleTapOn(document.getElementById("target"), 10, 10);
+  var prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  // instant scroll to the middle of the page
+  window.scrollTo({
+    top: 4 * window.innerHeight,
+    left: 0,
+    behavior: 'auto'
+  });
+
+  await promiseApzFlushedRepaints();
+
+  let prevScrollX = window.scrollX;
+  let prevScrollY = window.scrollY;
+
+  ok(3.9 * window.innerHeight < window.scrollY && window.scrollY < 4.1 * window.innerHeight,
+    "scrollY looks good");
+
+  // Check that double-tapping on the bottom scrollbar does not scroll us to the top
+  // Need to divide by resolution because the coords are assumed to be inside the resolution
+  await doubleTapOn(window, (window.innerWidth/2)/resolution, (window.innerHeight - 5)/resolution);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
+  ok(resolution == start_resolution, "The second double-tap has decreased the resolution to the start to " + resolution);
+
+  info("prevscroll " + prevScrollX + " " + prevScrollY + "\n");
+  info("window.scroll " + window.scrollX + " " + window.scrollY + "\n");
+
+  ok(0.88*prevScrollY < window.scrollY && window.scrollY < prevScrollY*1.12, "scroll y didn't change by much");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style type="text/css">
+    .spacer {
+      background-color: #eee;
+      width: 10px;
+      height: 800vh;
+    }
+</style>
+</head>
+<body>
+
+<div id="target" style="width: 100px; height: 100px; background: red;">
+</div>
+<div class="spacer">
+</div>
+
+</body>
+</html>
