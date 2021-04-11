@@ -1426,20 +1426,20 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                         "Interface with [Global] has a named %s" % memberType,
                         [self.location, specialMembersSeen[memberId].location],
                     )
-            # Make sure we're not [OverrideBuiltins]
-            if self.getExtendedAttribute("OverrideBuiltins"):
+            # Make sure we're not [LegacyOverrideBuiltIns]
+            if self.getExtendedAttribute("LegacyOverrideBuiltIns"):
                 raise WebIDLError(
-                    "Interface with [Global] also has " "[OverrideBuiltins]",
+                    "Interface with [Global] also has " "[LegacyOverrideBuiltIns]",
                     [self.location],
                 )
             # Mark all of our ancestors as being on the global's proto chain too
             parent = self.parent
             while parent:
-                # Must not inherit from an interface with [OverrideBuiltins]
-                if parent.getExtendedAttribute("OverrideBuiltins"):
+                # Must not inherit from an interface with [LegacyOverrideBuiltIns]
+                if parent.getExtendedAttribute("LegacyOverrideBuiltIns"):
                     raise WebIDLError(
                         "Interface with [Global] inherits from "
-                        "interface with [OverrideBuiltins]",
+                        "interface with [LegacyOverrideBuiltIns]",
                         [self.location, parent.location],
                     )
                 parent._isOnGlobalProtoChain = True
@@ -1927,7 +1927,7 @@ class IDLInterface(IDLInterfaceOrNamespace):
                     member.addExtendedAttributes([attr])
             elif (
                 identifier == "NeedResolve"
-                or identifier == "OverrideBuiltins"
+                or identifier == "LegacyOverrideBuiltIns"
                 or identifier == "ChromeOnly"
                 or identifier == "LegacyUnforgeable"
                 or identifier == "LegacyEventInit"

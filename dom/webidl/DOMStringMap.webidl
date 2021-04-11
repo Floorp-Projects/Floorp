@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-[OverrideBuiltins,
+[LegacyOverrideBuiltIns,
  Exposed=Window]
 interface DOMStringMap {
   getter DOMString (DOMString name);
