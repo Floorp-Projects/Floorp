@@ -29,9 +29,6 @@
 # NB: because oncommand fires after click, by the time we've fired, the checkbox binding
 #    will already have switched the button's state, so this is correct:
           oncommand="gCustomizeMode.toggleTitlebar(this.checked)" data-l10n-id="customize-mode-titlebar"/>
-<checkbox id="customization-extra-drag-space-checkbox" class="customizationmode-checkbox"
-          data-l10n-id="customize-mode-extra-drag-space"
-          oncommand="gCustomizeMode.toggleDragSpace(this.checked)"/>
 <button id="customization-toolbar-visibility-button" class="customizationmode-button" type="menu" data-l10n-id="customize-mode-toolbars">
   <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
 </button>

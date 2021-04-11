@@ -448,7 +448,6 @@ let BrowserUsageTelemetry = {
     this._setupAfterRestore();
     this._inited = true;
 
-    Services.prefs.addObserver("browser.tabs.extraDragSpace", this);
     Services.prefs.addObserver("browser.tabs.drawInTitlebar", this);
 
     this._recordUITelemetry();
@@ -512,15 +511,6 @@ let BrowserUsageTelemetry = {
         break;
       case "nsPref:changed":
         switch (data) {
-          case "browser.tabs.extraDragSpace":
-            this._recordWidgetChange(
-              "drag-space",
-              Services.prefs.getBoolPref("browser.tabs.extraDragSpace")
-                ? "on"
-                : "off",
-              "pref"
-            );
-            break;
           case "browser.tabs.drawInTitlebar":
             this._recordWidgetChange(
               "titlebar",
@@ -626,11 +616,6 @@ let BrowserUsageTelemetry = {
       ) != "false";
 
     widgetMap.set("menu-toolbar", menuBarHidden ? "off" : "on");
-
-    widgetMap.set(
-      "drag-space",
-      Services.prefs.getBoolPref("browser.tabs.extraDragSpace") ? "on" : "off"
-    );
 
     // Drawing in the titlebar means not showing the titlebar, hence the negation.
     widgetMap.set(
