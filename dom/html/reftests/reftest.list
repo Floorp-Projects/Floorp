@@ -43,7 +43,7 @@ skip-if(Android) == 649134-2.html 649134-2-ref.html
 # image-orientation when determining the size of the image.
 # (Fuzzy necessary due to pixel-wise comparison of different JPEGs.
 # The vast majority of the fuzziness comes from Linux and WinXP.)
-skip-if(isCoverageBuild) pref(layout.css.image-orientation.initial-from-image,true) fuzzy(0-2,0-830) == bug917595-iframe-1.html    bug917595-1-ref.html
+skip-if(isCoverageBuild) fuzzy(0-2,0-830) == bug917595-iframe-1.html bug917595-1-ref.html
 fuzzy(0-3,0-640) fuzzy-if(skiaContent,0-3,0-7544) fuzzy-if(webrender&&!geckoview,2-3,50-7544) == bug917595-exif-rotated.jpg bug917595-pixel-rotated.jpg # bug 1060869
 
 # Test support for SVG-as-image in <picture> elements.

@@ -113,9 +113,6 @@ Maybe<AspectRatio> DynamicImage::GetIntrinsicRatio() {
 NS_IMETHODIMP_(Orientation)
 DynamicImage::GetOrientation() { return Orientation(); }
 
-NS_IMETHODIMP_(bool)
-DynamicImage::HandledOrientation() { return false; }
-
 NS_IMETHODIMP
 DynamicImage::GetType(uint16_t* aType) {
   *aType = imgIContainer::TYPE_RASTER;

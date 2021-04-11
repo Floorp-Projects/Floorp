@@ -23,8 +23,7 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace image {
+namespace mozilla::image {
 
 /* static */
 already_AddRefed<Image> ImageOps::Freeze(Image* aImage) {
@@ -59,24 +58,22 @@ already_AddRefed<imgIContainer> ImageOps::Clip(
 /* static */
 already_AddRefed<Image> ImageOps::Orient(Image* aImage,
                                          Orientation aOrientation) {
-  RefPtr<Image> orientedImage = new OrientedImage(aImage, aOrientation);
-  return orientedImage.forget();
+  if (aOrientation.IsIdentity()) {
+    return do_AddRef(aImage);
+  }
+  RefPtr<Image> image = new OrientedImage(aImage, aOrientation);
+  return image.forget();
 }
 
 /* static */
 already_AddRefed<imgIContainer> ImageOps::Orient(imgIContainer* aImage,
                                                  Orientation aOrientation) {
-  nsCOMPtr<imgIContainer> orientedImage =
-      new OrientedImage(static_cast<Image*>(aImage), aOrientation);
-  return orientedImage.forget();
+  return Orient(static_cast<Image*>(aImage), aOrientation);
 }
 
 /* static */
 already_AddRefed<imgIContainer> ImageOps::Unorient(imgIContainer* aImage) {
-  Orientation orientation = aImage->GetOrientation().Reversed();
-  nsCOMPtr<imgIContainer> orientedImage =
-      new OrientedImage(static_cast<Image*>(aImage), orientation);
-  return orientedImage.forget();
+  return Orient(aImage, aImage->GetOrientation().Reversed());
 }
 
 /* static */
@@ -248,5 +245,4 @@ nsresult ImageOps::DecodeMetadata(ImageBuffer* aBuffer,
   return surface.forget();
 }
 
-}  // namespace image
-}  // namespace mozilla
+}  // namespace mozilla::image

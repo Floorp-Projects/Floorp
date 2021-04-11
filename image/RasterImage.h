@@ -383,32 +383,21 @@ class RasterImage final : public ImageResource,
 
   /**
    * Computes a matrix that applies the rotation and reflection specified by
-   * UsedOrientation(), or that matrix's inverse if aInvert is true.
+   * mOrientation, or that matrix's inverse if aInvert is true.
    *
    * See OrientedImage::OrientationMatrix.
    */
   gfxMatrix OrientationMatrix(const UnorientedIntSize& aSize,
                               bool aInvert = false) const;
 
-  /**
-   * The orientation value to honor for this image.
-   *
-   * If the image.honor-orientation-metadata pref is true, then this returns
-   * the orientation from the image's metadata.  Otherwise, it returns an
-   * Orientation that indicates no transformation is needed.
-   */
-  Orientation UsedOrientation() const {
-    return LoadHandledOrientation() ? mOrientation : Orientation();
-  }
-
   // Functions to convert between oriented and unoriented pixels.
   UnorientedIntSize ToUnoriented(OrientedIntSize aSize) const {
-    return UsedOrientation().SwapsWidthAndHeight()
+    return mOrientation.SwapsWidthAndHeight()
                ? UnorientedIntSize(aSize.height, aSize.width)
                : UnorientedIntSize(aSize.width, aSize.height);
   }
   OrientedIntSize ToOriented(UnorientedIntSize aSize) const {
-    return UsedOrientation().SwapsWidthAndHeight()
+    return mOrientation.SwapsWidthAndHeight()
                ? OrientedIntSize(aSize.height, aSize.width)
                : OrientedIntSize(aSize.width, aSize.height);
   }
@@ -420,13 +409,7 @@ class RasterImage final : public ImageResource,
   nsTArray<OrientedIntSize> mNativeSizes;
 
   // The orientation required to correctly orient the image, from the image's
-  // metadata.
-  //
-  // When the image.honor-orientation-metadata pref is enabled, the RasterImage
-  // will handle and apply this orientation itself.
-  //
-  // When the pref is disabled, it is the responsibility of users of the
-  // RasterImage to wrap it in an OrientedImage if desired.
+  // metadata. RasterImage will handle and apply this orientation itself.
   Orientation mOrientation;
 
   /// If this has a value, we're waiting for SetSize() to send the load event.
@@ -485,18 +468,7 @@ class RasterImage final : public ImageResource,
 
        // Whether, once we are done doing a metadata decode, we should
        // immediately kick off a full decode.
-       (bool, WantFullDecode, 1),
-
-       // Whether this RasterImage handled orientation of the image.
-       //
-       // This will be set based on the value of the
-       // image.honor-orientation-metadata pref at the time the RasterImage is
-       // created.
-       //
-       // NOTE(heycam): Once the image.honor-orientation-metadata pref is
-       // removed, this member (and the UsedOrientation() function) can also be
-       // removed.
-       (bool, HandledOrientation, 1)))
+       (bool, WantFullDecode, 1)))
 
   TimeStamp mDrawStartTime;
 

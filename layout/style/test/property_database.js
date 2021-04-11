@@ -13482,13 +13482,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.columns")) {
   };
 }
 
-if (
-  !IsCSSPropertyPrefEnabled("layout.css.image-orientation.initial-from-image")
-) {
-  gCSSProperties["image-orientation"].initial_values = ["none"];
-  gCSSProperties["image-orientation"].other_values = ["from-image"];
-}
-
 if (IsCSSPropertyPrefEnabled("layout.css.aspect-ratio.enabled")) {
   gCSSProperties["aspect-ratio"] = {
     domProp: "aspectRatio",
