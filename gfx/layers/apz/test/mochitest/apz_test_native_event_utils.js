@@ -772,15 +772,13 @@ function promiseNativeTouchDrag(
   });
 }
 
-function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {
+function synthesizeNativeTap(aTarget, aX, aY, aObserver = null) {
   var pt = coordinatesRelativeToScreen({
     offsetX: aX,
     offsetY: aY,
-    target: aElement,
+    target: aTarget,
   });
-  var utils = SpecialPowers.getDOMWindowUtils(
-    aElement.ownerDocument.defaultView
-  );
+  let utils = utilsForTarget(aTarget);
   utils.sendNativeTouchTap(pt.x, pt.y, false, aObserver);
   return true;
 }
