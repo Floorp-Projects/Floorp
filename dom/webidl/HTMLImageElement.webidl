@@ -63,7 +63,7 @@ partial interface HTMLImageElement {
            [CEReactions, SetterThrows]
            attribute DOMString longDesc;
 
-  [CEReactions, SetterThrows] attribute [TreatNullAs=EmptyString] DOMString border;
+  [CEReactions, SetterThrows] attribute [LegacyNullToEmptyString] DOMString border;
 };
 
 // [Update me: not in whatwg spec yet]

@@ -35,5 +35,5 @@ partial interface HTMLTableRowElement {
            attribute DOMString vAlign;
 
   [CEReactions, SetterThrows]
-           attribute [TreatNullAs=EmptyString] DOMString bgColor;
+           attribute [LegacyNullToEmptyString] DOMString bgColor;
 };

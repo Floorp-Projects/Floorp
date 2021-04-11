@@ -13,7 +13,7 @@ import runpy
 
 
 def generateLine(propName, extendedAttrs):
-    return "  [%s] attribute [TreatNullAs=EmptyString] UTF8String %s;\n" % (
+    return "  [%s] attribute [LegacyNullToEmptyString] UTF8String %s;\n" % (
         ", ".join(extendedAttrs),
         propName,
     )

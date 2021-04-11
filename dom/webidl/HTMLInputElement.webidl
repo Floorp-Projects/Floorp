@@ -93,7 +93,7 @@ interface HTMLInputElement : HTMLElement {
   [CEReactions, Pure, SetterThrows]
            attribute DOMString defaultValue;
   [CEReactions, Pure, SetterThrows, NeedsCallerType]
-           attribute [TreatNullAs=EmptyString] DOMString value;
+           attribute [LegacyNullToEmptyString] DOMString value;
   [Throws]
            attribute object? valueAsDate;
   [Pure, SetterThrows]

@@ -2337,7 +2337,7 @@ class IDLType(IDLObject):
         IDLObject.__init__(self, location)
         self.name = name
         self.builtin = False
-        self.treatNullAsEmpty = False
+        self.legacyNullToEmptyString = False
         self._clamp = False
         self._enforceRange = False
         self._allowShared = False
@@ -2349,7 +2349,7 @@ class IDLType(IDLObject):
             + hash(self.name)
             + hash(self._clamp)
             + hash(self._enforceRange)
-            + hash(self.treatNullAsEmpty)
+            + hash(self.legacyNullToEmptyString)
             + hash(self._allowShared)
         )
 
@@ -2360,7 +2360,7 @@ class IDLType(IDLObject):
             and self.name == other.name
             and self._clamp == other.hasClamp()
             and self._enforceRange == other.hasEnforceRange()
-            and self.treatNullAsEmpty == other.treatNullAsEmpty
+            and self.legacyNullToEmptyString == other.legacyNullToEmptyString
             and self._allowShared == other.hasAllowShared()
         )
 
@@ -2737,9 +2737,9 @@ class IDLNullableType(IDLParametrizedType):
                     [self.location],
                 )
         if self.inner.isDOMString():
-            if self.inner.treatNullAsEmpty:
+            if self.inner.legacyNullToEmptyString:
                 raise WebIDLError(
-                    "[TreatNullAs] not allowed on a nullable DOMString",
+                    "[LegacyNullToEmptyString] not allowed on a nullable DOMString",
                     [self.location, self.inner.location],
                 )
 
@@ -3508,14 +3508,14 @@ class IDLBuiltinType(IDLType):
         type,
         clamp=False,
         enforceRange=False,
-        treatNullAsEmpty=False,
+        legacyNullToEmptyString=False,
         allowShared=False,
         attrLocation=[],
     ):
         """
-        The mutually exclusive clamp/enforceRange/treatNullAsEmpty/allowShared arguments are used
+        The mutually exclusive clamp/enforceRange/legacyNullToEmptyString/allowShared arguments are used
         to create instances of this type with the appropriate attributes attached. Use .clamped(),
-        .rangeEnforced(), .withTreatNullAs() and .withAllowShared().
+        .rangeEnforced(), .withLegacyNullToEmptyString() and .withAllowShared().
 
         attrLocation is an array of source locations of these attributes for error reporting.
         """
@@ -3524,7 +3524,7 @@ class IDLBuiltinType(IDLType):
         self._typeTag = type
         self._clamped = None
         self._rangeEnforced = None
-        self._withTreatNullAs = None
+        self._withLegacyNullToEmptyString = None
         self._withAllowShared = None
         if self.isInteger():
             if clamp:
@@ -3540,12 +3540,14 @@ class IDLBuiltinType(IDLType):
                 "Non-integer types cannot be [Clamp] or [EnforceRange]", attrLocation
             )
         if self.isDOMString() or self.isUTF8String():
-            if treatNullAsEmpty:
-                self.treatNullAsEmpty = True
+            if legacyNullToEmptyString:
+                self.legacyNullToEmptyString = True
                 self.name = "NullIsEmpty" + self.name
-                self._extendedAttrDict["TreatNullAs"] = ["EmptyString"]
-        elif treatNullAsEmpty:
-            raise WebIDLError("Non-string types cannot be [TreatNullAs]", attrLocation)
+                self._extendedAttrDict["LegacyNullToEmptyString"] = True
+        elif legacyNullToEmptyString:
+            raise WebIDLError(
+                "Non-string types cannot be [LegacyNullToEmptyString]", attrLocation
+            )
         if self.isBufferSource():
             if allowShared:
                 self._allowShared = True
@@ -3587,16 +3589,16 @@ class IDLBuiltinType(IDLType):
             )
         return self._rangeEnforced
 
-    def withTreatNullAs(self, attrLocation):
-        if not self._withTreatNullAs:
-            self._withTreatNullAs = IDLBuiltinType(
+    def withLegacyNullToEmptyString(self, attrLocation):
+        if not self._withLegacyNullToEmptyString:
+            self._withLegacyNullToEmptyString = IDLBuiltinType(
                 self.location,
                 self.name,
                 self._typeTag,
-                treatNullAsEmpty=True,
+                legacyNullToEmptyString=True,
                 attrLocation=attrLocation,
             )
-        return self._withTreatNullAs
+        return self._withLegacyNullToEmptyString
 
     def withAllowShared(self, attrLocation):
         if not self._withAllowShared:
@@ -3814,26 +3816,21 @@ class IDLBuiltinType(IDLType):
                         [self.location, attribute.location],
                     )
                 ret = self.rangeEnforced([self.location, attribute.location])
-            elif identifier == "TreatNullAs":
+            elif identifier == "LegacyNullToEmptyString":
                 if not (self.isDOMString() or self.isUTF8String()):
                     raise WebIDLError(
-                        "[TreatNullAs] only allowed on DOMStrings and UTF8Strings",
+                        "[LegacyNullToEmptyString] only allowed on DOMStrings and UTF8Strings",
                         [self.location, attribute.location],
                     )
                 assert not self.nullable()
-                if not attribute.hasValue():
+                if attribute.hasValue():
                     raise WebIDLError(
-                        "[TreatNullAs] must take an identifier argument",
+                        "[LegacyNullToEmptyString] must take no identifier argument",
                         [attribute.location],
                     )
-                value = attribute.value()
-                if value != "EmptyString":
-                    raise WebIDLError(
-                        "[TreatNullAs] must take the identifier "
-                        "'EmptyString', not '%s'" % value,
-                        [attribute.location],
-                    )
-                ret = self.withTreatNullAs([self.location, attribute.location])
+                ret = self.withLegacyNullToEmptyString(
+                    [self.location, attribute.location]
+                )
             elif identifier == "AllowShared":
                 if not attribute.noArguments():
                     raise WebIDLError(
@@ -4130,8 +4127,8 @@ class IDLValue(IDLObject):
                     )
 
             return IDLValue(self.location, type, self.value)
-        elif self.type.isDOMString() and type.treatNullAsEmpty:
-            # TreatNullAsEmpty is a different type for resolution reasons,
+        elif self.type.isDOMString() and type.legacyNullToEmptyString:
+            # LegacyNullToEmptyString is a different type for resolution reasons,
             # however once you have a value it doesn't matter
             return self
 
@@ -5019,7 +5016,7 @@ class IDLAttribute(IDLInterfaceMember):
             self.type.hasClamp()
             or self.type.hasEnforceRange()
             or self.type.hasAllowShared()
-            or self.type.treatNullAsEmpty
+            or self.type.legacyNullToEmptyString
         ):
             raise WebIDLError(
                 "A readonly attribute cannot be [Clamp] or [EnforceRange] or [AllowShared]",
@@ -5563,7 +5560,7 @@ class IDLArgument(IDLObjectWithIdentifier):
             if self.allowTypeAttributes and (
                 identifier == "EnforceRange"
                 or identifier == "Clamp"
-                or identifier == "TreatNullAs"
+                or identifier == "LegacyNullToEmptyString"
                 or identifier == "AllowShared"
             ):
                 self.type = self.type.withExtendedAttributes([attribute])
@@ -5622,9 +5619,10 @@ class IDLArgument(IDLObjectWithIdentifier):
                 # codegen doesn't have to special-case this.
                 self.defaultValue = IDLUndefinedValue(self.location)
 
-        if self.dictionaryMember and self.type.treatNullAsEmpty:
+        if self.dictionaryMember and self.type.legacyNullToEmptyString:
             raise WebIDLError(
-                "Dictionary members cannot be [TreatNullAs]", [self.location]
+                "Dictionary members cannot be [LegacyNullToEmptyString]",
+                [self.location],
             )
         # Now do the coercing thing; this needs to happen after the
         # above creation of a default value.

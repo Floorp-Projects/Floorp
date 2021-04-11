@@ -25,7 +25,7 @@ interface CSSStyleDeclaration {
   UTF8String getPropertyValue(UTF8String property);
   UTF8String getPropertyPriority(UTF8String property);
   [CEReactions, NeedsSubjectPrincipal=NonSystem, Throws]
-  void setProperty(UTF8String property, [TreatNullAs=EmptyString] UTF8String value, optional [TreatNullAs=EmptyString] UTF8String priority = "");
+  void setProperty(UTF8String property, [LegacyNullToEmptyString] UTF8String value, optional [LegacyNullToEmptyString] UTF8String priority = "");
   [CEReactions, Throws]
   UTF8String removeProperty(UTF8String property);
 

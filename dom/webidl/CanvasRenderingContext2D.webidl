@@ -192,7 +192,7 @@ interface mixin CanvasFillStrokeStyles {
   [Pref="canvas.createConicGradient.enabled", NewObject]
   CanvasGradient createConicGradient(double angle, double cx, double cy);
   [NewObject, Throws]
-  CanvasPattern? createPattern(CanvasImageSource image, [TreatNullAs=EmptyString] DOMString repetition);
+  CanvasPattern? createPattern(CanvasImageSource image, [LegacyNullToEmptyString] DOMString repetition);
 };
 
 interface mixin CanvasShadowStyles {
