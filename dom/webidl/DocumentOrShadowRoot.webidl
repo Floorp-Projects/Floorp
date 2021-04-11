@@ -29,7 +29,7 @@ interface mixin DocumentOrShadowRoot {
   readonly attribute StyleSheetList styleSheets;
 
   readonly attribute Element? pointerLockElement;
-  [LenientSetter]
+  [LegacyLenientSetter]
   readonly attribute Element? fullscreenElement;
   [BinaryName="fullscreenElement"]
   readonly attribute Element? mozFullScreenElement;

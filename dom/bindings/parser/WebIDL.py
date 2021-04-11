@@ -5292,35 +5292,36 @@ class IDLAttribute(IDLInterfaceMember):
                     "appear on the same attribute",
                     [attr.location, self.location],
                 )
-        elif identifier == "LenientSetter":
+        elif identifier == "LegacyLenientSetter":
             if not attr.noArguments():
                 raise WebIDLError(
-                    "[LenientSetter] must take no arguments", [attr.location]
+                    "[LegacyLenientSetter] must take no arguments", [attr.location]
                 )
             if not self.readonly:
                 raise WebIDLError(
-                    "[LenientSetter] is only allowed on readonly " "attributes",
+                    "[LegacyLenientSetter] is only allowed on readonly " "attributes",
                     [attr.location, self.location],
                 )
             if self.type.isPromise():
                 raise WebIDLError(
-                    "[LenientSetter] is not allowed on " "Promise-typed attributes",
+                    "[LegacyLenientSetter] is not allowed on "
+                    "Promise-typed attributes",
                     [attr.location, self.location],
                 )
             if self.isStatic():
                 raise WebIDLError(
-                    "[LenientSetter] is only allowed on non-static " "attributes",
+                    "[LegacyLenientSetter] is only allowed on non-static " "attributes",
                     [attr.location, self.location],
                 )
             if self.getExtendedAttribute("PutForwards") is not None:
                 raise WebIDLError(
-                    "[LenientSetter] and [PutForwards] can't both "
+                    "[LegacyLenientSetter] and [PutForwards] can't both "
                     "appear on the same attribute",
                     [attr.location, self.location],
                 )
             if self.getExtendedAttribute("Replaceable") is not None:
                 raise WebIDLError(
-                    "[LenientSetter] and [Replaceable] can't both "
+                    "[LegacyLenientSetter] and [Replaceable] can't both "
                     "appear on the same attribute",
                     [attr.location, self.location],
                 )
@@ -6309,9 +6310,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             raise WebIDLError(
                 "Only attributes support [PutForwards]", [attr.location, self.location]
             )
-        elif identifier == "LenientSetter":
+        elif identifier == "LegacyLenientSetter":
             raise WebIDLError(
-                "Only attributes support [LenientSetter]",
+                "Only attributes support [LegacyLenientSetter]",
                 [attr.location, self.location],
             )
         elif identifier == "LenientFloat":

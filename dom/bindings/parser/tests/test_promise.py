@@ -120,14 +120,16 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface A {
-              [LenientSetter] readonly attribute Promise<any> attr;
+              [LegacyLenientSetter] readonly attribute Promise<any> attr;
             };
         """
         )
         results = parser.finish()
     except:
         threw = True
-    harness.ok(threw, "Should not allow [LenientSetter] Promise-typed attributes.")
+    harness.ok(
+        threw, "Should not allow [LegacyLenientSetter] Promise-typed attributes."
+    )
 
     parser = parser.reset()
     threw = False

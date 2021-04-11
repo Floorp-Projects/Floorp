@@ -3165,7 +3165,7 @@ class AttrDefiner(PropertyDefiner):
                 attr.readonly
                 and attr.getExtendedAttribute("PutForwards") is None
                 and attr.getExtendedAttribute("Replaceable") is None
-                and attr.getExtendedAttribute("LenientSetter") is None
+                and attr.getExtendedAttribute("LegacyLenientSetter") is None
             ):
                 return "nullptr, nullptr"
             if crossOriginOnly and not attr.getExtendedAttribute("CrossOriginWritable"):
@@ -11732,7 +11732,7 @@ class CGMemberJITInfo(CGThing):
                 not self.member.readonly
                 or self.member.getExtendedAttribute("PutForwards") is not None
                 or self.member.getExtendedAttribute("Replaceable") is not None
-                or self.member.getExtendedAttribute("LenientSetter") is not None
+                or self.member.getExtendedAttribute("LegacyLenientSetter") is not None
             ):
                 setterinfo = "%s_setterinfo" % IDLToCIdentifier(
                     self.member.identifier.name
@@ -16111,7 +16111,7 @@ def memberProperties(m, descriptor):
             if m.getExtendedAttribute("CrossOriginWritable"):
                 props.isCrossOriginSetter = True
         elif m.getExtendedAttribute("Replaceable") or m.getExtendedAttribute(
-            "LenientSetter"
+            "LegacyLenientSetter"
         ):
             if m.getExtendedAttribute("CrossOriginWritable"):
                 props.isCrossOriginSetter = True
@@ -16216,7 +16216,7 @@ class CGDescriptor(CGThing):
                         needCrossOriginPropertyArrays = True
                 elif m.getExtendedAttribute("Replaceable"):
                     cgThings.append(CGSpecializedReplaceableSetter(descriptor, m))
-                elif m.getExtendedAttribute("LenientSetter"):
+                elif m.getExtendedAttribute("LegacyLenientSetter"):
                     # XXX In this case, we need to add an include for mozilla/dom/Document.h to the generated cpp file.
                     cgThings.append(CGSpecializedLenientSetter(descriptor, m))
                 if (
