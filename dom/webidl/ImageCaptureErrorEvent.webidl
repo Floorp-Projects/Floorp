@@ -23,7 +23,7 @@ dictionary ImageCaptureErrorEventInit : EventInit {
   ImageCaptureError? imageCaptureError = null;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface ImageCaptureError {
   const unsigned short FRAME_GRAB_ERROR = 1;

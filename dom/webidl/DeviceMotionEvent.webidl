@@ -6,7 +6,7 @@
  * https://w3c.github.io/deviceorientation/
  */
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
   Exposed=Window]
 interface DeviceAcceleration {
   readonly attribute double? x;
@@ -14,7 +14,7 @@ interface DeviceAcceleration {
   readonly attribute double? z;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface DeviceRotationRate {
   readonly attribute double? alpha;

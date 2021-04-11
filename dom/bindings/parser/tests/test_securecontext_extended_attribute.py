@@ -473,12 +473,12 @@ def WebIDLTest(parser, harness):
         "Methods copied from non-[SecureContext] mixin should not be [SecureContext]",
     )
 
-    # Test SecureContext and NoInterfaceObject
+    # Test SecureContext and LegacyNoInterfaceObject
     parser = parser.reset()
     parser.parse(
         """
-        [NoInterfaceObject, SecureContext]
-        interface TestSecureContextNoInterfaceObject {
+        [LegacyNoInterfaceObject, SecureContext]
+        interface TestSecureContextLegacyNoInterfaceObject {
           void testSecureMethod(byte foo);
         };
     """
@@ -487,7 +487,7 @@ def WebIDLTest(parser, harness):
     harness.check(
         len(results[0].members),
         1,
-        "TestSecureContextNoInterfaceObject should have only one member",
+        "TestSecureContextLegacyNoInterfaceObject should have only one member",
     )
     harness.ok(
         results[0].getExtendedAttribute("SecureContext"),

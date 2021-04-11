@@ -4,7 +4,7 @@ import WebIDL
 def WebIDLTest(parser, harness):
     parser.parse(
         """
-        [NoInterfaceObject]
+        [LegacyNoInterfaceObject]
         interface TestExtendedAttr {
           [Unforgeable] readonly attribute byte b;
         };

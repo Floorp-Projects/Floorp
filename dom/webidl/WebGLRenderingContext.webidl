@@ -818,7 +818,7 @@ partial interface WebGLRenderingContext {
 ////////////////////////////////////////
 // specific extension interfaces
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_texture_compression_bptc {
     const GLenum COMPRESSED_RGBA_BPTC_UNORM_EXT = 0x8E8C;
@@ -827,7 +827,7 @@ interface EXT_texture_compression_bptc {
     const GLenum COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT = 0x8E8F;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_texture_compression_rgtc {
     const GLenum COMPRESSED_RED_RGTC1_EXT = 0x8DBB;
@@ -837,7 +837,7 @@ interface EXT_texture_compression_rgtc {
 };
 
 // https://www.khronos.org/registry/webgl/extensions/EXT_texture_norm16/
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_texture_norm16 {
   const GLenum R16_EXT = 0x822A;
@@ -850,7 +850,7 @@ interface EXT_texture_norm16 {
   const GLenum RGBA16_SNORM_EXT = 0x8F9B;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_compressed_texture_s3tc
 {
@@ -860,7 +860,7 @@ interface WEBGL_compressed_texture_s3tc
     const GLenum COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_compressed_texture_s3tc_srgb {
     /* Compressed Texture Formats */
@@ -870,7 +870,7 @@ interface WEBGL_compressed_texture_s3tc_srgb {
     const GLenum COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT  = 0x8C4F;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_compressed_texture_astc {
     /* Compressed Texture Format */
@@ -908,7 +908,7 @@ interface WEBGL_compressed_texture_astc {
     sequence<DOMString>? getSupportedProfiles();
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_compressed_texture_etc
 {
@@ -924,14 +924,14 @@ interface WEBGL_compressed_texture_etc
     const GLenum COMPRESSED_SRGB8_ALPHA8_ETC2_EAC                   = 0x9279;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_compressed_texture_etc1
 {
     const GLenum COMPRESSED_RGB_ETC1_WEBGL = 0x8D64;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_compressed_texture_pvrtc
 {
@@ -941,7 +941,7 @@ interface WEBGL_compressed_texture_pvrtc
     const GLenum COMPRESSED_RGBA_PVRTC_2BPPV1_IMG = 0x8C03;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_debug_renderer_info
 {
@@ -949,40 +949,40 @@ interface WEBGL_debug_renderer_info
     const GLenum UNMASKED_RENDERER_WEBGL      = 0x9246;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_debug_shaders
 {
     DOMString getTranslatedShaderSource(WebGLShader shader);
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_depth_texture
 {
     const GLenum UNSIGNED_INT_24_8_WEBGL = 0x84FA;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface OES_element_index_uint
 {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_frag_depth
 {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_lose_context {
     void loseContext();
     void restoreContext();
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_texture_filter_anisotropic
 {
@@ -990,7 +990,7 @@ interface EXT_texture_filter_anisotropic
     const GLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_sRGB
 {
@@ -1000,19 +1000,19 @@ interface EXT_sRGB
     const GLenum FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT = 0x8210;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface OES_standard_derivatives {
     const GLenum FRAGMENT_SHADER_DERIVATIVE_HINT_OES = 0x8B8B;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface OES_texture_float
 {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_draw_buffers {
     const GLenum COLOR_ATTACHMENT0_WEBGL     = 0x8CE0;
@@ -1055,32 +1055,32 @@ interface WEBGL_draw_buffers {
     void drawBuffersWEBGL(sequence<GLenum> buffers);
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface OES_texture_float_linear
 {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_shader_texture_lod
 {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface OES_texture_half_float
 {
     const GLenum HALF_FLOAT_OES = 0x8D61;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface OES_texture_half_float_linear
 {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_color_buffer_float
 {
@@ -1090,7 +1090,7 @@ interface WEBGL_color_buffer_float
     const GLenum UNSIGNED_NORMALIZED_EXT = 0x8C17;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_color_buffer_half_float
 {
@@ -1100,7 +1100,7 @@ interface EXT_color_buffer_half_float
     const GLenum UNSIGNED_NORMALIZED_EXT = 0x8C17;
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface OES_vertex_array_object {
     const GLenum VERTEX_ARRAY_BINDING_OES = 0x85B5;
@@ -1111,7 +1111,7 @@ interface OES_vertex_array_object {
     void bindVertexArrayOES(WebGLVertexArrayObject? arrayObject);
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface ANGLE_instanced_arrays {
     const GLenum VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE = 0x88FE;
@@ -1121,7 +1121,7 @@ interface ANGLE_instanced_arrays {
     void vertexAttribDivisorANGLE(GLuint index, GLuint divisor);
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_blend_minmax {
     const GLenum MIN_EXT = 0x8007;
@@ -1132,7 +1132,7 @@ interface EXT_blend_minmax {
 interface WebGLQuery {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_disjoint_timer_query {
     const GLenum QUERY_COUNTER_BITS_EXT = 0x8864;
@@ -1153,7 +1153,7 @@ interface EXT_disjoint_timer_query {
     any getQueryObjectEXT(WebGLQuery query, GLenum pname);
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface MOZ_debug {
     const GLenum EXTENSIONS = 0x1F03;
@@ -1166,17 +1166,17 @@ interface MOZ_debug {
     any getParameter(GLenum pname);
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_float_blend {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface OES_fbo_render_mipmap {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface WEBGL_explicit_present {
     void present();

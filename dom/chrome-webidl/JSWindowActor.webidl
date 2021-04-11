@@ -139,6 +139,6 @@ dictionary WindowActorChildOptions : WindowActorSidedOptions {
   * nsGlobalWindowOuter object as their subject, and the events will only be
   * dispatched to the corresponding window actor. If additional observer
   * notification's subjects are needed, please file a bug for that.
-  **/
+  */
   sequence<ByteString> observers;
 };
