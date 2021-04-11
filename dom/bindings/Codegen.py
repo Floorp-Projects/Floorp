@@ -952,9 +952,9 @@ class CGInterfaceObjectJSClass(CGThing):
 
         prototypeID, depth = PrototypeIDAndDepth(self.descriptor)
         slotCount = "DOM_INTERFACE_SLOTS_BASE"
-        if len(self.descriptor.interface.namedConstructors) > 0:
-            slotCount += " + %i /* slots for the named constructors */" % len(
-                self.descriptor.interface.namedConstructors
+        if len(self.descriptor.interface.legacyFactoryFunctions) > 0:
+            slotCount += " + %i /* slots for the legacy factory functions */" % len(
+                self.descriptor.interface.legacyFactoryFunctions
             )
         (protoGetter, _) = InterfaceObjectProtoGetter(self.descriptor, forXrays=True)
 
@@ -2308,11 +2308,11 @@ class CGClassConstructor(CGAbstractStaticMethod):
         )
 
 
-def NamedConstructorName(m):
+def LegacyFactoryFunctionName(m):
     return "_" + m.identifier.name
 
 
-class CGNamedConstructors(CGThing):
+class CGLegacyFactoryFunctions(CGThing):
     def __init__(self, descriptor):
         self.descriptor = descriptor
         CGThing.__init__(self)
@@ -2321,7 +2321,7 @@ class CGNamedConstructors(CGThing):
         return ""
 
     def define(self):
-        if len(self.descriptor.interface.namedConstructors) == 0:
+        if len(self.descriptor.interface.legacyFactoryFunctions) == 0:
             return ""
 
         constructorID = "constructors::id::"
@@ -2331,15 +2331,15 @@ class CGNamedConstructors(CGThing):
             constructorID += "_ID_Count"
 
         namedConstructors = ""
-        for n in self.descriptor.interface.namedConstructors:
+        for n in self.descriptor.interface.legacyFactoryFunctions:
             namedConstructors += (
-                '{ "%s", { %s, &sNamedConstructorNativePropertyHooks }, %i },\n'
-                % (n.identifier.name, NamedConstructorName(n), methodLength(n))
+                '{ "%s", { %s, &sLegacyFactoryFunctionNativePropertyHooks }, %i },\n'
+                % (n.identifier.name, LegacyFactoryFunctionName(n), methodLength(n))
             )
 
         return fill(
             """
-            const NativePropertyHooks sNamedConstructorNativePropertyHooks = {
+            const NativePropertyHooks sLegacyFactoryFunctionNativePropertyHooks = {
                 nullptr,
                 nullptr,
                 nullptr,
@@ -2349,7 +2349,7 @@ class CGNamedConstructors(CGThing):
                 nullptr
             };
 
-            static const NamedConstructor namedConstructors[] = {
+            static const LegacyFactoryFunction namedConstructors[] = {
               $*{namedConstructors}
               { nullptr, { nullptr, nullptr }, 0 }
             };
@@ -3645,7 +3645,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             constructArgs = methodLength(self.descriptor.interface.ctor())
         else:
             constructArgs = 0
-        if len(self.descriptor.interface.namedConstructors) > 0:
+        if len(self.descriptor.interface.legacyFactoryFunctions) > 0:
             namedConstructors = "namedConstructors"
         else:
             namedConstructors = "nullptr"
@@ -3673,8 +3673,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             getConstructorProto = CGGeneric(getConstructorProto)
             constructorProto = "constructorProto"
         else:
-            # We don't have slots to store the named constructors.
-            assert len(self.descriptor.interface.namedConstructors) == 0
+            # We don't have slots to store the legacy factory functions.
+            assert len(self.descriptor.interface.legacyFactoryFunctions) == 0
             interfaceClass = "nullptr"
             interfaceCache = "nullptr"
             getConstructorProto = None
@@ -10511,7 +10511,7 @@ def GetWebExposedName(idlObject, descriptor):
 def GetConstructorNameForReporting(descriptor, ctor):
     # Figure out the name of our constructor for reporting purposes.
     # For unnamed webidl constructors, identifier.name is "constructor" but
-    # the name JS sees is the interface name; for named constructors
+    # the name JS sees is the interface name; for legacy factory functions
     # identifier.name is the actual name.
     ctorName = ctor.identifier.name
     if ctorName == "constructor":
@@ -16139,8 +16139,10 @@ class CGDescriptor(CGThing):
         defaultToJSONMethod = None
         needCrossOriginPropertyArrays = False
         unscopableNames = list()
-        for n in descriptor.interface.namedConstructors:
-            cgThings.append(CGClassConstructor(descriptor, n, NamedConstructorName(n)))
+        for n in descriptor.interface.legacyFactoryFunctions:
+            cgThings.append(
+                CGClassConstructor(descriptor, n, LegacyFactoryFunctionName(n))
+            )
         for m in descriptor.interface.members:
             if m.isMethod() and m.identifier.name == "QueryInterface":
                 continue
@@ -16249,7 +16251,7 @@ class CGDescriptor(CGThing):
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGClassConstructor(descriptor, descriptor.interface.ctor()))
             cgThings.append(CGInterfaceObjectJSClass(descriptor, properties))
-            cgThings.append(CGNamedConstructors(descriptor))
+            cgThings.append(CGLegacyFactoryFunctions(descriptor))
 
         cgThings.append(CGLegacyCallHook(descriptor))
         if descriptor.interface.getExtendedAttribute("NeedResolve"):
@@ -17651,7 +17653,7 @@ def getGlobalNames(config):
     for desc in config.getDescriptors(registersGlobalNamesOnWindow=True):
         names.append((desc.name, desc))
         names.extend(
-            (n.identifier.name, desc) for n in desc.interface.namedConstructors
+            (n.identifier.name, desc) for n in desc.interface.legacyFactoryFunctions
         )
         names.extend((n, desc) for n in desc.interface.legacyWindowAliases)
     return names
@@ -18053,7 +18055,7 @@ class CGBindingRoot(CGThing):
         # generates only a few false positives.
         bindingHeaders["mozilla/ProfilerLabels.h"] = any(
             # constructor profiler label
-            d.interface.namedConstructors
+            d.interface.legacyFactoryFunctions
             or (d.interface.hasInterfaceObject() and d.interface.ctor())
             or any(
                 # getter/setter profiler labels
@@ -19073,7 +19075,7 @@ class CGBindingImplClass(CGClass):
 
         if iface.ctor():
             appendMethod(iface.ctor(), isConstructor=True)
-        for n in iface.namedConstructors:
+        for n in iface.legacyFactoryFunctions:
             appendMethod(n, isConstructor=True)
         for m in iface.members:
             if m.isMethod():

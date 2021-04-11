@@ -151,15 +151,15 @@ TestInterface includes InterfaceMixin;
 interface OnlyForUseInConstructor {
 };
 
-[NamedConstructor=Test,
- NamedConstructor=Test(DOMString str),
- NamedConstructor=Test2(DictForConstructor dict, any any1, object obj1,
+[LegacyFactoryFunction=Test,
+ LegacyFactoryFunction=Test(DOMString str),
+ LegacyFactoryFunction=Test2(DictForConstructor dict, any any1, object obj1,
                         object? obj2, sequence<Dict> seq, optional any any2,
                         optional object obj3, optional object? obj4),
- NamedConstructor=Test3((long or record<DOMString, any>) arg1),
- NamedConstructor=Test4(record<DOMString, record<DOMString, any>> arg1),
- NamedConstructor=Test5(record<DOMString, sequence<record<DOMString, record<DOMString, sequence<sequence<any>>>>>> arg1),
- NamedConstructor=Test6(sequence<record<ByteString, sequence<sequence<record<ByteString, record<USVString, any>>>>>> arg1),
+ LegacyFactoryFunction=Test3((long or record<DOMString, any>) arg1),
+ LegacyFactoryFunction=Test4(record<DOMString, record<DOMString, any>> arg1),
+ LegacyFactoryFunction=Test5(record<DOMString, sequence<record<DOMString, record<DOMString, sequence<sequence<any>>>>>> arg1),
+ LegacyFactoryFunction=Test6(sequence<record<ByteString, sequence<sequence<record<ByteString, record<USVString, any>>>>>> arg1),
  Exposed=Window]
 interface TestInterface {
   constructor();
