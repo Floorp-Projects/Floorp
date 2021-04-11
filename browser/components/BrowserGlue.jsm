@@ -2525,8 +2525,7 @@ BrowserGlue.prototype = {
       },
 
       {
-        condition:
-          AppConstants.MOZ_BACKGROUNDTASKS && AppConstants.MOZ_UPDATE_AGENT,
+        condition: AppConstants.MOZ_UPDATE_AGENT,
         task: () => {
           // Never in automation!  This is close to
           // `UpdateService.disabledForTesting`, but without creating the

@@ -2405,10 +2405,28 @@ with only_when(compile_environment & target_is_linux):
 # ==============================================================
 include("../build/moz.configure/nss.configure")
 
+
+# Enable or disable running in background task mode: headless for
+# periodic, short-lived, maintenance tasks.
+# ==============================================================================
+
+
+option(
+    "--disable-backgroundtasks",
+    help="Disable running in background task mode",
+)
+
+
+set_config(
+    "MOZ_BACKGROUNDTASKS", depends_if("--enable-backgroundtasks")(lambda _: True)
+)
+
+
 # Update-related programs: updater, maintenance service, update agent,
 # default browser agent.
 # ==============================================================
 include("../build/moz.configure/update-programs.configure")
+
 
 # Mobile optimizations
 # ==============================================================
@@ -2522,20 +2540,3 @@ def oxidized_breakpad(target):
 
 set_config("MOZ_OXIDIZED_BREAKPAD", True, when=oxidized_breakpad)
 set_define("MOZ_OXIDIZED_BREAKPAD", True, when=oxidized_breakpad)
-
-
-# Enable or disable running in background task mode: headless for
-# periodic, short-lived, maintenance tasks.
-# ==============================================================================
-
-
-option(
-    "--enable-backgroundtasks",
-    default=milestone.is_nightly,
-    help="{Enable|Disable} running in background task mode",
-)
-
-
-set_config(
-    "MOZ_BACKGROUNDTASKS", depends_if("--enable-backgroundtasks")(lambda _: True)
-)
