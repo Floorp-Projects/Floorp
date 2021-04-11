@@ -983,10 +983,10 @@ interface TestInterface {
 
   // Miscellania
   [LegacyLenientThis] attribute long attrWithLenientThis;
-  [Unforgeable] readonly attribute long unforgeableAttr;
-  [Unforgeable, ChromeOnly] readonly attribute long unforgeableAttr2;
-  [Unforgeable] long unforgeableMethod();
-  [Unforgeable, ChromeOnly] long unforgeableMethod2();
+  [LegacyUnforgeable] readonly attribute long unforgeableAttr;
+  [LegacyUnforgeable, ChromeOnly] readonly attribute long unforgeableAttr2;
+  [LegacyUnforgeable] long unforgeableMethod();
+  [LegacyUnforgeable, ChromeOnly] long unforgeableMethod2();
   stringifier;
   void passRenamedInterface(TestRenamedInterface arg);
   [PutForwards=writableByte] readonly attribute TestInterface putForwardsAttr;

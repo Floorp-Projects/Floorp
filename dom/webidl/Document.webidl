@@ -123,7 +123,7 @@ interface Document : Node {
 
 // https://html.spec.whatwg.org/multipage/dom.html#the-document-object
 partial interface Document {
-  [PutForwards=href, Unforgeable] readonly attribute Location? location;
+  [PutForwards=href, LegacyUnforgeable] readonly attribute Location? location;
   [SetterThrows]                           attribute DOMString domain;
   readonly attribute DOMString referrer;
   [Throws] attribute DOMString cookie;
