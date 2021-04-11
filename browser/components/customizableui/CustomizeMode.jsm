@@ -11,7 +11,6 @@ const kPaletteId = "customization-palette";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
 const kDrawInTitlebarPref = "browser.tabs.drawInTitlebar";
-const kExtraDragSpacePref = "browser.tabs.extraDragSpace";
 const kCompactModeShowPref = "browser.compactmode.show";
 const kBookmarksToolbarPref = "browser.toolbars.bookmarks.visibility";
 const kKeepBroadcastAttributes = "keepbroadcastattributeswhencustomizing";
@@ -172,12 +171,9 @@ function CustomizeMode(aWindow) {
 
   if (this._canDrawInTitlebar()) {
     this._updateTitlebarCheckbox();
-    this._updateDragSpaceCheckbox();
     Services.prefs.addObserver(kDrawInTitlebarPref, this);
-    Services.prefs.addObserver(kExtraDragSpacePref, this);
   } else {
     this.$("customization-titlebar-visibility-checkbox").hidden = true;
-    this.$("customization-extra-drag-space-checkbox").hidden = true;
   }
 
   // Observe pref changes to the bookmarks toolbar visibility,
@@ -235,7 +231,6 @@ CustomizeMode.prototype = {
   uninit() {
     if (this._canDrawInTitlebar()) {
       Services.prefs.removeObserver(kDrawInTitlebarPref, this);
-      Services.prefs.removeObserver(kExtraDragSpacePref, this);
     }
     Services.prefs.removeObserver(kBookmarksToolbarPref, this);
   },
@@ -1815,7 +1810,6 @@ CustomizeMode.prototype = {
         this._updateUndoResetButton();
         if (this._canDrawInTitlebar()) {
           this._updateTitlebarCheckbox();
-          this._updateDragSpaceCheckbox();
         }
         break;
     }
@@ -1865,40 +1859,9 @@ CustomizeMode.prototype = {
     }
   },
 
-  _updateDragSpaceCheckbox() {
-    let extraDragSpace = Services.prefs.getBoolPref(kExtraDragSpacePref);
-    let drawInTitlebar = Services.prefs.getBoolPref(
-      kDrawInTitlebarPref,
-      this.window.matchMedia("(-moz-gtk-csd-hide-titlebar-by-default)").matches
-    );
-    let menuBar = this.$("toolbar-menubar");
-    let menuBarEnabled =
-      menuBar &&
-      AppConstants.platform != "macosx" &&
-      menuBar.getAttribute("autohide") != "true";
-
-    let checkbox = this.$("customization-extra-drag-space-checkbox");
-    if (extraDragSpace) {
-      checkbox.setAttribute("checked", "true");
-    } else {
-      checkbox.removeAttribute("checked");
-    }
-
-    if (!drawInTitlebar || menuBarEnabled) {
-      checkbox.setAttribute("disabled", "true");
-    } else {
-      checkbox.removeAttribute("disabled");
-    }
-  },
-
   toggleTitlebar(aShouldShowTitlebar) {
     // Drawing in the titlebar means not showing the titlebar, hence the negation:
     Services.prefs.setBoolPref(kDrawInTitlebarPref, !aShouldShowTitlebar);
-    this._updateDragSpaceCheckbox();
-  },
-
-  toggleDragSpace(aShouldShowDragSpace) {
-    Services.prefs.setBoolPref(kExtraDragSpacePref, aShouldShowDragSpace);
   },
 
   _getBoundsWithoutFlushing(element) {
