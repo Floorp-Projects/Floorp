@@ -219,7 +219,7 @@ def idlTypeNeedsCallContext(type, descriptor=None, allowTreatNonCallableAsNull=F
         # There are some rare cases when we know we have an object, but those
         # are not worth the complexity of optimizing for.
         #
-        # Note that we checked the [TreatNonObjectAsNull] case already when
+        # Note that we checked the [LegacyTreatNonObjectAsNull] case already when
         # unwrapping nullables.
         return True
     if type.isUnion():
@@ -5617,7 +5617,7 @@ def getJSToNativeConversionInfo(
     we're a non-finite float that's not unrestricted.
 
     If allowTreatNonCallableAsNull is true, then [TreatNonCallableAsNull] and
-    [TreatNonObjectAsNull] extended attributes on nullable callback functions
+    [LegacyTreatNonObjectAsNull] extended attributes on nullable callback functions
     will be honored.
 
     If isCallbackReturnValue is "JSImpl" or "Callback", then the declType may be
