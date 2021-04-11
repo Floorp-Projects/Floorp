@@ -3,8 +3,8 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [NoInterfaceObject]
-            interface TestConstructorNoInterfaceObject {
+            [LegacyNoInterfaceObject]
+            interface TestConstructorLegacyNoInterfaceObject {
               constructor();
             };
         """
@@ -20,21 +20,21 @@ def WebIDLTest(parser, harness):
 
     parser.parse(
         """
-        [NoInterfaceObject, NamedConstructor=FooBar]
-        interface TestNamedConstructorNoInterfaceObject {
+        [LegacyNoInterfaceObject, NamedConstructor=FooBar]
+        interface TestNamedConstructorLegacyNoInterfaceObject {
         };
     """
     )
 
-    # Test HTMLConstructor and NoInterfaceObject
+    # Test HTMLConstructor and LegacyNoInterfaceObject
     parser = parser.reset()
 
     threw = False
     try:
         parser.parse(
             """
-            [NoInterfaceObject]
-            interface TestHTMLConstructorNoInterfaceObject {
+            [LegacyNoInterfaceObject]
+            interface TestHTMLConstructorLegacyNoInterfaceObject {
               [HTMLConstructor] constructor();
             };
         """

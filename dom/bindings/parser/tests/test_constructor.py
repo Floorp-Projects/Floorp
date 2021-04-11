@@ -537,7 +537,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [NoInterfaceObject]
+            [LegacyNoInterfaceObject]
             interface InterfaceWithoutInterfaceObject {
               constructor();
             };
@@ -549,7 +549,8 @@ def WebIDLTest(parser, harness):
 
     harness.ok(
         threw,
-        "Can't have a constructor operation on a [NoInterfaceObject] " "interface",
+        "Can't have a constructor operation on a [LegacyNoInterfaceObject] "
+        "interface",
     )
 
     parser = parser.reset()

@@ -49,7 +49,7 @@ interface mixin ExceptionMembers
   readonly attribute DOMString               stack;
 };
 
-[NoInterfaceObject, Exposed=(Window,Worker)]
+[LegacyNoInterfaceObject, Exposed=(Window,Worker)]
 interface Exception {
   // The name of the error code (ie, a string repr of |result|).
   readonly attribute DOMString               name;

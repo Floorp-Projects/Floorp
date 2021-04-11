@@ -9,8 +9,7 @@
                            object? obj2, sequence<Dict> seq, optional any any2,
                            optional object obj3, optional object? obj4),
  NamedConstructor=Example2((long or record<DOMString, any>) arg1),
- Exposed=Window,
- ]
+ Exposed=Window]
 interface TestExampleInterface {
   constructor();
   constructor(DOMString str);

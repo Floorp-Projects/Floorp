@@ -699,12 +699,12 @@ interface mixin WebGL2RenderingContextBase
 WebGL2RenderingContext includes WebGLRenderingContextBase;
 WebGL2RenderingContext includes WebGL2RenderingContextBase;
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface EXT_color_buffer_float {
 };
 
-[NoInterfaceObject,
+[LegacyNoInterfaceObject,
  Exposed=Window]
 interface OVR_multiview2 {
     const GLenum FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR = 0x9630;
