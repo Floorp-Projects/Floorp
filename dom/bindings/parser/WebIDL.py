@@ -1818,9 +1818,9 @@ class IDLInterface(IDLInterfaceOrNamespace):
                     "TreatNonCallableAsNull cannot be specified on interfaces",
                     [attr.location, self.location],
                 )
-            if identifier == "TreatNonObjectAsNull":
+            if identifier == "LegacyTreatNonObjectAsNull":
                 raise WebIDLError(
-                    "TreatNonObjectAsNull cannot be specified on interfaces",
+                    "LegacyTreatNonObjectAsNull cannot be specified on interfaces",
                     [attr.location, self.location],
                 )
             elif identifier == "LegacyNoInterfaceObject":
@@ -5702,10 +5702,11 @@ class IDLCallback(IDLObjectWithScope):
         for attr in attrs:
             if attr.identifier() == "TreatNonCallableAsNull":
                 self._treatNonCallableAsNull = True
-            elif attr.identifier() == "TreatNonObjectAsNull":
+            elif attr.identifier() == "LegacyTreatNonObjectAsNull":
                 if self._isConstructor:
                     raise WebIDLError(
-                        "[TreatNonObjectAsNull] is not supported " "on constructors",
+                        "[LegacyTreatNonObjectAsNull] is not supported "
+                        "on constructors",
                         [self.location],
                     )
                 self._treatNonObjectAsNull = True
@@ -5722,7 +5723,7 @@ class IDLCallback(IDLObjectWithScope):
         if self._treatNonCallableAsNull and self._treatNonObjectAsNull:
             raise WebIDLError(
                 "Cannot specify both [TreatNonCallableAsNull] "
-                "and [TreatNonObjectAsNull]",
+                "and [LegacyTreatNonObjectAsNull]",
                 [self.location],
             )
         if len(unhandledAttrs) != 0:

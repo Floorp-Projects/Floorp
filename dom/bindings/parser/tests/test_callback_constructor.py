@@ -54,7 +54,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [TreatNonObjectAsNull]
+            [LegacyTreatNonObjectAsNull]
             callback constructor CallbackConstructorType = object ();
         """
         )
@@ -62,7 +62,9 @@ def WebIDLTest(parser, harness):
     except:
         threw = True
 
-    harness.ok(threw, "Should throw on TreatNonObjectAsNull callback constructors")
+    harness.ok(
+        threw, "Should throw on LegacyTreatNonObjectAsNull callback constructors"
+    )
 
     parser.reset()
     threw = False

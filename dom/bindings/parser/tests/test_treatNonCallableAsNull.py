@@ -68,7 +68,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [TreatNonCallableAsNull, TreatNonObjectAsNull]
+            [TreatNonCallableAsNull, LegacyTreatNonObjectAsNull]
             callback Function = any(any... arguments);
         """
         )
