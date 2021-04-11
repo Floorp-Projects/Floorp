@@ -43,7 +43,7 @@ set_config(
 option(
     "--disable-update-agent",
     when=target_is_windows | target_is_osx,
-    default=True,
+    default=depends("--enable-backgroundtasks")(lambda x: bool(x)),
     help="{Enable|Disable} building update agent",
 )
 
@@ -53,6 +53,18 @@ set_config(
         lambda _: True
     ),
 )
+
+
+@depends(
+    "--enable-update-agent",
+    "--enable-backgroundtasks",
+    when=target_is_windows | target_is_osx,
+)
+def check_update_agent(update_agent, backgroundtasks):
+    if update_agent and not backgroundtasks:
+        die("--enable-backgroundtasks is required to --enable-update-agent")
+    return update_agent
+
 
 # Enable or disable the default browser agent, which monitors the user's default
 # browser setting on Windows.

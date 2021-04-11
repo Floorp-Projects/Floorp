@@ -22,11 +22,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 if CONFIG["MOZ_MAINTENANCE_SERVICE"]:
     XPCSHELL_TESTS_MANIFESTS += ["unit_service_updater/xpcshell.ini"]
 
-if (
-    CONFIG["MOZ_BUILD_APP"] == "browser"
-    and CONFIG["MOZ_BACKGROUNDTASKS"]
-    and CONFIG["MOZ_UPDATE_AGENT"]
-):
+if CONFIG["MOZ_BUILD_APP"] == "browser" and CONFIG["MOZ_UPDATE_AGENT"]:
     XPCSHELL_TESTS_MANIFESTS += ["unit_background_update/xpcshell.ini"]
 
 SimplePrograms(
