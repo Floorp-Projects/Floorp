@@ -88,6 +88,9 @@ abstract class BaseBrowserTrayList @JvmOverloads constructor(
         tabsFeature.stop()
         swipeToDelete.stop()
 
+        // Release the adapter so that `onDetachedFromRecyclerView` will be called in the adapter.
+        adapter = null
+
         touchHelper.attachToRecyclerView(null)
     }
 }
