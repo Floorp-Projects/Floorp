@@ -439,13 +439,7 @@ menuitem.bookmark-item {
     height: var(--tab-min-height);
   }
   :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"] {
-    height: calc(var(--tab-min-height) + var(--space-above-tabbar));
-  }
-
-  /* Add extra space to titlebar for dragging */
-  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .toolbar-items,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
-    padding-top: var(--space-above-tabbar);
+    height: var(--tab-min-height);
   }
 
   /* Make #TabsToolbar transparent as we style underlying #titlebar with
