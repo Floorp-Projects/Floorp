@@ -267,11 +267,11 @@ partial interface Document {
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#other-elements%2C-attributes-and-apis
 partial interface Document {
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString fgColor;
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString linkColor;
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString vlinkColor;
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString alinkColor;
-  [CEReactions] attribute [TreatNullAs=EmptyString] DOMString bgColor;
+  [CEReactions] attribute [LegacyNullToEmptyString] DOMString fgColor;
+  [CEReactions] attribute [LegacyNullToEmptyString] DOMString linkColor;
+  [CEReactions] attribute [LegacyNullToEmptyString] DOMString vlinkColor;
+  [CEReactions] attribute [LegacyNullToEmptyString] DOMString alinkColor;
+  [CEReactions] attribute [LegacyNullToEmptyString] DOMString bgColor;
 
   [SameObject] readonly attribute HTMLCollection anchors;
   [SameObject] readonly attribute HTMLCollection applets;

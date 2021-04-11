@@ -32,9 +32,9 @@ interface HTMLFrameElement : HTMLElement {
   readonly attribute WindowProxy? contentWindow;
 
   [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString marginHeight;
+  attribute [LegacyNullToEmptyString] DOMString marginHeight;
   [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString marginWidth;
+  attribute [LegacyNullToEmptyString] DOMString marginWidth;
 };
 
 HTMLFrameElement includes MozFrameLoaderOwner;

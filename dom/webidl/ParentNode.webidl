@@ -19,10 +19,10 @@ interface mixin ParentNode {
 
   [ChromeOnly]
   HTMLCollection getElementsByAttribute(DOMString name,
-                                        [TreatNullAs=EmptyString] DOMString value);
+                                        [LegacyNullToEmptyString] DOMString value);
   [ChromeOnly, Throws]
   HTMLCollection getElementsByAttributeNS(DOMString? namespaceURI, DOMString name,
-                                          [TreatNullAs=EmptyString] DOMString value);
+                                          [LegacyNullToEmptyString] DOMString value);
 
   [CEReactions, Throws, Unscopable]
   void prepend((Node or DOMString)... nodes);

@@ -1401,7 +1401,7 @@ interface TestCEReactionsInterface {
 
 typedef [EnforceRange] octet OctetRange;
 typedef [Clamp] octet OctetClamp;
-typedef [TreatNullAs=EmptyString] DOMString NullEmptyString;
+typedef [LegacyNullToEmptyString] DOMString NullEmptyString;
 // typedef [TreatNullAs=EmptyString] JSString NullEmptyJSString;
 
 dictionary TestAttributesOnDictionaryMembers {

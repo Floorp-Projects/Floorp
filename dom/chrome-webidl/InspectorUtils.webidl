@@ -16,7 +16,7 @@ namespace InspectorUtils {
   sequence<StyleSheet> getAllStyleSheets(Document document, optional boolean documentOnly = false);
   sequence<CSSStyleRule> getCSSStyleRules(
     Element element,
-    optional [TreatNullAs=EmptyString] DOMString pseudo = "",
+    optional [LegacyNullToEmptyString] DOMString pseudo = "",
     optional boolean relevantLinkVisited = false);
   unsigned long getRuleLine(CSSRule rule);
   unsigned long getRuleColumn(CSSRule rule);
@@ -31,7 +31,7 @@ namespace InspectorUtils {
       Element element,
       CSSStyleRule rule,
       unsigned long selectorIndex,
-      optional [TreatNullAs=EmptyString] DOMString pseudo = "",
+      optional [LegacyNullToEmptyString] DOMString pseudo = "",
       optional boolean includeVisitedStyle = false);
   boolean isInheritedProperty(UTF8String property);
   sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options = {});
@@ -77,7 +77,7 @@ namespace InspectorUtils {
   boolean hasPseudoClassLock(Element element, DOMString pseudoClass);
   void clearPseudoClassLocks(Element element);
   [Throws] void parseStyleSheet(CSSStyleSheet sheet, UTF8String input);
-  boolean isCustomElementName([TreatNullAs=EmptyString] DOMString name,
+  boolean isCustomElementName([LegacyNullToEmptyString] DOMString name,
                               DOMString? namespaceURI);
 
   boolean isElementThemed(Element element);

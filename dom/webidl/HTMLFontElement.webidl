@@ -15,7 +15,7 @@
 interface HTMLFontElement : HTMLElement {
   [HTMLConstructor] constructor();
 
-  [CEReactions, SetterThrows] attribute [TreatNullAs=EmptyString] DOMString color;
+  [CEReactions, SetterThrows] attribute [LegacyNullToEmptyString] DOMString color;
   [CEReactions, SetterThrows]                          attribute DOMString face;
   [CEReactions, SetterThrows]                          attribute DOMString size;
 };

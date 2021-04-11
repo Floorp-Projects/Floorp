@@ -26,7 +26,7 @@ interface HTMLElement : Element {
            attribute DOMString dir;
 
   [CEReactions, GetterThrows, Pure]
-           attribute [TreatNullAs=EmptyString] DOMString innerText;
+           attribute [LegacyNullToEmptyString] DOMString innerText;
 
   // user interaction
   [CEReactions, SetterThrows, Pure]

@@ -56,7 +56,7 @@ interface XSLTProcessor {
      * @param value        The new value of the XSLT parameter
      */
     [Throws]
-    void setParameter([TreatNullAs=EmptyString] DOMString namespaceURI,
+    void setParameter([LegacyNullToEmptyString] DOMString namespaceURI,
                       DOMString localName,
                       any value);
 
@@ -69,7 +69,7 @@ interface XSLTProcessor {
      * @return nsIVariant  The value of the XSLT parameter
      */
     [Throws]
-    nsIVariant? getParameter([TreatNullAs=EmptyString] DOMString namespaceURI,
+    nsIVariant? getParameter([LegacyNullToEmptyString] DOMString namespaceURI,
                              DOMString localName);
     /**
      * Removes a parameter, if set. This will make the processor use the
@@ -79,7 +79,7 @@ interface XSLTProcessor {
      * @param localName    The local name of the XSLT parameter
      */
     [Throws]
-    void removeParameter([TreatNullAs=EmptyString] DOMString namespaceURI,
+    void removeParameter([LegacyNullToEmptyString] DOMString namespaceURI,
                          DOMString localName);
 
     /**

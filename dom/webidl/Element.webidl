@@ -241,9 +241,9 @@ partial interface Element {
 // http://domparsing.spec.whatwg.org/#extensions-to-the-element-interface
 partial interface Element {
   [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, Pure, SetterThrows, GetterCanOOM]
-  attribute [TreatNullAs=EmptyString] DOMString innerHTML;
+  attribute [LegacyNullToEmptyString] DOMString innerHTML;
   [CEReactions, Pure, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString outerHTML;
+  attribute [LegacyNullToEmptyString] DOMString outerHTML;
   [CEReactions, Throws]
   void insertAdjacentHTML(DOMString position, DOMString text);
 };

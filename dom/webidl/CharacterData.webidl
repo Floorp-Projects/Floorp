@@ -13,7 +13,7 @@
 [Exposed=Window]
 interface CharacterData : Node {
   [Pure, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString data;
+  attribute [LegacyNullToEmptyString] DOMString data;
   [Pure]
   readonly attribute unsigned long length;
   [Throws]

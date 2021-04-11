@@ -56,9 +56,9 @@ partial interface HTMLTableElement {
            attribute DOMString width;
 
   [CEReactions, SetterThrows]
-           attribute [TreatNullAs=EmptyString] DOMString bgColor;
+           attribute [LegacyNullToEmptyString] DOMString bgColor;
   [CEReactions, SetterThrows]
-           attribute [TreatNullAs=EmptyString] DOMString cellPadding;
+           attribute [LegacyNullToEmptyString] DOMString cellPadding;
   [CEReactions, SetterThrows]
-           attribute [TreatNullAs=EmptyString] DOMString cellSpacing;
+           attribute [LegacyNullToEmptyString] DOMString cellSpacing;
 };
