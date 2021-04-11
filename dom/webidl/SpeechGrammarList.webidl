@@ -11,7 +11,7 @@
  */
 
 [Pref="media.webspeech.recognition.enable",
- NamedConstructor=webkitSpeechGrammarList,
+ LegacyFactoryFunction=webkitSpeechGrammarList,
  Func="SpeechRecognition::IsAuthorized",
  Exposed=Window]
 interface SpeechGrammarList {

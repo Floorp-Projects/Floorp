@@ -24,9 +24,9 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [Global, Exposed=TestNamedConstructorGlobal,
-             NamedConstructor=FooBar]
-            interface TestNamedConstructorGlobal {
+            [Global, Exposed=TestLegacyFactoryFunctionGlobal,
+             LegacyFactoryFunction=FooBar]
+            interface TestLegacyFactoryFunctionGlobal {
             };
         """
         )
@@ -41,9 +41,9 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            [NamedConstructor=FooBar, Global,
-             Exposed=TestNamedConstructorGlobal]
-            interface TestNamedConstructorGlobal {
+            [LegacyFactoryFunction=FooBar, Global,
+             Exposed=TestLegacyFactoryFunctionGlobal]
+            interface TestLegacyFactoryFunctionGlobal {
             };
         """
         )

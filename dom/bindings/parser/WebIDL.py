@@ -315,9 +315,9 @@ class IDLScope(IDLObject):
             )
 
         # We do the merging of overloads here as opposed to in IDLInterface
-        # because we need to merge overloads of NamedConstructors and we need to
+        # because we need to merge overloads of LegacyFactoryFunctions and we need to
         # detect conflicts in those across interfaces. See also the comment in
-        # IDLInterface.addExtendedAttributes for "NamedConstructor".
+        # IDLInterface.addExtendedAttributes for "LegacyFactoryFunction".
         if isinstance(originalObject, IDLMethod) and isinstance(newObject, IDLMethod):
             return originalObject.addOverload(newObject)
 
@@ -632,7 +632,7 @@ class IDLPartialInterfaceOrNamespace(IDLObject):
         for attr in attrs:
             identifier = attr.identifier()
 
-            if identifier == "NamedConstructor":
+            if identifier == "LegacyFactoryFunction":
                 self.propagatedExtendedAttrs.append(attr)
             elif identifier == "SecureContext":
                 self._haveSecureContextExtendedAttribute = True
@@ -947,7 +947,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         # namedConstructors needs deterministic ordering because bindings code
         # outputs the constructs in the order that namedConstructors enumerates
         # them.
-        self.namedConstructors = list()
+        self.legacyFactoryFunctions = list()
         self.legacyWindowAliases = []
         self.includedMixins = set()
         # self.interfacesBasedOnSelf is the set of interfaces that inherit from
@@ -1177,10 +1177,10 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
             # it doesn't get in the way later.
             self.members.remove(ctor)
 
-        for ctor in self.namedConstructors:
+        for ctor in self.legacyFactoryFunctions:
             if self.globalNames:
                 raise WebIDLError(
-                    "Can't have both a named constructor and [Global]",
+                    "Can't have both a legacy factory function and [Global]",
                     [self.location, ctor.location],
                 )
             assert len(ctor._exposureGlobalNames) == 0
@@ -1477,7 +1477,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         ctor = self.ctor()
         if ctor is not None:
             ctor.validate()
-        for namedCtor in self.namedConstructors:
+        for namedCtor in self.legacyFactoryFunctions:
             namedCtor.validate()
 
         indexedGetter = None
@@ -1829,10 +1829,10 @@ class IDLInterface(IDLInterfaceOrNamespace):
                     )
 
                 self._noInterfaceObject = True
-            elif identifier == "NamedConstructor":
+            elif identifier == "LegacyFactoryFunction":
                 if not attr.hasValue():
                     raise WebIDLError(
-                        "NamedConstructor must either take an identifier or take a named argument list",
+                        "LegacyFactoryFunction must either take an identifier or take a named argument list",
                         [attr.location],
                     )
 
@@ -1849,27 +1849,27 @@ class IDLInterface(IDLInterfaceOrNamespace):
                     [IDLExtendedAttribute(self.location, ("Throws",))]
                 )
 
-                # We need to detect conflicts for NamedConstructors across
+                # We need to detect conflicts for LegacyFactoryFunctions across
                 # interfaces. We first call resolve on the parentScope,
-                # which will merge all NamedConstructors with the same
+                # which will merge all LegacyFactoryFunctions with the same
                 # identifier accross interfaces as overloads.
                 method.resolve(self.parentScope)
 
                 # Then we look up the identifier on the parentScope. If the
                 # result is the same as the method we're adding then it
                 # hasn't been added as an overload and it's the first time
-                # we've encountered a NamedConstructor with that identifier.
+                # we've encountered a LegacyFactoryFunction with that identifier.
                 # If the result is not the same as the method we're adding
                 # then it has been added as an overload and we need to check
                 # whether the result is actually one of our existing
-                # NamedConstructors.
+                # LegacyFactoryFunctions.
                 newMethod = self.parentScope.lookupIdentifier(method.identifier)
                 if newMethod == method:
-                    self.namedConstructors.append(method)
-                elif newMethod not in self.namedConstructors:
+                    self.legacyFactoryFunctions.append(method)
+                elif newMethod not in self.legacyFactoryFunctions:
                     raise WebIDLError(
-                        "NamedConstructor conflicts with a "
-                        "NamedConstructor of a different interface",
+                        "LegacyFactoryFunction conflicts with a "
+                        "LegacyFactoryFunction of a different interface",
                         [method.location, newMethod.location],
                     )
             elif identifier == "ExceptionClass":
@@ -6479,7 +6479,7 @@ class IDLConstructor(IDLMethod):
                 raise WebIDLError(
                     "[HTMLConstructor] must take no arguments", [attr.location]
                 )
-            # We shouldn't end up here for named constructors.
+            # We shouldn't end up here for legacy factory functions.
             assert self.identifier.name == "constructor"
 
             if any(len(sig[1]) != 0 for sig in self.signatures()):
