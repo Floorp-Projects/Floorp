@@ -34,7 +34,7 @@ from Configuration import (
     getTypesFromCallback,
     getAllTypes,
     Descriptor,
-    MemberIsUnforgeable,
+    MemberIsLegacyUnforgeable,
     iteratorNativeType,
 )
 
@@ -859,7 +859,10 @@ class CGPrototypeJSClass(CGThing):
         slotCount = "DOM_INTERFACE_PROTO_SLOTS_BASE"
         # Globals handle unforgeables directly in Wrap() instead of
         # via a holder.
-        if self.descriptor.hasUnforgeableMembers and not self.descriptor.isGlobal():
+        if (
+            self.descriptor.hasLegacyUnforgeableMembers
+            and not self.descriptor.isGlobal()
+        ):
             slotCount += (
                 " + 1 /* slot for the JSObject holding the unforgeable properties */"
             )
@@ -2762,7 +2765,7 @@ class MethodDefiner(PropertyDefiner):
                 for m in descriptor.interface.members
                 if m.isMethod()
                 and m.isStatic() == static
-                and MemberIsUnforgeable(m, descriptor) == unforgeable
+                and MemberIsLegacyUnforgeable(m, descriptor) == unforgeable
                 and (
                     not crossOriginOnly or m.getExtendedAttribute("CrossOriginCallable")
                 )
@@ -2880,7 +2883,7 @@ class MethodDefiner(PropertyDefiner):
 
         if not static:
             stringifier = descriptor.operations["Stringifier"]
-            if stringifier and unforgeable == MemberIsUnforgeable(
+            if stringifier and unforgeable == MemberIsLegacyUnforgeable(
                 stringifier, descriptor
             ):
                 toStringDesc = {
@@ -2896,7 +2899,9 @@ class MethodDefiner(PropertyDefiner):
                     self.chrome.append(toStringDesc)
                 else:
                     self.regular.append(toStringDesc)
-            if unforgeable and descriptor.interface.getExtendedAttribute("Unforgeable"):
+            if unforgeable and descriptor.interface.getExtendedAttribute(
+                "LegacyUnforgeable"
+            ):
                 # Synthesize our valueOf method
                 self.regular.append(
                     {
@@ -3045,7 +3050,7 @@ class AttrDefiner(PropertyDefiner):
                 for m in descriptor.interface.members
                 if m.isAttr()
                 and m.isStatic() == static
-                and MemberIsUnforgeable(m, descriptor) == unforgeable
+                and MemberIsLegacyUnforgeable(m, descriptor) == unforgeable
                 and (
                     not crossOriginOnly
                     or m.getExtendedAttribute("CrossOriginReadable")
@@ -3836,7 +3841,10 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
         # Globals handle unforgeables directly in Wrap() instead of
         # via a holder.
-        if self.descriptor.hasUnforgeableMembers and not self.descriptor.isGlobal():
+        if (
+            self.descriptor.hasLegacyUnforgeableMembers
+            and not self.descriptor.isGlobal()
+        ):
             assert needInterfacePrototypeObject
 
             # We want to use the same JSClass and prototype as the object we'll
@@ -4362,7 +4370,7 @@ def InitUnforgeablePropertiesOnHolder(
 
     defineUnforgeableAttrs = fill(
         """
-        if (!DefineUnforgeableAttributes(aCx, ${holderName}, %s)) {
+        if (!DefineLegacyUnforgeableAttributes(aCx, ${holderName}, %s)) {
           $*{failureCode}
         }
         """,
@@ -4371,7 +4379,7 @@ def InitUnforgeablePropertiesOnHolder(
     )
     defineUnforgeableMethods = fill(
         """
-        if (!DefineUnforgeableMethods(aCx, ${holderName}, %s)) {
+        if (!DefineLegacyUnforgeableMethods(aCx, ${holderName}, %s)) {
           $*{failureCode}
         }
         """,
@@ -4394,7 +4402,7 @@ def InitUnforgeablePropertiesOnHolder(
                 )
             )
 
-    if descriptor.interface.getExtendedAttribute("Unforgeable"):
+    if descriptor.interface.getExtendedAttribute("LegacyUnforgeable"):
         # We do our undefined toPrimitive here, not as a regular property
         # because we don't have a concept of value props anywhere in IDL.
         unforgeables.append(
@@ -4425,7 +4433,7 @@ def CopyUnforgeablePropertiesToInstance(descriptor, failureCode):
     """
     assert not descriptor.isGlobal()
 
-    if not descriptor.hasUnforgeableMembers:
+    if not descriptor.hasLegacyUnforgeableMembers:
         return ""
 
     copyCode = [
@@ -4790,7 +4798,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             """
         )
 
-        if self.descriptor.hasUnforgeableMembers:
+        if self.descriptor.hasLegacyUnforgeableMembers:
             unforgeable = InitUnforgeablePropertiesOnHolder(
                 self.descriptor, self.properties, failureCode, "aReflector"
             ).define()
@@ -14672,7 +14680,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     JSContext* cx = cx_;
                     """
                 )
-            if self.descriptor.hasUnforgeableMembers:
+            if self.descriptor.hasLegacyUnforgeableMembers:
                 raise TypeError(
                     "Can't handle a named setter on an interface "
                     "that has unforgeables.  Figure out how that "
@@ -14741,7 +14749,7 @@ def getDeleterBody(descriptor, type, foundVar=None):
     if deleter:
         assert type == "Named"
         assert foundVar is not None
-        if descriptor.hasUnforgeableMembers:
+        if descriptor.hasLegacyUnforgeableMembers:
             raise TypeError(
                 "Can't handle a deleter on an interface "
                 "that has unforgeables.  Figure out how "
@@ -15424,7 +15432,7 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
                     + ": "
                     + "Can't cope with [OverrideBuiltins] and an indexed getter"
                 )
-            if self.descriptor.hasUnforgeableMembers:
+            if self.descriptor.hasLegacyUnforgeableMembers:
                 raise ValueError(
                     "In interface "
                     + self.descriptor.name

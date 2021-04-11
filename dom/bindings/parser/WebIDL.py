@@ -1220,17 +1220,17 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                     ],
                 )
 
-        # Deal with interfaces marked [Unforgeable], now that we have our full
+        # Deal with interfaces marked [LegacyUnforgeable], now that we have our full
         # member list, except unforgeables pulled in from parents.  We want to
         # do this before we set "originatingInterface" on our unforgeable
         # members.
-        if self.getExtendedAttribute("Unforgeable"):
+        if self.getExtendedAttribute("LegacyUnforgeable"):
             # Check that the interface already has all the things the
             # spec would otherwise require us to synthesize and is
             # missing the ones we plan to synthesize.
             if not any(m.isMethod() and m.isStringifier() for m in self.members):
                 raise WebIDLError(
-                    "Unforgeable interface %s does not have a "
+                    "LegacyUnforgeable interface %s does not have a "
                     "stringifier" % self.identifier.name,
                     [self.location],
                 )
@@ -1238,7 +1238,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
             for m in self.members:
                 if m.identifier.name == "toJSON":
                     raise WebIDLError(
-                        "Unforgeable interface %s has a "
+                        "LegacyUnforgeable interface %s has a "
                         "toJSON so we won't be able to add "
                         "one ourselves" % self.identifier.name,
                         [self.location, m.location],
@@ -1246,7 +1246,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
 
                 if m.identifier.name == "valueOf" and not m.isStatic():
                     raise WebIDLError(
-                        "Unforgeable interface %s has a valueOf "
+                        "LegacyUnforgeable interface %s has a valueOf "
                         "member so we won't be able to add one "
                         "ourselves" % self.identifier.name,
                         [self.location, m.location],
@@ -1255,7 +1255,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         for member in self.members:
             if (
                 (member.isAttr() or member.isMethod())
-                and member.isUnforgeable()
+                and member.isLegacyUnforgeable()
                 and not hasattr(member, "originatingInterface")
             ):
                 member.originatingInterface = self
@@ -1305,7 +1305,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                     self._ownMembersInSlots += 1
 
         if self.parent:
-            # Make sure we don't shadow any of the [Unforgeable] attributes on our
+            # Make sure we don't shadow any of the [LegacyUnforgeable] attributes on our
             # ancestor interfaces.  We don't have to worry about mixins here, because
             # those have already been imported into the relevant .members lists.  And
             # we don't have to worry about anything other than our parent, because it
@@ -1314,7 +1314,8 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
             for unforgeableMember in (
                 member
                 for member in self.parent.members
-                if (member.isAttr() or member.isMethod()) and member.isUnforgeable()
+                if (member.isAttr() or member.isMethod())
+                and member.isLegacyUnforgeable()
             ):
                 shadows = [
                     m
@@ -1326,7 +1327,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                 if len(shadows) != 0:
                     locs = [unforgeableMember.location] + [s.location for s in shadows]
                     raise WebIDLError(
-                        "Interface %s shadows [Unforgeable] "
+                        "Interface %s shadows [LegacyUnforgeable] "
                         "members of %s"
                         % (self.identifier.name, ancestor.identifier.name),
                         locs,
@@ -1465,7 +1466,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                     )
 
         # We also don't support inheriting from unforgeable interfaces.
-        if self.getExtendedAttribute("Unforgeable") and self.hasChildInterfaces():
+        if self.getExtendedAttribute("LegacyUnforgeable") and self.hasChildInterfaces():
             locations = [self.location] + list(
                 i.location for i in self.interfacesBasedOnSelf if i.parent == self
             )
@@ -1578,9 +1579,10 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
                             "identifierless operation",
                             [member.location],
                         )
-                    if member.isUnforgeable():
+                    if member.isLegacyUnforgeable():
                         raise WebIDLError(
-                            "[Alias] must not be used on an " "[Unforgeable] operation",
+                            "[Alias] must not be used on an "
+                            "[LegacyUnforgeable] operation",
                             [member.location],
                         )
 
@@ -1927,7 +1929,7 @@ class IDLInterface(IDLInterfaceOrNamespace):
                 identifier == "NeedResolve"
                 or identifier == "OverrideBuiltins"
                 or identifier == "ChromeOnly"
-                or identifier == "Unforgeable"
+                or identifier == "LegacyUnforgeable"
                 or identifier == "LegacyEventInit"
                 or identifier == "ProbablyShortLivingWrapper"
                 or identifier == "LegacyUnenumerableNamedProperties"
@@ -4971,7 +4973,7 @@ class IDLAttribute(IDLInterfaceMember):
         self.inherit = inherit
         self._static = static
         self.legacyLenientThis = False
-        self._unforgeable = False
+        self._legacyUnforgeable = False
         self.stringifier = stringifier
         self.slotIndices = None
         assert maplikeOrSetlike is None or isinstance(
@@ -5224,13 +5226,13 @@ class IDLAttribute(IDLInterfaceMember):
                     [attr.location, self.location],
                 )
             self.legacyLenientThis = True
-        elif identifier == "Unforgeable":
+        elif identifier == "LegacyUnforgeable":
             if self.isStatic():
                 raise WebIDLError(
-                    "[Unforgeable] is only allowed on non-static " "attributes",
+                    "[LegacyUnforgeable] is only allowed on non-static " "attributes",
                     [attr.location, self.location],
                 )
-            self._unforgeable = True
+            self._legacyUnforgeable = True
         elif identifier == "SameObject" and not self.readonly:
             raise WebIDLError(
                 "[SameObject] only allowed on readonly attributes",
@@ -5468,8 +5470,8 @@ class IDLAttribute(IDLInterfaceMember):
         """
         return self.maplikeOrSetlike is not None
 
-    def isUnforgeable(self):
-        return self._unforgeable
+    def isLegacyUnforgeable(self):
+        return self._legacyUnforgeable
 
     def _getDependentObjects(self):
         return set([self.type])
@@ -5843,7 +5845,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         self._htmlConstructor = False
         self.underlyingAttr = underlyingAttr
         self._specialType = specialType
-        self._unforgeable = False
+        self._legacyUnforgeable = False
         self.dependsOn = "Everything"
         self.affects = "Everything"
         self.aliases = []
@@ -6288,13 +6290,13 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 "Methods must not be flagged as " "[%s]" % identifier,
                 [attr.location, self.location],
             )
-        elif identifier == "Unforgeable":
+        elif identifier == "LegacyUnforgeable":
             if self.isStatic():
                 raise WebIDLError(
-                    "[Unforgeable] is only allowed on non-static " "methods",
+                    "[LegacyUnforgeable] is only allowed on non-static " "methods",
                     [attr.location, self.location],
                 )
-            self._unforgeable = True
+            self._legacyUnforgeable = True
         elif identifier == "SameObject":
             raise WebIDLError(
                 "Methods must not be flagged as [SameObject]",
@@ -6436,8 +6438,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
     def returnsPromise(self):
         return self._overloads[0].returnType.isPromise()
 
-    def isUnforgeable(self):
-        return self._unforgeable
+    def isLegacyUnforgeable(self):
+        return self._legacyUnforgeable
 
     def _getDependentObjects(self):
         deps = set()

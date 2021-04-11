@@ -6,7 +6,7 @@ def WebIDLTest(parser, harness):
         """
         [LegacyNoInterfaceObject]
         interface TestExtendedAttr {
-          [Unforgeable] readonly attribute byte b;
+          [LegacyUnforgeable] readonly attribute byte b;
         };
     """
     )
