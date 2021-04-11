@@ -757,9 +757,6 @@ enum class StyleMaskComposite : uint8_t {
   Exclude
 };
 
-// See nsStyleText::mControlCharacterVisibility
-enum class StyleControlCharacterVisibility : uint8_t { Hidden = 0, Visible };
-
 // scroll-behavior
 enum class StyleScrollBehavior : uint8_t {
   Auto,
