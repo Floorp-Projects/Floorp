@@ -179,7 +179,12 @@ pref("app.update.langpack.enabled", true);
   // out of the background update feature via Normandy.  (The per-installation
   // pref allows profiles beyond the default profile to enable and disable the
   // background update feature manually.)
+#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+  pref("app.update.background.scheduling.enabled", true);
+  pref("app.update.background.experimental", true);
+#else
   pref("app.update.background.scheduling.enabled", false);
+#endif
   // By default, check for updates when the browser is not running every 7 hours.
   pref("app.update.background.interval", 25200);
 #endif
