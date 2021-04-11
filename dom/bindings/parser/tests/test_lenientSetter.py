@@ -16,19 +16,19 @@ def should_throw(parser, harness, message, code):
 
 
 def WebIDLTest(parser, harness):
-    # The [LenientSetter] extended attribute MUST take no arguments.
+    # The [LegacyLenientSetter] extended attribute MUST take no arguments.
     should_throw(
         parser,
         harness,
         "no arguments",
         """
         interface I {
-          [LenientSetter=X] readonly attribute long A;
+          [LegacyLenientSetter=X] readonly attribute long A;
         };
     """,
     )
 
-    # An attribute with the [LenientSetter] extended attribute MUST NOT
+    # An attribute with the [LegacyLenientSetter] extended attribute MUST NOT
     # also be declared with the [PutForwards] extended attribute.
     should_throw(
         parser,
@@ -36,7 +36,7 @@ def WebIDLTest(parser, harness):
         "PutForwards",
         """
         interface I {
-          [PutForwards=B, LenientSetter] readonly attribute J A;
+          [PutForwards=B, LegacyLenientSetter] readonly attribute J A;
         };
         interface J {
           attribute long B;
@@ -44,7 +44,7 @@ def WebIDLTest(parser, harness):
     """,
     )
 
-    # An attribute with the [LenientSetter] extended attribute MUST NOT
+    # An attribute with the [LegacyLenientSetter] extended attribute MUST NOT
     # also be declared with the [Replaceable] extended attribute.
     should_throw(
         parser,
@@ -52,12 +52,12 @@ def WebIDLTest(parser, harness):
         "Replaceable",
         """
         interface I {
-          [Replaceable, LenientSetter] readonly attribute J A;
+          [Replaceable, LegacyLenientSetter] readonly attribute J A;
         };
     """,
     )
 
-    # The [LenientSetter] extended attribute MUST NOT be used on an
+    # The [LegacyLenientSetter] extended attribute MUST NOT be used on an
     # attribute that is not read only.
     should_throw(
         parser,
@@ -65,12 +65,12 @@ def WebIDLTest(parser, harness):
         "writable attribute",
         """
         interface I {
-          [LenientSetter] attribute long A;
+          [LegacyLenientSetter] attribute long A;
         };
     """,
     )
 
-    # The [LenientSetter] extended attribute MUST NOT be used on a
+    # The [LegacyLenientSetter] extended attribute MUST NOT be used on a
     # static attribute.
     should_throw(
         parser,
@@ -78,7 +78,7 @@ def WebIDLTest(parser, harness):
         "static attribute",
         """
         interface I {
-          [LenientSetter] static readonly attribute long A;
+          [LegacyLenientSetter] static readonly attribute long A;
         };
     """,
     )
