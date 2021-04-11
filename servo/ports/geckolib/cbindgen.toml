@@ -151,6 +151,7 @@ include = [
   "TextTransform",
   "TextJustify",
   "TextOverflow",
+  "MozControlCharacterVisibility",
   "RubyPosition",
   "MozListReversed",
   "Owned",

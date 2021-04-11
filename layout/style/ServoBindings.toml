@@ -162,7 +162,6 @@ rusty-enums = [
     "mozilla::StyleBackfaceVisibility",
     "mozilla::StyleBlend",
     "mozilla::StyleMaskComposite",
-    "mozilla::StyleControlCharacterVisibility",
     "mozilla::StyleWritingModeProperty",
 ]
 whitelist-vars = [
@@ -433,6 +432,7 @@ cbindgen-types = [
     { gecko = "StyleOverflowWrap", servo = "crate::values::computed::OverflowWrap" },
     { gecko = "StyleWordBreak", servo = "crate::values::computed::WordBreak" },
     { gecko = "StyleTextJustify", servo = "crate::values::computed::TextJustify" },
+    { gecko = "StyleMozControlCharacterVisibility", servo = "crate::values::computed::text::MozControlCharacterVisibility" },
     { gecko = "StyleLineBreak", servo = "crate::values::computed::LineBreak" },
     { gecko = "StyleUserSelect", servo = "crate::values::computed::UserSelect" },
     { gecko = "StyleBreakBetween", servo = "crate::values::computed::BreakBetween" },
