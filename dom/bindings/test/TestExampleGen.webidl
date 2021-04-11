@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-[NamedConstructor=Example,
- NamedConstructor=Example(DOMString str),
- NamedConstructor=Example2(DictForConstructor dict, any any1, object obj1,
+[LegacyFactoryFunction=Example,
+ LegacyFactoryFunction=Example(DOMString str),
+ LegacyFactoryFunction=Example2(DictForConstructor dict, any any1, object obj1,
                            object? obj2, sequence<Dict> seq, optional any any2,
                            optional object obj3, optional object? obj4),
- NamedConstructor=Example2((long or record<DOMString, any>) arg1),
+ LegacyFactoryFunction=Example2((long or record<DOMString, any>) arg1),
  Exposed=Window]
 interface TestExampleInterface {
   constructor();

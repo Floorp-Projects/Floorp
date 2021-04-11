@@ -20,8 +20,8 @@ def WebIDLTest(parser, harness):
 
     parser.parse(
         """
-        [LegacyNoInterfaceObject, NamedConstructor=FooBar]
-        interface TestNamedConstructorLegacyNoInterfaceObject {
+        [LegacyNoInterfaceObject, LegacyFactoryFunction=FooBar]
+        interface TestLegacyFactoryFunctionLegacyNoInterfaceObject {
         };
     """
     )
