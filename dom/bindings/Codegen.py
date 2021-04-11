@@ -3121,7 +3121,7 @@ class AttrDefiner(PropertyDefiner):
                 else:
                     exceptionPolicy = "ThrowExceptions"
 
-                if attr.hasLenientThis():
+                if attr.hasLegacyLenientThis():
                     if attr.getExtendedAttribute("CrossOriginReadable"):
                         raise TypeError(
                             "Can't handle lenient cross-origin "
@@ -3169,7 +3169,7 @@ class AttrDefiner(PropertyDefiner):
                 accessor = "set_" + IDLToCIdentifier(attr.identifier.name)
                 jitinfo = "nullptr"
             else:
-                if attr.hasLenientThis():
+                if attr.hasLegacyLenientThis():
                     if attr.getExtendedAttribute("CrossOriginWritable"):
                         raise TypeError(
                             "Can't handle lenient cross-origin "

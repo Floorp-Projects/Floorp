@@ -185,7 +185,7 @@ partial interface Document {
   //(Not implemented)readonly attribute HTMLCollection commands;
 
   // special event handler IDL attributes that only apply to Document objects
-  [LenientThis] attribute EventHandler onreadystatechange;
+  [LegacyLenientThis] attribute EventHandler onreadystatechange;
 
   // Gecko extensions?
                 attribute EventHandler onbeforescriptexecute;
