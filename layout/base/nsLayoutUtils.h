@@ -2883,11 +2883,6 @@ class nsLayoutUtils {
   static nsPoint ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
                                           nsIFrame* aFrame);
 
-  // Return the default value to be used for -moz-control-character-visibility,
-  // from preferences.
-  static mozilla::StyleControlCharacterVisibility
-  ControlCharVisibilityDefault();
-
   // Callers are responsible to ensure the user-font-set is up-to-date if
   // aUseUserFontSet is true.
   static already_AddRefed<nsFontMetrics> GetMetricsFor(
