@@ -34,7 +34,7 @@ class DefaultTabsTrayController(
     private val browsingModeManager: BrowsingModeManager,
     private val navController: NavController,
     private val profiler: Profiler?,
-    private val dismissTabTray: () -> Unit,
+    private val navigationInteractor: NavigationInteractor,
     private val metrics: MetricController,
     private val ioScope: CoroutineScope,
     private val accountManager: FxaAccountManager
@@ -44,7 +44,7 @@ class DefaultTabsTrayController(
         val startTime = profiler?.getProfilerTime()
         browsingModeManager.mode = BrowsingMode.fromBoolean(isPrivate)
         navController.navigate(TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
-        dismissTabTray()
+        navigationInteractor.onTabTrayDismissed()
         profiler?.addMarker(
             "DefaultTabTrayController.onNewTabTapped",
             startTime

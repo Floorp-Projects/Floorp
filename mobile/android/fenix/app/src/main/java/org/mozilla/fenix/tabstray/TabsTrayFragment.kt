@@ -91,11 +91,22 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         super.onViewCreated(view, savedInstanceState)
         val activity = activity as HomeActivity
 
+        val navigationInteractor =
+            DefaultNavigationInteractor(
+                tabsTrayStore = tabsTrayStore,
+                browserStore = requireComponents.core.store,
+                navController = findNavController(),
+                metrics = requireComponents.analytics.metrics,
+                dismissTabTray = ::dismissAllowingStateLoss,
+                dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome,
+                bookmarksUseCase = requireComponents.useCases.bookmarksUseCases
+            )
+
         tabsTrayController = DefaultTabsTrayController(
             store = tabsTrayStore,
             browsingModeManager = activity.browsingModeManager,
             navController = findNavController(),
-            dismissTabTray = ::dismissAllowingStateLoss,
+            navigationInteractor = navigationInteractor,
             profiler = requireComponents.core.engine.profiler,
             accountManager = requireComponents.backgroundServices.accountManager,
             metrics = requireComponents.analytics.metrics,
@@ -111,17 +122,6 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             requireComponents.analytics.metrics
         )
 
-        val navigationInteractor =
-            DefaultNavigationInteractor(
-                tabsTrayStore = tabsTrayStore,
-                browserStore = requireComponents.core.store,
-                navController = findNavController(),
-                metrics = requireComponents.analytics.metrics,
-                dismissTabTray = ::dismissAllowingStateLoss,
-                dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome,
-                bookmarksUseCase = requireComponents.useCases.bookmarksUseCases
-            )
-
         val syncedTabsTrayInteractor = SyncedTabsInteractor(
             requireComponents.analytics.metrics,
             requireActivity() as HomeActivity,
@@ -136,6 +136,14 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             this,
             browserTrayInteractor,
             syncedTabsTrayInteractor
+        )
+
+        behavior.addBottomSheetCallback(
+            TraySheetBehaviorCallback(
+                behavior,
+                navigationInteractor,
+                requireComponents.analytics.metrics
+            )
         )
 
         tabsTrayCtaBinding.set(
