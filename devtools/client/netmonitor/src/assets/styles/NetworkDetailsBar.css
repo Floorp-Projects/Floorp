@@ -255,6 +255,21 @@
   max-height: 100px;
 }
 
+.network-monitor #response-panel .response-font-box {
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.network-monitor .response-font {
+  margin-bottom: 10px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .network-monitor .tree-container .treeTable tr.response-preview-container {
   flex: 1;
   min-height: 0;
