@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">ଗୋପନୀୟତା ସଂରଚନା ପଢ଼ି ବଦଳାନ୍ତୁ</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">ସମସ୍ତ ଖୋଲା ଟ୍ୟାବଗୁଡ଼ିକର ତଥ୍ୟ ପଢ଼ନ୍ତୁ</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">ଆପଣଙ୍କର ଅବସ୍ଥାନକୁ ଅଭିଗମ୍ୟ କରନ୍ତୁ</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">ବ୍ରାଉଜିଙ୍ଗ ଇତିହାସ ଅଭିଗମ୍ୟ କରନ୍ତୁ</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">ବ୍ରାଉଜର ପ୍ରକ୍ସି ସେଟିଙ୍ଗକୁ ନିୟନ୍ତ୍ରଣ କରନ୍ତୁ</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">ନିକଟରେ ବନ୍ଦ ହୋଇଥିବା ଟ୍ୟାବଗୁଡ଼ିକୁ ଅଭିଗମ୍ୟ କରନ୍ତୁ</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">ଲୁଚାନ୍ତୁ ଏବଂ ବ୍ରାଉଜର ଟ୍ୟାବଗୁଡ଼ିକୁ ଦେଖାନ୍ତୁ</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">ବ୍ରାଉଜିଙ୍ଗ ଇତିହାସ ଅଭିଗମ୍ୟ କରନ୍ତୁ</string>
+    <!-- The version on of add-on. -->
+    <string name="mozac_feature_addons_version">ସଂସ୍କରଣ</string>
+    <!-- The authors of an add-on. -->
+    <string name="mozac_feature_addons_authors">ଲେଖକଗଣ</string>
+    <!-- The last date that the add-on was updated. -->
+    <string name="mozac_feature_addons_last_updated">ଅନ୍ତିମ ଅଦ୍ୟତନ</string>
+    <!-- The developer website (Homepage) of the add-on. -->
+    <string name="mozac_feature_addons_home_page">ମୂଳ ପୃଷ୍ଠା</string>
+    <!-- The rating of the add-on. -->
+    <string name="mozac_feature_addons_rating">ରେଟିଙ୍ଗ୍</string>
+    <!-- The settings of the add-on. -->
+    <string name="mozac_feature_addons_settings">ସେଟିଂସ୍</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_settings_on">ଅନ</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_settings_off">ଅଫ</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">ପ୍ରାଇଭେଟ ବ୍ରାଉଜିଂକୁ ଅନୁମତି ଦିଅନ୍ତୁ</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">ପ୍ରାଇଭେଟ ବ୍ରାଉଜିଂରେ ଚଲାନ୍ତୁ</string>
+    <!-- Indicates the add-on is enabled. -->
+    <string name="mozac_feature_addons_enabled">ସକ୍ରିୟ ହେଲା</string>
+    <!-- Indicates the add-on is disabled. -->
+    <string name="mozac_feature_addons_disabled">ଅକ୍ଷମ କରାଗଲା</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">ସ୍ଥାପିତ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">ପରାମର୍ଶିତ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">ଏବେ ସୁଦ୍ଧା ସମର୍ଥନ ନାହିଁ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">ଏବେ ସୁଦ୍ଧା ଅନୁପଲବ୍ଧ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
+    <string name="mozac_feature_addons_disabled_section">ନିଷ୍କ୍ରିୟ</string>
+    <!-- Displays a page with all the details of an add-on. -->
+    <string name="mozac_feature_addons_details">ବିବରଣୀ</string>
+    <!-- Displays a page with all the permissions of an add-on. -->
+    <string name="mozac_feature_addons_permissions">ଅନୁମତିଗୁଡିକ</string>
+    <!-- This is button that remove (uninstall an add-on). -->
+    <string name="mozac_feature_addons_remove">କାଢ଼ନ୍ତୁ</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s କୁ ଯୋଡ଼ିବେ?</string>
+    <!-- This is a button to add (install) an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">ଯୋଡ଼ନ୍ତୁ</string>
+    <!-- This is a button to cancel the add-on installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">ବାତିଲ କରନ୍ତୁ</string>
+    <!-- Accessibility content description to install add-on button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">ଏଡ-ଅନକୁ ସ୍ଥାପନ କରନ୍ତୁ</string>
+    <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+    <string name="mozac_feature_addons_install_addon_dialog_cancel">ବାତିଲ କରନ୍ତୁ</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">ଏଡ-ଅନଗୁଡ଼ିକ</string>
+    <!-- Label for add-ons sub menu item for add-ons manager-->
+    <string name="mozac_feature_addons_addons_manager">ଏଡ-ଅନ ପରିଚାଳକ</string>
+    <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">ଅନୁମତି ଦିଅନ୍ତୁ</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">ଅଗ୍ରାହ୍ୟ</string>
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s ପାଇଁ ଗୋଟିଏ ନୂଆ ଅଦ୍ୟତନ ଅଛି</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d ନୂଆ ଅନୁମତି ଆବଶ୍ୟକ</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">ଏକ ନୂଆ ଅନୁମତି ଆବଶ୍ୟକ</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">%1$s କୁ ସଫଳତାର ସହିତ ଇନଷ୍ଟଲ କରାହେଲା</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">%1$s କୁ ଇଂସ୍ଟଲ କରିବାରେ ବିଫଳ</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
+    <string name="mozac_feature_addons_unsupported_caption">1ଆଡ-ଅନ</string>
+    <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s ଆଡ-ଅନ ଗୁଡ଼ିକ</string>
+    <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
+    <string name="mozac_feature_addons_unsupported_learn_more">ଅଧିକ ଶିଖନ୍ତୁ</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
+    <string name="mozac_feature_addons_updater_status_successfully_updated">ସଫଳତାର ସହିତ ଅଦ୍ୟଟିତ ହେଲା</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
+    <string name="mozac_feature_addons_updater_status_no_update_available">କୌଣସି ଅଦ୍ୟତନ ଉପଲବ୍ଧ ନାହିଁ</string>
+    <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
+    <string name="mozac_feature_addons_updater_status_error">ତ୍ରୁଟି</string>
+    <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">ଶେଷ ଚେଷ୍ଟା</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
+    <string name="mozac_feature_addons_updater_dialog_status">ସ୍ଥିତି:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">ମେନୁରେ ଖୋଲନ୍ତୁ</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">ଠିକ ଅଛି, ବୁଝିଲି</string>
+</resources>
