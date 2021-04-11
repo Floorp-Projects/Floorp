@@ -111,7 +111,7 @@ fuzzy(0-1,0-1024) == downscale-32px.html?.jpg downscale-32px-ref.html
 == downscale-32px.html?-png-in.ico downscale-32px-ref.html
 
 # Test downscaling a JPEG with orientation metadata.
-pref(layout.css.image-orientation.initial-from-image,true) fuzzy(0-1,0-50) == downscale-orient.html downscale-orient-ref.html
+fuzzy(0-1,0-50) == downscale-orient.html downscale-orient-ref.html
 
 # RUN TESTS WITH DOWNSCALE-DURING-DECODE ENABLED:
 # ===============================================
@@ -200,7 +200,7 @@ fuzzy(0-18,0-128) == downscale-32px.html?-bmp-in.ico downscale-32px-ref.html
 fuzzy(0-18,0-128) == downscale-32px.html?-png-in.ico downscale-32px-ref.html
 
 # Test downscaling a JPEG with orientation metadata.
-pref(layout.css.image-orientation.initial-from-image,true) fuzzy(0-4,0-18) == downscale-orient.html downscale-orient-ref.html
+fuzzy(0-4,0-18) == downscale-orient.html downscale-orient-ref.html
 
 # Test images taller or wider than 32767 pixels.
 == huge-1.html?100x32768.png,100,100 huge-1.html?100x100.png,100,100

@@ -78,7 +78,6 @@ RasterImage::RasterImage(nsIURI* aURI /* = nullptr */)
       mFramesNotified(0),
 #endif
       mSourceBuffer(MakeNotNull<SourceBuffer*>()) {
-  StoreHandledOrientation(StaticPrefs::image_honor_orientation_metadata());
 }
 
 //******************************************************************************
@@ -259,9 +258,6 @@ Maybe<AspectRatio> RasterImage::GetIntrinsicRatio() {
 
 NS_IMETHODIMP_(Orientation)
 RasterImage::GetOrientation() { return mOrientation; }
-
-NS_IMETHODIMP_(bool)
-RasterImage::HandledOrientation() { return LoadHandledOrientation(); }
 
 //******************************************************************************
 NS_IMETHODIMP
@@ -603,7 +599,7 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
   // If this RasterImage requires orientation, we must return a newly created
   // surface with the oriented image instead of returning the frame's surface
   // directly.
-  surface = OrientedImage::OrientSurface(UsedOrientation(), surface);
+  surface = OrientedImage::OrientSurface(mOrientation, surface);
 
   if (!result.Surface()->IsFinished()) {
     return MakeTuple(ImgDrawResult::INCOMPLETE, suggestedSize.ToUnknownSize(),
@@ -783,8 +779,7 @@ bool RasterImage::SetMetadata(const ImageMetadata& aMetadata,
     // NOTE(heycam): We shouldn't have any image formats that support both
     // orientation and hotspots, so we assert that rather than add code
     // to orient the hotspot point correctly.
-    MOZ_ASSERT(UsedOrientation().IsIdentity(),
-               "Would need to orient hotspot point");
+    MOZ_ASSERT(mOrientation.IsIdentity(), "Would need to orient hotspot point");
 
     auto hotspot = aMetadata.GetHotspot();
     mHotspot.x = std::max(std::min(hotspot.x, mSize.width - 1), 0);
@@ -1475,7 +1470,7 @@ RasterImage::Draw(gfxContext* aContext, const IntSize& aSize,
     gfxContextMatrixAutoSaveRestore asr;
     ImageRegion region(aRegion);
 
-    if (!UsedOrientation().IsIdentity()) {
+    if (!mOrientation.IsIdentity()) {
       // Apply a transform so that the unoriented image is drawn in the
       // orientation expected by the caller.
       gfxMatrix matrix = OrientationMatrix(size);
@@ -1850,8 +1845,8 @@ IntSize RasterImage::OptimalImageSizeForDest(const gfxSize& aDest,
 
 gfxMatrix RasterImage::OrientationMatrix(const UnorientedIntSize& aSize,
                                          bool aInvert) const {
-  return OrientedImage::OrientationMatrix(UsedOrientation(),
-                                          aSize.ToUnknownSize(), aInvert);
+  return OrientedImage::OrientationMatrix(mOrientation, aSize.ToUnknownSize(),
+                                          aInvert);
 }
 
 /**
@@ -1897,18 +1892,18 @@ OrientedIntRect RasterImage::ToOriented(UnorientedIntRect aRect) const {
   IntRect rect = aRect.ToUnknownRect();
   auto size = ToUnoriented(mSize);
 
-  MOZ_ASSERT(!UsedOrientation().flipFirst,
+  MOZ_ASSERT(!mOrientation.flipFirst,
              "flipFirst should only be used by OrientedImage");
 
-  // UsedOrientation() specifies the transformation from a correctly oriented
-  // image to the pixels stored in the file, so we need to rotate by the
-  // negation of the given angle.
-  Angle angle = Orientation::InvertAngle(UsedOrientation().rotation);
+  // mOrientation specifies the transformation from a correctly oriented image
+  // to the pixels stored in the file, so we need to rotate by the negation of
+  // the given angle.
+  Angle angle = Orientation::InvertAngle(mOrientation.rotation);
   Rotate(rect, size.ToUnknownSize(), angle);
 
   // Use mSize instead of size, since after the Rotate call, the size of the
   // space that rect is in has had its width and height swapped.
-  Flip(rect, mSize.ToUnknownSize(), UsedOrientation().flip);
+  Flip(rect, mSize.ToUnknownSize(), mOrientation.flip);
 
   return OrientedIntRect::FromUnknownRect(rect);
 }
@@ -1916,10 +1911,10 @@ OrientedIntRect RasterImage::ToOriented(UnorientedIntRect aRect) const {
 UnorientedIntRect RasterImage::ToUnoriented(OrientedIntRect aRect) const {
   IntRect rect = aRect.ToUnknownRect();
 
-  Flip(rect, mSize.ToUnknownSize(), UsedOrientation().flip);
-  Rotate(rect, mSize.ToUnknownSize(), UsedOrientation().rotation);
+  Flip(rect, mSize.ToUnknownSize(), mOrientation.flip);
+  Rotate(rect, mSize.ToUnknownSize(), mOrientation.rotation);
 
-  MOZ_ASSERT(!UsedOrientation().flipFirst,
+  MOZ_ASSERT(!mOrientation.flipFirst,
              "flipFirst should only be used by OrientedImage");
 
   return UnorientedIntRect::FromUnknownRect(rect);

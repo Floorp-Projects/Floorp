@@ -1224,13 +1224,7 @@ uint32_t nsImageLoadingContent::NaturalWidth() {
 
   int32_t size = 0;
   if (image) {
-    if (image->GetOrientation().SwapsWidthAndHeight() &&
-        !image->HandledOrientation() &&
-        StaticPrefs::image_honor_orientation_metadata_natural_size()) {
-      Unused << image->GetHeight(&size);
-    } else {
-      Unused << image->GetWidth(&size);
-    }
+    Unused << image->GetWidth(&size);
   }
   return size;
 }
@@ -1243,13 +1237,7 @@ uint32_t nsImageLoadingContent::NaturalHeight() {
 
   int32_t size = 0;
   if (image) {
-    if (image->GetOrientation().SwapsWidthAndHeight() &&
-        !image->HandledOrientation() &&
-        StaticPrefs::image_honor_orientation_metadata_natural_size()) {
-      Unused << image->GetWidth(&size);
-    } else {
-      Unused << image->GetHeight(&size);
-    }
+    Unused << image->GetHeight(&size);
   }
   return size;
 }
