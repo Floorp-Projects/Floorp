@@ -5199,22 +5199,6 @@
   value: true
   mirror: always
 
-# Whether to honor orientation metadata (such as JPEG EXIF tags) by default.
-# When this pref is enabled, all images used by the platform will be correctly
-# re-oriented, except for content images (HTML <img> and CSS generated content
-# images) with image-orientation:none.
-- name: image.honor-orientation-metadata
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Honor image orientation metadata in the naturalWidth and naturalHeight
-# APIs on HTMLImageElement.
-- name: image.honor_orientation_metadata.natural_size
-  type: bool
-  value: true
-  mirror: always
-
 # The threshold for inferring that changes to an <img> element's |src|
 # attribute by JavaScript represent an animation, in milliseconds. If the |src|
 # attribute is changing more frequently than this value, then we enter a
@@ -6625,13 +6609,6 @@
   type: bool
   value: true
   mirror: always
-
-# Is the initial value for the image-orientation property 'from-image'?
-- name: layout.css.image-orientation.initial-from-image
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
 
 # Is support for CSS initial-letter property enabled?
 - name: layout.css.initial-letter.enabled
