@@ -4,26 +4,7 @@ def WebIDLTest(parser, harness):
             interface Child : Parent {
             };
             interface Parent {
-              [Unforgeable] readonly attribute long foo;
-            };
-        """
-    )
-
-    results = parser.finish()
-    harness.check(
-        len(results),
-        2,
-        "Should be able to inherit from an interface with " "[Unforgeable] properties.",
-    )
-
-    parser = parser.reset()
-    parser.parse(
-        """
-            interface Child : Parent {
-              const short foo = 10;
-            };
-            interface Parent {
-              [Unforgeable] readonly attribute long foo;
+              [LegacyUnforgeable] readonly attribute long foo;
             };
         """
     )
@@ -33,7 +14,27 @@ def WebIDLTest(parser, harness):
         len(results),
         2,
         "Should be able to inherit from an interface with "
-        "[Unforgeable] properties even if we have a constant with "
+        "[LegacyUnforgeable] properties.",
+    )
+
+    parser = parser.reset()
+    parser.parse(
+        """
+            interface Child : Parent {
+              const short foo = 10;
+            };
+            interface Parent {
+              [LegacyUnforgeable] readonly attribute long foo;
+            };
+        """
+    )
+
+    results = parser.finish()
+    harness.check(
+        len(results),
+        2,
+        "Should be able to inherit from an interface with "
+        "[LegacyUnforgeable] properties even if we have a constant with "
         "the same name.",
     )
 
@@ -44,7 +45,7 @@ def WebIDLTest(parser, harness):
               static attribute short foo;
             };
             interface Parent {
-              [Unforgeable] readonly attribute long foo;
+              [LegacyUnforgeable] readonly attribute long foo;
             };
         """
     )
@@ -54,7 +55,7 @@ def WebIDLTest(parser, harness):
         len(results),
         2,
         "Should be able to inherit from an interface with "
-        "[Unforgeable] properties even if we have a static attribute "
+        "[LegacyUnforgeable] properties even if we have a static attribute "
         "with the same name.",
     )
 
@@ -65,7 +66,7 @@ def WebIDLTest(parser, harness):
               static void foo();
             };
             interface Parent {
-              [Unforgeable] readonly attribute long foo;
+              [LegacyUnforgeable] readonly attribute long foo;
             };
         """
     )
@@ -75,7 +76,7 @@ def WebIDLTest(parser, harness):
         len(results),
         2,
         "Should be able to inherit from an interface with "
-        "[Unforgeable] properties even if we have a static operation "
+        "[LegacyUnforgeable] properties even if we have a static operation "
         "with the same name.",
     )
 
@@ -88,7 +89,7 @@ def WebIDLTest(parser, harness):
               void foo();
             };
             interface Parent {
-              [Unforgeable] readonly attribute long foo;
+              [LegacyUnforgeable] readonly attribute long foo;
             };
         """
         )
@@ -111,7 +112,7 @@ def WebIDLTest(parser, harness):
               void foo();
             };
             interface Parent {
-              [Unforgeable] void foo();
+              [LegacyUnforgeable] void foo();
             };
         """
         )
@@ -134,7 +135,7 @@ def WebIDLTest(parser, harness):
               attribute short foo;
             };
             interface Parent {
-              [Unforgeable] readonly attribute long foo;
+              [LegacyUnforgeable] readonly attribute long foo;
             };
         """
         )
@@ -157,7 +158,7 @@ def WebIDLTest(parser, harness):
               attribute short foo;
             };
             interface Parent {
-              [Unforgeable] void foo();
+              [LegacyUnforgeable] void foo();
             };
         """
         )
@@ -178,7 +179,7 @@ def WebIDLTest(parser, harness):
             };
             interface Parent {};
             interface mixin Mixin {
-              [Unforgeable] readonly attribute long foo;
+              [LegacyUnforgeable] readonly attribute long foo;
             };
             Parent includes Mixin;
         """
@@ -189,7 +190,7 @@ def WebIDLTest(parser, harness):
         len(results),
         4,
         "Should be able to inherit from an interface with a "
-        "mixin with [Unforgeable] properties.",
+        "mixin with [LegacyUnforgeable] properties.",
     )
 
     parser = parser.reset()
@@ -202,7 +203,7 @@ def WebIDLTest(parser, harness):
             };
             interface Parent {};
             interface mixin Mixin {
-              [Unforgeable] readonly attribute long foo;
+              [LegacyUnforgeable] readonly attribute long foo;
             };
             Parent includes Mixin;
         """
@@ -228,7 +229,7 @@ def WebIDLTest(parser, harness):
             interface Parent : GrandParent {};
             interface GrandParent {};
             interface mixin Mixin {
-              [Unforgeable] readonly attribute long foo;
+              [LegacyUnforgeable] readonly attribute long foo;
             };
             GrandParent includes Mixin;
             interface mixin ChildMixin {
@@ -258,7 +259,7 @@ def WebIDLTest(parser, harness):
             interface Parent : GrandParent {};
             interface GrandParent {};
             interface mixin Mixin {
-              [Unforgeable] void foo();
+              [LegacyUnforgeable] void foo();
             };
             GrandParent includes Mixin;
             interface mixin ChildMixin {
@@ -282,13 +283,15 @@ def WebIDLTest(parser, harness):
     parser.parse(
         """
         interface iface {
-          [Unforgeable] attribute long foo;
+          [LegacyUnforgeable] attribute long foo;
         };
     """
     )
 
     results = parser.finish()
-    harness.check(len(results), 1, "Should allow writable [Unforgeable] attribute.")
+    harness.check(
+        len(results), 1, "Should allow writable [LegacyUnforgeable] attribute."
+    )
 
     parser = parser.reset()
     threw = False
@@ -296,7 +299,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface iface {
-              [Unforgeable] static readonly attribute long foo;
+              [LegacyUnforgeable] static readonly attribute long foo;
             };
         """
         )
@@ -305,4 +308,4 @@ def WebIDLTest(parser, harness):
     except:
         threw = True
 
-    harness.ok(threw, "Should have thrown for static [Unforgeable] attribute.")
+    harness.ok(threw, "Should have thrown for static [LegacyUnforgeable] attribute.")

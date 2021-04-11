@@ -711,7 +711,7 @@ def WebIDLTest(parser, harness):
         "Inheritance of unforgeable attribute collision with child maplike/setlike",
         """
                interface Foo1 {
-               [Unforgeable]
+               [LegacyUnforgeable]
                attribute double size;
                };
                interface Foo2 : Foo1 {
@@ -724,7 +724,7 @@ def WebIDLTest(parser, harness):
         "Inheritance of multi-level unforgeable attribute collision with child maplike/setlike",
         """
                interface Foo1 {
-               [Unforgeable]
+               [LegacyUnforgeable]
                attribute double size;
                };
                interface Foo2 : Foo1 {

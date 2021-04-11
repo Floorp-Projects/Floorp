@@ -50,7 +50,7 @@ interface Event {
   [Pure]
   readonly attribute boolean composed;
 
-  [Unforgeable, Pure]
+  [LegacyUnforgeable, Pure]
   readonly attribute boolean isTrusted;
   [Pure]
   readonly attribute DOMHighResTimeStamp timeStamp;
