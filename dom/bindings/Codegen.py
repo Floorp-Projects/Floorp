@@ -7045,7 +7045,7 @@ def getJSToNativeConversionInfo(
             undefinedBehavior = "eNull"
         else:
             undefinedBehavior = "eStringify"
-            if type.treatNullAsEmpty:
+            if type.legacyNullToEmptyString:
                 treatNullAs = "EmptyString"
             else:
                 treatNullAs = "Default"

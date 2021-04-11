@@ -28,7 +28,7 @@ interface ShadowRoot : DocumentFragment
 
   // https://w3c.github.io/DOM-Parsing/#the-innerhtml-mixin
   [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString innerHTML;
+  attribute [LegacyNullToEmptyString] DOMString innerHTML;
 
   // When JS invokes importNode or createElement, the binding code needs to
   // create a reflector, and so invoking those methods directly on the content

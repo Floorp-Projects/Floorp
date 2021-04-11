@@ -10,7 +10,7 @@ def WebIDLTest(parser, harness):
             """
             typedef [EnforceRange] long Foo;
             typedef [Clamp] long Bar;
-            typedef [TreatNullAs=EmptyString] DOMString Baz;
+            typedef [LegacyNullToEmptyString] DOMString Baz;
             dictionary A {
                 required [EnforceRange] long a;
                 required [Clamp] long b;
@@ -21,12 +21,12 @@ def WebIDLTest(parser, harness):
                 attribute Foo typedefFoo;
                 attribute [EnforceRange] long foo;
                 attribute [Clamp] long bar;
-                attribute [TreatNullAs=EmptyString] DOMString baz;
+                attribute [LegacyNullToEmptyString] DOMString baz;
                 void method([EnforceRange] long foo, [Clamp] long bar,
-                            [TreatNullAs=EmptyString] DOMString baz);
+                            [LegacyNullToEmptyString] DOMString baz);
                 void method2(optional [EnforceRange] long foo, optional [Clamp] long bar,
-                             optional [TreatNullAs=EmptyString] DOMString baz);
-                void method3(optional [TreatNullAs=EmptyString] UTF8String foo = "");
+                             optional [LegacyNullToEmptyString] DOMString baz);
+                void method3(optional [LegacyNullToEmptyString] UTF8String foo = "");
             };
             interface C {
                 attribute [EnforceRange] long? foo;
@@ -56,9 +56,9 @@ def WebIDLTest(parser, harness):
         )
         harness.check(results[1].innerType.hasClamp(), True, "Bar is [Clamp]")
         harness.check(
-            results[2].innerType.treatNullAsEmpty,
+            results[2].innerType.legacyNullToEmptyString,
             True,
-            "Baz is [TreatNullAs=EmptyString]",
+            "Baz is [LegacyNullToEmptyString]",
         )
         A = results[3]
         harness.check(
@@ -80,9 +80,9 @@ def WebIDLTest(parser, harness):
         )
         harness.check(B.members[2].type.hasClamp(), True, "B.bar is [Clamp]")
         harness.check(
-            B.members[3].type.treatNullAsEmpty,
+            B.members[3].type.legacyNullToEmptyString,
             True,
-            "B.baz is [TreatNullAs=EmptyString]",
+            "B.baz is [LegacyNullToEmptyString]",
         )
         method = B.members[4].signatures()[0][1]
         harness.check(
@@ -94,9 +94,9 @@ def WebIDLTest(parser, harness):
             method[1].type.hasClamp(), True, "bar argument of method is [Clamp]"
         )
         harness.check(
-            method[2].type.treatNullAsEmpty,
+            method[2].type.legacyNullToEmptyString,
             True,
-            "baz argument of method is [TreatNullAs=EmptyString]",
+            "baz argument of method is [LegacyNullToEmptyString]",
         )
         method2 = B.members[5].signatures()[0][1]
         harness.check(
@@ -108,16 +108,16 @@ def WebIDLTest(parser, harness):
             method2[1].type.hasClamp(), True, "bar argument of method2 is [Clamp]"
         )
         harness.check(
-            method2[2].type.treatNullAsEmpty,
+            method2[2].type.legacyNullToEmptyString,
             True,
-            "baz argument of method2 is [TreatNullAs=EmptyString]",
+            "baz argument of method2 is [LegacyNullToEmptyString]",
         )
 
         method3 = B.members[6].signatures()[0][1]
         harness.check(
-            method3[0].type.treatNullAsEmpty,
+            method3[0].type.legacyNullToEmptyString,
             True,
-            "bar argument of method2 is [TreatNullAs=EmptyString]",
+            "bar argument of method2 is [LegacyNullToEmptyString]",
         )
         harness.check(
             method3[0].defaultValue.type.isUTF8String(),
@@ -220,7 +220,7 @@ def WebIDLTest(parser, harness):
     ATTRIBUTES = [
         ("[Clamp]", "long"),
         ("[EnforceRange]", "long"),
-        ("[TreatNullAs=EmptyString]", "DOMString"),
+        ("[LegacyNullToEmptyString]", "DOMString"),
         ("[AllowShared]", "ArrayBufferView"),
     ]
     TEMPLATES = [
@@ -462,42 +462,44 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-            typedef [TreatNullAs=EmptyString] long Foo;
+            typedef [LegacyNullToEmptyString] long Foo;
         """
         )
         parser.finish()
     except:
         threw = True
 
-    harness.ok(threw, "Should not allow [TreatNullAs] on long")
+    harness.ok(threw, "Should not allow [LegacyNullToEmptyString] on long")
 
     parser = parser.reset()
     threw = False
     try:
         parser.parse(
             """
-            typedef [TreatNullAs=EmptyString] JSString Foo;
+            typedef [LegacyNullToEmptyString] JSString Foo;
         """
         )
         parser.finish()
     except:
         threw = True
 
-    harness.ok(threw, "Should not allow [TreatNullAs] on JSString")
+    harness.ok(threw, "Should not allow [LegacyNullToEmptyString] on JSString")
 
     parser = parser.reset()
     threw = False
     try:
         parser.parse(
             """
-            typedef [TreatNullAs=EmptyString] DOMString? Foo;
+            typedef [LegacyNullToEmptyString] DOMString? Foo;
         """
         )
         parser.finish()
     except:
         threw = True
 
-    harness.ok(threw, "Should not allow [TreatNullAs] on nullable DOMString")
+    harness.ok(
+        threw, "Should not allow [LegacyNullToEmptyString] on nullable DOMString"
+    )
 
     parser = parser.reset()
     threw = False

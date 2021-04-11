@@ -160,7 +160,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             dictionary A {
-              [TreatNullAs=EmptyString] DOMString foo;
+              [LegacyNullToEmptyString] DOMString foo;
             };
         """
         )
@@ -168,7 +168,9 @@ def WebIDLTest(parser, harness):
     except:
         threw = True
 
-    harness.ok(threw, "Should not allow [TreatNullAs] on dictionary members")
+    harness.ok(
+        threw, "Should not allow [LegacyNullToEmptyString] on dictionary members"
+    )
 
     parser = parser.reset()
     threw = False

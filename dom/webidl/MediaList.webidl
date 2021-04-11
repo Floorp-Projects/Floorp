@@ -7,7 +7,7 @@
 
 [Exposed=Window]
 interface MediaList {
-  stringifier attribute [TreatNullAs=EmptyString] UTF8String mediaText;
+  stringifier attribute [LegacyNullToEmptyString] UTF8String mediaText;
 
   readonly attribute unsigned long    length;
   getter UTF8String? item(unsigned long index);

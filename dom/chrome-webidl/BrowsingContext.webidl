@@ -102,9 +102,9 @@ interface BrowsingContext {
 
   readonly attribute boolean ancestorsAreCurrent;
 
-  [SetterThrows] attribute [TreatNullAs=EmptyString] DOMString customPlatform;
+  [SetterThrows] attribute [LegacyNullToEmptyString] DOMString customPlatform;
 
-  [SetterThrows] attribute [TreatNullAs=EmptyString] DOMString customUserAgent;
+  [SetterThrows] attribute [LegacyNullToEmptyString] DOMString customUserAgent;
 
   readonly attribute DOMString embedderElementType;
 

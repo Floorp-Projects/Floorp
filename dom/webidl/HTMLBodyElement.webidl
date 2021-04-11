@@ -19,15 +19,15 @@ interface HTMLBodyElement : HTMLElement {
 
 partial interface HTMLBodyElement {
   [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString text;
+  attribute [LegacyNullToEmptyString] DOMString text;
   [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString link;
+  attribute [LegacyNullToEmptyString] DOMString link;
   [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString vLink;
+  attribute [LegacyNullToEmptyString] DOMString vLink;
   [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString aLink;
+  attribute [LegacyNullToEmptyString] DOMString aLink;
   [CEReactions, SetterThrows]
-  attribute [TreatNullAs=EmptyString] DOMString bgColor;
+  attribute [LegacyNullToEmptyString] DOMString bgColor;
   [CEReactions, SetterThrows]
   attribute DOMString background;
 };
