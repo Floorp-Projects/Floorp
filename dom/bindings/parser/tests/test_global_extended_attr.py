@@ -68,7 +68,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(
             """
-          [Global, OverrideBuiltins, Exposed=Foo]
+          [Global, LegacyOverrideBuiltIns, Exposed=Foo]
           interface Foo {
           };
         """
@@ -80,7 +80,7 @@ def WebIDLTest(parser, harness):
     harness.ok(
         threw,
         "Should have thrown for [Global] used on an interface with a "
-        "[OverrideBuiltins]",
+        "[LegacyOverrideBuiltIns]",
     )
 
     parser = parser.reset()
@@ -91,7 +91,7 @@ def WebIDLTest(parser, harness):
           [Global, Exposed=Foo]
           interface Foo : Bar {
           };
-          [OverrideBuiltins, Exposed=Foo]
+          [LegacyOverrideBuiltIns, Exposed=Foo]
           interface Bar {
           };
         """
@@ -103,7 +103,7 @@ def WebIDLTest(parser, harness):
     harness.ok(
         threw,
         "Should have thrown for [Global] used on an interface with an "
-        "[OverrideBuiltins] ancestor",
+        "[LegacyOverrideBuiltIns] ancestor",
     )
 
     parser = parser.reset()

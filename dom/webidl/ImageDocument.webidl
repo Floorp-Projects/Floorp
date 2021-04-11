@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[ChromeOnly, OverrideBuiltins,
+[ChromeOnly, LegacyOverrideBuiltIns,
  Exposed=Window]
 interface ImageDocument : HTMLDocument {
   /* Whether the image is overflowing visible area. */

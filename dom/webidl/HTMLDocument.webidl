@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[OverrideBuiltins,
+[LegacyOverrideBuiltIns,
  Exposed=Window,
  InstrumentedProps=(adoptedStyleSheets,
                     caretRangeFromPoint,
