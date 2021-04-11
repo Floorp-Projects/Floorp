@@ -10,6 +10,7 @@
 
 #include "gfxContext.h"
 #include "gfxUtils.h"
+#include "Layers.h"
 #include "nsContainerFrame.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsCSSRendering.h"
