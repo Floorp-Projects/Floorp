@@ -1776,7 +1776,7 @@
     <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description1">Ομαδοποιήστε παρόμοιες αναζητήσεις, σελίδες και καρτέλες για γρήγορη πρόσβαση αργότερα.</string>
     <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Έχετε συνδεθεί ως %s σε άλλο πρόγραμμα περιήγησης Firefox σε αυτό το τηλέφωνο. Θέλετε να συνδεθείτε με αυτό το λογαριασμό;</string>
+    <string name="onboarding_firefox_account_auto_signin_header_2">Έχετε συνδεθεί ως %s σε άλλο πρόγραμμα περιήγησης Firefox σε αυτό το τηλέφωνο. Θέλετε να συνδεθείτε με αυτό τον λογαριασμό;</string>
     <!-- Deprecated: Describes the add to homescreen functionality -->
     <string name="add_to_homescreen_description">Μπορείτε εύκολα να προσθέσετε αυτή την ιστοσελίδα στην αρχική οθόνη για άμεση πρόσβαση και ταχύτερη περιήγηση, σαν να ήταν εφαρμογή.</string>
 

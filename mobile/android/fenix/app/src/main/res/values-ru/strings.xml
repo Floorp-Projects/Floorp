@@ -22,10 +22,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Ваши приватные вкладки будут показаны здесь.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 открытая вкладка. Нажмите, чтобы переключить вкладки.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -192,6 +188,11 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Настроить вид для чтения</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Добавить</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Изменить</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Ошибка подключения. Не удалось распознать схему URL.</string>
@@ -622,6 +623,8 @@
     <string name="add_private_tab">Добавить приватную вкладку</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Приватно</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Синхронизация</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Открытые вкладки</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -1002,6 +1005,10 @@
     <string name="share_link_all_apps_subheader">Все действия</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Недавно использованные</string>
+    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
+    <string name="sync_signed_as">Вы вошли как %1$s</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Войти в синхронизацию</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Войти в синхронизацию</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1201,9 +1208,6 @@
     <string name="onboarding_header">Добро пожаловать в %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Уже есть аккаунт?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Познакомьтесь с %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Посмотрите, что нового</string>
     <!-- text for the "what's new" onboarding card description
@@ -1211,10 +1215,10 @@
     <string name="onboarding_whats_new_description">Есть вопросы о переработанном %s? Хотите узнать, что изменилось?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Получите ответы здесь</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Начните синхронизировать закладки, пароли и многое другое с вашим Аккаунтом Firefox.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Синхронизация Firefox между устройствами</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Узнать больше</string>
+    <string name="onboarding_manual_sign_in_description">Перенесите закладки, историю и пароли в Firefox на этом устройстве.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1223,8 +1227,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Да, авторизоваться</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Идет вход…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Войти в Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Зарегистрироваться</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Не входить</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1232,26 +1236,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Не удалось выполнить вход</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Автоматическая приватность</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Настройки приватности и безопасности блокируют трекеры, вредоносные программы, и компании, которые вас отслеживают.</string>
+    <string name="onboarding_tracking_protection_header_3">Постоянная приватность</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox автоматически блокирует тайную слежку компаний за вами в Интернете.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартная (по умолчанию)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Блокирует меньше трекеров. Страницы будут загружаться нормально.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Обеспечивает наилучший баланс приватности и производительности. Страницы будут загружаться нормально.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Строгая (рекомендуется)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Строгая</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Блокирует больше трекеров, рекламы и всплывающих окон. Страницы будут грузиться быстрее, но часть функций может не работать.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Сделайте выбор</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Блокирует больше трекеров, так что страницы загружаются быстрее, но некоторые страницы могут работать некорректно.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Выберите размещение панели инструментов</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Попробуйте сёрфинг одной рукой с панелью инструментов внизу, или переместите её наверх.</string>
+    <string name="onboarding_toolbar_placement_description_1">Обеспечьте удобный доступ к панели инструментов. Оставьте её внизу или переместите вверх.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Приватный режим</string>
     <!-- text for the private browsing onboarding card description
@@ -1265,7 +1266,7 @@
     <string name="onboarding_privacy_notice_header">Ваша приватность</string>
 
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Мы создали %s, чтобы предоставить вам контроль над тем, чем вы делитесь — как в Интернете, так и с нами.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Уведомление о конфиденциальности</string>
@@ -1280,7 +1281,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Выберите вашу тему</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Сохраните заряд аккумулятора и ваше зрение, включив тёмную тему.</string>
+    <string name="onboarding_theme_picker_description_2">Сохраните заряд аккумулятора и ваше зрение с помощью тёмной темы.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Автоматическая</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1335,13 +1336,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартная (по умолчанию)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Блокирует меньше трекеров. Страницы будут загружаться нормально.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Обеспечивает наилучший баланс приватности и производительности. Страницы будут загружаться нормально.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Что блокируется стандартной защитой от отслеживания</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Строгая</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Блокирует больше трекеров, рекламы и всплывающих окон. Страницы будут грузиться быстрее, но часть функций может не работать.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Блокирует больше трекеров, так что страницы загружаются быстрее, но некоторые страницы могут работать некорректно.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Что блокируется строгой защитой от отслеживания</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1587,6 +1588,29 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">Синхронизировать карты между различными устройствами</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Добавить банковскую карту</string>
+
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Управление сохранёнными картами</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Добавить карту</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Номер карты</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Срок действия</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Имя держателя</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Псевдоним карты</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Удалить карту</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Сохранить</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Сохранить</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Отмена</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Сохранённые карты</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Добавление поисковой системы</string>
