@@ -173,13 +173,13 @@ public final class GeckoRuntime implements Parcelable {
     private final WebExtensionController mWebExtensionController;
     private WebPushController mPushController;
     private final ContentBlockingController mContentBlockingController;
-    private final Autocomplete.LoginStorageProxy mLoginStorageProxy;
+    private final Autocomplete.StorageProxy mAutocompleteStorageProxy;
     private final ProfilerController mProfilerController;
 
     private GeckoRuntime() {
         mWebExtensionController = new WebExtensionController(this);
         mContentBlockingController = new ContentBlockingController();
-        mLoginStorageProxy = new Autocomplete.LoginStorageProxy();
+        mAutocompleteStorageProxy = new Autocomplete.StorageProxy();
         mProfilerController = new ProfilerController();
 
         if (sRuntime != null) {
@@ -566,28 +566,63 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     /**
-     * Set the {@link Autocomplete.LoginStorageDelegate} instance on this runtime.
-     * This delegate is required for handling login storage requests.
+     * Set the {@link Autocomplete.StorageDelegate} instance on this runtime.
+     * This delegate is required for handling autocomplete storage requests.
      *
-     * @param delegate The {@link Autocomplete.LoginStorageDelegate} handling login storage
-     *                 requests.
+     * @param delegate The {@link Autocomplete.StorageDelegate} handling
+     *                 autocomplete storage requests.
      */
+    @UiThread
+    public void setAutocompleteStorageDelegate(
+            final @Nullable Autocomplete.StorageDelegate delegate) {
+        ThreadUtils.assertOnUiThread();
+        mAutocompleteStorageProxy.setDelegate(delegate);
+    }
+
+    /**
+     * Set the {@link Autocomplete.LoginStorageDelegate} instance on this runtime.
+     * This delegate is required for handling autocomplete storage requests.
+     *
+     * @param delegate The {@link Autocomplete.LoginStorageDelegate} handling
+     *                 autocomplete storage requests.
+     *
+     * @deprecated This API has been replaced by
+     *             {@link #setAutocompleteStorageDelegate} and
+     *             will be removed in GeckoView 93.
+     */
+    @Deprecated @DeprecationSchedule(version = 93, id = "login-storage")
     @UiThread
     public void setLoginStorageDelegate(
             final @Nullable Autocomplete.LoginStorageDelegate delegate) {
         ThreadUtils.assertOnUiThread();
-        mLoginStorageProxy.setDelegate(delegate);
+        mAutocompleteStorageProxy.setDelegate(delegate);
+    }
+
+    /**
+     * Get the {@link Autocomplete.StorageDelegate} instance set on this runtime.
+     *
+     * @return The {@link Autocomplete.StorageDelegate} set on this runtime.
+     */
+    @UiThread
+    public @Nullable Autocomplete.StorageDelegate getAutocompleteStorageDelegate() {
+        ThreadUtils.assertOnUiThread();
+        return mAutocompleteStorageProxy.getDelegate();
     }
 
     /**
      * Get the {@link Autocomplete.LoginStorageDelegate} instance set on this runtime.
      *
      * @return The {@link Autocomplete.LoginStorageDelegate} set on this runtime.
+     *
+     * @deprecated This API has been replaced by
+     *             {@link #getAutocompleteStorageDelegate} and
+     *             will be removed in GeckoView 93.
      */
+    @Deprecated @DeprecationSchedule(version = 93, id = "login-storage")
     @UiThread
     public @Nullable Autocomplete.LoginStorageDelegate getLoginStorageDelegate() {
         ThreadUtils.assertOnUiThread();
-        return mLoginStorageProxy.getDelegate();
+        return (Autocomplete.LoginStorageDelegate)mAutocompleteStorageProxy.getDelegate();
     }
 
     @UiThread

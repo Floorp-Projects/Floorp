@@ -681,6 +681,26 @@ function startup() {
         frameScript: "chrome://geckoview/content/GeckoViewMediaControlChild.js",
       },
     },
+    {
+      name: "GeckoViewAutocomplete",
+      onInit: {
+        actors: {
+          FormAutofill: {
+            parent: {
+              moduleURI: "resource://autofill/FormAutofillParent.jsm",
+            },
+            child: {
+              moduleURI: "resource://autofill/FormAutofillChild.jsm",
+              events: {
+                focusin: {},
+                DOMFormBeforeSubmit: {},
+              },
+            },
+            allFrames: true,
+          },
+        },
+      },
+    },
   ]);
 
   if (!Services.appinfo.sessionHistoryInParent) {
