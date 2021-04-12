@@ -951,7 +951,10 @@ var AddonTestUtils = {
     );
   },
 
-  async promiseShutdownManager(clearOverrides = true) {
+  async promiseShutdownManager({
+    clearOverrides = true,
+    clearL10nRegistry = true,
+  } = {}) {
     if (!this.addonIntegrationService) {
       return false;
     }
@@ -995,7 +998,9 @@ var AddonTestUtils = {
     }
 
     // Clear L10nRegistry entries so restaring the AOM will work correctly with locales.
-    L10nRegistry.clearSources();
+    if (clearL10nRegistry) {
+      L10nRegistry.clearSources();
+    }
 
     // Clear any crash report annotations
     this.appInfo.annotations = {};
@@ -1040,7 +1045,7 @@ var AddonTestUtils = {
    *        after the AddonManager is shut down, before it is re-started.
    */
   async promiseRestartManager(newVersion) {
-    await this.promiseShutdownManager(false);
+    await this.promiseShutdownManager({ clearOverrides: false });
     await this.promiseStartupManager(newVersion);
   },
 

@@ -119,22 +119,19 @@ async function handleInitialHomepagePopup(extensionId, homepageUrl) {
  *   The homepage url to set.
  */
 async function handleHomepageUrl(extension, homepageUrl) {
-  let inControl;
-  if (
-    extension.startupReason == "ADDON_INSTALL" ||
-    extension.startupReason == "ADDON_ENABLE"
-  ) {
-    inControl = await ExtensionPreferencesManager.setSetting(
-      extension.id,
-      "homepage_override",
-      homepageUrl
-    );
-  } else {
-    let item = await ExtensionPreferencesManager.getSetting(
-      "homepage_override"
-    );
-    inControl = item && item.id && item.id == extension.id;
-  }
+  // For new installs and enabling a disabled addon, we will show
+  // the prompt.  We clear the confirmation in onDisabled and
+  // onUninstalled, so in either ADDON_INSTALL or ADDON_ENABLE it
+  // is already cleared, resulting in the prompt being shown if
+  // necessary the next time the homepage is shown.
+
+  // For localizing the homepageUrl, or otherwise updating the value
+  // we need to always set the setting here.
+  let inControl = await ExtensionPreferencesManager.setSetting(
+    extension.id,
+    "homepage_override",
+    homepageUrl
+  );
 
   if (inControl) {
     Services.prefs.setBoolPref(
@@ -251,8 +248,8 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     if (searchStartupPromise) {
       await searchStartupPromise.catch(Cu.reportError);
     }
-    // Note: We do not have to deal with homepage here as it is managed by
-    // the ExtensionPreferencesManager.
+    // Note: We do not have to manage the homepage setting here
+    // as it is managed by the ExtensionPreferencesManager.
     return Promise.all([
       this.removeSearchSettings(id),
       homepagePopup.clearConfirmation(id),
@@ -261,6 +258,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
 
   static async onUpdate(id, manifest) {
     if (!manifest?.chrome_settings_overrides?.homepage) {
+      // New or changed values are handled during onManifest.
       ExtensionPreferencesManager.removeSetting(id, "homepage_override");
     }
 
