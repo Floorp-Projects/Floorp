@@ -56,18 +56,23 @@ WARNING! This test involves background update, but background tasks are
     await UpdateUtils.setAppUpdateAutoEnabled(originalUpdateAutoVal);
   });
 
+  // For a little while longer, we want to have tests that assert the
+  // default value.
+  let defaultValue =
+    AppConstants.NIGHTLY_BUILD && AppConstants.platform == "win";
   is(
     Services.prefs.getBoolPref(ENABLE_UI_PREF, false),
-    false,
-    `${ENABLE_UI_PREF} should default to false.`
+    defaultValue,
+    `${ENABLE_UI_PREF} should default to ${defaultValue}.`
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [defaultValue], defaultValue => {
     is(
       content.document.getElementById("backgroundUpdate").hidden,
-      true,
-      `The background update UI should be hidden when ` +
-        `app.update.background.experimental is false.`
+      !defaultValue,
+      `The background update UI should be ${
+        defaultValue ? "shown" : "hidden"
+      } when app.update.background.experimental is ${defaultValue}.`
     );
   });
 
