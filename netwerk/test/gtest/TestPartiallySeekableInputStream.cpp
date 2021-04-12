@@ -9,6 +9,7 @@
 #include "mozilla/net/PartiallySeekableInputStream.h"
 
 using mozilla::GetCurrentSerialEventTarget;
+using mozilla::MakeRefPtr;
 using mozilla::SpinEventLoopUntil;
 using mozilla::net::PartiallySeekableInputStream;
 
