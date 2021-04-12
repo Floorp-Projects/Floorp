@@ -993,7 +993,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 @media (-moz-proton) {
 .addon-banner-item > .toolbarbutton-text,
 .panel-banner-item > .toolbarbutton-text {
-  margin-inline-start: 8px;
+  margin-inline: 8px;
   padding: 0;
 }
 } /** END Proton **/
