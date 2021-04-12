@@ -94,6 +94,7 @@ const kFileExtensions = [
   "apng",
   "aspx",
   "avi",
+  "avif",
   "bat",
   "bin",
   "bmp",
