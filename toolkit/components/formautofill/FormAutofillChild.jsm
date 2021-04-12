@@ -193,6 +193,10 @@ class FormAutofillChild extends JSWindowActorChild {
         FormAutofillContent.clearForm();
         break;
       }
+      case "FormAutofill:FillForm": {
+        FormAutofillContent.activeHandler.autofillFormFields(message.data);
+        break;
+      }
     }
   }
 }

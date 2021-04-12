@@ -8,3 +8,8 @@ toolkit.jar:
   res/autofill/phonenumberutils/ (./phonenumberutils/*.jsm)
   res/autofill/addressmetadata/ (./addressmetadata/*)
   res/autofill/content/ (./content/*)
+#ifdef ANDROID
+  res/autofill/FormAutofillStorage.jsm (./android/FormAutofillStorage.jsm)
+#else
+  res/autofill/FormAutofillStorage.jsm (./default/FormAutofillStorage.jsm)
+#endif
