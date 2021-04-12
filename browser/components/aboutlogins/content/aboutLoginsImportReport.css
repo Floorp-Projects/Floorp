@@ -29,6 +29,10 @@
   font-weight: bold;
 }
 
+.summary > a {
+  margin-top: 12px;
+}
+
 .new-logins,
 .exiting-logins,
 .duplicate-logins,
