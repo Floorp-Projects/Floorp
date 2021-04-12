@@ -184,7 +184,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
         // if worker registrations are no longer available.
         if (this.targetCommand.isTargetRegistered(target)) {
           // Only emit onTargetDestroyed if it wasn't already done by
-          // onNavigate (ie the target is still tracked by TargetList)
+          // onNavigate (ie the target is still tracked by TargetCommand)
           this.onTargetDestroyed(target);
         }
         // Here we only care about service workers which no longer match *any*

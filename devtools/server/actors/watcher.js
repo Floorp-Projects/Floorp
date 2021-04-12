@@ -169,7 +169,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.WEBSOCKET]: hasBrowserElement,
         },
         // @backward-compat { version 85 } When removing this trait, consumers using
-        // the TargetList to retrieve the Breakpoints front should still be careful to check
+        // the TargetCommand to retrieve the Breakpoints front should still be careful to check
         // that the Watcher is available
         "set-breakpoints": true,
         // @backward-compat { version 87 } Starting with FF87, if the watcher is

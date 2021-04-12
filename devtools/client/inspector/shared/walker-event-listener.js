@@ -6,7 +6,7 @@
 
 /**
  * WalkerEventListener provides a mechanism to listen the walker event of the inspector
- * while reflecting the updating of TargetList.
+ * while reflecting the updating of TargetCommand.
  */
 class WalkerEventListener {
   /**

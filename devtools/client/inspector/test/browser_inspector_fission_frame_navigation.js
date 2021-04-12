@@ -133,7 +133,7 @@ async function navigateIframeTo(inspector, url) {
   await inspector.markup._waitForChildren();
 
   if (isFissionEnabled()) {
-    info("Wait until the new target has been processed by TargetList");
+    info("Wait until the new target has been processed by TargetCommand");
     await onTargetProcessed;
   }
 
@@ -142,7 +142,7 @@ async function navigateIframeTo(inspector, url) {
 }
 
 /**
- * Returns a promise that waits until the provided commands's TargetList has fully
+ * Returns a promise that waits until the provided commands's TargetCommand has fully
  * processed a target with the provided URL.
  * This will avoid navigating again before the new resource watchers have fully
  * attached to the new target.

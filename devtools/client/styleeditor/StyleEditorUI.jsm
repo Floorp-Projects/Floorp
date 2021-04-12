@@ -135,7 +135,7 @@ StyleEditorUI.prototype = {
   },
 
   /**
-   * Initiates the style editor ui creation, and start to track TargetList updates.
+   * Initiates the style editor ui creation, and start to track TargetCommand updates.
    */
   async initialize() {
     this.createUI();

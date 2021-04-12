@@ -208,7 +208,7 @@ class LegacyWorkersWatcher {
     // Cleanup the targetsByProcess/targetsListeners maps, and unsubscribe from
     // all targetFronts. Process target fronts are either stored locally when
     // watching service workers for the content toolbox, or can be retrieved via
-    // the TargetList API otherwise (see _getProcessTargets implementations).
+    // the TargetCommand API otherwise (see _getProcessTargets implementations).
     if (this.target.isParentProcess || this._isServiceWorkerWatcher) {
       for (const targetFront of this._getProcessTargets()) {
         const listener = this.targetsListeners.get(targetFront);
