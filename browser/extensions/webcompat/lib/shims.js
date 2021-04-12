@@ -62,20 +62,29 @@ class Shim {
     }, pref);
 
     this.ready = Promise.all([
-      browser.aboutConfigPrefs.getPref(pref).then(value => {
-        this._disabledPrefValue = value;
-      }),
-      platformPromise.then(platform => {
-        this._disabledByPlatform =
-          this.platform !== "all" && this.platform !== platform;
-        return platform;
-      }),
-      releaseBranchPromise.then(branch => {
-        this._disabledByReleaseBranch =
-          this.branches && !this.branches.includes(branch);
-        return branch;
-      }),
-    ]).then(([_, platform, branch]) => {
+      browser.aboutConfigPrefs.getPref(pref),
+      platformPromise,
+      releaseBranchPromise,
+    ]).then(([disabledPrefValue, platform, branch]) => {
+      this._disabledPrefValue = disabledPrefValue;
+
+      this._disabledByPlatform =
+        this.platform !== "all" && this.platform !== platform;
+
+      this._disabledByReleaseBranch = false;
+      for (const supportedBranchAndPlatform of this.branches || []) {
+        const [
+          supportedBranch,
+          supportedPlatform,
+        ] = supportedBranchAndPlatform.split(":");
+        if (
+          (!supportedPlatform || supportedPlatform == platform) &&
+          supportedBranch != branch
+        ) {
+          this._disabledByReleaseBranch = true;
+        }
+      }
+
       this._preprocessOptions(platform, branch);
       this._onEnabledStateChanged();
     });
@@ -424,7 +433,7 @@ class Shims {
       return { cancel: true };
     }
 
-    debug("allowing", url);
+    debug("ignoring", url);
     return undefined;
   }
 }
