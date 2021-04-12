@@ -613,7 +613,7 @@
   padding: var(--urlbar-icon-padding);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  fill-opacity: 0.6;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
   color: inherit;
 }
 
@@ -976,9 +976,14 @@
 .searchbar-search-icon {
   list-style-image: url(chrome://global/skin/icons/search-glass.svg);
   -moz-context-properties: fill, fill-opacity;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
   pointer-events: none;
   margin-inline: 8px 6px;
   width: 16px;
+}
+
+@media not (-moz-proton) {
+.searchbar-search-icon {
   fill-opacity: .4;
 }
 
@@ -989,6 +994,7 @@
 .searchbar-search-button:hover:active > .searchbar-search-icon {
   fill-opacity: .8;
 }
+} /*** END !proton ***/
 
 .searchbar-search-icon-overlay {
   pointer-events: none;
