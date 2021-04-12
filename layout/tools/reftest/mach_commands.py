@@ -160,7 +160,6 @@ class ReftestRunner(MozbuildObject):
         if not args.utilityPath:
             args.utilityPath = args.xrePath
         args.ignoreWindowSize = True
-        args.printDeviceInfo = False
 
         from mozrunner.devices.android_device import get_adb_path
 

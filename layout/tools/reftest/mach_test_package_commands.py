@@ -68,7 +68,6 @@ def run_reftest_android(context, args):
     args.xrePath = context.hostutils
     args.httpdPath = context.module_dir
     args.ignoreWindowSize = True
-    args.printDeviceInfo = False
 
     config = context.mozharness_config
     if config:
