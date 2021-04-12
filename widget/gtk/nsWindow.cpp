@@ -2220,12 +2220,15 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
     if (gRaiseWindows && owningWindow->mIsShown && owningWindow->mShell &&
         !gtk_window_is_active(GTK_WINDOW(owningWindow->mShell))) {
       if (!mIsX11Display &&
-          Preferences::GetBool("widget.wayland.focus-workaround.enabled",
+          Preferences::GetBool("widget.wayland.test-workarounds.enabled",
                                false)) {
         // Wayland does not support focus changes so we need to workaround it
         // by window hide/show sequence.
         owningWindow->NativeShow(false);
-        owningWindow->NativeShow(true);
+        RefPtr<nsWindow> self(owningWindow);
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
+            "nsWindow::NativeShow()",
+            [self]() -> void { self->NativeShow(true); }));
         return;
       }
 
