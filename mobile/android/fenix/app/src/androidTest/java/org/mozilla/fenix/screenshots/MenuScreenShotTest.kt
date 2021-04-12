@@ -142,8 +142,8 @@ class MenuScreenShotTest : ScreenshotTest() {
         editBookmarkFolder()
         Screengrab.screenshot("ThreeDotMenuBookmarksRobot_edit-bookmark-folder-menu")
         // It may be needed to wait here to have the screenshot
-        mDevice.pressBack()
         bookmarksMenu {
+            navigateUp()
         }.openThreeDotMenu("test") {
             deleteBookmarkFolder()
             Screengrab.screenshot("ThreeDotMenuBookmarksRobot_delete-bookmark-folder-menu")
