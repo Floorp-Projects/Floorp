@@ -5,7 +5,7 @@
 use api::{BorderRadius, ClipMode, ColorF, ColorU, RasterSpace};
 use api::{ImageRendering, RepeatMode, PrimitiveFlags};
 use api::{PremultipliedColorF, PropertyBinding, Shadow};
-use api::{PrimitiveKeyKind};
+use api::{PrimitiveKeyKind, FillRule, POLYGON_CLIP_VERTEX_MAX};
 use api::units::*;
 use euclid::{SideOffsets2D, Size2D};
 use malloc_size_of::MallocSizeOf;
@@ -209,6 +209,46 @@ impl From<WorldRect> for RectangleKey {
         }
     }
 }
+
+/// To create a fixed-size representation of a polygon, we use a fixed
+/// number of points. Our initialization method restricts us to values
+/// <= 32. If our constant POLYGON_CLIP_VERTEX_MAX is > 32, the Rust
+/// compiler will complain.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Copy, Debug, Clone, Hash, MallocSizeOf, PartialEq)]
+pub struct PolygonKey {
+    pub point_count: u8,
+    pub points: [PointKey; POLYGON_CLIP_VERTEX_MAX],
+    pub fill_rule: FillRule,
+}
+
+impl PolygonKey {
+    pub fn new(
+        points_layout: &Vec<LayoutPoint>,
+        fill_rule: FillRule,
+    ) -> Self {
+        // We have to fill fixed-size arrays with data from a Vec.
+        // We'll do this by initializing the arrays to known-good
+        // values then overwriting those values as long as our
+        // iterator provides values.
+        let mut points: [PointKey; POLYGON_CLIP_VERTEX_MAX] = [PointKey { x: 0.0, y: 0.0}; POLYGON_CLIP_VERTEX_MAX];
+
+        let mut point_count: u8 = 0;
+        for (src, dest) in points_layout.iter().zip(points.iter_mut()) {
+            *dest = (*src as LayoutPoint).into();
+            point_count = point_count + 1;
+        }
+
+        PolygonKey {
+            point_count,
+            points,
+            fill_rule,
+        }
+    }
+}
+
+impl Eq for PolygonKey {}
 
 /// A hashable SideOffset2D that can be used in primitive keys.
 #[cfg_attr(feature = "capture", derive(Serialize))]
