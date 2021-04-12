@@ -654,8 +654,7 @@ pref("media.navigator.permission.device", true);
 pref("extensions.systemAddon.update.url", "https://aus5.mozilla.org/update/3/SystemAddons/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
 pref("extensions.systemAddon.update.enabled", true);
 
-// E10s stuff. We don't support 'file' or 'priveleged' process types.
-pref("browser.tabs.remote.separateFileUriProcess", false);
+// E10s stuff. We don't support 'privileged' process types.
 pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
 pref("browser.tabs.remote.enforceRemoteTypeRestrictions", false);
 
