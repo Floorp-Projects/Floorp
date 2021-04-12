@@ -56,7 +56,7 @@ add_task(async function test_profileSavedFieldNames_update() {
   FormAutofillStatus.formAutofillStorage.addresses._data = [];
 
   // The set is empty if there's no profile in the store.
-  FormAutofillStatus.updateSavedFieldNames();
+  await FormAutofillStatus.updateSavedFieldNames();
   Assert.equal(
     Services.ppmm.sharedData.get("FormAutofill:savedFieldNames").size,
     0
@@ -88,7 +88,7 @@ add_task(async function test_profileSavedFieldNames_update() {
     },
   ];
 
-  FormAutofillStatus.updateSavedFieldNames();
+  await FormAutofillStatus.updateSavedFieldNames();
 
   let autofillSavedFieldNames = Services.ppmm.sharedData.get(
     "FormAutofill:savedFieldNames"
