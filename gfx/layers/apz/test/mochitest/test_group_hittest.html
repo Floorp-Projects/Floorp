@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Various hit-testing tests that spawn in new windows - Part 2</title>
+  <title>Various hit-testing tests that spawn in new windows</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -32,14 +32,23 @@ var overscroll_prefs = [...prefs,
                        ];
 
 var subtests = [
+  {"file": "helper_hittest_basic.html", "prefs": prefs},
+  {"file": "helper_hittest_fixed_in_scrolled_transform.html", "prefs": prefs},
+  {"file": "helper_hittest_float_bug1434846.html", "prefs": prefs},
+  {"file": "helper_hittest_float_bug1443518.html", "prefs": prefs},
+  {"file": "helper_hittest_checkerboard.html", "prefs": prefs},
+  {"file": "helper_hittest_backface_hidden.html", "prefs": prefs},
+  {"file": "helper_hittest_touchaction.html", "prefs": prefs},
+  {"file": "helper_hittest_nested_transforms_bug1459696.html", "prefs": prefs},
+  {"file": "helper_hittest_sticky_bug1478304.html", "prefs": prefs},
+  {"file": "helper_hittest_clipped_fixed_modal.html", "prefs": prefs},
   {"file": "helper_hittest_pointerevents_svg.html", "prefs": prefs},
   {"file": "helper_hittest_clippath.html", "prefs": prefs},
   {"file": "helper_hittest_hoisted_scrollinfo.html", "prefs": prefs},
+  {"file": "helper_hittest_spam.html", "prefs": prefs},
   {"file": "helper_hittest_hidden_inactive_scrollframe.html", "prefs": prefs},
   {"file": "helper_hittest_overscroll.html", "prefs": overscroll_prefs},
   {"file": "helper_hittest_overscroll_subframe.html", "prefs": overscroll_prefs},
-  // This test should be at the end, because it's prone to timeout.
-  {"file": "helper_hittest_spam.html", "prefs": prefs},
 ];
 
 function addConditionalTests(tests) {
@@ -49,11 +58,9 @@ function addConditionalTests(tests) {
   var utils = SpecialPowers.getDOMWindowUtils(window);
   var isWebRender = utils.layerManagerType.startsWith("WebRender");
   if (isWebRender) {
-    // Add new tests at the beginning, to ensure the final test remains in
-    // the final position.
-    tests = [
+    tests = tests.concat([
       {"file": "helper_hittest_deep_scene_stack.html", "prefs": prefs},
-    ].concat(tests);
+    ]);
   }
   return tests;
 }
