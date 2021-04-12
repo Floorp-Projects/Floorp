@@ -5,9 +5,9 @@
 "use strict";
 
 class LegacyProcessesWatcher {
-  constructor(targetList, onTargetAvailable, onTargetDestroyed) {
-    this.targetList = targetList;
-    this.rootFront = targetList.rootFront;
+  constructor(targetCommand, onTargetAvailable, onTargetDestroyed) {
+    this.targetCommand = targetCommand;
+    this.rootFront = targetCommand.rootFront;
 
     this.onTargetAvailable = onTargetAvailable;
     this.onTargetDestroyed = onTargetDestroyed;
@@ -17,7 +17,7 @@ class LegacyProcessesWatcher {
   }
 
   async _processListChanged() {
-    if (this.targetList.isDestroyed()) {
+    if (this.targetCommand.isDestroyed()) {
       return;
     }
 
