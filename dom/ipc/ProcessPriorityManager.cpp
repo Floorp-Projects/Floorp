@@ -142,7 +142,7 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
       ParticularProcessPriorityManager* aParticularManager,
       hal::ProcessPriority aOldPriority);
 
-  void TabActivityChanged(BrowserParent* aBrowserParent, bool aIsActive);
+  void ActivityChanged(BrowserParent* aBrowserParent, bool aIsActive);
 
   void ResetPriority(ContentParent* aContentParent);
 
@@ -253,7 +253,7 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   void ResetPriorityNow();
   void SetPriorityNow(ProcessPriority aPriority);
 
-  void TabActivityChanged(BrowserParent* aBrowserParent, bool aIsActive);
+  void ActivityChanged(BrowserParent* aBrowserParent, bool aIsActive);
 
   void ShutDown();
 
@@ -448,8 +448,8 @@ void ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
   }
 }
 
-void ProcessPriorityManagerImpl::TabActivityChanged(
-    BrowserParent* aBrowserParent, bool aIsActive) {
+void ProcessPriorityManagerImpl::ActivityChanged(BrowserParent* aBrowserParent,
+                                                 bool aIsActive) {
   RefPtr<ParticularProcessPriorityManager> pppm =
       GetParticularProcessPriorityManager(aBrowserParent->Manager());
   if (!pppm) {
@@ -459,7 +459,7 @@ void ProcessPriorityManagerImpl::TabActivityChanged(
   Telemetry::ScalarAdd(
       Telemetry::ScalarID::DOM_CONTENTPROCESS_OS_PRIORITY_CHANGE_CONSIDERED, 1);
 
-  pppm->TabActivityChanged(aBrowserParent, aIsActive);
+  pppm->ActivityChanged(aBrowserParent, aIsActive);
 }
 
 void ProcessPriorityManagerImpl::ResetPriority(ContentParent* aContentParent) {
@@ -750,7 +750,7 @@ void ParticularProcessPriorityManager::SetPriorityNow(
                                    ProcessPriorityToString(mPriority));
 }
 
-void ParticularProcessPriorityManager::TabActivityChanged(
+void ParticularProcessPriorityManager::ActivityChanged(
     BrowserParent* aBrowserParent, bool aIsActive) {
   MOZ_ASSERT(aBrowserParent);
 
@@ -903,8 +903,8 @@ bool ProcessPriorityManager::CurrentProcessIsForeground() {
 }
 
 /* static */
-void ProcessPriorityManager::TabActivityChanged(BrowserParent* aBrowserParent,
-                                                bool aIsActive) {
+void ProcessPriorityManager::ActivityChanged(BrowserParent* aBrowserParent,
+                                             bool aIsActive) {
   MOZ_ASSERT(aBrowserParent);
 
   ProcessPriorityManagerImpl* singleton =
@@ -913,7 +913,7 @@ void ProcessPriorityManager::TabActivityChanged(BrowserParent* aBrowserParent,
     return;
   }
 
-  singleton->TabActivityChanged(aBrowserParent, aIsActive);
+  singleton->ActivityChanged(aBrowserParent, aIsActive);
 }
 
 /* static */

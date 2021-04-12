@@ -3356,7 +3356,7 @@ void BrowserParent::SetRenderLayers(bool aEnabled) {
     mActiveInPriorityManager = aEnabled;
     // Let's inform the priority manager. This operation can end up with the
     // changing of the process priority.
-    ProcessPriorityManager::TabActivityChanged(this, aEnabled);
+    ProcessPriorityManager::ActivityChanged(this, aEnabled);
   }
 
   if (aEnabled == mRenderLayers) {
@@ -3423,7 +3423,7 @@ void BrowserParent::NotifyResolutionChanged() {
 
 void BrowserParent::Deprioritize() {
   if (mActiveInPriorityManager) {
-    ProcessPriorityManager::TabActivityChanged(this, false);
+    ProcessPriorityManager::ActivityChanged(this, false);
     mActiveInPriorityManager = false;
   }
 }
