@@ -662,7 +662,7 @@ enum ProgramSourceType {
 pub struct ProgramSourceInfo {
     base_filename: &'static str,
     features: Vec<&'static str>,
-    full_name: Rc<String>,
+    full_name_cstr: Rc<std::ffi::CString>,
     source_type: ProgramSourceType,
     digest: ProgramSourceDigest,
 }
@@ -687,7 +687,7 @@ impl ProgramSourceInfo {
         // Hash the renderer name.
         hasher.write(device.capabilities.renderer_name.as_bytes());
 
-        let full_name = Rc::new(Self::make_full_name(name, features));
+        let full_name = Self::make_full_name(name, features);
 
         let optimized_source = if device.use_optimized_shaders {
             OPTIMIZED_SHADERS.get(&(gl_version, &full_name)).or_else(|| {
@@ -763,7 +763,7 @@ impl ProgramSourceInfo {
         ProgramSourceInfo {
             base_filename: name,
             features: features.to_vec(),
-            full_name,
+            full_name_cstr: Rc::new(std::ffi::CString::new(full_name).unwrap()),
             source_type,
             digest: hasher.into(),
         }
@@ -803,8 +803,8 @@ impl ProgramSourceInfo {
         }
     }
 
-    fn full_name(&self) -> &Rc<String> {
-        &self.full_name
+    fn full_name(&self) -> String {
+        Self::make_full_name(self.base_filename, &self.features)
     }
 }
 
@@ -1062,7 +1062,7 @@ pub struct Device {
     // device state
     bound_textures: [gl::GLuint; 16],
     bound_program: gl::GLuint,
-    bound_program_name: Rc<String>,
+    bound_program_name: Rc<std::ffi::CString>,
     bound_vao: gl::GLuint,
     bound_read_fbo: (FBOId, DeviceIntPoint),
     bound_draw_fbo: FBOId,
@@ -1764,7 +1764,7 @@ impl Device {
 
             bound_textures: [0; 16],
             bound_program: 0,
-            bound_program_name: Rc::new(String::new()),
+            bound_program_name: Rc::new(std::ffi::CString::new("").unwrap()),
             bound_vao: 0,
             bound_read_fbo: (FBOId(0), DeviceIntPoint::zero()),
             bound_draw_fbo: FBOId(0),
@@ -2219,7 +2219,7 @@ impl Device {
         let _guard = CrashAnnotatorGuard::new(
             &self.crash_annotator,
             CrashAnnotation::CompileShader,
-            &program.source_info.full_name()
+            &program.source_info.full_name_cstr
         );
 
         assert!(!program.is_initialized());
@@ -2385,7 +2385,7 @@ impl Device {
         if self.bound_program != program.id {
             self.gl.use_program(program.id);
             self.bound_program = program.id;
-            self.bound_program_name = program.source_info.full_name().clone();
+            self.bound_program_name = program.source_info.full_name_cstr.clone();
             self.program_mode_id = UniformLocation(program.u_mode);
         }
         true
