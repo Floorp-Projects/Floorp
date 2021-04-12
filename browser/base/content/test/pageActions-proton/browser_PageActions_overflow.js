@@ -166,3 +166,91 @@ add_task(async function bookmark() {
   await promiseStableResize(originalOuterWidth, win);
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function test_disabledPageAction_hidden_in_protonOverflowMenu() {
+  // Make sure that proton is enabled for this test (indipendently from its
+  // default value set on the current build).
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.proton.enabled", true]],
+  });
+  // Make sure the overflow menu urlbar button is visible (indipendently from
+  // the current size of the Firefox window).
+  BrowserPageActions.mainButtonNode.style.visibility = "visible";
+  registerCleanupFunction(() => {
+    BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: { page_action: {} },
+    async background() {
+      const { browser } = this;
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      browser.test.assertTrue(tab, "Got an active tab as expected");
+      browser.test.onMessage.addListener(async msg => {
+        switch (msg) {
+          case "show-pageAction":
+            await browser.pageAction.show(tab.id);
+            break;
+          case "hide-pageAction":
+            await browser.pageAction.hide(tab.id);
+            break;
+          default:
+            browser.test.fail(`Unexpected message received: ${msg}`);
+        }
+        browser.test.sendMessage(`${msg}:done`);
+      });
+    },
+  });
+
+  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+    const win = browser.ownerGlobal;
+    const promisePageActionPanelClosed = async () => {
+      let popupHiddenPromise = promisePageActionPanelHidden(win);
+      win.BrowserPageActions.panelNode.hidePopup();
+      await popupHiddenPromise;
+    };
+
+    await extension.startup();
+    const widgetId = ExtensionCommon.makeWidgetId(extension.id);
+
+    info(
+      "Show pageAction and verify it is visible in the urlbar overflow menu"
+    );
+    extension.sendMessage("show-pageAction");
+    await extension.awaitMessage("show-pageAction:done");
+    await promisePageActionPanelOpen(win);
+    let pageActionNode = win.BrowserPageActions.panelButtonNodeForActionID(
+      widgetId
+    );
+    ok(
+      pageActionNode && BrowserTestUtils.is_visible(pageActionNode),
+      "enabled pageAction should be visible in the urlbar overflow menu"
+    );
+
+    info("Hide pageAction and verify it is hidden in the urlbar overflow menu");
+    extension.sendMessage("hide-pageAction");
+    await extension.awaitMessage("hide-pageAction:done");
+
+    await BrowserTestUtils.waitForCondition(
+      () => !win.BrowserPageActions.panelButtonNodeForActionID(widgetId),
+      "Wait for the disabled pageAction to be removed from the urlbar overflow menu"
+    );
+
+    await promisePageActionPanelClosed();
+
+    info("Reopen the urlbar overflow menu");
+    await promisePageActionPanelOpen(win);
+    ok(
+      !win.BrowserPageActions.panelButtonNodeForActionID(widgetId),
+      "Disabled pageAction is still removed as expected"
+    );
+
+    await promisePageActionPanelClosed();
+    await extension.unload();
+  });
+
+  await SpecialPowers.popPrefEnv();
+});
