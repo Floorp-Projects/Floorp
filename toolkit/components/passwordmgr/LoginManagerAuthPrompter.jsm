@@ -132,7 +132,16 @@ LoginManagerAuthPromptFactory.prototype = {
   },
 
   getPendingPrompt(browser, hashKey) {
-    return this._pendingPrompts.get(browser || this._noBrowser)?.get(hashKey);
+    // If there is already a matching auth prompt which has no browser
+    // associated we can reuse it. This way we avoid showing tab level prompts
+    // when there is already a pending window prompt.
+    let pendingNoBrowserPrompt = this._pendingPrompts
+      .get(this._noBrowser)
+      ?.get(hashKey);
+    if (pendingNoBrowserPrompt) {
+      return pendingNoBrowserPrompt;
+    }
+    return this._pendingPrompts.get(browser)?.get(hashKey);
   },
 
   _setPendingPrompt(prompt, hashKey) {
