@@ -10,13 +10,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   AttributionCode: "resource:///modules/AttributionCode.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
 });
-
-const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
 
 const DEFAULT_WELCOME_CONTENT = {
   template: "multistage",
@@ -431,11 +428,59 @@ const RULES = [
   {
     description: "Windows pin to task bar screen",
     getDefaults() {
-      if (
-        !Services.prefs.getBoolPref(DID_SEE_ABOUT_WELCOME_PREF, true) &&
-        canPinCurrentAppToTaskbar()
-      ) {
-        return { ...DEFAULT_WELCOME_CONTENT };
+      if (canPinCurrentAppToTaskbar()) {
+        return {
+          template: "multistage",
+          screens: [
+            {
+              id: "AW_PIN_AND_DEFAULT",
+              order: 0,
+              content: {
+                ...DEFAULT_WELCOME_CONTENT.screens[0].content,
+                title: {
+                  string_id: "onboarding-multistage-pin-default-header",
+                },
+                subtitle: {
+                  string_id: "onboarding-multistage-pin-default-subtitle",
+                },
+                help_text: {
+                  position: "default",
+                  text: {
+                    string_id: "onboarding-multistage-pin-default-help-text",
+                  },
+                },
+                primary_button: {
+                  label: {
+                    string_id:
+                      "onboarding-multistage-pin-default-primary-button-label",
+                  },
+                  action: {
+                    navigate: true,
+                    type: "PIN_AND_DEFAULT",
+                    waitForDefault: true,
+                  },
+                },
+                waiting_for_default: {
+                  subtitle: {
+                    string_id:
+                      "onboarding-multistage-pin-default-waiting-subtitle",
+                  },
+                  help_text: null,
+                  primary_button: null,
+                  tiles: {
+                    media_type: "tiles-delayed",
+                    type: "image",
+                    source: {
+                      default:
+                        "chrome://activity-stream/content/data/content/assets/remote/windows-default-browser.gif",
+                    },
+                  },
+                },
+              },
+            },
+            ...DEFAULT_WELCOME_CONTENT.screens.slice(1),
+          ],
+        };
       }
 
       return null;
