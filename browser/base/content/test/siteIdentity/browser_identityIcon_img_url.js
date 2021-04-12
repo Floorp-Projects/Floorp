@@ -67,11 +67,6 @@ const TEST_CASES = [
     img_url: `url("chrome://global/skin/icons/security-warning.svg")`,
   },
   {
-    type: "netErrorPage",
-    testURL: "https://tls1.example.com/",
-    img_url: `url("chrome://global/skin/icons/security-broken.svg")`,
-  },
-  {
     type: "localhost",
     testURL: "http://127.0.0.1",
     img_url: `url("chrome://global/skin/icons/document.svg")`,
@@ -126,10 +121,7 @@ add_task(async function test() {
       () => {
         gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, testURL);
         let browser = gBrowser.selectedBrowser;
-        if (
-          testData.type === "certificateError" ||
-          testData.type === "netErrorPage"
-        ) {
+        if (testData.type === "certificateError") {
           pageLoaded = BrowserTestUtils.waitForErrorPage(browser);
         } else {
           pageLoaded = BrowserTestUtils.browserLoaded(browser);

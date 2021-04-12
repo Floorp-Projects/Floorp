@@ -275,8 +275,7 @@
 
 #identity-box[pageproxystate="valid"].notSecure #identity-icon,
 #identity-box[pageproxystate="valid"].mixedActiveContent #identity-icon,
-#identity-box[pageproxystate="valid"].httpsOnlyErrorPage #identity-icon,
-#identity-box[pageproxystate="valid"].netErrorPage #identity-icon {
+#identity-box[pageproxystate="valid"].httpsOnlyErrorPage #identity-icon {
   list-style-image: url(chrome://global/skin/icons/security-broken.svg);
 }
 
