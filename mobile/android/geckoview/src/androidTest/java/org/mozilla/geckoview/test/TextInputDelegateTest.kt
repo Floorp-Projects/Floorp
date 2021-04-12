@@ -459,7 +459,6 @@ class TextInputDelegateTest : BaseSessionTest() {
     }
 
     // Test deleteSurroundingText
-    @Ignore // disable test for frequent failures in bug 1655896
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun inputConnection_deleteSurroundingText() {
         setupContent("foobarfoo")
