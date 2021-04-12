@@ -10,6 +10,8 @@
     <string name="mozac_browser_menu_new_private_tab">Thẻ riêng tư mới</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Đóng thẻ</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Nhân đôi thẻ</string>
     <!-- Content description of the tab counter toolbar button -->
     <string name="mozac_tab_counter_content_description">Nút thanh công cụ bộ đếm thẻ.</string>
 </resources>
