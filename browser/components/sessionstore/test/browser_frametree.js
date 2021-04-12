@@ -27,9 +27,11 @@ add_task(async function test_frametree() {
   is(await countNonDynamicFrames(browser), 2, "two non-dynamic child frames");
 
   // Go back in history.
-  let pageShowPromise = ContentTask.spawn(browser, null, async () => {
-    await ContentTaskUtils.waitForEvent(this, "pageshow", true);
-  });
+  let pageShowPromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "pageshow",
+    true
+  );
   browser.goBack();
   await pageShowPromise;
 
