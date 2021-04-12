@@ -882,7 +882,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
         gAttachedBottom.erase(IDC_SUBMITREPORTCHECK);
         gAttachedBottom.erase(IDC_COMMENTTEXT);
 
-        StretchDialog(hwndDlg, urlCheckRect.top);
+        StretchDialog(hwndDlg, urlCheckRect.top - urlCheckRect.bottom);
 
         gAttachedBottom.insert(IDC_VIEWREPORTBUTTON);
         gAttachedBottom.insert(IDC_SUBMITREPORTCHECK);
