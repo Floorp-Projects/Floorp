@@ -17,7 +17,7 @@ class AssumptionsTestCase(unittest.TestCase):
 
     def testAcCheckoutFileFormatAndPathCorrect(self):
         # If file format or path is incorrect, this method will raise.
-        module.ac_checkout_to_gv_versions(AC_ROOT)
+        module.ac_checkout_to_gv_version(AC_ROOT)
 
     def testFenixCheckoutCorrectParse(self):
         # Unfortunately, we'd have to guess where the fenix install is

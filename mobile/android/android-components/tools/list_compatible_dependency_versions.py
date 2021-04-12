@@ -140,10 +140,8 @@ def gv_nightly_version_to_mc_hash(gv_nightly_version):
     pom, debug_pom_url = fetch_pom(pom_url)
     return get_hash_from_pom(pom, debug_pom_url)
 
-def ac_checkout_to_gv_versions(ac_root):
-    release_version = None
-    beta_version = None
-    nightly_version = None
+def ac_checkout_to_gv_version(ac_root):
+    version = None
 
     gv_version_path = os.path.join(ac_root, PATH_GV_VERSION)
     with open(gv_version_path) as f:
@@ -151,23 +149,19 @@ def ac_checkout_to_gv_versions(ac_root):
             stripped = line.strip()
 
             # Expected format: `const val nightly_version = "82.0.20200907094115"`
-            if stripped.startswith('const val nightly_version = "'):
-                nightly_version = extract_str_inside_quotes(line)
-            elif stripped.startswith('const val beta_version = "'):
-                beta_version = extract_str_inside_quotes(line)
-            elif stripped.startswith('const val release_version = "'):
-                release_version = extract_str_inside_quotes(line)
+            if stripped.startswith('const val version = "'):
+                version = extract_str_inside_quotes(line)
 
-        if not nightly_version or not beta_version or not release_version:
+        if not version:
             raise Exception('Unable to find gv versions from ac repository file "{}". This is likely a bug where the file path or format has changed.'.format(gv_version_path))
-    return release_version, beta_version, nightly_version
+    return version
 
 def ac_checkout_to_mc_hash(ac_root):
-    releasev, betav, nightlyv = ac_checkout_to_gv_versions(ac_root)
+    version = ac_checkout_to_gv_version(ac_root)
 
-    validate_gv_nightly_version(nightlyv)
-    mc_hash = gv_nightly_version_to_mc_hash(nightlyv)
-    return mc_hash, releasev, betav, nightlyv
+    validate_gv_nightly_version(version)
+    mc_hash = gv_nightly_version_to_mc_hash(version)
+    return mc_hash, version
 
 ### SECTION: MAIN ###
 def main_repo_to_hash(fenix_path, is_no_fenix_passed):
