@@ -1293,6 +1293,14 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           break;
         case MD_EXCEPTION_CODE_WIN_STACK_BUFFER_OVERRUN:
           reason = "EXCEPTION_STACK_BUFFER_OVERRUN";
+            if (raw_exception->exception_record.number_parameters > 0) {
+            uint32_t fast_fail_code =
+                static_cast<uint32_t>
+                (raw_exception->exception_record.exception_information[0]);
+            reason.append(" / ");
+            reason.append(FastFailToString(fast_fail_code));
+          }
+
           break;
         case MD_EXCEPTION_CODE_WIN_HEAP_CORRUPTION:
           reason = "EXCEPTION_HEAP_CORRUPTION";

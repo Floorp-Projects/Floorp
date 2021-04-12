@@ -46,6 +46,9 @@ namespace google_breakpad {
 /* Converts a NTSTATUS code to a reason string. */
 string NTStatusToString(uint32_t ntstatus);
 
+/* Converts a FAST_FAIL code to a reason string. */
+string FastFailToString(uint32_t fast_fail_code);
+
 }  // namespace google_breakpad
 
 #endif  // GOOGLE_BREAKPAD_PROCESSOR_SYMBOLIC_CONSTANTS_WIN_H_
