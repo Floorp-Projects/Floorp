@@ -156,11 +156,15 @@ async function submitFormAndGetResults(
     }
     form.submit();
   }
+
+  let loadPromise = BrowserTestUtils.browserLoaded(browser);
   await SpecialPowers.spawn(
     browser,
     [[formAction, selectorValues]],
     contentSubmitForm
   );
+  await loadPromise;
+
   let result = await getFormSubmitResponseResult(
     browser,
     formAction,
