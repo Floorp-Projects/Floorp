@@ -737,6 +737,8 @@ pub fn set_log_pings(value: bool) {
 /// Overrides any existing source tags.
 /// Source tags will show in the destination datasets, after ingestion.
 ///
+/// **Note** If one or more tags are invalid, all tags are ignored.
+///
 /// # Arguments
 ///
 /// * `tags` - A vector of at most 5 valid HTTP header values. Individual

@@ -5,8 +5,9 @@
 use std::convert::TryFrom;
 
 use crate::error::{Error, ErrorKind};
+use crate::metrics::labeled::validate_dynamic_label;
 #[allow(unused_imports)]
-use crate::metrics::{dynamic_label, LabeledMetric};
+use crate::metrics::LabeledMetric;
 use crate::Glean;
 
 /// The supported metrics' lifetimes.
@@ -112,7 +113,7 @@ impl CommonMetricData {
         let base_identifier = self.base_identifier();
 
         if let Some(label) = &self.dynamic_label {
-            dynamic_label(glean, self, &base_identifier, label)
+            validate_dynamic_label(glean, self, &base_identifier, label)
         } else {
             base_identifier
         }

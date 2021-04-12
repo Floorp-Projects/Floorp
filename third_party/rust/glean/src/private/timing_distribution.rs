@@ -32,6 +32,27 @@ impl TimingDistributionMetric {
             glean_core::metrics::TimingDistributionMetric::new(meta, time_unit),
         )))
     }
+
+    /// Accumulates the provided samples in the metric.
+    ///
+    /// # Arguments
+    ///
+    /// * `samples` - A list of samples recorded by the metric.
+    ///               Samples must be in nanoseconds.
+    ///
+    /// ## Notes
+    ///
+    /// Reports an [`ErrorType::InvalidOverflow`] error for samples that
+    /// are longer than `MAX_SAMPLE_TIME`.
+    pub fn accumulate_raw_samples_nanos(&self, samples: Vec<u64>) {
+        let metric = Arc::clone(&self.0);
+        crate::launch_with_glean(move |glean| {
+            metric
+                .write()
+                .unwrap()
+                .accumulate_raw_samples_nanos(glean, &samples);
+        });
+    }
 }
 
 #[inherent(pub)]

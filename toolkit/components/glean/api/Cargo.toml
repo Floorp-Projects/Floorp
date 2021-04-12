@@ -8,7 +8,7 @@ publish = false
 [dependencies]
 bincode = "1.0"
 chrono = "0.4.10"
-glean = "36.0.0"
+glean = "36.0.1"
 inherent = "0.1.4"
 log = "0.4"
 nsstring = { path = "../../../../xpcom/rust/nsstring", optional = true }

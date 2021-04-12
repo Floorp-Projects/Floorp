@@ -18,7 +18,7 @@ mod denominator;
 mod event;
 mod experiment;
 mod jwe;
-mod labeled;
+pub(crate) mod labeled;
 mod memory_distribution;
 mod memory_unit;
 mod ping;
@@ -51,9 +51,7 @@ pub use crate::histogram::HistogramType;
 #[cfg(test)]
 pub(crate) use self::experiment::RecordedExperimentData;
 pub use self::jwe::JweMetric;
-pub use self::labeled::{
-    combine_base_identifier_and_label, dynamic_label, strip_label, LabeledMetric,
-};
+pub use self::labeled::LabeledMetric;
 pub use self::memory_distribution::MemoryDistributionMetric;
 pub use self::memory_unit::MemoryUnit;
 pub use self::ping::PingType;

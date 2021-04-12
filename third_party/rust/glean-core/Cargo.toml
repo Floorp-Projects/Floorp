@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "36.0.0"
+version = "36.0.1"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
 include = ["/README.md", "/LICENSE", "/src", "/examples", "/tests", "/Cargo.toml"]
 description = "A modern Telemetry library"

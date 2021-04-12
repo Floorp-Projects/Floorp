@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::sync::{Arc, RwLock};
+use std::time::Duration;
 
 use inherent::inherent;
 
@@ -65,6 +66,16 @@ impl glean_core::traits::Timespan for TimespanMetric {
                 .write()
                 .expect("Lock poisoned for timespan metric on cancel.");
             lock.cancel()
+        });
+    }
+
+    fn set_raw(&self, elapsed: Duration) {
+        let metric = Arc::clone(&self.0);
+        crate::launch_with_glean(move |glean| {
+            let inner = metric
+                .write()
+                .expect("Lock poisoned for timespan metric on set_raw.");
+            inner.set_raw(glean, elapsed)
         });
     }
 
