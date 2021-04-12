@@ -44,6 +44,10 @@ A basic ``MOZCONFIG`` file for doing a debug build, put into ``$HOME/mozconfigs/
     # Enable the debugging tools: Assertions, debug only code etc.
     ac_add_options --enable-debug
 
+    # Use a dedicated objdir for SpiderMonkey debug builds to avoid
+    # conflicting with Firefox build with default configuration.
+    mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-debug-@CONFIG_GUESS@
+
 To activate a particular ``MOZCONFIG``, set the environment variable:
 
 .. code::
