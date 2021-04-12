@@ -122,7 +122,7 @@
             android:id="@+id/synced_tab_item"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:contentDescription="@string/tabs_header_private_tabs_title"
+            android:contentDescription="@string/tabs_header_synced_tabs_title"
             android:foregroundTint="@color/photonWhite"
             android:icon="@drawable/ic_synced_tabs" />
 
