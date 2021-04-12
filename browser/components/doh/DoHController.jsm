@@ -27,11 +27,46 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
 });
 
+// When this is set we suppress automatic TRR selection beyond dry-run as well
+// as sending observer notifications during heuristics throttling.
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "kDebounceTimeout",
+  "kIsInAutomation",
+  "doh-rollout._testing",
+  false
+);
+
+// We wait until the network has been stably up for this many milliseconds
+// before triggering a heuristics run.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "kNetworkDebounceTimeout",
   "doh-rollout.network-debounce-timeout",
   1000
+);
+
+// If consecutive heuristics runs are attempted within this period after a first,
+// we suppress them for this duration, at the end of which point we decide whether
+// to do one coalesced run or to extend the timer if the rate limit was exceeded.
+// Note that the very first run is allowed, after which we start the timer.
+// This throttling is necessary due to evidence of clients that experience
+// network volatility leading to thousands of runs per hour. See bug 1626083.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "kHeuristicsThrottleTimeout",
+  "doh-rollout.heuristics-throttle-timeout",
+  15000
+);
+
+// After the throttle timeout described above, if there are more than this many
+// heuristics attempts during the timeout, we restart the timer without running
+// heuristics. Thus, heuristics are suppressed completely as long as the rate
+// exceeds this limit.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "kHeuristicsRateLimit",
+  "doh-rollout.heuristics-throttle-rate-limit",
+  2
 );
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -293,26 +328,85 @@ const DoHController = {
     }
 
     await this.runTRRSelection();
-    await this.runHeuristics("startup");
+    this.runHeuristicsThrottled("startup");
     Services.obs.addObserver(this, kLinkStatusChangedTopic);
     Services.obs.addObserver(this, kConnectivityTopic);
 
     this._heuristicsAreEnabled = true;
   },
 
-  _lastHeuristicsRunTimestamp: 0,
+  _runsWhileThrottling: 0,
+  _wasThrottleExtended: false,
+  _throttleHeuristics() {
+    if (kHeuristicsThrottleTimeout < 0) {
+      // Skip throttling in tests that set timeout to a negative value.
+      return false;
+    }
+
+    if (this._throttleTimer) {
+      // Already throttling - nothing to do.
+      this._runsWhileThrottling++;
+      return true;
+    }
+
+    this._runsWhileThrottling = 0;
+
+    this._throttleTimer = setTimeout(
+      this._handleThrottleTimeout.bind(this),
+      kHeuristicsThrottleTimeout
+    );
+
+    return false;
+  },
+
+  _handleThrottleTimeout() {
+    delete this._throttleTimer;
+    if (this._runsWhileThrottling > kHeuristicsRateLimit) {
+      // During the throttle period, we saw that the rate limit was exceeded.
+      // We extend the throttle period, and don't bother running heuristics yet.
+      this._wasThrottleExtended = true;
+      // Restart the throttle timer.
+      this._throttleHeuristics();
+      if (kIsInAutomation) {
+        Services.obs.notifyObservers(null, "doh:heuristics-throttle-extend");
+      }
+      return;
+    }
+
+    // If this was an extended throttle and there were no runs during the
+    // extended period, we still want to run heuristics, since the extended
+    // throttle implies we had a non-zero number of attempts before extension.
+    if (this._runsWhileThrottling > 0 || this._wasThrottleExtended) {
+      this.runHeuristicsThrottled("throttled");
+    }
+
+    this._wasThrottleExtended = false;
+
+    if (kIsInAutomation) {
+      Services.obs.notifyObservers(null, "doh:heuristics-throttle-done");
+    }
+  },
+
+  runHeuristicsThrottled(evaluateReason) {
+    // _throttleHeuristics returns true if we've already witnessed a run and the
+    // timeout period hasn't lapsed yet. If it does so, we suppress this run.
+    if (this._throttleHeuristics()) {
+      return;
+    }
+
+    // _throttleHeuristics returned false - we're good to run heuristics.
+    // At this point the timer has been started and subsequent calls will be
+    // suppressed if it hasn't fired yet.
+    this.runHeuristics(evaluateReason);
+  },
   async runHeuristics(evaluateReason) {
     let start = Date.now();
-    // If this function is called in quick succession, _lastHeuristicsRunTimestamp
-    // might be refreshed while we are still awaiting Heuristics.run() below.
-    this._lastHeuristicsRunTimestamp = start;
 
     let results = await Heuristics.run();
 
     if (
       !gNetworkLinkService.isLinkUp ||
       this._lastDebounceTimestamp > start ||
-      this._lastHeuristicsRunTimestamp > start ||
       gCaptivePortalService.state == gCaptivePortalService.LOCKED_PORTAL
     ) {
       // If the network is currently down or there was a debounce triggered
@@ -448,6 +542,14 @@ const DoHController = {
 
     Services.obs.removeObserver(this, kLinkStatusChangedTopic);
     Services.obs.removeObserver(this, kConnectivityTopic);
+    if (this._debounceTimer) {
+      clearTimeout(this._debounceTimer);
+      delete this._debounceTimer;
+    }
+    if (this._throttleTimer) {
+      clearTimeout(this._throttleTimer);
+      delete this._throttleTimer;
+    }
     this._heuristicsAreEnabled = false;
   },
 
@@ -509,7 +611,7 @@ const DoHController = {
       );
     };
 
-    if (Cu.isInAutomation) {
+    if (kIsInAutomation) {
       // For mochitests, just record telemetry with a dummy result.
       // TRRPerformance.jsm is tested in xpcshell.
       setDryRunResultAndRecordTelemetry("https://dummytrr.com/query");
@@ -584,14 +686,20 @@ const DoHController = {
       return;
     }
 
+    if (kNetworkDebounceTimeout < 0) {
+      // Skip debouncing in tests that set timeout to a negative value.
+      this.onConnectionChangedDebounced();
+      return;
+    }
+
     this._lastDebounceTimestamp = Date.now();
     this._debounceTimer = setTimeout(() => {
       this._cancelDebounce();
       this.onConnectionChangedDebounced();
-    }, kDebounceTimeout);
+    }, kNetworkDebounceTimeout);
   },
 
-  async onConnectionChangedDebounced() {
+  onConnectionChangedDebounced() {
     if (!gNetworkLinkService.isLinkUp) {
       return;
     }
@@ -603,15 +711,15 @@ const DoHController = {
     // The network is up and we don't know that we're in a locked portal.
     // Run heuristics. If we detect a portal later, we'll run heuristics again
     // when it's unlocked. In that case, this run will likely have failed.
-    await this.runHeuristics("netchange");
+    this.runHeuristicsThrottled("netchange");
   },
 
-  async onConnectivityAvailable() {
+  onConnectivityAvailable() {
     if (this._debounceTimer) {
       // Already debouncing - nothing to do.
       return;
     }
 
-    await this.runHeuristics("connectivity");
+    this.runHeuristicsThrottled("connectivity");
   },
 };
