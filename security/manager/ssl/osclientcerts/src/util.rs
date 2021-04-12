@@ -19,13 +19,28 @@ macro_rules! unsafe_packed_field_access {
     }};
 }
 
+// The following ENCODED_OID_BYTES_* consist of the encoded bytes of an ASN.1
+// OBJECT IDENTIFIER specifying the indicated OID (in other words, the full
+// tag, length, and value).
 #[cfg(target_os = "macos")]
-pub const OID_BYTES_SECP256R1: &[u8] =
+pub const ENCODED_OID_BYTES_SECP256R1: &[u8] =
     &[0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07];
 #[cfg(target_os = "macos")]
-pub const OID_BYTES_SECP384R1: &[u8] = &[0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22];
+pub const ENCODED_OID_BYTES_SECP384R1: &[u8] = &[0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22];
 #[cfg(target_os = "macos")]
-pub const OID_BYTES_SECP521R1: &[u8] = &[0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23];
+pub const ENCODED_OID_BYTES_SECP521R1: &[u8] = &[0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23];
+
+// The following OID_BYTES_* consist of the contents of the bytes of an ASN.1
+// OBJECT IDENTIFIER specifying the indicated OID (in other words, just the
+// value, and not the tag or length).
+#[cfg(target_os = "macos")]
+pub const OID_BYTES_SHA_256: &[u8] = &[0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01];
+#[cfg(target_os = "macos")]
+pub const OID_BYTES_SHA_384: &[u8] = &[0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02];
+#[cfg(target_os = "macos")]
+pub const OID_BYTES_SHA_512: &[u8] = &[0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03];
+#[cfg(target_os = "macos")]
+pub const OID_BYTES_SHA_1: &[u8] = &[0x2b, 0x0e, 0x03, 0x02, 0x1a];
 
 // This is a helper function to take a value and lay it out in memory how
 // PKCS#11 is expecting it.
@@ -57,8 +72,8 @@ pub fn read_rsa_modulus(public_key: &[u8]) -> Result<Vec<u8>, ()> {
     Ok(modulus_value.to_vec())
 }
 
-/// Given a slice of DER bytes representing a DigestInfo, extracts the bytes of the digest.
-///
+/// Given a slice of DER bytes representing a DigestInfo, extracts the bytes of
+/// the OID of the hash algorithm and the digest.
 /// DigestInfo ::= SEQUENCE {
 ///   digestAlgorithm DigestAlgorithmIdentifier,
 ///   digest Digest }
@@ -70,16 +85,21 @@ pub fn read_rsa_modulus(public_key: &[u8]) -> Result<Vec<u8>, ()> {
 ///      parameters              ANY DEFINED BY algorithm OPTIONAL  }
 ///
 /// Digest ::= OCTET STRING
-#[cfg(target_os = "windows")]
-pub fn read_digest<'a>(digest_info: &'a [u8]) -> Result<&'a [u8], ()> {
+pub fn read_digest_info<'a>(digest_info: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), ()> {
     let mut sequence = Sequence::new(digest_info)?;
-    let _ = sequence.read_sequence()?;
+    let mut algorithm = sequence.read_sequence()?;
+    let oid = algorithm.read_oid()?;
+    algorithm.read_null()?;
+    if !algorithm.at_end() {
+        error!("read_digest: extra input");
+        return Err(());
+    }
     let digest = sequence.read_octet_string()?;
     if !sequence.at_end() {
         error!("read_digest: extra input");
         return Err(());
     }
-    Ok(digest)
+    Ok((oid, digest))
 }
 
 /// Given a slice of DER bytes representing an ECDSA signature, extracts the bytes of `r` and `s`
@@ -134,8 +154,11 @@ macro_rules! try_read_bytes {
 /// ASN.1 tag identifying an integer.
 const INTEGER: u8 = 0x02;
 /// ASN.1 tag identifying an octet string.
-#[cfg(target_os = "windows")]
 const OCTET_STRING: u8 = 0x04;
+/// ASN.1 tag identifying a null value.
+const NULL: u8 = 0x05;
+/// ASN.1 tag identifying an object identifier (OID).
+const OBJECT_IDENTIFIER: u8 = 0x06;
 /// ASN.1 tag identifying a sequence.
 const SEQUENCE: u8 = 0x10;
 /// ASN.1 tag modifier identifying an item as constructed.
@@ -179,10 +202,23 @@ impl<'a> Sequence<'a> {
         }
     }
 
-    #[cfg(target_os = "windows")]
     fn read_octet_string(&mut self) -> Result<&'a [u8], ()> {
         let (_, _, bytes) = self.contents.read_tlv(OCTET_STRING)?;
         Ok(bytes)
+    }
+
+    fn read_oid(&mut self) -> Result<&'a [u8], ()> {
+        let (_, _, bytes) = self.contents.read_tlv(OBJECT_IDENTIFIER)?;
+        Ok(bytes)
+    }
+
+    fn read_null(&mut self) -> Result<(), ()> {
+        let (_, _, bytes) = self.contents.read_tlv(NULL)?;
+        if bytes.len() == 0 {
+            Ok(())
+        } else {
+            Err(())
+        }
     }
 
     fn read_sequence(&mut self) -> Result<Sequence<'a>, ()> {
