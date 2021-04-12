@@ -85,4 +85,9 @@ pref("toolkit.autocomplete.delegate", true);
 // Bug 1625257.
 pref("webextensions.storage.sync.kinto", true);
 
-pref("browser.formfill.enable", true);
+// Form autofill prefs.
+pref("extensions.formautofill.addresses.capture.enabled", true);
+
+// Debug prefs.
+pref("browser.formfill.debug", false);
+pref("extensions.formautofill.loglevel", "Warn");
