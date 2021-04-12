@@ -8,8 +8,9 @@ license:
         - build/pgo/js-input
         # License not super clear
         - browser/branding/
-        # Trademark
+        # Trademarks
         - browser/components/pocket/content/panels/
+        - browser/components/newtab/data/content/tippytop/images/
         - toolkit/components/pdfjs/content/web/images/
         # We probably want a specific license
         - browser/extensions/webcompat/injections/
