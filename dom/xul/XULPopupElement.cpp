@@ -98,6 +98,49 @@ void XULPopupElement::HidePopup(bool aCancel) {
   }
 }
 
+static Modifiers ConvertModifiers(const ActivateMenuItemModifiers& aModifiers) {
+  Modifiers modifiers = 0;
+  if (aModifiers.mCtrlKey) {
+    modifiers |= MODIFIER_CONTROL;
+  }
+  if (aModifiers.mAltKey) {
+    modifiers |= MODIFIER_ALT;
+  }
+  if (aModifiers.mShiftKey) {
+    modifiers |= MODIFIER_SHIFT;
+  }
+  if (aModifiers.mMetaKey) {
+    modifiers |= MODIFIER_META;
+  }
+  return modifiers;
+}
+
+void XULPopupElement::ActivateItem(Element& aItemElement,
+                                   const ActivateMenuItemModifiers& aModifiers,
+                                   ErrorResult& aRv) {
+  if (!Contains(&aItemElement)) {
+    return aRv.ThrowInvalidStateError("Menu item is not inside this menu.");
+  }
+
+  nsMenuPopupFrame* menuPopupFrame =
+      do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
+  if (!menuPopupFrame || !menuPopupFrame->IsOpen()) {
+    return aRv.ThrowInvalidStateError("Menu is closed");
+  }
+
+  nsMenuFrame* itemFrame = do_QueryFrame(aItemElement.GetPrimaryFrame());
+  if (!itemFrame) {
+    return aRv.ThrowInvalidStateError("Couldn't get frame for menuitem");
+  }
+
+  if (itemFrame->GetMenuParent() != menuPopupFrame) {
+    return aRv.ThrowInvalidStateError(
+        "Menu item is not directly inside this menu");
+  }
+
+  itemFrame->ActivateItem(ConvertModifiers(aModifiers));
+}
+
 void XULPopupElement::MoveTo(int32_t aLeft, int32_t aTop) {
   nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
   if (menuPopupFrame) {
