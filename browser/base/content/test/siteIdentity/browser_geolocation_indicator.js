@@ -33,7 +33,7 @@ async function testGeoSharingIconVisible(state = true) {
   ok(sharingIcon, "Geo sharing icon exists");
 
   try {
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => sharingIcon.hasAttribute("sharing") === true,
       "Waiting for geo sharing icon visibility state",
       // If we wait for sharing icon to *not* show, waitForCondition will always timeout on correct state.
@@ -51,7 +51,7 @@ async function checkForDOMElement(state, id) {
   info(`Testing state ${state} of element  ${id}`);
   let el;
   try {
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => {
         el = document.getElementById(id);
         return el != null;
@@ -92,7 +92,7 @@ async function testPermissionPopupGeoContainer(
     // Wait for the geo container to be fully populated.
     // The time label is computed async.
     let container = await checkContainer;
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => container.childElementCount == 2,
       "permission-popup-geo-container should have two elements."
     );
@@ -358,7 +358,7 @@ add_task(async function test_permission_popup_permission_clear() {
   await Promise.all([
     testGeoSharingIconVisible(false),
     testPermissionPopupGeoContainer(false, false),
-    BrowserTestUtils.waitForCondition(() => {
+    TestUtils.waitForCondition(() => {
       let sharingState = tab._sharingState;
       return (
         sharingState == null ||
