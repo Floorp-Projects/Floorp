@@ -6,7 +6,7 @@
 
 const {
   LegacyWorkersWatcher,
-} = require("devtools/shared/resources/legacy-target-watchers/legacy-workers-watcher");
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
 
 class LegacySharedWorkersWatcher extends LegacyWorkersWatcher {
   // Flag used from the parent class to listen to process targets.

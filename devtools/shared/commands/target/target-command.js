@@ -13,16 +13,16 @@ const SERVER_TARGET_SWITCHING_ENABLED =
 
 const {
   LegacyProcessesWatcher,
-} = require("devtools/shared/resources/legacy-target-watchers/legacy-processes-watcher");
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher");
 const {
   LegacyServiceWorkersWatcher,
-} = require("devtools/shared/resources/legacy-target-watchers/legacy-serviceworkers-watcher");
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher");
 const {
   LegacySharedWorkersWatcher,
-} = require("devtools/shared/resources/legacy-target-watchers/legacy-sharedworkers-watcher");
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher");
 const {
   LegacyWorkersWatcher,
-} = require("devtools/shared/resources/legacy-target-watchers/legacy-workers-watcher");
+} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
 
 class TargetCommand extends EventEmitter {
   /**
