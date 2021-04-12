@@ -65,6 +65,6 @@ add_task(async function testTrrSelectionDisable() {
     undefined,
     "doh-rollout.uri remained unset."
   );
-  await ensureNoTRRModeChange(2);
+  await ensureTRRMode(2);
   await checkHeuristicsTelemetry("enable_doh", "startup");
 });
