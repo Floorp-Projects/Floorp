@@ -35,7 +35,7 @@ add_task(async function systemAddonPreffedOff() {
 
   BootstrapMonitor.checkNotStarted(id);
 
-  await promiseShutdownManager(false);
+  await promiseShutdownManager({ clearOverrides: false });
 });
 
 add_task(async function systemAddonPreffedOn() {
