@@ -15,12 +15,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { FormAutofill } = ChromeUtils.import(
-  "resource://formautofill/FormAutofill.jsm"
+  "resource://autofill/FormAutofill.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillUtils",
-  "resource://formautofill/FormAutofillUtils.jsm"
+  "resource://autofill/FormAutofillUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -1254,7 +1254,7 @@ this.FormAutofillHeuristics = {
 
 XPCOMUtils.defineLazyGetter(FormAutofillHeuristics, "RULES", () => {
   let sandbox = {};
-  const HEURISTICS_REGEXP = "chrome://formautofill/content/heuristicsRegexp.js";
+  const HEURISTICS_REGEXP = "resource://autofill/content/heuristicsRegexp.js";
   Services.scriptloader.loadSubScript(HEURISTICS_REGEXP, sandbox);
   return sandbox.HeuristicsRegExp.RULES;
 });

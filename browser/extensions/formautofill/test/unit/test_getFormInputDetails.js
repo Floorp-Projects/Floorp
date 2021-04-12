@@ -3,7 +3,7 @@
 var FormAutofillContent;
 add_task(async function() {
   ({ FormAutofillContent } = ChromeUtils.import(
-    "resource://formautofill/FormAutofillContent.jsm"
+    "resource://autofill/FormAutofillContent.jsm"
   ));
 });
 
