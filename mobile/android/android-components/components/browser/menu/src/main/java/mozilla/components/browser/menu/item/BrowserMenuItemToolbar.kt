@@ -29,10 +29,13 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
  *
  * @param items buttons that will be shown in a horizontal layout
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
+ * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
+ * depending on the menu position).
  */
 class BrowserMenuItemToolbar(
     private val items: List<Button>,
-    override val isCollapsingMenuLimit: Boolean = false
+    override val isCollapsingMenuLimit: Boolean = false,
+    override val isSticky: Boolean = false
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 

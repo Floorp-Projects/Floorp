@@ -29,6 +29,11 @@ import mozilla.components.concept.menu.candidate.TextStyle
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param textColorResource Optional ID of color resource to tint the text.
  * @property subMenu Target sub menu to be shown when this menu item is clicked.
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
+ * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
+ * depending on the menu position).
+ * @param endOfMenuAlwaysVisible when is set to true makes sure the bottom of the menu is always visible
+ * otherwise, the top of the menu is always visible.
  */
 @Suppress("LongParameterList")
 class ParentBrowserMenuItem(
@@ -42,6 +47,7 @@ class ParentBrowserMenuItem(
     private val textColorResource: Int = NO_ID,
     internal val subMenu: BrowserMenu,
     override val isCollapsingMenuLimit: Boolean = false,
+    override val isSticky: Boolean = false,
     endOfMenuAlwaysVisible: Boolean = false
 ) : AbstractParentBrowserMenuItem(subMenu, isCollapsingMenuLimit, endOfMenuAlwaysVisible) {
 

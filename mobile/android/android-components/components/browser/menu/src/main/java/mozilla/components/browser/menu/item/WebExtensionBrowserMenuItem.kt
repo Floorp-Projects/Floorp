@@ -30,12 +30,15 @@ import mozilla.components.support.base.log.Log
  * @param action the [Action] to display.
  * @param listener a callback to be invoked when this menu item is clicked.
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
+ * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
+ * depending on the menu position).
  */
 class WebExtensionBrowserMenuItem(
     internal var action: Action,
     internal val listener: () -> Unit,
     internal val id: String = "",
-    override val isCollapsingMenuLimit: Boolean = false
+    override val isCollapsingMenuLimit: Boolean = false,
+    override val isSticky: Boolean = false
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 

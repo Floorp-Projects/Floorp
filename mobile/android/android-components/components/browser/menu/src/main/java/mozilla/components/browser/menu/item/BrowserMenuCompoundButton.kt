@@ -20,6 +20,8 @@ import java.lang.reflect.Modifier.PRIVATE
  *
  * @param label The visible label of this menu item.
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
+ * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
+ * depending on the menu position).
  * @param initialState The initial value the checkbox should have.
  * @param listener Callback to be invoked when this menu item is checked.
  */
@@ -27,6 +29,7 @@ abstract class BrowserMenuCompoundButton(
     @VisibleForTesting(otherwise = PRIVATE)
     val label: String,
     override val isCollapsingMenuLimit: Boolean = false,
+    override val isSticky: Boolean = false,
     private val initialState: () -> Boolean = { false },
     private val listener: (Boolean) -> Unit
 ) : BrowserMenuItem {

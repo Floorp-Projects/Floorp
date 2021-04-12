@@ -28,6 +28,8 @@ import mozilla.components.concept.menu.candidate.TypefaceStyle
  * @param textStyle: The style to apply to the text.
  * @param textAlignment The alignment of text
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
+ * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
+ * depending on the menu position).
  */
 @Suppress("LongParameterList")
 class BrowserMenuCategory(
@@ -37,7 +39,8 @@ class BrowserMenuCategory(
     private val textColorResource: Int = NO_ID,
     @TypefaceStyle private val textStyle: Int = Typeface.BOLD,
     @TextAlignment private val textAlignment: Int = View.TEXT_ALIGNMENT_VIEW_START,
-    override val isCollapsingMenuLimit: Boolean = false
+    override val isCollapsingMenuLimit: Boolean = false,
+    override val isSticky: Boolean = false
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 

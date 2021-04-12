@@ -32,6 +32,8 @@ private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0, 0
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param textColorResource Optional ID of color resource to tint the text.
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
+ * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
+ * depending on the menu position).
  * @param highlight Highlight object representing how the menu item will be displayed when highlighted.
  * @param isHighlighted Whether or not to display the highlight
  * @param listener Callback to be invoked when this menu item is clicked.
@@ -43,6 +45,7 @@ class BrowserMenuHighlightableItem(
     @ColorRes private val iconTintColorResource: Int = NO_ID,
     @ColorRes private val textColorResource: Int = NO_ID,
     override val isCollapsingMenuLimit: Boolean = false,
+    override val isSticky: Boolean = false,
     override val highlight: BrowserMenuHighlight,
     override val isHighlighted: () -> Boolean = { true },
     private val listener: () -> Unit = {}
@@ -52,6 +55,7 @@ class BrowserMenuHighlightableItem(
     iconTintColorResource,
     textColorResource,
     isCollapsingMenuLimit,
+    isSticky,
     listener
 ), HighlightableMenuItem {
 
@@ -66,6 +70,7 @@ class BrowserMenuHighlightableItem(
         @ColorRes
         textColorResource: Int = NO_ID,
         isCollapsingMenuLimit: Boolean = false,
+        isSticky: Boolean = false,
         highlight: Highlight? = null,
         listener: () -> Unit = {}
     ) : this(
@@ -74,6 +79,7 @@ class BrowserMenuHighlightableItem(
         iconTintColorResource,
         textColorResource,
         isCollapsingMenuLimit,
+        isSticky,
         highlight ?: defaultHighlight,
         { highlight != null },
         listener

@@ -44,6 +44,8 @@ internal fun TextView.setColorResource(@ColorRes textColorResource: Int) {
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param textColorResource Optional ID of color resource to tint the text.
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
+ * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
+ * depending on the menu position).
  * @param listener Callback to be invoked when this menu item is clicked.
  */
 @Suppress("LongParameterList")
@@ -56,6 +58,7 @@ open class BrowserMenuImageText(
     @ColorRes
     private val textColorResource: Int = NO_ID,
     override val isCollapsingMenuLimit: Boolean = false,
+    override val isSticky: Boolean = false,
     private val listener: () -> Unit = {}
 ) : BrowserMenuItem {
 

@@ -16,11 +16,14 @@ import mozilla.components.browser.menu.BrowserMenuItem
  * @param endOfMenuAlwaysVisible when is set to true makes sure the bottom of the menu is always visible
  * otherwise, the top of the menu is always visible.
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
+ * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
+ * depending on the menu position).
  */
 abstract class AbstractParentBrowserMenuItem(
     private val subMenu: BrowserMenu,
     private val endOfMenuAlwaysVisible: Boolean,
-    override val isCollapsingMenuLimit: Boolean = false
+    override val isCollapsingMenuLimit: Boolean = false,
+    override val isSticky: Boolean = false
 ) : BrowserMenuItem {
     /**
      * Listener called when the sub menu is shown.
