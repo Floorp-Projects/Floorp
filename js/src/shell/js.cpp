@@ -11257,8 +11257,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
-  if (op.getBoolOption("large-arraybuffers")) {
-    JS::SetLargeArrayBuffersEnabled(true);
+  if (op.getBoolOption("no-large-arraybuffers")) {
+    JS::SetLargeArrayBuffersEnabled(false);
   }
 
   if (op.getBoolOption("disable-bailout-loop-check")) {
@@ -11904,9 +11904,9 @@ int main(int argc, char** argv, char** envp) {
                         "Enable top-level await") ||
       !op.addBoolOption('\0', "off-thread-parse-global",
                         "Use parseGlobal in all off-thread compilation") ||
-      !op.addBoolOption('\0', "large-arraybuffers",
-                        "Allow creating ArrayBuffers larger than 2 GB on "
-                        "64-bit platforms (experimental!)") ||
+      !op.addBoolOption('\0', "no-large-arraybuffers",
+                        "Disallow creating ArrayBuffers larger than 2 GB on "
+                        "64-bit platforms") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT

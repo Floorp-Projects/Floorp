@@ -33,7 +33,6 @@ bool JSAPITest::init(JSContext* maybeReusableContext) {
   }
 
   js::UseInternalJobQueues(cx);
-  JS::SetLargeArrayBuffersEnabled(true);
 
   if (!JS::InitSelfHostedCode(cx)) {
     return false;
