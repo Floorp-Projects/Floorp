@@ -183,10 +183,13 @@ ABORT_SIGNATURES = (
     # is automatically filtered out by that pattern.
     "core::ops::function::Fn::call",
     "gkrust_shared::panic_hook",
+    "mozglue_static::panic_hook",
     "intentional_panic",
     "mozalloc_abort",
     "mozalloc_abort(char const* const)",
     "static void Abort(const char *)",
+    "std::sys_common::backtrace::__rust_end_short_backtrace",
+    "rust_begin_unwind",
 )
 
 # Similar to above, but matches if the substring appears anywhere in the
@@ -196,6 +199,7 @@ ABORT_SUBSTRINGS = (
     # std::panicking or core::panic namespaces.
     "_panic_",
     "core::panic::",
+    "core::panicking::",
     "core::result::unwrap_failed",
     "std::panicking::",
 )
