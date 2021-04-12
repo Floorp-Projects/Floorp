@@ -142,11 +142,15 @@ function onTargetDestroyed({ targetFront }) {
 
 async function onSourceAvailable(sources) {
   const frontendSources = await Promise.all(
-    sources.map(async source => {
-      const threadFront = await source.targetFront.getFront("thread");
-      const frontendSource = prepareSourcePayload(threadFront, source);
-      return frontendSource;
-    })
+    sources
+      .filter(source => {
+        return !source.targetFront.isDestroyed();
+      })
+      .map(async source => {
+        const threadFront = await source.targetFront.getFront("thread");
+        const frontendSource = prepareSourcePayload(threadFront, source);
+        return frontendSource;
+      })
   );
   await actions.newGeneratedSources(frontendSources);
 }
