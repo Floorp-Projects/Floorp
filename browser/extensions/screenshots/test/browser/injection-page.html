@@ -17,8 +17,7 @@ let callback = function(mutationsList, observer) {
     }
   }
 };
-
-observer = new MutationObserver(callback);
+var observer = new MutationObserver(callback);
 observer.observe(document.body, {childList: true});
 </script>
 </body>
