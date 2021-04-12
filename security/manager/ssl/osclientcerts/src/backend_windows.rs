@@ -361,7 +361,7 @@ fn sign_cryptoapi(
     // data will be an encoded DigestInfo, which specifies the hash algorithm and bytes of the hash
     // to sign. However, CryptoAPI requires directly specifying the bytes of the hash, so it must
     // be extracted first.
-    let hash_bytes = read_digest(data)?;
+    let (_, hash_bytes) = read_digest_info(data)?;
     let hash = HCryptHash::new(hcryptprov, hash_bytes)?;
     let mut signature_len = 0;
     if unsafe {
