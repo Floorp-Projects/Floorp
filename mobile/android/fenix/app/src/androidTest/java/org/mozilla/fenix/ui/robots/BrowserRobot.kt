@@ -310,8 +310,7 @@ class BrowserRobot {
             // needs to wait for the right url to load before saving a bookmark
             verifyUrl(url.toString())
         }.openThreeDotMenu {
-            clickAddBookmarkButton()
-        }
+        }.bookmarkPage { }
     }
 
     fun clickLinkMatchingText(expectedText: String) {

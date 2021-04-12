@@ -17,7 +17,6 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -194,14 +193,13 @@ class SmokeTest {
 
     @Test
     // Verifies the list of items in a tab's 3 dot menu
-    @Ignore("To be re-implemented with the three dot menu changes https://github.com/mozilla-mobile/fenix/issues/17870")
     fun verifyPageMainMenuItemsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
-            verifyThreeDotMainMenuItems()
+            verifyPageThreeDotMainMenuItems()
         }
     }
 
@@ -321,41 +319,32 @@ class SmokeTest {
 
     @Test
     // Verifies the Bookmark button in a tab's 3 dot menu
-    // TODO: To be removed in https://github.com/mozilla-mobile/fenix/issues/17979 since the bookmark button is no longer in the nav bar.
     fun mainMenuBookmarkButtonTest() {
-        if (!FeatureFlags.toolbarMenuFeature) {
-            val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-            navigationToolbar {
-            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-            }.openThreeDotMenu {
-            }.bookmarkPage {
-                verifySnackBarText("Bookmark saved!")
-            }
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openThreeDotMenu {
+        }.bookmarkPage {
+            verifySnackBarText("Bookmark saved!")
         }
     }
 
     @Test
     // Verifies the Share button in a tab's 3 dot menu
-    @Ignore("To be fixed in https://github.com/mozilla-mobile/fenix/issues/17979")
     fun mainMenuShareButtonTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
-            verifyShareButton()
+        }.sharePage {
+            verifyShareAppsLayout()
         }
-
-        // we verify that the share button exists, but this fails when trying to click
-//        .sharePage {
-//            verifyShareAppsLayout()
-//        }
     }
 
     @Test
     // Verifies the refresh button in a tab's 3 dot menu
-    @Ignore("To be fixed in https://github.com/mozilla-mobile/fenix/issues/17979")
     fun mainMenuRefreshButtonTest() {
         val refreshWebPage = TestAssetHelper.getRefreshAsset(mockWebServer)
 
@@ -364,18 +353,13 @@ class SmokeTest {
             mDevice.waitForIdle()
         }.openThreeDotMenu {
             verifyThreeDotMenuExists()
-            verifyRefreshButton()
+        }.refreshPage {
+            verifyPageContent("REFRESHED")
         }
-
-        // we verify that the refresh button exists, but this fails when trying to click
-//        .refreshPage {
-//            verifyPageContent("REFRESHED")
-//        }
     }
 
     @Test
     // Turns ETP toggle off from Settings and verifies the ETP shield is not displayed in the nav bar
-    @Ignore("To be fixed in https://github.com/mozilla-mobile/fenix/issues/17979")
     fun verifyETPShieldNotDisplayedIfOFFGlobally() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -552,7 +536,6 @@ class SmokeTest {
 
     @Test
     // Saves a login, then changes it and verifies the update
-    @Ignore("To be re-implemented with the three dot menu changes https://github.com/mozilla-mobile/fenix/issues/17870")
     fun updateSavedLoginTest() {
         val saveLoginTest =
             TestAssetHelper.getSaveLoginAsset(mockWebServer)
@@ -616,7 +599,6 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17799")
     // Installs uBlock add-on and checks that the app doesn't crash while loading pages with trackers
     fun noCrashWithAddonInstalledTest() {
         // setting ETP to Strict mode to test it works with add-ons
@@ -991,7 +973,6 @@ class SmokeTest {
 
     @Test
     // Verifies that deleting a Bookmarks folder also removes the item from inside it.
-    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17799")
     fun deleteNonEmptyBookmarkFolderTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -1152,7 +1133,6 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17799")
     fun mainMenuInstallPWATest() {
         val pwaPage = "https://rpappalax.github.io/testapp/"
 
@@ -1169,7 +1149,6 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17971")
     // Verifies that reader mode is detected and the custom appearance controls are displayed
     fun verifyReaderViewAppearanceUI() {
         val readerViewPage =

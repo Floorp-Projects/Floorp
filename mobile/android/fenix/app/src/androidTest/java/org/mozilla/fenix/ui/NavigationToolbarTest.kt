@@ -49,7 +49,6 @@ class NavigationToolbarTest {
     }
 
     @Test
-    @Ignore("To be fixed in https://github.com/mozilla-mobile/fenix/issues/17979")
     fun goBackTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val nextWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
@@ -68,7 +67,6 @@ class NavigationToolbarTest {
     }
 
     @Test
-    @Ignore("To be fixed in https://github.com/mozilla-mobile/fenix/issues/17979")
     fun goForwardTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val nextWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
@@ -90,29 +88,8 @@ class NavigationToolbarTest {
         navigationToolbar {
         }.openThreeDotMenu {
             verifyThreeDotMenuExists()
-            verifyForwardButton()
         }.goForward {
             verifyUrl(nextWebPage.url.toString())
-        }
-    }
-
-    @Test
-    @Ignore("To be fixed in https://github.com/mozilla-mobile/fenix/issues/17979")
-    fun refreshPageTest() {
-        val refreshWebPage = TestAssetHelper.getRefreshAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(refreshWebPage.url) {
-            mDevice.waitForIdle()
-        }
-
-        // Use refresh from the three-dot menu
-        navigationToolbar {
-        }.openThreeDotMenu {
-            verifyThreeDotMenuExists()
-            verifyRefreshButton()
-        }.refreshPage {
-            verifyPageContent("REFRESHED")
         }
     }
 

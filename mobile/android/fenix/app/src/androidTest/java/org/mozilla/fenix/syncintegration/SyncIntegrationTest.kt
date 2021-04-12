@@ -28,7 +28,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.ext.toUri
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.ui.robots.accountSettings
-import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.settingsSubMenuLoginsAndPassword
@@ -141,10 +140,7 @@ class SyncIntegrationTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage) {
         }.openThreeDotMenu {
-            verifyAddBookmarkButton()
-            clickAddBookmarkButton()
-        }
-        browserScreen {
+        }.bookmarkPage {
         }.openThreeDotMenu {
         }.openSettings {
         }.openTurnOnSyncMenu {

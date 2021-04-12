@@ -269,16 +269,20 @@ private fun assertThemeSelected() = onView(withText("Light"))
 private fun assertAccessibilityButton() = onView(withText("Accessibility"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertSetAsDefaultBrowserButton() =
+private fun assertSetAsDefaultBrowserButton() {
+    scrollToElementByText("Set as default browser")
     onView(withText("Set as default browser"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 private fun assertDefaultBrowserIsDisabled() {
+    scrollToElementByText("Set as default browser")
     onView(withId(R.id.switch_widget))
         .check(matches(ViewMatchers.isNotChecked()))
 }
 
 private fun toggleDefaultBrowserSwitch() {
+    scrollToElementByText("Set as default browser")
     onView(
         CoreMatchers.allOf(
             ViewMatchers.withParent(CoreMatchers.not(withId(R.id.navigationToolbar))),

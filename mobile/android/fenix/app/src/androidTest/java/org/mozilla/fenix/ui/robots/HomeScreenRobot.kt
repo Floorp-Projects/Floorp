@@ -645,7 +645,7 @@ private fun assertPrivacyNoticeButton() {
 
 private fun assertStartBrowsingButton() {
     scrollToElementByText("Start browsing")
-    onView(allOf(withText("Start browsing")))
+    onView(withId(R.id.finish_button))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 

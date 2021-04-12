@@ -12,7 +12,6 @@ import mozilla.appservices.places.BookmarkRoot
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -32,7 +31,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 /**
  *  Tests for verifying basic functionality of bookmarks
  */
-@Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17979")
 class BookmarksTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
 
@@ -96,10 +94,7 @@ class BookmarksTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
-            verifyAddBookmarkButton()
-            clickAddBookmarkButton()
-        }
-        browserScreen {
+        }.bookmarkPage {
         }.openThreeDotMenu {
             verifyEditBookmarkButton()
         }

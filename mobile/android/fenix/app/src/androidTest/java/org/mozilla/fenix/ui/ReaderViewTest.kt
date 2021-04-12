@@ -9,10 +9,8 @@ import androidx.test.espresso.IdlingRegistry
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -104,7 +102,6 @@ class ReaderViewTest {
 
     @Test
     fun verifyReaderViewToggle() {
-        // New three-dot menu design does not have readerview appearance menu item
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
 
@@ -127,34 +124,21 @@ class ReaderViewTest {
         }
         browserScreen {
             verifyPageContent(estimatedReadingTime)
-        }
+        }.openThreeDotMenu {
+            verifyReaderViewAppearance(true)
+        }.closeBrowserMenuToBrowser { }
+
         navigationToolbar {
             verifyCloseReaderViewDetected(true)
             toggleReaderView()
             mDevice.waitForIdle()
             verifyReaderViewDetected(true)
-        }
-
-        if (!FeatureFlags.toolbarMenuFeature) {
-            browserScreen {
-                verifyPageContent(estimatedReadingTime)
-            }.openThreeDotMenu {
-                verifyReaderViewAppearance(true)
-            }.closeBrowserMenuToBrowser { }
-        }
-
-        if (!FeatureFlags.toolbarMenuFeature) {
-            navigationToolbar {
-                toggleReaderView()
-                mDevice.waitForIdle()
-            }.openThreeDotMenu {
-                verifyReaderViewAppearance(false)
-            }.close { }
-        }
+        }.openThreeDotMenu {
+            verifyReaderViewAppearance(false)
+        }.close { }
     }
 
     @Test
-    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17971")
     fun verifyReaderViewAppearanceFontToggle() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
@@ -195,7 +179,6 @@ class ReaderViewTest {
     }
 
     @Test
-    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17971")
     fun verifyReaderViewAppearanceFontSizeToggle() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
@@ -242,7 +225,6 @@ class ReaderViewTest {
     }
 
     @Test
-    @Ignore("To be re-implemented in https://github.com/mozilla-mobile/fenix/issues/17971")
     fun verifyReaderViewAppearanceColorSchemeChange() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
