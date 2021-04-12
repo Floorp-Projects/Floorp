@@ -705,7 +705,7 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
   }
 
   if (!bytecode->append((uint8_t*)code->dataPointerEither().unwrap(),
-                        code->byteLength().get())) {
+                        code->byteLength())) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -1391,7 +1391,7 @@ bool WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp) {
       continue;
     }
 
-    buf = ArrayBufferObject::createZeroed(cx, BufferSize(cs.payload->length()));
+    buf = ArrayBufferObject::createZeroed(cx, cs.payload->length());
     if (!buf) {
       return false;
     }
@@ -2396,14 +2396,13 @@ bool WasmMemoryObject::bufferGetterImpl(JSContext* cx, const CallArgs& args) {
   RootedArrayBufferObjectMaybeShared buffer(cx, &memoryObj->buffer());
 
   if (memoryObj->isShared()) {
-    size_t memoryLength = memoryObj->volatileMemoryLength().get();
-    MOZ_ASSERT(memoryLength >= buffer->byteLength().get());
+    size_t memoryLength = memoryObj->volatileMemoryLength();
+    MOZ_ASSERT(memoryLength >= buffer->byteLength());
 
-    if (memoryLength > buffer->byteLength().get()) {
+    if (memoryLength > buffer->byteLength()) {
       RootedSharedArrayBufferObject newBuffer(
-          cx,
-          SharedArrayBufferObject::New(cx, memoryObj->sharedArrayRawBuffer(),
-                                       BufferSize(memoryLength)));
+          cx, SharedArrayBufferObject::New(
+                  cx, memoryObj->sharedArrayRawBuffer(), memoryLength));
       if (!newBuffer) {
         return false;
       }
@@ -2501,7 +2500,7 @@ bool WasmMemoryObject::typeImpl(JSContext* cx, const CallArgs& args) {
   }
 
   uint32_t minimumPages = mozilla::AssertedCast<uint32_t>(
-      memoryObj->volatileMemoryLength().get() / wasm::PageSize);
+      memoryObj->volatileMemoryLength() / wasm::PageSize);
   if (!props.append(IdValuePair(NameToId(cx->names().minimum),
                                 Int32Value(minimumPages)))) {
     return false;
@@ -2527,7 +2526,7 @@ bool WasmMemoryObject::type(JSContext* cx, unsigned argc, Value* vp) {
 }
 #endif
 
-BufferSize WasmMemoryObject::volatileMemoryLength() const {
+size_t WasmMemoryObject::volatileMemoryLength() const {
   if (isShared()) {
     return sharedArrayRawBuffer()->volatileByteLength();
   }
@@ -2580,7 +2579,7 @@ bool WasmMemoryObject::movingGrowable() const {
   return !isHuge() && !buffer().wasmMaxSize();
 }
 
-BufferSize WasmMemoryObject::boundsCheckLimit() const {
+size_t WasmMemoryObject::boundsCheckLimit() const {
   if (!buffer().isWasm() || isHuge()) {
     return buffer().byteLength();
   }
@@ -2597,7 +2596,7 @@ BufferSize WasmMemoryObject::boundsCheckLimit() const {
   MOZ_ASSERT(wasm::IsValidBoundsCheckImmediate(mappedSize - wasm::GuardSize));
   size_t limit = mappedSize - wasm::GuardSize;
   MOZ_ASSERT(limit <= MaxMemory32BoundsCheckLimit());
-  return BufferSize(limit);
+  return limit;
 }
 
 bool WasmMemoryObject::addMovingGrowObserver(JSContext* cx,
@@ -2623,8 +2622,8 @@ uint32_t WasmMemoryObject::growShared(HandleWasmMemoryObject memory,
   SharedArrayRawBuffer* rawBuf = memory->sharedArrayRawBuffer();
   SharedArrayRawBuffer::Lock lock(rawBuf);
 
-  MOZ_ASSERT(rawBuf->volatileByteLength().get() % PageSize == 0);
-  uint32_t oldNumPages = rawBuf->volatileByteLength().get() / PageSize;
+  MOZ_ASSERT(rawBuf->volatileByteLength() % PageSize == 0);
+  uint32_t oldNumPages = rawBuf->volatileByteLength() / PageSize;
 
   CheckedInt<size_t> newSize = oldNumPages;
   newSize += delta;
@@ -2643,7 +2642,7 @@ uint32_t WasmMemoryObject::growShared(HandleWasmMemoryObject memory,
     return -1;
   }
 
-  if (!rawBuf->wasmGrowToSizeInPlace(lock, BufferSize(newSize.value()))) {
+  if (!rawBuf->wasmGrowToSizeInPlace(lock, newSize.value())) {
     return -1;
   }
 
@@ -2662,8 +2661,8 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
 
   RootedArrayBufferObject oldBuf(cx, &memory->buffer().as<ArrayBufferObject>());
 
-  MOZ_ASSERT(oldBuf->byteLength().get() % PageSize == 0);
-  uint32_t oldNumPages = oldBuf->byteLength().get() / PageSize;
+  MOZ_ASSERT(oldBuf->byteLength() % PageSize == 0);
+  uint32_t oldNumPages = oldBuf->byteLength() / PageSize;
 
 #if !defined(JS_64BIT) || defined(ENABLE_WASM_CRANELIFT)
   // TODO (large ArrayBuffer): For Cranelift, limit the memory size to something
@@ -2692,8 +2691,8 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
 
   if (memory->movingGrowable()) {
     MOZ_ASSERT(!memory->isHuge());
-    if (!ArrayBufferObject::wasmMovingGrowToSize(BufferSize(newSize.value()),
-                                                 oldBuf, &newBuf, cx)) {
+    if (!ArrayBufferObject::wasmMovingGrowToSize(newSize.value(), oldBuf,
+                                                 &newBuf, cx)) {
       return -1;
     }
   } else {
@@ -2703,8 +2702,8 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
       }
     }
 
-    if (!ArrayBufferObject::wasmGrowToSizeInPlace(BufferSize(newSize.value()),
-                                                  oldBuf, &newBuf, cx)) {
+    if (!ArrayBufferObject::wasmGrowToSizeInPlace(newSize.value(), oldBuf,
+                                                  &newBuf, cx)) {
       return -1;
     }
   }

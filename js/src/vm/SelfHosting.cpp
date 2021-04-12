@@ -1079,7 +1079,7 @@ static bool intrinsic_ArrayBufferByteLength(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[0].toObject().is<T>());
 
-  size_t byteLength = args[0].toObject().as<T>().byteLength().get();
+  size_t byteLength = args[0].toObject().as<T>().byteLength();
   args.rval().setNumber(byteLength);
   return true;
 }
@@ -1097,7 +1097,7 @@ static bool intrinsic_PossiblyWrappedArrayBufferByteLength(JSContext* cx,
     return false;
   }
 
-  size_t byteLength = obj->byteLength().get();
+  size_t byteLength = obj->byteLength();
   args.rval().setNumber(byteLength);
   return true;
 }
@@ -1395,9 +1395,9 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
   size_t sourceOffset = size_t(args[2].toNumber());
   size_t count = size_t(args[3].toNumber());
 
-  MOZ_ASSERT(count > 0 && count <= source->length().get());
-  MOZ_ASSERT(sourceOffset <= source->length().get() - count);
-  MOZ_ASSERT(count <= unsafeTypedArrayCrossCompartment->length().get());
+  MOZ_ASSERT(count > 0 && count <= source->length());
+  MOZ_ASSERT(sourceOffset <= source->length() - count);
+  MOZ_ASSERT(count <= unsafeTypedArrayCrossCompartment->length());
 
   size_t elementSize = TypedArrayElemSize(sourceType);
   MOZ_ASSERT(elementSize ==
@@ -1455,7 +1455,7 @@ static bool intrinsic_TypedArrayInitFromPackedArray(JSContext* cx,
 
   RootedArrayObject source(cx, &args[1].toObject().as<ArrayObject>());
   MOZ_ASSERT(IsPackedArray(source));
-  MOZ_ASSERT(source->length() == target->length().get());
+  MOZ_ASSERT(source->length() == target->length());
 
   switch (target->type()) {
 #define INIT_TYPED_ARRAY(T, N)                                         \

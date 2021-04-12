@@ -731,7 +731,7 @@ static MOZ_ALWAYS_INLINE bool NativeLookupOwnPropertyInline(
 
     if (index.isSome()) {
       uint64_t idx = index.value();
-      if (idx < obj->template as<TypedArrayObject>().length().get()) {
+      if (idx < obj->template as<TypedArrayObject>().length()) {
         propp.setTypedArrayElement(idx);
       } else {
         propp.setTypedArrayOutOfRange();

@@ -2065,7 +2065,7 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
   }
   // TypedArrayObject are also native and contain indexed properties.
   if (MOZ_UNLIKELY(obj->is<TypedArrayObject>())) {
-    size_t length = obj->as<TypedArrayObject>().length().get();
+    size_t length = obj->as<TypedArrayObject>().length();
     vp[0].setBoolean(uint32_t(index) < length);
     return true;
   }
@@ -2435,7 +2435,7 @@ static int32_t AtomicsCompareExchange(TypedArrayObject* typedArray,
   AutoUnsafeCallWithABI unsafe;
 
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  MOZ_ASSERT(index < typedArray->length().get());
+  MOZ_ASSERT(index < typedArray->length());
 
   SharedMem<T*> addr = typedArray->dataPointerEither().cast<T*>();
   return jit::AtomicOperations::compareExchangeSeqCst(addr + index, T(expected),
@@ -2467,7 +2467,7 @@ static int32_t AtomicsExchange(TypedArrayObject* typedArray, size_t index,
   AutoUnsafeCallWithABI unsafe;
 
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  MOZ_ASSERT(index < typedArray->length().get());
+  MOZ_ASSERT(index < typedArray->length());
 
   SharedMem<T*> addr = typedArray->dataPointerEither().cast<T*>();
   return jit::AtomicOperations::exchangeSeqCst(addr + index, T(value));
@@ -2498,7 +2498,7 @@ static int32_t AtomicsAdd(TypedArrayObject* typedArray, size_t index,
   AutoUnsafeCallWithABI unsafe;
 
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  MOZ_ASSERT(index < typedArray->length().get());
+  MOZ_ASSERT(index < typedArray->length());
 
   SharedMem<T*> addr = typedArray->dataPointerEither().cast<T*>();
   return jit::AtomicOperations::fetchAddSeqCst(addr + index, T(value));
@@ -2529,7 +2529,7 @@ static int32_t AtomicsSub(TypedArrayObject* typedArray, size_t index,
   AutoUnsafeCallWithABI unsafe;
 
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  MOZ_ASSERT(index < typedArray->length().get());
+  MOZ_ASSERT(index < typedArray->length());
 
   SharedMem<T*> addr = typedArray->dataPointerEither().cast<T*>();
   return jit::AtomicOperations::fetchSubSeqCst(addr + index, T(value));
@@ -2560,7 +2560,7 @@ static int32_t AtomicsAnd(TypedArrayObject* typedArray, size_t index,
   AutoUnsafeCallWithABI unsafe;
 
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  MOZ_ASSERT(index < typedArray->length().get());
+  MOZ_ASSERT(index < typedArray->length());
 
   SharedMem<T*> addr = typedArray->dataPointerEither().cast<T*>();
   return jit::AtomicOperations::fetchAndSeqCst(addr + index, T(value));
@@ -2591,7 +2591,7 @@ static int32_t AtomicsOr(TypedArrayObject* typedArray, size_t index,
   AutoUnsafeCallWithABI unsafe;
 
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  MOZ_ASSERT(index < typedArray->length().get());
+  MOZ_ASSERT(index < typedArray->length());
 
   SharedMem<T*> addr = typedArray->dataPointerEither().cast<T*>();
   return jit::AtomicOperations::fetchOrSeqCst(addr + index, T(value));
@@ -2622,7 +2622,7 @@ static int32_t AtomicsXor(TypedArrayObject* typedArray, size_t index,
   AutoUnsafeCallWithABI unsafe;
 
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  MOZ_ASSERT(index < typedArray->length().get());
+  MOZ_ASSERT(index < typedArray->length());
 
   SharedMem<T*> addr = typedArray->dataPointerEither().cast<T*>();
   return jit::AtomicOperations::fetchXorSeqCst(addr + index, T(value));
@@ -2652,7 +2652,7 @@ static BigInt* AtomicAccess64(JSContext* cx, TypedArrayObject* typedArray,
                               size_t index, AtomicOp op, Args... args) {
   MOZ_ASSERT(Scalar::isBigIntType(typedArray->type()));
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  MOZ_ASSERT(index < typedArray->length().get());
+  MOZ_ASSERT(index < typedArray->length());
 
   if (typedArray->type() == Scalar::BigInt64) {
     SharedMem<int64_t*> addr = typedArray->dataPointerEither().cast<int64_t*>();
@@ -2670,7 +2670,7 @@ static auto AtomicAccess64(TypedArrayObject* typedArray, size_t index,
                            AtomicOp op, Args... args) {
   MOZ_ASSERT(Scalar::isBigIntType(typedArray->type()));
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  MOZ_ASSERT(index < typedArray->length().get());
+  MOZ_ASSERT(index < typedArray->length());
 
   if (typedArray->type() == Scalar::BigInt64) {
     SharedMem<int64_t*> addr = typedArray->dataPointerEither().cast<int64_t*>();

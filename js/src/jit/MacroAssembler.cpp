@@ -722,7 +722,7 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
       "typed array inline buffer is limited by the maximum object byte size");
 
   // Initialise data elements to zero.
-  size_t length = templateObj->length().get();
+  size_t length = templateObj->length();
   MOZ_ASSERT(length <= INT32_MAX,
              "Template objects are only created for int32 lengths");
   size_t nbytes = length * templateObj->bytesPerElement();

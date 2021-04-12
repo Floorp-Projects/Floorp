@@ -1903,7 +1903,7 @@ static bool DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj,
     if (index) {
       // This method is only called for non-existent properties, which
       // means any absent indexed property must be out of range.
-      MOZ_ASSERT(index.value() >= obj->as<TypedArrayObject>().length().get());
+      MOZ_ASSERT(index.value() >= obj->as<TypedArrayObject>().length());
 
       // The following steps refer to 9.4.5.11 IntegerIndexedElementSet.
 

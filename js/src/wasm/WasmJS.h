@@ -34,9 +34,8 @@
 #include "js/RootingAPI.h"     // MovableCellHasher
 #include "js/SweepingAPI.h"    // JS::WeakCache
 #include "js/TypeDecls.h"  // HandleValue, HandleObject, MutableHandleObject, MutableHandleFunction
-#include "js/Vector.h"  // JS::Vector
+#include "js/Vector.h"        // JS::Vector
 #include "js/WasmFeatures.h"
-#include "vm/BufferSize.h"
 #include "vm/JSFunction.h"    // JSFunction
 #include "vm/NativeObject.h"  // NativeObject
 #include "wasm/WasmTypes.h"   // MutableHandleWasmInstanceObject, wasm::*
@@ -401,12 +400,12 @@ class WasmMemoryObject : public NativeObject {
   // The current length of the memory.  In the case of shared memory, the
   // length can change at any time.  Also note that this will acquire a lock
   // for shared memory, so do not call this from a signal handler.
-  js::BufferSize volatileMemoryLength() const;
+  size_t volatileMemoryLength() const;
 
   bool isShared() const;
   bool isHuge() const;
   bool movingGrowable() const;
-  js::BufferSize boundsCheckLimit() const;
+  size_t boundsCheckLimit() const;
 
   // If isShared() is true then obtain the underlying buffer object.
   SharedArrayRawBuffer* sharedArrayRawBuffer() const;
