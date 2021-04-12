@@ -376,7 +376,7 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
     -moz-context-properties: fill, fill-opacity;
     fill: currentColor;
     fill-opacity: var(--menu-icon-opacity);
-    list-style-image: url("chrome://global/skin/icons/check.svg");
+    list-style-image: url("chrome://global/skin/icons/menu-check.svg");
     width: 16px;
     margin-inline-end: 8px;
   }
