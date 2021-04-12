@@ -71,6 +71,7 @@ open class DefaultToolbarMenu(
     private var isCurrentUrlBookmarked = false
     private var isBookmarkedJob: Job? = null
 
+    private val shouldDeleteDataOnQuit = context.settings().shouldDeleteBrowsingDataOnQuit
     private val shouldUseBottomToolbar = context.settings().shouldUseBottomToolbar
 
     private val selectedSession: TabSessionState?
@@ -528,6 +529,14 @@ open class DefaultToolbarMenu(
         handleBookmarkItemTapped()
     }
 
+    val deleteDataOnQuit = BrowserMenuImageText(
+        label = context.getString(R.string.delete_browsing_data_on_quit_action),
+        imageResource = R.drawable.ic_exit,
+        iconTintColorResource = primaryTextColor
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.Quit)
+    }
+
     @VisibleForTesting(otherwise = PRIVATE)
     val newCoreMenuItems by lazy {
         val menuItems =
@@ -553,6 +562,7 @@ open class DefaultToolbarMenu(
                 saveToCollectionItem,
                 BrowserMenuDivider(),
                 settingsItem,
+                if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
                 if (shouldUseBottomToolbar) BrowserMenuDivider() else null,
                 if (shouldUseBottomToolbar) menuToolbar else null
             )
