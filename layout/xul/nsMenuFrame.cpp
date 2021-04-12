@@ -938,13 +938,10 @@ void nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent) {
   bool isTrusted =
       aEvent ? aEvent->IsTrusted() : nsContentUtils::IsCallerChrome();
 
-  bool shift = false, control = false, alt = false, meta = false;
+  mozilla::Modifiers modifiers = 0;
   WidgetInputEvent* inputEvent = aEvent ? aEvent->AsInputEvent() : nullptr;
   if (inputEvent) {
-    shift = inputEvent->IsShift();
-    control = inputEvent->IsControl();
-    alt = inputEvent->IsAlt();
-    meta = inputEvent->IsMeta();
+    modifiers = inputEvent->mModifiers;
   }
 
   // Because the command event is firing asynchronously, a flag is needed to
@@ -960,9 +957,9 @@ void nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent) {
         eCaseMatters);
   }
 
-  mDelayedMenuCommandEvent = new nsXULMenuCommandEvent(
-      mContent->AsElement(), isTrusted, shift, control, alt, meta, userinput,
-      needToFlipChecked);
+  mDelayedMenuCommandEvent =
+      new nsXULMenuCommandEvent(mContent->AsElement(), isTrusted, modifiers,
+                                userinput, needToFlipChecked);
 }
 
 void nsMenuFrame::PassMenuCommandEventToPopupManager() {
