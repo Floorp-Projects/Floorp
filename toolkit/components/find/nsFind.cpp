@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//#define DEBUG_FIND 1
+// #define DEBUG_FIND 1
 
 #include "nsFind.h"
 #include "mozilla/Likely.h"
@@ -604,14 +604,16 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     return NS_OK;
   }
 
+  const int32_t patternStart = mFindBackward ? patLen : 0;
+
   // current offset into the pattern -- reset to beginning/end:
-  int32_t pindex = (mFindBackward ? patLen : 0);
+  int32_t pindex = patternStart;
 
   // Current offset into the fragment
   int32_t findex = 0;
 
   // Direction to move pindex and ptr*
-  int incr = (mFindBackward ? -1 : 1);
+  int incr = mFindBackward ? -1 : 1;
 
   const nsTextFragment* frag = nullptr;
   int32_t fragLen = 0;
@@ -641,10 +643,14 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
   Text* current = nullptr;
 
   auto EndPartialMatch = [&]() -> bool {
-    bool hadAnchorNode = !!matchAnchorNode;
     // If we didn't match, go back to the beginning of patStr, and set findex
     // back to the next char after we started the current match.
-    if (matchAnchorNode) {  // we're ending a partial match
+    //
+    // There's no need to do this if we're still at the beginning of the pattern
+    // (this can happen e.g. with whitespace, and prevents exponential
+    // complexity when scanning a pattern that starts with whitespace).
+    const bool restart = !!matchAnchorNode && pindex != patternStart;
+    if (restart) {  // we're ending a partial match
       findex = matchAnchorOffset;
       state.mIterOffset = matchAnchorOffset;
       c = matchAnchorChar;
@@ -665,10 +671,10 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     matchAnchorChar = 0;
     inWhitespace = false;
     prevCharInMatch = 0;
-    pindex = mFindBackward ? patLen : 0;
+    pindex = patternStart;
     DEBUG_FIND_PRINTF("Setting findex back to %d, pindex to %d\n", findex,
                       pindex);
-    return hadAnchorNode;
+    return restart;
   };
 
   while (true) {
@@ -816,7 +822,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       continue;
     }
 
-    if (pindex != (mFindBackward ? patLen : 0) && c != patc && !inWhitespace) {
+    if (pindex != patternStart && c != patc && !inWhitespace) {
       // A non-matching '\n' between CJ characters is ignored
       if (c == '\n' && t2b && IS_CJ_CHAR(prevCharInMatch)) {
         int32_t nindex = findex + incr;
