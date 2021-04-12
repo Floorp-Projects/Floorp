@@ -215,6 +215,10 @@ class MozlintParser(ArgumentParser):
         if args.formats:
             formats = []
             for fmt in args.formats:
+                if isinstance(fmt, tuple):  # format is already processed
+                    formats.append(fmt)
+                    continue
+
                 path = None
                 if ":" in fmt:
                     # Detect optional formatter path
