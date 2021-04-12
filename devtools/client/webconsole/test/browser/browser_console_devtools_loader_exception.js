@@ -62,7 +62,7 @@ add_task(async function() {
     false
   );
 
-  const { targetList } = bcHud;
+  const { targetCommand } = bcHud.commands;
   // If Fission is not enabled for the Browser Console (e.g. in Beta at this moment),
   // the target list won't watch for Frame targets, and as a result we won't have issues
   // with pending connections to the server that we're observing when attaching the target.
@@ -71,11 +71,14 @@ add_task(async function() {
     : new Promise(resolve => {
         const onAvailable = ({ targetFront }) => {
           if (targetFront.url.includes("view-source:")) {
-            targetList.unwatchTargets([targetList.TYPES.FRAME], onAvailable);
+            targetCommand.unwatchTargets(
+              [targetCommand.TYPES.FRAME],
+              onAvailable
+            );
             resolve();
           }
         };
-        targetList.watchTargets([targetList.TYPES.FRAME], onAvailable);
+        targetCommand.watchTargets([targetCommand.TYPES.FRAME], onAvailable);
       });
 
   const onTabOpen = BrowserTestUtils.waitForNewTab(

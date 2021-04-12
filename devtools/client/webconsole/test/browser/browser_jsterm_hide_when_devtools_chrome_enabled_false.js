@@ -166,7 +166,7 @@ async function testObjectInspectorPropertiesAreSet(objInspector) {
 
 const seenWorkerTargets = new Set();
 function waitForSourceMapWorker(hud) {
-  const { targetList } = hud;
+  const { targetCommand } = hud.commands;
   // If Fission is not enabled for the Browser Console (e.g. in Beta at this moment),
   // the target list won't watch for Worker targets, and as a result we won't have issues
   // with pending connections to the server that we're observing when attaching the target.
@@ -187,10 +187,10 @@ function waitForSourceMapWorker(hud) {
         !seenWorkerTargets.has(targetFront)
       ) {
         seenWorkerTargets.add(targetFront);
-        targetList.unwatchTargets([targetList.TYPES.WORKER], onAvailable);
+        targetCommand.unwatchTargets([targetCommand.TYPES.WORKER], onAvailable);
         resolve();
       }
     };
-    targetList.watchTargets([targetList.TYPES.WORKER], onAvailable);
+    targetCommand.watchTargets([targetCommand.TYPES.WORKER], onAvailable);
   });
 }
