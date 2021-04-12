@@ -29,6 +29,7 @@ namespace gfx {
   _(WEBRENDER_QUALIFIED, Feature, "WebRender qualified")                 \
   _(WEBRENDER_COMPOSITOR, Feature, "WebRender native compositor")        \
   _(WEBRENDER_PARTIAL, Feature, "WebRender partial present")             \
+  _(WEBRENDER_SHADER_CACHE, Feature, "WebRender shader disk cache")      \
   _(WEBRENDER_OPTIMIZED_SHADERS, Feature, "WebRender optimized shaders") \
   _(WEBRENDER_ANGLE, Feature, "WebRender ANGLE")                         \
   _(WEBRENDER_DCOMP_PRESENT, Feature, "WebRender DirectComposition")     \
