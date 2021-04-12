@@ -242,7 +242,7 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   bool ShouldBlink();
   void StartBlinking();
   void StopBlinking();
-  void CreateMenuCommandEvent(mozilla::WidgetGUIEvent* aEvent);
+  void CreateMenuCommandEvent(bool aIsTrusted, mozilla::Modifiers aModifiers);
   void PassMenuCommandEventToPopupManager();
 
  protected:
