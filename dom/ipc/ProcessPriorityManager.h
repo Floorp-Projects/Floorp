@@ -9,6 +9,8 @@
 
 #include "mozilla/HalTypes.h"
 
+class nsFrameLoader;
+
 namespace mozilla {
 namespace dom {
 class ContentParent;
@@ -70,6 +72,8 @@ class ProcessPriorityManager final {
 
   static void TabActivityChanged(dom::BrowserParent* aBrowserParent,
                                  bool aIsActive);
+
+  static void RemoteBrowserFrameShown(nsFrameLoader* aFrameLoader);
 
  private:
   ProcessPriorityManager();
