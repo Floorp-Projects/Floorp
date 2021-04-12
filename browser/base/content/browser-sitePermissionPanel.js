@@ -649,9 +649,9 @@ var gPermissionPanel = {
     container.appendChild(nameLabel);
     let labelledBy = nameLabelId;
 
+    let stateLabel;
     if (showStateLabel) {
-      let stateLabel = this._createStateLabel(permission, idNoSuffix);
-      container.appendChild(stateLabel);
+      stateLabel = this._createStateLabel(permission, idNoSuffix);
       labelledBy += " " + stateLabel.id;
     }
 
@@ -661,6 +661,9 @@ var gPermissionPanel = {
        SCOPE_POLICY or SCOPE_GLOBAL permission. Policy permissions cannot be
        removed/changed for the duration of the browser session. */
     if (isPolicyPermission) {
+      if (stateLabel) {
+        container.appendChild(stateLabel);
+      }
       return container;
     }
 
@@ -676,6 +679,9 @@ var gPermissionPanel = {
           idNoSuffix,
           clearCallback,
         });
+        if (stateLabel) {
+          button.appendChild(stateLabel);
+        }
         container.appendChild(button);
       }
 
@@ -690,6 +696,9 @@ var gPermissionPanel = {
         idNoSuffix,
         clearCallback,
       });
+      if (stateLabel) {
+        button.appendChild(stateLabel);
+      }
       container.appendChild(button);
     }
 
@@ -933,7 +942,6 @@ var gPermissionPanel = {
     );
 
     item.appendChild(text);
-    item.appendChild(stateLabel);
 
     let button = this._createPermissionClearButton({
       permission,
@@ -947,6 +955,7 @@ var gPermissionPanel = {
         }
       },
     });
+    button.appendChild(stateLabel);
     item.appendChild(button);
 
     container.appendChild(item);

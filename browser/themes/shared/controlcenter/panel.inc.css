@@ -114,7 +114,6 @@
 }
 
 .identity-popup-section,
-.permission-popup-section,
 .protections-popup-section {
   border-top: 1px solid var(--panel-separator-color);
 }
@@ -176,11 +175,10 @@
 }
 
 #permission-popup-permissions-content {
-  padding-inline: 2em 1em;
+  padding-inline: 1.25em;
 }
 
-.identity-popup-security-content,
-#permission-popup-permissions-content {
+.identity-popup-security-content {
   padding-block: 1em;
 }
 
@@ -232,6 +230,16 @@
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
+@media not (-moz-proton-doorhangers) {
+#permission-popup-permissions-content {
+  padding-block: 1em;
+}
+
+#permission-popup-permissions-content {
+  padding-inline: 2em 1em;
+}
+} /** END not PROTON **/
+
 /* CONTENT */
 
 .protections-popup-footer-button,
@@ -262,9 +270,12 @@
   -moz-box-align: center;
 }
 
-#permission-popup-mainView-panel-header,
 #identity-popup-mainView-panel-header {
   padding: var(--vertical-section-padding) var(--horizontal-padding);
+}
+
+#permission-popup-mainView-panel-header {
+  padding: 4px 8px;
 }
 
 #protections-popup::part(arrow) {
@@ -308,6 +319,20 @@
    * The panel-header has 1em padding on each side. */
   max-width: calc(var(--popup-width) - 2 * var(--horizontal-padding));
 }
+
+#permission-popup-mainView-panel-header-span {
+  margin-top: 4px;
+}
+
+@media not (-moz-proton-doorhangers) {
+#permission-popup-mainView-panel-header {
+  padding: var(--vertical-section-padding) 2px;
+}
+
+#permission-popup-mainView-panel-header-span {
+  margin-top: 0;
+}
+} /** END not PROTON **/
 
 #protections-popup[toast] #protections-popup-info-button {
   display: none;
@@ -736,9 +761,12 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-.permission-popup-permission-item,
 #permission-popup-storage-access-permission-list-header {
   padding-inline-end: 8px;
+}
+
+.permission-popup-permission-item,
+#permission-popup-storage-access-permission-list-header {
   margin-top: 0.25em;
 }
 
@@ -759,19 +787,10 @@ description#identity-popup-content-verifier,
   color: var(--panel-description-color);
 }
 
-.permission-popup-permission-icon {
-  margin-inline-start: 3px;
-}
-
 .protections-popup-category-icon,
 .permission-popup-permission-icon {
   width: 16px;
   height: 16px;
-}
-
-.permission-popup-permission-icon.in-use {
-  -moz-context-properties: fill;
-  fill: rgb(224, 41, 29);
 }
 
 .protections-popup-category-label {
@@ -780,8 +799,28 @@ description#identity-popup-content-verifier,
 
 .permission-popup-permission-label,
 .permission-popup-permission-header-label {
+  margin-inline-start: 8px;
+}
+
+@media not (-moz-proton-doorhangers) {
+.permission-popup-permission-icon {
+  margin-inline-start: 3px;
+}
+
+.permission-popup-permission-icon.in-use {
+  -moz-context-properties: fill;
+  fill: rgb(224, 41, 29);
+}
+
+.permission-popup-permission-label,
+.permission-popup-permission-header-label {
   margin-inline-start: 10px;
 }
+
+.permission-popup-permission-item {
+  padding-inline-end: 8px;
+}
+} /** END not PROTON **/
 
 .permission-popup-permission-label-subitem {
   /* Align label with other labels with icon. */
@@ -795,10 +834,6 @@ description#identity-popup-content-verifier,
   text-align: end;
 }
 
-.permission-popup-permission-state-label {
-  color: var(--panel-description-color);
-}
-
 #protections-popup[hasException] .protections-popup-category-state-label {
   visibility: hidden;
 }
@@ -808,13 +843,13 @@ description#identity-popup-content-verifier,
   margin: 0;
   margin-inline-start: 2px;
   border-width: 0;
-  border-radius: 50%;
   min-width: 0;
   padding: 2px;
-  background-color: transparent;
+  background-color: var(--button-bgcolor);
   /* !important overrides :hover and :active colors from button.css */
   color: inherit !important;
   opacity: 0.6;
+  border-radius: 4px;
 }
 
 .permission-popup-permission-remove-button > .button-box {
@@ -834,17 +869,12 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-/* swap foreground / background colors on hover */
 .permission-popup-permission-remove-button:not(:-moz-focusring):hover {
-  background-color: currentColor;
-}
-
-.permission-popup-permission-remove-button:not(:-moz-focusring):hover > .button-box > .button-icon {
-  fill: var(--arrowpanel-background);
+  background-color: var(--button-hover-bgcolor);
 }
 
 .permission-popup-permission-remove-button:not(:-moz-focusring):hover:active {
-  opacity: 0.8;
+  background-color: var(--button-active-bgcolor)
 }
 
 #protections-popup[hasException] .protections-popup-tp-switch-on-header,
@@ -1082,7 +1112,7 @@ description#identity-popup-content-verifier,
   stroke: #ffbd4f;
 }
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media not (-moz-proton-doorhangers) {
 #protections-popup-mainView-panel-header-section {
   color: white;
   background: radial-gradient(circle farthest-side at top right, #9059FF, #0250BB);
@@ -1122,13 +1152,17 @@ description#identity-popup-content-verifier,
 }
 }/** END not PROTON **/
 
-@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+@media (-moz-proton-doorhangers) {
 #protections-popup-mainView-panel-header {
   min-height: 43.5px;
 }
 
 #protections-popup-info-button {
   margin-inline-end: 16px;
+}
+
+.permission-popup-section {
+  padding-bottom: 12px;
 }
 
 .protections-popup-footer-button,
@@ -1174,5 +1208,15 @@ description#identity-popup-content-verifier,
 .protections-popup-footer-button:focus-visible {
   box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
   background: none;
+}
+
+#blocked-popup-indicator-item,
+#geo-access-indicator-item {
+  margin-top: -2px;
+}
+
+#geo-access-indicator-item {
+  font-size: 0.8em;
+  color: var(--panel-description-color);
 }
 }/** END Proton **/
