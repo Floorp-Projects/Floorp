@@ -77,7 +77,7 @@ class BrowserConsole extends WebConsole {
       await super.init(false);
 
       // Reports the console as created only after everything is done,
-      // including TargetList.startListening.
+      // including TargetCommand.startListening.
       const id = Utils.supportsString(this.hudId);
       Services.obs.notifyObservers(id, "web-console-created");
     })();
