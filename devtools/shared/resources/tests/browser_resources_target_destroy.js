@@ -12,7 +12,7 @@ const {
 
 add_task(async function() {
   const tab = await addTab("data:text/html,Test");
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -54,7 +54,7 @@ add_task(async function() {
   });
 
   info("Close the client, which will destroy the target");
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 
   info(

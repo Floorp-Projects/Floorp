@@ -71,7 +71,7 @@ async function testNetworkEventResourcesWithoutExistingResources() {
 
 async function testNetworkEventResources(options) {
   const tab = await addTab(TEST_URI);
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -240,7 +240,7 @@ async function testNetworkEventResources(options) {
       onUpdated: onResourceUpdated,
     }
   );
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
   BrowserTestUtils.removeTab(tab);
 }
@@ -264,7 +264,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
   const allResourcesOnUpdate = [];
 
   const tab = await addTab(CSP_URL);
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -377,7 +377,7 @@ async function testNetworkEventResourcesFromTheContentProcess() {
     }
   );
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
   BrowserTestUtils.removeTab(tab);
 }

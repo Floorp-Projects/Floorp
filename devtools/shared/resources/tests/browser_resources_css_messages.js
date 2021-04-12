@@ -38,13 +38,13 @@ async function testWatchingCssMessages() {
   // Open a test tab
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
   const receivedMessages = [];
   const { onAvailable, onAllMessagesReceived } = setupOnAvailableFunction(
-    targetList,
+    targetCommand,
     receivedMessages,
     false
   );
@@ -69,7 +69,7 @@ async function testWatchingCssMessages() {
   ok(true, "All the expected CSS messages were received");
 
   Services.console.reset();
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -101,13 +101,13 @@ async function testWatchingCachedCssMessages() {
 
   // At this point, all messages should be in the ConsoleService cache, and we can begin
   // to watch and check that we do retrieve those messages.
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
   const receivedMessages = [];
   const { onAvailable } = setupOnAvailableFunction(
-    targetList,
+    targetCommand,
     receivedMessages,
     true
   );
@@ -117,12 +117,12 @@ async function testWatchingCachedCssMessages() {
   is(receivedMessages.length, 3, "Cached messages were retrieved as expected");
 
   Services.console.reset();
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
 function setupOnAvailableFunction(
-  targetList,
+  targetCommand,
   receivedMessages,
   isAlreadyExistingResource
 ) {
@@ -174,7 +174,7 @@ function setupOnAvailableFunction(
 
       is(
         resource.targetFront,
-        targetList.targetFront,
+        targetCommand.targetFront,
         "The targetFront property is the expected one"
       );
 

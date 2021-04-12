@@ -29,7 +29,7 @@ add_task(async function() {
 
 async function testWebsocketResources(target) {
   const tab = await addTab(URL_ROOT + "websocket_frontend.html");
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -180,7 +180,7 @@ async function testWebsocketResources(target) {
     onAvailable: onExsistingResourceAvailable,
   });
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
   BrowserTestUtils.removeTab(tab);
 }

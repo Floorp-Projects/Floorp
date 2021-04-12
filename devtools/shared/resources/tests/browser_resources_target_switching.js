@@ -16,7 +16,7 @@ const TEST_URI =
 add_task(async function() {
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -63,7 +63,7 @@ add_task(async function() {
     onAvailable,
   });
 
-  let onSwitched = targetList.once("switched-target");
+  let onSwitched = targetCommand.once("switched-target");
   info("Navigate to another process");
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -76,7 +76,7 @@ add_task(async function() {
   );
 
   info("Navigate back to data: URI");
-  onSwitched = targetList.once("switched-target");
+  onSwitched = targetCommand.once("switched-target");
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await onSwitched;
@@ -96,6 +96,6 @@ add_task(async function() {
     onAvailable: onSourceAvailable,
   });
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });

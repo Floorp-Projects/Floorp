@@ -26,7 +26,7 @@ add_task(async function() {
 async function testServerSentEventResources(target) {
   const tab = await addTab(URL_ROOT + "sse_frontend.html");
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -75,7 +75,7 @@ async function testServerSentEventResources(target) {
     { onAvailable: onResourceAvailable }
   );
 
-  await targetList.destroy();
+  await targetCommand.destroy();
   await client.close();
   BrowserTestUtils.removeTab(tab);
 }

@@ -23,16 +23,16 @@ async function _initResourceWatcherFromCommands(
     ResourceWatcher,
   } = require("devtools/shared/resources/resource-watcher");
 
-  const targetList = commands.targetCommand;
+  const targetCommand = commands.targetCommand;
   if (listenForWorkers) {
-    targetList.listenForWorkers = true;
+    targetCommand.listenForWorkers = true;
   }
-  await targetList.startListening();
+  await targetCommand.startListening();
 
   // Now create a ResourceWatcher
-  const resourceWatcher = new ResourceWatcher(targetList);
+  const resourceWatcher = new ResourceWatcher(targetCommand);
 
-  return { client: commands.client, commands, resourceWatcher, targetList };
+  return { client: commands.client, commands, resourceWatcher, targetCommand };
 }
 
 /**
@@ -49,7 +49,7 @@ async function _initResourceWatcherFromCommands(
  *         The commands object defined by modules from devtools/shared/commands.
  * @return {DevToolsClient} object.client
  *         The underlying client instance.
- * @return {DevToolsClient} object.targetList
+ * @return {TargetCommand} object.targetCommand
  *         The underlying target list instance.
  */
 async function initResourceWatcher(tab, options) {
@@ -67,7 +67,7 @@ async function initResourceWatcher(tab, options) {
  *         The commands object defined by modules from devtools/shared/commands.
  * @return {DevToolsClient} object.client
  *         The underlying client instance.
- * @return {DevToolsClient} object.targetList
+ * @return {DevToolsClient} object.targetCommand
  *         The underlying target list instance.
  */
 async function initMultiProcessResourceWatcher() {

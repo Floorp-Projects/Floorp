@@ -20,10 +20,11 @@ add_task(async function() {
 
   const tab = await addTab(FISSION_TEST_URL);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
-    tab,
-    { listenForWorkers: true }
-  );
+  const {
+    client,
+    resourceWatcher,
+    targetCommand,
+  } = await initResourceWatcher(tab, { listenForWorkers: true });
 
   info("Wait for the workers (from the main page and the iframe) to be ready");
   const targets = [];
@@ -34,7 +35,7 @@ add_task(async function() {
         resolve();
       }
     };
-    targetList.watchTargets([targetList.TYPES.WORKER], onAvailable);
+    targetCommand.watchTargets([targetCommand.TYPES.WORKER], onAvailable);
   });
 
   // The worker logs a message right when it starts, containing its location, so we can
@@ -208,7 +209,7 @@ add_task(async function() {
     expectedUrl: `${URL_ROOT_ORG_SSL}${WORKER_FILE}#simple-worker-in-second-iframe`,
   });
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {

@@ -24,7 +24,7 @@ add_task(async function() {
   const {
     client,
     resourceWatcher,
-    targetList,
+    targetCommand,
   } = await initMultiProcessResourceWatcher();
 
   const { CONSOLE_MESSAGE, ROOT_NODE } = ResourceWatcher.TYPES;
@@ -109,7 +109,7 @@ add_task(async function() {
   );
 
   // Cleanup
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });
 
