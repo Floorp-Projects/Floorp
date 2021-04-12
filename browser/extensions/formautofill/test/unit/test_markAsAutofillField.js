@@ -57,7 +57,7 @@ let markedFieldId = [];
 var FormAutofillContent;
 add_task(async function setup() {
   ({ FormAutofillContent } = ChromeUtils.import(
-    "resource://formautofill/FormAutofillContent.jsm"
+    "resource://autofill/FormAutofillContent.jsm"
   ));
 
   FormAutofillContent._markAsAutofillField = function(field) {

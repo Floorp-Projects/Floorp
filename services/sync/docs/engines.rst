@@ -111,7 +111,7 @@ treat them as a single engine in practice.
 
 As a result, only a shim is in the `services/sync/modules/engines/` directory,
 while the actual logic is
-`next to the storage implementation <https://searchfox.org/mozilla-central/source/browser/extensions/formautofill/FormAutofillSync.jsm>`_.
+`next to the storage implementation <https://searchfox.org/mozilla-central/source/toolkit/components/formautofill/FormAutofillSync.jsm>`_.
 
 This engine has a unique twist on the "mirror" concept described above -
 whenever a change is made to a fields, the original value of the field is
