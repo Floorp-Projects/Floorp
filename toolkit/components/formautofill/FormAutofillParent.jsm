@@ -43,8 +43,7 @@ const { FormAutofill } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CreditCard: "resource://gre/modules/CreditCard.jsm",
-  FormAutofillPreferences:
-    "resource://autofill/FormAutofillPreferences.jsm",
+  FormAutofillPreferences: "resource://autofill/FormAutofillPreferences.jsm",
   FormAutofillDoorhanger: "resource://autofill/FormAutofillDoorhanger.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
