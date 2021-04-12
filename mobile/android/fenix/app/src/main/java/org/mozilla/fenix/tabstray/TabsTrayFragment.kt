@@ -15,13 +15,18 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.android.synthetic.main.component_tabstray.view.*
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
+import kotlinx.android.synthetic.main.component_tabstray2.view.tab_tray_overflow
+import kotlinx.android.synthetic.main.component_tabstray2.view.tab_wrapper
 import kotlinx.android.synthetic.main.component_tabstray_fab.*
 import kotlinx.android.synthetic.main.tabs_tray_tab_counter2.*
+import kotlinx.android.synthetic.main.tabstray_multiselect_items.*
+import kotlinx.android.synthetic.main.tabstray_multiselect_items.view.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
+import mozilla.components.concept.tabstray.Tab
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
@@ -32,8 +37,13 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
+import org.mozilla.fenix.tabstray.browser.SelectionHandleBinding
+import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
+import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
+import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 
+@Suppress("TooManyFunctions")
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     private var fabView: View? = null
@@ -45,6 +55,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
     private val tabCounterBinding = ViewBoundFeatureWrapper<TabCounterBinding>()
     private val floatingActionButtonBinding = ViewBoundFeatureWrapper<FloatingActionButtonBinding>()
+    private val selectionBannerBinding = ViewBoundFeatureWrapper<SelectionBannerBinding>()
+    private val selectionHandleBinding = ViewBoundFeatureWrapper<SelectionHandleBinding>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +85,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         return containerView
     }
 
-    @ExperimentalCoroutinesApi
+    @Suppress("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val activity = activity as HomeActivity
@@ -100,11 +112,13 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
         val navigationInteractor =
             DefaultNavigationInteractor(
+                tabsTrayStore = tabsTrayStore,
                 browserStore = requireComponents.core.store,
                 navController = findNavController(),
                 metrics = requireComponents.analytics.metrics,
                 dismissTabTray = ::dismissAllowingStateLoss,
-                dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome
+                dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome,
+                bookmarksUseCase = requireComponents.useCases.bookmarksUseCases
             )
 
         val syncedTabsTrayInteractor = SyncedTabsInteractor(
@@ -152,6 +166,41 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             owner = this,
             view = view
         )
+
+        selectionBannerBinding.set(
+            feature = SelectionBannerBinding(
+                context = requireContext(),
+                store = tabsTrayStore,
+                navInteractor = navigationInteractor,
+                tabsTrayInteractor = this,
+                containerView = view,
+                backgroundView = topBar,
+                showOnSelectViews = VisibilityModifier(
+                    collect_multi_select,
+                    share_multi_select,
+                    menu_multi_select,
+                    multiselect_title,
+                    exit_multi_select
+                ),
+                showOnNormalViews = VisibilityModifier(
+                    tab_layout,
+                    tab_tray_overflow,
+                    new_tab_button
+                )
+            ),
+            owner = this,
+            view = view
+        )
+
+        selectionHandleBinding.set(
+            feature = SelectionHandleBinding(
+                store = tabsTrayStore,
+                handle = handle,
+                containerLayout = tab_wrapper
+            ),
+            owner = this,
+            view = view
+        )
     }
 
     override fun setCurrentTrayPosition(position: Int, smoothScroll: Boolean) {
@@ -172,13 +221,19 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         }
     }
 
-    override fun tabRemoved(tabId: String) {
+    override fun onDeleteTab(tabId: String) {
         // TODO re-implement these methods
         // showUndoSnackbarForTab(sessionId)
         // removeIfNotLastTab(sessionId)
 
         // Temporary
         requireComponents.useCases.tabsUseCases.removeTab(tabId)
+    }
+
+    override fun onDeleteTabs(tabs: Collection<Tab>) {
+        tabs.forEach {
+            onDeleteTab(it.id)
+        }
     }
 
     private fun setupPager(

@@ -70,7 +70,8 @@ class Components(private val context: Context) {
             core.sessionManager,
             core.store,
             core.webAppShortcutManager,
-            core.topSitesStorage
+            core.topSitesStorage,
+            core.bookmarksStorage
         )
     }
 

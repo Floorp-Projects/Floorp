@@ -64,7 +64,7 @@ class DefaultBrowserTrayInteractor(
     private val removeTabWrapper by lazy {
         RemoveTabUseCaseWrapper(metrics) {
             // Handle removal from the interactor where we can also handle "undo" visuals.
-            trayInteractor.tabRemoved(it)
+            trayInteractor.onDeleteTab(it)
         }
     }
 

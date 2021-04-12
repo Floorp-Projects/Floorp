@@ -48,7 +48,7 @@ abstract class BaseBrowserTrayList @JvmOverloads constructor(
         val removeTabUseCase = RemoveTabUseCaseWrapper(
             context.components.analytics.metrics
         ) { sessionId ->
-            interactor.tabRemoved(sessionId)
+            interactor.onDeleteTab(sessionId)
         }
 
         TabsFeature(

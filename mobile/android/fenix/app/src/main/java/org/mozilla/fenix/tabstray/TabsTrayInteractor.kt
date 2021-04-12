@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.tabstray
 
+import mozilla.components.concept.tabstray.Tab
+
 interface TabsTrayInteractor {
     /**
      * Set the current tray item to the clamped [position].
@@ -21,5 +23,10 @@ interface TabsTrayInteractor {
     /**
      * Invoked when a tab is removed from the tabs tray with the given [tabId].
      */
-    fun tabRemoved(tabId: String)
+    fun onDeleteTab(tabId: String)
+
+    /**
+     * Invoked when [Tab]s need to be deleted.
+     */
+    fun onDeleteTabs(tabs: Collection<Tab>)
 }

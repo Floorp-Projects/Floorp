@@ -6,34 +6,45 @@ package org.mozilla.fenix.tabstray
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.createTab as createStateTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.tabstray.Tab
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.tabstray.browser.createTab as createTrayTab
 
 class NavigationInteractorTest {
     private lateinit var store: BrowserStore
+    private lateinit var tabsTrayStore: TabsTrayStore
     private lateinit var navigationInteractor: NavigationInteractor
-    private val testTab: TabSessionState = createTab(url = "https://mozilla.org")
+    private val testTab: TabSessionState = createStateTab(url = "https://mozilla.org")
     private val navController: NavController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val dismissTabTray: () -> Unit = mockk(relaxed = true)
     private val dismissTabTrayAndNavigateHome: (String) -> Unit = mockk(relaxed = true)
+    private val bookmarksUseCase: BookmarksUseCase = mockk(relaxed = true)
 
     @Before
     fun setup() {
         store = BrowserStore(initialState = BrowserState(tabs = listOf(testTab)))
+        tabsTrayStore = TabsTrayStore()
         navigationInteractor = DefaultNavigationInteractor(
+            tabsTrayStore,
             store,
             navController,
             metrics,
             dismissTabTray,
-            dismissTabTrayAndNavigateHome
+            dismissTabTrayAndNavigateHome,
+            bookmarksUseCase
         )
     }
 
@@ -44,11 +55,18 @@ class NavigationInteractorTest {
         var openRecentlyClosedClicked = false
         var shareTabsOfTypeClicked = false
         var closeAllTabsClicked = false
+        var onShareTabs = false
+        var onSaveToCollections = false
+        var onBookmarkTabs = false
 
         class TestNavigationInteractor : NavigationInteractor {
 
             override fun onTabTrayDismissed() {
                 tabTrayDismissed = true
+            }
+
+            override fun onShareTabs(tabs: Collection<Tab>) {
+                onShareTabs = true
             }
 
             override fun onTabSettingsClicked() {
@@ -57,6 +75,14 @@ class NavigationInteractorTest {
 
             override fun onOpenRecentlyClosedClicked() {
                 openRecentlyClosedClicked = true
+            }
+
+            override fun onSaveToCollections(tabs: Collection<Tab>) {
+                onSaveToCollections = true
+            }
+
+            override fun onSaveToBookmarks(tabs: Collection<Tab>) {
+                onBookmarkTabs = true
             }
 
             override fun onShareTabsOfTypeClicked(private: Boolean) {
@@ -70,15 +96,21 @@ class NavigationInteractorTest {
 
         val navigationInteractor: NavigationInteractor = TestNavigationInteractor()
         navigationInteractor.onTabTrayDismissed()
-        assert(tabTrayDismissed)
+        assertTrue(tabTrayDismissed)
         navigationInteractor.onTabSettingsClicked()
-        assert(tabSettingsClicked)
+        assertTrue(tabSettingsClicked)
         navigationInteractor.onOpenRecentlyClosedClicked()
-        assert(openRecentlyClosedClicked)
+        assertTrue(openRecentlyClosedClicked)
         navigationInteractor.onShareTabsOfTypeClicked(true)
-        assert(shareTabsOfTypeClicked)
+        assertTrue(shareTabsOfTypeClicked)
         navigationInteractor.onCloseAllTabsClicked(true)
-        assert(closeAllTabsClicked)
+        assertTrue(closeAllTabsClicked)
+        navigationInteractor.onShareTabs(emptyList())
+        assertTrue(onShareTabs)
+        navigationInteractor.onSaveToCollections(emptyList())
+        assertTrue(onSaveToCollections)
+        navigationInteractor.onSaveToBookmarks(emptyList())
+        assertTrue(onBookmarkTabs)
     }
 
     @Test
@@ -109,5 +141,23 @@ class NavigationInteractorTest {
     fun `onShareTabsOfType calls navigation on DefaultNavigationInteractor`() {
         navigationInteractor.onShareTabsOfTypeClicked(false)
         verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
+    }
+
+    @Test
+    fun `onShareTabs calls navigation on DefaultNavigationInteractor`() {
+        navigationInteractor.onShareTabs(emptyList())
+        verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
+    }
+
+    @Test
+    fun `onSaveToCollections calls navigation on DefaultNavigationInteractor`() {
+        navigationInteractor.onSaveToCollections(emptyList())
+        verify(exactly = 1) { metrics.track(Event.TabsTraySaveToCollectionPressed) }
+    }
+
+    @Test
+    fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() {
+        navigationInteractor.onSaveToBookmarks(listOf(createTrayTab()))
+        coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
     }
 }

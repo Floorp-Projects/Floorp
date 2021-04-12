@@ -6,12 +6,20 @@ package org.mozilla.fenix.tabstray
 
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertNotNull
-import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 
 class MenuIntegrationTest {
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(TestCoroutineDispatcher())
 
     private val captureMiddleware = CaptureActionsMiddleware<TabsTrayState, TabsTrayAction>()
     private val tabsTrayStore = TabsTrayStore(middlewares = listOf(captureMiddleware))
@@ -53,12 +61,13 @@ class MenuIntegrationTest {
         verify { interactor.onOpenRecentlyClosedClicked() }
     }
 
-    @Ignore("Enable after we connect this menu item to the store")
     @Test
     fun `WHEN the select menu item is clicked THEN invoke the action`() {
         val menu = MenuIntegration(mockk(), mockk(), tabsTrayStore, mockk(), interactor)
 
-        menu.handleMenuClicked(TabsTrayMenu.Item.ShareAllTabs)
+        menu.handleMenuClicked(TabsTrayMenu.Item.SelectTabs)
+
+        tabsTrayStore.waitUntilIdle()
 
         assertNotNull(captureMiddleware.findLastAction(TabsTrayAction.EnterSelectMode::class))
     }

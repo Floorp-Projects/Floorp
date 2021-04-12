@@ -5,15 +5,11 @@
 package org.mozilla.fenix.tabstray
 
 import android.content.Context
-import android.view.View
 import androidx.annotation.VisibleForTesting
-import androidx.cardview.widget.CardView
-import androidx.core.content.ContextCompat
 import com.google.android.material.tabs.TabLayout
-import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.state.store.BrowserStore
-import org.mozilla.fenix.R
+import org.mozilla.fenix.utils.Do
 
 /**
  * A wrapper class that building the tabs tray menu that handles item clicks.
@@ -43,31 +39,19 @@ class MenuIntegration(
     fun build() = tabsTrayItemMenu.menuBuilder.build(context)
 
     @VisibleForTesting
-    internal fun handleMenuClicked(item: TabsTrayMenu.Item) = when (item) {
-        is TabsTrayMenu.Item.ShareAllTabs ->
-            navigationInteractor.onShareTabsOfTypeClicked(isPrivateMode)
-        is TabsTrayMenu.Item.OpenTabSettings ->
-            navigationInteractor.onTabSettingsClicked()
-        is TabsTrayMenu.Item.CloseAllTabs ->
-            navigationInteractor.onCloseAllTabsClicked(isPrivateMode)
-        is TabsTrayMenu.Item.OpenRecentlyClosed ->
-            navigationInteractor.onOpenRecentlyClosedClicked()
-        is TabsTrayMenu.Item.SelectTabs -> {
-            /* TODO implement when mulitiselect call is available */
+    internal fun handleMenuClicked(item: TabsTrayMenu.Item) {
+        Do exhaustive when (item) {
+            is TabsTrayMenu.Item.ShareAllTabs ->
+                navigationInteractor.onShareTabsOfTypeClicked(isPrivateMode)
+            is TabsTrayMenu.Item.OpenTabSettings ->
+                navigationInteractor.onTabSettingsClicked()
+            is TabsTrayMenu.Item.CloseAllTabs ->
+                navigationInteractor.onCloseAllTabsClicked(isPrivateMode)
+            is TabsTrayMenu.Item.OpenRecentlyClosed ->
+                navigationInteractor.onOpenRecentlyClosedClicked()
+            is TabsTrayMenu.Item.SelectTabs -> {
+                tabsTrayStore.dispatch(TabsTrayAction.EnterSelectMode)
+            }
         }
-    }
-}
-
-/**
- * Invokes [BrowserMenu.show] and applies the default theme color background.
- */
-fun BrowserMenu.showWithTheme(view: View) {
-    show(view).also { popupMenu ->
-        (popupMenu.contentView as? CardView)?.setCardBackgroundColor(
-            ContextCompat.getColor(
-                view.context,
-                R.color.foundation_normal_theme
-            )
-        )
     }
 }
