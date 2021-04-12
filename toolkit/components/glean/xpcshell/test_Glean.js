@@ -112,6 +112,10 @@ add_task(async function test_fog_string_list_works() {
 });
 
 add_task(async function test_fog_timespan_works() {
+  Glean.testOnly.canWeTimeIt.start();
+  Glean.testOnly.canWeTimeIt.cancel();
+  Assert.equal(undefined, Glean.testOnly.canWeTimeIt.testGetValue());
+
   // We start, briefly sleep and then stop.
   // That guarantees some time to measure.
   Glean.testOnly.canWeTimeIt.start();

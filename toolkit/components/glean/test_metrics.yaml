@@ -235,6 +235,25 @@ test_only:
       - test-ping
     telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_TIMESPAN
 
+  mirror_time_nanos:
+    type: timespan
+    time_unit: nanosecond
+    description: |
+      Mirrored metric for a timespan.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1704106
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1704106#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - test-ping
+    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_TIMESPAN_NANOS
+
   mirrors_for_labeled_bools:
     type: labeled_boolean
     description: |

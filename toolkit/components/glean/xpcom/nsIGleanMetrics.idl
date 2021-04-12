@@ -313,6 +313,17 @@ interface nsIGleanTimespan : nsISupports
   void cancel();
 
   /**
+   * Explicitly sets the timespan value.
+   *
+   * This API should only be used if you cannot make use of
+   * `start`/`stop`/`cancel`.
+   *
+   * @param aDuration The duration of this timespan, in units matching the
+   *        `time_unit` of this metric's definition.
+   */
+  void setRaw(in uint32_t aDuration);
+
+  /**
    * **Test-only API**
    *
    * Gets the currently stored value as an integer.
