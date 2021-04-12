@@ -177,8 +177,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_X11_EGL = 34;
   /* Whether DMABUF is supported, starting in 88. */
   const long FEATURE_DMABUF = 35;
+  /* Whether webrender caches shader program binaries to disk, starting in 89. */
+  const long FEATURE_WEBRENDER_SHADER_CACHE = 36;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_DMABUF;
+  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_SHADER_CACHE;
 
   /*
    * A set of return values from GetFeatureStatus

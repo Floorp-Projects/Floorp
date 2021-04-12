@@ -637,6 +637,21 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       return NS_OK;
     }
 
+    if (aFeature == FEATURE_WEBRENDER_SHADER_CACHE) {
+      // Program binaries are known to be buggy on Adreno 3xx. While we haven't
+      // encountered any correctness or stability issues with them, loading them
+      // fails more often than not, so is a waste of time. Better to just not
+      // even attempt to cache them. See bug 1615574.
+      const bool isAdreno3xx = mGLStrings->Renderer().Find(
+                                   "Adreno (TM) 3", /*ignoreCase*/ true) >= 0;
+      if (isAdreno3xx) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_ADRENO_3XX";
+      } else {
+        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+      }
+    }
+
     if (aFeature == FEATURE_WEBRENDER_OPTIMIZED_SHADERS) {
       // Optimized shaders result in completely broken rendering in at least one
       // Mali-T6xx device. Disable on all T6xx as a precaution until we know

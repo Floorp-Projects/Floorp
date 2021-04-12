@@ -24,6 +24,7 @@ class gfxConfigManager {
         mFeatureWrAngle(nullptr),
         mFeatureWrDComp(nullptr),
         mFeatureWrPartial(nullptr),
+        mFeatureWrShaderCache(nullptr),
         mFeatureWrOptimizedShaders(nullptr),
         mFeatureWrSoftware(nullptr),
         mFeatureHwCompositing(nullptr),
@@ -69,6 +70,7 @@ class gfxConfigManager {
   FeatureState* mFeatureWrAngle;
   FeatureState* mFeatureWrDComp;
   FeatureState* mFeatureWrPartial;
+  FeatureState* mFeatureWrShaderCache;
   FeatureState* mFeatureWrOptimizedShaders;
   FeatureState* mFeatureWrSoftware;
 
@@ -90,6 +92,7 @@ class gfxConfigManager {
   bool mWrDCompWinEnabled;
   bool mWrCompositorDCompRequired;
   bool mWrPartialPresent;
+  Maybe<bool> mWrShaderCache;
   bool mWrOptimizedShaders;
   bool mGPUProcessAllowSoftware;
   bool mXRenderEnabled;
