@@ -135,6 +135,14 @@ interface NimbusApi : Observable<NimbusApi.Observer> {
     fun setExperimentsLocally(@RawRes file: Int) = Unit
 
     /**
+     * Opt into a specific branch for the given experiment.
+     *
+     * @param experimentId The string experiment-id or "slug" for which to opt into
+     * @param branch The string branch slug for which to opt into
+     */
+    fun optInWithBranch(experimentId: String, branch: String) = Unit
+
+    /**
      * Opt out of a specific experiment
      *
      * @param experimentId The string experiment-id or "slug" for which to opt out of
@@ -431,13 +439,10 @@ class Nimbus(
         }
     }
 
-    // This function shouldn't be exposed to the public API, but is meant for testing purposes to
-    // force an experiment/branch enrollment.
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    internal fun optInWithBranch(experiment: String, branch: String) {
+    override fun optInWithBranch(experimentId: String, branch: String) {
         dbScope.launch {
             withCatchAll {
-                nimbus.optInWithBranch(experiment, branch).also(::recordExperimentTelemetryEvents)
+                nimbus.optInWithBranch(experimentId, branch).also(::recordExperimentTelemetryEvents)
             }
         }
     }
