@@ -196,9 +196,8 @@ class WebConsoleUI {
     }
 
     // Stop listening for targets
-    const { targetList } = this.hud;
-    targetList.unwatchTargets(
-      targetList.ALL_TYPES,
+    this.hud.commands.targetCommand.unwatchTargets(
+      this.hud.commands.targetCommand.ALL_TYPES,
       this._onTargetAvailable,
       this._onTargetDestroy
     );
@@ -341,7 +340,7 @@ class WebConsoleUI {
       // Bug 1642599:
       // TargetList.startListening ought to be called before watching for resources,
       // in order to set TargetList.watcherFront which is used by ResourceWatcher.watchResources.
-      await this.hud.targetList.startListening();
+      await this.hud.commands.targetCommand.startListening();
     }
 
     // Listen for all target types, including:
@@ -350,8 +349,8 @@ class WebConsoleUI {
     // - workers, for similar reason. When we open a toolbox
     // for just a worker, the top level target is a worker target.
     // - processes, as we want to spawn additional proxies for them.
-    await this.hud.targetList.watchTargets(
-      this.hud.targetList.ALL_TYPES,
+    await this.hud.commands.targetCommand.watchTargets(
+      this.hud.commands.targetCommand.ALL_TYPES,
       this._onTargetAvailable,
       this._onTargetDestroy
     );
@@ -468,9 +467,9 @@ class WebConsoleUI {
 
     // Allow frame, but only in content toolbox, i.e. still ignore them in
     // the context of the browser toolbox as we inspect messages via the process targets
-    const listenForFrames = this.hud.targetList.descriptorFront.isLocalTab;
+    const listenForFrames = this.hud.commands.descriptorFront.isLocalTab;
 
-    const { TYPES } = this.hud.targetList;
+    const { TYPES } = this.hud.commands.targetCommand;
     const isWorkerTarget =
       targetFront.targetType == TYPES.WORKER ||
       targetFront.targetType == TYPES.SHARED_WORKER ||
@@ -484,7 +483,7 @@ class WebConsoleUI {
       // Accept worker targets if the platform dispatching of worker messages to the main
       // thread is disabled (e.g. we get them directly from the worker target).
       (isWorkerTarget &&
-        !this.hud.targetList.rootFront.traits
+        !this.hud.commands.targetCommand.rootFront.traits
           .workerConsoleApiMessagesDispatchedToMainThread);
 
     if (!acceptTarget) {
