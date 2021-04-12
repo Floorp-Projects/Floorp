@@ -606,14 +606,6 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
         )
 
         self.add_argument(
-            "--no-device-info",
-            action="store_false",
-            dest="printDeviceInfo",
-            default=True,
-            help="Do not display verbose diagnostics about the remote device.",
-        )
-
-        self.add_argument(
             "--no-install",
             action="store_true",
             default=False,
