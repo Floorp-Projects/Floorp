@@ -6414,4 +6414,209 @@ string NTStatusToString(uint32_t ntstatus) {
   return reason;
 }
 
+string FastFailToString(uint32_t fast_fail_code) {
+  string code_string;
+  // The content of this switch was created from winnt.h in the 10 SDK
+  // (version 10.0.19041.0) with
+  //
+  // egrep '#define FAST_FAIL_[A-Z_0-9]+\s+[0-9]' winnt.h
+  // | tr -d '\r'
+  // | sed -r 's@#define FAST_FAIL_([A-Z_0-9]+)\s+([0-9]+).*@\2 \1@'
+  // | sed -r 's@([0-9]+) ([A-Z_0-9]+)@    case MD_FAST_FAIL_WIN_\2:\n      code_string = "FAST_FAIL_\2";\n      break;@'
+  //
+  // and then the default case added.
+  switch (fast_fail_code) {
+    case MD_FAST_FAIL_WIN_LEGACY_GS_VIOLATION:
+      code_string = "FAST_FAIL_LEGACY_GS_VIOLATION";
+      break;
+    case MD_FAST_FAIL_WIN_VTGUARD_CHECK_FAILURE:
+      code_string = "FAST_FAIL_VTGUARD_CHECK_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_STACK_COOKIE_CHECK_FAILURE:
+      code_string = "FAST_FAIL_STACK_COOKIE_CHECK_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_CORRUPT_LIST_ENTRY:
+      code_string = "FAST_FAIL_CORRUPT_LIST_ENTRY";
+      break;
+    case MD_FAST_FAIL_WIN_INCORRECT_STACK:
+      code_string = "FAST_FAIL_INCORRECT_STACK";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_ARG:
+      code_string = "FAST_FAIL_INVALID_ARG";
+      break;
+    case MD_FAST_FAIL_WIN_GS_COOKIE_INIT:
+      code_string = "FAST_FAIL_GS_COOKIE_INIT";
+      break;
+    case MD_FAST_FAIL_WIN_FATAL_APP_EXIT:
+      code_string = "FAST_FAIL_FATAL_APP_EXIT";
+      break;
+    case MD_FAST_FAIL_WIN_RANGE_CHECK_FAILURE:
+      code_string = "FAST_FAIL_RANGE_CHECK_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_UNSAFE_REGISTRY_ACCESS:
+      code_string = "FAST_FAIL_UNSAFE_REGISTRY_ACCESS";
+      break;
+    case MD_FAST_FAIL_WIN_GUARD_ICALL_CHECK_FAILURE:
+      code_string = "FAST_FAIL_GUARD_ICALL_CHECK_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_GUARD_WRITE_CHECK_FAILURE:
+      code_string = "FAST_FAIL_GUARD_WRITE_CHECK_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_FIBER_SWITCH:
+      code_string = "FAST_FAIL_INVALID_FIBER_SWITCH";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_SET_OF_CONTEXT:
+      code_string = "FAST_FAIL_INVALID_SET_OF_CONTEXT";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_REFERENCE_COUNT:
+      code_string = "FAST_FAIL_INVALID_REFERENCE_COUNT";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_JUMP_BUFFER:
+      code_string = "FAST_FAIL_INVALID_JUMP_BUFFER";
+      break;
+    case MD_FAST_FAIL_WIN_MRDATA_MODIFIED:
+      code_string = "FAST_FAIL_MRDATA_MODIFIED";
+      break;
+    case MD_FAST_FAIL_WIN_CERTIFICATION_FAILURE:
+      code_string = "FAST_FAIL_CERTIFICATION_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_EXCEPTION_CHAIN:
+      code_string = "FAST_FAIL_INVALID_EXCEPTION_CHAIN";
+      break;
+    case MD_FAST_FAIL_WIN_CRYPTO_LIBRARY:
+      code_string = "FAST_FAIL_CRYPTO_LIBRARY";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_CALL_IN_DLL_CALLOUT:
+      code_string = "FAST_FAIL_INVALID_CALL_IN_DLL_CALLOUT";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_IMAGE_BASE:
+      code_string = "FAST_FAIL_INVALID_IMAGE_BASE";
+      break;
+    case MD_FAST_FAIL_WIN_DLOAD_PROTECTION_FAILURE:
+      code_string = "FAST_FAIL_DLOAD_PROTECTION_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_UNSAFE_EXTENSION_CALL:
+      code_string = "FAST_FAIL_UNSAFE_EXTENSION_CALL";
+      break;
+    case MD_FAST_FAIL_WIN_DEPRECATED_SERVICE_INVOKED:
+      code_string = "FAST_FAIL_DEPRECATED_SERVICE_INVOKED";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_BUFFER_ACCESS:
+      code_string = "FAST_FAIL_INVALID_BUFFER_ACCESS";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_BALANCED_TREE:
+      code_string = "FAST_FAIL_INVALID_BALANCED_TREE";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_NEXT_THREAD:
+      code_string = "FAST_FAIL_INVALID_NEXT_THREAD";
+      break;
+    case MD_FAST_FAIL_WIN_GUARD_ICALL_CHECK_SUPPRESSED:
+      code_string = "FAST_FAIL_GUARD_ICALL_CHECK_SUPPRESSED";
+      break;
+    case MD_FAST_FAIL_WIN_APCS_DISABLED:
+      code_string = "FAST_FAIL_APCS_DISABLED";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_IDLE_STATE:
+      code_string = "FAST_FAIL_INVALID_IDLE_STATE";
+      break;
+    case MD_FAST_FAIL_WIN_MRDATA_PROTECTION_FAILURE:
+      code_string = "FAST_FAIL_MRDATA_PROTECTION_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_UNEXPECTED_HEAP_EXCEPTION:
+      code_string = "FAST_FAIL_UNEXPECTED_HEAP_EXCEPTION";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_LOCK_STATE:
+      code_string = "FAST_FAIL_INVALID_LOCK_STATE";
+      break;
+    case MD_FAST_FAIL_WIN_GUARD_JUMPTABLE:
+      code_string = "FAST_FAIL_GUARD_JUMPTABLE";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_LONGJUMP_TARGET:
+      code_string = "FAST_FAIL_INVALID_LONGJUMP_TARGET";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_DISPATCH_CONTEXT:
+      code_string = "FAST_FAIL_INVALID_DISPATCH_CONTEXT";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_THREAD:
+      code_string = "FAST_FAIL_INVALID_THREAD";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_SYSCALL_NUMBER:
+      code_string = "FAST_FAIL_INVALID_SYSCALL_NUMBER";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_FILE_OPERATION:
+      code_string = "FAST_FAIL_INVALID_FILE_OPERATION";
+      break;
+    case MD_FAST_FAIL_WIN_LPAC_ACCESS_DENIED:
+      code_string = "FAST_FAIL_LPAC_ACCESS_DENIED";
+      break;
+    case MD_FAST_FAIL_WIN_GUARD_SS_FAILURE:
+      code_string = "FAST_FAIL_GUARD_SS_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_LOADER_CONTINUITY_FAILURE:
+      code_string = "FAST_FAIL_LOADER_CONTINUITY_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_GUARD_EXPORT_SUPPRESSION_FAILURE:
+      code_string = "FAST_FAIL_GUARD_EXPORT_SUPPRESSION_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_CONTROL_STACK:
+      code_string = "FAST_FAIL_INVALID_CONTROL_STACK";
+      break;
+    case MD_FAST_FAIL_WIN_SET_CONTEXT_DENIED:
+      code_string = "FAST_FAIL_SET_CONTEXT_DENIED";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_IAT:
+      code_string = "FAST_FAIL_INVALID_IAT";
+      break;
+    case MD_FAST_FAIL_WIN_HEAP_METADATA_CORRUPTION:
+      code_string = "FAST_FAIL_HEAP_METADATA_CORRUPTION";
+      break;
+    case MD_FAST_FAIL_WIN_PAYLOAD_RESTRICTION_VIOLATION:
+      code_string = "FAST_FAIL_PAYLOAD_RESTRICTION_VIOLATION";
+      break;
+    case MD_FAST_FAIL_WIN_LOW_LABEL_ACCESS_DENIED:
+      code_string = "FAST_FAIL_LOW_LABEL_ACCESS_DENIED";
+      break;
+    case MD_FAST_FAIL_WIN_ENCLAVE_CALL_FAILURE:
+      code_string = "FAST_FAIL_ENCLAVE_CALL_FAILURE";
+      break;
+    case MD_FAST_FAIL_WIN_UNHANDLED_LSS_EXCEPTON:
+      code_string = "FAST_FAIL_UNHANDLED_LSS_EXCEPTON";
+      break;
+    case MD_FAST_FAIL_WIN_ADMINLESS_ACCESS_DENIED:
+      code_string = "FAST_FAIL_ADMINLESS_ACCESS_DENIED";
+      break;
+    case MD_FAST_FAIL_WIN_UNEXPECTED_CALL:
+      code_string = "FAST_FAIL_UNEXPECTED_CALL";
+      break;
+    case MD_FAST_FAIL_WIN_CONTROL_INVALID_RETURN_ADDRESS:
+      code_string = "FAST_FAIL_CONTROL_INVALID_RETURN_ADDRESS";
+      break;
+    case MD_FAST_FAIL_WIN_UNEXPECTED_HOST_BEHAVIOR:
+      code_string = "FAST_FAIL_UNEXPECTED_HOST_BEHAVIOR";
+      break;
+    case MD_FAST_FAIL_WIN_FLAGS_CORRUPTION:
+      code_string = "FAST_FAIL_FLAGS_CORRUPTION";
+      break;
+    case MD_FAST_FAIL_WIN_VEH_CORRUPTION:
+      code_string = "FAST_FAIL_VEH_CORRUPTION";
+      break;
+    case MD_FAST_FAIL_WIN_ETW_CORRUPTION:
+      code_string = "FAST_FAIL_ETW_CORRUPTION";
+      break;
+    case MD_FAST_FAIL_WIN_RIO_ABORT:
+      code_string = "FAST_FAIL_RIO_ABORT";
+      break;
+    case MD_FAST_FAIL_WIN_INVALID_PFN:
+      code_string = "FAST_FAIL_INVALID_PFN";
+      break;
+    default: {
+      char buffer[11];
+      snprintf(buffer, sizeof(buffer), "%u", fast_fail_code);
+      code_string = buffer;
+      break;
+    }
+  }
+  return code_string;
+}
+
 }  // namespace google_breakpad
