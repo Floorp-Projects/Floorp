@@ -93,7 +93,7 @@
 //!
 
 use api::{BorderRadius, ClipMode, ComplexClipRegion, ImageMask};
-use api::{BoxShadowClipMode, ClipId, FillRule, ImageKey, ImageRendering, PipelineId};
+use api::{BoxShadowClipMode, ClipId, ImageKey, ImageRendering, PipelineId};
 use api::units::*;
 use crate::image_tiling::{self, Repetition};
 use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
@@ -105,7 +105,7 @@ use crate::gpu_types::{BoxShadowStretchMode};
 use crate::intern::{self, ItemUid};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::prim_store::{VisibleMaskImageTile};
-use crate::prim_store::{PointKey, SizeKey, RectangleKey, PolygonKey};
+use crate::prim_store::{PointKey, SizeKey, RectangleKey};
 use crate::render_task_cache::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
@@ -398,12 +398,11 @@ impl From<ClipItemKey> for ClipNode {
                     mode,
                 }
             }
-            ClipItemKeyKind::ImageMask(rect, image, repeat, polygon) => {
+            ClipItemKeyKind::ImageMask(rect, image, repeat) => {
                 ClipItemKind::Image {
                     image,
                     rect: rect.into(),
                     repeat,
-                    polygon,
                 }
             }
             ClipItemKeyKind::BoxShadow(shadow_rect_fract_offset, shadow_rect_size, shadow_radius, prim_shadow_rect, blur_radius, clip_mode) => {
@@ -610,7 +609,7 @@ impl ClipNodeInfo {
 
         let mut visible_tiles = None;
 
-        if let ClipItemKind::Image { rect, image, repeat, .. } = node.item.kind {
+        if let ClipItemKind::Image { rect, image, repeat } = node.item.kind {
             let request = ImageRequest {
                 key: image,
                 rendering: ImageRendering::Auto,
@@ -1379,7 +1378,7 @@ impl ClipRegion<Option<ComplexClipRegion>> {
 pub enum ClipItemKeyKind {
     Rectangle(RectangleKey, ClipMode),
     RoundedRectangle(RectangleKey, BorderRadiusAu, ClipMode),
-    ImageMask(RectangleKey, ImageKey, bool, PolygonKey),
+    ImageMask(RectangleKey, ImageKey, bool),
     BoxShadow(PointKey, SizeKey, BorderRadiusAu, RectangleKey, Au, BoxShadowClipMode),
 }
 
@@ -1401,13 +1400,11 @@ impl ClipItemKeyKind {
         }
     }
 
-    pub fn image_mask(image_mask: &ImageMask, mask_rect: LayoutRect,
-                      points: Vec<LayoutPoint>, fill_rule: FillRule) -> Self {
+    pub fn image_mask(image_mask: &ImageMask, mask_rect: LayoutRect) -> Self {
         ClipItemKeyKind::ImageMask(
             mask_rect.into(),
             image_mask.image,
             image_mask.repeat,
-            PolygonKey::new(&points, fill_rule)
         )
     }
 
@@ -1489,7 +1486,6 @@ pub enum ClipItemKind {
         image: ImageKey,
         rect: LayoutRect,
         repeat: bool,
-        polygon: PolygonKey,
     },
     BoxShadow {
         source: BoxShadowClipSource,
@@ -1938,64 +1934,6 @@ fn rounded_rectangle_contains_rect_quick(
     }
 
     true
-}
-
-/// Test where point p is relative to the infinite line that passes through the segment
-/// defined by p0 and p1. Point p is on the "left" of the line if the triangle (p0, p1, p)
-/// forms a counter-clockwise triangle.
-/// > 0 is left of the line
-/// < 0 is right of the line
-/// == 0 is on the line
-pub fn is_left_of_line(
-    p_x: f32,
-    p_y: f32,
-    p0_x: f32,
-    p0_y: f32,
-    p1_x: f32,
-    p1_y: f32,
-) -> f32 {
-    (p1_x - p0_x) * (p_y - p0_y) - (p_x - p0_x) * (p1_y - p0_y)
-}
-
-pub fn polygon_contains_point(
-    point: &LayoutPoint,
-    rect: &LayoutRect,
-    polygon: &PolygonKey,
-) -> bool {
-    if !rect.contains(*point) {
-        return false;
-    }
-
-    // p is a LayoutPoint that we'll be comparing to dimensionless PointKeys,
-    // which were created from LayoutPoints, so it all works out.
-    let p = LayoutPoint::new(point.x - rect.origin.x, point.y - rect.origin.y);
-
-    // Calculate a winding number for this point.
-    let mut winding_number: i32 = 0;
-
-    let count = polygon.point_count as usize;
-
-    for i in 0..count {
-        let p0 = polygon.points[i];
-        let p1 = polygon.points[(i + 1) % count];
-
-        if p0.y <= p.y {
-            if p1.y > p.y {
-                if is_left_of_line(p.x, p.y, p0.x, p0.y, p1.x, p1.y) > 0.0 {
-                    winding_number = winding_number + 1;
-                }
-            }
-        } else if p1.y <= p.y {
-            if is_left_of_line(p.x, p.y, p0.x, p0.y, p1.x, p1.y) < 0.0 {
-                winding_number = winding_number - 1;
-            }
-        }
-    }
-
-    match polygon.fill_rule {
-        FillRule::Nonzero => winding_number != 0,
-        FillRule::Evenodd => winding_number.abs() % 2 == 1,
-    }
 }
 
 pub fn projected_rect_contains(
