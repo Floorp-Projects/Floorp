@@ -23,6 +23,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FeatureFlags
@@ -85,6 +86,7 @@ class DefaultToolbarMenuTest {
     }
 
     @Test
+    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/18822")
     fun `WHEN the bottom toolbar is set THEN the first item in the list is not the navigation`() {
         if (FeatureFlags.toolbarMenuFeature) {
             every { context.settings().shouldUseBottomToolbar } returns true
@@ -101,6 +103,7 @@ class DefaultToolbarMenuTest {
     }
 
     @Test
+    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/18822")
     fun `WHEN the top toolbar is set THEN the first item in the list is the navigation`() {
         if (FeatureFlags.toolbarMenuFeature) {
             every { context.settings().shouldUseBottomToolbar } returns false
@@ -117,6 +120,7 @@ class DefaultToolbarMenuTest {
     }
 
     @Test
+    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/18822")
     fun `WHEN the bottom toolbar is set THEN the nav menu should be the last item`() {
         if (FeatureFlags.toolbarMenuFeature) {
             every { context.settings().shouldUseBottomToolbar } returns true
@@ -134,6 +138,7 @@ class DefaultToolbarMenuTest {
     }
 
     @Test
+    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/18822")
     fun `WHEN the top toolbar is set THEN settings should be the last item`() {
         if (FeatureFlags.toolbarMenuFeature) {
             every { context.settings().shouldUseBottomToolbar } returns false
