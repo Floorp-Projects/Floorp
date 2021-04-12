@@ -1796,11 +1796,9 @@ impl DisplayListBuilder {
         &mut self,
         parent_space_and_clip: &di::SpaceAndClipInfo,
         image_mask: di::ImageMask,
+        points: &Vec<LayoutPoint>,
+        fill_rule: di::FillRule,
     ) -> di::ClipId {
-        // TODO(bradwerth): get points and fill_rule as parameters.
-        let points = Vec::<LayoutPoint>::new();
-        let fill_rule = di::FillRule::Nonzero;
-
         let id = self.generate_clip_index();
         let item = di::DisplayItem::ImageMaskClip(di::ImageMaskClipDisplayItem {
             id,
