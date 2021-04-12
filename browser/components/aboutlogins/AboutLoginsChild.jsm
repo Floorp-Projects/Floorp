@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyServiceGetter(
 const TELEMETRY_EVENT_CATEGORY = "pwmgr";
 const TELEMETRY_MIN_MS_BETWEEN_OPEN_MANAGEMENT = 5000;
 
-let lastOpenManagementOuterWindowID = null;
+let lastOpenManagementBrowserId = null;
 let lastOpenManagementEventTime = Number.NEGATIVE_INFINITY;
 let masterPasswordPromise;
 
@@ -180,14 +180,14 @@ class AboutLoginsChild extends JSWindowActorChild {
           // compare that number between different tabs and this JSM is shared.
           let now = docShell.now();
           if (
-            docShell.outerWindowID == lastOpenManagementOuterWindowID &&
+            this.browsingContext.browserId == lastOpenManagementBrowserId &&
             now - lastOpenManagementEventTime <
               TELEMETRY_MIN_MS_BETWEEN_OPEN_MANAGEMENT
           ) {
             return;
           }
           lastOpenManagementEventTime = now;
-          lastOpenManagementOuterWindowID = docShell.outerWindowID;
+          lastOpenManagementBrowserId = this.browsingContext.browserId;
         }
         recordTelemetryEvent(event.detail);
         break;
