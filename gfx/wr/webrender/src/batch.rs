@@ -3649,25 +3649,23 @@ impl ClipBatcher {
                         // by clipping the local clip rect with the backwards transformed target bounds.
                         // If it is not axis-aligned, then we pass the local clip rect through unmodified
                         // to the shader and also set up a scissor rect for the overall target bounds to
-                        // ensure nothing is drawn outside the target.
-                        let (local_rect, scissor_rect) =
-                            if prim_transform_id.transform_kind() == TransformedRectKind::AxisAligned {
-                                let world_rect =
-                                    sub_rect.translate(actual_rect.origin.to_vector()) / global_device_pixel_scale;
-                                (map_local_to_world
-                                    .unmap(&world_rect)
-                                    .expect("bug: should always map as axis-aligned")
-                                    .intersection(&rect)
-                                    .unwrap_or_default(),
-                                 None)
-                            } else {
+                        // ensure nothing is drawn outside the target. If for some reason we can't map the
+                        // rect back to local space, we also fall back to just using a scissor rectangle.
+                        let world_rect =
+                            sub_rect.translate(actual_rect.origin.to_vector()) / global_device_pixel_scale;
+                        let (local_rect, scissor_rect) = match map_local_to_world.unmap(&world_rect) {
+                            Some(local_rect)
+                                if prim_transform_id.transform_kind() == TransformedRectKind::AxisAligned => {
+                                (local_rect.intersection(&rect).unwrap_or_default(), None)
+                            }
+                            _ => {
                                 (rect,
                                  Some(common.sub_rect
                                     .translate(task_origin.to_vector())
                                     .round_out()
                                     .to_i32()))
-                            };
-
+                            }
+                        };
 
                         self.get_batch_list(is_first_clip)
                             .images
