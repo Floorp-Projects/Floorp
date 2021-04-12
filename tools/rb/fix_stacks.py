@@ -15,8 +15,6 @@ import platform
 import re
 import sys
 
-import six
-
 # Matches lines produced by MozFormatCodeAddress(), e.g.
 # `#01: ???[tests/example +0x43a0]`.
 line_re = re.compile("#\d+: .+\[.+ \+0x[0-9A-Fa-f]+\]")
@@ -76,9 +74,12 @@ def fixSymbols(
     line, jsonMode=False, slowWarning=False, breakpadSymsDir=None, hide_errors=False
 ):
 
-    line = six.ensure_str(line)
-    result = line_re.search(line)
-    if result is None:
+    if isinstance(line, bytes):
+        line_str = line.decode("utf-8")
+    else:
+        line_str = line
+
+    if line_re.search(line_str) is None:
         return line
 
     if not fix_stacks:
@@ -88,15 +89,15 @@ def fixSymbols(
     # to `fix-stacks` it will wait until it receives a newline, causing this
     # script to hang. So we add a newline if one is missing and then remove it
     # from the output.
-    is_missing_newline = not line.endswith("\n")
+    is_missing_newline = not line_str.endswith("\n")
     if is_missing_newline:
-        line = line + "\n"
-    fix_stacks.stdin.write(line)
+        line_str = line_str + "\n"
+    fix_stacks.stdin.write(line_str)
     fix_stacks.stdin.flush()
     out = fix_stacks.stdout.readline()
     if is_missing_newline:
         out = out[:-1]
-    return out
+    return bytes(out, "utf-8")
 
 
 if __name__ == "__main__":
