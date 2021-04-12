@@ -6,7 +6,9 @@
 <script>
 const t = async_test("Test window.find / nsFind");
 
-function testFindable(isFindable, textToFind, buildDoc, description) {
+function testFindable(findCount, textToFind, buildDoc, description) {
+  if (typeof findCount == "boolean")
+    findCount = findCount ? 1 : 0;
   try {
     const iframe = document.querySelector("iframe")
     iframe.contentDocument.documentElement.innerHTML =
@@ -16,11 +18,15 @@ function testFindable(isFindable, textToFind, buildDoc, description) {
       buildDoc(iframe.contentDocument);
 
     iframe.contentWindow.getSelection().removeAllRanges();
-    assert_equals(
-      isFindable,
-      iframe.contentWindow.find(textToFind),
-      "Should be " + (isFindable ? "" : "not ") + "findable: " + description + ", text: " + textToFind
-    );
+    for (let i = findCount; i >= 0; --i) {
+      const expectFindable = i != 0;
+      assert_equals(
+        iframe.contentWindow.find(textToFind),
+        expectFindable,
+        "Should be " + (expectFindable ? "" : "not ") + "findable: " + description + ", text: " + textToFind + ", iter: " + (findCount - i + 1)
+      );
+    }
+
   } catch (ex) {
     assert_unreached(ex);
   }
@@ -178,6 +184,8 @@ let runTests = t.step_func_done(function() {
   testFindable(true, "history.kafka", `
     <code>database.history&#8203;.kafka.bootstrap.servers</code>
   `, "ZWSP should be ignored");
+
+  testFindable(2, " ", "a    b    c", "Collapsed whitespace");
 });
 
 window.onload = function() {
