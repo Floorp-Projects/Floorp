@@ -53,7 +53,7 @@ add_task(async function() {
     }, "web-console-destroyed");
   });
 
-  await waitForAllTargetsToBeAttached(hud.targetList);
+  await waitForAllTargetsToBeAttached(hud.commands.targetCommand);
   waitForFocus(() => {
     EventUtils.synthesizeKey("w", { accelKey: true }, hud.iframeWindow);
   }, hud.iframeWindow);
