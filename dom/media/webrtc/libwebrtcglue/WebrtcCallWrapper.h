@@ -17,6 +17,7 @@
 
 namespace mozilla {
 class MediaSessionConduit;
+class SharedWebrtcState;
 
 // Wrap the webrtc.org Call class adding mozilla add/ref support.
 class WebrtcCallWrapper {
@@ -26,12 +27,14 @@ class WebrtcCallWrapper {
   static RefPtr<WebrtcCallWrapper> Create(
       const dom::RTCStatsTimestampMaker& aTimestampMaker,
       UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-      SharedWebrtcState* aSharedState, webrtc::WebRtcKeyValueConfig* aTrials);
+      const RefPtr<SharedWebrtcState>& aSharedState,
+      webrtc::WebRtcKeyValueConfig* aTrials);
 
   static RefPtr<WebrtcCallWrapper> Create(
       const dom::RTCStatsTimestampMaker& aTimestampMaker,
       UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-      webrtc::SharedModuleThread* aModuleThread,
+      RefPtr<AbstractThread> aCallThread,
+      rtc::scoped_refptr<webrtc::SharedModuleThread> aModuleThread,
       const webrtc::AudioState::Config& aAudioStateConfig,
       webrtc::AudioDecoderFactory* aAudioDecoderFactory,
       webrtc::WebRtcKeyValueConfig* aTrials);
@@ -43,6 +46,8 @@ class WebrtcCallWrapper {
   // Don't allow copying/assigning.
   WebrtcCallWrapper(const WebrtcCallWrapper&) = delete;
   void operator=(const WebrtcCallWrapper&) = delete;
+
+  void SetCall(UniquePtr<webrtc::Call> aCall);
 
   webrtc::Call* Call() const;
 
@@ -81,10 +86,10 @@ class WebrtcCallWrapper {
   virtual ~WebrtcCallWrapper();
 
  private:
-  WebrtcCallWrapper(RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
+  WebrtcCallWrapper(RefPtr<AbstractThread> aCallThread,
+                    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
                     UniquePtr<webrtc::VideoBitrateAllocatorFactory>
                         aVideoBitrateAllocatorFactory,
-                    UniquePtr<webrtc::Call> aCall,
                     UniquePtr<webrtc::RtcEventLog> aEventLog,
                     UniquePtr<webrtc::TaskQueueFactory> aTaskQueueFactory,
                     const dom::RTCStatsTimestampMaker& aTimestampMaker,
@@ -99,6 +104,7 @@ class WebrtcCallWrapper {
   UniquePtr<media::ShutdownBlockingTicket> mShutdownTicket;
 
  public:
+  const RefPtr<AbstractThread> mCallThread;
   const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
   const UniquePtr<webrtc::VideoBitrateAllocatorFactory>
       mVideoBitrateAllocatorFactory;
@@ -106,7 +112,7 @@ class WebrtcCallWrapper {
   const UniquePtr<webrtc::TaskQueueFactory> mTaskQueueFactory;
 
  private:
-  // Main thread only, as it's the Call worker thread.
+  // Call worker thread only.
   UniquePtr<webrtc::Call> mCall;
 };
 

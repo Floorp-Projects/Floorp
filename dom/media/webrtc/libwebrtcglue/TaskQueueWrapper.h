@@ -71,6 +71,19 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
                                   });
   }
 
+  already_AddRefed<Runnable> CreateTaskRunner(nsCOMPtr<nsIRunnable> aRunnable) {
+    return NS_NewRunnableFunction(
+        "TaskQueueWrapper::CreateTaskRunner",
+        [this, runnable = std::move(aRunnable)]() mutable {
+          CurrentTaskQueueSetter current(this);
+          auto hasShutdown = mHasShutdown.Lock();
+          if (*hasShutdown) {
+            return;
+          }
+          runnable->Run();
+        });
+  }
+
   void PostTask(std::unique_ptr<webrtc::QueuedTask> aTask) override {
     MOZ_ALWAYS_SUCCEEDS(
         mTaskQueue->Dispatch(CreateTaskRunner(std::move(aTask))));
@@ -103,14 +116,20 @@ class SharedThreadPoolWebRtcTaskQueueFactory : public webrtc::TaskQueueFactory {
  public:
   SharedThreadPoolWebRtcTaskQueueFactory() {}
 
-  std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
-  CreateTaskQueue(absl::string_view aName, Priority aPriority) const override {
+  UniquePtr<TaskQueueWrapper> CreateTaskQueueWrapper(absl::string_view aName,
+                                                     Priority aPriority) const {
     // XXX Do something with aPriority
     nsCString name(aName.data(), aName.size());
     auto taskQueue = MakeRefPtr<TaskQueue>(
         GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER), name.get());
+    return MakeUnique<TaskQueueWrapper>(std::move(taskQueue));
+  }
+
+  std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
+  CreateTaskQueue(absl::string_view aName, Priority aPriority) const override {
     return std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>(
-        new TaskQueueWrapper(std::move(taskQueue)), webrtc::TaskQueueDeleter());
+        CreateTaskQueueWrapper(std::move(aName), aPriority).release(),
+        webrtc::TaskQueueDeleter());
   }
 };
 
