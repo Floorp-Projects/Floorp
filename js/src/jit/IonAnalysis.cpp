@@ -450,6 +450,9 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
     if (mir->shouldCancel("Prune unused branches (removal loop)")) {
       return false;
     }
+    if (!graph.alloc().ensureBallast()) {
+      return false;
+    }
 
     MBasicBlock* block = *it++;
     if (block->isMarked() && !block->alwaysBails()) {
