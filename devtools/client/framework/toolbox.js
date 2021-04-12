@@ -782,10 +782,6 @@ Toolbox.prototype = {
       // Bug 1700909 will make the commands be instantiated by gDevTools instead of the Toolbox.
       this.commands = await createCommandsDictionary(this.descriptorFront);
 
-      //TODO: complete the renaming of targetList everywhere
-      // But for now, still expose this name on Toolbox
-      this.targetList = this.commands.targetCommand;
-
       this.commands.targetCommand.on(
         "target-thread-wrong-order-on-resume",
         this._onTargetThreadFrontResumeWrongOrder.bind(this)
