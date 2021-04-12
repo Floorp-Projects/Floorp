@@ -95,7 +95,7 @@ function setup() {
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   // the TRR server is on 127.0.0.1
-  prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
 
   // make all native resolve calls "secretly" resolve localhost instead
   prefs.setBoolPref("network.dns.native-is-localhost", true);
@@ -136,7 +136,7 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.trr.allow-rfc1918");
   prefs.clearUserPref("network.trr.useGET");
   prefs.clearUserPref("network.trr.confirmationNS");
-  prefs.clearUserPref("network.trr.bootstrapAddress");
+  prefs.clearUserPref("network.trr.bootstrapAddr");
   prefs.clearUserPref("network.trr.request-timeout");
   prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
   prefs.clearUserPref("network.trr.odoh.enabled");
@@ -439,11 +439,11 @@ add_task(async function test1b() {
     "network.trr.odoh.target_path",
     `odoh?responseIP=3.3.3.3`
   );
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
 
   await new DNSListener("bar.example.com", "3.3.3.3");
 
-  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  Services.prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
 });
 
 // verify that the name was put in cache - it works with bad DNS URI
@@ -1167,7 +1167,7 @@ add_task(async function test_connection_closed() {
     `odoh?responseIP=2.2.2.2`
   );
   // bootstrap
-  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  Services.prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
 
   await new DNSListener("bar.example.com", "2.2.2.2");
 
@@ -1189,7 +1189,7 @@ add_task(async function test_connection_closed_no_bootstrap() {
     `odoh?responseIP=3.3.3.3`
   );
 
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
 
   await new DNSListener("bar.example.com", "3.3.3.3");
 
@@ -1210,7 +1210,7 @@ add_task(async function test_connection_closed_no_bootstrap_no_excluded() {
   Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
   Services.prefs.setCharPref("network.trr.builtin-excluded-domains", "");
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
 
   await new DNSListener("bar.example.com", "3.3.3.3");
 
@@ -1238,7 +1238,7 @@ add_task(async function test_connection_closed_trr_first() {
     "network.dns.localDomains",
     "closeme.com, odoh_host.example.com"
   );
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
 
   await new DNSListener("bar.example.com", "9.9.9.9");
 

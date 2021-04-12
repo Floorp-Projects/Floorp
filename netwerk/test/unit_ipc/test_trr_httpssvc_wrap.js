@@ -19,7 +19,7 @@ function setup() {
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   // the TRR server is on 127.0.0.1
-  prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
 
   // make all native resolve calls "secretly" resolve localhost instead
   prefs.setBoolPref("network.dns.native-is-localhost", true);
@@ -56,7 +56,7 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.trr.allow-rfc1918");
   prefs.clearUserPref("network.trr.useGET");
   prefs.clearUserPref("network.trr.confirmationNS");
-  prefs.clearUserPref("network.trr.bootstrapAddress");
+  prefs.clearUserPref("network.trr.bootstrapAddr");
   prefs.clearUserPref("network.trr.blacklist-duration");
   prefs.clearUserPref("network.trr.request-timeout");
   prefs.clearUserPref("network.trr.clear-cache-on-pref-change");

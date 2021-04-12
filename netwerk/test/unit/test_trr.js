@@ -152,12 +152,12 @@ add_task(async function test_A_record() {
   setModeAndURI(3, "doh?responseIP=3.3.3.3"); // TRR-only
 
   // Clear bootstrap address and add DoH endpoint hostname to local domains
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
   Services.prefs.setCharPref("network.dns.localDomains", TRR_Domain);
 
   await new TRRDNSListener("bar.example.com", "3.3.3.3");
 
-  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  Services.prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
   Services.prefs.clearUserPref("network.dns.localDomains");
 
   info("Verify that the cached record is used when DoH endpoint is down");
@@ -658,7 +658,7 @@ add_task(async function test_connection_closed() {
   Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 500);
   // bootstrap
   Services.prefs.clearUserPref("network.dns.localDomains");
-  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  Services.prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
 
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
@@ -675,7 +675,7 @@ add_task(async function test_connection_closed() {
   await new TRRDNSListener("bar2.example.com", "2.2.2.2");
 
   // No bootstrap this time
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
 
   dns.clearCache(true);
   Services.prefs.setCharPref("network.trr.excluded-domains", "excluded,local");
@@ -695,7 +695,7 @@ add_task(async function test_connection_closed() {
   dns.clearCache(true);
   Services.prefs.setCharPref("network.trr.excluded-domains", "excluded");
   Services.prefs.clearUserPref("network.dns.localDomains");
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
 
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
@@ -714,7 +714,7 @@ add_task(async function test_connection_closed() {
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
   Services.prefs.setCharPref("network.trr.builtin-excluded-domains", "");
   Services.prefs.clearUserPref("network.dns.localDomains");
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
 
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
@@ -733,7 +733,7 @@ add_task(async function test_connection_closed() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=9.9.9.9");
   Services.prefs.setCharPref("network.dns.localDomains", "closeme.com");
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
 
   await new TRRDNSListener("bar.example.com", "9.9.9.9");
 
@@ -798,14 +798,14 @@ add_task(async function test_dnsSuffix() {
 
   Services.prefs.setBoolPref("network.trr.split_horizon_mitigations", true);
   await checkDnsSuffixInMode(2);
-  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  Services.prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
   await checkDnsSuffixInMode(3);
   Services.prefs.setBoolPref("network.trr.split_horizon_mitigations", false);
   // Test again with mitigations off
   await checkDnsSuffixInMode(2);
   await checkDnsSuffixInMode(3);
   Services.prefs.clearUserPref("network.trr.split_horizon_mitigations");
-  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddr");
 });
 
 add_task(async function test_async_resolve_with_trr_server() {
@@ -1493,4 +1493,16 @@ add_task(async function test_purge_trr_cache_on_mode_change() {
   await new TRRDNSListener("cached.example.com", "127.0.0.1");
 
   Services.prefs.setBoolPref("network.trr.clear-cache-on-pref-change", false);
+  Services.prefs.clearUserPref("doh-rollout.mode");
+});
+
+add_task(async function test_old_bootstrap_pref() {
+  dns.clearCache(true);
+  // Note this is a remote address. Setting this pref should have no effect,
+  // as this is the old name for the bootstrap pref.
+  // If this were to be used, the test would crash when accessing a non-local
+  // IP address.
+  Services.prefs.setCharPref("network.trr.bootstrapAddress", "1.1.1.1");
+  setModeAndURI(Ci.nsIDNSService.MODE_TRRONLY, `doh?responseIP=4.4.4.4`);
+  await new TRRDNSListener("testytest.com", "4.4.4.4");
 });
