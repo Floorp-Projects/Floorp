@@ -38,8 +38,12 @@ add_task(async function() {
   );
 
   info("Reload the page");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  let onPageLoaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    true
+  );
+  gBrowser.reloadTab(tab);
+  await onPageLoaded;
 
   is(
     await getTopLevelDocumentDevicePixelRatioAtStartup(),
@@ -67,11 +71,12 @@ add_task(async function() {
     "Check that navigating to a page that forces the creation of a new browsing context keep the simulation enabled"
   );
 
+  onPageLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, true);
   BrowserTestUtils.loadURI(
     gBrowser.selectedBrowser,
     URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
   );
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await onPageLoaded;
 
   isnot(
     gBrowser.selectedBrowser.browsingContext.id,
