@@ -604,6 +604,7 @@ void BrowserParent::Deactivated() {
   PointerLockManager::ReleaseLockedRemoteTarget(this);
   PointerEventHandler::ReleasePointerCaptureRemoteTarget(this);
   PresShell::ReleaseCapturingRemoteTarget(this);
+  ProcessPriorityManager::ActivityChanged(this, /* aIsActive = */ false);
 }
 
 void BrowserParent::DestroyInternal() {
