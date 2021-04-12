@@ -29,6 +29,7 @@ class PerfStats {
     Compositing,
     Reflowing,
     Styling,
+    HttpChannelCompletion,
     HttpChannelCompletion_Network,
     HttpChannelCompletion_Cache,
     Max

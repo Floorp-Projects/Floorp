@@ -912,14 +912,17 @@ void HttpChannelChild::OnStopRequest(
   }
 #endif
 
+  TimeDuration channelCompletionDuration = TimeStamp::Now() - mAsyncOpenTime;
   if (mIsFromCache) {
     PerfStats::RecordMeasurement(PerfStats::Metric::HttpChannelCompletion_Cache,
-                                 TimeStamp::Now() - mAsyncOpenTime);
+                                 channelCompletionDuration);
   } else {
     PerfStats::RecordMeasurement(
         PerfStats::Metric::HttpChannelCompletion_Network,
-        TimeStamp::Now() - mAsyncOpenTime);
+        channelCompletionDuration);
   }
+  PerfStats::RecordMeasurement(PerfStats::Metric::HttpChannelCompletion,
+                               channelCompletionDuration);
 
   mResponseTrailers = MakeUnique<nsHttpHeaderArray>(aResponseTrailers);
 
