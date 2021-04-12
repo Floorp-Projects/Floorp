@@ -1,1 +1,1 @@
-|jit-test| test-also=--no-wasm-simd; test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--wasm-compiler=optimizing; include:wasm.js
+|jit-test| test-also=--no-wasm-simd; test-also=--wasm-compiler=baseline; test-also=--wasm-compiler=optimizing; include:wasm.js
