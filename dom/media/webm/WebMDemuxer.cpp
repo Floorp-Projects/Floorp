@@ -945,6 +945,33 @@ nsresult WebMDemuxer::SeekInternal(TrackInfo::TrackType aType,
   return NS_OK;
 }
 
+bool WebMDemuxer::IsBufferedIntervalValid(uint64_t start, uint64_t end) {
+  if (start > end) {
+    // Buffered ranges are clamped to the media's start time and duration. Any
+    // frames with timestamps outside that range are ignored, see bug 1697641
+    // for more info.
+    WEBM_DEBUG("Ignoring range %" PRIu64 "-%" PRIu64
+               ", due to invalid interval (start > end).",
+               start, end);
+    return false;
+  }
+
+  auto startTime = TimeUnit::FromNanoseconds(start);
+  auto endTime = TimeUnit::FromNanoseconds(end);
+
+  if (startTime.IsNegative() || endTime.IsNegative()) {
+    // We can get timestamps that are conceptually valid, but become
+    // negative due to uint64 -> int64 conversion from TimeUnit. We should
+    // not get negative timestamps, so guard against them.
+    WEBM_DEBUG(
+        "Invalid range %f-%f, likely result of uint64 -> int64 conversion.",
+        startTime.ToSeconds(), endTime.ToSeconds());
+    return false;
+  }
+
+  return true;
+}
+
 media::TimeIntervals WebMDemuxer::GetBuffered() {
   EnsureUpToDateIndex();
   AutoPinned<MediaResource> resource(
@@ -981,19 +1008,14 @@ media::TimeIntervals WebMDemuxer::GetBuffered() {
                    TimeUnit::FromNanoseconds(duration).ToSeconds());
         end = duration;
       }
-      auto startTime = TimeUnit::FromNanoseconds(start);
-      auto endTime = TimeUnit::FromNanoseconds(end);
 
-      if (startTime.IsNegative() || endTime.IsNegative()) {
-        // We can get timestamps that are conceptually valid, but become
-        // negative due to uint64 -> int64 conversion from TimeUnit. We should
-        // not get negative timestamps here, so guard against them.
-        WEBM_DEBUG(
-            "Invalid range %f-%f, likely result of uint64 -> int64 conversion. "
-            "Bailing early.",
-            startTime.ToSeconds(), endTime.ToSeconds());
+      if (!IsBufferedIntervalValid(start, end)) {
+        WEBM_DEBUG("Invalid interval, bailing");
         break;
       }
+
+      auto startTime = TimeUnit::FromNanoseconds(start);
+      auto endTime = TimeUnit::FromNanoseconds(end);
 
       WEBM_DEBUG("add range %f-%f", startTime.ToSeconds(), endTime.ToSeconds());
       buffered += media::TimeInterval(startTime, endTime);

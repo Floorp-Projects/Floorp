@@ -164,6 +164,12 @@ class WebMDemuxer : public MediaDataDemuxer,
   void NotifyDataArrived() override;
   void NotifyDataRemoved() override;
   void EnsureUpToDateIndex();
+
+  // A helper to catch bad intervals during `GetBuffered`.
+  // Verifies if the interval given by start and end is valid, returning true if
+  // it is, or false if not. Logs failure reason if the interval is invalid.
+  bool IsBufferedIntervalValid(uint64_t start, uint64_t end);
+
   media::TimeIntervals GetBuffered();
   nsresult SeekInternal(TrackInfo::TrackType aType,
                         const media::TimeUnit& aTarget);
