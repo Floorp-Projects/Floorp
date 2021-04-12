@@ -86,10 +86,6 @@ async function setup() {
   // it can be controlled e.g. via Normandy, but for testing let's set enable.
   Preferences.set(prefs.TRR_SELECT_COMMIT_PREF, true);
 
-  // Enable provider steering. This pref ships false by default so it can be
-  // controlled e.g. via Normandy, but for testing let's enable.
-  Preferences.set(prefs.PROVIDER_STEERING_PREF, true);
-
   // Clear mode on shutdown by default.
   Preferences.set(prefs.CLEAR_ON_SHUTDOWN_PREF, true);
 
