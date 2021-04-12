@@ -366,12 +366,12 @@ async function safeCloseBrowserConsole({ clearOutput = false } = {}) {
 /**
  * Returns a Promise that resolves when all the targets are fully attached.
  *
- * @param {TargetList} targetList
+ * @param {TargetCommand} targetCommand
  */
-function waitForAllTargetsToBeAttached(targetList) {
+function waitForAllTargetsToBeAttached(targetCommand) {
   return Promise.allSettled(
-    targetList
-      .getAllTargets(targetList.ALL_TYPES)
+    targetCommand
+      .getAllTargets(targetCommand.ALL_TYPES)
       .map(target => target._onThreadInitialized)
   );
 }
