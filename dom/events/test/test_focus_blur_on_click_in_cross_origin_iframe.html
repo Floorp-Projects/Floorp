@@ -28,7 +28,7 @@ add_task(async () => {
   const loadsPromise = new Promise((resolve, reject) => {
     window.addEventListener("message", function listener(event) {
       if (event.data == "ready") {
-        is(state, "start");
+        is(state, "start", "check initial state");
         state = "ready";
         resolve();
       } else {
@@ -45,6 +45,7 @@ add_task(async () => {
   // Wait for APZ state stable so that mouse event handling APZ works properly
   // in out-of-process iframes.
   await promiseApzFlushedRepaints();
+  await waitUntilApzStable();
 
   // NOTE: synthesizeMouseAtCenter doesn't work for OOP iframes (bug 1528935),
   // so we use promiseNativeMouseEventWithAPZ instead.
@@ -72,7 +73,7 @@ add_task(async () => {
         state = "firstclick";
         window.removeEventListener("message", listener);
         resolve();
-     } else {
+      } else {
         reject("Unexpected message");
       }
     });
