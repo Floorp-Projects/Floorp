@@ -139,11 +139,18 @@ bool BaseProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id,
   // SpiderMonkey's particular foibles.
 
   // Steps 2-3.  (Step 1 is a superfluous assertion.)
-  Rooted<PropertyDescriptor> ownDesc(cx);
-  if (!getOwnPropertyDescriptor(cx, proxy, id, &ownDesc)) {
+  Rooted<PropertyDescriptor> ownDesc_(cx);
+  if (!getOwnPropertyDescriptor(cx, proxy, id, &ownDesc_)) {
     return false;
   }
-  ownDesc.assertCompleteIfFound();
+  ownDesc_.assertCompleteIfFound();
+
+  Rooted<mozilla::Maybe<PropertyDescriptor>> ownDesc(cx);
+  if (ownDesc_.object()) {
+    ownDesc.set(mozilla::Some(ownDesc_.get()));
+  } else {
+    ownDesc.reset();
+  }
 
   // The rest is factored out into a separate function with a weird name.
   // This algorithm continues just below.
@@ -151,15 +158,14 @@ bool BaseProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id,
                                         result);
 }
 
-bool js::SetPropertyIgnoringNamedGetter(JSContext* cx, HandleObject obj,
-                                        HandleId id, HandleValue v,
-                                        HandleValue receiver,
-                                        Handle<PropertyDescriptor> ownDesc_,
-                                        ObjectOpResult& result) {
-  Rooted<PropertyDescriptor> ownDesc(cx, ownDesc_);
+bool js::SetPropertyIgnoringNamedGetter(
+    JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
+    HandleValue receiver, Handle<mozilla::Maybe<PropertyDescriptor>> ownDesc_,
+    ObjectOpResult& result) {
+  Rooted<PropertyDescriptor> ownDesc(cx);
 
   // Step 4.
-  if (!ownDesc.object()) {
+  if (ownDesc_.isNothing()) {
     // The spec calls this variable "parent", but that word has weird
     // connotations in SpiderMonkey, so let's go with "proto".
     RootedObject proto(cx);
@@ -172,6 +178,8 @@ bool js::SetPropertyIgnoringNamedGetter(JSContext* cx, HandleObject obj,
 
     // Step 4.d.
     ownDesc.setDataDescriptor(UndefinedHandleValue, JSPROP_ENUMERATE);
+  } else {
+    ownDesc.set(*ownDesc_);
   }
 
   // Step 5.
@@ -186,26 +194,26 @@ bool js::SetPropertyIgnoringNamedGetter(JSContext* cx, HandleObject obj,
     RootedObject receiverObj(cx, &receiver.toObject());
 
     // Steps 5.c-d.
-    Rooted<PropertyDescriptor> existingDescriptor(cx);
+    Rooted<mozilla::Maybe<PropertyDescriptor>> existingDescriptor(cx);
     if (!GetOwnPropertyDescriptor(cx, receiverObj, id, &existingDescriptor)) {
       return false;
     }
 
     // Step 5.e.
-    if (existingDescriptor.object()) {
+    if (existingDescriptor.isSome()) {
       // Step 5.e.i.
-      if (existingDescriptor.isAccessorDescriptor()) {
+      if (existingDescriptor->isAccessorDescriptor()) {
         return result.fail(JSMSG_OVERWRITING_ACCESSOR);
       }
 
       // Step 5.e.ii.
-      if (!existingDescriptor.writable()) {
+      if (!existingDescriptor->writable()) {
         return result.fail(JSMSG_READ_ONLY);
       }
     }
 
     // Steps 5.e.iii-iv. and 5.f.i.
-    unsigned attrs = existingDescriptor.object()
+    unsigned attrs = existingDescriptor.isSome()
                          ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY |
                                JSPROP_IGNORE_PERMANENT
                          : JSPROP_ENUMERATE;
