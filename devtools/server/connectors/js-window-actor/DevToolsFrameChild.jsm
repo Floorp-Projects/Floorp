@@ -24,21 +24,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.jsm",
 });
 
-// Note: this preference should be read from the client and propagated to the
-// server. However since target switching is only supported for local-tab
-// debugging scenarios, it is acceptable to temporarily read it both on the
-// client and server until we can just enable it by default.
-XPCOMUtils.defineLazyGetter(this, "isServerTargetSwitchingEnabled", () =>
-  Services.prefs.getBoolPref("devtools.target-switching.server.enabled", false)
-);
-
 // Name of the attribute into which we save data in `sharedData` object.
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
 /**
  * Helper function to know if a given WindowGlobal should be exposed via watchTargets("frame") API
  */
-function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
+function shouldNotifyWindowGlobal(
+  windowGlobal,
+  watchedBrowserId,
+  { acceptTopLevelTarget = false }
+) {
   const browsingContext = windowGlobal.browsingContext;
   // Ignore about:blank loads, which spawn a document that never finishes loading
   // and would require somewhat useless Target and all its related overload.
@@ -75,10 +71,13 @@ function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
   // i.e. the frames which are in a distinct process compared to their parent document
   // If there is no parent, this is most likely the top level document.
   // Ignore it only if this is the top level target we are watching.
+  //
+  // `acceptTopLevelTarget` is set both when server side target switching is enabled
+  // or when navigating to and from pages in the bfcache
   if (
-    !isServerTargetSwitchingEnabled &&
     !browsingContext.parent &&
-    browsingContext.browserId == watchedBrowserId
+    browsingContext.browserId == watchedBrowserId &&
+    !acceptTopLevelTarget
   ) {
     return false;
   }
@@ -131,9 +130,38 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
     this._onConnectionChange = this._onConnectionChange.bind(this);
     EventEmitter.decorate(this);
+
+    // Set the following preferences on the constructor, so that we can easily
+    // toggle these preferences on and off from tests and have the new value being picked up.
+
+    // Note: this preference should be read from the client and propagated to the
+    // server. However since target switching is only supported for local-tab
+    // debugging scenarios, it is acceptable to temporarily read it both on the
+    // client and server until we can just enable it by default.
+    XPCOMUtils.defineLazyGetter(this, "isServerTargetSwitchingEnabled", () =>
+      Services.prefs.getBoolPref(
+        "devtools.target-switching.server.enabled",
+        false
+      )
+    );
+
+    // bfcache-in-parent changes significantly how navigation behaves.
+    // We may start reusing previously existing WindowGlobal and so reuse
+    // previous set of JSWindowActor pairs (i.e. DevToolsFrameParent/DevToolsFrameChild).
+    // When enabled, regular navigations may also change and spawn new BrowsingContexts.
+    // If the page we navigate from supports being stored in bfcache,
+    // the navigation will use a new BrowsingContext. And so force spawning
+    // a new top-level target.
+    XPCOMUtils.defineLazyGetter(
+      this,
+      "isBfcacheInParentEnabled",
+      () =>
+        Services.appinfo.sessionHistoryInParent &&
+        Services.prefs.getBoolPref("fission.bfcacheInParent", false)
+    );
   }
 
-  instantiate() {
+  instantiate({ forceOverridingFirstTarget = false } = {}) {
     const { sharedData } = Services.cpmm;
     const watchedDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
     if (!watchedDataByWatcherActor) {
@@ -147,7 +175,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
       const { connectionPrefix, browserId } = watchedData;
       if (
         watchedData.targets.includes("frame") &&
-        shouldNotifyWindowGlobal(this.manager, browserId)
+        shouldNotifyWindowGlobal(this.manager, browserId, {
+          acceptTopLevelTarget:
+            forceOverridingFirstTarget || this.isServerTargetSwitchingEnabled,
+        })
       ) {
         const browsingContext = this.manager.browsingContext;
 
@@ -164,7 +195,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
         // unless this target was created from a JSWindowActor target. The old JSWindowActor
         // target will still be around for a short time when the new one is
         // created.
-        if (existingTarget && !existingTarget.createdFromJsWindowActor) {
+        // Also force overriding the first message manager based target in case of BFCache
+        // which will set forceOverridingFirstTarget=true
+        if (
+          existingTarget &&
+          !existingTarget.createdFromJsWindowActor &&
+          !forceOverridingFirstTarget
+        ) {
           return;
         }
 
@@ -370,7 +407,9 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // on what should or should not be watched.
       if (
         this.manager.browsingContext.browserId != browserId &&
-        !shouldNotifyWindowGlobal(this.manager, browserId)
+        !shouldNotifyWindowGlobal(this.manager, browserId, {
+          acceptTopLevelTarget: true,
+        })
       ) {
         throw new Error(
           "Mismatch between DevToolsFrameParent and DevToolsFrameChild  " +
@@ -476,15 +515,73 @@ class DevToolsFrameChild extends JSWindowActorChild {
     return null;
   }
 
-  handleEvent({ type }) {
+  handleEvent({ type, persisted, target }) {
+    // Ignore any event that may fire for children WindowGlobals/documents
+    if (target != this.document) {
+      return;
+    }
+
     // DOMWindowCreated is registered from FrameWatcher via `ActorManagerParent.addJSWindowActors`
     // as a DOM event to be listened to and so is fired by JS Window Actor code platform code.
     if (type == "DOMWindowCreated") {
       this.instantiate();
+    } else if (
+      this.isBfcacheInParentEnabled &&
+      type == "pageshow" &&
+      persisted
+    ) {
+      // If persisted=true, this is a BFCache navigation.
+      // With Fission enabled, BFCache navigation will spawn a new DocShell
+      // in the same process:
+      // * the previous page won't be destroyed, its JSWindowActor will stay alive (didDestroy won't be called)
+      //   and a pagehide with persisted=true will be emitted on it.
+      // * the new page page won't emit any DOMWindowCreated, but instead a pageshow with persisted=true
+      //   will be emitted.
+      this.instantiate({ forceOverridingFirstTarget: true });
+    }
+    if (this.isBfcacheInParentEnabled && type == "pagehide" && persisted) {
+      this.didDestroy();
+
+      // We might navigate away for the first top level target,
+      // which isn't using JSWindowActor (it still uses messages manager and is created by the client, via TabDescriptor.getTarget).
+      // We have to unregister it from the TargetActorRegistry, otherwise,
+      // if we navigate back to it, the next DOMWindowCreated won't create a new target for it.
+      const { sharedData } = Services.cpmm;
+      const watchedDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
+      if (!watchedDataByWatcherActor) {
+        throw new Error(
+          "Request to instantiate the target(s) for the BrowsingContext, but `sharedData` is empty about watched targets"
+        );
+      }
+
+      const actors = [];
+      for (const [watcherActorID, watchedData] of watchedDataByWatcherActor) {
+        const { browserId } = watchedData;
+        const existingTarget = this._getTargetActorForWatcherActorID(
+          watcherActorID,
+          browserId
+        );
+
+        if (!existingTarget) {
+          continue;
+        }
+        if (existingTarget.window.document != target) {
+          throw new Error("Existing target actor is for a distinct document");
+        }
+        actors.push({ watcherActorID, form: existingTarget.form() });
+        existingTarget.destroy();
+      }
+      // The most important is to unregister the actor from TargetActorRegistry,
+      // so that it is no longer present in the list when new DOMWindowCreated fires.
+      // This will also help notify the client that the target has been destroyed.
+      // And if we navigate back to this target, the client will receive the same target actor ID,
+      // so that it is really important to destroy it correctly on both server and client.
+      this.sendAsyncMessage("DevToolsFrameChild:destroy", { actors });
     }
   }
 
   didDestroy() {
+    logWindowGlobal(this.manager, "Destroy WindowGlobalTarget");
     for (const [, connectionInfo] of this._connections) {
       connectionInfo.connection.close();
     }
