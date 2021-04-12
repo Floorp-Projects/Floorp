@@ -142,6 +142,18 @@ var BrowserPageActions = {
     if (this._panelNode && this.panelNode.state != "closed") {
       this._placeActionInPanelNow(action);
     } else {
+      // This method may be called for the same action more than once
+      // (e.g. when an extension does call pageAction.show/hidden to
+      // enable or disable its own pageAction and we will have to
+      // update the urlbar overflow panel accordingly).
+      //
+      // Ensure we don't add the same actions more than once (otherwise we will
+      // not remove all the entries in _removeActionFromPanel).
+      if (
+        this._actionsToLazilyPlaceInPanel.findIndex(a => a.id == action.id) >= 0
+      ) {
+        return;
+      }
       // Lazily place the action in the panel the next time it opens.
       this._actionsToLazilyPlaceInPanel.push(action);
     }
@@ -616,7 +628,17 @@ var BrowserPageActions = {
     urlbarNode,
     disabled = action.getDisabled(window)
   ) {
-    if (action.__transient) {
+    // When Proton is enabled, the extension page actions should behave similarly
+    // to a transient action, and be hidden from the urlbar overflow menu if they
+    // are disabled (as in the urlbar when the overflow menu isn't available)
+    //
+    // TODO(Bug 1704139): as a follow up we may look into just set on all
+    // extension pageActions `_transient: true`, at least once we sunset
+    // the proton preference and we don't need the pre-Proton behavior anymore,
+    // and remove this special case.
+    const isProtonExtensionAction = action.extensionID && gProton;
+
+    if (action.__transient || isProtonExtensionAction) {
       this.placeActionInPanel(action);
     } else {
       this._updateActionDisabledInPanel(action, panelNode, disabled);
