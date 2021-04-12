@@ -261,15 +261,12 @@ class nsXULPopupPositionedEvent : public mozilla::Runnable {
 class nsXULMenuCommandEvent : public mozilla::Runnable {
  public:
   nsXULMenuCommandEvent(mozilla::dom::Element* aMenu, bool aIsTrusted,
-                        bool aShift, bool aControl, bool aAlt, bool aMeta,
-                        bool aUserInput, bool aFlipChecked)
+                        mozilla::Modifiers aModifiers, bool aUserInput,
+                        bool aFlipChecked)
       : mozilla::Runnable("nsXULMenuCommandEvent"),
         mMenu(aMenu),
+        mModifiers(aModifiers),
         mIsTrusted(aIsTrusted),
-        mShift(aShift),
-        mControl(aControl),
-        mAlt(aAlt),
-        mMeta(aMeta),
         mUserInput(aUserInput),
         mFlipChecked(aFlipChecked),
         mCloseMenuMode(CloseMenuMode_Auto) {
@@ -285,11 +282,9 @@ class nsXULMenuCommandEvent : public mozilla::Runnable {
 
  private:
   RefPtr<mozilla::dom::Element> mMenu;
+
+  mozilla::Modifiers mModifiers;
   bool mIsTrusted;
-  bool mShift;
-  bool mControl;
-  bool mAlt;
-  bool mMeta;
   bool mUserInput;
   bool mFlipChecked;
   CloseMenuMode mCloseMenuMode;

@@ -2902,8 +2902,10 @@ nsXULMenuCommandEvent::Run() {
 
     AutoHandlingUserInputStatePusher userInpStatePusher(mUserInput);
     RefPtr<Element> menu = mMenu;
-    nsContentUtils::DispatchXULCommand(menu, mIsTrusted, nullptr, presShell,
-                                       mControl, mAlt, mShift, mMeta);
+    nsContentUtils::DispatchXULCommand(
+        menu, mIsTrusted, nullptr, presShell, mModifiers & MODIFIER_CONTROL,
+        mModifiers & MODIFIER_ALT, mModifiers & MODIFIER_SHIFT,
+        mModifiers & MODIFIER_META);
   }
 
   if (popup && mCloseMenuMode != CloseMenuMode_None)
