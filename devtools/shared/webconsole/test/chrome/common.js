@@ -122,10 +122,9 @@ async function createResourceWatcherForTab() {
   } = require("devtools/shared/resources/resource-watcher");
 
   const commands = await CommandsFactory.forMainProcess();
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
+  await commands.targetCommand.startListening();
   const target = commands.targetCommand.targetFront;
-  const resourceWatcher = new ResourceWatcher(targetList);
+  const resourceWatcher = new ResourceWatcher(commands.targetCommand);
 
   return { resourceWatcher, target };
 }

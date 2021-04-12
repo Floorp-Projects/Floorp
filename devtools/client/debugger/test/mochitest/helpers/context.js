@@ -12,6 +12,7 @@ function createDebuggerContext(toolbox) {
 
   return {
     ...win.dbg,
+    commands: toolbox.commands,
     toolbox: toolbox,
     win: win,
     panel: panel

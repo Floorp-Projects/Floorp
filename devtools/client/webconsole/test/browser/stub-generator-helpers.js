@@ -36,9 +36,8 @@ async function createResourceWatcherForCommands(commands) {
     ResourceWatcher,
   } = require("devtools/shared/resources/resource-watcher");
 
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
-  return new ResourceWatcher(targetList);
+  await commands.targetCommand.startListening();
+  return new ResourceWatcher(commands.targetCommand);
 }
 
 // eslint-disable-next-line complexity
