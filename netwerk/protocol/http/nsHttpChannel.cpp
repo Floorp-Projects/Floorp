@@ -6352,12 +6352,11 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     return rv;
   }
 
-  if (!mLoadGroup && !mCallbacks) {
-    // If no one called SetLoadGroup or SetNotificationCallbacks, the private
-    // state has not been updated on PrivateBrowsingChannel (which we derive
-    // from) Hence, we have to call UpdatePrivateBrowsing() here
-    UpdatePrivateBrowsing();
-  }
+  // If no one called SetLoadGroup or SetNotificationCallbacks, the private
+  // state has not been updated on PrivateBrowsingChannel (which we derive
+  // from) Same if the loadinfo has changed since the creation of the channel.
+  // Hence, we have to call UpdatePrivateBrowsing() here
+  UpdatePrivateBrowsing();
 
   AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(this);
 
