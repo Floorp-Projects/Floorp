@@ -220,6 +220,10 @@ add_task(async function test_crashframe() {
     "This test only makes sense of we can use OOP iframes."
   );
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.enforceIPCBasedPrincipalVetting", false]],
+  });
+
   // Create the crash reporting directory if it doesn't yet exist, otherwise, a failure
   // sometimes occurs. See bug 1687855 for fixing this.
   const uAppDataPath = Services.dirsvc.get("UAppData", Ci.nsIFile).path;

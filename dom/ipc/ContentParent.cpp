@@ -1277,8 +1277,9 @@ mozilla::ipc::IPCResult ContentParent::RecvUngrabPointer(
 
 Atomic<bool, mozilla::Relaxed> sContentParentTelemetryEventEnabled(false);
 
-static void LogAndAssertFailedPrincipalValidationInfo(nsIPrincipal* aPrincipal,
-                                                      const char* aMethod) {
+/*static*/
+void ContentParent::LogAndAssertFailedPrincipalValidationInfo(
+    nsIPrincipal* aPrincipal, const char* aMethod) {
   // nsContentSecurityManager may also enable this same event, but that's okay
   if (!sContentParentTelemetryEventEnabled.exchange(true)) {
     sContentParentTelemetryEventEnabled = true;
@@ -1330,6 +1331,11 @@ static void LogAndAssertFailedPrincipalValidationInfo(nsIPrincipal* aPrincipal,
 bool ContentParent::ValidatePrincipal(
     nsIPrincipal* aPrincipal,
     const EnumSet<ValidatePrincipalOptions>& aOptions) {
+  // If the pref says we should not validate, then there is nothing to do
+  if (!StaticPrefs::dom_security_enforceIPCBasedPrincipalVetting()) {
+    return true;
+  }
+
   // If there is no principal, then there is nothing to validate!
   if (!aPrincipal) {
     return aOptions.contains(ValidatePrincipalOptions::AllowNullPtr);
@@ -1377,6 +1383,10 @@ bool ContentParent::ValidatePrincipal(
   // A URI with a file:// scheme can never load in a non-file content process
   // due to sandboxing.
   if (aPrincipal->SchemeIs("file")) {
+    // If we don't support a separate 'file' process, then we can return here.
+    if (!StaticPrefs::browser_tabs_remote_separateFileUriProcess()) {
+      return true;
+    }
     return mRemoteType == FILE_REMOTE_TYPE;
   }
 
