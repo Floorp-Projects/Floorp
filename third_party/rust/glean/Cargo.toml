@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "glean"
-version = "36.0.0"
+version = "36.0.1"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
 include = ["/README.md", "/LICENSE", "/src", "/tests", "/Cargo.toml"]
 description = "Glean SDK Rust language bindings"
@@ -29,7 +29,7 @@ features = ["serde"]
 version = "0.5"
 
 [dependencies.glean-core]
-version = "36.0.0"
+version = "36.0.1"
 
 [dependencies.inherent]
 version = "0.1.4"
@@ -72,6 +72,9 @@ version = "0.4.0"
 
 [dev-dependencies.tempfile]
 version = "3.1.0"
+
+[features]
+rkv-safe-mode = ["glean-core/rkv-safe-mode"]
 [badges.circle-ci]
 branch = "main"
 repository = "mozilla/glean"

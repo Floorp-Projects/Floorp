@@ -2083,9 +2083,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "36.0.0"
+version = "36.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27c487254df8abcae3b3ff1a8d5ceb8f7d39b05e67d58f0b89898c20844da41d"
+checksum = "189c370f4d17144dc0af5b9640de2ac1016b603e583d3eb1050a142dba3df9dd"
 dependencies = [
  "chrono",
  "crossbeam-channel 0.5.0",
@@ -2103,9 +2103,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "36.0.0"
+version = "36.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a249ed8bd8588cf97d03de14e0a8ebe4e637c52581fb497bfa0f2bbf7e85018"
+checksum = "66d4e6fd10f9824bb8f46587536bcc20d858087513d7f913d4d9db2c18c2fe2f"
 dependencies = [
  "bincode",
  "chrono",
