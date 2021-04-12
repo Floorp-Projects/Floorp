@@ -8,13 +8,13 @@ const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
 
-module.exports = async function({ targetList, targetFront, onAvailable }) {
+module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   // Only allow the top level target and processes.
   // Frames can be ignored as logMessage are never sent to them anyway.
   // Also ignore workers as they are not supported yet. (see bug 1592584)
   const isAllowed =
     targetFront.isTopLevel ||
-    targetFront.targetType === targetList.TYPES.PROCESS;
+    targetFront.targetType === targetCommand.TYPES.PROCESS;
   if (!isAllowed) {
     return;
   }

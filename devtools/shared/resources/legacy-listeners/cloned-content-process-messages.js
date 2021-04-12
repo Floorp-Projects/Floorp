@@ -13,7 +13,7 @@ const Services = require("Services");
 // This legacy listener is used to retrieve content messages that are cloned from content
 // process to the parent process for BrowserConsole and BrowserToolbox when multiprocess
 // support is disabled.
-module.exports = async function({ targetList, targetFront, onAvailable }) {
+module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   const browserToolboxFissionSupport = Services.prefs.getBoolPref(
     "devtools.browsertoolbox.fission",
     false

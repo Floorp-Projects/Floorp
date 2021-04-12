@@ -9,7 +9,7 @@ const {
 } = require("devtools/shared/resources/resource-watcher");
 
 module.exports = async function({
-  targetList,
+  targetCommand,
   targetFront,
   onAvailable,
   onUpdated,
@@ -19,11 +19,11 @@ module.exports = async function({
   // the context of the browser toolbox as we inspect messages via the process
   // targets
   // Also ignore workers as they are not supported yet. (see bug 1592584)
-  const listenForFrames = targetList.descriptorFront.isLocalTab;
+  const listenForFrames = targetCommand.descriptorFront.isLocalTab;
   const isAllowed =
     targetFront.isTopLevel ||
-    targetFront.targetType === targetList.TYPES.PROCESS ||
-    (targetFront.targetType === targetList.TYPES.FRAME && listenForFrames);
+    targetFront.targetType === targetCommand.TYPES.PROCESS ||
+    (targetFront.targetType === targetCommand.TYPES.FRAME && listenForFrames);
 
   if (!isAllowed) {
     return;
