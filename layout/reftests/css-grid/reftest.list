@@ -272,7 +272,7 @@ fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn5-027.html grid-
 == grid-fragmentation-dyn1-029.html grid-fragmentation-029-ref.html
 == grid-fragmentation-dyn2-029.html grid-fragmentation-029-ref.html
 == grid-fragmentation-dyn2-030.html grid-fragmentation-030-ref.html
-fuzzy-if(webrender&&swgl,0-2,0-48) == grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
+fuzzy-if(webrender&&swgl,0-2,0-60) == grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
 
 == bug1306106.html bug1306106-ref.html
 == grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001-ref.html
