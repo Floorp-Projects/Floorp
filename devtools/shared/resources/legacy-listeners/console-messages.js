@@ -8,22 +8,22 @@ const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
 
-module.exports = async function({ targetList, targetFront, onAvailable }) {
+module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   // Allow the top level target unconditionnally.
   // Also allow frame, but only in content toolbox, i.e. still ignore them in
   // the context of the browser toolbox as we inspect messages via the process
   // targets
-  const listenForFrames = targetList.descriptorFront.isLocalTab;
+  const listenForFrames = targetCommand.descriptorFront.isLocalTab;
 
   // Allow workers when messages aren't dispatched to the main thread.
-  const listenForWorkers = !targetList.rootFront.traits
+  const listenForWorkers = !targetCommand.rootFront.traits
     .workerConsoleApiMessagesDispatchedToMainThread;
 
   const acceptTarget =
     targetFront.isTopLevel ||
-    targetFront.targetType === targetList.TYPES.PROCESS ||
-    (targetFront.targetType === targetList.TYPES.FRAME && listenForFrames) ||
-    (targetFront.targetType === targetList.TYPES.WORKER && listenForWorkers);
+    targetFront.targetType === targetCommand.TYPES.PROCESS ||
+    (targetFront.targetType === targetCommand.TYPES.FRAME && listenForFrames) ||
+    (targetFront.targetType === targetCommand.TYPES.WORKER && listenForWorkers);
 
   if (!acceptTarget) {
     return;
