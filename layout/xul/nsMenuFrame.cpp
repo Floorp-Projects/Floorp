@@ -900,6 +900,12 @@ void nsMenuFrame::Execute(WidgetGUIEvent* aEvent) {
   StartBlinking();
 }
 
+void nsMenuFrame::ActivateItem(Modifiers aModifiers) {
+  StopBlinking();
+  CreateMenuCommandEvent(nsContentUtils::IsCallerChrome(), aModifiers);
+  StartBlinking();
+}
+
 bool nsMenuFrame::ShouldBlink() {
   int32_t shouldBlink =
       LookAndFeel::GetInt(LookAndFeel::IntID::ChosenMenuItemsShouldBlink, 0);
