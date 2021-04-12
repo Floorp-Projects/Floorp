@@ -19,6 +19,7 @@ const AVAILABLE_SHIMS = [
   {
     id: "MochitestShim",
     platform: "all",
+    branch: ["all:ignoredOtherPlatform"],
     name: "Test shim for Mochitests",
     bug: "mochitest",
     file: "mochitest-shim-1.js",
@@ -99,7 +100,7 @@ const AVAILABLE_SHIMS = [
   {
     id: "AdSafeProtectedGoogleIMAAdapter",
     platform: "all",
-    branches: ["nightly"],
+    branches: ["nightly:android"],
     name: "Ad Safe Protected Google IMA Adapter",
     bug: "1508639",
     file: "adsafeprotected-ima.js",
@@ -138,7 +139,7 @@ const AVAILABLE_SHIMS = [
   {
     id: "FacebookSDK",
     platform: "all",
-    branches: ["nightly"],
+    branches: ["nightly:android"],
     name: "Facebook SDK",
     bug: "1226498",
     file: "facebook-sdk.js",
