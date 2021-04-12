@@ -203,6 +203,7 @@ load 1679477-1.html
 skip-if(Android) pref(dom.disable_open_during_load,false) load 1685009-1.html
 load 1694783-1.html
 load 1695782-1.html
-load 1700232.html
 load 1699013.html
+load 1700232.html
+load 1704321-1.html
 load 1702638.html
