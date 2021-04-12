@@ -16,7 +16,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -45,7 +45,7 @@ add_task(async function() {
   assertContents(cachedResources1, messages);
   assertResources(cachedResources2, cachedResources1);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });
 
@@ -56,7 +56,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -93,7 +93,7 @@ add_task(async function() {
   assertContents(availableResources, allMessages);
   assertResources(cachedResources, availableResources);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });
 
@@ -102,7 +102,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -134,7 +134,7 @@ add_task(async function() {
 
   is(cachedResources.length, 0, "The cache in ResourceWatcher is cleared");
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });
 
@@ -143,7 +143,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -192,7 +192,7 @@ add_task(async function() {
 
   assertResources(cachedResources, availableResources);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });
 
@@ -205,7 +205,7 @@ add_task(async function() {
 async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -261,7 +261,7 @@ async function testIgnoreExistingResources(isFirstListenerIgnoreExisting) {
   assertContents(cachedResourcesWithFlag, additionalMessages);
   assertContents(cachedResourcesWithoutFlag, allMessages);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -270,7 +270,7 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -308,7 +308,7 @@ add_task(async function() {
   resourceWatcher.unwatchResources([ResourceWatcher.TYPES.CONSOLE_MESSAGE], {
     onAvailable,
   });
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });
 

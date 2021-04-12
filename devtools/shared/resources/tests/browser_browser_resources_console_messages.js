@@ -18,7 +18,7 @@ add_task(async function() {
   const {
     client,
     resourceWatcher,
-    targetList,
+    targetCommand,
   } = await initMultiProcessResourceWatcher();
 
   info(
@@ -101,6 +101,6 @@ add_task(async function() {
     "isAlreadyExistingResource is false for the early message"
   );
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });

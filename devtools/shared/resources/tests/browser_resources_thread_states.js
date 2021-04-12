@@ -41,18 +41,18 @@ async function checkBreakpointBeforeWatchResources() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
   // Attach the thread actor before running the debugger statement,
   // so that it is correctly catched by the thread actor.
   info("Attach the top level target");
-  await targetList.targetFront.attach();
+  await targetCommand.targetFront.attach();
   // Init the Thread actor via attachAndInitThread in order to ensure
   // memoizing the thread front and avoid attaching it twice
   info("Attach the top level thread actor");
-  await targetList.targetFront.attachAndInitThread(targetList);
+  await targetCommand.targetFront.attachAndInitThread(targetCommand);
 
   info("Run the 'debugger' statement");
   // Note that we do not wait for the resolution of spawn as it will be paused
@@ -92,7 +92,7 @@ async function checkBreakpointBeforeWatchResources() {
     },
   });
 
-  const { threadFront } = targetList.targetFront;
+  const { threadFront } = targetCommand.targetFront;
   await threadFront.resume();
 
   await waitFor(
@@ -104,7 +104,7 @@ async function checkBreakpointBeforeWatchResources() {
 
   assertResumedResource(resumed);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -115,7 +115,7 @@ async function checkBreakpointAfterWatchResources() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -163,7 +163,7 @@ async function checkBreakpointAfterWatchResources() {
   });
 
   // treadFront is created and attached while calling watchResources
-  const { threadFront } = targetList.targetFront;
+  const { threadFront } = targetCommand.targetFront;
 
   await threadFront.resume();
 
@@ -176,7 +176,7 @@ async function checkBreakpointAfterWatchResources() {
 
   assertResumedResource(resumed);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -187,7 +187,7 @@ async function checkRealBreakpoint() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -204,7 +204,7 @@ async function checkRealBreakpoint() {
   );
 
   // treadFront is created and attached while calling watchResources
-  const { threadFront } = targetList.targetFront;
+  const { threadFront } = targetCommand.targetFront;
 
   // We have to call `sources` request, otherwise the Thread Actor
   // doesn't start watching for sources, and ignore the setBreakpoint call
@@ -258,7 +258,7 @@ async function checkRealBreakpoint() {
 
   assertResumedResource(resumed);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -271,7 +271,7 @@ async function checkPauseOnException() {
     "data:text/html,<meta charset=utf8><script>a.b.c.d</script>"
   );
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -288,7 +288,7 @@ async function checkPauseOnException() {
   );
 
   // treadFront is created and attached while calling watchResources
-  const { threadFront } = targetList.targetFront;
+  const { threadFront } = targetCommand.targetFront;
   await threadFront.reconfigure({ pauseOnExceptions: true });
 
   info("Reload the page, in order to trigger exception on load");
@@ -333,7 +333,7 @@ async function checkPauseOnException() {
 
   assertResumedResource(resumed);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -344,17 +344,17 @@ async function checkSetBeforeWatch() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
   // Attach the target in order to create the thread actor
   info("Attach the top level target");
-  await targetList.targetFront.attach();
+  await targetCommand.targetFront.attach();
   // Instantiate the thread front in order to be able to set a breakpoint before watching for thread state
   info("Attach the top level thread actor");
-  await targetList.targetFront.attachAndInitThread(targetList);
-  const { threadFront } = targetList.targetFront;
+  await targetCommand.targetFront.attachAndInitThread(targetCommand);
+  const { threadFront } = targetCommand.targetFront;
 
   // We have to call `sources` request, otherwise the Thread Actor
   // doesn't start watching for sources, and ignore the setBreakpoint call
@@ -422,7 +422,7 @@ async function checkSetBeforeWatch() {
 
   assertResumedResource(resumed);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -431,7 +431,7 @@ async function checkDebuggerStatementInIframes() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -494,7 +494,7 @@ async function checkDebuggerStatementInIframes() {
   } else {
     is(
       iframeTarget,
-      targetList.targetFront,
+      targetCommand.targetFront,
       "Without fission, the pause is from the top level target"
     );
   }
@@ -511,7 +511,7 @@ async function checkDebuggerStatementInIframes() {
 
   assertResumedResource(resumed);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 

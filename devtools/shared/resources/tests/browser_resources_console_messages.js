@@ -29,7 +29,7 @@ add_task(async function() {
 async function testTabConsoleMessagesResources(executeInIframe) {
   const tab = await addTab(FISSION_TEST_URL);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -107,7 +107,7 @@ async function testTabConsoleMessagesResources(executeInIframe) {
     "Got the expected number of runtime messages"
   );
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
@@ -123,7 +123,7 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
   info("Test ignoreExistingResources option for console messages");
   const tab = await addTab(FISSION_TEST_URL);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -159,10 +159,10 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
   );
   const expectedTargetFront =
     executeInIframe && isFissionEnabled()
-      ? targetList
-          .getAllTargets([targetList.TYPES.FRAME])
+      ? targetCommand
+          .getAllTargets([targetCommand.TYPES.FRAME])
           .find(target => target.url == IFRAME_URL)
-      : targetList.targetFront;
+      : targetCommand.targetFront;
   for (let i = 0; i < expectedRuntimeConsoleCalls.length; i++) {
     const resource = availableResources[i];
     const { message, targetFront } = resource;
@@ -180,7 +180,7 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
     );
   }
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {

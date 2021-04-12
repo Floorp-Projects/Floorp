@@ -21,7 +21,7 @@ async function testDocumentEventResources() {
   const tab = await addTab("data:text/html,Document Events");
 
   const listener = new ResourceListener();
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -65,7 +65,7 @@ async function testDocumentEventResources() {
     "shouldBeIgnoredAsRedundantWithTargetAvailable is not set after reloading"
   );
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -74,7 +74,7 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
 
   const tab = await addTab("data:text/html,Document Events");
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -92,7 +92,7 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
   await waitUntil(() => documentEvents.length === 3);
   assertEvents(...documentEvents);
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 

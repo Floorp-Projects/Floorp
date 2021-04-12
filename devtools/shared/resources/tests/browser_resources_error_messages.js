@@ -32,7 +32,7 @@ async function testErrorMessagesResources() {
   // Open a test tab
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -56,7 +56,7 @@ async function testErrorMessagesResources() {
 
       is(
         resource.targetFront,
-        targetList.targetFront,
+        targetCommand.targetFront,
         "The targetFront property is the expected one"
       );
 
@@ -105,7 +105,7 @@ async function testErrorMessagesResources() {
   ok(true, "All the expected errors were received");
 
   Services.console.reset();
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -113,7 +113,7 @@ async function testErrorMessagesResourcesWithIgnoreExistingResources() {
   info("Test ignoreExistingResources option for ERROR_MESSAGE");
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -153,7 +153,7 @@ async function testErrorMessagesResourcesWithIgnoreExistingResources() {
   }
 
   Services.console.reset();
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 

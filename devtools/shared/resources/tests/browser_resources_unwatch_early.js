@@ -15,7 +15,7 @@ const TEST_URI = "data:text/html;charset=utf-8,";
 add_task(async function() {
   const tab = await addTab(TEST_URI);
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
   const { CONSOLE_MESSAGE, ROOT_NODE } = ResourceWatcher.TYPES;
@@ -77,7 +77,7 @@ add_task(async function() {
   ok(!hasMessage(messages1, "msg-2"), "Watcher 1 did not receive msg-2");
   ok(!hasMessage(messages2, "msg-2"), "Watcher 2 did not receive msg-2");
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });
 

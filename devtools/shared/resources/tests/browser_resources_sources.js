@@ -17,17 +17,17 @@ add_task(async function() {
   const htmlRequest = await fetch(TEST_URL);
   const htmlContent = await htmlRequest.text();
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
   // Force the target list to cover workers
-  targetList.listenForWorkers = true;
-  targetList.listenForServiceWorkers = true;
-  await targetList.startListening();
+  targetCommand.listenForWorkers = true;
+  targetCommand.listenForServiceWorkers = true;
+  await targetCommand.startListening();
 
   const targets = [];
-  await targetList.watchTargets(targetList.ALL_TYPES, async function({
+  await targetCommand.watchTargets(targetCommand.ALL_TYPES, async function({
     targetFront,
   }) {
     targets.push(targetFront);
@@ -128,7 +128,7 @@ add_task(async function() {
   ];
   await assertResources(availableResources, expectedExistingResources);
 
-  await targetList.stopListening();
+  await targetCommand.stopListening();
   await client.close();
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {

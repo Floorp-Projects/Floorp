@@ -23,7 +23,7 @@ async function testPlatformMessagesResources() {
   const {
     client,
     resourceWatcher,
-    targetList,
+    targetCommand,
   } = await initMultiProcessResourceWatcher();
 
   const cachedMessages = [
@@ -53,7 +53,7 @@ async function testPlatformMessagesResources() {
 
       is(
         resource.targetFront,
-        targetList.targetFront,
+        targetCommand.targetFront,
         "The targetFront property is the expected one"
       );
 
@@ -100,7 +100,7 @@ async function testPlatformMessagesResources() {
   ok(true, "All the expected messages were received");
 
   Services.console.reset();
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }
 
@@ -108,7 +108,7 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   const {
     client,
     resourceWatcher,
-    targetList,
+    targetCommand,
   } = await initMultiProcessResourceWatcher();
 
   info(
@@ -160,6 +160,6 @@ async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
   }
 
   Services.console.reset();
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 }

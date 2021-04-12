@@ -15,7 +15,7 @@ add_task(async function() {
     "data:text/html,<body style='color: lime;'>CSS Changes</body>"
   );
 
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -25,7 +25,7 @@ add_task(async function() {
     onAvailable: () => {},
   });
 
-  const { walker } = await targetList.targetFront.getFront("inspector");
+  const { walker } = await targetCommand.targetFront.getFront("inspector");
   const nodeList = await walker.querySelectorAll(walker.rootNode, "body");
   const body = (await nodeList.items())[0];
   const style = (
@@ -89,7 +89,7 @@ add_task(async function() {
   is(availableResources[2], existingResources[2], "3rd resource is correct");
   is(availableResources[3], existingResources[3], "4th resource is correct");
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });
 

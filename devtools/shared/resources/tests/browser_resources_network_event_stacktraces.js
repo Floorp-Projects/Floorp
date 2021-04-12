@@ -29,7 +29,7 @@ const REQUEST_STUB = {
 add_task(async function() {
   info("Test network stacktraces events");
   const tab = await addTab(TEST_URI);
-  const { client, resourceWatcher, targetList } = await initResourceWatcher(
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
     tab
   );
 
@@ -98,7 +98,7 @@ add_task(async function() {
     }
   );
 
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
   BrowserTestUtils.removeTab(tab);
 });
