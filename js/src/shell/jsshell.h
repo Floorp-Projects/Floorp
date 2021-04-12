@@ -112,10 +112,6 @@ extern bool enableWasm;
 extern bool enableSharedMemory;
 extern bool enableWasmBaseline;
 extern bool enableWasmOptimizing;
-#ifdef JS_CODEGEN_ARM64
-// Cranelift->Ion transition
-extern bool forceWasmIon;
-#endif
 
 #define WASM_FEATURE(NAME, ...) extern bool enableWasm##NAME;
 JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE);
