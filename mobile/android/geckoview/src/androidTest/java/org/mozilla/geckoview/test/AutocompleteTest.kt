@@ -21,6 +21,8 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest
 import org.mozilla.geckoview.Autocomplete
+import org.mozilla.geckoview.Autocomplete.CreditCard
+import org.mozilla.geckoview.Autocomplete.CreditCardSelectOption
 import org.mozilla.geckoview.Autocomplete.LoginEntry
 import org.mozilla.geckoview.Autocomplete.LoginSaveOption
 import org.mozilla.geckoview.Autocomplete.LoginSelectOption
@@ -71,6 +73,150 @@ class AutocompleteTest : BaseSessionTest() {
 
         mainSession.loadTestPath(FORMS3_HTML_PATH)
         sessionRule.waitForResult(fetchHandled)
+    }
+
+    @Test
+    fun fetchCreditCards() {
+        val runtime = sessionRule.runtime
+        val register = { delegate: StorageDelegate ->
+            runtime.autocompleteStorageDelegate = delegate
+        }
+        val unregister = { _: StorageDelegate ->
+            runtime.autocompleteStorageDelegate = null
+        }
+
+        val fetchHandled = GeckoResult<Void>()
+
+        mainSession.loadTestPath(CC_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        sessionRule.addExternalDelegateDuringNextWait(
+                StorageDelegate::class, register, unregister,
+                object : StorageDelegate {
+            @AssertCalled(count = 1)
+            override fun onCreditCardFetch()
+                    : GeckoResult<Array<CreditCard>>? {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    fetchHandled.complete(null)
+                }, acceptDelay)
+
+                return null
+            }
+        })
+
+        mainSession.evaluateJS("document.querySelector('#name').focus()")
+        sessionRule.waitForResult(fetchHandled)
+    }
+
+    @Test
+    fun creditCardSelectAndFill() {
+        // Test:
+        // 1. Load a credit card form page.
+        // 2. Focus on the name input field.
+        //    a. Ensure onCreditCardFetch is called.
+        //    b. Return the saved entries.
+        //    c. Ensure onCreditCardSelect is called.
+        //    d. Select and return one of the options.
+        //    e. Ensure the form is filled accordingly.
+
+        val runtime = sessionRule.runtime
+        val register = { delegate: StorageDelegate ->
+            runtime.autocompleteStorageDelegate = delegate
+        }
+        val unregister = { _: StorageDelegate ->
+            runtime.autocompleteStorageDelegate = null
+        }
+
+        val name = arrayOf("Peter Parker", "John Doe")
+        val number = arrayOf("1234-1234-1234-1234", "2345-2345-2345-2345")
+        val guid = arrayOf("test-guid1", "test-guid2")
+        val expMonth = arrayOf("Apr", "Aug")
+        val expYear = arrayOf("22", "23")
+        val savedCC = arrayOf(
+          CreditCard.Builder()
+                .guid(guid[0])
+                .name(name[0])
+                .number(number[0])
+                .expirationMonth(expMonth[0])
+                .expirationYear(expYear[0])
+                .build(),
+          CreditCard.Builder()
+                .guid(guid[1])
+                .name(name[1])
+                .number(number[1])
+                .expirationMonth(expMonth[1])
+                .expirationYear(expYear[1])
+                .build())
+
+        val selectHandled = GeckoResult<Void>()
+
+        mainSession.loadTestPath(CC_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        sessionRule.addExternalDelegateDuringNextWait(
+                StorageDelegate::class, register, unregister,
+                object : StorageDelegate {
+            @AssertCalled
+            override fun onCreditCardFetch()
+                    : GeckoResult<Array<CreditCard>>? {
+                return GeckoResult.fromValue(savedCC)
+            }
+        })
+
+        mainSession.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onCreditCardSelect(
+                    session: GeckoSession,
+                    prompt: AutocompleteRequest<CreditCardSelectOption>)
+                    : GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Session should not be null", session, notNullValue())
+
+                assertThat(
+                    "There should be one option",
+                    prompt.options.size,
+                    equalTo(2))
+
+                for (i in 0..1) {
+                    val creditCard = prompt.options[i].value
+
+                    assertThat("Credit card should not be null", creditCard, notNullValue())
+                    assertThat(
+                        "Name should match",
+                        creditCard.name,
+                        equalTo(name[i]))
+                    assertThat(
+                        "Number should match",
+                        creditCard.number,
+                        equalTo(number[i]))
+                }
+                Handler(Looper.getMainLooper()).postDelayed({
+                    selectHandled.complete(null)
+                }, acceptDelay)
+
+                return GeckoResult.fromValue(prompt.confirm(prompt.options[0]))
+            }
+        })
+
+        // Focus on the name input field.
+        mainSession.evaluateJS("document.querySelector('#name').focus()")
+        sessionRule.waitForResult(selectHandled)
+
+        assertThat(
+            "Filled name should match",
+            mainSession.evaluateJS("document.querySelector('#name').value") as String,
+            equalTo(name[0]))
+        assertThat(
+            "Filled number should match",
+            mainSession.evaluateJS("document.querySelector('#number').value") as String,
+            equalTo(number[0]))
+        assertThat(
+            "Filled expiration month should match",
+            mainSession.evaluateJS("document.querySelector('#expMonth').value") as String,
+            equalTo(expMonth[0]))
+        assertThat(
+            "Filled expiration year should match",
+            mainSession.evaluateJS("document.querySelector('#expYear').value") as String,
+            equalTo(expYear[0]))
     }
 
     @Test
