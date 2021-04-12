@@ -65,6 +65,8 @@ add_task(async function tabstrip_context() {
   let closedTabsAvailable = SessionStore.getClosedTabCount(window) == 0;
   info("Closed tabs: " + closedTabsAvailable);
   let expectedEntries = [
+    ["#toolbar-context-openANewTab", true],
+    ["---"],
     ["#toolbar-context-reloadSelectedTab", true],
     ["#toolbar-context-bookmarkSelectedTab", true],
     ["#toolbar-context-selectAllTabs", true],

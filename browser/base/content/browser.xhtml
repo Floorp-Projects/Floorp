@@ -131,6 +131,9 @@
     <menupopup id="tabContextMenu"
                onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
                onpopuphidden="if (event.target == this) TabContextMenu.contextTab = null;">
+      <menuitem id="context_openANewTab" data-lazy-l10n-id="tab-context-open-a-new-tab"
+                oncommand="gBrowser.addAdjacentNewTab(TabContextMenu.contextTab)"/>
+      <menuseparator/>
       <menuitem id="context_reloadTab" data-lazy-l10n-id="reload-tab"
                 oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
       <menuitem id="context_reloadSelectedTabs" data-lazy-l10n-id="reload-tabs" hidden="true"
@@ -457,6 +460,11 @@
                 data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"
                 contexttype="toolbaritem"
                 class="customize-context-removeFromToolbar"/>
+      <menuitem id="toolbar-context-openANewTab"
+                contexttype="tabbar"
+                command="cmd_newNavigatorTab"
+                data-lazy-l10n-id="toolbar-context-menu-open-a-new-tab"/>
+      <menuseparator id="toolbarNavigatorItemsMenuSeparator"/>
       <menuitem id="toolbar-context-reloadSelectedTab"
                 contexttype="tabbar"
                 oncommand="gBrowser.reloadMultiSelectedTabs();"
