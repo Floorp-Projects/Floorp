@@ -82,6 +82,26 @@ class TimespanMetric {
   }
 
   /**
+   * Explicitly sets the timespan value
+   *
+   * This API should only be used if you cannot make use of
+   * `start`/`stop`/`cancel`.
+   *
+   * @param aDuration The duration of this timespan, in units matching the
+   *        `time_unit` of this metric's definition.
+   */
+  void SetRaw(uint32_t aDuration) const {
+    auto optScalarId = ScalarIdForMetric(mId);
+    if (optScalarId) {
+      auto scalarId = optScalarId.extract();
+      Telemetry::ScalarSet(scalarId, aDuration);
+    }
+#ifndef MOZ_GLEAN_ANDROID
+    fog_timespan_set_raw(mId, aDuration);
+#endif
+  }
+
+  /**
    * **Test-only API**
    *
    * Gets the currently stored value as an integer.
