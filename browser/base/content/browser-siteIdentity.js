@@ -837,9 +837,12 @@ var gIdentityHandler = {
     } else if (this._isAboutHttpsOnlyErrorPage) {
       // We show a not secure lock icon for 'about:httpsonlyerror' page.
       this._identityBox.className = "httpsOnlyErrorPage";
-    } else if (this._isAboutNetErrorPage || this._isAboutBlockedPage) {
-      // Network errors and blocked pages get a more neutral icon
+    } else if (this._isAboutBlockedPage) {
+      // Blocked pages get a more neutral icon
       this._identityBox.className = "unknownIdentity";
+    } else if (this._isAboutNetErrorPage) {
+      // We show a not secure lock icon for 'about:neterror' page.
+      this._identityBox.className = "netErrorPage";
     } else if (this._isPotentiallyTrustworthy) {
       // This is a local resource (and shouldn't be marked insecure).
       this._identityBox.className = "localResource";
