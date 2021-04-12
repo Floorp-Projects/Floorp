@@ -570,6 +570,15 @@
   /* Just remove this element once Proton is released */
   display: none;
 }
+
+/* The background can be very dark and if the add-on uses a black-ish svg it
+   will be barely visible. In the future we should have a standardized SVG
+   solution we can apply to add-on icons, for now we can only try to make them
+   visible through some filtering tricks */
+:root[lwt-toolbar-field-brighttext] #urlbar:not([focused="true"]) .urlbar-addon-page-action[style*=".svg"],
+:root[lwt-toolbar-field-focus-brighttext] #urlbar[focused="true"] .urlbar-addon-page-action[style*=".svg"] {
+  filter: grayscale(100%) brightness(20%) invert();
+}
 } /*** END proton ***/
 
 @media not (-moz-proton) {
