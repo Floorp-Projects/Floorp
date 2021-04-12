@@ -7,6 +7,7 @@
 #include "js/Proxy.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 
 #include <string.h>
 
@@ -48,13 +49,11 @@ static bool ProxySetOnExpando(JSContext* cx, HandleObject proxy, HandleId id,
   // expando exsists.
   MOZ_ASSERT(expando);
 
-  Rooted<PropertyDescriptor> ownDesc(cx);
+  Rooted<mozilla::Maybe<PropertyDescriptor>> ownDesc(cx);
   if (!GetOwnPropertyDescriptor(cx, expando, id, &ownDesc)) {
     return false;
   }
-  ownDesc.assertCompleteIfFound();
-
-  MOZ_ASSERT(ownDesc.object());
+  MOZ_ASSERT(ownDesc.isSome());
 
   RootedValue expandoValue(cx, proxy->as<ProxyObject>().expando());
   return SetPropertyIgnoringNamedGetter(cx, expando, id, v, expandoValue,

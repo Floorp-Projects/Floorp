@@ -31,9 +31,15 @@ class CustomProxyHandler : public Wrapper {
 
   bool set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
            HandleValue receiver, ObjectOpResult& result) const override {
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!Wrapper::getOwnPropertyDescriptor(cx, proxy, id, &desc)) {
+    Rooted<PropertyDescriptor> desc_(cx);
+    if (!Wrapper::getOwnPropertyDescriptor(cx, proxy, id, &desc_)) {
       return false;
+    }
+    Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
+    if (desc_.object()) {
+      desc.set(mozilla::Some(desc_.get()));
+    } else {
+      desc.reset();
     }
     return SetPropertyIgnoringNamedGetter(cx, proxy, id, v, receiver, desc,
                                           result);
