@@ -12,6 +12,7 @@
 #include "common/browser_logging/WebRtcLog.h"
 #include "gmp-video-decode.h"  // GMP_API_VIDEO_DECODER
 #include "gmp-video-encode.h"  // GMP_API_VIDEO_ENCODER
+#include "libwebrtcglue/CallWorkerThread.h"
 #include "modules/audio_device/include/fake_audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/include/aec_dump.h"
@@ -168,16 +169,22 @@ namespace mozilla {
 using namespace dom;
 
 SharedWebrtcState::SharedWebrtcState(
+    RefPtr<AbstractThread> aCallWorkerThread,
     webrtc::AudioState::Config&& aAudioStateConfig,
     RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory)
-    : mAudioStateConfig(std::move(aAudioStateConfig)),
+    : mCallWorkerThread(std::move(aCallWorkerThread)),
+      mAudioStateConfig(std::move(aAudioStateConfig)),
       mAudioDecoderFactory(std::move(aAudioDecoderFactory)) {}
 
+SharedWebrtcState::~SharedWebrtcState() = default;
+
 SharedModuleThread* SharedWebrtcState::GetModuleThread() {
+  MOZ_ASSERT(mCallWorkerThread->IsOnCurrentThread());
   if (!mModuleThread) {
     mModuleThread = webrtc::SharedModuleThread::Create(
         webrtc::ProcessThread::Create("libwebrtcModuleThread"),
         [this, self = RefPtr<SharedWebrtcState>(this)] {
+          MOZ_ASSERT(mCallWorkerThread->IsOnCurrentThread());
           mModuleThread = nullptr;
         });
   }
@@ -465,7 +472,15 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
     audioStateConfig.audio_device_module =
         new rtc::RefCountedObject<FakeAudioDeviceModule>();
 
+    SharedThreadPoolWebRtcTaskQueueFactory taskQueueFactory;
+    auto callWorkerThread = WrapUnique(
+        taskQueueFactory
+            .CreateTaskQueueWrapper("CallWorker",
+                                    webrtc::TaskQueueFactory::Priority::NORMAL)
+            .release());
+
     mSharedWebrtcState = MakeAndAddRef<SharedWebrtcState>(
+        new CallWorkerThread(std::move(callWorkerThread)),
         std::move(audioStateConfig),
         already_AddRefed(CreateBuiltinAudioDecoderFactory().release()));
 
