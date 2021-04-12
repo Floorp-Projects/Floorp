@@ -1411,5 +1411,6 @@ xul|*.addons-icon {
  * so can actually affect the button styling that way.  */
 :host(dialog[subdialog]) .dialog-button-box > button {
   margin: 0 4px;
+  min-width: auto;
 }
 }
