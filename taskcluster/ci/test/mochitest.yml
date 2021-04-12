@@ -402,6 +402,7 @@ mochitest-media:
             fission-webgl-ipc:
                 by-test-platform:
                     (linux.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
+                    (linux.*64|windows10-64)-qr/opt: ['autoland']
                     default: []
             default:
                 by-test-platform:
