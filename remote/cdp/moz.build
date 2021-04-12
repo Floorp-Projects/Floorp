@@ -4,28 +4,6 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Remote Protocol", "CDP")
-with Files("domains/**/Browser.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Browser")
-with Files("domains/**/DOM.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: DOM")
-with Files("domains/**/Emulation.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Emulation")
-with Files("domains/**/Input.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Input")
-with Files("domains/**/Log.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Log")
-with Files("domains/**/Network.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Network")
-with Files("domains/**/Page.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Page")
-with Files("domains/**/Performance.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Performance")
-with Files("domains/**/Runtime.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Runtime")
-with Files("domains/**/Security.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Security")
-with Files("domains/**/Target.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "CDP: Target")
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.ini",
