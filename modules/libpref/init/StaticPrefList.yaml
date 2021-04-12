@@ -5679,6 +5679,15 @@
 #endif
   mirror: always
 
+#if defined(MOZ_AARCH64)
+# Cranelift->Ion transition.  Temporary switch.  When we land Phase 2
+# of the transition, this switch will disappear altogether.
+- name: javascript.options.wasm_force_ion
+  type: bool
+  value: false
+  mirror: always
+#endif
+
 # SIMD is supported only on x86 and x64, with arm64 support imminent.
 #if defined(ENABLE_WASM_SIMD)
 -   name: javascript.options.wasm_simd
