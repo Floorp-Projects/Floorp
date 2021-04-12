@@ -583,6 +583,8 @@ class ChromeActions {
     var message;
     if (featureId === "forms") {
       message = getLocalizedString(strings, "unsupported_feature_forms");
+    } else if (featureId === "signatures") {
+      message = getLocalizedString(strings, "unsupported_feature_signatures");
     } else {
       message = getLocalizedString(strings, "unsupported_feature");
     }

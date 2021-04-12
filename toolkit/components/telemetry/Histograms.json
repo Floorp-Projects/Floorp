@@ -10114,7 +10114,7 @@
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1630844, 1666979, 1689264],
     "kind": "categorical",
-    "labels": ["unknown", "forms", "javaScript", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
+    "labels": ["unknown", "forms", "javaScript", "signatures", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
     "description": "The reason the fallback bar was shown."
   },
   "PDF_VIEWER_FALLBACK_ERROR": {
