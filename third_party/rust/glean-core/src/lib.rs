@@ -199,9 +199,6 @@ impl Glean {
             return Err(ErrorKind::InvalidConfig.into());
         }
 
-        // Creating the data store creates the necessary path as well.
-        // If that fails we bail out and don't initialize further.
-        let data_store = Some(Database::new(&cfg.data_path, cfg.delay_ping_lifetime_io)?);
         let event_data_store = EventDatabase::new(&cfg.data_path)?;
 
         // Create an upload manager with rate limiting of 15 pings every 60 seconds.
@@ -218,7 +215,9 @@ impl Glean {
 
         Ok(Self {
             upload_enabled: cfg.upload_enabled,
-            data_store,
+            // In the subprocess, we want to avoid accessing the database entirely.
+            // The easiest way to ensure that is to just not initialize it.
+            data_store: None,
             event_data_store,
             core_metrics: CoreMetrics::new(),
             database_metrics: DatabaseMetrics::new(),
@@ -241,6 +240,10 @@ impl Glean {
     /// the core metrics.
     pub fn new(cfg: Configuration) -> Result<Self> {
         let mut glean = Self::new_for_subprocess(&cfg, false)?;
+
+        // Creating the data store creates the necessary path as well.
+        // If that fails we bail out and don't initialize further.
+        glean.data_store = Some(Database::new(&cfg.data_path, cfg.delay_ping_lifetime_io)?);
 
         // The upload enabled flag may have changed since the last run, for
         // example by the changing of a config file.
@@ -808,6 +811,8 @@ impl Glean {
     /// This will return `false` in case `value` contains invalid tags.
     ///
     /// Ping tags will show in the destination datasets, after ingestion.
+    ///
+    /// **Note** If one or more tags are invalid, all tags are ignored.
     ///
     /// # Arguments
     ///

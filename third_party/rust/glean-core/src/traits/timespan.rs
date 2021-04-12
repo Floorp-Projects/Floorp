@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use crate::ErrorType;
+use std::time::Duration;
 
 /// A description for the [`TimespanMetric`](crate::metrics::TimespanMetric) type.
 ///
@@ -27,6 +28,17 @@ pub trait Timespan {
     /// Aborts a previous [`start`](Timespan::start) call. No error is recorded
     /// if no [`start`](Timespan::start) was called.
     fn cancel(&self);
+
+    /// Explicitly sets the timespan value.
+    ///
+    /// This API should only be used if your library or application requires recording
+    /// spans of time in a way that cannot make use of
+    /// [`start`](Timespan::start)/[`stop`](Timespan::stop)/[`cancel`](Timespan::cancel).
+    ///
+    /// # Arguments
+    ///
+    /// * `elapsed` - The elapsed time to record.
+    fn set_raw(&self, elapsed: Duration);
 
     /// **Exported for test purposes.**
     ///

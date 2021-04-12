@@ -209,16 +209,14 @@ impl std::fmt::Debug for Database {
 fn database_size(dir: &Path) -> Option<NonZeroU64> {
     let mut total_size = 0;
     if let Ok(entries) = fs::read_dir(dir) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                if let Ok(file_type) = entry.file_type() {
-                    if file_type.is_file() {
-                        let path = entry.path();
-                        if let Ok(metadata) = fs::metadata(path) {
-                            total_size += metadata.len();
-                        } else {
-                            continue;
-                        }
+        for entry in entries.flatten() {
+            if let Ok(file_type) = entry.file_type() {
+                if file_type.is_file() {
+                    let path = entry.path();
+                    if let Ok(metadata) = fs::metadata(path) {
+                        total_size += metadata.len();
+                    } else {
+                        continue;
                     }
                 }
             }
