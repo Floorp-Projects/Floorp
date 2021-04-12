@@ -4253,7 +4253,9 @@ async function runCallbackTests(aForTests)
   // XXX On macOS, window.moveBy() doesn't cause notify-position-change.
   //     Investigate this later (although, we cannot notify position change to
   //     native IME on macOS).
-  if (!kIsMac) {
+  // Wayland also does not support it.
+  var isWayland = Services.prefs.getBoolPref("widget.wayland.test-workarounds.enabled", false);
+  if (!kIsMac && !isWayland) {
     window.moveBy(0, 10);
     await waitUntilNotificationsReceived();
     is(notifications.length, 1,
