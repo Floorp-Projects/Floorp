@@ -8,6 +8,7 @@
 //!
 //! Conic gradients are rendered via cached render tasks and composited with the image brush.
 
+use euclid::vec2;
 use api::{ExtendMode, GradientStop, PremultipliedColorF};
 use api::units::*;
 use crate::scene_building::IsVisible;
@@ -90,6 +91,8 @@ pub struct ConicGradientTemplate {
     pub extend_mode: ExtendMode,
     pub center: DevicePoint,
     pub params: ConicGradientParams,
+    pub task_size: DeviceIntSize,
+    pub scale: DeviceVector2D,
     pub stretch_size: LayoutSize,
     pub tile_spacing: LayoutSize,
     pub brush_segments: Vec<BrushSegment>,
@@ -132,12 +135,29 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
         stretch_size.width = stretch_size.width.min(common.prim_rect.size.width);
         stretch_size.height = stretch_size.height.min(common.prim_rect.size.height);
 
+        // Avoid rendering enormous gradients. Radial gradients are mostly made of soft transitions,
+        // so it is unlikely that rendering at a higher resolution that 1024 would produce noticeable
+        // differences, especially with 8 bits per channel.
+        const MAX_SIZE: f32 = 1024.0;
+        let mut task_size: DeviceSize = stretch_size.cast_unit();
+        let mut scale = vec2(1.0, 1.0);
+        if task_size.width > MAX_SIZE {
+            scale.x = MAX_SIZE / task_size.width;
+            task_size.width = MAX_SIZE;
+        }
+        if task_size.height > MAX_SIZE {
+            scale.y = MAX_SIZE / task_size.height;
+            task_size.height = MAX_SIZE;
+        }
+
         ConicGradientTemplate {
             common,
             center: DevicePoint::new(item.center.x, item.center.y),
             extend_mode: item.extend_mode,
             params: item.params,
             stretch_size,
+            task_size: task_size.to_i32(),
+            scale,
             tile_spacing: item.tile_spacing.into(),
             brush_segments,
             stops_opacity,
@@ -188,10 +208,10 @@ impl ConicGradientTemplate {
             );
         }
 
-        let task_size = self.stretch_size.to_i32().cast_unit();
         let cache_key = ConicGradientCacheKey {
-            size: task_size,
+            size: self.task_size,
             center: PointKey { x: self.center.x, y: self.center.y },
+            scale: PointKey { x: self.scale.x, y: self.scale.y },
             start_offset: FloatKey(self.params.start_offset),
             end_offset: FloatKey(self.params.end_offset),
             angle: FloatKey(self.params.angle),
@@ -201,7 +221,7 @@ impl ConicGradientTemplate {
 
         let task_id = frame_state.resource_cache.request_render_task(
             RenderTaskCacheKey {
-                size: task_size,
+                size: self.task_size,
                 kind: RenderTaskCacheKeyKind::ConicGradient(cache_key),
             },
             frame_state.gpu_cache,
@@ -212,9 +232,10 @@ impl ConicGradientTemplate {
             frame_state.surfaces,
             |rg_builder| {
                 rg_builder.add().init(RenderTask::new_dynamic(
-                    task_size,
+                    self.task_size,
                     RenderTaskKind::ConicGradient(ConicGradientTask {
                         extend_mode: self.extend_mode,
+                        scale: self.scale,
                         center: self.center,
                         params: self.params.clone(),
                         stops: self.stops_handle,
@@ -288,6 +309,7 @@ impl IsVisible for ConicGradient {
 pub struct ConicGradientTask {
     pub extend_mode: ExtendMode,
     pub center: DevicePoint,
+    pub scale: DeviceVector2D,
     pub params: ConicGradientParams,
     pub stops: GpuCacheHandle,
 }
@@ -297,6 +319,7 @@ impl ConicGradientTask {
         ConicGradientInstance {
             task_rect: target_rect.to_f32(),
             center: self.center,
+            scale: self.scale,
             start_offset: self.params.start_offset,
             end_offset: self.params.end_offset,
             angle: self.params.angle,
@@ -316,6 +339,7 @@ impl ConicGradientTask {
 pub struct ConicGradientInstance {
     pub task_rect: DeviceRect,
     pub center: DevicePoint,
+    pub scale: DeviceVector2D,
     pub start_offset: f32,
     pub end_offset: f32,
     pub angle: f32,
@@ -329,6 +353,7 @@ pub struct ConicGradientInstance {
 pub struct ConicGradientCacheKey {
     pub size: DeviceIntSize,
     pub center: PointKey,
+    pub scale: PointKey,
     pub start_offset: FloatKey,
     pub end_offset: FloatKey,
     pub angle: FloatKey,
