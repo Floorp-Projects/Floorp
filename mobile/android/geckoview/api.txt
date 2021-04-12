@@ -118,6 +118,35 @@ package org.mozilla.geckoview {
     ctor protected Autocomplete();
   }
 
+  public static class Autocomplete.CreditCard {
+    ctor @AnyThread protected CreditCard();
+    field @NonNull public final String expirationMonth;
+    field @NonNull public final String expirationYear;
+    field @Nullable public final String guid;
+    field @NonNull public final String name;
+    field @NonNull public final String number;
+  }
+
+  public static class Autocomplete.CreditCard.Builder {
+    ctor @AnyThread public Builder();
+    method @AnyThread @NonNull public Autocomplete.CreditCard build();
+    method @AnyThread @NonNull public Autocomplete.CreditCard.Builder expirationMonth(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.CreditCard.Builder expirationYear(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.CreditCard.Builder guid(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.CreditCard.Builder name(@Nullable String);
+    method @AnyThread @NonNull public Autocomplete.CreditCard.Builder number(@Nullable String);
+  }
+
+  public static class Autocomplete.CreditCardSelectOption extends Autocomplete.SelectOption {
+    ctor public CreditCardSelectOption(@NonNull Autocomplete.CreditCard);
+  }
+
+  public static class Autocomplete.CreditCardSelectOption.Hint {
+    ctor public Hint();
+    field public static final int INSECURE_FORM = 2;
+    field public static final int NONE = 0;
+  }
+
   public static class Autocomplete.LoginEntry {
     ctor @AnyThread protected LoginEntry();
     field @Nullable public final String formActionOrigin;
@@ -143,30 +172,11 @@ package org.mozilla.geckoview {
     ctor public LoginSaveOption(@NonNull Autocomplete.LoginEntry);
   }
 
-  public static class Autocomplete.LoginSaveOption.Hint {
-    ctor protected Hint();
-    field public static final int GENERATED = 1;
-    field public static final int LOW_CONFIDENCE = 2;
-    field public static final int NONE = 0;
-  }
-
   public static class Autocomplete.LoginSelectOption extends Autocomplete.SelectOption {
     ctor public LoginSelectOption(@NonNull Autocomplete.LoginEntry);
   }
 
-  public static class Autocomplete.LoginSelectOption.Hint {
-    ctor public Hint();
-    field public static final int DUPLICATE_USERNAME = 4;
-    field public static final int GENERATED = 1;
-    field public static final int INSECURE_FORM = 2;
-    field public static final int MATCHING_ORIGIN = 8;
-    field public static final int NONE = 0;
-  }
-
-  public static interface Autocomplete.LoginStorageDelegate {
-    method @Nullable @UiThread default public GeckoResult<Autocomplete.LoginEntry[]> onLoginFetch(@NonNull String);
-    method @UiThread default public void onLoginSave(@NonNull Autocomplete.LoginEntry);
-    method @UiThread default public void onLoginUsed(@NonNull Autocomplete.LoginEntry, int);
+  @Deprecated @DeprecationSchedule(version=93,id="login-storage") public static interface Autocomplete.LoginStorageDelegate implements Autocomplete.StorageDelegate {
   }
 
   public abstract static class Autocomplete.Option<T> {
@@ -179,8 +189,31 @@ package org.mozilla.geckoview {
     ctor public SaveOption(@NonNull T, int);
   }
 
+  public static class Autocomplete.SaveOption.Hint {
+    ctor protected Hint();
+    field public static final int GENERATED = 1;
+    field public static final int LOW_CONFIDENCE = 2;
+    field public static final int NONE = 0;
+  }
+
   public abstract static class Autocomplete.SelectOption<T> extends Autocomplete.Option {
     ctor public SelectOption(@NonNull T, int);
+  }
+
+  public static class Autocomplete.SelectOption.Hint {
+    ctor public Hint();
+    field public static final int DUPLICATE_USERNAME = 4;
+    field public static final int GENERATED = 1;
+    field public static final int INSECURE_FORM = 2;
+    field public static final int MATCHING_ORIGIN = 8;
+    field public static final int NONE = 0;
+  }
+
+  public static interface Autocomplete.StorageDelegate {
+    method @Nullable @UiThread default public GeckoResult<Autocomplete.CreditCard[]> onCreditCardFetch();
+    method @Nullable @UiThread default public GeckoResult<Autocomplete.LoginEntry[]> onLoginFetch(@NonNull String);
+    method @UiThread default public void onLoginSave(@NonNull Autocomplete.LoginEntry);
+    method @UiThread default public void onLoginUsed(@NonNull Autocomplete.LoginEntry, int);
   }
 
   public static class Autocomplete.UsedField {
@@ -579,10 +612,11 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public static GeckoRuntime create(@NonNull Context);
     method @NonNull @UiThread public static GeckoRuntime create(@NonNull Context, @NonNull GeckoRuntimeSettings);
     method @Nullable @UiThread public GeckoRuntime.ActivityDelegate getActivityDelegate();
+    method @Nullable @UiThread public Autocomplete.StorageDelegate getAutocompleteStorageDelegate();
     method @NonNull @UiThread public ContentBlockingController getContentBlockingController();
     method @NonNull @UiThread public static synchronized GeckoRuntime getDefault(@NonNull Context);
     method @Nullable @UiThread public GeckoRuntime.Delegate getDelegate();
-    method @Nullable @UiThread public Autocomplete.LoginStorageDelegate getLoginStorageDelegate();
+    method @Deprecated @DeprecationSchedule(version=93,id="login-storage") @Nullable @UiThread public Autocomplete.LoginStorageDelegate getLoginStorageDelegate();
     method @Nullable @UiThread public File getProfileDir();
     method @NonNull @UiThread public ProfilerController getProfilerController();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
@@ -594,8 +628,9 @@ package org.mozilla.geckoview {
     method @UiThread public void orientationChanged(int);
     method @AnyThread public void readFromParcel(@NonNull Parcel);
     method @UiThread public void setActivityDelegate(@Nullable GeckoRuntime.ActivityDelegate);
+    method @UiThread public void setAutocompleteStorageDelegate(@Nullable Autocomplete.StorageDelegate);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
-    method @UiThread public void setLoginStorageDelegate(@Nullable Autocomplete.LoginStorageDelegate);
+    method @Deprecated @DeprecationSchedule(version=93,id="login-storage") @UiThread public void setLoginStorageDelegate(@Nullable Autocomplete.LoginStorageDelegate);
     method @UiThread public void setServiceWorkerDelegate(@Nullable GeckoRuntime.ServiceWorkerDelegate);
     method @UiThread public void setWebNotificationDelegate(@Nullable WebNotificationDelegate);
     method @AnyThread public void shutdown();
@@ -1006,6 +1041,7 @@ package org.mozilla.geckoview {
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onButtonPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ButtonPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onChoicePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ChoicePrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onColorPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ColorPrompt);
+    method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onCreditCardSelect(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSelectOption>);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onDateTimePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.DateTimePrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onFilePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.FilePrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onLoginSave(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>);
