@@ -1261,6 +1261,17 @@
 #endif
   mirror: always
 
+# When this pref is enabled then we use a separate content process for
+# top-level load of file:// URIs
+- name: browser.tabs.remote.separateFileUriProcess
+  type: RelaxedAtomicBool
+#if !defined(ANDROID)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
 # When this pref is enabled, opaque response is only allowed to enter the
 # content process if it's a response for media (audio, image, video), CSS, or
 # JavaScript.
@@ -2815,6 +2826,12 @@
 - name: dom.security.featurePolicy.webidl.enabled
   type: bool
   value: false
+  mirror: always
+
+# Perform IPC based Principal vetting in ContentParent
+- name: dom.security.enforceIPCBasedPrincipalVetting
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 # For testing purposes only: Flipping this pref to true allows

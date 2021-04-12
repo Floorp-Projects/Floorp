@@ -15,7 +15,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887098
   SimpleTest.waitForExplicitFinish();
   /* globals $,evalRef */
 
-  function loaded() {
+  async function loaded() {
+    // Bug 1703215: Using SpecialPowers causes about:mozilla to be loaded in the wrong
+    // process, hence we have to flip the pref and don't enforce IPC based Principal Vetting.
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.security.enforceIPCBasedPrincipalVetting", false]],
+    });
+
     var iwin = $("ifr").contentWindow;
     var href = SpecialPowers.wrap(iwin).location.href;
     if (/file_empty/.test(href)) {

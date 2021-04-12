@@ -2529,10 +2529,6 @@ pref("browser.tabs.remote.autostart", false);
 // of remote types. Only in effect when fission is enabled.
 pref("browser.tabs.remote.useOriginAttributesInRemoteType", true);
 
-// Pref to control whether we use separate content processes for top-level load
-// of file:// URIs.
-pref("browser.tabs.remote.separateFileUriProcess", true);
-
 // Pref to control whether we put all data: uri's in the default
 // web process when running with fission.
 pref("browser.tabs.remote.dataUriInDefaultWebProcess", false);
