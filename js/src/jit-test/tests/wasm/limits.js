@@ -86,20 +86,39 @@ testMemoryCreate(MemoryMaxRuntime, MemoryMaxValid, true);
 
 // Test that a memory type cannot be instantiated within a module or constructed
 // with a WebAssembly.Memory
-function testMemoryFailCreate(initial, maximum, shared, pattern) {
-  assertErrorMessage(() => wasmEvalText(`(module
+
+if (MemoryMaxRuntime < 65536) {
+    let testMemoryFailCreate = function(initial, maximum, shared) {
+        assertErrorMessage(() => wasmEvalText(`(module
     (memory ${initial} ${maximum || ''} ${shared ? 'shared' : ''})
-  )`), WebAssembly.RuntimeError, pattern);
-  assertErrorMessage(() => new WebAssembly.Memory({
-    initial,
-    maximum,
-    shared
-  }), WebAssembly.RuntimeError, pattern);
+  )`), WebAssembly.RuntimeError, /too many memory pages/);
+        assertErrorMessage(() => new WebAssembly.Memory({
+            initial,
+            maximum,
+            shared
+        }), WebAssembly.RuntimeError, /too many memory pages/);
+    }
+
+    testMemoryFailCreate(MemoryMaxRuntime + 1, undefined, false);
+    testMemoryFailCreate(MemoryMaxRuntime + 1, MemoryMaxValid, false);
+    testMemoryFailCreate(MemoryMaxRuntime + 1, MemoryMaxValid, true);
+} else {
+    let testMemoryFailCreate = function(initial, maximum, shared) {
+        assertErrorMessage(() => wasmEvalText(`(module
+    (memory ${initial} ${maximum || ''} ${shared ? 'shared' : ''})
+  )`), WebAssembly.CompileError, /(initial memory size too big)|(memory size minimum must not be greater than maximum)/);
+        assertErrorMessage(() => new WebAssembly.Memory({
+            initial,
+            maximum,
+            shared
+        }), RangeError, /bad Memory initial size/);
+    }
+
+    testMemoryFailCreate(MemoryMaxRuntime + 1, undefined, false);
+    testMemoryFailCreate(MemoryMaxRuntime + 1, MemoryMaxValid, false);
+    testMemoryFailCreate(MemoryMaxRuntime + 1, MemoryMaxValid, true);
 }
 
-testMemoryFailCreate(MemoryMaxRuntime + 1, undefined, false, /too many memory pages/);
-testMemoryFailCreate(MemoryMaxRuntime + 1, MemoryMaxValid, false, /too many memory pages/);
-testMemoryFailCreate(MemoryMaxRuntime + 1, MemoryMaxValid, true, /too many memory pages/);
 
 // Test that a memory type cannot be grown from initial to a target due to an
 // implementation limit
