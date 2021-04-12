@@ -18,13 +18,13 @@ class ResourceWatcher {
    *  - can already exist, or will be created later on
    *  - doesn't require any user data to be fetched, only a type/category
    *
-   * @param {TargetList} targetList
-   *        A TargetList instance, which helps communicating to the backend
+   * @param {TargetCommand} targetCommand
+   *        A TargetCommand instance, which helps communicating to the backend
    *        in order to iterate and listen over the requested resources.
    */
 
-  constructor(targetList) {
-    this.targetList = targetList;
+  constructor(targetCommand) {
+    this.targetCommand = targetCommand;
 
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
@@ -60,7 +60,7 @@ class ResourceWatcher {
   }
 
   get watcherFront() {
-    return this.targetList.watcherFront;
+    return this.targetCommand.watcherFront;
   }
 
   /**
@@ -271,8 +271,8 @@ class ResourceWatcher {
    */
   async _watchAllTargets() {
     if (!this._watchTargetsPromise) {
-      this._watchTargetsPromise = this.targetList.watchTargets(
-        this.targetList.ALL_TYPES,
+      this._watchTargetsPromise = this.targetCommand.watchTargets(
+        this.targetCommand.ALL_TYPES,
         this._onTargetAvailable,
         this._onTargetDestroyed
       );
@@ -285,8 +285,8 @@ class ResourceWatcher {
       return;
     }
     this._watchTargetsPromise = null;
-    this.targetList.unwatchTargets(
-      this.targetList.ALL_TYPES,
+    this.targetCommand.unwatchTargets(
+      this.targetCommand.ALL_TYPES,
       this._onTargetAvailable,
       this._onTargetDestroyed
     );
@@ -383,7 +383,7 @@ class ResourceWatcher {
   }
 
   _shouldRestartListenerOnTargetSwitching(resourceType) {
-    if (!this.targetList.isServerTargetSwitchingEnabled()) {
+    if (!this.targetCommand.isServerTargetSwitchingEnabled()) {
       // For top-level targets created from the client we should always restart
       // listeners.
       return true;
@@ -446,7 +446,7 @@ class ResourceWatcher {
       if (ResourceTransformers[resourceType]) {
         resource = ResourceTransformers[resourceType]({
           resource,
-          targetList: this.targetList,
+          targetCommand: this.targetCommand,
           targetFront,
           watcherFront: this.watcherFront,
         });
@@ -691,11 +691,11 @@ class ResourceWatcher {
    * @return {Boolean} True, if the server supports this type.
    */
   hasResourceWatcherSupport(resourceType) {
-    // If the targetList top level target is a parent process, we're in the browser console or browser toolbox.
+    // If the targetCommand top level target is a parent process, we're in the browser console or browser toolbox.
     // In such case, if the browser toolbox fission pref is disabled, we don't want to use watchers
     // (even if traits on the server are enabled).
     if (
-      this.targetList.targetFront.isParentProcess &&
+      this.targetCommand.targetFront.isParentProcess &&
       !Services.prefs.getBoolPref(BROWSERTOOLBOX_FISSION_ENABLED, false)
     ) {
       return false;
@@ -714,7 +714,7 @@ class ResourceWatcher {
   _hasResourceWatcherSupportForTarget(resourceType, targetFront) {
     // First check if the watcher supports this target type.
     // If it doesn't, no resource type can be listened via the Watcher actor for this target.
-    if (!this.targetList.hasTargetWatcherSupport(targetFront.targetType)) {
+    if (!this.targetCommand.hasTargetWatcherSupport(targetFront.targetType)) {
       return false;
     }
 
@@ -767,7 +767,9 @@ class ResourceWatcher {
     // we should go through all the existing targets as onTargetAvailable
     // has already been called for these existing targets.
     const promises = [];
-    const targets = this.targetList.getAllTargets(this.targetList.ALL_TYPES);
+    const targets = this.targetCommand.getAllTargets(
+      this.targetCommand.ALL_TYPES
+    );
     for (const target of targets) {
       promises.push(this._watchResourcesForTarget(target, resourceType));
     }
@@ -843,7 +845,7 @@ class ResourceWatcher {
 
     try {
       await LegacyListeners[resourceType]({
-        targetCommand: this.targetList,
+        targetCommand: this.targetCommand,
         targetFront,
         onAvailable,
         onDestroyed,
@@ -906,7 +908,9 @@ class ResourceWatcher {
 
     // If this was the last listener, we should stop watching these events from the actors
     // and the actors should stop watching things from the platform
-    const targets = this.targetList.getAllTargets(this.targetList.ALL_TYPES);
+    const targets = this.targetCommand.getAllTargets(
+      this.targetCommand.ALL_TYPES
+    );
     for (const target of targets) {
       this._unwatchResourcesForTarget(target, resourceType);
     }
@@ -985,7 +989,7 @@ const LegacyListeners = {
   [ResourceWatcher.TYPES
     .CLONED_CONTENT_PROCESS_MESSAGE]: require("devtools/shared/resources/legacy-listeners/cloned-content-process-messages"),
   async [ResourceWatcher.TYPES.DOCUMENT_EVENT]({
-    targetList,
+    targetCommand,
     targetFront,
     onAvailable,
   }) {
