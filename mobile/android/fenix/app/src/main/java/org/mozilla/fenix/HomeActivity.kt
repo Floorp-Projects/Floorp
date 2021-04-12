@@ -101,6 +101,7 @@ import org.mozilla.fenix.perf.PerformanceInflater
 import org.mozilla.fenix.perf.ProfilerMarkers
 import org.mozilla.fenix.perf.StartupPathProvider
 import org.mozilla.fenix.perf.StartupTimeline
+import org.mozilla.fenix.perf.StartupTypeTelemetry
 import org.mozilla.fenix.search.SearchDialogFragmentDirections
 import org.mozilla.fenix.session.PrivateNotificationService
 import org.mozilla.fenix.settings.SettingsFragmentDirections
@@ -173,6 +174,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private var actionMode: ActionMode? = null
 
     private val startupPathProvider = StartupPathProvider()
+    private lateinit var startupTypeTelemetry: StartupTypeTelemetry
 
     final override fun onCreate(savedInstanceState: Bundle?): Unit = PerfStartup.homeActivityOnCreate.measureNoInline {
         // DO NOT MOVE ANYTHING ABOVE THIS addMarker CALL.
@@ -266,6 +268,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         startupTelemetryOnCreateCalled(intent.toSafeIntent(), savedInstanceState != null)
         startupPathProvider.attachOnActivityOnCreate(lifecycle, intent)
+        startupTypeTelemetry = StartupTypeTelemetry(components.startupStateProvider, startupPathProvider).apply {
+            attachOnHomeActivityOnCreate(lifecycle)
+        }
 
         components.core.requestInterceptor.setNavigationController(navHost.navController)
 
