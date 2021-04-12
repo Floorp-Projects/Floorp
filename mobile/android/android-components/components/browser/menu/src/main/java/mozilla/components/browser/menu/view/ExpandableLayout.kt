@@ -309,6 +309,7 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
     // That distance will be the collapsed height of the ViewGroup used when this will be first shown on the screen.
     // Users will be able to afterwards expand the ViewGroup to the full height.
     @VisibleForTesting
+    @Suppress("ReturnCount")
     internal fun calculateCollapsedHeight(): Int {
         val listView = (wrappedView.getChildAt(0) as ViewGroup)
         // Simple sanity check
@@ -328,17 +329,14 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
         result += listView.paddingTop
         result += listView.paddingBottom
 
-        run loop@ {
+        run loop@{
             listView.children.forEachIndexed { index, view ->
                 if (index < lastVisibleItemIndexWhenCollapsed) {
                     result += view.marginTop
                     result += view.marginBottom
-                    result += view.paddingTop
-                    result += view.paddingBottom
                     result += view.measuredHeight
                 } else if (index == lastVisibleItemIndexWhenCollapsed) {
                     result += view.marginTop
-                    result += view.paddingTop
 
                     // Edgecase: if the same item is the sticky footer and the lastVisibleItemIndexWhenCollapsed
                     // the menu will be collapsed to this item but shown with full height.

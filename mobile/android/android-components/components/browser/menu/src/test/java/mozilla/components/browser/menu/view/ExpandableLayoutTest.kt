@@ -589,8 +589,8 @@ class ExpandableLayoutTest {
         var expected = 0
         expected += viewHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
         expected += listHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
-        expected += itemHeightForEachProperty * 5 // height + marginTop + marginBottom + paddingTop + paddingBottom for the top item shown in entirety
-        expected += itemHeightForEachProperty * 2 // marginTop + paddingTop for the special view
+        expected += itemHeightForEachProperty * 3 // height + marginTop + marginBottom for the top item shown in entirety
+        expected += itemHeightForEachProperty // marginTop for the special view
         expected += itemHeightForEachProperty / 2 // as per the specs, show only half of the special view
         assertEquals(expected, result)
     }
@@ -617,10 +617,10 @@ class ExpandableLayoutTest {
         var expected = 0
         expected += viewHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
         expected += listHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
-        expected += itemHeightForEachProperty * 5 // height + marginTop + marginBottom + paddingTop + paddingBottom for the top item shown in entirety
-        expected += itemHeightForEachProperty * 2 // marginTop + paddingTop for the special view
+        expected += itemHeightForEachProperty * 3 // height + marginTop + marginBottom for the top item shown in entirety
+        expected += itemHeightForEachProperty // marginTop for the special view
         expected += itemHeightForEachProperty / 2 // as per the specs, show only half of the special view
-        expected += itemHeightForEachProperty     // height of the sticky item
+        expected += itemHeightForEachProperty // height of the sticky item
         assertEquals(expected, result)
     }
 
@@ -646,9 +646,9 @@ class ExpandableLayoutTest {
         var expected = 0
         expected += viewHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
         expected += listHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
-        expected += itemHeightForEachProperty * 5 // height + marginTop + marginBottom + paddingTop + paddingBottom for the top item shown in entirety
-        expected += itemHeightForEachProperty * 2 // marginTop + paddingTop for the special view
-        expected += itemHeightForEachProperty     // height of the sticky item
+        expected += itemHeightForEachProperty * 3 // height + marginTop + marginBottom for the top item shown in entirety
+        expected += itemHeightForEachProperty // marginTop for the special view
+        expected += itemHeightForEachProperty // height of the sticky item
         assertEquals(expected, result)
     }
 }
