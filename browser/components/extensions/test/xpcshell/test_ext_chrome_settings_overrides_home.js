@@ -5,12 +5,19 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   HomePage: "resource:///modules/HomePage.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   sinon: "resource://testing-common/Sinon.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
+
+function promisePrefChanged(expectedValue) {
+  return TestUtils.waitForPrefChange("browser.startup.homepage", value =>
+    value.endsWith(expectedValue)
+  );
+}
 
 const HOMEPAGE_EXTENSION_CONTROLLED =
   "browser.startup.homepage_override.extensionControlled";
@@ -153,4 +160,72 @@ add_task(async function test_overriding_cancelled_after_ignore_update() {
 
   await extension.unload();
   HomePage._ignoreList = oldHomePageIgnoreList;
+});
+
+add_task(async function test_overriding_homepage_locale() {
+  Services.locale.availableLocales = ["en-US", "es-ES"];
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {
+          id: "homepage@example.com",
+        },
+      },
+      chrome_settings_overrides: {
+        homepage: "/__MSG_homepage__",
+      },
+      name: "extension",
+      default_locale: "en",
+    },
+    useAddonManager: "permanent",
+
+    files: {
+      "_locales/en/messages.json": {
+        homepage: {
+          message: "homepage.html",
+          description: "homepage",
+        },
+      },
+
+      "_locales/es_ES/messages.json": {
+        homepage: {
+          message: "default.html",
+          description: "homepage",
+        },
+      },
+    },
+  });
+
+  let prefPromise = promisePrefChanged("homepage.html");
+  await extension.startup();
+  await prefPromise;
+
+  Assert.equal(
+    HomePage.get(),
+    `moz-extension://${extension.uuid}/homepage.html`,
+    "Should have overridden the new homepage"
+  );
+
+  // Set the new locale now, and disable the L10nRegistry reset
+  // when shutting down the addon mananger.  This allows us to
+  // restart under a new locale without a lot of fuss.
+  let reqLoc = Services.locale.requestedLocales;
+  Services.locale.requestedLocales = ["es-ES"];
+
+  prefPromise = promisePrefChanged("default.html");
+  await AddonTestUtils.promiseShutdownManager({ clearL10nRegistry: false });
+  await AddonTestUtils.promiseStartupManager();
+  await extension.awaitStartup();
+  await prefPromise;
+
+  Assert.equal(
+    HomePage.get(),
+    `moz-extension://${extension.uuid}/default.html`,
+    "Should have overridden the new homepage"
+  );
+
+  await extension.unload();
+
+  Services.locale.requestedLocales = reqLoc;
 });
