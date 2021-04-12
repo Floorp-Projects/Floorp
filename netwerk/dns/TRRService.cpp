@@ -381,9 +381,9 @@ nsresult TRRService::ReadPrefs(const char* name) {
     Preferences::GetCString(TRR_PREF("confirmationNS"), mConfirmationNS);
     LOG(("confirmationNS = %s", mConfirmationNS.get()));
   }
-  if (!name || !strcmp(name, TRR_PREF("bootstrapAddress"))) {
+  if (!name || !strcmp(name, TRR_PREF("bootstrapAddr"))) {
     MutexAutoLock lock(mLock);
-    Preferences::GetCString(TRR_PREF("bootstrapAddress"), mBootstrapAddr);
+    Preferences::GetCString(TRR_PREF("bootstrapAddr"), mBootstrapAddr);
     clearEntireCache = true;
   }
   if (!name || !strcmp(name, TRR_PREF("blacklist-duration"))) {

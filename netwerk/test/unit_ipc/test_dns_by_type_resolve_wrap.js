@@ -18,7 +18,7 @@ function setup() {
   Services.prefs.setBoolPref("network.http.spdy.enabled", true);
   Services.prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   // the TRR server is on 127.0.0.1
-  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  Services.prefs.setCharPref("network.trr.bootstrapAddr", "127.0.0.1");
 
   // make all native resolve calls "secretly" resolve localhost instead
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
