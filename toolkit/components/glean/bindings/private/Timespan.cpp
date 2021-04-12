@@ -34,6 +34,12 @@ GleanTimespan::Cancel() {
 }
 
 NS_IMETHODIMP
+GleanTimespan::SetRaw(uint32_t aDuration) {
+  mTimespan.SetRaw(aDuration);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GleanTimespan::TestGetValue(const nsACString& aStorageName,
                             JS::MutableHandleValue aResult) {
   auto result = mTimespan.TestGetValue(aStorageName);

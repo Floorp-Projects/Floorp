@@ -45,6 +45,16 @@ pub unsafe extern "C" fn fog_timespan_cancel(id: u32) {
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn fog_timespan_set_raw(id: u32, duration: u32) {
+    with_metric!(
+        TIMESPAN_MAP,
+        id,
+        metric,
+        metric.set_raw_unitless(duration.into())
+    );
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn fog_timespan_test_has_value(id: u32, storage_name: &nsACString) -> bool {
     with_metric!(TIMESPAN_MAP, id, metric, test_has!(metric, storage_name))
 }

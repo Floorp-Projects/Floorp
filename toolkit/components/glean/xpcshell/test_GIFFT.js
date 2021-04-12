@@ -247,6 +247,14 @@ add_task(async function test_gifft_timespan() {
   Assert.greaterOrEqual(scalarValue("telemetry.test.mirror_for_timespan"), 10);
 });
 
+add_task(async function test_gifft_timespan_raw() {
+  Glean.testOnly.mirrorTimeNanos.setRaw(15 /*ns*/);
+
+  Assert.equal(15, Glean.testOnly.mirrorTimeNanos.testGetValue());
+  // setRaw, unlike start/stop, mirrors the raw value directly.
+  Assert.equal(scalarValue("telemetry.test.mirror_for_timespan_nanos"), 15);
+});
+
 add_task(async function test_gifft_labeled_boolean() {
   Assert.equal(
     undefined,
