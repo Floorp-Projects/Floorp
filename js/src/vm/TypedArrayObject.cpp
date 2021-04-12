@@ -1421,7 +1421,8 @@ static bool GetTemplateObjectForNative(JSContext* cx,
     }
 
     size_t nbytes;
-    if (!js::CalculateAllocSize<T>(len, &nbytes)) {
+    if (!js::CalculateAllocSize<T>(len, &nbytes) ||
+        nbytes > TypedArrayObject::maxByteLength()) {
       return true;
     }
 
