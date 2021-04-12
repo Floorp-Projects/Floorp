@@ -359,6 +359,10 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   bool AsyncPanZoomEnabled() const override;
 
+  bool StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
+                            const ScrollableLayerGuid& aGuid) override;
+  void StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) override;
+
  protected:
   virtual ~nsCocoaWindow();
 

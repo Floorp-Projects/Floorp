@@ -2521,6 +2521,22 @@ bool nsCocoaWindow::AsyncPanZoomEnabled() const {
   return nsBaseWidget::AsyncPanZoomEnabled();
 }
 
+bool nsCocoaWindow::StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
+                                         const ScrollableLayerGuid& aGuid) {
+  if (mPopupContentView) {
+    return mPopupContentView->StartAsyncAutoscroll(aAnchorLocation, aGuid);
+  }
+  return nsBaseWidget::StartAsyncAutoscroll(aAnchorLocation, aGuid);
+}
+
+void nsCocoaWindow::StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) {
+  if (mPopupContentView) {
+    mPopupContentView->StopAsyncAutoscroll(aGuid);
+    return;
+  }
+  nsBaseWidget::StopAsyncAutoscroll(aGuid);
+}
+
 already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {
   nsCOMPtr<nsIWidget> window = new nsCocoaWindow();
   return window.forget();
