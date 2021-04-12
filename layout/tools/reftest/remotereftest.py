@@ -18,7 +18,7 @@ from contextlib import closing
 
 from six.moves.urllib_request import urlopen
 
-from mozdevice import ADBDeviceFactory, ADBTimeoutError, RemoteProcessMonitor
+from mozdevice import ADBDeviceFactory, RemoteProcessMonitor
 import mozcrash
 
 from output import OutputHandler
@@ -366,29 +366,6 @@ class RemoteReftest(RefTest):
 
         return profile
 
-    def printDeviceInfo(self, printLogcat=False):
-        try:
-            if printLogcat:
-                logcat = self.device.get_logcat()
-                for l in logcat:
-                    ul = l.decode("utf-8", errors="replace")
-                    sl = ul.encode("iso8859-1", errors="replace")
-                    print("%s\n" % sl)
-            print("Device info:")
-            devinfo = self.device.get_info()
-            for category in devinfo:
-                if type(devinfo[category]) is list:
-                    print("  %s:" % category)
-                    for item in devinfo[category]:
-                        print("     %s" % item)
-                else:
-                    print("  %s: %s" % (category, devinfo[category]))
-            print("Test root: %s" % self.device.test_root)
-        except ADBTimeoutError:
-            raise
-        except Exception as e:
-            print("WARNING: Error getting device information: %s" % str(e))
-
     def environment(self, env=None, crashreporter=True, **kwargs):
         # Since running remote, do not mimic the local env: do not copy os.environ
         if env is None:
@@ -553,9 +530,6 @@ def run_test_harness(parser, options):
     if retVal:
         return retVal
 
-    if options.printDeviceInfo and not options.verify:
-        reftest.printDeviceInfo()
-
     retVal = 0
     try:
         if options.verify:
@@ -568,9 +542,6 @@ def run_test_harness(parser, options):
         retVal = 1
 
     reftest.stopWebServer(options)
-
-    if options.printDeviceInfo and not options.verify:
-        reftest.printDeviceInfo(printLogcat=(retVal != 0))
 
     return retVal
 
