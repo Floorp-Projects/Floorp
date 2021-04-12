@@ -66,6 +66,11 @@ class EraseBrowsingDataTest {
         } catch (e: IOException) {
             throw AssertionError("Could not start web server", e)
         }
+
+        notificationTray {
+            mDevice.openNotification()
+            clearNotifications()
+        }
     }
 
     @After
@@ -108,23 +113,6 @@ class EraseBrowsingDataTest {
         }.clickEraseAndOpenNotificationButton {
             verifySnackBarText(getStringResource(R.string.feedback_erase))
             verifyEmptySearchBar()
-        }
-    }
-
-    @Test
-    fun notificationOpenButtonTest() {
-        // Open a webpage
-        searchScreen {
-        }.loadPage(webServer.url("").toString()) { }
-        // Send app to background
-        pressHomeKey()
-        // Pull down system bar and select Open
-        mDevice.openNotification()
-        notificationTray {
-            verifySystemNotificationExists(getStringResource(R.string.notification_erase_text))
-            expandEraseBrowsingNotification()
-        }.clickNotificationOpenButton {
-            verifyBrowserView()
         }
     }
 
