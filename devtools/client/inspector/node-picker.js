@@ -16,16 +16,16 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  * - listen to node picker events from all walkers and relay them to subscribers
  *
  *
- * @param {TargetList} targetList
- *        The TargetList component referencing all the targets to be debugged
+ * @param {TargetCommand} targetCommand
+ *        The TargetCommand component referencing all the targets to be debugged
  * @param {Selection} selection
  *        The global Selection object
  */
 class NodePicker extends EventEmitter {
-  constructor(targetList, selection) {
+  constructor(targetCommand, selection) {
     super();
 
-    this.targetList = targetList;
+    this.targetCommand = targetCommand;
 
     // Whether or not the node picker is active.
     this.isPicking = false;
@@ -148,8 +148,8 @@ class NodePicker extends EventEmitter {
 
     this.emit("picker-starting");
 
-    this.targetList.watchTargets(
-      this.targetList.ALL_TYPES,
+    this.targetCommand.watchTargets(
+      this.targetCommand.ALL_TYPES,
       this._onTargetAvailable
     );
 
@@ -167,8 +167,8 @@ class NodePicker extends EventEmitter {
     this.isPicking = false;
     this.doFocus = false;
 
-    this.targetList.unwatchTargets(
-      this.targetList.ALL_TYPES,
+    this.targetCommand.unwatchTargets(
+      this.targetCommand.ALL_TYPES,
       this._onTargetAvailable
     );
 
