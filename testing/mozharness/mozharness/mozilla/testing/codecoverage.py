@@ -512,8 +512,6 @@ class CodeCoverageMixin(SingleTestMixin):
                 self.gcov_dir, self.jsvm_dir
             )
 
-            os.makedirs(dirs["abs_blob_upload_dir"], exist_ok=True)
-
             # Zip the grcov output and upload it.
             grcov_zip_path = os.path.join(
                 dirs["abs_blob_upload_dir"], "code-coverage-grcov.zip"
