@@ -2,8 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@media not (-moz-proton-modals) {
 #commonDialog {
   line-height: 13px;
+}
+
+#infoTitle,
+#infoBody {
+  font: menu;
+  line-height: 16px;
+  margin-bottom: 6px;
+}
+}
+
+#commonDialog:not([subdialog]) {
+  line-height: 13px;
+}
+
+#commonDialog:not([subdialog]) #infoTitle,
+#commonDialog:not([subdialog]) #infoBody {
+  font: menu;
+  line-height: 16px;
+  margin-bottom: 6px;
 }
 
 #infoContainer {
@@ -13,13 +33,6 @@
 #infoIcon {
   margin: 3px 5px 4px;
   margin-inline-end: 14px;
-}
-
-#infoTitle,
-#infoBody {
-  font: menu;
-  line-height: 16px;
-  margin-bottom: 6px;
 }
 
 #infoTitle {

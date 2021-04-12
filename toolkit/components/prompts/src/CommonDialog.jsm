@@ -86,6 +86,8 @@ CommonDialog.prototype = {
         this.initTextbox("login", this.args.value);
         // Clear the label, since this isn't really a username prompt.
         this.ui.loginLabel.setAttribute("value", "");
+        // Ensure the labeling for the prompt is correct.
+        this.ui.loginTextbox.setAttribute("aria-labelledby", "infoBody");
         break;
       case "promptUserAndPass":
         this.numButtons = 2;
