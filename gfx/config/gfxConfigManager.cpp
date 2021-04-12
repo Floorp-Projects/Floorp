@@ -38,6 +38,8 @@ void gfxConfigManager::Init() {
       StaticPrefs::layers_gpu_process_allow_software_AtStartup();
   mWrPartialPresent =
       StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup() > 0;
+  EmplaceUserPref(StaticPrefs::GetPrefName_gfx_webrender_program_binary_disk(),
+                  mWrShaderCache);
   mWrOptimizedShaders =
       StaticPrefs::gfx_webrender_use_optimized_shaders_AtStartup();
 #ifdef XP_WIN
@@ -81,6 +83,8 @@ void gfxConfigManager::Init() {
   mFeatureWrAngle = &gfxConfig::GetFeature(Feature::WEBRENDER_ANGLE);
   mFeatureWrDComp = &gfxConfig::GetFeature(Feature::WEBRENDER_DCOMP_PRESENT);
   mFeatureWrPartial = &gfxConfig::GetFeature(Feature::WEBRENDER_PARTIAL);
+  mFeatureWrShaderCache =
+      &gfxConfig::GetFeature(Feature::WEBRENDER_SHADER_CACHE);
   mFeatureWrOptimizedShaders =
       &gfxConfig::GetFeature(Feature::WEBRENDER_OPTIMIZED_SHADERS);
   mFeatureWrSoftware = &gfxConfig::GetFeature(Feature::WEBRENDER_SOFTWARE);
@@ -240,6 +244,8 @@ void gfxConfigManager::ConfigureWebRender() {
   MOZ_ASSERT(mFeatureWrAngle);
   MOZ_ASSERT(mFeatureWrDComp);
   MOZ_ASSERT(mFeatureWrPartial);
+  MOZ_ASSERT(mFeatureWrShaderCache);
+  MOZ_ASSERT(mFeatureWrOptimizedShaders);
   MOZ_ASSERT(mFeatureWrSoftware);
   MOZ_ASSERT(mFeatureHwCompositing);
   MOZ_ASSERT(mFeatureGPUProcess);
@@ -427,6 +433,18 @@ void gfxConfigManager::ConfigureWebRender() {
             "FEATURE_FAILURE_PARTIAL_PRESENT_BLOCKED"_ns);
       }
     }
+  }
+
+  mFeatureWrShaderCache->SetDefaultFromPref(
+      StaticPrefs::GetPrefName_gfx_webrender_program_binary_disk(), true,
+      StaticPrefs::GetPrefDefault_gfx_webrender_program_binary_disk(),
+      mWrShaderCache);
+  ConfigureFromBlocklist(nsIGfxInfo::FEATURE_WEBRENDER_SHADER_CACHE,
+                         mFeatureWrShaderCache);
+  if (!mFeatureWr->IsEnabled()) {
+    mFeatureWrShaderCache->ForceDisable(FeatureStatus::Unavailable,
+                                        "WebRender disabled",
+                                        "FEATURE_FAILURE_WR_DISABLED"_ns);
   }
 
   mFeatureWrOptimizedShaders->EnableByDefault();

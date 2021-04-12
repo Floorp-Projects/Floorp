@@ -626,10 +626,6 @@ pref("gfx.font_rendering.graphite.enabled", true);
   pref("gfx.webrender.triple-buffering.enabled", true);
 #endif
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
-  pref("gfx.webrender.program-binary-disk", true);
-#endif
-
 // WebRender debugging utilities.
 pref("gfx.webrender.debug.texture-cache", false);
 pref("gfx.webrender.debug.texture-cache.clear-evicted", true);

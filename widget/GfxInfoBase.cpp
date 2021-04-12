@@ -237,6 +237,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_DMABUF:
       name = BLOCKLIST_PREF_BRANCH "dmabuf";
       break;
+    case nsIGfxInfo::FEATURE_WEBRENDER_SHADER_CACHE:
+      name = BLOCKLIST_PREF_BRANCH "webrender.program-binary-disk";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
