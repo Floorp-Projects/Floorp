@@ -268,7 +268,8 @@ class TestAgent {
             MakeUnique<media::ShutdownBlockingTicket>(
                 u"WebrtcCallWrapper shutdown blocker"_ns,
                 NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
-            aModuleThread, aAudioStateConfig, aAudioDecoderFactory, aTrials)),
+            AbstractThread::MainThread(), aModuleThread, aAudioStateConfig,
+            aAudioDecoderFactory, aTrials)),
         audio_conduit_(
             AudioSessionConduit::Create(call_, test_utils->sts_target())),
         audio_pipeline_(),

@@ -7,6 +7,7 @@
 #include "common/browser_logging/CSFLog.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/Telemetry.h"
+#include "TaskQueueWrapper.h"
 #include "transport/runnable_utils.h"
 #include "WebrtcCallWrapper.h"
 

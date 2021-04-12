@@ -39,10 +39,17 @@ class SharedWebrtcState {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWebrtcState)
 
-  SharedWebrtcState(webrtc::AudioState::Config&& aAudioStateConfig,
+  SharedWebrtcState(RefPtr<AbstractThread> aCallWorkerThread,
+                    webrtc::AudioState::Config&& aAudioStateConfig,
                     RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory);
 
   webrtc::SharedModuleThread* GetModuleThread();
+
+  // A global Call worker thread shared between all Call instances. Implements
+  // AbstractThread for running tasks that call into a Call instance through its
+  // webrtc::TaskQueue member, and for using AbstractThread-specific higher
+  // order constructs like StateMirroring.
+  const RefPtr<AbstractThread> mCallWorkerThread;
 
   // AudioState config containing dummy implementations of the audio stack,
   // since we use our own audio stack instead. Shared across all Call instances.
@@ -53,7 +60,7 @@ class SharedWebrtcState {
   const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
 
  private:
-  virtual ~SharedWebrtcState() = default;
+  virtual ~SharedWebrtcState();
 
   // SharedModuleThread used for processing in all Call instances.
   // Only accessed on the global Call worker task queue. Set on first

@@ -8,15 +8,17 @@
 
 #include "jsapi/PeerConnectionCtx.h"
 #include "MediaConduitInterface.h"
+#include "TaskQueueWrapper.h"
 
 namespace mozilla {
 
 /* static */ RefPtr<WebrtcCallWrapper> WebrtcCallWrapper::Create(
     const dom::RTCStatsTimestampMaker& aTimestampMaker,
     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-    SharedWebrtcState* aSharedState, webrtc::WebRtcKeyValueConfig* aTrials) {
-  auto current = TaskQueueWrapper::MainAsCurrent();
+    const RefPtr<SharedWebrtcState>& aSharedState,
+    webrtc::WebRtcKeyValueConfig* aTrials) {
   return Create(aTimestampMaker, std::move(aShutdownTicket),
+                aSharedState->mCallWorkerThread.get(),
                 aSharedState->GetModuleThread(),
                 aSharedState->mAudioStateConfig,
                 aSharedState->mAudioDecoderFactory, aTrials);
@@ -25,11 +27,11 @@ namespace mozilla {
 /* static */ RefPtr<WebrtcCallWrapper> WebrtcCallWrapper::Create(
     const dom::RTCStatsTimestampMaker& aTimestampMaker,
     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-    webrtc::SharedModuleThread* aModuleThread,
+    RefPtr<AbstractThread> aCallThread,
+    rtc::scoped_refptr<webrtc::SharedModuleThread> aModuleThread,
     const webrtc::AudioState::Config& aAudioStateConfig,
     webrtc::AudioDecoderFactory* aAudioDecoderFactory,
     webrtc::WebRtcKeyValueConfig* aTrials) {
-  auto current = TaskQueueWrapper::MainAsCurrent();
   auto eventLog = MakeUnique<webrtc::RtcEventLogNull>();
   webrtc::Call::Config config(eventLog.get());
   config.audio_state = webrtc::AudioState::Create(aAudioStateConfig);
@@ -38,11 +40,19 @@ namespace mozilla {
   config.trials = aTrials;
   auto videoBitrateAllocatorFactory =
       WrapUnique(webrtc::CreateBuiltinVideoBitrateAllocatorFactory().release());
-  return new WebrtcCallWrapper(
-      aAudioDecoderFactory, std::move(videoBitrateAllocatorFactory),
-      WrapUnique(webrtc::Call::Create(config, aModuleThread)),
-      std::move(eventLog), std::move(taskQueueFactory), aTimestampMaker,
-      std::move(aShutdownTicket));
+  RefPtr<WebrtcCallWrapper> wrapper = new WebrtcCallWrapper(
+      std::move(aCallThread), aAudioDecoderFactory,
+      std::move(videoBitrateAllocatorFactory), std::move(eventLog),
+      std::move(taskQueueFactory), aTimestampMaker, std::move(aShutdownTicket));
+
+  wrapper->mCallThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [wrapper, config = std::move(config),
+                 moduleThread = std::move(aModuleThread)] {
+        wrapper->SetCall(
+            WrapUnique(webrtc::Call::Create(config, moduleThread)));
+      }));
+
+  return wrapper;
 }
 
 /* static */ RefPtr<WebrtcCallWrapper> WebrtcCallWrapper::Create(
@@ -50,13 +60,19 @@ namespace mozilla {
   return new WebrtcCallWrapper(std::move(aCall));
 }
 
+void WebrtcCallWrapper::SetCall(UniquePtr<webrtc::Call> aCall) {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+  MOZ_ASSERT(!mCall);
+  mCall = std::move(aCall);
+}
+
 webrtc::Call* WebrtcCallWrapper::Call() const {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   return mCall.get();
 }
 
 bool WebrtcCallWrapper::UnsetRemoteSSRC(uint32_t ssrc) {
-  MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   for (auto conduit : mConduits) {
     if (!conduit->UnsetRemoteSSRC(ssrc)) {
       return false;
@@ -67,12 +83,12 @@ bool WebrtcCallWrapper::UnsetRemoteSSRC(uint32_t ssrc) {
 }
 
 void WebrtcCallWrapper::RegisterConduit(MediaSessionConduit* conduit) {
-  MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mConduits.insert(conduit);
 }
 
 void WebrtcCallWrapper::UnregisterConduit(MediaSessionConduit* conduit) {
-  MOZ_ASSERT(TaskQueueWrapper::GetMainWorker()->IsCurrent());
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mConduits.erase(conduit);
 }
 
@@ -81,8 +97,7 @@ DOMHighResTimeStamp WebrtcCallWrapper::GetNow() const {
 }
 
 void WebrtcCallWrapper::Destroy() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mCall = nullptr;
   mShutdownTicket = nullptr;
 }
@@ -95,20 +110,21 @@ const dom::RTCStatsTimestampMaker& WebrtcCallWrapper::GetTimestampMaker()
 WebrtcCallWrapper::~WebrtcCallWrapper() { MOZ_ASSERT(!mCall); }
 
 WebrtcCallWrapper::WebrtcCallWrapper(
+    RefPtr<AbstractThread> aCallThread,
     RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
     UniquePtr<webrtc::VideoBitrateAllocatorFactory>
         aVideoBitrateAllocatorFactory,
-    UniquePtr<webrtc::Call> aCall, UniquePtr<webrtc::RtcEventLog> aEventLog,
+    UniquePtr<webrtc::RtcEventLog> aEventLog,
     UniquePtr<webrtc::TaskQueueFactory> aTaskQueueFactory,
     const dom::RTCStatsTimestampMaker& aTimestampMaker,
     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket)
     : mTimestampMaker(aTimestampMaker),
       mShutdownTicket(std::move(aShutdownTicket)),
+      mCallThread(std::move(aCallThread)),
       mAudioDecoderFactory(std::move(aAudioDecoderFactory)),
       mVideoBitrateAllocatorFactory(std::move(aVideoBitrateAllocatorFactory)),
       mEventLog(std::move(aEventLog)),
-      mTaskQueueFactory(std::move(aTaskQueueFactory)),
-      mCall(std::move(aCall)) {}
+      mTaskQueueFactory(std::move(aTaskQueueFactory)) {}
 
 WebrtcCallWrapper::WebrtcCallWrapper(UniquePtr<webrtc::Call> aCall)
     : mCall(std::move(aCall)) {
