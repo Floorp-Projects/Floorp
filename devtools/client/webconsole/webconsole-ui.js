@@ -148,7 +148,7 @@ class WebConsoleUI {
     this._initializer = (async () => {
       this._initUI();
       // Bug 1605763: It's important to call _attachTargets once the UI is initialized, as
-      // TargetList.startListening will start fetching additional targets
+      // TargetCommand.startListening will start fetching additional targets
       // and may overload the Browser Console.
       await this._attachTargets();
 
@@ -334,12 +334,12 @@ class WebConsoleUI {
 
     if (this.isBrowserConsole) {
       // Bug 1605763:
-      // TargetList.startListening will start fetching additional targets
+      // TargetCommand.startListening will start fetching additional targets
       // and may overload the Browser Console with loads of targets and resources.
       // We can call it from here, as `_attchTargets` is called after the UI is initialized.
       // Bug 1642599:
-      // TargetList.startListening ought to be called before watching for resources,
-      // in order to set TargetList.watcherFront which is used by ResourceWatcher.watchResources.
+      // TargetCommand.startListening ought to be called before watching for resources,
+      // in order to set TargetCommand.watcherFront which is used by ResourceWatcher.watchResources.
       await this.hud.commands.targetCommand.startListening();
     }
 

@@ -267,7 +267,7 @@ class ResourceWatcher {
    * Start watching for all already existing and future targets.
    *
    * We are using ALL_TYPES, but this won't force listening to all types.
-   * It will only listen for types which are defined by `TargetList.startListening`.
+   * It will only listen for types which are defined by `TargetCommand.startListening`.
    */
   async _watchAllTargets() {
     if (!this._watchTargetsPromise) {
@@ -293,7 +293,7 @@ class ResourceWatcher {
   }
 
   /**
-   * Method called by the TargetList for each already existing or target which has just been created.
+   * Method called by the TargetCommand for each already existing or target which has just been created.
    *
    * @param {Front} targetFront
    *        The Front of the target that is available.
@@ -354,7 +354,7 @@ class ResourceWatcher {
       }
     }
 
-    // Compared to the TargetList and Watcher.watchTargets,
+    // Compared to the TargetCommand and Watcher.watchTargets,
     // We do call Watcher.watchResources, but the events are fired on the target.
     // That's because the Watcher runs in the parent process/main thread, while resources
     // are available from the target's process/thread.
@@ -395,7 +395,7 @@ class ResourceWatcher {
   }
 
   /**
-   * Method called by the TargetList when a target has just been destroyed
+   * Method called by the TargetCommand when a target has just been destroyed
    * See _onTargetAvailable for arguments, they are the same.
    */
   _onTargetDestroyed({ targetFront }) {

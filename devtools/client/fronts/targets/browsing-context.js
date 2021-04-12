@@ -24,7 +24,7 @@ class BrowsingContextTargetFront extends TargetMixin(
     // For other targets, _javascriptEnabled will be updated everytime
     // `reconfigure` is called.
     // Note: this property is marked as private but is accessed by the
-    // TargetList to provide the "isJavascriptEnabled" wrapper. It should NOT be
+    // TargetCommand to provide the "isJavascriptEnabled" wrapper. It should NOT be
     // used anywhere else.
     this._javascriptEnabled = null;
 
