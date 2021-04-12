@@ -5713,10 +5713,10 @@
     mirror: always
 #endif
 
-# Experimental support for ArrayBuffers larger than 2 GB.
+# Support for ArrayBuffers larger than 2 GB on 64-bit systems
 - name: javascript.options.large_arraybuffers
   type: bool
-  value: false
+  value: true
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 

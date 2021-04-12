@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !largeArrayBufferEnabled(); --large-arraybuffers
+// |jit-test| skip-if: !largeArrayBufferEnabled()
 
 load(libdir + "asm.js");
 

@@ -1,4 +1,4 @@
-// |jit-test| error:RangeError
+// |jit-test| error:RangeError; skip-if: largeArrayBufferEnabled()
 setJitCompilerOption("ion.warmup.trigger", 50);
 setJitCompilerOption("offthread-compilation.enable", 0);
 gcPreserveCode();

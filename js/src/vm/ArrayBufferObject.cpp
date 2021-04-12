@@ -133,7 +133,7 @@ static Atomic<int32_t, mozilla::ReleaseAcquire> allocatedSinceLastTrigger(0);
 
 int32_t js::LiveMappedBufferCount() { return liveBufferCount; }
 
-bool js::ArrayBufferObject::supportLargeBuffers = false;
+bool js::ArrayBufferObject::supportLargeBuffers = true;
 
 [[nodiscard]] static bool CheckArrayBufferTooLarge(JSContext* cx,
                                                    uint64_t nbytes) {
