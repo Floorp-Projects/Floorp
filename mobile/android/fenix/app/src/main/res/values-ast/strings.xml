@@ -1516,8 +1516,14 @@ en llinia y con nós.</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Tarxetes de creitu</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Los datos tán cifraos</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Cífrense los datos</string>
 
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizar les tarxetes en tolos preseos</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Amestar una tarxeta de creitu</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Xestionar les tarxetes guardaes</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Amiestu d\'una tarxeta</string>
     <!-- The header for the card number of a credit card -->
