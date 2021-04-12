@@ -145,36 +145,11 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
   CSSRect compositedArea(visualScrollOffset,
                          metrics.CalculateCompositedSizeInCssPixels());
   const CSSCoord margin = 15;
-  Maybe<CSSRect> nearestScrollClip;
-  CSSRect rect = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame,
-                                                       &nearestScrollClip);
+  CSSRect rect =
+      nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame);
 
   CSSPoint point = CSSPoint::FromAppUnits(
       ViewportUtils::VisualToLayout(CSSPoint::ToAppUnits(aPoint), presShell));
-
-  CSSPoint documentRelativePoint =
-      point + CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
-
-  // In some cases, like overflow: visible and overflowing content, the bounding
-  // client rect of the targeted element won't contain the point the user double
-  // tapped on. In that case we use the scrollable overflow rect if it contains
-  // the user point.
-  if (!rect.Contains(documentRelativePoint)) {
-    if (nsIFrame* scrolledFrame = rootScrollFrame->GetScrolledFrame()) {
-      if (nsIFrame* f = element->GetPrimaryFrame()) {
-        CSSRect overflowRect =
-            CSSRect::FromAppUnits(nsLayoutUtils::TransformFrameRectToAncestor(
-                f, f->ScrollableOverflowRect(),
-                RelativeTo{scrolledFrame, ViewportType::Layout}));
-        if (nearestScrollClip.isSome()) {
-          overflowRect = nearestScrollClip->Intersect(overflowRect);
-        }
-        if (overflowRect.Contains(documentRelativePoint)) {
-          rect = overflowRect;
-        }
-      }
-    }
-  }
 
   // If the element is taller than the visible area of the page scale
   // the height of the |rect| so that it has the same aspect ratio as
@@ -186,7 +161,7 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
     if (widthRatio < 0.9 && targetHeight < rect.Height()) {
       const CSSPoint scrollPoint =
           CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
-      float newY = documentRelativePoint.y - (targetHeight * 0.5f);
+      float newY = point.y + scrollPoint.y - (targetHeight * 0.5f);
       if ((newY + targetHeight) > rect.YMost()) {
         rect.MoveByY(rect.Height() - targetHeight);
       } else if (newY > rect.Y()) {
