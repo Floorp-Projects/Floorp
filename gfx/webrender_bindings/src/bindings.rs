@@ -589,8 +589,7 @@ struct MozCrashAnnotator;
 unsafe impl Send for MozCrashAnnotator {}
 
 impl CrashAnnotator for MozCrashAnnotator {
-    fn set(&self, annotation: CrashAnnotation, value: &str) {
-        let value = CString::new(value).unwrap();
+    fn set(&self, annotation: CrashAnnotation, value: &std::ffi::CStr) {
         unsafe {
             gfx_wr_set_crash_annotation(annotation, value.as_ptr());
         }

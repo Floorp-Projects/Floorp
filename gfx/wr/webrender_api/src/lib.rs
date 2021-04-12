@@ -621,7 +621,7 @@ pub enum CrashAnnotation {
 
 /// Handler to expose support for annotating crash reports.
 pub trait CrashAnnotator : Send {
-    fn set(&self, annotation: CrashAnnotation, value: &str);
+    fn set(&self, annotation: CrashAnnotation, value: &std::ffi::CStr);
     fn clear(&self, annotation: CrashAnnotation);
     fn box_clone(&self) -> Box<dyn CrashAnnotator>;
 }
@@ -639,7 +639,11 @@ pub struct CrashAnnotatorGuard<'a> {
 }
 
 impl<'a> CrashAnnotatorGuard<'a> {
-    pub fn new(annotator: &'a Option<Box<dyn CrashAnnotator>>, annotation: CrashAnnotation, value: &str) -> Self {
+    pub fn new(
+        annotator: &'a Option<Box<dyn CrashAnnotator>>,
+        annotation: CrashAnnotation,
+        value: &std::ffi::CStr,
+    ) -> Self {
         if let Some(ref annotator) = annotator {
             annotator.set(annotation, value);
         }
