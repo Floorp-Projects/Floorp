@@ -35,7 +35,7 @@ MemoryPanel.prototype = {
     await this.initializer.initialize();
 
     await this._commands.targetCommand.watchTargets(
-      [this._toolbox.targetList.TYPES.FRAME],
+      [this._commands.targetCommand.TYPES.FRAME],
       this._onTargetAvailable
     );
 
@@ -59,8 +59,8 @@ MemoryPanel.prototype = {
     }
     this._destroyed = true;
 
-    this._toolbox.targetList.unwatchTargets(
-      [this._toolbox.targetList.TYPES.FRAME],
+    this._commands.targetCommand.unwatchTargets(
+      [this._commands.targetCommand.TYPES.FRAME],
       this._onTargetAvailable
     );
 
