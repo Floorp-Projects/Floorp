@@ -240,10 +240,9 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   bool SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize);
 
   bool ShouldBlink();
-  void StartBlinking(mozilla::WidgetGUIEvent* aEvent, bool aFlipChecked);
+  void StartBlinking();
   void StopBlinking();
-  void CreateMenuCommandEvent(mozilla::WidgetGUIEvent* aEvent,
-                              bool aFlipChecked);
+  void CreateMenuCommandEvent(mozilla::WidgetGUIEvent* aEvent);
   void PassMenuCommandEventToPopupManager();
 
  protected:

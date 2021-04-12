@@ -880,18 +880,12 @@ void nsMenuFrame::UpdateMenuSpecialState() {
 }
 
 void nsMenuFrame::Execute(WidgetGUIEvent* aEvent) {
-  // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
-  bool needToFlipChecked = false;
-  if (mType == eMenuType_Checkbox || (mType == eMenuType_Radio && !mChecked)) {
-    needToFlipChecked = !mContent->AsElement()->AttrValueIs(
-        kNameSpaceID_None, nsGkAtoms::autocheck, nsGkAtoms::_false,
-        eCaseMatters);
-  }
-
   nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
   if (sound) sound->PlayEventSound(nsISound::EVENT_MENU_EXECUTE);
 
-  StartBlinking(aEvent, needToFlipChecked);
+  StopBlinking();
+  CreateMenuCommandEvent(aEvent);
+  StartBlinking();
 }
 
 bool nsMenuFrame::ShouldBlink() {
@@ -902,10 +896,7 @@ bool nsMenuFrame::ShouldBlink() {
   return true;
 }
 
-void nsMenuFrame::StartBlinking(WidgetGUIEvent* aEvent, bool aFlipChecked) {
-  StopBlinking();
-  CreateMenuCommandEvent(aEvent, aFlipChecked);
-
+void nsMenuFrame::StartBlinking() {
   if (!ShouldBlink()) {
     PassMenuCommandEventToPopupManager();
     return;
@@ -940,8 +931,7 @@ void nsMenuFrame::StopBlinking() {
   mDelayedMenuCommandEvent = nullptr;
 }
 
-void nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent,
-                                         bool aFlipChecked) {
+void nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent) {
   // Create a trusted event if the triggering event was trusted, or if
   // we're called from chrome code (since at least one of our caller
   // passes in a null event).
@@ -962,9 +952,17 @@ void nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent,
   // window won't get blocked.
   bool userinput = dom::UserActivation::IsHandlingUserInput();
 
-  mDelayedMenuCommandEvent =
-      new nsXULMenuCommandEvent(mContent->AsElement(), isTrusted, shift,
-                                control, alt, meta, userinput, aFlipChecked);
+  // Flip "checked" state if we're a checkbox menu, or an un-checked radio menu.
+  bool needToFlipChecked = false;
+  if (mType == eMenuType_Checkbox || (mType == eMenuType_Radio && !mChecked)) {
+    needToFlipChecked = !mContent->AsElement()->AttrValueIs(
+        kNameSpaceID_None, nsGkAtoms::autocheck, nsGkAtoms::_false,
+        eCaseMatters);
+  }
+
+  mDelayedMenuCommandEvent = new nsXULMenuCommandEvent(
+      mContent->AsElement(), isTrusted, shift, control, alt, meta, userinput,
+      needToFlipChecked);
 }
 
 void nsMenuFrame::PassMenuCommandEventToPopupManager() {
