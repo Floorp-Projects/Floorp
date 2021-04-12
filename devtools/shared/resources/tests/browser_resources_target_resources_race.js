@@ -24,7 +24,7 @@ add_task(async function() {
   const {
     client,
     resourceWatcher,
-    targetList,
+    targetCommand,
   } = await initMultiProcessResourceWatcher();
 
   const expectedPlatformMessage = "expectedMessage";
@@ -72,6 +72,6 @@ add_task(async function() {
   });
 
   Services.console.reset();
-  targetList.destroy();
+  targetCommand.destroy();
   await client.close();
 });
