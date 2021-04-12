@@ -22,7 +22,7 @@ job-defaults:
             - android-gradle-dependencies
     run:
         # TODO Generate APKs in a build task instead
-        gradlew: ['clean', 'assembleGeckoNightly', 'assembleAndroidTest', 'assembleDebug']
+        gradlew: ['clean', 'assembleGecko', 'assembleAndroidTest', 'assembleDebug']
         secrets:
             - name: project/mobile/android-components/firebase
               key: firebaseToken

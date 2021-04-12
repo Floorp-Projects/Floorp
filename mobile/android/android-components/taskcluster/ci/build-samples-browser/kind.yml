@@ -40,29 +40,14 @@ job-defaults:
         max-run-time: 1200
 
 jobs:
-    nightly:
+    gecko:
         run:
             gradlew:
-                - ':samples-browser:assembleGeckoNightly'
-                - ':samples-browser:testGeckoNightlyDebugUnitTest'
-                - ':samples-browser:lintGeckoNightly'
+                - ':samples-browser:assembleGecko'
+                - ':samples-browser:testGeckoDebugUnitTest'
+                - ':samples-browser:lintGecko'
         treeherder:
             symbol: 'samples-browser(B)'
-    beta:
-        run:
-            gradlew:
-                - ':samples-browser:assembleGeckoBeta'
-                - ':samples-browser:testGeckoBetaDebugUnitTest'
-        treeherder:
-            symbol: 'samples-browser-beta(B)'
-
-    release:
-        run:
-            gradlew:
-                - ':samples-browser:assembleGeckoRelease'
-                - ':samples-browser:testGeckoReleaseDebugUnitTest'
-        treeherder:
-            symbol: 'samples-browser-release(B)'
 
     system:
         run:

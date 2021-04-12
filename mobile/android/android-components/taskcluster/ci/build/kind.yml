@@ -130,16 +130,6 @@ job-defaults:
 
 overriden-jobs:
     # Treeherder group names are too long to fit in 25 chars
-    browser-engine-gecko-nightly:
-        treeherder:
-            symbol: 'browser-engine-gecko-nigh(B)'
-    nightly-browser-engine-gecko-nightly:
-        treeherder:
-            symbol: 'browser-engine-gecko-nigh(BN)'
-    release-browser-engine-gecko-nightly:
-        treeherder:
-            symbol: 'browser-engine-gecko-nigh(BR)'
-
     lib-fetch-httpurlconnection:
         treeherder:
             symbol: 'lib-fetch-httpurlconnect(B)'

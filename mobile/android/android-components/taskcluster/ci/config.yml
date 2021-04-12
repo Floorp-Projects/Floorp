@@ -75,10 +75,6 @@ treeherder:
         lib-push-amazon: lib-push-amazon
         lib-push-firebase: lib-push-firebase
         lib-state: lib-state
-        samples-browser-beta: samples-browser-beta
-        samples-browser-release: samples-browser-release
-        samples-browser-system: samples-browser-system
-        samples-browser: samples-browser
         samples-crash: samples-crash
         samples-dataprotect: samples-dataprotect
         samples-firefox-accounts: samples-firefox-accounts
@@ -128,8 +124,7 @@ treeherder:
 
         # Groups aren't generated off buildconfig.yml:
         samples-browser: samples-browser
-        samples-browser-beta: samples-browser-beta
-        samples-browser-release: samples-browser-release
+        samples-browser-gecko: samples-browser-gecko
         samples-browser-system: samples-browser-system
 
 
