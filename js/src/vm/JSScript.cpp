@@ -1212,12 +1212,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                                        scriptEnclosingScope, funOrMod));
   MOZ_TRY(frontend::StencilXDR::codeSharedData<mode>(xdr, script->sharedData_));
 
-  if (mode == XDR_DECODE) {
-    if (!SharedImmutableScriptData::shareScriptData(cx, script->sharedData_)) {
-      return xdr->fail(JS::TranscodeResult::Throw);
-    }
-  }
-
   if (xdrFlags & HasLazyScript) {
     if (mode == XDR_DECODE) {
       script->setAllowRelazify();

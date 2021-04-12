@@ -253,6 +253,10 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
     }
     MOZ_TRY(XDRImmutableScriptData<mode>(xdr, data->isd_));
     sisd = data.release();
+
+    if (!SharedImmutableScriptData::shareScriptData(cx, sisd)) {
+      return xdr->fail(JS::TranscodeResult::Throw);
+    }
   }
 
   return Ok();
