@@ -42,6 +42,8 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.experiments.ExperimentBranch
+import org.mozilla.fenix.experiments.Experiments
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -53,7 +55,9 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.REQUEST_CODE_BROWSER_ROLE
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.ext.withExperiment
 import org.mozilla.fenix.settings.account.AccountUiView
+import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
 import kotlin.system.exitProcess
 
@@ -137,14 +141,30 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        val preferencesId = if (FeatureFlags.newIconSet) {
-            R.xml.preferences_without_icons
-        } else {
-            R.xml.preferences
-        }
+        val preferencesId = getPreferenceLayoutId()
+
         setPreferencesFromResource(preferencesId, rootKey)
         updateMakeDefaultBrowserPreference()
     }
+
+    /**
+     * @return The preference layout to be used depending on flags and existing experiment branches.
+     * Note: Changing Settings screen before experiment is over requires changing all layouts.
+     */
+    private fun getPreferenceLayoutId() =
+        if (isDefaultBrowserExperimentBranch() && !isFirefoxDefaultBrowser()) {
+            if (FeatureFlags.newIconSet) {
+                R.xml.preferences_without_icons_default_browser_experiment
+            } else {
+                R.xml.preferences_default_browser_experiment
+            }
+        } else {
+            if (FeatureFlags.newIconSet) {
+                R.xml.preferences_without_icons
+            } else {
+                R.xml.preferences
+            }
+        }
 
     @SuppressLint("RestrictedApi")
     override fun onResume() {
@@ -475,7 +495,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun updateMakeDefaultBrowserPreference() {
-        requirePreference<DefaultBrowserPreference>(R.string.pref_key_make_default_browser).updateSwitch()
+        if (!isDefaultBrowserExperimentBranch()) {
+            requirePreference<DefaultBrowserPreference>(R.string.pref_key_make_default_browser).updateSwitch()
+        }
     }
 
     private fun navigateFromSettings(directions: NavDirections) {
@@ -577,6 +599,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     }, FXA_SYNC_OVERRIDE_EXIT_DELAY)
                 }
         }
+    }
+
+    private fun isDefaultBrowserExperimentBranch(): Boolean {
+        val experiments = context?.components?.analytics?.experiments
+        return experiments?.withExperiment(Experiments.DEFAULT_BROWSER) { experimentBranch ->
+            (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_SETTINGS_MENU)
+        } == true
+    }
+
+    private fun isFirefoxDefaultBrowser(): Boolean {
+        val browsers = BrowsersCache.all(requireContext())
+        return browsers.isFirefoxDefaultBrowser
     }
 
     companion object {

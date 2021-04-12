@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.preference.Preference
+        android:key="@string/pref_key_make_default_browser"
+        android:layout="@layout/default_browser_experiment_preference"
+        app:allowDividerBelow="false" />
+
+    <androidx.preference.SwitchPreference
+        android:defaultValue="true"
+        android:key="@string/pref_key_allow_domestic_china_fxa_server"
+        android:title="@string/preferences_allow_domestic_china_fxa_server" />
+
+    <androidx.preference.EditTextPreference
+        android:inputType="textUri"
+        android:key="@string/pref_key_override_fxa_server"
+        android:title="@string/preferences_override_fxa_server"
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false" />
+
+    <androidx.preference.EditTextPreference
+        android:inputType="textUri"
+        android:key="@string/pref_key_override_sync_tokenserver"
+        android:title="@string/preferences_override_sync_tokenserver"
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false" />
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_category_general"
+        app:iconSpaceReserved="false">
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_search"
+            android:key="@string/pref_key_search_settings"
+            android:title="@string/preferences_search" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_multiple_tabs"
+            android:key="@string/pref_key_tabs"
+            android:title="@string/preferences_tabs" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_customize"
+            android:key="@string/pref_key_customize"
+            android:title="@string/preferences_customize" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_login"
+            android:key="@string/pref_key_passwords"
+            android:title="@string/preferences_passwords_logins_and_passwords" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_formfill"
+            android:key="@string/pref_key_credit_cards"
+            android:title="@string/preferences_credit_cards"
+            app:isPreferenceVisible="false" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_accessibility"
+            android:key="@string/pref_key_accessibility"
+            android:title="@string/preferences_accessibility" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_language"
+            android:key="@string/pref_key_language"
+            android:title="@string/preferences_language" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:key="@string/pref_key_sign_in"
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_category_account">
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_account"
+            android:key="@string/pref_key_sign_in"
+            android:title="@string/preferences_sync"
+            app:allowDividerBelow="true"
+            app:iconSpaceReserved="false" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:key="@string/pref_key_account_category"
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_category_account"
+        app:isPreferenceVisible="false">
+
+        <org.mozilla.fenix.settings.account.AccountPreference
+            android:icon="@drawable/ic_account"
+            android:key="@string/pref_key_account" />
+
+        <org.mozilla.fenix.settings.account.AccountAuthErrorPreference
+            android:icon="@drawable/ic_account_warning"
+            android:key="@string/pref_key_account_auth_error" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_category_privacy_security"
+        app:iconSpaceReserved="false">
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_private_browsing"
+            android:key="@string/pref_key_private_browsing"
+            android:title="@string/preferences_private_browsing_options" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_tracking_protection_enabled"
+            android:key="@string/pref_key_tracking_protection_settings"
+            android:title="@string/preference_enhanced_tracking_protection" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_permission"
+            android:key="@string/pref_key_site_permissions"
+            android:title="@string/preferences_site_permissions" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_delete"
+            android:key="@string/pref_key_delete_browsing_data"
+            android:title="@string/preferences_delete_browsing_data" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_exit"
+            android:key="@string/pref_key_delete_browsing_data_on_quit_preference"
+            android:title="@string/preferences_delete_browsing_data_on_quit" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_notifications"
+            android:key="@string/pref_key_notifications"
+            android:title="@string/preferences_notifications" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_data_collection"
+            android:key="@string/pref_key_data_choices"
+            android:title="@string/preferences_data_collection" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="@string/pref_key_advanced"
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_category_advanced"
+        app:iconSpaceReserved="false">
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_addons_extensions"
+            android:key="@string/pref_key_addons"
+            android:title="@string/preferences_addons" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_addons_extensions"
+            android:key="@string/pref_key_override_amo_collection"
+            android:title="@string/preferences_customize_amo_collection" />
+
+        <androidx.preference.SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_open_in_app"
+            android:key="@string/pref_key_open_links_in_external_app"
+            android:title="@string/preferences_open_links_in_apps" />
+
+        <androidx.preference.SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_download"
+            android:key="@string/pref_key_external_download_manager"
+            android:title="@string/preferences_external_download_manager" />
+
+        <androidx.preference.SwitchPreference
+            android:defaultValue="true"
+            android:icon="@drawable/ic_info"
+            android:key="@string/pref_key_leakcanary"
+            android:title="@string/preference_leakcanary"
+            app:isPreferenceVisible="@bool/IS_DEBUG" />
+
+        <androidx.preference.SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_energy"
+            android:key="@string/pref_key_remote_debugging"
+            android:title="@string/preferences_remote_debugging" />
+    </PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_category_about"
+        app:iconSpaceReserved="false">
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_bookmark_outline"
+            android:key="@string/pref_key_rate"
+            android:title="@string/preferences_rate" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_info"
+            android:key="@string/pref_key_about"
+            android:title="@string/preferences_about" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_info"
+            android:key="@string/pref_key_debug_settings"
+            android:title="@string/preferences_debug_settings"
+            app:isPreferenceVisible="false" />
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_info"
+            android:key="@string/pref_key_secret_debug_info"
+            android:title="@string/preferences_debug_info"
+            app:isPreferenceVisible="false" />
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_info"
+            android:key="@string/pref_key_nimbus_experiments"
+            android:title="@string/preferences_nimbus_experiments"
+            app:isPreferenceVisible="false" />
+    </androidx.preference.PreferenceCategory>
+</androidx.preference.PreferenceScreen>

@@ -21,5 +21,6 @@ class ExperimentBranch {
         const val A2 = "a2"
         const val DEFAULT_BROWSER_TOOLBAR_MENU = "default_browser_toolbar_menu"
         const val DEFAULT_BROWSER_NEW_TAB_BANNER = "default_browser_newtab_banner"
+        const val DEFAULT_BROWSER_SETTINGS_MENU = "default_browser_settings_menu"
     }
 }
