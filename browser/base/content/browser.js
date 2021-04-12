@@ -6337,6 +6337,10 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   let menuSeparator = document.getElementById("toolbarItemsMenuSeparator");
   menuSeparator.hidden = false;
 
+  document.getElementById(
+    "toolbarNavigatorItemsMenuSeparator"
+  ).hidden = !showTabStripItems;
+
   if (
     !CustomizationHandler.isCustomizing() &&
     CustomizableUI.isSpecialWidget(toolbarItem?.id || "")

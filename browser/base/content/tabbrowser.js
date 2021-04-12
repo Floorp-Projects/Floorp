@@ -2522,6 +2522,21 @@
       return this.addTab(aURI, params);
     },
 
+    addAdjacentNewTab(tab) {
+      Services.obs.notifyObservers(
+        {
+          wrappedJSObject: new Promise(resolve => {
+            this.selectedTab = this.addTrustedTab(BROWSER_NEW_TAB_URL, {
+              index: tab._tPos + 1,
+              userContextId: tab.userContextId,
+            });
+            resolve(this.selectedBrowser);
+          }),
+        },
+        "browser-open-newtab-start"
+      );
+    },
+
     /**
      * Must only be used sparingly for content that came from Chrome context
      * If in doubt use addWebTab
