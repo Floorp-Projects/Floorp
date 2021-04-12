@@ -36,9 +36,9 @@ var gExceptionPaths = [
   // toolkit/components/pdfjs/content/build/pdf.js
   "resource://pdf.js/web/images/",
 
-  // Exclude all the metadata paths under the country metadata folder because these
-  // paths will be concatenated in FormAutofillUtils.jsm based on different country/region.
-  "resource://formautofill/addressmetadata/",
+  // Exclude the form autofill path that has been moved out of the extensions to
+  // toolkit, see bug 1691821.
+  "resource://gre-resources/autofill/",
 
   // Exclude all search-extensions because they aren't referenced by filename
   "resource://search-extensions/",
@@ -372,7 +372,7 @@ function trackChromeUri(uri) {
 // formautofill registers resource://formautofill/ and
 // chrome://formautofill/content/ dynamically at runtime.
 // Bug 1480276 is about addressing this without this hard-coding.
-trackResourcePrefix("formautofill");
+trackResourcePrefix("autofill");
 trackChromeUri("chrome://formautofill/content/");
 
 function parseManifest(manifestUri) {
