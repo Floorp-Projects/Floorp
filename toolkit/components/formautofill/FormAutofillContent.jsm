@@ -22,7 +22,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 ChromeUtils.defineModuleGetter(
   this,
   "AddressResult",
-  "resource://formautofill/ProfileAutoCompleteResult.jsm"
+  "resource://autofill/ProfileAutoCompleteResult.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -32,22 +32,22 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "CreditCardResult",
-  "resource://formautofill/ProfileAutoCompleteResult.jsm"
+  "resource://autofill/ProfileAutoCompleteResult.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofill",
-  "resource://formautofill/FormAutofill.jsm"
+  "resource://autofill/FormAutofill.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillHandler",
-  "resource://formautofill/FormAutofillHandler.jsm"
+  "resource://autofill/FormAutofillHandler.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillUtils",
-  "resource://formautofill/FormAutofillUtils.jsm"
+  "resource://autofill/FormAutofillUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,

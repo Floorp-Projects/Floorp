@@ -37,16 +37,16 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 const { FormAutofill } = ChromeUtils.import(
-  "resource://formautofill/FormAutofill.jsm"
+  "resource://autofill/FormAutofill.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CreditCard: "resource://gre/modules/CreditCard.jsm",
   FormAutofillPreferences:
-    "resource://formautofill/FormAutofillPreferences.jsm",
-  FormAutofillDoorhanger: "resource://formautofill/FormAutofillDoorhanger.jsm",
-  FormAutofillUtils: "resource://formautofill/FormAutofillUtils.jsm",
+    "resource://autofill/FormAutofillPreferences.jsm",
+  FormAutofillDoorhanger: "resource://autofill/FormAutofillDoorhanger.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
   OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
 });
 
@@ -262,7 +262,7 @@ let FormAutofillStatus = {
 // Once storage is loaded we need to update saved field names and inform content processes.
 XPCOMUtils.defineLazyGetter(this, "gFormAutofillStorage", () => {
   let { formAutofillStorage } = ChromeUtils.import(
-    "resource://formautofill/FormAutofillStorage.jsm"
+    "resource://autofill/FormAutofillStorage.jsm"
   );
   log.debug("Loading formAutofillStorage");
 

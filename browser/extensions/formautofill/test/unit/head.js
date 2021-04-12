@@ -142,7 +142,7 @@ async function initProfileStorage(
   collectionName = "addresses"
 ) {
   let { FormAutofillStorage } = ChromeUtils.import(
-    "resource://formautofill/FormAutofillStorage.jsm",
+    "resource://autofill/FormAutofillStorage.jsm",
     null
   );
   let path = getTempFile(fileName).path;
@@ -209,10 +209,10 @@ var AddressDataLoader, FormAutofillUtils;
 async function runHeuristicsTest(patterns, fixturePathPrefix) {
   add_task(async function setup() {
     ({ FormAutofillHeuristics, LabelUtils } = ChromeUtils.import(
-      "resource://formautofill/FormAutofillHeuristics.jsm"
+      "resource://autofill/FormAutofillHeuristics.jsm"
     ));
     ({ AddressDataLoader, FormAutofillUtils } = ChromeUtils.import(
-      "resource://formautofill/FormAutofillUtils.jsm"
+      "resource://autofill/FormAutofillUtils.jsm"
     ));
   });
 

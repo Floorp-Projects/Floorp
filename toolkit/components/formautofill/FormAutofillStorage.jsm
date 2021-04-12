@@ -135,7 +135,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const { FormAutofill } = ChromeUtils.import(
-  "resource://formautofill/FormAutofill.jsm"
+  "resource://autofill/FormAutofill.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -151,12 +151,12 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillNameUtils",
-  "resource://formautofill/FormAutofillNameUtils.jsm"
+  "resource://autofill/FormAutofillNameUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillUtils",
-  "resource://formautofill/FormAutofillUtils.jsm"
+  "resource://autofill/FormAutofillUtils.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -166,7 +166,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "PhoneNumber",
-  "resource://formautofill/phonenumberutils/PhoneNumber.jsm"
+  "resource://autofill/phonenumberutils/PhoneNumber.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
