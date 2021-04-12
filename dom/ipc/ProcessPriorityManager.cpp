@@ -144,6 +144,8 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
 
   void TabActivityChanged(BrowserParent* aBrowserParent, bool aIsActive);
 
+  void ResetPriority(ContentParent* aContentParent);
+
  private:
   static bool sPrefListenersRegistered;
   static bool sInitialized;
@@ -236,7 +238,6 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
    */
   const nsAutoCString& NameWithComma();
 
-  void OnRemoteBrowserFrameShown(nsISupports* aSubject);
   void OnBrowserParentDestroyed(nsISupports* aSubject);
 
   ProcessPriority CurrentPriority();
@@ -461,6 +462,16 @@ void ProcessPriorityManagerImpl::TabActivityChanged(
   pppm->TabActivityChanged(aBrowserParent, aIsActive);
 }
 
+void ProcessPriorityManagerImpl::ResetPriority(ContentParent* aContentParent) {
+  RefPtr<ParticularProcessPriorityManager> pppm =
+      GetParticularProcessPriorityManager(aContentParent);
+  if (!pppm) {
+    return;
+  }
+
+  pppm->ResetPriority();
+}
+
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager, nsIObserver,
                   nsITimerCallback, nsISupportsWeakReference, nsINamed);
 
@@ -482,7 +493,6 @@ void ParticularProcessPriorityManager::Init() {
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->AddObserver(this, "remote-browser-shown", /* ownsWeak */ true);
     os->AddObserver(this, "ipc:browser-destroyed", /* ownsWeak */ true);
   }
 
@@ -565,10 +575,7 @@ ParticularProcessPriorityManager::Observe(nsISupports* aSubject,
   }
 
   nsDependentCString topic(aTopic);
-
-  if (topic.EqualsLiteral("remote-browser-shown")) {
-    OnRemoteBrowserFrameShown(aSubject);
-  } else if (topic.EqualsLiteral("ipc:browser-destroyed")) {
+  if (topic.EqualsLiteral("ipc:browser-destroyed")) {
     OnBrowserParentDestroyed(aSubject);
   } else {
     MOZ_ASSERT(false);
@@ -604,30 +611,6 @@ const nsAutoCString& ParticularProcessPriorityManager::NameWithComma() {
   CopyUTF16toUTF8(name, mNameWithComma);
   mNameWithComma.AppendLiteral(", ");
   return mNameWithComma;
-}
-
-void ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(
-    nsISupports* aSubject) {
-  RefPtr<nsFrameLoader> fl = do_QueryObject(aSubject);
-  NS_ENSURE_TRUE_VOID(fl);
-
-  BrowserParent* tp = BrowserParent::GetFrom(fl);
-  NS_ENSURE_TRUE_VOID(tp);
-
-  MOZ_ASSERT(XRE_IsParentProcess());
-  if (tp->Manager() != mContentParent) {
-    return;
-  }
-
-  // Ignore notifications that aren't from a Browser
-  if (fl->OwnerIsMozBrowserFrame()) {
-    ResetPriority();
-  }
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->RemoveObserver(this, "remote-browser-shown");
-  }
 }
 
 void ParticularProcessPriorityManager::OnBrowserParentDestroyed(
@@ -931,6 +914,28 @@ void ProcessPriorityManager::TabActivityChanged(BrowserParent* aBrowserParent,
   }
 
   singleton->TabActivityChanged(aBrowserParent, aIsActive);
+}
+
+/* static */
+void ProcessPriorityManager::RemoteBrowserFrameShown(
+    nsFrameLoader* aFrameLoader) {
+  ProcessPriorityManagerImpl* singleton =
+      ProcessPriorityManagerImpl::GetSingleton();
+  if (!singleton) {
+    return;
+  }
+
+  BrowserParent* bp = BrowserParent::GetFrom(aFrameLoader);
+  NS_ENSURE_TRUE_VOID(bp);
+
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  // Ignore calls that aren't from a Browser.
+  if (!aFrameLoader->OwnerIsMozBrowserFrame()) {
+    return;
+  }
+
+  singleton->ResetPriority(bp->Manager());
 }
 
 }  // namespace mozilla
