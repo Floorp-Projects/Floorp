@@ -18,6 +18,7 @@ add_task(async function() {
   const {
     selectors: { getSelectedSource },
     getState,
+    commands,
   } = dbg;
 
   info("Add breakpoint within the iframe, in `foo` function");
@@ -37,8 +38,8 @@ add_task(async function() {
   let testFront;
   if (isFissionEnabled()) {
     // We need to retrieve the testFront for the remote frame target.
-    const iframeTarget = dbg.toolbox.targetList
-      .getAllTargets([dbg.toolbox.targetList.TYPES.FRAME])
+    const iframeTarget = commands.targetCommand
+      .getAllTargets([commands.targetCommand.TYPES.FRAME])
       .find(target => target.url.includes("example.org"));
     testFront = await iframeTarget.getFront("test");
   } else {

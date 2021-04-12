@@ -19,10 +19,9 @@ add_task(async function() {
   } = require("devtools/shared/resources/resource-watcher");
 
   const commands = await CommandsFactory.forTab(tab);
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
-  const target = targetList.targetFront;
-  const resourceWatcher = new ResourceWatcher(targetList);
+  await commands.targetCommand.startListening();
+  const target = commands.targetCommand.targetFront;
+  const resourceWatcher = new ResourceWatcher(commands.targetCommand);
 
   const styleSheetsFront = await target.getFront("stylesheets");
   ok(styleSheetsFront, "The StyleSheetsFront was created.");
