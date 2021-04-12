@@ -579,78 +579,17 @@ void GeckoEditableSupport::SendIMEDummyKeyEvent(nsIWidget* aWidget,
   mDispatcher->DispatchKeyboardEvent(msg, event, status);
 }
 
-void GeckoEditableSupport::AddIMETextChange(const IMETextChange& aChange) {
-  mIMETextChanges.AppendElement(aChange);
+void GeckoEditableSupport::AddIMETextChange(
+    const IMENotification::TextChangeDataBase& aChange) {
+  mIMEPendingTextChange.MergeWith(aChange);
 
   // We may not be in the middle of flushing,
   // in which case this flag is meaningless.
   mIMETextChangedDuringFlush = true;
-
-  // Now that we added a new range we need to go back and
-  // update all the ranges before that.
-  // Ranges that have offsets which follow this new range
-  // need to be updated to reflect new offsets
-  const int32_t delta = aChange.mNewEnd - aChange.mOldEnd;
-  for (int32_t i = mIMETextChanges.Length() - 2; i >= 0; i--) {
-    IMETextChange& previousChange = mIMETextChanges[i];
-    if (previousChange.mStart > aChange.mOldEnd) {
-      previousChange.mStart += delta;
-      previousChange.mOldEnd += delta;
-      previousChange.mNewEnd += delta;
-    }
-  }
-
-  // Now go through all ranges to merge any ranges that are connected
-  // srcIndex is the index of the range to merge from
-  // dstIndex is the index of the range to potentially merge into
-  int32_t srcIndex = mIMETextChanges.Length() - 1;
-  int32_t dstIndex = srcIndex;
-
-  while (--dstIndex >= 0) {
-    IMETextChange& src = mIMETextChanges[srcIndex];
-    IMETextChange& dst = mIMETextChanges[dstIndex];
-    // When merging a more recent change into an older
-    // change, we need to compare recent change's (start, oldEnd)
-    // range to the older change's (start, newEnd)
-    if (src.mOldEnd < dst.mStart || dst.mNewEnd < src.mStart) {
-      // No overlap between ranges
-      continue;
-    }
-
-    if (src.mStart == dst.mStart && src.mNewEnd == dst.mNewEnd) {
-      // Same range. Adjust old end offset.
-      dst.mOldEnd = std::min(src.mOldEnd, dst.mOldEnd);
-    } else {
-      // When merging two ranges, there are generally four posibilities:
-      // [----(----]----), (----[----]----),
-      // [----(----)----], (----[----)----]
-      // where [----] is the first range and (----) is the second range
-      // As seen above, the start of the merged range is always the lesser
-      // of the two start offsets. OldEnd and NewEnd then need to be
-      // adjusted separately depending on the case. In any case, the change
-      // in text length of the merged range should be the sum of text length
-      // changes of the two original ranges, i.e.,
-      // newNewEnd - newOldEnd == newEnd1 - oldEnd1 + newEnd2 - oldEnd2
-      dst.mStart = std::min(dst.mStart, src.mStart);
-      if (src.mOldEnd < dst.mNewEnd) {
-        // New range overlaps or is within previous range; merge
-        dst.mNewEnd += src.mNewEnd - src.mOldEnd;
-      } else {  // src.mOldEnd >= dst.mNewEnd
-        // New range overlaps previous range; merge
-        dst.mOldEnd += src.mOldEnd - dst.mNewEnd;
-        dst.mNewEnd = src.mNewEnd;
-      }
-    }
-    // src merged to dst; delete src.
-    mIMETextChanges.RemoveElementAt(srcIndex);
-    // Any ranges that we skip over between src and dst are not mergeable
-    // so we can safely continue the merge starting at dst
-    srcIndex = dstIndex;
-  }
 }
 
 void GeckoEditableSupport::PostFlushIMEChanges() {
-  if (!mIMETextChanges.IsEmpty() || mIMESelectionChanged) {
+  if (mIMEPendingTextChange.IsValid() || mIMESelectionChanged) {
     // Already posted
     return;
   }
@@ -680,13 +619,16 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
   NS_ENSURE_TRUE_VOID(widget);
 
   struct TextRecord {
+    TextRecord() : start(-1), oldEnd(-1), newEnd(-1) {}
+
+    bool IsValid() const { return start >= 0; }
+
     nsString text;
     int32_t start;
     int32_t oldEnd;
     int32_t newEnd;
   };
-  AutoTArray<TextRecord, 4> textTransaction;
-  textTransaction.SetCapacity(mIMETextChanges.Length());
+  TextRecord textTransaction;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   mIMETextChangedDuringFlush = false;
@@ -708,29 +650,35 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
     return true;
   };
 
-  for (const IMETextChange& change : mIMETextChanges) {
-    if (change.mStart == change.mOldEnd && change.mStart == change.mNewEnd) {
-      continue;
-    }
-
-    nsString insertedString;
+  if (mIMEPendingTextChange.IsValid() &&
+      (mIMEPendingTextChange.mStartOffset !=
+           mIMEPendingTextChange.mRemovedEndOffset ||
+       mIMEPendingTextChange.mStartOffset !=
+           mIMEPendingTextChange.mAddedEndOffset)) {
     WidgetQueryContentEvent queryTextContentEvent(true, eQueryTextContent,
                                                   widget);
 
-    if (change.mNewEnd != change.mStart) {
+    if (mIMEPendingTextChange.mAddedEndOffset !=
+        mIMEPendingTextChange.mStartOffset) {
       queryTextContentEvent.InitForQueryTextContent(
-          change.mStart, change.mNewEnd - change.mStart);
+          mIMEPendingTextChange.mStartOffset,
+          mIMEPendingTextChange.mAddedEndOffset -
+              mIMEPendingTextChange.mStartOffset);
       widget->DispatchEvent(&queryTextContentEvent, status);
 
       if (shouldAbort(NS_WARN_IF(queryTextContentEvent.Failed()))) {
         return;
       }
 
-      insertedString = queryTextContentEvent.mReply->DataRef();
+      textTransaction.text = queryTextContentEvent.mReply->DataRef();
     }
 
-    textTransaction.AppendElement(TextRecord{insertedString, change.mStart,
-                                             change.mOldEnd, change.mNewEnd});
+    textTransaction.start =
+        static_cast<int32_t>(mIMEPendingTextChange.mStartOffset);
+    textTransaction.oldEnd =
+        static_cast<int32_t>(mIMEPendingTextChange.mRemovedEndOffset);
+    textTransaction.newEnd =
+        static_cast<int32_t>(mIMEPendingTextChange.mAddedEndOffset);
   }
 
   int32_t selStart = -1;
@@ -750,14 +698,12 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
     selEnd = static_cast<int32_t>(
         querySelectedTextEvent.mReply->SelectionEndOffset());
 
-    if (aFlags == FLUSH_FLAG_RECOVER) {
+    if (aFlags == FLUSH_FLAG_RECOVER && textTransaction.IsValid()) {
       // Sometimes we get out-of-bounds selection during recovery.
       // Limit the offsets so we don't crash.
-      for (const TextRecord& record : textTransaction) {
-        const int32_t end = record.start + record.text.Length();
-        selStart = std::min(selStart, end);
-        selEnd = std::min(selEnd, end);
-      }
+      const int32_t end = textTransaction.start + textTransaction.text.Length();
+      selStart = std::min(selStart, end);
+      selEnd = std::min(selEnd, end);
     }
   }
 
@@ -784,11 +730,11 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
   };
 
   // Commit the text change and selection change transaction.
-  mIMETextChanges.Clear();
+  mIMEPendingTextChange.Clear();
 
-  for (const TextRecord& record : textTransaction) {
-    mEditable->OnTextChange(record.text, record.start, record.oldEnd,
-                            record.newEnd);
+  if (textTransaction.IsValid()) {
+    mEditable->OnTextChange(textTransaction.text, textTransaction.start,
+                            textTransaction.oldEnd, textTransaction.newEnd);
     if (flushOnException()) {
       return;
     }
@@ -815,7 +761,7 @@ void GeckoEditableSupport::FlushIMEText(FlushChangesFlag aFlags) {
       "Cannot synchronize Java text with Gecko text");
 
   // Notify Java of the newly focused content
-  mIMETextChanges.Clear();
+  mIMEPendingTextChange.Clear();
   mIMESelectionChanged = true;
 
   // Use 'INT32_MAX / 2' here because subsequent text changes might combine
@@ -1005,9 +951,8 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
      * the NS_COMPOSITION_CHANGE event does not generate a text
      * change notification. However, the Java side still expects
      * one, so we manually generate a notification. */
-    IMETextChange dummyChange;
-    dummyChange.mStart = aStart;
-    dummyChange.mOldEnd = dummyChange.mNewEnd = aEnd;
+    IMENotification::TextChangeData dummyChange(aStart, aEnd, aEnd, false,
+                                                false);
     PostFlushIMEChanges();
     mIMESelectionChanged = true;
     AddIMETextChange(dummyChange);
@@ -1393,7 +1338,7 @@ nsresult GeckoEditableSupport::NotifyIME(
       /* Make sure Java's selection is up-to-date */
       PostFlushIMEChanges();
       mIMESelectionChanged = true;
-      AddIMETextChange(IMETextChange(aNotification));
+      AddIMETextChange(aNotification.mTextChangeData);
       break;
     }
 

@@ -46,26 +46,6 @@ class GeckoEditableSupport final
   using EditableClient = java::SessionTextInput::EditableClient;
   using EditableListener = java::SessionTextInput::EditableListener;
 
-  struct IMETextChange final {
-    int32_t mStart, mOldEnd, mNewEnd;
-
-    IMETextChange() : mStart(-1), mOldEnd(-1), mNewEnd(-1) {}
-
-    explicit IMETextChange(const IMENotification& aIMENotification)
-        : mStart(aIMENotification.mTextChangeData.mStartOffset),
-          mOldEnd(aIMENotification.mTextChangeData.mRemovedEndOffset),
-          mNewEnd(aIMENotification.mTextChangeData.mAddedEndOffset) {
-      MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE,
-                 "IMETextChange initialized with wrong notification");
-      MOZ_ASSERT(aIMENotification.mTextChangeData.IsValid(),
-                 "The text change notification isn't initialized");
-      MOZ_ASSERT(aIMENotification.mTextChangeData.IsInInt32Range(),
-                 "The text change notification is out of range");
-    }
-
-    bool IsEmpty() const { return mStart < 0; }
-  };
-
   enum FlushChangesFlag {
     // Not retrying.
     FLUSH_FLAG_NONE,
@@ -84,7 +64,7 @@ class GeckoEditableSupport final
   bool mEditableAttached;
   InputContext mInputContext;
   AutoTArray<UniquePtr<mozilla::WidgetEvent>, 4> mIMEKeyEvents;
-  AutoTArray<IMETextChange, 4> mIMETextChanges;
+  IMENotification::TextChangeData mIMEPendingTextChange;
   RefPtr<TextRangeArray> mIMERanges;
   RefPtr<Runnable> mDisposeRunnable;
   int32_t mIMEMaskEventsCount;         // Mask events when > 0.
@@ -113,7 +93,7 @@ class GeckoEditableSupport final
   RefPtr<TextComposition> GetComposition() const;
   bool RemoveComposition(RemoveCompositionFlag aFlag = COMMIT_IME_COMPOSITION);
   void SendIMEDummyKeyEvent(nsIWidget* aWidget, EventMessage msg);
-  void AddIMETextChange(const IMETextChange& aChange);
+  void AddIMETextChange(const IMENotification::TextChangeDataBase& aChange);
   void PostFlushIMEChanges();
   void FlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
   void FlushIMEText(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
