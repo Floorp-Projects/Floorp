@@ -50,6 +50,7 @@ add_task(async () => {
   // Wait for APZ state stable so that mouse event handling APZ works properly
   // in out-of-process iframes.
   await promiseApzFlushedRepaints();
+  await waitUntilApzStable();
 
   // NOTE: synthesizeMouseAtCenter doesn't work for OOP iframes (bug 1528935),
   // so we use promiseNativeMouseEventWithAPZ instead.
@@ -58,6 +59,7 @@ add_task(async () => {
 
   const firstClickPromise = new Promise((resolve, reject) => {
     window.addEventListener("message", function listener(event) {
+      info(`receive ${event.data}`);
       if (state == "ready") {
         if (event.data == "innerfocus") {
           state = "innerfocusbeforeclick";
@@ -98,6 +100,7 @@ add_task(async () => {
 
   const secondClickPromise = new Promise((resolve, reject) => {
     window.addEventListener("message", function listener(event) {
+      info(`receive ${event.data}`);
       if (state == "firstclick") {
         is(event.data, "middlefocus", "The third event should be 'middlefocus'.");
         state = "middlefocusbeforeclick";
