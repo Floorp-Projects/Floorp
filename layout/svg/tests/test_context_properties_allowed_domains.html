@@ -69,14 +69,15 @@
       let allowedSnapshot = await loadSrcImageAndSnapshot(frame, ALLOWED);
       let disallowedSnapshot = await loadSrcImageAndSnapshot(frame, DISALLOWED);
 
-      let result = compareSnapshots(redReference, greenReference, false);
-      ok(result[0], "First, ensure that red and green do not match.");
+      const kNoFuzz = null;
+      info("Sanity-check");
+      assertSnapshots(redReference, greenReference, false, kNoFuzz, "red", "green");
 
-      result = compareSnapshots(allowedSnapshot, greenReference, true);
-      ok(result[0], "The allowed domain should show green.");
+      info("Allowed domain should be green");
+      assertSnapshots(allowedSnapshot, greenReference, true, kNoFuzz, ALLOWED, "green");
 
-      result = compareSnapshots(disallowedSnapshot, redReference, true);
-      ok(result[0], "The disallowed domain should show red.");
+      info("Disallowed domain should be red");
+      assertSnapshots(disallowedSnapshot, redReference, true, kNoFuzz, DISALLOWED, "red");
     });
   </script>
 </head>
