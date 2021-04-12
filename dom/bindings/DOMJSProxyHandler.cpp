@@ -238,11 +238,19 @@ bool DOMProxyHandler::set(JSContext* cx, Handle<JSObject*> proxy,
 
   // Make sure to ignore our named properties when checking for own
   // property descriptors for a set.
-  JS::Rooted<PropertyDescriptor> ownDesc(cx);
+  Rooted<PropertyDescriptor> ownDesc_(cx);
   if (!getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ true,
-                            &ownDesc)) {
+                            &ownDesc_)) {
     return false;
   }
+
+  Rooted<Maybe<PropertyDescriptor>> ownDesc(cx);
+  if (ownDesc_.object()) {
+    ownDesc.set(mozilla::Some(ownDesc_.get()));
+  } else {
+    ownDesc.reset();
+  }
+
   return js::SetPropertyIgnoringNamedGetter(cx, proxy, id, v, receiver, ownDesc,
                                             result);
 }
