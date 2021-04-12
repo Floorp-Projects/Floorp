@@ -567,7 +567,7 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
   }
 
   if (memoryObj) {
-    size_t memoryLength = memoryObj->volatileMemoryLength().get();
+    size_t memoryLength = memoryObj->volatileMemoryLength();
     uint8_t* memoryBase =
         memoryObj->buffer().dataPointerEither().unwrap(/* memcpy */);
 
@@ -719,7 +719,7 @@ bool Module::instantiateMemory(JSContext* cx,
     if (!CheckLimits(cx, declaredMin, declaredMax,
                      /* defaultMax */ uint64_t(MaxMemory32Bytes()),
                      /* actualLength */
-                     uint64_t(memory->volatileMemoryLength().get()),
+                     uint64_t(memory->volatileMemoryLength()),
                      memory->buffer().wasmMaxSize(), metadata().isAsmJS(),
                      "Memory")) {
       return false;

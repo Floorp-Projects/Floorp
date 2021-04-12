@@ -70,7 +70,7 @@ class ArrayBufferViewObject : public NativeObject {
 
  public:
   [[nodiscard]] bool init(JSContext* cx, ArrayBufferObjectMaybeShared* buffer,
-                          BufferSize byteOffset, BufferSize length,
+                          size_t byteOffset, size_t length,
                           uint32_t bytesPerElement);
 
   static ArrayBufferObjectMaybeShared* bufferObject(
@@ -148,12 +148,12 @@ class ArrayBufferViewObject : public NativeObject {
     return buffer->isDetached();
   }
 
-  BufferSize byteOffset() const {
-    return BufferSize(size_t(getFixedSlot(BYTEOFFSET_SLOT).toPrivate()));
+  size_t byteOffset() const {
+    return size_t(getFixedSlot(BYTEOFFSET_SLOT).toPrivate());
   }
 
   Value byteOffsetValue() const {
-    size_t offset = byteOffset().get();
+    size_t offset = byteOffset();
     return NumberValue(offset);
   }
 

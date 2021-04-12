@@ -6808,7 +6808,7 @@ void CodeGenerator::visitNewTypedArray(LNewTypedArray* lir) {
 
   TypedArrayObject* ttemplate = &templateObject->as<TypedArrayObject>();
 
-  size_t n = ttemplate->length().get();
+  size_t n = ttemplate->length();
   MOZ_ASSERT(n <= INT32_MAX,
              "Template objects are only created for int32 lengths");
 

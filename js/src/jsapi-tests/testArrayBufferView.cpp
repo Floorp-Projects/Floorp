@@ -122,7 +122,7 @@ bool TestViewType(JSContext* cx) {
     AutoRealm ar(cx, otherGlobal);
     buffer = JS::NewArrayBuffer(cx, 8);
     CHECK(buffer);
-    CHECK(buffer->as<ArrayBufferObject>().byteLength().get() == 8);
+    CHECK(buffer->as<ArrayBufferObject>().byteLength() == 8);
   }
   CHECK(buffer->compartment() == otherGlobal->compartment());
   CHECK(JS_WrapObject(cx, &buffer));

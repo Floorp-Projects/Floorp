@@ -1782,21 +1782,21 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
   // callNativeGetterResult.
   EmitCallGetterResultGuards(writer, tarr, holder, shape, objId, mode_);
   if (isLength) {
-    if (tarr->length().get() <= INT32_MAX) {
+    if (tarr->length() <= INT32_MAX) {
       writer.loadArrayBufferViewLengthInt32Result(objId);
     } else {
       writer.loadArrayBufferViewLengthDoubleResult(objId);
     }
     trackAttached("TypedArrayLength");
   } else if (isByteOffset) {
-    if (tarr->byteOffset().get() <= INT32_MAX) {
+    if (tarr->byteOffset() <= INT32_MAX) {
       writer.arrayBufferViewByteOffsetInt32Result(objId);
     } else {
       writer.arrayBufferViewByteOffsetDoubleResult(objId);
     }
     trackAttached("TypedArrayByteOffset");
   } else {
-    if (tarr->byteLength().get() <= INT32_MAX) {
+    if (tarr->byteLength() <= INT32_MAX) {
       writer.typedArrayByteLengthInt32Result(objId);
     } else {
       writer.typedArrayByteLengthDoubleResult(objId);
@@ -1860,14 +1860,14 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
   EmitCallGetterResultGuards(writer, dv, holder, shape, objId, mode_);
   writer.guardHasAttachedArrayBuffer(objId);
   if (isByteOffset) {
-    if (dv->byteOffset().get() <= INT32_MAX) {
+    if (dv->byteOffset() <= INT32_MAX) {
       writer.arrayBufferViewByteOffsetInt32Result(objId);
     } else {
       writer.arrayBufferViewByteOffsetDoubleResult(objId);
     }
     trackAttached("DataViewByteOffset");
   } else {
-    if (dv->byteLength().get() <= INT32_MAX) {
+    if (dv->byteLength() <= INT32_MAX) {
       writer.loadArrayBufferViewLengthInt32Result(objId);
     } else {
       writer.loadArrayBufferViewLengthDoubleResult(objId);
@@ -1922,7 +1922,7 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
   EmitCallGetterResultGuards(writer, buf, holder, shape, objId, mode_);
-  if (buf->byteLength().get() <= INT32_MAX) {
+  if (buf->byteLength() <= INT32_MAX) {
     writer.loadArrayBufferByteLengthInt32Result(objId);
   } else {
     writer.loadArrayBufferByteLengthDoubleResult(objId);
@@ -2543,7 +2543,7 @@ AttachDecision GetPropIRGenerator::tryAttachSparseElement(
 // For Uint32Array we let the stub return a double only if the current result is
 // a double, to allow better codegen in Warp.
 static bool AllowDoubleForUint32Array(TypedArrayObject* tarr, uint64_t index) {
-  MOZ_ASSERT(index < tarr->length().get());
+  MOZ_ASSERT(index < tarr->length());
 
   if (tarr->type() != Scalar::Type::Uint32) {
     // Return value is only relevant for Uint32Array.
@@ -2571,7 +2571,7 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
   bool handleOOB = false;
   int64_t indexInt64;
   if (!ValueIsInt64Index(idVal_, &indexInt64) || indexInt64 < 0 ||
-      uint64_t(indexInt64) >= tarr->length().get()) {
+      uint64_t(indexInt64) >= tarr->length()) {
     handleOOB = true;
   }
 
@@ -4186,7 +4186,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
   bool handleOOB = false;
   int64_t indexInt64;
   if (!ValueIsInt64Index(idVal_, &indexInt64) || indexInt64 < 0 ||
-      uint64_t(indexInt64) >= tarr->length().get()) {
+      uint64_t(indexInt64) >= tarr->length()) {
     handleOOB = true;
   }
 
@@ -7099,7 +7099,7 @@ static bool AtomicsMeetsPreconditions(TypedArrayObject* typedArray,
   if (!ValueIsInt64Index(index, &indexInt64)) {
     return false;
   }
-  if (indexInt64 < 0 || uint64_t(indexInt64) >= typedArray->length().get()) {
+  if (indexInt64 < 0 || uint64_t(indexInt64) >= typedArray->length()) {
     return false;
   }
 
@@ -7951,7 +7951,7 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayByteOffset(
 
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
-  if (tarr->byteOffset().get() <= INT32_MAX) {
+  if (tarr->byteOffset() <= INT32_MAX) {
     writer.arrayBufferViewByteOffsetInt32Result(objArgId);
   } else {
     writer.arrayBufferViewByteOffsetDoubleResult(objArgId);
@@ -8011,7 +8011,7 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayLength(
     writer.guardIsNotProxy(objArgId);
   }
 
-  if (tarr->length().get() <= INT32_MAX) {
+  if (tarr->length() <= INT32_MAX) {
     writer.loadArrayBufferViewLengthInt32Result(objArgId);
   } else {
     writer.loadArrayBufferViewLengthDoubleResult(objArgId);
@@ -8050,7 +8050,7 @@ AttachDecision CallIRGenerator::tryAttachArrayBufferByteLength(
     writer.guardIsNotProxy(objArgId);
   }
 
-  if (buffer->byteLength().get() <= INT32_MAX) {
+  if (buffer->byteLength() <= INT32_MAX) {
     writer.loadArrayBufferByteLengthInt32Result(objArgId);
   } else {
     writer.loadArrayBufferByteLengthDoubleResult(objArgId);

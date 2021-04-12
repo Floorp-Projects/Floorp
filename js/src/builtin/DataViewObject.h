@@ -45,27 +45,27 @@ class DataViewObject : public ArrayBufferViewObject {
 
   static bool getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj,
                                          const CallArgs& args,
-                                         BufferSize* byteOffset,
-                                         BufferSize* byteLength);
+                                         size_t* byteOffset,
+                                         size_t* byteLength);
   static bool constructSameCompartment(JSContext* cx, HandleObject bufobj,
                                        const CallArgs& args);
   static bool constructWrapped(JSContext* cx, HandleObject bufobj,
                                const CallArgs& args);
 
   static DataViewObject* create(
-      JSContext* cx, BufferSize byteOffset, BufferSize byteLength,
+      JSContext* cx, size_t byteOffset, size_t byteLength,
       Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
 
  public:
   static const JSClass class_;
   static const JSClass protoClass_;
 
-  BufferSize byteLength() const {
-    return BufferSize(size_t(getFixedSlot(LENGTH_SLOT).toPrivate()));
+  size_t byteLength() const {
+    return size_t(getFixedSlot(LENGTH_SLOT).toPrivate());
   }
 
   Value byteLengthValue() const {
-    size_t len = byteLength().get();
+    size_t len = byteLength();
     return NumberValue(len);
   }
 
@@ -77,7 +77,7 @@ class DataViewObject : public ArrayBufferViewObject {
     MOZ_ASSERT(byteSize <= 8);
     mozilla::CheckedInt<uint64_t> endOffset(offset);
     endOffset += byteSize;
-    return endOffset.isValid() && endOffset.value() <= byteLength().get();
+    return endOffset.isValid() && endOffset.value() <= byteLength();
   }
 
   static bool isOriginalByteOffsetGetter(Native native) {
