@@ -70,12 +70,6 @@ class WebSocketWatcher {
   startListening(innerWindowId) {
     if (!this.windowIds.has(innerWindowId)) {
       this.windowIds.add(innerWindowId);
-      if (webSocketEventService.hasListenerFor(innerWindowId)) {
-        console.warn(
-          "Already listening to websockety events from another toolbox, it won't work for the last opened toolbox"
-        );
-        return;
-      }
       webSocketEventService.addListener(innerWindowId, this);
     }
   }
@@ -84,8 +78,9 @@ class WebSocketWatcher {
     if (this.windowIds.has(innerWindowId)) {
       this.windowIds.delete(innerWindowId);
       if (!webSocketEventService.hasListenerFor(innerWindowId)) {
+        // The listener might have already been cleaned up on `window-destroy`.
         console.warn(
-          "Already stopped listening to websocket events from another toolbox."
+          "Already stopped listening to websocket events for this window."
         );
         return;
       }
