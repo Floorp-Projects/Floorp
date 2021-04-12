@@ -1071,6 +1071,7 @@ class ModalPrompter {
   async openPrompt(args) {
     if (!this.browsingContext) {
       // We don't have a browsing context, fallback to a window prompt.
+      args.modalType = MODAL_TYPE_WINDOW;
       this.openWindowPrompt(null, args);
       return args;
     }
