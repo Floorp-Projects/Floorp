@@ -79,9 +79,6 @@
 --arm-asm-nop-fill=1
 --arm-hwcap=vfp
 
-# aarch64 specific, no-ops on other platforms.
---wasm-force-ion
-
 # Profiling, code coverage, and debugging
 # --dump-bytecode option implies --code-coverage
 --dump-bytecode
