@@ -216,6 +216,11 @@ pub mod desc {
                 kind: VertexAttributeKind::F32,
             },
             VertexAttribute {
+                name: "aScale",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
                 name: "aStartOffset",
                 count: 1,
                 kind: VertexAttributeKind::F32,
