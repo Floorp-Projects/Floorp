@@ -271,95 +271,68 @@ bool ReadableStream::constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
 //
 // Not implemented.
 
-enum class ReadableStreamReaderMode { Byob };
-
 /**
- * https://streams.spec.whatwg.org/#rs-get-reader
- * ReadableStreamReader getReader(optional ReadableStreamGetReaderOptions
- * options = {});
+ * Streams spec, 3.2.5.4. getReader({ mode } = {})
  */
 [[nodiscard]] static bool ReadableStream_getReader(JSContext* cx, unsigned argc,
                                                    JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  // Implicit |this| check.
+  // Implicit in the spec: Argument defaults and destructuring.
+  Rooted<Value> optionsVal(cx, args.get(0));
+  if (optionsVal.isUndefined()) {
+    JSObject* emptyObj = NewBuiltinClassInstance<PlainObject>(cx);
+    if (!emptyObj) {
+      return false;
+    }
+    optionsVal.setObject(*emptyObj);
+  }
+  Rooted<Value> modeVal(cx);
+  if (!GetProperty(cx, optionsVal, cx->names().mode, &modeVal)) {
+    return false;
+  }
+
+  // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
   Rooted<ReadableStream*> unwrappedStream(
       cx, UnwrapAndTypeCheckThis<ReadableStream>(cx, args, "getReader"));
   if (!unwrappedStream) {
     return false;
   }
 
-  // Implicit in the spec: Dictionary destructuring.
-  // https://heycam.github.io/webidl/#es-dictionary
-  // 3.2.17. Dictionary types
-
-  Rooted<Value> optionsVal(cx, args.get(0));
-  // Step 1.
-  if (!optionsVal.isNullOrUndefined() && !optionsVal.isObject()) {
-    ReportValueError(cx, JSMSG_CANT_CONVERT_TO, JSDVG_IGNORE_STACK, optionsVal,
-                     nullptr, "dictionary");
-    return false;
-  }
-
-  Maybe<ReadableStreamReaderMode> mode;
-  // Step 4: ...
-  //
-  // - Optimized for one dictionary member.
-  // - Treat non-object options as non-existing "mode" member.
-  if (optionsVal.isObject()) {
-    Rooted<Value> modeVal(cx);
-    if (!GetProperty(cx, optionsVal, cx->names().mode, &modeVal)) {
-      return false;
-    }
-
-    // Step 4.1.3: If esMemberValue is not undefined, then: ...
-    if (!modeVal.isUndefined()) {
-      // https://heycam.github.io/webidl/#es-enumeration
-      // 3.2.18. Enumeration types
-
-      // Step 1:  Let S be the result of calling ToString(V).
-      Rooted<JSString*> modeStr(cx, ToString<CanGC>(cx, modeVal));
-      if (!modeStr) {
-        return false;
-      }
-
-      // Step 2: If S is not one of E's enumeration values,
-      //         then throw a TypeError.
-      //
-      // Note: We only have one valid value "byob".
-      bool equal;
-      if (!EqualStrings(cx, modeStr, cx->names().byob, &equal)) {
-        return false;
-      }
-      if (!equal) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLESTREAM_INVALID_READER_MODE);
-        return false;
-      }
-
-      mode = Some(ReadableStreamReaderMode::Byob);
-    }
-  }
-
-  // Step 1: If options["mode"] does not exist,
-  //         return ? AcquireReadableStreamDefaultReader(this).
+  // Step 2: If mode is undefined, return
+  //         ? AcquireReadableStreamDefaultReader(this, true).
   Rooted<JSObject*> reader(cx);
-  if (mode.isNothing()) {
+  if (modeVal.isUndefined()) {
     reader = CreateReadableStreamDefaultReader(cx, unwrappedStream,
                                                ForAuthorCodeBool::Yes);
   } else {
-    // Step 2: Assert: options["mode"] is "byob".
-    MOZ_ASSERT(mode.value() == ReadableStreamReaderMode::Byob);
+    // Step 3: Set mode to ? ToString(mode) (implicit).
+    Rooted<JSString*> mode(cx, ToString<CanGC>(cx, modeVal));
+    if (!mode) {
+      return false;
+    }
 
-    // Step 3: Return ? AcquireReadableStreamBYOBReader(this).
+    // Step 5: (If mode is not "byob",) Throw a RangeError exception.
+    bool equal;
+    if (!EqualStrings(cx, mode, cx->names().byob, &equal)) {
+      return false;
+    }
+    if (!equal) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_READABLESTREAM_INVALID_READER_MODE);
+      return false;
+    }
+
+    // Step 4: If mode is "byob",
+    //         return ? AcquireReadableStreamBYOBReader(this, true).
     reader = CreateReadableStreamBYOBReader(cx, unwrappedStream,
                                             ForAuthorCodeBool::Yes);
   }
 
+  // Reordered second part of steps 2 and 4.
   if (!reader) {
     return false;
   }
-
   args.rval().setObject(*reader);
   return true;
 }
