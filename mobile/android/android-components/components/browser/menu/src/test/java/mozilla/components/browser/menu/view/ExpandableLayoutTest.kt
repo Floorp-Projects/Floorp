@@ -49,7 +49,7 @@ class ExpandableLayoutTest {
         }
 
         val result = ExpandableLayout.wrapContentInExpandableView(
-            wrappedView, 42, blankTouchListener
+            wrappedView, 42, 33, blankTouchListener
         )
 
         assertEquals(FrameLayout.LayoutParams.WRAP_CONTENT, result.wrappedView.layoutParams.height)
@@ -64,6 +64,7 @@ class ExpandableLayoutTest {
 
         // Also test the default configuration of a newly built ExpandableLayout.
         assertEquals(42, result.lastVisibleItemIndexWhenCollapsed)
+        assertEquals(33, result.stickyItemIndex)
         assertEquals(ExpandableLayout.NOT_CALCULATED_DEFAULT_HEIGHT, result.collapsedHeight)
         assertEquals(ExpandableLayout.NOT_CALCULATED_DEFAULT_HEIGHT, result.expandedHeight)
         assertEquals(ExpandableLayout.NOT_CALCULATED_DEFAULT_HEIGHT, result.parentHeight)
@@ -145,7 +146,7 @@ class ExpandableLayoutTest {
     fun `GIVEN an expanded menu WHEN onInterceptTouchEvent is called for a touch on the menu THEN super is called`() {
         val blankTouchListener = spy {}
         val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1, blankTouchListener)
+            FrameLayout(testContext), 1, blankTouchListener = blankTouchListener)
         )
         val event: MotionEvent = mock()
         doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
@@ -161,7 +162,7 @@ class ExpandableLayoutTest {
     fun `GIVEN a menu currently expanding WHEN onInterceptTouchEvent is called for a touch on the menu THEN the touch is swallowed`() {
         val blankTouchListener = spy {}
         val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1, blankTouchListener)
+            FrameLayout(testContext), 1, blankTouchListener = blankTouchListener)
         )
         val event: MotionEvent = mock()
         doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
@@ -178,7 +179,7 @@ class ExpandableLayoutTest {
     fun `GIVEN an expanded menu WHEN onInterceptTouchEvent is called for a outside the menu THEN super blankTouchListener is invoked`() {
         val blankTouchListener = spy {}
         val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1, blankTouchListener)
+            FrameLayout(testContext), 1, blankTouchListener = blankTouchListener)
         )
         val event: MotionEvent = mock()
         doReturn(false).`when`(expandableLayout).shouldInterceptTouches()
@@ -236,7 +237,7 @@ class ExpandableLayoutTest {
         var listenerCalled = false
         val listener = spy { listenerCalled = true }
         val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1, listener)
+            FrameLayout(testContext), 1, blankTouchListener = listener)
         )
         doReturn(false).`when`(expandableLayout).isTouchingTheWrappedView(any())
         val actionDown = MotionEvent.obtain(0, 0, ACTION_DOWN, 0f, 0f, 0)
@@ -251,7 +252,7 @@ class ExpandableLayoutTest {
         var listenerCalled = false
         val listener = spy { listenerCalled = true }
         val expandableLayout = spy(ExpandableLayout.wrapContentInExpandableView(
-            FrameLayout(testContext), 1, listener)
+            FrameLayout(testContext), 1, blankTouchListener = listener)
         )
         doReturn(true).`when`(expandableLayout).isTouchingTheWrappedView(any())
         val actionDown = MotionEvent.obtain(0, 0, ACTION_DOWN, 0f, 0f, 0)
@@ -567,7 +568,7 @@ class ExpandableLayoutTest {
     }
 
     @Test
-    fun `GIVEN calculateCollapsedHeight() WHEN called THEN it returns the distance between parent top and half of the SpecialView`() {
+    fun `GIVEN calculateCollapsedHeight() WHEN called without a sticky footer index THEN it returns the distance between parent top and half of the SpecialView`() {
         val viewHeightForEachProperty = 1_000
         val listHeightForEachProperty = 100
         val itemHeightForEachProperty = 10
@@ -591,6 +592,63 @@ class ExpandableLayoutTest {
         expected += itemHeightForEachProperty * 5 // height + marginTop + marginBottom + paddingTop + paddingBottom for the top item shown in entirety
         expected += itemHeightForEachProperty * 2 // marginTop + paddingTop for the special view
         expected += itemHeightForEachProperty / 2 // as per the specs, show only half of the special view
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `GIVEN calculateCollapsedHeight() WHEN called with a sticky footer index THEN it returns the distance between parent top and half of the SpecialView + height of sticky`() {
+        val viewHeightForEachProperty = 1_000
+        val listHeightForEachProperty = 100
+        val itemHeightForEachProperty = 10
+        // Adding Views and creating spies in two stages because otherwise
+        // the addView call for a spy will not get us the expected result.
+        var list = FrameLayout(testContext).apply {
+            addView(spy(View(testContext)).configureWithHeight(itemHeightForEachProperty))
+            addView(spy(View(testContext)).configureWithHeight(itemHeightForEachProperty))
+            addView(spy(View(testContext)).configureWithHeight(itemHeightForEachProperty))
+        }
+        list = spy(list).configureWithHeight(listHeightForEachProperty)
+        var wrappedView = FrameLayout(testContext).apply { addView(list) }
+        wrappedView = spy(wrappedView).configureWithHeight(viewHeightForEachProperty)
+        val expandableLayout = ExpandableLayout.wrapContentInExpandableView(wrappedView, 1, 2) { }
+
+        val result = expandableLayout.calculateCollapsedHeight()
+
+        var expected = 0
+        expected += viewHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
+        expected += listHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
+        expected += itemHeightForEachProperty * 5 // height + marginTop + marginBottom + paddingTop + paddingBottom for the top item shown in entirety
+        expected += itemHeightForEachProperty * 2 // marginTop + paddingTop for the special view
+        expected += itemHeightForEachProperty / 2 // as per the specs, show only half of the special view
+        expected += itemHeightForEachProperty     // height of the sticky item
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `GIVEN calculateCollapsedHeight() WHEN called the same item as limit and sticky THEN it returns the distance between parent top and bottom of sticky`() {
+        val viewHeightForEachProperty = 1_000
+        val listHeightForEachProperty = 100
+        val itemHeightForEachProperty = 10
+        // Adding Views and creating spies in two stages because otherwise
+        // the addView call for a spy will not get us the expected result.
+        var list = FrameLayout(testContext).apply {
+            addView(spy(View(testContext)).configureWithHeight(itemHeightForEachProperty))
+            addView(spy(View(testContext)).configureWithHeight(itemHeightForEachProperty))
+            addView(spy(View(testContext)).configureWithHeight(itemHeightForEachProperty))
+        }
+        list = spy(list).configureWithHeight(listHeightForEachProperty)
+        var wrappedView = FrameLayout(testContext).apply { addView(list) }
+        wrappedView = spy(wrappedView).configureWithHeight(viewHeightForEachProperty)
+        val expandableLayout = ExpandableLayout.wrapContentInExpandableView(wrappedView, 1, 1) { }
+
+        val result = expandableLayout.calculateCollapsedHeight()
+
+        var expected = 0
+        expected += viewHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
+        expected += listHeightForEachProperty * 4 // marginTop + marginBottom + paddingTop + paddingBottom
+        expected += itemHeightForEachProperty * 5 // height + marginTop + marginBottom + paddingTop + paddingBottom for the top item shown in entirety
+        expected += itemHeightForEachProperty * 2 // marginTop + paddingTop for the special view
+        expected += itemHeightForEachProperty     // height of the sticky item
         assertEquals(expected, result)
     }
 }

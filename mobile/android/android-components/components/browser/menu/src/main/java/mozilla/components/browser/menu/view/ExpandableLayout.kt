@@ -20,6 +20,7 @@ import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
 import androidx.core.view.marginTop
 import androidx.core.view.updateLayoutParams
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * ViewGroup intended to wrap another to then allow for the following automatic behavior:
@@ -46,6 +47,12 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
      */
     @VisibleForTesting
     internal var lastVisibleItemIndexWhenCollapsed: Int = Int.MAX_VALUE
+
+    /**
+     * Index of the sticky footer, if such an item is set.
+     */
+    @VisibleForTesting
+    internal var stickyItemIndex: Int = RecyclerView.NO_POSITION
 
     /**
      * Height of wrapped view when collapsed.
@@ -321,19 +328,34 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
         result += listView.paddingTop
         result += listView.paddingBottom
 
-        listView.children.forEachIndexed { index, view ->
-            if (index < lastVisibleItemIndexWhenCollapsed) {
-                result += view.marginTop
-                result += view.marginBottom
-                result += view.paddingTop
-                result += view.paddingBottom
-                result += view.measuredHeight
-            } else if (index == lastVisibleItemIndexWhenCollapsed) {
-                result += view.marginTop
-                result += view.paddingTop
-                result += view.measuredHeight / 2
+        run loop@ {
+            listView.children.forEachIndexed { index, view ->
+                if (index < lastVisibleItemIndexWhenCollapsed) {
+                    result += view.marginTop
+                    result += view.marginBottom
+                    result += view.paddingTop
+                    result += view.paddingBottom
+                    result += view.measuredHeight
+                } else if (index == lastVisibleItemIndexWhenCollapsed) {
+                    result += view.marginTop
+                    result += view.paddingTop
 
-                return@forEachIndexed
+                    // Edgecase: if the same item is the sticky footer and the lastVisibleItemIndexWhenCollapsed
+                    // the menu will be collapsed to this item but shown with full height.
+                    if (index == stickyItemIndex) {
+                        result += view.measuredHeight
+                        return@loop
+                    } else {
+                        result += view.measuredHeight / 2
+                    }
+                } else {
+                    // If there is a sticky item below we need to add it's height as an offset.
+                    // Otherwise the sticky item will cover the the view of lastVisibleItemIndexWhenCollapsed.
+                    if (index <= stickyItemIndex) {
+                        result += listView.getChildAt(stickyItemIndex).measuredHeight
+                    }
+                    return@loop
+                }
             }
         }
 
@@ -362,6 +384,7 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
         internal fun wrapContentInExpandableView(
             contentView: ViewGroup,
             lastVisibleItemIndexWhenCollapsed: Int = Int.MAX_VALUE,
+            stickyFooterItemIndex: Int = RecyclerView.NO_POSITION,
             blankTouchListener: (() -> Unit)? = null
         ): ExpandableLayout {
 
@@ -376,6 +399,7 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
             expandableView.addView(contentView, params)
 
             expandableView.wrappedView = contentView
+            expandableView.stickyItemIndex = stickyFooterItemIndex
             expandableView.blankTouchListener = blankTouchListener
             expandableView.lastVisibleItemIndexWhenCollapsed = lastVisibleItemIndexWhenCollapsed
 
