@@ -1273,7 +1273,7 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
     return false;
   }
 
-  uint64_t nelems = tarr->length().get();
+  uint64_t nelems = tarr->length();
   if (!out.write(nelems)) {
     return false;
   }
@@ -1284,7 +1284,7 @@ bool JSStructuredCloneWriter::writeTypedArray(HandleObject obj) {
     return false;
   }
 
-  uint64_t byteOffset = tarr->byteOffset().get();
+  uint64_t byteOffset = tarr->byteOffset();
   return out.write(byteOffset);
 }
 
@@ -1296,7 +1296,7 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
     return false;
   }
 
-  uint64_t byteLength = view->byteLength().get();
+  uint64_t byteLength = view->byteLength();
   if (!out.write(byteLength)) {
     return false;
   }
@@ -1307,7 +1307,7 @@ bool JSStructuredCloneWriter::writeDataView(HandleObject obj) {
     return false;
   }
 
-  uint64_t byteOffset = view->byteOffset().get();
+  uint64_t byteOffset = view->byteOffset();
   return out.write(byteOffset);
 }
 
@@ -1320,7 +1320,7 @@ bool JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj) {
     return false;
   }
 
-  uint64_t byteLength = buffer->byteLength().get();
+  uint64_t byteLength = buffer->byteLength();
   if (!out.write(byteLength)) {
     return false;
   }
@@ -1364,7 +1364,7 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   // rawbuf - that length can be different, and it can change at any time.
 
   intptr_t p = reinterpret_cast<intptr_t>(rawbuf);
-  uint64_t byteLength = sharedArrayBuffer->byteLength().get();
+  uint64_t byteLength = sharedArrayBuffer->byteLength();
   if (!(out.writePair(SCTAG_SHARED_ARRAY_BUFFER_OBJECT,
                       static_cast<uint32_t>(sizeof(p))) &&
         out.writeBytes(&byteLength, sizeof(byteLength)) &&
@@ -2013,7 +2013,7 @@ bool JSStructuredCloneWriter::transferOwnership() {
           return false;
         }
       } else {
-        size_t nbytes = arrayBuffer->byteLength().get();
+        size_t nbytes = arrayBuffer->byteLength();
 
         using BufferContents = ArrayBufferObject::BufferContents;
 
@@ -2364,21 +2364,20 @@ bool JSStructuredCloneReader::readArrayBuffer(StructuredDataType type,
   }
 
   // The maximum ArrayBuffer size depends on the platform and prefs, and we cast
-  // to BufferSize/size_t below, so we have to check this here.
+  // to size_t below, so we have to check this here.
   if (nbytes > ArrayBufferObject::maxBufferByteLength()) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
     return false;
   }
 
-  JSObject* obj =
-      ArrayBufferObject::createZeroed(context(), BufferSize(nbytes));
+  JSObject* obj = ArrayBufferObject::createZeroed(context(), size_t(nbytes));
   if (!obj) {
     return false;
   }
   vp.setObject(*obj);
   ArrayBufferObject& buffer = obj->as<ArrayBufferObject>();
-  MOZ_ASSERT(buffer.byteLength().get() == nbytes);
+  MOZ_ASSERT(buffer.byteLength() == nbytes);
   return in.readArray(buffer.dataPointer(), nbytes);
 }
 
@@ -2399,7 +2398,7 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
   }
 
   // The maximum ArrayBuffer size depends on the platform and prefs, and we cast
-  // to BufferSize/size_t below, so we have to check this here.
+  // to size_t below, so we have to check this here.
   if (byteLength > ArrayBufferObject::maxBufferByteLength()) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
@@ -2435,8 +2434,8 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
     return false;
   }
 
-  RootedObject obj(context(), SharedArrayBufferObject::New(
-                                  context(), rawbuf, BufferSize(byteLength)));
+  RootedObject obj(context(),
+                   SharedArrayBufferObject::New(context(), rawbuf, byteLength));
   if (!obj) {
     rawbuf->dropReference();
     return false;
@@ -2524,14 +2523,13 @@ bool JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType,
     return false;
   }
 
-  JSObject* obj =
-      ArrayBufferObject::createZeroed(context(), BufferSize(nbytes.value()));
+  JSObject* obj = ArrayBufferObject::createZeroed(context(), nbytes.value());
   if (!obj) {
     return false;
   }
   vp.setObject(*obj);
   ArrayBufferObject& buffer = obj->as<ArrayBufferObject>();
-  MOZ_ASSERT(buffer.byteLength().get() == nbytes);
+  MOZ_ASSERT(buffer.byteLength() == nbytes);
 
   switch (arrayType) {
     case Scalar::Int8:

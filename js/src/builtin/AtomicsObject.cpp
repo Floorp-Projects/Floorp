@@ -116,7 +116,7 @@ static bool ValidateAtomicAccess(JSContext* cx,
   // Step 1 (implicit).
 
   MOZ_ASSERT(!typedArray->hasDetachedBuffer());
-  size_t length = typedArray->length().get();
+  size_t length = typedArray->length();
 
   // Step 2.
   uint64_t accessIndex;
@@ -652,7 +652,7 @@ static bool DoAtomicsWait(JSContext* cx,
       cx, unwrappedTypedArray->bufferShared());
 
   // Step 11.
-  size_t offset = unwrappedTypedArray->byteOffset().get();
+  size_t offset = unwrappedTypedArray->byteOffset();
 
   // Steps 12-13.
   // The computation will not overflow because range checks have been
@@ -821,7 +821,7 @@ static bool atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
       cx, unwrappedTypedArray->bufferShared());
 
   // Step 6.
-  size_t offset = unwrappedTypedArray->byteOffset().get();
+  size_t offset = unwrappedTypedArray->byteOffset();
 
   // Steps 7-9.
   // The computation will not overflow because range checks have been

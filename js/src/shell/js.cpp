@@ -2254,7 +2254,7 @@ static uint8_t* CacheEntry_getBytecode(JSContext* cx, HandleObject cache,
   }
 
   ArrayBufferObject* arrayBuffer = &v.toObject().as<ArrayBufferObject>();
-  *length = arrayBuffer->byteLength().get();
+  *length = arrayBuffer->byteLength();
   return arrayBuffer->dataPointer();
 }
 
@@ -2267,8 +2267,7 @@ static bool CacheEntry_setBytecode(JSContext* cx, HandleObject cache,
 
   BufferContents contents = BufferContents::createMalloced(buffer);
   Rooted<ArrayBufferObject*> arrayBuffer(
-      cx,
-      ArrayBufferObject::createForContents(cx, BufferSize(length), contents));
+      cx, ArrayBufferObject::createForContents(cx, length, contents));
   if (!arrayBuffer) {
     return false;
   }
@@ -7584,7 +7583,7 @@ struct SharedObjectMailbox {
   union Value {
     struct {
       SharedArrayRawBuffer* buffer;
-      BufferSize length;
+      size_t length;
     } sarb;
     JS::WasmModule* module;
     double number;
@@ -7655,7 +7654,7 @@ static bool GetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
         // incremented prior to the SAB creation.
 
         SharedArrayRawBuffer* buf = mbx->val.sarb.buffer;
-        BufferSize length = mbx->val.sarb.length;
+        size_t length = mbx->val.sarb.length;
         if (!buf->addReference()) {
           JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                     JSMSG_SC_SAB_REFCNT_OFLO);
@@ -7892,7 +7891,7 @@ class StreamCacheEntryObject : public NativeObject {
     auto& bytes =
         args.thisv().toObject().as<StreamCacheEntryObject>().cache().bytes();
     RootedArrayBufferObject buffer(
-        cx, ArrayBufferObject::createZeroed(cx, BufferSize(bytes.length())));
+        cx, ArrayBufferObject::createZeroed(cx, bytes.length()));
     if (!buffer) {
       return false;
     }

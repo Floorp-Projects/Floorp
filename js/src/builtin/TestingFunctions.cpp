@@ -5460,7 +5460,7 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   frontend::CompilationStencil stencil(nullptr);
 
   /* Deserialize the stencil from XDR. */
-  JS::TranscodeRange xdrRange(src->dataPointer(), src->byteLength().get());
+  JS::TranscodeRange xdrRange(src->dataPointer(), src->byteLength());
   bool succeeded = false;
   if (!stencil.deserializeStencils(cx, input.get(), xdrRange, &succeeded)) {
     return false;

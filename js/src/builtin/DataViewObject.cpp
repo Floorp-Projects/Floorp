@@ -50,7 +50,7 @@ using mozilla::AssertedCast;
 using mozilla::WrapToSigned;
 
 DataViewObject* DataViewObject::create(
-    JSContext* cx, BufferSize byteOffset, BufferSize byteLength,
+    JSContext* cx, size_t byteOffset, size_t byteLength,
     Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto) {
   if (arrayBuffer->isDetached()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -72,8 +72,8 @@ DataViewObject* DataViewObject::create(
 bool DataViewObject::getAndCheckConstructorArgs(JSContext* cx,
                                                 HandleObject bufobj,
                                                 const CallArgs& args,
-                                                BufferSize* byteOffsetPtr,
-                                                BufferSize* byteLengthPtr) {
+                                                size_t* byteOffsetPtr,
+                                                size_t* byteLengthPtr) {
   // Step 3.
   if (!bufobj->is<ArrayBufferObjectMaybeShared>()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -97,7 +97,7 @@ bool DataViewObject::getAndCheckConstructorArgs(JSContext* cx,
   }
 
   // Step 6.
-  size_t bufferByteLength = buffer->byteLength().get();
+  size_t bufferByteLength = buffer->byteLength();
 
   // Step 7.
   if (offset > bufferByteLength) {
@@ -128,8 +128,8 @@ bool DataViewObject::getAndCheckConstructorArgs(JSContext* cx,
   }
   MOZ_ASSERT(viewByteLength <= ArrayBufferObject::maxBufferByteLength());
 
-  *byteOffsetPtr = BufferSize(offset);
-  *byteLengthPtr = BufferSize(viewByteLength);
+  *byteOffsetPtr = offset;
+  *byteLengthPtr = viewByteLength;
   return true;
 }
 
@@ -139,8 +139,8 @@ bool DataViewObject::constructSameCompartment(JSContext* cx,
   MOZ_ASSERT(args.isConstructing());
   cx->check(bufobj);
 
-  BufferSize byteOffset(0);
-  BufferSize byteLength(0);
+  size_t byteOffset = 0;
+  size_t byteLength = 0;
   if (!getAndCheckConstructorArgs(cx, bufobj, args, &byteOffset, &byteLength)) {
     return false;
   }
@@ -185,8 +185,8 @@ bool DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj,
   }
 
   // NB: This entails the IsArrayBuffer check
-  BufferSize byteOffset(0);
-  BufferSize byteLength(0);
+  size_t byteOffset = 0;
+  size_t byteLength = 0;
   if (!getAndCheckConstructorArgs(cx, unwrapped, args, &byteOffset,
                                   &byteLength)) {
     return false;

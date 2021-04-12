@@ -3201,7 +3201,7 @@ JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
     if (tarray->hasInlineElements()) {
       AllocKind srcKind = GetGCObjectKind(TypedArrayObject::FIXED_DATA_START);
       size_t headerSize = Arena::thingSize(srcKind);
-      srcSize = headerSize + tarray->byteLength().get();
+      srcSize = headerSize + tarray->byteLength();
     }
   }
 

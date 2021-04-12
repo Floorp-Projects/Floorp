@@ -215,7 +215,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
     // Collect any typed array or shared typed array elements from this
     // object.
     if (pobj->is<TypedArrayObject>()) {
-      size_t len = pobj->as<TypedArrayObject>().length().get();
+      size_t len = pobj->as<TypedArrayObject>().length();
 
       // Fail early if the typed array is enormous, because this will be very
       // slow and will likely report OOM. This also means we don't need to
