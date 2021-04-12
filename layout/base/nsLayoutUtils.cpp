@@ -8992,16 +8992,18 @@ nsBlockFrame* nsLayoutUtils::GetFloatContainingBlock(nsIFrame* aFrame) {
 // Element::GetBoundingClientRect().
 /* static */
 CSSRect nsLayoutUtils::GetBoundingContentRect(
-    const nsIContent* aContent, const nsIScrollableFrame* aRootScrollFrame) {
+    const nsIContent* aContent, const nsIScrollableFrame* aRootScrollFrame,
+    Maybe<CSSRect>* aOutNearestScrollClip) {
   if (nsIFrame* frame = aContent->GetPrimaryFrame()) {
-    return GetBoundingFrameRect(frame, aRootScrollFrame);
+    return GetBoundingFrameRect(frame, aRootScrollFrame, aOutNearestScrollClip);
   }
   return CSSRect();
 }
 
 /* static */
 CSSRect nsLayoutUtils::GetBoundingFrameRect(
-    nsIFrame* aFrame, const nsIScrollableFrame* aRootScrollFrame) {
+    nsIFrame* aFrame, const nsIScrollableFrame* aRootScrollFrame,
+    Maybe<CSSRect>* aOutNearestScrollClip) {
   CSSRect result;
   nsIFrame* relativeTo = aRootScrollFrame->GetScrolledFrame();
   result = CSSRect::FromAppUnits(nsLayoutUtils::GetAllInFlowRectsUnion(
@@ -9020,6 +9022,10 @@ CSSRect nsLayoutUtils::GetBoundingFrameRect(
     CSSRect subFrameRect =
         CSSRect::FromAppUnits(nsLayoutUtils::TransformFrameRectToAncestor(
             subFrame, subFrame->GetRectRelativeToSelf(), relativeTo));
+
+    if (aOutNearestScrollClip) {
+      *aOutNearestScrollClip = Some(subFrameRect);
+    }
 
     result = subFrameRect.Intersect(result);
   }
