@@ -17,6 +17,11 @@ import mozilla.components.concept.engine.EngineSessionState
  * used to observe engine events and update the store. It should become obsolete, once the
  * migration to browser state is complete, as the engine will then have direct access to
  * the store.
+ * @property crashed Whether this session has crashed. In conjunction with a `concept-engine`
+ * implementation that uses a multi-process architecture, single sessions can crash without crashing
+ * the whole app. A crashed session may still be operational (since the underlying engine implementation
+ * has recovered its content process), but further action may be needed to restore the last state
+ * before the session has crashed (if desired).
  * @property timestamp Timestamp of when the [EngineSession] was linked.
  */
 data class EngineState(
