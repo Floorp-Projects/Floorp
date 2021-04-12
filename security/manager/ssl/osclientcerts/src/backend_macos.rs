@@ -80,6 +80,10 @@ enum SecStringConstant {
     SecKeyAlgorithmECDSASignatureDigestX962SHA384,
     SecKeyAlgorithmECDSASignatureDigestX962SHA512,
     SecKeyAlgorithmRSASignatureDigestPKCS1v15Raw,
+    SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256,
+    SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA384,
+    SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA512,
+    SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1,
     SecAttrKeyTypeECSECPrimeRandom,
     // These are available in macOS 10.13
     SecKeyAlgorithmRSASignatureDigestPSSSHA1,
@@ -182,6 +186,22 @@ impl SecurityFramework {
                     (
                         b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15Raw\0".as_ref(),
                         SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15Raw,
+                    ),
+                    (
+                        b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256\0".as_ref(),
+                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256,
+                    ),
+                    (
+                        b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA384\0".as_ref(),
+                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA384,
+                    ),
+                    (
+                        b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA512\0".as_ref(),
+                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA512,
+                    ),
+                    (
+                        b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1\0".as_ref(),
+                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1,
                     ),
                     (
                         b"kSecKeyAlgorithmRSASignatureDigestPSSSHA1\0".as_ref(),
@@ -541,25 +561,25 @@ pub enum KeyType {
     RSA,
 }
 
-enum SignParams {
-    EC(CFString),
-    RSA(CFString),
+enum SignParams<'a> {
+    EC(CFString, &'a [u8]),
+    RSA(CFString, &'a [u8]),
 }
 
-impl SignParams {
+impl<'a> SignParams<'a> {
     fn new(
         key_type: KeyType,
-        data_len: usize,
+        data: &'a [u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
-    ) -> Result<SignParams, ()> {
+    ) -> Result<SignParams<'a>, ()> {
         match key_type {
-            KeyType::EC(_) => SignParams::new_ec_params(data_len),
-            KeyType::RSA => SignParams::new_rsa_params(params),
+            KeyType::EC(_) => SignParams::new_ec_params(data),
+            KeyType::RSA => SignParams::new_rsa_params(params, data),
         }
     }
 
-    fn new_ec_params(data_len: usize) -> Result<SignParams, ()> {
-        let algorithm_id = match data_len {
+    fn new_ec_params(data: &'a [u8]) -> Result<SignParams<'a>, ()> {
+        let algorithm_id = match data.len() {
             20 => SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA1,
             32 => SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA256,
             48 => SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA384,
@@ -567,49 +587,77 @@ impl SignParams {
             _ => {
                 error!(
                     "Unexpected digested signature input length for ECDSA: {}",
-                    data_len
+                    data.len()
                 );
                 return Err(());
             }
         };
         let algorithm = SECURITY_FRAMEWORK.get_sec_string_constant(algorithm_id)?;
-        Ok(SignParams::EC(algorithm))
+        Ok(SignParams::EC(algorithm, data))
     }
 
-    fn new_rsa_params(params: &Option<CK_RSA_PKCS_PSS_PARAMS>) -> Result<SignParams, ()> {
-        let pss_params = match params {
-            Some(pss_params) => pss_params,
-            None => {
-                return Ok(SignParams::RSA(
-                    SECURITY_FRAMEWORK.get_sec_string_constant(
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15Raw,
-                    )?,
-                ));
-            }
-        };
-        let algorithm = {
-            let algorithm_id = match pss_params.hashAlg {
-                CKM_SHA_1 => SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA1,
-                CKM_SHA256 => SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA256,
-                CKM_SHA384 => SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA384,
-                CKM_SHA512 => SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA512,
-                _ => {
-                    error!(
-                        "unsupported algorithm to use with RSA-PSS: {}",
-                        unsafe_packed_field_access!(pss_params.hashAlg)
-                    );
-                    return Err(());
-                }
+    fn new_rsa_params(
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+        data: &'a [u8],
+    ) -> Result<SignParams<'a>, ()> {
+        if let Some(pss_params) = params {
+            let algorithm = {
+                let algorithm_id = match pss_params.hashAlg {
+                    CKM_SHA_1 => SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA1,
+                    CKM_SHA256 => SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA256,
+                    CKM_SHA384 => SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA384,
+                    CKM_SHA512 => SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA512,
+                    _ => {
+                        error!(
+                            "unsupported algorithm to use with RSA-PSS: {}",
+                            unsafe_packed_field_access!(pss_params.hashAlg)
+                        );
+                        return Err(());
+                    }
+                };
+                SECURITY_FRAMEWORK.get_sec_string_constant(algorithm_id)?
             };
-            SECURITY_FRAMEWORK.get_sec_string_constant(algorithm_id)?
+            return Ok(SignParams::RSA(algorithm, data));
+        }
+
+        // Handle the case where this is a TLS 1.0 MD5/SHA1 hash.
+        if data.len() == 36 {
+            let algorithm_id = SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15Raw;
+            let algorithm = SECURITY_FRAMEWORK.get_sec_string_constant(algorithm_id)?;
+            return Ok(SignParams::RSA(algorithm, data));
+        }
+        // Otherwise, `data` should be a DigestInfo.
+        let (digest_oid, hash) = read_digest_info(data)?;
+        let algorithm_id = if digest_oid == OID_BYTES_SHA_256 {
+            SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256
+        } else if digest_oid == OID_BYTES_SHA_384 {
+            SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA384
+        } else if digest_oid == OID_BYTES_SHA_512 {
+            SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA512
+        } else if digest_oid == OID_BYTES_SHA_1 {
+            SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1
+        } else {
+            error!("unsupported digest algorithm: {:?}", digest_oid);
+            return Err(());
         };
-        Ok(SignParams::RSA(algorithm))
+
+        Ok(SignParams::RSA(
+            SECURITY_FRAMEWORK.get_sec_string_constant(algorithm_id)?,
+            hash,
+        ))
     }
 
     fn get_algorithm(&self) -> SecKeyAlgorithm {
         match self {
-            SignParams::EC(algorithm) => algorithm.as_concrete_TypeRef(),
-            SignParams::RSA(algorithm) => algorithm.as_concrete_TypeRef(),
+            SignParams::EC(algorithm, _) => algorithm.as_concrete_TypeRef(),
+            SignParams::RSA(algorithm, _) => algorithm.as_concrete_TypeRef(),
+        }
+    }
+
+    fn get_data_to_sign(&self) -> &'a [u8] {
+        match self {
+            SignParams::EC(_, data_to_sign) => data_to_sign,
+            SignParams::RSA(_, data_to_sign) => data_to_sign,
         }
     }
 }
@@ -656,9 +704,9 @@ impl Key {
                     None => return Err(()),
                 };
                 match key_size_in_bits {
-                    256 => ec_params = Some(OID_BYTES_SECP256R1.to_vec()),
-                    384 => ec_params = Some(OID_BYTES_SECP384R1.to_vec()),
-                    521 => ec_params = Some(OID_BYTES_SECP521R1.to_vec()),
+                    256 => ec_params = Some(ENCODED_OID_BYTES_SECP256R1.to_vec()),
+                    384 => ec_params = Some(ENCODED_OID_BYTES_SECP384R1.to_vec()),
+                    521 => ec_params = Some(ENCODED_OID_BYTES_SECP521R1.to_vec()),
                     _ => {
                         error!("unsupported EC key");
                         return Err(());
@@ -796,11 +844,11 @@ impl Key {
                 return Err(());
             }
         };
-        let sign_params = SignParams::new(self.key_type_enum, data.len(), params)?;
+        let sign_params = SignParams::new(self.key_type_enum, data, params)?;
         let signing_algorithm = sign_params.get_algorithm();
-        let data = CFData::from_buffer(data);
+        let data_to_sign = CFData::from_buffer(sign_params.get_data_to_sign());
         let signature =
-            SECURITY_FRAMEWORK.sec_key_create_signature(&key, signing_algorithm, &data)?;
+            SECURITY_FRAMEWORK.sec_key_create_signature(&key, signing_algorithm, &data_to_sign)?;
         let signature_value = match self.key_type_enum {
             KeyType::EC(coordinate_width) => {
                 // We need to convert the DER Ecdsa-Sig-Value to the
