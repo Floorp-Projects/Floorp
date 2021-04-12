@@ -881,16 +881,17 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
 
         // Make the range:
         // Check for word break (if necessary)
-        if (mWordBreaker) {
+        if (mWordBreaker || inWhitespace) {
           int32_t nextfindex = findex + incr;
 
           char16_t nextChar;
           // If still in array boundaries, get nextChar.
           if (mFindBackward ? (nextfindex >= 0) : (nextfindex < fragLen)) {
-            if (t2b)
+            if (t2b) {
               nextChar = DecodeChar(t2b, &nextfindex);
-            else
+            } else {
               nextChar = CHAR_TO_UNICHAR(t1b[nextfindex]);
+            }
           } else {
             // Get next character from the next node.
             nextChar = PeekNextChar(state, !!matchAnchorNode);
@@ -901,8 +902,14 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
           }
 
           // If a word break isn't there when it needs to be, reset search.
-          if (!BreakInBetween(c, nextChar)) {
+          if (mWordBreaker && !BreakInBetween(c, nextChar)) {
             matchAnchorNode = nullptr;
+            continue;
+          }
+
+          if (inWhitespace && IsSpace(nextChar)) {
+            // If the next character is also an space, keep going, this space
+            // will collapse.
             continue;
           }
         }
