@@ -520,8 +520,8 @@ var ProcessHangMonitor = {
 
     let buttons = [
       {
-        label: bundle.getString("processHang.button_stop.label2"),
-        accessKey: bundle.getString("processHang.button_stop.accessKey"),
+        label: bundle.getString("processHang.button_stop2.label"),
+        accessKey: bundle.getString("processHang.button_stop2.accessKey"),
         callback() {
           ProcessHangMonitor.stopIt(win);
         },
