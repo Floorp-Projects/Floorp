@@ -84,20 +84,20 @@ samples=${component//samples-}
 if [[ "${component}" != samples-* ]]
 then
     # Case 1: tests for any component (but NOT samples, NOT real UI tests)
-    APK_APP="./samples/browser/build/outputs/apk/geckoNightly/debug/samples-browser-geckoNightly-debug.apk"
+    APK_APP="./samples/browser/build/outputs/apk/gecko/debug/samples-browser-gecko-debug.apk"
     if [[ "${component}" == *"-"* ]]
     then
       regex='([a-z]*)-(.*)'
       [[ "$component" =~ $regex ]]
       APK_TEST="./components/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/build/outputs/apk/androidTest/debug/${component}-debug-androidTest.apk"
       else
-        APK_TEST="./components/${component}/engine-gecko-nightly/build/outputs/apk/androidTest/debug/browser-engine-gecko-nightly-debug-androidTest.apk"
+        APK_TEST="./components/${component}/engine-gecko/build/outputs/apk/androidTest/debug/browser-engine-gecko-debug-androidTest.apk"
     fi
 elif [[ "${component}" == "samples-browser" ]]
 then
-    # Case 2: tests for browser sample (geckoNightly sample only)
-    APK_APP="./samples/${samples}/build/outputs/apk/geckoNightly/debug/samples-${samples}-geckoNightly-debug.apk"
-    APK_TEST="./samples/${samples}/build/outputs/apk/androidTest/geckoNightly/debug/samples-{$samples}-geckoNightly-debug-androidTest.apk"
+    # Case 2: tests for browser sample (gecko sample only)
+    APK_APP="./samples/${samples}/build/outputs/apk/gecko/debug/samples-${samples}-gecko-debug.apk"
+    APK_TEST="./samples/${samples}/build/outputs/apk/androidTest/gecko/debug/samples-{$samples}-gecko-debug-androidTest.apk"
 else
     # Case 3: tests for non-browser samples (i.e.  samples-glean)
     APK_APP="./samples/${samples}/build/outputs/apk/debug/samples-${samples}-debug.apk"
