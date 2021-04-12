@@ -18,6 +18,13 @@ dictionary OpenPopupOptions {
   Event? triggerEvent = null;
 };
 
+dictionary ActivateMenuItemModifiers {
+  boolean altKey = false;
+  boolean metaKey = false;
+  boolean ctrlKey = false;
+  boolean shiftKey = false;
+};
+
 typedef (DOMString or OpenPopupOptions) StringOrOpenPopupOptions;
 
 [ChromeOnly,
@@ -114,6 +121,21 @@ interface XULPopupElement : XULElement
    * @param cancel if true, then the popup is being cancelled.
    */
   void hidePopup(optional boolean cancel = false);
+
+  /**
+   * Activate the item itemElement. This is the recommended way to "click" a
+   * menuitem in automated tests that involve menus.
+   * Fires the command event for the item and then closes the menu.
+   *
+   * Throws an InvalidStateError if the menu is not currently open, or if the
+   * menuitem is not inside this menu, or if the menuitem is hidden.
+   *
+   * @param itemElement The menuitem to activate.
+   * @param modifierKeys Which modifier keys should be set on the command event.
+   */
+  [Throws]
+  void activateItem(Element itemElement,
+                    optional ActivateMenuItemModifiers modifierKeys = {});
 
   /**
    * Attribute getter and setter for label.
