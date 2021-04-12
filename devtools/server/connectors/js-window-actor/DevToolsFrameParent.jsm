@@ -24,8 +24,6 @@ class DevToolsFrameParent extends JSWindowActorParent {
   constructor() {
     super();
 
-    this._destroyed = false;
-
     // Map of DevToolsServerConnection's used to forward the messages from/to
     // the client. The connections run in the parent process, as this code. We
     // may have more than one when there is more than one client debugging the
@@ -160,6 +158,7 @@ class DevToolsFrameParent extends JSWindowActorParent {
     if (this._connections.has(prefix)) {
       const { connection } = this._connections.get(prefix);
       this._cleanupConnection(connection);
+      this._connections.delete(connection.prefix);
     }
   }
 
@@ -176,18 +175,25 @@ class DevToolsFrameParent extends JSWindowActorParent {
     }
 
     connection.cancelForwarding(forwardingPrefix);
-    this._connections.delete(connection.prefix);
-    if (!this._connections.size) {
-      this._destroy();
-    }
   }
 
-  _destroy() {
-    if (this._destroyed) {
-      return;
-    }
-    this._destroyed = true;
-
+  /**
+   * Destroy everything that we did related to the current WindowGlobal that
+   * this JSWindow Actor represents:
+   *  - close all transports that were used as bridge to communicate with the
+   *    DevToolsFrameChild, running in the content process
+   *  - unregister these transports from DevToolsServer (cancelForwarding)
+   *  - notify the client, via the WatcherActor that all related targets,
+   *    one per client/connection are all destroyed
+   *
+   * Note that with bfcacheInParent, we may reuse a JSWindowActor pair after closing all connections.
+   * This is can happen outside of the destruction of the actor.
+   * We may reuse a DevToolsFrameParent and DevToolsFrameChild pair.
+   * When navigating away, we will destroy them and call this method.
+   * Then when navigating back, we will reuse the same instances.
+   * So that we should be careful to keep the class fully function and only clear all its state.
+   */
+  _closeAllConnections() {
     for (const { actor, connection, watcher } of this._connections.values()) {
       watcher.notifyTargetDestroyed(actor);
 
@@ -201,6 +207,7 @@ class DevToolsFrameParent extends JSWindowActorParent {
 
       this._cleanupConnection(connection);
     }
+    this._connections.clear();
   }
 
   /**
@@ -221,6 +228,12 @@ class DevToolsFrameParent extends JSWindowActorParent {
         return this.connectFromContent(message.data);
       case "DevToolsFrameChild:packet":
         return this.emit("packet-received", message);
+      case "DevToolsFrameChild:destroy":
+        for (const { form, watcherActorID } of message.data.actors) {
+          const watcher = WatcherRegistry.getWatcher(watcherActorID);
+          watcher.notifyTargetDestroyed(form);
+        }
+        return this._closeAllConnections();
       default:
         throw new Error(
           "Unsupported message in DevToolsFrameParent: " + message.name
@@ -229,6 +242,6 @@ class DevToolsFrameParent extends JSWindowActorParent {
   }
 
   didDestroy() {
-    this._destroy();
+    this._closeAllConnections();
   }
 }
