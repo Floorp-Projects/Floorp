@@ -131,16 +131,25 @@
   padding-block: 3px;
 }
 
+@media not (-moz-proton) {
 :root[uidensity=compact] .urlbarView-row {
   padding-block: 2px;
 }
+} /*** END !proton ***/
 
 @media (-moz-proton) {
+.urlbarView-row {
+  padding-block: 2px;
+}
+
 :root:not([uidensity=compact]) .urlbarView-row:not([type=tip], [type=dynamic]) {
   min-height: 32px;
-  padding-block: 4px;
 }
 } /*** END proton ***/
+
+:root[uidensity=touch] .urlbarView-row:not([type=tip], [type=dynamic]) {
+  padding-block: 11px;
+}
 
 .urlbarView-row-inner {
   display: flex;
@@ -159,9 +168,6 @@
 }
 } /*** END proton ***/
 
-:root[uidensity=touch] .urlbarView-row:not([type=tip], [type=dynamic]) {
-  padding-block: 11px;
-}
 
 .urlbarView-row[type=tip] {
   padding-block-start: 18px;
@@ -697,8 +703,12 @@
 
 @media (-moz-proton) {
 #urlbar .search-one-offs:not([hidden]) {
-  padding-block: 10px;
+  padding-block: 6px;
   border-top-color: var(--urlbar-separator-color);
+}
+
+:root[uidensity=touch] #urlbar .search-one-offs:not([hidden]) {
+  padding-block: 11px;
 }
 } /*** END proton ***/
 
