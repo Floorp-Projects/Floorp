@@ -35,6 +35,7 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.FeatureFlags.tabsTrayRewrite
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -216,7 +217,7 @@ open class DefaultToolbarMenu(
             !context.settings().installPwaOpened
         }
     ) {
-        onItemTapped.invoke(ToolbarMenu.Item.InstallToHomeScreen)
+        onItemTapped.invoke(ToolbarMenu.Item.InstallPwaToHomeScreen)
     }
 
     private val oldCoreMenuItems by lazy {
@@ -417,13 +418,26 @@ open class DefaultToolbarMenu(
         context.getString(R.string.sync_menu_sign_in)
     }
 
-    val syncedTabs = BrowserMenuImageText(
-        syncItemTitle,
-        R.drawable.ic_synced_tabs,
-        primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
-    }
+    val syncTabsOrSignInItem =
+        if (tabsTrayRewrite) {
+            // If synced tabs are being shown in tabs tray, show sync sign in here.
+            BrowserMenuImageText(
+                syncItemTitle,
+                R.drawable.ic_synced_tabs,
+                primaryTextColor()
+            ) {
+                onItemTapped.invoke(ToolbarMenu.Item.SyncAccount)
+            }
+        } else {
+            // If synced tabs are not shown in tabs tray, they should be shown here.
+            BrowserMenuImageText(
+                context.getString(R.string.synced_tabs),
+                R.drawable.ic_synced_tabs,
+                primaryTextColor()
+            ) {
+                onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
+            }
+        }
 
     val findInPageItem = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_find_in_page),
@@ -548,7 +562,7 @@ open class DefaultToolbarMenu(
                 historyItem,
                 downloadsItem,
                 extensionsItem,
-                syncedTabs,
+                syncTabsOrSignInItem,
                 BrowserMenuDivider(),
                 findInPageItem,
                 desktopSiteItem,

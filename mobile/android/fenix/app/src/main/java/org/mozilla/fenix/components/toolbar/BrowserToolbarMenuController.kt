@@ -92,7 +92,7 @@ class DefaultBrowserToolbarMenuController(
         Do exhaustive when (item) {
             // TODO: These can be removed for https://github.com/mozilla-mobile/fenix/issues/17870
             // todo === Start ===
-            is ToolbarMenu.Item.InstallToHomeScreen -> {
+            is ToolbarMenu.Item.InstallPwaToHomeScreen -> {
                 settings.installPwaOpened = true
                 MainScope().launch {
                     with(activity.components.useCases.webAppUseCases) {
@@ -219,6 +219,12 @@ class DefaultBrowserToolbarMenuController(
                 navController.nav(R.id.browserFragment, directions)
             }
             is ToolbarMenu.Item.SyncedTabs -> browserAnimator.captureEngineViewAndDrawStatically {
+                navController.nav(
+                    R.id.browserFragment,
+                    BrowserFragmentDirections.actionBrowserFragmentToSyncedTabsFragment()
+                )
+            }
+            is ToolbarMenu.Item.SyncAccount -> browserAnimator.captureEngineViewAndDrawStatically {
                 navController.nav(
                     R.id.browserFragment,
                     BrowserFragmentDirections.actionBrowserFragmentToSyncedTabsFragment()
@@ -359,15 +365,12 @@ class DefaultBrowserToolbarMenuController(
     @Suppress("ComplexMethod")
     private fun trackToolbarItemInteraction(item: ToolbarMenu.Item) {
         val eventItem = when (item) {
-            // TODO: These can be removed for https://github.com/mozilla-mobile/fenix/issues/17870
-            // todo === Start ===
             is ToolbarMenu.Item.OpenInFenix -> Event.BrowserMenuItemTapped.Item.OPEN_IN_FENIX
-            is ToolbarMenu.Item.InstallToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
+            is ToolbarMenu.Item.InstallPwaToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
             is ToolbarMenu.Item.Quit -> Event.BrowserMenuItemTapped.Item.QUIT
+            is ToolbarMenu.Item.OpenInApp -> Event.BrowserMenuItemTapped.Item.OPEN_IN_APP
             is ToolbarMenu.Item.CustomizeReaderView ->
                 Event.BrowserMenuItemTapped.Item.READER_MODE_APPEARANCE
-            is ToolbarMenu.Item.OpenInApp -> Event.BrowserMenuItemTapped.Item.OPEN_IN_APP
-            // todo === End ===
             is ToolbarMenu.Item.Back -> Event.BrowserMenuItemTapped.Item.BACK
             is ToolbarMenu.Item.Forward -> Event.BrowserMenuItemTapped.Item.FORWARD
             is ToolbarMenu.Item.Reload -> Event.BrowserMenuItemTapped.Item.RELOAD
@@ -385,6 +388,7 @@ class DefaultBrowserToolbarMenuController(
             is ToolbarMenu.Item.AddToTopSites -> Event.BrowserMenuItemTapped.Item.ADD_TO_TOP_SITES
             is ToolbarMenu.Item.AddToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
             is ToolbarMenu.Item.SyncedTabs -> Event.BrowserMenuItemTapped.Item.SYNC_TABS
+            is ToolbarMenu.Item.SyncAccount -> Event.BrowserMenuItemTapped.Item.SYNC_ACCOUNT
             is ToolbarMenu.Item.Bookmark -> Event.BrowserMenuItemTapped.Item.BOOKMARK
             is ToolbarMenu.Item.AddonsManager -> Event.BrowserMenuItemTapped.Item.ADDONS_MANAGER
             is ToolbarMenu.Item.Bookmarks -> Event.BrowserMenuItemTapped.Item.BOOKMARKS
