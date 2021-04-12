@@ -54,6 +54,7 @@
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/SystemPrincipal.h"
+#include "mozilla/TaskController.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
@@ -1147,7 +1148,32 @@ CycleCollectedJSRuntime* XPCJSContext::CreateRuntime(JSContext* aCx) {
   return new XPCJSRuntime(aCx);
 }
 
+class HelperThreadTaskHandler : public Task {
+ public:
+  bool Run() override {
+    mOffThreadTask->runTask();
+    mOffThreadTask.reset();
+    return true;
+  }
+  explicit HelperThreadTaskHandler(js::UniquePtr<RunnableTask> task)
+      // TODO: priority should be updated in Bug 1703185.
+      : Task(false, EventQueuePriority::Normal),
+        mOffThreadTask(std::move(task)) {}
+
+ private:
+  ~HelperThreadTaskHandler() = default;
+  js::UniquePtr<RunnableTask> mOffThreadTask;
+};
+
+bool DispatchOffThreadTask(js::UniquePtr<RunnableTask> task) {
+  TaskController::Get()->AddTask(
+      MakeAndAddRef<HelperThreadTaskHandler>(std::move(task)));
+  return true;
+}
+
 nsresult XPCJSContext::Initialize() {
+  SetHelperThreadTaskCallback(&DispatchOffThreadTask);
+
   nsresult rv =
       CycleCollectedJSContext::Initialize(nullptr, JS::DefaultHeapMaxBytes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
