@@ -23,6 +23,9 @@ class PrivateBrowserTabViewHolder(
     interactor,
     currentTabIndex
 ) {
+    override val emptyStringText: String
+        get() = itemView.resources.getString(R.string.no_private_tabs_description)
+
     companion object {
         const val LAYOUT_ID = R.layout.private_browser_tray_list
     }

@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.mozilla.fenix.tabstray.browser.NormalBrowserTrayList
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/tray_list_item"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"/>
+    android:layout_height="match_parent">
+
+    <org.mozilla.fenix.tabstray.browser.NormalBrowserTrayList
+        android:id="@+id/tray_list_item"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tab_tray_empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:gravity="center_horizontal"
+        android:paddingTop="80dp"
+        android:text="@string/no_open_tabs_description"
+        android:textColor="?secondaryText"
+        android:textSize="16sp"
+        android:visibility="visible" />
+</FrameLayout>
