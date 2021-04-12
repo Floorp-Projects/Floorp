@@ -131,11 +131,15 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
         // should be drawn in.
         let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
 
+        let mut stretch_size: LayoutSize = item.stretch_size.into();
+        stretch_size.width = stretch_size.width.min(common.prim_rect.size.width);
+        stretch_size.height = stretch_size.height.min(common.prim_rect.size.height);
+
         // Avoid rendering enormous gradients. Radial gradients are mostly made of soft transitions,
         // so it is unlikely that rendering at a higher resolution that 1024 would produce noticeable
         // differences, especially with 8 bits per channel.
         const MAX_SIZE: f32 = 1024.0;
-        let mut task_size = DeviceSize::new(item.stretch_size.w, item.stretch_size.h);
+        let mut task_size: DeviceSize = stretch_size.cast_unit();
         let mut center = DevicePoint::new(item.center.x, item.center.y);
         let mut params = item.params;
         if task_size.width > MAX_SIZE {
@@ -158,7 +162,7 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
             center,
             extend_mode: item.extend_mode,
             params,
-            stretch_size: item.stretch_size.into(),
+            stretch_size,
             task_size: task_size.to_i32(),
             tile_spacing: item.tile_spacing.into(),
             brush_segments,

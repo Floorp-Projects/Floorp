@@ -128,12 +128,16 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
         // should be drawn in.
         let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
 
+        let mut stretch_size: LayoutSize = item.stretch_size.into();
+        stretch_size.width = stretch_size.width.min(common.prim_rect.size.width);
+        stretch_size.height = stretch_size.height.min(common.prim_rect.size.height);
+
         ConicGradientTemplate {
             common,
             center: DevicePoint::new(item.center.x, item.center.y),
             extend_mode: item.extend_mode,
             params: item.params,
-            stretch_size: item.stretch_size.into(),
+            stretch_size,
             tile_spacing: item.tile_spacing.into(),
             brush_segments,
             stops_opacity,
