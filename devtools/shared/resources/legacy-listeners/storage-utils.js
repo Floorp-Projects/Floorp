@@ -27,7 +27,7 @@ function getFilteredStorageEvents(updates, storageType) {
 // listeners
 function makeStorageLegacyListener(storageKey, storageType) {
   return async function({
-    targetList,
+    targetCommand,
     targetType,
     targetFront,
     onAvailable,

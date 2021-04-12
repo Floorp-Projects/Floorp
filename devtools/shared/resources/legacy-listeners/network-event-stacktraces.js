@@ -8,7 +8,7 @@ const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
 
-module.exports = async function({ targetList, targetFront, onAvailable }) {
+module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   function onNetworkEventStackTrace(packet) {
     const actor = packet.eventActor;
     onAvailable([

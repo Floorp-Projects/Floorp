@@ -843,7 +843,7 @@ class ResourceWatcher {
 
     try {
       await LegacyListeners[resourceType]({
-        targetList: this.targetList,
+        targetCommand: this.targetList,
         targetFront,
         onAvailable,
         onDestroyed,

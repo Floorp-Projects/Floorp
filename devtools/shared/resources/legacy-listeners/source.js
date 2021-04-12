@@ -25,11 +25,11 @@ const {
  * - isBlackBoxed {Boolean}: Specifying whether the source actor's 'black-boxed' flag is set.
  * - extensionName {null|String}: If the source comes from an add-on, the add-on name.
  */
-module.exports = async function({ targetList, targetFront, onAvailable }) {
-  const isBrowserToolbox = targetList.targetFront.isParentProcess;
+module.exports = async function({ targetCommand, targetFront, onAvailable }) {
+  const isBrowserToolbox = targetCommand.targetFront.isParentProcess;
   const isNonTopLevelFrameTarget =
     !targetFront.isTopLevel &&
-    targetFront.targetType === targetList.TYPES.FRAME;
+    targetFront.targetType === targetCommand.TYPES.FRAME;
 
   if (isBrowserToolbox && isNonTopLevelFrameTarget) {
     // In the BrowserToolbox, non-top-level frame targets are already
