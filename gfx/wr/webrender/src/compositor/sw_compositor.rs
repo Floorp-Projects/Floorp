@@ -21,7 +21,6 @@ pub struct SwTile {
     y: i32,
     fbo_id: u32,
     color_id: u32,
-    dirty_rect: DeviceIntRect,
     valid_rect: DeviceIntRect,
     /// Composition of tiles must be ordered such that any tiles that may overlap
     /// an invalidated tile in an earlier surface only get drawn after that tile
@@ -43,7 +42,6 @@ impl SwTile {
             y,
             fbo_id: 0,
             color_id: 0,
-            dirty_rect: DeviceIntRect::zero(),
             valid_rect: DeviceIntRect::zero(),
             overlaps: Cell::new(0),
             invalid: Cell::new(false),
@@ -1245,7 +1243,6 @@ impl Compositor for SwCompositor {
 
         if let Some(surface) = self.surfaces.get_mut(&id.surface_id) {
             if let Some(tile) = surface.tiles.iter_mut().find(|t| t.x == id.x && t.y == id.y) {
-                tile.dirty_rect = dirty_rect;
                 assert_eq!(tile.valid_rect, valid_rect);
                 if valid_rect.is_empty() {
                     return surface_info;
