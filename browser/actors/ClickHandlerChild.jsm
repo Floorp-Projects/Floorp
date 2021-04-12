@@ -110,26 +110,6 @@ class ClickHandlerChild extends JSWindowActorChild {
         json.title = node.getAttribute("title");
       }
 
-      // Check if the link needs to be opened with mixed content allowed.
-      // Only when the owner doc has |mixedContentChannel| and the same origin
-      // should we allow mixed content.
-      json.allowMixedContent = false;
-      let docshell = ownerDoc.defaultView.docShell;
-      if (this.docShell.mixedContentChannel) {
-        const sm = Services.scriptSecurityManager;
-        try {
-          let targetURI = Services.io.newURI(href);
-          let isPrivateWin =
-            ownerDoc.nodePrincipal.originAttributes.privateBrowsingId > 0;
-          sm.checkSameOriginURI(
-            docshell.mixedContentChannel.URI,
-            targetURI,
-            false,
-            isPrivateWin
-          );
-          json.allowMixedContent = true;
-        } catch (e) {}
-      }
       json.originPrincipal = ownerDoc.nodePrincipal;
       json.originStoragePrincipal = ownerDoc.effectiveStoragePrincipal;
       json.triggeringPrincipal = ownerDoc.nodePrincipal;

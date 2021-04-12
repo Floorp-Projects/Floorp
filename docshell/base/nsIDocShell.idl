@@ -617,25 +617,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   readonly attribute bool asyncPanZoomEnabled;
 
   /**
-   * This member variable determines whether a document has Mixed Active Content that
-   * was initially blocked from loading, but the user has choosen to override the
-   * block and allow the content to load. mMixedContentChannel is set to the document's
-   * channel when the user allows mixed content. The nsMixedContentBlocker content policy
-   * checks if the document's root channel matches the mMixedContentChannel.  If it matches,
-   * then Mixed Content is loaded.  If it does match, mixed content is blocked.
-   *
-   * A match implies that there is definitely mixed active content on a page that was
-   * initially blocked by nsMixedContentBlocker and then allowed and loaded by the user.
-   * A miss imples that IF there is mixed active content on the page AND it was
-   * blocked by nsMixedContentBlocker.cpp, the user has not choosen to override
-   * the block. Note that if the about:config setting
-   * security.mixed_content.block_active_content is set to false, this boolean
-   * will be false, mMixedContentChannel will remain null since blocking active content has
-   * been disabled and hence mMixedContentChannel will never be set.
-   */
-  attribute nsIChannel mixedContentChannel;
-
-  /**
    * Are plugins allowed in the current document loaded in this docshell ?
    * (if there is one). This depends on whether plugins are allowed by this
    * docshell itself or if the document is sandboxed and hence plugins should

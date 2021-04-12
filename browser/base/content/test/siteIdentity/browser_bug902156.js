@@ -91,6 +91,7 @@ add_task(async function test1() {
         "OK: Executed mixed script in Test 1"
       );
     });
+    gIdentityHandler.enableMixedContentProtection();
   });
 });
 
@@ -154,6 +155,7 @@ add_task(async function test2() {
         "OK: Executed mixed script in Test 2"
       );
     });
+    gIdentityHandler.enableMixedContentProtection();
   });
 });
 

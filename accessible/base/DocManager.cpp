@@ -283,8 +283,7 @@ DocManager::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
   docShell->GetLoadType(&loadType);
   if (loadType == LOAD_RELOAD_NORMAL || loadType == LOAD_RELOAD_BYPASS_CACHE ||
       loadType == LOAD_RELOAD_BYPASS_PROXY ||
-      loadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE ||
-      loadType == LOAD_RELOAD_ALLOW_MIXED_CONTENT) {
+      loadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE) {
     isReloading = true;
   }
 

@@ -545,9 +545,6 @@ class ContextMenuChild extends JSWindowActorChild {
       doc.defaultView
     ).getFieldContext(aEvent.composedTarget);
 
-    // The same-origin check will be done in nsContextMenu.openLinkInTab.
-    let parentAllowsMixedContent = !!this.docShell.mixedContentChannel;
-
     let disableSetDesktopBackground = null;
 
     // Media related cache info parent needs for saving
@@ -659,7 +656,6 @@ class ContextMenuChild extends JSWindowActorChild {
       frameID,
       frameBrowsingContextID,
       disableSetDesktopBackground,
-      parentAllowsMixedContent,
     };
 
     if (context.inFrame && !context.inSrcdocFrame) {

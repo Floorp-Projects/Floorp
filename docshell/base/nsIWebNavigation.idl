@@ -180,12 +180,6 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_FROM_EXTERNAL   = 0x1000;
 
   /**
-    This flag is set when a user explicitly disables the Mixed Content
-    Blocker, and allows Mixed Content to load on an https page.
-  */
-  const unsigned long LOAD_FLAGS_ALLOW_MIXED_CONTENT = 0x2000;
-
-  /**
    * This flag specifies that this is the first load in this object.
    * Set with care, since setting incorrectly can cause us to assume that
    * nothing was actually loaded in this object if the load ends up being

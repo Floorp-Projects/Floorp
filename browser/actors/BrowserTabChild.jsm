@@ -94,10 +94,6 @@ class BrowserTabChild extends JSWindowActorChild {
         } catch (e) {}
         break;
 
-      case "MixedContent:ReenableProtection":
-        docShell.mixedContentChannel = null;
-        break;
-
       case "UpdateCharacterSet":
         docShell.charset = message.data.value;
         docShell.gatherCharsetMenuTelemetry();

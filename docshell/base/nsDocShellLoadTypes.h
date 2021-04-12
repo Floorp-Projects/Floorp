@@ -55,20 +55,12 @@ enum LoadType : uint32_t {
       MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL,
                      nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE |
                          nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
-  LOAD_NORMAL_ALLOW_MIXED_CONTENT =
-      MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL,
-                     nsIWebNavigation::LOAD_FLAGS_ALLOW_MIXED_CONTENT |
-                         nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE),
   LOAD_RELOAD_NORMAL = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD,
                                       nsIWebNavigation::LOAD_FLAGS_NONE),
   LOAD_RELOAD_BYPASS_CACHE = MAKE_LOAD_TYPE(
       nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE),
   LOAD_RELOAD_BYPASS_PROXY = MAKE_LOAD_TYPE(
       nsIDocShell::LOAD_CMD_RELOAD, nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY),
-  LOAD_RELOAD_ALLOW_MIXED_CONTENT =
-      MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD,
-                     nsIWebNavigation::LOAD_FLAGS_ALLOW_MIXED_CONTENT |
-                         nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE),
   LOAD_RELOAD_BYPASS_PROXY_AND_CACHE =
       MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD,
                      nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE |
@@ -124,7 +116,6 @@ static inline bool IsForceReloadType(uint32_t aLoadType) {
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
       return true;
   }
   return false;
@@ -137,13 +128,11 @@ static inline bool IsValidLoadType(uint32_t aLoadType) {
     case LOAD_NORMAL_BYPASS_CACHE:
     case LOAD_NORMAL_BYPASS_PROXY:
     case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
-    case LOAD_NORMAL_ALLOW_MIXED_CONTENT:
     case LOAD_HISTORY:
     case LOAD_RELOAD_NORMAL:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
     case LOAD_LINK:
     case LOAD_REFRESH:
     case LOAD_REFRESH_REPLACE:
@@ -161,7 +150,7 @@ static inline bool IsValidLoadType(uint32_t aLoadType) {
   return false;
 }
 
-static inline nsDOMNavigationTiming::Type ConvertLoadTypeToNavigationType(
+inline nsDOMNavigationTiming::Type ConvertLoadTypeToNavigationType(
     uint32_t aLoadType) {
   // Not initialized, assume it's normal load.
   if (aLoadType == 0) {
@@ -175,7 +164,6 @@ static inline nsDOMNavigationTiming::Type ConvertLoadTypeToNavigationType(
     case LOAD_NORMAL_BYPASS_PROXY:
     case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
     case LOAD_NORMAL_REPLACE:
-    case LOAD_NORMAL_ALLOW_MIXED_CONTENT:
     case LOAD_LINK:
     case LOAD_STOP_CONTENT:
     // FIXME: It isn't clear that LOAD_REFRESH_REPLACE should have a different
@@ -196,7 +184,6 @@ static inline nsDOMNavigationTiming::Type ConvertLoadTypeToNavigationType(
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
       result = nsDOMNavigationTiming::TYPE_RELOAD;
       break;
     case LOAD_STOP_CONTENT_AND_REPLACE:

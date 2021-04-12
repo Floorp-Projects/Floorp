@@ -340,16 +340,7 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(uri);
   loadState->SetReferrerInfo(aLoadURIOptions.mReferrerInfo);
 
-  /*
-   * If the user "Disables Protection on This Page", we have to make sure to
-   * remember the users decision when opening links in child tabs [Bug 906190]
-   */
-  if (loadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_MIXED_CONTENT) {
-    loadState->SetLoadType(
-        MAKE_LOAD_TYPE(LOAD_NORMAL_ALLOW_MIXED_CONTENT, loadFlags));
-  } else {
-    loadState->SetLoadType(MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags));
-  }
+  loadState->SetLoadType(MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags));
 
   loadState->SetLoadFlags(extraFlags);
   loadState->SetFirstParty(true);
@@ -895,11 +886,9 @@ nsLoadFlags nsDocShellLoadState::CalculateChannelLoadFlags(
     case LOAD_NORMAL_BYPASS_CACHE:
     case LOAD_NORMAL_BYPASS_PROXY:
     case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
-    case LOAD_NORMAL_ALLOW_MIXED_CONTENT:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
     case LOAD_REPLACE_BYPASS_CACHE:
       loadFlags |=
           nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::LOAD_FRESH_CONNECTION;
