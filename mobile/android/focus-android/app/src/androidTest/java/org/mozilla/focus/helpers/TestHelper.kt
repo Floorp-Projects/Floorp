@@ -11,7 +11,11 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.KeyEvent
 import androidx.test.espresso.Espresso
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.web.sugar.Web
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -22,6 +26,7 @@ import okhttp3.mockwebserver.MockResponse
 import okio.Buffer
 import okio.Okio
 import org.hamcrest.Matchers
+import org.hamcrest.Matchers.allOf
 import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
@@ -65,6 +70,17 @@ object TestHelper {
         )
         snackbarText.waitForExists(waitingTime)
         assertTrue(snackbarText.text.contains(text))
+    }
+
+    fun clickSnackBarActionButton(action: String) {
+        val snackbarActionButton =
+            onView(
+                allOf(
+                    withId(R.id.snackbar_action),
+                    withText(action)
+                )
+            )
+        snackbarActionButton.perform(click())
     }
 
     fun isPackageInstalled(packageName: String): Boolean {

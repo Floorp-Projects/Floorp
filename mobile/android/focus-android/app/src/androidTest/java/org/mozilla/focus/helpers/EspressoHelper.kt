@@ -11,7 +11,6 @@ import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.matcher.ViewMatchers
-import okhttp3.mockwebserver.MockWebServer
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
@@ -55,11 +54,6 @@ object EspressoHelper {
         )
             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
             .check(ViewAssertions.matches(ViewMatchers.withText(titleResource)))
-    }
-
-    @JvmStatic
-    fun navigateToMockWebServer(webServer: MockWebServer, path: String?) {
-        navigateToWebsite(webServer.url(path).toString())
     }
 
     @JvmStatic

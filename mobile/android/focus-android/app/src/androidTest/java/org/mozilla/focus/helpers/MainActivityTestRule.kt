@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.helpers
 
+import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.annotation.CallSuper
 import androidx.preference.PreferenceManager
 import androidx.test.espresso.intent.rule.IntentsTestRule
@@ -26,11 +27,13 @@ open class MainActivityFirstrunTestRule(
     launchActivity: Boolean = true,
     private val showFirstRun: Boolean
 ) : ActivityTestRule<MainActivity>(MainActivity::class.java, launchActivity) {
+    private val longTapUserPreference = getLongPressTimeout()
 
     @CallSuper
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
         updateFirstRun(showFirstRun)
+        setLongTapTimeout(3000)
     }
 
     override fun afterActivityFinished() {
@@ -47,17 +50,20 @@ open class MainActivityFirstrunTestRule(
         }
 
         closeNotificationShade()
+        setLongTapTimeout(longTapUserPreference)
     }
 }
 
 // Test rule that allows usage of Espresso Intents
 open class MainActivityIntentsTestRule(launchActivity: Boolean = true, private val showFirstRun: Boolean) :
     IntentsTestRule<MainActivity>(MainActivity::class.java, launchActivity) {
+    private val longTapUserPreference = getLongPressTimeout()
 
     @CallSuper
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
         updateFirstRun(showFirstRun)
+        setLongTapTimeout(3000)
     }
 
     override fun afterActivityFinished() {
@@ -74,6 +80,7 @@ open class MainActivityIntentsTestRule(launchActivity: Boolean = true, private v
         }
 
         closeNotificationShade()
+        setLongTapTimeout(longTapUserPreference)
     }
 }
 
@@ -118,4 +125,10 @@ private fun hideFirstRun(appStore: AppStore) {
         AppAction.FinishFirstRun(tabId = null)
     )
     runBlocking { job.join() }
+}
+
+// changing the device preference for Touch and Hold delay, to avoid long-clicks instead of a single-click
+private fun setLongTapTimeout(delay: Int) {
+    val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    mDevice.executeShellCommand("settings put secure long_press_timeout $delay")
 }
