@@ -614,7 +614,9 @@ open class DefaultToolbarMenu(
         val browsers = BrowsersCache.all(context)
 
         return experiments.withExperiment(Experiments.DEFAULT_BROWSER) { experimentBranch ->
-            if (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_TOOLBAR_MENU && !browsers.isDefaultBrowser) {
+            if (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_TOOLBAR_MENU &&
+                !browsers.isFirefoxDefaultBrowser
+            ) {
                 return@withExperiment BrowserMenuImageText(
                     label = context.getString(R.string.preferences_set_as_default_browser),
                     imageResource = R.mipmap.ic_launcher
