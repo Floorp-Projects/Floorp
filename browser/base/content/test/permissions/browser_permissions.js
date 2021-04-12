@@ -71,7 +71,7 @@ add_task(async function testMainViewVisible() {
       ".permission-popup-permission-label"
     );
     is(labels.length, 1, "One permission visible in main view");
-    is(labels[0].textContent, labelText, "Correct value");
+    is(labels[0].innerHTML, labelText, "Correct value");
 
     let img = permissionsList.querySelector(
       "image.permission-popup-permission-icon"
@@ -418,7 +418,7 @@ add_task(async function testPolicyPermission() {
       ".permission-popup-permission-label"
     );
     is(labels.length, 1, "One permission visible in main view");
-    is(labels[0].textContent, labelText, "Correct name label value");
+    is(labels[0].innerHTML, labelText, "Correct name label value");
 
     labelText = SitePermissions.getCurrentStateLabel(
       SitePermissions.ALLOW,
@@ -427,7 +427,7 @@ add_task(async function testPolicyPermission() {
     labels = permissionsList.querySelectorAll(
       ".permission-popup-permission-state-label"
     );
-    is(labels[0].textContent, labelText, "Correct state label value");
+    is(labels[0].innerHTML, labelText, "Correct state label value");
 
     // Check if the menulist and the remove button are hidden.
     // The menulist is specific to the "popup" permission.
