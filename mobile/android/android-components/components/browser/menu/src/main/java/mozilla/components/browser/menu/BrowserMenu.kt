@@ -24,6 +24,8 @@ import mozilla.components.browser.menu.BrowserMenu.Orientation.DOWN
 import mozilla.components.browser.menu.BrowserMenu.Orientation.UP
 import mozilla.components.browser.menu.view.DynamicWidthRecyclerView
 import mozilla.components.browser.menu.view.ExpandableLayout
+import mozilla.components.browser.menu.view.StickyItemPlacement
+import mozilla.components.browser.menu.view.StickyItemsLinearLayoutManager
 import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.support.ktx.android.view.isRTL
 import mozilla.components.support.ktx.android.view.onNextGlobalLayout
@@ -41,6 +43,7 @@ open class BrowserMenu internal constructor(
     internal var isShown = false
     @VisibleForTesting
     internal lateinit var menuPositioningData: MenuPositioningData
+    internal var backgroundColor: Int = Color.RED
 
     /**
      * @param anchor the view on which to pin the popup window.
@@ -62,15 +65,16 @@ open class BrowserMenu internal constructor(
         adapter.menu = this
 
         menuList = view.findViewById<DynamicWidthRecyclerView>(R.id.mozac_browser_menu_recyclerView).apply {
-            layoutManager = LinearLayoutManager(anchor.context, RecyclerView.VERTICAL, false)
+            layoutManager = StickyItemsLinearLayoutManager.get<BrowserMenuAdapter>(
+                anchor.context, StickyItemPlacement.BOTTOM, false
+            )
+
             adapter = this@BrowserMenu.adapter
             minWidth = style?.minWidth ?: resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_width_min)
             maxWidth = style?.maxWidth ?: resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_width_max)
         }
 
-        view.findViewById<CardView>(R.id.mozac_browser_menu_menuView).apply {
-            style?.backgroundColor?.let { setCardBackgroundColor(it) }
-        }
+        setColors(view, style)
 
         menuList?.accessibilityDelegate = object : View.AccessibilityDelegate() {
             override fun onInitializeAccessibilityNodeInfo(
@@ -120,34 +124,35 @@ open class BrowserMenu internal constructor(
         view: ViewGroup,
         endOfMenuAlwaysVisible: Boolean
     ): ViewGroup {
+        // If the menu is placed at the bottom it should start as collapsed.
         if (menuPositioningData.inferredMenuPlacement is BrowserMenuPlacement.AnchoredToBottom.Dropdown ||
             menuPositioningData.inferredMenuPlacement is BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring) {
 
             val collapsingMenuIndexLimit = adapter.visibleItems.indexOfFirst { it.isCollapsingMenuLimit }
+            val stickyFooterPosition = adapter.visibleItems.indexOfLast { it.isSticky }
             if (collapsingMenuIndexLimit > 0) {
                 return ExpandableLayout.wrapContentInExpandableView(
                     view,
-                    collapsingMenuIndexLimit
+                    collapsingMenuIndexLimit,
+                    stickyFooterPosition
                 ) { dismiss() }
             }
-        }
+        } else {
+            // The menu is by default set as a bottom one. Reconfigure it as a top one.
+            menuList?.layoutManager = StickyItemsLinearLayoutManager.get<BrowserMenuAdapter>(
+                view.context, StickyItemPlacement.TOP
+            )
 
-        // When showing an expandable bottom menu it should always be scrolled to the top (default in LayoutManager).
-        // Otherwise try showing the bottom of the menu when not enough space to fit it on the screen.
-        if (endOfMenuAlwaysVisible) {
-            menuList?.let {
-                showMenuBottom(it)
+            // By default the menu is laid out from and scrolled to top - showing the top most items.
+            // For the top menu it may be desired to initially show the bottom most items.
+            menuList?.let { list ->
+                list.setEndOfMenuAlwaysVisibleCompact(
+                    endOfMenuAlwaysVisible, list.layoutManager as LinearLayoutManager
+                )
             }
         }
 
         return view
-    }
-
-    @VisibleForTesting
-    internal fun showMenuBottom(menu: RecyclerView) {
-        menu.layoutManager = LinearLayoutManager(menu.context, RecyclerView.VERTICAL, false).also {
-            menu.setEndOfMenuAlwaysVisibleCompact(true, it)
-        }
     }
 
     @VisibleForTesting
@@ -198,6 +203,15 @@ open class BrowserMenu internal constructor(
 
     fun invalidate() {
         menuList?.let { adapter.invalidate(it) }
+    }
+
+    @VisibleForTesting
+    internal fun setColors(menuLayout: View, colorState: MenuStyle?) {
+        val listParent: CardView = menuLayout.findViewById(R.id.mozac_browser_menu_menuView)
+        backgroundColor = colorState?.backgroundColor?.let {
+            listParent.setCardBackgroundColor(it)
+            it.defaultColor
+        } ?: listParent.cardBackgroundColor.defaultColor
     }
 
     companion object {

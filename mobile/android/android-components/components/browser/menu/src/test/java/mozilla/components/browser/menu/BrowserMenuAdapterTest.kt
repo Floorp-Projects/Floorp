@@ -4,11 +4,16 @@
 
 package mozilla.components.browser.menu
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -120,6 +125,48 @@ class BrowserMenuAdapterTest {
         assertEquals(6, adapter.interactiveCount)
     }
 
+    @Test
+    fun `GIVEN a stickyItem exists in the visible items WHEN isStickyItem is called THEN it returns true`() {
+        val items = listOf(
+            createMenuItem(1, { true }, { 1 }),
+            createMenuItem(3, { true }, { 10 }, true),
+            createMenuItem(4, { true }, { 5 }),
+            createMenuItem(3, { false }, { 3 }, true)
+        )
+
+        val adapter = BrowserMenuAdapter(testContext, items)
+
+        assertFalse(adapter.isStickyItem(0))
+        assertTrue(adapter.isStickyItem(1))
+        assertFalse(adapter.isStickyItem(2))
+        assertFalse(adapter.isStickyItem(3))
+        assertFalse(adapter.isStickyItem(4))
+    }
+
+    @Test
+    fun `GIVEN a BrowserMenu exists WHEN setupStickyItem is called THEN the item background color is set for the View parameter`() {
+        val adapter = BrowserMenuAdapter(testContext, emptyList())
+        val menu: BrowserMenu = mock()
+        menu.backgroundColor = Color.CYAN
+        adapter.menu = menu
+        val view = View(testContext)
+
+        adapter.setupStickyItem(view)
+
+        assertEquals(menu.backgroundColor, (view.background as ColorDrawable).color)
+    }
+
+    @Test
+    fun `GIVEN BrowserMenuAdapter WHEN tearDownStickyItem is called THEN the item background is reset to transparent`() {
+        val adapter = BrowserMenuAdapter(testContext, emptyList())
+        val view = View(testContext)
+        view.setBackgroundColor(Color.CYAN)
+
+        adapter.tearDownStickyItem(view)
+
+        assertEquals(Color.TRANSPARENT, (view.background as ColorDrawable).color)
+    }
+
     private fun List<BrowserMenuItem>.assertTrueForOne(predicate: (BrowserMenuItem) -> Boolean) {
         for (item in this) {
             if (predicate(item)) {
@@ -140,7 +187,8 @@ class BrowserMenuAdapterTest {
     private fun createMenuItem(
         layout: Int = 0,
         visible: () -> Boolean = { true },
-        interactiveCount: () -> Int = { 1 }
+        interactiveCount: () -> Int = { 1 },
+        isSticky: Boolean = false
     ): BrowserMenuItem {
         return object : BrowserMenuItem {
             override val visible = visible
@@ -152,6 +200,8 @@ class BrowserMenuAdapterTest {
             override fun bind(menu: BrowserMenu, view: View) {}
 
             override fun invalidate(view: View) {}
+
+            override val isSticky = isSticky
         }
     }
 }
