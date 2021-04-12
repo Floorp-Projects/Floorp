@@ -11,6 +11,7 @@ job-defaults:
             android-hw-.*: geckoview-androidTest.apk
             default: null
     variants: ['fission']
+    python-3: true
     tier:
         by-variant:
             fission: 2
