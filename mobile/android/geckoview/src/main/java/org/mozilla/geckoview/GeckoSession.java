@@ -2860,7 +2860,29 @@ public class GeckoSession {
                     new PromptDelegate.AutocompleteRequest<>(options);
 
                 res = delegate.onLoginSelect(session, request);
+                break;
+            }
+            case "Autocomplete:Select:CreditCard": {
+                final GeckoBundle[] optionBundles =
+                    message.getBundleArray("options");
 
+                if (optionBundles == null) {
+                    break;
+                }
+
+                final Autocomplete.CreditCardSelectOption[] options =
+                    new Autocomplete.CreditCardSelectOption[optionBundles.length];
+
+                for (int i = 0; i < options.length; ++i) {
+                    options[i] = Autocomplete.CreditCardSelectOption.fromBundle(
+                        optionBundles[i]);
+                }
+
+                final PromptDelegate.AutocompleteRequest
+                    <Autocomplete.CreditCardSelectOption> request =
+                    new PromptDelegate.AutocompleteRequest<>(options);
+
+                res = delegate.onCreditCardSelect(session, request);
                 break;
             }
             default: {
@@ -5143,7 +5165,7 @@ public class GeckoSession {
          *
          *         Confirm the request with an {@link Autocomplete.Option}
          *         to trigger a
-         *         {@link Autocomplete.LoginStorageDelegate#onLoginSave} request
+         *         {@link Autocomplete.StorageDelegate#onLoginSave} request
          *         to save the given selection.
          *         The confirmed selection may be an entry out of the request's
          *         options, a modified option, or a freshly created login entry.
@@ -5181,6 +5203,34 @@ public class GeckoSession {
         default @Nullable GeckoResult<PromptResponse> onLoginSelect(
                 @NonNull final GeckoSession session,
                 @NonNull final AutocompleteRequest<Autocomplete.LoginSelectOption>
+                    request) {
+            return null;
+        }
+
+        /**
+         * Handle a credit card selection prompt request.
+         * This is triggered by the user focusing on a credit card input field.
+         *
+         * @param session The {@link GeckoSession} that triggered the request.
+         * @param request The {@link AutocompleteRequest} containing the request
+         *                details.
+         *
+         * @return A {@link GeckoResult} resolving to a {@link PromptResponse}
+         *
+         *         Confirm the request with an {@link Autocomplete.Option}
+         *         to let GeckoView fill out the credit card forms with the given
+         *         selection details.
+         *         The confirmed selection may be an entry out of the request's
+         *         options, a modified option, or a freshly created credit
+         *         card entry.
+         *
+         *         Dismiss the request to deny autocompletion for the detected
+         *         form.
+         */
+        @UiThread
+        default @Nullable GeckoResult<PromptResponse> onCreditCardSelect(
+                @NonNull final GeckoSession session,
+                @NonNull final AutocompleteRequest<Autocomplete.CreditCardSelectOption>
                     request) {
             return null;
         }
