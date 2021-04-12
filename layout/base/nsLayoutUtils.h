@@ -2802,15 +2802,21 @@ class nsLayoutUtils {
    * of the scrolled content of |aRootScrollFrame|.
    * Where the element is contained inside a scrollable subframe, the
    * bounding rect is clipped to the bounds of the subframe.
+   * If non-null aOutNearestScrollClip will be filled in with the rect of the
+   * nearest scroll frame (excluding aRootScrollFrame) that is an ancestor of
+   * the frame of aContent, if such exists, in the same coords are the returned
+   * rect. This rect is used to clip the result.
    */
   static CSSRect GetBoundingContentRect(
-      const nsIContent* aContent, const nsIScrollableFrame* aRootScrollFrame);
+      const nsIContent* aContent, const nsIScrollableFrame* aRootScrollFrame,
+      mozilla::Maybe<CSSRect>* aOutNearestScrollClip = nullptr);
 
   /**
    * Similar to GetBoundingContentRect for nsIFrame.
    */
   static CSSRect GetBoundingFrameRect(
-      nsIFrame* aFrame, const nsIScrollableFrame* aRootScrollFrame);
+      nsIFrame* aFrame, const nsIScrollableFrame* aRootScrollFrame,
+      mozilla::Maybe<CSSRect>* aOutNearestScrollClip = nullptr);
 
   /**
    * Returns the first ancestor who is a float containing block.

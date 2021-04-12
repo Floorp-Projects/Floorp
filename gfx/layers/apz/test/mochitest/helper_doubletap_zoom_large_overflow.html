@@ -1,0 +1,317 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping on overflow centers the zoom where we double tap</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function doubleTapOn(element, x, y) {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let transformEndPromise = promiseTransformEnd();
+
+  if (useTouchpad) {
+    synthesizeNativeTouchpadDoubleTap(element, x, y);
+  } else {
+    synthesizeNativeTap(element, x, y);
+    synthesizeNativeTap(element, x, y);
+  }
+
+  // Wait for the APZ:TransformEnd to fire
+  await transformEndPromise;
+
+  // Flush state so we can query an accurate resolution
+  await promiseApzFlushedRepaints();
+}
+
+async function test() {
+  var resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // instant scroll to the bottom of the page
+  window.scrollTo({
+    top: 10000,
+    left: 0,
+    behavior: 'auto'
+  });
+
+  await promiseApzFlushedRepaints();
+
+  let scrollPos = window.scrollY;
+  ok(scrollPos > 1500, "window scrolled down");
+
+  info("window.scrollY " + window.scrollY);
+
+  info("window.innerHeight " + window.innerHeight);
+
+  info("document.documentElement.scrollHeight " + document.documentElement.scrollHeight);
+
+  let target = document.getElementById("target");
+
+  let x = 10;
+  let y = document.documentElement.scrollHeight - 60;
+
+  // Check that double-tapping once zooms in
+  await doubleTapOn(target, x, y);
+  var prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  ok(window.scrollY > 1500, "window is still scrolled down");
+  ok(window.scrollY >= scrollPos-2, "window is still scrolled down");
+  info("window.scrollY " + window.scrollY);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style>
+    .container {
+      background-color: #eee;
+      width: 200px;
+      height: 50px;
+      border: 1px dotted black;
+      overflow: visible;
+    }
+</style>
+</head>
+<body>
+
+<div id="target" class="container">
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+Text text text text text text text text text text text text text text text text
+
+</div>
+
+</body>
+</html>
