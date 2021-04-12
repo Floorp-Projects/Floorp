@@ -883,8 +883,20 @@ void nsMenuFrame::Execute(WidgetGUIEvent* aEvent) {
   nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
   if (sound) sound->PlayEventSound(nsISound::EVENT_MENU_EXECUTE);
 
+  // Create a trusted event if the triggering event was trusted, or if
+  // we're called from chrome code (since at least one of our caller
+  // passes in a null event).
+  bool isTrusted =
+      aEvent ? aEvent->IsTrusted() : nsContentUtils::IsCallerChrome();
+
+  mozilla::Modifiers modifiers = 0;
+  WidgetInputEvent* inputEvent = aEvent ? aEvent->AsInputEvent() : nullptr;
+  if (inputEvent) {
+    modifiers = inputEvent->mModifiers;
+  }
+
   StopBlinking();
-  CreateMenuCommandEvent(aEvent);
+  CreateMenuCommandEvent(isTrusted, modifiers);
   StartBlinking();
 }
 
@@ -931,19 +943,8 @@ void nsMenuFrame::StopBlinking() {
   mDelayedMenuCommandEvent = nullptr;
 }
 
-void nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent) {
-  // Create a trusted event if the triggering event was trusted, or if
-  // we're called from chrome code (since at least one of our caller
-  // passes in a null event).
-  bool isTrusted =
-      aEvent ? aEvent->IsTrusted() : nsContentUtils::IsCallerChrome();
-
-  mozilla::Modifiers modifiers = 0;
-  WidgetInputEvent* inputEvent = aEvent ? aEvent->AsInputEvent() : nullptr;
-  if (inputEvent) {
-    modifiers = inputEvent->mModifiers;
-  }
-
+void nsMenuFrame::CreateMenuCommandEvent(bool aIsTrusted,
+                                         mozilla::Modifiers aModifiers) {
   // Because the command event is firing asynchronously, a flag is needed to
   // indicate whether user input is being handled. This ensures that a popup
   // window won't get blocked.
@@ -958,7 +959,7 @@ void nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent) {
   }
 
   mDelayedMenuCommandEvent =
-      new nsXULMenuCommandEvent(mContent->AsElement(), isTrusted, modifiers,
+      new nsXULMenuCommandEvent(mContent->AsElement(), aIsTrusted, aModifiers,
                                 userinput, needToFlipChecked);
 }
 
