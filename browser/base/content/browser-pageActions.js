@@ -546,6 +546,9 @@ var BrowserPageActions = {
   _makeUrlbarButtonNode(action) {
     let buttonNode = document.createXULElement("image");
     buttonNode.classList.add("urlbar-icon", "urlbar-page-action");
+    if (action.extensionID) {
+      buttonNode.classList.add("urlbar-addon-page-action");
+    }
     buttonNode.setAttribute("actionid", action.id);
     buttonNode.setAttribute("role", "button");
     let commandHandler = event => {
