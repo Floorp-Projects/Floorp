@@ -161,7 +161,7 @@ open class DefaultToolbarMenu(
         registerForIsBookmarkedUpdates()
 
         if (FeatureFlags.toolbarMenuFeature) {
-            BrowserMenuItemToolbar(listOf(back, forward, share, refresh))
+            BrowserMenuItemToolbar(listOf(back, forward, share, refresh), isSticky = true)
         } else {
             val bookmark = BrowserMenuItemToolbar.TwoStateButton(
                 primaryImageResource = R.drawable.ic_bookmark_filled,
