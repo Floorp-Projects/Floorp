@@ -208,7 +208,6 @@ class ProcessPriorityManagerChild final : public nsIObserver {
  * main-process only.
  */
 class ParticularProcessPriorityManager final : public WakeLockObserver,
-                                               public nsIObserver,
                                                public nsITimerCallback,
                                                public nsINamed,
                                                public nsSupportsWeakReference {
@@ -218,7 +217,6 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   explicit ParticularProcessPriorityManager(ContentParent* aContentParent);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
 
   virtual void Notify(const WakeLockInformation& aInfo) override;
@@ -237,8 +235,6 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
    * destroyed, whichever comes first.
    */
   const nsAutoCString& NameWithComma();
-
-  void OnBrowserParentDestroyed(nsISupports* aSubject);
 
   ProcessPriority CurrentPriority();
   ProcessPriority ComputePriority();
@@ -472,8 +468,8 @@ void ProcessPriorityManagerImpl::ResetPriority(ContentParent* aContentParent) {
   pppm->ResetPriority();
 }
 
-NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager, nsIObserver,
-                  nsITimerCallback, nsISupportsWeakReference, nsINamed);
+NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager, nsITimerCallback,
+                  nsISupportsWeakReference, nsINamed);
 
 ParticularProcessPriorityManager::ParticularProcessPriorityManager(
     ContentParent* aContentParent)
@@ -490,11 +486,6 @@ ParticularProcessPriorityManager::ParticularProcessPriorityManager(
 
 void ParticularProcessPriorityManager::Init() {
   RegisterWakeLockObserver(this);
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->AddObserver(this, "ipc:browser-destroyed", /* ownsWeak */ true);
-  }
 
   // This process may already hold the CPU lock; for example, our parent may
   // have acquired it on our behalf.
@@ -565,25 +556,6 @@ void ParticularProcessPriorityManager::Notify(
   }
 }
 
-NS_IMETHODIMP
-ParticularProcessPriorityManager::Observe(nsISupports* aSubject,
-                                          const char* aTopic,
-                                          const char16_t* aData) {
-  if (!mContentParent) {
-    // We've been shut down.
-    return NS_OK;
-  }
-
-  nsDependentCString topic(aTopic);
-  if (topic.EqualsLiteral("ipc:browser-destroyed")) {
-    OnBrowserParentDestroyed(aSubject);
-  } else {
-    MOZ_ASSERT(false);
-  }
-
-  return NS_OK;
-}
-
 uint64_t ParticularProcessPriorityManager::ChildID() const {
   // We have to cache mContentParent->ChildID() instead of getting it from the
   // ContentParent each time because after ShutDown() is called, mContentParent
@@ -611,23 +583,6 @@ const nsAutoCString& ParticularProcessPriorityManager::NameWithComma() {
   CopyUTF16toUTF8(name, mNameWithComma);
   mNameWithComma.AppendLiteral(", ");
   return mNameWithComma;
-}
-
-void ParticularProcessPriorityManager::OnBrowserParentDestroyed(
-    nsISupports* aSubject) {
-  nsCOMPtr<nsIRemoteTab> remoteTab = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE_VOID(remoteTab);
-  BrowserHost* browserHost = BrowserHost::GetFrom(remoteTab.get());
-
-  MOZ_ASSERT(XRE_IsParentProcess());
-  if (browserHost->GetContentParent() &&
-      browserHost->GetContentParent() != mContentParent) {
-    return;
-  }
-
-  mActiveBrowserParents.Remove(browserHost->GetTabId());
-
-  ResetPriority();
 }
 
 void ParticularProcessPriorityManager::ResetPriority() {
