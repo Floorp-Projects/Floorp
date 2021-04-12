@@ -3,8 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<androidx.preference.PreferenceScreen
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.preference.Preference
@@ -15,9 +14,9 @@
         app:allowDividerBelow="false" />
 
     <androidx.preference.SwitchPreference
-            android:key="@string/pref_key_allow_domestic_china_fxa_server"
-            android:title="@string/preferences_allow_domestic_china_fxa_server"
-            android:defaultValue="true"/>
+        android:key="@string/pref_key_allow_domestic_china_fxa_server"
+        android:title="@string/preferences_allow_domestic_china_fxa_server"
+        android:defaultValue="true" />
 
     <androidx.preference.PreferenceCategory
         android:key="@string/pref_key_account_category"
@@ -199,6 +198,7 @@
             app:isPreferenceVisible="false" />
         <androidx.preference.Preference
             android:key="@string/pref_key_nimbus_experiments"
+            app:iconSpaceReserved="false"
             android:title="@string/preferences_nimbus_experiments"
             app:isPreferenceVisible="false" />
     </androidx.preference.PreferenceCategory>
