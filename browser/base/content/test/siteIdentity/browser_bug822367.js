@@ -46,8 +46,7 @@ add_task(async function MixedTest1A() {
     passiveLoaded: false,
   });
 
-  let { gIdentityHandler } = gTestBrowser.ownerGlobal;
-  gIdentityHandler.disableMixedContentProtection();
+  gTestBrowser.ownerGlobal.gIdentityHandler.disableMixedContentProtection();
   await BrowserTestUtils.browserLoaded(gTestBrowser);
 });
 
@@ -58,6 +57,7 @@ add_task(async function MixedTest1B() {
       "Waited too long for mixed script to run in Test 1"
     );
   });
+  gTestBrowser.ownerGlobal.gIdentityHandler.enableMixedContentProtectionNoReload();
 });
 
 // Mixed Display Test - Doorhanger should not appear
@@ -87,8 +87,7 @@ add_task(async function MixedTest3A() {
     passiveLoaded: false,
   });
 
-  let { gIdentityHandler } = gTestBrowser.ownerGlobal;
-  gIdentityHandler.disableMixedContentProtection();
+  gTestBrowser.ownerGlobal.gIdentityHandler.disableMixedContentProtection();
   await BrowserTestUtils.browserLoaded(gTestBrowser);
 });
 
@@ -110,15 +109,17 @@ add_task(async function MixedTest3B() {
     activeBlocked: false,
     passiveLoaded: true,
   });
+  gTestBrowser.ownerGlobal.gIdentityHandler.enableMixedContentProtectionNoReload();
 });
 
-// Location change - User override on one page doesn't propogate to another page after location change.
+// Location change - User override on one page doesn't propagate to another page after location change.
 add_task(async function MixedTest4() {
   var url = HTTPS_TEST_ROOT_2 + "file_bug822367_4.html";
   BrowserTestUtils.loadURI(gTestBrowser, url);
   await BrowserTestUtils.browserLoaded(gTestBrowser, false, url);
 });
 
+let preLocationChangePrincipal = null;
 add_task(async function MixedTest4A() {
   await assertMixedContentBlockingState(gTestBrowser, {
     activeLoaded: false,
@@ -126,8 +127,8 @@ add_task(async function MixedTest4A() {
     passiveLoaded: false,
   });
 
-  let { gIdentityHandler } = gTestBrowser.ownerGlobal;
-  gIdentityHandler.disableMixedContentProtection();
+  preLocationChangePrincipal = gTestBrowser.contentPrincipal;
+  gTestBrowser.ownerGlobal.gIdentityHandler.disableMixedContentProtection();
   await BrowserTestUtils.browserLoaded(gTestBrowser);
 });
 
@@ -154,6 +155,10 @@ add_task(async function MixedTest4C() {
       "Mixed script loaded in test 4 after location change!"
     );
   });
+  SitePermissions.removeFromPrincipal(
+    preLocationChangePrincipal,
+    "mixed-content"
+  );
 });
 
 // Mixed script attempts to load in a document.open()
@@ -170,8 +175,7 @@ add_task(async function MixedTest5A() {
     passiveLoaded: false,
   });
 
-  let { gIdentityHandler } = gTestBrowser.ownerGlobal;
-  gIdentityHandler.disableMixedContentProtection();
+  gTestBrowser.ownerGlobal.gIdentityHandler.disableMixedContentProtection();
   await BrowserTestUtils.browserLoaded(gTestBrowser);
 });
 
@@ -182,6 +186,7 @@ add_task(async function MixedTest5B() {
       "Waited too long for mixed script to run in Test 5"
     );
   });
+  gTestBrowser.ownerGlobal.gIdentityHandler.enableMixedContentProtectionNoReload();
 });
 
 // Mixed script attempts to load in a document.open() that is within an iframe.
@@ -209,8 +214,7 @@ add_task(async function MixedTest6B() {
     passiveLoaded: false,
   });
 
-  let { gIdentityHandler } = gTestBrowser.ownerGlobal;
-  gIdentityHandler.disableMixedContentProtection();
+  gTestBrowser.ownerGlobal.gIdentityHandler.disableMixedContentProtection();
 
   await BrowserTestUtils.browserLoaded(gTestBrowser);
 });
@@ -242,6 +246,7 @@ add_task(async function MixedTest6D() {
     activeBlocked: false,
     passiveLoaded: false,
   });
+  gTestBrowser.ownerGlobal.gIdentityHandler.enableMixedContentProtectionNoReload();
 });
 
 add_task(async function cleanup() {

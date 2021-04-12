@@ -367,7 +367,6 @@ function openLinkIn(url, where, params) {
     : new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, null);
   var aRelatedToCurrent = params.relatedToCurrent;
   var aAllowInheritPrincipal = !!params.allowInheritPrincipal;
-  var aAllowMixedContent = params.allowMixedContent;
   var aForceAllowDataURI = params.forceAllowDataURI;
   var aInBackground = params.inBackground;
   var aInitiatingDoc = params.initiatingDoc;
@@ -663,7 +662,6 @@ function openLinkIn(url, where, params) {
         allowThirdPartyFixup: aAllowThirdPartyFixup,
         relatedToCurrent: aRelatedToCurrent,
         skipAnimation: aSkipTabAnimation,
-        allowMixedContent: aAllowMixedContent,
         userContextId: aUserContextId,
         originPrincipal: aPrincipal,
         originStoragePrincipal: aStoragePrincipal,
