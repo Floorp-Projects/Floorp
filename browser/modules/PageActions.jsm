@@ -1186,8 +1186,19 @@ Action.prototype = {
    *         disabled.
    */
   shouldShowInPanel(browserWindow) {
+    // When Proton is enabled, the extension page actions should behave similarly
+    // to a transient action, and be hidden from the urlbar overflow menu if they
+    // are disabled (as in the urlbar when the overflow menu isn't available)
+    //
+    // TODO(Bug 1704139): as a follow up we may look into just set on all
+    // extensions pageActions `_transient: true`, at least once we sunset
+    // the proton preference and we don't need the pre-Proton behavior anymore,
+    // and remove this special case.
+    const isProtonExtensionAction = this.extensionID && protonEnabled;
+
     return (
-      (!this.__transient || !this.getDisabled(browserWindow)) &&
+      (!(this.__transient || isProtonExtensionAction) ||
+        !this.getDisabled(browserWindow)) &&
       this.canShowInWindow(browserWindow)
     );
   },

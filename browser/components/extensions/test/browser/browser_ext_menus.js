@@ -173,11 +173,13 @@ add_task(async function test_actionContextMenus() {
 });
 
 add_task(async function test_hiddenPageActionContextMenu() {
-  // In Proton there's no page actions menu by default, there is only an
-  // overflow menu when the window is smaller than 680px. While currently
-  // disabled page actions are shown in that overflow menu, bug 1703889 will
-  // change the behavior, hiding them. Then this test won't be necessary anymore
-  // since the user won't be able to open the context menu on disabled actions.
+  // In Proton the disabled pageAction are hidden in the urlbar
+  // and in the overflow menu, and so the pageAction context menu
+  // cannot be triggered on a disabled pageACtion.
+  //
+  // When we will sunset the proton about:config pref, this test
+  // won't be necessary anymore since the user won't be able to
+  // open the context menu on disabled actions.
   await SpecialPowers.pushPrefEnv({
     set: [["browser.proton.enabled", false]],
   });

@@ -5,6 +5,15 @@
 add_task(async function setup() {
   // The page action button is hidden by default for proton.
   // This tests the use of pageAction when the button is visible.
+  //
+  // TODO(Bug 1704171): this should technically be removed in a follow up
+  // and the tests in this file adapted to keep into account that:
+  // - in Proton the pageAction is pinned on the urlbar by default
+  //   when shown, and hidden when is not available (same for the
+  //   overflow menu when enabled)
+  // - with Proton disabled, the pageAction is always part of the overflow
+  //   panel (either if the pageAction is enabled or disabled) and on the urlbar
+  //   only if explicitly pinned.
   if (gProton) {
     BrowserPageActions.mainButtonNode.style.visibility = "visible";
     registerCleanupFunction(() => {
@@ -159,6 +168,17 @@ add_task(async function test_clickData_reset() {
 });
 
 add_task(async function test_click_disabled() {
+  // In Proton the disabled pageAction are hidden in the urlbar
+  // and in the overflow menu, and so the pageAction context menu
+  // cannot be triggered on a disabled pageACtion.
+  //
+  // When we will sunset the proton about:config pref, this test
+  // won't be necessary anymore since the user won't be able to
+  // open the context menu on disabled actions.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.proton.enabled", false]],
+  });
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       page_action: {},
@@ -218,5 +238,7 @@ add_task(async function test_click_disabled() {
   await clickPageActionInPanel(extension, window, { button: 1 });
   await extension.awaitMessage("onClick");
 
+  // Undo the Proton pref change.
+  await SpecialPowers.popPrefEnv();
   await extension.unload();
 });
