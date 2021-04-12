@@ -98,7 +98,6 @@ class ClickHandlerParent extends JSWindowActorParent {
     let params = {
       charset: browser.characterSet,
       referrerInfo: E10SUtils.deserializeReferrerInfo(data.referrerInfo),
-      allowMixedContent: data.allowMixedContent,
       isContentWindowPrivate: data.isContentWindowPrivate,
       originPrincipal: data.originPrincipal,
       originStoragePrincipal: data.originStoragePrincipal,

@@ -250,9 +250,6 @@ static void LogShellLoadType(nsIDocShell* aDocShell) {
     case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
       printf("normal bypass proxy and cache; ");
       break;
-    case LOAD_NORMAL_ALLOW_MIXED_CONTENT:
-      printf("normal allow mixed content; ");
-      break;
     case LOAD_RELOAD_NORMAL:
       printf("reload normal; ");
       break;
@@ -264,9 +261,6 @@ static void LogShellLoadType(nsIDocShell* aDocShell) {
       break;
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
       printf("reload bypass proxy and cache; ");
-      break;
-    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
-      printf("reload allow mixed content; ");
       break;
     case LOAD_LINK:
       printf("link; ");

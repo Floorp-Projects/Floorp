@@ -2544,22 +2544,6 @@ DocumentLoadListener::AsyncOnChannelRedirect(
        "mHaveVisibleRedirect=%c",
        this, mHaveVisibleRedirect ? 'T' : 'F'));
 
-  // If this is a cross-origin redirect, then we should no longer allow
-  // mixed content. The destination docshell checks this in its redirect
-  // handling, but if we deliver to a new docshell (with a process switch)
-  // then this doesn't happen.
-  // Manually remove the allow mixed content flags.
-  nsresult rv = nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
-  if (NS_FAILED(rv)) {
-    if (mLoadStateLoadType == LOAD_NORMAL_ALLOW_MIXED_CONTENT) {
-      mLoadStateLoadType = LOAD_NORMAL;
-    } else if (mLoadStateLoadType == LOAD_RELOAD_ALLOW_MIXED_CONTENT) {
-      mLoadStateLoadType = LOAD_RELOAD_NORMAL;
-    }
-    MOZ_ASSERT(!LOAD_TYPE_HAS_FLAGS(
-        mLoadStateLoadType, nsIWebNavigation::LOAD_FLAGS_ALLOW_MIXED_CONTENT));
-  }
-
   // We need the original URI of the current channel to use to open the real
   // channel in the content process. Unfortunately we overwrite the original
   // uri of the new channel with the original pre-redirect URI, so grab

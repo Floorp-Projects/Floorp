@@ -1365,8 +1365,6 @@ nsresult nsSHistory::Reload(uint32_t aReloadFlags,
     loadType = LOAD_RELOAD_BYPASS_CACHE;
   } else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE) {
     loadType = LOAD_RELOAD_CHARSET_CHANGE;
-  } else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_MIXED_CONTENT) {
-    loadType = LOAD_RELOAD_ALLOW_MIXED_CONTENT;
   } else {
     loadType = LOAD_RELOAD_NORMAL;
   }

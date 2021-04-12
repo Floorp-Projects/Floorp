@@ -45,6 +45,7 @@ async function doTest(
 
       // Disable the Mixed Content Blocker for the page, which reloads it.
       let promiseReloaded = BrowserTestUtils.browserLoaded(browser);
+      let principal = gBrowser.contentPrincipal;
       gIdentityHandler.disableMixedContentProtection();
       await promiseReloaded;
 
@@ -85,6 +86,8 @@ async function doTest(
 
         gBrowser.removeCurrentTab();
       }
+
+      SitePermissions.removeFromPrincipal(principal, "mixed-content");
     }
   );
 }

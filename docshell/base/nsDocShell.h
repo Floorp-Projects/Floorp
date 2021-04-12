@@ -1173,11 +1173,6 @@ class nsDocShell final : public nsDocLoader,
   nsCOMPtr<nsIURI> mFailedURI;
   nsCOMPtr<nsIChannel> mFailedChannel;
 
-  // Set in DoURILoad when either the LOAD_RELOAD_ALLOW_MIXED_CONTENT flag or
-  // the LOAD_NORMAL_ALLOW_MIXED_CONTENT flag is set.
-  // Checked in nsMixedContentBlocker, to see if the channels match.
-  nsCOMPtr<nsIChannel> mMixedContentChannel;
-
   mozilla::UniquePtr<mozilla::gfx::Matrix5x4> mColorMatrix;
 
   const mozilla::Encoding* mForcedCharset;
