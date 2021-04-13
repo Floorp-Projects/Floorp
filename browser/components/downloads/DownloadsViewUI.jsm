@@ -216,7 +216,6 @@ DownloadsViewUI.DownloadElementShell.prototype = {
                          crop="end"/>
           </vbox>
         </hbox>
-        <toolbarseparator />
         <button class="downloadButton"/>
       `);
       gDownloadListItemFragments.set(document, downloadListItemFragment);

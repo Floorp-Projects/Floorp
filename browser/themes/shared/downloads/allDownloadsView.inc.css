@@ -46,10 +46,6 @@
   background-image: url("chrome://global/skin/icons/info-filled.svg");
 }
 
-@item@ > toolbarseparator {
-  display: none;
-}
-
 .downloadTarget {
   margin: 0;
 }

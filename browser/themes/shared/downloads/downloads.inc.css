@@ -26,13 +26,36 @@
   pointer-events: none;
 }
 
-@item@ > toolbarseparator {
-  margin: 0;
-  border: 0;
-  min-width: 0;
-  border-inline-start: 1px solid var(--panel-separator-color);
-  appearance: none;
+@media (-moz-proton-doorhangers) {
+#emptyDownloads {
+  padding: 1.5em 0.62em 2.1em;
 }
+
+#downloadsListBox {
+  margin: 0.31em 0 0.93em;
+}
+
+@item@ {
+  height: 3.1em;
+  padding: 0.31em;
+  margin: 0.31em 0;
+}
+
+.downloadTypeIcon {
+  margin-inline-end: 0.7em;
+}
+}/** END Proton **/
+
+@media not (-moz-proton-doorhangers) {
+@item@ {
+  height: var(--downloads-item-height);
+  border-bottom: 1px solid var(--panel-separator-color);
+}
+
+.downloadTypeIcon {
+  margin: 8px 13px;
+}
+}/** END not Proton **/
 
 .downloadsPanelFooterButton:hover {
   outline: 1px solid var(--arrowpanel-dimmed);
@@ -59,15 +82,6 @@
   padding-inline: 14px;
 }
 } /** END not Proton **/
-
-@item@ > toolbarseparator {
-  margin: 10px 0;
-}
-
-@item@:hover > toolbarseparator {
-  margin: 0;
-}
-
 #downloadsSummary {
   -moz-user-focus: normal;
 }
@@ -85,14 +99,11 @@
 }
 
 /*** List items and similar elements in the summary ***/
-
-#downloadsSummary,
-@item@ {
+#downloadsSummary {
   height: var(--downloads-item-height);
 }
 
 @item@ {
-  border-bottom: 1px solid var(--panel-separator-color);
   background: transparent;
   color: inherit;
 }
@@ -102,7 +113,6 @@
 }
 
 .downloadTypeIcon {
-  margin: 8px 13px;
   width: 32px;
   height: 32px;
 }
@@ -156,10 +166,6 @@
 @item@.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
 @item@:not(.downloadHoveringButton) > .downloadMainArea > .downloadContainer > .downloadDetailsButtonHover {
   display: none;
-}
-
-@item@[verdict] > toolbarseparator {
-  visibility: hidden;
 }
 
 .downloadButton {
