@@ -240,6 +240,10 @@ ALL_PROCESSES += [
     # Webroot SecureAnywhere causes crashes, bug 1700281
     DllBlocklistEntry("WRDll.x64.dll", (1, 1, 0, 227)),
     DllBlocklistEntry("WRDll.x86.dll", (1, 1, 0, 227)),
+
+    # InfoWatch Device Monitor causes crashes, bug 1704276
+    DllBlocklistEntry("iwprn.dll", (6, 9, 11, 360)),
+    DllBlocklistEntry("iwprn_x86.dll", (6, 9, 11, 360)),
 ]
 
 ALL_PROCESSES_TESTS += [
