@@ -612,12 +612,16 @@
     <string name="tabs_header_private_title">Zasebna seja</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Zasebni zavihki</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Sinhronizirani zavihki</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Dodaj zavihek</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Dodaj zasebni zavihek</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Zasebno</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sinhroniziraj</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Odprti zavihki</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -1198,6 +1202,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Da, prijavi me</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Prijavljanje …</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Prijava</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Ostanite odjavljeni</string>
     <!-- text to display in the snackbar once account is signed-in -->

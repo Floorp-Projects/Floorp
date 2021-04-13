@@ -625,6 +625,8 @@
     <string name="add_private_tab">ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਜੋੜੋ</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">ਪ੍ਰਾਈਵੇਟ</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">ਸਿੰਕ</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">ਟੈਬਾਂ ਖੋਲ੍ਹੋ</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -1575,6 +1577,8 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਕਾਰਡਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">ਕਰੈਡਿਟ ਕਾਰਡ ਜੋੜੋ</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">ਕਾਰਡ ਜੋੜੋ</string>
     <!-- The header for the card number of a credit card -->
@@ -1593,6 +1597,9 @@
     <string name="credit_cards_save_button">ਸੰਭਾਲੋ</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">ਰੱਦ ਕਰੋ</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ਖੋਜ ਇੰਜਣ ਜੋੜੋ</string>
