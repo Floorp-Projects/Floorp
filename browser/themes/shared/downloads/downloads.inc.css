@@ -54,10 +54,12 @@
   background-color: var(--button-active-bgcolor);
 }
 
+@item@[verdict="Insecure"] .downloadDetails,
 @item@[verdict="Malware"] .downloadDetails {
   color: #C50042;
 }
 
+:root[lwt-popup-brighttext] @item@[verdict="Insecure"] .downloadDetails,
 :root[lwt-popup-brighttext] @item@[verdict="Malware"] .downloadDetails {
   color: #FF848B;
 }
@@ -68,6 +70,58 @@
 
 #downloadsPanel-blockedSubview-buttons {
   display: flex;
+}
+
+.downloadBlockedBadge {
+  display: none;
+}
+
+.downloadBlockedBadgeNew {
+  background-repeat: no-repeat;
+  width: 16px;
+  margin: 10.5px 0 0;
+}
+
+#downloadsPanel-blockedSubview[verdict="Insecure"] .downloadsPanel-blockedSubview-image,
+#downloadsPanel-blockedSubview[verdict="Malware"] .downloadsPanel-blockedSubview-image,
+@item@[verdict="Insecure"] .downloadBlockedBadgeNew,
+@item@[verdict="Malware"] .downloadBlockedBadgeNew {
+  background-image: url("chrome://global/skin/icons/error.svg");
+  -moz-context-properties: fill;
+  fill: #e22850;
+}
+
+:root[lwt-popup-brighttext] #downloadsPanel-blockedSubview[verdict="Insecure"] .downloadsPanel-blockedSubview-image,
+:root[lwt-popup-brighttext] @item@[verdict="Insecure"] .downloadBlockedBadgeNew,
+:root[lwt-popup-brighttext] #downloadsPanel-blockedSubview[verdict="Malware"] .downloadsPanel-blockedSubview-image,
+:root[lwt-popup-brighttext] @item@[verdict="Malware"] .downloadBlockedBadgeNew {
+  fill: #FF9AA2;
+}
+
+#downloadsPanel-blockedSubview[verdict="Uncommon"] .downloadsPanel-blockedSubview-image,
+@item@[verdict="Uncommon"] .downloadBlockedBadgeNew {
+  -moz-context-properties: fill;
+  fill: #0090ED;
+  background-image: url("chrome://global/skin/icons/info-filled.svg");
+}
+
+:root[lwt-popup-brighttext] #downloadsPanel-blockedSubview[verdict="Uncommon"] .downloadsPanel-blockedSubview-image,
+:root[lwt-popup-brighttext] @item@[verdict="Uncommon"] .downloadBlockedBadgeNew {
+  fill: #80EBFF;
+}
+
+.downloadsPanel-blockedSubview-image {
+  width: 16px;
+  background-repeat: no-repeat;
+  margin-inline-end: 25px;
+}
+
+.downloadsPanel-blockedSubview-title-box {
+  margin-block: 21.5px 0;
+}
+
+#downloadsPanel-blockedSubview-title {
+  -moz-box-flex: 1;
 }
 }/** END Proton **/
 
@@ -106,6 +160,45 @@
 @item@[verdict="Malware"]:hover:active {
   background-color: #aa1b08;
   color: white;
+}
+
+.downloadBlockedBadgeNew {
+  display: none;
+}
+
+#downloadsPanel-blockedSubview[verdict="Insecure"] >.panel-view-body-unscrollable,
+#downloadsPanel-blockedSubview[verdict="Malware"] > .panel-view-body-unscrollable {
+  background-image: url("chrome://browser/skin/downloads/download-blocked.svg");
+}
+
+#downloadsPanel-blockedSubview > .panel-view-body-unscrollable {
+  background-position: 16px 16px;
+  background-size: 32px 32px;
+  background-repeat: no-repeat;
+}
+
+#downloadsPanel-blockedSubview:-moz-locale-dir(rtl) {
+  background-position: calc(100% - 16px) 16px;
+}
+
+#downloadsPanel-blockedSubview-details1,
+#downloadsPanel-blockedSubview-details2,
+#downloadsPanel-blockedSubview-title {
+  margin-inline: 64px 16px;
+}
+
+#downloadsPanel-blockedSubview[verdict="PotentiallyUnwanted"] > .panel-view-body-unscrollable {
+  background-image: url("chrome://global/skin/icons/warning.svg");
+}
+
+#downloadsPanel-blockedSubview[verdict="Uncommon"] > .panel-view-body-unscrollable {
+  -moz-context-properties: fill;
+  fill: #00a1f2;
+  background-image: url("chrome://global/skin/icons/info-filled.svg");
+}
+
+.downloadsPanel-blockedSubview-image {
+  display: none;
 }
 }/** END not Proton **/
 
@@ -169,8 +262,10 @@
   background-position-x: left;
 }
 
+#downloadsPanel-blockedSubview[verdict="PotentiallyUnwanted"] .downloadsPanel-blockedSubview-image,
+@item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadgeNew,
 @item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadge {
-  background-image: url("chrome://browser/skin/warning.svg");
+  background-image: url("chrome://global/skin/icons/warning.svg");
 }
 
 @item@[verdict="Uncommon"] .downloadBlockedBadge {
@@ -261,24 +356,7 @@
 }
 
 /*** Blocked subview ***/
-
-#downloadsPanel-blockedSubview > .panel-view-body-unscrollable {
-  background-image: url("chrome://browser/skin/warning.svg");
-  background-size: 32px 32px;
-  background-position: 16px 16px;
-  background-repeat: no-repeat;
-}
-
-#downloadsPanel-blockedSubview:-moz-locale-dir(rtl) {
-  background-position: calc(100% - 16px) 16px;
-}
-
-#downloadsPanel-blockedSubview[verdict=Malware] > .panel-view-body-unscrollable {
-  background-image: url("chrome://browser/skin/downloads/download-blocked.svg");
-}
-
 #downloadsPanel-blockedSubview-title {
-  margin-block: 16px;
   font-size: calc(100% / var(--downloads-item-font-size-factor));
 }
 
@@ -287,12 +365,6 @@
   font-size: calc(100% * var(--downloads-item-font-size-factor));
   margin-bottom: 16px;
   opacity: var(--downloads-item-details-opacity);
-}
-
-#downloadsPanel-blockedSubview-title,
-#downloadsPanel-blockedSubview-details1,
-#downloadsPanel-blockedSubview-details2 {
-  margin-inline: 64px 16px;
 }
 
 /*** Progressmeter ***/
