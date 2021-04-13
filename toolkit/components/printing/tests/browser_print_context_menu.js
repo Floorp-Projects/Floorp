@@ -26,12 +26,13 @@ add_task(async function testPrintFrame() {
     );
     await popupShownPromise;
 
-    let frameContextMenu = document.getElementById("frame");
+    let frameItem = document.getElementById("frame");
+    let frameContextMenu = frameItem.menupopup;
     popupShownPromise = BrowserTestUtils.waitForEvent(
       frameContextMenu,
       "popupshown"
     );
-    EventUtils.synthesizeMouseAtCenter(frameContextMenu, {});
+    frameItem.openMenu(true);
     await popupShownPromise;
 
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(
@@ -39,7 +40,7 @@ add_task(async function testPrintFrame() {
       "popuphidden"
     );
     let item = document.getElementById("context-printframe");
-    EventUtils.synthesizeMouseAtCenter(item, {});
+    frameContextMenu.activateItem(item);
     await popupHiddenPromise;
 
     await BrowserTestUtils.waitForCondition(
