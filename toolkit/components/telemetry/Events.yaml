@@ -536,6 +536,28 @@ navigation:
     extra_keys:
       engine: The id of the search engine used.
 
+upgrade_dialog:
+  content:
+    objects: ["show", "close", "button", "theme"]
+    bug_numbers: [1697222]
+    description: >
+      Content page behaviors of the upgrade dialog. Value indicates the interaction.
+    expiry_version: never
+    notification_emails: ["edilee@mozilla.com"]
+    products: ["firefox"]
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+  trigger:
+    objects: ["reason"]
+    bug_numbers: [1697222]
+    description: >
+      Triggering behaviors of the upgrade dialog. Value indicates which condition failed or all satisfied.
+    expiry_version: never
+    notification_emails: ["edilee@mozilla.com"]
+    products: ["firefox"]
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+
 urlbar:
   engagement:
     objects: ["click", "enter", "paste_go", "drop_go"]
