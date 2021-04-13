@@ -61,7 +61,7 @@ add_task(async function testPopup() {
       "#toggle_PersonalToolbar"
     );
     let subMenu = bookmarksToolbarMenu.querySelector("menupopup");
-    EventUtils.synthesizeMouseAtCenter(bookmarksToolbarMenu, {});
+    bookmarksToolbarMenu.openMenu(true);
     await BrowserTestUtils.waitForPopupEvent(subMenu, "shown");
     let menuitems = subMenu.querySelectorAll("menuitem");
     for (let menuitem of menuitems) {
