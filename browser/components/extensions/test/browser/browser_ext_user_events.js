@@ -209,7 +209,7 @@ add_task(async function testSources() {
           "test user events in onclick"
         );
         is(items.length, 1, "Found context menu item");
-        EventUtils.synthesizeMouseAtCenter(items[0], {});
+        menu.activateItem(items[0]);
       },
       expectPrompt: false, // cookies permission has no prompt.
       perm: "cookies",
@@ -229,7 +229,7 @@ add_task(async function testSources() {
           "test user events in onClicked"
         );
         is(items.length, 1, "Found context menu item again");
-        EventUtils.synthesizeMouseAtCenter(items[0], {});
+        menu.activateItem(items[0]);
       },
       expectPrompt: true,
       perm: "webNavigation",
