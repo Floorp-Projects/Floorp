@@ -30,6 +30,10 @@ pub(crate) struct InitUserActivityObserver {
 #[allow(non_snake_case)]
 impl UserActivityObserver {
     pub(crate) unsafe fn begin_observing() -> Result<(), nsresult> {
+        // First and foremost, even if we can't get the ObserverService,
+        // init always means client activity.
+        glean::handle_client_active();
+
         let activity_obs = Self::allocate(InitUserActivityObserver {
             last_edge: RwLock::new(Instant::now()),
             was_active: AtomicBool::new(false),
