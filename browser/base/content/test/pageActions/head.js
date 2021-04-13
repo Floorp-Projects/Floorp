@@ -100,13 +100,13 @@ function promisePanelEvent(panelIDOrNode, eventType) {
       (eventType == "popupshown" && panel.state == "open") ||
       (eventType == "popuphidden" && panel.state == "closed")
     ) {
-      executeSoon(resolve);
+      executeSoon(() => resolve(panel));
       return;
     }
     panel.addEventListener(
       eventType,
       () => {
-        executeSoon(resolve);
+        executeSoon(() => resolve(panel));
       },
       { once: true }
     );
