@@ -875,6 +875,11 @@ class PackedType : public T {
     }
   }
 
+  PackedType<ValTypeTraits> valType() const {
+    MOZ_ASSERT(isValType());
+    return PackedType<ValTypeTraits>(tc_);
+  }
+
   bool isValType() const {
     switch (tc_.typeCode()) {
       case TypeCode::I8:
@@ -993,6 +998,8 @@ static inline bool IsNumberType(ValType vt) { return !vt.isReference(); }
 static inline jit::MIRType ToMIRType(const Maybe<ValType>& t) {
   return t ? ToMIRType(ValType(t.ref())) : jit::MIRType::None;
 }
+
+extern bool ToValType(JSContext* cx, HandleValue v, ValType* out);
 
 extern UniqueChars ToString(ValType type);
 
@@ -1461,6 +1468,9 @@ class MOZ_NON_PARAM Val : public LitVal {
     return cell_.ref_.asJSObjectAddress();
   }
 
+  void readFromRootedLocation(const void* loc);
+  void writeToRootedLocation(void* loc, bool mustWrite64) const;
+
   // See the comment for `ToWebAssemblyValue` below.
   static bool fromJSValue(JSContext* cx, ValType targetType, HandleValue val,
                           MutableHandle<Val> rval);
@@ -1503,6 +1513,16 @@ using MutableHandleValVector = MutableHandle<ValVector>;
 class NoDebug;
 class DebugCodegenVal;
 
+// The level of coercion to apply in `ToWebAssemblyValue` and `ToJSValue`.
+enum class CoercionLevel {
+  // The default coercions given by the JS-API specification.
+  Spec,
+  // Allow for the coercions given by `Spec` but also use WebAssembly.Global
+  // as a container for lossless conversions. This is only available through
+  // the wasmLosslessInvoke testing function and is used in tests.
+  Lossless,
+};
+
 // Coercion function from a JS value to a WebAssembly value [1].
 //
 // This function may fail for any of the following reasons:
@@ -1514,10 +1534,12 @@ class DebugCodegenVal;
 // [1] https://webassembly.github.io/spec/js-api/index.html#towebassemblyvalue
 template <typename Debug = NoDebug>
 extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
-                               void* loc, bool mustWrite64);
+                               void* loc, bool mustWrite64,
+                               CoercionLevel level = CoercionLevel::Spec);
 template <typename Debug = NoDebug>
 extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
-                               void* loc, bool mustWrite64);
+                               void* loc, bool mustWrite64,
+                               CoercionLevel level = CoercionLevel::Spec);
 
 // Coercion function from a WebAssembly value to a JS value [1].
 //
@@ -1529,10 +1551,12 @@ extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
 // [1] https://webassembly.github.io/spec/js-api/index.html#tojsvalue
 template <typename Debug = NoDebug>
 extern bool ToJSValue(JSContext* cx, const void* src, FieldType type,
-                      MutableHandleValue dst);
+                      MutableHandleValue dst,
+                      CoercionLevel level = CoercionLevel::Spec);
 template <typename Debug = NoDebug>
 extern bool ToJSValue(JSContext* cx, const void* src, ValType type,
-                      MutableHandleValue dst);
+                      MutableHandleValue dst,
+                      CoercionLevel level = CoercionLevel::Spec);
 
 // The FuncType class represents a WebAssembly function signature which takes a
 // list of value types and returns an expression type. The engine uses two

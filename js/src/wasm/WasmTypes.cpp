@@ -18,6 +18,8 @@
 
 #include "wasm/WasmTypes.h"
 
+#include "mozilla/FloatingPoint.h"
+
 #include <algorithm>
 
 #include "jsmath.h"
@@ -96,6 +98,18 @@ Val::Val(const LitVal& val) {
       return;
   }
   MOZ_CRASH();
+}
+
+void Val::readFromRootedLocation(const void* loc) {
+  memset(&cell_, 0, sizeof(Cell));
+  memcpy(&cell_, loc, type_.size());
+}
+
+void Val::writeToRootedLocation(void* loc, bool mustWrite64) const {
+  memcpy(loc, &cell_, type_.size());
+  if (mustWrite64 && type_.size() == 4) {
+    memset((uint8_t*)(loc) + 4, 0, 4);
+  }
 }
 
 bool Val::fromJSValue(JSContext* cx, ValType targetType, HandleValue val,
@@ -214,30 +228,35 @@ class wasm::DebugCodegenVal {
 
 template bool wasm::ToWebAssemblyValue<NoDebug>(JSContext* cx, HandleValue val,
                                                 FieldType type, void* loc,
-                                                bool mustWrite64);
-template bool wasm::ToWebAssemblyValue<DebugCodegenVal>(JSContext* cx,
-                                                        HandleValue val,
-                                                        FieldType type,
-                                                        void* loc,
-                                                        bool mustWrite64);
+                                                bool mustWrite64,
+                                                CoercionLevel level);
+template bool wasm::ToWebAssemblyValue<DebugCodegenVal>(
+    JSContext* cx, HandleValue val, FieldType type, void* loc, bool mustWrite64,
+    CoercionLevel level);
 template bool wasm::ToJSValue<NoDebug>(JSContext* cx, const void* src,
-                                       FieldType type, MutableHandleValue dst);
+                                       FieldType type, MutableHandleValue dst,
+                                       CoercionLevel level);
 template bool wasm::ToJSValue<DebugCodegenVal>(JSContext* cx, const void* src,
                                                FieldType type,
-                                               MutableHandleValue dst);
+                                               MutableHandleValue dst,
+                                               CoercionLevel level);
 
 template bool wasm::ToWebAssemblyValue<NoDebug>(JSContext* cx, HandleValue val,
                                                 ValType type, void* loc,
-                                                bool mustWrite64);
+                                                bool mustWrite64,
+                                                CoercionLevel level);
 template bool wasm::ToWebAssemblyValue<DebugCodegenVal>(JSContext* cx,
                                                         HandleValue val,
                                                         ValType type, void* loc,
-                                                        bool mustWrite64);
+                                                        bool mustWrite64,
+                                                        CoercionLevel level);
 template bool wasm::ToJSValue<NoDebug>(JSContext* cx, const void* src,
-                                       ValType type, MutableHandleValue dst);
+                                       ValType type, MutableHandleValue dst,
+                                       CoercionLevel level);
 template bool wasm::ToJSValue<DebugCodegenVal>(JSContext* cx, const void* src,
                                                ValType type,
-                                               MutableHandleValue dst);
+                                               MutableHandleValue dst,
+                                               CoercionLevel level);
 
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_i8(JSContext* cx, HandleValue val, int8_t* loc) {
@@ -340,9 +359,31 @@ bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val, void** loc,
   return true;
 }
 
+bool ToWebAssemblyValue_lossless(JSContext* cx, HandleValue val, ValType type,
+                                 void* loc, bool mustWrite64) {
+  if (!val.isObject() || !val.toObject().is<WasmGlobalObject>()) {
+    return false;
+  }
+  Rooted<WasmGlobalObject*> srcVal(cx, &val.toObject().as<WasmGlobalObject>());
+
+  if (srcVal->type() != type) {
+    return false;
+  }
+
+  srcVal->val().get().writeToRootedLocation(loc, mustWrite64);
+  return true;
+}
+
 template <typename Debug>
 bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
-                              void* loc, bool mustWrite64) {
+                              void* loc, bool mustWrite64,
+                              CoercionLevel level) {
+  if (level == CoercionLevel::Lossless &&
+      ToWebAssemblyValue_lossless(cx, val, type.valType(), (void*)loc,
+                                  mustWrite64)) {
+    return true;
+  }
+
   switch (type.kind()) {
     case FieldType::I8:
       return ToWebAssemblyValue_i8<Debug>(cx, val, (int8_t*)loc);
@@ -384,6 +425,7 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
           break;
       }
   }
+
   MOZ_ASSERT(!type.isExposable());
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                            JSMSG_WASM_BAD_VAL_TYPE);
@@ -391,9 +433,10 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
 }
 template <typename Debug>
 bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
-                              void* loc, bool mustWrite64) {
+                              void* loc, bool mustWrite64,
+                              CoercionLevel level) {
   return wasm::ToWebAssemblyValue(cx, val, FieldType(type.packed()), loc,
-                                  mustWrite64);
+                                  mustWrite64, level);
 }
 
 template <typename Debug = NoDebug>
@@ -451,9 +494,27 @@ bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
   return true;
 }
 
+template <typename Debug = NoDebug>
+bool ToJSValue_lossless(JSContext* cx, const void* src, MutableHandleValue dst,
+                        ValType type) {
+  RootedVal srcVal(cx, type);
+  srcVal.get().readFromRootedLocation(src);
+  RootedObject prototype(
+      cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal));
+  Rooted<WasmGlobalObject*> srcGlobal(
+      cx, WasmGlobalObject::create(cx, srcVal, false, prototype));
+  dst.set(ObjectValue(*srcGlobal.get()));
+  return true;
+}
+
 template <typename Debug>
 bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
-                     MutableHandleValue dst) {
+                     MutableHandleValue dst, CoercionLevel level) {
+  if (level == CoercionLevel::Lossless) {
+    MOZ_ASSERT(type.isValType());
+    return ToJSValue_lossless(cx, src, dst, type.valType());
+  }
+
   switch (type.kind()) {
     case FieldType::I8:
       return ToJSValue_i8<Debug>(cx, *reinterpret_cast<const int8_t*>(src),
@@ -499,8 +560,8 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
 }
 template <typename Debug>
 bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
-                     MutableHandleValue dst) {
-  return wasm::ToJSValue(cx, src, FieldType(type.packed()), dst);
+                     MutableHandleValue dst, CoercionLevel level) {
+  return wasm::ToJSValue(cx, src, FieldType(type.packed()), dst, level);
 }
 
 void AnyRef::trace(JSTracer* trc) {
@@ -1842,6 +1903,46 @@ void wasm::DebugCodegen(DebugChannel channel, const char* fmt, ...) {
   vfprintf(stderr, fmt, ap);
   va_end(ap);
 #endif
+}
+
+bool wasm::ToValType(JSContext* cx, HandleValue v, ValType* out) {
+  RootedString typeStr(cx, ToString(cx, v));
+  if (!typeStr) {
+    return false;
+  }
+
+  RootedLinearString typeLinearStr(cx, typeStr->ensureLinear(cx));
+  if (!typeLinearStr) {
+    return false;
+  }
+
+  if (StringEqualsLiteral(typeLinearStr, "i32")) {
+    *out = ValType::I32;
+  } else if (StringEqualsLiteral(typeLinearStr, "i64")) {
+    *out = ValType::I64;
+  } else if (StringEqualsLiteral(typeLinearStr, "f32")) {
+    *out = ValType::F32;
+  } else if (StringEqualsLiteral(typeLinearStr, "f64")) {
+    *out = ValType::F64;
+#ifdef ENABLE_WASM_SIMD
+  } else if (SimdAvailable(cx) && StringEqualsLiteral(typeLinearStr, "v128")) {
+    *out = ValType::V128;
+#endif
+  } else if (StringEqualsLiteral(typeLinearStr, "funcref")) {
+    *out = RefType::func();
+  } else if (StringEqualsLiteral(typeLinearStr, "externref")) {
+    *out = RefType::extern_();
+#ifdef ENABLE_WASM_GC
+  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "eqref")) {
+    *out = RefType::eq();
+#endif
+  } else {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_STRING_VAL_TYPE);
+    return false;
+  }
+
+  return true;
 }
 
 UniqueChars wasm::ToString(ValType type) {
