@@ -87,13 +87,15 @@ class nsMenuX final : public nsMenuParentX,
 
   void PopupShowingEventWasSentAndApprovedExternally() { DidFirePopupShowing(); }
 
-  // Called from the menu delegate during menuWillOpen.
-  // Fires the popupshown event.
+  // Called from the menu delegate during menuWillOpen, or to simulate opening.
+  // Ignored if the menu is already considered open.
+  // Fires the popupshown event, if it hasn't been sent yet for this opening.
   // When calling this method, the caller must hold a strong reference to this object, because other
   // references to this object can be dropped during the handling of the DOM event.
-  nsEventStatus MenuOpened();
+  void MenuOpened();
 
-  // Called from the menu delegate during menuDidClose.
+  // Called from the menu delegate during menuDidClose, or to simulate closing.
+  // Ignored if the menu is already considered closed.
   // When calling this method, the caller must hold a strong reference to this object, because other
   // references to this object can be dropped during the handling of the DOM event.
   void MenuClosed();
@@ -216,7 +218,8 @@ class nsMenuX final : public nsMenuParentX,
   bool mIsEnabled = true;
   bool mNeedsRebuild = true;
 
-  // Whether the native NSMenu is open, from the macOS perspective.
+  // Whether the native NSMenu is considered open.
+  // Also affected by MenuOpened() / MenuClosed() calls for simulated opening / closing.
   bool mIsOpen = false;
 
   // Whether the popup is open from Gecko's perspective, based on popupshowing / popuphiding events.

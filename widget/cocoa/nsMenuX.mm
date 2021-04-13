@@ -327,7 +327,11 @@ nsresult nsMenuX::RemoveAll() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsEventStatus nsMenuX::MenuOpened() {
+void nsMenuX::MenuOpened() {
+  if (mIsOpen) {
+    return;
+  }
+
   if (!mDidFirePopupshowingAndIsApprovedToOpen) {
     // Fire popupshowing now.
     bool approvedToOpen = OnOpen();
@@ -372,8 +376,6 @@ nsEventStatus nsMenuX::MenuOpened() {
     RemoveAll();
     RebuildMenu();
   }
-
-  return nsEventStatus_eConsumeNoDefault;
 }
 
 void nsMenuX::MenuClosed() {
