@@ -110,7 +110,7 @@ add_task(async function test_remove_tags_from_Toolbar() {
       let properties = document.getElementById(
         "placesContext_show_bookmark:info"
       );
-      EventUtils.synthesizeMouseAtCenter(properties, {});
+      placesContext.activateItem(properties, {});
     },
     async function test(dialogWin) {
       let tagspicker = dialogWin.document.getElementById(
