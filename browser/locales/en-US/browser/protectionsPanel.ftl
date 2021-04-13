@@ -89,6 +89,10 @@ protections-panel-fingerprinters = Fingerprinters collect settings from your bro
 protections-panel-tracking-content = Websites may load external ads, videos, and other content with tracking code. Blocking tracking content can help sites load faster, but some buttons, forms, and login fields might not work.
 protections-panel-social-media-trackers = Social networks place trackers on other websites to follow what you do, see, and watch online. This allows social media companies to learn more about you beyond what you share on your social media profiles.
 
+protections-panel-description-shim-allowed = Some trackers marked below have been partially unblocked on this page because you interacted with them.
+protections-panel-shim-allowed-indicator =
+  .tooltiptext = Tracker partially unblocked
+
 protections-panel-content-blocking-manage-settings =
   .label = Manage Protection Settings
   .accesskey = M
