@@ -139,7 +139,8 @@ class Instance {
   // value in args.rval.
 
   [[nodiscard]] bool callExport(JSContext* cx, uint32_t funcIndex,
-                                CallArgs args);
+                                CallArgs args,
+                                CoercionLevel level = CoercionLevel::Spec);
 
   // Return the name associated with a given function index, or generate one
   // if none was given by the module.
@@ -237,7 +238,8 @@ class Instance {
 using UniqueInstance = UniquePtr<Instance>;
 
 bool ResultsToJSValue(JSContext* cx, ResultType type, void* registerResultLoc,
-                      Maybe<char*> stackResultsLoc, MutableHandleValue rval);
+                      Maybe<char*> stackResultsLoc, MutableHandleValue rval,
+                      CoercionLevel level = CoercionLevel::Spec);
 
 }  // namespace wasm
 }  // namespace js
