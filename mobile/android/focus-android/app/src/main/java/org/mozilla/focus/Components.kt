@@ -17,6 +17,7 @@ import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.downloads.DownloadsUseCases
+import mozilla.components.feature.prompts.PromptMiddleware
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.search.middleware.SearchMiddleware
@@ -93,7 +94,8 @@ class Components(
                 // https://github.com/mozilla-mobile/focus-android/issues/4781
                 RegionMiddleware(context, LocationService.default()),
                 SearchMiddleware(context, migration = SearchMigration(context)),
-                SearchFilterMiddleware()
+                SearchFilterMiddleware(),
+                PromptMiddleware()
             ) + EngineMiddleware.create(engine, ::findSessionById)
         )
     }
