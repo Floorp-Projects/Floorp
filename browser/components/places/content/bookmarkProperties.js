@@ -136,7 +136,7 @@ var BookmarkPropertiesPanel = {
   _getDialogTitle: function BPP__getDialogTitle() {
     if (this._action == ACTION_ADD) {
       if (this._itemType == BOOKMARK_ITEM) {
-        return this._strings.getString("dialogTitleAddNewBookmark");
+        return this._strings.getString("dialogTitleAddNewBookmark2");
       }
 
       // add folder
