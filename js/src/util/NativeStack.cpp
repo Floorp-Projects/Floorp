@@ -10,8 +10,6 @@
 
 #ifdef XP_WIN
 #  include "util/Windows.h"
-#elif defined(__wasi__)
-// Nothing
 #elif defined(XP_DARWIN) || defined(DARWIN) || defined(XP_UNIX)
 #  include <pthread.h>
 #  if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
@@ -117,18 +115,7 @@ void* js::GetNativeStackBaseImpl() {
 #  endif
 }
 
-#elif defined(__wasi__)
-
-// Since we rearrange the layout for wasi via --stack-first flag for the linker
-// the final layout is: 0x00 | <- stack | data | heap -> |.
-static void* NativeStackBase = __builtin_frame_address(0);
-
-void* js::GetNativeStackBaseImpl() {
-  MOZ_ASSERT(JS_STACK_GROWTH_DIRECTION < 0);
-  return NativeStackBase;
-}
-
-#else  // __wasi__
+#else /* XP_UNIX */
 
 void* js::GetNativeStackBaseImpl() {
   pthread_t thread = pthread_self();

@@ -206,7 +206,7 @@
 #include <iterator>
 #include <string.h>
 #include <utility>
-#if !defined(XP_WIN) && !defined(__wasi__)
+#ifndef XP_WIN
 #  include <sys/mman.h>
 #  include <unistd.h>
 #endif
