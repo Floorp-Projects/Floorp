@@ -46,10 +46,17 @@
          gclient config https://github.com/mozilla/libwebrtc && \
          gclient sync -D --force --reset --with_branch_heads \
         )
+  
+    Note that if one uses `gclient` sync with a different output directory `$MOZ_LIBWEBRTC_GIT`
+    must be set to the original clone directory, and `$MOZ_LIBWEBRTC` needs to be set to the
+    directory created by `gclient sync`.
 
 6. Now it is time to generate the build files.  The script should be run from the top
 directory of our firefox tree.
 
         ./dom/media/webrtc/third_party_build/gn-configs/generate-gn-build-files.sh
+
+   Debugging the generate script itself may prove useful, and one can do this by setting the DEBUG_GEN environment
+   variable to a non-empty value. This will print everything that the script executes.
 
 7. Checkin all the generated/modified files and try your build!
