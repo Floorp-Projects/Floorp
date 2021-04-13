@@ -352,3 +352,99 @@ add_task(async function test_record_exposure_event() {
 
   sandbox.restore();
 });
+
+add_task(async function test_record_exposure_event_once() {
+  const { sandbox, manager } = await setupForExperimentFeature();
+
+  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+  const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  manager.store.addExperiment(
+    ExperimentFakes.experiment("blah", {
+      featureIds: ["foo"],
+      branch: {
+        slug: "treatment",
+        feature: {
+          featureId: "foo",
+          enabled: false,
+          value: null,
+        },
+      },
+    })
+  );
+
+  featureInstance.recordExposureEvent();
+  featureInstance.recordExposureEvent();
+  featureInstance.recordExposureEvent();
+
+  Assert.ok(exposureSpy.calledOnce, "Should emit a single exposure event.");
+
+  sandbox.restore();
+});
+
+add_task(async function test_prevent_double_exposure_getValue() {
+  const { sandbox, manager } = await setupForExperimentFeature();
+
+  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+  const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  manager.store.addExperiment(
+    ExperimentFakes.experiment("blah", {
+      featureIds: ["foo"],
+      branch: {
+        slug: "treatment",
+        feature: {
+          featureId: "foo",
+          enabled: false,
+          value: null,
+        },
+      },
+    })
+  );
+
+  featureInstance.getValue({ sendExposureEvent: true });
+  featureInstance.getValue({ sendExposureEvent: true });
+  featureInstance.getValue({ sendExposureEvent: true });
+
+  Assert.ok(
+    exposureSpy.calledOnce,
+    "Should emit a single exposure event (getValue)."
+  );
+
+  sandbox.restore();
+});
+
+add_task(async function test_prevent_double_exposure_isEnabled() {
+  const { sandbox, manager } = await setupForExperimentFeature();
+
+  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+  const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+
+  manager.store.addExperiment(
+    ExperimentFakes.experiment("blah", {
+      featureIds: ["foo"],
+      branch: {
+        slug: "treatment",
+        feature: {
+          featureId: "foo",
+          enabled: false,
+          value: null,
+        },
+      },
+    })
+  );
+
+  featureInstance.isEnabled({ sendExposureEvent: true });
+  featureInstance.isEnabled({ sendExposureEvent: true });
+  featureInstance.isEnabled({ sendExposureEvent: true });
+
+  Assert.ok(
+    exposureSpy.calledOnce,
+    "Should emit a single exposure event (getValue)."
+  );
+
+  sandbox.restore();
+});
