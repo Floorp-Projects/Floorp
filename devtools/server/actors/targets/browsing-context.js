@@ -1066,8 +1066,6 @@ const browsingContextTargetPrototype = {
       return true;
     }
 
-    this.emit("tabDetached");
-
     return true;
   },
 

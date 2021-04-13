@@ -217,10 +217,6 @@ function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
       spawnInParentActorPool.destroy();
 
       if (actor) {
-        // The FrameTargetActor within the child process doesn't necessary
-        // have time to uninitialize itself when the frame is closed/killed.
-        // So ensure telling the client that the related actor is detached.
-        connection.send({ from: actor.actor, type: "tabDetached" });
         actor = null;
       }
 

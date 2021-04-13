@@ -197,14 +197,6 @@ class DevToolsFrameParent extends JSWindowActorParent {
     for (const { actor, connection, watcher } of this._connections.values()) {
       watcher.notifyTargetDestroyed(actor);
 
-      // XXX: we should probably get rid of this
-      if (actor && connection.transport) {
-        // The FrameTargetActor within the child process doesn't necessary
-        // have time to uninitialize itself when the frame is closed/killed.
-        // So ensure telling the client that the related actor is detached.
-        connection.send({ from: actor.actor, type: "tabDetached" });
-      }
-
       this._cleanupConnection(connection);
     }
     this._connections.clear();
