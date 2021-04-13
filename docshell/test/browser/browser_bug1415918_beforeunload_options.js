@@ -6,6 +6,10 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
+
 SimpleTest.requestFlakyTimeout("Needs to test a timeout");
 
 function delay(msec) {
@@ -13,13 +17,25 @@ function delay(msec) {
   return new Promise(resolve => setTimeout(resolve, msec));
 }
 
+function allowNextNavigation(browser) {
+  return PromptTestUtils.handleNextPrompt(
+    browser,
+    { modalType: Services.prompt.MODAL_TYPE_CONTENT, promptType: "confirmEx" },
+    { buttonNumClick: 0 }
+  );
+}
+
+function cancelNextNavigation(browser) {
+  return PromptTestUtils.handleNextPrompt(
+    browser,
+    { modalType: Services.prompt.MODAL_TYPE_CONTENT, promptType: "confirmEx" },
+    { buttonNumClick: 1 }
+  );
+}
+
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.require_user_interaction_for_beforeunload", false]],
-  });
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
   });
 
   const permitUnloadTimeout = Services.prefs.getIntPref(
@@ -36,47 +52,28 @@ add_task(async function test() {
     });
   });
 
-  let allowNavigation;
-  let promptShown = false;
-  let promptDismissed = false;
-  let promptTimeout;
-
-  const DIALOG_TOPIC = "tabmodal-dialog-loaded";
-  async function observer(node) {
-    promptShown = true;
-
-    if (promptTimeout) {
-      await delay(promptTimeout);
-    }
-
-    let button = node.querySelector(
-      `.tabmodalprompt-button${allowNavigation ? 0 : 1}`
-    );
-    button.click();
-    promptDismissed = true;
-  }
-  Services.obs.addObserver(observer, DIALOG_TOPIC);
-
   /*
    * Check condition where beforeunload handlers request a prompt.
    */
 
   // Prompt is shown, user clicks OK.
-  allowNavigation = true;
-  promptShown = false;
 
+  let promptShownPromise = allowNextNavigation(browser);
   ok(browser.permitUnload().permitUnload, "permit unload should be true");
-  ok(promptShown, "prompt should have been displayed");
+  await promptShownPromise;
 
   // Prompt is shown, user clicks CANCEL.
-  allowNavigation = false;
-  promptShown = false;
-
+  promptShownPromise = cancelNextNavigation(browser);
   ok(!browser.permitUnload().permitUnload, "permit unload should be false");
-  ok(promptShown, "prompt should have been displayed");
+  await promptShownPromise;
 
   // Prompt is not shown, don't permit unload.
-  promptShown = false;
+  let promptShown = false;
+  let shownCallback = () => {
+    promptShown = true;
+  };
+
+  browser.addEventListener("DOMWillOpenModalDialog", shownCallback);
   ok(
     !browser.permitUnload("dontUnload").permitUnload,
     "permit unload should be false"
@@ -90,10 +87,20 @@ add_task(async function test() {
     "permit unload should be true"
   );
   ok(!promptShown, "prompt should not have been displayed");
+  browser.removeEventListener("DOMWillOpenModalDialog", shownCallback);
 
-  promptShown = false;
-  promptDismissed = false;
-  promptTimeout = 3 * permitUnloadTimeout;
+  promptShownPromise = PromptTestUtils.waitForPrompt(browser, {
+    modalType: Services.prompt.MODAL_TYPE_CONTENT,
+    promptType: "confirmEx",
+  });
+
+  let promptDismissed = false;
+  let closedCallback = () => {
+    promptDismissed = true;
+  };
+
+  browser.addEventListener("DOMModalDialogClosed", closedCallback);
+
   let promise = browser.asyncPermitUnload();
 
   let promiseResolved = false;
@@ -101,8 +108,7 @@ add_task(async function test() {
     promiseResolved = true;
   });
 
-  await TestUtils.waitForCondition(() => promptShown);
-  ok(!promptDismissed, "Should not have dismissed prompt yet");
+  let dialog = await promptShownPromise;
   ok(!promiseResolved, "Should not have resolved promise yet");
 
   await delay(permitUnloadTimeout * 1.5);
@@ -110,24 +116,28 @@ add_task(async function test() {
   ok(!promptDismissed, "Should not have dismissed prompt yet");
   ok(!promiseResolved, "Should not have resolved promise yet");
 
+  await PromptTestUtils.handlePrompt(dialog, { buttonNumClick: 1 });
+
   let { permitUnload } = await promise;
   ok(promptDismissed, "Should have dismissed prompt");
   ok(!permitUnload, "Should not have permitted unload");
 
-  promptTimeout = null;
+  browser.removeEventListener("DOMModalDialogClosed", closedCallback);
+
+  promptShownPromise = allowNextNavigation(browser);
 
   /*
    * Check condition where no one requests a prompt.  In all cases,
    * permitUnload should be true, and all handlers fired.
    */
-
-  allowNavigation = true;
-
   url += "?1";
   BrowserTestUtils.loadURI(browser, url);
   await BrowserTestUtils.browserLoaded(browser, false, url);
+  await promptShownPromise;
 
   promptShown = false;
+  browser.addEventListener("DOMWillOpenModalDialog", shownCallback);
+
   ok(browser.permitUnload().permitUnload, "permit unload should be true");
   ok(!promptShown, "prompt should not have been displayed");
 
@@ -145,7 +155,7 @@ add_task(async function test() {
   );
   ok(!promptShown, "prompt should not have been displayed");
 
-  await BrowserTestUtils.removeTab(tab);
+  browser.removeEventListener("DOMWillOpenModalDialog", shownCallback);
 
-  Services.obs.removeObserver(observer, DIALOG_TOPIC);
+  await BrowserTestUtils.removeTab(tab, { skipPermitUnload: true });
 });
