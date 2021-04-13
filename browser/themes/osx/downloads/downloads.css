@@ -24,6 +24,7 @@
   outline-offset: -2px;
 }
 
+@media not (-moz-proton-doorhangers) {
 @item@[verdict="Malware"]:not(:hover) {
   color: #aa1b08;
 }
@@ -31,6 +32,7 @@
 :root[lwt-popup-brighttext] @item@[verdict="Malware"]:not(:hover) {
   color: #ff0039;
 }
+} /** END not Proton **/
 
 .downloadProgress::-moz-progress-bar {
   background-color: #3c9af8;

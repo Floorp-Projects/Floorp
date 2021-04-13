@@ -39,6 +39,27 @@
   height: 3.1em;
   padding: 0.31em;
   margin: 0.31em 0;
+  border-radius: 4px;
+}
+
+@itemFinished@[exists]:hover,
+@item@[verdict]:hover,
+.downloadsPanelFooterButton:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+@itemFinished@[exists]:hover:active,
+.downloadsPanelFooterButton[open="true"],
+@item@[verdict]:hover:active {
+  background-color: var(--button-active-bgcolor);
+}
+
+@item@[verdict="Malware"] .downloadDetails {
+  color: #C50042;
+}
+
+:root[lwt-popup-brighttext] @item@[verdict="Malware"] .downloadDetails {
+  color: #FF848B;
 }
 
 .downloadTypeIcon {
@@ -55,7 +76,6 @@
 .downloadTypeIcon {
   margin: 8px 13px;
 }
-}/** END not Proton **/
 
 .downloadsPanelFooterButton:hover {
   outline: 1px solid var(--arrowpanel-dimmed);
@@ -65,6 +85,25 @@
 .downloadsPanelFooterButton[open="true"] {
   outline: 1px solid var(--arrowpanel-dimmed-further);
 }
+
+@itemFinished@[exists] .downloadMainArea:hover,
+@item@:not([verdict]) > .downloadButton:hover,
+@item@[verdict]:hover {
+  background-color: var(--arrowpanel-dimmed);
+}
+
+@itemFinished@[exists] > .downloadMainArea:hover:active,
+@item@:not([verdict]) > .downloadButton:hover:active,
+@item@[verdict]:hover:active {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+@item@[verdict="Malware"]:hover,
+@item@[verdict="Malware"]:hover:active {
+  background-color: #aa1b08;
+  color: white;
+}
+}/** END not Proton **/
 
 @notKeyfocus@ .downloadsPanelFooterButton:-moz-focusring {
   outline: none;
@@ -189,24 +228,6 @@
 .downloadButton > .button-box > .button-text {
   margin: 0 !important;
   padding: 0;
-}
-
-@itemFinished@[exists] .downloadMainArea:hover,
-@item@:not([verdict]) > .downloadButton:hover,
-@item@[verdict]:hover {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-@itemFinished@[exists] > .downloadMainArea:hover:active,
-@item@:not([verdict]) > .downloadButton:hover:active,
-@item@[verdict]:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-@item@[verdict="Malware"]:hover,
-@item@[verdict="Malware"]:hover:active {
-  background-color: #aa1b08;
-  color: white;
 }
 
 /*** Button icons ***/
