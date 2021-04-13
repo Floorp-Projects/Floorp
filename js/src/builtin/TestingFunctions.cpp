@@ -4535,6 +4535,11 @@ class ShapeSnapshotObject : public NativeObject {
   static const JSClassOps classOps_;
   static const JSClass class_;
 
+  bool hasSnapshot() const {
+    // The snapshot may not be present yet if we GC during initialization.
+    return !getSlot(SnapshotSlot).isUndefined();
+  }
+
   ShapeSnapshot& snapshot() const {
     void* ptr = getSlot(SnapshotSlot).toPrivate();
     MOZ_ASSERT(ptr);
@@ -4544,10 +4549,14 @@ class ShapeSnapshotObject : public NativeObject {
   static ShapeSnapshotObject* create(JSContext* cx, HandleObject obj);
 
   static void finalize(JSFreeOp* fop, JSObject* obj) {
-    js_delete(&obj->as<ShapeSnapshotObject>().snapshot());
+    if (obj->as<ShapeSnapshotObject>().hasSnapshot()) {
+      js_delete(&obj->as<ShapeSnapshotObject>().snapshot());
+    }
   }
   static void trace(JSTracer* trc, JSObject* obj) {
-    obj->as<ShapeSnapshotObject>().snapshot().trace(trc);
+    if (obj->as<ShapeSnapshotObject>().hasSnapshot()) {
+      obj->as<ShapeSnapshotObject>().snapshot().trace(trc);
+    }
   }
 };
 
