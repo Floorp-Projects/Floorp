@@ -6,6 +6,7 @@ const {
   AddonManager,
   document: gDoc,
   getShellService,
+  Services,
 } = window.docShell.chromeEventHandler.ownerGlobal;
 
 const SHELL = getShellService();
@@ -94,6 +95,19 @@ function adjustModalBackdrop() {
   CLEANUP.push(() => classList.remove("showToolbar"));
 }
 
+// Helper to record various events from the dialog content.
+function recordEvent(obj, val) {
+  Services.telemetry.recordEvent("upgrade_dialog", "content", obj, `${val}`);
+}
+
+// Assume the dialog closes from an external trigger unless this helper is used.
+let gCloseReason = "external";
+CLEANUP.push(() => recordEvent("close", gCloseReason));
+function closeDialog(reason) {
+  gCloseReason = reason;
+  close();
+}
+
 // Hook up dynamic behaviors of the dialog.
 function onLoad(ready) {
   const title = document.getElementById("title");
@@ -107,6 +121,11 @@ function onLoad(ready) {
   // Update the screen content and handle actions.
   let current = -1;
   (async function advance({ target } = {}) {
+    // Record which button was clicked.
+    if (target) {
+      recordEvent("button", target.dataset.l10nId);
+    }
+
     // Move to the next screen and perform screen-specific behavior.
     switch (++current) {
       case 0:
@@ -127,7 +146,7 @@ function onLoad(ready) {
             } catch (ex) {}
           }
         } else if (target === secondary && IS_DEFAULT && !(await NEED_PIN)) {
-          window.close();
+          closeDialog("early");
           return;
         }
 
@@ -140,6 +159,7 @@ function onLoad(ready) {
             // Enable the theme of the corresponding button position.
             const index = [...themes.children].indexOf(button);
             enableTheme(THEME_IDS[index]);
+            recordEvent("theme", index);
           }
         });
 
@@ -167,7 +187,7 @@ function onLoad(ready) {
           gPrevTheme = null;
         }
 
-        window.close();
+        closeDialog("complete");
         return;
     }
 
@@ -192,6 +212,9 @@ function onLoad(ready) {
       // Let testing know the screen is ready to continue.
       dispatchEvent(new CustomEvent("ready"));
     });
+
+    // Record that the screen was shown.
+    recordEvent("show", current);
   })();
 }
 document.mozSubdialogReady = new Promise(resolve =>
