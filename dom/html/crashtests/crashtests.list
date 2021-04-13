@@ -90,3 +90,4 @@ load 1550881-1.html
 load 1550881-2.html
 skip-if(Android) pref(dom.disable_open_during_load,false) load 1667493.html
 load 1680418.html
+load 1704660.html
