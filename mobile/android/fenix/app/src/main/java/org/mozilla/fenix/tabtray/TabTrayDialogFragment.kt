@@ -432,7 +432,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
                 .setView(customLayout)
                 .setPositiveButton(android.R.string.ok) { dialog, _ ->
                     val selectedCollection =
-                        (list.adapter as CollectionsAdapter).getSelectedCollection()
+                        (list.adapter as CollectionsListAdapter).getSelectedCollection()
                     val collection = tabCollectionStorage.cachedTabCollections[selectedCollection]
                     viewLifecycleOwner.lifecycleScope.launch(Main) {
                         tabCollectionStorage.addTabsToCollection(collection, sessionList)
@@ -452,7 +452,7 @@ class TabTrayDialogFragment : AppCompatDialogFragment(), UserInteractionHandler 
 
             val dialog = builder.create()
             val adapter =
-                CollectionsAdapter(arrayOf(it.getString(R.string.tab_tray_add_new_collection)) + collections) {
+                CollectionsListAdapter(arrayOf(it.getString(R.string.tab_tray_add_new_collection)) + collections) {
                     dialog.dismiss()
                     showAddNewCollectionDialog(sessionList)
                 }

@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
-class CollectionsAdapterTest {
+class CollectionsListAdapterTest {
     private val collectionList: Array<String> =
         arrayOf(
             "Add new collection",
@@ -25,14 +25,14 @@ class CollectionsAdapterTest {
 
     @Test
     fun `getItemCount should return the correct list size`() {
-        val adapter = CollectionsAdapter(collectionList, onNewCollectionClicked)
+        val adapter = CollectionsListAdapter(collectionList, onNewCollectionClicked)
 
         assertEquals(3, adapter.itemCount)
     }
 
     @Test
     fun `getSelectedCollection should account for add new collection when returning right item`() {
-        val adapter = CollectionsAdapter(collectionList, onNewCollectionClicked)
+        val adapter = CollectionsListAdapter(collectionList, onNewCollectionClicked)
 
         // first collection by default
         assertEquals(1, adapter.checkedPosition)
@@ -44,7 +44,7 @@ class CollectionsAdapterTest {
 
     @Test
     fun `creates and binds viewholder`() {
-        val adapter = CollectionsAdapter(collectionList, onNewCollectionClicked)
+        val adapter = CollectionsListAdapter(collectionList, onNewCollectionClicked)
 
         val holder1 = adapter.createViewHolder(FrameLayout(testContext), 0)
         val holder2 = adapter.createViewHolder(FrameLayout(testContext), 0)
