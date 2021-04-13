@@ -1346,6 +1346,9 @@ void nsLookAndFeel::EnsureInit() {
   gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT,
                                          &color);
   mButtonHoverFace = GDK_RGBA_TO_NS_RGBA(color);
+  if (!NS_GET_A(mButtonHoverFace)) {
+    mButtonHoverFace = mMozWindowBackground;
+  }
 
   // Combobox text color
   style = GetStyleContext(MOZ_GTK_COMBOBOX_ENTRY_TEXTAREA);
