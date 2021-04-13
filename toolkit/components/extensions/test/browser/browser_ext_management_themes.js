@@ -125,10 +125,18 @@ add_task(async function test_management_themes() {
     "Simple theme test",
     "webextension theme installed"
   );
-  is(await extension.awaitMessage("onDisabled"), "Default", "default disabled");
+  is(
+    await extension.awaitMessage("onDisabled"),
+    "System theme",
+    "default disabled"
+  );
 
   extension.sendMessage("test");
-  is(await extension.awaitMessage("onEnabled"), "Default", "default enabled");
+  is(
+    await extension.awaitMessage("onEnabled"),
+    "System theme",
+    "default enabled"
+  );
   is(
     await extension.awaitMessage("onDisabled"),
     "Simple theme test",
@@ -139,11 +147,19 @@ add_task(async function test_management_themes() {
     "Simple theme test",
     "addon enabled"
   );
-  is(await extension.awaitMessage("onDisabled"), "Default", "default disabled");
+  is(
+    await extension.awaitMessage("onDisabled"),
+    "System theme",
+    "default disabled"
+  );
   await extension.awaitMessage("done");
 
   await Promise.all([theme.unload(), extension.awaitMessage("onUninstalled")]);
 
-  is(await extension.awaitMessage("onEnabled"), "Default", "default enabled");
+  is(
+    await extension.awaitMessage("onEnabled"),
+    "System theme",
+    "default enabled"
+  );
   await extension.unload();
 });
