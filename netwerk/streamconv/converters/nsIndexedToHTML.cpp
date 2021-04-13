@@ -306,7 +306,6 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
       "  border-spacing: 0;\n"
       "}\n"
       "table.ellipsis > tbody > tr > td {\n"
-      "  padding: 0;\n"
       "  overflow: hidden;\n"
       "  text-overflow: ellipsis;\n"
       "}\n"
