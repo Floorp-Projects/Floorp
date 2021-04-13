@@ -133,7 +133,7 @@ Http3CheckListener.prototype = {
     try {
       httpVersion = request.protocolVersion;
     } catch (e) {}
-    Assert.equal(httpVersion, "h3");
+    Assert.equal(httpVersion, "h3-27");
     Assert.equal(this.onDataAvailableFired, true);
   },
 };
@@ -163,7 +163,7 @@ WaitForHttp3Listener.prototype.onStopRequest = function testOnStopRequest(
     try {
       httpVersion = request.protocolVersion;
     } catch (e) {}
-    Assert.equal(httpVersion, "h3");
+    Assert.equal(httpVersion, "h3-27");
     run_next_test();
   } else {
     dump("poll later for alt svc mapping\n");
