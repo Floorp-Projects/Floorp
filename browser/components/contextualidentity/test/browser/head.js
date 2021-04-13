@@ -13,22 +13,20 @@ async function openTabMenuFor(tab) {
 }
 
 async function openReopenMenuForTab(tab) {
-  openTabMenuFor(tab);
+  await openTabMenuFor(tab);
 
   let reopenItem = tab.ownerDocument.getElementById(
     "context_reopenInContainer"
   );
   ok(!reopenItem.hidden, "Reopen in Container item should be shown");
 
-  const menuPopup = tab.ownerDocument.getElementById(
-    "context_reopenInContainer"
-  ).menupopup;
+  const menuPopup = reopenItem.menupopup;
   const menuPopupPromise = BrowserTestUtils.waitForEvent(
     menuPopup,
     "popupshown"
   );
   info(`About to open a popup`);
-  menuPopup.openPopup();
+  reopenItem.openMenu(true);
   info(`Waiting for the menu popup promise`);
   await menuPopupPromise;
   info(`Awaited menu popup promise`);
@@ -40,7 +38,8 @@ function openTabInContainer(gBrowser, url, reopenMenu, id) {
   let menuitem = reopenMenu.querySelector(
     `menuitem[data-usercontextid="${id}"]`
   );
-  EventUtils.synthesizeMouseAtCenter(menuitem, {}, menuitem.ownerGlobal);
+  info(`about to activate item`);
+  reopenMenu.activateItem(menuitem);
   return tabPromise;
 }
 
