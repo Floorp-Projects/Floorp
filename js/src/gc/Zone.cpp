@@ -650,7 +650,7 @@ void Zone::addSizeOfIncludingThis(
     size_t* shapeCaches, size_t* atomsMarkBitmaps, size_t* compartmentObjects,
     size_t* crossCompartmentWrappersTables, size_t* compartmentsPrivateData,
     size_t* scriptCountsMapArg) {
-  *regexpZone += regExps().sizeOfExcludingThis(mallocSizeOf);
+  *regexpZone += regExps().sizeOfIncludingThis(mallocSizeOf);
   if (jitZone_) {
     jitZone_->addSizeOfIncludingThis(mallocSizeOf, code, jitZone,
                                      baselineStubsOptimized);
