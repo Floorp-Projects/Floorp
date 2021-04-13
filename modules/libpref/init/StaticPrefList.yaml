@@ -2931,6 +2931,13 @@
   value: false
   mirror: always
 
+# If true, top-level request will get upgraded to HTTPS and
+# downgraded again if the request failed.
+- name: dom.security.https_only_mode_https_first
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: dom.security.unexpected_system_load_telemetry_enabled
   type: bool
   value: true

@@ -131,6 +131,10 @@ class nsDocShellLoadState final {
 
   void SetForceAllowDataURI(bool aForceAllowDataURI);
 
+  bool IsExemptFromHTTPSOnlyMode() const;
+
+  void SetIsExemptFromHTTPSOnlyMode(bool aIsExemptFromHTTPSOnlyMode);
+
   bool OriginalFrameSrc() const;
 
   void SetOriginalFrameSrc(bool aOriginalFrameSrc);
@@ -403,6 +407,10 @@ class nsDocShellLoadState final {
   // If this attribute is true, then a top-level navigation
   // to a data URI will be allowed.
   bool mForceAllowDataURI;
+
+  // If this attribute is true, then the top-level navigaion
+  // will be exempt from HTTPS-Only-Mode upgrades.
+  bool mIsExemptFromHTTPSOnlyMode;
 
   // If this attribute is true, this load corresponds to a frame
   // element loading its original src (or srcdoc) attribute.

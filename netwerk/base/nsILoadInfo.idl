@@ -471,6 +471,12 @@ interface nsILoadInfo : nsISupports
   const unsigned long HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE = (1 << 5);
 
   /**
+   * This flag indicates that the request should not be logged to the
+   * console.
+   */
+  const unsigned long HTTPS_ONLY_UPGRADED_HTTPS_FIRST = (1 << 6);
+
+  /**
    * Upgrade state of HTTPS-Only Mode. The flag HTTPS_ONLY_EXEMPT can get
    * set on requests that should be excempt from an upgrade.
    */

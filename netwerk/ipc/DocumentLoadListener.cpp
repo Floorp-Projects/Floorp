@@ -140,6 +140,12 @@ static auto CreateDocumentLoadInfo(CanonicalBrowsingContext* aBrowsingContext,
                                            attrs, securityFlags, sandboxFlags);
   }
 
+  if (aLoadState->IsExemptFromHTTPSOnlyMode()) {
+    uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
+    httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
+    loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
+  }
+
   loadInfo->SetTriggeringSandboxFlags(aLoadState->TriggeringSandboxFlags());
   loadInfo->SetHasValidUserGestureActivation(
       aLoadState->HasValidUserGestureActivation());
@@ -2159,6 +2165,17 @@ bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
       mLoadStateInternalLoadFlags &
           nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
       bc->UsePrivateBrowsing(), true, getter_AddRefs(newPostData));
+
+  // If the request failed, the above attempt to fix it failed but it
+  // was upgraded using HTTPS-First, then let's check if we can downgrade
+  // the scheme to HTTP again.
+  bool isHTTPSFirstFixup = false;
+  if (NS_FAILED(aStatus) && !newURI) {
+    newURI = nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(mChannel,
+                                                                     aStatus);
+    isHTTPSFirstFixup = true;
+  }
+
   if (!newURI) {
     return false;
   }
@@ -2178,6 +2195,12 @@ bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
 
   loadState->SetPostDataStream(newPostData);
+
+  if (isHTTPSFirstFixup) {
+    // We have to exempt the load from HTTPS-First to prevent a
+    // upgrade-downgrade loop.
+    loadState->SetIsExemptFromHTTPSOnlyMode(true);
+  }
 
   bc->LoadURI(loadState, false);
   return true;
