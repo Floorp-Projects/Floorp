@@ -219,6 +219,8 @@ class MediaManager final : public nsIMediaManagerService,
 
   using StreamPromise =
       MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>;
+  using DevicePromise =
+      MozPromise<RefPtr<MediaDevice>, RefPtr<MediaMgrError>, true>;
   using DevicesPromise =
       MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>;
   using MgrPromise = MozPromise<bool, RefPtr<MediaMgrError>, true>;
