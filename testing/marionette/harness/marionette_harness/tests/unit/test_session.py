@@ -31,9 +31,6 @@ class TestSession(MarionetteTestCase):
         self.assertIn("platformName", caps)
         self.assertIn("platformVersion", caps)
 
-        # Optional capabilities we want Marionette to support
-        self.assertIn("rotatable", caps)
-
     def test_get_session_id(self):
         # Sends newSession
         self.marionette.start_session()
