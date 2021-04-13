@@ -50,6 +50,26 @@ uint32_t MakeCookieBehavior(uint32_t aCookieBehavior) {
 // static
 uint32_t nsICookieManager::GetCookieBehavior(bool aIsPrivate) {
   if (aIsPrivate) {
+    // To sync the cookieBehavior pref between regular and private mode in ETP
+    // custom mode, we will return the regular cookieBehavior pref for private
+    // mode when
+    //   1. The regular cookieBehavior pref has a non-default value.
+    //   2. And the private cookieBehavior pref has a default value.
+    // Also, this can cover the migration case where the user has a non-default
+    // cookieBehavior before the private cookieBehavior was introduced. The
+    // getter here will directly return the regular cookieBehavior, so that the
+    // cookieBehavior for private mode is consistent.
+    if (mozilla::Preferences::HasUserValue(
+            "network.cookie.cookieBehavior.pbmode")) {
+      return MakeCookieBehavior(
+          mozilla::StaticPrefs::network_cookie_cookieBehavior_pbmode());
+    }
+
+    if (mozilla::Preferences::HasUserValue("network.cookie.cookieBehavior")) {
+      return MakeCookieBehavior(
+          mozilla::StaticPrefs::network_cookie_cookieBehavior());
+    }
+
     return MakeCookieBehavior(
         mozilla::StaticPrefs::network_cookie_cookieBehavior_pbmode());
   }
