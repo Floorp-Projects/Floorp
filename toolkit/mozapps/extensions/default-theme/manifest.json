@@ -7,10 +7,10 @@
     }
   },
 
-  "name": "System setting",
-  "description": "Use your operating system theme.",
+  "name": "Default",
+  "description": "A theme with the operating system color scheme.",
   "author": "Mozilla",
-  "version": "1.2",
+  "version": "1.1",
 
   "icons": {"32": "icon.svg"},
 
