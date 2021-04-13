@@ -34,12 +34,8 @@
 
 #ifndef XP_WIN
 
-#  ifdef __wasi__
-#    include <stdlib.h>
-#  else
-#    include <sys/types.h>
-#    include <sys/mman.h>
-#  endif  // __wasi__
+#  include <sys/types.h>
+#  include <sys/mman.h>
 
 #  include "mozilla/Types.h"
 
@@ -70,12 +66,7 @@ static inline void MozTagAnonymousMemory(const void* aPtr, size_t aLength,
 static inline void* MozTaggedAnonymousMmap(void* aAddr, size_t aLength,
                                            int aProt, int aFlags, int aFd,
                                            off_t aOffset, const char* aTag) {
-#    ifdef __wasi__
-  MOZ_CRASH("We don't use this memory for WASI right now.");
-  return nullptr;
-#    else
   return mmap(aAddr, aLength, aProt, aFlags, aFd, aOffset);
-#    endif
 }
 
 static inline int MozTaggedMemoryIsSupported(void) { return 0; }

@@ -14,7 +14,7 @@
 
 #include <string>
 #include <string.h>
-#if !defined(XP_WIN) && !defined(__wasi__)
+#ifndef XP_WIN
 #  include <sys/mman.h>
 #endif
 

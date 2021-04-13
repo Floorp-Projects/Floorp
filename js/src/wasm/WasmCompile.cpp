@@ -23,10 +23,7 @@
 
 #include <algorithm>
 
-#ifndef __wasi__
-#  include "jit/ProcessExecutableMemory.h"
-#endif
-
+#include "jit/ProcessExecutableMemory.h"
 #include "util/Text.h"
 #include "vm/HelperThreadState.h"
 #include "vm/Realm.h"
