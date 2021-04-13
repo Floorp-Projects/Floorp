@@ -28,6 +28,7 @@
   --tabs-border-color: rgba(0,0,0,.3);
 
   --chrome-content-separator-color: ThreeDShadow;
+  --panel-font-size: 1.05em;
 }
 
 @media (-moz-proton) {
@@ -39,6 +40,7 @@
 @media not (-moz-proton) {
 :root {
   --toolbarbutton-icon-fill-opacity: .85;
+  --panel-font-size: 1em;
 }
 
 #tabbrowser-tabs {
