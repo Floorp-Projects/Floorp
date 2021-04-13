@@ -253,11 +253,14 @@ browsertime-benchmark-wasm:
                     windows7.*: []
                     default: [mozilla-central]
             default:
-                by-test-platform:
-                    (linux|windows|macos)(?!.*shippable).*: []
-                    linux.*shippable.*: ["trunk", "mozilla-beta"]
-                    macos.*shippable.*: ["trunk", "mozilla-beta"]
-                    windows10.*shippable.*: ["trunk", "mozilla-beta"]
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            (linux|windows|macos)(?!.*shippable).*: []
+                            linux.*shippable.*: ["trunk", "mozilla-beta"]
+                            macos.*shippable.*: ["trunk", "mozilla-beta"]
+                            windows10.*shippable.*: ["trunk", "mozilla-beta"]
+                            default: []
                     default: []
     max-run-time:
         by-subtest:
