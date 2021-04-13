@@ -1009,6 +1009,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "div.proton[style*='.avif']",
       "div.section-left",
       "span.attrib-text",
+      "div.secondary-cta.top",
     ],
     // Unexpected selectors:
     ["main.AW_STEP2", "main.AW_STEP3"]
