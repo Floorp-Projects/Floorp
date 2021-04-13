@@ -476,6 +476,7 @@ package org.mozilla.geckoview {
 
   public static class ContentBlockingController.Event {
     ctor protected Event();
+    field public static final int ALLOWED_TRACKING_CONTENT = 32;
     field public static final int BLOCKED_CRYPTOMINING_CONTENT = 2048;
     field public static final int BLOCKED_FINGERPRINTING_CONTENT = 64;
     field public static final int BLOCKED_SOCIALTRACKING_CONTENT = 65536;

@@ -318,9 +318,12 @@ interface nsIWebProgressListener : nsISupports
    * STATE_LOADED_SOCIALTRACKING_CONTENT
    *   SocialTracking content has been loaded.
    *
-   * STATE_UNBLOCKED_TRACKING_CONTENT
-   *   Tracking content should be blocked from loading was unblocked.
+   * STATE_REPLACED_TRACKING_CONTENT
+   *   Tracking content which should be blocked from loading was replaced with a
+   *   shim.
    *
+   * STATE_ALLOWED_TRACKING_CONTENT
+   *   Tracking content which should be blocked from loading was allowed.
    */
   const unsigned long STATE_BLOCKED_TRACKING_CONTENT        = 0x00001000;
   const unsigned long STATE_LOADED_LEVEL_1_TRACKING_CONTENT = 0x00002000;
@@ -341,7 +344,8 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_COOKIES_BLOCKED_FOREIGN         = 0x00000080;
   const unsigned long STATE_BLOCKED_SOCIALTRACKING_CONTENT  = 0x00010000;
   const unsigned long STATE_LOADED_SOCIALTRACKING_CONTENT   = 0x00020000;
-  const unsigned long STATE_UNBLOCKED_TRACKING_CONTENT      = 0x00000010;
+  const unsigned long STATE_REPLACED_TRACKING_CONTENT       = 0x00000010;
+  const unsigned long STATE_ALLOWED_TRACKING_CONTENT        = 0x00000020;
 
   /**
    * Flag for HTTPS-Only Mode upgrades

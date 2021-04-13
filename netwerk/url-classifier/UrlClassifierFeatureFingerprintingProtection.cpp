@@ -153,11 +153,12 @@ UrlClassifierFeatureFingerprintingProtection::ProcessChannel(
   ChannelBlockDecision decision =
       ChannelClassifierService::OnBeforeBlockChannel(aChannel, mName, list);
   if (decision != ChannelBlockDecision::Blocked) {
-    if (decision == ChannelBlockDecision::Unblocked) {
-      ContentBlockingNotifier::OnEvent(
-          aChannel, nsIWebProgressListener::STATE_UNBLOCKED_TRACKING_CONTENT,
-          false);
-    }
+    uint32_t event =
+        decision == ChannelBlockDecision::Replaced
+            ? nsIWebProgressListener::STATE_REPLACED_TRACKING_CONTENT
+            : nsIWebProgressListener::STATE_ALLOWED_TRACKING_CONTENT;
+    ContentBlockingNotifier::OnEvent(aChannel, event, false);
+
     *aShouldContinue = true;
     return NS_OK;
   }

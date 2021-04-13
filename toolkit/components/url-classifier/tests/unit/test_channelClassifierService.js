@@ -138,7 +138,7 @@ add_task(async function test_unblock_channel() {
       url: channel.URI.spec,
     },
     ch => {
-      ch.unblock();
+      ch.replace();
     }
   );
 

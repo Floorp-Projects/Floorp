@@ -313,6 +313,12 @@ public class ContentBlockingController {
          */
         public static final int REPLACED_TRACKING_CONTENT       = 0x00000010;
 
+        /**
+         * Indicates that content that would have been blocked has instead been
+         * allowed by a shim.
+         */
+        public static final int ALLOWED_TRACKING_CONTENT        = 0x00000020;
+
         protected Event() {}
     }
 
