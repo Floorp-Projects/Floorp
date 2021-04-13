@@ -45,6 +45,11 @@ bool nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(bool aFromPrivateWindow) {
 }
 
 /* static */
+bool nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled() {
+  return mozilla::StaticPrefs::dom_security_https_only_mode_https_first();
+}
+
+/* static */
 void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
     mozilla::net::DocumentLoadListener* aDocumentLoadListener) {
   // only send http background request to counter timeouts if the
@@ -62,8 +67,9 @@ void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
   nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
   bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
 
-  // if https-only mode is not even enabled, then there is nothing to do here.
-  if (!IsHttpsOnlyModeEnabled(isPrivateWin)) {
+  // if neither HTTPS-Only nor HTTPS-First mode is enabled, then there is
+  // nothing to do here.
+  if (!IsHttpsOnlyModeEnabled(isPrivateWin) && !IsHttpsFirstModeEnabled()) {
     return;
   }
 
@@ -213,7 +219,7 @@ bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(nsIURI* aURI,
                                                      nsILoadInfo* aLoadInfo) {
   // 1. Check if the HTTPS-Only Mode is even enabled, before we do anything else
   bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  if (!IsHttpsOnlyModeEnabled(isPrivateWin)) {
+  if (!IsHttpsOnlyModeEnabled(isPrivateWin) && !IsHttpsFirstModeEnabled()) {
     return false;
   }
 
@@ -287,6 +293,93 @@ bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(nsIURI* aURI,
 }
 
 /* static */
+bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
+                                                      nsILoadInfo* aLoadInfo) {
+  // 1. Check if HTTPS-First Mode is enabled
+  if (!IsHttpsFirstModeEnabled()) {
+    return false;
+  }
+
+  // 2. HTTPS-First only upgrades top-level loads
+  if (aLoadInfo->GetExternalContentPolicyType() !=
+      ExtContentPolicy::TYPE_DOCUMENT) {
+    return false;
+  }
+
+  // 3. Don't upgrade if upgraded previously or exempt from upgrades
+  uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST ||
+      httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
+    return false;
+  }
+
+  // We can upgrade the request - let's log to the console and set the status
+  // so we know that we upgraded the request.
+  MOZ_ASSERT(aURI->SchemeIs("http"), "how come the request is not 'http'?");
+  nsAutoCString scheme;
+  aURI->GetScheme(scheme);
+  scheme.AppendLiteral("s");
+  NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
+  NS_ConvertUTF8toUTF16 reportScheme(scheme);
+
+  AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
+  nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeRequest", params,
+                                       nsIScriptError::warningFlag, aLoadInfo,
+                                       aURI, true);
+
+  // Set flag so we know that we upgraded the request
+  httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST;
+  aLoadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
+  return true;
+}
+
+/* static */
+already_AddRefed<nsIURI>
+nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(nsIChannel* aChannel,
+                                                        nsresult aError) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
+  // Only downgrade if we this request was upgraded using HTTPS-First Mode
+  if (!(httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST)) {
+    return nullptr;
+  }
+
+  // No matter if we're downgrading or not, the request failed so we need to
+  // inform the background request.
+  loadInfo->SetHttpsOnlyStatus(
+      httpsOnlyStatus | nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS);
+
+  // We're only downgrading if it's possible that the error was
+  // caused by the upgrade.
+  if (HttpsUpgradeUnrelatedErrorCode(aError)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  // Only downgrade if the current scheme is HTTPS
+  if (!uri->SchemeIs("https")) {
+    return nullptr;
+  }
+
+  // Change the scheme to http
+  nsCOMPtr<nsIURI> newURI;
+  mozilla::Unused << NS_MutateURI(uri).SetScheme("http"_ns).Finalize(
+      getter_AddRefs(newURI));
+
+  // Log downgrade to console
+  NS_ConvertUTF8toUTF16 reportSpec(uri->GetSpecOrDefault());
+  AutoTArray<nsString, 1> params = {reportSpec};
+  nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyFailedDowngradeAgain", params,
+                                       nsIScriptError::warningFlag, loadInfo,
+                                       uri, true);
+
+  return newURI.forget();
+}
+
+/* static */
 bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsIChannel* aChannel,
                                              nsresult aError) {
   // If there is no failed channel, then there is nothing to do here.
@@ -311,14 +404,7 @@ bool nsHTTPSOnlyUtils::CouldBeHttpsOnlyError(nsIChannel* aChannel,
 
   // If it's one of those errors, then most likely it's not a HTTPS-Only error
   // (This list of errors is largely drawn from nsDocShell::DisplayLoadError())
-  return !(NS_ERROR_UNKNOWN_PROTOCOL == aError ||
-           NS_ERROR_FILE_NOT_FOUND == aError ||
-           NS_ERROR_FILE_ACCESS_DENIED == aError ||
-           NS_ERROR_UNKNOWN_HOST == aError || NS_ERROR_PHISHING_URI == aError ||
-           NS_ERROR_MALWARE_URI == aError || NS_ERROR_UNWANTED_URI == aError ||
-           NS_ERROR_HARMFUL_URI == aError ||
-           NS_ERROR_CONTENT_CRASHED == aError ||
-           NS_ERROR_FRAME_CRASHED == aError);
+  return !HttpsUpgradeUnrelatedErrorCode(aError);
 }
 
 /* static */
@@ -391,23 +477,35 @@ bool nsHTTPSOnlyUtils::IsSafeToAcceptCORSOrMixedContent(
   return nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin);
 }
 
+/* static */
+bool nsHTTPSOnlyUtils::HttpsUpgradeUnrelatedErrorCode(nsresult aError) {
+  return NS_ERROR_UNKNOWN_PROTOCOL == aError ||
+         NS_ERROR_FILE_NOT_FOUND == aError ||
+         NS_ERROR_FILE_ACCESS_DENIED == aError ||
+         NS_ERROR_UNKNOWN_HOST == aError || NS_ERROR_PHISHING_URI == aError ||
+         NS_ERROR_MALWARE_URI == aError || NS_ERROR_UNWANTED_URI == aError ||
+         NS_ERROR_HARMFUL_URI == aError || NS_ERROR_CONTENT_CRASHED == aError ||
+         NS_ERROR_FRAME_CRASHED == aError;
+}
+
 /* ------ Logging ------ */
 
 /* static */
 void nsHTTPSOnlyUtils::LogLocalizedString(const char* aName,
                                           const nsTArray<nsString>& aParams,
                                           uint32_t aFlags,
-                                          nsILoadInfo* aLoadInfo,
-                                          nsIURI* aURI) {
+                                          nsILoadInfo* aLoadInfo, nsIURI* aURI,
+                                          bool aUseHttpsFirst) {
   nsAutoString logMsg;
   nsContentUtils::FormatLocalizedString(nsContentUtils::eSECURITY_PROPERTIES,
                                         aName, aParams, logMsg);
-  LogMessage(logMsg, aFlags, aLoadInfo, aURI);
+  LogMessage(logMsg, aFlags, aLoadInfo, aURI, aUseHttpsFirst);
 }
 
 /* static */
 void nsHTTPSOnlyUtils::LogMessage(const nsAString& aMessage, uint32_t aFlags,
-                                  nsILoadInfo* aLoadInfo, nsIURI* aURI) {
+                                  nsILoadInfo* aLoadInfo, nsIURI* aURI,
+                                  bool aUseHttpsFirst) {
   // do not log to the console if the loadinfo says we should not!
   uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
   if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE) {
@@ -416,11 +514,12 @@ void nsHTTPSOnlyUtils::LogMessage(const nsAString& aMessage, uint32_t aFlags,
 
   // Prepending HTTPS-Only to the outgoing console message
   nsString message;
-  message.AppendLiteral(u"HTTPS-Only Mode: ");
+  message.Append(aUseHttpsFirst ? u"HTTPS-First Mode: "_ns
+                                : u"HTTPS-Only Mode: "_ns);
   message.Append(aMessage);
 
   // Allow for easy distinction in devtools code.
-  nsCString category("HTTPSOnly");
+  nsCString category(aUseHttpsFirst ? "HTTPSFirst" : "HTTPSOnly");
 
   uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
   if (innerWindowId > 0) {
