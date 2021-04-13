@@ -22,6 +22,7 @@ registerCleanupFunction(function() {
  * checking the checkbox does actually enable that behaviour.
  */
 add_task(async function test_old_modal_ui() {
+  // We're intentionally testing the old modal mechanism, so disable the new one.
   await SpecialPowers.pushPrefEnv({
     set: [["prompts.contentPromptSubDialog", false]],
   });
@@ -130,6 +131,7 @@ add_task(async function test_old_modal_ui() {
 });
 
 add_task(async function test_new_modal_ui() {
+  // We're intentionally testing the new modal mechanism, so make sure it's enabled.
   await SpecialPowers.pushPrefEnv({
     set: [["prompts.contentPromptSubDialog", true]],
   });

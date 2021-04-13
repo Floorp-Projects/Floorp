@@ -4,15 +4,18 @@
 // beforeunload confirmation ignores the beforeunload listener and
 // unblocks the original close call.
 
-const DIALOG_TOPIC = "tabmodal-dialog-loaded";
+const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
+  "prompts.contentPromptSubDialog",
+  false
+);
+
+const DIALOG_TOPIC = CONTENT_PROMPT_SUBDIALOG
+  ? "common-dialog-loaded"
+  : "tabmodal-dialog-loaded";
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.require_user_interaction_for_beforeunload", false]],
-  });
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
   });
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
