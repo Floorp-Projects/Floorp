@@ -65,7 +65,7 @@ add_task(async function() {
           });
         }
       );
-      EventUtils.synthesizeMouseAtCenter(testMenuItem, {}, window);
+      contextMenu.activateItem(testMenuItem);
       await promiseCtxMenuClick;
     }
   );
