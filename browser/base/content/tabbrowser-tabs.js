@@ -682,15 +682,7 @@
           for (let tab of movingTabs) {
             tab.setAttribute("tabdrop-samewindow", "true");
             tab.style.transform = "translateX(" + newTranslateX + "px)";
-            let onTransitionEnd = transitionendEvent => {
-              if (
-                transitionendEvent.propertyName != "transform" ||
-                transitionendEvent.originalTarget != tab
-              ) {
-                return;
-              }
-              tab.removeEventListener("transitionend", onTransitionEnd);
-
+            let postTransitionCleanup = () => {
               tab.removeAttribute("tabdrop-samewindow");
 
               this._finishAnimateTabMove();
@@ -703,7 +695,22 @@
 
               gBrowser.syncThrobberAnimations(tab);
             };
-            tab.addEventListener("transitionend", onTransitionEnd);
+            if (gReduceMotion) {
+              postTransitionCleanup();
+            } else {
+              let onTransitionEnd = transitionendEvent => {
+                if (
+                  transitionendEvent.propertyName != "transform" ||
+                  transitionendEvent.originalTarget != tab
+                ) {
+                  return;
+                }
+                tab.removeEventListener("transitionend", onTransitionEnd);
+
+                postTransitionCleanup();
+              };
+              tab.addEventListener("transitionend", onTransitionEnd);
+            }
           }
         } else {
           this._finishAnimateTabMove();
@@ -1619,19 +1626,26 @@
 
         movingTab.groupingTabsData.translateX = shift;
 
-        let onTransitionEnd = transitionendEvent => {
-          if (
-            transitionendEvent.propertyName != "transform" ||
-            transitionendEvent.originalTarget != movingTab
-          ) {
-            return;
-          }
-          movingTab.removeEventListener("transitionend", onTransitionEnd);
+        let postTransitionCleanup = () => {
           movingTab.groupingTabsData.newIndex = movingTabNewIndex;
           movingTab.groupingTabsData.animate = false;
         };
+        if (gReduceMotion) {
+          postTransitionCleanup();
+        } else {
+          let onTransitionEnd = transitionendEvent => {
+            if (
+              transitionendEvent.propertyName != "transform" ||
+              transitionendEvent.originalTarget != movingTab
+            ) {
+              return;
+            }
+            movingTab.removeEventListener("transitionend", onTransitionEnd);
+            postTransitionCleanup();
+          };
 
-        movingTab.addEventListener("transitionend", onTransitionEnd);
+          movingTab.addEventListener("transitionend", onTransitionEnd);
+        }
 
         // Add animation data for tabs between movingTab (selected
         // tab moving towards the dragged tab) and draggedTab.
