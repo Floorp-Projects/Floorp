@@ -75,7 +75,7 @@ opt-level = 2
 opt-level = 2
 
 [patch.crates-io]
-chardetng = { git = "https://github.com/hsivonen/chardetng", rev="fd4ed671ef495af4dcda4c4cba3ef8d426db8af1" }
+chardetng = { git = "https://github.com/hsivonen/chardetng", rev="39f95e2f7cd6e632a379cdeee62c68e8cedd7810" }
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="0917fe780032a6bbb23d71be545f9c1834128d75" }
