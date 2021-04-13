@@ -147,10 +147,10 @@ def cargo_info(cargo):
     )
 
 
-@depends(rustc_info, cargo_info, build_project)
+@depends(rustc_info, cargo_info)
 @imports(_from="mozboot.util", _import="MINIMUM_RUST_VERSION")
 @imports(_from="textwrap", _import="dedent")
-def rust_compiler(rustc_info, cargo_info, build_project):
+def rust_compiler(rustc_info, cargo_info):
     if not rustc_info:
         die(
             dedent(
