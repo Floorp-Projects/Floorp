@@ -6,14 +6,14 @@
 const URL1 = MAIN_DOMAIN + "navigate-first.html";
 const URL2 = MAIN_DOMAIN + "navigate-second.html";
 
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
+
 var isE10s = Services.appinfo.browserTabsRemoteAutostart;
 
 SpecialPowers.pushPrefEnv({
   set: [["dom.require_user_interaction_for_beforeunload", false]],
-});
-
-SpecialPowers.pushPrefEnv({
-  set: [["prompts.contentPromptSubDialog", false]],
 });
 
 var signalAllEventsReceived;
@@ -87,22 +87,6 @@ function assertEvent(event, data) {
   }
 }
 
-function waitForOnBeforeUnloadDialog(browser, callback) {
-  browser.addEventListener(
-    "DOMWillOpenModalDialog",
-    async function(event) {
-      const stack = browser.parentNode;
-      const dialogs = stack.getElementsByTagName("tabmodalprompt");
-      await waitUntil(() => dialogs[0]);
-      const { button0, button1 } = browser.tabModalPromptBox.getPrompt(
-        dialogs[0]
-      ).ui;
-      callback(button0, button1);
-    },
-    { capture: true, once: true }
-  );
-}
-
 var httpObserver = function(subject, topic, state) {
   const channel = subject.QueryInterface(Ci.nsIHttpChannel);
   const url = channel.URI.spec;
@@ -141,10 +125,12 @@ add_task(async function() {
   const browser = await addTab(URL1);
 
   // Listen for alert() call being made in navigate-first during unload
-  waitForOnBeforeUnloadDialog(browser, function(btnLeave, btnStay) {
+  const beforeUnloadPromise = PromptTestUtils.handleNextPrompt(
+    browser,
+    { modalType: Services.prompt.MODAL_TYPE_CONTENT, promptType: "confirmEx" },
+    { buttonNumClick: 0 }
+  ).then(() => {
     assertEvent("unload-dialog");
-    // accept to quit this page to another
-    btnLeave.click();
   });
 
   // Listen for messages sent by the content task
@@ -184,6 +170,7 @@ add_task(async function() {
     gBrowser.selectedBrowser
   );
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URL2);
+  await beforeUnloadPromise;
   await onBrowserLoaded;
 
   // Wait for all events to be received

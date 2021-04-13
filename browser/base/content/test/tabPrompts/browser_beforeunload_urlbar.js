@@ -8,12 +8,14 @@ const TEST_ROOT = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
+const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
+  "prompts.contentPromptSubDialog",
+  false
+);
+
 add_task(async function test_beforeunload_stay_clears_urlbar() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.require_user_interaction_for_beforeunload", false]],
-  });
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
   });
 
   const TEST_URL = TEST_ROOT + "file_beforeunload_stop.html";
@@ -23,18 +25,29 @@ add_task(async function test_beforeunload_stay_clears_urlbar() {
     gURLBar.inputField.value = inputValue.slice(0, -1);
     EventUtils.sendString(inputValue.slice(-1));
 
-    let promptOpenedPromise = TestUtils.topicObserved("tabmodal-dialog-loaded");
-    EventUtils.synthesizeKey("VK_RETURN");
-    await promptOpenedPromise;
-    let promptElement = browser.parentNode.querySelector("tabmodalprompt");
+    if (CONTENT_PROMPT_SUBDIALOG) {
+      let promptOpenedPromise = BrowserTestUtils.promiseAlertDialogOpen(
+        "cancel"
+      );
+      EventUtils.synthesizeKey("VK_RETURN");
+      await promptOpenedPromise;
+      await TestUtils.waitForTick();
+    } else {
+      let promptOpenedPromise = TestUtils.topicObserved(
+        "tabmodal-dialog-loaded"
+      );
+      EventUtils.synthesizeKey("VK_RETURN");
+      await promptOpenedPromise;
+      let promptElement = browser.parentNode.querySelector("tabmodalprompt");
 
-    // Click the cancel button
-    promptElement.querySelector(".tabmodalprompt-button1").click();
+      // Click the cancel button
+      promptElement.querySelector(".tabmodalprompt-button1").click();
+      await TestUtils.waitForCondition(
+        () => promptElement.parentNode == null,
+        "tabprompt should be removed"
+      );
+    }
 
-    await TestUtils.waitForCondition(
-      () => promptElement.parentNode == null,
-      "tabprompt should be removed"
-    );
     // Can't just compare directly with TEST_URL because the URL may be trimmed.
     // Just need it to not be the example.org thing we typed in.
     ok(

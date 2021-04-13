@@ -1,10 +1,20 @@
 const TEST_PAGE =
   "http://mochi.test:8888/browser/browser/base/content/test/general/file_double_close_tab.html";
 
+const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
+  "prompts.contentPromptSubDialog",
+  false
+);
+
 var expectingDialog = false;
 var wantToClose = true;
 var resolveDialogPromise;
+
 function onTabModalDialogLoaded(node) {
+  ok(
+    !CONTENT_PROMPT_SUBDIALOG,
+    "Should not be using content prompt subdialogs."
+  );
   ok(expectingDialog, "Should be expecting this dialog.");
   expectingDialog = false;
   if (wantToClose) {
@@ -19,19 +29,34 @@ function onTabModalDialogLoaded(node) {
   }
 }
 
+function onCommonDialogLoaded(promptWindow) {
+  ok(CONTENT_PROMPT_SUBDIALOG, "Should be using content prompt subdialogs.");
+  ok(expectingDialog, "Should be expecting this dialog.");
+  expectingDialog = false;
+  let dialog = promptWindow.Dialog;
+  if (wantToClose) {
+    // This accepts the dialog, closing it
+    dialog.ui.button0.click();
+  } else {
+    // This keeps the page open
+    dialog.ui.button1.click();
+  }
+  if (resolveDialogPromise) {
+    resolveDialogPromise();
+  }
+}
+
 SpecialPowers.pushPrefEnv({
   set: [["dom.require_user_interaction_for_beforeunload", false]],
 });
 
-SpecialPowers.pushPrefEnv({
-  set: [["prompts.contentPromptSubDialog", false]],
-});
-
 // Listen for the dialog being created
 Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded");
+Services.obs.addObserver(onCommonDialogLoaded, "common-dialog-loaded");
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("browser.tabs.warnOnClose");
   Services.obs.removeObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded");
+  Services.obs.removeObserver(onCommonDialogLoaded, "common-dialog-loaded");
 });
 
 add_task(async function closeLastTabInWindow() {
