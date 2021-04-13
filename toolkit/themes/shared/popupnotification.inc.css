@@ -113,10 +113,6 @@
 
 /** PopupNotifications **/
 @media (-moz-proton-doorhangers) {
-popupnotification {
-  font: caption;
-}
-
 .panel-footer {
   justify-content: flex-end;
   margin: 8px 16px 16px;

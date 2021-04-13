@@ -154,7 +154,7 @@ html|img#editBookmarkPanelFavicon[src] {
 
 @media (-moz-proton-doorhangers) {
 #editBookmarkPanel {
-  font: caption;
+  font-size: var(--panel-font-size);
 }
 
 #editBookmarkPanelInfoArea {

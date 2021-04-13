@@ -21,6 +21,7 @@
   --arrowpanel-field-background: rgba(249,249,250,.3);
 
   --chrome-content-separator-color: #e1e1e2;
+  --panel-font-size: 1.25em;
 }
 
 :root:-moz-lwtheme {
@@ -35,6 +36,7 @@
 @media not (-moz-proton) {
 :root {
   --toolbarbutton-icon-fill-opacity: .7;
+  --panel-font-size: 1em;
 }
 
 #navigator-toolbox {
