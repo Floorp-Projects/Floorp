@@ -521,7 +521,7 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/LightweightThemeChild.jsm",
       events: {
-        pageshow: { mozSystemGroup: true },
+        DOMContentLoaded: {},
       },
     },
     includeChrome: true,
