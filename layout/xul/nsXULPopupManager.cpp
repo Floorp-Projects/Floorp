@@ -1125,6 +1125,20 @@ void nsXULPopupManager::HidePopup(nsIContent* aPopup, bool aHideChain,
   }
 }
 
+void nsXULPopupManager::HideMenu(nsIContent* aMenu) {
+  nsMenuFrame* menu = do_QueryFrame(aMenu->GetPrimaryFrame(FlushType::Frames));
+  if (!menu) {
+    return;
+  }
+
+  nsMenuPopupFrame* popupFrame = menu->GetPopup();
+  if (!popupFrame) {
+    return;
+  }
+
+  HidePopup(popupFrame->GetContent(), false, true, false, false);
+}
+
 // This is used to hide the popup after a transition finishes.
 class TransitionEnder final : public nsIDOMEventListener {
  protected:

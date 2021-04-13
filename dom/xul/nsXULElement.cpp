@@ -467,18 +467,19 @@ bool nsXULElement::HasMenu() {
 }
 
 void nsXULElement::OpenMenu(bool aOpenFlag) {
-  nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
+  // Flush frames first. It's not clear why this is needed, see bug 1704670.
+  if (Document* doc = GetComposedDoc()) {
+    doc->FlushPendingNotifications(FlushType::Frames);
+  }
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
     if (aOpenFlag) {
       // Nothing will happen if this element isn't a menu.
       pm->ShowMenu(this, false, false);
-    } else if (menu) {
-      nsMenuPopupFrame* popupFrame = menu->GetPopup();
-      if (popupFrame) {
-        pm->HidePopup(popupFrame->GetContent(), false, true, false, false);
-      }
+    } else {
+      // Nothing will happen if this element isn't a menu.
+      pm->HideMenu(this);
     }
   }
 }

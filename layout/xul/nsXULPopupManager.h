@@ -484,6 +484,11 @@ class nsXULPopupManager final : public nsIDOMEventListener,
                  bool aAsynchronous, bool aIsCancel,
                  nsIContent* aLastPopup = nullptr);
 
+  /*
+   * Hide the popup of a <menu>.
+   */
+  void HideMenu(nsIContent* aMenu);
+
   /**
    * Hide a popup after a short delay. This is used when rolling over menu
    * items. This timer is stored in mCloseTimer. The timer may be cancelled and
