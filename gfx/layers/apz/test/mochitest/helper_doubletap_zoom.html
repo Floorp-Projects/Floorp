@@ -10,9 +10,16 @@
   <script type="application/javascript">
 
 async function doubleTapOn(element, x, y) {
+  let useTouchpad = (location.search == "?touchpad");
+
   let transformEndPromise = promiseTransformEnd();
 
-  synthesizeNativeTouchpadDoubleTap(element, x, y);
+  if (useTouchpad) {
+    synthesizeNativeTouchpadDoubleTap(element, x, y);
+  } else {
+    synthesizeNativeTap(element, x, y);
+    synthesizeNativeTap(element, x, y);
+  }
 
   // Wait for the APZ:TransformEnd to fire
   await transformEndPromise;
