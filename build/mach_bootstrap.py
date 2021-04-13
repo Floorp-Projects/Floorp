@@ -8,6 +8,7 @@ import math
 import os
 import platform
 import shutil
+import site
 import sys
 
 if sys.version_info[0] < 3:
@@ -197,6 +198,12 @@ def bootstrap(topsrcdir):
     deleted_dir = os.path.join(topsrcdir, "third_party", "python", "psutil")
     if os.path.exists(deleted_dir):
         shutil.rmtree(deleted_dir, ignore_errors=True)
+
+    if sys.prefix == sys.base_prefix:
+        # We are not in a virtualenv. Remove global site packages
+        # from sys.path.
+        site_paths = {*site.getsitepackages(), site.getusersitepackages()}
+        sys.path = [path for path in sys.path if path not in site_paths]
 
     # Global build system and mach state is stored in a central directory. By
     # default, this is ~/.mozbuild. However, it can be defined via an
