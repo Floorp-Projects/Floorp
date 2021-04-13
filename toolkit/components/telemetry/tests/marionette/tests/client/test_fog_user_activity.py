@@ -11,6 +11,12 @@ class TestClientActivity(FOGTestCase):
 
     def test_user_activity(self):
 
+        # First test that restarting the browser sends a "active" ping
+        ping0 = self.wait_for_ping(
+            self.restart_browser, FOG_BASELINE_PING, ping_server=self.fog_ping_server
+        )
+        self.assertEqual("active", ping0["payload"]["ping_info"]["reason"])
+
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             zero_prefs_script = """\
             Services.prefs.setIntPref("telemetry.fog.test.inactivity_limit", 0);
