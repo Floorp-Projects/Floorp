@@ -33,7 +33,8 @@ add_task(async function setup() {
   await UrlClassifierTestUtils.addTestTrackers();
   Services.prefs.setBoolPref(DTSCBN_PREF, true);
 
-  let TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
+  let TrackingProtection =
+    gBrowser.ownerGlobal.gProtectionsHandler.blockers.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
   ok(!TrackingProtection.enabled, "TP is not enabled");
 

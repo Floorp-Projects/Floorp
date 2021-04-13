@@ -233,4 +233,62 @@ var UrlClassifierTestUtils = {
       }
     });
   },
+
+  /**
+   * Handle the next "urlclassifier-before-block-channel" event.
+   * @param {Object} options
+   * @param {String} [options.filterOrigin] - Only handle event for channels
+   * with matching origin.
+   * @param {function} [options.onBeforeBlockChannel] - Optional callback for
+   * the event. Called before acting on the channel.
+   * @param {("allow"|"replace")} [options.action] - Whether to allow or replace
+   * the channel.
+   * @returns {Promise} - Resolves once event has been handled.
+   */
+  handleBeforeBlockChannel({
+    filterOrigin = null,
+    onBeforeBlockChannel,
+    action,
+  }) {
+    if (action && action != "allow" && action != "replace") {
+      throw new Error("Invalid action " + action);
+    }
+    let channelClassifierService = Cc[
+      "@mozilla.org/url-classifier/channel-classifier-service;1"
+    ].getService(Ci.nsIChannelClassifierService);
+
+    let resolver;
+    let promise = new Promise(resolve => {
+      resolver = resolve;
+    });
+
+    let observer = {
+      observe(subject, topic) {
+        if (topic != "urlclassifier-before-block-channel") {
+          return;
+        }
+        let channel = subject.QueryInterface(Ci.nsIUrlClassifierBlockedChannel);
+
+        if (filterOrigin) {
+          let { url } = channel;
+          let { origin } = new URL(url);
+          if (filterOrigin != origin) {
+            return;
+          }
+        }
+
+        if (onBeforeBlockChannel) {
+          onBeforeBlockChannel(channel);
+        }
+        if (action) {
+          channel[action]();
+        }
+
+        channelClassifierService.removeListener(observer);
+        resolver();
+      },
+    };
+    channelClassifierService.addListener(observer);
+    return promise;
+  },
 };

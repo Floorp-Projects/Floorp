@@ -33,7 +33,7 @@ async function assertSitesListed(blocked) {
   await openProtectionsPanel();
 
   let categoryItem = document.getElementById(
-    "protections-popup-category-tracking-protection"
+    "protections-popup-category-trackers"
   );
 
   // Explicitly waiting for the category item becoming visible.
@@ -49,6 +49,10 @@ async function assertSitesListed(blocked) {
 
   ok(true, "Trackers view was shown");
 
+  let trackersViewShimHint = document.getElementById(
+    "protections-popup-trackersView-shim-allow-hint"
+  );
+  ok(trackersViewShimHint.hidden, "Shim hint is hidden");
   let listItems = trackersView.querySelectorAll(".protections-popup-list-item");
   is(listItems.length, 1, "We have 1 tracker in the list");
 

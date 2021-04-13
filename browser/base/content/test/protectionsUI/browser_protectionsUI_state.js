@@ -88,7 +88,7 @@ async function testBenignPage() {
     "Cookie restrictions category is not found"
   );
   ok(
-    notFound("protections-popup-category-tracking-protection"),
+    notFound("protections-popup-category-trackers"),
     "Trackers category is not found"
   );
   await closeProtectionsPanel(win);
@@ -125,7 +125,7 @@ async function testBenignPageWithException() {
     "Cookie restrictions category is not found"
   );
   ok(
-    notFound("protections-popup-category-tracking-protection"),
+    notFound("protections-popup-category-trackers"),
     "Trackers category is not found"
   );
   await closeProtectionsPanel(win);
@@ -170,7 +170,7 @@ async function testTrackingPage(window) {
 
   await openProtectionsPanel(false, window);
   ok(
-    !notFound("protections-popup-category-tracking-protection"),
+    !notFound("protections-popup-category-trackers"),
     "Trackers category is detected"
   );
   if (gTrackingPageURL == COOKIE_PAGE) {
@@ -213,7 +213,7 @@ async function testTrackingPageUnblocked(blockedByTP, window) {
 
   await openProtectionsPanel(false, window);
   ok(
-    !notFound("protections-popup-category-tracking-protection"),
+    !notFound("protections-popup-category-trackers"),
     "Trackers category is detected"
   );
   if (gTrackingPageURL == COOKIE_PAGE) {
@@ -284,7 +284,9 @@ add_task(async function testNormalBrowsing() {
     gProtectionsHandler,
     "gProtectionsHandler is attached to the browser window"
   );
-  TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
+
+  TrackingProtection =
+    gBrowser.ownerGlobal.gProtectionsHandler.blockers.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the browser window");
   is(
     TrackingProtection.enabled,
@@ -323,7 +325,9 @@ add_task(async function testPrivateBrowsing() {
     gProtectionsHandler,
     "gProtectionsHandler is attached to the private window"
   );
-  TrackingProtection = tabbrowser.ownerGlobal.TrackingProtection;
+
+  TrackingProtection =
+    tabbrowser.ownerGlobal.gProtectionsHandler.blockers.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the private window");
   is(
     TrackingProtection.enabled,
@@ -355,7 +359,8 @@ add_task(async function testThirdPartyCookies() {
     gProtectionsHandler,
     "gProtectionsHandler is attached to the browser window"
   );
-  ThirdPartyCookies = gBrowser.ownerGlobal.ThirdPartyCookies;
+  ThirdPartyCookies =
+    gBrowser.ownerGlobal.gProtectionsHandler.blockers.ThirdPartyCookies;
   ok(ThirdPartyCookies, "TP is attached to the browser window");
   is(
     ThirdPartyCookies.enabled,

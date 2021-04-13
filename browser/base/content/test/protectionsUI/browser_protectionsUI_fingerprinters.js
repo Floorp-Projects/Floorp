@@ -228,6 +228,11 @@ async function testSubview(hasException) {
   categoryItem.click();
   await viewShown;
 
+  let trackersViewShimHint = document.getElementById(
+    "protections-popup-fingerprintersView-shim-allow-hint"
+  );
+  ok(trackersViewShimHint.hidden, "Shim hint is hidden");
+
   let listItems = subview.querySelectorAll(".protections-popup-list-item");
   is(listItems.length, 1, "We have 1 item in the list");
   let listItem = listItems[0];
