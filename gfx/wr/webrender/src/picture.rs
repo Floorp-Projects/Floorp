@@ -99,6 +99,7 @@ use api::{PropertyBinding, PropertyBindingId, FilterPrimitive};
 use api::{DebugFlags, ImageKey, ColorF, ColorU, PrimitiveFlags};
 use api::{ImageRendering, ColorDepth, YuvColorSpace, YuvFormat};
 use api::units::*;
+use crate::batch::BatchFilter;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::clip::{ClipStore, ClipChainInstance, ClipChainId, ClipInstance};
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX,
@@ -1724,18 +1725,11 @@ impl TileDescriptor {
     }
 }
 
-/// Stores both the world and devices rects for a single dirty rect.
-#[derive(Debug, Clone)]
-pub struct DirtyRegionRect {
-    /// The dirty region in space of the picture cache
-    pub rect_in_pic_space: PictureRect,
-}
-
 /// Represents the dirty region of a tile cache picture.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DirtyRegion {
-    /// The individual dirty rects of this region.
-    pub dirty_rects: Vec<DirtyRegionRect>,
+    /// The individual filters that make up this region.
+    pub filters: Vec<BatchFilter>,
 
     /// The overall dirty rect, a combination of dirty_rects
     pub combined: WorldRect,
@@ -1750,7 +1744,7 @@ impl DirtyRegion {
         spatial_node_index: SpatialNodeIndex,
     ) -> Self {
         DirtyRegion {
-            dirty_rects: Vec::with_capacity(16),
+            filters: Vec::with_capacity(16),
             combined: WorldRect::zero(),
             spatial_node_index,
         }
@@ -1761,7 +1755,7 @@ impl DirtyRegion {
         &mut self,
         spatial_node_index: SpatialNodeIndex,
     ) {
-        self.dirty_rects.clear();
+        self.filters.clear();
         self.combined = WorldRect::zero();
         self.spatial_node_index = spatial_node_index;
     }
@@ -1787,7 +1781,7 @@ impl DirtyRegion {
         // Include this in the overall dirty rect
         self.combined = self.combined.union(&world_rect);
 
-        self.dirty_rects.push(DirtyRegionRect {
+        self.filters.push(BatchFilter {
             rect_in_pic_space,
         });
     }
@@ -1806,24 +1800,24 @@ impl DirtyRegion {
             spatial_tree,
         );
 
-        let mut dirty_rects = Vec::with_capacity(self.dirty_rects.len());
+        let mut filters = Vec::with_capacity(self.filters.len());
         let mut combined = WorldRect::zero();
 
-        for rect in &self.dirty_rects {
-            let rect_in_pic_space = rect.rect_in_pic_space.inflate(inflate_amount, inflate_amount);
+        for filter in &self.filters {
+            let rect_in_pic_space = filter.rect_in_pic_space.inflate(inflate_amount, inflate_amount);
 
             let world_rect = map_pic_to_world
                 .map(&rect_in_pic_space)
                 .expect("bug");
 
             combined = combined.union(&world_rect);
-            dirty_rects.push(DirtyRegionRect {
+            filters.push(BatchFilter {
                 rect_in_pic_space,
             });
         }
 
         DirtyRegion {
-            dirty_rects,
+            filters,
             combined,
             spatial_node_index: self.spatial_node_index,
         }
@@ -3627,7 +3621,9 @@ impl TileCacheInstance {
         }
 
         prim_instance.vis.state = VisibilityState::Coarse {
-            rect_in_pic_space: pic_clip_rect,
+            filter: BatchFilter {
+                rect_in_pic_space: pic_clip_rect,
+            },
             vis_flags,
         };
     }
@@ -4954,6 +4950,10 @@ impl PicturePrimitive {
 
                         let task_size = tile_cache.current_tile_size;
 
+                        let batch_filter = BatchFilter {
+                            rect_in_pic_space: tile.local_dirty_rect,
+                        };
+
                         let render_task_id = frame_state.rg_builder.add().init(
                             RenderTask::new(
                                 RenderTaskLocation::Static {
@@ -4969,7 +4969,7 @@ impl PicturePrimitive {
                                     content_origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
-                                    Some(tile.local_dirty_rect),
+                                    Some(batch_filter),
                                     Some(scissor_rect),
                                     Some(valid_rect),
                                 )
