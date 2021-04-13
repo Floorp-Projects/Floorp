@@ -12,9 +12,6 @@ update:
 	cp -R wasm-generate-testsuite/tests/js ../../tests/wasm/spec
 	echo $(warning) > ../../tests/wasm/spec/README.md
 	[ ! -d ./spec-tests.patch ] || (cd ../../tests/wasm/spec && patch -u -p7 < ../../../etc/wasm/spec-tests.patch)
-	rm -r ../../../../../testing/web-platform/mozilla/tests/wasm
-	cp -R wasm-generate-testsuite/tests/wpt ../../../../../testing/web-platform/mozilla/tests/wasm
-	echo $(warning) > ../../../../../testing/web-platform/mozilla/tests/wasm/README.md
 
 run:
 	@[ -z $(MOZCONFIG) ] && echo "You need to define the MOZCONFIG env variable first."
