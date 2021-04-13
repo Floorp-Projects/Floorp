@@ -160,12 +160,8 @@ urlbar-star-add-bookmark =
 
 ## Page Action Context Menu
 
-page-action-add-to-urlbar =
-    .label = Add to Address Bar
 page-action-manage-extension =
     .label = Manage Extension…
-page-action-remove-from-urlbar =
-    .label = Remove from Address Bar
 page-action-remove-extension =
     .label = Remove Extension
 

@@ -980,18 +980,6 @@ var BrowserPageActions = {
     }
     this._contextAction = action;
 
-    let state;
-    if (this._contextAction._isMozillaAction) {
-      state = this._contextAction.pinnedToUrlbar
-        ? "builtInPinned"
-        : "builtInUnpinned";
-    } else {
-      state = this._contextAction.pinnedToUrlbar
-        ? "extensionPinned"
-        : "extensionUnpinned";
-    }
-    popup.setAttribute("state", state);
-
     let removeExtension = popup.querySelector(".removeExtensionItem");
     let { extensionID } = this._contextAction;
     let addon = extensionID && (await AddonManager.getAddonByID(extensionID));
@@ -1001,24 +989,6 @@ var BrowserPageActions = {
         addon.permissions & AddonManager.PERM_CAN_UNINSTALL
       );
     }
-  },
-
-  /**
-   * Call this from the menu item in the context menu that toggles pinning.
-   */
-  togglePinningForContextAction() {
-    if (!this._contextAction) {
-      return;
-    }
-    let action = this._contextAction;
-    this._contextAction = null;
-
-    action.pinnedToUrlbar = !action.pinnedToUrlbar;
-    BrowserUsageTelemetry.recordWidgetChange(
-      action.id,
-      action.pinnedToUrlbar ? "page-action-buttons" : null,
-      "pageaction-context"
-    );
   },
 
   /**

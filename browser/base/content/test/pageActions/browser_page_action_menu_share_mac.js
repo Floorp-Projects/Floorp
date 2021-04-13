@@ -88,64 +88,6 @@ add_task(async function shareURL() {
   });
 });
 
-add_task(async function shareURLAddressBar() {
-  await BrowserTestUtils.withNewTab(URL, async () => {
-    // Open pageAction panel
-    await promisePageActionPanelOpen();
-
-    // Right click the Share button
-    let contextMenuPromise = promisePanelShown("pageActionContextMenu");
-    let shareURLButton = document.getElementById("pageAction-panel-shareURL");
-    EventUtils.synthesizeMouseAtCenter(shareURLButton, {
-      type: "contextmenu",
-      button: 2,
-    });
-    await contextMenuPromise;
-
-    // Click "Add to Address Bar"
-    contextMenuPromise = promisePanelHidden("pageActionContextMenu");
-    let ctxMenuButton = document.querySelector(
-      "#pageActionContextMenu .pageActionContextMenuItem"
-    );
-    EventUtils.synthesizeMouseAtCenter(ctxMenuButton, {});
-    await contextMenuPromise;
-
-    // Wait for the Share button to be added
-    await TestUtils.waitForCondition(() => {
-      return document.getElementById("pageAction-urlbar-shareURL");
-    }, "Waiting for the share url button to be added to url bar");
-
-    // Press the Share button
-    let shareButton = document.getElementById("pageAction-urlbar-shareURL");
-    let viewPromise = promisePageActionPanelShown();
-    EventUtils.synthesizeMouseAtCenter(shareButton, {});
-    await viewPromise;
-
-    // Ensure we have share providers
-    let panel = document.getElementById(
-      "pageAction-urlbar-shareURL-subview-body"
-    );
-    // We should see 1 receiver and one extra node for the "More..." button
-    Assert.equal(panel.children.length, 2, "Has correct share receivers");
-
-    // Remove the Share URL button from the Address bar so we dont interfere
-    // with future tests
-    contextMenuPromise = promisePanelShown("pageActionContextMenu");
-    EventUtils.synthesizeMouseAtCenter(shareButton, {
-      type: "contextmenu",
-      button: 2,
-    });
-    await contextMenuPromise;
-
-    contextMenuPromise = promisePanelHidden("pageActionContextMenu");
-    ctxMenuButton = document.querySelector(
-      "#pageActionContextMenu .pageActionContextMenuItem"
-    );
-    EventUtils.synthesizeMouseAtCenter(ctxMenuButton, {});
-    await contextMenuPromise;
-  });
-});
-
 add_task(async function openSharingPreferences() {
   await BrowserTestUtils.withNewTab(URL, async () => {
     // Open the panel.
