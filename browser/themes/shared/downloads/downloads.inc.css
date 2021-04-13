@@ -79,7 +79,7 @@
 .downloadBlockedBadgeNew {
   background-repeat: no-repeat;
   width: 16px;
-  margin: 10.5px 0 0;
+  margin: 10.5px 16px 0;
 }
 
 #downloadsPanel-blockedSubview[verdict="Insecure"] .downloadsPanel-blockedSubview-image,
@@ -122,6 +122,11 @@
 
 #downloadsPanel-blockedSubview-title {
   -moz-box-flex: 1;
+}
+
+button.downloadButton {
+  min-width: 32px;
+  height: 32px;
 }
 }/** END Proton **/
 
@@ -199,6 +204,10 @@
 
 .downloadsPanel-blockedSubview-image {
   display: none;
+}
+
+.downloadButton {
+  min-width: 58px;
 }
 }/** END not Proton **/
 
@@ -308,7 +317,6 @@
 
 .downloadButton {
   appearance: none;
-  min-width: 58px;
   margin: 0;
   border: none;
   background: transparent;
