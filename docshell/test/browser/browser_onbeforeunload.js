@@ -8,9 +8,20 @@ const BASE_URL = "http://mochi.test:8888/browser/docshell/test/browser/";
 
 const TEST_PAGE = BASE_URL + "file_onbeforeunload_0.html";
 
-const DIALOG_TOPIC = "tabmodal-dialog-loaded";
+const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
+  "prompts.contentPromptSubDialog",
+  false
+);
+
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
 
 async function withTabModalPromptCount(expected, task) {
+  const DIALOG_TOPIC = CONTENT_PROMPT_SUBDIALOG
+    ? "common-dialog-loaded"
+    : "tabmodal-dialog-loaded";
+
   let count = 0;
   function observer() {
     count++;
@@ -25,14 +36,11 @@ async function withTabModalPromptCount(expected, task) {
   }
 }
 
-function promiseAllowUnloadPrompt(allowNavigation) {
-  return BrowserUtils.promiseObserved(DIALOG_TOPIC).then(
-    ({ subject: node }) => {
-      let button = node.querySelector(
-        `.tabmodalprompt-button${allowNavigation ? 0 : 1}`
-      );
-      button.click();
-    }
+function promiseAllowUnloadPrompt(browser, allowNavigation) {
+  return PromptTestUtils.handleNextPrompt(
+    browser,
+    { modalType: Services.prompt.MODAL_TYPE_CONTENT, promptType: "confirmEx" },
+    { buttonNumClick: allowNavigation ? 0 : 1 }
   );
 }
 
@@ -219,7 +227,7 @@ async function doTest(actions, startIdx, navigate) {
   let promptPromise;
   if (expected.expectPrompt) {
     awaitingPrompt = true;
-    promptPromise = promiseAllowUnloadPrompt(false).then(() => {
+    promptPromise = promiseAllowUnloadPrompt(browser, false).then(() => {
       awaitingPrompt = false;
     });
   }
@@ -269,10 +277,6 @@ async function doTest(actions, startIdx, navigate) {
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.require_user_interaction_for_beforeunload", false]],
-  });
-
-  SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
   });
 
   for (let actions of PERMUTATIONS) {

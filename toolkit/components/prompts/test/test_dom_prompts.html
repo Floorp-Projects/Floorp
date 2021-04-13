@@ -16,10 +16,6 @@ var rv;
 var state, action;
 modalType = Ci.nsIPrompt.MODAL_TYPE_CONTENT;
 
-SpecialPowers.pushPrefEnv({
-  set: [["prompts.contentPromptSubDialog", false]],
-});
-
 add_task(async function test_alert_ok() {
     info("Starting test: Alert");
     state = {
@@ -79,7 +75,6 @@ add_task(async function test_alert_noargs() {
 
     await promptDone;
 });
-
 
 add_task(async function test_confirm_ok() {
     info("Starting test: Confirm");

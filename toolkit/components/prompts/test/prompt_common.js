@@ -307,7 +307,8 @@ function checkPromptState(promptState, expectedState) {
   if (
     isOSX &&
     expectedState.focused &&
-    expectedState.focused.startsWith("button")
+    expectedState.focused.startsWith("button") &&
+    !promptState.infoRowHidden
   ) {
     is(
       promptState.focused,
