@@ -75,7 +75,7 @@ const PACKET_HEADER_MAX = 200;
  *             This object also emits "progress" events for each chunk that is
  *             copied.  See stream-utils.js.
  *
- * - onClosed(reason) - called when the connection is closed. |reason| is
+ * - onTransportClosed(reason) - called when the connection is closed. |reason| is
  *   an optional nsresult or object, typically passed when the transport is
  *   closed due to some error in a underlying stream.
  *
@@ -183,7 +183,7 @@ DebuggerTransport.prototype = {
     this._destroyIncoming();
     this._destroyAllOutgoing();
     if (this.hooks) {
-      this.hooks.onClosed(reason);
+      this.hooks.onTransportClosed(reason);
       this.hooks = null;
     }
     if (reason) {

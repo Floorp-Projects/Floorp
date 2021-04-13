@@ -67,14 +67,14 @@ function run_test() {
           );
           client2.close();
         },
-        onClosed: function(result) {
+        onTransportClosed: function(result) {
           client1.close();
         },
       };
       client2.ready();
     },
 
-    onClosed: function(result) {
+    onTransportClosed: function(result) {
       do_test_finished();
     },
   };

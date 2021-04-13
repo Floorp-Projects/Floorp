@@ -74,7 +74,7 @@ var test_helper = async function(payload) {
         transport._outgoing.push(new RawPacket(transport, payload));
         transport._flushOutgoing();
       },
-      onClosed: function(status) {
+      onTransportClosed: function(status) {
         Assert.ok(true);
         resolve();
       },

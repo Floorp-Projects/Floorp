@@ -372,7 +372,7 @@ OOBCert.Client.prototype = {
               break;
           }
         },
-        onClosed(reason) {
+        onTransportClosed(reason) {
           closeDialog();
           // Transport died before auth completed
           transport.hooks = null;

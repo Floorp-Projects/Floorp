@@ -62,9 +62,9 @@ TracingTransport.prototype = {
     });
     this.hooks.onPacket(packet);
   },
-  onClosed: function() {
-    if (this.hooks.onClosed) {
-      this.hooks.onClosed();
+  onTransportClosed: function() {
+    if (this.hooks.onTransportClosed) {
+      this.hooks.onTransportClosed();
     }
   },
 

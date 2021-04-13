@@ -772,7 +772,7 @@ ServerSocketConnection.prototype = {
     // Start up the transport to observe the streams in case they are closed
     // early.  This allows us to clean up our state as well.
     this._transport.hooks = {
-      onClosed: reason => {
+      onTransportClosed: reason => {
         this.deny(reason);
       },
     };

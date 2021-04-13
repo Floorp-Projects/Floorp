@@ -116,7 +116,7 @@ try {
 
       removeMessageListener("debug:disconnect", onDisconnect);
       // Call DevToolsServerConnection.close to destroy all child actors. It should end up
-      // calling DevToolsServerConnection.onClosed that would actually cleanup all actor
+      // calling DevToolsServerConnection.onTransportClosed that would actually cleanup all actor
       // pools.
       conn.close();
       connections.delete(prefix);

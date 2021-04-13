@@ -77,7 +77,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
       })
       .then(() => {
         // It's now safe to close
-        transport.hooks.onClosed = () => {
+        transport.hooks.onTransportClosed = () => {
           clientResolve();
         };
         transport.close();
@@ -112,7 +112,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
         .then(write_data);
     },
 
-    onClosed: function() {
+    onTransportClosed: function() {
       do_throw("Transport closed before we expected");
     },
   };

@@ -77,7 +77,7 @@ var test_transport = async function(transportFactory) {
       })
       .then(() => {
         // It's now safe to close
-        transport.hooks.onClosed = () => {
+        transport.hooks.onTransportClosed = () => {
           clientResolve();
         };
         transport.close();
@@ -141,7 +141,7 @@ var test_transport = async function(transportFactory) {
       Assert.equal(packet.error, "noSuchActor");
     },
 
-    onClosed: function() {
+    onTransportClosed: function() {
       do_throw("Transport closed before we expected");
     },
   };
