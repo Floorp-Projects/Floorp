@@ -888,25 +888,29 @@ void TRR::ReportStatus(nsresult aStatusCode) {
 }
 
 static void RecordHttpVersion(nsIHttpChannel* aHttpChannel) {
-  nsAutoCString protocol;
-  nsresult rv = aHttpChannel->GetProtocolVersion(protocol);
-  if (NS_FAILED(rv)) {
-    LOG(("Failed to get protocol version, rv=%x", (int)rv));
+  nsCOMPtr<nsIHttpChannelInternal> internalChannel =
+      do_QueryInterface(aHttpChannel);
+  if (!internalChannel) {
+    LOG(("RecordHttpVersion: Failed to QI nsIHttpChannelInternal"));
     return;
   }
 
-  if (protocol.LowerCaseEqualsLiteral("h2")) {
-    Telemetry::AccumulateCategorical(
-        Telemetry::LABELS_DNS_TRR_HTTP_VERSION::h_2);
-  } else if (protocol.LowerCaseEqualsLiteral("h3")) {
-    Telemetry::AccumulateCategorical(
-        Telemetry::LABELS_DNS_TRR_HTTP_VERSION::h_3);
-  } else {
-    Telemetry::AccumulateCategorical(
-        Telemetry::LABELS_DNS_TRR_HTTP_VERSION::h_1);
+  uint32_t major, minor;
+  if (NS_FAILED(internalChannel->GetResponseVersion(&major, &minor))) {
+    LOG(("RecordHttpVersion: Failed to get protocol version"));
+    return;
   }
 
-  LOG(("DoH endpoint responded using HTTP version: %s", protocol.get()));
+  auto label = Telemetry::LABELS_DNS_TRR_HTTP_VERSION2::h_1;
+  if (major == 2) {
+    label = Telemetry::LABELS_DNS_TRR_HTTP_VERSION2::h_2;
+  } else if (major == 3) {
+    label = Telemetry::LABELS_DNS_TRR_HTTP_VERSION2::h_3;
+  }
+
+  Telemetry::AccumulateCategoricalKeyed(TRRService::ProviderKey(), label);
+
+  LOG(("RecordHttpVersion: Provider responded using HTTP version: %d", major));
 }
 
 NS_IMETHODIMP
