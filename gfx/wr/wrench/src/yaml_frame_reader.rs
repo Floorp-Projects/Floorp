@@ -17,6 +17,7 @@ use std::usize;
 use webrender::api::*;
 use webrender::render_api::*;
 use webrender::api::units::*;
+use webrender::api::FillRule;
 use crate::wrench::{FontDescriptor, Wrench, WrenchThing};
 use crate::yaml_helper::{StringEnum, YamlHelper, make_perspective};
 use yaml_rust::{Yaml, YamlLoader};
@@ -1982,6 +1983,8 @@ impl YamlFrameReader {
             space_and_clip.clip_id = dl.define_clip_image_mask(
                 &space_and_clip,
                 image_mask,
+                &vec![],
+                FillRule::Nonzero,
             );
         }
 
