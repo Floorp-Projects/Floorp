@@ -73,7 +73,7 @@ class Watch(MachCommandBase):
     @Command(
         "watch",
         category="post-build",
-        description="Watch and re-build the tree.",
+        description="Watch and re-build (parts of) the tree.",
         conditions=[conditions.is_firefox],
     )
     @CommandArgument(
@@ -83,18 +83,16 @@ class Watch(MachCommandBase):
         help="Verbose output for what commands the watcher is running.",
     )
     def watch(self, verbose=False):
-        """Watch and re-build the source tree."""
+        """Watch and re-build (parts of) the source tree."""
 
         if not conditions.is_artifact_build(self):
             print(
-                "mach watch requires an artifact build. See "
-                "https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build"  # noqa
+                "WARNING: mach watch only rebuilds the `mach build faster` parts of the tree!"
             )
-            return 1
 
         if not self.substs.get("WATCHMAN", None):
             print(
-                "mach watch requires watchman to be installed. See "
+                "mach watch requires watchman to be installed and found at configure time. See "
                 "https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Incremental_builds_with_filesystem_watching"  # noqa
             )
             return 1
