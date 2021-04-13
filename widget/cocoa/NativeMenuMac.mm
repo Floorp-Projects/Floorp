@@ -360,6 +360,15 @@ void NativeMenuMac::ActivateItem(dom::Element* aItemElement, Modifiers aModifier
                               ConvertModifierFlags(aModifiers));
 }
 
+void NativeMenuMac::OpenSubmenu(dom::Element* aMenuElement) {
+  if (RefPtr<nsMenuX> menu = GetOpenMenuContainingElement(aMenuElement)) {
+    Maybe<nsMenuX::MenuChild> item = menu->GetItemForElement(aMenuElement);
+    if (item && item->is<RefPtr<nsMenuX>>()) {
+      item->as<RefPtr<nsMenuX>>()->MenuOpened();
+    }
+  }
+}
+
 RefPtr<Element> NativeMenuMac::Element() { return mElement; }
 
 }  // namespace widget
