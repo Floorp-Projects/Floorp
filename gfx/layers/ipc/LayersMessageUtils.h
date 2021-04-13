@@ -31,6 +31,7 @@
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/RepaintRequest.h"
 #include "nsSize.h"
+#include "mozilla/layers/DoubleTapToZoom.h"
 
 // For ParamTraits, could be moved to cpp file
 #include "ipc/nsGUIEventIPC.h"
@@ -999,6 +1000,22 @@ struct ParamTraits<mozilla::RayReferenceData> {
                    paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->mInitialPosition) &&
             ReadParam(aMsg, aIter, &aResult->mContainingBlockRect));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::ZoomTarget> {
+  typedef mozilla::layers::ZoomTarget paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.targetRect);
+    WriteParam(aMsg, aParam.elementBoundingRect);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->targetRect) &&
+            ReadParam(aMsg, aIter, &aResult->elementBoundingRect));
   }
 };
 

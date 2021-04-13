@@ -107,8 +107,31 @@ static bool IsRectZoomedIn(const CSSRect& aRect,
 
 }  // namespace
 
-CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
-                              const CSSPoint& aPoint) {
+static CSSRect AddHMargin(const CSSRect& aRect, const CSSCoord& aMargin,
+                          const FrameMetrics& aMetrics) {
+  CSSRect rect =
+      CSSRect(std::max(aMetrics.GetScrollableRect().X(), aRect.X() - aMargin),
+              aRect.Y(), aRect.Width() + 2 * aMargin, aRect.Height());
+  // Constrict the rect to the screen's right edge
+  rect.SetWidth(
+      std::min(rect.Width(), aMetrics.GetScrollableRect().XMost() - rect.X()));
+  return rect;
+}
+
+static CSSRect AddVMargin(const CSSRect& aRect, const CSSCoord& aMargin,
+                          const FrameMetrics& aMetrics) {
+  CSSRect rect =
+      CSSRect(aRect.X(),
+              std::max(aMetrics.GetScrollableRect().Y(), aRect.Y() - aMargin),
+              aRect.Width(), aRect.Height() + 2 * aMargin);
+  // Constrict the rect to the screen's bottom edge
+  rect.SetHeight(
+      std::min(rect.Height(), aMetrics.GetScrollableRect().YMost() - rect.Y()));
+  return rect;
+}
+
+ZoomTarget CalculateRectToZoomTo(
+    const RefPtr<dom::Document>& aRootContentDocument, const CSSPoint& aPoint) {
   // Ensure the layout information we get is up-to-date.
   aRootContentDocument->FlushPendingNotifications(FlushType::Layout);
 
@@ -117,18 +140,18 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
 
   RefPtr<PresShell> presShell = aRootContentDocument->GetPresShell();
   if (!presShell) {
-    return zoomOut;
+    return ZoomTarget{zoomOut, Nothing()};
   }
 
   nsIScrollableFrame* rootScrollFrame =
       presShell->GetRootScrollFrameAsScrollable();
   if (!rootScrollFrame) {
-    return zoomOut;
+    return ZoomTarget{zoomOut, Nothing()};
   }
 
   nsCOMPtr<dom::Element> element = ElementFromPoint(presShell, aPoint);
   if (!element) {
-    return zoomOut;
+    return ZoomTarget{zoomOut, Nothing()};
   }
 
   while (element && !ShouldZoomToElement(element, aRootContentDocument)) {
@@ -136,7 +159,7 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
   }
 
   if (!element) {
-    return zoomOut;
+    return ZoomTarget{zoomOut, Nothing()};
   }
 
   FrameMetrics metrics =
@@ -144,7 +167,6 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
   CSSPoint visualScrollOffset = metrics.GetVisualScrollOffset();
   CSSRect compositedArea(visualScrollOffset,
                          metrics.CalculateCompositedSizeInCssPixels());
-  const CSSCoord margin = 15;
   Maybe<CSSRect> nearestScrollClip;
   CSSRect rect = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame,
                                                        &nearestScrollClip);
@@ -176,6 +198,8 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
     }
   }
 
+  CSSRect elementBoundingRect = rect;
+
   // If the element is taller than the visible area of the page scale
   // the height of the |rect| so that it has the same aspect ratio as
   // the root frame.  The clipped |rect| is centered on the y value of
@@ -194,20 +218,25 @@ CSSRect CalculateRectToZoomTo(const RefPtr<dom::Document>& aRootContentDocument,
     }
   }
 
-  rect = CSSRect(std::max(metrics.GetScrollableRect().X(), rect.X() - margin),
-                 rect.Y(), rect.Width() + 2 * margin, rect.Height());
-  // Constrict the rect to the screen's right edge
-  rect.SetWidth(
-      std::min(rect.Width(), metrics.GetScrollableRect().XMost() - rect.X()));
+  const CSSCoord margin = 15;
+  rect = AddHMargin(rect, margin, metrics);
 
   // If the rect is already taking up most of the visible area and is
   // stretching the width of the page, then we want to zoom out instead.
   if (IsRectZoomedIn(rect, compositedArea)) {
-    return zoomOut;
+    return ZoomTarget{zoomOut, Nothing()};
   }
 
+  elementBoundingRect = AddHMargin(elementBoundingRect, margin, metrics);
+
+  // Unlike rect, elementBoundingRect is the full height of the element we are
+  // zooming to. If we zoom to it without a margin it can look a weird, so give
+  // it a vertical margin.
+  elementBoundingRect = AddVMargin(elementBoundingRect, margin, metrics);
+
   rect.Round();
-  return rect;
+  elementBoundingRect.Round();
+  return ZoomTarget{rect, Some(elementBoundingRect)};
 }
 
 }  // namespace layers

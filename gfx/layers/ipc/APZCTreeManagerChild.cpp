@@ -50,9 +50,9 @@ void APZCTreeManagerChild::SetKeyboardMap(const KeyboardMap& aKeyboardMap) {
 }
 
 void APZCTreeManagerChild::ZoomToRect(const ScrollableLayerGuid& aGuid,
-                                      const CSSRect& aRect,
+                                      const ZoomTarget& aZoomTarget,
                                       const uint32_t aFlags) {
-  SendZoomToRect(aGuid, aRect, aFlags);
+  SendZoomToRect(aGuid, aZoomTarget, aFlags);
 }
 
 void APZCTreeManagerChild::ContentReceivedInputBlock(uint64_t aInputBlockId,

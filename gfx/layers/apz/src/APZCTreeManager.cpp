@@ -31,6 +31,7 @@
 #include "mozilla/layers/APZUtils.h"        // for AsyncTransform
 #include "mozilla/layers/AsyncDragMetrics.h"        // for AsyncDragMetrics
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent, etc
+#include "mozilla/layers/DoubleTapToZoom.h"         // for ZoomTarget
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
@@ -2339,7 +2340,8 @@ void APZCTreeManager::SetKeyboardMap(const KeyboardMap& aKeyboardMap) {
 }
 
 void APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
-                                 const CSSRect& aRect, const uint32_t aFlags) {
+                                 const ZoomTarget& aZoomTarget,
+                                 const uint32_t aFlags) {
   // We could probably move this to run on the updater thread if needed, but
   // either way we should restrict it to a single thread. For now let's use the
   // controller thread.
@@ -2347,7 +2349,7 @@ void APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
 
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
   if (apzc) {
-    apzc->ZoomToRect(aRect, aFlags);
+    apzc->ZoomToRect(aZoomTarget, aFlags);
   }
 }
 
