@@ -48,5 +48,5 @@ add_task(async function() {
 
   const { client } = toolbox.target;
   await toolbox.destroy();
-  ok(client._closed, "The client is closed after closing the toolbox");
+  ok(client._transportClosed, "The client is closed after closing the toolbox");
 });
