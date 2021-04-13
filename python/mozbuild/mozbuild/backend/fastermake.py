@@ -256,24 +256,23 @@ class FasterMakeBackend(MakeBackend, PartialBackend):
             ) as fh:
                 install_manifest.write(fileobj=fh)
 
-        # For artifact builds only, write a single unified manifest
-        # for consumption by |mach watch|.
-        if self.environment.is_artifact_build:
-            unified_manifest = InstallManifest()
-            for base, install_manifest in six.iteritems(self._install_manifests):
-                # Expect 'dist/bin/**', which includes 'dist/bin' with no trailing slash.
-                assert base.startswith("dist/bin")
-                base = base[len("dist/bin") :]
-                if base and base[0] == "/":
-                    base = base[1:]
-                unified_manifest.add_entries_from(install_manifest, base=base)
+        # Write a single unified manifest for consumption by |mach watch|.
+        # Since this doesn't start 'install_', it's not processed by the build.
+        unified_manifest = InstallManifest()
+        for base, install_manifest in six.iteritems(self._install_manifests):
+            # Expect 'dist/bin/**', which includes 'dist/bin' with no trailing slash.
+            assert base.startswith("dist/bin")
+            base = base[len("dist/bin") :]
+            if base and base[0] == "/":
+                base = base[1:]
+            unified_manifest.add_entries_from(install_manifest, base=base)
 
-            with self._write_file(
-                mozpath.join(
-                    self.environment.topobjdir, "faster", "unified_install_dist_bin"
-                )
-            ) as fh:
-                unified_manifest.write(fileobj=fh)
+        with self._write_file(
+            mozpath.join(
+                self.environment.topobjdir, "faster", "unified_install_dist_bin"
+            )
+        ) as fh:
+            unified_manifest.write(fileobj=fh)
 
         for obj in self._generated_files:
             for stmt in self._format_statements_for_generated_file(obj, "default"):
