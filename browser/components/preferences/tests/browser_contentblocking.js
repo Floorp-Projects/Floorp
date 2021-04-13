@@ -9,6 +9,7 @@ ChromeUtils.defineModuleGetter(
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
 const NCB_PREF = "network.cookie.cookieBehavior";
+const NCBP_PREF = "network.cookie.cookieBehavior.pbmode";
 const CAT_PREF = "browser.contentblocking.category";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const STP_PREF = "privacy.trackingprotection.socialtracking.enabled";
@@ -73,6 +74,10 @@ add_task(async function testContentBlockingMainCategory() {
     [TP_PBM_PREF, true],
     [STP_PREF, false],
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+    [
+      NCBP_PREF,
+      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+    ],
     [ISOLATE_UI_PREF, true],
     [FPI_PREF, false],
   ];
@@ -193,6 +198,11 @@ add_task(async function testContentBlockingMainCategory() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
     `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER}`
   );
+  is(
+    Services.prefs.getIntPref(NCBP_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+    `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
+  );
   // Select block trackers and isolate
   cookieMenuTrackersPlusIsolate.click();
   ok(
@@ -204,6 +214,11 @@ add_task(async function testContentBlockingMainCategory() {
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
     `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
   );
+  is(
+    Services.prefs.getIntPref(NCBP_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+    `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
+  );
   // Select block unvisited
   cookieMenuUnvisited.click();
   ok(cookieMenuUnvisited.selected, "The unvisited item should be selected");
@@ -211,6 +226,11 @@ add_task(async function testContentBlockingMainCategory() {
     Services.prefs.getIntPref(NCB_PREF),
     Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN,
     `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN}`
+  );
+  is(
+    Services.prefs.getIntPref(NCBP_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+    `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
   );
   // Select block all third party
   cookieMenuAllThirdParties.click();
@@ -223,6 +243,11 @@ add_task(async function testContentBlockingMainCategory() {
     Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
     `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN}`
   );
+  is(
+    Services.prefs.getIntPref(NCBP_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+    `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
+  );
   // Select block all third party
   cookieMenuAll.click();
   ok(cookieMenuAll.selected, "The all cookies item should be selected");
@@ -230,6 +255,11 @@ add_task(async function testContentBlockingMainCategory() {
     Services.prefs.getIntPref(NCB_PREF),
     Ci.nsICookieService.BEHAVIOR_REJECT,
     `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT}`
+  );
+  is(
+    Services.prefs.getIntPref(NCBP_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+    `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
   );
 
   gBrowser.removeCurrentTab();
@@ -281,6 +311,7 @@ add_task(async function testContentBlockingStandardCategory() {
     [TP_PREF]: null,
     [TP_PBM_PREF]: null,
     [NCB_PREF]: null,
+    [NCBP_PREF]: null,
     [FP_PREF]: null,
     [STP_PREF]: null,
     [CM_PREF]: null,
@@ -308,6 +339,10 @@ add_task(async function testContentBlockingStandardCategory() {
   Services.prefs.setBoolPref(TP_PBM_PREF, false);
   Services.prefs.setIntPref(
     NCB_PREF,
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+  );
+  Services.prefs.setIntPref(
+    NCBP_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
   Services.prefs.setBoolPref(STP_PREF, !Services.prefs.getBoolPref(STP_PREF));
@@ -380,6 +415,10 @@ add_task(async function testContentBlockingStrictCategory() {
   Services.prefs.setBoolPref(LEVEL2_PREF, false);
   Services.prefs.setIntPref(
     NCB_PREF,
+    Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN
+  );
+  Services.prefs.setIntPref(
+    NCBP_PREF,
     Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN
   );
   let strict_pref = Services.prefs.getStringPref(STRICT_PREF).split(",");
@@ -524,6 +563,48 @@ add_task(async function testContentBlockingStrictCategory() {
           `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
         );
         break;
+      case "cookieBehaviorPBM0":
+        is(
+          Services.prefs.getIntPref(NCBP_PREF),
+          Ci.nsICookieService.BEHAVIOR_ACCEPT,
+          `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_ACCEPT}`
+        );
+        break;
+      case "cookieBehaviorPBM1":
+        is(
+          Services.prefs.getIntPref(NCBP_PREF),
+          Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
+          `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN}`
+        );
+        break;
+      case "cookieBehaviorPBM2":
+        is(
+          Services.prefs.getIntPref(NCBP_PREF),
+          Ci.nsICookieService.BEHAVIOR_REJECT,
+          `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT}`
+        );
+        break;
+      case "cookieBehaviorPBM3":
+        is(
+          Services.prefs.getIntPref(NCBP_PREF),
+          Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN,
+          `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN}`
+        );
+        break;
+      case "cookieBehaviorPBM4":
+        is(
+          Services.prefs.getIntPref(NCBP_PREF),
+          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+          `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER}`
+        );
+        break;
+      case "cookieBehaviorPBM5":
+        is(
+          Services.prefs.getIntPref(NCBP_PREF),
+          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+          `${NCBP_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN}`
+        );
+        break;
       default:
         ok(false, "unknown option was added to the strict pref");
         break;
@@ -535,7 +616,15 @@ add_task(async function testContentBlockingStrictCategory() {
 
 // Tests that the content blocking "Custom" category behaves as expected.
 add_task(async function testContentBlockingCustomCategory() {
-  let prefs = [TP_PREF, TP_PBM_PREF, NCB_PREF, FP_PREF, STP_PREF, CM_PREF];
+  let prefs = [
+    TP_PREF,
+    TP_PBM_PREF,
+    NCB_PREF,
+    NCBP_PREF,
+    FP_PREF,
+    STP_PREF,
+    CM_PREF,
+  ];
 
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   let doc = gBrowser.contentDocument;
@@ -610,6 +699,39 @@ add_task(async function testContentBlockingCustomCategory() {
   Services.prefs.setIntPref(NCB_PREF, nonDefaultNCB);
   await TestUtils.waitForCondition(() =>
     Services.prefs.prefHasUserValue(NCB_PREF)
+  );
+  is(
+    Services.prefs.getStringPref(CAT_PREF),
+    "custom",
+    `${CAT_PREF} has been set to custom`
+  );
+
+  strictRadioOption.click();
+  await TestUtils.waitForCondition(
+    () => Services.prefs.getStringPref(CAT_PREF) == "strict"
+  );
+
+  // Changing the NCBP_PREF should necessarily set CAT_PREF to "custom"
+  let defaultNCBP = defaults.get(NCBP_PREF);
+  let nonDefaultNCBP;
+  switch (defaultNCBP) {
+    case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+      nonDefaultNCBP = Ci.nsICookieService.BEHAVIOR_REJECT;
+      break;
+    case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+    case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
+      nonDefaultNCBP = Ci.nsICookieService.BEHAVIOR_ACCEPT;
+      break;
+    default:
+      ok(
+        false,
+        "Unexpected default value found for " + NCBP_PREF + ": " + defaultNCBP
+      );
+      break;
+  }
+  Services.prefs.setIntPref(NCBP_PREF, nonDefaultNCBP);
+  await TestUtils.waitForCondition(() =>
+    Services.prefs.prefHasUserValue(NCBP_PREF)
   );
   is(
     Services.prefs.getStringPref(CAT_PREF),
@@ -806,6 +928,10 @@ add_task(async function testPolicyCategorization() {
     !Services.prefs.prefHasUserValue(NCB_PREF),
     `${NCB_PREF} starts with the default value`
   );
+  ok(
+    !Services.prefs.prefHasUserValue(NCBP_PREF),
+    `${NCBP_PREF} starts with the default value`
+  );
 
   let uiUpdatedPromise = TestUtils.topicObserved("privacy-pane-tp-ui-updated");
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
@@ -821,6 +947,11 @@ add_task(async function testPolicyCategorization() {
 
   EnterprisePolicyTesting.checkPolicyPref(
     NCB_PREF,
+    Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
+    true
+  );
+  EnterprisePolicyTesting.checkPolicyPref(
+    NCBP_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
     true
   );

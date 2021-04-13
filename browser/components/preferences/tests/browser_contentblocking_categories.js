@@ -12,6 +12,7 @@ ChromeUtils.defineModuleGetter(
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
 const NCB_PREF = "network.cookie.cookieBehavior";
+const NCBP_PREF = "network.cookie.cookieBehavior.pbmode";
 const CAT_PREF = "browser.contentblocking.category";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
@@ -56,6 +57,10 @@ add_task(async function testContentBlockingStandardDefinition() {
     `${NCB_PREF} pref has the default value`
   );
   ok(
+    !Services.prefs.prefHasUserValue(NCBP_PREF),
+    `${NCBP_PREF} pref has the default value`
+  );
+  ok(
     !Services.prefs.prefHasUserValue(LEVEL2_PREF),
     `${LEVEL2_PREF} pref has the default value`
   );
@@ -67,6 +72,7 @@ add_task(async function testContentBlockingStandardDefinition() {
   let originalCM = defaults.getBoolPref(CM_PREF);
   let originalSTP = defaults.getBoolPref(STP_PREF);
   let originalNCB = defaults.getIntPref(NCB_PREF);
+  let originalNCBP = defaults.getIntPref(NCBP_PREF);
   let originalLEVEL2 = defaults.getBoolPref(LEVEL2_PREF);
 
   let nonDefaultNCB;
@@ -78,7 +84,17 @@ add_task(async function testContentBlockingStandardDefinition() {
       nonDefaultNCB = Ci.nsICookieService.BEHAVIOR_ACCEPT;
       break;
   }
+  let nonDefaultNCBP;
+  switch (originalNCBP) {
+    case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+      nonDefaultNCBP = Ci.nsICookieService.BEHAVIOR_REJECT;
+      break;
+    default:
+      nonDefaultNCBP = Ci.nsICookieService.BEHAVIOR_ACCEPT;
+      break;
+  }
   defaults.setIntPref(NCB_PREF, nonDefaultNCB);
+  defaults.setIntPref(NCBP_PREF, nonDefaultNCBP);
   defaults.setBoolPref(TP_PREF, !originalTP);
   defaults.setBoolPref(TP_PBM_PREF, !originalTPPBM);
   defaults.setBoolPref(FP_PREF, !originalFP);
@@ -112,6 +128,10 @@ add_task(async function testContentBlockingStandardDefinition() {
     `${NCB_PREF} pref has the default value`
   );
   ok(
+    !Services.prefs.prefHasUserValue(NCBP_PREF),
+    `${NCBP_PREF} pref has the default value`
+  );
+  ok(
     !Services.prefs.prefHasUserValue(LEVEL2_PREF),
     `${LEVEL2_PREF} pref has the default value`
   );
@@ -124,6 +144,7 @@ add_task(async function testContentBlockingStandardDefinition() {
   defaults.setBoolPref(CM_PREF, originalCM);
   defaults.setBoolPref(STP_PREF, originalSTP);
   defaults.setIntPref(NCB_PREF, originalNCB);
+  defaults.setIntPref(NCBP_PREF, originalNCBP);
   defaults.setBoolPref(LEVEL2_PREF, originalLEVEL2);
 });
 
@@ -135,7 +156,7 @@ add_task(async function testContentBlockingStrictDefinition() {
   let originalStrictPref = defaults.getStringPref(STRICT_DEF_PREF);
   defaults.setStringPref(
     STRICT_DEF_PREF,
-    "tp,tpPrivate,fp,cm,cookieBehavior0,stp,lvl2"
+    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,lvl2"
   );
   Services.prefs.setStringPref(CAT_PREF, "strict");
   is(
@@ -150,7 +171,7 @@ add_task(async function testContentBlockingStrictDefinition() {
   );
   is(
     Services.prefs.getStringPref(STRICT_DEF_PREF),
-    "tp,tpPrivate,fp,cm,cookieBehavior0,stp,lvl2",
+    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,lvl2",
     `${STRICT_DEF_PREF} changed to what we set.`
   );
 
@@ -182,7 +203,12 @@ add_task(async function testContentBlockingStrictDefinition() {
   is(
     Services.prefs.getIntPref(NCB_PREF),
     Ci.nsICookieService.BEHAVIOR_ACCEPT,
-    `${NCB_PREF} has been set to BEHAVIOR_REJECT_TRACKER`
+    `${NCB_PREF} has been set to BEHAVIOR_ACCEPT`
+  );
+  is(
+    Services.prefs.getIntPref(NCBP_PREF),
+    Ci.nsICookieService.BEHAVIOR_ACCEPT,
+    `${NCBP_PREF} has been set to BEHAVIOR_ACCEPT`
   );
   is(
     Services.prefs.getBoolPref(LEVEL2_PREF),
@@ -218,13 +244,17 @@ add_task(async function testContentBlockingStrictDefinition() {
     `${NCB_PREF} pref has the default value`
   );
   ok(
+    !Services.prefs.prefHasUserValue(NCBP_PREF),
+    `${NCBP_PREF} pref has the default value`
+  );
+  ok(
     !Services.prefs.prefHasUserValue(LEVEL2_PREF),
     `${LEVEL2_PREF} pref has the default value`
   );
 
   defaults.setStringPref(
     STRICT_DEF_PREF,
-    "-tpPrivate,-fp,-cm,-tp,cookieBehavior3,-stp,-lvl2"
+    "-tpPrivate,-fp,-cm,-tp,cookieBehavior3,cookieBehaviorPBM2,-stp,-lvl2"
   );
   is(
     Services.prefs.getBoolPref(TP_PREF),
@@ -255,6 +285,11 @@ add_task(async function testContentBlockingStrictDefinition() {
     Services.prefs.getIntPref(NCB_PREF),
     Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN,
     `${NCB_PREF} has been set to BEHAVIOR_REJECT_TRACKER`
+  );
+  is(
+    Services.prefs.getIntPref(NCBP_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT,
+    `${NCBP_PREF} has been set to BEHAVIOR_REJECT`
   );
   is(
     Services.prefs.getBoolPref(LEVEL2_PREF),
