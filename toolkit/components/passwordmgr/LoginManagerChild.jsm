@@ -1156,6 +1156,12 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
          * updated by the user.
          */
         formlessModifiedPasswordFields: new WeakFieldSet(),
+
+        /**
+         * Caches the results of the username heuristic
+         */
+        cachedIsInferredUsernameField: new WeakMap(),
+        cachedIsInferredEmailField: new WeakMap(),
       };
       this._loginFormStateByDocument.set(document, loginFormState);
     }
@@ -1545,10 +1551,16 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     if (!usernameField) {
-      // Locate the username field in the form by searching backwards
-      // from the first password field, assume the first text field is the
-      // username. We might not find a username field if the user is
-      // already logged in to the site.
+      // Searching backwards from the first password field until we find a field
+      // that looks like a "username" field. If no "username" field is found,
+      // consider an email-like field a username field, if any.
+      // If neither a username-like or an email-like field exists, assume the
+      // first text field before the password field is the username.
+      // We might not find a username field if the user is already logged in to the site.
+      //
+      // Note: We only search fields precede the first password field because we
+      // don't see sites putting a username field after a password field. We can
+      // extend searching to all fields in the form if this turns out not to be the case.
 
       for (let i = pwFields[0].index - 1; i >= 0; i--) {
         let element = form.elements[i];
@@ -1564,8 +1576,23 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
           continue;
         }
 
-        usernameField = element;
-        break;
+        // Assume the first text field is the username by default.
+        // It will be replaced if we find a likely username field afterward.
+        if (!usernameField) {
+          usernameField = element;
+        }
+
+        if (this.isProbablyAnUsernameField(element)) {
+          // An username field is found, we are done.
+          usernameField = element;
+          break;
+        } else if (this.isProbablyAnEmailField(element)) {
+          // An email field is found, consider it a username field but continue
+          // to search for an "username" field.
+          // In current implementation, if another email field is found during
+          // the process, we will use the new one.
+          usernameField = element;
+        }
       }
     }
 
@@ -2857,5 +2884,43 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
           (newPasswordField.disabled || newPasswordField.readOnly),
       },
     };
+  }
+
+  /**
+   * Returns true if the input field is considered a username field by
+   * 'LoginHelper.isInferredUsernameField'. The main purpose of this method
+   * is to cache the result because _getFormFields has many call sites and we
+   * want to avoid applying the heuristic every time.
+   *
+   * @param {Element} element the field to check.
+   * @returns {boolean} True if the element is likely a username field
+   */
+  isProbablyAnUsernameField(inputElement) {
+    let docState = this.stateForDocument(inputElement.ownerDocument);
+    let result = docState.cachedIsInferredUsernameField.get(inputElement);
+    if (result === undefined) {
+      result = LoginHelper.isInferredUsernameField(inputElement);
+      docState.cachedIsInferredUsernameField.set(inputElement, result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns true if the input field is considered an email field by
+   * 'LoginHelper.isInferredEmailField'.
+   *
+   * @param {Element} element the field to check.
+   * @returns {boolean} True if the element is likely an email field
+   */
+  isProbablyAnEmailField(inputElement) {
+    let docState = this.stateForDocument(inputElement.ownerDocument);
+    let result = docState.cachedIsInferredEmailField.get(inputElement);
+    if (result === undefined) {
+      result = LoginHelper.isInferredEmailField(inputElement);
+      docState.cachedIsInferredEmailField.set(inputElement, result);
+    }
+
+    return result;
   }
 };
