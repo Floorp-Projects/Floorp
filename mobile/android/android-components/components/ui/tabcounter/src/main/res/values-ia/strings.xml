@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Duplicar scheda</string>
+    </resources>

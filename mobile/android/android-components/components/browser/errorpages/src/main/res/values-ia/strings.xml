@@ -6,14 +6,42 @@
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Impossibile completar le requesta</string>
 
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Nulle altere information sur iste problema o error es disponibile actualmente.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Connexion secur fallite</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Le pagina que tu tenta vider non pote esser monstrate perque le authenticitate del datos recipite non poteva esser verificate.</li>
+        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+      </ul>
+    
+]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Connexion secur fallite</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Isto pote esser un problema con le configuration del servitor, o pote esser alicuno que tenta de finger se servitor.</li>
+        <li>Si tu era connexe a iste servitor con successo in le passato, le error pote esser temporari e tu pote retentar plus tarde.</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avantiate…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Qualcuno pote tentar de finger se le sito e tu non deberea continuar.</label>
+        <br><br>
+        <label>Sitos web prova lor identitate via certificatos. %1$s non es digne de fide <b>%2$s</b> perque su emissor de certificato es incognite, le certificato es auto-firmate o le servitor non invia le correcte certificatos intermedie.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Retroceder (Recommendate)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -22,17 +50,74 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Le connexion ha essite interrumpite</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Le navigator ha connectite con successo, ma le connexion ha essite interrumpite durante le transferimento de informationes. Retenta.</p>
+      <ul>
+        <li>Le sito pote esser temporarimente indisponibile o troppo occupate. Retentar in alcun momentos.</li>
+        <li>Si tu non pote cargar ulle paginas, verifica le connexion de datos o wi-fi de tu apparato.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Le connexion ha expirate</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Le sito requestate non ha respondite a un requesta de connexion e le navigator ha cessate de attender un responsa.</p>
+      <ul>
+        <li>Poterea le servitor patir alte carga o un interruption temporari? Retenta plus tarde.</li>
+        <li>An tu non pote navigar altere sitos? Verifica le connexion de rete del apparato.</li>
+        <li>Es tu apparato o rete protegite per un firewall o proxy? Parametros non correcte pote interferer con le navigation del Web.</li>
+        <li>Ancora ha tu difficultates? Consulta tu administrator de rete o fornitor de Internet pro assistentia.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Connexion impossibile</string>
 
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Le sito pote esser temporarimente indisponibile o troppo occupate. Retenta in alcun momentos.</li>
+        <li>Si tu non pote cargar ulle paginas, verifica le connexion de datos o wi-fi de tu apparato.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Responsa inexpectate del servitor</string>
 
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Le sito respondeva al requesta de rete in un maniera impreviste e le navigator non pote continuar.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Le pagina non redirige correctemente</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Le navigator ha cessate de tentar recuperar le elemento requiurite. Le sito redirige le requesta in un maniera que jammais se completara.</p>
+      <ul>
+        <li>Ha tu disactivate o blocate cookies necessari pro iste sito?</li>
+        <li>Si acceptar le cookies del sito non resolve le problema, il ha probabilemente un problema de configuration del servitor e non de tu apparato.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Modo disconnectite</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Le navigator opera in su modo sin connexion e non pote connecter se al elemento requirite.</p>
+      <ul>
+        <li>Es le apparato connectite a un rete active?</li>
+        <li>Pulsa “Retentar” pro passar al modo online e recargar le pagina.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Porta limitate pro rationes de securitate</string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Le connexion ha essite remontate</string>
