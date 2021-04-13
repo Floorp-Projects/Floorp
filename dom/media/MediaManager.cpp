@@ -3116,11 +3116,11 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
           });
 }
 
-RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
+RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateDevices(
     nsPIDOMWindowInner* aWindow, CallerType aCallerType) {
   MOZ_ASSERT(NS_IsMainThread());
   if (sHasShutdown) {
-    return DevicesPromise::CreateAndReject(
+    return DeviceSetPromise::CreateAndReject(
         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
                                   "In shutdown"),
         __func__);
@@ -3150,7 +3150,7 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
     audioOutputType = MediaSinkEnum::Speaker;
   } else if (audioType == MediaSourceEnum::Other &&
              videoType == MediaSourceEnum::Other) {
-    return DevicesPromise::CreateAndResolve(devices, __func__);
+    return DeviceSetPromise::CreateAndResolve(devices, __func__);
   }
 
   bool resistFingerprinting = nsContentUtils::ResistFingerprinting(aCallerType);
@@ -3191,10 +3191,11 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [devices](bool) {
-            return DevicesPromise::CreateAndResolve(devices, __func__);
+            return DeviceSetPromise::CreateAndResolve(devices, __func__);
           },
           [](RefPtr<MediaMgrError>&& aError) {
-            return DevicesPromise::CreateAndReject(std::move(aError), __func__);
+            return DeviceSetPromise::CreateAndReject(std::move(aError),
+                                                     __func__);
           });
 }
 
