@@ -5682,6 +5682,7 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
         GetFilesOrDirectoriesInternal();
 
     if (files.IsEmpty()) {
+      NS_ENSURE_STATE(GetOwnerGlobal());
       ErrorResult rv;
       RefPtr<Blob> blob = Blob::CreateStringBlob(
           GetOwnerGlobal(), ""_ns, u"application/octet-stream"_ns);
