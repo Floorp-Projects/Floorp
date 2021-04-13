@@ -26,6 +26,7 @@
 #include "builtin/Array.h"
 #include "builtin/BigInt.h"
 #include "builtin/Eval.h"
+#include "builtin/MapObject.h"
 #include "builtin/Object.h"
 #include "builtin/String.h"
 #include "builtin/Symbol.h"
@@ -3594,13 +3595,17 @@ void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
     // - ( 1.0%, 96.4%): Proxy
 
     // Note that any JSClass that is special cased below likely needs to
-    // specify the JSCLASS_DELAY_METADATA_CALLBACK flag, or else we will
+    // specify the JSCLASS_DELAY_METADATA_BUILDER flag, or else we will
     // probably crash if the object metadata callback attempts to get the
     // size of the new object (which Debugger code does) before private
     // slots are initialized.
   } else if (is<ArgumentsObject>()) {
     info->objectsMallocHeapMisc +=
         as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
+  } else if (is<MapObject>()) {
+    info->objectsMallocHeapMisc += as<MapObject>().sizeOfData(mallocSizeOf);
+  } else if (is<SetObject>()) {
+    info->objectsMallocHeapMisc += as<SetObject>().sizeOfData(mallocSizeOf);
   } else if (is<RegExpStaticsObject>()) {
     info->objectsMallocHeapMisc +=
         as<RegExpStaticsObject>().sizeOfData(mallocSizeOf);
