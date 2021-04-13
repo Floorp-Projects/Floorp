@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:; img-src https://addons.cdn.mozilla.net; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+  <link rel="stylesheet" type="text/css" href="chrome://browser/skin/upgradeDialog.css">
+  <link rel="localization" href="branding/brand.ftl">
+  <link rel="localization" href="browser/upgradeDialog.ftl">
+  <script src="chrome://browser/content/upgradeDialog.js"></script>
+</head>
+<body>
+  <h1 id="title"></h1>
+  <h2 id="subtitle" data-l10n-id="upgrade-dialog-new-subtitle"></h2>
+  <spacer></spacer>
+  <ul class="items">
+    <li>
+      <h2 data-l10n-id="upgrade-dialog-new-item-menu-title"></h2>
+      <p data-l10n-id="upgrade-dialog-new-item-menu-description"></p>
+    </li>
+    <li>
+      <h2 data-l10n-id="upgrade-dialog-new-item-tabs-title"></h2>
+      <p data-l10n-id="upgrade-dialog-new-item-tabs-description"></p>
+    </li>
+    <li>
+      <h2 data-l10n-id="upgrade-dialog-new-item-icons-title"></h2>
+      <p data-l10n-id="upgrade-dialog-new-item-icons-description"></p>
+    </li>
+  </ul>
+  <div class="themes hidden">
+    <input type="radio" name="theme" data-l10n-id="upgrade-dialog-theme-system"></input>
+    <input type="radio" name="theme" data-l10n-id="upgrade-dialog-theme-light"></input>
+    <input type="radio" name="theme" data-l10n-id="upgrade-dialog-theme-dark"></input>
+    <input type="radio" name="theme" data-l10n-id="upgrade-dialog-theme-alpenglow"></input>
+    <input type="radio" name="theme" data-l10n-id="upgrade-dialog-theme-keep"></input>
+  </div>
+  <spacer></spacer>
+  <button id="primary" class="primary"></button>
+  <button id="secondary" class="text-link"></button>
+  <h3 class="steps"><span>•</span> • </h3>
+</body>
+</html>
