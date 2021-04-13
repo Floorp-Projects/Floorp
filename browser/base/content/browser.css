@@ -1412,28 +1412,6 @@ toolbarpaletteitem > #stop-reload-button {
   }
 }
 
-/* Page action context menu */
-#pageActionContextMenu > .pageActionContextMenuItem {
-  visibility: collapse;
-}
-
-#pageActionContextMenu[state=extensionPinned] > .pageActionContextMenuItem.manageExtensionItem,
-#pageActionContextMenu[state=extensionUnpinned] > .pageActionContextMenuItem.manageExtensionItem,
-#pageActionContextMenu[state=extensionPinned] > .pageActionContextMenuItem.removeExtensionItem,
-#pageActionContextMenu[state=extensionUnpinned] > .pageActionContextMenuItem.removeExtensionItem {
-  visibility: visible;
-}
-
-@media not (-moz-proton) {
-/* These pin/unpin menu options should be removed after Proton is released */
-#pageActionContextMenu[state=builtInPinned] > .pageActionContextMenuItem.builtInPinned,
-#pageActionContextMenu[state=builtInUnpinned] > .pageActionContextMenuItem.builtInUnpinned,
-#pageActionContextMenu[state=extensionPinned] > .pageActionContextMenuItem.extensionPinned,
-#pageActionContextMenu[state=extensionUnpinned] > .pageActionContextMenuItem.extensionUnpinned {
-  visibility: visible;
-}
-} /*** !proton ***/
-
 /* Print pending */
 .printSettingsBrowser {
   width: 250px !important;

@@ -603,19 +603,6 @@
 
     <menupopup id="pageActionContextMenu"
                onpopupshowing="BrowserPageActions.onContextMenuShowing(event, this);">
-      <menuitem class="pageActionContextMenuItem builtInUnpinned"
-                oncommand="BrowserPageActions.togglePinningForContextAction();"
-                data-l10n-id="page-action-add-to-urlbar"/>
-      <menuitem class="pageActionContextMenuItem builtInPinned"
-                oncommand="BrowserPageActions.togglePinningForContextAction();"
-                data-l10n-id="page-action-remove-from-urlbar"/>
-      <menuitem class="pageActionContextMenuItem extensionUnpinned"
-                oncommand="BrowserPageActions.togglePinningForContextAction();"
-                data-l10n-id="page-action-add-to-urlbar"/>
-      <menuitem class="pageActionContextMenuItem extensionPinned"
-                oncommand="BrowserPageActions.togglePinningForContextAction();"
-                data-l10n-id="page-action-remove-from-urlbar"/>
-      <menuseparator class="pageActionContextMenuItem extensionPinned extensionUnpinned"/>
       <menuitem class="pageActionContextMenuItem extensionPinned extensionUnpinned manageExtensionItem"
                 oncommand="BrowserPageActions.openAboutAddonsForContextAction();"
                 data-l10n-id="page-action-manage-extension"/>
