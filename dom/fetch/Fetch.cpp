@@ -266,8 +266,6 @@ class WorkerFetchResolver final : public FetchDriverObserver {
   RefPtr<WeakWorkerRef> mWorkerRef;
   bool mIsShutdown;
 
-  Atomic<bool> mNeedOnDataAvailable;
-
  public:
   // Returns null if worker is shutting down.
   static already_AddRefed<WorkerFetchResolver> Create(
@@ -356,7 +354,6 @@ class WorkerFetchResolver final : public FetchDriverObserver {
     mIsShutdown = true;
     mPromiseProxy->CleanUp();
 
-    mIsNeedOnDataAvailable = false;
     mFetchObserver = nullptr;
 
     if (mSignalProxy) {
@@ -379,8 +376,7 @@ class WorkerFetchResolver final : public FetchDriverObserver {
       : mPromiseProxy(aProxy),
         mSignalProxy(aSignalProxy),
         mFetchObserver(aObserver),
-        mIsShutdown(false),
-        mIsNeedOnDataAvailable(!!aObserver) {
+        mIsShutdown(false) {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(mPromiseProxy);
   }
@@ -875,7 +871,8 @@ void WorkerFetchResolver::OnResponseAvailableInternal(
 
 bool WorkerFetchResolver::NeedOnDataAvailable() {
   AssertIsOnMainThread();
-  return mIsNeedOnDataAvailable;
+  MutexAutoLock lock(mPromiseProxy->Lock());
+  return !!mFetchObserver;
 }
 
 void WorkerFetchResolver::OnDataAvailable() {
