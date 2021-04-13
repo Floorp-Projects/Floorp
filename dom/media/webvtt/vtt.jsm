@@ -1328,6 +1328,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
     this.buffer = "";
     this.decoder = decoder || new TextDecoder("utf8");
     this.regionList = [];
+    this.isPrevLineBlank = false;
   };
 
   WebVTT.Parser.prototype = {
@@ -1369,9 +1370,19 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
         // Spec defined replacement.
         line = line.replace(/[\u0000]/g, "\uFFFD");
 
-        if (!/^NOTE($|[ \t])/.test(line)) {
+        // Detect the comment. We parse line on the fly, so we only check if the
+        // comment block is preceded by a blank line and won't check if it's
+        // followed by another blank line.
+        // https://www.w3.org/TR/webvtt1/#introduction-comments
+        // TODO (1703895): according to the spec, the comment represents as a
+        // comment block, so we need to refactor the parser in order to better
+        // handle the comment block.
+        if (this.isPrevLineBlank && /^NOTE($|[ \t])/.test(line)) {
+          LOG("Ignore comment that starts with 'NOTE'");
+        } else {
           this.parseLine(line);
         }
+        this.isPrevLineBlank = emptyOrOnlyContainsWhiteSpaces(line);
       }
 
       return this;
@@ -1648,6 +1659,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "DEBUG_LOG",
       } catch(e) {
         self.reportOrThrowError(e);
       }
+      self.isPrevLineBlank = false;
       self.onflush && self.onflush();
       return this;
     }
