@@ -7,10 +7,10 @@
     }
   },
 
-  "name": "Default",
-  "description": "A theme with the operating system color scheme.",
+  "name": "System theme",
+  "description": "Follow the operating system setting for buttons, menus, and windows.",
   "author": "Mozilla",
-  "version": "1.1",
+  "version": "1.2",
 
   "icons": {"32": "icon.svg"},
 
