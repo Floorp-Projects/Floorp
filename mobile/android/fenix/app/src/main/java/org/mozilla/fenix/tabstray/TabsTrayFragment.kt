@@ -93,13 +93,15 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
         val navigationInteractor =
             DefaultNavigationInteractor(
+                context = requireContext(),
                 tabsTrayStore = tabsTrayStore,
                 browserStore = requireComponents.core.store,
                 navController = findNavController(),
                 metrics = requireComponents.analytics.metrics,
                 dismissTabTray = ::dismissAllowingStateLoss,
                 dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome,
-                bookmarksUseCase = requireComponents.useCases.bookmarksUseCases
+                bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
+                collectionStorage = requireComponents.core.tabCollectionStorage
             )
 
         tabsTrayController = DefaultTabsTrayController(
