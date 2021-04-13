@@ -178,6 +178,7 @@ add_task(async function test_add_bookmark_tags_from_library() {
   Assert.equal(tags.length, 2, "Found the right number of tags");
   Assert.deepEqual(tags, ["tag1", "tag2"], "Found the expected tags");
 
+  await promiseLibraryClosed(library);
   // Cleanup.
   await PlacesUtils.bookmarks.eraseEverything();
 });
