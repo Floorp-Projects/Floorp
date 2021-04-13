@@ -806,6 +806,8 @@ void PromiseWorkerProxy::CleanUp() {
     // Release the Promise and remove the PromiseWorkerProxy from the holders of
     // the worker thread since the Promise has been resolved/rejected or the
     // worker thread has been cancelled.
+    mWorkerRef = nullptr;
+
     CleanProperties();
   }
   Release();
