@@ -43,7 +43,7 @@ add_task(async function test_bookmark_page() {
       let properties = library.document.getElementById(
         "placesContext_createBookmark"
       );
-      EventUtils.synthesizeMouseAtCenter(properties, {}, library);
+      placesContext.activateItem(properties);
     },
     async dialogWin => {
       Assert.strictEqual(
@@ -81,7 +81,7 @@ add_task(async function test_bookmark_pages() {
       let properties = library.document.getElementById(
         "placesContext_createBookmark"
       );
-      EventUtils.synthesizeMouseAtCenter(properties, {}, library);
+      placesContext.activateItem(properties);
     },
     async dialogWin => {
       Assert.strictEqual(
