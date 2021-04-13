@@ -252,6 +252,137 @@ const TESTCASES = [
     // this test doesn't make sense to run with different filled generated password values
     extraTestEnvironments: [],
   },
+  // begin of getusername heuristic tests
+  {
+    description: "multiple non-username like input fields in a <form>",
+    document: `<form>
+      <input id="un1">
+      <input id="un2">
+      <input id="un3">
+      <input id="pw1" type=password>
+      </form>`,
+    returnedFieldIDs: {
+      usernameField: "un3",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
+    skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
+  },
+  {
+    description:
+      "1 username input and multiple non-username like input in a <form>",
+    document: `<form>
+      <input id="un1">
+      <input id="un2" name="username">
+      <input id="un3">
+      <input id="pw1" type=password>
+      </form>`,
+    returnedFieldIDs: {
+      usernameField: "un2",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
+    skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
+  },
+  {
+    description:
+      "1 email input and multiple non-username like input in a <form>",
+    document: `<form>
+      <input id="un1">
+      <input id="un2" name="email">
+      <input id="un3">
+      <input id="pw1" type=password>
+      </form>`,
+    returnedFieldIDs: {
+      usernameField: "un2",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
+    skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
+  },
+  {
+    description:
+      "1 username & 1 email field, the email field is more close to the password",
+    document: `<form>
+      <input id="un1" name="username">
+      <input id="un2" name="email">
+      <input id="pw1" type=password>
+      </form>`,
+    returnedFieldIDs: {
+      usernameField: "un1",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
+    skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
+  },
+  {
+    description:
+      "1 username and 1 email field, the username field is more close to the password",
+    document: `<form>
+      <input id="un1" name="email">
+      <input id="un2" name="username">
+      <input id="pw1" type=password>
+      </form>`,
+    returnedFieldIDs: {
+      usernameField: "un2",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
+    skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
+  },
+  {
+    description: "2 username fields in a <form>",
+    document: `<form>
+      <input id="un1" name="username">
+      <input id="un2" name="username">
+      <input id="un3">
+      <input id="pw1" type=password>
+      </form>`,
+    returnedFieldIDs: {
+      usernameField: "un2",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
+    skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
+  },
+  {
+    description: "2 email fields in a <form>",
+    document: `<form>
+      <input id="un1" name="email">
+      <input id="un2" name="email">
+      <input id="un3">
+      <input id="pw1" type=password>
+      </form>`,
+    returnedFieldIDs: {
+      usernameField: "un1",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
+    skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
+  },
+  {
+    description: "the password field precedes the username field",
+    document: `<form>
+      <input id="un1">
+      <input id="pw1" type=password>
+      <input id="un2" name="username">
+      </form>`,
+    returnedFieldIDs: {
+      usernameField: "un1",
+      newPasswordField: "pw1",
+      oldPasswordField: null,
+    },
+    skipEmptyFields: undefined,
+    extraTestEnvironments: [TESTENVIRONMENTS.filledPW1WithGeneratedPassword],
+  },
+  // end of getusername heuristic tests
 ];
 
 const TEST_ENVIRONMENT_CASES = TESTCASES.flatMap(tc => {
