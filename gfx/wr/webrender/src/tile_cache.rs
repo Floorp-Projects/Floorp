@@ -227,6 +227,7 @@ impl TileCacheBuilder {
             shared_clips,
             shared_clip_chain: ClipChainId::NONE,
             virtual_surface_size: config.compositor_kind.get_virtual_surface_size(),
+            compositor_surface_count: prim_list.compositor_surface_count,
         };
 
         self.pending_tile_caches.push(PendingTileCache {
@@ -363,6 +364,7 @@ impl TileCacheBuilder {
                         shared_clips: Vec::new(),
                         shared_clip_chain: ClipChainId::NONE,
                         virtual_surface_size: config.compositor_kind.get_virtual_surface_size(),
+                        compositor_surface_count: 0,
                     }
                 } else {
                     let slice_flags = self.force_new_tile_cache.unwrap_or(SliceFlags::empty());
@@ -393,6 +395,7 @@ impl TileCacheBuilder {
                         shared_clips,
                         shared_clip_chain: ClipChainId::NONE,
                         virtual_surface_size: config.compositor_kind.get_virtual_surface_size(),
+                        compositor_surface_count: 0,
                     }
                 };
 
@@ -545,6 +548,7 @@ fn create_tile_cache(
         shared_clips,
         shared_clip_chain: parent_clip_chain_id,
         virtual_surface_size: frame_builder_config.compositor_kind.get_virtual_surface_size(),
+        compositor_surface_count: prim_list.compositor_surface_count,
     });
 
     let pic_index = prim_store.pictures.alloc().init(PicturePrimitive::new_image(
