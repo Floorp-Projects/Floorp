@@ -76,8 +76,9 @@ async function openViewSource() {
       contentAreaContextMenuPopup,
       "popuphidden"
     );
-    let item = document.getElementById("context-viewsource");
-    EventUtils.synthesizeMouseAtCenter(item, {});
+    contentAreaContextMenuPopup.activateItem(
+      document.getElementById("context-viewsource")
+    );
     await popupHiddenPromise;
   });
 }
