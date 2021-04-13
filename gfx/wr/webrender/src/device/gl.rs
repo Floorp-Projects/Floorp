@@ -2615,7 +2615,12 @@ impl Device {
     /// to allow tiled GPUs to avoid writing the contents back to memory.
     pub fn invalidate_depth_target(&mut self) {
         assert!(self.depth_available);
-        self.gl.invalidate_framebuffer(gl::DRAW_FRAMEBUFFER, &[gl::DEPTH_ATTACHMENT]);
+        let attachments = if self.bound_draw_fbo == self.default_draw_fbo {
+            &[gl::DEPTH] as &[gl::GLenum]
+        } else {
+            &[gl::DEPTH_ATTACHMENT] as &[gl::GLenum]
+        };
+        self.gl.invalidate_framebuffer(gl::DRAW_FRAMEBUFFER, attachments);
     }
 
     /// Notifies the device that a render target is about to be reused.
