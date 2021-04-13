@@ -100,13 +100,6 @@ class nsMenuX final : public nsMenuParentX,
   // references to this object can be dropped during the handling of the DOM event.
   void MenuClosed();
 
-  // Called from mPendingAsyncMenuCloseRunnable asynchronously after MenuClosed(), so that it runs
-  // after any potential menuItemHit calls for clicked menu items.
-  // Fires popuphiding and popuphidden events.
-  // When calling this method, the caller must hold a strong reference to this object, because other
-  // references to this object can be dropped during the handling of the DOM event.
-  void MenuClosedAsync();
-
   // Close the menu if it's open, and flush any pending popuphiding / popuphidden events.
   bool Close();
 
@@ -177,6 +170,13 @@ class nsMenuX final : public nsMenuParentX,
   // children, and the NSMenu only contains visible items. So the insertion index is equal to the
   // number of visible previous siblings of aChild in mMenuChildren.
   NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
+
+  // Called from mPendingAsyncMenuCloseRunnable asynchronously after MenuClosed(), so that it runs
+  // after any potential menuItemHit calls for clicked menu items.
+  // Fires popuphiding and popuphidden events.
+  // When calling this method, the caller must hold a strong reference to this object, because other
+  // references to this object can be dropped during the handling of the DOM event.
+  void MenuClosedAsync();
 
   // If mPendingAsyncMenuCloseRunnable is non-null, call MenuClosedAsync() to send out pending
   // popuphiding/popuphidden events.
