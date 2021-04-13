@@ -75,21 +75,23 @@ void RenderCompositorLayersSWGL::CancelFrame() {
 void RenderCompositorLayersSWGL::StartCompositing(
     const wr::DeviceIntRect* aDirtyRects, size_t aNumDirtyRects,
     const wr::DeviceIntRect* aOpaqueRects, size_t aNumOpaqueRects) {
-  if (!mInFrame) {
+  MOZ_RELEASE_ASSERT(!mCompositingStarted);
+
+  if (!mInFrame || aNumDirtyRects == 0) {
     return;
   }
+
   gfx::IntRect bounds(gfx::IntPoint(0, 0), GetBufferSize().ToUnknownSize());
   nsIntRegion dirty;
-  if (aNumDirtyRects) {
-    for (size_t i = 0; i < aNumDirtyRects; i++) {
-      const auto& rect = aDirtyRects[i];
-      dirty.OrWith(gfx::IntRect(rect.origin.x, rect.origin.y, rect.size.width,
-                                rect.size.height));
-    }
-    dirty.AndWith(bounds);
-  } else {
-    dirty = bounds;
+
+  MOZ_RELEASE_ASSERT(aNumDirtyRects > 0);
+  for (size_t i = 0; i < aNumDirtyRects; i++) {
+    const auto& rect = aDirtyRects[i];
+    dirty.OrWith(gfx::IntRect(rect.origin.x, rect.origin.y, rect.size.width,
+                              rect.size.height));
   }
+  dirty.AndWith(bounds);
+
   nsIntRegion opaque(bounds);
   opaque.SubOut(mWidget->GetTransparentRegion().ToUnknownRegion());
   for (size_t i = 0; i < aNumOpaqueRects; i++) {
