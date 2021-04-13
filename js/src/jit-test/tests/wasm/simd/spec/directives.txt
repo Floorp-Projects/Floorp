@@ -1,1 +1,0 @@
-|jit-test| test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--wasm-compiler=optimizing; test-also=--no-wasm-simd; skip-if: !wasmSimdEnabled()
