@@ -122,7 +122,9 @@ add_task(async function test_context_menu_link() {
         win.gBrowser.selectedBrowser
       );
       await promisePopupShown;
-      win.document.getElementById("context-bookmarklink").click();
+      contextMenu.activateItem(
+        win.document.getElementById("context-bookmarklink")
+      );
     },
     async function test(dialogWin) {
       let expectedFolder = win.gBookmarksToolbar2h2020
