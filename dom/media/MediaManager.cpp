@@ -3677,7 +3677,6 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_ERROR_FAILURE;  // ignored
     }
     // A particular device or devices were chosen by the user.
-    // NOTE: does not allow setting a device to null; assumes nullptr
     nsCOMPtr<nsIArray> array(do_QueryInterface(aSubject));
     MOZ_ASSERT(array);
     uint32_t len = 0;
