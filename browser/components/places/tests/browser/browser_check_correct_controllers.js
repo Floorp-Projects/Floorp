@@ -46,6 +46,11 @@ add_task(async function test() {
   // Open the context menu for a toolbar item, and check if the toolbar's
   // controller is returned.
   let toolbarItems = document.getElementById("PlacesToolbarItems");
+  let placesContext = document.getElementById("placesContext");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    placesContext,
+    "popupshown"
+  );
   EventUtils.synthesizeMouse(
     toolbarItems.children[0],
     4,
@@ -53,13 +58,20 @@ add_task(async function test() {
     { type: "contextmenu", button: 2 },
     window
   );
+  await popupShownPromise;
+
   controller = PlacesUIUtils.getControllerForCommand(window, "placesCmd_copy");
   let toolbarController = document
     .getElementById("PlacesToolbar")
     .controllers.getControllerForCommand("placesCmd_copy");
   ok(controller == toolbarController, "the toolbar controller was returned");
 
-  document.getElementById("placesContext").hidePopup();
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    placesContext,
+    "popuphidden"
+  );
+  placesContext.hidePopup();
+  await popupHiddenPromise;
 
   // Now that the context menu is closed, try to get the tree controller again.
   tree.focus();
