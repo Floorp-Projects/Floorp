@@ -406,8 +406,15 @@ body {
       line-height: 16px; }
     .onboardingContainer.proton .secondary {
       color: var(--proton-secondary-button-color);
-      font-size: 13px;
-      line-height: 16px; }
+      font-size: 14px;
+      line-height: 20px; }
+    .onboardingContainer.proton .secondary-cta.top {
+      position: absolute;
+      top: 10px;
+      inset-inline-end: 47px;
+      z-index: 2; }
+      .onboardingContainer.proton .secondary-cta.top button {
+        color: #FFF; }
     .onboardingContainer.proton .steps {
       padding-bottom: 44px; }
       .onboardingContainer.proton .steps .indicator {
