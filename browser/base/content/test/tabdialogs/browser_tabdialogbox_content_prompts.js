@@ -153,17 +153,39 @@ async function checkOriginText(browser, stringKey, origin = null) {
   await dialog._dialogReady;
 
   let dialogDoc = dialog._frame.contentWindow.document;
-  let infoTitle = dialogDoc.querySelector("#infoTitle");
+  let protonModals = Services.prefs.getBoolPref(
+    "browser.proton.modals.enabled",
+    false
+  );
+  let titleSelector = protonModals ? "#titleText" : "#infoTitle";
+  let infoTitle = dialogDoc.querySelector(titleSelector);
   ok(BrowserTestUtils.is_visible(infoTitle), "Title text is visible");
 
   info("Check the displayed origin text is correct.");
   let titleText;
 
-  if (origin) {
-    titleText = commonDialogsBundle.formatStringFromName(stringKey, [origin]);
+  if (protonModals) {
+    if (origin) {
+      let host = origin;
+      try {
+        host = new URL(origin).host;
+      } catch (ex) {
+        /* will fail for the extension case. */
+      }
+      is(infoTitle.textContent, host, "Origin should be in header.");
+    } else {
+      is(
+        infoTitle.dataset.l10nId,
+        "common-dialog-title-null",
+        "Null principal string should be in header."
+      );
+    }
   } else {
-    titleText = commonDialogsBundle.GetStringFromName(stringKey);
+    if (origin) {
+      titleText = commonDialogsBundle.formatStringFromName(stringKey, [origin]);
+    } else {
+      titleText = commonDialogsBundle.GetStringFromName(stringKey);
+    }
+    is(infoTitle.textContent, titleText, "Origin header is correct.");
   }
-
-  is(infoTitle.textContent, titleText, "Origin header is correct.");
 }

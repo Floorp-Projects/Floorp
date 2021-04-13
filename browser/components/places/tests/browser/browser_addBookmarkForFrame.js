@@ -35,6 +35,7 @@ async function withAddBookmarkForFrame(taskFn) {
 
       let bookmarkFrame = document.getElementById("context-bookmarkframe");
       bookmarkFrame.click();
+      contentAreaContextMenu.hidePopup();
     },
     taskFn
   );

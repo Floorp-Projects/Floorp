@@ -12,6 +12,8 @@ function closeHandler(dialogWin) {
   );
 }
 
+let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+
 add_task(async function() {
   await BrowserTestUtils.withNewTab(
     {
@@ -27,7 +29,10 @@ add_task(async function() {
 
       await withBookmarksDialog(
         true,
-        AddKeywordForSearchField,
+        function() {
+          AddKeywordForSearchField();
+          contentAreaContextMenu.hidePopup();
+        },
         async function(dialogWin) {
           let acceptBtn = dialogWin.document
             .getElementById("bookmarkpropertiesdialog")
@@ -118,7 +123,10 @@ add_task(async function reopen_same_field() {
 
       await withBookmarksDialog(
         true,
-        AddKeywordForSearchField,
+        function() {
+          AddKeywordForSearchField();
+          contentAreaContextMenu.hidePopup();
+        },
         async function(dialogWin) {
           let acceptBtn = dialogWin.document
             .getElementById("bookmarkpropertiesdialog")
@@ -164,7 +172,10 @@ add_task(async function open_other_field() {
 
       await withBookmarksDialog(
         true,
-        AddKeywordForSearchField,
+        function() {
+          AddKeywordForSearchField();
+          contentAreaContextMenu.hidePopup();
+        },
         function(dialogWin) {
           let acceptBtn = dialogWin.document
             .getElementById("bookmarkpropertiesdialog")
