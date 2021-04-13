@@ -835,6 +835,7 @@
 }
 
 #PopupSearchAutoComplete:-moz-lwtheme {
+  color: var(--lwt-toolbar-field-focus-color);
   background-color: var(--lwt-toolbar-field-focus);
 }
 } /*** END proton ***/
