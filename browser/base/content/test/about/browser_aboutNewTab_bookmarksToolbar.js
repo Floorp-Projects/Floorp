@@ -182,7 +182,7 @@ add_task(async function bookmarks_toolbar_open_persisted() {
   let bookmarksToolbarMenu = document.querySelector("#toggle_PersonalToolbar");
   let subMenu = bookmarksToolbarMenu.querySelector("menupopup");
   popupShown = BrowserTestUtils.waitForEvent(subMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(bookmarksToolbarMenu, {});
+  bookmarksToolbarMenu.openMenu(true);
   await popupShown;
   let alwaysMenuItem = document.querySelector(
     'menuitem[data-visibility-enum="always"]'
@@ -197,7 +197,7 @@ add_task(async function bookmarks_toolbar_open_persisted() {
   is(neverMenuItem.getAttribute("checked"), "false", "Menuitem isn't checked");
   is(newTabMenuItem.getAttribute("checked"), "true", "Menuitem is checked");
 
-  EventUtils.synthesizeMouseAtCenter(alwaysMenuItem, {});
+  subMenu.activateItem(alwaysMenuItem);
 
   await waitForBookmarksToolbarVisibility({ visible: true });
   popupShown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
@@ -208,10 +208,9 @@ add_task(async function bookmarks_toolbar_open_persisted() {
   );
   await popupShown;
   bookmarksToolbarMenu = document.querySelector("#toggle_PersonalToolbar");
-  EventUtils.synthesizeMouseAtCenter(bookmarksToolbarMenu, {});
   subMenu = bookmarksToolbarMenu.querySelector("menupopup");
   popupShown = BrowserTestUtils.waitForEvent(subMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(bookmarksToolbarMenu, {});
+  bookmarksToolbarMenu.openMenu(true);
   await popupShown;
   alwaysMenuItem = document.querySelector(
     'menuitem[data-visibility-enum="always"]'
@@ -241,10 +240,9 @@ add_task(async function bookmarks_toolbar_open_persisted() {
   );
   await popupShown;
   bookmarksToolbarMenu = document.querySelector("#toggle_PersonalToolbar");
-  EventUtils.synthesizeMouseAtCenter(bookmarksToolbarMenu, {});
   subMenu = bookmarksToolbarMenu.querySelector("menupopup");
   popupShown = BrowserTestUtils.waitForEvent(subMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(bookmarksToolbarMenu, {});
+  bookmarksToolbarMenu.openMenu(true);
   await popupShown;
   alwaysMenuItem = document.querySelector(
     'menuitem[data-visibility-enum="always"]'
@@ -258,7 +256,7 @@ add_task(async function bookmarks_toolbar_open_persisted() {
   is(alwaysMenuItem.getAttribute("checked"), "true", "Menuitem is checked");
   is(neverMenuItem.getAttribute("checked"), "false", "Menuitem isn't checked");
   is(newTabMenuItem.getAttribute("checked"), "false", "Menuitem isn't checked");
-  EventUtils.synthesizeMouseAtCenter(newTabMenuItem, {});
+  subMenu.activateItem(newTabMenuItem);
   await waitForBookmarksToolbarVisibility({
     visible: false,
     message: "Toolbar is hidden",
