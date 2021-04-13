@@ -5,6 +5,7 @@
 use api::{CompositeOperator, FilterPrimitive, FilterPrimitiveInput, FilterPrimitiveKind};
 use api::{LineStyle, LineOrientation, ClipMode, MixBlendMode, ColorF, ColorSpace};
 use api::units::*;
+use crate::batch::BatchFilter;
 use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
@@ -174,8 +175,7 @@ pub struct PictureTask {
     pub content_origin: DevicePoint,
     pub surface_spatial_node_index: SpatialNodeIndex,
     pub device_pixel_scale: DevicePixelScale,
-    /// A dirty rect defining which prims should be built for this picture task.
-    pub dirty_rect: Option<PictureRect>,
+    pub batch_filter: Option<BatchFilter>,
     pub scissor_rect: Option<DeviceIntRect>,
     pub valid_rect: Option<DeviceIntRect>,
 }
@@ -391,7 +391,7 @@ impl RenderTaskKind {
         content_origin: DevicePoint,
         surface_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
-        dirty_rect: Option<PictureRect>,
+        batch_filter: Option<BatchFilter>,
         scissor_rect: Option<DeviceIntRect>,
         valid_rect: Option<DeviceIntRect>,
     ) -> Self {
@@ -406,7 +406,7 @@ impl RenderTaskKind {
             can_merge,
             surface_spatial_node_index,
             device_pixel_scale,
-            dirty_rect,
+            batch_filter,
             scissor_rect,
             valid_rect,
         })
