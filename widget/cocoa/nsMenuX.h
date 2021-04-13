@@ -89,7 +89,6 @@ class nsMenuX final : public nsMenuParentX,
 
   // Called from the menu delegate during menuWillOpen, or to simulate opening.
   // Ignored if the menu is already considered open.
-  // Fires the popupshown event, if it hasn't been sent yet for this opening.
   // When calling this method, the caller must hold a strong reference to this object, because other
   // references to this object can be dropped during the handling of the DOM event.
   void MenuOpened();
@@ -171,12 +170,19 @@ class nsMenuX final : public nsMenuParentX,
   // number of visible previous siblings of aChild in mMenuChildren.
   NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
 
+  // Fires the popupshown event.
+  void MenuOpenedAsync();
+
   // Called from mPendingAsyncMenuCloseRunnable asynchronously after MenuClosed(), so that it runs
   // after any potential menuItemHit calls for clicked menu items.
   // Fires popuphiding and popuphidden events.
   // When calling this method, the caller must hold a strong reference to this object, because other
   // references to this object can be dropped during the handling of the DOM event.
   void MenuClosedAsync();
+
+  // If mPendingAsyncMenuOpenRunnable is non-null, call MenuOpenedAsync() to send out the pending
+  // popupshown event.
+  void FlushMenuOpenedRunnable();
 
   // If mPendingAsyncMenuCloseRunnable is non-null, call MenuClosedAsync() to send out pending
   // popuphiding/popuphidden events.
@@ -195,6 +201,9 @@ class nsMenuX final : public nsMenuParentX,
   mozilla::UniquePtr<nsMenuItemIconX> mIcon;
 
   Observer* mObserver = nullptr;  // non-owning pointer to our observer
+
+  // Non-null between a call to MenuOpened() and MenuOpenedAsync().
+  RefPtr<mozilla::CancelableRunnable> mPendingAsyncMenuOpenRunnable;
 
   // Non-null between a call to MenuClosed() and MenuClosedAsync().
   // This is asynchronous so that, if a menu item is clicked, we can fire popuphiding *after* we
