@@ -14,11 +14,15 @@ const TEST_FILE = "file_download.txt";
 const TEST_URL = BASE + "/" + TEST_FILE;
 
 // We use different cookieBehaviors so that we can verify if we use the correct
-// cookieBehavior if option.incognito is set.
+// cookieBehavior if option.incognito is set. Note that we need to set a
+// non-default value to the private cookieBehavior because the private
+// cookieBehavior will mirror the regular cookieBehavior if the private pref is
+// default value and the regular pref is non-default value. To avoid affecting
+// the test by mirroring, we set the private cookieBehavior to a non-default
+// value.
 const TEST_REGULAR_COOKIE_BEHAVIOR =
   Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
-const TEST_PRIVATE_COOKIE_BEHAVIOR =
-  Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+const TEST_PRIVATE_COOKIE_BEHAVIOR = Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
 
 let downloadDir;
 

@@ -107,8 +107,23 @@ function setCookieBehaviorPref(cookieBehavior, runInPrivateWindow) {
   // tests.
   if (runInPrivateWindow) {
     cbPrivate = cookieBehavior;
-    cbRegular =
-      cookieBehavior == BEHAVIOR_ACCEPT ? BEHAVIOR_REJECT : BEHAVIOR_ACCEPT;
+
+    let defaultPrefBranch = Services.prefs.getDefaultBranch("");
+    // In order to test the default private cookieBehavior pref, we need to set
+    // the regular pref to the default value because we don't want the private
+    // pref to mirror the regular pref in this case.
+    //
+    // Note that the private pref will mirror the regular pref if the private
+    // pref is in default value and the regular pref is not in default value.
+    if (
+      cookieBehavior ==
+      defaultPrefBranch.getIntPref("network.cookie.cookieBehavior.pbmode")
+    ) {
+      cbRegular = defaultPrefBranch.getIntPref("network.cookie.cookieBehavior");
+    } else {
+      cbRegular =
+        cookieBehavior == BEHAVIOR_ACCEPT ? BEHAVIOR_REJECT : BEHAVIOR_ACCEPT;
+    }
   } else {
     cbRegular = cookieBehavior;
     cbPrivate =
