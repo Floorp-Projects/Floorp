@@ -3837,10 +3837,18 @@ bool nsTextPaintStyle::EnsureSufficientContrast(nscolor* aForeColor,
   InitCommonColors();
 
   // If the combination of selection background color and frame background color
-  // is sufficient contrast, don't exchange the selection colors.
-  int32_t backLuminosityDifference =
+  // has sufficient contrast, don't exchange the selection colors.
+  //
+  // Note we use a different threshold here: mSufficientContrast is for contrast
+  // between text and background colors, but since we're diffing two
+  // backgrounds, we don't need that much contrast.  We match the heuristic from
+  // NS_SUFFICIENT_LUMINOSITY_DIFFERENCE_BG and use 20% of mSufficientContrast.
+  const int32_t minLuminosityDifferenceForBackground = mSufficientContrast / 5;
+  const int32_t backLuminosityDifference =
       NS_LUMINOSITY_DIFFERENCE(*aBackColor, mFrameBackgroundColor);
-  if (backLuminosityDifference >= mSufficientContrast) return false;
+  if (backLuminosityDifference >= minLuminosityDifferenceForBackground) {
+    return false;
+  }
 
   // Otherwise, we should use the higher-contrast color for the selection
   // background color.
@@ -4023,7 +4031,9 @@ bool nsTextPaintStyle::GetSelectionUnderlineForPaint(int32_t aIndex,
 }
 
 void nsTextPaintStyle::InitCommonColors() {
-  if (mInitCommonColors) return;
+  if (mInitCommonColors) {
+    return;
+  }
 
   nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(mFrame);
   NS_ASSERTION(bgFrame, "Cannot find NonTransparentBackgroundFrame.");
