@@ -563,7 +563,8 @@ panelview:not([mainview]) .toolbarbutton-text,
   --arrowpanel-padding: 4px 0;
 }
 
-#appMenu-popup panelview {
+#appMenu-popup panelview,
+#PanelUI-fxa {
   width: 22.5em;
 }
 
