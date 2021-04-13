@@ -70,7 +70,6 @@ checkbox:not([disabled="true"]):hover:active > .checkbox-check[checked] {
 
 checkbox:not([native]):-moz-focusring > .checkbox-check {
   outline: 2px solid var(--focus-outline-color, -moz-accent-color);
-  outline-offset: var(--focus-outline-offset, -1px);
-  box-shadow: 0 0 0 4px var(--buttons-box-shadow, rgba(10, 132, 255, 0.3));
+  outline-offset: var(--focus-outline-offset, 2px);
 }
 } /** END Proton **/
