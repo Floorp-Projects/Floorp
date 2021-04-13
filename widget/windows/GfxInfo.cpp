@@ -1861,16 +1861,13 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
                                 "FEATURE_ROLLOUT_EARLY_BETA_SOFTWARE_WR");
 #endif
 
-#if defined(_M_X64) || defined(__amd64__)
-    if (mozilla::supports_avx2()) {
-      APPEND_TO_DRIVER_BLOCKLIST2_EXT(
-          OperatingSystem::Windows, ScreenSizeStatus::Small, BatteryStatus::All,
-          DesktopEnvironment::All, WindowProtocol::All, DriverVendor::All,
-          DeviceFamily::All, nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-          nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
-          V(0, 0, 0, 0), "FEATURE_ROLLOUT_RELEASE_SMALL_SCRN_SOFTWARE_WR");
-    }
-#endif
+    APPEND_TO_DRIVER_BLOCKLIST2_EXT(
+        OperatingSystem::Windows, ScreenSizeStatus::SmallAndMedium,
+        BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
+        DriverVendor::All, DeviceFamily::All,
+        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_RELEASE_S_M_SCRN_SOFTWARE_WR");
   }
   return *sDriverInfo;
 }
