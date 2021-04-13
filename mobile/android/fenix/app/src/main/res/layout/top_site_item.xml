@@ -40,7 +40,7 @@
         android:id="@+id/pin_indicator"
         android:layout_width="16dp"
         android:layout_height="16dp"
-        android:elevation="5dp"
+        android:elevation="7dp"
         android:translationX="8dp"
         android:translationY="-8dp"
         android:visibility="gone"

@@ -286,6 +286,7 @@
     <color name="top_site_pager_dot">@color/photonLightGrey30</color>
     <color name="top_site_pager_dot_selected">@color/photonLightGrey50</color>
     <color name="top_site_pin_icon_background_tint">@color/photonInk20</color>
+    <color name="top_sites_border_color">@color/photonLightGrey30</color>
 
     <!-- Synced tabs colors-->
     <color name="synced_tabs_separator">@color/synced_tabs_separator_light_theme</color>
