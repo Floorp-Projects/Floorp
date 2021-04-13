@@ -80,7 +80,7 @@ add_task(async function testTempPermissionOnReload() {
     reloaded = BrowserTestUtils.browserLoaded(browser, false, origin);
 
     // Reload as a user through the context menu (should remove the temp permission).
-    EventUtils.synthesizeMouseAtCenter(reloadMenuItem, {});
+    contextMenu.activateItem(reloadMenuItem);
 
     await reloaded;
 
@@ -159,7 +159,7 @@ add_task(async function testTempPermissionOnReloadAllTabs() {
         BrowserTestUtils.browserLoaded(gBrowser.getBrowserForTab(tab))
       )
     );
-    EventUtils.synthesizeMouseAtCenter(reloadMenuItem, {});
+    contextMenu.activateItem(reloadMenuItem);
     await reloaded;
 
     Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
