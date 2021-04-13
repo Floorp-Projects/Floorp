@@ -387,7 +387,7 @@ void PointerEventHandler::ImplicitlyCapturePointer(nsIFrame* aFrame,
   WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
   NS_WARNING_ASSERTION(pointerEvent,
                        "Call ImplicitlyCapturePointer with non-pointer event");
-  if (pointerEvent->mInputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+  if (!pointerEvent->mFromTouchEvent) {
     // We only implicitly capture the pointer for touch device.
     return;
   }
@@ -555,6 +555,7 @@ void PointerEventHandler::InitPointerEventFromTouch(
   aPointerEvent->mButton = button;
   aPointerEvent->mButtons = buttons;
   aPointerEvent->mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+  aPointerEvent->mFromTouchEvent = true;
 }
 
 /* static */
