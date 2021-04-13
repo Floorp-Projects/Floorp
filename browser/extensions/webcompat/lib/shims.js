@@ -45,6 +45,7 @@ class Shim {
     this.needsShimHelpers = opts.needsShimHelpers;
     this.platform = opts.platform || "all";
     this.unblocksOnOptIn = unblocksOnOptIn;
+    this.userHasOptedIn = false;
 
     this._hostOptIns = new Set();
 
@@ -145,6 +146,7 @@ class Shim {
     return browser.trackingProtection.allow(this.id, this.matches, {
       hosts: this.hosts,
       notHosts: this.notHosts,
+      willBeShimming: !this.userHasOptedIn,
     });
   }
 
@@ -178,10 +180,13 @@ class Shim {
   }
 
   async onUserOptIn(host) {
-    const { unblocksOnOptIn } = this;
+    const { matches, unblocksOnOptIn } = this;
     if (unblocksOnOptIn) {
-      await browser.trackingProtection.allow(this.id, unblocksOnOptIn, {
+      this.userHasOptedIn = true;
+      const toUnblock = matches.concat(unblocksOnOptIn);
+      await browser.trackingProtection.allow(this.id, toUnblock, {
         hosts: [host],
+        willBeShimming: false,
       });
     }
 

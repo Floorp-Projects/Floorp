@@ -40,6 +40,11 @@
                   "type": "string"
                 },
                 "optional": true
+              },
+              "willBeShimming": {
+                "description": "Whether requests are allowed for shimming",
+                "type": "boolean",
+                "optional": false
               }
             }
           }

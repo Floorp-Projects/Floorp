@@ -43,14 +43,18 @@ class Manager {
           }
           for (const allowList of this._allowLists.values()) {
             for (const entry of allowList.values()) {
-              const { matcher, hosts, notHosts } = entry;
+              const { matcher, hosts, notHosts, willBeShimming } = entry;
               if (matcher.matches(url)) {
                 if (
                   !notHosts?.has(topHost) &&
                   (hosts === true || hosts.has(topHost))
                 ) {
                   this._unblockedChannelIds.add(channelId);
-                  channel.unblock();
+                  if (willBeShimming) {
+                    channel.replace();
+                  } else {
+                    channel.allow();
+                  }
                   return;
                 }
               }
@@ -79,10 +83,10 @@ class Manager {
   }
 
   wasChannelIdUnblocked(channelId) {
-    return this._unblockedChannelIds.has(channelId);
+    return this._unblockedChannelIds?.has(channelId);
   }
 
-  allow(allowListId, patterns, { hosts, notHosts }) {
+  allow(allowListId, patterns, { hosts, notHosts, willBeShimming }) {
     this._ensureStarted();
 
     if (!this._allowLists.has(allowListId)) {
@@ -96,9 +100,10 @@ class Manager {
         });
       }
       const allowListPattern = allowList.get(pattern);
+      allowListPattern.willBeShimming = willBeShimming;
       if (!hosts) {
         allowListPattern.hosts = true;
-      } else {
+      } else if (allowListPattern.hosts !== true) {
         if (!allowListPattern.hosts) {
           allowListPattern.hosts = new Set();
         }
