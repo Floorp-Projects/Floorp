@@ -1771,7 +1771,7 @@ static bool GetInterpEntryAndEnsureStubs(JSContext* cx, Instance& instance,
 bool wasm::ResultsToJSValue(JSContext* cx, ResultType type,
                             void* registerResultLoc,
                             Maybe<char*> stackResultsLoc,
-                            MutableHandleValue rval) {
+                            MutableHandleValue rval, CoercionLevel level) {
   if (type.empty()) {
     // No results: set to undefined, and we're done.
     rval.setUndefined();
@@ -1795,7 +1795,7 @@ bool wasm::ResultsToJSValue(JSContext* cx, ResultType type,
     if (iter.cur().inRegister()) {
       MOZ_ASSERT(!usedRegisterResult);
       if (!ToJSValue<DebugCodegenVal>(cx, registerResultLoc, iter.cur().type(),
-                                      rval)) {
+                                      rval, level)) {
         return false;
       }
       usedRegisterResult = true;
@@ -1819,7 +1819,7 @@ bool wasm::ResultsToJSValue(JSContext* cx, ResultType type,
     const ABIResult& result = iter.cur();
     if (result.onStack()) {
       char* loc = stackResultsLoc.value() + result.stackOffset();
-      if (!ToJSValue<DebugCodegenVal>(cx, loc, result.type(), &tmp)) {
+      if (!ToJSValue<DebugCodegenVal>(cx, loc, result.type(), &tmp, level)) {
         return false;
       }
       if (!NewbornArrayPush(cx, array, tmp)) {
@@ -1892,16 +1892,17 @@ class MOZ_RAII ReturnToJSResultCollector {
     return stackResultsArea_.get();
   }
 
-  bool collect(JSContext* cx, void* registerResultLoc,
-               MutableHandleValue rval) {
+  bool collect(JSContext* cx, void* registerResultLoc, MutableHandleValue rval,
+               CoercionLevel level) {
     Maybe<char*> stackResultsLoc =
         stackResultsArea_ ? Some(stackResultsArea_.get()) : Nothing();
-    return ResultsToJSValue(cx, type_, registerResultLoc, stackResultsLoc,
-                            rval);
+    return ResultsToJSValue(cx, type_, registerResultLoc, stackResultsLoc, rval,
+                            level);
   }
 };
 
-bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
+bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
+                          CoercionLevel level) {
   if (memory_) {
     // If there has been a moving grow, this Instance should have been notified.
     MOZ_RELEASE_ASSERT(memory_->buffer().dataPointerEither() == memoryBase());
@@ -1914,7 +1915,9 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return false;
   }
 
-  if (funcType->hasUnexposableArgOrRet()) {
+  // Lossless coercions can handle unexposable arguments or returns. This is
+  // only available in testing code.
+  if (level != CoercionLevel::Lossless && funcType->hasUnexposableArgOrRet()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_VAL_TYPE);
     return false;
@@ -1956,7 +1959,8 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     size_t naturalIdx = argTypes.naturalIndex(i);
     v = naturalIdx < args.length() ? args[naturalIdx] : UndefinedValue();
     ValType type = funcType->arg(naturalIdx);
-    if (!ToWebAssemblyValue<DebugCodegenVal>(cx, v, type, rawArgLoc, true)) {
+    if (!ToWebAssemblyValue<DebugCodegenVal>(cx, v, type, rawArgLoc, true,
+                                             level)) {
       return false;
     }
     if (type.isReference()) {
@@ -2037,7 +2041,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   void* registerResultLoc = &exportArgs[0];
   DebugCodegen(DebugChannel::Function, "wasm-function[%d]; results [",
                funcIndex);
-  if (!results.collect(cx, registerResultLoc, args.rval())) {
+  if (!results.collect(cx, registerResultLoc, args.rval(), level)) {
     return false;
   }
   DebugCodegen(DebugChannel::Function, "]\n");

@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cinttypes>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -36,6 +37,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "jsmath.h"
 
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/CommonFunctions.h"
@@ -73,6 +75,7 @@
 #include "js/HashTable.h"
 #include "js/LocaleSensitive.h"
 #include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
+#include "js/Printf.h"
 #include "js/PropertySpec.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/SourceText.h"
@@ -1003,6 +1006,369 @@ static bool WasmSimdAnalysis(JSContext* cx, unsigned argc, Value* vp) {
 #  endif
 #endif
 
+static bool WasmGlobalFromArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
+  if (!wasm::HasSupport(cx)) {
+    JS_ReportErrorASCII(cx, "wasm support unavailable");
+    return false;
+  }
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() < 2) {
+    JS_ReportErrorASCII(cx, "not enough arguments");
+    return false;
+  }
+
+  // Get the type of the value
+  wasm::ValType valType;
+  if (!wasm::ToValType(cx, args.get(0), &valType)) {
+    return false;
+  }
+
+  // Get the array buffer for the value
+  if (!args.get(1).isObject() ||
+      !args.get(1).toObject().is<ArrayBufferObject>()) {
+    JS_ReportErrorASCII(cx, "argument is not an array buffer");
+    return false;
+  }
+  RootedArrayBufferObject buffer(
+      cx, &args.get(1).toObject().as<ArrayBufferObject>());
+
+  // Only allow POD to be created from bytes
+  switch (valType.kind()) {
+    case wasm::ValType::I32:
+    case wasm::ValType::I64:
+    case wasm::ValType::F32:
+    case wasm::ValType::F64:
+    case wasm::ValType::V128:
+      break;
+    default:
+      JS_ReportErrorASCII(
+          cx, "invalid valtype for creating WebAssembly.Global from bytes");
+      return false;
+  }
+
+  // Check we have all the bytes we need
+  if (valType.size() != buffer->byteLength()) {
+    JS_ReportErrorASCII(cx, "array buffer has incorrect size");
+    return false;
+  }
+
+  // Copy the bytes from buffer into a tagged val
+  wasm::RootedVal val(cx, valType);
+  val.get().readFromRootedLocation(buffer->dataPointer());
+
+  // Create the global object
+  RootedObject proto(
+      cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal));
+  RootedWasmGlobalObject result(
+      cx, WasmGlobalObject::create(cx, val, false, proto));
+
+  args.rval().setObject(*result.get());
+  return true;
+}
+
+enum class LaneInterp {
+  I32x4,
+  I64x2,
+  F32x4,
+  F64x2,
+};
+
+size_t LaneInterpLanes(LaneInterp interp) {
+  switch (interp) {
+    case LaneInterp::I32x4:
+      return 4;
+    case LaneInterp::I64x2:
+      return 2;
+    case LaneInterp::F32x4:
+      return 4;
+    case LaneInterp::F64x2:
+      return 2;
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+      return 0;
+  }
+}
+
+static bool ToLaneInterp(JSContext* cx, HandleValue v, LaneInterp* out) {
+  RootedString interpStr(cx, ToString(cx, v));
+  if (!interpStr) {
+    return false;
+  }
+  RootedLinearString interpLinearStr(cx, interpStr->ensureLinear(cx));
+  if (!interpLinearStr) {
+    return false;
+  }
+
+  if (StringEqualsLiteral(interpLinearStr, "i32x4")) {
+    *out = LaneInterp::I32x4;
+    return true;
+  } else if (StringEqualsLiteral(interpLinearStr, "i64x2")) {
+    *out = LaneInterp::I64x2;
+    return true;
+  } else if (StringEqualsLiteral(interpLinearStr, "f32x4")) {
+    *out = LaneInterp::F32x4;
+    return true;
+  } else if (StringEqualsLiteral(interpLinearStr, "f64x2")) {
+    *out = LaneInterp::F64x2;
+    return true;
+  }
+
+  JS_ReportErrorASCII(cx, "invalid lane interpretation");
+  return false;
+}
+
+static bool WasmGlobalExtractLane(JSContext* cx, unsigned argc, Value* vp) {
+  if (!wasm::HasSupport(cx)) {
+    JS_ReportErrorASCII(cx, "wasm support unavailable");
+    return false;
+  }
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() < 3) {
+    JS_ReportErrorASCII(cx, "not enough arguments");
+    return false;
+  }
+
+  // Get the global value
+  if (!args.get(0).isObject() ||
+      !args.get(0).toObject().is<WasmGlobalObject>()) {
+    JS_ReportErrorASCII(cx, "argument is not wasm value");
+    return false;
+  }
+  RootedWasmGlobalObject global(cx,
+                                &args.get(0).toObject().as<WasmGlobalObject>());
+
+  // Check that we have a v128 value
+  if (global->type().kind() != wasm::ValType::V128) {
+    JS_ReportErrorASCII(cx, "global is not a v128 value");
+    return false;
+  }
+  wasm::V128 v128 = global->val().get().v128();
+
+  // Get the passed interpretation of lanes
+  LaneInterp interp;
+  if (!ToLaneInterp(cx, args.get(1), &interp)) {
+    return false;
+  }
+
+  // Get the lane to extract
+  int32_t lane;
+  if (!ToInt32(cx, args.get(2), &lane)) {
+    return false;
+  }
+
+  // Check that the lane interp is valid
+  if (lane < 0 || size_t(lane) >= LaneInterpLanes(interp)) {
+    JS_ReportErrorASCII(cx, "invalid lane for interp");
+    return false;
+  }
+
+  wasm::RootedVal val(cx);
+  switch (interp) {
+    case LaneInterp::I32x4:
+      val.set(wasm::Val(v128.extractLane<uint32_t>(lane)));
+      break;
+    case LaneInterp::I64x2:
+      val.set(wasm::Val(v128.extractLane<uint64_t>(lane)));
+      break;
+    case LaneInterp::F32x4:
+      val.set(wasm::Val(v128.extractLane<float>(lane)));
+      break;
+    case LaneInterp::F64x2:
+      val.set(wasm::Val(v128.extractLane<double>(lane)));
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+
+  RootedObject proto(
+      cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal));
+  RootedWasmGlobalObject result(
+      cx, WasmGlobalObject::create(cx, val, false, proto));
+  args.rval().setObject(*result.get());
+  return true;
+}
+
+static bool WasmGlobalsEqual(JSContext* cx, unsigned argc, Value* vp) {
+  if (!wasm::HasSupport(cx)) {
+    JS_ReportErrorASCII(cx, "wasm support unavailable");
+    return false;
+  }
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() < 2) {
+    JS_ReportErrorASCII(cx, "not enough arguments");
+    return false;
+  }
+
+  if (!args.get(0).isObject() ||
+      !args.get(0).toObject().is<WasmGlobalObject>() ||
+      !args.get(1).isObject() ||
+      !args.get(1).toObject().is<WasmGlobalObject>()) {
+    JS_ReportErrorASCII(cx, "argument is not wasm value");
+    return false;
+  }
+
+  RootedWasmGlobalObject a(cx, &args.get(0).toObject().as<WasmGlobalObject>());
+  RootedWasmGlobalObject b(cx, &args.get(1).toObject().as<WasmGlobalObject>());
+
+  if (a->type() != b->type()) {
+    JS_ReportErrorASCII(cx, "globals are of different type");
+    return false;
+  }
+
+  bool result;
+  const wasm::Val& aVal = a->val().get();
+  const wasm::Val& bVal = b->val().get();
+  switch (a->type().kind()) {
+    case wasm::ValType::I32: {
+      result = aVal.i32() == bVal.i32();
+      break;
+    }
+    case wasm::ValType::I64: {
+      result = aVal.i64() == bVal.i64();
+      break;
+    }
+    case wasm::ValType::F32: {
+      result = mozilla::EqualOrBothNaN(aVal.f32(), aVal.f32());
+      break;
+    }
+    case wasm::ValType::F64: {
+      result = mozilla::EqualOrBothNaN(aVal.f64(), aVal.f64());
+      break;
+    }
+    case wasm::ValType::V128: {
+      // Don't know the interpretation of the v128, so we only can do an exact
+      // bitwise equality. Testing code can use wasmGlobalExtractLane to
+      // workaround this if needed.
+      result = aVal.v128() == bVal.v128();
+      break;
+    }
+    case wasm::ValType::Ref: {
+      result = aVal.ref() == bVal.ref();
+      break;
+    }
+    default:
+      JS_ReportErrorASCII(cx, "unsupported type");
+      return false;
+  }
+  args.rval().setBoolean(result);
+  return true;
+}
+
+static bool WasmGlobalToString(JSContext* cx, unsigned argc, Value* vp) {
+  if (!wasm::HasSupport(cx)) {
+    JS_ReportErrorASCII(cx, "wasm support unavailable");
+    return false;
+  }
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() < 1) {
+    JS_ReportErrorASCII(cx, "not enough arguments");
+    return false;
+  }
+  if (!args.get(0).isObject() ||
+      !args.get(0).toObject().is<WasmGlobalObject>()) {
+    JS_ReportErrorASCII(cx, "argument is not wasm value");
+    return false;
+  }
+  RootedWasmGlobalObject global(cx,
+                                &args.get(0).toObject().as<WasmGlobalObject>());
+  const wasm::Val& globalVal = global->val().get();
+
+  UniqueChars result;
+  switch (globalVal.type().kind()) {
+    case wasm::ValType::I32: {
+      result = JS_smprintf("i32:%" PRIx32, globalVal.i32());
+      break;
+    }
+    case wasm::ValType::I64: {
+      result = JS_smprintf("i64:%" PRIx64, globalVal.i64());
+      break;
+    }
+    case wasm::ValType::F32: {
+      result = JS_smprintf("f32:%f", globalVal.f32());
+      break;
+    }
+    case wasm::ValType::F64: {
+      result = JS_smprintf("f64:%lf", globalVal.f64());
+      break;
+    }
+    case wasm::ValType::V128: {
+      wasm::V128 v128 = globalVal.v128();
+      result = JS_smprintf(
+          "v128:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x", v128.bytes[0],
+          v128.bytes[1], v128.bytes[2], v128.bytes[3], v128.bytes[4],
+          v128.bytes[5], v128.bytes[6], v128.bytes[7], v128.bytes[8],
+          v128.bytes[9], v128.bytes[10], v128.bytes[11], v128.bytes[12],
+          v128.bytes[13], v128.bytes[14], v128.bytes[15]);
+      break;
+    }
+    case wasm::ValType::Ref: {
+      result = JS_smprintf("ref:%p", globalVal.ref().asJSObject());
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+
+  args.rval().setString(JS_NewStringCopyZ(cx, result.get()));
+  return true;
+}
+
+static bool WasmLosslessInvoke(JSContext* cx, unsigned argc, Value* vp) {
+  if (!wasm::HasSupport(cx)) {
+    JS_ReportErrorASCII(cx, "wasm support unavailable");
+    return false;
+  }
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() < 1) {
+    JS_ReportErrorASCII(cx, "not enough arguments");
+    return false;
+  }
+  if (!args.get(0).isObject()) {
+    JS_ReportErrorASCII(cx, "argument is not an object");
+    return false;
+  }
+
+  RootedFunction func(cx, args[0].toObject().maybeUnwrapIf<JSFunction>());
+  if (!func || !wasm::IsWasmExportedFunction(func)) {
+    JS_ReportErrorASCII(cx, "argument is not an exported wasm function");
+    return false;
+  }
+
+  // Get the instance and funcIndex for calling the function
+  wasm::Instance& instance = wasm::ExportedFunctionToInstance(func);
+  uint32_t funcIndex = wasm::ExportedFunctionToFuncIndex(func);
+
+  // Set up a modified call frame following the standard JS
+  // [callee, this, arguments...] convention.
+  RootedValueVector wasmCallFrame(cx);
+  size_t len = 2 + args.length();
+  if (!wasmCallFrame.resize(len)) {
+    return false;
+  }
+  wasmCallFrame[0].set(args.calleev());
+  wasmCallFrame[1].set(args.thisv());
+  // Copy over the arguments needed to invoke the provided wasm function,
+  // skipping the wasm function we're calling that is at `args.get(0)`.
+  for (size_t i = 1; i < args.length(); i++) {
+    size_t wasmArg = i - 1;
+    wasmCallFrame[2 + wasmArg].set(args.get(i));
+  }
+  size_t wasmArgc = argc - 1;
+  CallArgs wasmCallArgs(CallArgsFromVp(wasmArgc, wasmCallFrame.begin()));
+
+  // Invoke the function with the new call frame
+  bool result = instance.callExport(cx, funcIndex, wasmCallArgs,
+                                    wasm::CoercionLevel::Lossless);
+  // Assign the wasm rval to our rval
+  args.rval().set(wasmCallArgs.rval());
+  return result;
+}
+
 static bool ConvertToTier(JSContext* cx, HandleValue value,
                           const wasm::Code& code, wasm::Tier* tier) {
   RootedString option(cx, JS::ToString(cx, value));
@@ -1040,7 +1406,7 @@ static bool ConvertToTier(JSContext* cx, HandleValue value,
 }
 
 static bool WasmExtractCode(JSContext* cx, unsigned argc, Value* vp) {
-  if (!cx->options().wasm()) {
+  if (!wasm::HasSupport(cx)) {
     JS_ReportErrorASCII(cx, "wasm support unavailable");
     return false;
   }
@@ -1309,7 +1675,7 @@ static bool WasmDisassembleCode(JSContext* cx, const wasm::Code& code,
 }
 
 static bool WasmDisassemble(JSContext* cx, unsigned argc, Value* vp) {
-  if (!cx->options().wasm()) {
+  if (!wasm::HasSupport(cx)) {
     JS_ReportErrorASCII(cx, "wasm support unavailable");
     return false;
   }
@@ -7223,6 +7589,32 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
 "wasmSimdAnalysis(...)",
 "  Unstable API for white-box testing.\n"),
 #endif
+
+    JS_FN_HELP("wasmGlobalFromArrayBuffer", WasmGlobalFromArrayBuffer, 2, 0,
+"wasmGlobalFromArrayBuffer(type, arrayBuffer)",
+"  Create a WebAssembly.Global object from a provided ArrayBuffer. The type\n"
+"  must be POD (i32, i64, f32, f64, v128). The buffer must be the same\n"
+"  size as the type in bytes.\n"),
+    JS_FN_HELP("wasmGlobalExtractLane", WasmGlobalExtractLane, 3, 0,
+"wasmGlobalExtractLane(global, laneInterp, laneIndex)",
+"  Extract a lane from a WebAssembly.Global object that contains a v128 value\n"
+"  and return it as a new WebAssembly.Global object of the appropriate type.\n"
+"  The supported laneInterp values are i32x4, i64x2, f32x4, and\n"
+"  f64x2.\n"),
+    JS_FN_HELP("wasmGlobalsEqual", WasmGlobalsEqual, 2, 0,
+"wasmGlobalsEqual(globalA, globalB)",
+"  Compares two WebAssembly.Global objects for if their types and values are\n"
+"  equal. Mutability is not compared. NaN values are considered equal and are\n"
+"  not required to have the same bit pattern.\n"),
+    JS_FN_HELP("wasmGlobalToString", WasmGlobalToString, 1, 0,
+"wasmGlobalToString(global)",
+"  Returns a debug representation of the contents of a WebAssembly.Global\n"
+"  object.\n"),
+    JS_FN_HELP("wasmLosslessInvoke", WasmLosslessInvoke, 1, 0,
+"wasmLosslessInvoke(wasmFunc, args...)",
+"  Invokes the provided WebAssembly function using a modified conversion\n"
+"  function that allows providing a param as a WebAssembly.Global and\n"
+"  returning a result as a WebAssembly.Global.\n"),
 
     JS_FN_HELP("wasmCompilersPresent", WasmCompilersPresent, 0, 0,
 "wasmCompilersPresent()",

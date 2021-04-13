@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "js/Printf.h"
 #include "wasm/WasmTypes.h"
 
 using namespace js;
@@ -47,6 +48,11 @@ bool wasm::TextToBinary(const char16_t* text, size_t textLen, Bytes* bytes,
                                     &outError, &outErrorLength);
 
   if (result) {
+    if (outBytesLength == 0) {
+      *error = JS_smprintf("missing bytes");
+      return false;
+    }
+
     MOZ_ASSERT(outBytes);
     MOZ_ASSERT(outBytesLength > 0);
     bytes->replaceRawBuffer(outBytes, outBytesLength);
