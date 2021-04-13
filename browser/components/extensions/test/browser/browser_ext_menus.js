@@ -218,13 +218,11 @@ add_task(async function test_hiddenPageActionContextMenu() {
     return window.getComputedStyle(node).visibility == "visible";
   });
 
-  is(menuItems.length, 4, "Correct number of children");
-  const [dontShowItem, separator, manageItem, removeItem] = menuItems;
+  is(menuItems.length, 2, "Correct number of children");
+  const [manageItem, removeItem] = menuItems;
 
-  is(dontShowItem.label, "Remove from Address Bar", "Correct first child");
-  is(separator.tagName, "menuseparator", "Correct second child");
-  is(manageItem.label, "Manage Extension\u2026", "Correct third child");
-  is(removeItem.label, "Remove Extension", "Correct fourth child");
+  is(manageItem.label, "Manage Extension\u2026", "Correct first child");
+  is(removeItem.label, "Remove Extension", "Correct second child");
 
   await closeChromeContextMenu(menu.id);
   await closeChromeContextMenu(BrowserPageActions.panelNode.id);
