@@ -301,6 +301,9 @@ pref("browser.startup.preXulSkeletonUI", false);
 #endif
 #endif
 
+// Show an upgrade dialog on major upgrades.
+pref("browser.startup.upgradeDialog.enabled", true);
+
 // Don't create the hidden window during startup on
 // platforms that don't always need it (Win/Linux).
 pref("toolkit.lazyHiddenWindow", true);
