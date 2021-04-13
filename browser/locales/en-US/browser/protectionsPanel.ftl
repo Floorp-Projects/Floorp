@@ -90,6 +90,7 @@ protections-panel-tracking-content = Websites may load external ads, videos, and
 protections-panel-social-media-trackers = Social networks place trackers on other websites to follow what you do, see, and watch online. This allows social media companies to learn more about you beyond what you share on your social media profiles.
 
 protections-panel-description-shim-allowed = Some trackers marked below have been partially unblocked on this page because you interacted with them.
+protections-panel-description-shim-allowed-learn-more = Learn more
 protections-panel-shim-allowed-indicator =
   .tooltiptext = Tracker partially unblocked
 
