@@ -785,9 +785,11 @@ function synthesizeNativeTap(aTarget, aX, aY, aObserver = null) {
 
 // only currently implemented on macOS
 function synthesizeNativeTouchpadDoubleTap(aTarget, aX, aY) {
-  ok(getPlatform() == "mac",
+  ok(
+    getPlatform() == "mac",
     "only implemented on mac. implement sendNativeTouchpadDoubleTap for this platform," +
-    " see bug 1696802 for how it was done on macOS");
+      " see bug 1696802 for how it was done on macOS"
+  );
   let pt = coordinatesRelativeToScreen({
     offsetX: aX,
     offsetY: aY,
