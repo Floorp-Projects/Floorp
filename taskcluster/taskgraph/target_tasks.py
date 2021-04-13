@@ -288,7 +288,9 @@ def _try_option_syntax(full_task_graph, parameters, graph_config):
     target_tasks_labels = [
         t.label
         for t in six.itervalues(full_task_graph.tasks)
-        if options.task_matches(t) and filter_by_uncommon_try_tasks(t.label)
+        if options.task_matches(t)
+        and filter_by_uncommon_try_tasks(t.label)
+        and filter_unsupported_artifact_builds(t, parameters)
     ]
 
     attributes = {
