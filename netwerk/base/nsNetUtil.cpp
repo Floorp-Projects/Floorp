@@ -2856,7 +2856,8 @@ nsresult NS_ShouldSecureUpgrade(
       !nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(aURI)) {
     if (aLoadInfo) {
       // Check if the request can get upgraded with the HTTPS-Only mode
-      if (nsHTTPSOnlyUtils::ShouldUpgradeRequest(aURI, aLoadInfo)) {
+      if (nsHTTPSOnlyUtils::ShouldUpgradeRequest(aURI, aLoadInfo) ||
+          nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(aURI, aLoadInfo)) {
         aShouldUpgrade = true;
         return NS_OK;
       }

@@ -14,11 +14,17 @@
 class nsHTTPSOnlyUtils {
  public:
   /**
-   * Returns if HTTPSOnly-Mode preference is enabled
+   * Returns if HTTPS-Only Mode preference is enabled
    * @param aFromPrivateWindow true if executing in private browsing mode
    * @return true if HTTPS-Only Mode is enabled
    */
   static bool IsHttpsOnlyModeEnabled(bool aFromPrivateWindow);
+
+  /**
+   * Returns if HTTPS-First Mode preference is enabled
+   * @return true if HTTPS-First Mode is enabled
+   */
+  static bool IsHttpsFirstModeEnabled();
 
   /**
    * Potentially fires an http request for a top-level load (provided by
@@ -64,8 +70,29 @@ class nsHTTPSOnlyUtils {
                                             nsILoadInfo* aLoadInfo);
 
   /**
-   * Checks if the error code is on a block-list of codes that are probably not
-   * related to a HTTPS-Only Mode upgrade.
+   * Determines if a request should get upgraded because of the HTTPS-First
+   * mode. If true, the httpsOnlyStatus in LoadInfo gets updated and a message
+   * is logged in the console.
+   * @param  aURI      nsIURI of request
+   * @param  aLoadInfo nsILoadInfo of request
+   * @return           true if request should get upgraded
+   */
+  static bool ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
+                                             nsILoadInfo* aLoadInfo);
+
+  /**
+   * Determines if the request was previously upgraded with HTTPS-First, creates
+   * a downgraded URI and logs to console.
+   * @param  aError   Error code
+   * @param  aChannel Failed channel
+   * @return          URI with http-scheme or nullptr
+   */
+  static already_AddRefed<nsIURI> PotentiallyDowngradeHttpsFirstRequest(
+      nsIChannel* aChannel, nsresult aError);
+
+  /**
+   * Checks if the error code is on a block-list of codes that are probably
+   * not related to a HTTPS-Only Mode upgrade.
    * @param  aChannel The failed Channel.
    * @param  aError Error Code from Request
    * @return        false if error is not related to upgrade
@@ -74,16 +101,18 @@ class nsHTTPSOnlyUtils {
 
   /**
    * Logs localized message to either content console or browser console
-   * @param aName      Localization key
-   * @param aParams    Localization parameters
-   * @param aFlags     Logging Flag (see nsIScriptError)
-   * @param aLoadInfo  The loadinfo of the request.
-   * @param [aURI]     Optional: URI to log
+   * @param aName            Localization key
+   * @param aParams          Localization parameters
+   * @param aFlags           Logging Flag (see nsIScriptError)
+   * @param aLoadInfo        The loadinfo of the request.
+   * @param [aURI]           Optional: URI to log
+   * @param [aUseHttpsFirst] Optional: Log using HTTPS-First (vs. HTTPS-Only)
    */
   static void LogLocalizedString(const char* aName,
                                  const nsTArray<nsString>& aParams,
                                  uint32_t aFlags, nsILoadInfo* aLoadInfo,
-                                 nsIURI* aURI = nullptr);
+                                 nsIURI* aURI = nullptr,
+                                 bool aUseHttpsFirst = false);
 
   /**
    * Tests if the HTTPS-Only upgrade exception is set for a given principal.
@@ -124,14 +153,23 @@ class nsHTTPSOnlyUtils {
 
  private:
   /**
+   * Checks if it can be ruled out that the error has something
+   * to do with an HTTPS upgrade.
+   * @param  aError error code
+   * @return        true if error is unrelated to the upgrade
+   */
+  static bool HttpsUpgradeUnrelatedErrorCode(nsresult aError);
+  /**
    * Logs localized message to either content console or browser console
-   * @param aMessage   Message to log
-   * @param aFlags     Logging Flag (see nsIScriptError)
-   * @param aLoadInfo  The loadinfo of the request.
-   * @param [aURI]     Optional: URI to log
+   * @param aMessage         Message to log
+   * @param aFlags           Logging Flag (see nsIScriptError)
+   * @param aLoadInfo        The loadinfo of the request.
+   * @param [aURI]           Optional: URI to log
+   * @param [aUseHttpsFirst] Optional: Log using HTTPS-First (vs. HTTPS-Only)
    */
   static void LogMessage(const nsAString& aMessage, uint32_t aFlags,
-                         nsILoadInfo* aLoadInfo, nsIURI* aURI = nullptr);
+                         nsILoadInfo* aLoadInfo, nsIURI* aURI = nullptr,
+                         bool aUseHttpsFirst = false);
 
   /**
    * Checks whether the URI ends with .onion
