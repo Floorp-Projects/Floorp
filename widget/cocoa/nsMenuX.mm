@@ -383,6 +383,13 @@ void nsMenuX::MenuClosed() {
     return;
   }
 
+  // If any of our submenus were opened programmatically, make sure they get closed first.
+  for (auto& child : mMenuChildren) {
+    if (child.is<RefPtr<nsMenuX>>()) {
+      child.as<RefPtr<nsMenuX>>()->MenuClosed();
+    }
+  }
+
   mIsOpen = false;
 
   // Do the rest of the MenuClosed work in MenuClosedAsync.
@@ -417,6 +424,13 @@ void nsMenuX::MenuClosed() {
 }
 
 void nsMenuX::FlushMenuClosedRunnable() {
+  // If any of our submenus have a pending menu closed runnable, make sure those run first.
+  for (auto& child : mMenuChildren) {
+    if (child.is<RefPtr<nsMenuX>>()) {
+      child.as<RefPtr<nsMenuX>>()->FlushMenuClosedRunnable();
+    }
+  }
+
   if (mPendingAsyncMenuCloseRunnable) {
     MenuClosedAsync();
   }
