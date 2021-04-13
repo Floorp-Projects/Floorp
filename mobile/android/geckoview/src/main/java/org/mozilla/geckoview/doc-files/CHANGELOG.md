@@ -36,6 +36,9 @@ exclude: true
   of removing it in GeckoView v93. Please use
   [`Autocomplete.StorageDelegate`][89.11] instead.
   ([bug 1691819]({{bugzilla}}1691819)).
+- Added [`ALLOWED_TRACKING_CONTENT`][89.12] to content blocking API to indicate
+  when unsafe content is allowed by a shim.
+  ([bug 1661330]({{bugzilla}}1661330))
 
 [89.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.ContentPermission.html
 [89.2]: {{javadoc_uri}}/StorageController.html#getPermissions-java.lang.String-
@@ -48,6 +51,7 @@ exclude: true
 [89.9]: {{javadoc_uri}}/WebRequestError.html
 [89.10]: {{javadoc_uri}}/WebRequestError.html#ERROR_DATA_URI_TOO_LONG
 [89.11]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html
+[89.12]: {{javadoc_uri}}/ContentBlockingController.Event.html#ALLOWED_TRACKING_CONTENT
 
 ## v88
 - Added [`WebExtension.Download#update`][88.1] that can be used to
@@ -970,4 +974,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2196bd78cc8b0fab91db99c3e04ce25a6726e883
+[api-version]: 245647b6b04b1b9aafbf910ce2ef6292fa468a2b
