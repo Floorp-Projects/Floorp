@@ -176,6 +176,16 @@ class TestResolveKeyedBy(unittest.TestCase):
             "n",
         )
 
+        self.assertEqual(
+            resolve_keyed_by(
+                {"f": "hats", "x": {"by-f": {"hat.*": "head", "ha.*": "hair"}}},
+                "x",
+                "n",
+                enforce_single_match=False,
+            ),
+            {"f": "hats", "x": "head"},
+        )
+
     def test_no_key_no_default(self):
         """
         When the key referenced in `by-*` doesn't exist, and there is not default value,
@@ -196,7 +206,9 @@ class TestResolveKeyedBy(unittest.TestCase):
         """
         self.assertEqual(
             resolve_keyed_by(
-                {"x": {"by-f": {"hat": "head", "default": "anywhere"}}}, "x", "n"
+                {"x": {"by-f": {"hat": "head", "default": "anywhere"}}},
+                "x",
+                "n",
             ),
             {"x": "anywhere"},
         )
