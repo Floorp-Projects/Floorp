@@ -166,7 +166,7 @@ class ClientWrapper {
   }
 
   isClosed() {
-    return this.client._closed;
+    return this.client._transportClosed;
   }
 
   // This method will be mocked to return a dummy URL during mochitests

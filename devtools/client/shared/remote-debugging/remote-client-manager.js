@@ -131,7 +131,7 @@ class RemoteClientManager {
    */
   _onClientClosed() {
     const closedClientKeys = [...this._clients.keys()].filter(key => {
-      return this._clients.get(key)._closed;
+      return this._clients.get(key)._transportClosed;
     });
 
     for (const key of closedClientKeys) {
