@@ -21,7 +21,7 @@ async function openTabMenuFor(tab) {
 }
 
 async function openReopenMenuForTab(tab) {
-  openTabMenuFor(tab);
+  await openTabMenuFor(tab);
 
   let reopenItem = tab.ownerDocument.getElementById(
     "context_reopenInContainer"
@@ -30,11 +30,7 @@ async function openReopenMenuForTab(tab) {
 
   let reopenMenu = reopenItem.getElementsByTagName("menupopup")[0];
   let reopenMenuShown = BrowserTestUtils.waitForEvent(reopenMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(
-    reopenItem,
-    { type: "mousemove" },
-    tab.ownerGlobal
-  );
+  reopenItem.openMenu(true);
   await reopenMenuShown;
 
   return reopenMenu;
@@ -60,7 +56,7 @@ function openTabInContainer(gBrowser, reopenMenu, id) {
   let menuitem = reopenMenu.querySelector(
     `menuitem[data-usercontextid="${id}"]`
   );
-  EventUtils.synthesizeMouseAtCenter(menuitem, {}, menuitem.ownerGlobal);
+  reopenMenu.activateItem(menuitem);
   return tabPromise;
 }
 
@@ -128,12 +124,12 @@ add_task(async function testDisabled() {
     "Tab with No Container should be opened"
   );
 
-  openTabMenuFor(tab);
+  let tabMenu = await openTabMenuFor(tab);
   let reopenItem = document.getElementById("context_reopenInContainer");
   ok(reopenItem.hidden, "Reopen in Container item should be hidden");
 
   // Close the tab menu.
-  EventUtils.synthesizeKey("KEY_Escape");
+  tabMenu.hidePopup();
 
   BrowserTestUtils.removeTab(tab);
 });
@@ -155,14 +151,14 @@ add_task(async function testPrivateMode() {
     "Tab with No Container should be opened"
   );
 
-  openTabMenuFor(tab);
+  let tabMenu = await openTabMenuFor(tab);
   let reopenItem = privateWindow.document.getElementById(
     "context_reopenInContainer"
   );
   ok(reopenItem.hidden, "Reopen in Container item should be hidden");
 
   // Close the tab menu.
-  EventUtils.synthesizeKey("KEY_Escape");
+  tabMenu.hidePopup();
 
   await BrowserTestUtils.closeWindow(privateWindow);
 });
