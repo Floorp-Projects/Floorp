@@ -581,13 +581,11 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-list-item {
+  display: flex;
   margin: 5px 0;
-  overflow: hidden;
-  -moz-box-align: center;
 }
 
 .protections-popup-list-host-label {
-  -moz-box-flex: 1;
   direction: ltr;
   text-align: match-parent;
 }
@@ -721,7 +719,7 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-.tracking-protection-icon {
+.trackers-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/tracker-image.svg);
 }
 
@@ -1220,3 +1218,35 @@ description#identity-popup-content-verifier,
   color: var(--panel-description-color);
 }
 }/** END Proton **/
+
+/** Shim-allow warning and indicator icons **/
+
+.protections-popup-shim-allow-hint {
+  padding: 0 2em;
+  margin-block-end: 10px;
+}
+
+.protections-popup-shim-allow-hint-icon,
+.protections-popup-list-host-shim-allow-indicator{
+  width: 16px;
+  -moz-context-properties: fill;
+  background-image: url("chrome://global/skin/icons/info-filled.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+
+  fill: #0090ED;
+}
+
+:root[lwt-popup-brighttext] .protections-popup-shim-allow-hint-icon,
+:root[lwt-popup-brighttext] .protections-popup-list-host-shim-allow-indicator {
+  fill: #80EBFF;
+}
+
+.protections-popup-shim-allow-hint-icon {
+  margin-inline-end: 0.5em;
+}
+
+.protections-popup-list-host-shim-allow-indicator {
+  margin-inline-start: 0.5em;
+  min-width: 16px;
+}
