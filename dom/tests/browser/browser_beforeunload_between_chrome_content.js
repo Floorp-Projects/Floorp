@@ -1,5 +1,9 @@
 const TEST_URL = "http://www.example.com/browser/dom/tests/browser/dummy.html";
 
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
+
 function pageScript() {
   window.addEventListener(
     "beforeunload",
@@ -28,27 +32,16 @@ function injectBeforeUnload(browser) {
 }
 
 // Wait for onbeforeunload dialog, and dismiss it immediately.
-function awaitAndCloseBeforeUnloadDialog(doStayOnPage) {
-  return new Promise(resolve => {
-    function onDialogShown(node) {
-      Services.obs.removeObserver(onDialogShown, "tabmodal-dialog-loaded");
-      let button = node.querySelector(
-        doStayOnPage ? ".tabmodalprompt-button1" : ".tabmodalprompt-button0"
-      );
-      button.click();
-      resolve();
-    }
-
-    Services.obs.addObserver(onDialogShown, "tabmodal-dialog-loaded");
-  });
+function awaitAndCloseBeforeUnloadDialog(browser, doStayOnPage) {
+  return PromptTestUtils.handleNextPrompt(
+    browser,
+    { modalType: Services.prompt.MODAL_TYPE_CONTENT, promptType: "confirmEx" },
+    { buttonNumClick: doStayOnPage ? 1 : 0 }
+  );
 }
 
 SpecialPowers.pushPrefEnv({
   set: [["dom.require_user_interaction_for_beforeunload", false]],
-});
-
-SpecialPowers.pushPrefEnv({
-  set: [["prompts.contentPromptSubDialog", false]],
 });
 
 /**
@@ -70,7 +63,7 @@ add_task(async function() {
 
   await injectBeforeUnload(browser);
   // Navigate to a chrome page.
-  let dialogShown1 = awaitAndCloseBeforeUnloadDialog(false);
+  let dialogShown1 = awaitAndCloseBeforeUnloadDialog(browser, false);
   BrowserTestUtils.loadURI(browser, "about:support");
   await Promise.all([dialogShown1, BrowserTestUtils.browserLoaded(browser)]);
 

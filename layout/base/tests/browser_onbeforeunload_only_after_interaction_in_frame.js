@@ -1,3 +1,7 @@
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
+
 function pageScript() {
   window.addEventListener(
     "beforeunload",
@@ -17,10 +21,6 @@ SpecialPowers.pushPrefEnv({
   ],
 });
 
-SpecialPowers.pushPrefEnv({
-  set: [["prompts.contentPromptSubDialog", false]],
-});
-
 const FRAME_URL =
   "data:text/html," + encodeURIComponent("<body>Just a frame</body>");
 
@@ -36,17 +36,17 @@ const PAGE_URL =
 
 add_task(async function doClick() {
   // The onbeforeunload dialog should appear.
-  let dialogShown = false;
-  function onDialogShown(node) {
-    dialogShown = true;
-    let dismissButton = node.querySelector(".tabmodalprompt-button0");
-    dismissButton.click();
-  }
-  let obsName = "tabmodal-dialog-loaded";
-  Services.obs.addObserver(onDialogShown, obsName);
-  await openPage(true);
-  Services.obs.removeObserver(onDialogShown, obsName);
-  Assert.ok(dialogShown, "Should have shown dialog.");
+  let dialogPromise = PromptTestUtils.waitForPrompt(null, {
+    modalType: Services.prompt.MODAL_TYPE_CONTENT,
+    promptType: "confirmEx",
+  });
+
+  let openPagePromise = openPage(true);
+  let dialog = await dialogPromise;
+  Assert.ok(true, "Showed the beforeunload dialog.");
+
+  await PromptTestUtils.handlePrompt(dialog, { buttonNumClick: 0 });
+  await openPagePromise;
 });
 
 add_task(async function noClick() {

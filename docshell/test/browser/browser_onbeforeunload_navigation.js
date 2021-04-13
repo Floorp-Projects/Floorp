@@ -6,6 +6,10 @@ const TARGETED_PAGE =
   "data:text/html," +
   encodeURIComponent("<body>Shouldn't be seeing this</body>");
 
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
+
 var loadStarted = false;
 var tabStateListener = {
   resolveLoad: null,
@@ -47,30 +51,17 @@ function promiseLoaded(url, callback) {
   });
 }
 
-async function promiseStayOnPagePrompt(acceptNavigation) {
-  loadStarted = false;
-  let [dialog] = await TestUtils.topicObserved("tabmodal-dialog-loaded");
-
-  ok(!loadStarted, "No load should be started");
-
-  let button = dialog.querySelector(
-    acceptNavigation ? ".tabmodalprompt-button0" : ".tabmodalprompt-button1"
+function promiseStayOnPagePrompt(browser, acceptNavigation) {
+  return PromptTestUtils.handleNextPrompt(
+    browser,
+    { modalType: Services.prompt.MODAL_TYPE_CONTENT, promptType: "confirmEx" },
+    { buttonNumClick: acceptNavigation ? 0 : 1 }
   );
-  button.click();
-
-  // Make a trip through the event loop so that, if anything is going to
-  // happen after we deny the navigation, it has a chance to happen
-  // before we return to our caller.
-  await new Promise(executeSoon);
 }
 
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.require_user_interaction_for_beforeunload", false]],
-  });
-
-  SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
   });
 
   let testTab = await BrowserTestUtils.openNewForegroundTab(
@@ -114,7 +105,7 @@ add_task(async function test() {
         });
       }
 
-      let promptPromise = promiseStayOnPagePrompt(allowNavigation);
+      let promptPromise = promiseStayOnPagePrompt(browser, allowNavigation);
       let loadPromise;
       if (allowNavigation) {
         loadPromise = promiseLoaded(TARGETED_PAGE);
