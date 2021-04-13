@@ -1,0 +1,325 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="272" height="16">
+  <defs>
+    <path id="a" d="M-4 -4.3c0 1.625 -0.049 2.76 0 3.3a7.57 7.57 0 0 0 1.487 4.382 4.22 4.22 0 0 0 2.513 1.605 4.218 4.218 0 0 0 2.512 -1.605 7.57 7.57 0 0 0 1.488 -4.382c0.049 -0.54 0 -1.675 0 -3.3l-4 -0.685 -4 0.685zm4 11.306l-0.112 -0.012a6.247 6.247 0 0 1 -4.012 -2.426 9.273 9.273 0 0 1 -1.8 -5.287c-0.076 -0.839 -0.076 -2.681 -0.076 -3.706a1.846 1.846 0 0 1 1.527 -1.822l4.473 -0.768 4.471 0.768a1.845 1.845 0 0 1 1.529 1.823c0 1.023 0 2.866 -0.08 3.705a9.266 9.266 0 0 1 -1.8 5.287 6.25 6.25 0 0 1 -4.012 2.426l-0.108 0.012z"/>
+    <path id="b" d="M1.25 -3.451l-2.5 0.428c0.009 0.942 0.03 1.655 0.062 2a5.77 5.77 0 0 0 1.13 3.531 2.689 2.689 0 0 0 1.3 0.943h0.008v-6.902z"/>
+    <linearGradient id="c" x1="-5.224" x2="-2.95" y1="-6.263" y2="10.923" gradientUnits="userSpaceOnUse" spreadMethod="pad">
+      <stop offset="0%" stop-color="#C689FF"/>
+      <stop offset="50%" stop-color="#639EF9"/>
+      <stop offset="100%" stop-color="#00B3F4"/>
+    </linearGradient>
+  </defs>
+  <svg width="16" height="16" x="0" y="0" preserveAspectRatio="xMidYMid meet">
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity="0" href="#b"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="16" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="e" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.018 0.131 -0.044 0.353" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.018 0.131 -0.044 0.353"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity="0" href="#b"/>
+    </g>
+    <g mask="url(#e)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="32" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="d" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.114 0.822 -0.172 1.847" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.114 0.822 -0.172 1.847"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity="0" href="#b"/>
+    </g>
+    <g mask="url(#d)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="48" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="f" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563a12.49 12.49 0 0 1 0.238 0.278" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563a12.49 12.49 0 0 1 0.238 0.278"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity="0" href="#b"/>
+    </g>
+    <g mask="url(#f)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="64" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="g" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 0.551 0 1.322 -0.54 2.091 -1.244" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 0.551 0 1.322 -0.54 2.091 -1.244"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity=".1" href="#b"/>
+    </g>
+    <g mask="url(#g)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="80" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="h" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.326 -0.426 0.451 -1.508 0.483 -2.649" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.326 -0.426 0.451 -1.508 0.483 -2.649"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity=".2" href="#b"/>
+    </g>
+    <g mask="url(#h)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="96" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="i" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-0.152 -0.084 -0.413 -0.214" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-0.152 -0.084 -0.413 -0.214"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity=".3" href="#b"/>
+    </g>
+    <g mask="url(#i)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="112" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="j" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-1.348 -0.749 -2.904 -1.21" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-1.348 -0.749 -2.904 -1.21"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity=".4" href="#b"/>
+    </g>
+    <g mask="url(#j)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="128" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="k" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.636 -1.465 -4.79 -1.558" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.636 -1.465 -4.79 -1.558"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity=".5" href="#b"/>
+    </g>
+    <g mask="url(#k)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="144" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="l" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563a8.02 8.02 0 0 0 -1.206 0.097" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563a8.02 8.02 0 0 0 -1.206 0.097"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity=".6" href="#b"/>
+    </g>
+    <g mask="url(#l)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="160" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="m" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-0.783 0 -1.566 0.136 -2.248 0.311" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-0.783 0 -1.566 0.136 -2.248 0.311"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".792" href="#b"/>
+      <use fill="url(#c)" fill-opacity=".7" href="#b"/>
+    </g>
+    <g mask="url(#m)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="176" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="n" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-1.096 0 -2.191 0.267 -3.011 0.533" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-1.096 0 -2.191 0.267 -3.011 0.533"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".594" href="#b"/>
+      <use fill="url(#c)" fill-opacity=".8" href="#b"/>
+    </g>
+    <g mask="url(#n)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="192" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="o" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-1.365 0 -2.729 0.414 -3.563 0.725" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-1.365 0 -2.729 0.414 -3.563 0.725"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".396" href="#b"/>
+      <use fill="url(#c)" fill-opacity=".9" href="#b"/>
+    </g>
+    <g mask="url(#o)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="208" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="p" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-1.602 0 -3.204 0.57 -3.947 0.875" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-1.602 0 -3.204 0.57 -3.947 0.875"/>
+        </g>
+      </mask>
+    </defs>
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".198" href="#b"/>
+      <use fill="url(#c)" fill-opacity="1" href="#b"/>
+    </g>
+    <g mask="url(#p)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="224" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="q" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-1.816 0 -3.631 0.732 -4.196 0.981" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-1.816 0 -3.631 0.732 -4.196 0.981"/>
+        </g>
+      </mask>
+    </defs>
+    <g opacity=".75">
+      <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity="0" href="#b"/>
+      <use fill="url(#c)" fill-opacity="1" href="#b"/>
+    </g>
+    <g mask="url(#q)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="240" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="r" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-2.01 0 -4.018 0.897 -4.333 1.043" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563c-2.01 0 -4.018 0.897 -4.333 1.043"/>
+        </g>
+      </mask>
+    </defs>
+    <g opacity=".5">
+      <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity="0" href="#b"/>
+      <use fill="url(#c)" fill-opacity="1" href="#b"/>
+    </g>
+    <g mask="url(#r)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="256" y="0" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <mask id="s" mask-type="alpha">
+        <g opacity="1">
+          <path fill="red" fill-opacity="1" d="M-4.938 -3.875s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563 -4.375 1.063 -4.375 1.063" transform="translate(8 8)"/>
+          <path fill-opacity="0" stroke="#D60021" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="1" stroke-width="3" d="M3.062 4.125s-0.625 4.501 0.313 5.563c0.938 1.062 3.251 4.25 4.563 4.25 1.312 0 3.875 -3.064 4.687 -4.126 0.812 -1.062 0.375 -6.187 0.375 -6.187s-2.812 -1.563 -5 -1.563 -4.375 1.063 -4.375 1.063"/>
+        </g>
+      </mask>
+    </defs>
+    <g opacity=".25">
+      <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity="0" href="#b"/>
+      <use fill="url(#c)" fill-opacity="1" href="#b"/>
+    </g>
+    <g mask="url(#s)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+  <svg width="16" height="16" x="272" y="0" preserveAspectRatio="xMidYMid meet">
+    <use fill="#BABABA" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    <g opacity="1" transform="translate(6.75 7.988)">
+      <use fill="#BABABA" fill-opacity=".99" href="#b"/>
+      <use fill="url(#c)" fill-opacity="0" href="#b"/>
+    </g>
+    <g mask="url(#M)">
+      <use fill="url(#c)" fill-opacity="1" href="#a" opacity="1" transform="translate(8 8)"/>
+    </g>
+  </svg>
+</svg>
