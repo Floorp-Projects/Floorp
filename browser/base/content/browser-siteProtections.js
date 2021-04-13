@@ -1069,6 +1069,15 @@ var gProtectionsHandler = {
       document.getElementById(
         "protections-popup-sendReportView-learn-more"
       ).href = baseURL + "blocking-breakage";
+
+      let shimAllowLearnMoreURL =
+        baseURL + "smartblock-enhanced-tracking-protection";
+
+      document
+        .querySelectorAll(".protections-popup-shim-allow-learn-more")
+        .forEach(label => {
+          label.href = shimAllowLearnMoreURL;
+        });
     }
   },
 
