@@ -1314,6 +1314,10 @@ BrowserGlue.prototype = {
       this._matchCBCategory
     );
     Services.prefs.removeObserver(
+      "network.cookie.cookieBehavior.pbmode",
+      this._matchCBCategory
+    );
+    Services.prefs.removeObserver(
       ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY,
       this._updateCBCategory
     );
@@ -1715,6 +1719,10 @@ BrowserGlue.prototype = {
     );
     Services.prefs.addObserver(
       "network.cookie.cookieBehavior",
+      this._matchCBCategory
+    );
+    Services.prefs.addObserver(
+      "network.cookie.cookieBehavior.pbmode",
       this._matchCBCategory
     );
     Services.prefs.addObserver(
@@ -4196,6 +4204,7 @@ var ContentBlockingCategoriesPrefs = {
     this.CATEGORY_PREFS = {
       strict: {
         "network.cookie.cookieBehavior": null,
+        "network.cookie.cookieBehavior.pbmode": null,
         "privacy.trackingprotection.pbmode.enabled": null,
         "privacy.trackingprotection.enabled": null,
         "privacy.trackingprotection.socialtracking.enabled": null,
@@ -4205,6 +4214,7 @@ var ContentBlockingCategoriesPrefs = {
       },
       standard: {
         "network.cookie.cookieBehavior": null,
+        "network.cookie.cookieBehavior.pbmode": null,
         "privacy.trackingprotection.pbmode.enabled": null,
         "privacy.trackingprotection.enabled": null,
         "privacy.trackingprotection.socialtracking.enabled": null,
@@ -4301,6 +4311,30 @@ var ContentBlockingCategoriesPrefs = {
           break;
         case "cookieBehavior5":
           this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] =
+            Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+          break;
+        case "cookieBehaviorPBM0":
+          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior.pbmode"] =
+            Ci.nsICookieService.BEHAVIOR_ACCEPT;
+          break;
+        case "cookieBehaviorPBM1":
+          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior.pbmode"] =
+            Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
+          break;
+        case "cookieBehaviorPBM2":
+          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior.pbmode"] =
+            Ci.nsICookieService.BEHAVIOR_REJECT;
+          break;
+        case "cookieBehaviorPBM3":
+          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior.pbmode"] =
+            Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN;
+          break;
+        case "cookieBehaviorPBM4":
+          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior.pbmode"] =
+            Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+          break;
+        case "cookieBehaviorPBM5":
+          this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior.pbmode"] =
             Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
           break;
         default:
