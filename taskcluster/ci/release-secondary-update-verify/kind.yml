@@ -35,7 +35,7 @@ job-defaults:
         symbol: UV(UVS)
         kind: test
     extra:
-        chunks: 12
+        chunks: 16
 
 jobs:
     firefox-secondary-linux64:
@@ -73,3 +73,5 @@ jobs:
         shipping-product: firefox
         attributes:
             build_platform: macosx64-shippable
+        extra:
+            chunks: 30
