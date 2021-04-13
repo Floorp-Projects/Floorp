@@ -20,7 +20,7 @@ async function test_view_image_works({ page, selector }) {
   let accel = AppConstants.platform == "macosx" ? "metaKey" : "ctrlKey";
   let tests = {
     tab: {
-      event: { [accel]: true },
+      modifiers: { [accel]: true },
       async loadedPromise() {
         return BrowserTestUtils.waitForNewTab(
           gBrowser,
@@ -33,7 +33,7 @@ async function test_view_image_works({ page, selector }) {
       },
     },
     window: {
-      event: { shiftKey: true },
+      modifiers: { shiftKey: true },
       async loadedPromise() {
         // Unfortunately we can't predict the URL so can't just pass that to waitForNewWindow
         let w = await BrowserTestUtils.waitForNewWindow();
@@ -55,7 +55,7 @@ async function test_view_image_works({ page, selector }) {
       },
     },
     self: {
-      event: {},
+      modifiers: {},
       async loadedPromise() {
         return BrowserTestUtils.waitForNewTab(
           gBrowser,
@@ -100,9 +100,9 @@ async function test_view_image_works({ page, selector }) {
         "popuphidden"
       );
       let browserPromise = test.loadedPromise();
-      EventUtils.synthesizeMouseAtCenter(
+      contextMenu.activateItem(
         document.getElementById("context-viewimage"),
-        test.event
+        test.modifiers
       );
       await promisePopupHidden;
 
