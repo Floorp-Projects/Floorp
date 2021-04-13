@@ -213,11 +213,31 @@ add_task(async function exit_early() {
   );
 });
 
+function AssertTelemetry(telemetry, message) {
+  Assert.stringContains(
+    Services.telemetry
+      .snapshotEvents(Services.telemetry.DATASET_ALL_CHANNELS)
+      .parent.map(e => e.join("#"))
+      .toString(),
+    telemetry.join("#"),
+    message
+  );
+}
+
 add_task(async function not_major_upgrade() {
+  Services.telemetry.clearEvents();
+
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+
+  AssertTelemetry(
+    ["upgrade_dialog", "trigger", "reason", "not-major"],
+    "Not major upgrade for upgrade dialog requirements"
+  );
 });
 
 add_task(async function remote_disabled() {
+  Services.telemetry.clearEvents();
+
   // TODO(bug 1701948): Set up actual remote defaults.
   NimbusFeatures.upgradeDialog._onRemoteReady();
   Services.prefs.setBoolPref("browser.startup.upgradeDialog.enabled", false);
@@ -230,19 +250,40 @@ add_task(async function remote_disabled() {
 
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
 
+  AssertTelemetry(
+    ["upgrade_dialog", "trigger", "reason", "disabled"],
+    "Feature disabled for upgrade dialog requirements"
+  );
   Services.prefs.clearUserPref("browser.startup.upgradeDialog.enabled");
 });
 
 add_task(async function show_major_upgrade() {
+  Services.telemetry.clearEvents();
+
   const promise = waitForDialog();
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
   await promise;
 
   Assert.ok(true, "Upgrade dialog opened and closed from major upgrade");
+  AssertTelemetry(
+    ["upgrade_dialog", "trigger", "reason", "satisfied"],
+    "Satisfied upgrade dialog requirements"
+  );
+  AssertTelemetry(
+    ["upgrade_dialog", "content", "close", "external"],
+    "Telemetry tracked dialog close"
+  );
 });
 
 add_task(async function dont_reshow() {
+  Services.telemetry.clearEvents();
+
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+
+  AssertTelemetry(
+    ["upgrade_dialog", "trigger", "reason", "already-shown"],
+    "Shouldn't reshow for upgrade dialog requirements"
+  );
 });
 
 registerCleanupFunction(() => {
