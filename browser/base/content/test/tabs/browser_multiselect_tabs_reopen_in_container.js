@@ -17,7 +17,7 @@ async function openTabMenuFor(tab) {
 }
 
 async function openReopenMenuForTab(tab) {
-  openTabMenuFor(tab);
+  await openTabMenuFor(tab);
 
   let reopenItem = tab.ownerDocument.getElementById(
     "context_reopenInContainer"
@@ -26,11 +26,7 @@ async function openReopenMenuForTab(tab) {
 
   let reopenMenu = reopenItem.getElementsByTagName("menupopup")[0];
   let reopenMenuShown = BrowserTestUtils.waitForEvent(reopenMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(
-    reopenItem,
-    { type: "mousemove" },
-    tab.ownerGlobal
-  );
+  reopenItem.openMenu(true);
   await reopenMenuShown;
 
   return reopenMenu;
@@ -56,7 +52,7 @@ function openTabInContainer(gBrowser, tab, reopenMenu, id) {
   let menuitem = reopenMenu.querySelector(
     `menuitem[data-usercontextid="${id}"]`
   );
-  EventUtils.synthesizeMouseAtCenter(menuitem, {}, menuitem.ownerGlobal);
+  reopenMenu.activateItem(menuitem);
   return tabPromise;
 }
 
