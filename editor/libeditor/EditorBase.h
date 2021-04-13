@@ -860,8 +860,10 @@ class EditorBase : public nsIEditor,
 #ifdef DEBUG
       mHasCanHandleChecked = true;
 #endif  // #ifdefn DEBUG
-      // Don't allow to run new edit action until the top level edit action.
-      if (mEditAction != EditAction::eInitializing && mEditorWasDestroyed) {
+      // Don't allow to run new edit action when an edit action caused
+      // destroying the editor while it's being handled.
+      if (mEditAction != EditAction::eInitializing &&
+          mEditorWasDestroyedDuringHandlingEditAction) {
         NS_WARNING("Editor was destroyed during an edit action being handled");
         return false;
       }
@@ -907,6 +909,16 @@ class EditorBase : public nsIEditor,
                  mEditAction == EditAction::ePasteAsQuotation ||
                  mEditAction == EditAction::eDrop);
       mHasTriedToDispatchBeforeInputEvent = true;
+    }
+
+    /**
+     * MarkAsHandled() is called before dispatching `input` event and notifying
+     * editor observers.  After this is called, any nested edit action become
+     * non illegal case.
+     */
+    void MarkAsHandled() {
+      MOZ_ASSERT(!mHandled);
+      mHandled = true;
     }
 
     /**
@@ -1028,12 +1040,20 @@ class EditorBase : public nsIEditor,
     bool IsAborted() const { return mAborted; }
 
     void OnEditorDestroy() {
-      mEditorWasDestroyed = true;
+      if (!mHandled && mHasTriedToDispatchBeforeInputEvent) {
+        // Remember the editor was destroyed only when this edit action is being
+        // handled because they are caused by mutation event listeners or
+        // something other unexpected event listeners.  In the cases, new child
+        // edit action shouldn't been aborted.
+        mEditorWasDestroyedDuringHandlingEditAction = true;
+      }
       if (mParentData) {
         mParentData->OnEditorDestroy();
       }
     }
-    bool HasEditorDestroyed() const { return mEditorWasDestroyed; }
+    bool HasEditorDestroyedDuringHandlingEditAction() const {
+      return mEditorWasDestroyedDuringHandlingEditAction;
+    }
 
     void SetTopLevelEditSubAction(EditSubAction aEditSubAction,
                                   EDirection aDirection = eNone) {
@@ -1270,7 +1290,10 @@ class EditorBase : public nsIEditor,
     // The editor instance may be destroyed once temporarily if `document.write`
     // etc runs.  In such case, we should mark this flag of being handled
     // edit action.
-    bool mEditorWasDestroyed;
+    bool mEditorWasDestroyedDuringHandlingEditAction;
+    // This is set before dispatching `input` event and notifying editor
+    // observers.
+    bool mHandled;
 
 #ifdef DEBUG
     mutable bool mHasCanHandleChecked = false;

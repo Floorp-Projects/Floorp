@@ -248,8 +248,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(EditorBase)
 nsresult EditorBase::Init(Document& aDocument, Element* aRoot,
                           nsISelectionController* aSelectionController,
                           uint32_t aFlags, const nsAString& aValue) {
-  MOZ_ASSERT_IF(!mEditActionData || !mEditActionData->HasEditorDestroyed(),
-                GetTopLevelEditSubAction() == EditSubAction::eNone);
+  MOZ_ASSERT_IF(
+      !mEditActionData ||
+          !mEditActionData->HasEditorDestroyedDuringHandlingEditAction(),
+      GetTopLevelEditSubAction() == EditSubAction::eNone);
 
   // First only set flags, but other stuff shouldn't be initialized now.
   // Note that SetFlags() will be called by PostCreate().
@@ -1716,6 +1718,10 @@ void EditorBase::NotifyEditorObservers(
     case eNotifyEditorObserversOfEnd:
       mIsInEditSubAction = false;
 
+      if (mEditActionData) {
+        mEditActionData->MarkAsHandled();
+      }
+
       if (mTextInputListener) {
         // TODO: TextInputListener::OnEditActionHandled() may return
         //       NS_ERROR_OUT_OF_MEMORY.  If so and if
@@ -1773,6 +1779,10 @@ void EditorBase::NotifyEditorObservers(
       break;
     case eNotifyEditorObserversOfCancel:
       mIsInEditSubAction = false;
+
+      if (mEditActionData) {
+        mEditActionData->MarkAsHandled();
+      }
 
       if (mIMEContentObserver) {
         RefPtr<IMEContentObserver> observer = mIMEContentObserver;
@@ -4436,6 +4446,8 @@ nsresult EditorBase::ToggleTextDirectionAsAction(nsIPrincipal* aPrincipal) {
     return EditorBase::ToGenericNSResult(rv);
   }
 
+  editActionData.MarkAsHandled();
+
   // XXX When we don't change the text direction, do we really need to
   //     dispatch input event?
   DispatchInputEvent();
@@ -4480,6 +4492,8 @@ void EditorBase::SwitchTextDirectionTo(TextDirection aTextDirection) {
       return;
     }
   }
+
+  editActionData.MarkAsHandled();
 
   // XXX When we don't change the text direction, do we really need to
   //     dispatch input event?
@@ -5131,7 +5145,10 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
       mBeforeInputEventCanceled(false),
       mMakeBeforeInputEventNonCancelable(false),
       mHasTriedToDispatchClipboardEvent(false),
-      mEditorWasDestroyed(mParentData && mParentData->mEditorWasDestroyed) {
+      mEditorWasDestroyedDuringHandlingEditAction(
+          mParentData &&
+          mParentData->mEditorWasDestroyedDuringHandlingEditAction),
+      mHandled(false) {
   // If we're nested edit action, copies necessary data from the parent.
   if (mParentData) {
     mSelection = mParentData->mSelection;
