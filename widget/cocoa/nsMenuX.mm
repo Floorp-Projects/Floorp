@@ -411,17 +411,17 @@ void nsMenuX::MenuOpenedAsync() {
     mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, u"true"_ns, true);
   }
 
+  // Notify our observer.
+  if (mObserver) {
+    mObserver->OnMenuOpened();
+  }
+
   // Fire popupshown.
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShown, nullptr, WidgetMouseEvent::eReal);
   nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
-
-  // Notify our observer.
-  if (mObserver) {
-    mObserver->OnMenuOpened();
-  }
 }
 
 void nsMenuX::MenuClosed() {
