@@ -6,7 +6,7 @@
 
 #include "MmapFaultHandler.h"
 
-#if defined(XP_UNIX) && !defined(XP_DARWIN)
+#if defined(XP_UNIX) && !defined(XP_DARWIN) && !defined(__wasi__)
 
 #  include "PlatformMutex.h"
 #  include "mozilla/Atomics.h"
