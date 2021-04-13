@@ -68,10 +68,7 @@ add_task(async function test_save_link_blocked_by_extension() {
           setTimeout(resolve, 0);
           return Ci.nsIFilePicker.returnCancel;
         };
-        EventUtils.synthesizeMouseAtCenter(
-          menu.querySelector("#context-savelink"),
-          {}
-        );
+        menu.activateItem(menu.querySelector("#context-savelink"));
       });
     }
   );
