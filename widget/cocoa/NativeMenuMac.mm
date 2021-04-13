@@ -369,6 +369,15 @@ void NativeMenuMac::OpenSubmenu(dom::Element* aMenuElement) {
   }
 }
 
+void NativeMenuMac::CloseSubmenu(dom::Element* aMenuElement) {
+  if (RefPtr<nsMenuX> menu = GetOpenMenuContainingElement(aMenuElement)) {
+    Maybe<nsMenuX::MenuChild> item = menu->GetItemForElement(aMenuElement);
+    if (item && item->is<RefPtr<nsMenuX>>()) {
+      item->as<RefPtr<nsMenuX>>()->MenuClosed();
+    }
+  }
+}
+
 RefPtr<Element> NativeMenuMac::Element() { return mElement; }
 
 }  // namespace widget
