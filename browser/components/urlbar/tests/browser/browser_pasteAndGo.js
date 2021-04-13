@@ -26,7 +26,7 @@ add_task(async function() {
         false,
         url.replace(/\n/g, "")
       );
-      EventUtils.synthesizeMouseAtCenter(menuitem, {});
+      menuitem.closest("menupopup").activateItem(menuitem);
       // Using toSource in order to get the newlines escaped:
       info("Paste and go, loading " + url.toSource());
       await browserLoadedPromise;
@@ -48,7 +48,7 @@ add_task(async function test_invisible_char() {
       false,
       url.replace(/\u2028/g, "")
     );
-    EventUtils.synthesizeMouseAtCenter(menuitem, {});
+    menuitem.closest("menupopup").activateItem(menuitem);
     // Using toSource in order to get the newlines escaped:
     info("Paste and go, loading " + url.toSource());
     await browserLoadedPromise;
@@ -72,7 +72,7 @@ add_task(async function test_with_input_and_results() {
     false,
     url
   );
-  EventUtils.synthesizeMouseAtCenter(menuitem, {});
+  menuitem.closest("menupopup").activateItem(menuitem);
   // Using toSource in order to get the newlines escaped:
   info("Paste and go, loading " + url.toSource());
   await browserLoadedPromise;
