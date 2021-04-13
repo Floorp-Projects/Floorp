@@ -128,6 +128,9 @@ nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsI
 nsMenuX::~nsMenuX() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // Make sure a pending popupshown event isn't dropped.
+  FlushMenuOpenedRunnable();
+
   if (mIsOpen) {
     [mNativeMenu cancelTracking];
   }
@@ -332,6 +335,10 @@ void nsMenuX::MenuOpened() {
     return;
   }
 
+  // Make sure we fire any pending popupshown / popuphiding / popuphidden events first.
+  FlushMenuOpenedRunnable();
+  FlushMenuClosedRunnable();
+
   if (!mDidFirePopupshowingAndIsApprovedToOpen) {
     // Fire popupshowing now.
     bool approvedToOpen = OnOpen();
@@ -346,8 +353,56 @@ void nsMenuX::MenuOpened() {
 
   mIsOpen = true;
 
-  // Make sure we fire any pending popuphiding / popuphidden events first.
-  FlushMenuClosedRunnable();
+  // Reset mDidFirePopupshowingAndIsApprovedToOpen for the next menu opening.
+  mDidFirePopupshowingAndIsApprovedToOpen = false;
+
+  if (mNeedsRebuild) {
+    OnHighlightedItemChanged(Nothing());
+    RemoveAll();
+    RebuildMenu();
+  }
+
+  // Fire the popupshown event in MenuOpenedAsync.
+  // MenuOpened() is called during menuWillOpen, and if cancelTracking is called now, menuDidClose
+  // will not be called.
+  // The runnable object must not hold a strong reference to the nsMenuX, so that there is no
+  // reference cycle.
+  class MenuOpenedAsyncRunnable final : public mozilla::CancelableRunnable {
+   public:
+    explicit MenuOpenedAsyncRunnable(nsMenuX* aMenu)
+        : CancelableRunnable("MenuOpenedAsyncRunnable"), mMenu(aMenu) {}
+
+    nsresult Run() override {
+      if (mMenu) {
+        RefPtr<nsMenuX> menu = mMenu;
+        menu->MenuOpenedAsync();
+        mMenu = nullptr;
+      }
+      return NS_OK;
+    }
+    nsresult Cancel() override {
+      mMenu = nullptr;
+      return NS_OK;
+    }
+
+   private:
+    nsMenuX* mMenu;  // weak, cleared by Cancel() and Run()
+  };
+  mPendingAsyncMenuOpenRunnable = new MenuOpenedAsyncRunnable(this);
+  NS_DispatchToCurrentThread(mPendingAsyncMenuOpenRunnable);
+}
+
+void nsMenuX::FlushMenuOpenedRunnable() {
+  if (mPendingAsyncMenuOpenRunnable) {
+    MenuOpenedAsync();
+  }
+}
+
+void nsMenuX::MenuOpenedAsync() {
+  if (mPendingAsyncMenuOpenRunnable) {
+    mPendingAsyncMenuOpenRunnable->Cancel();
+    mPendingAsyncMenuOpenRunnable = nullptr;
+  }
 
   mIsOpenForGecko = true;
 
@@ -356,25 +411,16 @@ void nsMenuX::MenuOpened() {
     mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, u"true"_ns, true);
   }
 
+  // Fire popupshown.
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShown, nullptr, WidgetMouseEvent::eReal);
-
   nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
-  // Reset mDidFirePopupshowingAndIsApprovedToOpen for then next menu opening.
-  mDidFirePopupshowingAndIsApprovedToOpen = false;
-
   // Notify our observer.
   if (mObserver) {
     mObserver->OnMenuOpened();
-  }
-
-  if (mNeedsRebuild) {
-    OnHighlightedItemChanged(Nothing());
-    RemoveAll();
-    RebuildMenu();
   }
 }
 
@@ -382,6 +428,9 @@ void nsMenuX::MenuClosed() {
   if (!mIsOpen) {
     return;
   }
+
+  // Make sure we fire any pending popupshown events first.
+  FlushMenuOpenedRunnable();
 
   // If any of our submenus were opened programmatically, make sure they get closed first.
   for (auto& child : mMenuChildren) {
@@ -517,6 +566,8 @@ void nsMenuX::ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierF
 
 bool nsMenuX::Close() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  FlushMenuOpenedRunnable();
 
   bool wasOpen = mIsOpenForGecko;
 
