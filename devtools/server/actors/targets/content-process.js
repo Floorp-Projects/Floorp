@@ -207,10 +207,6 @@ const ContentProcessTargetActor = TargetActorMixin(
       }
       Resources.unwatchAllTargetResources(this);
 
-      // Notify the client that this target is being destroyed.
-      // So that we can destroy the target front and all its children.
-      this.emit("tabDetached");
-
       Actor.prototype.destroy.call(this);
 
       if (this.threadActor) {
