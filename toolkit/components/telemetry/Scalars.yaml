@@ -666,26 +666,6 @@ browser.usage:
       - 'main'
       - 'content'
 
-browser.input:
-  touch_event_count:
-    bug_numbers:
-      - 1626099
-    description: >-
-      Windows only.
-      Counts occurrences of touch events,
-      measured when user starts a touch event.
-    expires: "90"
-    kind: uint
-    notification_emails:
-      - gfx-telemetry-alerts@mozilla.com
-      - ktaeleman@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-      - 'content'
-
 browser.ui:
   toolbar_widgets:
     bug_numbers:

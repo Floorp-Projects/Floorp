@@ -62,7 +62,7 @@ import org.mozilla.gecko.util.GeckoBundle;
  * <p>
  * With the document parsed and the login input fields identified, GeckoView
  * dispatches a
- * <code>LoginStorageDelegate.onLoginFetch(&quot;example.com&quot;)</code>
+ * <code>StorageDelegate.onLoginFetch(&quot;example.com&quot;)</code>
  * request to fetch logins for the given domain.
  * </p>
  * <p>
@@ -82,14 +82,14 @@ import org.mozilla.gecko.util.GeckoBundle;
  * <h3>Update API</h3>
  * <p>
  * When the user submits some login input fields, GeckoView dispatches another
- * <code>LoginStorageDelegate.onLoginFetch(&quot;example.com&quot;)</code>
+ * <code>StorageDelegate.onLoginFetch(&quot;example.com&quot;)</code>
  * request to check whether the submitted login exists or whether it's a new or
  * updated login entry.
  * </p>
  * <p>
  * If the submitted login is already contained as-is in the collection returned
  * by <code>onLoginFetch</code>, then GeckoView dispatches
- * <code>LoginStorageDelegate.onLoginUsed</code> with the submitted login
+ * <code>StorageDelegate.onLoginUsed</code> with the submitted login
  * entry.
  * </p>
  * <p>
@@ -120,12 +120,12 @@ import org.mozilla.gecko.util.GeckoBundle;
  * <p>
  * The login entry returned in a confirmed save prompt is used to request for
  * saving in the runtime delegate via
- * <code>LoginStorageDelegate.onLoginSave(login)</code>.
+ * <code>StorageDelegate.onLoginSave(login)</code>.
  * If the app has already stored the entry during the prompt request handling,
  * it may ignore this storage saving request.
  * </p>
  *
- * <br>@see GeckoRuntime#setLoginStorageDelegate
+ * <br>@see GeckoRuntime#setAutocompleteStorageDelegate
  * <br>@see GeckoSession#setPromptDelegate
  * <br>@see GeckoSession.PromptDelegate#onLoginSave
  * <br>@see GeckoSession.PromptDelegate#onLoginSelect
@@ -135,6 +135,172 @@ public class Autocomplete {
     private static final boolean DEBUG = false;
 
     protected Autocomplete() {}
+
+    /**
+     * Holds credit card information for a specific entry.
+     */
+    public static class CreditCard {
+        private static final String GUID_KEY = "guid";
+        private static final String NAME_KEY = "name";
+        private static final String NUMBER_KEY = "number";
+        private static final String EXP_MONTH_KEY = "expMonth";
+        private static final String EXP_YEAR_KEY = "expYear";
+
+        /**
+         * The unique identifier for this login entry.
+         */
+        public final @Nullable String guid;
+
+        /**
+         * The full name as it appears on the credit card.
+         */
+        public final @NonNull String name;
+
+        /**
+         * The credit card number.
+         */
+        public final @NonNull String number;
+
+        /**
+         * The expiration month.
+         */
+        public final @NonNull String expirationMonth;
+
+        /**
+         * The expiration year.
+         */
+        public final @NonNull String expirationYear;
+
+        // For tests only.
+        @AnyThread
+        protected CreditCard() {
+            guid = null;
+            name = "";
+            number = "";
+            expirationMonth = "";
+            expirationYear = "";
+        }
+
+        @AnyThread
+        /* package */ CreditCard(final @NonNull GeckoBundle bundle) {
+            guid = bundle.getString(GUID_KEY);
+            name = bundle.getString(NAME_KEY, "");
+            number = bundle.getString(NUMBER_KEY, "");
+            expirationMonth = bundle.getString(EXP_MONTH_KEY, "");
+            expirationYear = bundle.getString(EXP_YEAR_KEY, "");
+        }
+
+        @Override
+        @AnyThread
+        public String toString() {
+            final StringBuilder builder = new StringBuilder("CreditCard {");
+            builder
+                .append("guid=").append(guid)
+                .append(", name=").append(name)
+                .append(", number=").append(number)
+                .append(", expirationMonth=").append(expirationMonth)
+                .append(", expirationYear=").append(expirationYear)
+                .append("}");
+            return builder.toString();
+        }
+
+        @AnyThread
+        /* package */ @NonNull GeckoBundle toBundle() {
+            final GeckoBundle bundle = new GeckoBundle(7);
+            bundle.putString(GUID_KEY, guid);
+            bundle.putString(NAME_KEY, name);
+            bundle.putString(NUMBER_KEY, number);
+            bundle.putString(EXP_MONTH_KEY, expirationMonth);
+            bundle.putString(EXP_YEAR_KEY, expirationYear);
+
+            return bundle;
+        }
+
+        public static class Builder {
+            private final GeckoBundle mBundle;
+
+            @AnyThread
+            /* package */ Builder(final @NonNull GeckoBundle bundle) {
+                mBundle = new GeckoBundle(bundle);
+            }
+
+            @AnyThread
+            @SuppressWarnings("checkstyle:javadocmethod")
+            public Builder() {
+                mBundle = new GeckoBundle(7);
+            }
+
+            /**
+             * Finalize the {@link CreditCard} instance.
+             *
+             * @return The {@link CreditCard} instance.
+             */
+            @AnyThread
+            public @NonNull CreditCard build() {
+                return new CreditCard(mBundle);
+            }
+
+            /**
+             * Set the unique identifier for this credit card entry.
+             *
+             * @param guid The unique identifier string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder guid(final @Nullable String guid) {
+                mBundle.putString(GUID_KEY, guid);
+                return this;
+            }
+
+            /**
+             * Set the name for this credit card entry.
+             *
+             * @param name The full name as it appears on the credit card.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder name(final @Nullable String name) {
+                mBundle.putString(NAME_KEY, name);
+                return this;
+            }
+
+            /**
+             * Set the number for this credit card entry.
+             *
+             * @param number The credit card number string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder number(final @Nullable String number) {
+                mBundle.putString(NUMBER_KEY, number);
+                return this;
+            }
+
+            /**
+             * Set the expiration month for this credit card entry.
+             *
+             * @param expMonth The expiration month string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder expirationMonth(final @Nullable String expMonth) {
+                mBundle.putString(EXP_MONTH_KEY, expMonth);
+                return this;
+            }
+
+            /**
+             * Set the expiration year for this credit card entry.
+             *
+             * @param expYear The expiration year string.
+             * @return This {@link Builder} instance.
+             */
+            @AnyThread
+            public @NonNull Builder expirationYear(final @Nullable String expYear) {
+                mBundle.putString(EXP_YEAR_KEY, expYear);
+                return this;
+            }
+        }
+    }
 
     /**
      * Holds login information for a specific entry.
@@ -337,7 +503,7 @@ public class Autocomplete {
 
     // Sync with UsedField in GeckoViewAutocomplete.jsm.
     /**
-     * Possible login entry field types for {@link LoginStorageDelegate#onLoginUsed}.
+     * Possible login entry field types for {@link StorageDelegate#onLoginUsed}.
      */
     public static class UsedField {
         /**
@@ -353,9 +519,9 @@ public class Autocomplete {
      * Login storage events include login entry requests for autofill and
      * autocompletion of login input fields.
      * This delegate is attached to the runtime via
-     * {@link GeckoRuntime#setLoginStorageDelegate}.
+     * {@link GeckoRuntime#setAutocompleteStorageDelegate}.
      */
-    public interface LoginStorageDelegate {
+    public interface StorageDelegate {
         /**
          * Request login entries for a given domain.
          * While processing the web document, we have identified elements
@@ -371,6 +537,21 @@ public class Autocomplete {
         @UiThread
         default @Nullable GeckoResult<LoginEntry[]> onLoginFetch(
                 @NonNull final String domain) {
+            return null;
+        }
+
+        /**
+         * Request credit card entries.
+         * While processing the web document, we have identified elements
+         * resembling credit card input fields suitable for autofill.
+         * We will attempt to match the provided credit card information to the
+         * identified input fields.
+         *
+         * @return A {@link GeckoResult} that completes with an array of
+         *         {@link CreditCard} containing the existing credit cards.
+         */
+        @UiThread
+        default @Nullable GeckoResult<CreditCard[]> onCreditCardFetch() {
             return null;
         }
 
@@ -402,6 +583,13 @@ public class Autocomplete {
     }
 
     /**
+     * @deprecated This API has been replaced by {@link StorageDelegate} and
+     *             will be removed in GeckoView 93.
+     */
+    @Deprecated @DeprecationSchedule(version = 93, id = "login-storage")
+    public interface LoginStorageDelegate extends StorageDelegate {}
+
+    /**
      * Abstract base class for Autocomplete options.
      * Extended by {@link Autocomplete.SaveOption} and
      * {@link Autocomplete.SelectOption}.
@@ -428,44 +616,10 @@ public class Autocomplete {
      * Extended by {@link Autocomplete.LoginSaveOption}.
      */
     public abstract static class SaveOption<T> extends Option<T> {
-
-        @SuppressWarnings("checkstyle:javadocmethod")
-        public SaveOption(final @NonNull T value, final int hint) {
-            super(value, hint);
-        }
-    }
-
-    /**
-     * Abstract base class for saving options.
-     * Extended by {@link Autocomplete.LoginSelectOption}.
-     */
-    public abstract static class SelectOption<T> extends Option<T> {
-        @SuppressWarnings("checkstyle:javadocmethod")
-        public SelectOption(
-                final @NonNull T value,
-                final int hint) {
-            super(value, hint);
-        }
-
-        @Override
-        public String toString() {
-            final StringBuilder builder = new StringBuilder("SelectOption {");
-            builder
-                .append("value=").append(value).append(", ")
-                .append("hint=").append(hint)
-                .append("}");
-            return builder.toString();
-        }
-    }
-
-    /**
-     * Holds information required to process login saving requests.
-     */
-    public static class LoginSaveOption extends SaveOption<LoginEntry> {
         @Retention(RetentionPolicy.SOURCE)
         @IntDef(flag = true,
                 value = { Hint.NONE, Hint.GENERATED, Hint.LOW_CONFIDENCE })
-        /* package */ @interface LoginSaveHint {}
+        /* package */ @interface SaveOptionHint {}
 
         /**
          * Hint types for login saving requests.
@@ -491,6 +645,84 @@ public class Autocomplete {
             protected Hint() {}
         }
 
+        @SuppressWarnings("checkstyle:javadocmethod")
+        public SaveOption(
+                final @NonNull T value,
+                final @SaveOptionHint int hint) {
+            super(value, hint);
+        }
+    }
+
+    /**
+     * Abstract base class for saving options.
+     * Extended by {@link Autocomplete.LoginSelectOption}.
+     */
+    public abstract static class SelectOption<T> extends Option<T> {
+        @Retention(RetentionPolicy.SOURCE)
+        @IntDef(flag = true,
+                value = { Hint.NONE, Hint.GENERATED, Hint.INSECURE_FORM,
+                          Hint.DUPLICATE_USERNAME, Hint.MATCHING_ORIGIN })
+        /* package */ @interface SelectOptionHint {}
+
+        /**
+         * Hint types for selection requests.
+         */
+        public static class Hint {
+            public static final int NONE = 0;
+
+            /**
+             * Auto-generated password.
+             * A new password-only login entry containing a secure generated
+             * password.
+             */
+            public static final int GENERATED = 1 << 0;
+
+            /**
+             * Insecure context.
+             * The form or transmission mechanics are considered insecure.
+             * This is the case when the form is served via http or submitted
+             * insecurely.
+             */
+            public static final int INSECURE_FORM = 1 << 1;
+
+            /**
+             * The username is shared with another login entry.
+             * There are multiple login entries in the options that share the
+             * same username. You may have to disambiguate the login entry,
+             * e.g., using the last date of modification and its origin.
+             */
+            public static final int DUPLICATE_USERNAME = 1 << 2;
+
+            /**
+             * The login entry's origin matches the login form origin.
+             * The login was saved from the same origin it is being requested
+             * for, rather than for a subdomain.
+             */
+            public static final int MATCHING_ORIGIN = 1 << 3;
+        }
+
+        @SuppressWarnings("checkstyle:javadocmethod")
+        public SelectOption(
+                final @NonNull T value,
+                final @SelectOptionHint int hint) {
+            super(value, hint);
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder builder = new StringBuilder("SelectOption {");
+            builder
+                .append("value=").append(value).append(", ")
+                .append("hint=").append(hint)
+                .append("}");
+            return builder.toString();
+        }
+    }
+
+    /**
+     * Holds information required to process login saving requests.
+     */
+    public static class LoginSaveOption extends SaveOption<LoginEntry> {
         /**
          * Construct a login save option.
          *
@@ -499,7 +731,7 @@ public class Autocomplete {
          */
         /* package */ LoginSaveOption(
                 final @NonNull LoginEntry value,
-                final @LoginSaveHint int hint) {
+                final @SaveOptionHint int hint) {
             super(value, hint);
         }
 
@@ -525,49 +757,6 @@ public class Autocomplete {
      * Holds information required to process login selection requests.
      */
     public static class LoginSelectOption extends SelectOption<LoginEntry> {
-        @Retention(RetentionPolicy.SOURCE)
-        @IntDef(flag = true,
-                value = { Hint.NONE, Hint.GENERATED, Hint.INSECURE_FORM,
-                          Hint.DUPLICATE_USERNAME, Hint.MATCHING_ORIGIN })
-        /* package */ @interface LoginSelectHint {}
-
-        /**
-         * Hint types for login selection requests.
-         */
-        public static class Hint {
-            public static final int NONE = 0;
-
-            /**
-             * Auto-generated password.
-             * A new password-only login entry containing a secure generated
-             * password.
-             */
-            public static final int GENERATED = 1 << 0;
-
-            /**
-             * Insecure login.
-             * The login form or transmission mechanics are considered insecure.
-             * This is the case when the form is served via http or submitted
-             * insecurely.
-             */
-            public static final int INSECURE_FORM = 1 << 1;
-
-            /**
-             * The username is shared with another login entry.
-             * There are multiple login entries in the options that share the
-             * same username. You may have to disambiguate the login entry,
-             * e.g., using the last date of modification and its origin.
-             */
-            public static final int DUPLICATE_USERNAME = 1 << 2;
-
-            /**
-             * The login entry's origin matches the login form origin.
-             * The login was saved from the same origin it is being requested
-             * for, rather than for a subdomain.
-             */
-            public static final int MATCHING_ORIGIN = 1 << 3;
-        }
-
         /**
          * Construct a login select option.
          *
@@ -576,7 +765,7 @@ public class Autocomplete {
          */
         /* package */ LoginSelectOption(
                 final @NonNull LoginEntry value,
-                final @LoginSelectHint int hint) {
+                final @SelectOptionHint int hint) {
             super(value, hint);
         }
 
@@ -606,24 +795,87 @@ public class Autocomplete {
         }
     }
 
-    /* package */ final static class LoginStorageProxy implements BundleEventListener {
-        private static final String LOGTAG = "LoginStorageProxy";
+    /**
+     * Holds information required to process credit card selection requests.
+     */
+    public static class CreditCardSelectOption extends SelectOption<CreditCard> {
+        @Retention(RetentionPolicy.SOURCE)
+        @IntDef(flag = true,
+                value = { Hint.NONE, Hint.INSECURE_FORM })
+        /* package */ @interface CreditCardSelectHint {}
 
+        /**
+         * Hint types for credit card selection requests.
+         */
+        public static class Hint {
+            public static final int NONE = 0;
+
+            /**
+             * Insecure context.
+             * The form or transmission mechanics are considered insecure.
+             * This is the case when the form is served via http or submitted
+             * insecurely.
+             */
+            public static final int INSECURE_FORM = 1 << 1;
+        }
+
+        /**
+         * Construct a credit card select option.
+         *
+         * @param value The {@link LoginEntry} credit card entry selection option.
+         * @param hint The {@link Hint} detailing the type of the option.
+         */
+        /* package */ CreditCardSelectOption(
+                final @NonNull CreditCard value,
+                final @CreditCardSelectHint int hint) {
+            super(value, hint);
+        }
+
+        /**
+         * Construct a credit card select option.
+         *
+         * @param value The {@link CreditCard} credit card entry selection option.
+         */
+        public CreditCardSelectOption(final @NonNull CreditCard value) {
+            this(value, Hint.NONE);
+        }
+
+        /* package */ static @NonNull CreditCardSelectOption fromBundle(
+                final @NonNull GeckoBundle bundle) {
+            final int hint = bundle.getInt("hint");
+            final CreditCard value = new CreditCard(bundle.getBundle("value"));
+
+            return new CreditCardSelectOption(value, hint);
+        }
+
+        @Override
+        /* package */ @NonNull GeckoBundle toBundle() {
+            final GeckoBundle bundle = new GeckoBundle(2);
+            bundle.putBundle(VALUE_KEY, value.toBundle());
+            bundle.putInt(HINT_KEY, hint);
+            return bundle;
+        }
+    }
+
+    /* package */ final static class StorageProxy implements BundleEventListener {
         private static final String FETCH_LOGIN_EVENT =
             "GeckoView:Autocomplete:Fetch:Login";
+        private static final String FETCH_CREDIT_CARD_EVENT =
+            "GeckoView:Autocomplete:Fetch:CreditCard";
         private static final String SAVE_LOGIN_EVENT =
             "GeckoView:Autocomplete:Save:Login";
         private static final String USED_LOGIN_EVENT =
             "GeckoView:Autocomplete:Used:Login";
 
-        private @Nullable LoginStorageDelegate mDelegate;
+        private @Nullable StorageDelegate mDelegate;
 
-        public LoginStorageProxy() {}
+        public StorageProxy() {}
 
         private void registerListener() {
             EventDispatcher.getInstance().registerUiThreadListener(
                     this,
                     FETCH_LOGIN_EVENT,
+                    FETCH_CREDIT_CARD_EVENT,
                     SAVE_LOGIN_EVENT,
                     USED_LOGIN_EVENT);
         }
@@ -632,22 +884,28 @@ public class Autocomplete {
             EventDispatcher.getInstance().unregisterUiThreadListener(
                     this,
                     FETCH_LOGIN_EVENT,
+                    FETCH_CREDIT_CARD_EVENT,
                     SAVE_LOGIN_EVENT,
                     USED_LOGIN_EVENT);
         }
 
         public synchronized void setDelegate(
-                final @Nullable LoginStorageDelegate delegate) {
-            if (mDelegate == null && delegate != null) {
-                registerListener();
-            } else if (mDelegate != null && delegate == null) {
+                final @Nullable StorageDelegate delegate) {
+            if (mDelegate == delegate) {
+                return;
+            }
+            if (mDelegate != null) {
                 unregisterListener();
             }
 
             mDelegate = delegate;
+
+            if (mDelegate != null) {
+                registerListener();
+            }
         }
 
-        public synchronized @Nullable LoginStorageDelegate getDelegate() {
+        public synchronized @Nullable StorageDelegate getDelegate() {
             return mDelegate;
         }
 
@@ -662,7 +920,7 @@ public class Autocomplete {
 
             if (mDelegate == null) {
                 if (callback != null) {
-                    callback.sendError("No LoginStorageDelegate attached");
+                    callback.sendError("No StorageDelegate attached");
                 }
                 return;
             }
@@ -690,6 +948,29 @@ public class Autocomplete {
                     }
 
                     return loginBundles;
+                }));
+            } else if (FETCH_CREDIT_CARD_EVENT.equals(event)) {
+                final GeckoResult<Autocomplete.CreditCard[]> result =
+                    mDelegate.onCreditCardFetch();
+
+                if (result == null) {
+                    callback.sendSuccess(new GeckoBundle[0]);
+                    return;
+                }
+
+                callback.resolveTo(result.map(creditCards -> {
+                    if (creditCards == null) {
+                        return new GeckoBundle[0];
+                    }
+
+                    // This is a one-liner with streams (API level 24).
+                    final GeckoBundle[] creditCardBundles =
+                            new GeckoBundle[creditCards.length];
+                    for (int i = 0; i < creditCards.length; ++i) {
+                        creditCardBundles[i] = creditCards[i].toBundle();
+                    }
+
+                    return creditCardBundles;
                 }));
             } else if (SAVE_LOGIN_EVENT.equals(event)) {
                 final GeckoBundle loginBundle = message.getBundle("login");

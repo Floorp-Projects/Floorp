@@ -119,6 +119,8 @@ browser.jar:
         content/browser/newInstall.js                 (content/newInstall.js)
         content/browser/newInstallPage.html           (content/newInstallPage.html)
         content/browser/newInstallPage.js             (content/newInstallPage.js)
+        content/browser/upgradeDialog.html            (content/upgradeDialog.html)
+        content/browser/upgradeDialog.js              (content/upgradeDialog.js)
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/aboutNetError.xhtml
 

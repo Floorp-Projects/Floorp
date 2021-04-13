@@ -84,3 +84,17 @@ pref("toolkit.autocomplete.delegate", true);
 // Android doesn't support the new sync storage yet, we will have our own in
 // Bug 1625257.
 pref("webextensions.storage.sync.kinto", true);
+
+// This value is derived from the calculation:
+// MOZ_ANDROID_CONTENT_SERVICE_COUNT - dom.ipc.processCount
+// (dom.ipc.processCount is set in GeckoRuntimeSettings.java)
+#ifdef NIGHTLY_BUILD
+  pref("dom.ipc.processCount.webCOOP+COEP", 38);
+#endif
+
+// Form autofill prefs.
+pref("extensions.formautofill.addresses.capture.enabled", true);
+
+// Debug prefs.
+pref("browser.formfill.debug", false);
+pref("extensions.formautofill.loglevel", "Warn");

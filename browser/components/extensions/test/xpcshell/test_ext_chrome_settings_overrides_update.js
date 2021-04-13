@@ -35,6 +35,12 @@ async function setupRemoteSettings() {
   ]);
 }
 
+function promisePrefChanged(expectedValue) {
+  return TestUtils.waitForPrefChange("browser.startup.homepage", value =>
+    value.endsWith(expectedValue)
+  );
+}
+
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
   await setupRemoteSettings();
@@ -49,19 +55,6 @@ add_task(async function test_overrides_update_removal() {
 
   const EXTENSION_ID = "test_overrides_update@tests.mozilla.org";
   const HOMEPAGE_URI = "webext-homepage-1.html";
-
-  const HOMEPAGE_URL_PREF = "browser.startup.homepage";
-
-  function promisePrefChanged(value) {
-    return new Promise((resolve, reject) => {
-      Services.prefs.addObserver(HOMEPAGE_URL_PREF, function observer() {
-        if (HomePage.get().endsWith(value)) {
-          Services.prefs.removeObserver(HOMEPAGE_URL_PREF, observer);
-          resolve();
-        }
-      });
-    });
-  }
 
   let extensionInfo = {
     useAddonManager: "permanent",
@@ -203,18 +196,19 @@ add_task(async function test_overrides_update_adding() {
     },
   };
 
+  let prefPromise = promisePrefChanged(HOMEPAGE_URI);
   await extension.upgrade(extensionInfo);
   await AddonTestUtils.waitForSearchProviderStartup(extension);
+  await prefPromise;
 
   equal(
     extension.version,
     "2.0",
     "The updated addon has the expected version."
   );
-  equal(
-    HomePage.get(),
-    defaultHomepageURL,
-    "Home page url is not overridden by the extension during upgrade."
+  ok(
+    HomePage.get().endsWith(HOMEPAGE_URI),
+    "Home page url is overridden by the extension during upgrade."
   );
   // An upgraded extension adding a search engine cannot override
   // the default engine.
@@ -222,6 +216,73 @@ add_task(async function test_overrides_update_adding() {
     (await Services.search.getDefault()).name,
     defaultEngineName,
     "Default engine is still the default after startup."
+  );
+
+  await extension.unload();
+});
+
+add_task(async function test_overrides_update_homepage_change() {
+  /* This tests the scenario where an addon changes
+   * a homepage url when upgrading. */
+
+  const EXTENSION_ID = "test_overrides_update@tests.mozilla.org";
+  const HOMEPAGE_URI = "webext-homepage-1.html";
+  const HOMEPAGE_URI_2 = "webext-homepage-2.html";
+
+  let extensionInfo = {
+    useAddonManager: "permanent",
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: EXTENSION_ID,
+        },
+      },
+      chrome_settings_overrides: {
+        homepage: HOMEPAGE_URI,
+      },
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionInfo);
+
+  let prefPromise = promisePrefChanged(HOMEPAGE_URI);
+  await extension.startup();
+  await prefPromise;
+
+  equal(
+    extension.version,
+    "1.0",
+    "The installed addon has the expected version."
+  );
+  ok(
+    HomePage.get().endsWith(HOMEPAGE_URI),
+    "Home page url is the extension url after startup."
+  );
+
+  extensionInfo.manifest = {
+    version: "2.0",
+    applications: {
+      gecko: {
+        id: EXTENSION_ID,
+      },
+    },
+    chrome_settings_overrides: {
+      homepage: HOMEPAGE_URI_2,
+    },
+  };
+
+  prefPromise = promisePrefChanged(HOMEPAGE_URI_2);
+  await extension.upgrade(extensionInfo);
+  await prefPromise;
+
+  equal(
+    extension.version,
+    "2.0",
+    "The updated addon has the expected version."
+  );
+  ok(
+    HomePage.get().endsWith(HOMEPAGE_URI_2),
+    "Home page url is by the extension after upgrade."
   );
 
   await extension.unload();

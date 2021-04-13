@@ -38,6 +38,7 @@
   --urlbar-box-active-bgcolor: color-mix(in srgb, var(--urlbar-box-bgcolor), currentColor 21%);
 
   --urlbar-min-height: 32px;
+  --urlbar-icon-fill-opacity: 1;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
   --urlbar-separator-color: var(--panel-separator-color);
   --urlbar-popup-url-color: -moz-nativehyperlinktext;
@@ -53,6 +54,7 @@
     --focus-outline-width: 0;
     --identity-box-margin-inline: 3px;
     --identity-box-label-opacity: .6;
+    --urlbar-icon-fill-opacity: .6;
   }
 } /*** END !proton ***/
 

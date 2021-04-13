@@ -121,7 +121,17 @@ dialog[subdialog] {
 }
 
 #commonDialog[subdialog] label {
-  margin: 4px;
+  margin: 4px; /* Labels for input boxes should get block as well as the regular inline margin. */
+}
+
+#commonDialog[subdialog] .checkbox-label {
+  /* The checkbox already has the horizontal margin, so override the rule
+   * above. */
+  margin: 0;
+}
+
+#commonDialog[subdialog] .checkbox-check {
+  margin-block: 0;
 }
 
 #commonDialog[subdialog] input {
@@ -136,5 +146,14 @@ dialog[subdialog] .dialogRow {
 /* Start-align labels: */
 #loginLabel, #password1Label {
   text-align: start;
+}
+
+/* Fix spacing in the `prompt()` case: */
+#loginLabel[value=""] {
+  display: none;
+}
+
+dialog[subdialog][windowtype="prompt:prompt"] #infoRow {
+  margin-bottom: 4px;
 }
 }

@@ -65,6 +65,10 @@ const MANIFEST = {
   "password-autocomplete": {
     description: "A special autocomplete UI for password fields.",
   },
+  upgradeDialog: {
+    description: "The dialog shown for major upgrades",
+    enabledFallbackPref: "browser.startup.upgradeDialog.enabled",
+  },
 };
 
 function isBooleanValueDefined(value) {

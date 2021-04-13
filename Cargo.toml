@@ -85,7 +85,7 @@ spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu5" }
 # failure's backtrace feature might break our builds, see bug 1608157.
 failure = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
 failure_derive = { git = "https://github.com/badboy/failure", rev = "64af847bc5fdcb6d2438bec8a6030812a80519a5" }
-minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "01c7a0da8d34059f7dae8ab9e7512529ff16347a" }
+minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "667c38bf1d9a8ea0c2c0a219d13006a39847b3f2" }
 xmldecl = { git = "https://github.com/hsivonen/xmldecl", rev="a74f7df5bf6cb11194fb74daa0c3cf42f326fd90" }
 
 [patch.crates-io.cranelift-codegen]

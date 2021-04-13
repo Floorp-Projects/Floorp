@@ -399,7 +399,13 @@ mochitest-media:
                     (linux.*64|windows10-64)-shippable-qr/opt: ['mozilla-central']
                     linux.*64-(asan|tsan)/opt: ['autoland', 'mozilla-central']
                     default: []
-            fission-webgl-ipc: []
+            fission-webgl-ipc:
+                by-test-platform:
+                    (linux.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
+                    (linux.*64|windows10-64)-qr/opt: ['autoland']
+                    (linux.*64|windows10-64)-shippable-qr/opt: ['mozilla-central']
+                    linux.*64-(asan|tsan)/opt: ['autoland', 'mozilla-central']
+                    default: []
             default:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']

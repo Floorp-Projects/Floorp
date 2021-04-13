@@ -35,6 +35,7 @@ import androidx.annotation.UiThread;
 import androidx.core.view.ViewCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.DisplayCutout;
@@ -913,29 +914,33 @@ public class GeckoView extends FrameLayout {
                 return;
             }
 
-            switch (notification) {
-                case Autofill.Notify.SESSION_STARTED:
-                    // This line seems necessary for auto-fill to work on the initial page.
-                case Autofill.Notify.SESSION_CANCELED:
-                    manager.cancel();
-                    break;
-                case Autofill.Notify.SESSION_COMMITTED:
-                    manager.commit();
-                    break;
-                case Autofill.Notify.NODE_FOCUSED:
-                    manager.notifyViewEntered(
-                        GeckoView.this, node.getId(),
-                        displayRectForId(session, node));
-                    break;
-                case Autofill.Notify.NODE_BLURRED:
-                    manager.notifyViewExited(GeckoView.this, node.getId());
-                    break;
-                case Autofill.Notify.NODE_UPDATED:
-                    manager.notifyValueChanged(
-                            GeckoView.this,
-                            node.getId(),
-                            AutofillValue.forText(node.getValue()));
-                    break;
+            try {
+                switch (notification) {
+                    case Autofill.Notify.SESSION_STARTED:
+                        // This line seems necessary for auto-fill to work on the initial page.
+                    case Autofill.Notify.SESSION_CANCELED:
+                        manager.cancel();
+                        break;
+                    case Autofill.Notify.SESSION_COMMITTED:
+                        manager.commit();
+                        break;
+                    case Autofill.Notify.NODE_FOCUSED:
+                        manager.notifyViewEntered(
+                                GeckoView.this, node.getId(),
+                                displayRectForId(session, node));
+                        break;
+                    case Autofill.Notify.NODE_BLURRED:
+                        manager.notifyViewExited(GeckoView.this, node.getId());
+                        break;
+                    case Autofill.Notify.NODE_UPDATED:
+                        manager.notifyValueChanged(
+                                GeckoView.this,
+                                node.getId(),
+                                AutofillValue.forText(node.getValue()));
+                        break;
+                }
+            } catch (final SecurityException e) {
+                Log.e(LOGTAG, "Failed to call Autofill Manager API: ", e);
             }
         }
     }

@@ -5529,7 +5529,7 @@
 
 # A threshold for Warp to decide whether a function can be inlined.
 # If the size of a function is smaller than this threshold, then it
-# may be inlined. 
+# may be inlined.
 #
 # NOTE: These must match JitOptions defaults.
 - name: javascript.options.inlining_bytecode_max_length
@@ -5678,6 +5678,15 @@
   value: true
 #endif
   mirror: always
+
+#if defined(MOZ_AARCH64)
+# Cranelift->Ion transition.  Temporary switch.  When we land Phase 2
+# of the transition, this switch will disappear altogether.
+- name: javascript.options.wasm_force_ion
+  type: bool
+  value: false
+  mirror: always
+#endif
 
 # SIMD is supported only on x86 and x64, with arm64 support imminent.
 #if defined(ENABLE_WASM_SIMD)
@@ -6733,7 +6742,7 @@
 # Dictates whether or not the forced-colors media query is enabled.
 - name: layout.css.forced-colors.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
