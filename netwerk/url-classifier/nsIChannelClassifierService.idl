@@ -34,16 +34,15 @@ interface nsIUrlClassifierBlockedChannel: nsISupports
 
   readonly attribute AString topLevelUrl;
 
-  // Ask UrlClassifier to unblock the load.
-  // This is similar to allow(), the only difference is that the unblocked channel
-  // is still considered as a tracking channel, so classifier will notify UI
-  // content blocking event for the channel.
-  void unblock();
+  // Unblock the load, but inform the UI that the tracking content will be
+  // replaced with a shim. The unblocked channel is still considered as a
+  // tracking channel. The only difference to allow() is the event sent to the
+  // UI. Calls to replace will only unblock the channel. Callers are responsible
+  // for replacing the tracking content.
+  void replace();
 
-  // Ask UrlClassifier to allow the load.
-  // This is similar to unblock(), the only difference is that the allowed channel
-  // is not considered as a tracking channel anymore. UI will not receive content
-  // blocking event for the channel.
+  // Unblock the load and inform the UI that the channel has been allowed to
+  // load. The unblocked channel is still considered as a tracking channel.
   void allow();
 };
 

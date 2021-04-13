@@ -15,7 +15,7 @@ namespace net {
 
 enum class ChannelBlockDecision {
   Blocked,
-  Unblocked,
+  Replaced,
   Allowed,
 };
 

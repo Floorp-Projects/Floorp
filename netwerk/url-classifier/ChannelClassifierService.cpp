@@ -146,10 +146,10 @@ UrlClassifierBlockedChannel::Allow() {
 }
 
 NS_IMETHODIMP
-UrlClassifierBlockedChannel::Unblock() {
-  UC_LOG(("ChannelClassifierService: unblock channel %p", mChannel.get()));
+UrlClassifierBlockedChannel::Replace() {
+  UC_LOG(("ChannelClassifierService: replace channel %p", mChannel.get()));
 
-  mDecision = ChannelBlockDecision::Unblocked;
+  mDecision = ChannelBlockDecision::Replaced;
   return NS_OK;
 }
 
