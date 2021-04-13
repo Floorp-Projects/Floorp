@@ -48,20 +48,21 @@ h2 {
 
 .perf-toggle-label {
   padding: 7px 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: max-content auto;
   max-width: max-content;
 }
 
 .perf-toggle-text-label {
-  height: 24px; /* checkbox/radio height + their margin-block */
   display: flex;
   align-items: center;
 }
 
 .perf-toggle-description {
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.8;
   color: var(--in-content-deemphasized-text);
+  grid-column: 2;
 }
 
 /* Presets section */
@@ -129,7 +130,7 @@ h2 {
   margin-inline: 0;
 }
 
-.perf-settings-checkbox-label-disabled > .perf-settings-feature-text {
+.perf-settings-checkbox-label-disabled > :not(input) {
   /* The checkboxes already get their opacity set to 0.5 in common.inc.css,
      so only target the text. The descriptions get their text deemphasized,
      so set a value a bit higher than 0.5 to compensate for that. */

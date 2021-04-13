@@ -64,13 +64,10 @@ class Preset extends PureComponent {
         checked: selected,
         onChange: this.onChange,
       }),
-      div(
-        { className: "perf-presets-text" },
-        div({ className: "perf-toggle-text-label" }, labelText),
-        description
-          ? div({ className: "perf-toggle-description" }, description)
-          : null
-      )
+      div({ className: "perf-toggle-text-label" }, labelText),
+      description
+        ? div({ className: "perf-toggle-description" }, description)
+        : null
     );
   }
 }
