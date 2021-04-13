@@ -528,6 +528,14 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   void ExecuteMenu(nsIContent* aMenu, nsXULMenuCommandEvent* aEvent);
 
   /**
+   * If a native menu is open, and aItem is an item in the menu's subtree,
+   * execute the item with the help of the native menu and close the menu.
+   * Returns true if a native menu was open.
+   */
+  bool ActivateNativeMenuItem(nsIContent* aItem, mozilla::Modifiers aModifiers,
+                              mozilla::ErrorResult& aRv);
+
+  /**
    * Return true if the popup for the supplied content node is open.
    */
   bool IsPopupOpen(nsIContent* aPopup);
