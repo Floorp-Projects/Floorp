@@ -499,7 +499,7 @@ nsPIDOMWindowInner* RTCRtpReceiver::GetParentObject() const { return mWindow; }
 void RTCRtpReceiver::Shutdown() {
   ASSERT_ON_THREAD(mMainThread);
   if (mPipeline) {
-    mPipeline->Shutdown_m();
+    mPipeline->Shutdown();
     mPipeline->mConduit->SetRtcpEventObserver(nullptr);
     mPipeline = nullptr;
   }
