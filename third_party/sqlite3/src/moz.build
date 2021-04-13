@@ -91,7 +91,11 @@ elif CONFIG['HAVE_64BIT_BUILD']:
 DEFINES['SQLITE_TEMP_FILE_PREFIX'] = '"mz_etilqs_"'
 
 # Enabling sqlite math functions
-DEFINES['SQLITE_ENABLE_MATH_FUNCTIONS']= True
+DEFINES['SQLITE_ENABLE_MATH_FUNCTIONS'] = True
+if CONFIG["OS_TARGET"] == "Linux":
+    OS_LIBS += [
+        "m"
+    ]
 
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
