@@ -45,7 +45,7 @@ class LightweightThemeChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
       // Make sure to update the theme data on first page show.
-      case "pageshow":
+      case "DOMContentLoaded":
         this.update();
         break;
 
