@@ -6,10 +6,6 @@ const baseURL = getRootDirectory(gTestPath).replace(
 const alertURL = `${baseURL}file_bug1682866.html`;
 
 add_task(async function testAlertForceClosed() {
-  SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
-  });
-
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     alertURL,

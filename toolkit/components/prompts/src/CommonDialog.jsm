@@ -310,7 +310,10 @@ CommonDialog.prototype = {
 
     if (!this.hasInputField) {
       let isOSX = "nsILocalFileMac" in Ci;
-      if (isOSX) {
+      // If the infoRow exists and is is hidden, then the infoBody is also hidden,
+      // which means it can't be focused. At that point, we fall back to focusing
+      // the default button, regardless of platform.
+      if (isOSX && !(this.ui.infoRow && this.ui.infoRow.hidden)) {
         this.ui.infoBody.focus();
       } else {
         button.focus({ preventFocusRing: true });

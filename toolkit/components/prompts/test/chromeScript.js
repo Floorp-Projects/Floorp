@@ -14,6 +14,11 @@ var tabSubDialogsEnabled = Services.prefs.getBoolPref(
   false
 );
 
+var contentPromptSubdialogsEnabled = Services.prefs.getBoolPref(
+  "prompts.contentPromptSubDialog",
+  false
+);
+
 // Define these to make EventUtils happy.
 let window = this;
 let parent = {};
@@ -88,7 +93,8 @@ async function handlePrompt(action, modalType, isSelect) {
   let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
 
   if (
-    modalType === Services.prompt.MODAL_TYPE_CONTENT ||
+    (!contentPromptSubdialogsEnabled &&
+      modalType === Services.prompt.MODAL_TYPE_CONTENT) ||
     (!tabSubDialogsEnabled && modalType === Services.prompt.MODAL_TYPE_TAB)
   ) {
     let gBrowser = browserWin.gBrowser;
@@ -156,6 +162,7 @@ function getSelectState(ui) {
 function getPromptState(ui) {
   let state = {};
   state.msg = ui.infoBody.textContent;
+  state.infoRowHidden = ui.infoRow?.hidden || false;
   state.titleHidden = ui.infoTitle.hidden;
   state.textHidden = ui.loginContainer.hidden;
   state.passHidden = ui.password1Container.hidden;

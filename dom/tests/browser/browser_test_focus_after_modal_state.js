@@ -1,23 +1,19 @@
 const TEST_URL =
   "https://example.com/browser/dom/tests/browser/focus_after_prompt.html";
 
-function awaitAndClosePrompt() {
-  return new Promise(resolve => {
-    function onDialogShown(node) {
-      Services.obs.removeObserver(onDialogShown, "tabmodal-dialog-loaded");
-      let button = node.querySelector(".tabmodalprompt-button0");
-      button.click();
-      resolve();
-    }
-    Services.obs.addObserver(onDialogShown, "tabmodal-dialog-loaded");
-  });
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
+
+function awaitAndClosePrompt(browser) {
+  return PromptTestUtils.handleNextPrompt(
+    browser,
+    { modalType: Services.prompt.MODAL_TYPE_CONTENT, promptType: "prompt" },
+    { buttonNumClick: 0 }
+  );
 }
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.contentPromptSubDialog", false]],
-  });
-
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   let browser = tab.linkedBrowser;
 
@@ -55,8 +51,8 @@ add_task(async function() {
 
   // Click on div that triggers a prompt, and then check that focus is back on
   // the editable iframe.
-  let dialogShown = awaitAndClosePrompt();
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  let dialogShown = awaitAndClosePrompt(browser);
+  await SpecialPowers.spawn(browser, [], async function() {
     let div = content.document.getElementById("clickMeDiv");
     div.click();
   });

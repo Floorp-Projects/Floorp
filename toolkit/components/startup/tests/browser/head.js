@@ -3,28 +3,26 @@
 
 "use strict";
 
-SpecialPowers.pushPrefEnv({
-  set: [["prompts.contentPromptSubDialog", false]],
-});
+const { PromptTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromptTestUtils.jsm"
+);
 
 function whenBrowserLoaded(browser, callback) {
   return BrowserTestUtils.browserLoaded(browser).then(callback);
 }
 
 function waitForOnBeforeUnloadDialog(browser, callback) {
-  browser.addEventListener(
-    "DOMWillOpenModalDialog",
-    function onModalDialog(event) {
-      SimpleTest.waitForCondition(
-        () => Services.focus.activeWindow == browser.ownerGlobal,
-        function() {
-          let prompt = browser.tabModalPromptBox.listPrompts()[0];
-          let { button0, button1 } = prompt.ui;
-          callback(button0, button1);
-        },
-        "Waited too long for window with dialog to focus"
-      );
-    },
-    { capture: true, once: true }
-  );
+  PromptTestUtils.waitForPrompt(browser, {
+    modalType: Services.prompt.MODAL_TYPE_CONTENT,
+    promptType: "confirmEx",
+  }).then(dialog => {
+    SimpleTest.waitForCondition(
+      () => Services.focus.activeWindow == browser.ownerGlobal,
+      function() {
+        let { button0, button1 } = dialog.ui;
+        callback(button0, button1);
+      },
+      "Waited too long for window with dialog to focus"
+    );
+  });
 }
