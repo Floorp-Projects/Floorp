@@ -213,10 +213,7 @@ static bool GetBorderColors(GtkStyleContext* aContext, nscolor* aLightColor,
 // from both Highlight, used as focused+selected background, and the listbox
 // background which is assumed to be similar to -moz-field
 nsresult nsLookAndFeel::InitCellHighlightColors() {
-  // NS_SUFFICIENT_LUMINOSITY_DIFFERENCE is the a11y standard for text
-  // on a background. Use 20% of that standard since we have a background
-  // on top of another background
-  int32_t minLuminosityDifference = NS_SUFFICIENT_LUMINOSITY_DIFFERENCE / 5;
+  int32_t minLuminosityDifference = NS_SUFFICIENT_LUMINOSITY_DIFFERENCE_BG;
   int32_t backLuminosityDifference =
       NS_LUMINOSITY_DIFFERENCE(mMozWindowBackground, mFieldBackground);
   if (backLuminosityDifference >= minLuminosityDifference) {
