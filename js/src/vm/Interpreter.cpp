@@ -5051,6 +5051,14 @@ JSObject* js::NewObjectOperationWithTemplate(JSContext* cx,
   return CopyTemplateObject(cx, templateObject.as<PlainObject>(), newKind);
 }
 
+JSObject* js::NewPlainObject(JSContext* cx, HandleShape shape,
+                             gc::AllocKind allocKind,
+                             gc::InitialHeap initialHeap) {
+  MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
+  auto r = NativeObject::create(cx, allocKind, initialHeap, shape);
+  return cx->resultToPtr(r);
+}
+
 JSObject* js::CreateThisWithTemplate(JSContext* cx,
                                      HandleObject templateObject) {
   mozilla::Maybe<AutoRealm> ar;

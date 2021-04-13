@@ -6106,24 +6106,37 @@ bool CacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
                                                gc::AllocKind allocKind,
                                                uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
+  AutoCallVM callvm(masm, this, allocator);
   AutoScratchRegister obj(allocator, masm);
   AutoScratchRegister scratch(allocator, masm);
-  AutoScratchRegisterMaybeOutput shape(allocator, masm, output);
+  AutoScratchRegisterMaybeOutput shape(allocator, masm, callvm.output());
 
   StubFieldOffset shapeSlot(shapeOffset, StubField::Type::Shape);
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
+  Label success;
+  Label fail;
 
   emitLoadStubField(shapeSlot, shape);
   masm.createPlainGCObject(obj, shape, scratch, shape, numFixedSlots,
-                           numDynamicSlots, allocKind, gc::DefaultHeap,
-                           failure->label());
+                           numDynamicSlots, allocKind, gc::DefaultHeap, &fail);
+  masm.tagValue(JSVAL_TYPE_OBJECT, obj, callvm.output().valueReg());
+  masm.jump(&success);
 
-  masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+  masm.bind(&fail);
+
+  // We get here if the nursery is full (unlikely) but also if the current arena
+  // is full and we need to allocate a new one (fairly common).
+
+  callvm.prepare();
+  masm.Push(Imm32(gc::DefaultHeap));
+  masm.Push(Imm32(int32_t(allocKind)));
+  masm.Push(shape);
+
+  using Fn =
+      JSObject* (*)(JSContext*, HandleShape, gc::AllocKind, gc::InitialHeap);
+  callvm.call<Fn, NewPlainObject>();
+
+  masm.bind(&success);
   return true;
 }
 

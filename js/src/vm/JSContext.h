@@ -422,7 +422,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   }
 
   template <typename V, typename E>
-  V* resultToPtr(const JS::Result<V*, E>& result) {
+  V* resultToPtr(JS::Result<V*, E>& result) {
     return result.isOk() ? result.unwrap() : nullptr;
   }
 
