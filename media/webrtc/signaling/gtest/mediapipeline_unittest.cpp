@@ -70,38 +70,21 @@ class FakeAudioTrack : public ProcessedMediaTrack {
   FakeAudioTrack()
       : ProcessedMediaTrack(44100, MediaSegment::AUDIO, nullptr),
         mMutex("Fake AudioTrack") {
-    Resume();
-  }
-
-  void Destroy() override {
-    MOZ_ASSERT(!mMainThreadDestroyed);
-    mMainThreadDestroyed = true;
-    Suspend();
-  }
-
-  void QueueSetAutoend(bool) override {}
-
-  void Suspend() override {
-    MutexAutoLock lock(mMutex);
-    if (mSuspended) {
-      return;
-    }
-    mSuspended = true;
-    mTimer->Cancel();
-    mTimer = nullptr;
-  }
-
-  void Resume() override {
-    MutexAutoLock lock(mMutex);
-    if (!mSuspended) {
-      return;
-    }
-    mSuspended = false;
     NS_NewTimerWithFuncCallback(
         getter_AddRefs(mTimer), FakeAudioTrackGenerateData, this, 20,
         nsITimer::TYPE_REPEATING_SLACK,
         "FakeAudioTrack::FakeAudioTrackGenerateData", test_utils->sts_target());
   }
+
+  void Destroy() override {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(!mMainThreadDestroyed);
+    mMainThreadDestroyed = true;
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+
+  void QueueSetAutoend(bool) override {}
 
   void AddListener(MediaTrackListener* aListener) override {
     MutexAutoLock lock(mMutex);
@@ -124,7 +107,6 @@ class FakeAudioTrack : public ProcessedMediaTrack {
  private:
   Mutex mMutex;
   MediaTrackListener* mListener = nullptr;
-  bool mSuspended = true;
   nsCOMPtr<nsITimer> mTimer;
   int mCount = 0;
 
@@ -133,10 +115,9 @@ class FakeAudioTrack : public ProcessedMediaTrack {
   static void FakeAudioTrackGenerateData(nsITimer* timer, void* closure) {
     auto t = static_cast<FakeAudioTrack*>(closure);
     MutexAutoLock lock(t->mMutex);
-    if (t->mSuspended) {
+    if (t->mMainThreadDestroyed) {
       return;
     }
-
     CheckedInt<size_t> bufferSize(sizeof(int16_t));
     bufferSize *= NUM_CHANNELS;
     bufferSize *= AUDIO_BUFFER_SIZE;
@@ -312,20 +293,30 @@ class TestAgent {
   void Stop() {
     MOZ_MTLOG(ML_DEBUG, "Stopping");
 
-    if (audio_pipeline_) audio_pipeline_->Stop();
+    if (audio_pipeline_) {
+      audio_pipeline_->Stop();
+    }
+    if (audio_conduit_) {
+      audio_conduit_->StopTransmitting();
+      audio_conduit_->StopReceiving();
+    }
   }
 
   void Shutdown_s() { transport_->Shutdown(); }
 
   void Shutdown() {
     if (audio_pipeline_) {
-      audio_pipeline_->Shutdown_m();
+      audio_pipeline_->Shutdown();
     }
     if (audio_conduit_) {
       audio_conduit_->DeleteStreams();
     }
     if (call_) {
       call_->Destroy();
+    }
+    if (audio_track_) {
+      audio_track_->Destroy();
+      audio_track_ = nullptr;
     }
 
     test_utils->sts_target()->Dispatch(
@@ -390,11 +381,12 @@ class TestAgentSend : public TestAgent {
     std::string test_pc;
 
     RefPtr<MediaPipelineTransmit> audio_pipeline = new MediaPipelineTransmit(
-        test_pc, transport_, nullptr, test_utils->sts_target(), false,
-        audio_conduit_);
+        test_pc, transport_, GetMainThreadSerialEventTarget(),
+        test_utils->sts_target(), false, audio_conduit_);
 
-    audio_pipeline->SetSendTrack(audio_track_);
+    audio_pipeline->SetSendTrackOverride(audio_track_);
     audio_pipeline->Start();
+    audio_conduit_->StartTransmitting();
 
     audio_pipeline_ = audio_pipeline;
 
@@ -424,11 +416,13 @@ class TestAgentReceive : public TestAgent {
     std::string test_pc;
 
     audio_pipeline_ = new MediaPipelineReceiveAudio(
-        test_pc, transport_, nullptr, test_utils->sts_target(),
+        test_pc, transport_, GetMainThreadSerialEventTarget(),
+        test_utils->sts_target(),
         static_cast<AudioSessionConduit*>(audio_conduit_.get()), nullptr,
         PRINCIPAL_HANDLE_NONE);
 
     audio_pipeline_->Start();
+    audio_conduit_->StartReceiving();
 
     audio_pipeline_->UpdateTransport_m(aTransportId, std::move(bundle_filter_));
   }
