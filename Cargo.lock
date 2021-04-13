@@ -572,7 +572,7 @@ checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 [[package]]
 name = "chardetng"
 version = "0.1.9"
-source = "git+https://github.com/hsivonen/chardetng?rev=fd4ed671ef495af4dcda4c4cba3ef8d426db8af1#fd4ed671ef495af4dcda4c4cba3ef8d426db8af1"
+source = "git+https://github.com/hsivonen/chardetng?rev=39f95e2f7cd6e632a379cdeee62c68e8cedd7810#39f95e2f7cd6e632a379cdeee62c68e8cedd7810"
 dependencies = [
  "encoding_rs",
  "memchr",
