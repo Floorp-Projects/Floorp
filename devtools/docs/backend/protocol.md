@@ -709,14 +709,6 @@ This indicates that the tab has begun navigating to *newURL*; JavaScript executi
 
 where *newURL* and *newTitle* are the URL and title of the page the tab is now showing. The *tabThreadActor* given in the response to the original `"attach"` packet is now debugging the new page's code.
 
-If the user closes a tab to which the client is attached, its *targetActor* sends a notification packet of the form:
-
-```
-{ "from":<targetActor>, "type":"tabDetached" }
-```
-
-The client is now detached from the tab.
-
 ### Chrome Debugging
 
 If the server supports debugging chrome code, the root actor's reply to a `"listTabs"` request includes a property named `"chromeDebugger"`, whose value is the name of a thread-like actor to which the client can attach to debug chrome code.
