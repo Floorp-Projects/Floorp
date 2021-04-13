@@ -55,9 +55,9 @@ nsMappedAttributes::nsMappedAttributes(const nsMappedAttributes& aCopy)
   MOZ_ASSERT(mBufferSize >= aCopy.mAttrCount, "can't fit attributes");
   MOZ_ASSERT(mRefCnt == 0);  // Ensure caching works as expected.
 
-  uint32_t i;
-  for (i = 0; i < mAttrCount; ++i) {
-    new (&Attrs()[i]) InternalAttr(aCopy.Attrs()[i]);
+  uint32_t i = 0;
+  for (const InternalAttr& attr : aCopy.Attrs()) {
+    new (&mBuffer[i++]) InternalAttr(attr);
   }
 }
 
@@ -66,9 +66,8 @@ nsMappedAttributes::~nsMappedAttributes() {
     mSheet->DropMappedAttributes(this);
   }
 
-  uint32_t i;
-  for (i = 0; i < mAttrCount; ++i) {
-    Attrs()[i].~InternalAttr();
+  for (InternalAttr& attr : Attrs()) {
+    attr.~InternalAttr();
   }
 }
 
@@ -82,14 +81,6 @@ nsMappedAttributes* nsMappedAttributes::Clone(bool aWillAddAttr) {
 void* nsMappedAttributes::operator new(size_t aSize,
                                        uint32_t aAttrCount) noexcept(true) {
   size_t size = aSize + aAttrCount * sizeof(InternalAttr);
-
-  // aSize will include the mAttrs buffer so subtract that.
-  // We don't want to under-allocate, however, so do not subtract
-  // if we have zero attributes. The zero attribute case only happens
-  // for <body>'s mapped attributes
-  if (aAttrCount != 0) {
-    size -= sizeof(void* [1]);
-  }
 
   if (sCachedMappedAttributeAllocations) {
     void* cached = sCachedMappedAttributeAllocations->SafeElementAt(aAttrCount);
@@ -139,9 +130,9 @@ void nsMappedAttributes::SetAndSwapAttr(nsAtom* aAttrName, nsAttrValue& aValue,
   MOZ_ASSERT(aAttrName, "null name");
   *aValueWasSet = false;
   uint32_t i;
-  for (i = 0; i < mAttrCount && !Attrs()[i].mName.IsSmaller(aAttrName); ++i) {
-    if (Attrs()[i].mName.Equals(aAttrName)) {
-      Attrs()[i].mValue.SwapValueWith(aValue);
+  for (i = 0; i < mAttrCount && !mBuffer[i].mName.IsSmaller(aAttrName); ++i) {
+    if (mBuffer[i].mName.Equals(aAttrName)) {
+      mBuffer[i].mValue.SwapValueWith(aValue);
       *aValueWasSet = true;
       return;
     }
@@ -150,36 +141,33 @@ void nsMappedAttributes::SetAndSwapAttr(nsAtom* aAttrName, nsAttrValue& aValue,
   MOZ_ASSERT(mBufferSize >= mAttrCount + 1, "can't fit attributes");
 
   if (mAttrCount != i) {
-    memmove(&Attrs()[i + 1], &Attrs()[i],
+    memmove(&mBuffer[i + 1], &mBuffer[i],
             (mAttrCount - i) * sizeof(InternalAttr));
   }
 
-  new (&Attrs()[i].mName) nsAttrName(aAttrName);
-  new (&Attrs()[i].mValue) nsAttrValue();
-  Attrs()[i].mValue.SwapValueWith(aValue);
+  new (&mBuffer[i].mName) nsAttrName(aAttrName);
+  new (&mBuffer[i].mValue) nsAttrValue();
+  mBuffer[i].mValue.SwapValueWith(aValue);
   ++mAttrCount;
 }
 
 const nsAttrValue* nsMappedAttributes::GetAttr(const nsAtom* aAttrName) const {
   MOZ_ASSERT(aAttrName, "null name");
-
-  for (uint32_t i = 0; i < mAttrCount; ++i) {
-    if (Attrs()[i].mName.Equals(aAttrName)) {
-      return &Attrs()[i].mValue;
+  for (const InternalAttr& attr : Attrs()) {
+    if (attr.mName.Equals(aAttrName)) {
+      return &attr.mValue;
     }
   }
-
   return nullptr;
 }
 
 const nsAttrValue* nsMappedAttributes::GetAttr(
     const nsAString& aAttrName) const {
-  for (uint32_t i = 0; i < mAttrCount; ++i) {
-    if (Attrs()[i].mName.Atom()->Equals(aAttrName)) {
-      return &Attrs()[i].mValue;
+  for (const InternalAttr& attr : Attrs()) {
+    if (attr.mName.Atom()->Equals(aAttrName)) {
+      return &attr.mValue;
     }
   }
-
   return nullptr;
 }
 
@@ -194,8 +182,8 @@ bool nsMappedAttributes::Equals(const nsMappedAttributes* aOther) const {
 
   uint32_t i;
   for (i = 0; i < mAttrCount; ++i) {
-    if (!Attrs()[i].mName.Equals(aOther->Attrs()[i].mName) ||
-        !Attrs()[i].mValue.Equals(aOther->Attrs()[i].mValue)) {
+    if (!mBuffer[i].mName.Equals(aOther->mBuffer[i].mName) ||
+        !mBuffer[i].mValue.Equals(aOther->mBuffer[i].mValue)) {
       return false;
     }
   }
@@ -205,13 +193,9 @@ bool nsMappedAttributes::Equals(const nsMappedAttributes* aOther) const {
 
 PLDHashNumber nsMappedAttributes::HashValue() const {
   PLDHashNumber hash = HashGeneric(mRuleMapper);
-
-  uint32_t i;
-  for (i = 0; i < mAttrCount; ++i) {
-    hash = AddToHash(hash, Attrs()[i].mName.HashValue(),
-                     Attrs()[i].mValue.HashValue());
+  for (const InternalAttr& attr : Attrs()) {
+    hash = AddToHash(hash, attr.mName.HashValue(), attr.mValue.HashValue());
   }
-
   return hash;
 }
 
@@ -223,24 +207,23 @@ void nsMappedAttributes::SetStyleSheet(nsHTMLStyleSheet* aSheet) {
 }
 
 void nsMappedAttributes::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue) {
-  Attrs()[aPos].mValue.SwapValueWith(aValue);
-  Attrs()[aPos].~InternalAttr();
-  memmove(&Attrs()[aPos], &Attrs()[aPos + 1],
+  mBuffer[aPos].mValue.SwapValueWith(aValue);
+  mBuffer[aPos].~InternalAttr();
+  memmove(&mBuffer[aPos], &mBuffer[aPos + 1],
           (mAttrCount - aPos - 1) * sizeof(InternalAttr));
   mAttrCount--;
 }
 
 const nsAttrName* nsMappedAttributes::GetExistingAttrNameFromQName(
     const nsAString& aName) const {
-  uint32_t i;
-  for (i = 0; i < mAttrCount; ++i) {
-    if (Attrs()[i].mName.IsAtom()) {
-      if (Attrs()[i].mName.Atom()->Equals(aName)) {
-        return &Attrs()[i].mName;
+  for (const InternalAttr& attr : Attrs()) {
+    if (attr.mName.IsAtom()) {
+      if (attr.mName.Atom()->Equals(aName)) {
+        return &attr.mName;
       }
     } else {
-      if (Attrs()[i].mName.NodeInfo()->QualifiedNameEquals(aName)) {
-        return &Attrs()[i].mName;
+      if (attr.mName.NodeInfo()->QualifiedNameEquals(aName)) {
+        return &attr.mName;
       }
     }
   }
@@ -249,13 +232,11 @@ const nsAttrName* nsMappedAttributes::GetExistingAttrNameFromQName(
 }
 
 int32_t nsMappedAttributes::IndexOfAttr(const nsAtom* aLocalName) const {
-  uint32_t i;
-  for (i = 0; i < mAttrCount; ++i) {
-    if (Attrs()[i].mName.Equals(aLocalName)) {
+  for (uint32_t i = 0; i < mAttrCount; ++i) {
+    if (mBuffer[i].mName.Equals(aLocalName)) {
       return i;
     }
   }
-
   return -1;
 }
 
@@ -264,8 +245,8 @@ size_t nsMappedAttributes::SizeOfIncludingThis(
   MOZ_ASSERT(mBufferSize >= mAttrCount, "can't fit attributes");
 
   size_t n = aMallocSizeOf(this);
-  for (uint16_t i = 0; i < mAttrCount; ++i) {
-    n += Attrs()[i].mValue.SizeOfExcludingThis(aMallocSizeOf);
+  for (const InternalAttr& attr : Attrs()) {
+    n += attr.mValue.SizeOfExcludingThis(aMallocSizeOf);
   }
   return n;
 }
