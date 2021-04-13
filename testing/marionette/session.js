@@ -527,9 +527,6 @@ class Capabilities extends Map {
       ["strictFileInteractability", false],
       ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
 
-      // features
-      ["rotatable", AppInfo.isAndroid],
-
       // proprietary
       ["moz:accessibilityChecks", false],
       ["moz:buildID", AppInfo.appBuildID],
