@@ -34,6 +34,7 @@ class NativeMenuMac : public NativeMenu,
   void ActivateItem(dom::Element* aItemElement, Modifiers aModifiers,
                     ErrorResult& aRv) override;
   void OpenSubmenu(dom::Element* aMenuElement) override;
+  void CloseSubmenu(dom::Element* aMenuElement) override;
   RefPtr<dom::Element> Element() override;
   void AddObserver(NativeMenu::Observer* aObserver) override {
     mObservers.AppendElement(aObserver);
