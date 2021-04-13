@@ -50,8 +50,8 @@ WebSocketDebuggerTransport.prototype = {
     this.socket = null;
 
     if (this.hooks) {
-      if (this.hooks.onClosed) {
-        this.hooks.onClosed();
+      if (this.hooks.onTransportClosed) {
+        this.hooks.onTransportClosed();
       }
       this.hooks = null;
     }

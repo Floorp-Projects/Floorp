@@ -588,7 +588,7 @@ DevToolsClient.prototype = {
    *        The status code that corresponds to the reason for closing
    *        the stream.
    */
-  onClosed() {
+  onTransportClosed() {
     if (this._closed) {
       return;
     }

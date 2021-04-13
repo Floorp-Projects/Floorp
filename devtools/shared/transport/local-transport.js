@@ -166,8 +166,8 @@ LocalDebuggerTransport.prototype = {
     }
     if (this.hooks) {
       try {
-        if (this.hooks.onClosed) {
-          this.hooks.onClosed();
+        if (this.hooks.onTransportClosed) {
+          this.hooks.onTransportClosed();
         }
       } catch (ex) {
         console.error(ex);

@@ -142,13 +142,13 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
         );
         transport.ready();
         transport.hooks = {
-          onClosed: () => {
+          onTransportClosed: () => {
             if (DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
               // If the worker happens to be shutting down while we are trying
               // to close the connection, there is a small interval during
               // which no more runnables can be dispatched to the worker, but
               // the worker debugger has not yet been closed. In that case,
-              // the call to postMessage below will fail. The onClosed hook on
+              // the call to postMessage below will fail. The onTransportClosed hook on
               // DebuggerTransport is not supposed to throw exceptions, so we
               // need to make sure to catch these early.
               try {

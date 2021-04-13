@@ -143,7 +143,7 @@ class DevToolsWorkerParent extends JSWindowActorParent {
       const transport = new JsWindowActorTransport(this, forwardingPrefix);
       transport.hooks = {
         onPacket: connection.send.bind(connection),
-        onClosed() {},
+        onTransportClosed() {},
       };
       transport.ready();
 
