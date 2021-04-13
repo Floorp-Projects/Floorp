@@ -29,7 +29,7 @@ jobs:
           path: beta
           ref: "releases_v${{ steps.fenix-beta-version.outputs.fenix-beta-version }}.0.0"
       - name: "Sync Strings"
-        uses: mozilla-mobile/sync-strings-action@1.0.0
+        uses: mozilla-mobile/sync-strings-action@1.0.1
         with:
           src: main
           dst: beta
