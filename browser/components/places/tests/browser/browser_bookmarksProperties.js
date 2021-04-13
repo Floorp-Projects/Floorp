@@ -35,11 +35,6 @@ const DIALOG_URL = "chrome://browser/content/places/bookmarkProperties.xhtml";
 const DIALOG_URL_MINIMAL_UI =
   "chrome://browser/content/places/bookmarkProperties2.xhtml";
 
-const { BrowserWindowTracker } = ChromeUtils.import(
-  "resource:///modules/BrowserWindowTracker.jsm"
-);
-var win = BrowserWindowTracker.getTopWindow();
-
 function add_bookmark(url) {
   return PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -314,6 +309,7 @@ gTests.push({
   desc:
     " Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog",
   sidebar: SIDEBAR_HISTORY_ID,
+  dialogUrl: DIALOG_URL_MINIMAL_UI,
   action: ACTION_ADD,
   historyView: SIDEBAR_HISTORY_BYLASTVISITED_VIEW,
   window: null,
@@ -473,6 +469,23 @@ function execute_test_in_sidebar(test) {
   });
 }
 
+async function promise_properties_window(dialogUrl = DIALOG_URL) {
+  let protonModal = Services.prefs.getBoolPref(
+    "browser.proton.modals.enabled",
+    false
+  );
+  let win = await BrowserTestUtils.promiseAlertDialogOpen(null, dialogUrl, {
+    isSubDialog: protonModal,
+  });
+  await SimpleTest.promiseFocus(win);
+  await TestUtils.waitForCondition(
+    () => win.gEditItemOverlay.initialized,
+    "EditItemOverlay is initialized"
+  );
+  await new Promise(executeSoon);
+  return win;
+}
+
 async function open_properties_dialog(test) {
   var sidebar = document.getElementById("sidebar");
 
@@ -502,28 +515,6 @@ async function open_properties_dialog(test) {
   );
 
   return new Promise(resolve => {
-    // Wait for the Properties dialog.
-    function windowObserver(observerWindow, aTopic, aData) {
-      if (aTopic != "domwindowopened") {
-        return;
-      }
-      Services.ww.unregisterNotification(windowObserver);
-      waitForFocus(async () => {
-        // Ensure overlay is loaded
-        await BrowserTestUtils.waitForCondition(
-          () => observerWindow.gEditItemOverlay.initialized,
-          "EditItemOverlay is initialized"
-        );
-        test.window = observerWindow;
-        try {
-          executeSoon(resolve);
-        } catch (ex) {
-          Assert.ok(false, "An error occured during test run: " + ex.message);
-        }
-      }, observerWindow);
-    }
-    Services.ww.registerNotification(windowObserver);
-
     var command = null;
     switch (test.action) {
       case ACTION_EDIT:
@@ -554,6 +545,10 @@ async function open_properties_dialog(test) {
       " command '" + command + "' on current selected node is enabled"
     );
 
+    promise_properties_window(test.dialogUrl).then(win => {
+      test.window = win;
+      resolve();
+    });
     // This will open the dialog. For some reason this needs to be executed
     // later, as otherwise opening the dialog throws an exception.
     executeSoon(() => {

@@ -154,10 +154,19 @@ async function testPlacesPanel(testInfo) {
 
 function promiseAlertDialogObserved() {
   return new Promise(resolve => {
-    function observer(subject) {
+    async function observer(subject) {
       info("alert dialog observed as expected");
       Services.obs.removeObserver(observer, "common-dialog-loaded");
       Services.obs.removeObserver(observer, "tabmodal-dialog-loaded");
+
+      // Work around https://bugzilla.mozilla.org/show_bug.cgi?id=1699844 by
+      // waiting before closing this prompt:
+      await (async function() {
+        let rAFCount = 3;
+        while (rAFCount--) {
+          await new Promise(requestAnimationFrame);
+        }
+      })();
 
       if (subject.Dialog) {
         subject.Dialog.ui.button0.click();
