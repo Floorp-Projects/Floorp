@@ -130,7 +130,7 @@ async function openContextMenu(contextMenu, target) {
   await BrowserTestUtils.waitForPopupEvent(contextMenu, "shown");
   let bookmarksToolbarMenu = document.querySelector("#toggle_PersonalToolbar");
   let subMenu = bookmarksToolbarMenu.querySelector("menupopup");
-  EventUtils.synthesizeMouseAtCenter(bookmarksToolbarMenu, {});
+  bookmarksToolbarMenu.openMenu(true);
   await BrowserTestUtils.waitForPopupEvent(subMenu, "shown");
 }
 
