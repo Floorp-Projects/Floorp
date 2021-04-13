@@ -1690,12 +1690,13 @@ pref("media.gmp-provider.enabled", true);
 #ifdef NIGHTLY_BUILD
 // Enable Dynamic First-Party Isolation in Nightly.
 pref("network.cookie.cookieBehavior", 5 /* BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN */);
-pref("network.cookie.cookieBehavior.pbmode", 5 /* BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN */);
 #else
 // Enable blocking access to storage from tracking resources by default.
 pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
-pref("network.cookie.cookieBehavior.pbmode", 4 /* BEHAVIOR_REJECT_TRACKER */);
 #endif
+
+// Enable Dynamic First-Party Isolation in the private browsing mode.
+pref("network.cookie.cookieBehavior.pbmode", 5 /* BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN */);
 
 // Enable fingerprinting blocking by default for all channels, only on desktop.
 pref("privacy.trackingprotection.fingerprinting.enabled", true);
