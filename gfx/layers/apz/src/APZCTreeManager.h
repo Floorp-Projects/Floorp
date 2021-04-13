@@ -63,6 +63,7 @@ class SampleTime;
 class WebRenderScrollDataWrapper;
 struct AncestorTransform;
 struct ScrollThumbData;
+struct ZoomTarget;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -224,7 +225,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * up. |aRect| must be given in CSS pixels, relative to the document.
    * |aFlags| is a combination of the ZoomToRectBehavior enum values.
    */
-  void ZoomToRect(const ScrollableLayerGuid& aGuid, const CSSRect& aRect,
+  void ZoomToRect(const ScrollableLayerGuid& aGuid,
+                  const ZoomTarget& aZoomTarget,
                   const uint32_t aFlags = DEFAULT_BEHAVIOR) override;
 
   /**

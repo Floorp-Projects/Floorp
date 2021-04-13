@@ -138,18 +138,18 @@ void ChromeProcessController::HandleDoubleTap(
     return;
   }
 
-  CSSRect zoomToRect = CalculateRectToZoomTo(document, aPoint);
+  ZoomTarget zoomTarget = CalculateRectToZoomTo(document, aPoint);
 
   uint32_t presShellId;
   ScrollableLayerGuid::ViewID viewId;
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
           document->GetDocumentElement(), &presShellId, &viewId)) {
     APZThreadUtils::RunOnControllerThread(
-        NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
+        NewRunnableMethod<ScrollableLayerGuid, ZoomTarget, uint32_t>(
             "IAPZCTreeManager::ZoomToRect", mAPZCTreeManager,
             &IAPZCTreeManager::ZoomToRect,
             ScrollableLayerGuid(aGuid.mLayersId, presShellId, viewId),
-            zoomToRect, ZoomToRectBehavior::DEFAULT_BEHAVIOR));
+            zoomTarget, ZoomToRectBehavior::DEFAULT_BEHAVIOR));
   }
 }
 

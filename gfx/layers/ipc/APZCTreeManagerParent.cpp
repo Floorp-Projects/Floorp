@@ -46,7 +46,7 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetKeyboardMap(
 }
 
 mozilla::ipc::IPCResult APZCTreeManagerParent::RecvZoomToRect(
-    const ScrollableLayerGuid& aGuid, const CSSRect& aRect,
+    const ScrollableLayerGuid& aGuid, const ZoomTarget& aZoomTarget,
     const uint32_t& aFlags) {
   if (!IsGuidValid(aGuid)) {
     return IPC_FAIL_NO_REASON(this);
@@ -54,9 +54,9 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvZoomToRect(
 
   mUpdater->RunOnControllerThread(
       aGuid.mLayersId,
-      NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
+      NewRunnableMethod<ScrollableLayerGuid, ZoomTarget, uint32_t>(
           "layers::IAPZCTreeManager::ZoomToRect", mTreeManager,
-          &IAPZCTreeManager::ZoomToRect, aGuid, aRect, aFlags));
+          &IAPZCTreeManager::ZoomToRect, aGuid, aZoomTarget, aFlags));
   return IPC_OK();
 }
 
