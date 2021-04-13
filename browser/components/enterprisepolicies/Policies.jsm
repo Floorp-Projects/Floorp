@@ -442,6 +442,11 @@ var Policies = {
           newCookieBehavior,
           param.Locked
         );
+        setDefaultPref(
+          "network.cookie.cookieBehavior.pbmode",
+          newCookieBehavior,
+          param.Locked
+        );
       }
 
       const KEEP_COOKIES_UNTIL_EXPIRATION = 0;
