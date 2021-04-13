@@ -983,8 +983,9 @@ RegExpShared* RegExpZone::get(JSContext* cx, HandleAtom source,
   return shared;
 }
 
-size_t RegExpZone::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-  return set_.sizeOfExcludingThis(mallocSizeOf);
+size_t RegExpZone::sizeOfIncludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  return mallocSizeOf(this) + set_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 RegExpZone::RegExpZone(Zone* zone) : set_(zone, zone) {}
