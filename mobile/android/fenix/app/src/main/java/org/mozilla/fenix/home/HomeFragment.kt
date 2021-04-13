@@ -782,6 +782,7 @@ class HomeFragment : Fragment() {
                             R.id.homeFragment,
                             HomeFragmentDirections.actionGlobalSettingsFragment()
                         )
+                        requireComponents.analytics.metrics.track(Event.HomeMenuSettingsItemClicked)
                     }
                     HomeMenu.Item.SyncTabs -> {
                         hideOnboardingIfNeeded()

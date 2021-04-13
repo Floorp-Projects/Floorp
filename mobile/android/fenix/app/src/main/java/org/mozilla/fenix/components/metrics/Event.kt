@@ -224,6 +224,9 @@ sealed class Event {
     object SearchSuggestionClicked : Event()
     object OpenedTabSuggestionClicked : Event()
 
+    // Home menu interaction
+    object HomeMenuSettingsItemClicked : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {

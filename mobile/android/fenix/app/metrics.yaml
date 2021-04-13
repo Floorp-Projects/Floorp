@@ -5093,6 +5093,20 @@ awesomebar:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
 
+home_menu:
+  settings_item_clicked:
+    type: event
+    description: The user clicked the settings option in home menu.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18856
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18987
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
+
 android_keystore_experiment:
   experiment_failure:
     type: event

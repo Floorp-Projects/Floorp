@@ -34,6 +34,7 @@ import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
+import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MasterPassword
@@ -808,6 +809,9 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.SecurePrefsReset -> EventWrapper<NoExtraKeys>(
             { AndroidKeystoreExperiment.reset.record(it) }
+        )
+        is Event.HomeMenuSettingsItemClicked -> EventWrapper<NoExtraKeys>(
+            { HomeMenu.settingsItemClicked.record(it) }
         )
 
         // Don't record other events in Glean:
