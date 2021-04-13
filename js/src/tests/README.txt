@@ -11,8 +11,7 @@ generated automatically by the build phase 'package-tests' using the
 Running tests
 -------------
 See
-https://developer.mozilla.org/en-US/docs/SpiderMonkey/Running_Automated_JavaScript_Tests
-
+https://firefox-source-docs.mozilla.org/js/build.html#testing
 
 Creating a test
 ---------------
