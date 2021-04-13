@@ -52,7 +52,7 @@ add_task(async function() {
         notification.messageImage,
         "::after"
       ).content,
-      'url("chrome://global/skin/icons/info.svg")',
+      'url("chrome://global/skin/icons/info-filled.svg")',
       "We expect this notification to have an icon."
     );
   } else {
