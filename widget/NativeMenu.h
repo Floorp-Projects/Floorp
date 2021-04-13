@@ -46,6 +46,12 @@ class NativeMenu {
   // submenu) is open.
   virtual void OpenSubmenu(dom::Element* aMenuElement) = 0;
 
+  // Closing, or simulate the closing of, a submenu.
+  // aMenuElement can be nested arbitrarily deeply within submenus inside this
+  // menu. Only works while this menu (and any submenus on the path to the
+  // submenu) is open.
+  virtual void CloseSubmenu(dom::Element* aMenuElement) = 0;
+
   // Return this NativeMenu's DOM element.
   virtual RefPtr<dom::Element> Element() = 0;
 
