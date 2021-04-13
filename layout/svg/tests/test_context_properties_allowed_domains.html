@@ -36,6 +36,12 @@
         frame.src = src;
       }
       await waitForLoad(frame);
+
+      // Wait through two rAF ticks to be sure we've gotten at least one paint
+      // after the iframe loads:
+      await new Promise(resolve  => requestAnimationFrame(resolve));
+      await new Promise(resolve  => requestAnimationFrame(resolve));
+
       return await snapshotWindow(frame, false);
     }
 
