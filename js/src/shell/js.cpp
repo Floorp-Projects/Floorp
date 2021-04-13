@@ -47,9 +47,11 @@
 #include <sys/types.h>
 #include <utility>
 #ifdef XP_UNIX
-#  include <sys/mman.h>
+#  ifndef __wasi__
+#    include <sys/mman.h>
+#    include <sys/wait.h>
+#  endif
 #  include <sys/stat.h>
-#  include <sys/wait.h>
 #  include <unistd.h>
 #endif
 #ifdef XP_LINUX
