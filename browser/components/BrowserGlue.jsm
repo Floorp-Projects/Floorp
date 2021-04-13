@@ -3754,6 +3754,12 @@ BrowserGlue.prototype = {
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
 
+  _showUpgradeDialog() {
+    BrowserWindowTracker.getTopWindow().gDialogBox.open(
+      "chrome://browser/content/upgradeDialog.html"
+    );
+  },
+
   _maybeShowDefaultBrowserPrompt() {
     Promise.all([
       DefaultBrowserCheck.willCheckDefaultBrowser(/* isStartupCheck */ true),
