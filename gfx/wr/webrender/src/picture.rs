@@ -3626,9 +3626,9 @@ impl TileCacheInstance {
             }
         }
 
-        prim_instance.vis.flags = vis_flags;
         prim_instance.vis.state = VisibilityState::Coarse {
             rect_in_pic_space: pic_clip_rect,
+            vis_flags,
         };
     }
 
