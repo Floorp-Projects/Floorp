@@ -19,7 +19,10 @@ MOCHITEST_MANIFESTS += [
     "test/pointerevents/mochitest.ini",
 ]
 
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += [
+    "test/chrome.ini",
+    "test/pointerevents/chrome.ini",
+]
 
 TEST_DIRS += ["test/gtest"]
 

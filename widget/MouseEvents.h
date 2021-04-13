@@ -683,7 +683,8 @@ class WidgetPointerEvent : public WidgetMouseEvent {
   friend class mozilla::dom::PBrowserParent;
   friend class mozilla::dom::PBrowserChild;
 
-  WidgetPointerEvent() : mWidth(1), mHeight(1), mIsPrimary(true) {}
+  WidgetPointerEvent()
+      : mWidth(1), mHeight(1), mIsPrimary(true), mFromTouchEvent(false) {}
 
  public:
   virtual WidgetPointerEvent* AsPointerEvent() override { return this; }
@@ -692,10 +693,15 @@ class WidgetPointerEvent : public WidgetMouseEvent {
       : WidgetMouseEvent(aIsTrusted, aMsg, w, ePointerEventClass, eReal),
         mWidth(1),
         mHeight(1),
-        mIsPrimary(true) {}
+        mIsPrimary(true),
+        mFromTouchEvent(false) {}
 
   explicit WidgetPointerEvent(const WidgetMouseEvent& aEvent)
-      : WidgetMouseEvent(aEvent), mWidth(1), mHeight(1), mIsPrimary(true) {
+      : WidgetMouseEvent(aEvent),
+        mWidth(1),
+        mHeight(1),
+        mIsPrimary(true),
+        mFromTouchEvent(false) {
     mClass = ePointerEventClass;
   }
 
@@ -713,6 +719,7 @@ class WidgetPointerEvent : public WidgetMouseEvent {
   uint32_t mWidth;
   uint32_t mHeight;
   bool mIsPrimary;
+  bool mFromTouchEvent;
 
   // XXX Not tested by test_assign_event_data.html
   void AssignPointerEventData(const WidgetPointerEvent& aEvent,
@@ -722,6 +729,7 @@ class WidgetPointerEvent : public WidgetMouseEvent {
     mWidth = aEvent.mWidth;
     mHeight = aEvent.mHeight;
     mIsPrimary = aEvent.mIsPrimary;
+    mFromTouchEvent = aEvent.mFromTouchEvent;
   }
 };
 
