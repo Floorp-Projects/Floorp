@@ -1827,6 +1827,7 @@ menuitem.panel-subview-footer@menuStateActive@,
 #widget-overflow-mainView > .panel-subview-body > toolbarseparator,
 .PanelUI-subView toolbarseparator,
 #permission-popup-mainView > toolbarseparator,
+#protections-popup-mainView toolbarseparator,
 .cui-widget-panelview menuseparator,
 .cui-widget-panel toolbarseparator {
   appearance: none;
