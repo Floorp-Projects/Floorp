@@ -13,6 +13,7 @@ const PREF_COOKIE_BEHAVIOR_PBMODE = "network.cookie.cookieBehavior.pbmode";
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_FPI);
   Services.prefs.clearUserPref(PREF_COOKIE_BEHAVIOR);
+  Services.prefs.clearUserPref(PREF_COOKIE_BEHAVIOR_PBMODE);
 });
 
 add_task(function test_FPI_off() {
@@ -23,6 +24,8 @@ add_task(function test_FPI_off() {
     equal(Services.prefs.getIntPref(PREF_COOKIE_BEHAVIOR), i);
     equal(Services.cookies.getCookieBehavior(false), i);
   }
+
+  Services.prefs.clearUserPref(PREF_COOKIE_BEHAVIOR);
 
   for (let i = 0; i <= Ci.nsICookieService.BEHAVIOR_LAST; ++i) {
     Services.prefs.setIntPref(PREF_COOKIE_BEHAVIOR_PBMODE, i);
@@ -45,6 +48,8 @@ add_task(function test_FPI_on() {
     );
   }
 
+  Services.prefs.clearUserPref(PREF_COOKIE_BEHAVIOR);
+
   for (let i = 0; i <= Ci.nsICookieService.BEHAVIOR_LAST; ++i) {
     Services.prefs.setIntPref(PREF_COOKIE_BEHAVIOR_PBMODE, i);
     equal(Services.prefs.getIntPref(PREF_COOKIE_BEHAVIOR_PBMODE), i);
@@ -54,5 +59,36 @@ add_task(function test_FPI_on() {
         ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
         : i
     );
+  }
+
+  Services.prefs.clearUserPref(PREF_FPI);
+});
+
+add_task(function test_private_cookieBehavior_mirroring() {
+  // Test that the private cookieBehavior getter will return the regular pref if
+  // the regular pref has a user value and the private pref has a default value.
+  Services.prefs.clearUserPref(PREF_COOKIE_BEHAVIOR_PBMODE);
+  for (let i = 0; i <= Ci.nsICookieService.BEHAVIOR_LAST; ++i) {
+    Services.prefs.setIntPref(PREF_COOKIE_BEHAVIOR, i);
+    if (!Services.prefs.prefHasUserValue(PREF_COOKIE_BEHAVIOR)) {
+      continue;
+    }
+
+    equal(Services.cookies.getCookieBehavior(true), i);
+  }
+
+  // Test that the private cookieBehavior getter will always return the private
+  // pref if the private cookieBehavior has a user value.
+  for (let i = 0; i <= Ci.nsICookieService.BEHAVIOR_LAST; ++i) {
+    Services.prefs.setIntPref(PREF_COOKIE_BEHAVIOR_PBMODE, i);
+    if (!Services.prefs.prefHasUserValue(PREF_COOKIE_BEHAVIOR_PBMODE)) {
+      continue;
+    }
+
+    for (let j = 0; j <= Ci.nsICookieService.BEHAVIOR_LAST; ++j) {
+      Services.prefs.setIntPref(PREF_COOKIE_BEHAVIOR, j);
+
+      equal(Services.cookies.getCookieBehavior(true), i);
+    }
   }
 });
