@@ -332,9 +332,6 @@ class nsDocumentViewer final : public nsIContentViewer,
   NS_DECL_NSIWEBBROWSERPRINT
 #endif
 
-  using CallChildFunc = FunctionRef<void(nsDocumentViewer*)>;
-  void CallChildren(CallChildFunc aFunc);
-
   // nsIDocumentViewerPrint Printing Methods
   NS_DECL_NSIDOCUMENTVIEWERPRINT
 
@@ -2541,28 +2538,6 @@ NS_IMETHODIMP nsDocumentViewer::SetCommandNode(nsINode* aNode) {
   return NS_OK;
 }
 
-void nsDocumentViewer::CallChildren(CallChildFunc aFunc) {
-  nsCOMPtr<nsIDocShell> docShell(mContainer);
-  if (!docShell) {
-    return;
-  }
-  int32_t n = 0;
-  docShell->GetInProcessChildCount(&n);
-  for (int32_t i = 0; i < n; i++) {
-    nsCOMPtr<nsIDocShellTreeItem> child;
-    docShell->GetInProcessChildAt(i, getter_AddRefs(child));
-    nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-    NS_ASSERTION(childAsShell, "null child in docshell");
-    if (childAsShell) {
-      nsCOMPtr<nsIContentViewer> childCV;
-      childAsShell->GetContentViewer(getter_AddRefs(childCV));
-      if (childCV) {
-        aFunc(static_cast<nsDocumentViewer*>(childCV.get()));
-      }
-    }
-  }
-}
-
 NS_IMETHODIMP
 nsDocumentViewer::GetDeviceFullZoomForTest(float* aDeviceFullZoom) {
   NS_ENSURE_ARG_POINTER(aDeviceFullZoom);
@@ -2622,11 +2597,18 @@ NS_IMETHODIMP nsDocumentViewer::GetHintCharacterSetSource(
 NS_IMETHODIMP
 nsDocumentViewer::SetHintCharacterSetSource(int32_t aHintCharacterSetSource) {
   mHintCharsetSource = aHintCharacterSetSource;
-  auto childFn = [aHintCharacterSetSource](nsDocumentViewer* aChild) {
-    aChild->SetHintCharacterSetSource(aHintCharacterSetSource);
-  };
+
   // now set the force char set on all children of mContainer
-  CallChildren(childFn);
+  if (RefPtr docShell = nsDocShell::Cast(mContainer)) {
+    int32_t n = docShell->GetInProcessChildCount();
+    for (int32_t i = 0; i < n; i++) {
+      if (RefPtr<nsDocShell> child = docShell->GetInProcessChildAt(i)) {
+        if (nsCOMPtr<nsIContentViewer> childCV = child->GetContentViewer()) {
+          childCV->SetHintCharacterSetSource(aHintCharacterSetSource);
+        }
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -2648,11 +2630,17 @@ nsDocumentViewer::SetHintCharacterSet(const nsACString& aHintCharacterSet) {
 NS_IMETHODIMP_(void)
 nsDocumentViewer::SetHintCharset(const Encoding* aEncoding) {
   mHintCharset = aEncoding;
-  auto childFn = [aEncoding](nsDocumentViewer* aChild) {
-    aChild->SetHintCharset(aEncoding);
-  };
   // now set the force char set on all children of mContainer
-  CallChildren(childFn);
+  if (RefPtr docShell = nsDocShell::Cast(mContainer)) {
+    int32_t n = docShell->GetInProcessChildCount();
+    for (int32_t i = 0; i < n; i++) {
+      if (RefPtr<nsDocShell> child = docShell->GetInProcessChildAt(i)) {
+        if (nsCOMPtr<nsIContentViewer> childCV = child->GetContentViewer()) {
+          childCV->SetHintCharset(aEncoding);
+        }
+      }
+    }
+  }
 }
 
 nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
