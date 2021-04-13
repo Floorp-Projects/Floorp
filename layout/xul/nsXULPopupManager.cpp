@@ -1422,6 +1422,17 @@ void nsXULPopupManager::ExecuteMenu(nsIContent* aMenu,
   aMenu->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
 }
 
+bool nsXULPopupManager::ActivateNativeMenuItem(nsIContent* aItem,
+                                               mozilla::Modifiers aModifiers,
+                                               mozilla::ErrorResult& aRv) {
+  if (mNativeMenu && aItem->IsElement() &&
+      mNativeMenu->Element()->Contains(aItem)) {
+    mNativeMenu->ActivateItem(aItem->AsElement(), aModifiers, aRv);
+    return true;
+  }
+  return false;
+}
+
 nsEventStatus nsXULPopupManager::FirePopupShowingEvent(
     nsIContent* aPopup, nsPresContext* aPresContext, Event* aTriggerEvent) {
   nsCOMPtr<nsIContent> popup = aPopup;  // keep a strong reference to the popup
