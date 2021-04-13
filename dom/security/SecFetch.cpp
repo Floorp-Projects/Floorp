@@ -204,6 +204,12 @@ bool IsUserTriggeredForSecFetchSite(nsIHttpChannel* aHTTPChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aHTTPChannel->LoadInfo();
   ExtContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
 
+  // A request issued by the browser is always user initiated.
+  if (loadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
+      contentType == ExtContentPolicy::TYPE_OTHER) {
+    return true;
+  }
+
   // only requests wich result in type "document" are subject to
   // user initiated actions in the context of SecFetch.
   if (contentType != ExtContentPolicy::TYPE_DOCUMENT &&
