@@ -1313,10 +1313,14 @@ class GetUserMediaTask {
   }
 
  private:
+  // Thread-safe (object) principal of Window with ID mWindowID
   const ipc::PrincipalInfo mPrincipalInfo;
 
  protected:
+  // The ID of the not-necessarily-toplevel inner Window relevant global
+  // object of the MediaDevices on which getUserMedia() was called
   const uint64_t mWindowID;
+  // Whether the JS caller of getUserMedia() has system (subject) principal
   const bool mIsChrome;
 
  public:
@@ -1480,15 +1484,21 @@ class GetUserMediaStreamTask final : public GetUserMediaTask {
  private:
   void PrepareDOMStream();
 
+  // Constraints derived from those passed to getUserMedia() but adjusted for
+  // preferences, defaults, and security
   const MediaStreamConstraints mConstraints;
 
   MozPromiseHolder<MediaManager::StreamPromise> mHolder;
+  // GetUserMediaWindowListener with which DeviceListeners are registered
   const RefPtr<GetUserMediaWindowListener> mWindowListener;
   const RefPtr<DeviceListener> mAudioDeviceListener;
   const RefPtr<DeviceListener> mVideoDeviceListener;
+  // MediaDevices are set when selected and Allowed() by the UI.
   RefPtr<MediaDevice> mAudioDevice;
   RefPtr<MediaDevice> mVideoDevice;
+  // Copy of MediaManager::mPrefs
   const MediaEnginePrefs mPrefs;
+  // media.getusermedia.window.focus_source.enabled
   const bool mShouldFocusSource;
   // The MediaManager is referenced at construction so that it won't be
   // created after its ShutdownBlocker would run.
