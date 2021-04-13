@@ -216,6 +216,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
                          crop="end"/>
           </vbox>
         </hbox>
+        <image class="downloadBlockedBadgeNew" />
         <button class="downloadButton"/>
       `);
       gDownloadListItemFragments.set(document, downloadListItemFragment);
