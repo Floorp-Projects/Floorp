@@ -2,7 +2,7 @@
 
 // We need to test a lot of permutations here, and there isn't any sensible way
 // to split them up or run them faster.
-requestLongerTimeout(4);
+requestLongerTimeout(6);
 
 const BASE_URL = "http://mochi.test:8888/browser/docshell/test/browser/";
 
