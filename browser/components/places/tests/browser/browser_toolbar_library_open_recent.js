@@ -61,9 +61,7 @@ async function openBookmarkedItemInNewTab(itemFromMenu) {
   let tabCreatedPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
   let openInNewTabOption = document.getElementById("placesContext_open:newtab");
-  EventUtils.synthesizeMouseAtCenter(openInNewTabOption, {
-    button: 0,
-  });
+  placesContext.activateItem(openInNewTabOption);
   info("Click open in new tab");
 
   let lastOpenedTab = await tabCreatedPromise;
