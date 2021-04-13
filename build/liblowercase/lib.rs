@@ -234,6 +234,8 @@ wrappers! {
 
     fn opendir(path: *const c_char) -> *mut libc::DIR;
 
+    fn stat(path: *const c_char, buf: *mut libc::stat) -> c_int;
+    fn stat64(path: *const c_char, buf: *mut libc::stat64) -> c_int;
     fn __xstat(ver: c_int, path: *const c_char, buf: *mut libc::stat) -> c_int;
     fn __xstat64(ver: c_int, path: *const c_char, buf: *mut libc::stat64) -> c_int;
 
