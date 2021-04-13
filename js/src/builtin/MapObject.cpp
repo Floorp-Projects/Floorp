@@ -393,7 +393,8 @@ const ClassSpec MapObject::classSpec_ = {
 
 const JSClass MapObject::class_ = {
     "Map",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(MapObject::SlotCount) |
+    JSCLASS_HAS_PRIVATE | JSCLASS_DELAY_METADATA_BUILDER |
+        JSCLASS_HAS_RESERVED_SLOTS(MapObject::SlotCount) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Map) | JSCLASS_FOREGROUND_FINALIZE |
         JSCLASS_SKIP_NURSERY_FINALIZE,
     &MapObject::classOps_, &MapObject::classSpec_};
@@ -626,6 +627,7 @@ MapObject* MapObject::create(JSContext* cx,
     return nullptr;
   }
 
+  AutoSetNewObjectMetadata metadata(cx);
   MapObject* mapObj = NewObjectWithClassProto<MapObject>(cx, proto);
   if (!mapObj) {
     return nullptr;
@@ -642,6 +644,17 @@ MapObject* MapObject::create(JSContext* cx,
   mapObj->initReservedSlot(HasNurseryMemorySlot,
                            JS::BooleanValue(insideNursery));
   return mapObj;
+}
+
+size_t MapObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
+  size_t size = 0;
+  if (ValueMap* map = getData()) {
+    size += map->sizeOfIncludingThis(mallocSizeOf);
+  }
+  if (NurseryKeysVector* nurseryKeys = GetNurseryKeys(this)) {
+    size += nurseryKeys->sizeOfIncludingThis(mallocSizeOf);
+  }
+  return size;
 }
 
 void MapObject::finalize(JSFreeOp* fop, JSObject* obj) {
@@ -1166,7 +1179,8 @@ const ClassSpec SetObject::classSpec_ = {
 
 const JSClass SetObject::class_ = {
     "Set",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SetObject::SlotCount) |
+    JSCLASS_HAS_PRIVATE | JSCLASS_DELAY_METADATA_BUILDER |
+        JSCLASS_HAS_RESERVED_SLOTS(SetObject::SlotCount) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Set) | JSCLASS_FOREGROUND_FINALIZE |
         JSCLASS_SKIP_NURSERY_FINALIZE,
     &SetObject::classOps_,
@@ -1273,6 +1287,7 @@ SetObject* SetObject::create(JSContext* cx,
     return nullptr;
   }
 
+  AutoSetNewObjectMetadata metadata(cx);
   SetObject* obj = NewObjectWithClassProto<SetObject>(cx, proto);
   if (!obj) {
     return nullptr;
@@ -1297,6 +1312,17 @@ void SetObject::trace(JSTracer* trc, JSObject* obj) {
       TraceKey(r, r.front(), trc);
     }
   }
+}
+
+size_t SetObject::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) {
+  size_t size = 0;
+  if (ValueSet* set = getData()) {
+    size += set->sizeOfIncludingThis(mallocSizeOf);
+  }
+  if (NurseryKeysVector* nurseryKeys = GetNurseryKeys(this)) {
+    size += nurseryKeys->sizeOfIncludingThis(mallocSizeOf);
+  }
+  return size;
 }
 
 void SetObject::finalize(JSFreeOp* fop, JSObject* obj) {

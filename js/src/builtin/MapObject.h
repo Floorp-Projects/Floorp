@@ -7,6 +7,8 @@
 #ifndef builtin_MapObject_h
 #define builtin_MapObject_h
 
+#include "mozilla/MemoryReporting.h"
+
 #include "builtin/SelfHostingDefines.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSObject.h"
@@ -143,6 +145,8 @@ class MapObject : public NativeObject {
 
   static void sweepAfterMinorGC(JSFreeOp* fop, MapObject* mapobj);
 
+  size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf);
+
  private:
   static const ClassSpec classSpec_;
   static const JSClassOps classOps_;
@@ -265,6 +269,8 @@ class SetObject : public NativeObject {
   friend class OrderedHashTableRef<SetObject>;
 
   static void sweepAfterMinorGC(JSFreeOp* fop, SetObject* setobj);
+
+  size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf);
 
  private:
   static const ClassSpec classSpec_;
