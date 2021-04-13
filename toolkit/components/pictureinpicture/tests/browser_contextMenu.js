@@ -62,7 +62,7 @@ add_task(async () => {
         gBrowser,
       },
       async browser => {
-        await openContextMenu(browser, videoId);
+        let contextMenu = await openContextMenu(browser, videoId);
 
         info("Context menu is open.");
 
@@ -79,7 +79,7 @@ add_task(async () => {
           "Picture-in-Picture should be unchecked."
         );
 
-        await EventUtils.synthesizeMouseAtCenter(menuItem, {});
+        contextMenu.activateItem(menuItem);
 
         await SpecialPowers.spawn(browser, [videoId], async videoID => {
           let video = content.document.getElementById(videoID);
@@ -90,11 +90,11 @@ add_task(async () => {
 
         info("PiP player is now open.");
 
-        await openContextMenu(browser, videoId);
+        contextMenu = await openContextMenu(browser, videoId);
 
         info("Context menu is open again.");
 
-        await EventUtils.synthesizeMouseAtCenter(menuItem, {});
+        contextMenu.activateItem(menuItem);
 
         await SpecialPowers.spawn(browser, [videoId], async videoID => {
           let video = content.document.getElementById(videoID);
