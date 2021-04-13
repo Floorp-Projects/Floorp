@@ -209,6 +209,12 @@ SubDialog.prototype = {
       detail: { dialog: this, abort: true },
     });
     this._frame.contentWindow.close();
+    // It's possible that we're aborting this dialog before we've had a
+    // chance to set up the contentWindow.close function override in
+    // _onContentLoaded. If so, call this.close() directly to clean things
+    // up. That'll be a no-op if the contentWindow.close override had been
+    // set up, since this.close is idempotent.
+    this.close(this._closingEvent);
   },
 
   close(aEvent = null) {
