@@ -186,7 +186,7 @@ add_task(async function contextMenu() {
     await shown;
 
     let hidden = BrowserTestUtils.waitForEvent(context, "popuphidden");
-    click("context_toggleMuteTab");
+    context.activateItem(document.getElementById("context_toggleMuteTab"));
     await hidden;
 
     assertInteractionScalars({
