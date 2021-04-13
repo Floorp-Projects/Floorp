@@ -631,7 +631,9 @@ def handle_keyed_by_mozharness(config, tasks):
     ]
     for task in tasks:
         for field in fields:
-            resolve_keyed_by(task, field, item_name=task["test-name"])
+            resolve_keyed_by(
+                task, field, item_name=task["test-name"], enforce_single_match=False
+            )
         yield task
 
 
@@ -702,6 +704,7 @@ def resolve_keys(config, tasks):
             task,
             "require-signed-extensions",
             item_name=task["test-name"],
+            enforce_single_match=False,
             **{
                 "release-type": config.params["release_type"],
             }
@@ -837,7 +840,9 @@ def set_target(config, tasks):
         build_platform = task["build-platform"]
         target = None
         if "target" in task:
-            resolve_keyed_by(task, "target", item_name=task["test-name"])
+            resolve_keyed_by(
+                task, "target", item_name=task["test-name"], enforce_single_match=False
+            )
             target = task["target"]
         if not target:
             if build_platform.startswith("macosx"):
@@ -965,6 +970,7 @@ def handle_keyed_by(config, tasks):
                 field,
                 item_name=task["test-name"],
                 defer=["variant"],
+                enforce_single_match=False,
                 project=config.params["project"],
             )
         yield task
@@ -1232,6 +1238,7 @@ def handle_keyed_by_variant(config, tasks):
                 task,
                 field,
                 item_name=task["test-name"],
+                enforce_single_match=False,
                 variant=task["attributes"].get("unittest_variant"),
             )
         yield task
@@ -1337,7 +1344,9 @@ def handle_tier(config, tasks):
     specify a tier otherwise."""
     for task in tasks:
         if "tier" in task:
-            resolve_keyed_by(task, "tier", item_name=task["test-name"])
+            resolve_keyed_by(
+                task, "tier", item_name=task["test-name"], enforce_single_match=False
+            )
 
         # only override if not set for the test
         if "tier" not in task or task["tier"] == "default":

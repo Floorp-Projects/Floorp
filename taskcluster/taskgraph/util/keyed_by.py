@@ -7,7 +7,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 from .attributes import keymatch
 
 
-def evaluate_keyed_by(value, item_name, attributes, defer=None):
+def evaluate_keyed_by(
+    value, item_name, attributes, defer=None, enforce_single_match=True
+):
     """
     For values which can either accept a literal value, or be keyed by some
     attributes, perform that lookup and return the result.
@@ -22,7 +24,6 @@ def evaluate_keyed_by(value, item_name, attributes, defer=None):
     a call to `evaluate_keyed_by(item, 'thing-name', {'test-platform': 'linux96')`
     would return `12`.
 
-    The `item_name` parameter is used to generate useful error messages.
     Items can be nested as deeply as desired::
 
         by-test-platform:
@@ -33,11 +34,19 @@ def evaluate_keyed_by(value, item_name, attributes, defer=None):
             linux: 13
             default: 12
 
-    The `defer` parameter allows evaluating a by-* entry at a later time. In the
-    example above it's possible that the project attribute hasn't been set
-    yet, in which case we'd want to stop before resolving that subkey and then
-    call this function again later. This can be accomplished by setting
-    `defer=["project"]` in this example.
+    Args:
+        value (str): Name of the value to perform evaluation on.
+        item_name (str): Used to generate useful error messages.
+        attributes (dict): Dictionary of attributes used to lookup 'by-<key>' with.
+        defer (list):
+            Allows evaluating a by-* entry at a later time. In the example
+            above it's possible that the project attribute hasn't been set yet,
+            in which case we'd want to stop before resolving that subkey and
+            then call this function again later. This can be accomplished by
+            setting `defer=["project"]` in this example.
+        enforce_single_match (bool):
+            If True (default), each task may only match a single arm of the
+            evaluation.
     """
     while True:
         if not isinstance(value, dict) or len(value) != 1:
@@ -73,7 +82,7 @@ def evaluate_keyed_by(value, item_name, attributes, defer=None):
                 )
 
         matches = keymatch(alternatives, key)
-        if len(matches) > 1:
+        if enforce_single_match and len(matches) > 1:
             raise Exception(
                 "Multiple matching values for {} {!r} found while "
                 "determining item {}".format(keyed_by, key, item_name)
