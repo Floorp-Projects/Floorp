@@ -310,7 +310,7 @@ nsresult EditorBase::Init(Document& aDocument, Element* aRoot,
 
   MOZ_ASSERT(IsInitialized());
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInitializing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_FAILURE;
   }
