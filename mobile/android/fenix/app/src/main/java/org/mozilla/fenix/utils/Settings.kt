@@ -353,7 +353,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     var tabsTrayRewrite by featureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_new_tabs_tray),
-        default = false,
+        default = true,
         featureFlag = FeatureFlags.tabsTrayRewrite
     )
 
