@@ -1,0 +1,12 @@
+[package]
+name = "wast2js"
+version = "0.1.0"
+authors = ["Ryan Hunt <rhunt@eqrion.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.19"
+wast = { version = "35.0.0" }
+dprint-plugin-typescript = { version = "0.42.0" }
