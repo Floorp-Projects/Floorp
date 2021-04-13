@@ -1697,6 +1697,23 @@ StartupCache = {
     "schemas",
   ]),
 
+  _ensureDirectoryPromise: null,
+  _saveTask: null,
+
+  _ensureDirectory() {
+    if (this._ensureDirectoryPromise === null) {
+      this._ensureDirectoryPromise = IOUtils.makeDirectory(
+        PathUtils.parent(this.file),
+        {
+          ignoreExisting: true,
+          createAncestors: true,
+        }
+      );
+    }
+
+    return this._ensureDirectoryPromise;
+  },
+
   // When the application version changes, this file is removed by
   // RemoveComponentRegistries in nsAppRunner.cpp.
   file: PathUtils.join(
@@ -1707,16 +1724,14 @@ StartupCache = {
 
   async _saveNow() {
     let data = new Uint8Array(aomStartup.encodeBlob(this._data));
+    await this._ensureDirectoryPromise;
     await IOUtils.write(this.file, data, { tmpPath: `${this.file}.tmp` });
   },
 
-  async save() {
-    if (!this._saveTask) {
-      await IOUtils.makeDirectory(PathUtils.parent(this.file), {
-        ignoreExisting: true,
-        createAncestors: true,
-      });
+  save() {
+    this._ensureDirectory();
 
+    if (!this._saveTask) {
       this._saveTask = new DeferredTask(() => this._saveNow(), 5000);
 
       IOUtils.profileBeforeChange.addBlocker(
@@ -1727,6 +1742,7 @@ StartupCache = {
         }
       );
     }
+
     return this._saveTask.arm();
   },
 

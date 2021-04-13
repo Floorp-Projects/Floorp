@@ -447,8 +447,6 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
 
 pub struct MarionetteSession {
     pub session_id: String,
-    protocol: Option<u16>,
-    application_type: Option<String>,
     command_id: MessageId,
 }
 
@@ -457,8 +455,6 @@ impl MarionetteSession {
         let initital_id = session_id.unwrap_or_else(|| "".to_string());
         MarionetteSession {
             session_id: initital_id,
-            protocol: None,
-            application_type: None,
             command_id: 0,
         }
     }
@@ -1304,15 +1300,13 @@ impl MarionetteConnection {
             };
 
             match try_connect() {
-                Ok((stream, data)) => {
+                Ok((stream, _data)) => {
                     debug!(
                         "Connection to Marionette established on {}:{}.",
                         self.host, self.port,
                     );
 
                     self.stream = Some(stream);
-                    self.session.application_type = Some(data.application_type);
-                    self.session.protocol = Some(data.protocol);
                     break;
                 }
                 Err(e) => {

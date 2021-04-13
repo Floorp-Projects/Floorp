@@ -7,6 +7,8 @@
 const EXPORTED_SYMBOLS = [
   "GeckoViewAutocomplete",
   "LoginEntry",
+  "CreditCard",
+  "Address",
   "SelectOption",
 ];
 
@@ -106,8 +108,189 @@ class LoginEntry {
   }
 }
 
+class Address {
+  constructor({
+    name,
+    givenName,
+    additionalName,
+    familyName,
+    organization,
+    streetAddress,
+    addressLevel1,
+    addressLevel2,
+    addressLevel3,
+    postalCode,
+    country,
+    tel,
+    email,
+    guid,
+    timeCreated,
+    timeLastUsed,
+    timeLastModified,
+    timesUsed,
+    version,
+  }) {
+    this.name = name ?? null;
+    this.givenName = givenName ?? null;
+    this.additionalName = additionalName ?? null;
+    this.familyName = familyName ?? null;
+    this.organization = organization ?? null;
+    this.streetAddress = streetAddress ?? null;
+    this.addressLevel1 = addressLevel1 ?? null;
+    this.addressLevel2 = addressLevel2 ?? null;
+    this.addressLevel3 = addressLevel3 ?? null;
+    this.postalCode = postalCode ?? null;
+    this.country = country ?? null;
+    this.tel = tel ?? null;
+    this.email = email ?? null;
+
+    // Metadata.
+    this.guid = guid ?? null;
+    // TODO: Not supported by GV.
+    this.timeCreated = timeCreated ?? null;
+    this.timeLastUsed = timeLastUsed ?? null;
+    this.timeLastModified = timeLastModified ?? null;
+    this.timesUsed = timesUsed ?? null;
+    this.version = version ?? null;
+  }
+
+  isValid() {
+    return (
+      (this.name ?? this.givenName ?? this.familyName) !== null &&
+      this.streetAddress !== null &&
+      this.postalCode !== null
+    );
+  }
+
+  static fromGecko(aObj) {
+    return new Address({
+      version: aObj.version,
+      name: aObj.name,
+      givenName: aObj["given-name"],
+      additionalName: aObj["additional-name"],
+      familyName: aObj["family-name"],
+      organization: aObj.organization,
+      streetAddress: aObj["street-address"],
+      addressLevel1: aObj["address-level1"],
+      addressLevel2: aObj["address-level2"],
+      addressLevel3: aObj["address-level3"],
+      postalCode: aObj["postal-code"],
+      country: aObj.country,
+      tel: aObj.tel,
+      email: aObj.email,
+      guid: aObj.guid,
+      timeCreated: aObj.timeCreated,
+      timeLastUsed: aObj.timeLastUsed,
+      timeLastModified: aObj.timeLastModified,
+      timesUsed: aObj.timesUsed,
+    });
+  }
+
+  static parse(aObj) {
+    const entry = new Address({});
+    Object.assign(entry, aObj);
+
+    return entry;
+  }
+
+  toGecko() {
+    return {
+      version: this.version,
+      name: this.name,
+      "given-name": this.givenName,
+      "additional-name": this.additionalName,
+      "family-name": this.familyName,
+      organization: this.organization,
+      "street-address": this.streetAddress,
+      "address-level1": this.addressLevel1,
+      "address-level2": this.addressLevel2,
+      "address-level3": this.addressLevel3,
+      "postal-code": this.postalCode,
+      country: this.country,
+      tel: this.tel,
+      email: this.email,
+      guid: this.guid,
+    };
+  }
+}
+
+class CreditCard {
+  constructor({
+    name,
+    number,
+    expMonth,
+    expYear,
+    type,
+    guid,
+    timeCreated,
+    timeLastUsed,
+    timeLastModified,
+    timesUsed,
+    version,
+  }) {
+    this.name = name ?? null;
+    this.number = number ?? null;
+    this.expMonth = expMonth ?? null;
+    this.expYear = expYear ?? null;
+    this.type = type ?? null;
+
+    // Metadata.
+    this.guid = guid ?? null;
+    // TODO: Not supported by GV.
+    this.timeCreated = timeCreated ?? null;
+    this.timeLastUsed = timeLastUsed ?? null;
+    this.timeLastModified = timeLastModified ?? null;
+    this.timesUsed = timesUsed ?? null;
+    this.version = version ?? null;
+  }
+
+  isValid() {
+    return (
+      this.name !== null &&
+      this.number !== null &&
+      this.expMonth !== null &&
+      this.expYear !== null
+    );
+  }
+
+  static fromGecko(aObj) {
+    return new CreditCard({
+      version: aObj.version,
+      name: aObj["cc-name"],
+      number: aObj["cc-number"],
+      expMonth: aObj["cc-exp-month"],
+      expYear: aObj["cc-exp-year"],
+      type: aObj["cc-type"],
+      guid: aObj.guid,
+      timeCreated: aObj.timeCreated,
+      timeLastUsed: aObj.timeLastUsed,
+      timeLastModified: aObj.timeLastModified,
+      timesUsed: aObj.timesUsed,
+    });
+  }
+
+  static parse(aObj) {
+    const entry = new CreditCard({});
+    Object.assign(entry, aObj);
+
+    return entry;
+  }
+
+  toGecko() {
+    return {
+      version: this.version,
+      "cc-name": this.name,
+      "cc-number": this.number,
+      "cc-exp-month": this.expMonth,
+      "cc-exp-year": this.expYear,
+      "cc-type": this.type,
+      guid: this.guid,
+    };
+  }
+}
+
 class SelectOption {
-  // Sync with Autocomplete.LoginSelectOption.Hint in Autocomplete.java.
+  // Sync with Autocomplete.SelectOption.Hint in Autocomplete.java.
   static Hint = {
     NONE: 0,
     GENERATED: 1 << 0,
@@ -160,7 +343,9 @@ const GeckoViewAutocomplete = {
   fetchCreditCards() {
     debug`fetchCreditCards`;
 
-    return Promise.resolve(null);
+    return EventDispatcher.instance.sendRequestForResult({
+      type: "GeckoView:Autocomplete:Fetch:CreditCard",
+    });
   },
 
   /**
@@ -189,6 +374,11 @@ const GeckoViewAutocomplete = {
    */
   onCreditCardSave(aCreditCard) {
     debug`onLoginSave ${aCreditCard}`;
+
+    EventDispatcher.instance.sendRequest({
+      type: "GeckoView:Autocomplete:Save:CreditCard",
+      creditCard: aCreditCard,
+    });
   },
 
   /**
@@ -235,7 +425,8 @@ const GeckoViewAutocomplete = {
     });
   },
 
-  _numActiveOnLoginSelect: 0,
+  _numActiveSelections: 0,
+
   /**
    * Delegates login entry selection.
    * Call this when there are multiple login entry option for a form to delegate
@@ -276,6 +467,60 @@ const GeckoViewAutocomplete = {
     });
   },
 
+  /**
+   * Delegates credit card entry selection.
+   * Call this when there are multiple credit card entry option for a form to delegate
+   * the selection.
+   *
+   * @param aBrowser The browser instance the triggered the selection.
+   * @param aOptions The list of {SelectOption} depicting viable options.
+   */
+  onCreditCardSelect(aBrowser, aOptions) {
+    debug`onCreditCardSelect ${aOptions}`;
+
+    return new Promise((resolve, reject) => {
+      if (!aBrowser || !aOptions) {
+        debug`onCreditCardSelect Rejecting - no browser or options provided`;
+        reject();
+        return;
+      }
+
+      const prompt = new GeckoViewPrompter(aBrowser.ownerGlobal);
+      prompt.asyncShowPrompt(
+        {
+          type: "Autocomplete:Select:CreditCard",
+          options: aOptions,
+        },
+        result => {
+          if (!result || !result.selection) {
+            reject();
+            return;
+          }
+
+          const option = new SelectOption({
+            value: CreditCard.parse(result.selection.value),
+            hint: result.selection.hint,
+          });
+          resolve(option);
+        }
+      );
+    });
+  },
+
+  /**
+   * Delegates address entry selection.
+   * Call this when there are multiple address entry option for a form to delegate
+   * the selection.
+   *
+   * @param aBrowser The browser instance the triggered the selection.
+   * @param aOptions The list of {SelectOption} depicting viable options.
+   */
+  onAddressSelect(aBrowser, aOptions) {
+    debug`onAddressSelect ${aOptions}`;
+
+    return Promise.resolve(null);
+  },
+
   async delegateSelection({
     browsingContext,
     options,
@@ -291,6 +536,8 @@ const GeckoViewAutocomplete = {
     let insecureHint = SelectOption.Hint.NONE;
     let loginStyle = null;
 
+    // TODO: Replace this string with more robust mechanics.
+    let selectionType = null;
     const selectOptions = [];
 
     for (const option of options) {
@@ -301,6 +548,7 @@ const GeckoViewAutocomplete = {
           break;
         }
         case "generatedPassword": {
+          selectionType = "login";
           const comment = JSON.parse(option.comment);
           selectOptions.push(
             new SelectOption({
@@ -315,6 +563,7 @@ const GeckoViewAutocomplete = {
         case "login":
         // Fallthrough.
         case "loginWithOrigin": {
+          selectionType = "login";
           loginStyle = option.style;
           const comment = JSON.parse(option.comment);
 
@@ -334,6 +583,32 @@ const GeckoViewAutocomplete = {
           );
           break;
         }
+        case "autofill-profile": {
+          const comment = JSON.parse(option.comment);
+          debug`delegateSelection ${comment}`;
+          const creditCard = CreditCard.fromGecko(comment);
+          const address = Address.fromGecko(comment);
+          if (creditCard.isValid()) {
+            selectionType = "creditCard";
+            selectOptions.push(
+              new SelectOption({
+                value: creditCard,
+                hint: insecureHint,
+              })
+            );
+          } else if (address.isValid()) {
+            selectionType = "address";
+            selectOptions.push(
+              new SelectOption({
+                value: address,
+                hint: insecureHint,
+              })
+            );
+          }
+          break;
+        }
+        default:
+          debug`delegateSelection - ignoring unknown option style ${option.style}`;
       }
     }
 
@@ -342,45 +617,79 @@ const GeckoViewAutocomplete = {
       return;
     }
 
-    if (this._numActiveOnLoginSelect > 0) {
+    if (this._numActiveSelections > 0) {
       debug`Abort delegateSelection - there is already one delegation active`;
       return;
     }
 
-    ++this._numActiveOnLoginSelect;
+    ++this._numActiveSelections;
 
+    let selectedOption = null;
     const browser = browsingContext.top.embedderElement;
-    const selectedOption = await this.onLoginSelect(
-      browser,
-      selectOptions
-    ).catch(_ => {
-      debug`No GV delegate attached`;
-    });
-
-    --this._numActiveOnLoginSelect;
-
-    debug`delegateSelection selected option: ${selectedOption}`;
-    const selectedLogin = selectedOption?.value?.toLoginInfo();
-
-    if (!selectedLogin) {
-      debug`Abort delegateSelection - no login entry selected`;
-      return;
+    if (selectionType === "login") {
+      selectedOption = await this.onLoginSelect(browser, selectOptions).catch(
+        _ => {
+          debug`No GV delegate attached`;
+        }
+      );
+    } else if (selectionType === "creditCard") {
+      selectedOption = await this.onCreditCardSelect(
+        browser,
+        selectOptions
+      ).catch(_ => {
+        debug`No GV delegate attached`;
+      });
+    } else if (selectionType === "address") {
+      selectedOption = await this.onAddressSelect(browser, selectOptions).catch(
+        _ => {
+          debug`No GV delegate attached`;
+        }
+      );
     }
 
-    debug`delegateSelection - filling form`;
+    --this._numActiveSelections;
 
-    const actor = browsingContext.currentWindowGlobal.getActor("LoginManager");
+    debug`delegateSelection selected option: ${selectedOption}`;
 
-    await actor.fillForm({
-      browser,
-      inputElementIdentifier,
-      loginFormOrigin: formOrigin,
-      login: selectedLogin,
-      style:
-        selectedOption.hint & SelectOption.Hint.GENERATED
-          ? "generatedPassword"
-          : loginStyle,
-    });
+    if (selectionType === "login") {
+      const selectedLogin = selectedOption?.value?.toLoginInfo();
+
+      if (!selectedLogin) {
+        debug`Abort delegateSelection - no login entry selected`;
+        return;
+      }
+
+      debug`delegateSelection - filling form`;
+
+      const actor = browsingContext.currentWindowGlobal.getActor(
+        "LoginManager"
+      );
+
+      await actor.fillForm({
+        browser,
+        inputElementIdentifier,
+        loginFormOrigin: formOrigin,
+        login: selectedLogin,
+        style:
+          selectedOption.hint & SelectOption.Hint.GENERATED
+            ? "generatedPassword"
+            : loginStyle,
+      });
+    } else if (selectionType === "creditCard") {
+      const selectedCreditCard = selectedOption?.value?.toGecko();
+      const actor = browsingContext.currentWindowGlobal.getActor(
+        "FormAutofill"
+      );
+
+      actor.sendAsyncMessage("FormAutofill:FillForm", selectedCreditCard);
+    } else if (selectionType === "address") {
+      const selectedAddress = selectedOption?.value?.toGecko();
+      const actor = browsingContext.currentWindowGlobal.getActor(
+        "FormAutofill"
+      );
+
+      actor.sendAsyncMessage("FormAutofill:FillForm", selectedAddress);
+    }
 
     debug`delegateSelection - form filled`;
   },

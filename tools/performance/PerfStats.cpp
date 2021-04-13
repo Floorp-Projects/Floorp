@@ -27,6 +27,7 @@ static const char* const sMetricNames[] = {"DisplayListBuilding",
                                            "Compositing",
                                            "Reflowing",
                                            "Styling",
+                                           "HttpChannelCompletion",
                                            "HttpChannelCompletion_Network",
                                            "HttpChannelCompletion_Cache"};
 

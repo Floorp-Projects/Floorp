@@ -664,6 +664,7 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
   uint32_t interruptRetries = 0;
   const uint32_t maxInterruptRetries = 4;
   do {
+    DebugOnly<bool> alreadyThrowing = cx->isExceptionPending();
     RegExpRunStatus result = irregexp::Execute(cx, re, input, start, matches);
 
     if (result == RegExpRunStatus_Error) {
@@ -677,6 +678,14 @@ RegExpRunStatus RegExpShared::execute(JSContext* cx,
        * third case, we want to handle the interrupt and try again.
        * We cap the number of times we will retry.
        */
+      if (cx->isExceptionPending()) {
+        // If this regexp is being executed by recovery instructions
+        // while bailing out to handle an exception, there may already
+        // be an exception pending. If so, just return that exception
+        // instead of reporting a new one.
+        MOZ_ASSERT(alreadyThrowing);
+        return RegExpRunStatus_Error;
+      }
       if (cx->hasAnyPendingInterrupt()) {
         if (!CheckForInterrupt(cx)) {
           return RegExpRunStatus_Error;

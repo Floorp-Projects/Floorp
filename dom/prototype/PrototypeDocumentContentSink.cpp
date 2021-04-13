@@ -121,7 +121,8 @@ nsresult PrototypeDocumentContentSink::Init(Document* aDoc, nsIURI* aURI,
 }
 
 NS_IMPL_CYCLE_COLLECTION(PrototypeDocumentContentSink, mParser, mDocumentURI,
-                         mDocument, mScriptLoader, mCurrentPrototype)
+                         mDocument, mScriptLoader, mContextStack,
+                         mCurrentPrototype)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PrototypeDocumentContentSink)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentSink)
@@ -187,13 +188,27 @@ void PrototypeDocumentContentSink::ContinueInterruptedParsingAsync() {
 PrototypeDocumentContentSink::ContextStack::ContextStack()
     : mTop(nullptr), mDepth(0) {}
 
-PrototypeDocumentContentSink::ContextStack::~ContextStack() {
+PrototypeDocumentContentSink::ContextStack::~ContextStack() { Clear(); }
+
+void PrototypeDocumentContentSink::ContextStack::Traverse(
+    nsCycleCollectionTraversalCallback& aCallback, const char* aName,
+    uint32_t aFlags) {
+  aFlags |= CycleCollectionEdgeNameArrayFlag;
+  Entry* current = mTop;
+  while (current) {
+    CycleCollectionNoteChild(aCallback, current->mElement, aName, aFlags);
+    current = current->mNext;
+  }
+}
+
+void PrototypeDocumentContentSink::ContextStack::Clear() {
   while (mTop) {
     Entry* doomed = mTop;
     mTop = mTop->mNext;
     NS_IF_RELEASE(doomed->mElement);
     delete doomed;
   }
+  mDepth = 0;
 }
 
 nsresult PrototypeDocumentContentSink::ContextStack::Push(

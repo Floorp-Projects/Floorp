@@ -31,6 +31,7 @@ toolkit.jar:
   skin/classic/global/dirListing/folder.png                (dirListing/folder.png)
   skin/classic/global/dirListing/up.png                    (dirListing/up.png)
   skin/classic/global/icons/Landscape.png                  (icons/Landscape.png)
+  skin/classic/global/icons/menu-check.svg                 (icons/menu-check.svg)
   skin/classic/global/icons/Portrait.png                   (icons/Portrait.png)
   skin/classic/global/icons/Print-preview.png              (icons/Print-preview.png)
   skin/classic/global/icons/sslWarning.png                 (icons/sslWarning.png)

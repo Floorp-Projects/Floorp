@@ -301,6 +301,9 @@ pref("browser.startup.preXulSkeletonUI", false);
 #endif
 #endif
 
+// Show an upgrade dialog on major upgrades.
+pref("browser.startup.upgradeDialog.enabled", true);
+
 // Don't create the hidden window during startup on
 // platforms that don't always need it (Win/Linux).
 pref("toolkit.lazyHiddenWindow", true);
@@ -1977,39 +1980,11 @@ pref("webchannel.allowObject.urlWhitelist", "https://content.cdn.mozilla.net htt
 pref("browser.crashReports.unsubmittedCheck.chancesUntilSuppress", 4);
 pref("browser.crashReports.unsubmittedCheck.autoSubmit2", false);
 
-// Preferences for the form autofill system extension
-// The truthy values of "extensions.formautofill.available" are "on" and "detect",
-// any other value means autofill isn't available.
-// "detect" means it's enabled if conditions defined in the extension are met.
-pref("extensions.formautofill.available", "detect");
-pref("extensions.formautofill.addresses.enabled", true);
-pref("extensions.formautofill.addresses.capture.enabled", false);
-pref("extensions.formautofill.creditCards.available", true);
-pref("extensions.formautofill.creditCards.enabled", true);
+// Preferences for the form autofill toolkit component.
 // Checkbox in sync options for credit card data sync service
 pref("services.sync.engine.creditcards.available", true);
-// Temporary preference to control displaying the UI elements for
-// credit card autofill used for the duration of the A/B test.
-pref("extensions.formautofill.creditCards.hideui", false);
-// Pref for shield/heartbeat to recognize users who have used Credit Card
-// Autofill. The valid values can be:
-// 0: none
-// 1: submitted a manually-filled credit card form (but didn't see the doorhanger
-//    because of a duplicate profile in the storage)
-// 2: saw the doorhanger
-// 3: submitted an autofill'ed credit card form
-pref("extensions.formautofill.creditCards.used", 0);
-pref("extensions.formautofill.firstTimeUse", true);
-pref("extensions.formautofill.heuristics.enabled", true);
 // Whether the user enabled the OS re-auth dialog.
 pref("extensions.formautofill.reauth.enabled", false);
-pref("extensions.formautofill.section.enabled", true);
-pref("extensions.formautofill.loglevel", "Warn");
-
-pref("toolkit.osKeyStore.loglevel", "Warn");
-
-pref("extensions.formautofill.supportedCountries", "US,CA");
-pref("extensions.formautofill.supportRTL", false);
 
 // Whether or not to restore a session with lazy-browser tabs.
 pref("browser.sessionstore.restore_tabs_lazily", true);

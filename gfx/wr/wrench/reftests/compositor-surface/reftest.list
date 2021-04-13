@@ -1,0 +1,3 @@
+# TODO: Enable these once non-opaque compositor surface support is enabled!
+# == basic.yaml basic-ref.yaml
+# == too-many-surfaces.yaml too-many-surfaces-ref.yaml

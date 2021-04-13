@@ -6146,6 +6146,9 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
 
   const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
   const bool isAutoISize = styleISize.IsAuto();
+  const bool isAutoBSize =
+      nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM)) ||
+      aFlags.contains(ComputeSizeFlag::UseAutoBSize);
   // Compute inline-axis size
   if (!isAutoISize) {
     auto iSizeResult = ComputeISizeValue(
@@ -6153,18 +6156,11 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
         boxSizingToMarginEdgeISize, styleISize, aSizeOverrides, aFlags);
     result.ISize(aWM) = iSizeResult.mISize;
     aspectRatioUsage = iSizeResult.mAspectRatioUsage;
-  } else if (aspectRatio &&
-             !nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM))) {
-    auto bSize = nsLayoutUtils::ComputeBSizeValue(
-        aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
-        styleBSize.AsLengthPercentage());
-    result.ISize(aWM) = aspectRatio.ComputeRatioDependentSize(
-        LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
-    aspectRatioUsage = AspectRatioUsage::ToComputeISize;
   } else if (MOZ_UNLIKELY(isGridItem) && !IsTrueOverflowContainer()) {
     // 'auto' inline-size for grid-level box - fill the CB for 'stretch' /
     // 'normal' and clamp it to the CB if requested:
     bool stretch = false;
+    bool mayUseAspectRatio = aspectRatio && !isAutoBSize;
     if (!aFlags.contains(ComputeSizeFlag::ShrinkWrap) &&
         !StyleMargin()->HasInlineAxisAuto(aWM) &&
         !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisBlock
@@ -6172,9 +6168,30 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       auto inlineAxisAlignment =
           isOrthogonal ? StylePosition()->UsedAlignSelf(alignCB->Style())._0
                        : StylePosition()->UsedJustifySelf(alignCB->Style())._0;
-      stretch = inlineAxisAlignment == StyleAlignFlags::NORMAL ||
-                inlineAxisAlignment == StyleAlignFlags::STRETCH;
+      stretch = inlineAxisAlignment == StyleAlignFlags::STRETCH ||
+                (inlineAxisAlignment == StyleAlignFlags::NORMAL &&
+                 !mayUseAspectRatio);
     }
+
+    // Apply the preferred aspect ratio for alignments other than *stretch* and
+    // *normal without aspect ratio*.
+    // The spec says all other values should size the items as fit-content, and
+    // the intrinsic size should respect the preferred aspect ratio, so we also
+    // apply aspect ratio for all other values.
+    // https://drafts.csswg.org/css-grid/#grid-item-sizing
+    if (!stretch && mayUseAspectRatio) {
+      // Note: we don't need to handle aspect ratio for inline axis if both
+      // width/height are auto. The default ratio-dependent axis is block axis
+      // in this case, so we can simply get the block size from the non-auto
+      // |styleBSize|.
+      auto bSize = nsLayoutUtils::ComputeBSizeValue(
+          aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
+          styleBSize.AsLengthPercentage());
+      result.ISize(aWM) = aspectRatio.ComputeRatioDependentSize(
+          LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
+      aspectRatioUsage = AspectRatioUsage::ToComputeISize;
+    }
+
     if (stretch || aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize)) {
       auto iSizeToFillCB =
           std::max(nscoord(0), aCBSize.ISize(aWM) - aBorderPadding.ISize(aWM) -
@@ -6183,6 +6200,13 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
         result.ISize(aWM) = iSizeToFillCB;
       }
     }
+  } else if (aspectRatio && !isAutoBSize) {
+    auto bSize = nsLayoutUtils::ComputeBSizeValue(
+        aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
+        styleBSize.AsLengthPercentage());
+    result.ISize(aWM) = aspectRatio.ComputeRatioDependentSize(
+        LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
+    aspectRatioUsage = AspectRatioUsage::ToComputeISize;
   }
 
   // Calculate and apply transferred min & max size contraints.
@@ -6279,54 +6303,71 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // Compute block-axis size
   // (but not if we have auto bsize or if we received the "UseAutoBSize"
   // flag -- then, we'll just stick with the bsize that we already calculated
-  // in the initial ComputeAutoSize() call.)
-  if (!aFlags.contains(ComputeSizeFlag::UseAutoBSize)) {
-    if (!nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM))) {
-      result.BSize(aWM) = nsLayoutUtils::ComputeBSizeValue(
-          aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
-          styleBSize.AsLengthPercentage());
-    } else if (aspectRatio) {
-      // If both inline and block dimensions are auto (i.e. weak size
-      // constraints), the block axis is the ratio-dependent axis.
-      // If we have a super large inline size, aspect-ratio should still be
-      // applied. That's why we apply aspect-ratio unconditionally for auto
-      // block size here.
-      // FIXME: Bug 1690423 moves this part below the handle of grid, so this
-      // shouldn't affect grid layout.
-      result.BSize(aWM) = aspectRatio.ComputeRatioDependentSize(
-          LogicalAxis::eLogicalAxisBlock, aWM, result.ISize(aWM),
-          boxSizingAdjust);
-      MOZ_ASSERT(aspectRatioUsage == AspectRatioUsage::None);
-      aspectRatioUsage = AspectRatioUsage::ToComputeBSize;
-    } else if (MOZ_UNLIKELY(isGridItem) && styleBSize.IsAuto() &&
-               !IsTrueOverflowContainer() &&
-               !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisInline
-                                                : eLogicalAxisBlock)) {
-      auto cbSize = aCBSize.BSize(aWM);
-      if (cbSize != NS_UNCONSTRAINEDSIZE) {
-        // 'auto' block-size for grid-level box - fill the CB for 'stretch' /
-        // 'normal' and clamp it to the CB if requested:
-        bool stretch = false;
-        if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
-          auto blockAxisAlignment =
-              isOrthogonal
-                  ? StylePosition()->UsedJustifySelf(alignCB->Style())._0
-                  : StylePosition()->UsedAlignSelf(alignCB->Style())._0;
-          stretch = blockAxisAlignment == StyleAlignFlags::NORMAL ||
-                    blockAxisAlignment == StyleAlignFlags::STRETCH;
-        }
-        if (stretch ||
-            aFlags.contains(ComputeSizeFlag::BClampMarginBoxMinSize)) {
-          auto bSizeToFillCB =
-              std::max(nscoord(0),
-                       cbSize - aBorderPadding.BSize(aWM) - aMargin.BSize(aWM));
-          if (stretch || (result.BSize(aWM) != NS_UNCONSTRAINEDSIZE &&
-                          result.BSize(aWM) > bSizeToFillCB)) {
-            result.BSize(aWM) = bSizeToFillCB;
-          }
+  // in the initial ComputeAutoSize() call. However, if we have a valid
+  // preferred aspect ratio, we still have to compute the block size because
+  // aspect ratio affects the intrinsic content size.)
+  if (!isAutoBSize) {
+    result.BSize(aWM) = nsLayoutUtils::ComputeBSizeValue(
+        aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
+        styleBSize.AsLengthPercentage());
+  } else if (MOZ_UNLIKELY(isGridItem) &&
+             // FIXME: Any better way to refine the auto check here?
+             styleBSize.IsAuto() &&
+             !aFlags.contains(ComputeSizeFlag::UseAutoBSize) &&
+             !IsTrueOverflowContainer() &&
+             !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisInline
+                                              : eLogicalAxisBlock)) {
+    auto cbSize = aCBSize.BSize(aWM);
+    if (cbSize != NS_UNCONSTRAINEDSIZE) {
+      // 'auto' block-size for grid-level box - fill the CB for 'stretch' /
+      // 'normal' and clamp it to the CB if requested:
+      bool stretch = false;
+      bool mayUseAspectRatio =
+          aspectRatio && result.ISize(aWM) != NS_UNCONSTRAINEDSIZE;
+      if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
+        auto blockAxisAlignment =
+            isOrthogonal ? StylePosition()->UsedJustifySelf(alignCB->Style())._0
+                         : StylePosition()->UsedAlignSelf(alignCB->Style())._0;
+        stretch = blockAxisAlignment == StyleAlignFlags::STRETCH ||
+                  (blockAxisAlignment == StyleAlignFlags::NORMAL &&
+                   !mayUseAspectRatio);
+      }
+
+      // Apply the preferred aspect ratio for alignments other than *stretch*
+      // and *normal without aspect ratio*.
+      // The spec says all other values should size the items as fit-content,
+      // and the intrinsic size should respect the preferred aspect ratio, so
+      // we also apply aspect ratio for all other values.
+      // https://drafts.csswg.org/css-grid/#grid-item-sizing
+      if (!stretch && mayUseAspectRatio) {
+        result.BSize(aWM) = aspectRatio.ComputeRatioDependentSize(
+            LogicalAxis::eLogicalAxisBlock, aWM, result.ISize(aWM),
+            boxSizingAdjust);
+        MOZ_ASSERT(aspectRatioUsage == AspectRatioUsage::None);
+        aspectRatioUsage = AspectRatioUsage::ToComputeBSize;
+      }
+
+      if (stretch || aFlags.contains(ComputeSizeFlag::BClampMarginBoxMinSize)) {
+        auto bSizeToFillCB =
+            std::max(nscoord(0),
+                     cbSize - aBorderPadding.BSize(aWM) - aMargin.BSize(aWM));
+        if (stretch || (result.BSize(aWM) != NS_UNCONSTRAINEDSIZE &&
+                        result.BSize(aWM) > bSizeToFillCB)) {
+          result.BSize(aWM) = bSizeToFillCB;
         }
       }
     }
+  } else if (aspectRatio) {
+    // If both inline and block dimensions are auto, the block axis is the
+    // ratio-dependent axis by default.
+    // If we have a super large inline size, aspect-ratio should still be
+    // applied (so aspectRatioUsage flag is set as expected). That's why we
+    // apply aspect-ratio unconditionally for auto block size here.
+    result.BSize(aWM) = aspectRatio.ComputeRatioDependentSize(
+        LogicalAxis::eLogicalAxisBlock, aWM, result.ISize(aWM),
+        boxSizingAdjust);
+    MOZ_ASSERT(aspectRatioUsage == AspectRatioUsage::None);
+    aspectRatioUsage = AspectRatioUsage::ToComputeBSize;
   }
 
   if (result.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {

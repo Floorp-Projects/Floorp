@@ -15,7 +15,7 @@ rev = "4af6c367603869a30fddb5ffb0aba2b9477ba92e"
 [source."https://github.com/msirringhaus/minidump_writer_linux.git"]
 git = "https://github.com/msirringhaus/minidump_writer_linux.git"
 replace-with = "vendored-sources"
-rev = "01c7a0da8d34059f7dae8ab9e7512529ff16347a"
+rev = "667c38bf1d9a8ea0c2c0a219d13006a39847b3f2"
 
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"

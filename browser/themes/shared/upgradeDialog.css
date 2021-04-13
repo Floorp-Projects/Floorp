@@ -1,0 +1,191 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  background: url(chrome://branding/content/about-logo.svg) center 45px / 64px no-repeat;
+  display: flex;
+  flex-direction: column;
+  padding: 120px 30px 10px;
+  width: 600px;
+}
+
+body > .hidden {
+  display: none;
+}
+
+spacer {
+  flex: auto;
+}
+
+#title {
+  font-size: 24px;
+  font-weight: normal;
+  line-height: 36px;
+  margin: 5px auto;
+  text-align: center;
+  white-space: pre-wrap;
+}
+
+#subtitle {
+  color: var(--in-content-deemphasized-text);
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 24px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.items {
+  margin: auto;
+  max-width: 320px;
+}
+
+.items > li {
+  list-style: none;
+  margin: 25px 0;
+  position: relative;
+}
+
+/* Display a custom icon in front of each item. */
+.items > ::before {
+  background-size: 100%;
+  content: "";
+  -moz-context-properties: fill;
+  fill: var(--in-content-icon-color);
+  height: 24px;
+  inset-inline-start: -32px;
+  position: absolute;
+  width: 24px;
+}
+
+.items > :nth-child(1)::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/menu-24.svg");
+}
+
+.items > :nth-child(2)::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/tabs-24.svg");
+}
+
+.items > :nth-child(3)::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/highlights-24.svg");
+}
+
+.items h2 {
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 24px;
+  margin: 4px 0;
+}
+
+.items p {
+  color: var(--in-content-deemphasized-text);
+  font-size: 14px;
+  line-height: 20px;
+  margin: 0;
+}
+
+.themes {
+  display: flex;
+  padding: 18px 0;
+}
+
+/* Make these theme radio buttons appear like regular buttons. */
+.themes > input {
+  background: initial;
+  border: initial;
+  border-radius: var(--in-content-button-border-radius);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font-size: 12px;
+  height: initial;
+  line-height: 16px;
+  margin: 0 5px;
+  overflow: clip;
+  padding: 7px;
+  text-align: center;
+  width: initial;
+}
+
+.themes > input:checked {
+  background: initial;
+  color: inherit;
+}
+
+.themes > input:enabled:hover,
+.themes > input:enabled:checked:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+
+.themes > input:enabled:hover:active,
+.themes > input:enabled:checked:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+/* Display a custom theme swatch at the top of each button. */
+.themes > ::before {
+  border-radius: 100%;
+  content: "";
+  height: 62px;
+  margin: 0 auto 10px;
+  outline: 1px solid var(--in-content-border-color);
+  width: 62px;
+}
+
+.themes > :checked::before {
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.2);
+  outline: 2px solid var(--in-content-primary-button-background);
+}
+
+.themes > :nth-child(1)::before {
+  background: linear-gradient(45deg, #F0F0F4 50%, #23222B 50%);
+}
+
+.themes > :nth-child(2)::before {
+  background: linear-gradient(45deg, #F0F0F4, #F9F9FB);
+}
+
+.themes > :nth-child(3)::before {
+  background: linear-gradient(45deg, #1C1B22 50%, #42414D);
+}
+
+.themes > :nth-child(4)::before {
+  background: linear-gradient(45deg, #9059FF, #FF4AA2, #FFBD4F);
+}
+
+/* Zoom in to the corner of the ltr theme preview image without buttons. */
+.themes > :nth-child(5)::before {
+  background: var(--theme-swatch) top right / 165% 255%;
+  transform: rotate(-45deg);
+}
+
+/* Theme swatches are up-to-right gradients in ltr, so mirror for rtl. */
+.themes > :dir(rtl)::before {
+  transform: scaleX(-1);
+}
+
+.themes > :nth-child(5):dir(rtl)::before {
+  transform: rotate(-135deg);
+}
+
+#primary,
+#secondary {
+  margin: 5px auto;
+}
+
+#secondary {
+  background: none;
+  color: var(--in-content-link-color) !important;
+  font-weight: normal;
+}
+
+.steps {
+  color: var(--checkbox-border-color);
+  margin: 9px auto;
+  user-select: none;
+}
+
+.steps > span {
+  color: var(--checkbox-checked-bgcolor);
+}
