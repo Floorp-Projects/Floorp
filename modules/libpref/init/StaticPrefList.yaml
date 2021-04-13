@@ -6591,7 +6591,7 @@
 # Is support for the @font-face metrics override descriptors enabled?
 - name: layout.css.font-metrics-overrides.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
