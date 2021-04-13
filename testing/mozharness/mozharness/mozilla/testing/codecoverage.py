@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 
+import errno
 import json
 import os
 import posixpath
@@ -511,6 +512,12 @@ class CodeCoverageMixin(SingleTestMixin):
             grcov_output_file, jsvm_output_file = self.parse_coverage_artifacts(
                 self.gcov_dir, self.jsvm_dir
             )
+
+            try:
+                os.makedirs(dirs["abs_blob_upload_dir"])
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
 
             # Zip the grcov output and upload it.
             grcov_zip_path = os.path.join(
