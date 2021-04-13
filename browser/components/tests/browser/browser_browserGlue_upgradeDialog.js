@@ -213,6 +213,42 @@ add_task(async function exit_early() {
   );
 });
 
+add_task(async function not_major_upgrade() {
+  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+});
+
+add_task(async function remote_disabled() {
+  // TODO(bug 1701948): Set up actual remote defaults.
+  NimbusFeatures.upgradeDialog._onRemoteReady();
+  Services.prefs.setBoolPref("browser.startup.upgradeDialog.enabled", false);
+
+  // Simulate starting from a previous version.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.startup.homepage_override.mstone", "88.0"]],
+  });
+  Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler).defaultArgs;
+
+  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+
+  Services.prefs.clearUserPref("browser.startup.upgradeDialog.enabled");
+});
+
+add_task(async function show_major_upgrade() {
+  const promise = waitForDialog();
+  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+  await promise;
+
+  Assert.ok(true, "Upgrade dialog opened and closed from major upgrade");
+});
+
+add_task(async function dont_reshow() {
+  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+});
+
 registerCleanupFunction(() => {
   getShellService.restore();
+  Cc["@mozilla.org/browser/clh;1"].getService(
+    Ci.nsIBrowserHandler
+  ).majorUpgrade = false;
+  Services.prefs.clearUserPref("browser.startup.upgradeDialog.version");
 });
