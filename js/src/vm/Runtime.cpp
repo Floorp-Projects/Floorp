@@ -357,6 +357,8 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     rtSizes->atomsTable += mallocSizeOf(staticStrings);
     rtSizes->atomsTable += mallocSizeOf(commonNames);
     rtSizes->atomsTable += permanentAtoms()->sizeOfIncludingThis(mallocSizeOf);
+    rtSizes->atomsTable +=
+        commonParserNames.ref()->sizeOfIncludingThis(mallocSizeOf);
   }
 
   JSContext* cx = mainContextFromAnyThread();
