@@ -13,6 +13,8 @@
 #if defined(XP_WIN)
 #  include "util/Windows.h"
 #  include <psapi.h>
+#elif defined(__wasi__)
+// Nothing.
 #else
 #  include <algorithm>
 #  include <errno.h>
@@ -295,6 +297,22 @@ void* mapMemory(size_t length) {
 void unmapPages(void* p, size_t size) {
   MOZ_ALWAYS_TRUE(VirtualFree(p, 0, MEM_RELEASE));
 }
+
+#elif defined(__wasi__)
+
+void* mapMemoryAt(void* desired, size_t length) { return nullptr; }
+
+void* mapMemory(size_t length) {
+  void* addr = nullptr;
+  if (int err = posix_memalign(&addr, js::gc::SystemPageSize(), length)) {
+    MOZ_ASSERT(err == ENOMEM);
+  }
+  MOZ_ASSERT(addr);
+  memset(addr, 0, length);
+  return addr;
+}
+
+void unmapPages(void* p, size_t size) { free(p); }
 
 #else
 
