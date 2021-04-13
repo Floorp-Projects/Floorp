@@ -737,7 +737,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
       Tokenizer p(keyValuePairs["cpu family"_ns]);
       if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
           t.AsInteger() <= INT32_MAX) {
-        cpuFamily = static_cast<int>(t.AsInteger());
+        cpuFamily = static_cast<int32_t>(t.AsInteger());
       }
     }
 
@@ -747,7 +747,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
       Tokenizer p(keyValuePairs["model"_ns]);
       if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
           t.AsInteger() <= INT32_MAX) {
-        cpuModel = static_cast<int>(t.AsInteger());
+        cpuModel = static_cast<int32_t>(t.AsInteger());
       }
     }
 
@@ -757,7 +757,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
       Tokenizer p(keyValuePairs["stepping"_ns]);
       if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
           t.AsInteger() <= INT32_MAX) {
-        cpuStepping = static_cast<int>(t.AsInteger());
+        cpuStepping = static_cast<int32_t>(t.AsInteger());
       }
     }
 
@@ -767,7 +767,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
       Tokenizer p(keyValuePairs["cpu cores"_ns]);
       if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
           t.AsInteger() <= INT32_MAX) {
-        physicalCPUs = static_cast<int>(t.AsInteger());
+        physicalCPUs = static_cast<int32_t>(t.AsInteger());
       }
     }
   }
@@ -782,7 +782,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
       Tokenizer p(line.c_str());
       if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
           t.AsInteger() <= INT32_MAX) {
-        cpuSpeed = static_cast<int>(t.AsInteger() / 1000);
+        cpuSpeed = static_cast<int32_t>(t.AsInteger() / 1000);
       }
     }
   }
@@ -796,7 +796,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
       Tokenizer p(line.c_str(), nullptr, "K");
       if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
           t.AsInteger() <= INT32_MAX) {
-        cacheSizeL2 = static_cast<int>(t.AsInteger());
+        cacheSizeL2 = static_cast<int32_t>(t.AsInteger());
       }
     }
   }
@@ -810,7 +810,7 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
       Tokenizer p(line.c_str(), nullptr, "K");
       if (p.Next(t) && t.Type() == Tokenizer::TOKEN_INTEGER &&
           t.AsInteger() <= INT32_MAX) {
-        cacheSizeL3 = static_cast<int>(t.AsInteger());
+        cacheSizeL3 = static_cast<int32_t>(t.AsInteger());
       }
     }
   }
