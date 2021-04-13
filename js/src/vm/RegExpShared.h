@@ -308,7 +308,7 @@ class RegExpZone {
   void clear() { set_.clear(); }
 #endif
 
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 class RegExpRealm {
