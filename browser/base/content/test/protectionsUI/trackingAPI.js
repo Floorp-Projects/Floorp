@@ -32,6 +32,9 @@ onmessage = event => {
     case "more-tracking":
       createIframe("https://itisatracker.org/");
       break;
+    case "more-tracking-2":
+      createIframe("https://tracking.example.com/");
+      break;
     case "cookie":
       createIframe(
         "https://trackertest.org/browser/browser/base/content/test/protectionsUI/cookieServer.sjs"

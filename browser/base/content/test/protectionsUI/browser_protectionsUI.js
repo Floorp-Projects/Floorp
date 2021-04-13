@@ -617,7 +617,7 @@ add_task(async function testNumberOfBlockedTrackers() {
 
 add_task(async function testSubViewTelemetry() {
   let items = [
-    ["protections-popup-category-tracking-protection", "trackers"],
+    ["protections-popup-category-trackers", "trackers"],
     ["protections-popup-category-socialblock", "social"],
     ["protections-popup-category-cookies", "cookies"],
     ["protections-popup-category-cryptominers", "cryptominers"],
