@@ -1,0 +1,19 @@
+[package]
+name = "wasm-generate-spectests"
+version = "0.1.0"
+authors = ["Ryan Hunt <rhunt@eqrion.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1"
+serde = "1"
+serde_derive = "1"
+toml = "0.5.6"
+log = "0.4"
+env_logger = "0.7"
+anyhow = "1.0.19"
+wast2js = { path = "./wast2js" }
+
+[workspace]

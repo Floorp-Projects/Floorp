@@ -60,8 +60,10 @@ _OPT\.OBJ/
 # SpiderMonkey test result logs
 ^js/src/tests/results-.*\.(html|txt)$
 ^js/src/devtools/rootAnalysis/t/out
-# SpiderMonkey clone of the wasm-generate-testsuite repository
-^js/src/jit-test/etc/wasm/wasm-generate-testsuite/
+# SpiderMonkey wasm/generate-spectests artifacts
+^js/src/jit-test/etc/wasm/generate-spectests/specs/
+^js/src/jit-test/etc/wasm/generate-spectests/tests/
+^js/src/jit-test/etc/wasm/generate-spectests/target/
 
 # Java HTML5 parser classes
 ^parser/html/java/(html|java)parser/
