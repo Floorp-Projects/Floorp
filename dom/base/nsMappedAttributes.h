@@ -22,6 +22,8 @@ class nsAtom;
 class nsHTMLStyleSheet;
 
 class nsMappedAttributes final {
+  using InternalAttr = AttrArray::InternalAttr;
+
  public:
   nsMappedAttributes(nsHTMLStyleSheet* aSheet,
                      nsMapRuleToAttributesFunc aMapRuleFunc);
@@ -50,6 +52,12 @@ class nsMappedAttributes final {
     mRuleMapper = aRuleMapper;
   }
 
+  auto Attrs() const {
+    return mozilla::Span<const InternalAttr>{mBuffer, mAttrCount};
+  }
+  auto Attrs() {
+    return mozilla::Span<InternalAttr>{mBuffer, mAttrCount};
+  }
   const nsAttrName* NameAt(uint32_t aPos) const {
     NS_ASSERTION(aPos < mAttrCount, "out-of-bounds");
     return &Attrs()[aPos].mName;
@@ -90,25 +98,6 @@ class nsMappedAttributes final {
   nsMappedAttributes(const nsMappedAttributes& aCopy);
   ~nsMappedAttributes();
 
-  struct InternalAttr {
-    nsAttrName mName;
-    nsAttrValue mValue;
-  };
-
-  /**
-   * Due to a compiler bug in VisualAge C++ for AIX, we need to return the
-   * address of the first index into mAttrs here, instead of simply
-   * returning mAttrs itself.
-   *
-   * See Bug 231104 for more information.
-   */
-  const InternalAttr* Attrs() const {
-    return reinterpret_cast<const InternalAttr*>(&(mAttrs[0]));
-  }
-  InternalAttr* Attrs() {
-    return reinterpret_cast<InternalAttr*>(&(mAttrs[0]));
-  }
-
   uint16_t mAttrCount;
 #ifdef DEBUG
   uint16_t mBufferSize;
@@ -116,7 +105,7 @@ class nsMappedAttributes final {
   nsHTMLStyleSheet* mSheet;  // weak
   nsMapRuleToAttributesFunc mRuleMapper;
   RefPtr<RawServoDeclarationBlock> mServoStyle;
-  void* mAttrs[1];
+  InternalAttr mBuffer[0];
 
   static bool sShuttingDown;
 

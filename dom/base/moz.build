@@ -87,6 +87,7 @@ EXPORTS += [
     "nsJSUtils.h",
     "nsLineBreaker.h",
     "nsMappedAttributeElement.h",
+    "nsMappedAttributes.h",
     "nsNameSpaceManager.h",
     "nsNodeInfoManager.h",
     "nsPIDOMWindow.h",

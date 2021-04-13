@@ -33,6 +33,7 @@ headers = [
     "mozilla/SizeOfState.h",
     "nsCSSProps.h",
     "nsContentUtils.h",
+    "nsMappedAttributes.h",
     "nsNameSpaceManager.h",
     "GeckoProfiler.h",
 ]
