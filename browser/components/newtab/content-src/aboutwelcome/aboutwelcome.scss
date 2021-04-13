@@ -530,13 +530,22 @@ body {
 
   // Styles specific to Proton multistage welcome UI
   &.proton {
-    background: linear-gradient(69.76deg, #15141A 2.07%, rgba(21, 20, 26, 0) 65.58%) center / cover no-repeat fixed;
+    background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center / cover no-repeat fixed;
+
+    &:dir(rtl) {
+      transform: rotateY(180deg);
+    }
 
     .screen {
       position: relative;
       flex-flow: row nowrap;
       height: 100%;
+      min-height: 500px;
       overflow: hidden;
+
+      &:dir(rtl) {
+        transform: rotateY(180deg);
+      }
     }
 
     .section-main {
@@ -556,6 +565,7 @@ body {
         font-size: 24px;
         line-height: 36px;
         font-weight: normal;
+        letter-spacing: -0.02em;
       }
 
       h2 {
@@ -595,7 +605,7 @@ body {
     }
 
     .steps {
-      padding-bottom: 44px;
+      padding-bottom: 15px;
 
       .indicator {
         width: 6px;
@@ -612,12 +622,16 @@ body {
       border: var(--tiles-theme-section-border-width)
       solid
       var(--proton-content-background-color);
+
+      &:focus-within {
+        border: var(--tiles-theme-section-border-width) dotted;
+      }
     }
 
     .theme {
       align-items: center;
       width: auto;
-      min-width: 80px;
+      min-width: 50px;
       height: initial;
       background-color: var(--proton-content-background-color);
       box-shadow: none;
@@ -710,22 +724,16 @@ body {
     }
 
     .screen-0 {
-      /**
-       * Proton welcome content is above white background noodle on first screen even when
-       * using the RTL UI direction; below rule enforce that ordering.
-       */
-      min-height: 600px;
       min-width: 700px;
-      direction: ltr;
 
       .section-left {
         width: 50%;
         display: flex;
         flex-direction: column;
-        margin: 0 0 0 101px;
+        margin-inline-start: 101px;
 
         @media (max-width: $break-point-widest) {
-          margin: 0 0 0 71px;
+          margin-inline-start: 71px;
         }
 
         .message-text {
@@ -737,8 +745,8 @@ body {
           h1 {
             color: #FFF;
             font-weight: bold;
-            font-size: 64px;
-            line-height: 72px;
+            font-size: 104px;
+            line-height: 92px;
             margin: 0 6px;
             width: 517px;
             text-align: initial;
@@ -766,7 +774,7 @@ body {
         .attrib-text {
           height: 18px;
           margin-bottom: 25px;
-          text-align: left;
+          text-align: initial;
           font-size: 12px;
           line-height: 18px;
           color: #F9F9FB;
@@ -792,7 +800,7 @@ body {
           position: absolute;
           height: 350px;
           bottom: -60px;
-          right: 20px;
+          inset-inline-end: 80px;
         }
 
         .brand-logo {
@@ -810,10 +818,14 @@ body {
 
       // Position of noodles on first screen
       .outline-L {
-        width: 120px;
-        height: 135px;
+        width: 87px;
+        height: 80px;
         bottom: 94px;
-        right: 420px;
+        inset-inline-end: 430px;
+
+        &:dir(rtl) {
+          transform: rotate(240deg);
+        }
 
         @media (max-width: $proton-break-point-smallest) {
           visibility: hidden;
@@ -824,28 +836,42 @@ body {
         width: 1300px;
         height: 1050px;
         bottom: -390px;
-        right: -640px;
+        inset-inline-end: -640px;
         transform: rotate(-80deg);
+
+        &:dir(rtl) {
+          transform: rotate(-260deg);
+        }
       }
 
       .orange-L {
         width: 466px;
         height: 356px;
-        bottom: 280px;
-        right: -240px;
+        bottom: 270px;
+        inset-inline-end: -245px;
+
+        &:dir(rtl) {
+          bottom: 208px;
+          inset-inline-end: -100px;
+          transform: rotate(-245deg);
+        }
       }
 
       .purple-C {
         width: 467px;
         height: 382px;
-        bottom: -60px;
-        right: 160px;
-        transform: rotate(-40deg);
+        bottom: -100px;
+        inset-inline-end: 125px;
+        transform: rotate(-75deg);
+
+        &:dir(rtl) {
+          transform: rotate(-207deg);
+        }
       }
 
       .yellow-circle {
-        bottom: 105px;
-        right: 600px;
+        bottom: 75px;
+        inset-inline-end: 540px;
       }
     }
 
@@ -875,22 +901,34 @@ body {
 
       //Position of noodles on second screen
       .outline-L {
-        width: 80px;
-        height: 100px;
-        transform: rotate(10deg) translate(-30%, 160%);
+        width: 87px;
+        height: 80px;
+        transform: rotate(10deg) translate(-30%, 200%);
         z-index: 2;
+
+        &:dir(rtl) {
+          transform: rotate(232deg) translate(-160%, -145%);
+        }
       }
 
       .orange-L {
         width: 448px;
         height: 568px;
         transform: rotate(-155deg) translate(12%, -21%);
+
+        &:dir(rtl) {
+          transform: rotate(-180deg) translate(-10%, -12%);
+        }
       }
 
       .purple-C {
         width: 294px;
         height: 254px;
         transform: translate(-20%, -62%);
+
+        &:dir(rtl) {
+          transform: rotate(50deg) translate(-25%, -50%);
+        }
       }
 
       .yellow-circle {
@@ -899,8 +937,16 @@ body {
         transform: translate(230%, -5%);
         background: #FF7139;
 
+        &:dir(rtl) {
+          transform: translate(-225%, -5%);
+        }
+
         @media (max-width: $break-point-large) {
           transform: translate(205%, -5%);
+
+          &:dir(rtl) {
+            transform: translate(-200%, -5%);
+          }
         }
 
         @media (max-width: $break-point-medium) {
@@ -935,13 +981,21 @@ body {
 
       // Position of noodles on third screen
       .outline-L {
-        width: 90px;
-        height: 110px;
-        transform: rotate(250deg) translate(-420%, 330%);
+        width: 87px;
+        height: 80px;
+        transform: rotate(250deg) translate(-420%, 425%);
         z-index: 2;
+
+        &:dir(rtl) {
+          transform: rotate(10deg) translate(-475%, 300%);
+        }
 
         @media (max-width: $break-point-large) {
           transform: rotate(250deg) translate(-400%, 280%);
+
+          &:dir(rtl) {
+            transform: rotate(10deg) translate(-390%, 340%);
+          }
         }
       }
 
@@ -949,6 +1003,10 @@ body {
         height: 800px;
         width: 660px;
         transform: rotate(35deg) translate(-10%, -7%);
+
+        &:dir(rtl) {
+          transform: rotate(215deg) translate(-10%, -7%);
+        }
 
         @media (max-width: $break-point-large) {
           height: 740px;
@@ -960,6 +1018,10 @@ body {
         width: 392px;
         height: 394px;
         transform: rotate(260deg) translate(-34%, -35%);
+
+        &:dir(rtl) {
+          transform: rotate(50deg) translate(-20%, -40%);
+        }
       }
 
       .yellow-circle {
@@ -967,6 +1029,10 @@ body {
         height: 165px;
         transform: translate(160%, 130%);
         background: #FF7139;
+
+        &:dir(rtl) {
+          transform: translate(-190%, -130%);
+        }
       }
     }
   }
