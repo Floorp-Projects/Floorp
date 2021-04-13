@@ -47,12 +47,13 @@ add_task(async function test_open_iframe() {
   );
 
   // Open frame submenu
-  const menuPopup = contextMenu.querySelector("#frame").menupopup;
+  const frameItem = contextMenu.querySelector("#frame");
+  const menuPopup = frameItem.menupopup;
   const menuPopupPromise = BrowserTestUtils.waitForEvent(
     menuPopup,
     "popupshown"
   );
-  menuPopup.openPopup();
+  frameItem.openMenu(true);
   await menuPopupPromise;
 
   let domItem = contextMenu.querySelector("#context-openframeintab");
