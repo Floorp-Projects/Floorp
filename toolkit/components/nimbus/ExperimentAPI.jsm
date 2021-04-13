@@ -361,8 +361,6 @@ class ExperimentFeature {
         `No manifest entry for ${featureId}. Please add one to toolkit/components/messaging-system/experiments/ExperimentAPI.jsm`
       );
     }
-    // Prevent the instance from sending multiple exposure events
-    this._sendExposureEventOnce = true;
     this._onRemoteReady = null;
     this._waitForRemote = new Promise(
       resolve => (this._onRemoteReady = resolve)
@@ -460,13 +458,8 @@ class ExperimentFeature {
   isEnabled({ sendExposureEvent, defaultValue = null } = {}) {
     const branch = ExperimentAPI.activateBranch({
       featureId: this.featureId,
-      sendExposureEvent: sendExposureEvent && this._sendExposureEventOnce,
+      sendExposureEvent,
     });
-
-    // Prevent future exposure events if user is enrolled in an experiment
-    if (branch && sendExposureEvent) {
-      this._sendExposureEventOnce = false;
-    }
 
     // First, try to return an experiment value if it exists.
     if (isBooleanValueDefined(branch?.feature.enabled)) {
@@ -497,14 +490,8 @@ class ExperimentFeature {
     let userPrefs = this._getUserPrefsValues();
     const branch = ExperimentAPI.activateBranch({
       featureId: this.featureId,
-      sendExposureEvent: sendExposureEvent && this._sendExposureEventOnce,
+      sendExposureEvent,
     });
-
-    // Prevent future exposure events if user is enrolled in an experiment
-    if (branch && sendExposureEvent) {
-      this._sendExposureEventOnce = false;
-    }
-
     if (branch?.feature?.value) {
       return { ...branch.feature.value, ...userPrefs };
     }
@@ -529,17 +516,10 @@ class ExperimentFeature {
   }
 
   recordExposureEvent() {
-    if (this._sendExposureEventOnce) {
-      let experimentData = ExperimentAPI.activateBranch({
-        featureId: this.featureId,
-        sendExposureEvent: true,
-      });
-
-      // Exposure only sent if user is enrolled in an experiment
-      if (experimentData) {
-        this._sendExposureEventOnce = false;
-      }
-    }
+    ExperimentAPI.activateBranch({
+      featureId: this.featureId,
+      sendExposureEvent: true,
+    });
   }
 
   onUpdate(callback) {
