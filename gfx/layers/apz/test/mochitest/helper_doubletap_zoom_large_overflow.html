@@ -9,26 +9,9 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-async function doubleTapOn(element, x, y) {
+async function test() {
   let useTouchpad = (location.search == "?touchpad");
 
-  let transformEndPromise = promiseTransformEnd();
-
-  if (useTouchpad) {
-    synthesizeNativeTouchpadDoubleTap(element, x, y);
-  } else {
-    synthesizeNativeTap(element, x, y);
-    synthesizeNativeTap(element, x, y);
-  }
-
-  // Wait for the APZ:TransformEnd to fire
-  await transformEndPromise;
-
-  // Flush state so we can query an accurate resolution
-  await promiseApzFlushedRepaints();
-}
-
-async function test() {
   var resolution = getResolution();
   ok(resolution > 0,
      "The initial_resolution is " + resolution + ", which is some sane value");
@@ -57,7 +40,7 @@ async function test() {
   let y = document.documentElement.scrollHeight - 60;
 
   // Check that double-tapping once zooms in
-  await doubleTapOn(target, x, y);
+  await doubleTapOn(target, x, y, useTouchpad);
   var prev_resolution = resolution;
   resolution = getResolution();
   ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
