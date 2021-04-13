@@ -12,6 +12,7 @@ interface nsIBrowserHandler : nsISupports
   attribute AUTF8String startPage;
   attribute AUTF8String defaultArgs;
   attribute boolean kiosk;
+  attribute boolean majorUpgrade;
 
   /**
    * Extract the width and height specified on the command line, if present.
