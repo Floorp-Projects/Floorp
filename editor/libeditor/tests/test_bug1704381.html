@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test for Bug 1704381</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<textarea>abc</textarea>
+</body>
+<script>
+"use strict";
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(() => {
+  const textarea = document.querySelector("textarea");
+  (function test_EditorBase_ToggleTextDirectionAsAction() {
+    textarea.removeAttribute("dir");
+    textarea.focus();
+    let newValue;
+    textarea.oninput = () => {
+      textarea.scrollHeight;  // flush pending layout and run re-initializing editor synchronously
+      newValue = textarea.value;
+    };
+    SpecialPowers.doCommand(window, "cmd_switchTextDirection");
+    is(newValue, "abc",
+      "EditorBase::ToggleTextDirectionAsAction: Getting value should be succeeded immediately after reinitializing the editor");
+    textarea.removeAttribute("dir");
+  })();
+  (function test_EditorBase_NotifyEditorObservers() {
+    textarea.focus();
+    let newValue;
+    textarea.oninput = () => {
+      textarea.scrollHeight;  // flush pending layout and run re-initializing editor synchronously
+      newValue = textarea.value;
+    };
+    document.execCommand("insertLineBreak");
+    is(newValue, "\nabc",
+      "EditorBase::NotifyEditorObservers: Getting value should be succeeded immediately after reinitializing the editor");
+    textarea.value = "abc";
+  })();
+  // TODO: Cannot test EditorBase::SwitchTextDirectionTo() since it requires bidi keyboard layout activated.
+  SimpleTest.finish();
+});
+</script>
+</html>
