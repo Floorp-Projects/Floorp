@@ -3177,22 +3177,6 @@ telemetry:
     record_in_processes:
       - all
 
-  about_telemetry_pageload:
-    bug_numbers:
-      - 1512503
-    description: >
-      The number of times about:telemetry was loaded.
-    expires: "70"
-    kind: uint
-    notification_emails:
-      - chutten@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
-
   sync_shutdown_ping_sent:
     bug_numbers:
       - 1673795
