@@ -783,7 +783,11 @@ function synthesizeNativeTap(aTarget, aX, aY, aObserver = null) {
   return true;
 }
 
+// only currently implemented on macOS
 function synthesizeNativeTouchpadDoubleTap(aTarget, aX, aY) {
+  ok(getPlatform() == "mac",
+    "only implemented on mac. implement sendNativeTouchpadDoubleTap for this platform," +
+    " see bug 1696802 for how it was done on macOS");
   let pt = coordinatesRelativeToScreen({
     offsetX: aX,
     offsetY: aY,
@@ -1348,4 +1352,22 @@ async function pinchZoomOutWithTouchAtCenter() {
   var zoom_out = pinchZoomOutTouchSequenceAtCenter();
   var touchIds = [0, 1];
   await synthesizeNativeTouchAndWaitForTransformEnd(zoom_out, touchIds);
+}
+
+// useTouchpad is only currently implemented on macOS
+async function doubleTapOn(element, x, y, useTouchpad) {
+  let transformEndPromise = promiseTransformEnd();
+
+  if (useTouchpad) {
+    synthesizeNativeTouchpadDoubleTap(element, x, y);
+  } else {
+    synthesizeNativeTap(element, x, y);
+    synthesizeNativeTap(element, x, y);
+  }
+
+  // Wait for the APZ:TransformEnd to fire
+  await transformEndPromise;
+
+  // Flush state so we can query an accurate resolution
+  await promiseOnlyApzControllerFlushed();
 }
