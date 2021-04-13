@@ -2473,7 +2473,7 @@ var XPIProvider = {
 
       this.maybeInstallBuiltinAddon(
         "default-theme@mozilla.org",
-        "1.2",
+        "1.1",
         "resource://default-theme/"
       );
 
