@@ -214,6 +214,10 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 // Don't report non-media URLs.
                 return;
             }
+            if (mResourceCallbacks == null || loadEventInfo.uri == null) {
+                return;
+            }
+
             if (DEBUG) {
                 Log.d(LOGTAG, "on-load: url=" + loadEventInfo.uri);
             }
