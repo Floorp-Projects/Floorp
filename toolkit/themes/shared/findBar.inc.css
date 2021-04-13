@@ -11,6 +11,7 @@ findbar {
   transition-property: margin-bottom, opacity, visibility;
   transition-duration: 150ms, 150ms, 0s;
   transition-timing-function: ease-in-out, ease-in-out, linear;
+  padding-block: 6px;
 }
 
 findbar[hidden] {
@@ -28,7 +29,13 @@ findbar[noanim] {
 }
 
 .findbar-container {
-  padding: 6px;
+  margin-inline-start: 8px;
+  height: 28px;
+}
+
+/* Remove start margin when close button is on the left side (on macOS) */
+.findbar-closebutton + .findbar-container {
+  margin-inline-start: 0;
 }
 
 /* Search field */
@@ -148,9 +155,10 @@ html|input.findbar-textbox[flash="true"] {
 
 /* Close button */
 
-.findbar-closebutton {
-  /* Override margin-inline from close-icon.css */
-  margin-inline: 4px 8px !important;
+/* Increase specificity to override close-icon.css */
+.close-icon.findbar-closebutton {
+  margin: 2px 8px;
+  width: 24px;
 }
 
 @media not (-moz-proton) {

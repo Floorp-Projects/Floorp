@@ -11,7 +11,6 @@ use std::path::PathBuf;
 
 pub const LINUX_GATE_LIBRARY_NAME: &'static str = "linux-gate.so";
 pub const DELETED_SUFFIX: &'static str = " (deleted)";
-pub const MOZILLA_IPC_PREFIX: &'static str = "org.mozilla.ipc.";
 pub const RESERVED_FLAGS: &'static str = "---p";
 
 type Result<T> = std::result::Result<T, MapsReaderError>;
@@ -57,14 +56,6 @@ pub type MappingList = Vec<MappingEntry>;
 pub enum MappingInfoParsingResult {
     SkipLine,
     Success(MappingInfo),
-}
-
-fn is_ipc_shared_memory_segment(pathname: Option<&str>) -> bool {
-    if let Some(name) = pathname {
-        name.contains(MOZILLA_IPC_PREFIX) && name.contains(DELETED_SUFFIX)
-    } else {
-        false
-    }
 }
 
 fn is_mapping_a_path(pathname: Option<&str>) -> bool {
@@ -141,11 +132,6 @@ impl MappingInfo {
         if !is_path && linux_gate_loc != 0 && start_address == linux_gate_loc.try_into()? {
             pathname = Some(LINUX_GATE_LIBRARY_NAME);
             offset = 0;
-        }
-
-        if is_ipc_shared_memory_segment(pathname) {
-            // Skip shared memory segments used for IPC
-            return Ok(MappingInfoParsingResult::SkipLine);
         }
 
         match (pathname, last_mapping) {

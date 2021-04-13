@@ -29,7 +29,6 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/LoadInfo.h"
 #include "nsGlobalWindow.h"
@@ -81,38 +80,10 @@ using namespace mozilla::net;
 namespace mozilla {
 namespace dom {
 
-class WebSocketImpl;
-
-// This class is responsible for proxying nsIObserver and nsIWebSocketImpl
-// interfaces to WebSocketImpl. WebSocketImplProxy should be only accessed on
-// main thread, so we can let it support weak reference.
-class WebSocketImplProxy final : public nsIObserver,
-                                 public nsSupportsWeakReference,
-                                 public nsIWebSocketImpl {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSIWEBSOCKETIMPL
-
-  explicit WebSocketImplProxy(WebSocketImpl* aOwner) : mOwner(aOwner) {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-
-  void Disconnect() {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mOwner = nullptr;
-  }
-
- private:
-  ~WebSocketImplProxy() = default;
-
-  RefPtr<WebSocketImpl> mOwner;
-};
-
 class WebSocketImpl final : public nsIInterfaceRequestor,
                             public nsIWebSocketListener,
                             public nsIObserver,
+                            public nsSupportsWeakReference,
                             public nsIRequest,
                             public nsIEventTarget,
                             public nsIWebSocketImpl {
@@ -145,8 +116,6 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
         mWorkerShuttingDown(false) {
     if (!NS_IsMainThread()) {
       mIsMainThread = false;
-    } else {
-      mImplProxy = new WebSocketImplProxy(this);
     }
   }
 
@@ -261,8 +230,6 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   // For dispatching runnables to main thread.
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
-  RefPtr<WebSocketImplProxy> mImplProxy;
-
  private:
   ~WebSocketImpl() {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread() == mIsMainThread ||
@@ -275,30 +242,9 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   }
 };
 
-NS_IMPL_ISUPPORTS(WebSocketImplProxy, nsIObserver, nsISupportsWeakReference,
-                  nsIWebSocketImpl)
-
-NS_IMETHODIMP
-WebSocketImplProxy::Observe(nsISupports* aSubject, const char* aTopic,
-                            const char16_t* aData) {
-  if (!mOwner) {
-    return NS_OK;
-  }
-
-  return mOwner->Observe(aSubject, aTopic, aData);
-}
-
-NS_IMETHODIMP
-WebSocketImplProxy::SendMessage(const nsAString& aMessage) {
-  if (!mOwner) {
-    return NS_OK;
-  }
-
-  return mOwner->SendMessage(aMessage);
-}
-
 NS_IMPL_ISUPPORTS(WebSocketImpl, nsIInterfaceRequestor, nsIWebSocketListener,
-                  nsIObserver, nsIRequest, nsIEventTarget, nsIWebSocketImpl)
+                  nsIObserver, nsISupportsWeakReference, nsIRequest,
+                  nsIEventTarget, nsIWebSocketImpl)
 
 class CallDispatchConnectionCloseEvents final : public DiscardableRunnable {
  public:
@@ -670,11 +616,6 @@ void WebSocketImpl::DisconnectInternal() {
       os->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
       os->RemoveObserver(this, DOM_WINDOW_FROZEN_TOPIC);
     }
-  }
-
-  if (mImplProxy) {
-    mImplProxy->Disconnect();
-    mImplProxy = nullptr;
   }
 }
 
@@ -1307,12 +1248,6 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
   RefPtr<WebSocket> webSocket = new WebSocket(global);
   RefPtr<WebSocketImpl> webSocketImpl = webSocket->mImpl;
 
-  auto clearGuard = MakeScopeExit([&] {
-    if (NS_IsMainThread()) {
-      webSocketImpl->mImplProxy->Disconnect();
-    }
-  });
-
   bool connectionFailed = true;
 
   if (NS_IsMainThread()) {
@@ -1557,12 +1492,11 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
     if (NS_WARN_IF(!os)) {
       return NS_ERROR_FAILURE;
     }
-    MOZ_ASSERT(mImplProxy);
 
-    rv = os->AddObserver(mImplProxy, DOM_WINDOW_DESTROYED_TOPIC, true);
+    rv = os->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = os->AddObserver(mImplProxy, DOM_WINDOW_FROZEN_TOPIC, true);
+    rv = os->AddObserver(this, DOM_WINDOW_FROZEN_TOPIC, true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1847,9 +1781,7 @@ nsresult WebSocketImpl::InitializeConnection(
   mChannel = wsChannel;
 
   if (mIsMainThread) {
-    MOZ_ASSERT(mImplProxy);
-    mService->AssociateWebSocketImplWithSerialID(mImplProxy,
-                                                 mChannel->Serial());
+    mService->AssociateWebSocketImplWithSerialID(this, mChannel->Serial());
   }
 
   if (mIsMainThread && doc) {

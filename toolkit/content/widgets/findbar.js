@@ -42,8 +42,6 @@
     static get markup() {
       return `
       <hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
-        <toolbarbutton anonid="find-closebutton" class="findbar-closebutton tabbable close-icon"
-          data-l10n-id="findbar-find-button-close" oncommand="close();" />
         <hbox anonid="findbar-textbox-wrapper" align="stretch">
           <html:input anonid="findbar-textbox" class="findbar-textbox" />
           <toolbarbutton anonid="find-previous" class="findbar-find-previous tabbable"
@@ -67,6 +65,8 @@
         <image anonid="find-status-icon" class="find-status-icon" />
         <description anonid="find-status" control="findbar-textbox" class="findbar-label findbar-find-status" />
       </hbox>
+      <toolbarbutton anonid="find-closebutton" class="findbar-closebutton tabbable close-icon"
+          data-l10n-id="findbar-find-button-close" oncommand="close();" />
       `;
     }
 
@@ -98,6 +98,12 @@
       this.setAttribute("noanim", "true");
       this.hidden = true;
       this.appendChild(this.constructor.fragment);
+      if (AppConstants.platform == "macosx") {
+        this.insertBefore(
+          this.getElement("find-closebutton"),
+          this.getElement("findbar-container")
+        );
+      }
 
       /**
        * Please keep in sync with toolkit/modules/FindBarContent.jsm

@@ -16,32 +16,14 @@ pub fn write(
     buffer: &mut DumpBuf,
     dumper: &mut LinuxPtraceDumper,
 ) -> Result<MDRawDirectory> {
-    let mut num_output_mappings = config.user_mapping_list.len();
+    let mut modules = Vec::new();
 
-    for mapping in &dumper.mappings {
+    // First write all the mappings from the dumper
+    for map_idx in 0..dumper.mappings.len() {
         // If the mapping is uninteresting, or if
         // there is caller-provided information about this mapping
         // in the user_mapping_list list, skip it
-        if mapping.is_interesting() && !mapping.is_contained_in(&config.user_mapping_list) {
-            num_output_mappings += 1;
-        }
-    }
 
-    let list_header = MemoryWriter::<u32>::alloc_with_val(buffer, num_output_mappings as u32)?;
-
-    let mut dirent = MDRawDirectory {
-        stream_type: MDStreamType::ModuleListStream as u32,
-        location: list_header.location(),
-    };
-
-    // In case of num_output_mappings == 0, this call doesn't allocate any memory in the buffer
-    let mut mapping_list =
-        MemoryArrayWriter::<MDRawModule>::alloc_array(buffer, num_output_mappings)?;
-    dirent.location.data_size += mapping_list.location().data_size;
-
-    // First write all the mappings from the dumper
-    let mut idx = 0;
-    for map_idx in 0..dumper.mappings.len() {
         if !dumper.mappings[map_idx].is_interesting()
             || dumper.mappings[map_idx].is_contained_in(&config.user_mapping_list)
         {
@@ -51,18 +33,35 @@ pub fn write(
         let identifier = dumper
             .elf_identifier_for_mapping_index(map_idx)
             .unwrap_or(Default::default());
+
+        // If the identifier is all 0, its an uninteresting mapping (bmc#1676109)
+        if identifier.is_empty() || identifier.iter().all(|&x| x == 0) {
+            continue;
+        }
+
         let module = fill_raw_module(buffer, &dumper.mappings[map_idx], &identifier)?;
-        mapping_list.set_value_at(buffer, module, idx)?;
-        idx += 1;
+        modules.push(module);
     }
 
     // Next write all the mappings provided by the caller
     for user in &config.user_mapping_list {
         // GUID was provided by caller.
         let module = fill_raw_module(buffer, &user.mapping, &user.identifier)?;
-        mapping_list.set_value_at(buffer, module, idx)?;
-        idx += 1;
+        modules.push(module)
     }
+
+    let list_header = MemoryWriter::<u32>::alloc_with_val(buffer, modules.len() as u32)?;
+
+    let mut dirent = MDRawDirectory {
+        stream_type: MDStreamType::ModuleListStream as u32,
+        location: list_header.location(),
+    };
+
+    if !modules.is_empty() {
+        let mapping_list = MemoryArrayWriter::<MDRawModule>::alloc_from_array(buffer, &modules)?;
+        dirent.location.data_size += mapping_list.location().data_size;
+    }
+
     Ok(dirent)
 }
 

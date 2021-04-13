@@ -1658,6 +1658,10 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   background-color: rgba(91, 91, 102, 0.45);
 }
 
+#window-modal-dialog.showToolbar::backdrop {
+  background: linear-gradient(transparent, rgba(91, 91, 102, 0.45) 20%);
+}
+
 /* For the window-modal dialog, the background is supplied by the HTML dialog
  * backdrop, so the dialogOverlay background above "double backgrounds" - so
  * we remove it here: */

@@ -86,6 +86,14 @@ patterns = [
         "&cur->instructions[0]",
         "dest",
     ),
+    ("std::__copy_move", 4, "CopySpan", "source.data()", "target.data()"),
+    (
+        "__memmove_avx_unaligned_erms",
+        1,
+        "mozilla::detail::EndianUtils::copyAndSwapTo<.*0,.*0",
+        "aSrc",
+        "(size_t) aDest",
+    ),
 ]
 
 

@@ -219,7 +219,9 @@ class MediaManager final : public nsIMediaManagerService,
 
   using StreamPromise =
       MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>;
-  using DevicesPromise =
+  using DevicePromise =
+      MozPromise<RefPtr<MediaDevice>, RefPtr<MediaMgrError>, true>;
+  using DeviceSetPromise =
       MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>;
   using MgrPromise = MozPromise<bool, RefPtr<MediaMgrError>, true>;
   using BadConstraintsPromise =
@@ -235,8 +237,8 @@ class MediaManager final : public nsIMediaManagerService,
       nsPIDOMWindowInner* aWindow,
       dom::MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
       uint64_t aInnerWindowID = 0, const nsAString& aCallID = nsString());
-  RefPtr<DevicesPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
-                                          dom::CallerType aCallerType);
+  RefPtr<DeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
+                                            dom::CallerType aCallerType);
 
   nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow,
                             dom::Promise& aPromise);

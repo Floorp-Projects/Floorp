@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
+#include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDTD.h"
 #include "mozilla/dom/FromParser.h"
@@ -170,6 +171,23 @@ class PrototypeDocumentContentSink final : public nsIStreamLoaderObserver,
                   int32_t* aIndex);
 
     nsresult SetTopIndex(int32_t aIndex);
+
+    void Traverse(nsCycleCollectionTraversalCallback& aCallback,
+                  const char* aName, uint32_t aFlags = 0);
+    void Clear();
+
+    // Cycle collector helpers for ContextStack.
+    friend void ImplCycleCollectionUnlink(
+        PrototypeDocumentContentSink::ContextStack& aField) {
+      aField.Clear();
+    }
+
+    friend void ImplCycleCollectionTraverse(
+        nsCycleCollectionTraversalCallback& aCallback,
+        PrototypeDocumentContentSink::ContextStack& aField, const char* aName,
+        uint32_t aFlags = 0) {
+      aField.Traverse(aCallback, aName, aFlags);
+    }
   };
 
   friend class ContextStack;
