@@ -739,7 +739,7 @@ html|input[type="checkbox"] {
   border: 1px solid var(--checkbox-border-color);
   background-color: var(--checkbox-unchecked-bgcolor);
   border-radius: 2px;
-  margin-inline-end: 6px;
+  margin-inline: 0 6px;
   flex-shrink: 0; /* avoid shrinking inside flex container */
 }
 
@@ -796,8 +796,8 @@ xul|*.radio-check {
   padding: 0;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 100%;
-  margin-block: 3px; /* extend the vertical clicktarget */
-  margin-inline: 0 10px;
+  margin-block: 2px; /* extend the vertical clicktarget */
+  margin-inline: 0 6px;
   background-color: var(--in-content-button-background);
   background-position: center;
   flex-shrink: 0; /* avoid shrinking inside flex container */

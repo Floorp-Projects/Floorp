@@ -401,24 +401,21 @@ class Settings extends PureComponent {
             disabled: !isSupported,
           }),
           div(
-            { className: "perf-settings-feature-text" },
-            div(
-              { className: "perf-toggle-text-label" },
-              !isSupported && featureDescription.experimental
-                ? // Note when unsupported features are experimental.
-                  `${name} (Experimental)`
-                : name
-            ),
-            div(
-              { className: "perf-toggle-description" },
-              title,
-              !isSupported && disabledReason
-                ? div(
-                    { className: "perf-settings-feature-disabled-reason" },
-                    disabledReason
-                  )
-                : null
-            )
+            { className: "perf-toggle-text-label" },
+            !isSupported && featureDescription.experimental
+              ? // Note when unsupported features are experimental.
+                `${name} (Experimental)`
+              : name
+          ),
+          div(
+            { className: "perf-toggle-description" },
+            title,
+            !isSupported && disabledReason
+              ? div(
+                  { className: "perf-settings-feature-disabled-reason" },
+                  disabledReason
+                )
+              : null
           )
         );
       })
