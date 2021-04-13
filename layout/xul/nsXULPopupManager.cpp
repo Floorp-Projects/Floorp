@@ -1132,6 +1132,12 @@ void nsXULPopupManager::HidePopup(nsIContent* aPopup, bool aHideChain,
 }
 
 void nsXULPopupManager::HideMenu(nsIContent* aMenu) {
+  if (mNativeMenu && aMenu->IsElement() &&
+      mNativeMenu->Element()->Contains(aMenu)) {
+    mNativeMenu->CloseSubmenu(aMenu->AsElement());
+    return;
+  }
+
   nsMenuFrame* menu = do_QueryFrame(aMenu->GetPrimaryFrame(FlushType::Frames));
   if (!menu) {
     return;
