@@ -66,9 +66,6 @@ class TestCapabilities(MarionetteTestCase):
         )
         self.assertTrue(self.caps["strictFileInteractability"])
 
-    def test_supported_features(self):
-        self.assertIn("rotatable", self.caps)
-
     def test_additional_capabilities(self):
         self.assertIn("moz:processID", self.caps)
         self.assertEqual(self.caps["moz:processID"], self.appinfo["processID"])
