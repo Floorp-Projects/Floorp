@@ -34,6 +34,8 @@
 #ifdef XP_WIN
 #  include "mozilla/StackWalk_windows.h"
 #  include "mozilla/WindowsVersion.h"
+#elif defined(__wasi__)
+// Nothing.
 #else
 #  include <sys/mman.h>
 #  include <unistd.h>
@@ -324,7 +326,20 @@ static void DecommitPages(void* addr, size_t bytes) {
     MOZ_CRASH("DecommitPages failed");
   }
 }
-#else  // !XP_WIN
+#elif defined(__wasi__)
+static void* ReserveProcessExecutableMemory(size_t bytes) {
+  MOZ_CRASH("NYI for WASI.");
+  return nullptr;
+}
+[[nodiscard]] static bool CommitPages(void* addr, size_t bytes,
+                                      ProtectionSetting protection) {
+  MOZ_CRASH("NYI for WASI.");
+  return false;
+}
+static void DecommitPages(void* addr, size_t bytes) {
+  MOZ_CRASH("NYI for WASI.");
+}
+#else  // !XP_WIN && !__wasi__
 #  ifndef MAP_NORESERVE
 #    define MAP_NORESERVE 0
 #  endif
@@ -556,6 +571,9 @@ class ProcessExecutableMemory {
   }
 
   void release() {
+#if defined(__wasi__)
+    MOZ_ASSERT(!initialized());
+#else
     MOZ_ASSERT(initialized());
     MOZ_ASSERT(pages_.empty());
     MOZ_ASSERT(pagesAllocated_ == 0);
@@ -563,6 +581,7 @@ class ProcessExecutableMemory {
     base_ = nullptr;
     rng_.reset();
     MOZ_ASSERT(!initialized());
+#endif
   }
 
   void assertValidAddress(void* p, size_t bytes) const {
@@ -709,6 +728,8 @@ bool js::jit::InitProcessExecutableMemory() {
 #ifdef JS_CODEGEN_ARM64
   // Initialize instruction cache flushing.
   vixl::CPU::SetUp();
+#elif defined(__wasi__)
+  return true;
 #endif
   return execMemory.init();
 }
@@ -772,20 +793,24 @@ bool js::jit::ReprotectRegion(void* start, size_t size,
   // We use the C++ fence here -- and not AtomicOperations::fenceSeqCst() --
   // primarily because ReprotectRegion will be called while we construct our own
   // jitted atomics.  But the C++ fence is sufficient and correct, too.
+#ifdef __wasi__
+  MOZ_CRASH("NYI FOR WASI.");
+#else
   std::atomic_thread_fence(std::memory_order_seq_cst);
 
-#ifdef XP_WIN
+#  ifdef XP_WIN
   DWORD oldProtect;
   DWORD flags = ProtectionSettingToFlags(protection);
   if (!VirtualProtect(pageStart, size, flags, &oldProtect)) {
     return false;
   }
-#else
+#  else
   unsigned flags = ProtectionSettingToFlags(protection);
   if (mprotect(pageStart, size, flags)) {
     return false;
   }
-#endif
+#  endif
+#endif  // __wasi__
 
   execMemory.assertValidAddress(pageStart, size);
   return true;
