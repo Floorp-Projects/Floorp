@@ -472,7 +472,7 @@ DevToolsServerConnection.prototype = {
    *        The status code that corresponds to the reason for closing
    *        the stream.
    */
-  onClosed(status) {
+  onTransportClosed(status) {
     dumpn("Cleaning up connection.");
     if (!this._actorPool) {
       // Ignore this call if the connection is already closed.

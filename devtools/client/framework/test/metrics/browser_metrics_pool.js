@@ -54,7 +54,7 @@ add_task(async function() {
 
   info("Test how long it takes to destroy all the Pools");
   start = performance.now();
-  conn.onClosed();
+  conn.onTransportClosed();
   const destroyResult = performance.now() - start;
   sumResult += destroyResult;
 

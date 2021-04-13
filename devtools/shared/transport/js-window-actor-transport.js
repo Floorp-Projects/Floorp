@@ -37,8 +37,8 @@ class JsWindowActorTransport {
 
   close() {
     this._removeListener();
-    if (this.hooks.onClosed) {
-      this.hooks.onClosed();
+    if (this.hooks.onTransportClosed) {
+      this.hooks.onTransportClosed();
     }
   }
 

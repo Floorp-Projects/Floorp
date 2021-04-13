@@ -70,7 +70,7 @@ async function test_socket_conn() {
         });
         Assert.equal(packet.from, "root");
       },
-      onClosed: function(status) {
+      onTransportClosed: function(status) {
         resolve();
       },
     };
@@ -121,7 +121,7 @@ function test_pipe_conn() {
       Assert.equal(packet.from, "root");
       transport.close();
     },
-    onClosed: function(status) {
+    onTransportClosed: function(status) {
       run_next_test();
     },
   };
