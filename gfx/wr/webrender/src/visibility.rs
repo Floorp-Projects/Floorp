@@ -11,6 +11,7 @@ use api::{ColorF, DebugFlags};
 use api::units::*;
 use euclid::Scale;
 use std::{usize, mem};
+use crate::batch::BatchFilter;
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::composite::CompositeState;
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex};
@@ -100,7 +101,8 @@ pub enum VisibilityState {
     /// or more visible tiles. The rect in picture cache space is stored here to allow
     /// the detailed calculations below.
     Coarse {
-        rect_in_pic_space: PictureRect,
+        /// Information about which tile batchers this prim should be added to
+        filter: BatchFilter,
 
         /// A set of flags that define how this primitive should be handled
         /// during batching of visible primitives.
@@ -109,9 +111,8 @@ pub enum VisibilityState {
     /// Once coarse visibility is resolved, this will be set if the primitive
     /// intersected any dirty rects, otherwise prim will be culled.
     Detailed {
-        // TODO(gw): Intersecting Box2D is more efficient than Rect. Consider
-        //           storing here (and perhaps above) as a Box2D.
-        rect_in_pic_space: PictureRect,
+        /// Information about which tile batchers this prim should be added to
+        filter: BatchFilter,
 
         /// A set of flags that define how this primitive should be handled
         /// during batching of visible primitives.
