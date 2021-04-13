@@ -162,6 +162,7 @@ LazyLogModule gMediaManagerLog("MediaManager");
 
 class GetUserMediaStreamTask;
 class LocalTrackSource;
+class SelectAudioOutputTask;
 
 using dom::CallerType;
 using dom::ConstrainDOMStringParameters;
@@ -1270,8 +1271,12 @@ class GetUserMediaTask {
                       const nsCString& aMessage = ""_ns) = 0;
 
   virtual GetUserMediaStreamTask* AsGetUserMediaStreamTask() { return nullptr; }
+  virtual SelectAudioOutputTask* AsSelectAudioOutputTask() { return nullptr; }
 
-  uint64_t GetWindowID() { return mWindowID; }
+  uint64_t GetWindowID() const { return mWindowID; }
+  enum CallerType CallerType() const {
+    return mIsChrome ? CallerType::System : CallerType::NonSystem;
+  }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     size_t amount = aMallocSizeOf(this);
@@ -1682,6 +1687,52 @@ void GetUserMediaStreamTask::PrepareDOMStream() {
 
   PersistPrincipalKey();
 }
+
+/**
+ * Describes a requested task that handles response from the UI to a
+ * selectAudioOutput() request and sends results back to content.  If the
+ * request is allowed, then the MozPromise is resolved with a MediaDevice
+ * for the approved device.
+ */
+class SelectAudioOutputTask final : public GetUserMediaTask {
+ public:
+  SelectAudioOutputTask(
+      MozPromiseHolder<MediaManager::DevicePromise>&& aHolder,
+      uint64_t aWindowID, enum CallerType aCallerType,
+      const ipc::PrincipalInfo& aPrincipalInfo,
+      RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aMediaDeviceSet)
+      : GetUserMediaTask(aWindowID, aPrincipalInfo,
+                         aCallerType == CallerType::System,
+                         std::move(aMediaDeviceSet)),
+        mHolder(std::move(aHolder)) {}
+
+  void Allowed(RefPtr<MediaDevice> aAudioOutput) {
+    MOZ_ASSERT(aAudioOutput);
+    mHolder.Resolve(std::move(aAudioOutput), __func__);
+    PersistPrincipalKey();
+  }
+
+  void Denied(MediaMgrError::Name aName, const nsCString& aMessage) override {
+    MOZ_ASSERT(NS_IsMainThread());
+    Fail(aName, aMessage);
+  }
+
+  SelectAudioOutputTask* AsSelectAudioOutputTask() override { return this; }
+
+ private:
+  ~SelectAudioOutputTask() override {
+    if (!mHolder.IsEmpty()) {
+      Fail(MediaMgrError::Name::NotAllowedError);
+    }
+  }
+
+  void Fail(MediaMgrError::Name aName, const nsCString& aMessage = ""_ns) {
+    mHolder.Reject(MakeRefPtr<MediaMgrError>(aName, aMessage), __func__);
+  }
+
+ private:
+  MozPromiseHolder<MediaManager::DevicePromise> mHolder;
+};
 
 /* static */
 void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
@@ -3676,13 +3727,15 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     if (NS_WARN_IF(!aSubject)) {
       return NS_ERROR_FAILURE;  // ignored
     }
-    // A particular device or devices were chosen by the user.
+    // Permission has been granted.  aSubject contains the particular device
+    // or devices selected and approved by the user, if any.
     nsCOMPtr<nsIArray> array(do_QueryInterface(aSubject));
     MOZ_ASSERT(array);
     uint32_t len = 0;
     array->GetLength(&len);
     RefPtr<MediaDevice> audioInput;
     RefPtr<MediaDevice> videoInput;
+    RefPtr<MediaDevice> audioOutput;
     for (uint32_t i = 0; i < len; i++) {
       nsCOMPtr<nsIMediaDevice> device;
       array->QueryElementAt(i, NS_GET_IID(nsIMediaDevice),
@@ -3695,16 +3748,24 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       // Casting here is safe because a MediaDevice is created
       // only in Gecko side, JS can only query for an instance.
       MediaDevice* dev = static_cast<MediaDevice*>(device.get());
-      if (dev->mKind == MediaDeviceKind::Videoinput) {
-        if (!videoInput) {
-          videoInput = dev;
-        }
-      } else if (dev->mKind == MediaDeviceKind::Audioinput) {
-        if (!audioInput) {
-          audioInput = dev;
-        }
-      } else {
-        MOZ_CRASH("Unexpected device kind");
+      switch (dev->mKind) {
+        case MediaDeviceKind::Videoinput:
+          if (!videoInput) {
+            videoInput = dev;
+          }
+          break;
+        case MediaDeviceKind::Audioinput:
+          if (!audioInput) {
+            audioInput = dev;
+          }
+          break;
+        case MediaDeviceKind::Audiooutput:
+          if (!audioOutput) {
+            audioOutput = dev;
+          }
+          break;
+        default:
+          MOZ_CRASH("Unexpected device kind");
       }
     }
 
@@ -3718,6 +3779,22 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
         return NS_OK;
       }
       streamTask->Allowed(std::move(audioInput), std::move(videoInput));
+      return NS_OK;
+    }
+    if (SelectAudioOutputTask* outputTask = task->AsSelectAudioOutputTask()) {
+      if (!audioOutput) {
+        // selectAudioOutput() has checked for "denied" permission state
+        // before reporting no devices.  (This differs from getUserMedia(),
+        // which checks for no devices before checking permission.)  However,
+        // selectAudioOutput() still does not prompt before reporting no
+        // devices, so hide this information when resisting fingerprinting.
+        auto error = nsContentUtils::ResistFingerprinting(task->CallerType())
+                         ? MediaMgrError::Name::NotAllowedError
+                         : MediaMgrError::Name::NotFoundError;
+        task->Denied(error);
+        return NS_OK;
+      }
+      outputTask->Allowed(std::move(audioOutput));
       return NS_OK;
     }
 
