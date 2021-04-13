@@ -292,7 +292,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   bool ComputeShouldAccelerate();
-  virtual bool WidgetTypePrefersSoftwareWebRender() const;
   virtual bool WidgetTypeSupportsAcceleration() { return true; }
   [[nodiscard]] virtual nsresult OnDefaultButtonLoaded(
       const LayoutDeviceIntRect& aButtonRect) override {

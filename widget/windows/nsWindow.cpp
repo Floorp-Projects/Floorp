@@ -8509,12 +8509,6 @@ void nsWindow::PickerClosed() {
   }
 }
 
-bool nsWindow::WidgetTypePrefersSoftwareWebRender() const {
-  return (mTransparencyMode == eTransparencyTransparent &&
-          StaticPrefs::gfx_webrender_software_unaccelerated_widget_allow()) ||
-         nsBaseWidget::WidgetTypePrefersSoftwareWebRender();
-}
-
 bool nsWindow::WidgetTypeSupportsAcceleration() {
   // We don't currently support using an accelerated layer manager with
   // transparent windows so don't even try. I'm also not sure if we even
