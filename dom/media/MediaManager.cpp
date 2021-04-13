@@ -1490,7 +1490,9 @@ class GetUserMediaStreamTask final : public GetUserMediaTask {
   RefPtr<MediaDevice> mVideoDevice;
   const MediaEnginePrefs mPrefs;
   const bool mShouldFocusSource;
-  RefPtr<MediaManager> mManager;  // get ref to this when creating the runnable
+  // The MediaManager is referenced at construction so that it won't be
+  // created after its ShutdownBlocker would run.
+  const RefPtr<MediaManager> mManager;
 };
 
 /**
