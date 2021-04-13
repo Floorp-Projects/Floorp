@@ -38,6 +38,7 @@ avoid-blacklist-and-whitelist:
         - browser/base/content/test/protectionsUI/browser_protectionsUI_report_breakage.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_socialtracking.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_state.js
+        - browser/base/content/test/protectionsUI/browser_protectionsUI_subview_shim.js
         - browser/base/content/test/siteIdentity/browser_no_mcb_for_loopback.js
         - browser/base/content/test/siteIdentity/browser_no_mcb_for_onions.js
         - browser/base/content/test/static/browser_all_files_referenced.js

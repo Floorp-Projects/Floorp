@@ -15,8 +15,13 @@ registerCleanupFunction(function() {
 });
 
 add_task(async function testNormalBrowsing() {
-  let TrackingProtection = gBrowser.ownerGlobal.TrackingProtection;
-  ok(TrackingProtection, "TP is attached to the browser window");
+  let {
+    TrackingProtection,
+  } = gBrowser.ownerGlobal.gProtectionsHandler.blockers;
+  ok(
+    TrackingProtection,
+    "Normal window gProtectionsHandler should have TrackingProtection blocker."
+  );
 
   Services.prefs.setBoolPref(PREF, true);
   Services.prefs.setBoolPref(PB_PREF, false);
@@ -35,8 +40,13 @@ add_task(async function testPrivateBrowsing() {
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  let TrackingProtection = privateWin.gBrowser.ownerGlobal.TrackingProtection;
-  ok(TrackingProtection, "TP is attached to the browser window");
+  let {
+    TrackingProtection,
+  } = privateWin.gBrowser.ownerGlobal.gProtectionsHandler.blockers;
+  ok(
+    TrackingProtection,
+    "Private window gProtectionsHandler should have TrackingProtection blocker."
+  );
 
   Services.prefs.setBoolPref(PREF, true);
   Services.prefs.setBoolPref(PB_PREF, false);

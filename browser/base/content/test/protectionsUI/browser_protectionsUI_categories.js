@@ -182,7 +182,7 @@ add_task(async function testCategorySections() {
     await closeProtectionsPanel();
 
     let categoryItems = [
-      "protections-popup-category-tracking-protection",
+      "protections-popup-category-trackers",
       "protections-popup-category-socialblock",
       "protections-popup-category-cookies",
       "protections-popup-category-cryptominers",
@@ -234,7 +234,7 @@ add_task(async function testCategorySections() {
  */
 add_task(async function testCategorySectionInitial() {
   let categoryItems = [
-    "protections-popup-category-tracking-protection",
+    "protections-popup-category-trackers",
     "protections-popup-category-socialblock",
     "protections-popup-category-cookies",
     "protections-popup-category-cryptominers",

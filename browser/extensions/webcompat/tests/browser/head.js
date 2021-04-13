@@ -41,7 +41,8 @@ async function testShimRuns(
     waitForLoad: true,
   });
 
-  const TrackingProtection = tab.ownerGlobal.TrackingProtection;
+  const TrackingProtection =
+    tab.ownerGlobal.gProtectionsHandler.blockers.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the tab");
   ok(TrackingProtection.enabled, "TP is enabled");
 

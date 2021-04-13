@@ -91,7 +91,9 @@ add_task(async function testExceptionAddition() {
 
   gProtectionsHandler = browser.ownerGlobal.gProtectionsHandler;
   ok(gProtectionsHandler, "CB is attached to the private window");
-  TrackingProtection = browser.ownerGlobal.TrackingProtection;
+
+  TrackingProtection =
+    browser.ownerGlobal.gProtectionsHandler.blockers.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the private window");
 
   Services.prefs.setBoolPref(TP_PB_PREF, true);
@@ -135,7 +137,8 @@ add_task(async function testExceptionPersistence() {
 
   gProtectionsHandler = browser.ownerGlobal.gProtectionsHandler;
   ok(gProtectionsHandler, "CB is attached to the private window");
-  TrackingProtection = browser.ownerGlobal.TrackingProtection;
+  TrackingProtection =
+    browser.ownerGlobal.gProtectionsHandler.blockers.TrackingProtection;
   ok(TrackingProtection, "TP is attached to the private window");
 
   ok(TrackingProtection.enabled, "TP is still enabled");
