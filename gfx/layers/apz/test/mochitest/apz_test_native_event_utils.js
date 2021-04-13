@@ -1369,5 +1369,5 @@ async function doubleTapOn(element, x, y, useTouchpad) {
   await transformEndPromise;
 
   // Flush state so we can query an accurate resolution
-  await promiseOnlyApzControllerFlushed();
+  await promiseApzFlushedRepaints();
 }
