@@ -49,7 +49,7 @@ add_task(async function context_one() {
 
       info("Click on the menuitem");
       let enginePromise = promiseEngine("engine-added", "add_search_engine_0");
-      EventUtils.synthesizeMouseAtCenter(elt, {});
+      popup.activateItem(elt);
       await enginePromise;
       Assert.equal(popup.state, "closed");
     });
@@ -109,7 +109,7 @@ add_task(async function context_invalid() {
         promptType: "alert",
       });
 
-      EventUtils.synthesizeMouseAtCenter(elt, {});
+      popup.activateItem(elt);
 
       let prompt = await promptPromise;
       Assert.ok(
@@ -189,18 +189,30 @@ add_task(async function context_many() {
 
       info("Open the submenu");
       let popupShown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-      EventUtils.synthesizeMouseAtCenter(menu, {});
+      menu.openMenu(true);
       await popupShown;
       for (let i = 0; i < 4; ++i) {
         let elt = popup.parentNode.getMenuItem(`add-engine-${i}`);
         Assert.equal(elt.parentNode, menu.menupopup);
-        Assert.ok(BrowserTestUtils.is_visible(elt));
+        if (
+          AppConstants.platform != "macosx" ||
+          !Services.prefs.getBoolPref(
+            "widget.macos.native-context-menus",
+            false
+          )
+        ) {
+          // When openMenu is called on macOS native context menus, the menuitem
+          // is not visible. It is only open from the test's perspective (i.e.,
+          // popupshown is fired).
+          Assert.ok(BrowserTestUtils.is_visible(elt));
+        }
       }
 
       info("Click on the first engine to install it");
       let enginePromise = promiseEngine("engine-added", "add_search_engine_0");
       let elt = popup.parentNode.getMenuItem("add-engine-0");
-      EventUtils.synthesizeMouseAtCenter(elt, {});
+
+      elt.closest("menupopup").activateItem(elt);
       await enginePromise;
       Assert.equal(popup.state, "closed");
     });
@@ -239,12 +251,20 @@ add_task(async function context_many() {
 
       info("Open the submenu");
       let popupShown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-      EventUtils.synthesizeMouseAtCenter(menu, {});
+      menu.openMenu(true);
       await popupShown;
       for (let i = 0; i < 4; ++i) {
         let elt = popup.parentNode.getMenuItem(`add-engine-${i}`);
         Assert.equal(elt.parentNode, menu.menupopup);
-        Assert.ok(BrowserTestUtils.is_visible(elt));
+        if (
+          AppConstants.platform != "macosx" ||
+          !Services.prefs.getBoolPref(
+            "widget.macos.native-context-menus",
+            false
+          )
+        ) {
+          Assert.ok(BrowserTestUtils.is_visible(elt));
+        }
       }
     });
   });
