@@ -59,8 +59,6 @@ function TargetMixin(parentClass) {
       // In order to avoid destroying the `_resourceCache`, we need to call `super.on()`
       // instead of `this.on()`.
       super.on("resource-available-form", this._onResourceAvailable);
-
-      this._addListeners();
     }
 
     on(eventName, listener) {
@@ -569,29 +567,6 @@ function TargetMixin(parentClass) {
       return this.threadFront;
     }
 
-    /**
-     * Setup listeners.
-     */
-    _addListeners() {
-      this.client.on("closed", this.destroy);
-    }
-
-    /**
-     * Teardown listeners.
-     */
-    _removeListeners() {
-      // Remove listeners set in _addListeners
-      if (this.client) {
-        this.client.off("closed", this.destroy);
-      }
-
-      // Remove listeners set in attachConsole
-      if (this.removeOnInspectObjectListener) {
-        this.removeOnInspectObjectListener();
-        this.removeOnInspectObjectListener = null;
-      }
-    }
-
     isDestroyedOrBeingDestroyed() {
       return this.isDestroyed() || this._destroyer;
     }
@@ -641,7 +616,11 @@ function TargetMixin(parentClass) {
         }
       }
 
-      this._removeListeners();
+      // Remove listeners set in attachConsole
+      if (this.removeOnInspectObjectListener) {
+        this.removeOnInspectObjectListener();
+        this.removeOnInspectObjectListener = null;
+      }
 
       this.threadFront = null;
 
