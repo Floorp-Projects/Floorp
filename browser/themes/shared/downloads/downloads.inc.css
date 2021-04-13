@@ -65,6 +65,10 @@
 .downloadTypeIcon {
   margin-inline-end: 0.7em;
 }
+
+#downloadsPanel-blockedSubview-buttons {
+  display: flex;
+}
 }/** END Proton **/
 
 @media not (-moz-proton-doorhangers) {
