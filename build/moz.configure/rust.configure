@@ -164,10 +164,7 @@ def rust_compiler(rustc_info, cargo_info, build_project):
         """
             )
         )
-    if build_project == "tools/crashreporter":
-        rustc_min_version = Version("1.47.0")
-    else:
-        rustc_min_version = Version(MINIMUM_RUST_VERSION)
+    rustc_min_version = Version(MINIMUM_RUST_VERSION)
     cargo_min_version = rustc_min_version
 
     version = rustc_info.version
