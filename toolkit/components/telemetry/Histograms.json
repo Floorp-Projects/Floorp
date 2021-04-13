@@ -11816,7 +11816,7 @@
     "kind": "enumerated",
     "n_values": 4,
     "releaseChannelCollection": "opt-out",
-    "description": "Result of the Set Default Browser dialog (0=Use Firefox + 'Always perform check' unchecked, 1=Use Firefox + 'Always perform check' checked, 2=Not Now + 'Always perform check' unchecked, 3=Not Now + 'Always perform check' checked)"
+    "description": "Result of the Set Default Browser dialog. After Firefox 89 the these values are: (0=Use Firefox + 'Don't ask again' checked, 1=Use Firefox + 'Don't ask again' unchecked, 2=Not Now + 'Don't ask again' checked, 3=Not Now + 'Don't ask again' unchecked). Before Firefox 89 these values were: (0=Use Firefox + 'Always perform check' unchecked, 1=Use Firefox + 'Always perform check' checked, 2=Not Now + 'Always perform check' unchecked, 3=Not Now + 'Always perform check' checked)."
   },
   "BROWSER_SET_DEFAULT_ERROR": {
     "record_in_processes": ["main"],

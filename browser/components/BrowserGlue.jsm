@@ -4563,29 +4563,25 @@ ContentPermissionPrompt.prototype = {
 };
 
 var DefaultBrowserCheck = {
-  prompt(win) {
-    let brandBundle = win.document.getElementById("bundle_brand");
-    let brandShortName = brandBundle.getString("brandShortName");
-
-    let shellBundle = win.document.getElementById("bundle_shell");
-    let buttonPrefix = "setDefaultBrowserAlert";
-    let yesButton = shellBundle.getFormattedString(
-      buttonPrefix + "Confirm.label",
-      [brandShortName]
+  async prompt(win) {
+    win.MozXULElement.insertFTLIfNeeded("branding/brand.ftl");
+    win.MozXULElement.insertFTLIfNeeded(
+      "browser/defaultBrowserNotification.ftl"
     );
-    let notNowButton = shellBundle.getString(buttonPrefix + "NotNow.label");
-
-    let promptTitle = shellBundle.getString("setDefaultBrowserTitle");
-    let promptMessage = shellBundle.getFormattedString(
-      "setDefaultBrowserMessage",
-      [brandShortName]
-    );
-    let askLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk", [
-      brandShortName,
-    ]);
+    // Resolve the translations for the prompt elements and return only the
+    // string values
+    let [promptTitle, promptMessage, askLabel, yesButton, notNowButton] = (
+      await win.document.l10n.formatMessages([
+        { id: "default-browser-prompt-title-alt" },
+        { id: "default-browser-prompt-message-alt" },
+        { id: "default-browser-prompt-checkbox-label" },
+        { id: "default-browser-prompt-button-primary-alt" },
+        { id: "default-browser-prompt-button-secondary" },
+      ])
+    ).map(({ value }) => value);
 
     let ps = Services.prompt;
-    let shouldAsk = { value: true };
+    let stopAsk = { value: false };
     let buttonFlags =
       ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0 +
       ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_1 +
@@ -4599,16 +4595,16 @@ var DefaultBrowserCheck = {
       notNowButton,
       null,
       askLabel,
-      shouldAsk
+      stopAsk
     );
     if (rv == 0) {
       win.getShellService().setAsDefault();
-    } else if (!shouldAsk.value) {
+    } else if (stopAsk.value) {
       win.getShellService().shouldCheckDefaultBrowser = false;
     }
 
     try {
-      let resultEnum = rv * 2 + shouldAsk.value;
+      let resultEnum = rv * 2 + !stopAsk.value;
       Services.telemetry
         .getHistogramById("BROWSER_SET_DEFAULT_RESULT")
         .add(resultEnum);
