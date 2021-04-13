@@ -70,11 +70,11 @@
         <vbox id="protections-popup-content" flex="1">
           <vbox id="protections-popup-category-list">
             <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
-            <toolbarbutton id="protections-popup-category-tracking-protection"
+            <toolbarbutton id="protections-popup-category-trackers"
                            oncommand="gProtectionsHandler.showTrackersSubview(event); gProtectionsHandler.recordClick('trackers');"
                            class="protections-popup-category" align="center"
                            wrap="true">
-              <image class="protections-popup-category-icon tracking-protection-icon"/>
+              <image class="protections-popup-category-icon trackers-icon"/>
               <label flex="1" class="protections-popup-category-label" data-l10n-id="protections-panel-content-blocking-tracking-protection"></label>
             </toolbarbutton>
             <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
@@ -214,6 +214,13 @@
                descriptionheightworkaround="true">
         <vbox id="protections-popup-trackersView-description" class="protections-popup-description">
           <description data-l10n-id="protections-panel-tracking-content"></description>
+          <hbox id="protections-popup-trackersView-shim-allow-hint"
+                class="protections-popup-shim-allow-hint">
+            <image class="protections-popup-shim-allow-hint-icon"></image>
+            <description flex="1"
+                         data-l10n-id="protections-panel-description-shim-allowed">
+            </description>
+          </hbox>
         </vbox>
         <vbox id="protections-popup-trackersView-list" class="protections-popup-list">
         </vbox>
@@ -230,6 +237,13 @@
                descriptionheightworkaround="true">
         <vbox id="protections-popup-socialblockView-heading" class="protections-popup-description">
           <description data-l10n-id="protections-panel-social-media-trackers"></description>
+          <hbox id="protections-popup-socialblockView-shim-allow-hint"
+                class="protections-popup-shim-allow-hint">
+            <image class="protections-popup-shim-allow-hint-icon"></image>
+            <description flex="1"
+                         data-l10n-id="protections-panel-description-shim-allowed">
+            </description>
+          </hbox>
         </vbox>
         <vbox id="protections-popup-socialblockView-list" class="protections-popup-list">
         </vbox>
@@ -262,6 +276,13 @@
                descriptionheightworkaround="true">
         <vbox id="protections-popup-fingerprinters-heading" class="protections-popup-description">
           <description data-l10n-id="protections-panel-fingerprinters"></description>
+          <hbox id="protections-popup-fingerprintersView-shim-allow-hint"
+                class="protections-popup-shim-allow-hint">
+            <image class="protections-popup-shim-allow-hint-icon"></image>
+            <description flex="1"
+                        data-l10n-id="protections-panel-description-shim-allowed">
+            </description>
+          </hbox>
         </vbox>
         <vbox id="protections-popup-fingerprintersView-list" class="protections-popup-list">
         </vbox>
@@ -278,6 +299,13 @@
                descriptionheightworkaround="true">
         <vbox id="protections-popup-cryptominers-heading" class="protections-popup-description">
           <description data-l10n-id="protections-panel-cryptominers"></description>
+          <hbox id="protections-popup-cryptominersView-shim-allow-hint"
+                class="protections-popup-shim-allow-hint">
+            <image class="protections-popup-shim-allow-hint-icon"></image>
+            <description flex="1"
+                        data-l10n-id="protections-panel-description-shim-allowed">
+            </description>
+          </hbox>
         </vbox>
         <vbox id="protections-popup-cryptominersView-list" class="protections-popup-list">
         </vbox>
