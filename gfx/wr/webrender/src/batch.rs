@@ -960,15 +960,131 @@ impl BatchBuilder {
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
     ) {
-        let rect_in_pic_space = match prim_instance.vis.state {
+        let (rect_in_pic_space, vis_flags) = match prim_instance.vis.state {
             VisibilityState::Culled => {
                 return;
             }
             VisibilityState::Unset | VisibilityState::Coarse { .. } => {
                 panic!("bug: invalid visibility state");
             }
-            VisibilityState::Detailed { ref rect_in_pic_space } => {
-                rect_in_pic_space
+            VisibilityState::Detailed { ref rect_in_pic_space, vis_flags } => {
+                (rect_in_pic_space, vis_flags)
+            }
+            VisibilityState::PassThrough => {
+                let pic_index = match prim_instance.kind {
+                    PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
+                    _ => unreachable!("Only picture prims can be pass through"),
+                };
+                let picture = &ctx.prim_store.pictures[pic_index.0];
+
+                match picture.context_3d {
+                    // Convert all children of the 3D hierarchy root into batches.
+                    Picture3DContext::In { root_data: Some(ref list), .. } => {
+                        for child in list {
+                            let child_prim_instance = &picture.prim_list.prim_instances[child.anchor.instance_index];
+                            let child_prim_info = &child_prim_instance.vis;
+
+                            let child_pic_index = match child_prim_instance.kind {
+                                PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
+                                _ => unreachable!(),
+                            };
+                            let pic = &ctx.prim_store.pictures[child_pic_index.0];
+
+                            let child_rect_in_pic_space = match child_prim_info.state {
+                                VisibilityState::Detailed { rect_in_pic_space, .. } => rect_in_pic_space,
+                                _ => panic!("bug: culled prim should not be in child list"),
+                            };
+
+                            // Get clip task, if set, for the picture primitive.
+                            let (child_clip_task_address, clip_mask_texture_id) = ctx.get_prim_clip_task_and_texture(
+                                child_prim_info.clip_task_index,
+                                render_tasks,
+                            ).unwrap();
+
+                            let prim_header = PrimitiveHeader {
+                                local_rect: pic.precise_local_rect,
+                                local_clip_rect: child_prim_info.combined_local_clip_rect,
+                                specific_prim_address: GpuCacheAddress::INVALID,
+                                transform_id: transforms
+                                    .get_id(
+                                        child.spatial_node_index,
+                                        root_spatial_node_index,
+                                        ctx.spatial_tree,
+                                    ),
+                            };
+
+                            let raster_config = pic
+                                .raster_config
+                                .as_ref()
+                                .expect("BUG: 3d primitive was not assigned a surface");
+
+                            let child_pic_task_id = pic
+                                .primary_render_task_id
+                                .unwrap();
+
+                            let (uv_rect_address, texture) = render_tasks.resolve_location(
+                                child_pic_task_id,
+                                gpu_cache,
+                            ).unwrap();
+                            let textures = BatchTextures::prim_textured(
+                                texture,
+                                clip_mask_texture_id,
+                            );
+
+                            // Need a new z-id for each child preserve-3d context added
+                            // by this inner loop.
+                            let z_id = z_generator.next();
+
+                            let prim_header_index = prim_headers.push(&prim_header, z_id, [
+                                uv_rect_address.as_int(),
+                                if raster_config.establishes_raster_root { 1 } else { 0 },
+                                0,
+                                child_clip_task_address.0 as i32,
+                            ]);
+
+                            let key = BatchKey::new(
+                                BatchKind::SplitComposite,
+                                BlendMode::PremultipliedAlpha,
+                                textures,
+                            );
+
+                            self.add_split_composite_instance_to_batches(
+                                key,
+                                BatchFeatures::CLIP_MASK,
+                                &child_prim_info.clip_chain.pic_clip_rect,
+                                z_id,
+                                prim_header_index,
+                                child.gpu_address,
+                                &child_rect_in_pic_space,
+                            );
+                        }
+                    }
+                    // Ignore the 3D pictures that are not in the root of preserve-3D
+                    // hierarchy, since we process them with the root.
+                    Picture3DContext::In { root_data: None, .. } => {
+                        unreachable!();
+                    }
+                    // Proceed for non-3D pictures.
+                    Picture3DContext::Out => {
+                        // If this picture is being drawn into an existing target (i.e. with
+                        // no composition operation), recurse and add to the current batch list.
+                        self.add_pic_to_batch(
+                            picture,
+                            ctx,
+                            gpu_cache,
+                            render_tasks,
+                            deferred_resolves,
+                            prim_headers,
+                            transforms,
+                            root_spatial_node_index,
+                            surface_spatial_node_index,
+                            z_generator,
+                            composite_state,
+                        );
+                    }
+                }
+
+                return;
             }
         };
 
@@ -994,7 +1110,7 @@ impl BatchBuilder {
         // use the backdrop color as a clear color, and so we can drop this
         // primitive and any prior primitives from the batch lists for this
         // picture cache slice.
-        if prim_info.flags.contains(PrimitiveVisibilityFlags::IS_BACKDROP) {
+        if vis_flags.contains(PrimitiveVisibilityFlags::IS_BACKDROP) {
             self.clear_batches();
             return;
         }
@@ -1482,85 +1598,8 @@ impl BatchBuilder {
 
                 match picture.context_3d {
                     // Convert all children of the 3D hierarchy root into batches.
-                    Picture3DContext::In { root_data: Some(ref list), .. } => {
-                        for child in list {
-                            let child_prim_instance = &picture.prim_list.prim_instances[child.anchor.instance_index];
-                            let child_prim_info = &child_prim_instance.vis;
-
-                            let child_pic_index = match child_prim_instance.kind {
-                                PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
-                                _ => unreachable!(),
-                            };
-                            let pic = &ctx.prim_store.pictures[child_pic_index.0];
-
-                            let child_rect_in_pic_space = match child_prim_info.state {
-                                VisibilityState::Detailed { ref rect_in_pic_space } => rect_in_pic_space,
-                                _ => panic!("bug: culled prim should not be in child list"),
-                            };
-
-                            // Get clip task, if set, for the picture primitive.
-                            let (child_clip_task_address, clip_mask_texture_id) = ctx.get_prim_clip_task_and_texture(
-                                child_prim_info.clip_task_index,
-                                render_tasks,
-                            ).unwrap();
-
-                            let prim_header = PrimitiveHeader {
-                                local_rect: pic.precise_local_rect,
-                                local_clip_rect: child_prim_info.combined_local_clip_rect,
-                                specific_prim_address: GpuCacheAddress::INVALID,
-                                transform_id: transforms
-                                    .get_id(
-                                        child.spatial_node_index,
-                                        root_spatial_node_index,
-                                        ctx.spatial_tree,
-                                    ),
-                            };
-
-                            let raster_config = pic
-                                .raster_config
-                                .as_ref()
-                                .expect("BUG: 3d primitive was not assigned a surface");
-
-                            let child_pic_task_id = pic
-                                .primary_render_task_id
-                                .unwrap();
-
-                            let (uv_rect_address, texture) = render_tasks.resolve_location(
-                                child_pic_task_id,
-                                gpu_cache,
-                            ).unwrap();
-                            let textures = BatchTextures::prim_textured(
-                                texture,
-                                clip_mask_texture_id,
-                            );
-
-                            // Need a new z-id for each child preserve-3d context added
-                            // by this inner loop.
-                            let z_id = z_generator.next();
-
-                            let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                uv_rect_address.as_int(),
-                                if raster_config.establishes_raster_root { 1 } else { 0 },
-                                0,
-                                child_clip_task_address.0 as i32,
-                            ]);
-
-                            let key = BatchKey::new(
-                                BatchKind::SplitComposite,
-                                BlendMode::PremultipliedAlpha,
-                                textures,
-                            );
-
-                            self.add_split_composite_instance_to_batches(
-                                key,
-                                BatchFeatures::CLIP_MASK,
-                                &child_prim_info.clip_chain.pic_clip_rect,
-                                z_id,
-                                prim_header_index,
-                                child.gpu_address,
-                                child_rect_in_pic_space,
-                            );
-                        }
+                    Picture3DContext::In { root_data: Some(_), .. } => {
+                        unreachable!("bug: handled above");
                     }
                     // Ignore the 3D pictures that are not in the root of preserve-3D
                     // hierarchy, since we process them with the root.
@@ -2208,21 +2247,7 @@ impl BatchBuilder {
                         }
                     }
                     None => {
-                        // If this picture is being drawn into an existing target (i.e. with
-                        // no composition operation), recurse and add to the current batch list.
-                        self.add_pic_to_batch(
-                            picture,
-                            ctx,
-                            gpu_cache,
-                            render_tasks,
-                            deferred_resolves,
-                            prim_headers,
-                            transforms,
-                            root_spatial_node_index,
-                            surface_spatial_node_index,
-                            z_generator,
-                            composite_state,
-                        );
+                        unreachable!();
                     }
                 }
             }

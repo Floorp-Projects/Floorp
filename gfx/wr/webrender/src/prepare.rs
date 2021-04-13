@@ -81,7 +81,7 @@ pub fn prepare_primitives(
                 VisibilityState::Culled => {
                     continue;
                 }
-                VisibilityState::Coarse { ref rect_in_pic_space } => {
+                VisibilityState::Coarse { ref rect_in_pic_space, vis_flags } => {
                     // The original coarse state was calculated during the initial visibility pass.
                     // However, it's possible that the dirty rect has got smaller, if tiles were not
                     // dirty. Intersecting with the dirty rect here eliminates preparing any primitives
@@ -100,6 +100,7 @@ pub fn prepare_primitives(
                     if is_in_dirty_region {
                         prim_instance.vis.state = VisibilityState::Detailed {
                             rect_in_pic_space: *rect_in_pic_space,
+                            vis_flags,
                         }
                     } else {
                         prim_instance.clear_visibility();
@@ -109,6 +110,7 @@ pub fn prepare_primitives(
                 VisibilityState::Detailed { .. } => {
                     // Was already set to detailed (picture caching disabled or a root element)
                 }
+                VisibilityState::PassThrough => {}
             }
 
             let plane_split_anchor = PlaneSplitAnchor::new(cluster_index, prim_instance_index);
