@@ -753,6 +753,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   min-height: unset;
   border-radius: 4px;
   -moz-box-align: start;
+  font-weight: 600;
 }
 
 } /** END Proton **/
