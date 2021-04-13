@@ -662,6 +662,12 @@ void nsXULPopupManager::SetActiveMenuBar(nsMenuBarFrame* aMenuBar,
 
 void nsXULPopupManager::ShowMenu(nsIContent* aMenu, bool aSelectFirstItem,
                                  bool aAsynchronous) {
+  if (mNativeMenu && aMenu->IsElement() &&
+      mNativeMenu->Element()->Contains(aMenu)) {
+    mNativeMenu->OpenSubmenu(aMenu->AsElement());
+    return;
+  }
+
   nsMenuFrame* menuFrame = do_QueryFrame(aMenu->GetPrimaryFrame());
   if (!menuFrame || !menuFrame->IsMenu()) return;
 
