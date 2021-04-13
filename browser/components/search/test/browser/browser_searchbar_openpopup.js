@@ -386,14 +386,16 @@ add_task(async function contextmenu_closes_popup() {
   is(textbox.selectionStart, 0, "Should have selected all of the text");
   is(textbox.selectionEnd, 3, "Should have selected all of the text");
 
-  promise = promiseEvent(searchPopup, "popuphidden");
-  context_click(textbox);
-  await promise;
-
   let contextPopup = searchbar._menupopup;
-  promise = promiseEvent(contextPopup, "popuphidden");
+  let contextMenuShownPromise = promiseEvent(contextPopup, "popupshown");
+  let searchPopupHiddenPromise = promiseEvent(searchPopup, "popuphidden");
+  context_click(textbox);
+  await contextMenuShownPromise;
+  await searchPopupHiddenPromise;
+
+  let contextMenuHiddenPromise = promiseEvent(contextPopup, "popuphidden");
   contextPopup.hidePopup();
-  await promise;
+  await contextMenuHiddenPromise;
 
   textbox.value = "";
 });
