@@ -2199,6 +2199,10 @@ pub struct TileCacheParams {
     pub shared_clip_chain: ClipChainId,
     // Virtual surface sizes are always square, so this represents both the width and height
     pub virtual_surface_size: i32,
+    // The number of compositor surfaces that are being requested for this tile cache.
+    // This is only a suggestion - the tile cache will clamp this as a reasonable number
+    // and only promote a limited number of surfaces.
+    pub compositor_surface_count: usize,
 }
 
 /// Represents a cache of tiles that make up a picture primitives.
@@ -2355,6 +2359,11 @@ impl TileCacheInstance {
             external_native_surface_cache: FastHashMap::default(),
             frame_id: FrameId::INVALID,
         }
+    }
+
+    /// Return the total number of tiles allocated by this tile cache
+    pub fn tile_count(&self) -> usize {
+        self.tile_rect.size.area() as usize
     }
 
     /// Reset this tile cache with the updated parameters from a new scene
@@ -4304,6 +4313,9 @@ pub struct PrimitiveList {
     pub clusters: Vec<PrimitiveCluster>,
     pub prim_instances: Vec<PrimitiveInstance>,
     pub child_pictures: Vec<PictureIndex>,
+    /// The number of preferred compositor surfaces that were found when
+    /// adding prims to this list.
+    pub compositor_surface_count: usize,
 }
 
 impl PrimitiveList {
@@ -4316,6 +4328,7 @@ impl PrimitiveList {
             clusters: Vec::new(),
             prim_instances: Vec::new(),
             child_pictures: Vec::new(),
+            compositor_surface_count: 0,
         }
     }
 
@@ -4343,6 +4356,10 @@ impl PrimitiveList {
 
         if prim_flags.contains(PrimitiveFlags::IS_BACKFACE_VISIBLE) {
             flags.insert(ClusterFlags::IS_BACKFACE_VISIBLE);
+        }
+
+        if prim_flags.contains(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE) {
+            self.compositor_surface_count += 1;
         }
 
         let culling_rect = prim_instance.clip_set.local_clip_rect
@@ -4682,7 +4699,7 @@ impl PicturePrimitive {
             Some(RasterConfig { surface_index, composite_mode: PictureCompositeMode::TileCache { slice_id }, .. }) => {
                 let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
                 let mut debug_info = SliceDebugInfo::new();
-                let mut surface_tasks = Vec::with_capacity(tile_cache.tiles.len());
+                let mut surface_tasks = Vec::with_capacity(tile_cache.tile_count());
                 let mut surface_device_rect = DeviceRect::zero();
                 let device_pixel_scale = frame_state
                     .surfaces[surface_index.0]
