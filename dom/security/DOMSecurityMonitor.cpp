@@ -54,7 +54,7 @@ void DOMSecurityMonitor::AuditParsingOfHTMLXMLFragments(
       "chrome://global/content/elements/marquee.js"_ns,
       nsLiteralCString(
           "chrome://pocket/content/panels/js/vendor/jquery-2.1.1.min.js"),
-      "chrome://browser/content/aboutNetError.js"_ns,
+      "chrome://browser/content/certerror/aboutNetError.js"_ns,
       nsLiteralCString("chrome://devtools/content/shared/sourceeditor/"
                        "codemirror/codemirror.bundle.js"),
       nsLiteralCString(
