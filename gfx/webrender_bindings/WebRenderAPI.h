@@ -460,9 +460,7 @@ class DisplayListBuilder final {
       const Maybe<wr::WrSpaceAndClip>& aParent, const wr::LayoutRect& aClipRect,
       const nsTArray<wr::ComplexClipRegion>* aComplex = nullptr);
 
-  wr::WrClipId DefineImageMaskClip(const wr::ImageMask& aMask,
-                                   const nsTArray<wr::LayoutPoint>&,
-                                   wr::FillRule);
+  wr::WrClipId DefineImageMaskClip(const wr::ImageMask& aMask);
   wr::WrClipId DefineRoundedRectClip(const wr::ComplexClipRegion& aComplex);
   wr::WrClipId DefineRectClip(wr::LayoutRect aClipRect);
 

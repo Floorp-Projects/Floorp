@@ -227,7 +227,6 @@ pub struct BuiltDisplayListIter<'a> {
     cur_filter_primitives: ItemRange<'a, di::FilterPrimitive>,
     cur_clip_chain_items: ItemRange<'a, di::ClipId>,
     cur_complex_clip: ItemRange<'a, di::ComplexClipRegion>,
-    cur_points: ItemRange<'a, LayoutPoint>,
     peeking: Peek,
     /// Should just be initialized but never populated in release builds
     debug_stats: DebugStats,
@@ -323,10 +322,6 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
 
     pub fn complex_clip(&self) -> ItemRange<di::ComplexClipRegion> {
         self.iter.cur_complex_clip
-    }
-
-    pub fn points(&self) -> ItemRange<LayoutPoint> {
-        self.iter.cur_points
     }
 
     pub fn glyphs(&self) -> ItemRange<GlyphInstance> {
@@ -484,9 +479,6 @@ impl BuiltDisplayList {
                 Real::SetGradientStops => Debug::SetGradientStops(
                     item.iter.cur_stops.iter().collect()
                 ),
-                Real::SetPoints => Debug::SetPoints(
-                    item.iter.cur_points.iter().collect()
-                ),
                 Real::RectClip(v) => Debug::RectClip(v),
                 Real::RoundedRectClip(v) => Debug::RoundedRectClip(v),
                 Real::ImageMaskClip(v) => Debug::ImageMaskClip(v),
@@ -556,7 +548,6 @@ impl<'a> BuiltDisplayListIter<'a> {
             cur_filter_primitives: ItemRange::default(),
             cur_clip_chain_items: ItemRange::default(),
             cur_complex_clip: ItemRange::default(),
-            cur_points: ItemRange::default(),
             peeking: Peek::NotPeeking,
             debug_stats: DebugStats {
                 last_addr: data.as_ptr() as usize,
@@ -625,7 +616,6 @@ impl<'a> BuiltDisplayListIter<'a> {
         self.cur_stops = ItemRange::default();
         self.cur_complex_clip = ItemRange::default();
         self.cur_clip_chain_items = ItemRange::default();
-        self.cur_points = ItemRange::default();
         self.cur_filters = ItemRange::default();
         self.cur_filter_primitives = ItemRange::default();
         self.cur_filter_data.clear();
@@ -636,8 +626,7 @@ impl<'a> BuiltDisplayListIter<'a> {
                 SetGradientStops |
                 SetFilterOps |
                 SetFilterData |
-                SetFilterPrimitives |
-                SetPoints => {
+                SetFilterPrimitives => {
                     // These are marker items for populating other display items, don't yield them.
                     continue;
                 }
@@ -698,10 +687,6 @@ impl<'a> BuiltDisplayListIter<'a> {
             SetFilterPrimitives => {
                 self.cur_filter_primitives = skip_slice::<di::FilterPrimitive>(&mut self.data);
                 self.debug_stats.log_slice("set_filter_primitives.primitives", &self.cur_filter_primitives);
-            }
-            SetPoints => {
-                self.cur_points = skip_slice::<LayoutPoint>(&mut self.data);
-                self.debug_stats.log_slice("set_points.points", &self.cur_points);
             }
             ClipChain(_) => {
                 self.cur_clip_chain_items = skip_slice::<di::ClipId>(&mut self.data);
@@ -915,10 +900,6 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                 Debug::SetGradientStops(stops) => {
                     DisplayListBuilder::push_iter_impl(&mut temp, stops);
                     Real::SetGradientStops
-                },
-                Debug::SetPoints(points) => {
-                    DisplayListBuilder::push_iter_impl(&mut temp, points);
-                    Real::SetPoints
                 },
                 Debug::RectClip(v) => Real::RectClip(v),
                 Debug::RoundedRectClip(v) => Real::RoundedRectClip(v),
@@ -1800,19 +1781,14 @@ impl DisplayListBuilder {
         &mut self,
         parent_space_and_clip: &di::SpaceAndClipInfo,
         image_mask: di::ImageMask,
-        points: &Vec<LayoutPoint>,
-        fill_rule: di::FillRule,
     ) -> di::ClipId {
         let id = self.generate_clip_index();
         let item = di::DisplayItem::ImageMaskClip(di::ImageMaskClipDisplayItem {
             id,
             parent_space_and_clip: *parent_space_and_clip,
             image_mask,
-            fill_rule,
         });
 
-        self.push_item(&di::DisplayItem::SetPoints);
-        self.push_iter(points);
         self.push_item(&item);
         id
     }
