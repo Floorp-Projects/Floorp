@@ -97,13 +97,13 @@ async function test() {
       layersId,
       "(complex) point in the iframe behind overlaying div, but outside the bounding box of the clip path");
   checkHitResult(hitTest({ x: 160, y: 160 }),
-      APZHitResultFlags.VISIBLE,
-      iframeViewId,
+      APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+      rootViewId,
       layersId,
       "(complex) point in the iframe behind overlaying div, inside the bounding box of the clip path, but outside the actual clip shape");
   checkHitResult(hitTest({ x: 300, y: 200 }),
-      APZHitResultFlags.VISIBLE,
-      iframeViewId,
+      APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+      rootViewId,
       layersId,
       "(complex) point inside the clip shape of the overlaying div");
 }

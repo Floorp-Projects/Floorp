@@ -1072,13 +1072,11 @@ wr::WrClipId DisplayListBuilder::DefineClip(
 }
 
 wr::WrClipId DisplayListBuilder::DefineImageMaskClip(
-    const wr::ImageMask& aMask, const nsTArray<wr::LayoutPoint>& aPoints,
-    wr::FillRule aFillRule) {
+    const wr::ImageMask& aMask) {
   CancelGroup();
 
   WrClipId clipId = wr_dp_define_image_mask_clip_with_parent_clip_chain(
-      mWrState, &mCurrentSpaceAndClipChain, aMask, aPoints.Elements(),
-      aPoints.Length(), aFillRule);
+      mWrState, &mCurrentSpaceAndClipChain, aMask);
 
   return clipId;
 }
