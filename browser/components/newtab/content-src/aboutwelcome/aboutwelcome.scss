@@ -579,8 +579,19 @@ body {
 
     .secondary {
       color: var(--proton-secondary-button-color);
-      font-size: 13px;
-      line-height: 16px;
+      font-size: 14px;
+      line-height: 20px;
+    }
+
+    .secondary-cta.top {
+      position: absolute;
+      top: 10px;
+      inset-inline-end: 47px;
+      z-index: 2;
+
+      button {
+        color: #FFF;
+      }
     }
 
     .steps {

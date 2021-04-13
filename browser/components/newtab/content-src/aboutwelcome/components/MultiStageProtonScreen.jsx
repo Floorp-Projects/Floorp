@@ -29,6 +29,13 @@ export class MultiStageProtonScreen extends React.PureComponent {
           </div>
         ) : null}
         <div className="section-main">
+          {content.secondary_button_top ? (
+            <SecondaryCTA
+              content={content}
+              handleAction={this.props.handleAction}
+              position="top"
+            />
+          ) : null}
           <div className={`noodle orange-L`} />
           <div className={`noodle purple-C`} />
           {isWelcomeScreen ? <div className={`noodle solid-L`} /> : null}
