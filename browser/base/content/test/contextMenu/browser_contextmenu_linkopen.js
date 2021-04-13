@@ -73,9 +73,8 @@ async function activateContextAndWaitFor(selector, where) {
   );
   let domItem = contextMenu.querySelector("#context-" + contextMenuItem);
   info("Going to click item " + domItem.id);
-  let bounds = domItem.getBoundingClientRect();
   ok(
-    bounds.height && bounds.width,
+    BrowserTestUtils.is_visible(domItem),
     "DOM context menu item " + where + " should be visible"
   );
   ok(
