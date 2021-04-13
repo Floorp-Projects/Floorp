@@ -5362,13 +5362,15 @@ APZCTreeManager* AsyncPanZoomController::GetApzcTreeManager() const {
   return mTreeManager;
 }
 
-void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
-  if (!aRect.IsFinite()) {
+void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
+                                        const uint32_t aFlags) {
+  CSSRect rect = aZoomTarget.targetRect;
+  if (!rect.IsFinite()) {
     NS_WARNING("ZoomToRect got called with a non-finite rect; ignoring...");
     return;
   }
 
-  if (aRect.IsEmpty() && (aFlags & DISABLE_ZOOM_OUT)) {
+  if (rect.IsEmpty() && (aFlags & DISABLE_ZOOM_OUT)) {
     // Double-tap-to-zooming uses an empty rect to mean "zoom out".
     // If zooming out is disabled, an empty rect is nonsensical
     // and will produce undesirable scrolling.
@@ -5410,12 +5412,12 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     CSSToParentLayerScale localMaxZoom =
         std::max(localMinZoom, mZoomConstraints.mMaxZoom);
 
-    if (!aRect.IsEmpty()) {
+    if (!rect.IsEmpty()) {
       // Intersect the zoom-to-rect to the CSS rect to make sure it fits.
-      aRect = aRect.Intersect(cssPageRect);
+      rect = rect.Intersect(cssPageRect);
       targetZoom = CSSToParentLayerScale(
-          std::min(compositionBounds.Width() / aRect.Width(),
-                   compositionBounds.Height() / aRect.Height()));
+          std::min(compositionBounds.Width() / rect.Width(),
+                   compositionBounds.Height() / rect.Height()));
       if (aFlags & DISABLE_ZOOM_OUT) {
         targetZoom = std::max(targetZoom, currentZoom);
       }
@@ -5431,7 +5433,7 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     if (aFlags & DISABLE_ZOOM_OUT) {
       zoomOut = false;
     } else {
-      zoomOut = aRect.IsEmpty() ||
+      zoomOut = rect.IsEmpty() ||
                 (currentZoom == localMaxZoom && targetZoom >= localMaxZoom) ||
                 (currentZoom == localMinZoom && targetZoom <= localMinZoom);
     }
@@ -5443,11 +5445,11 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
           cssPageRect.Width() * (compositedSize.height / compositedSize.width);
       float dh = compositedSize.height - newHeight;
 
-      aRect = CSSRect(0.0f, y + dh / 2, cssPageRect.Width(), newHeight);
-      aRect = aRect.Intersect(cssPageRect);
+      rect = CSSRect(0.0f, y + dh / 2, cssPageRect.Width(), newHeight);
+      rect = rect.Intersect(cssPageRect);
       targetZoom = CSSToParentLayerScale(
-          std::min(compositionBounds.Width() / aRect.Width(),
-                   compositionBounds.Height() / aRect.Height()));
+          std::min(compositionBounds.Width() / rect.Width(),
+                   compositionBounds.Height() / rect.Height()));
     }
 
     targetZoom.scale =
@@ -5474,32 +5476,42 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
     CSSSize sizeAfterZoom =
         endZoomToMetrics.CalculateCompositedSizeInCssPixels();
 
+    if (!zoomOut && aZoomTarget.elementBoundingRect.isSome()) {
+      MOZ_ASSERT(aZoomTarget.elementBoundingRect->Contains(rect));
+      CSSRect elementBoundingRect =
+          aZoomTarget.elementBoundingRect->Intersect(cssPageRect);
+      if (elementBoundingRect.width <= sizeAfterZoom.width &&
+          elementBoundingRect.height <= sizeAfterZoom.height) {
+        rect = elementBoundingRect;
+      }
+    }
+
     // Vertically center the zoomed element in the screen.
-    if (!zoomOut && (sizeAfterZoom.height > aRect.Height())) {
-      aRect.MoveByY(-(sizeAfterZoom.height - aRect.Height()) * 0.5f);
-      if (aRect.Y() < 0.0f) {
-        aRect.MoveToY(0.0f);
+    if (!zoomOut && (sizeAfterZoom.height > rect.Height())) {
+      rect.MoveByY(-(sizeAfterZoom.height - rect.Height()) * 0.5f);
+      if (rect.Y() < 0.0f) {
+        rect.MoveToY(0.0f);
       }
     }
 
     // Horizontally center the zoomed element in the screen.
-    if (!zoomOut && (sizeAfterZoom.width > aRect.Width())) {
-      aRect.MoveByX(-(sizeAfterZoom.width - aRect.Width()) * 0.5f);
-      if (aRect.X() < 0.0f) {
-        aRect.MoveToX(0.0f);
+    if (!zoomOut && (sizeAfterZoom.width > rect.Width())) {
+      rect.MoveByX(-(sizeAfterZoom.width - rect.Width()) * 0.5f);
+      if (rect.X() < 0.0f) {
+        rect.MoveToX(0.0f);
       }
     }
 
     // If either of these conditions are met, the page will be
     // overscrolled after zoomed
-    if (aRect.Y() + sizeAfterZoom.height > cssPageRect.Height()) {
-      aRect.MoveToY(std::max(0.f, cssPageRect.Height() - sizeAfterZoom.height));
+    if (rect.Y() + sizeAfterZoom.height > cssPageRect.Height()) {
+      rect.MoveToY(std::max(0.f, cssPageRect.Height() - sizeAfterZoom.height));
     }
-    if (aRect.X() + sizeAfterZoom.width > cssPageRect.Width()) {
-      aRect.MoveToX(std::max(0.f, cssPageRect.Width() - sizeAfterZoom.width));
+    if (rect.X() + sizeAfterZoom.width > cssPageRect.Width()) {
+      rect.MoveToX(std::max(0.f, cssPageRect.Width() - sizeAfterZoom.width));
     }
 
-    endZoomToMetrics.SetVisualScrollOffset(aRect.TopLeft());
+    endZoomToMetrics.SetVisualScrollOffset(rect.TopLeft());
     endZoomToMetrics.RecalculateLayoutViewportOffset();
 
     StartAnimation(new ZoomAnimation(

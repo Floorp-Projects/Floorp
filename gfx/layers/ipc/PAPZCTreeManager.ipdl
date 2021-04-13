@@ -14,6 +14,7 @@ using LayoutDeviceCoord from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using ScreenPoint from "Units.h";
 using mozilla::layers::MaybeZoomConstraints from "mozilla/layers/ZoomConstraints.h";
+using ZoomTarget from "mozilla/layers/DoubleTapToZoom.h";
 using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/LayersTypes.h";
@@ -46,7 +47,7 @@ parent:
   // These messages correspond to the methods
   // on the IAPZCTreeManager interface
 
-  async ZoomToRect(ScrollableLayerGuid aGuid, CSSRect aRect, uint32_t Flags);
+  async ZoomToRect(ScrollableLayerGuid aGuid, ZoomTarget aZoomTarget, uint32_t Flags);
 
   async ContentReceivedInputBlock(uint64_t aInputBlockId, bool PreventDefault);
 

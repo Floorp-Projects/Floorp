@@ -34,7 +34,7 @@ class APZCTreeManagerParent : public PAPZCTreeManagerParent {
   mozilla::ipc::IPCResult RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap);
 
   mozilla::ipc::IPCResult RecvZoomToRect(const ScrollableLayerGuid& aGuid,
-                                         const CSSRect& aRect,
+                                         const ZoomTarget& aZoomTarget,
                                          const uint32_t& aFlags);
 
   mozilla::ipc::IPCResult RecvContentReceivedInputBlock(

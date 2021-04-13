@@ -19,13 +19,27 @@ class Document;
 
 namespace layers {
 
+struct ZoomTarget {
+  // The preferred target rect that we'd like to zoom in on, if possible. An
+  // empty rect means the browser should zoom out.
+  CSSRect targetRect;
+
+  // If zooming all the way in on |targetRect| is not possible (for example, due
+  // to a max zoom constraint), |elementBoundingRect| may be used to inform a
+  // more optimal target scroll position (for example, we may try to maximize
+  // the area of |elementBoundingRect| that's showing, while keeping
+  // |targetRect| in view and keeping the zoom as close to the desired zoom as
+  // possible).
+  Maybe<CSSRect> elementBoundingRect;
+};
+
 /**
- * For a double tap at |aPoint|, return the rect to which the browser
- * should zoom in response, or an empty rect if the browser should zoom out.
- * |aDocument| should be the root content document for the content that was
- * tapped.
+ * For a double tap at |aPoint|, return a ZoomTarget struct with contains a rect
+ * to which the browser should zoom in response (see ZoomTarget definition for
+ * more details). An empty rect means the browser should zoom out. |aDocument|
+ * should be the root content document for the content that was tapped.
  */
-CSSRect CalculateRectToZoomTo(
+ZoomTarget CalculateRectToZoomTo(
     const RefPtr<mozilla::dom::Document>& aRootContentDocument,
     const CSSPoint& aPoint);
 
