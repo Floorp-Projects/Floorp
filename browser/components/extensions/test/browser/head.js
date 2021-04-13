@@ -495,7 +495,7 @@ async function openExtensionContextMenu(selector = "#img1") {
     contextMenu,
     "popupshown"
   );
-  EventUtils.synthesizeMouseAtCenter(extensionMenu, {});
+  extensionMenu.openMenu(true);
   await popupShownPromise;
   return extensionMenu;
 }
@@ -509,7 +509,7 @@ async function closeExtensionContextMenu(itemToSelect, modifiers = {}) {
     "popuphidden"
   );
   if (itemToSelect) {
-    EventUtils.synthesizeMouseAtCenter(itemToSelect, modifiers);
+    itemToSelect.closest("menupopup").activateItem(itemToSelect, modifiers);
   } else {
     contentAreaContextMenu.hidePopup();
   }
@@ -564,7 +564,7 @@ async function openChromeContextMenu(menuId, target, win = window) {
 async function openSubmenu(submenuItem, win = window) {
   const submenu = submenuItem.menupopup;
   const shown = BrowserTestUtils.waitForEvent(submenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(submenuItem, {}, win);
+  submenuItem.openMenu(true);
   await shown;
   return submenu;
 }
@@ -573,7 +573,7 @@ function closeChromeContextMenu(menuId, itemToSelect, win = window) {
   const menu = win.document.getElementById(menuId);
   const hidden = BrowserTestUtils.waitForEvent(menu, "popuphidden");
   if (itemToSelect) {
-    EventUtils.synthesizeMouseAtCenter(itemToSelect, {}, win);
+    itemToSelect.closest("menupopup").activateItem(itemToSelect);
   } else {
     menu.hidePopup();
   }
