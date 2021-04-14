@@ -1789,9 +1789,9 @@ bool EqualStringsHelperPure(JSString* str1, JSString* str2) {
 }
 
 static bool MaybeTypedArrayIndexString(jsid id) {
-  MOZ_ASSERT(JSID_IS_ATOM(id) || JSID_IS_SYMBOL(id));
+  MOZ_ASSERT(id.isAtom() || JSID_IS_SYMBOL(id));
 
-  if (MOZ_LIKELY(JSID_IS_ATOM(id))) {
+  if (MOZ_LIKELY(id.isAtom())) {
     JSAtom* str = JSID_TO_ATOM(id);
     if (str->length() > 0) {
       // Only check the first character because we want this function to be
@@ -1811,7 +1811,7 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
 
   AutoUnsafeCallWithABI unsafe;
 
-  MOZ_ASSERT(JSID_IS_ATOM(id) || JSID_IS_SYMBOL(id));
+  MOZ_ASSERT(id.isAtom() || JSID_IS_SYMBOL(id));
 
   while (true) {
     if (Shape* shape = obj->lastProperty()->search(cx, id)) {
