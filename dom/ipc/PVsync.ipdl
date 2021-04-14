@@ -24,7 +24,7 @@ async protocol PVsync
 
 child:
   // Send vsync event and vsync rate from chrome to content process.
-  [Compress, Priority=high] async Notify(VsyncEvent aVsync, float aVsyncRate);
+  [Compress, Priority=vsync] async Notify(VsyncEvent aVsync, float aVsyncRate);
 
 parent:
   // Content process use these messages to acquire the vsync event.

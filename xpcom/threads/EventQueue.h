@@ -23,7 +23,7 @@ enum class EventQueuePriority {
   Normal,
   MediumHigh,
   InputHigh,
-  High,
+  Vsync,
 
   Count
 };
