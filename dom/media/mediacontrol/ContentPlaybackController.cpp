@@ -63,14 +63,6 @@ void ContentPlaybackController::NotifyMediaSession(
     LOG("Handle '%s' in media session behavior for BC %" PRIu64,
         ToMediaSessionActionStr(aDetails.mAction), mBC->Id());
     MOZ_ASSERT(session->IsActive(), "Notify inactive media session!");
-    if (aDetails.mAction == MediaSessionAction::Play ||
-        aDetails.mAction == MediaSessionAction::Pause ||
-        aDetails.mAction == MediaSessionAction::Stop) {
-      AccumulateCategorical(
-          mozilla::Telemetry::
-              LABELS_MEDIA_CONTROL_HANDLE_PLAY_PAUSE_STOP_ACTIONS::
-                  MediaSessionHandler);
-    }
     session->NotifyHandler(aDetails);
   }
 }
