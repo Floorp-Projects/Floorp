@@ -21,15 +21,15 @@ job-defaults:
         by-variant:
             fission:
                 by-test-platform:
-                    windows7.*: []
+                    windows.*-32.*: []
                     default: [mozilla-central]
             default:
                 by-app:
                     firefox:
                         by-test-platform:
-                            windows7-32.*/opt: []
+                            windows.*-32.*/opt: []
                             macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                            (linux|windows10|macos)(?!.*shippable).*: []
+                            (linux|windows.*64|macos)(?!.*shippable).*: []
                             default: ["trunk", "mozilla-beta"]
                     chrome: []
                     chromium: []
@@ -37,14 +37,14 @@ job-defaults:
                         by-test-name:
                             raptor-.*-profiling.*:
                                 by-test-platform:
-                                    windows7-32.*/opt: []
-                                    (linux|windows10|macos)(?!.*shippable).*: []
+                                    windows.*-32.*/opt: []
+                                    (linux|windows.*64|macos)(?!.*shippable).*: []
                                     default: ["mozilla-central"]
                             default:
                                 by-test-platform:
-                                    windows7-32.*/opt: []
+                                    windows.*-32.*/opt: []
                                     macosx.*64(?:-qr)?/opt: ["mozilla-central"]
-                                    (linux|windows10|macos)(?!.*shippable).*: []
+                                    (linux|windows.*64|macos)(?!.*shippable).*: []
                                     default: ["trunk", "mozilla-beta"]
     limit-platforms:
         by-app:
@@ -223,7 +223,7 @@ raptor-unity-webgl-firefox:
             fission: []
             default:
                 by-test-platform:
-                    (linux|windows|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*shippable).*: []
                     default: ["autoland"]
     tier:
         by-variant:
@@ -432,7 +432,7 @@ raptor-youtube-playback-v9-power-firefox:
     treeherder-symbol: Rap(ytp-v9-p)
     run-on-projects:
         by-test-platform:
-            (linux|windows|macos)(?!.*shippable).*: []
+            (linux|windows.*64|macos)(?!.*shippable).*: []
             default: ["mozilla-central"]
     max-run-time: 2700
     tier:
@@ -450,7 +450,7 @@ raptor-youtube-playback-h264-power-firefox:
     treeherder-symbol: Rap(ytp-h264-p)
     run-on-projects:
         by-test-platform:
-            (linux|windows|macos)(?!.*shippable).*: []
+            (linux|windows.*64|macos)(?!.*shippable).*: []
             default: ["mozilla-central"]
     max-run-time: 2700
     tier:
@@ -470,11 +470,11 @@ raptor-youtube-playback-av1-sfr-firefox:
         by-variant:
             fission:
                 by-test-platform:
-                    windows7.*: []
+                    windows.*-32.*: []
                     default: [mozilla-central]
             default:
                 by-test-platform:
-                    (linux|windows|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*shippable).*: []
                     default: ['mozilla-central']
     limit-platforms:
         - windows10-64-ref-hw-2017/opt
@@ -495,12 +495,12 @@ raptor-youtube-playback-h264-sfr-firefox:
         by-variant:
             fission:
                 by-test-platform:
-                    windows7.*: []
+                    windows.*-32.*: []
                     default: [mozilla-central]
             default:
                 by-test-platform:
-                    windows7-32.*/opt: []
-                    (linux|windows10|macos)(?!.*shippable).*: []
+                    windows.*-32.*/opt: []
+                    (linux|windows.*64|macos)(?!.*shippable).*: []
                     default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -518,12 +518,12 @@ raptor-youtube-playback-hfr-firefox:
         by-variant:
             fission:
                 by-test-platform:
-                    windows7.*: []
+                    windows.*-32.*: []
                     default: [mozilla-central]
             default:
                 by-test-platform:
-                    windows7-32.*/opt: []
-                    (linux|windows10|macos)(?!.*shippable).*: []
+                    windows.*-32.*/opt: []
+                    (linux|windows.*64|macos)(?!.*shippable).*: []
                     default: ['mozilla-central']
     max-run-time: 3600
     tier: 2
@@ -539,12 +539,12 @@ raptor-youtube-playback-vp9-sfr-firefox:
         by-variant:
             fission:
                 by-test-platform:
-                    windows7.*: []
+                    windows.*-32.*: []
                     default: [mozilla-central]
             default:
                 by-test-platform:
-                    windows7-32.*/opt: []
-                    (linux|windows10|macos)(?!.*shippable).*: []
+                    windows.*-32.*/opt: []
+                    (linux|windows.*64|macos)(?!.*shippable).*: []
                     default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -564,12 +564,12 @@ raptor-youtube-playback-widevine-hfr-firefox:
         by-variant:
             fission:
                 by-test-platform:
-                    windows7.*: []
+                    windows.*-32.*: []
                     default: [mozilla-central]
             default:
                 by-test-platform:
-                    windows7-32.*/opt: []
-                    (linux|windows10|macos)(?!.*shippable).*: []
+                    windows.*-32.*/opt: []
+                    (linux|windows.*64|macos)(?!.*shippable).*: []
                     default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -587,12 +587,12 @@ raptor-youtube-playback-widevine-h264-sfr-firefox:
         by-variant:
             fission:
                 by-test-platform:
-                    windows7.*: []
+                    windows.*-32.*: []
                     default: [mozilla-central]
             default:
                 by-test-platform:
-                    windows7-32.*/opt: []
-                    (linux|windows10|macos)(?!.*shippable).*: []
+                    windows.*-32.*/opt: []
+                    (linux|windows.*64|macos)(?!.*shippable).*: []
                     default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -610,11 +610,11 @@ raptor-youtube-playback-widevine-vp9-sfr-firefox:
         by-variant:
             fission:
                 by-test-platform:
-                    windows7.*: []
+                    windows.*-32.*: []
                     default: [mozilla-central]
             default:
                 by-test-platform:
-                    (linux|windows|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*shippable).*: []
                     default: ['mozilla-central']
     max-run-time:
         by-test-platform:
@@ -657,12 +657,12 @@ raptor-jetstream2-firefox:
         by-variant:
             fission:
                 by-test-platform:
-                    windows7.*: []
+                    windows.*-32.*: []
                     default: [mozilla-central]
             default:
                 by-test-platform:
-                    windows7-32.*/opt: []
-                    (linux|windows10|macos)(?!.*shippable).*: []
+                    windows.*-32.*/opt: []
+                    (linux|windows.*64|macos)(?!.*shippable).*: []
                     default: ['mozilla-central']
     tier:
         by-variant:

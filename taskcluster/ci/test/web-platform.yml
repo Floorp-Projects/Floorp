@@ -63,7 +63,7 @@ web-platform-tests:
             linux.*64-ccov.*/opt: 20
             linux.*/debug: 16
             macosx.*/debug: 18
-            windows7.*/opt: 12
+            windows.*32.*/opt: 12
             windows.*/debug: 14
             windows10-64-ccov.*/opt: 14
             default: 10
@@ -250,7 +250,7 @@ web-platform-tests-wdspec:
             default:
                 by-test-platform:
                     linux.*-qr/.*: ['release']  # skip on integration branches due to high load
-                    windows.*-qr/.*: ['release']  # skip on integration branches due to high load
+                    windows10-64.*-qr/.*: ['release']  # skip on integration branches due to high load
                     default: built-projects
     tier:
         by-variant:
