@@ -10,6 +10,9 @@ const { BackgroundTasksTestUtils } = ChromeUtils.import(
   "resource://testing-common/BackgroundTasksTestUtils.jsm"
 );
 BackgroundTasksTestUtils.init(this);
+const do_backgroundtask = BackgroundTasksTestUtils.do_backgroundtask.bind(
+  BackgroundTasksTestUtils
+);
 const setupProfileService = BackgroundTasksTestUtils.setupProfileService.bind(
   BackgroundTasksTestUtils
 );
