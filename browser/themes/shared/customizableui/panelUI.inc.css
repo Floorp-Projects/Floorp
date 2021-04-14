@@ -757,6 +757,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   font-weight: 600;
 }
 
+.addon-banner-item + .addon-banner-item,
+#appMenu-proton-addon-banners:not(:empty) + .panel-banner-item {
+  margin-block-start: 4px;
+}
+
 } /** END Proton **/
 
 @media not (-moz-proton) {
