@@ -22,11 +22,13 @@
 
   --chrome-content-separator-color: ThreeDShadow;
   --tabs-border-color: threedshadow;
+  --panel-font-size: 1.15em;
 }
 
 @media not (-moz-proton) {
 :root {
   --toolbarbutton-border-radius: 2px;
+  --panel-font-size: 1em;
 }
 } /* END !proton */
 

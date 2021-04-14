@@ -584,7 +584,7 @@ async function doPasteAndGoTest(searchString, expectedURL) {
     false,
     expectedURL
   );
-  EventUtils.synthesizeMouseAtCenter(menuitem, {});
+  cxmenu.activateItem(menuitem);
   await browserLoadedPromise;
   BrowserTestUtils.removeTab(tab);
   resetSearchTipsProvider();

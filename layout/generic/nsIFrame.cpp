@@ -8839,6 +8839,8 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
 nsresult nsIFrame::PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos) {
   // Adjusted so that the caret can't get confused when content changes
   nsIFrame* blockFrame = AdjustFrameForSelectionStyles(this);
+  Element* editingHost = blockFrame->GetContent()->GetEditingHost();
+
   int32_t thisLine;
   MOZ_TRY_VAR(thisLine,
               blockFrame->GetLineNumber(aPos->mScrollViewStop, &blockFrame));
@@ -8881,6 +8883,18 @@ nsresult nsIFrame::PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos) {
   }
   if (!baseFrame) {
     return NS_ERROR_FAILURE;
+  }
+  // Make sure we are not leaving our inline editing host if exists
+  if (editingHost) {
+    if (nsIFrame* frame = editingHost->GetPrimaryFrame()) {
+      if (frame->IsInlineOutside() &&
+          !editingHost->Contains(baseFrame->GetContent())) {
+        baseFrame = frame;
+        if (endOfLine) {
+          baseFrame = baseFrame->LastContinuation();
+        }
+      }
+    }
   }
   FrameTarget targetFrame = DrillDownToSelectionFrame(baseFrame, endOfLine, 0);
   SetPeekResultFromFrame(*aPos, targetFrame.frame, endOfLine ? -1 : 0,

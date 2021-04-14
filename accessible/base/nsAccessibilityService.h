@@ -67,7 +67,7 @@ struct MarkupAttrInfo {
   nsStaticAtom* DOMAttrValue;
 };
 
-struct HTMLMarkupMapInfo {
+struct MarkupMapInfo {
   const nsStaticAtom* const tag;
   New_Accessible* new_func;
   a11y::role role;
@@ -255,8 +255,8 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
                                     bool* aIsSubtreeHidden = nullptr);
 
   mozilla::a11y::role MarkupRole(const nsIContent* aContent) const {
-    const mozilla::a11y::HTMLMarkupMapInfo* markupMap =
-        mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+    const mozilla::a11y::MarkupMapInfo* markupMap =
+        GetMarkupMapInfoForNode(aContent);
     return markupMap ? markupMap->role : mozilla::a11y::roles::NOTHING;
   }
 
@@ -266,8 +266,8 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    */
   nsStaticAtom* MarkupAttribute(const nsIContent* aContent,
                                 nsStaticAtom* aAtom) const {
-    const mozilla::a11y::HTMLMarkupMapInfo* markupMap =
-        mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+    const mozilla::a11y::MarkupMapInfo* markupMap =
+        GetMarkupMapInfoForNode(aContent);
     if (markupMap) {
       for (size_t i = 0; i < mozilla::ArrayLength(markupMap->attrs); i++) {
         const mozilla::a11y::MarkupAttrInfo* info = markupMap->attrs + i;
@@ -363,9 +363,25 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    */
   static uint32_t gConsumers;
 
-  nsTHashMap<nsPtrHashKey<const nsAtom>,
-             const mozilla::a11y::HTMLMarkupMapInfo*>
-      mHTMLMarkupMap;
+  using MarkupMap = nsTHashMap<nsPtrHashKey<const nsAtom>,
+                               const mozilla::a11y::MarkupMapInfo*>;
+  MarkupMap mHTMLMarkupMap;
+  MarkupMap mMathMLMarkupMap;
+
+  const mozilla::a11y::MarkupMapInfo* GetMarkupMapInfoForNode(
+      const nsIContent* aContent) const {
+    if (aContent->IsHTMLElement()) {
+      return mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+    }
+    if (aContent->IsMathMLElement()) {
+      return mMathMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+    }
+    // This function can be called by MarkupAttribute, etc. which might in turn
+    // be called on a XUL, SVG, etc. element. For example, this can happen
+    // with nsAccUtils::SetLiveContainerAttributes.
+    return nullptr;
+  }
+
 #ifdef MOZ_XUL
   nsTHashMap<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*>
       mXULMarkupMap;

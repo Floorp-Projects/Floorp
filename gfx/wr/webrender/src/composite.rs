@@ -536,210 +536,212 @@ impl CompositeState {
         gpu_cache: &mut GpuCache,
         deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
-        let mut visible_opaque_tile_count = 0;
-        let mut visible_alpha_tile_count = 0;
-        let mut opaque_tile_descriptors = Vec::new();
-        let mut alpha_tile_descriptors = Vec::new();
-        let mut surface_device_rect = DeviceRect::zero();
+        for sub_slice in &tile_cache.sub_slices {
+            let mut visible_opaque_tile_count = 0;
+            let mut visible_alpha_tile_count = 0;
+            let mut opaque_tile_descriptors = Vec::new();
+            let mut alpha_tile_descriptors = Vec::new();
+            let mut surface_device_rect = DeviceRect::zero();
 
-        for tile in tile_cache.tiles.values() {
-            if !tile.is_visible {
-                // This can occur when a tile is found to be occluded during frame building.
-                continue;
-            }
-
-            let device_rect = (tile.world_tile_rect * global_device_pixel_scale).round();
-            let surface = tile.surface.as_ref().expect("no tile surface set!");
-
-            // Accumulate this tile into the overall surface bounds. This is used below
-            // to clamp the size of the supplied clip rect to a reasonable value.
-            // NOTE: This clip rect must include the device_valid_rect rather than
-            //       the tile device rect. This ensures that in the case of a picture
-            //       cache slice that is smaller than a single tile, the clip rect in
-            //       the composite descriptor will change if the position of that slice
-            //       is changed. Otherwise, WR may conclude that no composite is needed
-            //       if the tile itself was not invalidated due to changing content.
-            //       See bug #1675414 for more detail.
-            surface_device_rect = surface_device_rect.union(&tile.device_valid_rect);
-
-            let descriptor = CompositeTileDescriptor {
-                surface_kind: surface.into(),
-                tile_id: tile.id,
-            };
-
-            let (surface, is_opaque) = match surface {
-                TileSurface::Color { color } => {
-                    (CompositeTileSurface::Color { color: *color }, true)
-                }
-                TileSurface::Clear => {
-                    (CompositeTileSurface::Clear, false)
-                }
-                TileSurface::Texture { descriptor, .. } => {
-                    let surface = descriptor.resolve(resource_cache, tile_cache.current_tile_size);
-                    (
-                        CompositeTileSurface::Texture { surface },
-                        // If a tile has compositor surface intersecting with it, we need to
-                        // respect the tile.is_opaque property even if the overall tile cache
-                        // is opaque. In this case, the tile.is_opaque property is required
-                        // in order to ensure correct draw order with compositor surfaces.
-                        tile.is_opaque || (!tile.has_compositor_surface && tile_cache.is_opaque()),
-                    )
-                }
-            };
-
-            if is_opaque {
-                opaque_tile_descriptors.push(descriptor);
-                visible_opaque_tile_count += 1;
-            } else {
-                alpha_tile_descriptors.push(descriptor);
-                visible_alpha_tile_count += 1;
-            }
-
-            let tile = CompositeTile {
-                surface,
-                rect: device_rect,
-                valid_rect: tile.device_valid_rect.translate(-device_rect.origin.to_vector()),
-                dirty_rect: tile.device_dirty_rect.translate(-device_rect.origin.to_vector()),
-                clip_rect: device_clip_rect,
-                transform: None,
-                z_id: tile.z_id,
-            };
-
-            self.push_tile(tile, is_opaque);
-        }
-
-        // Sort the tile descriptor lists, since iterating values in the tile_cache.tiles
-        // hashmap doesn't provide any ordering guarantees, but we want to detect the
-        // composite descriptor as equal if the tiles list is the same, regardless of
-        // ordering.
-        opaque_tile_descriptors.sort_by_key(|desc| desc.tile_id);
-        alpha_tile_descriptors.sort_by_key(|desc| desc.tile_id);
-
-        // If the clip rect is too large, it can cause accuracy and correctness problems
-        // for some native compositors (specifically, CoreAnimation in this case). To
-        // work around that, intersect the supplied clip rect with the current bounds
-        // of the native surface, which ensures it is a reasonable size.
-        let surface_clip_rect = device_clip_rect
-            .intersection(&surface_device_rect)
-            .unwrap_or(DeviceRect::zero());
-
-        // Add opaque surface before any compositor surfaces
-        if visible_opaque_tile_count > 0 {
-            self.descriptor.surfaces.push(
-                CompositeSurfaceDescriptor {
-                    surface_id: tile_cache.native_surface.as_ref().map(|s| s.opaque),
-                    clip_rect: surface_clip_rect,
-                    transform: CompositorSurfaceTransform::translation(
-                        tile_cache.device_position.x,
-                        tile_cache.device_position.y,
-                        0.0,
-                    ),
-                    image_dependencies: [ImageDependency::INVALID; 3],
-                    image_rendering: ImageRendering::CrispEdges,
-                    tile_descriptors: opaque_tile_descriptors,
-                }
-            );
-        }
-
-        // For each compositor surface that was promoted, build the
-        // information required for the compositor to draw it
-        for external_surface in &tile_cache.external_surfaces {
-            let clip_rect = external_surface
-                .clip_rect
-                .intersection(&device_clip_rect)
-                .unwrap_or_else(DeviceRect::zero);
-
-            let required_plane_count =
-                match external_surface.dependency {
-                    ExternalSurfaceDependency::Yuv { format, .. } => {
-                        format.get_plane_num()
-                    },
-                    ExternalSurfaceDependency::Rgb { .. } => {
-                        1
-                    }
-                };
-
-            let mut image_dependencies = [ImageDependency::INVALID; 3];
-
-            for i in 0 .. required_plane_count {
-                let dependency = match external_surface.dependency {
-                    ExternalSurfaceDependency::Yuv { image_dependencies, .. } => {
-                        image_dependencies[i]
-                    },
-                    ExternalSurfaceDependency::Rgb { image_dependency, .. } => {
-                        image_dependency
-                    }
-                };
-                image_dependencies[i] = dependency;
-            }
-
-            // Get a new z_id for each compositor surface, to ensure correct ordering
-            // when drawing with the simple (Draw) compositor, and to schedule compositing
-            // of any required updates into the surfaces.
-            let needs_external_surface_update = match self.compositor_kind {
-                CompositorKind::Draw { .. } => true,
-                _ => external_surface.update_params.is_some(),
-            };
-            let external_surface_index = if needs_external_surface_update {
-                let external_surface_index = self.compute_external_surface_dependencies(
-                    &external_surface,
-                    &image_dependencies,
-                    required_plane_count,
-                    resource_cache,
-                    gpu_cache,
-                    deferred_resolves,
-                );
-                if external_surface_index == ResolvedExternalSurfaceIndex::INVALID {
+            for tile in sub_slice.tiles.values() {
+                if !tile.is_visible {
+                    // This can occur when a tile is found to be occluded during frame building.
                     continue;
                 }
-                external_surface_index
-            } else {
-                ResolvedExternalSurfaceIndex::INVALID
-            };
 
-            let tile = CompositeTile {
-                surface: CompositeTileSurface::ExternalSurface { external_surface_index },
-                rect: external_surface.surface_rect,
-                valid_rect: external_surface.surface_rect.translate(-external_surface.surface_rect.origin.to_vector()),
-                dirty_rect: external_surface.surface_rect.translate(-external_surface.surface_rect.origin.to_vector()),
-                clip_rect,
-                transform: Some(external_surface.transform),
-                z_id: external_surface.z_id,
-            };
+                let device_rect = (tile.world_tile_rect * global_device_pixel_scale).round();
+                let surface = tile.surface.as_ref().expect("no tile surface set!");
 
-            // Add a surface descriptor for each compositor surface. For the Draw
-            // compositor, this is used to avoid composites being skipped by adding
-            // a dependency on the compositor surface external image keys / generations.
-            self.descriptor.surfaces.push(
-                CompositeSurfaceDescriptor {
-                    surface_id: external_surface.native_surface_id,
+                // Accumulate this tile into the overall surface bounds. This is used below
+                // to clamp the size of the supplied clip rect to a reasonable value.
+                // NOTE: This clip rect must include the device_valid_rect rather than
+                //       the tile device rect. This ensures that in the case of a picture
+                //       cache slice that is smaller than a single tile, the clip rect in
+                //       the composite descriptor will change if the position of that slice
+                //       is changed. Otherwise, WR may conclude that no composite is needed
+                //       if the tile itself was not invalidated due to changing content.
+                //       See bug #1675414 for more detail.
+                surface_device_rect = surface_device_rect.union(&tile.device_valid_rect);
+
+                let descriptor = CompositeTileDescriptor {
+                    surface_kind: surface.into(),
+                    tile_id: tile.id,
+                };
+
+                let (surface, is_opaque) = match surface {
+                    TileSurface::Color { color } => {
+                        (CompositeTileSurface::Color { color: *color }, true)
+                    }
+                    TileSurface::Clear => {
+                        (CompositeTileSurface::Clear, false)
+                    }
+                    TileSurface::Texture { descriptor, .. } => {
+                        let surface = descriptor.resolve(resource_cache, tile_cache.current_tile_size);
+                        (
+                            CompositeTileSurface::Texture { surface },
+                            // If a tile has compositor surface intersecting with it, we need to
+                            // respect the tile.is_opaque property even if the overall tile cache
+                            // is opaque. In this case, the tile.is_opaque property is required
+                            // in order to ensure correct draw order with compositor surfaces.
+                            tile.is_opaque || (!tile.has_compositor_surface && tile_cache.is_opaque()),
+                        )
+                    }
+                };
+
+                if is_opaque {
+                    opaque_tile_descriptors.push(descriptor);
+                    visible_opaque_tile_count += 1;
+                } else {
+                    alpha_tile_descriptors.push(descriptor);
+                    visible_alpha_tile_count += 1;
+                }
+
+                let tile = CompositeTile {
+                    surface,
+                    rect: device_rect,
+                    valid_rect: tile.device_valid_rect.translate(-device_rect.origin.to_vector()),
+                    dirty_rect: tile.device_dirty_rect.translate(-device_rect.origin.to_vector()),
+                    clip_rect: device_clip_rect,
+                    transform: None,
+                    z_id: tile.z_id,
+                };
+
+                self.push_tile(tile, is_opaque);
+            }
+
+            // Sort the tile descriptor lists, since iterating values in the tile_cache.tiles
+            // hashmap doesn't provide any ordering guarantees, but we want to detect the
+            // composite descriptor as equal if the tiles list is the same, regardless of
+            // ordering.
+            opaque_tile_descriptors.sort_by_key(|desc| desc.tile_id);
+            alpha_tile_descriptors.sort_by_key(|desc| desc.tile_id);
+
+            // If the clip rect is too large, it can cause accuracy and correctness problems
+            // for some native compositors (specifically, CoreAnimation in this case). To
+            // work around that, intersect the supplied clip rect with the current bounds
+            // of the native surface, which ensures it is a reasonable size.
+            let surface_clip_rect = device_clip_rect
+                .intersection(&surface_device_rect)
+                .unwrap_or(DeviceRect::zero());
+
+            // Add opaque surface before any compositor surfaces
+            if visible_opaque_tile_count > 0 {
+                self.descriptor.surfaces.push(
+                    CompositeSurfaceDescriptor {
+                        surface_id: sub_slice.native_surface.as_ref().map(|s| s.opaque),
+                        clip_rect: surface_clip_rect,
+                        transform: CompositorSurfaceTransform::translation(
+                            tile_cache.device_position.x,
+                            tile_cache.device_position.y,
+                            0.0,
+                        ),
+                        image_dependencies: [ImageDependency::INVALID; 3],
+                        image_rendering: ImageRendering::CrispEdges,
+                        tile_descriptors: opaque_tile_descriptors,
+                    }
+                );
+            }
+
+            // For each compositor surface that was promoted, build the
+            // information required for the compositor to draw it
+            for external_surface in &tile_cache.external_surfaces {
+                let clip_rect = external_surface
+                    .clip_rect
+                    .intersection(&device_clip_rect)
+                    .unwrap_or_else(DeviceRect::zero);
+
+                let required_plane_count =
+                    match external_surface.dependency {
+                        ExternalSurfaceDependency::Yuv { format, .. } => {
+                            format.get_plane_num()
+                        },
+                        ExternalSurfaceDependency::Rgb { .. } => {
+                            1
+                        }
+                    };
+
+                let mut image_dependencies = [ImageDependency::INVALID; 3];
+
+                for i in 0 .. required_plane_count {
+                    let dependency = match external_surface.dependency {
+                        ExternalSurfaceDependency::Yuv { image_dependencies, .. } => {
+                            image_dependencies[i]
+                        },
+                        ExternalSurfaceDependency::Rgb { image_dependency, .. } => {
+                            image_dependency
+                        }
+                    };
+                    image_dependencies[i] = dependency;
+                }
+
+                // Get a new z_id for each compositor surface, to ensure correct ordering
+                // when drawing with the simple (Draw) compositor, and to schedule compositing
+                // of any required updates into the surfaces.
+                let needs_external_surface_update = match self.compositor_kind {
+                    CompositorKind::Draw { .. } => true,
+                    _ => external_surface.update_params.is_some(),
+                };
+                let external_surface_index = if needs_external_surface_update {
+                    let external_surface_index = self.compute_external_surface_dependencies(
+                        &external_surface,
+                        &image_dependencies,
+                        required_plane_count,
+                        resource_cache,
+                        gpu_cache,
+                        deferred_resolves,
+                    );
+                    if external_surface_index == ResolvedExternalSurfaceIndex::INVALID {
+                        continue;
+                    }
+                    external_surface_index
+                } else {
+                    ResolvedExternalSurfaceIndex::INVALID
+                };
+
+                let tile = CompositeTile {
+                    surface: CompositeTileSurface::ExternalSurface { external_surface_index },
+                    rect: external_surface.surface_rect,
+                    valid_rect: external_surface.surface_rect.translate(-external_surface.surface_rect.origin.to_vector()),
+                    dirty_rect: external_surface.surface_rect.translate(-external_surface.surface_rect.origin.to_vector()),
                     clip_rect,
-                    transform: external_surface.transform,
-                    image_dependencies: image_dependencies,
-                    image_rendering: external_surface.image_rendering,
-                    tile_descriptors: Vec::new(),
-                }
-            );
+                    transform: Some(external_surface.transform),
+                    z_id: external_surface.z_id,
+                };
 
-            self.push_tile(tile, true);
-        }
+                // Add a surface descriptor for each compositor surface. For the Draw
+                // compositor, this is used to avoid composites being skipped by adding
+                // a dependency on the compositor surface external image keys / generations.
+                self.descriptor.surfaces.push(
+                    CompositeSurfaceDescriptor {
+                        surface_id: external_surface.native_surface_id,
+                        clip_rect,
+                        transform: external_surface.transform,
+                        image_dependencies: image_dependencies,
+                        image_rendering: external_surface.image_rendering,
+                        tile_descriptors: Vec::new(),
+                    }
+                );
 
-        // Add alpha / overlay tiles after compositor surfaces
-        if visible_alpha_tile_count > 0 {
-            self.descriptor.surfaces.push(
-                CompositeSurfaceDescriptor {
-                    surface_id: tile_cache.native_surface.as_ref().map(|s| s.alpha),
-                    clip_rect: surface_clip_rect,
-                    transform: CompositorSurfaceTransform::translation(
-                        tile_cache.device_position.x,
-                        tile_cache.device_position.y,
-                        0.0,
-                    ),
-                    image_dependencies: [ImageDependency::INVALID; 3],
-                    image_rendering: ImageRendering::CrispEdges,
-                    tile_descriptors: alpha_tile_descriptors,
-                }
-            );
+                self.push_tile(tile, true);
+            }
+
+            // Add alpha / overlay tiles after compositor surfaces
+            if visible_alpha_tile_count > 0 {
+                self.descriptor.surfaces.push(
+                    CompositeSurfaceDescriptor {
+                        surface_id: sub_slice.native_surface.as_ref().map(|s| s.alpha),
+                        clip_rect: surface_clip_rect,
+                        transform: CompositorSurfaceTransform::translation(
+                            tile_cache.device_position.x,
+                            tile_cache.device_position.y,
+                            0.0,
+                        ),
+                        image_dependencies: [ImageDependency::INVALID; 3],
+                        image_rendering: ImageRendering::CrispEdges,
+                        tile_descriptors: alpha_tile_descriptors,
+                    }
+                );
+            }
         }
     }
 

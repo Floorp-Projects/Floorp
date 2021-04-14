@@ -619,7 +619,7 @@ const tests = [
     );
     await cxmenuPromise;
     let menuitem = inputBox.getMenuItem("paste-and-go");
-    EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
+    cxmenu.activateItem(menuitem);
     await promise;
     return {
       category: "urlbar",

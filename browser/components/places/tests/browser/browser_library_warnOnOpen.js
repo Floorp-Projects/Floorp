@@ -129,7 +129,7 @@ add_task(async function test_warnOnOpenLinks() {
   );
   let promiseLoaded = BrowserTestUtils.promiseAlertDialog("cancel");
 
-  EventUtils.synthesizeMouseAtCenter(openTabs, {}, gLibrary);
+  placesContext.activateItem(openTabs, {});
 
   await promiseLoaded;
 

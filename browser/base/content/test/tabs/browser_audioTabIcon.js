@@ -168,7 +168,7 @@ async function test_muting_using_menu(tab, expectMuted) {
     contextMenu,
     "popuphidden"
   );
-  EventUtils.synthesizeMouseAtCenter(toggleMute, {});
+  contextMenu.activateItem(toggleMute);
   await popupHiddenPromise;
   await mutedPromise;
 }

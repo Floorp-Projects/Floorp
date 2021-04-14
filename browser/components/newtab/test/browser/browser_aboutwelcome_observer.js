@@ -1,16 +1,8 @@
 "use strict";
 
-const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const { AboutWelcomeParent } = ChromeUtils.import(
   "resource:///actors/AboutWelcomeParent.jsm"
 );
-
-/**
- * Sets the aboutwelcome pref to enabled simplified welcome UI
- */
-async function setAboutWelcomePref(value) {
-  return pushPrefs([SEPARATE_ABOUT_WELCOME_PREF, value]);
-}
 
 async function openAboutWelcomeTab() {
   await setAboutWelcomePref(true);

@@ -799,8 +799,6 @@ menupopup::part(drop-indicator) {
 }
 
 .ac-has-end-icon {
-  /* icon width + icon end margin */
-  padding-inline-end: calc(12px + 8px);
   text-overflow: ellipsis;
   overflow: hidden;
 }
@@ -857,9 +855,18 @@ menupopup::part(drop-indicator) {
 #webRTC-selectMicrophone-icon {
   display: none;
 }
+
+.ac-has-end-icon {
+  /* Password manager's username field icon width + icon end margin */
+  padding-inline-end: calc(12px + 8px);
+}
 } /** END not Proton **/
 
 @media (-moz-proton-doorhangers) {
+popupnotification {
+  font-size: var(--panel-font-size);
+}
+
 popupnotificationcontent {
   margin-block-start: 8px;
 }
@@ -892,10 +899,10 @@ popupnotificationcontent {
 }
 
 .popup-notification-body :is(description, label, checkbox, input) {
-  margin-inline-start: 0;
+  margin-inline: 0;
 }
 
-.popup-notification-body html|input {
+.popup-notification-body input {
   padding: 8px;
   border-radius: 4px;
   border: 0;
@@ -905,7 +912,22 @@ popupnotificationcontent {
   color: var(--input-color, FieldText);
 }
 
-.popup-notification-body html|input:focus-visible {
+.popup-notification-body input.ac-has-end-icon {
+  --input-padding-from-arrow-side: calc(8px + 16px + 8px); /* spacing from the end + arrow element width + extra spacing) */
+  padding-inline-end: var(--input-padding-from-arrow-side);
+}
+
+/* Avoid overlapping the text on the arrow icon when switching input text direction */
+.popup-notification-body:-moz-locale-dir(rtl) input.ac-has-end-icon:dir(ltr) {
+  padding-left: var(--input-padding-from-arrow-side);
+  padding-right: 8px;
+}
+.popup-notification-body:-moz-locale-dir(ltr) input.ac-has-end-icon:dir(rtl) {
+  padding-right: var(--input-padding-from-arrow-side);
+  padding-left: 8px;
+}
+
+.popup-notification-body input:focus-visible {
   outline: 2px solid var(--focus-outline-color);
 }
 
