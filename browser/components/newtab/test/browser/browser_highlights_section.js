@@ -67,11 +67,6 @@ test_highlights(
 test_highlights(
   1, // Number of highlights cards
   async function check_highlights_context_menu() {
-    let found = content.document.querySelectorAll(
-      "[data-section-id='highlights'] .card-context-icon.icon-bookmark-added"
-    ).length;
-    is(found, 1, "there should be 1 bookmark icon");
-
     const menuButton = content.document.querySelector(
       "[data-section-id='highlights'] .card-outer .context-menu-button"
     );
@@ -86,15 +81,15 @@ test_highlights(
     );
 
     const removeBookmarkBtn = contextMenu.querySelector(
-      "[data-section-id='highlights'] button .icon-bookmark-added"
+      "[data-section-id='highlights'] button"
     );
     removeBookmarkBtn.click();
 
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.querySelectorAll(
-          "[data-section-id='highlights'] .card-context-icon.icon-bookmark-added"
-        ).length === 0,
+          "[data-section-id='highlights'] .card-outer:not(.placeholder)"
+        ),
       "no more bookmark cards should be visible"
     );
   }
