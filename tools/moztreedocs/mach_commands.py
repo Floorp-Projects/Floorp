@@ -13,6 +13,7 @@ import sys
 import time
 import yaml
 import uuid
+import mozpack.path as mozpath
 
 from functools import partial
 from pprint import pprint
@@ -30,15 +31,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 topsrcdir = os.path.abspath(os.path.dirname(os.path.dirname(here)))
 DOC_ROOT = os.path.join(topsrcdir, "docs")
 BASE_LINK = "http://gecko-docs.mozilla.org-l1.s3-website.us-west-2.amazonaws.com/"
-JSDOC_NOT_FOUND = """\
-JSDoc==3.5.5 is required to build the docs but was not found on your system.
-Please install it globally by running:
-
-    $ mach npm install -g jsdoc@3.5.5
-
-Bug 1498604 tracks bootstrapping jsdoc properly.
-Bug 1556460 tracks supporting newer versions of jsdoc.
-"""
 
 
 @CommandProvider
@@ -127,8 +119,27 @@ class Documentation(MachCommandBase):
         write_url=None,
         verbose=None,
     ):
-        if self.check_jsdoc():
-            return die(JSDOC_NOT_FOUND)
+
+        # TODO: Bug 1704891 - move the ESLint setup tools to a shared place.
+        sys.path.append(mozpath.join(self.topsrcdir, "tools", "lint", "eslint"))
+        import setup_helper
+
+        setup_helper.set_project_root(self.topsrcdir)
+
+        if not setup_helper.check_node_executables_valid():
+            return 1
+
+        setup_helper.eslint_maybe_setup()
+
+        # Set the path so that Sphinx can find jsdoc, unfortunately there isn't
+        # a way to pass this to Sphinx itself at the moment.
+        os.environ["PATH"] = (
+            mozpath.join(self.topsrcdir, "node_modules", ".bin")
+            + os.pathsep
+            + self._node_path()
+            + os.pathsep
+            + os.environ["PATH"]
+        )
 
         self.activate_virtualenv()
         self.virtualenv_manager.install_pip_requirements(
@@ -295,6 +306,13 @@ class Documentation(MachCommandBase):
             self._read_project_properties()
         return self._version
 
+    def _node_path(self):
+        from mozbuild.nodeutil import find_node_executable
+
+        node, _ = find_node_executable()
+
+        return os.path.dirname(node)
+
     def _find_doc_dir(self, path):
         if os.path.isfile(path):
             return
@@ -391,21 +409,6 @@ class Documentation(MachCommandBase):
         ]
         args.extend([os.path.join(self.topsrcdir, path) for path in set(metrics_paths)])
         subprocess.check_call(args)
-
-    def check_jsdoc(self):
-        try:
-            from mozfile import which
-
-            exe_name = which("jsdoc")
-            if not exe_name:
-                return 1
-            out = subprocess.check_output([exe_name, "--version"])
-            version = out.split()[1]
-        except subprocess.CalledProcessError:
-            version = None
-
-        if not version or not version.startswith(b"3.5"):
-            return 1
 
 
 def die(msg, exit_code=1):
