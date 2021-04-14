@@ -5107,6 +5107,20 @@ home_menu:
       - fenix-core@mozilla.com
     expires: "2021-10-01"
 
+home_screen:
+  home_screen_displayed:
+    type: event
+    description: The user clicked the settings option in home menu.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18856
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19025
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
+
 android_keystore_experiment:
   experiment_failure:
     type: event

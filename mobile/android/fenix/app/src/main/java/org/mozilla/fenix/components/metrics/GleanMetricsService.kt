@@ -35,6 +35,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.HomeMenu
+import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MasterPassword
@@ -820,6 +821,9 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.SetDefaultBrowserClicked -> EventWrapper<NoExtraKeys>(
             { SetDefaultNewtabExperiment.setDefaultBrowserClicked.record(it) }
+        )
+        is Event.HomeScreenDisplayed -> EventWrapper<NoExtraKeys>(
+            { HomeScreen.homeScreenDisplayed.record(it) }
         )
 
         // Don't record other events in Glean:

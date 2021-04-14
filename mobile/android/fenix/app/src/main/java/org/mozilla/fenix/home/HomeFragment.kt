@@ -364,6 +364,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) =
         PerfStartup.homeFragmentOnViewCreated.measureNoInline {
             super.onViewCreated(view, savedInstanceState)
+            context?.metrics?.track(Event.HomeScreenDisplayed)
 
             observeSearchEngineChanges()
             createHomeMenu(requireContext(), WeakReference(view.menuButton))

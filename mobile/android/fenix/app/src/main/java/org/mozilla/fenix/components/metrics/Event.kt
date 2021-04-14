@@ -230,6 +230,7 @@ sealed class Event {
 
     // Home menu interaction
     object HomeMenuSettingsItemClicked : Event()
+    object HomeScreenDisplayed : Event()
 
     // Interaction events with extras
 
