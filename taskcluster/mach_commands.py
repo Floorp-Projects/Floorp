@@ -539,7 +539,12 @@ class MachCommands(MachCommandBase):
                     print("abort: can't diff taskgraph with dirty working directory")
                     return 1
 
-                cur_ref = vcs.head_ref[:12]
+                # We want to return the working directory to the current state
+                # as best we can after we're done. In all known cases, using
+                # branch or bookmark (which are both available on the VCS object)
+                # as `branch` is preferable to a specific revision.
+                cur_ref = vcs.branch or vcs.head_ref[:12]
+
                 if options["diff"] == "default":
                     base_ref = vcs.base_ref
                 else:
