@@ -4,7 +4,7 @@
 
 tab-context-open-a-new-tab =
     .label = Open a New Tab
-    .accesskey = O
+    .accesskey = w
 reload-tab =
     .label = Reload Tab
     .accesskey = R
