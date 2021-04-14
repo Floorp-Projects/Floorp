@@ -295,12 +295,21 @@ var SelectParentHelper = {
         break;
 
       case "mouseover":
-        this._actor.sendAsyncMessage("Forms:MouseOver", {});
-
+        if (
+          !event.relatedTarget ||
+          !this._currentMenulist.contains(event.relatedTarget)
+        ) {
+          this._actor.sendAsyncMessage("Forms:MouseOver", {});
+        }
         break;
 
       case "mouseout":
-        this._actor.sendAsyncMessage("Forms:MouseOut", {});
+        if (
+          !event.relatedTarget ||
+          !this._currentMenulist.contains(event.relatedTarget)
+        ) {
+          this._actor.sendAsyncMessage("Forms:MouseOut", {});
+        }
         break;
 
       case "keydown":
