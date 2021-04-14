@@ -1,4 +1,4 @@
-/* global $:false, PKT_PANEL_OVERLAY:false */
+/* global PKT_PANEL_OVERLAY:false */
 /* import-globals-from messages.js */
 
 var PKT_PANEL = function() {};
@@ -64,7 +64,7 @@ PKT_PANEL.prototype = {
   },
 };
 
-$(function() {
+function onDOMLoaded() {
   if (!window.thePKT_PANEL) {
     var thePKT_PANEL = new PKT_PANEL();
     /* global thePKT_PANEL */
@@ -92,4 +92,10 @@ $(function() {
       window.thePKT_PANEL.create();
     }
   );
-});
+}
+
+if (document.readyState != `loading`) {
+  onDOMLoaded();
+} else {
+  document.addEventListener(`DOMContentLoaded`, onDOMLoaded);
+}
