@@ -972,7 +972,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     // hit-test result therefore needs to use the parent process layers id.
     LayersId rootLayersId = mCompositorSession->RootLayerTreeId();
 
-    UniquePtr<DisplayportSetListener> postLayerization;
+    RefPtr<DisplayportSetListener> postLayerization;
     if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
       nsTArray<TouchBehaviorFlags> allowedTouchBehaviors;
       if (touchEvent->mMessage == eTouchStart) {
@@ -1005,8 +1005,8 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
           inputBlockId);
       mAPZEventState->ProcessMouseEvent(*mouseEvent, inputBlockId);
     }
-    if (postLayerization && postLayerization->Register()) {
-      Unused << postLayerization.release();
+    if (postLayerization) {
+      postLayerization->TryRegister();
     }
   }
 

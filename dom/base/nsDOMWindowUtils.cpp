@@ -3013,12 +3013,14 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
   if (waitForRefresh) {
     waitForRefresh = false;
     if (nsPresContext* presContext = presShell->GetPresContext()) {
-      waitForRefresh = presContext->RegisterOneShotPostRefreshObserver(
-          new OneShotPostRefreshObserver(
-              presShell,
-              [widget = RefPtr<nsIWidget>(widget), presShellId, viewId, bounds,
-               flags](PresShell*, OneShotPostRefreshObserver*) {
-                widget->ZoomToRect(presShellId, viewId, bounds, flags);
+      waitForRefresh = presContext->RegisterManagedPostRefreshObserver(
+          new ManagedPostRefreshObserver(
+              presShell, [widget = RefPtr<nsIWidget>(widget), presShellId,
+                          viewId, bounds, flags](bool aWasCanceled) {
+                if (!aWasCanceled) {
+                  widget->ZoomToRect(presShellId, viewId, bounds, flags);
+                }
+                return ManagedPostRefreshObserver::Unregister::Yes;
               }));
     }
   }
