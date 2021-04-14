@@ -1530,6 +1530,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Manage saved cards</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Add card</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Edit card</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Card Number</string>
     <!-- The header for the expiration date of a credit card -->

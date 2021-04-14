@@ -7,6 +7,7 @@ package org.mozilla.fenix.ext
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.text.Editable
 import android.util.Patterns
 import android.webkit.URLUtil
 import androidx.core.net.toUri
@@ -113,6 +114,11 @@ fun String.simplifiedUrl(): String {
     }
     return afterScheme
 }
+
+/**
+ * Returns an [Editable] for the provided string.
+ */
+fun String.toEditable(): Editable = Editable.Factory.getInstance().newEditable(this)
 
 suspend fun bitmapForUrl(url: String, client: Client): Bitmap? = withContext(Dispatchers.IO) {
     // Code below will cache it in Gecko's cache, which ensures that as long as we've fetched it once,

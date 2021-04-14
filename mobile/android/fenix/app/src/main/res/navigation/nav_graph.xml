@@ -1065,7 +1065,13 @@
         <fragment
             android:id="@+id/creditCardEditorFragment"
             android:name="org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment"
-            android:label="@string/credit_cards_add_card" />
+            android:label="@string/credit_cards_add_card">
+            <argument
+                android:name="creditCard"
+                android:defaultValue="@null"
+                app:argType="mozilla.components.concept.storage.CreditCard"
+                app:nullable="true" />
+        </fragment>
         <fragment
             android:id="@+id/creditCardsManagementFragment"
             android:name="org.mozilla.fenix.settings.creditcards.CreditCardsManagementFragment"

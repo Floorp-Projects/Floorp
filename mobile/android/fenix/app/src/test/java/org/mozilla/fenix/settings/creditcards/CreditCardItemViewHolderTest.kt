@@ -57,6 +57,6 @@ class CreditCardItemViewHolderTest {
         CreditCardItemViewHolder(view, interactor).bind(creditCard)
 
         view.performClick()
-        verify { interactor.onSelectCreditCard() }
+        verify { interactor.onSelectCreditCard(creditCard) }
     }
 }

@@ -8,6 +8,7 @@ import androidx.navigation.NavController
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import mozilla.components.concept.storage.CreditCard
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -34,12 +35,27 @@ class DefaultCreditCardsManagementControllerTest {
 
     @Test
     fun handleCreditCardClicked() {
-        controller.handleCreditCardClicked()
+        val creditCard = CreditCard(
+            guid = "id",
+            billingName = "Banana Apple",
+            cardNumber = "4111111111111110",
+            expiryMonth = 1,
+            expiryYear = 2030,
+            cardType = "amex",
+            timeCreated = 1L,
+            timeLastUsed = 1L,
+            timeLastModified = 1L,
+            timesUsed = 1L
+        )
+
+        controller.handleCreditCardClicked(creditCard)
 
         verify {
             navController.navigate(
                 CreditCardsManagementFragmentDirections
-                    .actionCreditCardsManagementFragmentToCreditCardEditorFragment()
+                    .actionCreditCardsManagementFragmentToCreditCardEditorFragment(
+                        creditCard = creditCard
+                    )
             )
         }
     }

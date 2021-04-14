@@ -19,10 +19,12 @@ import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStor
 interface CreditCardEditorController {
 
     /**
-     * Saves the provided credit card field into the credit card storage. Called when a user
-     * taps on the save menu item or "Save" button.
-     *
-     * @param creditCardFields A [UpdatableCreditCardFields] record to add.
+     * @see [CreditCardEditorInteractor.onCancelButtonClicked]
+     */
+    fun handleCancelButtonClicked()
+
+    /**
+     * @see [CreditCardEditorInteractor.onSaveButtonClicked]
      */
     fun handleSaveCreditCard(creditCardFields: UpdatableCreditCardFields)
 }
@@ -42,6 +44,10 @@ class DefaultCreditCardEditorController(
     private val navController: NavController,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : CreditCardEditorController {
+
+    override fun handleCancelButtonClicked() {
+        navController.popBackStack()
+    }
 
     override fun handleSaveCreditCard(creditCardFields: UpdatableCreditCardFields) {
         lifecycleScope.launch(ioDispatcher) {

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.creditcards.controller
 
 import androidx.navigation.NavController
+import mozilla.components.concept.storage.CreditCard
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.settings.creditcards.CreditCardsManagementFragmentDirections
 
@@ -17,7 +18,7 @@ interface CreditCardsManagementController {
     /**
      * @see [CreditCardsManagementInteractor.onSelectCreditCard]
      */
-    fun handleCreditCardClicked()
+    fun handleCreditCardClicked(creditCard: CreditCard)
 }
 
 /**
@@ -27,10 +28,12 @@ class DefaultCreditCardsManagementController(
     private val navController: NavController
 ) : CreditCardsManagementController {
 
-    override fun handleCreditCardClicked() {
+    override fun handleCreditCardClicked(creditCard: CreditCard) {
         navController.navigateBlockingForAsyncNavGraph(
             CreditCardsManagementFragmentDirections
-                .actionCreditCardsManagementFragmentToCreditCardEditorFragment()
+                .actionCreditCardsManagementFragmentToCreditCardEditorFragment(
+                    creditCard = creditCard
+                )
         )
     }
 }

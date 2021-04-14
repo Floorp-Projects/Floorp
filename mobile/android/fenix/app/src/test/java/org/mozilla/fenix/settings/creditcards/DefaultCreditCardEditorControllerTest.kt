@@ -8,6 +8,7 @@ import androidx.navigation.NavController
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -51,6 +52,15 @@ class DefaultCreditCardEditorControllerTest {
     fun cleanUp() {
         testCoroutineScope.cleanupTestCoroutines()
         testDispatcher.cleanupTestCoroutines()
+    }
+
+    @Test
+    fun handleCancelButtonClicked() {
+        controller.handleCancelButtonClicked()
+
+        verify {
+            navController.popBackStack()
+        }
     }
 
     @Test

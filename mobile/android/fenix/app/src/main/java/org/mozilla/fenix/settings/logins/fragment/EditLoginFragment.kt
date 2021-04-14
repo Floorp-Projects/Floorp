@@ -30,6 +30,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.toEditable
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
 import org.mozilla.fenix.settings.logins.SavedLogin
@@ -44,8 +45,6 @@ import org.mozilla.fenix.settings.logins.togglePasswordReveal
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "NestedBlockDepth", "ForbiddenComment")
 class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
-
-    private fun String.toEditable(): Editable = Editable.Factory.getInstance().newEditable(this)
 
     private val args by navArgs<EditLoginFragmentArgs>()
     private lateinit var loginsFragmentStore: LoginsFragmentStore

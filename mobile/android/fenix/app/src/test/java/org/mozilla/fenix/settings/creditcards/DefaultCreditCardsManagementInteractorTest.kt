@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.creditcards
 
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.concept.storage.CreditCard
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.settings.creditcards.controller.CreditCardsManagementController
@@ -24,7 +25,8 @@ class DefaultCreditCardsManagementInteractorTest {
 
     @Test
     fun onSelectCreditCard() {
-        interactor.onSelectCreditCard()
-        verify { controller.handleCreditCardClicked() }
+        val creditCard: CreditCard = mockk(relaxed = true)
+        interactor.onSelectCreditCard(creditCard)
+        verify { controller.handleCreditCardClicked(creditCard) }
     }
 }

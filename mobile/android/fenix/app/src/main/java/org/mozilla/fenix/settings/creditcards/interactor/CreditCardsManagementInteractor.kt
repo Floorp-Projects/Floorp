@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.creditcards.interactor
 
+import mozilla.components.concept.storage.CreditCard
 import org.mozilla.fenix.settings.creditcards.controller.CreditCardsManagementController
 
 /**
@@ -14,18 +15,23 @@ interface CreditCardsManagementInteractor {
     /**
      * Navigates to the credit card editor to edit the selected credit card. Called when a user
      * taps on a credit card item.
+     *
+     * @param creditCard The selected [CreditCard] to edit.
      */
-    fun onSelectCreditCard()
+    fun onSelectCreditCard(creditCard: CreditCard)
 }
 
 /**
- * The default implementation of [CreditCardEditorInteractor]
+ * The default implementation of [CreditCardsManagementInteractor].
+ *
+ * @param controller An instance of [CreditCardsManagementController] which will be delegated for
+ * all user interactions.
  */
 class DefaultCreditCardsManagementInteractor(
     private val controller: CreditCardsManagementController
 ) : CreditCardsManagementInteractor {
 
-    override fun onSelectCreditCard() {
-        controller.handleCreditCardClicked()
+    override fun onSelectCreditCard(creditCard: CreditCard) {
+        controller.handleCreditCardClicked(creditCard)
     }
 }
