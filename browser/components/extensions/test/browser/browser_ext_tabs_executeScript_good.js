@@ -178,7 +178,7 @@ add_task(async function testGoodPermissions() {
 
       let item = contextMenu.querySelector("[label=activeTab]");
 
-      await EventUtils.synthesizeMouseAtCenter(item, {}, window);
+      contextMenu.activateItem(item);
 
       await awaitPopupHidden;
     },
