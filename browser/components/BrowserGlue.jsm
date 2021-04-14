@@ -4616,13 +4616,13 @@ var DefaultBrowserCheck = {
     ).map(({ value }) => value);
 
     let ps = Services.prompt;
-    let stopAsk = { value: false };
     let buttonFlags =
       ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0 +
       ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_1 +
       ps.BUTTON_POS_0_DEFAULT;
-    let rv = ps.confirmEx(
-      win,
+    let rv = await ps.asyncConfirmEx(
+      win.browsingContext,
+      ps.MODAL_TYPE_INTERNAL_WINDOW,
       promptTitle,
       promptMessage,
       buttonFlags,
@@ -4630,17 +4630,20 @@ var DefaultBrowserCheck = {
       notNowButton,
       null,
       askLabel,
-      stopAsk
+      false, // checkbox state
+      { headerIconURL: "chrome://branding/content/icon32.png" }
     );
-    if (rv == 0) {
+    let buttonNumClicked = rv.get("buttonNumClicked");
+    let checkboxState = rv.get("checked");
+    if (buttonNumClicked == 0) {
       shellService.setAsDefault();
       shellService.pinToTaskbar();
-    } else if (stopAsk.value) {
+    } else if (checkboxState) {
       shellService.shouldCheckDefaultBrowser = false;
     }
 
     try {
-      let resultEnum = rv * 2 + !stopAsk.value;
+      let resultEnum = buttonNumClicked * 2 + !checkboxState;
       Services.telemetry
         .getHistogramById("BROWSER_SET_DEFAULT_RESULT")
         .add(resultEnum);
