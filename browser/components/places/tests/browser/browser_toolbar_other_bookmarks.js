@@ -221,7 +221,7 @@ add_task(async function testDeletingMenuItems() {
   let deleteMenuBookmark = document.getElementById(
     "placesContext_deleteBookmark"
   );
-  EventUtils.synthesizeMouseAtCenter(deleteMenuBookmark, {});
+  placesContext.activateItem(deleteMenuBookmark);
 
   await TestUtils.waitForCondition(() => {
     let popup = document.querySelector("#OtherBookmarksPopup");
@@ -583,7 +583,7 @@ async function selectShowOtherBookmarksMenuItem(selector) {
   );
   let contextMenu = document.getElementById("placesContext");
 
-  EventUtils.synthesizeMouseAtCenter(otherBookmarksMenuItem, {});
+  contextMenu.activateItem(otherBookmarksMenuItem);
 
   await BrowserTestUtils.waitForPopupEvent(contextMenu, "hidden");
   await closeToolbarContextMenu();
