@@ -8,7 +8,6 @@ import math
 import os
 import platform
 import shutil
-import site
 import sys
 
 if sys.version_info[0] < 3:
@@ -198,12 +197,6 @@ def bootstrap(topsrcdir):
     deleted_dir = os.path.join(topsrcdir, "third_party", "python", "psutil")
     if os.path.exists(deleted_dir):
         shutil.rmtree(deleted_dir, ignore_errors=True)
-
-    if sys.prefix == sys.base_prefix:
-        # We are not in a virtualenv. Remove global site packages
-        # from sys.path.
-        site_paths = {*site.getsitepackages(), site.getusersitepackages()}
-        sys.path = [path for path in sys.path if path not in site_paths]
 
     # Global build system and mach state is stored in a central directory. By
     # default, this is ~/.mozbuild. However, it can be defined via an
@@ -411,9 +404,7 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
     mach_metrics.mach.duration.stop()
     mach_metrics.mach.success.set(success)
     system_metrics = mach_metrics.mach.system
-    cpu_brand = get_cpu_brand()
-    if cpu_brand:
-        system_metrics.cpu_brand.set(cpu_brand)
+    system_metrics.cpu_brand.set(get_cpu_brand())
     distro, version = get_distro_and_version()
     system_metrics.distro.set(distro)
     system_metrics.distro_version.set(version)
