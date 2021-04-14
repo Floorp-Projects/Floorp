@@ -87,8 +87,10 @@ abstract class TabsTrayViewHolder(
         updateSelectedTabIndicator(isSelected)
         updateMediaState(tab)
 
-        selectionHolder?.let {
-            setSelectionInteractor(tab, it, browserTrayInteractor)
+        if (selectionHolder != null) {
+            setSelectionInteractor(tab, selectionHolder, browserTrayInteractor)
+        } else {
+            itemView.setOnClickListener { browserTrayInteractor.open(tab) }
         }
 
         if (tab.thumbnail != null) {
