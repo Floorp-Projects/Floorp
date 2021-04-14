@@ -2110,10 +2110,6 @@ var gBrowserInit = {
             "PlacesToolbarHelper.openManagedBookmark(event);"
           );
           managedBookmarksPopup.setAttribute(
-            "onclick",
-            "checkForMiddleClick(this, event);"
-          );
-          managedBookmarksPopup.setAttribute(
             "ondragover",
             "event.dataTransfer.effectAllowed='none';"
           );
