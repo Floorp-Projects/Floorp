@@ -230,7 +230,7 @@
 
 .cui-widget-panel,
 #widget-overflow {
-  font: menu;
+  font-size: var(--panel-font-size);
 }
 
 panelview {
@@ -563,7 +563,8 @@ panelview:not([mainview]) .toolbarbutton-text,
   --arrowpanel-padding: 4px 0;
 }
 
-#appMenu-popup panelview {
+#appMenu-popup panelview,
+#PanelUI-fxa {
   width: 22.5em;
 }
 

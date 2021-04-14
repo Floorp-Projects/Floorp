@@ -375,12 +375,17 @@ body {
       .onboardingContainer .steps .indicator.current {
         opacity: 1; }
   .onboardingContainer.proton {
-    background: linear-gradient(69.76deg, #15141A 2.07%, rgba(21, 20, 26, 0) 65.58%) center/cover no-repeat fixed; }
+    background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center/cover no-repeat fixed; }
+    .onboardingContainer.proton:dir(rtl) {
+      transform: rotateY(180deg); }
     .onboardingContainer.proton .screen {
       position: relative;
       flex-flow: row nowrap;
       height: 100%;
+      min-height: 500px;
       overflow: hidden; }
+      .onboardingContainer.proton .screen:dir(rtl) {
+        transform: rotateY(180deg); }
     .onboardingContainer.proton .section-main {
       display: flex;
       flex-direction: column;
@@ -392,7 +397,8 @@ body {
       color: var(--proton-text-primary-color);
       font-size: 24px;
       line-height: 36px;
-      font-weight: normal; }
+      font-weight: normal;
+      letter-spacing: -0.02em; }
     .onboardingContainer.proton .welcome-text h2 {
       font-size: 16px;
       line-height: 24px; }
@@ -416,7 +422,7 @@ body {
       .onboardingContainer.proton .secondary-cta.top button {
         color: #FFF; }
     .onboardingContainer.proton .steps {
-      padding-bottom: 44px; }
+      padding-bottom: 15px; }
       .onboardingContainer.proton .steps .indicator {
         width: 6px;
         height: 6px;
@@ -425,10 +431,12 @@ body {
           background: var(--proton-indicator-active-color); }
     .onboardingContainer.proton .tiles-theme-section {
       border: var(--tiles-theme-section-border-width) solid var(--proton-content-background-color); }
+      .onboardingContainer.proton .tiles-theme-section:focus-within {
+        border: var(--tiles-theme-section-border-width) dotted; }
     .onboardingContainer.proton .theme {
       align-items: center;
       width: auto;
-      min-width: 80px;
+      min-width: 50px;
       height: initial;
       background-color: var(--proton-content-background-color);
       box-shadow: none; }
@@ -487,21 +495,15 @@ body {
       -moz-context-properties: fill;
       fill: #FFA437; }
     .onboardingContainer.proton .screen-0 {
-      /**
-       * Proton welcome content is above white background noodle on first screen even when
-       * using the RTL UI direction; below rule enforce that ordering.
-       */
-      min-height: 600px;
-      min-width: 700px;
-      direction: ltr; }
+      min-width: 700px; }
       .onboardingContainer.proton .screen-0 .section-left {
         width: 50%;
         display: flex;
         flex-direction: column;
-        margin: 0 0 0 101px; }
+        margin-inline-start: 101px; }
         @media (max-width: 1122px) {
           .onboardingContainer.proton .screen-0 .section-left {
-            margin: 0 0 0 71px; } }
+            margin-inline-start: 71px; } }
         .onboardingContainer.proton .screen-0 .section-left .message-text {
           flex-grow: 1;
           display: flex;
@@ -510,8 +512,8 @@ body {
           .onboardingContainer.proton .screen-0 .section-left .message-text h1 {
             color: #FFF;
             font-weight: bold;
-            font-size: 64px;
-            line-height: 72px;
+            font-size: 104px;
+            line-height: 92px;
             margin: 0 6px;
             width: 517px;
             text-align: initial; }
@@ -533,7 +535,7 @@ body {
         .onboardingContainer.proton .screen-0 .section-left .attrib-text {
           height: 18px;
           margin-bottom: 25px;
-          text-align: left;
+          text-align: initial;
           font-size: 12px;
           line-height: 18px;
           color: #F9F9FB;
@@ -553,7 +555,7 @@ body {
           position: absolute;
           height: 350px;
           bottom: -60px;
-          right: 20px; }
+          inset-inline-end: 80px; }
         .onboardingContainer.proton .screen-0 .section-main .brand-logo {
           margin-top: 0; }
         .onboardingContainer.proton .screen-0 .section-main .welcome-text {
@@ -561,10 +563,12 @@ body {
           .onboardingContainer.proton .screen-0 .section-main .welcome-text h1 {
             width: 283px; }
       .onboardingContainer.proton .screen-0 .outline-L {
-        width: 120px;
-        height: 135px;
+        width: 87px;
+        height: 80px;
         bottom: 94px;
-        right: 420px; }
+        inset-inline-end: 430px; }
+        .onboardingContainer.proton .screen-0 .outline-L:dir(rtl) {
+          transform: rotate(240deg); }
         @media (max-width: 690px) {
           .onboardingContainer.proton .screen-0 .outline-L {
             visibility: hidden; } }
@@ -572,22 +576,30 @@ body {
         width: 1300px;
         height: 1050px;
         bottom: -390px;
-        right: -640px;
+        inset-inline-end: -640px;
         transform: rotate(-80deg); }
+        .onboardingContainer.proton .screen-0 .solid-L:dir(rtl) {
+          transform: rotate(-260deg); }
       .onboardingContainer.proton .screen-0 .orange-L {
         width: 466px;
         height: 356px;
-        bottom: 280px;
-        right: -240px; }
+        bottom: 270px;
+        inset-inline-end: -245px; }
+        .onboardingContainer.proton .screen-0 .orange-L:dir(rtl) {
+          bottom: 208px;
+          inset-inline-end: -100px;
+          transform: rotate(-245deg); }
       .onboardingContainer.proton .screen-0 .purple-C {
         width: 467px;
         height: 382px;
-        bottom: -60px;
-        right: 160px;
-        transform: rotate(-40deg); }
+        bottom: -100px;
+        inset-inline-end: 125px;
+        transform: rotate(-75deg); }
+        .onboardingContainer.proton .screen-0 .purple-C:dir(rtl) {
+          transform: rotate(-207deg); }
       .onboardingContainer.proton .screen-0 .yellow-circle {
-        bottom: 105px;
-        right: 600px; }
+        bottom: 75px;
+        inset-inline-end: 540px; }
     .onboardingContainer.proton .screen-1 .section-main {
       z-index: 1;
       width: 504px;
@@ -606,26 +618,36 @@ body {
       background-color: var(--proton-content-background-color);
       border-radius: 20px; }
     .onboardingContainer.proton .screen-1 .outline-L {
-      width: 80px;
-      height: 100px;
-      transform: rotate(10deg) translate(-30%, 160%);
+      width: 87px;
+      height: 80px;
+      transform: rotate(10deg) translate(-30%, 200%);
       z-index: 2; }
+      .onboardingContainer.proton .screen-1 .outline-L:dir(rtl) {
+        transform: rotate(232deg) translate(-160%, -145%); }
     .onboardingContainer.proton .screen-1 .orange-L {
       width: 448px;
       height: 568px;
       transform: rotate(-155deg) translate(12%, -21%); }
+      .onboardingContainer.proton .screen-1 .orange-L:dir(rtl) {
+        transform: rotate(-180deg) translate(-10%, -12%); }
     .onboardingContainer.proton .screen-1 .purple-C {
       width: 294px;
       height: 254px;
       transform: translate(-20%, -62%); }
+      .onboardingContainer.proton .screen-1 .purple-C:dir(rtl) {
+        transform: rotate(50deg) translate(-25%, -50%); }
     .onboardingContainer.proton .screen-1 .yellow-circle {
       width: 165px;
       height: 165px;
       transform: translate(230%, -5%);
       background: #FF7139; }
+      .onboardingContainer.proton .screen-1 .yellow-circle:dir(rtl) {
+        transform: translate(-225%, -5%); }
       @media (max-width: 866px) {
         .onboardingContainer.proton .screen-1 .yellow-circle {
-          transform: translate(205%, -5%); } }
+          transform: translate(205%, -5%); }
+          .onboardingContainer.proton .screen-1 .yellow-circle:dir(rtl) {
+            transform: translate(-200%, -5%); } }
       @media (max-width: 610px) {
         .onboardingContainer.proton .screen-1 .yellow-circle {
           transform: translate(185%, -5%); } }
@@ -647,17 +669,23 @@ body {
       background-color: var(--proton-content-background-color);
       border-radius: 20px; }
     .onboardingContainer.proton .screen-2 .outline-L {
-      width: 90px;
-      height: 110px;
-      transform: rotate(250deg) translate(-420%, 330%);
+      width: 87px;
+      height: 80px;
+      transform: rotate(250deg) translate(-420%, 425%);
       z-index: 2; }
+      .onboardingContainer.proton .screen-2 .outline-L:dir(rtl) {
+        transform: rotate(10deg) translate(-475%, 300%); }
       @media (max-width: 866px) {
         .onboardingContainer.proton .screen-2 .outline-L {
-          transform: rotate(250deg) translate(-400%, 280%); } }
+          transform: rotate(250deg) translate(-400%, 280%); }
+          .onboardingContainer.proton .screen-2 .outline-L:dir(rtl) {
+            transform: rotate(10deg) translate(-390%, 340%); } }
     .onboardingContainer.proton .screen-2 .orange-L {
       height: 800px;
       width: 660px;
       transform: rotate(35deg) translate(-10%, -7%); }
+      .onboardingContainer.proton .screen-2 .orange-L:dir(rtl) {
+        transform: rotate(215deg) translate(-10%, -7%); }
       @media (max-width: 866px) {
         .onboardingContainer.proton .screen-2 .orange-L {
           height: 740px;
@@ -666,8 +694,12 @@ body {
       width: 392px;
       height: 394px;
       transform: rotate(260deg) translate(-34%, -35%); }
+      .onboardingContainer.proton .screen-2 .purple-C:dir(rtl) {
+        transform: rotate(50deg) translate(-20%, -40%); }
     .onboardingContainer.proton .screen-2 .yellow-circle {
       width: 165px;
       height: 165px;
       transform: translate(160%, 130%);
       background: #FF7139; }
+      .onboardingContainer.proton .screen-2 .yellow-circle:dir(rtl) {
+        transform: translate(-190%, -130%); }

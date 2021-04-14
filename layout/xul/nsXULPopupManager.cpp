@@ -795,6 +795,11 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
     return true;
   }
 
+  // Hide the menu from our accessibility code so that we don't dispatch custom
+  // accessibility notifications which would conflict with the system ones.
+  aPopup->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
+                               u"true"_ns, true);
+
   nsCOMPtr<nsIContent> triggerContent;
   InitTriggerEvent(aTriggerEvent, aPopup, getter_AddRefs(triggerContent));
 
@@ -859,6 +864,11 @@ void nsXULPopupManager::OnNativeMenuClosed() {
   }
   mNativeMenu->RemoveObserver(this);
   mNativeMenu = nullptr;
+
+  // Stop hiding the menu from accessibility code, in case it gets opened as a
+  // non-native menu in the future.
+  popup->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
+                                true);
 }
 
 void nsXULPopupManager::ShowPopupAtScreenRect(

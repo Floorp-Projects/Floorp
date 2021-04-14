@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  --info-icon-url: url("chrome://global/skin/icons/info.svg");
+  --info-icon-url: url("chrome://global/skin/icons/info-filled.svg");
   --warn-icon-url: url("chrome://global/skin/icons/warning.svg");
   --success-icon-url: url("chrome://global/skin/icons/success.svg");
   --error-icon-url: url("chrome://global/skin/icons/error.svg");
@@ -254,7 +254,7 @@ strong {
   display: none;
 }
 :host([type=info]) .icon {
-  color: rgb(128,235,255);
+  color: rgb(0,144,237);
 }
 :host([type=warning]) .icon {
   color: rgb(255,164,54);
@@ -265,7 +265,7 @@ strong {
 
 @media (prefers-color-scheme: dark) {
   :host([type=info]) .icon {
-    color: rgb(0,221,255);
+    color: rgb(128,235,255);
   }
   :host([type=warning]) .icon {
     color: rgb(255,189,79);

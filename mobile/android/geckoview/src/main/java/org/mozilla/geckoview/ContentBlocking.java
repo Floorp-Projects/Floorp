@@ -177,6 +177,18 @@ public class ContentBlocking {
             }
 
             /**
+             * Set cookie storage behavior in private browsing mode.
+             *
+             * @param behavior The storage behavior that should be applied.
+             *                 Use one of the {@link CookieBehavior} flags.
+             * @return The Builder instance.
+             */
+            public @NonNull Builder cookieBehaviorPrivateMode(final @CBCookieBehavior int behavior) {
+                getSettings().setCookieBehaviorPrivateMode(behavior);
+                return this;
+            }
+
+            /**
              * Set the cookie lifetime.
              *
              * @param lifetime The enforced cookie lifetime.
@@ -260,6 +272,8 @@ public class ContentBlocking {
             "browser.safebrowsing.phishing.enabled", true);
         /* package */ final Pref<Integer> mCookieBehavior = new Pref<Integer>(
             "network.cookie.cookieBehavior", CookieBehavior.ACCEPT_NON_TRACKERS);
+        /* package */ final Pref<Integer> mCookieBehaviorPrivateMode = new Pref<Integer>(
+            "network.cookie.cookieBehavior.pbmode", CookieBehavior.ACCEPT_NON_TRACKERS);
         /* package */ final Pref<Integer> mCookieLifetime = new Pref<Integer>(
             "network.cookie.lifetimePolicy", CookieLifetime.NORMAL);
         /* package */ final Pref<Boolean> mCookiePurging = new Pref<Boolean>(
@@ -543,6 +557,28 @@ public class ContentBlocking {
         public @NonNull Settings setCookieBehavior(
                 final @CBCookieBehavior int behavior) {
             mCookieBehavior.commit(behavior);
+            return this;
+        }
+
+        /**
+         * Get the assigned private mode cookie storage behavior.
+         *
+         * @return The assigned behavior, as one of {@link CookieBehavior} flags.
+         */
+        public @CBCookieBehavior int getCookieBehaviorPrivateMode() {
+            return mCookieBehaviorPrivateMode.get();
+        }
+
+        /**
+         * Set cookie storage behavior for private browsing mode.
+         *
+         * @param behavior The storage behavior that should be applied.
+         *                 Use one of the {@link CookieBehavior} flags.
+         * @return This Settings instance.
+         */
+        public @NonNull Settings setCookieBehaviorPrivateMode(
+                final @CBCookieBehavior int behavior) {
+            mCookieBehaviorPrivateMode.commit(behavior);
             return this;
         }
 

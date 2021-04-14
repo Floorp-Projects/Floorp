@@ -826,10 +826,6 @@ bool nsBaseWidget::ComputeShouldAccelerate() {
          WidgetTypeSupportsAcceleration();
 }
 
-bool nsBaseWidget::WidgetTypePrefersSoftwareWebRender() const {
-  return StaticPrefs::gfx_webrender_software_unaccelerated_widget_force();
-}
-
 bool nsBaseWidget::UseAPZ() {
   return (gfxPlatform::AsyncPanZoomEnabled() &&
           (WindowType() == eWindowType_toplevel ||
@@ -1226,7 +1222,9 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
         StaticPrefs::gfx_webrender_unaccelerated_widget_force()) {
       enableWR = gfx::gfxVars::UseWebRender();
       enableSWWR = gfx::gfxVars::UseSoftwareWebRender();
-    } else if (WidgetTypePrefersSoftwareWebRender()) {
+    } else if (gfxPlatform::DoesFissionForceWebRender() ||
+               StaticPrefs::
+                   gfx_webrender_software_unaccelerated_widget_allow()) {
       enableWR = enableSWWR = gfx::gfxVars::UseWebRender();
     } else {
       enableWR = enableSWWR = false;

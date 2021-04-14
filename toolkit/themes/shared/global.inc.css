@@ -20,7 +20,7 @@
   --arrowpanel-color: var(--default-arrowpanel-color);
   --arrowpanel-border-color: var(--default-arrowpanel-border-color);
   --arrowpanel-border-radius: 8px;
-  --arrowpanel-padding: 16px;
+  --arrowpanel-padding: 1.25em;
 
   --arrowpanel-dimmed: color-mix(in srgb, currentColor 17%, transparent);
   --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 30%, transparent);

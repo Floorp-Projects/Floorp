@@ -64,7 +64,12 @@ async function openNewSearchTab(event_args, expect_new_window = false) {
     );
   }
 
-  EventUtils.synthesizeMouseAtCenter(searchItem, event_args);
+  if ("button" in event_args) {
+    // Bug 1704879: activateItem does not currently support button
+    EventUtils.synthesizeMouseAtCenter(searchItem, event_args);
+  } else {
+    contextMenu.activateItem(searchItem, event_args);
+  }
 
   if (expect_new_window) {
     let win = await searchTabPromise;
@@ -108,13 +113,20 @@ add_task(async function test_whereToOpenLink() {
   );
   BrowserTestUtils.removeTab(searchTab);
 
-  searchTab = await openNewSearchTab({ button: 1 });
-  isnot(
-    searchTab,
-    gBrowser.selectedTab,
-    "Search tab is opened in background (middle mouse)"
-  );
-  BrowserTestUtils.removeTab(searchTab);
+  // TODO bug 1704883: Re-enable this subtest. Native context menus on macOS do
+  // not yet support alternate mouse buttons.
+  if (
+    !AppConstants.platform == "macosx" ||
+    !Services.prefs.getBoolPref("widget.macos.native-context-menus", false)
+  ) {
+    searchTab = await openNewSearchTab({ button: 1 });
+    isnot(
+      searchTab,
+      gBrowser.selectedTab,
+      "Search tab is opened in background (middle mouse)"
+    );
+    BrowserTestUtils.removeTab(searchTab);
+  }
 
   searchTab = await openNewSearchTab({ ctrlKey: true });
   isnot(
@@ -146,13 +158,20 @@ add_task(async function test_whereToOpenLink() {
   );
   BrowserTestUtils.removeTab(searchTab);
 
-  searchTab = await openNewSearchTab({ button: 1 });
-  is(
-    searchTab,
-    gBrowser.selectedTab,
-    "Search tab is opened in foreground (middle mouse)"
-  );
-  BrowserTestUtils.removeTab(searchTab);
+  // TODO bug 1704883: Re-enable this subtest. Native context menus on macOS do
+  // not yet support alternate mouse buttons.
+  if (
+    !AppConstants.platform == "macosx" ||
+    !Services.prefs.getBoolPref("widget.macos.native-context-menus", false)
+  ) {
+    searchTab = await openNewSearchTab({ button: 1 });
+    is(
+      searchTab,
+      gBrowser.selectedTab,
+      "Search tab is opened in foreground (middle mouse)"
+    );
+    BrowserTestUtils.removeTab(searchTab);
+  }
 
   searchTab = await openNewSearchTab({ ctrlKey: true });
   is(

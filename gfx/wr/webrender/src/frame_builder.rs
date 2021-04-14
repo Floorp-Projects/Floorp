@@ -14,7 +14,7 @@ use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
 use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter};
 use crate::picture::{DirtyRegion, PictureUpdateState, SliceId, TileCacheInstance};
-use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceRenderTasks};
+use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceRenderTasks, SubSliceIndex};
 use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
 use crate::prim_store::{PictureIndex, PrimitiveDebugId};
@@ -455,6 +455,7 @@ impl FrameBuilder {
         );
         default_dirty_region.add_dirty_region(
             frame_context.global_screen_world_rect.cast_unit(),
+            SubSliceIndex::DEFAULT,
             frame_context.spatial_tree,
         );
         frame_state.push_dirty_region(default_dirty_region);
