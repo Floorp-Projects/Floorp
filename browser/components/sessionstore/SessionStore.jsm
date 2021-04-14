@@ -53,6 +53,8 @@ const OBSERVING = [
   "browser:purge-session-history-for-domain",
   "idle-daily",
   "clear-origin-attributes-data",
+  "browsing-context-did-set-embedder",
+  "browsing-context-discarded",
 ];
 
 // XUL Window properties to (re)store
@@ -95,10 +97,6 @@ const MESSAGES = [
 
   // The content script encountered an error.
   "SessionStore:error",
-
-  // The content script asks us to add the session history listener in the
-  // parent process when sessionHistory is in the parent process.
-  "SessionStore:addSHistoryListener",
 ];
 
 // The list of messages we accept from <xul:browser>s that have no tab
@@ -114,9 +112,6 @@ const NOTAB_MESSAGES = new Set([
 
   // For a description see above.
   "SessionStore:error",
-
-  // For a description see above.
-  "SessionStore:addSHistoryListener",
 ]);
 
 // The list of messages we accept without an "epoch" parameter.
@@ -127,9 +122,6 @@ const NOEPOCH_MESSAGES = new Set([
 
   // For a description see above.
   "SessionStore:error",
-
-  // For a description see above.
-  "SessionStore:addSHistoryListener",
 ]);
 
 // The list of messages we want to receive even during the short period after a
@@ -994,15 +986,35 @@ var SessionStoreInternal = {
           this._forgetTabsWithUserContextId(userContextId);
         }
         break;
+      case "browsing-context-did-set-embedder":
+        if (Services.appinfo.sessionHistoryInParent) {
+          if (
+            aSubject &&
+            aSubject === aSubject.top &&
+            aSubject.isContent &&
+            aSubject.embedderElement
+          ) {
+            this.addSHistoryListener(aSubject.embedderElement, aSubject);
+          }
+        }
+        break;
+      case "browsing-context-discarded":
+        if (Services.appinfo.sessionHistoryInParent) {
+          let permanentKey = aSubject?.embedderElement?.permanentKey;
+          if (permanentKey) {
+            this._browserSHistoryListener.get(permanentKey)?.uninstall();
+          }
+        }
+        break;
     }
   },
 
-  // Create a new SessionHistory listener on the provided browser element and
-  // save a reference to that listener on the _browserSHistoryListener map.
-  addSHistoryListener(aBrowser) {
+  // Add a new SessionHistory listener to the provided browsing context and save
+  // a reference to that listener in the _browserSHistoryListener map.
+  addSHistoryListener(aBrowser, aBrowsingContext) {
     class SHistoryListener {
-      constructor(browser) {
-        this._browserId = browser.browsingContext.browserId;
+      constructor(browser, browsingContext) {
+        this._browserId = browsingContext.browserId;
         this._fromIndex = kNoIndex;
         this._permanentKey = browser.permanentKey;
       }
@@ -1043,7 +1055,7 @@ var SessionStoreInternal = {
         }
 
         if (!this.didCollect()) {
-          browser.frameLoader.requestSHistoryUpdate(/* aImmediately */ false);
+          browser.frameLoader?.requestSHistoryUpdate(/* aImmediately */ false);
         }
 
         this._fromIndex = index;
@@ -1077,20 +1089,20 @@ var SessionStoreInternal = {
       throw new Error("This function should only be used with SHIP");
     }
 
+    let sessionHistory = aBrowsingContext.sessionHistory;
     if (
       aBrowser &&
-      aBrowser.browsingContext?.sessionHistory &&
-      !this._browserSHistoryListener.has(aBrowser.permanentKey)
+      aBrowser.permanentKey &&
+      !this._browserSHistoryListener.has(aBrowser.permanentKey) &&
+      sessionHistory
     ) {
-      let listener = new SHistoryListener(aBrowser);
-      aBrowser.browsingContext.sessionHistory.addSHistoryListener(listener);
+      let listener = new SHistoryListener(aBrowser, aBrowsingContext);
+      sessionHistory.addSHistoryListener(listener);
       this._browserSHistoryListener.set(aBrowser.permanentKey, listener);
 
       // Immediately collect data if we start with a non-empty SHistory.
-      if (
-        aBrowser.currentURI.spec !== "about:blank" ||
-        aBrowser.browsingContext.sessionHistory.count !== 0
-      ) {
+      let uri = aBrowsingContext.currentURI?.spec;
+      if (uri !== "about:blank" || sessionHistory.count !== 0) {
         aBrowser.frameLoader?.requestSHistoryUpdate(/* aImmediately */ true);
       }
     }
@@ -1234,7 +1246,7 @@ var SessionStoreInternal = {
       aBrowsingContext === aBrowsingContext.top
     ) {
       if (!this._browserSHistoryListener.has(aBrowser.permanentKey)) {
-        this.addSHistoryListener(aBrowser);
+        this.addSHistoryListener(aBrowser, aBrowsingContext);
       }
       let listener = this._browserSHistoryListener.get(aBrowser.permanentKey);
       if (!listener) {
@@ -1306,9 +1318,6 @@ var SessionStoreInternal = {
     }
 
     switch (aMessage.name) {
-      case "SessionStore:addSHistoryListener":
-        this.addSHistoryListener(browser);
-        break;
       case "SessionStore:update":
         // |browser.frameLoader| might be empty if the browser was already
         // destroyed and its tab removed. In that case we still have the last
