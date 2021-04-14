@@ -14,6 +14,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   TaskScheduler: "resource://gre/modules/TaskScheduler.jsm",
@@ -31,13 +32,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   };
   return new ConsoleAPI(consoleOptions);
 });
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "ProfileService",
-  "@mozilla.org/toolkit/profile-service;1",
-  "nsIToolkitProfileService"
-);
 
 XPCOMUtils.defineLazyGetter(this, "localization", () => {
   return new Localization(
@@ -83,17 +77,6 @@ var BackgroundUpdate = {
   _force() {
     // We want to allow developers and testers to monkey with the system.
     return Services.prefs.getBoolPref("app.update.background.force", false);
-  },
-
-  _currentProfileIsDefaultProfile() {
-    let defaultProfile;
-    try {
-      defaultProfile = ProfileService.defaultProfile;
-    } catch (e) {}
-    let currentProfile = ProfileService.currentProfile;
-    // This comparison needs to accommodate null on both sides.
-    let isDefaultProfile = defaultProfile && currentProfile == defaultProfile;
-    return isDefaultProfile;
   },
 
   /**
@@ -203,7 +186,13 @@ var BackgroundUpdate = {
       );
     }
 
-    if (!this._currentProfileIsDefaultProfile()) {
+    // No default profile happens under xpcshell but also when running local
+    // builds.  It's unexpected in the wild so we track it separately.
+    if (!BackgroundTasksUtils.hasDefaultProfile()) {
+      reasons.push(this.REASON.NO_DEFAULT_PROFILE_EXISTS);
+    }
+
+    if (!BackgroundTasksUtils.currentProfileIsDefaultProfile()) {
       reasons.push(this.REASON.NOT_DEFAULT_PROFILE);
     }
 
@@ -327,7 +316,10 @@ var BackgroundUpdate = {
   async maybeScheduleBackgroundUpdateTask() {
     let SLUG = "maybeScheduleBackgroundUpdateTask";
 
-    if (this._force() || this._currentProfileIsDefaultProfile()) {
+    if (
+      this._force() ||
+      BackgroundTasksUtils.currentProfileIsDefaultProfile()
+    ) {
       await this._mirrorToPerInstallationPref();
     }
 
@@ -483,6 +475,7 @@ BackgroundUpdate.REASON = {
     "updates cannot usually stage and cannot usually apply",
   LANGPACK_INSTALLED:
     "app.update.langpack.enabled=true and at least one langpack is installed",
+  NO_DEFAULT_PROFILE_EXISTS: "no default profile exists",
   NOT_DEFAULT_PROFILE: "not default profile",
   NO_APP_UPDATE_AUTO: "app.update.auto=false",
   NO_APP_UPDATE_BACKGROUND_ENABLED: "app.update.background.enabled=false",
