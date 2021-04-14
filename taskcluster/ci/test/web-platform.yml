@@ -90,6 +90,7 @@ web-platform-tests:
                     linux1804-32-shippable/opt: ['release']  # skip integration, Bug 1599197
                     linux.*-qr/.*: ['release']  # skip on integration branches due to high load
                     windows.*-qr/.*: ['release']  # skip on integration branches due to high load
+                    .*-tsan/opt: ['trunk']
                     default: built-projects
     mozharness:
         chunked: true
@@ -166,7 +167,10 @@ web-platform-tests-reftest:
                     (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan/opt: ['trunk']
                     default: []
-            default: built-projects
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    default: built-projects
     tier:
         by-variant:
             fission:
