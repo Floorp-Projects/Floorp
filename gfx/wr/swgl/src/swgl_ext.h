@@ -415,19 +415,19 @@ static P* blendTextureLinearDispatch(S sampler, vec2 uv, int span,
     if (uv_step.x > 0.0f && insideDist >= uv_step.x) {
       int inside = int(end - buf);
       if (filter == LINEAR_FILTER_DOWNSCALE) {
-        inside =
-            min(inside, int(insideDist * (0.5f / swgl_LinearQuantizeScale)) &
-                            ~(swgl_StepSize - 1));
+        inside = clamp(int(insideDist * (0.5f / swgl_LinearQuantizeScale)) &
+                           ~(swgl_StepSize - 1),
+                       0, inside);
         blendTextureLinearDownscale<BLEND>(sampler, uv, inside, min_uv, max_uv,
                                            color, buf);
       } else if (filter == LINEAR_FILTER_UPSCALE) {
-        inside = min(inside, int(insideDist / uv_step.x) * swgl_StepSize);
+        inside = clamp(int(insideDist / uv_step.x) * swgl_StepSize, 0, inside);
         blendTextureLinearUpscale<BLEND>(sampler, uv, inside, uv_step, min_uv,
                                          max_uv, color, buf);
       } else {
-        inside =
-            min(inside, int(insideDist * (1.0f / swgl_LinearQuantizeScale)) &
-                            ~(swgl_StepSize - 1));
+        inside = clamp(int(insideDist * (1.0f / swgl_LinearQuantizeScale)) &
+                           ~(swgl_StepSize - 1),
+                       0, inside);
         blendTextureLinearFast<BLEND>(sampler, uv, inside, min_uv, max_uv,
                                       color, buf);
       }
