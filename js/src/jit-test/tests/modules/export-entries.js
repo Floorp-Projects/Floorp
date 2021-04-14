@@ -1,20 +1,11 @@
 // Test localExportEntries property
 
-function testObjectContents(actual, expected) {
-    for (var property in expected) {
-        if(actual[property] instanceof Object) {
-            testObjectContents(actual[property], expected[property]);
-        }
-        else {
-            assertEq(actual[property], expected[property]);
-        }
-    }
-}
-
 function testArrayContents(actual, expected) {
     assertEq(actual.length, expected.length);
     for (var i = 0; i < actual.length; i++) {
-        testObjectContents(actual[i], expected[i]);
+        for (var property in expected[i]) {
+            assertEq(actual[i][property], expected[i][property]);
+        }
     }
 }
 
@@ -92,11 +83,11 @@ testIndirectExportEntries(
 
 testIndirectExportEntries(
     'export {x} from "mod";',
-    [{exportName: 'x', moduleRequest: {specifier:'mod'}, importName: 'x', localName: null}]);
+    [{exportName: 'x', moduleRequest: 'mod', importName: 'x', localName: null}]);
 
 testIndirectExportEntries(
     'export {v as x} from "mod";',
-    [{exportName: 'x', moduleRequest: {specifier:'mod'}, importName: 'v', localName: null}]);
+    [{exportName: 'x', moduleRequest: 'mod', importName: 'v', localName: null}]);
 
 testIndirectExportEntries(
     'export * from "mod";',
@@ -104,7 +95,7 @@ testIndirectExportEntries(
 
 testIndirectExportEntries(
     'import {v as x} from "mod"; export {x as y};',
-    [{exportName: 'y', moduleRequest: {specifier:'mod'}, importName: 'v', localName: null}]);
+    [{exportName: 'y', moduleRequest: 'mod', importName: 'v', localName: null}]);
 
 // Test starExportEntries property
 
@@ -127,4 +118,4 @@ testStarExportEntries(
 
 testStarExportEntries(
     'export * from "mod";',
-    [{exportName: null, moduleRequest: {specifier:'mod'}, importName: null, localName: null}]);
+    [{exportName: null, moduleRequest: 'mod', importName: null, localName: null}]);

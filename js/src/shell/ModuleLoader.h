@@ -20,18 +20,18 @@ class ModuleLoader {
   bool loadRootModule(JSContext* cx, HandleString path);
 
   // Testing hook to register a module that wasn't loaded by the module loader.
-  bool registerTestModule(JSContext* cx, HandleObject moduleRequest,
+  bool registerTestModule(JSContext* cx, HandleString specifier,
                           HandleModuleObject module);
 
  private:
   static JSObject* ResolveImportedModule(JSContext* cx,
                                          HandleValue referencingPrivate,
-                                         HandleObject moduleRequest);
+                                         HandleString specifier);
   static bool GetImportMetaProperties(JSContext* cx, HandleValue privateValue,
                                       HandleObject metaObject);
   static bool ImportModuleDynamically(JSContext* cx,
                                       HandleValue referencingPrivate,
-                                      HandleObject moduleRequest,
+                                      HandleString specifier,
                                       HandleObject promise);
 
   static bool DynamicImportDelayFulfilled(JSContext* cx, unsigned argc,
@@ -41,22 +41,22 @@ class ModuleLoader {
 
   bool loadAndExecute(JSContext* cx, HandleString path, MutableHandleValue);
   JSObject* resolveImportedModule(JSContext* cx, HandleValue referencingPrivate,
-                                  HandleObject moduleRequest);
+                                  HandleString specifier);
   bool populateImportMeta(JSContext* cx, HandleValue privateValue,
                           HandleObject metaObject);
   bool dynamicImport(JSContext* cx, HandleValue referencingPrivate,
-                     HandleObject moduleRequest, HandleObject promise);
+                     HandleString specifier, HandleObject promise);
   bool doDynamicImport(JSContext* cx, HandleValue referencingPrivate,
-                       HandleObject moduleRequest, HandleObject promise);
+                       HandleString specifier, HandleObject promise);
   bool tryDynamicImport(JSContext* cx, HandleValue referencingPrivate,
-                        HandleObject moduleRequest, HandleObject promise,
+                        HandleString specifier, HandleObject promise,
                         MutableHandleValue rval);
   JSObject* loadAndParse(JSContext* cx, HandleString path);
   bool lookupModuleInRegistry(JSContext* cx, HandleString path,
                               MutableHandleObject moduleOut);
   bool addModuleToRegistry(JSContext* cx, HandleString path,
                            HandleObject module);
-  JSLinearString* resolve(JSContext* cx, HandleObject moduleRequestArg,
+  JSLinearString* resolve(JSContext* cx, HandleString name,
                           HandleValue referencingInfo);
   bool getScriptPath(JSContext* cx, HandleValue privateValue,
                      MutableHandle<JSLinearString*> pathOut);
