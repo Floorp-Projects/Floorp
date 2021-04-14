@@ -1523,7 +1523,9 @@ impl Device {
                 Swizzle::Rgba, // converted on uploads by the driver, no swizzling needed
                 TexStorageUsage::Never
             ),
-            // We can use glTexStorage with BGRA8 as the internal format.
+            // glTexStorage is always supported in GLES 3, but because the GL_EXT_texture_storage
+            // extension is supported we can use glTexStorage with BGRA8 as the internal format.
+            // Prefer BGRA textures over RGBA.
             gl::GlType::Gles if supports_gles_bgra && supports_texture_storage => (
                 TextureFormatPair::from(ImageFormat::BGRA8),
                 TextureFormatPair { internal: gl::BGRA8_EXT, external: gl::BGRA_EXT },
@@ -1531,19 +1533,9 @@ impl Device {
                 Swizzle::Rgba, // no conversion needed
                 TexStorageUsage::Always,
             ),
-            // For BGRA8 textures we must use the unsized BGRA internal
-            // format and glTexImage. If texture storage is supported we can
-            // use it for other formats, which is always the case for ES 3.
-            // We can't use glTexStorage with BGRA8 as the internal format.
-            gl::GlType::Gles if supports_gles_bgra && !avoid_tex_image => (
-                TextureFormatPair::from(ImageFormat::RGBA8),
-                TextureFormatPair::from(gl::BGRA_EXT),
-                gl::UNSIGNED_BYTE,
-                Swizzle::Rgba, // no conversion needed
-                TexStorageUsage::NonBGRA8,
-            ),
-            // BGRA is not supported as an internal format, therefore we will
-            // use RGBA. The swizzling will happen at the texture unit.
+            // BGRA is not supported as an internal format with glTexStorage, therefore we will
+            // use RGBA textures instead and pretend BGRA data is RGBA when uploading.
+            // The swizzling will happen at the texture unit.
             gl::GlType::Gles if supports_texture_swizzle => (
                 TextureFormatPair::from(ImageFormat::RGBA8),
                 TextureFormatPair { internal: gl::RGBA8, external: gl::RGBA },
@@ -1551,14 +1543,29 @@ impl Device {
                 Swizzle::Bgra, // pretend it's RGBA, rely on swizzling
                 TexStorageUsage::Always,
             ),
-            // BGRA and swizzling are not supported. We force the conversion done by the driver.
-            gl::GlType::Gles => (
-                TextureFormatPair::from(ImageFormat::RGBA8),
-                TextureFormatPair { internal: gl::RGBA8, external: gl::BGRA },
+            // BGRA is not supported as an internal format with glTexStorage, and we cannot use
+            // swizzling either. Therefore prefer BGRA textures over RGBA, but use glTexImage
+            // to initialize BGRA textures. glTexStorage can still be used for other formats.
+            gl::GlType::Gles if supports_gles_bgra && !avoid_tex_image => (
+                TextureFormatPair::from(ImageFormat::BGRA8),
+                TextureFormatPair::from(gl::BGRA_EXT),
                 gl::UNSIGNED_BYTE,
-                Swizzle::Rgba,
-                TexStorageUsage::Always,
+                Swizzle::Rgba, // no conversion needed
+                TexStorageUsage::NonBGRA8,
             ),
+            // Neither BGRA or swizzling are supported. GLES does not allow format conversion
+            // during upload so we must use RGBA textures and pretend BGRA data is RGBA when
+            // uploading. Images may be rendered incorrectly as a result.
+            gl::GlType::Gles => {
+                warn!("Neither BGRA or texture swizzling are supported. Images may be rendered incorrectly.");
+                (
+                    TextureFormatPair::from(ImageFormat::RGBA8),
+                    TextureFormatPair { internal: gl::RGBA8, external: gl::RGBA },
+                    gl::UNSIGNED_BYTE,
+                    Swizzle::Rgba,
+                    TexStorageUsage::Always,
+                )
+            }
         };
 
         let is_software_webrender = renderer_name.starts_with("Software WebRender");
