@@ -619,7 +619,7 @@ RefPtr<MediaPipelineTransmit> TransceiverImpl::GetSendPipeline() {
 }
 
 static nsresult JsepCodecDescToAudioCodecConfig(
-    const JsepCodecDescription& aCodec, UniquePtr<AudioCodecConfig>* aConfig) {
+    const JsepCodecDescription& aCodec, Maybe<AudioCodecConfig>* aConfig) {
   MOZ_ASSERT(aCodec.mType == SdpMediaSection::kAudio);
   if (aCodec.mType != SdpMediaSection::kAudio) return NS_ERROR_INVALID_ARG;
 
@@ -633,9 +633,9 @@ static nsresult JsepCodecDescToAudioCodecConfig(
     return NS_ERROR_INVALID_ARG;
   }
 
-  aConfig->reset(new AudioCodecConfig(pt, desc.mName, desc.mClock,
-                                      desc.mForceMono ? 1 : desc.mChannels,
-                                      desc.mFECEnabled));
+  *aConfig = Some(AudioCodecConfig(pt, desc.mName, desc.mClock,
+                                   desc.mForceMono ? 1 : desc.mChannels,
+                                   desc.mFECEnabled));
   (*aConfig)->mMaxPlaybackRate = desc.mMaxPlaybackRate;
   (*aConfig)->mDtmfEnabled = desc.mDtmfEnabled;
   (*aConfig)->mDTXEnabled = desc.mDTXEnabled;
@@ -652,19 +652,19 @@ static nsresult JsepCodecDescToAudioCodecConfig(
 /*static*/
 nsresult TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
     const JsepTrackNegotiatedDetails& aDetails,
-    std::vector<UniquePtr<AudioCodecConfig>>* aConfigs) {
-  UniquePtr<AudioCodecConfig> telephoneEvent;
+    std::vector<AudioCodecConfig>* aConfigs) {
+  Maybe<AudioCodecConfig> telephoneEvent;
 
   if (aDetails.GetEncodingCount()) {
     for (const auto& codec : aDetails.GetEncoding(0).GetCodecs()) {
-      UniquePtr<AudioCodecConfig> config;
+      Maybe<AudioCodecConfig> config;
       if (NS_FAILED(JsepCodecDescToAudioCodecConfig(*codec, &config))) {
         return NS_ERROR_INVALID_ARG;
       }
       if (config->mName == "telephone-event") {
         telephoneEvent = std::move(config);
       } else {
-        aConfigs->push_back(std::move(config));
+        aConfigs->push_back(std::move(*config));
       }
     }
   }
@@ -672,7 +672,7 @@ nsresult TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
   // Put telephone event at the back, because webrtc.org crashes if we don't
   // If we need to do even more sorting, we should use std::sort.
   if (telephoneEvent) {
-    aConfigs->push_back(std::move(telephoneEvent));
+    aConfigs->push_back(std::move(*telephoneEvent));
   }
 
   if (aConfigs->empty()) {
@@ -692,7 +692,7 @@ nsresult TransceiverImpl::UpdateAudioConduit() {
   if (mJsepTransceiver->mSendTrack.GetNegotiatedDetails() &&
       mJsepTransceiver->mSendTrack.GetActive()) {
     const auto& details(*mJsepTransceiver->mSendTrack.GetNegotiatedDetails());
-    std::vector<UniquePtr<AudioCodecConfig>> configs;
+    std::vector<AudioCodecConfig> configs;
     nsresult rv = TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
         details, &configs);
 
@@ -705,15 +705,15 @@ nsresult TransceiverImpl::UpdateAudioConduit() {
     }
 
     for (const auto& value : configs) {
-      if (value->mName == "telephone-event") {
+      if (value.mName == "telephone-event") {
         // we have a telephone event codec, so we need to make sure
         // the dynamic pt is set properly
-        conduit->SetDtmfPayloadType(value->mType, value->mFreq);
+        conduit->SetDtmfPayloadType(value.mType, value.mFreq);
         break;
       }
     }
 
-    auto error = conduit->ConfigureSendMediaCodec(configs[0].get());
+    auto error = conduit->ConfigureSendMediaCodec(configs[0]);
     if (error) {
       MOZ_MTLOG(ML_ERROR, mPCHandle
                               << "[" << mMid << "]: " << __FUNCTION__
@@ -727,7 +727,7 @@ nsresult TransceiverImpl::UpdateAudioConduit() {
 }
 
 static nsresult JsepCodecDescToVideoCodecConfig(
-    const JsepCodecDescription& aCodec, UniquePtr<VideoCodecConfig>* aConfig) {
+    const JsepCodecDescription& aCodec, Maybe<VideoCodecConfig>* aConfig) {
   MOZ_ASSERT(aCodec.mType == SdpMediaSection::kVideo);
   if (aCodec.mType != SdpMediaSection::kVideo) {
     MOZ_ASSERT(false, "JsepCodecDescription has wrong type");
@@ -757,8 +757,8 @@ static nsresult JsepCodecDescToVideoCodecConfig(
     h264Config->tias_bw = 0;  // TODO(bug 1403206)
   }
 
-  aConfig->reset(new VideoCodecConfig(pt, desc.mName, desc.mConstraints,
-                                      h264Config.get()));
+  *aConfig = Some(
+      VideoCodecConfig(pt, desc.mName, desc.mConstraints, h264Config.get()));
 
   (*aConfig)->mAckFbTypes = desc.mAckFbTypes;
   (*aConfig)->mNackFbTypes = desc.mNackFbTypes;
@@ -789,10 +789,10 @@ static nsresult JsepCodecDescToVideoCodecConfig(
 /*static*/
 nsresult TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(
     const JsepTrackNegotiatedDetails& aDetails,
-    std::vector<UniquePtr<VideoCodecConfig>>* aConfigs) {
+    std::vector<VideoCodecConfig>* aConfigs) {
   if (aDetails.GetEncodingCount()) {
     for (const auto& codec : aDetails.GetEncoding(0).GetCodecs()) {
-      UniquePtr<VideoCodecConfig> config;
+      Maybe<VideoCodecConfig> config;
       if (NS_FAILED(JsepCodecDescToVideoCodecConfig(*codec, &config))) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -809,7 +809,7 @@ nsresult TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(
         }
       }
 
-      aConfigs->push_back(std::move(config));
+      aConfigs->push_back(std::move(*config));
     }
   }
 
@@ -836,7 +836,7 @@ nsresult TransceiverImpl::UpdateVideoConduit() {
       return rv;
     }
 
-    std::vector<UniquePtr<VideoCodecConfig>> configs;
+    std::vector<VideoCodecConfig> configs;
     rv = TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(details,
                                                                &configs);
     if (NS_FAILED(rv)) {
@@ -853,7 +853,7 @@ nsresult TransceiverImpl::UpdateVideoConduit() {
       return NS_OK;
     }
 
-    auto error = conduit->ConfigureSendMediaCodec(configs[0].get(),
+    auto error = conduit->ConfigureSendMediaCodec(configs[0],
                                                   details.GetRtpRtcpConfig());
     if (error) {
       MOZ_MTLOG(ML_ERROR, mPCHandle

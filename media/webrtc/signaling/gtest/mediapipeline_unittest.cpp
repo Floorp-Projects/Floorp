@@ -369,7 +369,7 @@ class TestAgentSend : public TestAgent {
     auto rv = WaitFor(InvokeAsync(call_->mCallThread, __func__, [&] {
       return Promise::CreateAndResolve(
           static_cast<AudioSessionConduit*>(audio_conduit_.get())
-              ->ConfigureSendMediaCodec(&audio_config_),
+              ->ConfigureSendMediaCodec(audio_config_),
           "TestAgentSend::ConfigureSendMediaCodec");
     }));
     EXPECT_EQ(kMediaConduitNoError, rv.unwrap());
@@ -399,8 +399,8 @@ class TestAgentReceive : public TestAgent {
   TestAgentReceive(const RefPtr<SharedWebrtcState>& aSharedState,
                    webrtc::WebRtcKeyValueConfig* aTrials)
       : TestAgent(aSharedState, aTrials) {
-    std::vector<UniquePtr<AudioCodecConfig>> codecs;
-    codecs.emplace_back(new AudioCodecConfig(audio_config_));
+    std::vector<AudioCodecConfig> codecs;
+    codecs.push_back(audio_config_);
 
     using Promise = MozPromise<MediaConduitErrorCode, bool, true>;
     auto rv = WaitFor(InvokeAsync(call_->mCallThread, __func__, [&] {

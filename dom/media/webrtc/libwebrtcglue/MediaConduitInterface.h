@@ -408,7 +408,7 @@ class VideoSessionConduit : public MediaSessionConduit {
    *
    */
   virtual MediaConduitErrorCode ConfigureSendMediaCodec(
-      const VideoCodecConfig* sendSessionConfig,
+      const VideoCodecConfig& sendSessionConfig,
       const RtpRtcpConfig& aRtpRtcpConfig) = 0;
 
   /**
@@ -419,7 +419,7 @@ class VideoSessionConduit : public MediaSessionConduit {
    *
    */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
-      const std::vector<UniquePtr<VideoCodecConfig>>& recvCodecConfigList,
+      const std::vector<VideoCodecConfig>& recvCodecConfigList,
       const RtpRtcpConfig& aRtpRtcpConfig) = 0;
 
   /**
@@ -524,7 +524,7 @@ class AudioSessionConduit : public MediaSessionConduit {
    * NOTE: See VideoConduit for more information
    */
   virtual MediaConduitErrorCode ConfigureSendMediaCodec(
-      const AudioCodecConfig* sendCodecConfig) = 0;
+      const AudioCodecConfig& sendCodecConfig) = 0;
 
   /**
    * Function to configure list of receive codecs for the audio session
@@ -532,7 +532,7 @@ class AudioSessionConduit : public MediaSessionConduit {
    * NOTE: See VideoConduit for more information
    */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
-      const std::vector<UniquePtr<AudioCodecConfig>>& recvCodecConfigList) = 0;
+      const std::vector<AudioCodecConfig>& recvCodecConfigList) = 0;
 
   virtual bool SetDtmfPayloadType(unsigned char type, int freq) = 0;
 
