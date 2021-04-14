@@ -59,7 +59,7 @@ menupopup {
     padding-block: 4px;
 
     /* Prevent contained items from drawing over the border-radius. */
-    overflow: hidden;
+    overflow: clip;
   }
 }
 }
