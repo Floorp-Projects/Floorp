@@ -2329,19 +2329,18 @@ impl<'a> SceneBuilder<'a> {
         new_node_id: ClipId,
         space_and_clip: &SpaceAndClipInfo,
         image_mask: &ImageMask,
-        _fill_rule: FillRule,
-        _points_range: ItemRange<LayoutPoint>,
+        fill_rule: FillRule,
+        points_range: ItemRange<LayoutPoint>,
     ) {
-        // TODO(bradwerth): incorporate fill_rule and points_range into
-        // the ClipItemKey.
         let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
 
         let snapped_mask_rect = self.snap_rect(
             &image_mask.rect,
             spatial_node_index,
         );
+        let points = points_range.iter().collect();
         let item = ClipItemKey {
-            kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect),
+            kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect, points, fill_rule),
         };
 
         let handle = self
