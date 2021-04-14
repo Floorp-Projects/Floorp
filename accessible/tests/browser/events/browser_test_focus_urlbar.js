@@ -273,32 +273,50 @@ async function runTests() {
     testStates(event.accessible, STATE_FOCUSED);
   }
 
-  info(
-    "Ensuring context menu gets menu event on launch, item focus on down, and address bar focus on escape."
-  );
-  let menuEvent = waitForEvent(
-    nsIAccessibleEvent.EVENT_MENUPOPUP_START,
-    isEventForMenuPopup
-  );
-  EventUtils.sendMouseEvent(
-    { type: "contextmenu" },
-    gURLBar.querySelector("moz-input-box")
-  );
-  await menuEvent;
+  if (
+    AppConstants.platform == "macosx" &&
+    Services.prefs.getBoolPref("widget.macos.native-context-menus", false)
+  ) {
+    // With native context menus, we do not observe accessibility events and we
+    // cannot send synthetic key events to the menu.
+    info("Opening and closing context native context menu");
+    let contextMenu = gURLBar.querySelector("menupopup");
+    let popupshown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+    EventUtils.synthesizeMouseAtCenter(gURLBar.querySelector("moz-input-box"), {
+      type: "contextmenu",
+    });
+    await popupshown;
+    let popuphidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+    contextMenu.hidePopup();
+    await popuphidden;
+  } else {
+    info(
+      "Ensuring context menu gets menu event on launch, and item focus on down"
+    );
+    let menuEvent = waitForEvent(
+      nsIAccessibleEvent.EVENT_MENUPOPUP_START,
+      isEventForMenuPopup
+    );
+    EventUtils.synthesizeMouseAtCenter(gURLBar.querySelector("moz-input-box"), {
+      type: "contextmenu",
+    });
+    await menuEvent;
 
-  focused = waitForEvent(EVENT_FOCUS, isEventForMenuItem);
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  event = await focused;
-  testStates(event.accessible, STATE_FOCUSED);
+    focused = waitForEvent(EVENT_FOCUS, isEventForMenuItem);
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    event = await focused;
+    testStates(event.accessible, STATE_FOCUSED);
 
-  focused = waitForEvent(EVENT_FOCUS, textBox);
-  let closed = waitForEvent(
-    nsIAccessibleEvent.EVENT_MENUPOPUP_END,
-    isEventForMenuPopup
-  );
-  EventUtils.synthesizeKey("KEY_Escape");
-  await closed;
-  await focused;
+    focused = waitForEvent(EVENT_FOCUS, textBox);
+    let closed = waitForEvent(
+      nsIAccessibleEvent.EVENT_MENUPOPUP_END,
+      isEventForMenuPopup
+    );
+    EventUtils.synthesizeKey("KEY_Escape");
+    await closed;
+    await focused;
+  }
+  info("Ensuring address bar is focused after context menu is dismissed.");
   testStates(textBox, STATE_FOCUSED);
 }
 
