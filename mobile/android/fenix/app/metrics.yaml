@@ -223,6 +223,32 @@ events:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-07-01"
+  default_browser_changed:
+    type: event
+    description: |
+      Indicates the default browser was changed
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18857
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18895
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
+  toolbar_menu_visible:
+    type: event
+    description: |
+      The browser menu was displayed from toolbar menu
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18855
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18895
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
   total_uri_count:
     type: counter
     description: |
@@ -561,6 +587,20 @@ search_shortcuts:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
 
+experiments_default_browser:
+  toolbar_menu_clicked:
+    type: event
+    description: |
+      Set default browser was clicked from toolbar menu
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18851
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18895
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
 toolbar_settings:
   changed_position:
     type: event

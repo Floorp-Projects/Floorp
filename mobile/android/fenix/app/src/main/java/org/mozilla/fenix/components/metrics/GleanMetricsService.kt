@@ -32,6 +32,7 @@ import org.mozilla.fenix.GleanMetrics.DownloadsMisc
 import org.mozilla.fenix.GleanMetrics.DownloadsManagement
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.ExperimentsDefaultBrowser
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.GleanMetrics.HomeMenu
@@ -194,6 +195,15 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.BrowserMenuItemTapped -> EventWrapper(
             { Events.browserMenuAction.record(it) },
             { Events.browserMenuActionKeys.valueOf(it) }
+        )
+        is Event.SetDefaultBrowserToolbarMenuClicked -> EventWrapper<NoExtraKeys>(
+            { ExperimentsDefaultBrowser.toolbarMenuClicked.record(it) }
+        )
+        is Event.ToolbarMenuShown -> EventWrapper<NoExtraKeys>(
+            { Events.toolbarMenuVisible.record(it) }
+        )
+        is Event.ChangedToDefaultBrowser -> EventWrapper<NoExtraKeys>(
+            { Events.defaultBrowserChanged.record(it) }
         )
         is Event.OpenedBookmark -> EventWrapper<NoExtraKeys>(
             { BookmarksManagement.open.record(it) }
@@ -838,7 +848,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.FennecToFenixMigrated -> null
         is Event.AddonInstalled -> null
         is Event.SearchWidgetInstalled -> null
-        is Event.ChangedToDefaultBrowser -> null
         is Event.SyncAuthFromSharedReuse, Event.SyncAuthFromSharedCopy -> null
     }
 

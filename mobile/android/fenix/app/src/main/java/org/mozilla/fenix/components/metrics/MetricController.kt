@@ -179,7 +179,7 @@ internal class ReleaseMetricController(
         }
 
         Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
-            metadata?.get("customTab")?.let { Event.CustomTabsMenuOpened }
+            metadata?.get("customTab")?.let { Event.CustomTabsMenuOpened } ?: Event.ToolbarMenuShown
         }
         Component.BROWSER_MENU to BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM -> {
             metadata?.get("id")?.let { Event.AddonsOpenInToolbarMenu(it.toString()) }
