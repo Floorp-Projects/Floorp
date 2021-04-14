@@ -35,6 +35,16 @@ add_task(async function() {
         });
       }
 
+      function promiseContentTick() {
+        return SpecialPowers.spawn(browser, [], async () => {
+          await new Promise(r => {
+            content.requestAnimationFrame(() => {
+              content.requestAnimationFrame(r);
+            });
+          });
+        });
+      }
+
       let autoScroller;
       function promiseWaitForAutoScrollerOpen() {
         if (autoScroller?.state == "open") {
@@ -169,6 +179,7 @@ add_task(async function() {
           button: 1, // middle button
         });
         await promiseFlushLayoutInContent();
+        await promiseContentTick();
         await eventsInContent.promiseMouseEvents(
           ["mouseup"],
           "At starting autoscrolling"
@@ -302,6 +313,7 @@ add_task(async function() {
           button: aButton,
         });
         await promiseFlushLayoutInContent();
+        await promiseContentTick();
         await eventsInContent.promiseMouseEvents(
           aButton != 2 ? ["mouseup"] : ["mouseup", "contextmenu"],
           aDescription
