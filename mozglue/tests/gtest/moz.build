@@ -2,16 +2,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+if CONFIG["OS_ARCH"] == "WINNT":
+    SOURCES += [
+        "TestDLLBlocklist.cpp",
+        "TestNativeNtGTest.cpp",
+    ]
+
+    TEST_DIRS += [
+        "TestDllBlocklist_AllowByVersion",
+        "TestDllBlocklist_MatchByName",
+        "TestDllBlocklist_MatchByVersion",
+        "TestDllBlocklist_NoOpEntryPoint",
+    ]
+
 SOURCES += [
-    "TestDLLBlocklist.cpp",
-    "TestNativeNtGTest.cpp",
+    "TestStackWalk.cpp",
 ]
+
+# The test relies on optimizations being on, so we can't let --disable-optimize
+# getting in the way. See details in the source file.
+SOURCES["TestStackWalk.cpp"].flags += ["-O2"]
 
 FINAL_LIBRARY = "xul-gtest"
-
-TEST_DIRS += [
-    "TestDllBlocklist_AllowByVersion",
-    "TestDllBlocklist_MatchByName",
-    "TestDllBlocklist_MatchByVersion",
-    "TestDllBlocklist_NoOpEntryPoint",
-]

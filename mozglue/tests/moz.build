@@ -38,7 +38,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
     )
     TEST_DIRS += [
         "interceptor",
-        "gtest",
     ]
     OS_LIBS += [
         "ntdll",
@@ -50,3 +49,7 @@ if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):
     LDFLAGS += [
         "-municode",
     ]
+
+TEST_DIRS += [
+    "gtest",
+]
