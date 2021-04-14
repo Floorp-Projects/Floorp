@@ -887,8 +887,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     // display:contents element doesn't have a frame, but retains the semantics.
     // All its children are unaffected.
     if (nsCoreUtils::IsDisplayContents(content)) {
-      const MarkupMapInfo* markupMap =
-          mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
+      const MarkupMapInfo* markupMap = GetMarkupMapInfoForNode(content);
       if (markupMap && markupMap->new_func) {
         RefPtr<LocalAccessible> newAcc =
             markupMap->new_func(content->AsElement(), aContext);
@@ -1445,7 +1444,7 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
 void nsAccessibilityService::MarkupAttributes(
     const nsIContent* aContent, nsIPersistentProperties* aAttributes) const {
   const mozilla::a11y::MarkupMapInfo* markupMap =
-      mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+      GetMarkupMapInfoForNode(aContent);
   if (!markupMap) return;
 
   for (uint32_t i = 0; i < ArrayLength(markupMap->attrs); i++) {
