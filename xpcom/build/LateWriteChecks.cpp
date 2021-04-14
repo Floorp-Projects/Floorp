@@ -129,8 +129,7 @@ void LateWriteObserver::Observe(
   // concurrently from many writes, so we use multiple temporary files.
   std::vector<uintptr_t> rawStack;
 
-  MozStackWalk(RecordStackWalker, /* skipFrames */ 0, /* maxFrames */ 0,
-               &rawStack);
+  MozStackWalk(RecordStackWalker, nullptr, /* maxFrames */ 0, &rawStack);
   mozilla::Telemetry::ProcessedStack stack =
       mozilla::Telemetry::GetStackAndModules(rawStack);
 

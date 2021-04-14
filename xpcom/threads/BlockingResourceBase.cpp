@@ -16,6 +16,7 @@
 #    include "nsTHashtable.h"
 #  endif
 
+#  include "mozilla/Attributes.h"
 #  include "mozilla/CondVar.h"
 #  include "mozilla/DeadlockDetector.h"
 #  include "mozilla/RecursiveMutex.h"
@@ -55,20 +56,16 @@ void BlockingResourceBase::StackWalkCallback(uint32_t aFrameNumber, void* aPc,
 #  endif
 }
 
-void BlockingResourceBase::GetStackTrace(AcquisitionState& aState) {
+void BlockingResourceBase::GetStackTrace(AcquisitionState& aState,
+                                         const void* aFirstFramePC) {
 #  ifndef MOZ_CALLSTACK_DISABLED
-  // Skip this function and the calling function.
-  const uint32_t kSkipFrames = 2;
-
   // Clear the array...
   aState.reset();
   // ...and create a new one; this also puts the state to 'acquired' status
   // regardless of whether we obtain a stack trace or not.
   aState.emplace();
 
-  // NB: Ignore the return value, there's nothing useful we can do if this
-  //     this fails.
-  MozStackWalk(StackWalkCallback, kSkipFrames, kAcquisitionStateStackSize,
+  MozStackWalk(StackWalkCallback, aFirstFramePC, kAcquisitionStateStackSize,
                aState.ptr());
 #  endif
 }
@@ -212,7 +209,7 @@ void BlockingResourceBase::Shutdown() {
   sDeadlockDetector = 0;
 }
 
-void BlockingResourceBase::CheckAcquire() {
+MOZ_NEVER_INLINE void BlockingResourceBase::CheckAcquire() {
   if (mType == eCondVar) {
     MOZ_ASSERT_UNREACHABLE(
         "FIXME bug 456272: annots. to allow CheckAcquire()ing condvars");
@@ -228,7 +225,7 @@ void BlockingResourceBase::CheckAcquire() {
 
 #  ifndef MOZ_CALLSTACK_DISABLED
   // Update the current stack before printing.
-  GetStackTrace(mAcquired);
+  GetStackTrace(mAcquired, CallerPC());
 #  endif
 
   fputs("###!!! ERROR: Potential deadlock detected:\n", stderr);
@@ -251,7 +248,7 @@ void BlockingResourceBase::CheckAcquire() {
   }
 }
 
-void BlockingResourceBase::Acquire() {
+MOZ_NEVER_INLINE void BlockingResourceBase::Acquire() {
   if (mType == eCondVar) {
     MOZ_ASSERT_UNREACHABLE(
         "FIXME bug 456272: annots. to allow Acquire()ing condvars");
@@ -265,7 +262,7 @@ void BlockingResourceBase::Acquire() {
   mAcquired = true;
 #  else
   // Take a stack snapshot.
-  GetStackTrace(mAcquired);
+  GetStackTrace(mAcquired, CallerPC());
   MOZ_ASSERT(IsAcquired());
 
   if (!mFirstSeen) {

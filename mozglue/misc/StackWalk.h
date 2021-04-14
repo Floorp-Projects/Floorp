@@ -16,6 +16,24 @@
 MOZ_BEGIN_EXTERN_C
 
 /**
+ * Returns the position of the Program Counter for the caller of the current
+ * function. This is meant to be used to feed the aFirstFramePC argument to
+ * MozStackWalk or MozWalkTheStack*, and should be used in the last function
+ * that should be skipped in the trace, and passed down to MozStackWalk or
+ * MozWalkTheStack*, through any intermediaries.
+ *
+ * THIS DOES NOT 100% RELIABLY GIVE THE CALLER PC, but marking functions
+ * calling this macro with MOZ_NEVER_INLINE gets us close. In cases it doesn't
+ * give the caller's PC, it may give the caller of the caller, or its caller,
+ * etc. depending on tail call optimization.
+ *
+ * Past versions of stackwalking relied on passing a constant number of frames
+ * to skip to MozStackWalk or MozWalkTheStack, which fell short in more cases
+ * (inlining of intermediaries, tail call optimization).
+ */
+#define CallerPC() __builtin_extract_return_addr(__builtin_return_address(0))
+
+/**
  * The callback for MozStackWalk and MozStackWalkThread.
  *
  * @param aFrameNumber  The frame number (starts at 1, not 0).
@@ -34,18 +52,20 @@ typedef void (*MozWalkStackCallback)(uint32_t aFrameNumber, void* aPC,
  * Call aCallback for each stack frame on the current thread, from
  * the caller of MozStackWalk to main (or above).
  *
- * @param aCallback    Callback function, called once per frame.
- * @param aSkipFrames  Number of initial frames to skip.  0 means that
- *                     the first callback will be for the caller of
- *                     MozStackWalk.
- * @param aMaxFrames   Maximum number of frames to trace.  0 means no limit.
- * @param aClosure     Caller-supplied data passed through to aCallback.
+ * @param aCallback     Callback function, called once per frame.
+ * @param aFirstFramePC Position of the Program Counter where the trace
+ *                      starts from. All frames seen before reaching that
+ *                      address are skipped. Nullptr means that the first
+ *                      callback will be for the caller of MozStackWalk.
+ * @param aMaxFrames    Maximum number of frames to trace.  0 means no limit.
+ * @param aClosure      Caller-supplied data passed through to aCallback.
  *
  * May skip some stack frames due to compiler optimizations or code
  * generation.
  */
-MFBT_API void MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
-                           uint32_t aMaxFrames, void* aClosure);
+MFBT_API void MozStackWalk(MozWalkStackCallback aCallback,
+                           const void* aFirstFramePC, uint32_t aMaxFrames,
+                           void* aClosure);
 
 typedef struct {
   /*
@@ -147,29 +167,32 @@ MFBT_API int MozFormatCodeAddressDetails(char* aBuffer, uint32_t aBufferSize,
 /**
  * Walk the stack and print the stack trace to the given stream.
  *
- * @param aStream      A stdio stream.
- * @param aSkipFrames  Number of initial frames to skip.  0 means that
- *                     the first callback will be for the caller of
- *                     MozWalkTheStack.
- * @param aMaxFrames   Maximum number of frames to trace.  0 means no limit.
+ * @param aStream       A stdio stream.
+ * @param aFirstFramePC Position of the Program Counter where the trace
+ *                      starts from. All frames seen before reaching that
+ *                      address are skipped. Nullptr means that the first
+ *                      callback will be for the caller of MozWalkTheStack.
+ * @param aMaxFrames    Maximum number of frames to trace.  0 means no limit.
  */
 MFBT_API void MozWalkTheStack(FILE* aStream,
-                              uint32_t aSkipFrames FRAMES_DEFAULT,
+                              const void* aFirstFramePC FRAMES_DEFAULT,
                               uint32_t aMaxFrames FRAMES_DEFAULT);
 
 /**
  * Walk the stack and send each stack trace line to a callback writer.
  * Each line string is null terminated but doesn't contain a '\n' character.
  *
- * @param aWriter      The callback.
- * @param aSkipFrames  Number of initial frames to skip.  0 means that
- *                     the first callback will be for the caller of
- *                     MozWalkTheStack.
- * @param aMaxFrames   Maximum number of frames to trace.  0 means no limit.
+ * @param aWriter       The callback.
+ * @param aFirstFramePC Position of the Program Counter where the trace
+ *                      starts from. All frames seen before reaching that
+ *                      address are skipped. Nullptr means that the first
+ *                      callback will be for the caller of
+ * MozWalkTheStackWithWriter.
+ * @param aMaxFrames    Maximum number of frames to trace.  0 means no limit.
  */
-MFBT_API void MozWalkTheStackWithWriter(void (*aWriter)(const char*),
-                                        uint32_t aSkipFrames FRAMES_DEFAULT,
-                                        uint32_t aMaxFrames FRAMES_DEFAULT);
+MFBT_API void MozWalkTheStackWithWriter(
+    void (*aWriter)(const char*), const void* aFirstFramePC FRAMES_DEFAULT,
+    uint32_t aMaxFrames FRAMES_DEFAULT);
 
 #undef FRAMES_DEFAULT
 
