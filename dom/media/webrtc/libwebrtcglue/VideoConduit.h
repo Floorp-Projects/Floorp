@@ -127,7 +127,7 @@ class WebrtcVideoConduit
    * restarting transmission sub-system on the engine.
    */
   MediaConduitErrorCode ConfigureSendMediaCodec(
-      const VideoCodecConfig* codecInfo,
+      const VideoCodecConfig& codecInfo,
       const RtpRtcpConfig& aRtpRtcpConfig) override;
 
   /**
@@ -141,7 +141,7 @@ class WebrtcVideoConduit
    * restarting transmission sub-system on the engine.
    */
   MediaConduitErrorCode ConfigureRecvMediaCodecs(
-      const std::vector<UniquePtr<VideoCodecConfig>>& codecConfigList,
+      const std::vector<VideoCodecConfig>& codecConfigList,
       const RtpRtcpConfig& aRtpRtcpConfig) override;
 
   /**
@@ -349,11 +349,11 @@ class WebrtcVideoConduit
       mEngineReceiving;  // if true ==> Receive Subsystem up and running
 
   // Local database of currently applied receive codecs. Call thread only.
-  nsTArray<UniquePtr<VideoCodecConfig>> mRecvCodecList;
+  std::vector<VideoCodecConfig> mRecvCodecList;
 
   // Written only on the Call thread. Guarded by mMutex, except for reads on the
   // Call thread.
-  UniquePtr<VideoCodecConfig> mCurSendCodecConfig;
+  Maybe<VideoCodecConfig> mCurSendCodecConfig;
 
   // Bookkeeping of stats for telemetry. Call thread only.
   RunningStat mSendFramerate;

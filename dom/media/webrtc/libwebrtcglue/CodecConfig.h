@@ -53,6 +53,20 @@ struct AudioCodecConfig {
         mMaxAverageBitrate(0),
         mMaxPlaybackRate(0),
         mCbrEnabled(false) {}
+
+  bool operator==(const AudioCodecConfig& aOther) const {
+    return mType == aOther.mType && mName == aOther.mName &&
+           mFreq == aOther.mFreq && mChannels == aOther.mChannels &&
+           mFECEnabled == aOther.mFECEnabled &&
+           mDtmfEnabled == aOther.mDtmfEnabled &&
+           mFrameSizeMs == aOther.mFrameSizeMs &&
+           mMaxFrameSizeMs == aOther.mMaxFrameSizeMs &&
+           mMinFrameSizeMs == aOther.mMinFrameSizeMs &&
+           mDTXEnabled == aOther.mDTXEnabled &&
+           mMaxAverageBitrate == aOther.mMaxAverageBitrate &&
+           mMaxPlaybackRate == aOther.mMaxPlaybackRate &&
+           mCbrEnabled == aOther.mCbrEnabled;
+  }
 };
 
 /*
@@ -68,6 +82,14 @@ struct VideoCodecConfigH264 {
   int packetization_mode;
   int profile_level_id;
   int tias_bw;
+
+  bool operator==(const VideoCodecConfigH264& aOther) const {
+    return strncmp(sprop_parameter_sets, aOther.sprop_parameter_sets,
+                   MAX_SPROP_LEN) == 0 &&
+           packetization_mode == aOther.packetization_mode &&
+           profile_level_id == aOther.profile_level_id &&
+           tias_bw == aOther.tias_bw;
+  }
 };
 
 // class so the std::strings can get freed more easily/reliably
@@ -112,25 +134,22 @@ class VideoCodecConfig {
   // TODO: add external negotiated SPS/PPS
 
   bool operator==(const VideoCodecConfig& aRhs) const {
-    if (mType != aRhs.mType || mName != aRhs.mName ||
-        mAckFbTypes != aRhs.mAckFbTypes || mNackFbTypes != aRhs.mNackFbTypes ||
-        mCcmFbTypes != aRhs.mCcmFbTypes || mRembFbSet != aRhs.mRembFbSet ||
-        mFECFbSet != aRhs.mFECFbSet ||
-        mTransportCCFbSet != aRhs.mTransportCCFbSet ||
-        mULPFECPayloadType != aRhs.mULPFECPayloadType ||
-        mREDPayloadType != aRhs.mREDPayloadType ||
-        mREDRTXPayloadType != aRhs.mREDRTXPayloadType ||
-        mRTXPayloadType != aRhs.mRTXPayloadType || mTias != aRhs.mTias ||
-        !(mEncodingConstraints == aRhs.mEncodingConstraints) ||
-        !(mEncodings == aRhs.mEncodings) ||
-        mSpropParameterSets != aRhs.mSpropParameterSets ||
-        mProfile != aRhs.mProfile || mConstraints != aRhs.mConstraints ||
-        mLevel != aRhs.mLevel ||
-        mPacketizationMode != aRhs.mPacketizationMode) {
-      return false;
-    }
-
-    return true;
+    return mType == aRhs.mType && mName == aRhs.mName &&
+           mAckFbTypes == aRhs.mAckFbTypes &&
+           mNackFbTypes == aRhs.mNackFbTypes &&
+           mCcmFbTypes == aRhs.mCcmFbTypes && mRembFbSet == aRhs.mRembFbSet &&
+           mFECFbSet == aRhs.mFECFbSet &&
+           mTransportCCFbSet == aRhs.mTransportCCFbSet &&
+           mULPFECPayloadType == aRhs.mULPFECPayloadType &&
+           mREDPayloadType == aRhs.mREDPayloadType &&
+           mREDRTXPayloadType == aRhs.mREDRTXPayloadType &&
+           mRTXPayloadType == aRhs.mRTXPayloadType && mTias == aRhs.mTias &&
+           mEncodingConstraints == aRhs.mEncodingConstraints &&
+           mEncodings == aRhs.mEncodings &&
+           mSpropParameterSets == aRhs.mSpropParameterSets &&
+           mProfile == aRhs.mProfile && mConstraints == aRhs.mConstraints &&
+           mLevel == aRhs.mLevel &&
+           mPacketizationMode == aRhs.mPacketizationMode;
   }
 
   VideoCodecConfig(int type, std::string name,

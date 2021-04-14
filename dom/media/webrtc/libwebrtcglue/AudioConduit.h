@@ -67,7 +67,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
    *       restarting transmission sub-system on the engine.
    */
   MediaConduitErrorCode ConfigureSendMediaCodec(
-      const AudioCodecConfig* codecConfig) override;
+      const AudioCodecConfig& codecConfig) override;
   /**
    * Function to configure list of receive codecs for the audio session
    * @param sendSessionConfig: CodecConfiguration
@@ -79,7 +79,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
    *       restarting transmission sub-system on the engine.
    */
   MediaConduitErrorCode ConfigureRecvMediaCodecs(
-      const std::vector<UniquePtr<AudioCodecConfig>>& codecConfigList) override;
+      const std::vector<AudioCodecConfig>& codecConfigList) override;
 
   MediaConduitErrorCode SetLocalRTPExtensions(
       MediaSessionConduitLocalDirection aDirection,
@@ -180,14 +180,14 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   void operator=(const WebrtcAudioConduit& other) = delete;
 
   // Function to convert between WebRTC and Conduit codec structures
-  bool CodecConfigToWebRTCCodec(const AudioCodecConfig* codecInfo,
+  bool CodecConfigToWebRTCCodec(const AudioCodecConfig& codecInfo,
                                 webrtc::AudioSendStream::Config& config);
 
   // Generate block size in sample length for a given sampling frequency
   unsigned int GetNum10msSamplesForFrequency(int samplingFreqHz) const;
 
   // Checks the codec to be applied
-  MediaConduitErrorCode ValidateCodecConfig(const AudioCodecConfig* codecInfo,
+  MediaConduitErrorCode ValidateCodecConfig(const AudioCodecConfig& codecInfo,
                                             bool send);
 
   MediaConduitErrorCode CreateSendStream();
