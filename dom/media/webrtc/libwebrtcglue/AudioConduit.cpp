@@ -47,7 +47,7 @@ RefPtr<AudioSessionConduit> AudioSessionConduit::Create(
                                         std::move(aStsThread));
 }
 
-void WebrtcAudioConduit::DeleteStreams() {
+void WebrtcAudioConduit::Shutdown() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   MutexAutoLock lock(mMutex);
   DeleteSendStream();

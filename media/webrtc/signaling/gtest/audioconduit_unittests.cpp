@@ -26,7 +26,7 @@ class AudioConduitTest : public ::testing::Test {
             mCallWrapper, GetCurrentSerialEventTarget())) {}
 
   ~AudioConduitTest() override {
-    mAudioConduit->DeleteStreams();
+    mAudioConduit->Shutdown();
     mCallWrapper->Destroy();
   }
 
