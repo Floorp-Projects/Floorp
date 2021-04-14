@@ -224,7 +224,7 @@ static int32_t sPlatformDisabledState = 0;
   {nsGkAtoms::atom, new_func, static_cast<a11y::role>(r), {__VA_ARGS__}},
 
 static const MarkupMapInfo sHTMLMarkupMapList[] = {
-#include "MarkupMap.h"
+#include "HTMLMarkupMap.h"
 };
 
 #undef MARKUPMAP
