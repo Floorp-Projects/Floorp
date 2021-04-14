@@ -219,17 +219,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             it.start()
         }
 
-        if (isActivityColdStarted(
-                intent,
-                savedInstanceState
-            ) && !externalSourceIntentProcessors.any {
-                it.process(
-                    intent,
-                    navHost.navController,
-                    this.intent
-                )
-            }
-        ) {
+        if (isActivityColdStarted(intent, savedInstanceState) &&
+                !externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }) {
             navigateToBrowserOnColdStart()
         }
 
