@@ -57,12 +57,11 @@ void FOG::Shutdown() {
 }
 
 NS_IMETHODIMP
-FOG::InitializeFOG(const nsACString& aDataPathOverride,
-                   const nsACString& aAppIdOverride) {
+FOG::InitializeFOG(const nsACString& aDataPathOverride) {
 #ifdef MOZ_GLEAN_ANDROID
   return NS_OK;
 #else
-  return glean::impl::fog_init(&aDataPathOverride, &aAppIdOverride);
+  return glean::impl::fog_init(&aDataPathOverride);
 #endif
 }
 
