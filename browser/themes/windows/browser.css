@@ -536,6 +536,9 @@ menuitem.bookmark-item {
   :root:not(:-moz-lwtheme) #urlbar:not([focused="true"]) {
     --urlbar-box-bgcolor: white;
   }
+  :root[lwt-default-theme-in-dark-mode] #urlbar:not([focused="true"]) {
+    --urlbar-box-bgcolor: var(--lwt-toolbar-field-focus);
+  }
   } /*** END proton ***/
 }
 
