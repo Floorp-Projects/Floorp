@@ -6,61 +6,10 @@
 
 "use strict";
 
-async function do_backgroundtask(
-  task,
-  options = { extraArgs: [], extraEnv: {} }
-) {
-  options = Object.assign({}, options);
-  options.extraArgs = options.extraArgs || [];
-  options.extraEnv = options.extraEnv || {};
-
-  let command = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
-  let args = ["--backgroundtask", task];
-  args.push(...options.extraArgs);
-
-  // Ensure `resource://testing-common` gets mapped.
-  let protocolHandler = Services.io
-    .getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-
-  let uri = protocolHandler.getSubstitution("testing-common");
-  Assert.ok(uri, "resource://testing-common is not substituted");
-
-  // The equivalent of _TESTING_MODULES_DIR in xpcshell.
-  options.extraEnv.XPCSHELL_TESTING_MODULES_URI = uri.spec;
-
-  // Now we can actually invoke the process.
-  info(
-    `launching child process ${command} with args: ${args} and extra environment: ${JSON.stringify(
-      options.extraEnv
-    )}`
-  );
-
-  const { Subprocess } = ChromeUtils.import(
-    "resource://gre/modules/Subprocess.jsm"
-  );
-  let proc = await Subprocess.call({
-    command,
-    arguments: args,
-    environment: options.extraEnv,
-    environmentAppend: true,
-    stderr: "stdout",
-  }).then(p => {
-    p.stdin.close();
-    const dumpPipe = async pipe => {
-      let data = await pipe.readString();
-      while (data) {
-        for (let line of data.split(/\r\n|\r|\n/).slice(0, -1)) {
-          dump("> " + line + "\n");
-        }
-        data = await pipe.readString();
-      }
-    };
-    dumpPipe(p.stdout);
-
-    return p;
-  });
-
-  let { exitCode } = await proc.wait();
-  return exitCode;
-}
+const { BackgroundTasksTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BackgroundTasksTestUtils.jsm"
+);
+BackgroundTasksTestUtils.init(this);
+const do_backgroundtask = BackgroundTasksTestUtils.do_backgroundtask.bind(
+  BackgroundTasksTestUtils
+);

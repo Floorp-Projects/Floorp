@@ -49,6 +49,10 @@ EXTRA_JS_MODULES.backgroundtasks += [
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
+TESTING_JS_MODULES += [
+    "BackgroundTasksTestUtils.jsm",
+]
+
 TESTING_JS_MODULES.backgroundtasks += [
     "tests/BackgroundTask_backgroundtask_specific_pref.jsm",
     "tests/BackgroundTask_crash.jsm",
