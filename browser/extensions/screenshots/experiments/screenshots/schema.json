@@ -18,13 +18,6 @@
         "async": true
       },
       {
-        "name": "isUploadDisabled",
-        "type": "function",
-        "description": "Returns the value of the 'extensions.screenshots.upload-disabled' preference",
-        "parameters": [],
-        "async": true
-      },
-      {
         "name": "setIcon",
         "type": "function",
         "description": "Disables or enables the screenshot toolbar button",
