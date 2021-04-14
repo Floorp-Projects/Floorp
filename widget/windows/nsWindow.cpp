@@ -4353,7 +4353,7 @@ bool nsWindow::DispatchStandardEvent(EventMessage aMsg) {
 }
 
 bool nsWindow::DispatchKeyboardEvent(WidgetKeyboardEvent* event) {
-  nsEventStatus status = DispatchInputEvent(event);
+  nsEventStatus status = DispatchInputEvent(event).mContentStatus;
   return ConvertStatus(status);
 }
 
@@ -4364,7 +4364,8 @@ bool nsWindow::DispatchContentCommandEvent(WidgetContentCommandEvent* aEvent) {
 }
 
 bool nsWindow::DispatchWheelEvent(WidgetWheelEvent* aEvent) {
-  nsEventStatus status = DispatchInputEvent(aEvent->AsInputEvent());
+  nsEventStatus status =
+      DispatchInputEvent(aEvent->AsInputEvent()).mContentStatus;
   return ConvertStatus(status);
 }
 
@@ -4697,7 +4698,7 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       }
     }
 
-    result = ConvertStatus(DispatchInputEvent(&event));
+    result = ConvertStatus(DispatchInputEvent(&event).mContentStatus);
 
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in EventListenerManager::HandleEvent()

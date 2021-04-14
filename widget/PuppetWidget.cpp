@@ -382,15 +382,16 @@ nsresult PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent,
   return NS_OK;
 }
 
-nsEventStatus PuppetWidget::DispatchInputEvent(WidgetInputEvent* aEvent) {
+nsIWidget::ContentAndAPZEventStatus PuppetWidget::DispatchInputEvent(
+    WidgetInputEvent* aEvent) {
+  ContentAndAPZEventStatus status;
   if (!AsyncPanZoomEnabled()) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    DispatchEvent(aEvent, status);
+    DispatchEvent(aEvent, status.mContentStatus);
     return status;
   }
 
   if (!mBrowserChild) {
-    return nsEventStatus_eIgnore;
+    return status;
   }
 
   switch (aEvent->mClass) {
@@ -408,7 +409,7 @@ nsEventStatus PuppetWidget::DispatchInputEvent(WidgetInputEvent* aEvent) {
       MOZ_ASSERT_UNREACHABLE("unsupported event type");
   }
 
-  return nsEventStatus_eIgnore;
+  return status;
 }
 
 nsresult PuppetWidget::SynthesizeNativeKeyEvent(

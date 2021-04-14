@@ -8124,7 +8124,7 @@ nsresult nsContentUtils::SendMouseEvent(
     return presShell->HandleEvent(view->GetFrame(), &event, false, &status);
   }
   if (StaticPrefs::test_events_async_enabled()) {
-    status = widget->DispatchInputEvent(&event);
+    status = widget->DispatchInputEvent(&event).mContentStatus;
   } else {
     nsresult rv = widget->DispatchEvent(&event, status);
     NS_ENSURE_SUCCESS(rv, rv);
