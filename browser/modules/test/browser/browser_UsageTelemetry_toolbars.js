@@ -404,14 +404,14 @@ add_task(async function contextMenus() {
     if (bookmarksFeatureEnabled) {
       let subMenu = barMenu.querySelector("menupopup");
       popupShown = BrowserTestUtils.waitForEvent(subMenu, "popupshown");
-      EventUtils.synthesizeMouseAtCenter(barMenu, {});
+      barMenu.openMenu(true);
       await popupShown;
-      let alwaysButton = barMenu.querySelector(
+      let alwaysButton = subMenu.querySelector(
         '*[data-visibility-enum="always"]'
       );
-      EventUtils.synthesizeMouseAtCenter(alwaysButton, {});
+      subMenu.activateItem(alwaysButton);
     } else {
-      EventUtils.synthesizeMouseAtCenter(barMenu, {});
+      menu.activateItem(barMenu);
     }
     await popupHidden;
 
@@ -427,7 +427,7 @@ add_task(async function contextMenus() {
     let removeButton = document.querySelector(
       "#toolbar-context-menu .customize-context-removeFromToolbar"
     );
-    EventUtils.synthesizeMouseAtCenter(removeButton, {}, window);
+    menu.activateItem(removeButton);
     await popupHidden;
 
     let bookmarksBarTelemetryScalar = bookmarksFeatureEnabled
