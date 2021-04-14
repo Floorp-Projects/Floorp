@@ -17,7 +17,7 @@ import org.junit.Rule
 import org.junit.runner.RunWith
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper
-import org.mozilla.focus.helpers.TestHelper.appName
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.pressBackKey
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
@@ -70,7 +70,7 @@ class ShareWebsiteTest {
     init {
         val shareBtn = TestHelper.mDevice.findObject(
             UiSelector()
-                .resourceId(appName + ":id/share")
+                .resourceId(packageName + ":id/share")
                 .enabled(true)
         )
 

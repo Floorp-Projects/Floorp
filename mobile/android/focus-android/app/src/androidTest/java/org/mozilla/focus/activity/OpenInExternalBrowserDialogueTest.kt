@@ -16,7 +16,7 @@ import org.junit.Rule
 import org.junit.runner.RunWith
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper
-import org.mozilla.focus.helpers.TestHelper.appName
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.pressBackKey
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
@@ -62,7 +62,7 @@ class OpenInExternalBrowserDialogueTest {
     init {
         val openWithBtn = TestHelper.mDevice.findObject(
             UiSelector()
-                .resourceId(appName + ":id/open_select_browser")
+                .resourceId(packageName + ":id/open_select_browser")
                 .enabled(true)
         )
         val openWithTitle = TestHelper.mDevice.findObject(
@@ -73,7 +73,7 @@ class OpenInExternalBrowserDialogueTest {
         )
         val openWithList = TestHelper.mDevice.findObject(
             UiSelector()
-                .resourceId(appName + ":id/apps")
+                .resourceId(packageName + ":id/apps")
                 .enabled(true)
         )
 

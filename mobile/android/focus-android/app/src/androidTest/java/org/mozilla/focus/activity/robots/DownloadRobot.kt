@@ -12,10 +12,10 @@ import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource
-import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.isPackageInstalled
 import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 
@@ -52,7 +52,7 @@ class DownloadRobot {
     }
 
     fun openDownloadedFile() {
-        val snackBarButton = mDevice.findObject(UiSelector().resourceId("$appName:id/snackbar_action"))
+        val snackBarButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/snackbar_action"))
         snackBarButton.waitForExists(waitingTime)
         snackBarButton.clickAndWaitForNewWindow(webPageLoadwaitingTime)
     }
@@ -72,22 +72,22 @@ val downloadIconAsset: UiObject = mDevice.findObject(
 
 private val downloadDialogTitle = mDevice.findObject(
     UiSelector()
-        .resourceId("$appName:id/title")
+        .resourceId("$packageName:id/title")
 )
 
 private val downloadFileName = mDevice.findObject(
     UiSelector()
-        .resourceId("$appName:id/filename")
+        .resourceId("$packageName:id/filename")
 )
 
 private val downloadCancelBtn = mDevice.findObject(
     UiSelector()
-        .resourceId("$appName:id/close_button")
+        .resourceId("$packageName:id/close_button")
 )
 
 private val downloadBtn = mDevice.findObject(
     UiSelector()
-        .resourceId("$appName:id/download_button")
+        .resourceId("$packageName:id/download_button")
 )
 
 private val downloadNotificationText = getStringResource(R.string.mozac_feature_downloads_completed_notification_text2)

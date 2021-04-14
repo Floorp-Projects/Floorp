@@ -15,26 +15,26 @@ import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource
-import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 
 class BrowserRobot {
 
     val progressBar =
         mDevice.findObject(
-            UiSelector().resourceId("$appName:id/progress")
+            UiSelector().resourceId("$packageName:id/progress")
         )
 
     fun verifyBrowserView() =
-        assertTrue(mDevice.findObject(UiSelector().resourceId("$appName:id/webview"))
+        assertTrue(mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
             .waitForExists(webPageLoadwaitingTime)
         )
 
     fun verifyPageContent(expectedText: String) {
         val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
-        mDevice.findObject(UiSelector().resourceId("$appName:id/webview"))
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
             .waitForExists(webPageLoadwaitingTime)
 
         runWithIdleRes(sessionLoadedIdlingResource) {
@@ -50,7 +50,7 @@ class BrowserRobot {
 
         browserURLbar.waitForExists(webPageLoadwaitingTime)
 
-        mDevice.findObject(UiSelector().resourceId("$appName:id/webview"))
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
             .waitForExists(webPageLoadwaitingTime)
 
         runWithIdleRes(sessionLoadedIdlingResource) {
@@ -92,6 +92,6 @@ inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
     }
 }
 
-private val browserURLbar = mDevice.findObject(UiSelector().resourceId("$appName:id/display_url"))
+private val browserURLbar = mDevice.findObject(UiSelector().resourceId("$packageName:id/display_url"))
 
 private val floatingEraseButton = onView(allOf(withId(R.id.erase), isDisplayed()))

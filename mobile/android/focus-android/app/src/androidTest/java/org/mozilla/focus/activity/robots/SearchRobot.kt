@@ -13,8 +13,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource
-import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
@@ -71,7 +71,7 @@ class SearchRobot {
                     BrowserRobot().progressBar.waitUntilGone(webPageLoadwaitingTime)
                 )
                 assertTrue(
-                    mDevice.findObject(UiSelector().resourceId("$appName:id/webview"))
+                    mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
                         .waitForExists(webPageLoadwaitingTime)
                 )
             }
@@ -88,29 +88,29 @@ fun searchScreen(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
 }
 
 private val searchBar =
-    mDevice.findObject(UiSelector().resourceId("$appName:id/urlView"))
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/urlView"))
 
 private val searchHint = mDevice.findObject(
     UiSelector()
-        .resourceId("$appName:id/searchView")
+        .resourceId("$packageName:id/searchView")
         .clickable(true)
 )
 
 private val searchSuggestionsTitle = mDevice.findObject(
     UiSelector()
-        .resourceId("$appName:id/enable_search_suggestions_title")
+        .resourceId("$packageName:id/enable_search_suggestions_title")
         .enabled(true)
 )
 
 private val searchSuggestionsButtonYes = mDevice.findObject(
     UiSelector()
-        .resourceId("$appName:id/enable_search_suggestions_button")
+        .resourceId("$packageName:id/enable_search_suggestions_button")
         .enabled(true)
 )
 
 private val suggestionsList = mDevice.findObject(
     UiSelector()
-        .resourceId("$appName:id/suggestionList")
+        .resourceId("$packageName:id/suggestionList")
 )
 
 private val clearSearchButton = onView(withId(R.id.clearView))

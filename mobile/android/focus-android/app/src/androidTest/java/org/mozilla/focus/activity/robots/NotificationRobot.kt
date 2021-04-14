@@ -5,13 +5,13 @@
 package org.mozilla.focus.activity.robots
 
 import android.util.Log
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper
+import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitingTime
@@ -108,8 +108,6 @@ private val notificationOpenButton = mDevice.findObject(
 private val notificationTray = UiScrollable(
     UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller")
 ).setAsVerticalList()
-
-private val appName = InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.app_name)
 
 private val notificationHeader = mDevice.findObject(
     UiSelector()

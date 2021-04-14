@@ -12,7 +12,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
-import org.mozilla.focus.helpers.TestHelper.appName
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 
 class SettingsPrivacyMenuRobot {
@@ -36,7 +36,7 @@ class SettingsPrivacyMenuRobot {
 }
 
 private val privacySettingsList =
-    UiScrollable(UiSelector().resourceId("$appName:id/recycler_view"))
+    UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
 
 private fun adTrackersBlockSwitch(): ViewInteraction {
     privacySettingsList

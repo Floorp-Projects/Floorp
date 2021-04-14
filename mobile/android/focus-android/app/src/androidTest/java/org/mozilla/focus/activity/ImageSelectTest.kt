@@ -23,8 +23,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper
-import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.pressBackKey
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
@@ -39,7 +39,7 @@ class ImageSelectTest {
     private var rabbitImage: UiObject? = null
     private val imageMenuTitle = TestHelper.mDevice.findObject(
         UiSelector()
-            .resourceId(appName + ":id/topPanel")
+            .resourceId(packageName + ":id/topPanel")
             .enabled(true)
     )
     private val imageMenuTitleText = TestHelper.mDevice.findObject(
@@ -50,25 +50,25 @@ class ImageSelectTest {
     )
     private val shareMenu = TestHelper.mDevice.findObject(
         UiSelector()
-            .resourceId(appName + ":id/design_menu_item_text")
+            .resourceId(packageName + ":id/design_menu_item_text")
             .text("Share image")
             .enabled(true)
     )
     private val copyMenu = TestHelper.mDevice.findObject(
         UiSelector()
-            .resourceId(appName + ":id/design_menu_item_text")
+            .resourceId(packageName + ":id/design_menu_item_text")
             .text("Copy image address")
             .enabled(true)
     )
     private val saveMenu = TestHelper.mDevice.findObject(
         UiSelector()
-            .resourceId(appName + ":id/design_menu_item_text")
+            .resourceId(packageName + ":id/design_menu_item_text")
             .text("Save image")
             .enabled(true)
     )
     private val warning = TestHelper.mDevice.findObject(
         UiSelector()
-            .resourceId(appName + ":id/warning")
+            .resourceId(packageName + ":id/warning")
             .text("Saved and shared images will not be deleted when you erase Firefox Focus history.")
             .enabled(true)
     )

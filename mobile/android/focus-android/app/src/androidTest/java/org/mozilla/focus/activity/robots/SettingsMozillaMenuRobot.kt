@@ -27,7 +27,7 @@ class SettingsMozillaMenuRobot {
 }
 
 private val mozillaSettingsList =
-    UiScrollable(UiSelector().resourceId("${TestHelper.appName}:id/recycler_view"))
+    UiScrollable(UiSelector().resourceId("${TestHelper.packageName}:id/recycler_view"))
 
 private val showTipsSwitch = onView(withText("Show home screen tips"))
 

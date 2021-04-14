@@ -12,9 +12,9 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
-import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 
 class HomeScreenRobot {
@@ -42,6 +42,6 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
     return HomeScreenRobot.Transition()
 }
 
-private val searchBar = mDevice.findObject(UiSelector().resourceId("$appName:id/urlView"))
+private val searchBar = mDevice.findObject(UiSelector().resourceId("$packageName:id/urlView"))
 
 private val mainMenu = onView(withId(R.id.menuView))

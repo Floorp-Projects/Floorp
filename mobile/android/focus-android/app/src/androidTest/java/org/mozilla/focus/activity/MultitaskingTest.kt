@@ -35,8 +35,8 @@ import org.mozilla.focus.helpers.EspressoHelper.onFloatingTabsButton
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource
 import org.mozilla.focus.helpers.TestHelper
-import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.helpers.TestHelper.packageName
 
 /**
  * Open multiple sessions and verify that the UI looks like it should.
@@ -199,12 +199,12 @@ class MultitaskingTest {
     private fun checkNewTabPopup() {
         TestHelper.mDevice.wait(
             Until.findObject(
-                By.res(appName, "snackbar_text")
+                By.res(packageName, "snackbar_text")
             ), 5000
         )
         TestHelper.mDevice.wait(
             Until.gone(
-                By.res(appName, "snackbar_text")
+                By.res(packageName, "snackbar_text")
             ), 5000
         )
     }

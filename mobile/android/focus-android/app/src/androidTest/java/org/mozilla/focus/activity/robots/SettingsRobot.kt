@@ -7,7 +7,7 @@ package org.mozilla.focus.activity.robots
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
-import org.mozilla.focus.helpers.TestHelper.appName
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 
 class SettingsRobot {
@@ -72,7 +72,7 @@ class SettingsRobot {
     }
 }
 
-private val settingsMenuList = UiScrollable(UiSelector().resourceId("$appName:id/recycler_view"))
+private val settingsMenuList = UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
 
 private val generalSettingsMenu = settingsMenuList.getChild(
     UiSelector()

@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
 import org.mozilla.focus.helpers.EspressoHelper.openSettings
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper
-import org.mozilla.focus.helpers.TestHelper.appName
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.pressBackKey
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
@@ -80,7 +80,7 @@ class SettingsBlockToggleTest {
         )
         val blockAdTrackerSwitch = blockAdTrackerEntry.getChild(
             UiSelector()
-                .resourceId(appName + ":id/switchWidget")
+                .resourceId(packageName + ":id/switchWidget")
         )
         val blockAnalyticTrackerEntry = TestHelper.settingsMenu.getChild(
             UiSelector()
@@ -89,7 +89,7 @@ class SettingsBlockToggleTest {
         )
         val blockAnalyticTrackerSwitch = blockAnalyticTrackerEntry.getChild(
             UiSelector()
-                .resourceId(appName + ":id/switchWidget")
+                .resourceId(packageName + ":id/switchWidget")
         )
         val blockSocialTrackerEntry = TestHelper.settingsMenu.getChild(
             UiSelector()
@@ -98,7 +98,7 @@ class SettingsBlockToggleTest {
         )
         val blockSocialTrackerSwitch = blockSocialTrackerEntry.getChild(
             UiSelector()
-                .resourceId(appName + ":id/switchWidget")
+                .resourceId(packageName + ":id/switchWidget")
         )
 
         // Let's go to an actual URL which is http://
