@@ -4485,7 +4485,8 @@ static bool CheckCoercedCall(FunctionValidator<Unit>& f, ParseNode* call,
                              Type ret, Type* type) {
   MOZ_ASSERT(ret.isCanonical());
 
-  if (!CheckRecursionLimitDontReport(f.cx())) {
+  AutoCheckRecursionLimit recursion(f.cx());
+  if (!recursion.checkDontReport(f.cx())) {
     return f.m().failOverRecursed();
   }
 
@@ -4817,7 +4818,8 @@ static bool CheckMultiply(FunctionValidator<Unit>& f, ParseNode* star,
 template <typename Unit>
 static bool CheckAddOrSub(FunctionValidator<Unit>& f, ParseNode* expr,
                           Type* type, unsigned* numAddOrSubOut = nullptr) {
-  if (!CheckRecursionLimitDontReport(f.cx())) {
+  AutoCheckRecursionLimit recursion(f.cx());
+  if (!recursion.checkDontReport(f.cx())) {
     return f.m().failOverRecursed();
   }
 
@@ -5199,7 +5201,8 @@ static bool CheckBitwise(FunctionValidator<Unit>& f, ParseNode* bitwise,
 
 template <typename Unit>
 static bool CheckExpr(FunctionValidator<Unit>& f, ParseNode* expr, Type* type) {
-  if (!CheckRecursionLimitDontReport(f.cx())) {
+  AutoCheckRecursionLimit recursion(f.cx());
+  if (!recursion.checkDontReport(f.cx())) {
     return f.m().failOverRecursed();
   }
 
@@ -5932,7 +5935,8 @@ static bool CheckBreakOrContinue(FunctionValidatorShared& f, bool isBreak,
 
 template <typename Unit>
 static bool CheckStatement(FunctionValidator<Unit>& f, ParseNode* stmt) {
-  if (!CheckRecursionLimitDontReport(f.cx())) {
+  AutoCheckRecursionLimit recursion(f.cx());
+  if (!recursion.checkDontReport(f.cx())) {
     return f.m().failOverRecursed();
   }
 

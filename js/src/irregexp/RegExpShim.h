@@ -30,7 +30,7 @@
 #include "jit/JitCode.h"
 #include "jit/Label.h"
 #include "jit/shared/Assembler-shared.h"
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit{,Conservative}DontReport
+#include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/RegExpFlags.h"
 #include "js/Value.h"
 #include "threading/ExclusiveData.h"
@@ -1125,11 +1125,11 @@ class Isolate {
 // https://github.com/v8/v8/blob/50dcf2af54ce27801a71c47c1be1d2c5e36b0dd6/src/execution/isolate.h#L1909-L1931
 class StackLimitCheck {
  public:
-  StackLimitCheck(Isolate* isolate) : cx_(isolate->cx()) {}
+  StackLimitCheck(Isolate* isolate) : cx_(isolate->cx()), recursion_(cx_) {}
 
   // Use this to check for stack-overflows in C++ code.
   bool HasOverflowed() {
-    bool overflowed = !js::CheckRecursionLimitDontReport(cx_);
+    bool overflowed = !recursion_.checkDontReport(cx_);
     if (overflowed && js::SupportDifferentialTesting()) {
       // We don't report overrecursion here, but we throw an exception later
       // and this still affects differential testing. Mimic ReportOverRecursed
@@ -1151,6 +1151,7 @@ class StackLimitCheck {
 
  private:
   JSContext* cx_;
+  js::AutoCheckRecursionLimit recursion_;
 };
 
 class Code : public HeapObject {
