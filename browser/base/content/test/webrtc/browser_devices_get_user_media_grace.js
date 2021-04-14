@@ -107,6 +107,7 @@ var gTests = [
           "without prompting within grace period."
       );
       await closeStream();
+      await checkNotSharingWithinGracePeriod();
       await noPrompt(true, true);
 
       info(
@@ -114,6 +115,7 @@ var gTests = [
           "without prompting within grace period."
       );
       await closeStream();
+      await checkNotSharingWithinGracePeriod();
       await noPrompt(true, false);
 
       info(
@@ -121,6 +123,7 @@ var gTests = [
           "without prompting within grace period."
       );
       await closeStream();
+      await checkNotSharingWithinGracePeriod();
       await noPrompt(false, true);
 
       info("gUM(screen) still causes a prompt.");
@@ -146,7 +149,9 @@ var gTests = [
 
       await closeStream();
       info("Closed stream. Waiting past grace period.");
+      await checkNotSharingWithinGracePeriod();
       await wait(WAIT_PERIOD_MS);
+      await checkNotSharing();
 
       info("After grace period expires, gUM(camera) causes a prompt.");
       await prompt(false, true);
@@ -180,6 +185,7 @@ var gTests = [
         "After page reload, gUM(camera+mic) returns a stream " +
           "without prompting within grace period."
       );
+      await checkNotSharingWithinGracePeriod();
       await noPrompt(true, true);
       await closeStream();
 
@@ -198,6 +204,7 @@ var gTests = [
         "After user page reload, gUM(camera+mic) returns a stream " +
           "without prompting within grace period."
       );
+      await checkNotSharingWithinGracePeriod();
       await noPrompt(true, true);
 
       info("gUM(screen) still causes a prompt.");
@@ -223,7 +230,9 @@ var gTests = [
 
       await closeStream();
       info("Closed stream. Waiting past grace period.");
+      await checkNotSharingWithinGracePeriod();
       await wait(WAIT_PERIOD_MS);
+      await checkNotSharing();
 
       info("After grace period expires, gUM(camera) causes a prompt.");
       await prompt(false, true);
@@ -253,7 +262,9 @@ var gTests = [
       await enableObserverVerification();
       await closeStream();
       info("Closed stream. Waiting past grace period.");
+      await checkNotSharingWithinGracePeriod();
       await wait(WAIT_PERIOD_MS);
+      await checkNotSharing();
 
       info("After grace period expires, gUM(camera+mic) causes a prompt.");
       await prompt(true, true);
@@ -284,11 +295,14 @@ var gTests = [
         "After navigating to second same-origin page, gUM(camera+mic) " +
           "returns a stream without prompting within grace period."
       );
+      await checkNotSharingWithinGracePeriod();
       await noPrompt(true, true);
       await closeStream();
 
       info("Closed stream. Waiting past grace period.");
+      await checkNotSharingWithinGracePeriod();
       await wait(LONG_WAIT_PERIOD_MS);
+      await checkNotSharing();
 
       info("After grace period expires, gUM(camera+mic) causes a prompt.");
       await prompt(true, true);
@@ -311,10 +325,13 @@ var gTests = [
         "After navigating back to the first page, gUM(camera+mic) " +
           "returns a stream without prompting within grace period."
       );
+      await checkNotSharingWithinGracePeriod();
       await noPrompt(true, true);
       await closeStream();
       info("Closed stream. Waiting past grace period.");
+      await checkNotSharingWithinGracePeriod();
       await wait(LONG_WAIT_PERIOD_MS);
+      await checkNotSharing();
 
       info("After grace period expires, gUM(camera+mic) causes a prompt.");
       await prompt(true, true);
