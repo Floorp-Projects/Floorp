@@ -51,6 +51,7 @@ class DefaultTabsTrayController(
             "DefaultTabTrayController.onNewTabTapped",
             startTime
         )
+        sendNewTabEvent(isPrivate)
     }
 
     override fun onSyncStarted() {
@@ -67,5 +68,15 @@ class DefaultTabsTrayController(
         }.invokeOnCompletion {
             store.dispatch(TabsTrayAction.SyncCompleted)
         }
+    }
+
+    private fun sendNewTabEvent(isPrivateModeSelected: Boolean) {
+        val eventToSend = if (isPrivateModeSelected) {
+            Event.NewPrivateTabTapped
+        } else {
+            Event.NewTabTapped
+        }
+
+        metrics.track(eventToSend)
     }
 }

@@ -92,6 +92,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         super.onViewCreated(view, savedInstanceState)
         val activity = activity as HomeActivity
 
+        requireComponents.analytics.metrics.track(Event.TabsTrayOpened)
+
         val navigationInteractor =
             DefaultNavigationInteractor(
                 context = requireContext(),
@@ -99,8 +101,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
                 browserStore = requireComponents.core.store,
                 navController = findNavController(),
                 metrics = requireComponents.analytics.metrics,
-                dismissTabTray = ::dismissAllowingStateLoss,
-                dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome,
+                dismissTabTray = ::dismissTabsTray,
+                dismissTabTrayAndNavigateHome = ::dismissTabsTrayAndNavigateHome,
                 bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
                 collectionStorage = requireComponents.core.tabCollectionStorage
             )
@@ -144,8 +146,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         behavior.addBottomSheetCallback(
             TraySheetBehaviorCallback(
                 behavior,
-                navigationInteractor,
-                requireComponents.analytics.metrics
+                navigationInteractor
             )
         )
 
@@ -167,7 +168,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
                 tabLayout = tab_layout,
                 interactor = this,
                 browserStore = requireComponents.core.store,
-                trayStore = tabsTrayStore
+                trayStore = tabsTrayStore,
+                metrics = requireComponents.analytics.metrics
             ), owner = this,
             view = view
         )
@@ -233,7 +235,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     }
 
     override fun navigateToBrowser() {
-        dismissAllowingStateLoss()
+        dismissTabsTray()
 
         val navController = findNavController()
 
@@ -299,10 +301,15 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     private val homeViewModel: HomeScreenViewModel by activityViewModels()
 
-    private fun dismissTabTrayAndNavigateHome(sessionId: String) {
+    private fun dismissTabsTrayAndNavigateHome(sessionId: String) {
         homeViewModel.sessionToDelete = sessionId
         val directions = NavGraphDirections.actionGlobalHome()
         findNavController().navigateBlockingForAsyncNavGraph(directions)
+        dismissTabsTray()
+    }
+
+    private fun dismissTabsTray() {
         dismissAllowingStateLoss()
+        requireComponents.analytics.metrics.track(Event.TabsTrayClosed)
     }
 }

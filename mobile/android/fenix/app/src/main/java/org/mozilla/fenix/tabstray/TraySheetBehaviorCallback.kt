@@ -8,18 +8,14 @@ import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 
 class TraySheetBehaviorCallback(
     private val behavior: BottomSheetBehavior<ConstraintLayout>,
-    private val trayInteractor: NavigationInteractor,
-    private val metrics: MetricController
+    private val trayInteractor: NavigationInteractor
 ) : BottomSheetBehavior.BottomSheetCallback() {
 
     override fun onStateChanged(bottomSheet: View, newState: Int) {
         if (newState == STATE_HIDDEN) {
-            metrics.track(Event.TabsTrayClosed)
             trayInteractor.onTabTrayDismissed()
         } else if (newState == BottomSheetBehavior.STATE_HALF_EXPANDED) {
             // We only support expanded and collapsed states.

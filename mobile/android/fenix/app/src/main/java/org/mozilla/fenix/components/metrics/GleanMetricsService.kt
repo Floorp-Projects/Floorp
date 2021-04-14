@@ -674,6 +674,9 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TabsTrayNormalModeTapped -> EventWrapper<NoExtraKeys>(
             { TabsTray.normalModeTapped.record(it) }
         )
+        is Event.TabsTraySyncedModeTapped -> EventWrapper<NoExtraKeys>(
+            { TabsTray.syncedModeTapped.record(it) }
+        )
         is Event.NewTabTapped -> EventWrapper<NoExtraKeys>(
             { TabsTray.newTabTapped.record(it) }
         )

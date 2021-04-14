@@ -85,6 +85,7 @@ class TabsTrayInfoBannerBinding(
                 }
             ) {
                 navigationInteractor.onTabSettingsClicked()
+                metrics?.track(Event.TabsTrayCfrTapped)
                 settings.shouldShowGridViewBanner = false
             }
         } else {
@@ -110,6 +111,7 @@ class TabsTrayInfoBannerBinding(
                 }
             ) {
                 navigationInteractor.onTabSettingsClicked()
+                metrics?.track(Event.TabsTrayCfrTapped)
                 settings.shouldShowAutoCloseTabsBanner = false
             }
         } else {

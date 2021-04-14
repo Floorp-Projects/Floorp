@@ -2473,6 +2473,19 @@ tabs_tray:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-08-01"
+  synced_mode_tapped:
+    type: event
+    description: |
+      A user switched to synced mode
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18948
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19004
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-08-01"
   new_tab_tapped:
     type: event
     description: |

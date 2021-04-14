@@ -26,7 +26,7 @@ class TabLayoutMediatorTest {
         val store = createStore("123")
         val tabLayout: TabLayout = mockk(relaxed = true)
         val tab: TabLayout.Tab = mockk(relaxed = true)
-        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, mockk())
+        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, mockk(), mockk())
 
         every { tabLayout.getTabAt(POSITION_NORMAL_TABS) }.answers { tab }
 
@@ -40,7 +40,7 @@ class TabLayoutMediatorTest {
         val store = createStore("456")
         val tabLayout: TabLayout = mockk(relaxed = true)
         val tab: TabLayout.Tab = mockk(relaxed = true)
-        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, mockk())
+        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, mockk(), mockk())
 
         every { tabLayout.getTabAt(POSITION_PRIVATE_TABS) }.answers { tab }
 
@@ -53,7 +53,7 @@ class TabLayoutMediatorTest {
     fun `lifecycle methods adds and removes observer`() {
         val store = createStore("456")
         val tabLayout: TabLayout = mockk(relaxed = true)
-        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, mockk())
+        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, mockk(), mockk())
 
         mediator.start()
 

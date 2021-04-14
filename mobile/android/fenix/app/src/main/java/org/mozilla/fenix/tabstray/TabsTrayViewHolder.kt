@@ -214,6 +214,7 @@ abstract class TabsTrayViewHolder(
 
         itemView.setOnLongClickListener {
             if (holder.selectedItems.isEmpty()) {
+                metrics.track(Event.CollectionTabLongPressed)
                 interactor.select(item)
                 true
             } else {

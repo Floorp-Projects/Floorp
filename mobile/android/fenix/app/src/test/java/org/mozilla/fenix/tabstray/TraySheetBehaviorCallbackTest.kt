@@ -16,27 +16,23 @@ import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Test
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 
 class TraySheetBehaviorCallbackTest {
 
     @Test
     fun `WHEN state is hidden THEN invoke interactor`() {
         val interactor = mockk<NavigationInteractor>(relaxed = true)
-        val metrics = mockk<MetricController>(relaxed = true)
-        val callback = TraySheetBehaviorCallback(mockk(), interactor, metrics)
+        val callback = TraySheetBehaviorCallback(mockk(), interactor)
 
         callback.onStateChanged(mockk(), STATE_HIDDEN)
 
         verify { interactor.onTabTrayDismissed() }
-        verify { metrics.track(Event.TabsTrayClosed) }
     }
 
     @Test
     fun `WHEN state is half-expanded THEN close the tray`() {
         val behavior = mockk<BottomSheetBehavior<ConstraintLayout>>(relaxed = true)
-        val callback = TraySheetBehaviorCallback(behavior, mockk(), mockk())
+        val callback = TraySheetBehaviorCallback(behavior, mockk())
 
         callback.onStateChanged(mockk(), STATE_HALF_EXPANDED)
 
@@ -47,9 +43,7 @@ class TraySheetBehaviorCallbackTest {
     fun `WHEN other states are invoked THEN do nothing`() {
         val behavior = mockk<BottomSheetBehavior<ConstraintLayout>>(relaxed = true)
         val interactor = mockk<NavigationInteractor>(relaxed = true)
-        val metrics = mockk<MetricController>(relaxed = true)
-
-        val callback = TraySheetBehaviorCallback(behavior, interactor, metrics)
+        val callback = TraySheetBehaviorCallback(behavior, interactor)
 
         callback.onStateChanged(mockk(), STATE_COLLAPSED)
         callback.onStateChanged(mockk(), STATE_DRAGGING)
@@ -58,6 +52,5 @@ class TraySheetBehaviorCallbackTest {
 
         verify { behavior wasNot Called }
         verify { interactor wasNot Called }
-        verify { metrics wasNot Called }
     }
 }

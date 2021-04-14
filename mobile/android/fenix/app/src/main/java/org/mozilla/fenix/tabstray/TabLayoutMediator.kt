@@ -9,8 +9,11 @@ import com.google.android.material.tabs.TabLayout
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_NORMAL_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_PRIVATE_TABS
+import org.mozilla.fenix.utils.Do
 
 /**
  * Selected the selected pager depending on the [BrowserStore] state and synchronizes user actions
@@ -20,10 +23,11 @@ class TabLayoutMediator(
     private val tabLayout: TabLayout,
     interactor: TabsTrayInteractor,
     private val browserStore: BrowserStore,
-    trayStore: TabsTrayStore
+    trayStore: TabsTrayStore,
+    private val metrics: MetricController
 ) : LifecycleAwareFeature {
 
-    private val observer = TabLayoutObserver(interactor, trayStore)
+    private val observer = TabLayoutObserver(interactor, trayStore, metrics)
 
     /**
      * Start observing the [TabLayout] and select the current tab for initial state.
@@ -57,7 +61,8 @@ class TabLayoutMediator(
  */
 internal class TabLayoutObserver(
     private val interactor: TabsTrayInteractor,
-    private val trayStore: TabsTrayStore
+    private val trayStore: TabsTrayStore,
+    private val metrics: MetricController
 ) : TabLayout.OnTabSelectedListener {
 
     private var initialScroll = true
@@ -74,6 +79,12 @@ internal class TabLayoutObserver(
         interactor.setCurrentTrayPosition(tab.position, animate)
 
         trayStore.dispatch(TabsTrayAction.PageSelected(tab.toPage()))
+
+        Do exhaustive when (tab.toPage()) {
+            Page.NormalTabs -> metrics.track(Event.TabsTrayNormalModeTapped)
+            Page.PrivateTabs -> metrics.track(Event.TabsTrayPrivateModeTapped)
+            Page.SyncedTabs -> metrics.track(Event.TabsTraySyncedModeTapped)
+        }
     }
 
     override fun onTabUnselected(tab: TabLayout.Tab) = Unit

@@ -182,6 +182,7 @@ sealed class Event {
     object ClosedExistingTab : Event()
     object TabsTrayPrivateModeTapped : Event()
     object TabsTrayNormalModeTapped : Event()
+    object TabsTraySyncedModeTapped : Event()
     object NewTabTapped : Event()
     object NewPrivateTabTapped : Event()
     object TabsTrayMenuOpened : Event()

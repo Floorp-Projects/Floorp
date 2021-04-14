@@ -22,6 +22,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayInfoBannerBinding.Companion.TAB_COUNT_SHOW_CFR
@@ -100,9 +101,11 @@ class TabsTrayInfoBannerTest {
         assert(view.visibility == VISIBLE)
         binding.banner?.actionToPerform?.invoke()
 
-        verify { interactor.onTabSettingsClicked() }
+        verify(exactly = 1) { interactor.onTabSettingsClicked() }
         assert(!settings.shouldShowGridViewBanner)
         assert(settings.shouldShowAutoCloseTabsBanner)
+        verify(exactly = 1) { metrics.track(Event.TabsTrayCfrTapped) }
+        verify(exactly = 0) { metrics.track(Event.TabsTrayCfrDismissed) }
     }
 
     @Test
@@ -130,9 +133,11 @@ class TabsTrayInfoBannerTest {
         assert(view.visibility == VISIBLE)
         binding.banner?.actionToPerform?.invoke()
 
-        verify { interactor.onTabSettingsClicked() }
+        verify(exactly = 1) { interactor.onTabSettingsClicked() }
         assert(!settings.shouldShowGridViewBanner)
         assert(!settings.shouldShowAutoCloseTabsBanner)
+        verify(exactly = 1) { metrics.track(Event.TabsTrayCfrTapped) }
+        verify(exactly = 0) { metrics.track(Event.TabsTrayCfrDismissed) }
     }
 
     @Test
@@ -162,6 +167,8 @@ class TabsTrayInfoBannerTest {
         verify(exactly = 0) { interactor.onTabSettingsClicked() }
         assert(!settings.shouldShowGridViewBanner)
         assert(settings.shouldShowAutoCloseTabsBanner)
+        verify(exactly = 0) { metrics.track(Event.TabsTrayCfrTapped) }
+        verify(exactly = 1) { metrics.track(Event.TabsTrayCfrDismissed) }
     }
 
     @Test
@@ -191,6 +198,8 @@ class TabsTrayInfoBannerTest {
         verify(exactly = 0) { interactor.onTabSettingsClicked() }
         assert(settings.shouldShowGridViewBanner)
         assert(!settings.shouldShowAutoCloseTabsBanner)
+        verify(exactly = 0) { metrics.track(Event.TabsTrayCfrTapped) }
+        verify(exactly = 1) { metrics.track(Event.TabsTrayCfrDismissed) }
     }
 
     @Test
