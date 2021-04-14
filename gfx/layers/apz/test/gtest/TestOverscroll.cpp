@@ -61,7 +61,6 @@ class APZCOverscrollTester : public APZCBasicTester {
     EXPECT_TRUE(recoveredFromOverscroll);
     apzc->AssertStateIsReset();
   }
-
 };
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
@@ -711,5 +710,528 @@ TEST_F(APZCOverscrollTester, DisallowOverscrollInSingleLineTextControl) {
              ScreenIntPoint(50, 5), ScreenPoint(0, 0), mcc->Time());
   // No overscrolling should happen either.
   EXPECT_TRUE(!apzc->IsOverscrolled());
+}
+#endif
+
+#ifndef MOZ_WIDGET_ANDROID  // Maybe fails on Android
+// Tests that horizontal overscroll animation keeps running with vertical
+// pan momentum scrolling.
+TEST_F(APZCOverscrollTester,
+       HorizontalOverscrollAnimationWithVerticalPanMomentumScrolling) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetScrollableRect(CSSRect(0, 0, 1000, 5000));
+  apzc->SetFrameMetrics(metrics);
+
+  // Try to overscroll left with pan gestures.
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(-2, 0), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(-10, 0), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(-2, 0), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 0), mcc->Time());
+
+  // Make sure we've started an overscroll animation.
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  AsyncTransformComponentMatrix initialOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+
+  // Send lengthy downward momentums to make sure the overscroll animation
+  // doesn't clobber the momentums scrolling.
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  // The overscroll amount on X axis has started being managed by the overscroll
+  // animation.
+  AsyncTransformComponentMatrix currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  EXPECT_NE(initialOverscrolledTransform._41, currentOverscrolledTransform._41);
+  // There is no overscroll on Y axis.
+  EXPECT_EQ(currentOverscrolledTransform._42, 0);
+  ParentLayerPoint scrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  // The scroll offset shouldn't be changed by the overscroll animation.
+  EXPECT_EQ(scrollOffset.y, 0);
+
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMSTART, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 0), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on both axes shouldn't be changed by this pan
+  // momentum start event since the displacement is zero.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  EXPECT_EQ(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  // The overscroll amount should be managed by the overscroll animation.
+  EXPECT_NE(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  scrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  // Not yet started scrolling.
+  EXPECT_EQ(scrollOffset.y, 0);
+  EXPECT_EQ(scrollOffset.x, 0);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  // Send a long pan momentum.
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 200), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on X axis shouldn't be changed by this momentum pan.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // Now it started scrolling vertically.
+  scrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  EXPECT_GT(scrollOffset.y, 0);
+  EXPECT_EQ(scrollOffset.x, 0);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  // The overscroll on X axis keeps being managed by the overscroll animation.
+  EXPECT_NE(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // The scroll offset on Y axis shouldn't be changed by the overscroll
+  // animation.
+  EXPECT_EQ(scrollOffset.y, apzc->GetCurrentAsyncScrollOffset(
+                                    AsyncPanZoomController::eForHitTesting)
+                                .y);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  scrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 100), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on X axis shouldn't be changed by this momentum pan.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // Scrolling keeps going by momentum.
+  EXPECT_GT(
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
+          .y,
+      scrollOffset.y);
+
+  scrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 10), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // Scrolling keeps going by momentum.
+  EXPECT_GT(
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
+          .y,
+      scrollOffset.y);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  scrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMEND, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 0), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // This momentum event doesn't change the scroll offset since its
+  // displacement is zero.
+  EXPECT_EQ(
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
+          .y,
+      scrollOffset.y);
+
+  // Check that we recover from the horizontal overscroll via the animation.
+  ParentLayerPoint expectedScrollOffset(0, scrollOffset.y);
+  SampleAnimationUntilRecoveredFromOverscroll(expectedScrollOffset);
+}
+#endif
+
+#ifndef MOZ_WIDGET_ANDROID  // Maybe fails on Android
+// Similar to above
+// HorizontalOverscrollAnimationWithVerticalPanMomentumScrolling,
+// but having OverscrollAnimation on both axes initially.
+TEST_F(APZCOverscrollTester,
+       BothAxesOverscrollAnimationWithPanMomentumScrolling) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetScrollableRect(CSSRect(0, 0, 1000, 5000));
+  apzc->SetFrameMetrics(metrics);
+
+  // Try to overscroll up and left with pan gestures.
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(-2, -2), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(-10, -10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(-2, -2), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 0), mcc->Time());
+
+  // Make sure we've started an overscroll animation.
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  AsyncTransformComponentMatrix initialOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+
+  // Send lengthy downward momentums to make sure the overscroll animation
+  // doesn't clobber the momentums scrolling.
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  // The overscroll amount has started being managed by the overscroll
+  // animation.
+  AsyncTransformComponentMatrix currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  EXPECT_NE(initialOverscrolledTransform._41, currentOverscrolledTransform._41);
+  EXPECT_NE(initialOverscrolledTransform._42, currentOverscrolledTransform._42);
+
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMSTART, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 0), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on both axes shouldn't be changed by this pan
+  // momentum start event since the displacement is zero.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  EXPECT_EQ(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  // Still being managed by the overscroll animation.
+  EXPECT_NE(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  EXPECT_NE(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  // Send a long pan momentum.
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 200), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on X axis shouldn't be changed by this momentum pan.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // But now the overscroll amount on Y axis should be changed by this momentum
+  // pan.
+  EXPECT_NE(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+  // Actually it's no longer overscrolled.
+  EXPECT_EQ(
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42,
+      0);
+
+  ParentLayerPoint currentScrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  // Now it started scrolling.
+  EXPECT_GT(currentScrollOffset.y, 0);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  // The overscroll on X axis keeps being managed by the overscroll animation.
+  EXPECT_NE(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // But the overscroll on Y axis is no longer affected by the overscroll
+  // animation.
+  EXPECT_EQ(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+  // The scroll offset on Y axis shouldn't be changed by the overscroll
+  // animation.
+  EXPECT_EQ(
+      currentScrollOffset.y,
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
+          .y);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  currentScrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 100), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on X axis shouldn't be changed by this momentum pan.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // Keeping no overscrolling on Y axis.
+  EXPECT_EQ(
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42,
+      0);
+  // Scrolling keeps going by momentum.
+  EXPECT_GT(
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
+          .y,
+      currentScrollOffset.y);
+
+  currentScrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 10), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // Keeping no overscrolling on Y axis.
+  EXPECT_EQ(
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42,
+      0);
+  // Scrolling keeps going by momentum.
+  EXPECT_GT(
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
+          .y,
+      currentScrollOffset.y);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  currentScrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMEND, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 0), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // Keeping no overscrolling on Y axis.
+  EXPECT_EQ(
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42,
+      0);
+  // This momentum event doesn't change the scroll offset since its
+  // displacement is zero.
+  EXPECT_EQ(
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
+          .y,
+      currentScrollOffset.y);
+
+  // Check that we recover from the horizontal overscroll via the animation.
+  ParentLayerPoint expectedScrollOffset(0, currentScrollOffset.y);
+  SampleAnimationUntilRecoveredFromOverscroll(expectedScrollOffset);
+}
+#endif
+
+#ifndef MOZ_WIDGET_ANDROID  // Maybe fails on Android
+// This is another variant of
+// HorizontalOverscrollAnimationWithVerticalPanMomentumScrolling. In this test,
+// after a horizontal overscroll animation started, upwards pan moments happen,
+// thus there should be a new vertical overscroll animation in addition to
+// the horizontal one.
+TEST_F(
+    APZCOverscrollTester,
+    VerticalOverscrollAnimationInAdditionToExistingHorizontalOverscrollAnimation) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
+  metrics.SetCompositionBounds(ParentLayerRect(0, 0, 100, 100));
+  metrics.SetScrollableRect(CSSRect(0, 0, 1000, 5000));
+  // Scrolls the content 50px down.
+  metrics.SetVisualScrollOffset(CSSPoint(0, 50));
+  apzc->SetFrameMetrics(metrics);
+
+  // Try to overscroll left with pan gestures.
+  PanGesture(PanGestureInput::PANGESTURE_START, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(-2, 0), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(-10, 0), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(-2, 0), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_END, apzc, ScreenIntPoint(50, 80),
+             ScreenPoint(0, 0), mcc->Time());
+
+  // Make sure we've started an overscroll animation.
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  AsyncTransformComponentMatrix initialOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+
+  // Send lengthy __upward__ momentums to make sure the overscroll animation
+  // doesn't clobber the momentums scrolling.
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  // The overscroll amount on X axis has started being managed by the overscroll
+  // animation.
+  AsyncTransformComponentMatrix currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  EXPECT_NE(initialOverscrolledTransform._41, currentOverscrolledTransform._41);
+  // There is no overscroll on Y axis.
+  EXPECT_EQ(
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42,
+      0);
+  ParentLayerPoint scrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  // The scroll offset shouldn't be changed by the overscroll animation.
+  EXPECT_EQ(scrollOffset.y, 50);
+
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMSTART, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 0), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on both axes shouldn't be changed by this pan
+  // momentum start event since the displacement is zero.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  EXPECT_EQ(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  // The overscroll amount should be managed by the overscroll animation.
+  EXPECT_NE(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  scrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  // Not yet started scrolling.
+  EXPECT_EQ(scrollOffset.y, 50);
+  EXPECT_EQ(scrollOffset.x, 0);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  // Send a long pan momentum.
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, -200), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on X axis shouldn't be changed by this momentum pan.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // Now it started scrolling vertically.
+  scrollOffset =
+      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  EXPECT_EQ(scrollOffset.y, 0);
+  EXPECT_EQ(scrollOffset.x, 0);
+  // Actually it's also vertically overscrolled.
+  EXPECT_GT(
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42,
+      0);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  // The overscroll on X axis keeps being managed by the overscroll animation.
+  EXPECT_NE(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // The overscroll on Y Axis hasn't been changed by the overscroll animation at
+  // this moment, sine the last displacement was consumed in the last pan
+  // momentum.
+  EXPECT_EQ(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, -100), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on X axis shouldn't be changed by this momentum pan.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // Now the overscroll amount on Y axis shouldn't be changed by this momentum
+  // pan either.
+  EXPECT_EQ(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  EXPECT_NE(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  // And now the overscroll on Y Axis should be also managed by the overscroll
+  // animation.
+  EXPECT_NE(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, -10), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+  // The overscroll amount on both axes shouldn't be changed by momentum event.
+  EXPECT_EQ(
+      currentOverscrolledTransform._41,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._41);
+  EXPECT_EQ(
+      currentOverscrolledTransform._42,
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting)._42);
+
+  currentOverscrolledTransform =
+      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
+  mcc->AdvanceByMillis(5);
+  apzc->AdvanceAnimations(mcc->GetSampleTime());
+  PanGesture(PanGestureInput::PANGESTURE_MOMENTUMEND, apzc,
+             ScreenIntPoint(50, 80), ScreenPoint(0, 0), mcc->Time());
+  EXPECT_TRUE(apzc->IsOverscrolled());
+  EXPECT_TRUE(apzc->IsOverscrollAnimationRunning());
+
+  // Check that we recover from the horizontal overscroll via the animation.
+  ParentLayerPoint expectedScrollOffset(0, 0);
+  SampleAnimationUntilRecoveredFromOverscroll(expectedScrollOffset);
 }
 #endif

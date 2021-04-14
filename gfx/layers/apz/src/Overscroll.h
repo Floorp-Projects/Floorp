@@ -62,6 +62,60 @@ class OverscrollAnimation : public AsyncPanZoomAnimation {
 
   virtual bool WantsRepaints() override { return false; }
 
+  // Tell the overscroll animation about the pan momentum event. For each axis,
+  // the overscroll animation may start, stop, or continue managing that axis in
+  // response to the pan momentum event
+  void HandlePanMomentum(const ParentLayerPoint& aDisplacement) {
+    float xOverscroll = mApzc.mX.GetOverscroll();
+    if ((xOverscroll > 0 && aDisplacement.x > 0) ||
+        (xOverscroll < 0 && aDisplacement.x < 0)) {
+      if (!mApzc.mX.IsOverscrollAnimationRunning()) {
+        // Start a new overscroll animation on this axis, if there is no
+        // overscroll animation running and if the pan momentum displacement
+        // the pan momentum displacement is the same direction of the current
+        // overscroll.
+        mApzc.mX.StartOverscrollAnimation(mApzc.mX.GetVelocity());
+      }
+    } else if ((xOverscroll > 0 && aDisplacement.x < 0) ||
+               (xOverscroll < 0 && aDisplacement.x > 0)) {
+      // Otherwise, stop the animation in the direction so that it won't clobber
+      // subsequent pan momentum scrolling.
+      mApzc.mX.EndOverscrollAnimation();
+    }
+
+    // Same as above but for Y axis.
+    float yOverscroll = mApzc.mY.GetOverscroll();
+    if ((yOverscroll > 0 && aDisplacement.y > 0) ||
+        (yOverscroll < 0 && aDisplacement.y < 0)) {
+      if (!mApzc.mY.IsOverscrollAnimationRunning()) {
+        mApzc.mY.StartOverscrollAnimation(mApzc.mY.GetVelocity());
+      }
+    } else if ((yOverscroll > 0 && aDisplacement.y < 0) ||
+               (yOverscroll < 0 && aDisplacement.y > 0)) {
+      mApzc.mY.EndOverscrollAnimation();
+    }
+  }
+
+  ScrollDirections GetDirections() const {
+    ScrollDirections directions;
+    if (mApzc.mX.IsOverscrollAnimationRunning()) {
+      directions += ScrollDirection::eHorizontal;
+    }
+    if (mApzc.mY.IsOverscrollAnimationRunning()) {
+      directions += ScrollDirection::eVertical;
+    }
+    return directions;
+  };
+
+  OverscrollAnimation* AsOverscrollAnimation() override { return this; }
+
+  bool IsManagingXAxis() const {
+    return mApzc.mX.IsOverscrollAnimationRunning();
+  }
+  bool IsManagingYAxis() const {
+    return mApzc.mY.IsOverscrollAnimationRunning();
+  }
+
  private:
   AsyncPanZoomController& mApzc;
 };
