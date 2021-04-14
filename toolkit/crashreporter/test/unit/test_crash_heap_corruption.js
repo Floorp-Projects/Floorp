@@ -20,10 +20,7 @@ add_task(async function run_test() {
       let decoder = new TextDecoder();
       extra = JSON.parse(decoder.decode(data));
 
-      Assert.equal(
-        extra.StackTraces.crash_info.type,
-        "EXCEPTION_HEAP_CORRUPTION"
-      );
+      Assert.equal(extra.StackTraces.crash_info.type, "STATUS_HEAP_CORRUPTION");
       Assert.equal(extra.TestKey, "TestValue");
     },
     // process will exit with a zero exit status
