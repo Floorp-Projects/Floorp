@@ -17,7 +17,7 @@
 
 #include "js/HeapAPI.h"  // JS::StackKind, JS::StackForTrustedScript, JS::StackForUntrustedScript
 #include "js/RootingAPI.h"  // JS::RootingContext
-#include "js/Utility.h"  // JS_STACK_OOM_POSSIBLY_FAIL_REPORT, JS_STACK_OOM_POSSIBLY_FAIL
+#include "js/Utility.h"     // JS_STACK_OOM_POSSIBLY_FAIL
 
 struct JS_PUBLIC_API JSContext;
 
@@ -27,12 +27,6 @@ struct JS_PUBLIC_API JSContext;
 #  else
 #    define JS_STACK_GROWTH_DIRECTION (-1)
 #  endif
-#endif
-
-#if JS_STACK_GROWTH_DIRECTION > 0
-#  define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) < (limit)))
-#else
-#  define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) > (limit)))
 #endif
 
 namespace js {
@@ -57,6 +51,9 @@ namespace js {
 // buffer (as in, it uses the untrusted limit and subtracts a little more from
 // it).
 class MOZ_RAII AutoCheckRecursionLimit {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool checkLimitImpl(uintptr_t limit,
+                                                      void* sp) const;
+
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkLimit(JSContext* cx,
                                                   uintptr_t limit) const;
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkLimitDontReport(
@@ -93,6 +90,17 @@ class MOZ_RAII AutoCheckRecursionLimit {
 
 extern MOZ_COLD JS_FRIEND_API void ReportOverRecursed(JSContext* maybecx);
 
+MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimitImpl(uintptr_t limit,
+                                                               void* sp) const {
+  JS_STACK_OOM_POSSIBLY_FAIL();
+
+#if JS_STACK_GROWTH_DIRECTION > 0
+  return MOZ_LIKELY(uintptr_t(sp) < limit);
+#else
+  return MOZ_LIKELY(uintptr_t(sp) > limit);
+#endif
+}
+
 MOZ_ALWAYS_INLINE uintptr_t
 AutoCheckRecursionLimit::getStackLimit(JSContext* cx) const {
   JS::StackKind kind = runningWithTrustedPrincipals(cx)
@@ -115,29 +123,20 @@ MOZ_ALWAYS_INLINE uintptr_t AutoCheckRecursionLimit::getStackLimitHelper(
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimit(
     JSContext* cx, uintptr_t limit) const {
   int stackDummy;
-
-  JS_STACK_OOM_POSSIBLY_FAIL_REPORT();
-
-  if (!JS_CHECK_STACK_SIZE(limit, &stackDummy)) {
+  if (MOZ_UNLIKELY(!checkLimitImpl(limit, &stackDummy))) {
     ReportOverRecursed(cx);
     return false;
   }
-
   return true;
 }
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimitDontReport(
     uintptr_t limit) const {
   int stackDummy;
-
-  JS_STACK_OOM_POSSIBLY_FAIL();
-
-  return JS_CHECK_STACK_SIZE(limit, &stackDummy);
+  return checkLimitImpl(limit, &stackDummy);
 }
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(JSContext* cx) const {
-  JS_STACK_OOM_POSSIBLY_FAIL_REPORT();
-
   // getStackLimit(cx) is pretty slow because it has to do an uninlined
   // call to runningWithTrustedPrincipals to determine which stack limit to
   // use. To work around this, check the untrusted limit first to avoid the
@@ -157,9 +156,7 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkDontReport(
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkWithStackPointerDontReport(
     JSContext* cx, void* sp) const {
-  JS_STACK_OOM_POSSIBLY_FAIL();
-
-  return JS_CHECK_STACK_SIZE(getStackLimit(cx), sp);
+  return checkLimitImpl(getStackLimit(cx), sp);
 }
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkWithExtra(
@@ -171,10 +168,7 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkWithExtra(
 #else
   sp -= extra;
 #endif
-
-  JS_STACK_OOM_POSSIBLY_FAIL_REPORT();
-
-  if (!JS_CHECK_STACK_SIZE(getStackLimit(cx), sp)) {
+  if (MOZ_UNLIKELY(!checkLimitImpl(getStackLimit(cx), sp))) {
     ReportOverRecursed(cx);
     return false;
   }
