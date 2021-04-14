@@ -58,7 +58,6 @@ pip3 install -r /build/zstandard_requirements.txt
 # shellcheck disable=SC1091
 . install-node.sh
 
-npm install -g jsdoc@3.5.5
 npm install -g yarn@1.9.4
 
 /build/tooltool.py fetch -m /tmp/eslint.tt
