@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function CallModuleResolveHook(module, specifier, expectedMinimumStatus)
+function CallModuleResolveHook(module, moduleRequest, expectedMinimumStatus)
 {
-    let requestedModule = HostResolveImportedModule(module, specifier);
+    let requestedModule = HostResolveImportedModule(module, moduleRequest);
     if (requestedModule.status < expectedMinimumStatus)
         ThrowInternalError(JSMSG_BAD_MODULE_STATUS);
 
@@ -390,7 +390,7 @@ function InnerModuleLinking(module, stack, index)
     let requestedModules = module.requestedModules;
     for (let i = 0; i < requestedModules.length; i++) {
         // Step 9.a
-        let required = requestedModules[i].moduleSpecifier;
+        let required = requestedModules[i].moduleRequest;
         let requiredModule = CallModuleResolveHook(module, required, MODULE_STATUS_UNLINKED);
 
         // Step 9.b
@@ -690,7 +690,7 @@ function InnerModuleEvaluation(module, stack, index)
     // Step 10
     let requestedModules = module.requestedModules;
     for (let i = 0; i < requestedModules.length; i++) {
-        let required = requestedModules[i].moduleSpecifier;
+        let required = requestedModules[i].moduleRequest;
         let requiredModule =
             CallModuleResolveHook(module, required, MODULE_STATUS_LINKED);
 

@@ -2,7 +2,7 @@
 
 function importEntryEq(a, b)
 {
-    return a['moduleRequest'] === b['moduleRequest'] &&
+    return a['moduleRequest']['specifier'] === b['moduleRequest']['specifier'] &&
            a['importName'] === b['importName'] &&
            a['localName'] === b['localName'];
 }
@@ -30,20 +30,20 @@ function testImportEntries(source, expected) {
 testImportEntries('', []);
 
 testImportEntries('import v from "mod";',
-                  [{moduleRequest: 'mod', importName: 'default', localName: 'v'}]);
+                  [{moduleRequest: {specifier: 'mod'}, importName: 'default', localName: 'v'}]);
 
 testImportEntries('import * as ns from "mod";',
-                  [{moduleRequest: 'mod', importName: null, localName: 'ns'}]);
+                  [{moduleRequest: {specifier: 'mod'}, importName: null, localName: 'ns'}]);
 
 testImportEntries('import {x} from "mod";',
-                  [{moduleRequest: 'mod', importName: 'x', localName: 'x'}]);
+                  [{moduleRequest: {specifier: 'mod'}, importName: 'x', localName: 'x'}]);
 
 testImportEntries('import {x as v} from "mod";',
-                  [{moduleRequest: 'mod', importName: 'x', localName: 'v'}]);
+                  [{moduleRequest: {specifier: 'mod'}, importName: 'x', localName: 'v'}]);
 
 testImportEntries('import "mod";',
                   []);
 
 testImportEntries('import {x} from "a"; import {y} from "b";',
-                  [{moduleRequest: 'a', importName: 'x', localName: 'x'},
-                   {moduleRequest: 'b', importName: 'y', localName: 'y'}]);
+                  [{moduleRequest: {specifier: 'a'}, importName: 'x', localName: 'x'},
+                   {moduleRequest: {specifier: 'b'}, importName: 'y', localName: 'y'}]);
