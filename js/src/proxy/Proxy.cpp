@@ -727,8 +727,8 @@ bool Proxy::isArray(JSContext* cx, HandleObject proxy,
 const char* Proxy::className(JSContext* cx, HandleObject proxy) {
   // Check for unbounded recursion, but don't signal an error; className
   // needs to be infallible.
-  int stackDummy;
-  if (!JS_CHECK_STACK_SIZE(GetNativeStackLimit(cx), &stackDummy)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.checkDontReport(cx)) {
     return "too much recursion";
   }
 
