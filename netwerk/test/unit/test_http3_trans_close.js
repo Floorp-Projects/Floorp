@@ -34,7 +34,7 @@ Http3Listener.prototype = {
     try {
       httpVersion = request.protocolVersion;
     } catch (e) {}
-    Assert.equal(httpVersion, "h3");
+    Assert.equal(httpVersion, "h3-27");
     Assert.equal(this.amount, this.expectedAmount);
 
     this.finish();
