@@ -1028,6 +1028,25 @@ async function checkNotSharing() {
   await assertWebRTCIndicatorStatus(null);
 }
 
+async function checkNotSharingWithinGracePeriod() {
+  Assert.deepEqual(
+    await getMediaCaptureState(),
+    {},
+    "expected nothing to be shared"
+  );
+
+  ok(
+    document.getElementById("webrtc-sharing-icon").hasAttribute("sharing"),
+    "has sharing indicator on the control center icon"
+  );
+  ok(
+    document.getElementById("webrtc-sharing-icon").hasAttribute("paused"),
+    "sharing indicator is paused"
+  );
+
+  await assertWebRTCIndicatorStatus(null);
+}
+
 async function promiseReloadFrame(aFrameId, aBrowsingContext) {
   let loadedPromise = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
