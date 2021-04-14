@@ -61,7 +61,7 @@ add_task(async function test_remove_bookmark_from_toolbar() {
     "places"
   );
 
-  EventUtils.synthesizeMouseAtCenter(contextMenuDeleteBookmark, {});
+  contextMenu.activateItem(contextMenuDeleteBookmark, {});
 
   await removePromise;
 
@@ -145,7 +145,7 @@ add_task(async function test_remove_bookmark_from_library() {
     events => events.some(event => event.url == uris[0]),
     "places"
   );
-  EventUtils.synthesizeMouseAtCenter(contextMenuDeleteBookmark, {}, library);
+  contextMenu.activateItem(contextMenuDeleteBookmark, {});
 
   await removePromise;
 
