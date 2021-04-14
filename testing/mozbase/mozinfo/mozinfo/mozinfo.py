@@ -158,6 +158,10 @@ if (
 ):
     info["apple_silicon"] = True
 
+info["apple_catalina"] = False
+if info["os"] == "mac" and float(os_version) == 10.15:
+    info["apple_catalina"] = True
+
 info["version"] = version
 info["os_version"] = StringVersion(os_version)
 
