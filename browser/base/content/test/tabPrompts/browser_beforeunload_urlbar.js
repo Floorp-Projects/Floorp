@@ -26,20 +26,20 @@ add_task(async function test_beforeunload_stay_clears_urlbar() {
     EventUtils.sendString(inputValue.slice(-1));
 
     if (CONTENT_PROMPT_SUBDIALOG) {
-      let promptOpenedPromise = BrowserTestUtils.promiseAlertDialogOpen(
-        "cancel"
-      );
+      let promptOpenedPromise = BrowserTestUtils.promiseAlertDialogOpen(null);
       EventUtils.synthesizeKey("VK_RETURN");
-      await promptOpenedPromise;
-      await TestUtils.waitForTick();
+      let win = await promptOpenedPromise;
       // For proton modal dialogs, work around bug 1699844 by
       // waiting before closing this prompt:
       await (async function() {
         let rAFCount = 3;
         while (rAFCount--) {
-          await new Promise(window.requestAnimationFrame);
+          await new Promise(win.requestAnimationFrame);
         }
       })();
+      let dialog = win.document.querySelector("dialog");
+      dialog.getButton("cancel").click();
+      await TestUtils.waitForTick();
     } else {
       let promptOpenedPromise = TestUtils.topicObserved(
         "tabmodal-dialog-loaded"
