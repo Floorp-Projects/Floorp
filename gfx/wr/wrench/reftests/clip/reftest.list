@@ -18,3 +18,4 @@ color_targets(1) alpha_targets(0) == clip-out-rotation.yaml blank.yaml # Unexpec
 == iframe-nested-in-stacking-context.yaml iframe-nested-in-stacking-context-ref.yaml
 == clip-rectangle-redundant-sc.yaml clip-rectangle-redundant-sc-ref.yaml
 fuzzy(128,707) == clip-filter-raster-root.yaml clip-filter-raster-root-ref.yaml
+== blend-container.yaml blend-container-ref.yaml
