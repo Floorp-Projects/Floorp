@@ -56,7 +56,7 @@ class VideoConduitTest : public Test {
   }
 
   ~VideoConduitTest() override {
-    mVideoConduit->DeleteStreams();
+    mVideoConduit->Shutdown();
     mCallWrapper->Destroy();
   }
 

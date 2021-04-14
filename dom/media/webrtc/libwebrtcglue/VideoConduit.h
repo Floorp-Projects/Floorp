@@ -207,7 +207,7 @@ class WebrtcVideoConduit
 
   bool HasCodecPluginID(uint64_t aPluginID) override;
 
-  void DeleteStreams() override;
+  void Shutdown() override;
 
   bool Denoising() const { return mDenoising; }
 

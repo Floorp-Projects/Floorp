@@ -931,7 +931,7 @@ void TransceiverImpl::Stop() {
   UpdateSendTrack(nullptr);
 
   if (mConduit) {
-    mConduit->DeleteStreams();
+    mConduit->Shutdown();
   }
   mConduit = nullptr;
 

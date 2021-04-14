@@ -230,7 +230,7 @@ class MediaSessionConduit {
   virtual void DeliverPacket(rtc::CopyOnWriteBuffer packet,
                              PacketType type) = 0;
 
-  virtual void DeleteStreams() = 0;
+  virtual void Shutdown() = 0;
 
   virtual Maybe<RefPtr<AudioSessionConduit>> AsAudioSessionConduit() = 0;
   virtual Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() = 0;
