@@ -37,6 +37,25 @@ struct JS_PUBLIC_API JSContext;
 
 namespace js {
 
+// AutoCheckRecursionLimit can be used to check whether we're close to using up
+// the C++ stack.
+//
+// Typical usage is like this:
+//
+//   AutoCheckRecursionLimit recursion(cx);
+//   if (!recursion.check(cx)) {
+//     return false;
+//   }
+//
+// The check* functions return |false| if we are close to the stack limit.
+// They also report an overrecursion error, except for the DontReport variants.
+//
+// The checkSystem variant gives us a little extra space so we can ensure that
+// crucial code is able to run.
+//
+// checkConservative allows less space than any other check, including a safety
+// buffer (as in, it uses the untrusted limit and subtracts a little more from
+// it).
 class MOZ_RAII AutoCheckRecursionLimit {
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkLimit(JSContext* cx,
                                                   uintptr_t limit) const;
@@ -90,15 +109,6 @@ MOZ_ALWAYS_INLINE uintptr_t AutoCheckRecursionLimit::getStackLimitHelper(
 #endif
   return limit;
 }
-
-/*
- * These functions return |false| if we are close to using up the C++ stack.
- * They also report an overrecursion error, except for the DontReport variants.
- * The CheckSystemRecursionLimit variant gives us a little extra space so we
- * can ensure that crucial code is able to run. CheckRecursionLimitConservative
- * allows less space than any other check, including a safety buffer (as in, it
- * uses the untrusted limit and subtracts a little more from it).
- */
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimit(
     JSContext* cx, uintptr_t limit) const {
