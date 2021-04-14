@@ -1854,7 +1854,7 @@ pref("privacy.webrtc.sharedTabWarning", false);
 // re-prompting without the user having to persist permission to the site, in a
 // common case of a web conference asking them for the camera in a lobby page,
 // before navigating to the actual meeting room page. Doesn't survive tab close.
-pref("privacy.webrtc.deviceGracePeriodTimeoutMs", 50000);
+pref("privacy.webrtc.deviceGracePeriodTimeoutMs", 3600000);
 
 // Start the browser in e10s mode
 pref("browser.tabs.remote.autostart", true);
