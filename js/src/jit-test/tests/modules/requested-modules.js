@@ -5,7 +5,7 @@ function testRequestedModules(source, expected) {
     var actual = module.requestedModules;
     assertEq(actual.length, expected.length);
     for (var i = 0; i < actual.length; i++) {
-        assertEq(actual[i].moduleSpecifier, expected[i]);
+        assertEq(actual[i].moduleRequest.specifier, expected[i]);
     }
 }
 

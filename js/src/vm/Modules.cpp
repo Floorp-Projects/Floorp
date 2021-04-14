@@ -74,26 +74,26 @@ JS_PUBLIC_API void JS::SetModuleDynamicImportHook(
 
 JS_PUBLIC_API bool JS::FinishDynamicModuleImport(
     JSContext* cx, Handle<JSObject*> evaluationPromise,
-    Handle<Value> referencingPrivate, Handle<JSString*> specifier,
+    Handle<Value> referencingPrivate, Handle<JSObject*> moduleRequest,
     Handle<JSObject*> promise) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(referencingPrivate, promise);
 
-  return js::FinishDynamicModuleImport(cx, evaluationPromise,
-                                       referencingPrivate, specifier, promise);
+  return js::FinishDynamicModuleImport(
+      cx, evaluationPromise, referencingPrivate, moduleRequest, promise);
 }
 
 JS_PUBLIC_API bool JS::FinishDynamicModuleImport_NoTLA(
     JSContext* cx, JS::DynamicImportStatus status,
-    Handle<Value> referencingPrivate, Handle<JSString*> specifier,
+    Handle<Value> referencingPrivate, Handle<JSObject*> moduleRequest,
     Handle<JSObject*> promise) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(referencingPrivate, promise);
 
   return js::FinishDynamicModuleImport_NoTLA(cx, status, referencingPrivate,
-                                             specifier, promise);
+                                             moduleRequest, promise);
 }
 
 template <typename Unit>
@@ -172,7 +172,7 @@ JS_PUBLIC_API JSString* JS::GetRequestedModuleSpecifier(JSContext* cx,
   cx->check(value);
 
   JSObject* obj = &value.toObject();
-  return obj->as<RequestedModuleObject>().moduleSpecifier();
+  return obj->as<RequestedModuleObject>().moduleRequest()->specifier();
 }
 
 JS_PUBLIC_API void JS::GetRequestedModuleSourcePos(JSContext* cx,

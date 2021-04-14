@@ -54,6 +54,18 @@ using HandleModuleObject = Handle<ModuleObject*>;
 using RootedModuleEnvironmentObject = Rooted<ModuleEnvironmentObject*>;
 using HandleModuleEnvironmentObject = Handle<ModuleEnvironmentObject*>;
 
+class ModuleRequestObject : public NativeObject {
+ public:
+  enum { SpecifierSlot = 0, SlotCount };
+
+  static const JSClass class_;
+  static bool isInstance(HandleValue value);
+  [[nodiscard]] static ModuleRequestObject* create(JSContext* cx,
+                                                   HandleAtom specifier);
+
+  JSAtom* specifier() const;
+};
+
 class ImportEntryObject : public NativeObject {
  public:
   enum {
@@ -67,11 +79,11 @@ class ImportEntryObject : public NativeObject {
 
   static const JSClass class_;
   static bool isInstance(HandleValue value);
-  static ImportEntryObject* create(JSContext* cx, HandleAtom moduleRequest,
+  static ImportEntryObject* create(JSContext* cx, HandleObject moduleRequest,
                                    HandleAtom maybeImportName,
                                    HandleAtom localName, uint32_t lineNumber,
                                    uint32_t columnNumber);
-  JSAtom* moduleRequest() const;
+  ModuleRequestObject* moduleRequest() const;
   JSAtom* importName() const;
   JSAtom* localName() const;
   uint32_t lineNumber() const;
@@ -102,12 +114,12 @@ class ExportEntryObject : public NativeObject {
   static const JSClass class_;
   static bool isInstance(HandleValue value);
   static ExportEntryObject* create(JSContext* cx, HandleAtom maybeExportName,
-                                   HandleAtom maybeModuleRequest,
+                                   HandleObject maybeModuleRequest,
                                    HandleAtom maybeImportName,
                                    HandleAtom maybeLocalName,
                                    uint32_t lineNumber, uint32_t columnNumber);
   JSAtom* exportName() const;
-  JSAtom* moduleRequest() const;
+  ModuleRequestObject* moduleRequest() const;
   JSAtom* importName() const;
   JSAtom* localName() const;
   uint32_t lineNumber() const;
@@ -122,15 +134,15 @@ using HandleExportEntryObject = Handle<ExportEntryObject*>;
 
 class RequestedModuleObject : public NativeObject {
  public:
-  enum { ModuleSpecifierSlot = 0, LineNumberSlot, ColumnNumberSlot, SlotCount };
+  enum { ModuleRequestSlot = 0, LineNumberSlot, ColumnNumberSlot, SlotCount };
 
   static const JSClass class_;
   static bool isInstance(HandleValue value);
   static RequestedModuleObject* create(JSContext* cx,
-                                       HandleAtom moduleSpecifier,
+                                       HandleObject moduleRequest,
                                        uint32_t lineNumber,
                                        uint32_t columnNumber);
-  JSAtom* moduleSpecifier() const;
+  ModuleRequestObject* moduleRequest() const;
   uint32_t lineNumber() const;
   uint32_t columnNumber() const;
 };
@@ -141,9 +153,17 @@ using RootedRequestedModuleVector = Rooted<GCVector<RequestedModuleObject*> >;
 using MutableHandleRequestedModuleObject =
     MutableHandle<RequestedModuleObject*>;
 
+using RootedModuleRequestObject = Rooted<ModuleRequestObject*>;
+using MutableHandleModuleRequestObject = MutableHandle<ModuleRequestObject*>;
+
 template <XDRMode mode>
 XDRResult XDRRequestedModuleObject(XDRState<mode>* xdr,
                                    MutableHandleRequestedModuleObject reqObj);
+
+template <XDRMode mode>
+XDRResult XDRModuleRequestObject(
+    XDRState<mode>* xdr, MutableHandleModuleRequestObject moduleRequestObj,
+    bool allowNullSpecifier);
 
 class IndirectBindingMap {
  public:
@@ -419,7 +439,7 @@ class ModuleObject : public NativeObject {
 JSObject* GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
 
 JSObject* CallModuleResolveHook(JSContext* cx, HandleValue referencingPrivate,
-                                HandleString specifier);
+                                HandleObject moduleRequest);
 
 // https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
 void AsyncModuleExecutionFulfilled(JSContext* cx, HandleModuleObject module);
@@ -443,14 +463,15 @@ bool OnModuleEvaluationFailure(JSContext* cx, HandleObject evaluationPromise);
 
 bool FinishDynamicModuleImport(JSContext* cx, HandleObject evaluationPromise,
                                HandleValue referencingPrivate,
-                               HandleString specifier, HandleObject promise);
+                               HandleObject moduleRequest,
+                               HandleObject promise);
 
 // This is used so that Top Level Await functionality can be turned off
 // entirely. It will be removed in bug#1676612.
 bool FinishDynamicModuleImport_NoTLA(JSContext* cx,
                                      JS::DynamicImportStatus status,
                                      HandleValue referencingPrivate,
-                                     HandleString specifier,
+                                     HandleObject moduleRequest,
                                      HandleObject promise);
 
 template <XDRMode mode>
