@@ -26,6 +26,9 @@ glob:**/*.py
 # moz.build files are read to discover location of docs.
 glob:**/moz.build
 
+# package*.json files are needed for node_modules
+glob:**/package*.json
+
 # Read to set the version of the docs.
 path:config/milestone.txt
 
