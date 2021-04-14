@@ -396,7 +396,7 @@ nsresult nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   } else if (
 #ifndef NSCONTEXTMENUISMOUSEUP
       (aEvent->mMessage == eMouseUp &&
-       (aEvent->AsMouseEvent()->mButton == MouseButton::eSecondary
+       (aEvent->AsMouseEvent()->mButton != MouseButton::ePrimary
 #  ifdef XP_MACOSX
         // On Mac, we get the context menu event on left-click when ctrl key is
         // pressed, listen it as well to dismiss the menu.
