@@ -112,6 +112,7 @@ class StartupStateProvider(
         }
         val afterLastStopped = startupLog.log.takeLastWhile { it != LogEntry.AppStopped }
 
+        @Suppress("MagicNumber") // we take a specific number at the end of the list to compare them.
         val isLastActivityCreatedStillStarted = afterLastStopped.takeLast(3) == listOf(
             LogEntry.ActivityCreated(activityClass),
             LogEntry.ActivityStarted(activityClass),

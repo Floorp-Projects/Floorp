@@ -56,7 +56,7 @@ class StartupStateProviderTest {
     }
 
     @Test
-    fun `GIVEN the app started for an activity WHEN hot start THEN cold start is false` () {
+    fun `GIVEN the app started for an activity WHEN hot start THEN cold start is false`() {
         forEachHotStartEntries { index ->
             assertFalse("$index", provider.isColdStartForStartedActivity(homeActivityClass))
         }
@@ -77,7 +77,7 @@ class StartupStateProviderTest {
     }
 
     @Test
-    fun `GIVEN the app started for an activity WHEN is hot start THEN warm start is false` () {
+    fun `GIVEN the app started for an activity WHEN is hot start THEN warm start is false`() {
         forEachHotStartEntries { index ->
             assertFalse("$index", provider.isWarmStartForStartedActivity(homeActivityClass))
         }
@@ -98,7 +98,7 @@ class StartupStateProviderTest {
     }
 
     @Test
-    fun `GIVEN the app started for an activity WHEN is hot start THEN hot start is true` () {
+    fun `GIVEN the app started for an activity WHEN is hot start THEN hot start is true`() {
         forEachHotStartEntries { index ->
             assertTrue("$index", provider.isHotStartForStartedActivity(homeActivityClass))
         }
