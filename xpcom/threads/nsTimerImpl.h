@@ -17,6 +17,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
+#include "mozilla/Logging.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "TracedTaskCommon.h"
