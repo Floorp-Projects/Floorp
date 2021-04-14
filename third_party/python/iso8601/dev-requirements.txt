@@ -1,6 +1,8 @@
 devpi>=1.2.1
+mypy>=0.782
 pytest>=2.5.2
 Sphinx>=1.2.1
 tox-pyenv>=1.0.3
 tox>=1.7.0
+twine>=1.9.1
 wheel>=0.22.0
