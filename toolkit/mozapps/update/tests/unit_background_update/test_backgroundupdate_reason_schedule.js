@@ -100,3 +100,17 @@ add_task(
     );
   }
 );
+
+add_task(
+  {
+    skip_if: () => !AppConstants.MOZ_BACKGROUNDTASKS,
+  },
+  async function test_reasons_schedule_default_profile() {
+    // It's difficult to arrange a default profile in a testing environment, so
+    // this is not as thorough as we'd like.
+    let result = await reasons();
+
+    Assert.ok(result.includes(REASON.NO_DEFAULT_PROFILE_EXISTS));
+    Assert.ok(result.includes(REASON.NOT_DEFAULT_PROFILE));
+  }
+);
