@@ -659,12 +659,12 @@ void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
       aFontList.AppendElement("Zapf Dingbats");
     }
     aFontList.AppendElement("Geneva");
+    aFontList.AppendElement("STIXGeneral");
     aFontList.AppendElement("Apple Symbols");
     // Japanese fonts also cover a lot of miscellaneous symbols
     aFontList.AppendElement("Hiragino Sans");
     aFontList.AppendElement("Hiragino Kaku Gothic ProN");
   }
-  aFontList.AppendElement("STIXGeneral");
 
   // Arial Unicode MS has lots of glyphs for obscure characters; try it as a
   // last resort.
