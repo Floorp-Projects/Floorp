@@ -9514,43 +9514,6 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
   return Some(clipId);
 }
 
-static void FillPolygonDataForDisplayItem(
-    const nsDisplayMasksAndClipPaths& aDisplayItem,
-    nsTArray<wr::LayoutPoint>& aPoints, wr::FillRule& aFillRule) {
-  nsIFrame* frame = aDisplayItem.Frame();
-  const auto* style = frame->StyleSVGReset();
-  bool isPolygon = style->HasClipPath() && style->mClipPath.IsShape() &&
-                   style->mClipPath.AsShape()._0->IsPolygon();
-  if (!isPolygon) {
-    return;
-  }
-
-  const auto& clipPath = style->mClipPath;
-  const auto& shape = *clipPath.AsShape()._0;
-  const nsRect refBox =
-      nsLayoutUtils::ComputeGeometryBox(frame, clipPath.AsShape()._1);
-
-  // We only fill polygon data for polygons that are below a complexity
-  // limit.
-  nsTArray<nsPoint> vertices =
-      ShapeUtils::ComputePolygonVertices(shape, refBox);
-  if (vertices.Length() > wr::POLYGON_CLIP_VERTEX_MAX) {
-    return;
-  }
-
-  auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
-
-  for (size_t i = 0; i < vertices.Length(); ++i) {
-    wr::LayoutPoint point = wr::ToLayoutPoint(
-        LayoutDevicePoint::FromAppUnits(vertices[i], appUnitsPerDevPixel));
-    aPoints.AppendElement(point);
-  }
-
-  aFillRule = (shape.AsPolygon().fill == StyleFillRule::Nonzero)
-                  ? wr::FillRule::Nonzero
-                  : wr::FillRule::Evenodd;
-}
-
 static Maybe<wr::WrClipId> CreateWRClipPathAndMasks(
     nsDisplayMasksAndClipPaths* aDisplayItem, const LayoutDeviceRect& aBounds,
     wr::IpcResourceUpdateQueue& aResources, wr::DisplayListBuilder& aBuilder,
@@ -9566,14 +9529,7 @@ static Maybe<wr::WrClipId> CreateWRClipPathAndMasks(
     return Nothing();
   }
 
-  // We couldn't create a simple clip region, but before we create an image
-  // mask clip, see if we can get a polygon clip to add to it.
-  nsTArray<wr::LayoutPoint> points;
-  wr::FillRule fillRule = wr::FillRule::Nonzero;
-  FillPolygonDataForDisplayItem(*aDisplayItem, points, fillRule);
-
-  wr::WrClipId clipId =
-      aBuilder.DefineImageMaskClip(mask.ref(), points, fillRule);
+  wr::WrClipId clipId = aBuilder.DefineImageMaskClip(mask.ref());
 
   return Some(clipId);
 }
