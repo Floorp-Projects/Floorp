@@ -106,12 +106,26 @@ const AdjustableTitle = {
 
   _overflowHandler() {
     requestAnimationFrame(async () => {
-      let isOverflown = await window.promiseDocumentFlushed(() => {
-        return (
-          this._titleCropEl.getBoundingClientRect().width <
-          this._titleEl.getBoundingClientRect().width
-        );
-      });
+      let isOverflown;
+      try {
+        isOverflown = await window.promiseDocumentFlushed(() => {
+          return (
+            this._titleCropEl.getBoundingClientRect().width <
+            this._titleEl.getBoundingClientRect().width
+          );
+        });
+      } catch (ex) {
+        // In automated tests, this can fail with a DOM exception if
+        // the window has closed by the time layout tries to call us.
+        // In this case, just bail, and only log any other errors:
+        if (
+          !DOMException.isInstance(ex) ||
+          ex.name != "NoModificationAllowedError"
+        ) {
+          Cu.reportError(ex);
+        }
+        return;
+      }
       this._titleCropEl.toggleAttribute("overflown", isOverflown);
       if (isOverflown) {
         this._titleEl.setAttribute("title", this._titleEl.textContent);
