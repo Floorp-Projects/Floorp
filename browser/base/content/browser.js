@@ -837,6 +837,7 @@ const gClickAndHoldListenersOnElement = {
         aEvent.altKey,
         aEvent.shiftKey,
         aEvent.metaKey,
+        0,
         null,
         aEvent.mozInputSource
       );
