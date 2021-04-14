@@ -256,7 +256,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
 
   mozilla::a11y::role MarkupRole(const nsIContent* aContent) const {
     const mozilla::a11y::MarkupMapInfo* markupMap =
-        mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+        GetMarkupMapInfoForNode(aContent);
     return markupMap ? markupMap->role : mozilla::a11y::roles::NOTHING;
   }
 
@@ -267,7 +267,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   nsStaticAtom* MarkupAttribute(const nsIContent* aContent,
                                 nsStaticAtom* aAtom) const {
     const mozilla::a11y::MarkupMapInfo* markupMap =
-        mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+        GetMarkupMapInfoForNode(aContent);
     if (markupMap) {
       for (size_t i = 0; i < mozilla::ArrayLength(markupMap->attrs); i++) {
         const mozilla::a11y::MarkupAttrInfo* info = markupMap->attrs + i;
@@ -363,8 +363,15 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    */
   static uint32_t gConsumers;
 
-  nsTHashMap<nsPtrHashKey<const nsAtom>, const mozilla::a11y::MarkupMapInfo*>
-      mHTMLMarkupMap;
+  using MarkupMap = nsTHashMap<nsPtrHashKey<const nsAtom>,
+                               const mozilla::a11y::MarkupMapInfo*>;
+  MarkupMap mHTMLMarkupMap;
+
+  const mozilla::a11y::MarkupMapInfo* GetMarkupMapInfoForNode(
+      const nsIContent* aContent) const {
+    return mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+  }
+
 #ifdef MOZ_XUL
   nsTHashMap<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*>
       mXULMarkupMap;
