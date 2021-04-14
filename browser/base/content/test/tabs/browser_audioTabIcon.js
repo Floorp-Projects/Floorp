@@ -256,7 +256,7 @@ async function test_playing_icon_on_hidden_tab(tab) {
   function assertIconShowing() {
     is(
       getComputedStyle(alltabsBadge).backgroundImage,
-      'url("chrome://browser/skin/tabbrowser/badge-audio-playing.svg")',
+      'url("chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg")',
       "The audio playing icon is shown"
     );
     is(

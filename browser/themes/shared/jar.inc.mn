@@ -225,7 +225,6 @@
   skin/classic/browser/search-engine-placeholder@2x.png        (../shared/search/search-engine-placeholder@2x.png)
   skin/classic/browser/search-indicator-badge-add.svg          (../shared/search/search-indicator-badge-add.svg)
 
-  skin/classic/browser/tabbrowser/badge-audio-playing.svg      (../shared/tabbrowser/badge-audio-playing.svg)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
   skin/classic/browser/tabbrowser/hourglass.svg                (../shared/tabbrowser/hourglass.svg)
   skin/classic/browser/tabbrowser/indicator-tab-attention.svg  (../shared/tabbrowser/indicator-tab-attention.svg)
