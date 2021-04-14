@@ -314,7 +314,7 @@ class TestUrlFinder(unittest.TestCase):
                 ],
             },
             {
-                "chrome://global/content/netError.xhtml": "chrome://browser/content/aboutNetError.xhtml",  # NOQA: E501
+                "chrome://global/content/netError.xhtml": "chrome://browser/content/certerror/aboutNetError.xhtml",  # NOQA: E501
             },
             {
                 "dist/bin/components/MainProcessSingleton.js": ["path1", None],
@@ -330,8 +330,8 @@ class TestUrlFinder(unittest.TestCase):
                     "browser/components/newtab/lib/*",
                     None,
                 ],
-                "dist/bin/browser/chrome/browser/content/browser/aboutNetError.xhtml": [
-                    "browser/base/content/aboutNetError.xhtml",
+                "dist/bin/browser/chrome/browser/content/browser/certerror/aboutNetError.xhtml": [
+                    "browser/base/content/certerror/aboutNetError.xhtml",
                     None,
                 ],
                 "dist/bin/modules/AppConstants.jsm": [
@@ -403,7 +403,7 @@ class TestUrlFinder(unittest.TestCase):
             # Path which is in url overrides
             (
                 "chrome://global/content/netError.xhtml",
-                ("browser/base/content/aboutNetError.xhtml", None),
+                ("browser/base/content/certerror/aboutNetError.xhtml", None),
             ),
             # Path which ends with > eval
             (
