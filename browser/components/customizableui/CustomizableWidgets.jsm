@@ -102,6 +102,9 @@ const CustomizableWidgets = [
         case "ViewShowing":
           this.onSubViewShowing(event);
           break;
+        case "unload":
+          this.onWindowUnload(event);
+          break;
         default:
           throw new Error(`Unsupported event for '${this.id}'`);
       }
@@ -166,6 +169,7 @@ const CustomizableWidgets = [
       // When the popup is hidden (thus the panelmultiview node as well), make
       // sure to stop listening to PlacesDatabase updates.
       panelview.panelMultiView.addEventListener("PanelMultiViewHidden", this);
+      window.addEventListener("unload", this);
     },
     onViewHiding(event) {
       log.debug("History view is being hidden!");
@@ -186,6 +190,11 @@ const CustomizableWidgets = [
         ).removeEventListener("ViewShowing", this);
       }
       panelMultiView.removeEventListener("PanelMultiViewHidden", this);
+    },
+    onWindowUnload(event) {
+      if (this._panelMenuView) {
+        delete this._panelMenuView;
+      }
     },
     onSubViewShowing(event) {
       let panelview = event.target;
