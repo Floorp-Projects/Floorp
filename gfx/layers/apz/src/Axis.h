@@ -175,6 +175,11 @@ class Axis {
   void ClearOverscroll();
 
   /**
+   * Returns whether the overscroll animation is running.
+   */
+  bool IsOverscrollAnimationRunning() const;
+
+  /**
    * Gets the starting position of the touch supplied in StartTouch().
    */
   ParentLayerCoord PanStart() const;
