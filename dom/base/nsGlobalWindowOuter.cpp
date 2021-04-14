@@ -79,7 +79,7 @@
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimitConservativeDontReport
+#include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/friend/WindowProxy.h"  // js::IsWindowProxy, js::SetWindowProxy
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
@@ -2091,7 +2091,8 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   // transplanting code, since it has no good way to handle errors. This uses
   // the untrusted script limit, which is not strictly necessary since no
   // actual script should run.
-  if (!js::CheckRecursionLimitConservativeDontReport(cx)) {
+  js::AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.checkConservativeDontReport(cx)) {
     NS_WARNING("Overrecursion in SetNewDocument");
     return NS_ERROR_FAILURE;
   }
