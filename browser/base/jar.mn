@@ -23,9 +23,9 @@ browser.jar:
         content/browser/logos/tracking-protection-dark-theme.svg (content/logos/tracking-protection-dark-theme.svg)
         content/browser/logos/vpn-dark.svg            (content/logos/vpn-dark.svg)
         content/browser/logos/vpn-light.svg           (content/logos/vpn-light.svg)
-        content/browser/aboutNetErrorCodes.js         (content/aboutNetErrorCodes.js)
-        content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
-        content/browser/aboutNetError.js               (content/aboutNetError.js)
+        content/browser/certerror/aboutNetErrorCodes.js (content/certerror/aboutNetErrorCodes.js)
+        content/browser/certerror/aboutNetError.xhtml (content/certerror/aboutNetError.xhtml)
+        content/browser/certerror/aboutNetError.js    (content/certerror/aboutNetError.js)
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)
         content/browser/aboutFrameCrashed.html        (content/aboutFrameCrashed.html)
         content/browser/aboutTabCrashed.css           (content/aboutTabCrashed.css)
@@ -122,7 +122,7 @@ browser.jar:
         content/browser/upgradeDialog.html            (content/upgradeDialog.html)
         content/browser/upgradeDialog.js              (content/upgradeDialog.js)
 
-% override chrome://global/content/netError.xhtml chrome://browser/content/aboutNetError.xhtml
+% override chrome://global/content/netError.xhtml chrome://browser/content/certerror/aboutNetError.xhtml
 
 # L10n resources and overrides.
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
