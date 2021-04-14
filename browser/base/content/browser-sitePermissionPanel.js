@@ -228,21 +228,39 @@ var gPermissionPanel = {
     let hasSharingIcon = false;
 
     if (this._sharingState) {
-      if (this._sharingState.webRTC?.sharing) {
-        this._webRTCSharingIcon.setAttribute(
-          "sharing",
-          this._sharingState.webRTC.sharing
-        );
-        hasSharingIcon = true;
+      if (this._sharingState.webRTC) {
+        if (this._sharingState.webRTC.sharing) {
+          this._webRTCSharingIcon.setAttribute(
+            "sharing",
+            this._sharingState.webRTC.sharing
+          );
+          hasSharingIcon = true;
 
-        if (this._sharingState.webRTC?.paused) {
-          this._webRTCSharingIcon.setAttribute("paused", "true");
+          if (this._sharingState.webRTC.paused) {
+            this._webRTCSharingIcon.setAttribute("paused", "true");
+          }
+        } else {
+          // Reflect any active permission grace periods
+          let { micGrace, camGrace } = hasMicCamGracePeriodsSolely(
+            gBrowser.selectedBrowser
+          );
+          if (micGrace || camGrace) {
+            // Reuse the "paused sharing" indicator to warn about grace periods
+            this._webRTCSharingIcon.setAttribute(
+              "sharing",
+              camGrace ? "camera" : "microphone"
+            );
+            hasSharingIcon = true;
+            this._webRTCSharingIcon.setAttribute("paused", "true");
+          }
         }
       }
+
       if (this._sharingState.geo) {
         this._geoSharingIcon.setAttribute("sharing", this._sharingState.geo);
         hasSharingIcon = true;
       }
+
       if (this._sharingState.xr) {
         this._xrSharingIcon.setAttribute("sharing", this._sharingState.xr);
         hasSharingIcon = true;
@@ -998,3 +1016,44 @@ var gPermissionPanel = {
       .appendChild(indicator);
   },
 };
+
+/**
+ * Returns an object containing two booleans: {camGrace, micGrace},
+ * whether permission grace periods are found for camera/microphone AND
+ * persistent permissions do not exist for said permissions.
+ * @param browser - Browser element to get permissions for.
+ */
+function hasMicCamGracePeriodsSolely(browser) {
+  let perms = SitePermissions.getAllForBrowser(browser);
+  let micGrace = false;
+  let micGrant = false;
+  let camGrace = false;
+  let camGrant = false;
+  for (const perm of perms) {
+    if (perm.state != SitePermissions.ALLOW) {
+      continue;
+    }
+    let [id, key] = perm.id.split(SitePermissions.PERM_KEY_DELIMITER);
+    let temporary = !!key && perm.scope == SitePermissions.SCOPE_TEMPORARY;
+    let persistent = !key && perm.scope == SitePermissions.SCOPE_PERSISTENT;
+
+    if (id == "microphone") {
+      if (temporary) {
+        micGrace = true;
+      }
+      if (persistent) {
+        micGrant = true;
+      }
+      continue;
+    }
+    if (id == "camera") {
+      if (temporary) {
+        camGrace = true;
+      }
+      if (persistent) {
+        camGrant = true;
+      }
+    }
+  }
+  return { micGrace: micGrace && !micGrant, camGrace: camGrace && !camGrant };
+}
