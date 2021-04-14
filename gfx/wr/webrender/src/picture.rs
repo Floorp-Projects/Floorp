@@ -2418,6 +2418,11 @@ impl TileCacheInstance {
                             }
                         }
                     }
+
+                    if let Some(native_surface) = sub_slice.native_surface {
+                        resource_cache.destroy_compositor_surface(native_surface.opaque);
+                        resource_cache.destroy_compositor_surface(native_surface.alpha);
+                    }
                 }
             } else {
                 while self.sub_slices.len() < required_sub_slice_count {
