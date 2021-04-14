@@ -257,14 +257,6 @@ inline bool HadSimulatedInterrupt() {
         if (js::oom::ShouldFailWithStackOOM()) return false; \
       } while (0)
 
-#    define JS_STACK_OOM_POSSIBLY_FAIL_REPORT()  \
-      do {                                       \
-        if (js::oom::ShouldFailWithStackOOM()) { \
-          ReportOverRecursed(cx);                \
-          return false;                          \
-        }                                        \
-      } while (0)
-
 #    define JS_INTERRUPT_POSSIBLY_FAIL()                             \
       do {                                                           \
         if (MOZ_UNLIKELY(js::oom::ShouldFailWithInterrupt())) {      \
@@ -283,9 +275,6 @@ inline bool HadSimulatedInterrupt() {
       } while (0)
 #    define JS_STACK_OOM_POSSIBLY_FAIL() \
       do {                               \
-      } while (0)
-#    define JS_STACK_OOM_POSSIBLY_FAIL_REPORT() \
-      do {                                      \
       } while (0)
 #    define JS_INTERRUPT_POSSIBLY_FAIL() \
       do {                               \
