@@ -362,82 +362,82 @@ class HomeFragment : Fragment() {
 
     @Suppress("LongMethod", "ComplexMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) =
-            PerfStartup.homeFragmentOnViewCreated.measureNoInline { // weird indent so we don't have to break blame.
-        super.onViewCreated(view, savedInstanceState)
+        PerfStartup.homeFragmentOnViewCreated.measureNoInline {
+            super.onViewCreated(view, savedInstanceState)
 
-        observeSearchEngineChanges()
-        createHomeMenu(requireContext(), WeakReference(view.menuButton))
-        createTabCounterMenu(view)
+            observeSearchEngineChanges()
+            createHomeMenu(requireContext(), WeakReference(view.menuButton))
+            createTabCounterMenu(view)
 
-        view.menuButton.setColorFilter(
-            ContextCompat.getColor(
-                requireContext(),
-                ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
-            )
-        )
-
-        view.toolbar.compoundDrawablePadding =
-            view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
-        view.toolbar_wrapper.setOnClickListener {
-            navigateToSearch()
-            requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
-        }
-
-        view.toolbar_wrapper.setOnLongClickListener {
-            ToolbarPopupWindow.show(
-                WeakReference(it),
-                handlePasteAndGo = sessionControlInteractor::onPasteAndGo,
-                handlePaste = sessionControlInteractor::onPaste,
-                copyVisible = false
-            )
-            true
-        }
-
-        view.tab_button.setOnClickListener {
-            openTabTray()
-        }
-
-        PrivateBrowsingButtonView(
-            privateBrowsingButton,
-            browsingModeManager
-        ) { newMode ->
-            if (newMode == BrowsingMode.Private) {
-                requireContext().settings().incrementNumTimesPrivateModeOpened()
-            }
-
-            if (onboarding.userHasBeenOnboarded()) {
-                homeFragmentStore.dispatch(
-                    HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
+            view.menuButton.setColorFilter(
+                ContextCompat.getColor(
+                    requireContext(),
+                    ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
                 )
+            )
+
+            view.toolbar.compoundDrawablePadding =
+                view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
+            view.toolbar_wrapper.setOnClickListener {
+                navigateToSearch()
+                requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
+            }
+
+            view.toolbar_wrapper.setOnLongClickListener {
+                ToolbarPopupWindow.show(
+                    WeakReference(it),
+                    handlePasteAndGo = sessionControlInteractor::onPasteAndGo,
+                    handlePaste = sessionControlInteractor::onPaste,
+                    copyVisible = false
+                )
+                true
+            }
+
+            view.tab_button.setOnClickListener {
+                openTabTray()
+            }
+
+            PrivateBrowsingButtonView(
+                privateBrowsingButton,
+                browsingModeManager
+            ) { newMode ->
+                if (newMode == BrowsingMode.Private) {
+                    requireContext().settings().incrementNumTimesPrivateModeOpened()
+                }
+
+                if (onboarding.userHasBeenOnboarded()) {
+                    homeFragmentStore.dispatch(
+                        HomeFragmentAction.ModeChange(Mode.fromBrowsingMode(newMode))
+                    )
+                }
+            }
+
+            consumeFrom(requireComponents.core.store) {
+                updateTabCounter(it)
+            }
+
+            homeViewModel.sessionToDelete?.also {
+                if (it == ALL_NORMAL_TABS || it == ALL_PRIVATE_TABS) {
+                    removeAllTabsAndShowSnackbar(it)
+                } else {
+                    removeTabAndShowSnackbar(it)
+                }
+            }
+
+            homeViewModel.sessionToDelete = null
+
+            updateTabCounter(requireComponents.core.store.state)
+
+            if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)) {
+                navigateToSearch()
+            } else if (bundleArgs.getLong(FOCUS_ON_COLLECTION, -1) >= 0) {
+                // No need to scroll to async'd loaded TopSites if we want to scroll to collections.
+                homeViewModel.shouldScrollToTopSites = false
+                /* Triggered when the user has added a tab to a collection and has tapped
+                * the View action on the [TabsTrayDialogFragment] snackbar.*/
+                scrollAndAnimateCollection(bundleArgs.getLong(FOCUS_ON_COLLECTION, -1))
             }
         }
-
-        consumeFrom(requireComponents.core.store) {
-            updateTabCounter(it)
-        }
-
-        homeViewModel.sessionToDelete?.also {
-            if (it == ALL_NORMAL_TABS || it == ALL_PRIVATE_TABS) {
-                removeAllTabsAndShowSnackbar(it)
-            } else {
-                removeTabAndShowSnackbar(it)
-            }
-        }
-
-        homeViewModel.sessionToDelete = null
-
-        updateTabCounter(requireComponents.core.store.state)
-
-        if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)) {
-            navigateToSearch()
-        } else if (bundleArgs.getLong(FOCUS_ON_COLLECTION, -1) >= 0) {
-            // No need to scroll to async'd loaded TopSites if we want to scroll to collections.
-            homeViewModel.shouldScrollToTopSites = false
-            /* Triggered when the user has added a tab to a collection and has tapped
-            * the View action on the [TabsTrayDialogFragment] snackbar.*/
-            scrollAndAnimateCollection(bundleArgs.getLong(FOCUS_ON_COLLECTION, -1))
-        }
-    }
 
     private fun observeSearchEngineChanges() {
         consumeFlow(store) { flow ->
