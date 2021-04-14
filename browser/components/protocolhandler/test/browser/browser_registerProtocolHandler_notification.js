@@ -42,17 +42,14 @@ add_task(async function() {
 
   if (gProton) {
     // Make sure the CSS is fully loaded...
-    await TestUtils.waitForCondition(
-      () =>
-        notification.shadowRoot.styleSheets.length &&
-        [...notification.shadowRoot.styleSheets].every(s => s.rules.length)
-    );
-    is(
-      notification.ownerGlobal.getComputedStyle(
-        notification.messageImage,
-        "::after"
-      ).content,
-      'url("chrome://global/skin/icons/info-filled.svg")',
+    ok(
+      await TestUtils.waitForCondition(
+        () =>
+          notification.ownerGlobal.getComputedStyle(
+            notification.messageImage,
+            "::after"
+          ).content == 'url("chrome://global/skin/icons/info-filled.svg")'
+      ),
       "We expect this notification to have an icon."
     );
   } else {
