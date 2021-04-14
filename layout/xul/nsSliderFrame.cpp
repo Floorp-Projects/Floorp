@@ -1146,11 +1146,14 @@ void nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent) {
   if (waitForRefresh) {
     waitForRefresh = false;
     if (nsPresContext* presContext = presShell->GetPresContext()) {
-      waitForRefresh = presContext->RegisterOneShotPostRefreshObserver(
-          new OneShotPostRefreshObserver(
-              presShell, [widget = RefPtr<nsIWidget>(widget), dragMetrics](
-                             mozilla::PresShell*, OneShotPostRefreshObserver*) {
-                widget->StartAsyncScrollbarDrag(dragMetrics);
+      waitForRefresh = presContext->RegisterManagedPostRefreshObserver(
+          new ManagedPostRefreshObserver(
+              presShell, [widget = RefPtr<nsIWidget>(widget),
+                          dragMetrics](bool aWasCanceled) {
+                if (!aWasCanceled) {
+                  widget->StartAsyncScrollbarDrag(dragMetrics);
+                }
+                return ManagedPostRefreshObserver::Unregister::Yes;
               }));
     }
   }

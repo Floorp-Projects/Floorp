@@ -73,20 +73,25 @@ add_task(async function setup() {
  * resolve once layout and style have been flushed.
  */
 add_task(async function test_basic() {
+  info("Dirtying style / layout");
   dirtyStyleAndLayout();
   assertFlushesRequired();
 
+  info("Waiting");
   await window.promiseDocumentFlushed(() => {});
   assertNoFlushesRequired();
 
+  info("Dirtying style");
   dirtyStyle();
   assertFlushesRequired();
 
+  info("Waiting");
   await window.promiseDocumentFlushed(() => {});
   assertNoFlushesRequired();
 
   // The DOM should be clean already, but we'll do this anyway to isolate
   // failures from other tests.
+  info("Cleaning up");
   await cleanTheDOM();
 });
 

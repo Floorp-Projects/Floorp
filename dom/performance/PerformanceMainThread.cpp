@@ -223,11 +223,15 @@ void PerformanceMainThread::InsertEventTimingEntry(
   // `pending Event Timing entries` step. So mixing the order
   // here is fine.
   mHasQueuedRefreshdriverObserver =
-      presContext->RegisterOneShotPostRefreshObserver(
-          new OneShotPostRefreshObserver(
+      presContext->RegisterManagedPostRefreshObserver(
+          new ManagedPostRefreshObserver(
               presShell, [performance = RefPtr<PerformanceMainThread>(this)](
-                             PresShell*, OneShotPostRefreshObserver*) {
-                performance->DispatchPendingEventTimingEntries();
+                             bool aWasCanceled) {
+                if (!aWasCanceled) {
+                  // XXX Should we do this even if canceled?
+                  performance->DispatchPendingEventTimingEntries();
+                }
+                return ManagedPostRefreshObserver::Unregister::Yes;
               }));
 }
 
