@@ -45,8 +45,19 @@ bool nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(bool aFromPrivateWindow) {
 }
 
 /* static */
-bool nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled() {
-  return mozilla::StaticPrefs::dom_security_https_only_mode_https_first();
+bool nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(bool aFromPrivateWindow) {
+  // if the general pref is set to true, then we always return
+  if (mozilla::StaticPrefs::dom_security_https_only_mode_https_first()) {
+    return true;
+  }
+
+  // otherwise we check if executing in private browsing mode and return true
+  // if the PBM pref for HTTPS-First is set.
+  if (aFromPrivateWindow &&
+      mozilla::StaticPrefs::dom_security_https_only_mode_https_first_pbm()) {
+    return true;
+  }
+  return false;
 }
 
 /* static */
@@ -69,7 +80,8 @@ void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
 
   // if neither HTTPS-Only nor HTTPS-First mode is enabled, then there is
   // nothing to do here.
-  if (!IsHttpsOnlyModeEnabled(isPrivateWin) && !IsHttpsFirstModeEnabled()) {
+  if (!IsHttpsOnlyModeEnabled(isPrivateWin) &&
+      !IsHttpsFirstModeEnabled(isPrivateWin)) {
     return;
   }
 
@@ -219,7 +231,8 @@ bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(nsIURI* aURI,
                                                      nsILoadInfo* aLoadInfo) {
   // 1. Check if the HTTPS-Only Mode is even enabled, before we do anything else
   bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  if (!IsHttpsOnlyModeEnabled(isPrivateWin) && !IsHttpsFirstModeEnabled()) {
+  if (!IsHttpsOnlyModeEnabled(isPrivateWin) &&
+      !IsHttpsFirstModeEnabled(isPrivateWin)) {
     return false;
   }
 
@@ -296,7 +309,8 @@ bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(nsIURI* aURI,
 bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
                                                       nsILoadInfo* aLoadInfo) {
   // 1. Check if HTTPS-First Mode is enabled
-  if (!IsHttpsFirstModeEnabled()) {
+  bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  if (!IsHttpsFirstModeEnabled(isPrivateWin)) {
     return false;
   }
 

@@ -22,9 +22,10 @@ class nsHTTPSOnlyUtils {
 
   /**
    * Returns if HTTPS-First Mode preference is enabled
+   * @param aFromPrivateWindow true if executing in private browsing mode
    * @return true if HTTPS-First Mode is enabled
    */
-  static bool IsHttpsFirstModeEnabled();
+  static bool IsHttpsFirstModeEnabled(bool aFromPrivateWindow);
 
   /**
    * Potentially fires an http request for a top-level load (provided by
