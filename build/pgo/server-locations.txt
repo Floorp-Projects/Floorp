@@ -74,6 +74,7 @@ http://test2.mochi.test:8888
 http://example.org:80                privileged
 http://test1.example.org:80          privileged
 http://test2.example.org:80          privileged
+http://test3.example.org:80          privileged
 http://sub1.test1.example.org:80     privileged
 http://sub1.test2.example.org:80     privileged
 http://sub2.test1.example.org:80     privileged
