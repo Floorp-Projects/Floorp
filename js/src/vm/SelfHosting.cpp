@@ -1856,11 +1856,11 @@ static bool intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
   RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-  RootedString specifier(cx, args[1].toString());
+  RootedObject moduleRequest(cx, &args[1].toObject());
 
   RootedValue referencingPrivate(cx, JS::GetModulePrivate(module));
-  RootedObject result(cx,
-                      CallModuleResolveHook(cx, referencingPrivate, specifier));
+  RootedObject result(
+      cx, CallModuleResolveHook(cx, referencingPrivate, moduleRequest));
   if (!result) {
     return false;
   }
