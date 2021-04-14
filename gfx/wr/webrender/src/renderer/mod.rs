@@ -1412,8 +1412,8 @@ impl Renderer {
         self.device.preferred_color_formats().external
     }
 
-    pub fn optimal_texture_stride_alignment(&self, format: ImageFormat) -> usize {
-        self.device.optimal_pbo_stride().num_bytes(format).get()
+    pub fn required_texture_stride_alignment(&self, format: ImageFormat) -> usize {
+        self.device.required_pbo_stride().num_bytes(format).get()
     }
 
     pub fn set_clear_color(&mut self, color: Option<ColorF>) {
