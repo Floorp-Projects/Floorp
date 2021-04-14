@@ -340,6 +340,7 @@ class AutoScrollChild extends JSWindowActorChild {
           event.isTrusted &&
           !event.defaultPrevented &&
           event.button === 1 &&
+          !event.clickEventPrevented() &&
           !this._scrollable &&
           !this.isAutoscrollBlocker(event.originalTarget)
         ) {

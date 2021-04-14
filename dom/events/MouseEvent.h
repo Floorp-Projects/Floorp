@@ -77,6 +77,7 @@ class MouseEvent : public UIEvent {
                         uint16_t aButton, EventTarget* aRelatedTarget,
                         float aPressure, uint16_t aInputSource);
   void PreventClickEvent();
+  bool ClickEventPrevented();
 
  protected:
   ~MouseEvent() = default;
