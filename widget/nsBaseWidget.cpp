@@ -1122,15 +1122,19 @@ void nsBaseWidget::DispatchPinchGestureInput(PinchGestureInput& aInput) {
   }
 }
 
-nsEventStatus nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent) {
+nsIWidget::ContentAndAPZEventStatus nsBaseWidget::DispatchInputEvent(
+    WidgetInputEvent* aEvent) {
+  nsIWidget::ContentAndAPZEventStatus status;
   MOZ_ASSERT(NS_IsMainThread());
   if (mAPZC) {
     if (APZThreadUtils::IsControllerThread()) {
       APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(*aEvent);
+      status.mApzStatus = result.GetStatus();
       if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) {
-        return result.GetStatus();
+        return status;
       }
-      return ProcessUntransformedAPZEvent(aEvent, result);
+      status.mContentStatus = ProcessUntransformedAPZEvent(aEvent, result);
+      return status;
     }
     if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
       RefPtr<Runnable> r =
@@ -1138,21 +1142,22 @@ nsEventStatus nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent) {
                                               WidgetWheelEvent>(*wheelEvent,
                                                                 mAPZC, this);
       APZThreadUtils::RunOnControllerThread(std::move(r));
-      return nsEventStatus_eConsumeDoDefault;
+      status.mContentStatus = nsEventStatus_eConsumeDoDefault;
+      return status;
     }
     if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
       RefPtr<Runnable> r =
           new DispatchInputOnControllerThread<MouseInput, WidgetMouseEvent>(
               *mouseEvent, mAPZC, this);
       APZThreadUtils::RunOnControllerThread(std::move(r));
-      return nsEventStatus_eConsumeDoDefault;
+      status.mContentStatus = nsEventStatus_eConsumeDoDefault;
+      return status;
     }
     // Allow dispatching keyboard events on Gecko thread.
     MOZ_ASSERT(aEvent->AsKeyboardEvent());
   }
 
-  nsEventStatus status;
-  DispatchEvent(aEvent, status);
+  DispatchEvent(aEvent, status.mContentStatus);
   return status;
 }
 
