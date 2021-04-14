@@ -1478,10 +1478,6 @@ var gProtectionsHandler = {
     if (event.target == this._protectionsPopup) {
       window.addEventListener("focus", this, true);
 
-      // Add the "open" attribute to the tracking protection icon container
-      // for styling.
-      this._trackingProtectionIconContainer.setAttribute("open", "true");
-
       // Insert the info message if needed. This will be shown once and then
       // remain collapsed.
       ToolbarPanelHub.insertProtectionPanelMessage(event);
@@ -1499,7 +1495,6 @@ var gProtectionsHandler = {
   onPopupHidden(event) {
     if (event.target == this._protectionsPopup) {
       window.removeEventListener("focus", this, true);
-      this._trackingProtectionIconContainer.removeAttribute("open");
     }
   },
 

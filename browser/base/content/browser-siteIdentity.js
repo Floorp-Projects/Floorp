@@ -1185,9 +1185,6 @@ var gIdentityHandler = {
     // Update the popup strings
     this.refreshIdentityPopup();
 
-    // Add the "open" attribute to the identity box for styling
-    this._identityIconBox.setAttribute("open", "true");
-
     // Check the panel state of other panels. Hide them if needed.
     let openPanels = Array.from(document.querySelectorAll("panel[openpanel]"));
     for (let panel of openPanels) {
@@ -1211,7 +1208,6 @@ var gIdentityHandler = {
   onPopupHidden(event) {
     if (event.target == this._identityPopup) {
       window.removeEventListener("focus", this, true);
-      this._identityIconBox.removeAttribute("open");
     }
   },
 
