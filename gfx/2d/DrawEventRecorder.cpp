@@ -167,7 +167,7 @@ bool DrawEventRecorderMemory::Finish() {
   // write out the index
   mOutputStream.write(mIndex.mData, mIndex.mLength);
   bool hasItems = mIndex.mLength != 0;
-  mIndex = MemStream();
+  mIndex.reset();
   // write out the offset of the Index to the end of the output stream
   WriteElement(mOutputStream, indexOffset);
   ClearResources();
@@ -179,8 +179,8 @@ size_t DrawEventRecorderMemory::RecordingSize() {
 }
 
 void DrawEventRecorderMemory::WipeRecording() {
-  mOutputStream = MemStream();
-  mIndex = MemStream();
+  mOutputStream.reset();
+  mIndex.reset();
 
   WriteHeader(mOutputStream);
 }
