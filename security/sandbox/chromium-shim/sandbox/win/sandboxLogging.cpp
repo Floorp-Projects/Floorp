@@ -8,8 +8,6 @@
 
 #include "base/strings/utf_string_conversions.h"
 #include "sandbox/win/src/sandbox_policy.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/StackWalk.h"
 
 namespace mozilla {
 namespace sandboxing {
@@ -22,39 +20,34 @@ ProvideLogFunction(LogFunction aLogFunction)
   sLogFunction = aLogFunction;
 }
 
-static void
-LogBlocked(const char* aFunctionName, const char* aContext, const void* aFirstFramePC)
+void
+LogBlocked(const char* aFunctionName, const char* aContext, uint32_t aFramesToSkip)
 {
   if (sLogFunction) {
     sLogFunction("BLOCKED", aFunctionName, aContext,
-                 /* aShouldLogStackTrace */ true, aFirstFramePC);
+                 /* aShouldLogStackTrace */ true, aFramesToSkip);
   }
 }
 
-MOZ_NEVER_INLINE void
-LogBlocked(const char* aFunctionName, const char* aContext)
-{
-  if (sLogFunction) {
-    LogBlocked(aFunctionName, aContext, CallerPC());
-  }
-}
-
-MOZ_NEVER_INLINE void
+void
 LogBlocked(const char* aFunctionName, const wchar_t* aContext)
 {
   if (sLogFunction) {
-    LogBlocked(aFunctionName, base::WideToUTF8(aContext).c_str(), CallerPC());
+    // Skip an extra frame to allow for this function.
+    LogBlocked(aFunctionName, base::WideToUTF8(aContext).c_str(),
+               /* aFramesToSkip */ 3);
   }
 }
 
-MOZ_NEVER_INLINE void
+void
 LogBlocked(const char* aFunctionName, const wchar_t* aContext,
            uint16_t aLengthInBytes)
 {
   if (sLogFunction) {
+    // Skip an extra frame to allow for this function.
     LogBlocked(aFunctionName,
                base::WideToUTF8(std::wstring(aContext, aLengthInBytes / sizeof(wchar_t))).c_str(),
-               CallerPC());
+               /* aFramesToSkip */ 3);
   }
 }
 
@@ -63,7 +56,7 @@ LogAllowed(const char* aFunctionName, const char* aContext)
 {
   if (sLogFunction) {
     sLogFunction("Broker ALLOWED", aFunctionName, aContext,
-                 /* aShouldLogStackTrace */ false, nullptr);
+                 /* aShouldLogStackTrace */ false, /* aFramesToSkip */ 0);
   }
 }
 
