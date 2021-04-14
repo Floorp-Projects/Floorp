@@ -1,1 +1,1 @@
-|jit-test| --wasm-exceptions; test-also=--wasm-compiler=ion; test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; include:wasm.js; skip-if: !wasmExceptionsEnabled()
+|jit-test| --wasm-exceptions; test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; include:wasm.js; skip-if: !wasmExceptionsEnabled()

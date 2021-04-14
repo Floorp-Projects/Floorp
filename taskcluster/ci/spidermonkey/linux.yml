@@ -147,6 +147,7 @@ sm-arm64-sim-cranelift-linux64/debug:
     treeherder:
         platform: linux64/debug
         symbol: SM(arm64cl)
+        tier: 3
     run:
         spidermonkey-variant: arm64-cranelift-sim
     fetches:
@@ -160,6 +161,9 @@ sm-arm64-sim-cranelift-linux64/debug:
             - linux64-dump-syms
             - linux64-sysroot
     run-on-projects: ['mozilla-central']
+    routes:
+        - "notify.email.jseward@mozilla.com.on-failed"
+        - "notify.email.lhansen@mozilla.com.on-failed"
 
 sm-asan-linux64/opt:
     description: "Spidermonkey Address Sanitizer"
