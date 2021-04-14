@@ -19,7 +19,7 @@
 #include "builtin/Array.h"
 #include "builtin/BigInt.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/StackLimits.h"    // js::CheckRecursionLimit
+#include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/Object.h"                // JS::GetBuiltinClass
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
@@ -671,7 +671,8 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
   /* Step 11 must be handled by the caller. */
   MOZ_ASSERT(!IsFilteredValue(v));
 
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
@@ -925,7 +926,8 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
 /* ES5 15.12.2 Walk. */
 static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
                  HandleValue reviver, MutableHandleValue vp) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
