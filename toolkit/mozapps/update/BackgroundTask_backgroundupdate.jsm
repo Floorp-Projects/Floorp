@@ -72,6 +72,16 @@ async function _attemptBackgroundUpdate() {
   );
   let reasons = await BackgroundUpdate._reasonsToNotUpdateInstallation();
 
+  if (BackgroundUpdate._force()) {
+    // We want to allow developers and testers to monkey with the system.
+    log.debug(
+      `${SLUG}: app.update.background.force=true, ignoring reasons: ${JSON.stringify(
+        reasons
+      )}`
+    );
+    reasons = [];
+  }
+
   // Other instances running are a transient precondition (during this invocation).
   if (!reasons.length) {
     log.debug(`${SLUG}: checking if other instance is running`);
