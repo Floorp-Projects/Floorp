@@ -91,13 +91,13 @@ MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename,
                       "Assertion failure: %s, at %s:%d\n", aStr, aFilename,
                       aLine);
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
-  MozWalkTheStackWithWriter(MOZ_ReportAssertionFailurePrintFrame,
-                            /* aSkipFrames */ 1, /* aMaxFrames */ 0);
+  MozWalkTheStackWithWriter(MOZ_ReportAssertionFailurePrintFrame, CallerPC(),
+                            /* aMaxFrames */ 0);
 #  endif
 #else
   fprintf(stderr, "Assertion failure: %s, at %s:%d\n", aStr, aFilename, aLine);
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
-  MozWalkTheStack(stderr, /* aSkipFrames */ 1, /* aMaxFrames */ 0);
+  MozWalkTheStack(stderr, CallerPC(), /* aMaxFrames */ 0);
 #  endif
   fflush(stderr);
 #endif
@@ -112,7 +112,7 @@ MOZ_MAYBE_UNUSED static MOZ_COLD MOZ_NEVER_INLINE void MOZ_ReportCrash(
 #else
   fprintf(stderr, "Hit MOZ_CRASH(%s) at %s:%d\n", aStr, aFilename, aLine);
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
-  MozWalkTheStack(stderr, /* aSkipFrames */ 1, /* aMaxFrames */ 0);
+  MozWalkTheStack(stderr, CallerPC(), /* aMaxFrames */ 0);
 #  endif
   fflush(stderr);
 #endif
