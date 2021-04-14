@@ -2521,7 +2521,7 @@ nsFloatManager::ShapeInfo::CreateInset(const StyleBasicShape& aBasicShape,
       LogicalRect(aWM, insetRect, aContainerSize), aWM, aContainerSize);
   nscoord physicalRadii[8];
   bool hasRadii = ShapeUtils::ComputeInsetRadii(
-      aBasicShape, insetRect, physicalShapeBoxRect, physicalRadii);
+      aBasicShape, physicalShapeBoxRect, physicalRadii);
 
   // With a zero shape-margin, we will be able to use the fast constructor.
   if (aShapeMargin == 0) {
