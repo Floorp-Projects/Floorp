@@ -9463,7 +9463,7 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
 
       nscoord radii[8] = {0};
 
-      if (ShapeUtils::ComputeInsetRadii(shape, insetRect, refBox, radii)) {
+      if (ShapeUtils::ComputeInsetRadii(shape, refBox, radii)) {
         clipRegions.AppendElement(
             wr::ToComplexClipRegion(insetRect, radii, appUnitsPerDevPixel));
       }
