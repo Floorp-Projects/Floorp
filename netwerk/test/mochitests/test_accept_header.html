@@ -26,7 +26,7 @@ function test_iframe() {
   let ifr = document.createElement("iframe");
   ifr.src = "test_accept_header.sjs?iframe";
   ifr.onload = () => {
-    test_last_request_and_continue("iframe", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
+    test_last_request_and_continue("iframe", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
   };
   document.body.appendChild(ifr);
 }
@@ -36,7 +36,7 @@ function test_image() {
   i.src = "test_accept_header.sjs?image";
   i.onload = function() {
     // Fetch spec says we should have: "image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
-    test_last_request_and_continue("image", "image/avif,image/webp,*/*");
+    test_last_request_and_continue("image", "image/webp,*/*");
   }
 }
 
