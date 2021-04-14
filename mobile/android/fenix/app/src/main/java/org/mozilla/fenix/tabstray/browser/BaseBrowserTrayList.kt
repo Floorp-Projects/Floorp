@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabstray.browser
 
 import android.content.Context
 import android.util.AttributeSet
+import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import org.mozilla.fenix.ext.components
@@ -82,14 +83,15 @@ abstract class BaseBrowserTrayList @JvmOverloads constructor(
         touchHelper.attachToRecyclerView(this)
     }
 
-    override fun onDetachedFromWindow() {
+    @VisibleForTesting
+    public override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
 
         tabsFeature.stop()
         swipeToDelete.stop()
 
-        // Release the adapter so that `onDetachedFromRecyclerView` will be called in the adapter.
-        adapter = null
+        // Notify the adapter that it is released from the view preemptively.
+        adapter?.onDetachedFromRecyclerView(this)
 
         touchHelper.attachToRecyclerView(null)
     }
