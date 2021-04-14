@@ -5,8 +5,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Remote Settings Client")
 
-TEST_DIRS += ["test"]
-
 DIRS += [
     "dumps",
 ]

@@ -104,12 +104,8 @@ def constructCertDatabase(build, srcDir):
         print("{}\n\n{}\n".format(e, e.help()))
         return 1
     openssl = find_executable("openssl")
-    pycert = os.path.join(
-        build.topsrcdir, "security", "manager", "ssl", "tests", "unit", "pycert.py"
-    )
-    pykey = os.path.join(
-        build.topsrcdir, "security", "manager", "ssl", "tests", "unit", "pykey.py"
-    )
+    pycert = os.path.join(build.topsrcdir, "security", "manager", "tools", "pycert.py")
+    pykey = os.path.join(build.topsrcdir, "security", "manager", "tools", "pykey.py")
 
     with NamedTemporaryFile(mode="wt+") as pwfile, TemporaryDirectory() as pemfolder:
         pwfile.write("\n")

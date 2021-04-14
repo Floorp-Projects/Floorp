@@ -211,7 +211,6 @@ def CbindgenHeader(name, inputs):
 
 
 include('gecko_templates.mozbuild')
-include('test_templates.mozbuild')
 
 
 @template
