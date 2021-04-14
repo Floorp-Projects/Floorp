@@ -11,19 +11,7 @@ const {
 
 const SHELL = getShellService();
 const IS_DEFAULT = SHELL.isDefaultBrowser();
-const CAN_PIN = (() => {
-  try {
-    SHELL.QueryInterface(
-      Ci.nsIWindowsShellService
-    ).checkPinCurrentAppToTaskbar();
-    return true;
-  } catch (ex) {
-    return false;
-  }
-})();
-const NEED_PIN = Promise.resolve(
-  CAN_PIN && SHELL.isCurrentAppPinnedToTaskbarAsync().then(pinned => !pinned)
-);
+const NEED_PIN = SHELL.doesAppNeedPin();
 
 // Strings for various elements with matching ids on each screen.
 const PIN_OR_THEME_STRING = NEED_PIN.then(pin =>
@@ -140,11 +128,7 @@ function onLoad(ready) {
           if (!IS_DEFAULT) {
             SHELL.setAsDefault();
           }
-          if (await NEED_PIN) {
-            try {
-              SHELL.pinCurrentAppToTaskbar();
-            } catch (ex) {}
-          }
+          SHELL.pinToTaskbar();
         } else if (target === secondary && IS_DEFAULT && !(await NEED_PIN)) {
           closeDialog("early");
           return;
