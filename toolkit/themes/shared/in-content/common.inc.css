@@ -578,11 +578,16 @@ html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [t
 html|textarea {
   font-family: inherit;
   font-size: inherit;
-  padding: 5px 8px;
+  padding: 8px;
   margin: 2px 4px;
 }
 
 @media not (-moz-proton) {
+html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
+html|textarea {
+  padding: 5px 8px;
+}
+
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):enabled:not(:focus):hover,
 html|textarea:enabled:not(:focus):hover,
 xul|search-textbox:not([disabled="true"], [focused]):hover {
