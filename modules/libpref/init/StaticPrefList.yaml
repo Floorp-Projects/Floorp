@@ -2938,6 +2938,14 @@
   value: false
   mirror: always
 
+# If true, top-level requests in Private Browsing Mode will get
+# upgraded to HTTPS. (If dom.security.https_only_mode_https_first
+# is set to true then this pref has no effect)
+- name: dom.security.https_only_mode_https_first_pbm
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: dom.security.unexpected_system_load_telemetry_enabled
   type: bool
   value: true
