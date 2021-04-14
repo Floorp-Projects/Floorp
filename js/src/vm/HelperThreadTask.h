@@ -33,7 +33,7 @@ struct MapTypeToThreadType<jit::IonCompileTask> {
 
 template <>
 struct MapTypeToThreadType<wasm::Tier2GeneratorTask> {
-  static const ThreadType threadType = THREAD_TYPE_WASM_TIER2;
+  static const ThreadType threadType = THREAD_TYPE_WASM_GENERATOR_TIER2;
 };
 
 template <>
