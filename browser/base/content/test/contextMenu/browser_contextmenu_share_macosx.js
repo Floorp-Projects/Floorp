@@ -56,7 +56,7 @@ registerCleanupFunction(async function() {
  */
 add_task(async function test_contextmenu_share_macosx() {
   await BrowserTestUtils.withNewTab(TEST_URL, async () => {
-    await openTabContextMenu(gBrowser.selectedTab);
+    let contextMenu = await openTabContextMenu(gBrowser.selectedTab);
     await TestUtils.waitForCondition(() => {
       let itemCreated = document.getElementById("context_shareTabURL");
       return !!itemCreated;
@@ -75,7 +75,7 @@ add_task(async function test_contextmenu_share_macosx() {
 
     info("Click on the sharing service");
     let menuPopupClosedPromised = BrowserTestUtils.waitForPopupEvent(
-      popup,
+      contextMenu,
       "hidden"
     );
     let shareButton = items[0];
@@ -90,7 +90,7 @@ add_task(async function test_contextmenu_share_macosx() {
       "Share button's share-name value should match the service's name. "
     );
 
-    EventUtils.synthesizeMouseAtCenter(shareButton, {});
+    popup.activateItem(shareButton);
     await menuPopupClosedPromised;
 
     ok(shareUrlSpy.calledOnce, "shareUrl called");
@@ -102,7 +102,7 @@ add_task(async function test_contextmenu_share_macosx() {
     is(title, "Sharing URL", "Shared the correct title.");
 
     info("Test the More... button");
-    await openTabContextMenu(gBrowser.selectedTab);
+    contextMenu = await openTabContextMenu(gBrowser.selectedTab);
     await openMenuPopup();
     // Since the tab context menu was collapsed previously, the popup needs to get the
     // providers again.
@@ -114,10 +114,10 @@ add_task(async function test_contextmenu_share_macosx() {
     info("Click on the More Button");
     let moreButton = items[1];
     menuPopupClosedPromised = BrowserTestUtils.waitForPopupEvent(
-      popup,
+      contextMenu,
       "hidden"
     );
-    EventUtils.synthesizeMouseAtCenter(moreButton, {});
+    popup.activateItem(moreButton);
     await menuPopupClosedPromised;
     ok(openSharingPreferencesSpy.calledOnce, "openSharingPreferences called");
   });
@@ -136,12 +136,13 @@ async function openTabContextMenu(tab) {
 
   EventUtils.synthesizeMouseAtCenter(tab, { type: "contextmenu" });
   await openTabContextMenuPromise;
+  return contextMenu;
 }
 
 async function openMenuPopup() {
   info("Opening Share menu popup.");
   let popup = document.getElementById("context_shareTabURL_popup");
   let shareItem = document.getElementById("context_shareTabURL");
-  EventUtils.synthesizeMouseAtCenter(shareItem, {});
+  shareItem.openMenu(true);
   await BrowserTestUtils.waitForPopupEvent(popup, "shown");
 }
