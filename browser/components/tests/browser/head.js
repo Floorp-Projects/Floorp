@@ -3,7 +3,10 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  sinon: "resource://testing-common/Sinon.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+});
 
 let didMockShell = false;
 function mockShell(overrides = {}) {
@@ -49,6 +52,10 @@ function mockShell(overrides = {}) {
   mock = new Proxy(mock, {
     get(target, prop) {
       return (prop in target ? target : ShellService)[prop];
+    },
+    set(target, prop, val) {
+      (prop in target ? target : ShellService)[prop] = val;
+      return true;
     },
   });
 
