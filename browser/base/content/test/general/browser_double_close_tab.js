@@ -10,14 +10,24 @@ const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
 );
 
 function waitForDialog(callback) {
-  function onDialogLoaded(nodeOrDialogWindow) {
+  async function onDialogLoaded(nodeOrDialogWindow) {
     let node = CONTENT_PROMPT_SUBDIALOG
       ? nodeOrDialogWindow.document.querySelector("dialog")
       : nodeOrDialogWindow;
     Services.obs.removeObserver(onDialogLoaded, "tabmodal-dialog-loaded");
     Services.obs.removeObserver(onDialogLoaded, "common-dialog-loaded");
     // Allow dialog's onLoad call to run to completion
-    Promise.resolve().then(() => callback(node));
+    await Promise.resolve();
+    // For embedded windows, work around bug 1699844 by
+    // waiting before closing this prompt:
+    await (async function() {
+      let rAFCount = 3;
+      while (rAFCount--) {
+        await new Promise(node.ownerGlobal.requestAnimationFrame);
+      }
+    })();
+
+    callback(node);
   }
 
   // Listen for the dialog being created
