@@ -45,10 +45,8 @@ add_task(async function test_save_image_webp_with_jpeg_extension() {
           setTimeout(resolve, 0);
           return Ci.nsIFilePicker.returnCancel;
         };
-        EventUtils.synthesizeMouseAtCenter(
-          menu.querySelector("#context-saveimage"),
-          {}
-        );
+        let menuitem = menu.querySelector("#context-saveimage");
+        menu.activateItem(menuitem);
       });
     }
   );
@@ -81,10 +79,8 @@ add_task(async function test_save_link_webp_with_jpeg_extension() {
           setTimeout(resolve, 0);
           return Ci.nsIFilePicker.returnCancel;
         };
-        EventUtils.synthesizeMouseAtCenter(
-          menu.querySelector("#context-savelink"),
-          {}
-        );
+        let menuitem = menu.querySelector("#context-savelink");
+        menu.activateItem(menuitem);
       });
     }
   );
