@@ -142,6 +142,31 @@ let ShellServiceInternal = {
       .getHistogramById("BROWSER_SET_DEFAULT_ERROR")
       .add(setAsDefaultError);
   },
+
+  async doesAppNeedPin() {
+    // Currently this only works on certain Windows versions.
+    try {
+      // First check if we can even pin the app where an exception means no.
+      this.shellService
+        .QueryInterface(Ci.nsIWindowsShellService)
+        .checkPinCurrentAppToTaskbar();
+
+      // Then check if we're already pinned.
+      return !(await this.shellService.isCurrentAppPinnedToTaskbarAsync());
+    } catch (ex) {
+      return false;
+    }
+  },
+
+  async pinToTaskbar() {
+    if (await this.doesAppNeedPin()) {
+      try {
+        this.shellService.pinCurrentAppToTaskbar();
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }
+  },
 };
 
 XPCOMUtils.defineLazyServiceGetter(

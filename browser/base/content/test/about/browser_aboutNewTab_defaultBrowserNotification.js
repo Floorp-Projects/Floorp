@@ -305,6 +305,9 @@ async function test_with_mock_shellservice(options, testFn) {
   let mockShellService = {
     _isDefault: !!options.isDefault,
     canSetDesktopBackground() {},
+    doesAppNeedPin() {
+      return false;
+    },
     isDefaultBrowserOptOut() {
       return false;
     },
