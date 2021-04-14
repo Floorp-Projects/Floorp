@@ -3,42 +3,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-
 const BROWSER_GLUE = Cc["@mozilla.org/browser/browserglue;1"].getService()
   .wrappedJSObject;
-
-sinon.stub(window, "getShellService");
-function mockShell(overrides = {}) {
-  const mock = {
-    canPin: false,
-    isDefault: false,
-    isPinned: false,
-
-    checkPinCurrentAppToTaskbar() {
-      if (!this.canPin) {
-        throw Error;
-      }
-    },
-    isCurrentAppPinnedToTaskbarAsync() {
-      return Promise.resolve(this.isPinned);
-    },
-    isDefaultBrowser() {
-      return this.isDefault;
-    },
-    // eslint-disable-next-line mozilla/use-chromeutils-generateqi
-    QueryInterface() {
-      return this;
-    },
-
-    pinCurrentAppToTaskbar: sinon.stub(),
-    setAsDefault: sinon.stub(),
-    ...overrides,
-  };
-
-  getShellService.returns(mock);
-  return mock;
-}
 
 function waitForDialog(callback = win => win.close()) {
   return BrowserTestUtils.promiseAlertDialog(
@@ -287,7 +253,6 @@ add_task(async function dont_reshow() {
 });
 
 registerCleanupFunction(() => {
-  getShellService.restore();
   Cc["@mozilla.org/browser/clh;1"].getService(
     Ci.nsIBrowserHandler
   ).majorUpgrade = false;
