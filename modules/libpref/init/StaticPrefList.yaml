@@ -1155,7 +1155,7 @@
 
 - name: browser.proton.modals.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
