@@ -3562,7 +3562,15 @@ class SystemAddonInstaller extends DirectoryInstaller {
     for (let addon of aAddons) {
       let install = await createLocalInstall(
         addon._sourceBundle,
-        this.location
+        this.location,
+        // Make sure that system addons being installed for the first time through
+        // Balrog have telemetryInfo associated with them (on the contrary the ones
+        // updated through Balrog but part of the build will already have the same
+        // `source`, but we expect no `method` to be set for them).
+        {
+          source: "system-addon",
+          method: "product-updates",
+        }
       );
       installs.push(install);
     }
