@@ -333,7 +333,8 @@ JS_FRIEND_API bool js::IsObjectInContextCompartment(JSObject* obj,
   return obj->compartment() == cx->compartment();
 }
 
-JS_FRIEND_API bool js::detail::RunningWithTrustedPrincipals(JSContext* cx) {
+JS_FRIEND_API bool js::AutoCheckRecursionLimit::runningWithTrustedPrincipals(
+    JSContext* cx) const {
   return cx->runningWithTrustedPrincipals();
 }
 
