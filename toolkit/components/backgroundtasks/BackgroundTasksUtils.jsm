@@ -31,6 +31,58 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 var BackgroundTasksUtils = {
+  // Manage our own default profile that can be overridden for testing.  It's
+  // easier to do this here rather than using the profile service itself.
+  _defaultProfileInitialized: false,
+  _defaultProfile: null,
+
+  getDefaultProfile() {
+    if (!this._defaultProfileInitialized) {
+      this._defaultProfileInitialized = true;
+      // This is all test-only.
+      const env = Cc["@mozilla.org/process/environment;1"].getService(
+        Ci.nsIEnvironment
+      );
+      let defaultProfilePath = env.get(
+        "MOZ_BACKGROUNDTASKS_DEFAULT_PROFILE_PATH"
+      );
+      let noDefaultProfile = env.get("MOZ_BACKGROUNDTASKS_NO_DEFAULT_PROFILE");
+      if (defaultProfilePath) {
+        log.info(
+          `getDefaultProfile: using default profile path ${defaultProfilePath}`
+        );
+        var tmpd = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        tmpd.initWithPath(defaultProfilePath);
+        // Sadly this writes to `profiles.ini`, but there's little to be done.
+        this._defaultProfile = ProfileService.createProfile(
+          tmpd,
+          `MOZ_BACKGROUNDTASKS_DEFAULT_PROFILE_PATH-${Date.now()}`
+        );
+      } else if (noDefaultProfile) {
+        log.info(`getDefaultProfile: setting default profile to null`);
+        this._defaultProfile = null;
+      } else {
+        try {
+          log.info(`getDefaultProfile: using ProfileService.defaultProfile`);
+          this._defaultProfile = ProfileService.defaultProfile;
+        } catch (e) {}
+      }
+    }
+    return this._defaultProfile;
+  },
+
+  hasDefaultProfile() {
+    return this.getDefaultProfile() != null;
+  },
+
+  currentProfileIsDefaultProfile() {
+    let defaultProfile = this.getDefaultProfile();
+    let currentProfile = ProfileService.currentProfile;
+    // This comparison needs to accommodate null on both sides.
+    let isDefaultProfile = defaultProfile && currentProfile == defaultProfile;
+    return isDefaultProfile;
+  },
+
   _throwIfNotLocked(lock) {
     if (!(lock instanceof Ci.nsIProfileLock)) {
       throw new Error("Passed lock was not an instance of nsIProfileLock");
@@ -66,7 +118,7 @@ var BackgroundTasksUtils = {
    * @param {nsIToolkitProfile} [profile] defaults to default profile
    * @return {Promise<T>}
    */
-  async withProfileLock(callback, profile = ProfileService.defaultProfile) {
+  async withProfileLock(callback, profile = this.getDefaultProfile()) {
     if (!profile) {
       throw new Error("No default profile exists");
     }
