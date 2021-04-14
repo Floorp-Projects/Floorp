@@ -1,5 +1,25 @@
 # -*- coding: utf-8 -*-
 
+r"""
+The ``codes`` object defines a mapping from common names for HTTP statuses
+to their numerical codes, accessible either as attributes or as dictionary
+items.
+
+Example::
+
+    >>> import requests
+    >>> requests.codes['temporary_redirect']
+    307
+    >>> requests.codes.teapot
+    418
+    >>> requests.codes['\o/']
+    200
+
+Some codes have multiple names, and both upper- and lower-case versions of
+the names are allowed. For example, ``codes.ok``, ``codes.OK``, and
+``codes.okay`` all correspond to the HTTP status code 200.
+"""
+
 from .structures import LookupDict
 
 _codes = {
@@ -31,7 +51,7 @@ _codes = {
     306: ('switch_proxy',),
     307: ('temporary_redirect', 'temporary_moved', 'temporary'),
     308: ('permanent_redirect',
-          'resume_incomplete', 'resume',), # These 2 to be removed in 3.0
+          'resume_incomplete', 'resume',),  # These 2 to be removed in 3.0
 
     # Client Error.
     400: ('bad_request', 'bad'),
@@ -53,6 +73,7 @@ _codes = {
     416: ('requested_range_not_satisfiable', 'requested_range', 'range_not_satisfiable'),
     417: ('expectation_failed',),
     418: ('im_a_teapot', 'teapot', 'i_am_a_teapot'),
+    421: ('misdirected_request',),
     422: ('unprocessable_entity', 'unprocessable'),
     423: ('locked',),
     424: ('failed_dependency', 'dependency'),
@@ -83,8 +104,20 @@ _codes = {
 
 codes = LookupDict(name='status_codes')
 
-for code, titles in _codes.items():
-    for title in titles:
-        setattr(codes, title, code)
-        if not title.startswith('\\'):
-            setattr(codes, title.upper(), code)
+def _init():
+    for code, titles in _codes.items():
+        for title in titles:
+            setattr(codes, title, code)
+            if not title.startswith(('\\', '/')):
+                setattr(codes, title.upper(), code)
+
+    def doc(code):
+        names = ', '.join('``%s``' % n for n in _codes[code])
+        return '* %d: %s' % (code, names)
+
+    global __doc__
+    __doc__ = (__doc__ + '\n' +
+               '\n'.join(doc(code) for code in sorted(_codes))
+               if __doc__ is not None else None)
+
+_init()

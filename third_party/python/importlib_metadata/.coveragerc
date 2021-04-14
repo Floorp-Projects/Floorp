@@ -1,0 +1,10 @@
+[run]
+omit =
+	# leading `*/` for pytest-dev/pytest-cov#456
+	*/.tox/*
+	tests/*
+	prepare/*
+	*/_itertools.py
+
+[report]
+show_missing = True
