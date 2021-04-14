@@ -61,7 +61,7 @@ class Message : public Pickle {
   enum PriorityValue {
     NORMAL_PRIORITY = 0,
     INPUT_PRIORITY = 1,
-    HIGH_PRIORITY = 2,
+    VSYNC_PRIORITY = 2,
     MEDIUMHIGH_PRIORITY = 3,
   };
 
