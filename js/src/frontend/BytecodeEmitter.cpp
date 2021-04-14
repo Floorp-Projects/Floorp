@@ -61,7 +61,7 @@
 #include "frontend/WhileEmitter.h"                 // WhileEmitter
 #include "js/CompileOptions.h"  // TransitiveCompileOptions, CompileOptions
 #include "js/friend/ErrorMessages.h"      // JSMSG_*
-#include "js/friend/StackLimits.h"        // CheckRecursionLimit
+#include "js/friend/StackLimits.h"        // AutoCheckRecursionLimit
 #include "util/StringBuffer.h"            // StringBuffer
 #include "vm/AsyncFunctionResolveKind.h"  // AsyncFunctionResolveKind
 #include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
@@ -1043,7 +1043,8 @@ JSOp BytecodeEmitter::strictifySetNameOp(JSOp op) {
 }
 
 bool BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
@@ -7580,7 +7581,8 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
                                                 CallNode* call,
                                                 CallOrNewEmitter& cone,
                                                 OptionalEmitter& oe) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
@@ -8150,7 +8152,8 @@ bool BytecodeEmitter::emitLeftAssociative(ListNode* node) {
 bool BytecodeEmitter::emitOptionalTree(
     ParseNode* pn, OptionalEmitter& oe,
     ValueUsage valueUsage /* = ValueUsage::WantValue */) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
   ParseNodeKind kind = pn->getKind();
@@ -10652,7 +10655,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationForOpcodeSlow(
 bool BytecodeEmitter::emitTree(
     ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::WantValue */,
     EmitLineNumberNote emitLineNote /* = EMIT_LINENOTE */) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 

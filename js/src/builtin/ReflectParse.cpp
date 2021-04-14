@@ -22,7 +22,7 @@
 #include "frontend/Parser.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/StackLimits.h"    // js::CheckRecursionLimit
+#include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/StableStringChars.h"
 #include "vm/BigIntType.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
@@ -2382,7 +2382,8 @@ bool ASTSerializer::classDefinition(ClassNode* pn, bool expr,
 }
 
 bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
@@ -2782,7 +2783,8 @@ bool ASTSerializer::rightAssociate(ListNode* node, MutableHandleValue dst) {
 }
 
 bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
@@ -3494,7 +3496,8 @@ bool ASTSerializer::objectPattern(ListNode* obj, MutableHandleValue dst) {
 }
 
 bool ASTSerializer::pattern(ParseNode* pn, MutableHandleValue dst) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 

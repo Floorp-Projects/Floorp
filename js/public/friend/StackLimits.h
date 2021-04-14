@@ -55,6 +55,16 @@ MOZ_ALWAYS_INLINE uintptr_t GetNativeStackLimitHelper(JSContext* cx,
 
 }  // namespace detail
 
+class MOZ_RAII AutoCheckRecursionLimit {
+ public:
+  explicit MOZ_ALWAYS_INLINE AutoCheckRecursionLimit(JSContext* cx) {}
+
+  AutoCheckRecursionLimit(const AutoCheckRecursionLimit&) = delete;
+  void operator=(const AutoCheckRecursionLimit&) = delete;
+
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool check(JSContext* cx) const;
+};
+
 extern MOZ_COLD JS_FRIEND_API void ReportOverRecursed(JSContext* maybecx);
 
 MOZ_ALWAYS_INLINE uintptr_t GetNativeStackLimit(JSContext* cx) {
@@ -94,7 +104,7 @@ MOZ_ALWAYS_INLINE bool CheckRecursionLimitDontReport(uintptr_t limit) {
   return JS_CHECK_STACK_SIZE(limit, &stackDummy);
 }
 
-MOZ_ALWAYS_INLINE bool CheckRecursionLimit(JSContext* cx) {
+MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(JSContext* cx) const {
   JS_STACK_OOM_POSSIBLY_FAIL_REPORT();
 
   // GetNativeStackLimit(cx) is pretty slow because it has to do an uninlined
