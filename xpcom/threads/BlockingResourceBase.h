@@ -316,8 +316,7 @@ class BlockingResourceBase {
 
   static void StackWalkCallback(uint32_t aFrameNumber, void* aPc, void* aSp,
                                 void* aClosure);
-  static void GetStackTrace(AcquisitionState& aState,
-                            const void* aFirstFramePC);
+  static void GetStackTrace(AcquisitionState& aState);
 
 #  ifdef MOZILLA_INTERNAL_API
   // so it can call BlockingResourceBase::Shutdown()
