@@ -55,15 +55,21 @@ if (!window.googleImaVansAdapter) {
     dispose: () => {},
   };
 
-  // Treat it as an opt-in when the user clicks on a video
-  // TODO: Improve this! It races to tell the bg script to unblock the ad from
-  // https://pubads.g.doubleclick.net/gampad/ads before the page loads them.
-  async function click(e) {
-    if (e.isTrusted && e.target.closest("#video-player")) {
-      document.documentElement.removeEventListener("click", click, true);
-      await sendMessageToAddon("optIn");
-      // TODO: reload ima3.js?
+  if (document.domain === "www.nhl.com") {
+    // Treat it as an opt-in when the user clicks on a video
+    // TODO: Improve this! It races to tell the bg script to unblock the ad from
+    // https://pubads.g.doubleclick.net/gampad/ads before the page loads them.
+    async function click(e) {
+      if (
+        e.isTrusted &&
+        e.target.closest(
+          "#video-player, .video-preview, article:not([data-video-url=''])"
+        )
+      ) {
+        document.documentElement.removeEventListener("click", click, true);
+        await sendMessageToAddon("optIn");
+      }
     }
+    document.documentElement.addEventListener("click", click, true);
   }
-  document.documentElement.addEventListener("click", click, true);
 }

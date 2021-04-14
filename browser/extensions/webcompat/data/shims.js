@@ -104,10 +104,13 @@ const AVAILABLE_SHIMS = [
     name: "Ad Safe Protected Google IMA Adapter",
     bug: "1508639",
     file: "adsafeprotected-ima.js",
-    matches: ["*://static.adsafeprotected.com/vans-adapter-google-ima.js"],
+    matches: [
+      "*://cdn.adsafeprotected.com/iasPET.1.js",
+      "*://static.adsafeprotected.com/vans-adapter-google-ima.js",
+    ],
     needsShimHelpers: ["optIn"],
     onlyIfBlockedByETP: true,
-    unblocksOnOptIn: ["*://pubads.g.doubleclick.net/gampad/ads"],
+    unblocksOnOptIn: ["*://pubads.g.doubleclick.net/gampad/ads*"],
   },
   {
     id: "AdsByGoogle",
@@ -179,7 +182,10 @@ const AVAILABLE_SHIMS = [
     name: "Google Analytics Tag Manager",
     bug: "1478593",
     file: "google-analytics-tag-manager.js",
-    matches: ["*://www.google-analytics.com/gtm/js"],
+    matches: [
+      "*://www.google-analytics.com/gtm/js",
+      "*://www.googletagmanager.com/gtm.js",
+    ],
     onlyIfBlockedByETP: true,
   },
   {
@@ -212,7 +218,10 @@ const AVAILABLE_SHIMS = [
     bug: "1487373",
     file: "empty-script.js",
     onlyIfBlockedByETP: true,
-    matches: ["*://s0.2mdn.net/instream/html5/ima3.js"],
+    matches: [
+      "*://s0.2mdn.net/instream/html5/ima3.js",
+      "*://imasdk.googleapis.com/js/sdkloader/ima3.js",
+    ],
   },
   {
     id: "Rambler",
