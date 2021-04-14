@@ -1143,9 +1143,6 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
     case MD_OS_WIN32_NT:
     case MD_OS_WIN32_WINDOWS: {
       switch (exception_code) {
-        case MD_EXCEPTION_CODE_WIN_CONTROL_C:
-          reason = "DBG_CONTROL_C";
-          break;
         case MD_EXCEPTION_CODE_WIN_GUARD_PAGE_VIOLATION:
           reason = "EXCEPTION_GUARD_PAGE";
           break;
@@ -1250,7 +1247,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           reason = "EXCEPTION_INVALID_DISPOSITION";
           break;
         case MD_EXCEPTION_CODE_WIN_ARRAY_BOUNDS_EXCEEDED:
-          reason = "EXCEPTION_BOUNDS_EXCEEDED";
+          reason = "EXCEPTION_ARRAY_BOUNDS_EXCEEDED";
           break;
         case MD_EXCEPTION_CODE_WIN_FLOAT_DENORMAL_OPERAND:
           reason = "EXCEPTION_FLT_DENORMAL_OPERAND";
@@ -1291,8 +1288,8 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
         case MD_EXCEPTION_CODE_WIN_POSSIBLE_DEADLOCK:
           reason = "EXCEPTION_POSSIBLE_DEADLOCK";
           break;
-        case MD_EXCEPTION_CODE_WIN_STACK_BUFFER_OVERRUN:
-          reason = "EXCEPTION_STACK_BUFFER_OVERRUN";
+        case MD_NTSTATUS_WIN_STATUS_STACK_BUFFER_OVERRUN:
+          reason = "STATUS_STACK_BUFFER_OVERRUN";
             if (raw_exception->exception_record.number_parameters > 0) {
             uint32_t fast_fail_code =
                 static_cast<uint32_t>
@@ -1301,9 +1298,6 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
             reason.append(FastFailToString(fast_fail_code));
           }
 
-          break;
-        case MD_EXCEPTION_CODE_WIN_HEAP_CORRUPTION:
-          reason = "EXCEPTION_HEAP_CORRUPTION";
           break;
         case MD_EXCEPTION_OUT_OF_MEMORY:
           reason = "Out of Memory";
@@ -1315,7 +1309,10 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           reason = "Simulated Exception";
           break;
         default:
-          BPLOG(INFO) << "Unknown exception reason " << reason;
+          reason = NTStatusToString(exception_code);
+          if (reason.substr(0, 2) == "0x") {
+            BPLOG(INFO) << "Unknown exception reason " << reason;
+          }
           break;
       }
       break;
