@@ -869,7 +869,7 @@ void WebrtcVideoConduit::InitCall() {
       });
 }
 
-void WebrtcVideoConduit::DeleteStreams() {
+void WebrtcVideoConduit::Shutdown() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
   using namespace Telemetry;
