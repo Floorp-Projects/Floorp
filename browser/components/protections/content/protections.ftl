@@ -22,5 +22,5 @@ vpn-header-content-subscribed = Using the { -mozilla-vpn-brand-name } encrypts a
 
 vpn-banner-header = Protection that extends beyond the browser
 # Note This text is not being translated, and the <br> will need to be removed if or when it does get translated
-vpn-banner-content = Try { -mozilla-vpn-brand-name } risk-free and see why TechRadar says <br> “its speed, simplicity and low monthly price make it worth a look.”
+vpn-banner-content = Try { -mozilla-vpn-brand-name } risk-free and see why TechRadar says, <br> “its speed, simplicity and low monthly price make it worth a look.”
 vpn-banner-link = Get { -mozilla-vpn-brand-name }
