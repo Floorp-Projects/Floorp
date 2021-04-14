@@ -307,6 +307,10 @@
                 data-l10n-id="main-context-menu-print-selection"
                 oncommand="gContextMenu.printSelection();"/>
       <menuseparator id="context-sep-selectall"/>
+      <menuitem id="context-take-screenshot"
+                data-l10n-id="main-context-menu-take-screenshot"
+                oncommand="gContextMenu.takeScreenshot();"/>
+      <menuseparator id="context-sep-screenshots"/>
       <menuitem id="context-keywordfield"
                 data-l10n-id="main-context-menu-keyword"
                 oncommand="AddKeywordForSearchField();"/>
@@ -358,10 +362,6 @@
 #endif
         </menupopup>
       </menu>
-      <menuseparator id="context-sep-screenshots"/>
-      <menuitem id="context-take-screenshot"
-                data-l10n-id="main-context-menu-take-screenshot"
-                oncommand="gContextMenu.takeScreenshot();"/>
       <menuseparator id="spell-separator"/>
       <menuitem id="spell-check-enabled"
                 label="&spellCheckToggle.label;"
