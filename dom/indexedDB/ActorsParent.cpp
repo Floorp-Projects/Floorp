@@ -2812,11 +2812,11 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
  private:
   bool VerifyRequestParams(const RequestParams& aParams) const;
 
-  bool VerifyRequestParams(const SerializedKeyRange& aKeyRange) const;
+  bool VerifyRequestParams(const SerializedKeyRange& aParams) const;
 
   bool VerifyRequestParams(const ObjectStoreAddPutParams& aParams) const;
 
-  bool VerifyRequestParams(const Maybe<SerializedKeyRange>& aKeyRange) const;
+  bool VerifyRequestParams(const Maybe<SerializedKeyRange>& aParams) const;
 
   void CommitOrAbort();
 };
