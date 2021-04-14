@@ -770,26 +770,13 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
                                "FEATURE_ROLLOUT_EARLY_BETA_SOFTWARE_WR", "");
 #endif
 
-#if defined(_M_X64) || defined(__amd64__)
-    // Initial Linux release population for SW-WR.
-    if (mozilla::supports_avx2()) {
-      APPEND_TO_DRIVER_BLOCKLIST_EXT(
-          OperatingSystem::Linux, ScreenSizeStatus::Small, BatteryStatus::All,
-          DesktopEnvironment::All, WindowProtocol::X11,
-          DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
-          nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-          nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_LESS_THAN, V(460, 32, 3, 0),
-          "FEATURE_ROLLOUT_OLD_NVIDIA_RELEASE_SOFTWARE_WR", "");
-
-      APPEND_TO_DRIVER_BLOCKLIST_EXT(
-          OperatingSystem::Linux, ScreenSizeStatus::Small, BatteryStatus::All,
-          DesktopEnvironment::All, WindowProtocol::X11,
-          DriverVendor::MesaLLVMPipe, DeviceFamily::All,
-          nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-          nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
-          V(0, 0, 0, 0), "FEATURE_ROLLOUT_LLVMPIPE_RELEASE_SOFTWARE_WR", "");
-    }
-#endif
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::SmallAndMedium,
+        BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
+        DriverVendor::All, DeviceFamily::All,
+        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_S_M_SCRN_SOFTWARE_WR", "");
 
     ////////////////////////////////////
     // FEATURE_X11_EGL
