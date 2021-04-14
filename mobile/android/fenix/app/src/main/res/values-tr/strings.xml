@@ -605,6 +605,8 @@
     <string name="tabs_header_private_title">Gizli oturum</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Gizli sekmeler</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Eşitlenmiş sekmeler</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Sekme ekle</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1737,6 +1739,9 @@
 	<string name="top_sites_rename_dialog_ok">Tamam</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">İptal</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Web siteleri, e-postalar ve mesajlardaki bağlantılar otomatik olarak Firefox’ta açılsın.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Kaldır</string>

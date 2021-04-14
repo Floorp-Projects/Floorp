@@ -1742,6 +1742,9 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Pśetergnuś</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Nastajśo wótkaze z websedłow, mejlkow a powěsćow, aby se awtomatiski we Firefox wócynili.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Wótwónoźeś</string>
 

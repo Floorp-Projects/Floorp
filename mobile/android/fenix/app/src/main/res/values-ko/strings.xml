@@ -1793,6 +1793,9 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">취소</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Firefox에서 자동으로 열리도록 웹 사이트, 이메일 및 메시지의 링크를 설정합니다.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">삭제</string>
 

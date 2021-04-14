@@ -608,6 +608,8 @@
     <string name="tabs_header_private_title">Privát munkamenet</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Privát lapok</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Szinkronizált lapok</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Lap hozzáadása</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1750,6 +1752,9 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Mégse</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Állítsa be a webhelyek, e-mailek és üzenetek hivatkozásait, hogy azok automatikusan a Firefoxban nyíljanak meg.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Eltávolítás</string>

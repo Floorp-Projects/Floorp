@@ -1781,6 +1781,9 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">取消</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">将网站、电子邮件及聊天工具中的链接设为在 Firefox 中自动打开。</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">移除</string>
 

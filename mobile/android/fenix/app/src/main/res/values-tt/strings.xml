@@ -176,6 +176,8 @@
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Эзләү</string>
 
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Җиһаз теленә иярү</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Телне эзләү</string>
 
@@ -186,6 +188,8 @@
     <string name="search_engine_button">Эзләү системасы</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Эзләү системасы көйләүләре</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Сылтаманы алмашу буферыннан алу</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Рөхсәт итү</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -327,6 +331,9 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Искәртүләр</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Үзгә кушымчалар җыентыгы</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ОК</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -1243,12 +1250,31 @@
     <string name="preferences_credit_cards">Кредит карталары</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Мәгълүматлар шифрланган</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Карталарны җиһазлар арасында синхронлау</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Кредит картасын өстәү</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Сакланган карталар белән идарә итү</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Картаны өстәү</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Карта номеры</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Вакыты чыгу датасы</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Картадагы исем</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Картаны бетерү</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Саклау</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">Саклау</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Баш тарту</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Сакланган карталар</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Эзләү системасын өстәү</string>
@@ -1272,9 +1298,21 @@
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Күбрәк белү</string>
 
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Эзләү системасының исемен кертегез</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Эзләнәсе сүзтезмәне кертегез</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Эзләнәсе сүзтезмәнең Мисал форматына туры килүен тикшерегез</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s ясалды</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s сакланды</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s бетерелде</string>
 
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s яңартыла…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string name="migration_update_app_button">%s программасын кабызу</string>
     <!-- Accessibility description text for a completed migration item -->
@@ -1286,6 +1324,18 @@
     <string name="quick_settings_sheet_secure_connection">Хәвефсез бәйләнеш</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Хәвефсез булмаган бәйләнеш</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Барлык сайтлардагы барлык рөхсәтләрне дә чистартуны раслыйсызмы?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Бу сайт өчен бирелгән барлык рөхсәтләрне дә чистартуны раслыйсызмы?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Әлеге сайт өчен бирелгән бу рөхсәтне кире алуны раслыйсызмы?</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Төп мәкаләләр</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Бу кыстыргычны бетерүне раслыйсызмы?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Төп сайтларга өстәү</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Раслаучы: %1$s</string>
@@ -1293,8 +1343,14 @@
     <string name="login_menu_delete_button">Бетерү</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Үзгәртү</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Бу логинны бетерүне раслыйсызмы?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Бетерү</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Логин көйләүләре </string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Логин үзгәрешләрен саклау.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Үзгәрешләрдән ваз кичү</string>
     <!--  The page title for editing a saved login. -->
@@ -1319,6 +1375,8 @@
     <string name="top_sites_max_limit_confirmation_button">Яхшы, аңладым</string>
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Исем</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Төп сайт исеме</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ОК</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
