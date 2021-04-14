@@ -17,6 +17,59 @@ async function focusWindow(win) {
   await promise;
 }
 
+function getDialogDoc() {
+  // Trudge through all the open windows, until we find the one
+  // that has either commonDialog.xhtml or selectDialog.xhtml loaded.
+  // var enumerator = Services.wm.getEnumerator("navigator:browser");
+  for (let { docShell } of Services.wm.getEnumerator(null)) {
+    var containedDocShells = docShell.getAllDocShellsInSubtree(
+      docShell.typeChrome,
+      docShell.ENUMERATE_FORWARDS
+    );
+    for (let childDocShell of containedDocShells) {
+      // Get the corresponding document for this docshell
+      // We don't want it if it's not done loading.
+      if (childDocShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE) {
+        continue;
+      }
+      var childDoc = childDocShell.contentViewer.DOMDocument;
+      if (
+        childDoc.location.href !=
+          "chrome://global/content/commonDialog.xhtml" &&
+        childDoc.location.href != "chrome://global/content/selectDialog.xhtml"
+      ) {
+        continue;
+      }
+
+      // We're expecting the dialog to be focused. If it's not yet, try later.
+      // (In particular, this is needed on Linux to reliably check focused elements.)
+      if (Services.focus.focusedWindow != childDoc.defaultView) {
+        continue;
+      }
+
+      return childDoc;
+    }
+  }
+
+  return null;
+}
+
+async function waitForAuthPrompt() {
+  let promptDoc = await TestUtils.waitForCondition(() => {
+    return getAuthPrompt();
+  });
+  info("Got prompt: " + promptDoc);
+  return promptDoc;
+}
+
+function getAuthPrompt() {
+  let doc = getDialogDoc();
+  if (!doc) {
+    return false; // try again in a bit
+  }
+  return doc;
+}
+
 async function loadAccessRestrictedURL(browser, url, username, password) {
   let browserLoaded = BrowserTestUtils.browserLoaded(browser);
   BrowserTestUtils.loadURI(browser, url);
