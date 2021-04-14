@@ -103,9 +103,10 @@ bool SmoothMsdScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
     // violate the lock ordering. Instead we schedule
     // HandleSmoothScrollOverscroll() to be called after mRecursiveMutex is
     // released.
-    mDeferredTasks.AppendElement(NewRunnableMethod<ParentLayerPoint>(
+    mDeferredTasks.AppendElement(NewRunnableMethod<ParentLayerPoint, SideBits>(
         "layers::AsyncPanZoomController::HandleSmoothScrollOverscroll", &mApzc,
-        &AsyncPanZoomController::HandleSmoothScrollOverscroll, velocity));
+        &AsyncPanZoomController::HandleSmoothScrollOverscroll, velocity,
+        apz::GetOverscrollSideBits(overscroll)));
     return false;
   }
 

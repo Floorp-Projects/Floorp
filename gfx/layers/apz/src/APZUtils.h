@@ -205,6 +205,12 @@ bool AboutToCheckerboard(const FrameMetrics& aPaintedMetrics,
  * using the StaticPrefs getter directly.
  */
 bool ShouldUseProgressivePaint();
+
+/**
+ * Returns SideBits where the given |aOverscrollAmount| overscrolls.
+ */
+SideBits GetOverscrollSideBits(const ParentLayerPoint& aOverscrollAmount);
+
 }  // namespace apz
 
 }  // namespace layers

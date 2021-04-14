@@ -2721,7 +2721,7 @@ nsEventStatus AsyncPanZoomController::OnPan(
 
   if (aFingersOnTouchpad == FingersOnTouchpad::No) {
     if (IsOverscrolled() && mState != OVERSCROLL_ANIMATION) {
-      StartOverscrollAnimation(velocity);
+      StartOverscrollAnimation(velocity, GetOverscrollSideBits());
     } else if (!consumed) {
       // If there is unconsumed scroll and we're in the momentum part of the
       // pan gesture, terminate the momentum scroll. This prevents momentum
@@ -2754,7 +2754,7 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
   if (IsOverscrolled() && mState != OVERSCROLL_ANIMATION) {
     // If we are in overscrolled state, trigger OverscrollAnimation to
     // ensure we will snap back to the scroll edge.
-    StartOverscrollAnimation(GetVelocityVector());
+    StartOverscrollAnimation(GetVelocityVector(), GetOverscrollSideBits());
   } else {
     SetState(NOTHING);
   }
@@ -3635,7 +3635,7 @@ bool AsyncPanZoomController::OverscrollBehaviorAllowsSwipe() const {
 }
 
 void AsyncPanZoomController::HandleFlingOverscroll(
-    const ParentLayerPoint& aVelocity,
+    const ParentLayerPoint& aVelocity, SideBits aOverscrollSideBits,
     const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
     const RefPtr<const AsyncPanZoomController>& aScrolledApzc) {
   APZCTreeManager* treeManagerLocal = GetApzcTreeManager();
@@ -3659,17 +3659,19 @@ void AsyncPanZoomController::HandleFlingOverscroll(
       }
 
       if (!IsZero(residualVelocity)) {
-        mOverscrollEffect->HandleFlingOverscroll(residualVelocity);
+        mOverscrollEffect->HandleFlingOverscroll(residualVelocity,
+                                                 aOverscrollSideBits);
       }
     }
   }
 }
 
 void AsyncPanZoomController::HandleSmoothScrollOverscroll(
-    const ParentLayerPoint& aVelocity) {
+    const ParentLayerPoint& aVelocity, SideBits aOverscrollSideBits) {
   // We must call BuildOverscrollHandoffChain from this deferred callback
   // function in order to avoid a deadlock when acquiring the tree lock.
-  HandleFlingOverscroll(aVelocity, BuildOverscrollHandoffChain(), nullptr);
+  HandleFlingOverscroll(aVelocity, aOverscrollSideBits,
+                        BuildOverscrollHandoffChain(), nullptr);
 }
 
 void AsyncPanZoomController::SmoothScrollTo(const CSSPoint& aDestination,
@@ -3730,13 +3732,13 @@ void AsyncPanZoomController::SmoothMsdScrollTo(const CSSPoint& aDestination) {
 }
 
 void AsyncPanZoomController::StartOverscrollAnimation(
-    const ParentLayerPoint& aVelocity) {
+    const ParentLayerPoint& aVelocity, SideBits aOverscrollSideBits) {
   SetState(OVERSCROLL_ANIMATION);
 
   ParentLayerPoint velocity = aVelocity;
   AdjustDeltaForAllowedScrollDirections(velocity,
                                         GetOverscrollableDirections());
-  StartAnimation(new OverscrollAnimation(*this, velocity));
+  StartAnimation(new OverscrollAnimation(*this, velocity, aOverscrollSideBits));
 }
 
 bool AsyncPanZoomController::CallDispatchScroll(
@@ -3832,6 +3834,10 @@ ExternalPoint AsyncPanZoomController::GetFirstExternalTouchPoint(
 
 ParentLayerPoint AsyncPanZoomController::GetOverscrollAmount() const {
   return {mX.GetOverscroll(), mY.GetOverscroll()};
+}
+
+SideBits AsyncPanZoomController::GetOverscrollSideBits() const {
+  return apz::GetOverscrollSideBits({mX.GetOverscroll(), mY.GetOverscroll()});
 }
 
 void AsyncPanZoomController::RestoreOverscrollAmount(
@@ -4175,7 +4181,7 @@ bool AsyncPanZoomController::SnapBackIfOverscrolled() {
   // animation - if so, don't start a new one.
   if (IsOverscrolled() && mState != OVERSCROLL_ANIMATION) {
     APZC_LOG("%p is overscrolled, starting snap-back\n", this);
-    StartOverscrollAnimation(ParentLayerPoint(0, 0));
+    StartOverscrollAnimation(ParentLayerPoint(0, 0), GetOverscrollSideBits());
     return true;
   }
   // If we don't kick off an overscroll animation, we still need to ask the

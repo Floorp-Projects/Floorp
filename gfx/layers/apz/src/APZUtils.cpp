@@ -109,6 +109,24 @@ bool ShouldUseProgressivePaint() {
 #endif
 }
 
+SideBits GetOverscrollSideBits(const ParentLayerPoint& aOverscrollAmount) {
+  SideBits sides = SideBits::eNone;
+
+  if (aOverscrollAmount.x < 0) {
+    sides |= SideBits::eLeft;
+  } else if (aOverscrollAmount.x > 0) {
+    sides |= SideBits::eRight;
+  }
+
+  if (aOverscrollAmount.y < 0) {
+    sides |= SideBits::eTop;
+  } else if (aOverscrollAmount.y > 0) {
+    sides |= SideBits::eBottom;
+  }
+
+  return sides;
+}
+
 }  // namespace apz
 }  // namespace layers
 }  // namespace mozilla

@@ -233,6 +233,10 @@ bool Axis::SampleOverscrollAnimation(const TimeDuration& aDelta) {
   return true;
 }
 
+bool Axis::IsOverscrollAnimationRunning() const {
+  return !mMSDModel.IsFinished(1.0);
+}
+
 bool Axis::IsOverscrolled() const { return mOverscroll != 0.f; }
 
 void Axis::ClearOverscroll() {

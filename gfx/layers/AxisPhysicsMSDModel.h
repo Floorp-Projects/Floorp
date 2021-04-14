@@ -38,7 +38,7 @@ class AxisPhysicsMSDModel : public AxisPhysicsModel {
    * Returns true when the position is close to the destination and the
    * velocity is low.
    */
-  bool IsFinished(double aSmallestVisibleIncrement);
+  bool IsFinished(double aSmallestVisibleIncrement) const;
 
  protected:
   double Acceleration(const State& aState) override;
