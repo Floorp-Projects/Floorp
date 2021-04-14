@@ -26,6 +26,7 @@
 
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_image.h"
+#include "mozilla/ProfilerMarkers.h"
 
 namespace mozilla {
 namespace image {
@@ -112,6 +113,17 @@ already_AddRefed<Image> ImageFactory::CreateImage(
     NotifyImageLoading(aURI);
   }
 #endif
+
+  if (profiler_can_accept_markers()) {
+    static const size_t sMaxTruncatedLength = 1024;
+    nsAutoCString spec;
+    aURI->GetSpec(spec);
+    if (spec.Length() >= sMaxTruncatedLength) {
+      spec.Truncate(sMaxTruncatedLength);
+    }
+    PROFILER_MARKER_TEXT("Image Load", GRAPHICS,
+                         MarkerInnerWindowId(aInnerWindowId), spec);
+  }
 
   // Select the type of image to create based on MIME type.
   if (aMimeType.EqualsLiteral(IMAGE_SVG_XML)) {

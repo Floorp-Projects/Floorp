@@ -545,6 +545,7 @@ RasterImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 RasterImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
                             uint32_t aFlags) {
+  AutoProfilerImagePaintMarker PROFILER_RAII(this);
 #ifdef DEBUG
   NotifyDrawingObservers();
 #endif
@@ -1385,6 +1386,7 @@ ImgDrawResult RasterImage::DrawInternal(DrawableSurface&& aSurface,
   ImageRegion region(aRegion);
   bool frameIsFinished = aSurface->IsFinished();
 
+  AutoProfilerImagePaintMarker PROFILER_RAII(this);
 #ifdef DEBUG
   NotifyDrawingObservers();
 #endif

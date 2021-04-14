@@ -219,6 +219,7 @@ ImgDrawResult ImageResource::GetImageContainerImpl(
     }
   }
 
+  AutoProfilerImagePaintMarker PROFILER_RAII(this);
 #ifdef DEBUG
   NotifyDrawingObservers();
 #endif
