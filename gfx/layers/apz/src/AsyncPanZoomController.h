@@ -1243,6 +1243,13 @@ class AsyncPanZoomController {
    */
   CSSRect GetVisibleRect(const RecursiveMutexAutoLock& aProofOfLock) const;
 
+  /**
+   * Returns a pair of displacements both in logical/physical units for
+   * |aEvent|.
+   */
+  std::tuple<ParentLayerPoint, ScreenPoint> GetDisplacementsForPanGesture(
+      const PanGestureInput& aEvent);
+
  private:
   friend class AutoApplyAsyncTestAttributes;
 

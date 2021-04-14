@@ -2569,40 +2569,9 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(
   return nsEventStatus_eConsumeNoDefault;
 }
 
-nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
-                                            bool aFingersOnTouchpad) {
-  APZC_LOG("%p got a pan-pan in state %d\n", this, mState);
-
-  if (mState == SMOOTHMSD_SCROLL) {
-    if (!aFingersOnTouchpad) {
-      // When a SMOOTHMSD_SCROLL scroll is being processed on a frame, mouse
-      // wheel and trackpad momentum scroll position updates will not cancel the
-      // SMOOTHMSD_SCROLL scroll animations, enabling scripts that depend on
-      // them to be responsive without forcing the user to wait for the momentum
-      // scrolling to completely stop.
-      return nsEventStatus_eConsumeNoDefault;
-    }
-
-    // SMOOTHMSD_SCROLL scrolls are cancelled by pan gestures.
-    CancelAnimation();
-  }
-
-  if (mState == NOTHING) {
-    // This event block was interrupted by something else. If the user's fingers
-    // are still on on the touchpad we want to resume scrolling, otherwise we
-    // ignore the rest of the scroll gesture.
-    if (!aFingersOnTouchpad) {
-      return nsEventStatus_eConsumeNoDefault;
-    }
-    // Resume / restart the pan.
-    // PanBegin will call back into this function with mState == PANNING.
-    return OnPanBegin(aEvent);
-  }
-
-  if (mState == OVERSCROLL_ANIMATION && !aFingersOnTouchpad) {
-    return nsEventStatus_eConsumeNoDefault;
-  }
-
+std::tuple<ParentLayerPoint, ScreenPoint>
+AsyncPanZoomController::GetDisplacementsForPanGesture(
+    const PanGestureInput& aEvent) {
   // Note that there is a multiplier that applies onto the "physical" pan
   // displacement (how much the user's fingers moved) that produces the
   // "logical" pan displacement (how much the page should move). For some of the
@@ -2667,6 +2636,46 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
       logicalPanDisplacement,
       GetCurrentPanGestureBlock()->GetAllowedScrollDirections());
 
+  return {logicalPanDisplacement, physicalPanDisplacement};
+}
+
+nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
+                                            bool aFingersOnTouchpad) {
+  APZC_LOG("%p got a pan-pan in state %d\n", this, mState);
+
+  if (mState == SMOOTHMSD_SCROLL) {
+    if (!aFingersOnTouchpad) {
+      // When a SMOOTHMSD_SCROLL scroll is being processed on a frame, mouse
+      // wheel and trackpad momentum scroll position updates will not cancel the
+      // SMOOTHMSD_SCROLL scroll animations, enabling scripts that depend on
+      // them to be responsive without forcing the user to wait for the momentum
+      // scrolling to completely stop.
+      return nsEventStatus_eConsumeNoDefault;
+    }
+
+    // SMOOTHMSD_SCROLL scrolls are cancelled by pan gestures.
+    CancelAnimation();
+  }
+
+  if (mState == NOTHING) {
+    // This event block was interrupted by something else. If the user's fingers
+    // are still on on the touchpad we want to resume scrolling, otherwise we
+    // ignore the rest of the scroll gesture.
+    if (!aFingersOnTouchpad) {
+      return nsEventStatus_eConsumeNoDefault;
+    }
+    // Resume / restart the pan.
+    // PanBegin will call back into this function with mState == PANNING.
+    return OnPanBegin(aEvent);
+  }
+
+  if (mState == OVERSCROLL_ANIMATION && !aFingersOnTouchpad) {
+    return nsEventStatus_eConsumeNoDefault;
+  }
+
+  auto [logicalPanDisplacement, physicalPanDisplacement] =
+      GetDisplacementsForPanGesture(aEvent);
+
   // We need to update the axis velocity in order to get a useful display port
   // size and position. We need to do so even if this is a momentum pan (i.e.
   // aFingersOnTouchpad == false); in that case the "with touch" part is not
@@ -2684,6 +2693,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
 
   HandlePanningUpdate(physicalPanDisplacement);
 
+  MOZ_ASSERT(GetCurrentPanGestureBlock());
   ScreenPoint panDistance(fabs(physicalPanDisplacement.x),
                           fabs(physicalPanDisplacement.y));
   OverscrollHandoffState handoffState(
