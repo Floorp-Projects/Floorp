@@ -535,7 +535,6 @@ BackgroundUpdate.REASON = {
   NO_MOZ_BACKGROUNDTASKS: "MOZ_BACKGROUNDTASKS=0",
   NO_OMNIJAR: "no omnijar",
   WINDOWS_CANNOT_USUALLY_USE_BITS: "on Windows but cannot usually use BITS",
-  OTHER_INSTANCE: "other instance is running",
 };
 
 /**
@@ -551,4 +550,6 @@ BackgroundUpdate.EXIT_CODE = {
   DEFAULT_PROFILE_DOES_NOT_EXIST: 11,
   DEFAULT_PROFILE_CANNOT_BE_LOCKED: 12,
   DEFAULT_PROFILE_CANNOT_BE_READ: 13,
+  // Another instance is running.
+  OTHER_INSTANCE: 21,
 };

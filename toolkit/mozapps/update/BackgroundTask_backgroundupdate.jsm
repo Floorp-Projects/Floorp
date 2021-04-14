@@ -85,17 +85,6 @@ async function _attemptBackgroundUpdate() {
     reasons = [];
   }
 
-  // Other instances running are a transient precondition (during this invocation).
-  if (!reasons.length) {
-    log.debug(`${SLUG}: checking if other instance is running`);
-    let syncManager = Cc[
-      "@mozilla.org/updates/update-sync-manager;1"
-    ].getService(Ci.nsIUpdateSyncManager);
-    if (syncManager.isOtherInstanceRunning()) {
-      reasons.push(BackgroundUpdate.REASON.OTHER_INSTANCE);
-    }
-  }
-
   reasons.sort();
   for (let reason of reasons) {
     Glean.backgroundUpdate.reasons.add(reason);
@@ -222,6 +211,24 @@ async function runBackgroundTask() {
     UpdRootD: Services.dirsvc.get("UpdRootD", Ci.nsIFile).path,
   };
   log.debug(`${SLUG}: current configuration`, data);
+
+  // Other instances running are a transient precondition (during this invocation).  We'd prefer to
+  // check this later, as a reason for not updating, but Glean is not tested in multi-process
+  // environments and while its storage (backed by rkv) can in theory support multiple processes, it
+  // is not clear that it in fact does support multiple processes.  So we are conservative here.
+  // There is a potential time-of-check/time-of-use race condition here, but if process B starts
+  // after we pass this test, that process should exit after it gets to this check, avoiding
+  // multiple processes using the same Glean storage.  If and when more and longer-running
+  // background tasks become common, we may need to be more fine-grained and share just the Glean
+  // storage resource.
+  log.debug(`${SLUG}: checking if other instance is running`);
+  let syncManager = Cc["@mozilla.org/updates/update-sync-manager;1"].getService(
+    Ci.nsIUpdateSyncManager
+  );
+  if (syncManager.isOtherInstanceRunning()) {
+    log.error(`${SLUG}: another instance is running`);
+    return EXIT_CODE.OTHER_INSTANCE;
+  }
 
   // Here we mirror specific prefs from the default profile into our temporary profile.  We want to
   // do this early because some of the prefs may impact internals such as log levels.  Generally,
