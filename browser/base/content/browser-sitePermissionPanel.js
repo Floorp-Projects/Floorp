@@ -191,9 +191,6 @@ var gPermissionPanel = {
     // Update the popup strings
     this._refreshPermissionPopup();
 
-    // Add the "open" attribute to the button in the identity box for styling
-    this._identityPermissionBox.setAttribute("open", "true");
-
     // Check the panel state of other panels. Hide them if needed.
     let openPanels = Array.from(document.querySelectorAll("panel[openpanel]"));
     for (let panel of openPanels) {
@@ -338,7 +335,6 @@ var gPermissionPanel = {
   onPopupHidden(event) {
     if (event.target == this._permissionPopup) {
       window.removeEventListener("focus", this, true);
-      this._identityPermissionBox.removeAttribute("open");
     }
   },
 
