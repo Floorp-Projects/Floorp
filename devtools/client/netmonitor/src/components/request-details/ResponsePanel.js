@@ -30,9 +30,6 @@ const PropertiesView = createFactory(
 const ImagePreview = createFactory(
   require("devtools/client/netmonitor/src/components/previews/ImagePreview")
 );
-const FontPreview = createFactory(
-  require("devtools/client/netmonitor/src/components/previews/FontPreview")
-);
 const SourcePreview = createFactory(
   require("devtools/client/netmonitor/src/components/previews/SourcePreview")
 );
@@ -229,12 +226,8 @@ class ResponsePanel extends Component {
 
     let { encoding, mimeType, text } = responseContent.content;
 
-    if (Filters.images({ mimeType })) {
+    if (mimeType.includes("image/")) {
       return ImagePreview({ encoding, mimeType, text, url });
-    }
-
-    if (Filters.fonts({ url, mimeType })) {
-      return FontPreview({ connector, mimeType, url });
     }
 
     // Decode response if it's coming from JSONView.
