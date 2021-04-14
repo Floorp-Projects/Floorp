@@ -3,21 +3,68 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @media (-moz-proton-modals) {
-.expander-up,
-.expander-down {
-  border-radius: 4px;
-  align-self: center;
+:root {
+  /* we eventually want to share this value with the bookmark panel, which is
+     currently using --arrowpanel-padding */
+  --editbookmarkdialog-padding: 1.25em;
 }
 
-#editBMPanel_tagsField {
-  margin-inline-end: 16px;
+#bookmarkpropertiesdialog #editBookmarkPanelRows > vbox {
+  padding-block: var(--editbookmarkdialog-padding) 0;
 }
 
-#editBMPanel_tagsRow > hbox {
-  display: grid;
-  grid-template-columns: 1fr auto;
+#bookmarkpropertiesdialog #editBookmarkPanelContent label[control] {
+  margin-inline-start: 0;
+  margin-block-start: 0;
 }
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows {
+  padding: calc(var(--editbookmarkdialog-padding) / 2) var(--editbookmarkdialog-padding) var(--editbookmarkdialog-padding);
 }
+
+#bookmarkpropertiesdialog .expander-up,
+#bookmarkpropertiesdialog .expander-down {
+  appearance: none;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin: 0;
+  margin-inline-start: 4px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+}
+
+#bookmarkpropertiesdialog .expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  transform: scaleY(-1);
+}
+
+#bookmarkpropertiesdialog .expander-down {
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows > vbox > input,
+#bookmarkpropertiesdialog #editBookmarkPanelRows > vbox > hbox > input,
+#bookmarkpropertiesdialog #editBMPanel_folderMenuList {
+  margin: 0;
+}
+
+/* dialog-specific #editBookmarkPanel styles */
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows {
+  padding-inline: 0;
+  margin-inline: 4px;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows,
+#bookmarkpropertiesdialog vbox#editBMPanel_nameRow {
+  padding-top: 0;
+}
+
+#bookmarkpropertiesdialog #editBookmarkPanelRows #editBMPanel_tagsField {
+  margin-inline-end: var(--editbookmarkdialog-padding);
+}
+} /** END Proton **/
 
 tree[is="places-tree"] > treechildren::-moz-tree-cell {
   /* ensure we use the direction of the website title / url instead of the
@@ -50,10 +97,8 @@ tree[is="places-tree"] > treechildren::-moz-tree-cell {
 }
 
 .caption-label {
-  font-size: 10px;
+  font-size: 0.9em;
   line-height: 12px;
   margin: 2px 4px;
-  color: #5B5B66;
-  /* Text should span all columns */
-  grid-column: 1/-1;
+  color: currentColor;
 }
