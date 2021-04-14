@@ -117,7 +117,7 @@
 #include "js/experimental/TypedData.h"   // JS_NewUint8Array
 #include "js/friend/DumpFunctions.h"     // JS::FormatStackDump
 #include "js/friend/ErrorMessages.h"     // js::GetErrorMessage, JSMSG_*
-#include "js/friend/StackLimits.h"       // js::CheckRecursionLimitConservative
+#include "js/friend/StackLimits.h"       // js::AutoCheckRecursionLimit
 #include "js/friend/WindowProxy.h"  // js::IsWindowProxy, js::SetWindowProxyClass, js::ToWindowProxyIfWindow, js::ToWindowIfWindowProxy
 #include "js/GCAPI.h"               // JS::AutoCheckCannotGC
 #include "js/GCVector.h"
@@ -8883,7 +8883,7 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
 
   // The following steps aim to replicate the behavior of UpdateReflectorGlobal
   // in dom/bindings/BindingUtils.cpp. In detail:
-  // 1. Check the recursion depth using CheckRecursionLimitConservative.
+  // 1. Check the recursion depth using checkConservative.
   // 2. Enter the target compartment.
   // 3. Clone the source object using JS_CloneObject.
   // 4. Check if new wrappers can be created if source and target are in
@@ -8896,7 +8896,8 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
   // to transplant an object into the same compartment as the source object to
   // cover all operations supported by JS_TransplantObject.
 
-  if (!CheckRecursionLimitConservative(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.checkConservative(cx)) {
     return false;
   }
 
