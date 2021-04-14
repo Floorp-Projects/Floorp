@@ -1,4 +1,4 @@
-/* global $:false, Handlebars:false, thePKT_PANEL:false */
+/* global Handlebars:false, thePKT_PANEL:false */
 /* import-globals-from messages.js */
 
 /*
@@ -24,45 +24,26 @@ var PKT_PANEL_OVERLAY = function(options) {
   this.loggedOutVariant = "control";
   this.dictJSON = {};
   this.initCloseTabEvents = function() {
-    function clickHelper(e, linkData) {
-      e.preventDefault();
-      thePKT_PANEL.sendMessage("PKT_openTabWithUrl", {
-        url: linkData.url,
-        activate: true,
-        source: linkData.source || "",
+    function clickHelper(selector, source) {
+      document.querySelector(selector)?.addEventListener(`click`, event => {
+        event.preventDefault();
+
+        thePKT_PANEL.sendMessage("PKT_openTabWithUrl", {
+          url: event.currentTarget.getAttribute(`href`),
+          activate: true,
+          source: source || "",
+        });
       });
     }
-    $(".pkt_ext_learnmore").click(function(e) {
-      clickHelper(e, {
-        source: "learn_more",
-        url: $(this).attr("href"),
-      });
-    });
-    $(".signup-btn-firefox").click(function(e) {
-      clickHelper(e, {
-        source: "sign_up_1",
-        url: $(this).attr("href"),
-      });
-    });
-    $(".signup-btn-email").click(function(e) {
-      clickHelper(e, {
-        source: "sign_up_2",
-        url: $(this).attr("href"),
-      });
-    });
-    $(".pkt_ext_login").click(function(e) {
-      clickHelper(e, {
-        source: "log_in",
-        url: $(this).attr("href"),
-      });
-    });
+
+    clickHelper(`.pkt_ext_learnmore`, `learn_more`);
+    clickHelper(`.signup-btn-firefox`, `sign_up_1`);
+    clickHelper(`.signup-btn-email`, `sign_up_2`);
+    clickHelper(`.pkt_ext_login`, `log_in`);
+
     // A generic click we don't do anything special for.
     // Was used for an experiment, possibly not needed anymore.
-    $(".signup-btn-tryitnow").click(function(e) {
-      clickHelper(e, {
-        url: $(this).attr("href"),
-      });
-    });
+    clickHelper(`.signup-btn-tryitnow`);
   };
   this.sanitizeText = function(s) {
     var sanitizeMap = {
@@ -83,6 +64,9 @@ var PKT_PANEL_OVERLAY = function(options) {
     this.dictJSON = window.pocketStrings;
   };
   this.create = function() {
+    const parser = new DOMParser();
+    let elBody = document.querySelector(`body`);
+
     var controlvariant = window.location.href.match(
       /controlvariant=([\w|\.]*)&?/
     );
@@ -124,12 +108,17 @@ var PKT_PANEL_OVERLAY = function(options) {
 
     // extra modifier class for language
     if (this.locale) {
-      $("body").addClass("pkt_ext_signup_" + this.locale);
+      elBody.classList.add(`pkt_ext_signup_${this.locale}`);
     }
 
     // Create actual content
     if (this.variant == "overflow") {
-      $("body").append(Handlebars.templates.signup_shell(this.dictJSON));
+      elBody.append(
+        parser.parseFromString(
+          Handlebars.templates.signup_shell(this.dictJSON),
+          `text/html`
+        ).documentElement
+      );
     } else {
       // Logged Out Display Variants for MV Testing
       let variants = {
@@ -156,15 +145,17 @@ var PKT_PANEL_OVERLAY = function(options) {
       }
 
       if (loggedOutVariantTemplate !== `signupstoryboard_shell`) {
-        $("body").addClass(`
-          los_variant los_${loggedOutVariantTemplate}
-        `);
+        elBody.classList.add(`los_variant`);
+        elBody.classList.add(`los_${loggedOutVariantTemplate}`);
       }
 
-      $("body").append(
-        Handlebars.templates[loggedOutVariantTemplate || variants.control](
-          this.dictJSON
-        )
+      elBody.append(
+        parser.parseFromString(
+          Handlebars.templates[loggedOutVariantTemplate || variants.control](
+            this.dictJSON
+          ),
+          `text/html`
+        ).documentElement
       );
     }
 
