@@ -17,8 +17,10 @@ interface nsIFOG : nsISupports
    *
    * @param aDataPathOverride - The path of a custom Glean data path to use
    *        instead of the profile dir.
+   * @param aAppIdOverride - The application_id to use instead of
+   *        "firefox.desktop".
    */
-  void initializeFOG([optional] in AUTF8String aDataPathOverride);
+  void initializeFOG([optional] in AUTF8String aDataPathOverride, [optional] in AUTF8String aAppIdOverride);
 
   /**
    * Enable or Disable the logging of pings in the Glean SDK.
