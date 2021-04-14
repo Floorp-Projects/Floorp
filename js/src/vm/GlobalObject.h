@@ -115,6 +115,7 @@ class GlobalObject : public NativeObject {
     IMPORT_ENTRY_PROTO,
     EXPORT_ENTRY_PROTO,
     REQUESTED_MODULE_PROTO,
+    MODULE_REQUEST_PROTO,
     REGEXP_STATICS,
     RUNTIME_CODEGEN_ENABLED,
     INTRINSICS,
@@ -518,6 +519,12 @@ class GlobalObject : public NativeObject {
                              initRequestedModuleProto);
   }
 
+  static JSObject* getOrCreateModuleRequestPrototype(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    return getOrCreateObject(cx, global, MODULE_REQUEST_PROTO,
+                             initModuleRequestProto);
+  }
+
   static JSFunction* getOrCreateTypedArrayConstructor(
       JSContext* cx, Handle<GlobalObject*> global) {
     if (!ensureConstructor(cx, global, JSProto_TypedArray)) {
@@ -841,6 +848,8 @@ class GlobalObject : public NativeObject {
   static bool initExportEntryProto(JSContext* cx, Handle<GlobalObject*> global);
   static bool initRequestedModuleProto(JSContext* cx,
                                        Handle<GlobalObject*> global);
+  static bool initModuleRequestProto(JSContext* cx,
+                                     Handle<GlobalObject*> global);
 
   static bool initStandardClasses(JSContext* cx, Handle<GlobalObject*> global);
   static bool initSelfHostingBuiltins(JSContext* cx,
