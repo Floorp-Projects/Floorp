@@ -293,7 +293,11 @@ struct MemStream {
       if (mLength > mCapacity) {
         mCapacity = mLength * 2;
       }
-      mData = (char*)realloc(mData, mCapacity);
+      char* data = (char*)realloc(mData, mCapacity);
+      if (!data) {
+        free(mData);
+      }
+      mData = data;
     }
     if (mData) {
       return true;
@@ -301,8 +305,22 @@ struct MemStream {
     NS_ERROR("Failed to allocate MemStream!");
     mValid = false;
     mLength = 0;
+    mCapacity = 0;
     return false;
   }
+
+  void reset() {
+    free(mData);
+    mData = nullptr;
+    mValid = true;
+    mLength = 0;
+    mCapacity = 0;
+  }
+
+  MemStream(const MemStream&) = delete;
+  MemStream(MemStream&&) = delete;
+  MemStream& operator=(const MemStream&) = delete;
+  MemStream& operator=(MemStream&&) = delete;
 
   void write(const char* aData, size_t aSize) {
     if (Resize(mLength + aSize)) {
