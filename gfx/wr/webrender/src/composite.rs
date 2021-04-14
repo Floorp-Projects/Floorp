@@ -579,11 +579,7 @@ impl CompositeState {
                         let surface = descriptor.resolve(resource_cache, tile_cache.current_tile_size);
                         (
                             CompositeTileSurface::Texture { surface },
-                            // If a tile has compositor surface intersecting with it, we need to
-                            // respect the tile.is_opaque property even if the overall tile cache
-                            // is opaque. In this case, the tile.is_opaque property is required
-                            // in order to ensure correct draw order with compositor surfaces.
-                            tile.is_opaque || (!tile.has_compositor_surface && tile_cache.is_opaque()),
+                            tile.is_opaque
                         )
                     }
                 };
@@ -642,9 +638,29 @@ impl CompositeState {
                 );
             }
 
+            // Add alpha tiles after opaque surfaces
+            if visible_alpha_tile_count > 0 {
+                self.descriptor.surfaces.push(
+                    CompositeSurfaceDescriptor {
+                        surface_id: sub_slice.native_surface.as_ref().map(|s| s.alpha),
+                        clip_rect: surface_clip_rect,
+                        transform: CompositorSurfaceTransform::translation(
+                            tile_cache.device_position.x,
+                            tile_cache.device_position.y,
+                            0.0,
+                        ),
+                        image_dependencies: [ImageDependency::INVALID; 3],
+                        image_rendering: ImageRendering::CrispEdges,
+                        tile_descriptors: alpha_tile_descriptors,
+                    }
+                );
+            }
+
             // For each compositor surface that was promoted, build the
             // information required for the compositor to draw it
-            for external_surface in &tile_cache.external_surfaces {
+            for compositor_surface in &sub_slice.compositor_surfaces {
+                let external_surface = &compositor_surface.descriptor;
+
                 let clip_rect = external_surface
                     .clip_rect
                     .intersection(&device_clip_rect)
@@ -722,25 +738,7 @@ impl CompositeState {
                     }
                 );
 
-                self.push_tile(tile, true);
-            }
-
-            // Add alpha / overlay tiles after compositor surfaces
-            if visible_alpha_tile_count > 0 {
-                self.descriptor.surfaces.push(
-                    CompositeSurfaceDescriptor {
-                        surface_id: sub_slice.native_surface.as_ref().map(|s| s.alpha),
-                        clip_rect: surface_clip_rect,
-                        transform: CompositorSurfaceTransform::translation(
-                            tile_cache.device_position.x,
-                            tile_cache.device_position.y,
-                            0.0,
-                        ),
-                        image_dependencies: [ImageDependency::INVALID; 3],
-                        image_rendering: ImageRendering::CrispEdges,
-                        tile_descriptors: alpha_tile_descriptors,
-                    }
-                );
+                self.push_tile(tile, compositor_surface.is_opaque);
             }
         }
     }
@@ -869,7 +867,11 @@ impl CompositeState {
                 }
             }
             CompositeTileSurface::ExternalSurface { .. } => {
-                self.opaque_tiles.push(tile);
+                if is_opaque {
+                    self.opaque_tiles.push(tile);
+                } else {
+                    self.alpha_tiles.push(tile);
+                }
             }
         }
     }
