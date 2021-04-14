@@ -112,7 +112,10 @@ class TestPointerActions(BaseMouseAction):
             message="Context menu did not open",
         )
         with self.marionette.using_context("chrome"):
-            self.marionette.find_element(By.ID, "main-window").send_keys(Keys.ESCAPE)
+            cm_el = self.marionette.find_element(By.ID, "contentAreaContextMenu")
+            self.marionette.execute_script(
+                "arguments[0].hidePopup()", script_args=(cm_el,)
+            )
         Wait(self.marionette).until(
             lambda _: context_menu_state() == "closed",
             message="Context menu did not close",
