@@ -161,6 +161,10 @@ class Repository(object):
         Return None if the hg hash of the base ref could not be calculated.
         """
 
+    @abc.abstractproperty
+    def branch(self):
+        """Current branch or bookmark the checkout has active."""
+
     @abc.abstractmethod
     def get_commit_time(self):
         """Return the Unix time of the HEAD revision."""
@@ -328,6 +332,16 @@ class HgRepository(Repository):
 
     def base_ref_as_hg(self):
         return self.base_ref
+
+    @property
+    def branch(self):
+        bookmarks_fn = os.path.join(self.path, ".hg", "bookmarks.current")
+        if os.path.exists(bookmarks_fn):
+            with open(bookmarks_fn) as f:
+                bookmark = f.read()
+                return bookmark or None
+
+        return None
 
     def __enter__(self):
         if self._client.server is None:
@@ -540,6 +554,10 @@ class GitRepository(Repository):
             return self._run("cinnabar", "git2hg", base_ref)
         except subprocess.CalledProcessError:
             return
+
+    @property
+    def branch(self):
+        return self._run("branch", "--show-current").strip() or None
 
     @property
     def has_git_cinnabar(self):
