@@ -3706,7 +3706,8 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
   }
 
   // right menu click on linux should also pop up a context menu
-  if (!StaticPrefs::ui_context_menus_after_mouseup()) {
+  if (!StaticPrefs::ui_context_menus_after_mouseup() &&
+      eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
     DispatchContextMenuEventFromMouseEvent(domButton, aEvent);
   }
 }
@@ -3764,7 +3765,8 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
   mLastMotionPressure = pressure;
 
   // right menu click on linux should also pop up a context menu
-  if (StaticPrefs::ui_context_menus_after_mouseup()) {
+  if (StaticPrefs::ui_context_menus_after_mouseup() &&
+      eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
     DispatchContextMenuEventFromMouseEvent(domButton, aEvent);
   }
 
