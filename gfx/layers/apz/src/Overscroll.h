@@ -19,10 +19,15 @@ namespace layers {
 class OverscrollAnimation : public AsyncPanZoomAnimation {
  public:
   OverscrollAnimation(AsyncPanZoomController& aApzc,
-                      const ParentLayerPoint& aVelocity)
+                      const ParentLayerPoint& aVelocity,
+                      SideBits aOverscrollSideBits)
       : mApzc(aApzc) {
-    mApzc.mX.StartOverscrollAnimation(aVelocity.x);
-    mApzc.mY.StartOverscrollAnimation(aVelocity.y);
+    if ((aOverscrollSideBits & SideBits::eLeftRight) != SideBits::eNone) {
+      mApzc.mX.StartOverscrollAnimation(aVelocity.x);
+    }
+    if ((aOverscrollSideBits & SideBits::eTopBottom) != SideBits::eNone) {
+      mApzc.mY.StartOverscrollAnimation(aVelocity.y);
+    }
   }
   virtual ~OverscrollAnimation() {
     mApzc.mX.EndOverscrollAnimation();
@@ -32,8 +37,10 @@ class OverscrollAnimation : public AsyncPanZoomAnimation {
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) override {
     // Can't inline these variables due to short-circuit evaluation.
-    bool continueX = mApzc.mX.SampleOverscrollAnimation(aDelta);
-    bool continueY = mApzc.mY.SampleOverscrollAnimation(aDelta);
+    bool continueX = mApzc.mX.IsOverscrollAnimationRunning() &&
+                     mApzc.mX.SampleOverscrollAnimation(aDelta);
+    bool continueY = mApzc.mY.IsOverscrollAnimationRunning() &&
+                     mApzc.mY.SampleOverscrollAnimation(aDelta);
     if (!continueX && !continueY) {
       // If we got into overscroll from a fling, that fling did not request a
       // fling snap to avoid a resulting scrollTo from cancelling the overscroll
@@ -65,7 +72,8 @@ class OverscrollEffectBase {
   virtual ~OverscrollEffectBase() = default;
   virtual void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
                                  ScrollDirections aOverscrolableDirections) = 0;
-  virtual void HandleFlingOverscroll(const ParentLayerPoint& aVelocity) = 0;
+  virtual void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
+                                     SideBits aOverscrollSideBits) = 0;
 };
 
 // A generic overscroll effect, implemented by AsyncPanZoomController itself.
@@ -91,8 +99,9 @@ class GenericOverscrollEffect : public OverscrollEffectBase {
     }
   }
 
-  void HandleFlingOverscroll(const ParentLayerPoint& aVelocity) override {
-    mApzc.StartOverscrollAnimation(aVelocity);
+  void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
+                             SideBits aOverscrollSideBits) override {
+    mApzc.StartOverscrollAnimation(aVelocity, aOverscrollSideBits);
   }
 
  private:
@@ -117,7 +126,8 @@ class WidgetOverscrollEffect : public OverscrollEffectBase {
     }
   }
 
-  void HandleFlingOverscroll(const ParentLayerPoint& aVelocity) override {
+  void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
+                             SideBits aOverscrollSideBits) override {
     RefPtr<GeckoContentController> controller =
         mApzc.GetGeckoContentController();
     if (controller) {

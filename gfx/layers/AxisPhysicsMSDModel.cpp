@@ -56,7 +56,7 @@ void AxisPhysicsMSDModel::SetDestination(double aDestination) {
   mDestination = aDestination;
 }
 
-bool AxisPhysicsMSDModel::IsFinished(double aSmallestVisibleIncrement) {
+bool AxisPhysicsMSDModel::IsFinished(double aSmallestVisibleIncrement) const {
   // In order to satisfy the condition of reaching the destination, the distance
   // between the simulation position and the destination must be less than
   // aSmallestVisibleIncrement while the speed is simultaneously less than

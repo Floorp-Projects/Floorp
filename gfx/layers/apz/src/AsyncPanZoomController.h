@@ -809,6 +809,12 @@ class AsyncPanZoomController {
    * Gets the amount by which this APZC is overscrolled along both axes.
    */
   ParentLayerPoint GetOverscrollAmount() const;
+
+  /**
+   * Returns SideBits where this APZC is overscrolled.
+   */
+  SideBits GetOverscrollSideBits() const;
+
   /**
    * Restore the amount by which this APZC is overscrolled along both axes
    * to the specified amount. This is for test-related use; overscrolling
@@ -1452,14 +1458,16 @@ class AsyncPanZoomController {
   // later in the handoff chain, or if there are no takers, continuing the
   // fling and entering an overscrolled state.
   void HandleFlingOverscroll(
-      const ParentLayerPoint& aVelocity,
+      const ParentLayerPoint& aVelocity, SideBits aOverscrollSideBits,
       const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
       const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
 
-  void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
+  void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity,
+                                    SideBits aOverscrollSideBits);
 
   // Start an overscroll animation with the given initial velocity.
-  void StartOverscrollAnimation(const ParentLayerPoint& aVelocity);
+  void StartOverscrollAnimation(const ParentLayerPoint& aVelocity,
+                                SideBits aOverscrollSideBits);
 
   // Return the directions in which this APZC allows overscrolling.
   ScrollDirections GetOverscrollableDirections() const;
