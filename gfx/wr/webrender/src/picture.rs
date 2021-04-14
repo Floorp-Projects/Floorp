@@ -267,9 +267,6 @@ pub struct TileCoordinate;
 
 // Geometry types for tile coordinates.
 pub type TileOffset = Point2D<i32, TileCoordinate>;
-// TileSize type is also used in used in lib.rs and cbindgen picks the wrong one when
-// generating headers.
-/// cbindgen:ignore
 pub type TileSize = Size2D<i32, TileCoordinate>;
 pub type TileRect = Rect<i32, TileCoordinate>;
 
@@ -6321,7 +6318,7 @@ impl PicturePrimitive {
             }
 
             // Map the cluster bounding rect into the space of the surface, and
-            // include it in the surface bounding rect.
+            // include it in the surface bounding rect. 
             surface.map_local_to_surface.set_target_spatial_node(
                 cluster.spatial_node_index,
                 frame_context.spatial_tree,

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Various hit-testing tests that spawn in new windows - Part 1</title>
+  <title>Various hit-testing tests that spawn in new windows</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -42,12 +42,34 @@ var subtests = [
   {"file": "helper_hittest_nested_transforms_bug1459696.html", "prefs": prefs},
   {"file": "helper_hittest_sticky_bug1478304.html", "prefs": prefs},
   {"file": "helper_hittest_clipped_fixed_modal.html", "prefs": prefs},
+  {"file": "helper_hittest_pointerevents_svg.html", "prefs": prefs},
+  {"file": "helper_hittest_clippath.html", "prefs": prefs},
+  {"file": "helper_hittest_hoisted_scrollinfo.html", "prefs": prefs},
+  {"file": "helper_hittest_spam.html", "prefs": prefs},
+  {"file": "helper_hittest_hidden_inactive_scrollframe.html", "prefs": prefs},
+  {"file": "helper_hittest_overscroll.html", "prefs": overscroll_prefs},
+  {"file": "helper_hittest_overscroll_subframe.html", "prefs": overscroll_prefs},
+  {"file": "helper_hittest_overscroll_contextmenu.html", "prefs": overscroll_prefs},
 ];
+
+function addConditionalTests(tests) {
+  // Add some more tests only useful with WebRender. Note that we do this in
+  // function run after loading, because trying to read layerManagerType can
+  // throw an NS_ERROR_FAILURE if called too early.
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  var isWebRender = utils.layerManagerType.startsWith("WebRender");
+  if (isWebRender) {
+    tests = tests.concat([
+      {"file": "helper_hittest_deep_scene_stack.html", "prefs": prefs},
+    ]);
+  }
+  return tests;
+}
 
 if (isApzEnabled()) {
   SimpleTest.waitForExplicitFinish();
   window.onload = function() {
-    runSubtestsSeriallyInFreshWindows(subtests)
+    runSubtestsSeriallyInFreshWindows(addConditionalTests(subtests))
     .then(SimpleTest.finish, SimpleTest.finishWithFailure);
   };
 }
