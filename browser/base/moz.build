@@ -84,7 +84,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("windows", "gtk"):
 JAR_MANIFESTS += ["jar.mn"]
 
 GeneratedFile(
-    "content/aboutNetErrorCodes.js",
-    script="gen_aboutneterror_codes.py",
+    "content/certerror/aboutNetErrorCodes.js",
+    script="content/certerror/gen_aboutneterror_codes.py",
     inputs=["/browser/locales/en-US/browser/nsserrors.ftl"],
 )
