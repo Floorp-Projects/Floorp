@@ -633,7 +633,12 @@ class AsyncPanZoomController {
   nsEventStatus OnPanMayBegin(const PanGestureInput& aEvent);
   nsEventStatus OnPanCancelled(const PanGestureInput& aEvent);
   nsEventStatus OnPanBegin(const PanGestureInput& aEvent);
-  nsEventStatus OnPan(const PanGestureInput& aEvent, bool aFingersOnTouchpad);
+  enum class FingersOnTouchpad {
+    Yes,
+    No,
+  };
+  nsEventStatus OnPan(const PanGestureInput& aEvent,
+                      FingersOnTouchpad aFingersOnTouchpad);
   nsEventStatus OnPanEnd(const PanGestureInput& aEvent);
   nsEventStatus OnPanMomentumStart(const PanGestureInput& aEvent);
   nsEventStatus OnPanMomentumEnd(const PanGestureInput& aEvent);
