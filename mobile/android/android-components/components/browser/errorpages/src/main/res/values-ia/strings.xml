@@ -119,44 +119,183 @@
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Porta limitate pro rationes de securitate</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+· <p>Le adresse requirite specificava un porta (e.g., <q>mozilla.org:80</q> pro porta 80 sur mozilla.org) normalmente usate pro propositos <em>differente</em> que le navigation del Web. Le navigator ha cancellate le requesta pro tu protection e securitate.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Le connexion ha essite remontate</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Le ligamine de rete ha essite interrumpite negotiante un connexion. Retenta.</p>
+      <ul>
+        <li>Le sito pote esser temporarimente indisponibile o troppo occupate. Retenta post alcun momentos.</li>
+        <li>Si tu non pote cargar ulle paginas, verifica le connexion de datos o wi-fi de tu apparato.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Typo de file non secur</string>
 
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+<ul>
+  <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+</ul>
+]]></string>
+
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Error de contento corrumpite</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite disvelate.</p>
+      <ul>
+        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Contento collabite</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite disvelate.</p>
+      <ul>
+        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Error de codification del contento</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Le pagina que tu tenta vider non pote esser monstrate perque illo usa un modulo de compression non valide o non supportate.</p>
+      <ul>
+        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Adresse non trovate</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Le navigator non pote trovar le servitor hoste al adresse fornite.</p>
+      <ul>
+        <li>Verifica le adresse pro errores de scriptura como
+          <strong>ww</strong>.example.com in vice de
+          <strong>www</strong>.example.com.</li>
+        <li>Si tu non pote cargar ulle paginas, verifica le connexion de datos o le wi-fi de tu apparato.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Nulle connexion a Internet</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Verifica tu connexion de rete o tenta recargar le pagina post alcun momentos.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Recargar</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Adresse non valide</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Le adresse fornite non es in un formato recognoscite. Verifica le barra del adresses pro errores e retenta.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Le adresse non es valide</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Web adresses es usualmente scribite como<strong>http://www.example.com/</strong></li>
+        <li>Verifica que tu usa barras oblique directe (i.e. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocollo incognite</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Le adresse specifica un protocollo (e.g., <q>wxyz://</q>) que le navigator non recognosce, assi le navigator non pote connecter te correctemente al sito.</p>
+      <ul>
+        <li>Tenta tu acceder files multimedial o altere servicios non textual? Verifica le sito pro altere requisitos.</li>
+        <li>Alcun protocollos pote requirer software de tertie-parte o plugins ante que le navigator pote recognoscer los.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">File non trovate</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Pote le elemento haber essite renominate, removite o transferite?</li>
+        <li>Ha il un error de orthographia, majusculas o altere typographic in le adresse?</li>
+        <li>Ha tu sufficiente permissos de accesso al elemento requirite?</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Le accesso al file ha essite refusate</string>
 
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Illo pote haber essite removite, movite o le permissos del file pote impedir le accesso.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Connexion refusate per le servitor proxy</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Le navigator es configurate pro usar un servitor proxy, ma le proxy refusava un connexion.</p>
+      <ul>
+        <li>Es le configuration del proxy del navigator correcte? Verifica le parametros e retenta.</li>
+        <li>Al le servicio proxy permitte al connexiones de iste rete?</li>
+        <li>Ancora ha tu difficultates? Consulta tu administrator de rete o fornitor de Internet pro assistentia.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Servitor proxy non trovate</string>
 
-    </resources>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Le navigator es configurate pro usar un servitor proxy, ma le proxy non pote esser trovate.</p>
+      <ul>
+        <li>Es le configuration del proxy del navigator correcte? Verifica le parametros e retenta.</li>
+        <li>Es le apparato connectite a un rete active?</li>
+        <li>Ancora ha tu difficultates? Consulta tu administrator de rete o fornitor de Internet pro assistentia.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Problema de sito malware</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Le sito a %1$s ha essite signalate como sito attaccante e ha essite blocate in base a tu preferentias de securitate.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Problema de sito indesirate</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Le sito a %1$s ha essite signalate como servitor de software indesirate e ha essite blocate in base a tu preferentias de securitate.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problema de sito malefic</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Le sito a %1$s ha essite signalate como potentialmente malefic e ha essite blocate in base a tu preferentias de securitate.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema de sito fraudulente</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Iste pagina web a %1$s ha essite signalate como sito fraudulente e ha essite blocate in base a tu preferentias de securitate.</p>
+    ]]></string>
+</resources>
