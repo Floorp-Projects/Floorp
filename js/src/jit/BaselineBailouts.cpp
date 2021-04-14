@@ -24,7 +24,7 @@
 #include "jit/Recover.h"
 #include "jit/RematerializedFrame.h"
 #include "jit/SharedICRegisters.h"
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimitWithStackPointerDontReport, js::ReportOverRecursed
+#include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit, js::ReportOverRecursed
 #include "js/Utility.h"
 #include "util/Memory.h"
 #include "vm/ArgumentsObject.h"
@@ -1717,7 +1717,8 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
     overRecursed = true;
   }
 #else
-  if (!CheckRecursionLimitWithStackPointerDontReport(cx, newsp)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.checkWithStackPointerDontReport(cx, newsp)) {
     overRecursed = true;
   }
 #endif
