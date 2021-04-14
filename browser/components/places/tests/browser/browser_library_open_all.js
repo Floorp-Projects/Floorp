@@ -43,7 +43,7 @@ add_task(async function test_open_all_in_tabs_from_library() {
     "placesContext_openBookmarkLinks:tabs"
   );
   let promiseWaitForWindow = BrowserTestUtils.waitForNewWindow();
-  EventUtils.synthesizeMouseAtCenter(openTabs, { shiftKey: true }, gLibrary);
+  placesContext.activateItem(openTabs, { shiftKey: true });
   let newWindow = await promiseWaitForWindow;
 
   Assert.equal(
