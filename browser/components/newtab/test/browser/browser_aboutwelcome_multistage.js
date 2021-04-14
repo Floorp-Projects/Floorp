@@ -13,10 +13,8 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
-const ABOUT_WELCOME_DESIGN_PREF = "browser.aboutwelcome.design";
 
 const TEST_MULTISTAGE_CONTENT = [
   {
@@ -204,19 +202,9 @@ async function getAboutWelcomeParent(browser) {
 
 const TEST_MULTISTAGE_JSON = JSON.stringify(TEST_MULTISTAGE_CONTENT);
 const TEST_PROTON_JSON = JSON.stringify(TEST_PROTON_CONTENT);
-/**
- * Sets the aboutwelcome pref to enabled simplified welcome UI
- */
-async function setAboutWelcomePref(value) {
-  return pushPrefs([SEPARATE_ABOUT_WELCOME_PREF, value]);
-}
 
 async function setAboutWelcomeMultiStage(value = "") {
   return pushPrefs([ABOUT_WELCOME_OVERRIDE_CONTENT_PREF, value]);
-}
-
-async function setAboutWelcomeDesign(value = "") {
-  return pushPrefs([ABOUT_WELCOME_DESIGN_PREF, value]);
 }
 
 async function openAboutWelcome() {
@@ -301,6 +289,7 @@ add_task(async function setup() {
   // This needs to happen before any about:welcome page opens
   sandbox.stub(FxAccounts.config, "promiseMetricsFlowURI").resolves("");
   await setAboutWelcomeMultiStage("");
+  await setProton(false);
 
   registerCleanupFunction(() => {
     sandbox.restore();
@@ -982,7 +971,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
   const sandbox = sinon.createSandbox();
   await setAboutWelcomePref(true);
   await setAboutWelcomeMultiStage(TEST_PROTON_JSON);
-  await setAboutWelcomeDesign("proton");
+  await setProton(true);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

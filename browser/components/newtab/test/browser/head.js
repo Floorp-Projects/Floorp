@@ -69,6 +69,16 @@ async function setTestTopSites() {
 }
 
 // eslint-disable-next-line no-unused-vars
+async function setAboutWelcomePref(value) {
+  return pushPrefs(["browser.aboutwelcome.enabled", value]);
+}
+
+// eslint-disable-next-line no-unused-vars
+async function setProton(value = false) {
+  return pushPrefs(["browser.proton.enabled", value]);
+}
+
+// eslint-disable-next-line no-unused-vars
 async function clearHistoryAndBookmarks() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
