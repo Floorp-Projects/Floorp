@@ -26,6 +26,13 @@
   opacity: .6;
 }
 
+/* Make the contrast stronger in dark mode */
+@media (-moz-proton) {
+:root[lwt-toolbar-field-focus-brighttext] .search-panel-header > label {
+  opacity: 1;
+}
+}
+
 /**
  * The borders of the various elements are specified as follows.
  *
