@@ -37,12 +37,6 @@ struct JS_PUBLIC_API JSContext;
 
 namespace js {
 
-namespace detail {
-
-extern JS_FRIEND_API bool RunningWithTrustedPrincipals(JSContext* cx);
-
-}  // namespace detail
-
 class MOZ_RAII AutoCheckRecursionLimit {
   [[nodiscard]] MOZ_ALWAYS_INLINE bool checkLimit(JSContext* cx,
                                                   uintptr_t limit) const;
@@ -53,6 +47,8 @@ class MOZ_RAII AutoCheckRecursionLimit {
   MOZ_ALWAYS_INLINE uintptr_t getStackLimitHelper(JSContext* cx,
                                                   JS::StackKind kind,
                                                   int extraAllowance) const;
+
+  JS_FRIEND_API bool runningWithTrustedPrincipals(JSContext* cx) const;
 
  public:
   explicit MOZ_ALWAYS_INLINE AutoCheckRecursionLimit(JSContext* cx) {}
@@ -78,7 +74,7 @@ extern MOZ_COLD JS_FRIEND_API void ReportOverRecursed(JSContext* maybecx);
 
 MOZ_ALWAYS_INLINE uintptr_t
 AutoCheckRecursionLimit::getStackLimit(JSContext* cx) const {
-  JS::StackKind kind = detail::RunningWithTrustedPrincipals(cx)
+  JS::StackKind kind = runningWithTrustedPrincipals(cx)
                            ? JS::StackForTrustedScript
                            : JS::StackForUntrustedScript;
   return getStackLimitHelper(cx, kind, 0);
@@ -130,8 +126,8 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimitDontReport(
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::check(JSContext* cx) const {
   JS_STACK_OOM_POSSIBLY_FAIL_REPORT();
 
-  // GetNativeStackLimit(cx) is pretty slow because it has to do an uninlined
-  // call to RunningWithTrustedPrincipals to determine which stack limit to
+  // getStackLimit(cx) is pretty slow because it has to do an uninlined
+  // call to runningWithTrustedPrincipals to determine which stack limit to
   // use. To work around this, check the untrusted limit first to avoid the
   // overhead in most cases.
   uintptr_t untrustedLimit =
