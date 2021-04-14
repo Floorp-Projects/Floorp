@@ -300,3 +300,25 @@
     color: var(--organizer-text-primary-color);
   }
 }
+
+/* expanders */
+
+.expander-up,
+.expander-down {
+  min-width: 0;
+  padding: 1px;
+  margin: 0;
+  margin-inline-end: 4px;
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.expander-up {
+  transform: scaleY(-1);
+}
+
+.expander-up > .button-box,
+.expander-down > .button-box {
+  padding: 0;
+}

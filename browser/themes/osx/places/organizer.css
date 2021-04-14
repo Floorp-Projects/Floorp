@@ -182,3 +182,22 @@
 #clearDownloadsButton > .toolbarbutton-icon {
   display: none;
 }
+
+/**** expanders ****/
+
+.expander-up,
+.expander-down {
+  margin-block: 0 1px;
+  margin-inline: 8px 4px;
+  padding: 0;
+}
+
+.expander-up {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-disclosure-button-open;
+}
+
+.expander-down {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-disclosure-button-closed;
+}

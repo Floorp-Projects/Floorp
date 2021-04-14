@@ -27,6 +27,7 @@
 
 /* Expanders */
 
+@media not (-moz-proton-modals) {
 .expander-up,
 .expander-down {
   min-width: 0;
@@ -46,6 +47,7 @@
 .expander-down > .button-box {
   padding: 0;
 }
+} /** END not Proton **/
 
 #editBMPanel_folderTree {
   margin-block: 2px;
