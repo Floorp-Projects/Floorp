@@ -1,20 +1,20 @@
 "use strict";
 
 // Check TopSites edit modal and overlay show up.
-test_newtab(
+test_newtab({
+  before: setTestTopSites,
   // it should be able to click the topsites add button to reveal the add top site modal and overlay.
-  function topsites_edit() {
+  test: function topsites_edit() {
     // Open the section context menu.
-    content.document
-      .querySelector(".top-sites .section-top-bar .context-menu-button")
-      .click();
+    content.document.querySelector(".top-sites .context-menu-button").click();
+
     let contextMenu = content.document.querySelector(
-      ".top-sites .section-top-bar .context-menu"
+      ".top-sites .context-menu"
     );
     ok(contextMenu, "Should find a visible topsite context menu");
 
     const topsitesAddBtn = content.document.querySelector(
-      ".top-sites .context-menu-item button"
+      ".top-sites li:nth-child(2) button"
     );
     topsitesAddBtn.click();
 
@@ -23,8 +23,8 @@ test_newtab(
 
     found = content.document.querySelector(".modalOverlayOuter");
     ok(found && !found.hidden, "Should find a visible overlay");
-  }
-);
+  },
+});
 
 // Test pin/unpin context menu options.
 test_newtab({
@@ -80,7 +80,7 @@ test_newtab({
 
 // Check Topsites add
 test_newtab({
-  before: setDefaultTopSites,
+  before: setTestTopSites,
   // it should be able to click the topsites edit button to reveal the edit topsites modal and overlay.
   test: async function topsites_add() {
     let nativeInputValueSetter = Object.getOwnPropertyDescriptor(
@@ -90,18 +90,17 @@ test_newtab({
     let event = new content.Event("input", { bubbles: true });
 
     // Find the add topsites button
-    content.document
-      .querySelector(".top-sites .section-top-bar .context-menu-button")
-      .click();
-    let contextMenu = content.document.querySelector(
-      ".top-sites .section-top-bar .context-menu"
-    );
-    ok(contextMenu, "Should find a visible topsite context menu");
+    content.document.querySelector(".top-sites .context-menu-button").click();
 
     const topsitesAddBtn = content.document.querySelector(
-      ".top-sites .context-menu-item button"
+      ".top-sites li:nth-child(2) button"
     );
     topsitesAddBtn.click();
+
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector(".modalOverlayOuter"),
+      "No overlay found"
+    );
 
     let found = content.document.querySelector(".modalOverlayOuter");
     ok(found && !found.hidden, "Should find a visible overlay");
@@ -133,15 +132,13 @@ test_newtab({
     // Wait for Topsite to be populated
     await ContentTaskUtils.waitForCondition(
       () =>
-        content.document
-          .querySelector(".top-site-outer:first-child a")
-          .getAttribute("href") === "https://bugzilla.mozilla.org",
+        content.document.querySelector("[href='https://bugzilla.mozilla.org']"),
       "No Topsite found"
     );
 
     // Remove topsite after test is complete
     let topsiteContextBtn = content.document.querySelector(
-      ".top-sites-list .context-menu-button"
+      ".top-sites-list li:nth-child(1) .context-menu-button"
     );
     topsiteContextBtn.click();
     await ContentTaskUtils.waitForCondition(
@@ -149,21 +146,17 @@ test_newtab({
       "No context menu found"
     );
 
-    let contextMen = content.document.querySelector(
-      ".top-sites-list .context-menu"
-    );
-
-    const dismissBtn = contextMen.querySelector(
-      ".top-sites .context-menu-item button .icon-dismiss"
+    const dismissBtn = content.document.querySelector(
+      ".top-sites li:nth-child(7) button"
     );
     dismissBtn.click();
 
     // Wait for Topsite to be removed
     await ContentTaskUtils.waitForCondition(
       () =>
-        content.document
-          .querySelector(".top-site-outer:first-child a")
-          .getAttribute("href") !== "https://bugzilla.mozilla.org",
+        !content.document.querySelector(
+          "[href='https://bugzilla.mozilla.org']"
+        ),
       "Topsite not removed"
     );
   },
