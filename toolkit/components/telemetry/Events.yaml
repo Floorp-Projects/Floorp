@@ -198,6 +198,11 @@ addonsManager:
     extra_keys:
       addon_id: >
         A string which identifies the add-on. This value might be trimmed.
+      taar_based: >
+        This extra key is only set for install flows related to the discovery
+        addon. When available it is going to be a string set to "1" for
+        TAAR based recommendations, "0" for manually curated and unset if
+        not relevant for the particular install flow.
       utm_campaign: >
         The specific product promotion or strategic campaign that drives
         traffic to the install page.
@@ -213,7 +218,7 @@ addonsManager:
     products:
       - "firefox"
     record_in_processes: ["main"]
-    bug_numbers: [1653020]
+    bug_numbers: [1653020, 1699225]
     release_channel_collection: opt-out
   manage:
     description: >
@@ -274,13 +279,19 @@ addonsManager:
         "recent" or "available".
       source: The source of the installation for an add-on.
       addonId: The id of the add-on being acted upon.
+      taar_enabled: >
+        This extra key is only set for the "discover" view and "list" view when
+        type is "extension".
+        When available it is going to be a string set to "1" if the
+        TAAR based discovery was enabled, "0" if it was disabled and unset if
+        not relevant for the particular view.
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "92"
     products:
       - "firefox"
       - "fennec"
     record_in_processes: ["main"]
-    bug_numbers: [1500147, 1590736, 1630596, 1672570]
+    bug_numbers: [1500147, 1590736, 1630596, 1672570, 1699225]
     release_channel_collection: opt-out
   action:
     description: >
@@ -303,13 +314,18 @@ addonsManager:
       view: >
         The view for the event when object is aboutAddons, or the specific doorhanger when object is doorhanger.
       addonId: The id of the add-on being acted upon.
+      taar_based: >
+        This extra key is only set for the "installFromRecommendation" action.
+        When available it is going to be a string set to "1" for
+        TAAR based recommendations, "0" for manually curated and unset if
+        not relevant for the particular action.
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "92"
     products:
       - "firefox"
       - "fennec"
     record_in_processes: ["main"]
-    bug_numbers: [1500147, 1513344, 1529347, 1546248, 1590736, 1630596, 1672570]
+    bug_numbers: [1500147, 1513344, 1529347, 1546248, 1590736, 1630596, 1672570, 1699225]
     release_channel_collection: opt-out
   report:
     description: >

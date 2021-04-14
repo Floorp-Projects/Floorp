@@ -34,11 +34,29 @@ async function recordViewTelemetry(param) {
 
   let { currentViewId } = gViewController;
   let viewType = gViewController.parseViewId(currentViewId)?.type;
-  AMTelemetry.recordViewEvent({
+  let details = {
     view: viewType || "other",
     addon,
     type,
-  });
+  };
+
+  // The extensions list view does also include recommendations that may be
+  // recommended by TAAR, themes list view does not at the moment.
+  if (
+    viewType === "discover" ||
+    (viewType === "list" && type === "extension")
+  ) {
+    // DiscoveryAPI is defined in aboutaddons.js (which is technically loaded after
+    // this script, nevertheless we would never reach this if aboutaddons.js wasn't
+    // already executed and the about:addons views defined, which guarantees that
+    // DiscoveryAPI will always be defined here.
+    // (This telemetry collection is also covered by tests and so there will also be
+    // test failures if that isn't the case anymore).
+    const { DiscoveryAPI } = window;
+    details.taarEnabled = !!DiscoveryAPI.clientIdDiscoveryEnabled;
+  }
+
+  AMTelemetry.recordViewEvent(details);
 }
 
 // Used by external callers to load a specific view into the manager
