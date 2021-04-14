@@ -2952,7 +2952,7 @@ nsXULMenuCommandEvent::Run() {
     nsContentUtils::DispatchXULCommand(
         menu, mIsTrusted, nullptr, presShell, mModifiers & MODIFIER_CONTROL,
         mModifiers & MODIFIER_ALT, mModifiers & MODIFIER_SHIFT,
-        mModifiers & MODIFIER_META);
+        mModifiers & MODIFIER_META, 0, mButton);
   }
 
   if (popup && mCloseMenuMode != CloseMenuMode_None)
