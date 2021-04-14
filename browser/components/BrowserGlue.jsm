@@ -4665,10 +4665,12 @@ var DefaultBrowserCheck = {
     let shouldCheck =
       !AppConstants.DEBUG &&
       shellService.shouldCheckDefaultBrowser &&
-      !Services.prefs.getBoolPref(
-        "browser.defaultbrowser.notificationbar",
-        false
-      );
+      // Ignore notificationbar pref if proton to show the prompt.
+      (Services.prefs.getBoolPref("browser.proton.enabled", true) ||
+        !Services.prefs.getBoolPref(
+          "browser.defaultbrowser.notificationbar",
+          false
+        ));
 
     // Even if we shouldn't check the default browser, we still continue when
     // isStartupCheck = true to set prefs and telemetry.
