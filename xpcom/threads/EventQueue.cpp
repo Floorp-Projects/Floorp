@@ -8,6 +8,7 @@
 
 #include "GeckoProfiler.h"
 #include "InputTaskManager.h"
+#include "VsyncTaskManager.h"
 #include "nsIRunnable.h"
 #include "TaskController.h"
 
@@ -47,6 +48,8 @@ void EventQueueInternal<ItemsPerPage>::PutEvent(
     } else if (aPriority == EventQueuePriority::DeferredTimers ||
                aPriority == EventQueuePriority::Idle) {
       manager = TaskController::Get()->GetIdleTaskManager();
+    } else if (aPriority == EventQueuePriority::Vsync) {
+      manager = VsyncTaskManager::Get();
     }
 
     tc->DispatchRunnable(event.forget(), static_cast<uint32_t>(aPriority),
