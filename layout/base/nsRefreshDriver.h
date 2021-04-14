@@ -125,11 +125,9 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    * refresh driver ticks.
    */
   void AddPostRefreshObserver(nsAPostRefreshObserver* aObserver);
-  void AddPostRefreshObserver(mozilla::OneShotPostRefreshObserver* aObserver) =
-      delete;
+  void AddPostRefreshObserver(mozilla::ManagedPostRefreshObserver*) = delete;
   void RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver);
-  void RemovePostRefreshObserver(
-      mozilla::OneShotPostRefreshObserver* aObserver) = delete;
+  void RemovePostRefreshObserver(mozilla::ManagedPostRefreshObserver*) = delete;
 
   /**
    * Add/Remove imgIRequest versions of observers.

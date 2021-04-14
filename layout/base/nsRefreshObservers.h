@@ -67,24 +67,26 @@ class nsAPostRefreshObserver {
 namespace mozilla {
 
 /**
- * A wrapper for nsAPostRefreshObserver that's one-shot (unregisters itself
- * after firing once) and can be used without writing a derived class by passing
- * in the action in the form of a lambda (or other function object).
+ * A wrapper for nsAPostRefreshObserver that's refcounted and might unregister
+ * itself after firing.
  *
  * Note, while the observer unregisters itself, the registering still needs to
  * be done by the caller.
  */
-class OneShotPostRefreshObserver : public nsAPostRefreshObserver {
+class ManagedPostRefreshObserver : public nsAPostRefreshObserver {
  public:
-  using Action =
-      std::function<void(mozilla::PresShell*, OneShotPostRefreshObserver*)>;
-  NS_INLINE_DECL_REFCOUNTING(OneShotPostRefreshObserver)
-  OneShotPostRefreshObserver(mozilla::PresShell* aPresShell, Action&& aAction);
-  explicit OneShotPostRefreshObserver(mozilla::PresShell* aPresShell);
+  // Whether the post-refresh observer should be unregistered after it has
+  // fired.
+  enum class Unregister : bool { No, Yes };
+  using Action = std::function<Unregister(bool aWasCanceled)>;
+  NS_INLINE_DECL_REFCOUNTING(ManagedPostRefreshObserver)
+  ManagedPostRefreshObserver(mozilla::PresShell*, Action&&);
+  explicit ManagedPostRefreshObserver(mozilla::PresShell*);
   void DidRefresh() override;
+  void Cancel();
 
  protected:
-  virtual ~OneShotPostRefreshObserver();
+  virtual ~ManagedPostRefreshObserver();
   RefPtr<mozilla::PresShell> mPresShell;
   Action mAction;
 };

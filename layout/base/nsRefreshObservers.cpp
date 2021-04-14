@@ -9,38 +9,42 @@
 
 namespace mozilla {
 
-OneShotPostRefreshObserver::OneShotPostRefreshObserver(PresShell* aPresShell,
+ManagedPostRefreshObserver::ManagedPostRefreshObserver(PresShell* aPresShell,
                                                        Action&& aAction)
     : mPresShell(aPresShell), mAction(std::move(aAction)) {}
 
-OneShotPostRefreshObserver::OneShotPostRefreshObserver(PresShell* aPresShell)
+ManagedPostRefreshObserver::ManagedPostRefreshObserver(PresShell* aPresShell)
     : mPresShell(aPresShell) {}
 
-OneShotPostRefreshObserver::~OneShotPostRefreshObserver() = default;
+ManagedPostRefreshObserver::~ManagedPostRefreshObserver() = default;
 
-void OneShotPostRefreshObserver::DidRefresh() {
+void ManagedPostRefreshObserver::Cancel() {
+  mAction(true);
+  mAction = nullptr;
+  mPresShell = nullptr;
+}
+
+void ManagedPostRefreshObserver::DidRefresh() {
   if (!mPresShell) {
     MOZ_ASSERT_UNREACHABLE(
         "Post-refresh observer fired again after failed attempt at "
         "unregistering it");
     return;
   }
-
-  RefPtr<OneShotPostRefreshObserver> kungfuDeathGrip = this;
-
-  mAction(mPresShell, this);
-
-  nsPresContext* presContext = mPresShell->GetPresContext();
-  if (!presContext) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Unable to unregister post-refresh observer! Leaking it instead of "
-        "leaving garbage registered");
-    // Graceful handling, just in case...
-    mPresShell = nullptr;
-    mAction = Action();
-    return;
+  Unregister unregister = mAction(false);
+  if (bool(unregister)) {
+    nsPresContext* presContext = mPresShell->GetPresContext();
+    if (!presContext) {
+      MOZ_ASSERT_UNREACHABLE(
+          "Unable to unregister post-refresh observer! Leaking it instead of "
+          "leaving garbage registered");
+      // Graceful handling, just in case...
+      mPresShell = nullptr;
+      mAction = nullptr;
+      return;
+    }
+    presContext->UnregisterManagedPostRefreshObserver(this);
   }
-  presContext->UnregisterOneShotPostRefreshObserver(this);
 }
 
 }  // namespace mozilla
