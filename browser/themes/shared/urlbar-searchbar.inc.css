@@ -1067,3 +1067,12 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left::after {
 .searchbar-engine-one-off-add-engine[image]:hover > .button-box > .button-icon {
   opacity: 1;
 }
+
+/* Set opacity of placeholder for urlbar and searchbar in dark mode during
+   focusing on to make the contrast stronger */
+@media (-moz-proton) {
+:root[lwt-toolbar-field-focus-brighttext] #urlbar[focused="true"] #urlbar-input::placeholder,
+:root[lwt-toolbar-field-focus-brighttext] #searchbar:focus-within .searchbar-textbox::placeholder {
+  opacity: 1;
+}
+}
