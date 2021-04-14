@@ -1,41 +1,23 @@
 from __future__ import absolute_import, print_function
-import os.path
-import shutil
-import subprocess
-import sys
+import py
+import invoke
 
-VENDOR_TARGET = "py/_vendored_packages"
-GOOD_FILES = ('README.md', '__init__.py')
+VENDOR_TARGET = py.path.local("py/_vendored_packages")
+GOOD_FILES = 'README.md', '__init__.py'
 
-
-def remove_libs():
+@invoke.task()
+def remove_libs(ctx):
     print("removing vendored libs")
-    for filename in os.listdir(VENDOR_TARGET):
-        if filename not in GOOD_FILES:
-            path = os.path.join(VENDOR_TARGET, filename)
+    for path in VENDOR_TARGET.listdir():
+        if path.basename not in GOOD_FILES:
             print(" ", path)
-            if os.path.isfile(path):
-                os.remove(path)
-            else:
-                shutil.rmtree(path)
+            path.remove()
 
-
-def update_libs():
+@invoke.task(pre=[remove_libs])
+def update_libs(ctx):
     print("installing libs")
-    subprocess.check_call((
-        sys.executable, '-m', 'pip', 'install',
-        '--target', VENDOR_TARGET, 'apipkg', 'iniconfig',
-    ))
-    subprocess.check_call(('git', 'add', VENDOR_TARGET))
+    ctx.run("pip install -t {target} apipkg iniconfig".format(target=VENDOR_TARGET))
+    ctx.run("git add {target}".format(target=VENDOR_TARGET))
     print("Please commit to finish the update after running the tests:")
     print()
     print('    git commit -am "Updated vendored libs"')
-
-
-def main():
-    remove_libs()
-    update_libs()
-
-
-if __name__ == '__main__':
-    exit(main())
