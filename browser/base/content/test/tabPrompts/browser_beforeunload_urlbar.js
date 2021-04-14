@@ -32,6 +32,14 @@ add_task(async function test_beforeunload_stay_clears_urlbar() {
       EventUtils.synthesizeKey("VK_RETURN");
       await promptOpenedPromise;
       await TestUtils.waitForTick();
+      // For proton modal dialogs, work around bug 1699844 by
+      // waiting before closing this prompt:
+      await (async function() {
+        let rAFCount = 3;
+        while (rAFCount--) {
+          await new Promise(window.requestAnimationFrame);
+        }
+      })();
     } else {
       let promptOpenedPromise = TestUtils.topicObserved(
         "tabmodal-dialog-loaded"
