@@ -15,6 +15,10 @@ const { ExperimentAPI } = ChromeUtils.import(
 async function testWithExperimentFeatureValue(slug, featureValue, test) {
   test_newtab({
     async before() {
+      Services.prefs.setBoolPref(
+        "browser.newtabpage.activity-stream.newNewtabExperience.enabled",
+        false
+      );
       let updatePromise = new Promise(resolve =>
         ExperimentAPI._store.once(`update:${slug}`, resolve)
       );
@@ -36,6 +40,9 @@ async function testWithExperimentFeatureValue(slug, featureValue, test) {
     },
     test,
     async after() {
+      Services.prefs.clearUserPref(
+        "browser.newtabpage.activity-stream.newNewtabExperience.enabled"
+      );
       ExperimentAPI._store._deleteForTests(slug);
       is(ExperimentAPI._store.getAll().includes(slug), false, "Cleanup done");
     },

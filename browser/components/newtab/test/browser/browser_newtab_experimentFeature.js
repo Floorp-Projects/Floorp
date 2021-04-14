@@ -27,7 +27,7 @@ add_task(async function test_enroll_newNewtabExperience() {
 
   await SpecialPowers.spawn(browser, [], () => {
     let newtabExperience = content.document.querySelector(".newtab-experience");
-    ok(!newtabExperience, "Newtab experience is off by default");
+    ok(newtabExperience, "Newtab experience is on by default");
   });
 
   let recipe = ExperimentFakes.recipe(`foo${Date.now()}`, {
@@ -39,8 +39,8 @@ add_task(async function test_enroll_newNewtabExperience() {
           featureId: "newtab",
           enabled: true,
           value: {
-            newNewtabExperienceEnabled: true,
-            customizationMenuEnabled: true,
+            newNewtabExperienceEnabled: false,
+            customizationMenuEnabled: false,
           },
         },
       },
@@ -51,8 +51,8 @@ add_task(async function test_enroll_newNewtabExperience() {
           featureId: "newtab",
           enabled: true,
           value: {
-            newNewtabExperienceEnabled: true,
-            customizationMenuEnabled: true,
+            newNewtabExperienceEnabled: false,
+            customizationMenuEnabled: false,
           },
         },
       },
@@ -75,7 +75,7 @@ add_task(async function test_enroll_newNewtabExperience() {
 
   await SpecialPowers.spawn(browser, [], () => {
     let newtabExperience = content.document.querySelector(".newtab-experience");
-    ok(newtabExperience, "Newtab experience active");
+    ok(!newtabExperience, "Newtab experience deactive");
   });
 
   await ExperimentManager.unenroll(recipe.slug, "cleanup");
@@ -85,15 +85,10 @@ add_task(async function test_enroll_newNewtabExperience() {
     "Wait for enrollment to finish"
   );
 
-  await BrowserTestUtils.waitForCondition(
-    () =>
-      SpecialPowers.spawn(
-        browser,
-        [],
-        () => !content.document.querySelector(".newtab-experience")
-      ),
-    "Newtab experience is off again"
-  );
+  await SpecialPowers.spawn(browser, [], () => {
+    let newtabExperience = content.document.querySelector(".newtab-experience");
+    ok(newtabExperience, "Newtab experience is on again");
+  });
 
   BrowserTestUtils.removeTab(tab);
 });
