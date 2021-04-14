@@ -1765,6 +1765,7 @@ impl DirtyRegion {
     pub fn add_dirty_region(
         &mut self,
         rect_in_pic_space: PictureRect,
+        sub_slice_index: SubSliceIndex,
         spatial_tree: &SpatialTree,
     ) {
         let map_pic_to_world = SpaceMapper::new_with_target(
@@ -1783,6 +1784,7 @@ impl DirtyRegion {
 
         self.filters.push(BatchFilter {
             rect_in_pic_space,
+            sub_slice_index,
         });
     }
 
@@ -1813,6 +1815,7 @@ impl DirtyRegion {
             combined = combined.union(&world_rect);
             filters.push(BatchFilter {
                 rect_in_pic_space,
+                sub_slice_index: filter.sub_slice_index,
             });
         }
 
@@ -2199,6 +2202,27 @@ pub struct TileCacheParams {
     pub compositor_surface_count: usize,
 }
 
+/// Defines which sub-slice (effectively a z-index) a primitive exists on within
+/// a picture cache instance.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct SubSliceIndex(u8);
+
+impl SubSliceIndex {
+    pub const DEFAULT: SubSliceIndex = SubSliceIndex(0);
+
+    pub fn new(index: usize) -> Self {
+        SubSliceIndex(index as u8)
+    }
+
+    /// Return true if this sub-slice is the primary sub-slice (for now, we assume
+    /// that only the primary sub-slice may be opaque and support subpixel AA, for example).
+    pub fn is_primary(&self) -> bool {
+        self.0 == 0
+    }
+}
+
 /// A SubSlice represents a potentially overlapping set of tiles within a picture cache. Most
 /// picture cache instances will have only a single sub-slice. The exception to this is when
 /// a picture cache has compositor surfaces, in which case sub slices are used to interleave
@@ -2400,7 +2424,7 @@ impl TileCacheInstance {
 
     /// Return the total number of tiles allocated by this tile cache
     pub fn tile_count(&self) -> usize {
-        self.tile_rect.size.area() as usize
+        self.tile_rect.size.area() as usize * self.sub_slices.len()
     }
 
     /// Reset this tile cache with the updated parameters from a new scene
@@ -2409,9 +2433,35 @@ impl TileCacheInstance {
     pub fn prepare_for_new_scene(
         &mut self,
         params: TileCacheParams,
+        resource_cache: &mut ResourceCache,
     ) {
         // We should only receive updated state for matching slice key
         assert_eq!(self.slice, params.slice);
+
+        // TODO(gw): Read the compositor surface count from the params in a follow up.
+        let required_sub_slice_count = 1;
+
+        if self.sub_slices.len() != required_sub_slice_count {
+            self.tile_rect = TileRect::zero();
+
+            if self.sub_slices.len() > required_sub_slice_count {
+                let old_sub_slices = self.sub_slices.split_off(required_sub_slice_count);
+
+                for mut sub_slice in old_sub_slices {
+                    for tile in sub_slice.tiles.values_mut() {
+                        if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { ref mut id, .. }, .. }) = tile.surface {
+                            if let Some(id) = id.take() {
+                                resource_cache.destroy_compositor_tile(id);
+                            }
+                        }
+                    }
+                }
+            } else {
+                while self.sub_slices.len() < required_sub_slice_count {
+                    self.sub_slices.push(SubSlice::new());
+                }
+            }
+        }
 
         // Store the parameters from the scene builder for this slice. Other
         // params in the tile cache are retained and reused, or are always
@@ -2814,7 +2864,7 @@ impl TileCacheInstance {
 
         let mut world_culling_rect = WorldRect::zero();
 
-        let ctx = TilePreUpdateContext {
+        let mut ctx = TilePreUpdateContext {
             pic_to_world_mapper,
             fract_offset: self.fract_offset,
             device_fract_offset: self.device_fract_offset,
@@ -2845,6 +2895,9 @@ impl TileCacheInstance {
                     world_culling_rect = world_culling_rect.union(&tile.world_tile_rect);
                 }
             }
+
+            // The background color can only be applied to the first sub-slice.
+            ctx.background_color = None;
         }
 
         // If compositor mode is changed, need to drop all incompatible tiles.
@@ -3583,7 +3636,8 @@ impl TileCacheInstance {
         let mut vis_flags = PrimitiveVisibilityFlags::empty();
 
         // TODO(gw): Select the right sub_slice!
-        let sub_slice = &mut self.sub_slices[0];
+        let sub_slice_index = 0;
+        let sub_slice = &mut self.sub_slices[sub_slice_index];
 
         if let Some(backdrop_candidate) = backdrop_candidate {
             let is_suitable_backdrop = match backdrop_candidate.kind {
@@ -3670,6 +3724,7 @@ impl TileCacheInstance {
         prim_instance.vis.state = VisibilityState::Coarse {
             filter: BatchFilter {
                 rect_in_pic_space: pic_clip_rect,
+                sub_slice_index: SubSliceIndex::new(sub_slice_index),
             },
             vis_flags,
         };
@@ -4925,6 +4980,7 @@ impl PicturePrimitive {
                         // surface allocation).
                         tile_cache.dirty_region.add_dirty_region(
                             tile.local_dirty_rect,
+                            SubSliceIndex::new(sub_slice_index),
                             frame_context.spatial_tree,
                         );
 
@@ -5012,6 +5068,7 @@ impl PicturePrimitive {
 
                             let batch_filter = BatchFilter {
                                 rect_in_pic_space: tile.local_dirty_rect,
+                                sub_slice_index: SubSliceIndex::new(sub_slice_index),
                             };
 
                             let render_task_id = frame_state.rg_builder.add().init(
