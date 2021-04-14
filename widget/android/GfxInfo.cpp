@@ -612,6 +612,9 @@ nsresult GfxInfo::GetFeatureStatusImpl(
                      // Excluding G31 due to bug 1689947.
                      gpu.Find("Mali-G31", /*ignoreCase*/ true) == kNotFound;
 
+      // Enable Webrender on all PowerVR Rogue GPUs
+      isUnblocked |= gpu.Find("PowerVR Rogue", /*ignoreCase*/ true) >= 0;
+
       if (!isUnblocked) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_WEBRENDER_BLOCKED_DEVICE";
