@@ -3014,8 +3014,8 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   LayoutDeviceIntPoint pos = geckoEvent.mRefPoint;
 
   // This might destroy our widget (and null out mGeckoChild).
-  bool defaultPrevented =
-      (mGeckoChild->DispatchInputEvent(&geckoEvent) == nsEventStatus_eConsumeNoDefault);
+  bool defaultPrevented = (mGeckoChild->DispatchInputEvent(&geckoEvent).mContentStatus ==
+                           nsEventStatus_eConsumeNoDefault);
 
   if (!mGeckoChild) {
     return;
@@ -4090,7 +4090,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   WidgetMouseEvent geckoEvent(true, eMouseActivate, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:aEvent toGeckoEvent:&geckoEvent];
-  return (mGeckoChild->DispatchInputEvent(&geckoEvent) != nsEventStatus_eConsumeNoDefault);
+  return (mGeckoChild->DispatchInputEvent(&geckoEvent).mContentStatus !=
+          nsEventStatus_eConsumeNoDefault);
 }
 
 // We must always call through to our superclass, even when mGeckoChild is

@@ -1450,12 +1450,21 @@ class nsIWidget : public nsISupports {
    */
   virtual void DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) = 0;
 
+  // A structure that groups the statuses from APZ dispatch and content
+  // dispatch.
+  struct ContentAndAPZEventStatus {
+    // Either of these may not be set if the event was not dispatched
+    // to APZ or to content.
+    nsEventStatus mApzStatus = nsEventStatus_eIgnore;
+    nsEventStatus mContentStatus = nsEventStatus_eIgnore;
+  };
+
   /**
    * Dispatches an event that must be handled by APZ first, when APZ is
    * enabled. If invoked in the child process, it is forwarded to the
    * parent process synchronously.
    */
-  virtual nsEventStatus DispatchInputEvent(
+  virtual ContentAndAPZEventStatus DispatchInputEvent(
       mozilla::WidgetInputEvent* aEvent) = 0;
 
   /**
