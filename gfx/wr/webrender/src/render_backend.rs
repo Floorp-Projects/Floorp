@@ -721,7 +721,10 @@ impl Document {
             let tile_cache = match tile_caches.remove(&slice_id) {
                 Some(mut existing_tile_cache) => {
                     // Found an existing cache - update the cache params and reuse it
-                    existing_tile_cache.prepare_for_new_scene(params);
+                    existing_tile_cache.prepare_for_new_scene(
+                        params,
+                        resource_cache,
+                    );
                     existing_tile_cache
                 }
                 None => {

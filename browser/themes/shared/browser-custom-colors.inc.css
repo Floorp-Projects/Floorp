@@ -13,7 +13,6 @@
     --button-hover-bgcolor: rgb(224,224,230);
     --button-active-bgcolor: rgb(207,207,216);
     --button-color: rgb(21,20,26);
-    --buttons-box-shadow: transparent;
 
     --focus-outline-color: var(--buttons-primary-button-bgcolor);
     --focus-outline-offset: 2px;

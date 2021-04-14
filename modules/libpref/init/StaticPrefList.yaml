@@ -3465,7 +3465,7 @@
 # W3C pointer events draft.
 - name: dom.w3c_pointer_events.implicit_capture
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # In case Touch API is enabled, this pref controls whether to support
@@ -5059,14 +5059,7 @@
 # software backend
 - name: gfx.webrender.software.unaccelerated-widget.allow
   type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# Whether to force widgets that don't support acceleration to use WebRender
-# software backend
-- name: gfx.webrender.software.unaccelerated-widget.force
-  type: RelaxedAtomicBool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Whether to force widgets to don't support acceleration to use WebRender

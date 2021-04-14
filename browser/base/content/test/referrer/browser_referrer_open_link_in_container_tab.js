@@ -63,7 +63,7 @@ function startNewTabTestCase(aTestNumber) {
       { once: true }
     );
 
-    menupopup.openPopup();
+    menu.openMenu(true);
   });
 }
 

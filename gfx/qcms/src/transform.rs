@@ -721,23 +721,21 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
     let r_table: *const f32 = table;
     let g_table: *const f32 = table.offset(1);
     let b_table: *const f32 = table.offset(2);
-    let mut c0_r: f32;
-    let mut c1_r: f32;
-    let mut c2_r: f32;
-    let mut c3_r: f32;
-    let mut c0_g: f32;
-    let mut c1_g: f32;
-    let mut c2_g: f32;
-    let mut c3_g: f32;
-    let mut c0_b: f32;
-    let mut c1_b: f32;
-    let mut c2_b: f32;
-    let mut c3_b: f32;
-    let mut clut_r: f32;
-    let mut clut_g: f32;
-    let mut clut_b: f32;
+
     let mut i: u32 = 0;
     while (i as usize) < length {
+        let c0_r: f32;
+        let c1_r: f32;
+        let c2_r: f32;
+        let c3_r: f32;
+        let c0_g: f32;
+        let c1_g: f32;
+        let c2_g: f32;
+        let c3_g: f32;
+        let c0_b: f32;
+        let c1_b: f32;
+        let c2_b: f32;
+        let c3_b: f32;
         let in_r: u8 = *src.add(F::kRIndex);
         let in_g: u8 = *src.add(F::kGIndex);
         let in_b: u8 = *src.add(F::kBIndex);
@@ -758,115 +756,85 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
         let rx: f32 = linear_r * ((*transform).grid_size as i32 - 1) as f32 - x as f32;
         let ry: f32 = linear_g * ((*transform).grid_size as i32 - 1) as f32 - y as f32;
         let rz: f32 = linear_b * ((*transform).grid_size as i32 - 1) as f32 - z as f32;
-        c0_r = *r_table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
-        c0_g = *g_table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
-        c0_b = *b_table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize);
+        let CLU = |table: *const f32, x, y, z| {
+            *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize)
+        };
+
+        c0_r = CLU(r_table, x, y, z);
+        c0_g = CLU(g_table, x, y, z);
+        c0_b = CLU(b_table, x, y, z);
         if rx >= ry {
             if ry >= rz {
                 //rx >= ry && ry >= rz
-                c1_r = *r_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize) - c0_r; //rz > rx && rx >= ry
-                c2_r = *r_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize)
-                    - *r_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize);
-                c3_r = *r_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                    - *r_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize);
-                c1_g = *g_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize) - c0_g;
-                c2_g = *g_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize)
-                    - *g_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize);
-                c3_g = *g_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                    - *g_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize);
-                c1_b = *b_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize) - c0_b;
-                c2_b = *b_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize)
-                    - *b_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize);
-                c3_b = *b_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                    - *b_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize)
+                c1_r = CLU(r_table, x_n, y, z) - c0_r;
+                c2_r = CLU(r_table, x_n, y_n, z) - CLU(r_table, x_n, y, z);
+                c3_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y_n, z);
+                c1_g = CLU(g_table, x_n, y, z) - c0_g;
+                c2_g = CLU(g_table, x_n, y_n, z) - CLU(g_table, x_n, y, z);
+                c3_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y_n, z);
+                c1_b = CLU(b_table, x_n, y, z) - c0_b;
+                c2_b = CLU(b_table, x_n, y_n, z) - CLU(b_table, x_n, y, z);
+                c3_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y_n, z);
             } else if rx >= rz {
                 //rx >= rz && rz >= ry
-                c1_r = *r_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize) - c0_r;
-                c2_r = *r_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                    - *r_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize);
-                c3_r = *r_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize)
-                    - *r_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize);
-                c1_g = *g_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize) - c0_g;
-                c2_g = *g_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                    - *g_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize);
-                c3_g = *g_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize)
-                    - *g_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize);
-                c1_b = *b_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize) - c0_b;
-                c2_b = *b_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                    - *b_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize);
-                c3_b = *b_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize)
-                    - *b_table.offset(((x_n * len + y * x_len + z * xy_len) * 3) as isize)
+                c1_r = CLU(r_table, x_n, y, z) - c0_r;
+                c2_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y, z_n);
+                c3_r = CLU(r_table, x_n, y, z_n) - CLU(r_table, x_n, y, z);
+                c1_g = CLU(g_table, x_n, y, z) - c0_g;
+                c2_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y, z_n);
+                c3_g = CLU(g_table, x_n, y, z_n) - CLU(g_table, x_n, y, z);
+                c1_b = CLU(b_table, x_n, y, z) - c0_b;
+                c2_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y, z_n);
+                c3_b = CLU(b_table, x_n, y, z_n) - CLU(b_table, x_n, y, z);
             } else {
-                c1_r = *r_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize)
-                    - *r_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize);
-                c2_r = *r_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                    - *r_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize);
-                c3_r = *r_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize) - c0_r;
-                c1_g = *g_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize)
-                    - *g_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize);
-                c2_g = *g_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                    - *g_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize);
-                c3_g = *g_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize) - c0_g;
-                c1_b = *b_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize)
-                    - *b_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize);
-                c2_b = *b_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                    - *b_table.offset(((x_n * len + y * x_len + z_n * xy_len) * 3) as isize);
-                c3_b = *b_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize) - c0_b
+                //rz > rx && rx >= ry
+                c1_r = CLU(r_table, x_n, y, z_n) - CLU(r_table, x, y, z_n);
+                c2_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y, z_n);
+                c3_r = CLU(r_table, x, y, z_n) - c0_r;
+                c1_g = CLU(g_table, x_n, y, z_n) - CLU(g_table, x, y, z_n);
+                c2_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y, z_n);
+                c3_g = CLU(g_table, x, y, z_n) - c0_g;
+                c1_b = CLU(b_table, x_n, y, z_n) - CLU(b_table, x, y, z_n);
+                c2_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y, z_n);
+                c3_b = CLU(b_table, x, y, z_n) - c0_b;
             }
         } else if rx >= rz {
             //ry > rx && rx >= rz
-            c1_r = *r_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize)
-                - *r_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize); //rz > ry && ry > rx
-            c2_r = *r_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize) - c0_r;
-            c3_r = *r_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *r_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize);
-            c1_g = *g_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize)
-                - *g_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize);
-            c2_g = *g_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize) - c0_g;
-            c3_g = *g_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *g_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize);
-            c1_b = *b_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize)
-                - *b_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize);
-            c2_b = *b_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize) - c0_b;
-            c3_b = *b_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *b_table.offset(((x_n * len + y_n * x_len + z * xy_len) * 3) as isize)
+            c1_r = CLU(r_table, x_n, y_n, z) - CLU(r_table, x, y_n, z);
+            c2_r = CLU(r_table, x, y_n, z) - c0_r;
+            c3_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x_n, y_n, z);
+            c1_g = CLU(g_table, x_n, y_n, z) - CLU(g_table, x, y_n, z);
+            c2_g = CLU(g_table, x, y_n, z) - c0_g;
+            c3_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x_n, y_n, z);
+            c1_b = CLU(b_table, x_n, y_n, z) - CLU(b_table, x, y_n, z);
+            c2_b = CLU(b_table, x, y_n, z) - c0_b;
+            c3_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x_n, y_n, z);
         } else if ry >= rz {
             //ry >= rz && rz > rx
-            c1_r = *r_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *r_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize);
-            c2_r = *r_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize) - c0_r;
-            c3_r = *r_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *r_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize);
-            c1_g = *g_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *g_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize);
-            c2_g = *g_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize) - c0_g;
-            c3_g = *g_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *g_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize);
-            c1_b = *b_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *b_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize);
-            c2_b = *b_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize) - c0_b;
-            c3_b = *b_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *b_table.offset(((x * len + y_n * x_len + z * xy_len) * 3) as isize)
+            c1_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x, y_n, z_n);
+            c2_r = CLU(r_table, x, y_n, z) - c0_r;
+            c3_r = CLU(r_table, x, y_n, z_n) - CLU(r_table, x, y_n, z);
+            c1_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x, y_n, z_n);
+            c2_g = CLU(g_table, x, y_n, z) - c0_g;
+            c3_g = CLU(g_table, x, y_n, z_n) - CLU(g_table, x, y_n, z);
+            c1_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x, y_n, z_n);
+            c2_b = CLU(b_table, x, y_n, z) - c0_b;
+            c3_b = CLU(b_table, x, y_n, z_n) - CLU(b_table, x, y_n, z);
         } else {
-            c1_r = *r_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *r_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize);
-            c2_r = *r_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *r_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize);
-            c3_r = *r_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize) - c0_r;
-            c1_g = *g_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *g_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize);
-            c2_g = *g_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *g_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize);
-            c3_g = *g_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize) - c0_g;
-            c1_b = *b_table.offset(((x_n * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *b_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize);
-            c2_b = *b_table.offset(((x * len + y_n * x_len + z_n * xy_len) * 3) as isize)
-                - *b_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize);
-            c3_b = *b_table.offset(((x * len + y * x_len + z_n * xy_len) * 3) as isize) - c0_b
+            //rz > ry && ry > rx
+            c1_r = CLU(r_table, x_n, y_n, z_n) - CLU(r_table, x, y_n, z_n);
+            c2_r = CLU(r_table, x, y_n, z_n) - CLU(r_table, x, y, z_n);
+            c3_r = CLU(r_table, x, y, z_n) - c0_r;
+            c1_g = CLU(g_table, x_n, y_n, z_n) - CLU(g_table, x, y_n, z_n);
+            c2_g = CLU(g_table, x, y_n, z_n) - CLU(g_table, x, y, z_n);
+            c3_g = CLU(g_table, x, y, z_n) - c0_g;
+            c1_b = CLU(b_table, x_n, y_n, z_n) - CLU(b_table, x, y_n, z_n);
+            c2_b = CLU(b_table, x, y_n, z_n) - CLU(b_table, x, y, z_n);
+            c3_b = CLU(b_table, x, y, z_n) - c0_b;
         }
-        clut_r = c0_r + c1_r * rx + c2_r * ry + c3_r * rz;
-        clut_g = c0_g + c1_g * rx + c2_g * ry + c3_g * rz;
-        clut_b = c0_b + c1_b * rx + c2_b * ry + c3_b * rz;
+        let clut_r = c0_r + c1_r * rx + c2_r * ry + c3_r * rz;
+        let clut_g = c0_g + c1_g * rx + c2_g * ry + c3_g * rz;
+        let clut_b = c0_b + c1_b * rx + c2_b * ry + c3_b * rz;
         *dest.add(F::kRIndex) = clamp_u8(clut_r * 255.0);
         *dest.add(F::kGIndex) = clamp_u8(clut_g * 255.0);
         *dest.add(F::kBIndex) = clamp_u8(clut_b * 255.0);

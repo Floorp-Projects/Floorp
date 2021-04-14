@@ -109,9 +109,9 @@ dialog[subdialog] #iconContainer {
 
 /* Fix padding/spacing */
 dialog[subdialog] {
-  /* All the inner items should have 4px inline margin, leading to 16px spacing
+  /* All the inner items should have 4px inline margin, leading to 1.16em spacing
    * between the dialog and its contents, and 8px horizontal spacing between items. */
-  padding: 16px 12px;
+  padding: 1.16em calc(1.16em - 4px);
 }
 
 /* Use an ID selector for the dialog to win on specificity... */
@@ -140,7 +140,7 @@ dialog[subdialog] {
 
 /* Add vertical spaces between rows: */
 dialog[subdialog] .dialogRow {
-  margin-block: 0 16px;
+  margin-block: 0 1.16em;
 }
 
 /* Start-align labels: */

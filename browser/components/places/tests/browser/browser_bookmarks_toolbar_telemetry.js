@@ -133,12 +133,12 @@ async function changeToolbarVisibilityViaContextMenu(nextState) {
   let bookmarksToolbarMenu = document.querySelector("#toggle_PersonalToolbar");
   let subMenu = bookmarksToolbarMenu.querySelector("menupopup");
   popupShown = BrowserTestUtils.waitForEvent(subMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(bookmarksToolbarMenu, {});
+  bookmarksToolbarMenu.openMenu(true);
   await popupShown;
   let menuItem = document.querySelector(
     `menuitem[data-visibility-enum="${nextState}"]`
   );
-  EventUtils.synthesizeMouseAtCenter(menuItem, {});
+  subMenu.activateItem(menuItem);
   contextMenu.hidePopup();
 }
 

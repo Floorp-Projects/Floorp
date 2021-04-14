@@ -589,7 +589,6 @@ var gHomePane = {
       },
       rv
     );
-    Services.telemetry.scalarAdd("preferences.use_bookmark", 1);
   },
 
   restoreDefaultHomePage() {

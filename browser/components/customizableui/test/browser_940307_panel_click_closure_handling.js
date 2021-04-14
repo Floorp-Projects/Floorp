@@ -75,7 +75,7 @@ add_task(async function searchbar_in_panel() {
 
   let selectAll = contextmenu.querySelector("[cmd='cmd_selectAll']");
   let contextMenuHidden = promisePanelElementHidden(window, contextmenu);
-  EventUtils.synthesizeMouseAtCenter(selectAll, {});
+  contextmenu.activateItem(selectAll);
   await contextMenuHidden;
 
   ok(isOverflowOpen(), "Panel should still be open");

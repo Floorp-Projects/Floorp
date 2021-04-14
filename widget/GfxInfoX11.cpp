@@ -729,69 +729,10 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // Intel Mesa baseline, chosen arbitrarily.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::All, WindowProtocol::Wayland, DriverVendor::MesaAll,
-        DeviceFamily::IntelRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_INTEL_WAYLAND_MESA", "Mesa 17.0.0.0");
-
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::GNOME, WindowProtocol::All, DriverVendor::MesaAll,
-        DeviceFamily::IntelRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_INTEL_GNOME_MESA", "Mesa 17.0.0.0");
-
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::KDE, WindowProtocol::All, DriverVendor::MesaAll,
-        DeviceFamily::IntelRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_INTEL_KDE_MESA", "Mesa 17.0.0.0");
-
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::XFCE, WindowProtocol::All, DriverVendor::MesaAll,
-        DeviceFamily::IntelRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_INTEL_XFCE_MESA", "Mesa 17.0.0.0");
-
-    // ATI Mesa baseline, chosen arbitrarily.
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::All, WindowProtocol::Wayland, DriverVendor::MesaAll,
-        DeviceFamily::AtiRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_ATI_GNOME_MESA", "Mesa 17.0.0.0");
-
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::GNOME, WindowProtocol::All, DriverVendor::MesaAll,
-        DeviceFamily::AtiRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_ATI_GNOME_MESA", "Mesa 17.0.0.0");
-
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::KDE, WindowProtocol::All, DriverVendor::MesaAll,
-        DeviceFamily::AtiRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_ATI_KDE_MESA", "Mesa 17.0.0.0");
-
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::XFCE, WindowProtocol::All, DriverVendor::MesaAll,
-        DeviceFamily::AtiRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_ATI_XFCE_MESA", "Mesa 17.0.0.0");
-
-#ifdef EARLY_BETA_OR_EARLIER
-    // Intel Mesa baseline, chosen arbitrarily.
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
         DesktopEnvironment::All, WindowProtocol::All, DriverVendor::MesaAll,
         DeviceFamily::IntelRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_EARLY_BETA_INTEL_MESA",
+        V(17, 0, 0, 0), "FEATURE_ROLLOUT_INTEL_MESA",
         "Mesa 17.0.0.0");
 
     // Nvidia Mesa baseline, see bug 1563859.
@@ -800,7 +741,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DesktopEnvironment::All, WindowProtocol::All, DriverVendor::MesaAll,
         DeviceFamily::NvidiaRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_ALLOW_QUALIFIED, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(18, 2, 0, 0), "FEATURE_ROLLOUT_EARLY_BETA_NVIDIA_MESA",
+        V(18, 2, 0, 0), "FEATURE_ROLLOUT_NVIDIA_MESA",
         "Mesa 18.2.0.0");
 
     // Nvidia proprietary driver baseline, see bug 1673752.
@@ -809,7 +750,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DesktopEnvironment::All, WindowProtocol::All, DriverVendor::NonMesaAll,
         DeviceFamily::NvidiaAll, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_ALLOW_QUALIFIED, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(460, 32, 3, 0), "FEATURE_FAILURE_WEBRENDER_OLD_NVIDIA", "460.32.03");
+        V(460, 32, 3, 0), "FEATURE_ROLLOUT_NVIDIA_BINARY", "460.32.03");
 
     // ATI Mesa baseline, chosen arbitrarily.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
@@ -817,8 +758,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DesktopEnvironment::All, WindowProtocol::All, DriverVendor::MesaAll,
         DeviceFamily::AtiRolloutWebRender, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(17, 0, 0, 0), "FEATURE_ROLLOUT_EARLY_BETA_ATI_MESA", "Mesa 17.0.0.0");
-#endif
+        V(17, 0, 0, 0), "FEATURE_ROLLOUT_ATI_MESA", "Mesa 17.0.0.0");
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
@@ -830,26 +770,13 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
                                "FEATURE_ROLLOUT_EARLY_BETA_SOFTWARE_WR", "");
 #endif
 
-#if defined(_M_X64) || defined(__amd64__)
-    // Initial Linux release population for SW-WR.
-    if (mozilla::supports_avx2()) {
-      APPEND_TO_DRIVER_BLOCKLIST_EXT(
-          OperatingSystem::Linux, ScreenSizeStatus::Small, BatteryStatus::All,
-          DesktopEnvironment::All, WindowProtocol::X11,
-          DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
-          nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-          nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_LESS_THAN, V(460, 32, 3, 0),
-          "FEATURE_ROLLOUT_OLD_NVIDIA_RELEASE_SOFTWARE_WR", "");
-
-      APPEND_TO_DRIVER_BLOCKLIST_EXT(
-          OperatingSystem::Linux, ScreenSizeStatus::Small, BatteryStatus::All,
-          DesktopEnvironment::All, WindowProtocol::X11,
-          DriverVendor::MesaLLVMPipe, DeviceFamily::All,
-          nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
-          nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
-          V(0, 0, 0, 0), "FEATURE_ROLLOUT_LLVMPIPE_RELEASE_SOFTWARE_WR", "");
-    }
-#endif
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::SmallAndMedium,
+        BatteryStatus::All, DesktopEnvironment::All, WindowProtocol::All,
+        DriverVendor::All, DeviceFamily::All,
+        nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_S_M_SCRN_SOFTWARE_WR", "");
 
     ////////////////////////////////////
     // FEATURE_X11_EGL

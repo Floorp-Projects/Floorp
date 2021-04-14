@@ -17,7 +17,7 @@ use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId
 use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceImage, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
 use crate::internal_types::{FastHashMap, Swizzle, TextureSource, Filter};
-use crate::picture::{ClusterFlags, Picture3DContext, PictureCompositeMode, PicturePrimitive};
+use crate::picture::{ClusterFlags, Picture3DContext, PictureCompositeMode, PicturePrimitive, SubSliceIndex};
 use crate::prim_store::{DeferredResolve, PrimitiveInstanceKind, ClipData};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
@@ -53,10 +53,12 @@ const CLIP_RECTANGLE_AREA_THRESHOLD: f32 = (CLIP_RECTANGLE_TILE_SIZE * CLIP_RECT
 #[derive(Copy, Clone, Debug)]
 pub struct BatchFilter {
     pub rect_in_pic_space: PictureRect,
+    pub sub_slice_index: SubSliceIndex,
 }
 
 impl BatchFilter {
     pub fn matches(&self, other: &BatchFilter) -> bool {
+        self.sub_slice_index == other.sub_slice_index &&
         self.rect_in_pic_space.intersects(&other.rect_in_pic_space)
     }
 }

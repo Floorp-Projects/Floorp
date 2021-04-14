@@ -1979,23 +1979,6 @@ preferences:
       - 'fennec'
     record_in_processes:
       - main
-  use_bookmark:
-    bug_numbers:
-      - 1392951
-    description: >-
-      The number of times the "Use Bookmark..." button has been clicked.
-      Recorded when a a user clicks the "Use Bookmark..." button.
-    expires: "62"
-    kind: uint
-    keyed: true
-    notification_emails:
-      - chsiang@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - main
 
 webrtc.video:
   recv_codec_used:

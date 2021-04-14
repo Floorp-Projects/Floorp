@@ -223,8 +223,12 @@ static int32_t sPlatformDisabledState = 0;
 #define MARKUPMAP(atom, new_func, r, ...) \
   {nsGkAtoms::atom, new_func, static_cast<a11y::role>(r), {__VA_ARGS__}},
 
-static const HTMLMarkupMapInfo sHTMLMarkupMapList[] = {
-#include "MarkupMap.h"
+static const MarkupMapInfo sHTMLMarkupMapList[] = {
+#include "HTMLMarkupMap.h"
+};
+
+static const MarkupMapInfo sMathMLMarkupMapList[] = {
+#include "MathMLMarkupMap.h"
 };
 
 #undef MARKUPMAP
@@ -264,7 +268,8 @@ uint32_t nsAccessibilityService::gConsumers = 0;
 nsAccessibilityService::nsAccessibilityService()
     : DocManager(),
       FocusManager(),
-      mHTMLMarkupMap(ArrayLength(sHTMLMarkupMapList))
+      mHTMLMarkupMap(ArrayLength(sHTMLMarkupMapList)),
+      mMathMLMarkupMap(ArrayLength(sMathMLMarkupMapList))
 #ifdef MOZ_XUL
       ,
       mXULMarkupMap(ArrayLength(sXULMarkupMapList))
@@ -887,8 +892,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     // display:contents element doesn't have a frame, but retains the semantics.
     // All its children are unaffected.
     if (nsCoreUtils::IsDisplayContents(content)) {
-      const HTMLMarkupMapInfo* markupMap =
-          mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
+      const MarkupMapInfo* markupMap = GetMarkupMapInfoForNode(content);
       if (markupMap && markupMap->new_func) {
         RefPtr<LocalAccessible> newAcc =
             markupMap->new_func(content->AsElement(), aContext);
@@ -997,7 +1001,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
         frame->AccessibleType() == eOuterDocType) {
       // Prefer to use markup to decide if and what kind of accessible to
       // create,
-      const HTMLMarkupMapInfo* markupMap =
+      const MarkupMapInfo* markupMap =
           mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
       if (markupMap && markupMap->new_func) {
         newAcc = markupMap->new_func(content->AsElement(), aContext);
@@ -1120,8 +1124,8 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
       }
 
     } else if (content->IsMathMLElement()) {
-      const HTMLMarkupMapInfo* markupMap =
-          mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
+      const MarkupMapInfo* markupMap =
+          mMathMLMarkupMap.Get(content->NodeInfo()->NameAtom());
       if (markupMap && markupMap->new_func) {
         newAcc = markupMap->new_func(content->AsElement(), aContext);
       }
@@ -1196,6 +1200,9 @@ bool nsAccessibilityService::Init() {
   for (uint32_t i = 0; i < ArrayLength(sHTMLMarkupMapList); i++) {
     mHTMLMarkupMap.InsertOrUpdate(sHTMLMarkupMapList[i].tag,
                                   &sHTMLMarkupMapList[i]);
+  }
+  for (const auto& info : sMathMLMarkupMapList) {
+    mMathMLMarkupMap.InsertOrUpdate(info.tag, &info);
   }
 
 #ifdef MOZ_XUL
@@ -1444,8 +1451,8 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
 
 void nsAccessibilityService::MarkupAttributes(
     const nsIContent* aContent, nsIPersistentProperties* aAttributes) const {
-  const mozilla::a11y::HTMLMarkupMapInfo* markupMap =
-      mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+  const mozilla::a11y::MarkupMapInfo* markupMap =
+      GetMarkupMapInfoForNode(aContent);
   if (!markupMap) return;
 
   for (uint32_t i = 0; i < ArrayLength(markupMap->attrs); i++) {

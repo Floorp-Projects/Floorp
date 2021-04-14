@@ -1,14 +1,5 @@
 "use strict";
 
-const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
-
-/**
- * Sets the aboutwelcome pref to enabled simplified welcome UI
- */
-async function setAboutWelcomePref(value) {
-  return pushPrefs([SEPARATE_ABOUT_WELCOME_PREF, value]);
-}
-
 async function openAboutWelcome() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -30,6 +21,7 @@ async function test_about_welcome(
   unexpectedSelectors = []
 ) {
   await setAboutWelcomePref(true);
+  await setProton(false);
   let browser = await openAboutWelcome();
 
   await ContentTask.spawn(
