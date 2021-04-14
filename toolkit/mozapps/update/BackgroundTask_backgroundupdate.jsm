@@ -8,8 +8,8 @@
 var EXPORTED_SYMBOLS = ["runBackgroundTask"];
 
 const { EXIT_CODE } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundTasksManager.jsm"
-).BackgroundTasksManager;
+  "resource://gre/modules/BackgroundUpdate.jsm"
+).BackgroundUpdate;
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -211,12 +211,21 @@ async function runBackgroundTask() {
       }
     }
   } catch (e) {
+    if (!BackgroundTasksUtils.hasDefaultProfile()) {
+      log.error(`${SLUG}: caught exception; no default profile exists`, e);
+      return EXIT_CODE.DEFAULT_PROFILE_DOES_NOT_EXIST;
+    }
+
+    if (e.name == "CannotLockProfileError") {
+      log.error(`${SLUG}: caught exception; could not lock default profile`, e);
+      return EXIT_CODE.DEFAULT_PROFILE_CANNOT_BE_LOCKED;
+    }
+
     log.error(
-      `${SLUG}: caught exception reading preferences from default profile`,
+      `${SLUG}: caught exception reading preferences and telemetry client ID from default profile`,
       e
     );
-
-    return EXIT_CODE.EXCEPTION;
+    return EXIT_CODE.DEFAULT_PROFILE_CANNOT_BE_READ;
   }
 
   // The langpack updating mechanism expects the addons manager, but in background task mode, the

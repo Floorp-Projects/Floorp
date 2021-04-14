@@ -139,6 +139,10 @@ var BackgroundTasksManager = {
  * background tasks have limited channels to communicate with consumers, the
  * special values `NOT_FOUND` (integer 2) and `THREW_EXCEPTION` (integer 3) are
  * distinguished.
+ *
+ * If you extend this to add background task-specific exit codes, use exit codes
+ * greater than 10 to allow for additional shared exit codes to be added here.
+ * Exit codes should be between 0 and 127 to be safe across platforms.
  */
 BackgroundTasksManager.EXIT_CODE = {
   /**
@@ -161,4 +165,10 @@ BackgroundTasksManager.EXIT_CODE = {
    * The `runBackgroundTask(...)` promise rejected with an exception.
    */
   EXCEPTION: 3,
+
+  /**
+   * The last exit code reserved by this structure.  Use codes larger than this
+   * code for background task-specific exit codes.
+   */
+  LAST_RESERVED: 10,
 };

@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.jsm",
+  BackgroundTasksManager: "resource://gre/modules/BackgroundTasksManager.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   TaskScheduler: "resource://gre/modules/TaskScheduler.jsm",
@@ -483,4 +484,19 @@ BackgroundUpdate.REASON = {
   NO_OMNIJAR: "no omnijar",
   WINDOWS_CANNOT_USUALLY_USE_BITS: "on Windows but cannot usually use BITS",
   OTHER_INSTANCE: "other instance is running",
+};
+
+/**
+ * Specific exit codes for `--backgroundtask backgroundupdate`.
+ *
+ * These help distinguish common failure cases.  In particular, they distinguish
+ * "default profile does not exist" from "default profile cannot be locked" from
+ * more general errors reading from the default profile.
+ */
+BackgroundUpdate.EXIT_CODE = {
+  ...BackgroundTasksManager.EXIT_CODE,
+  // We clone the other exit codes simply so we can use one object for all the codes.
+  DEFAULT_PROFILE_DOES_NOT_EXIST: 11,
+  DEFAULT_PROFILE_CANNOT_BE_LOCKED: 12,
+  DEFAULT_PROFILE_CANNOT_BE_READ: 13,
 };
