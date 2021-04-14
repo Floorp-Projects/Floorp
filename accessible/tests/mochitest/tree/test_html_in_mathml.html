@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML in MathML Tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // <label> is generally not valid in MathML and shouldn't create an HTMl
+      // label.
+      testAccessibleTree("invalidLabel", {
+        MATHML_MATH: [ {
+          TEXT: [ {
+            TEXT_LEAF: []
+          } ],
+        } ],
+      });
+
+      // HTML is valid inside <mtext>, so <label> should create an HTMl label.
+      testAccessibleTree("validLabel", {
+        MATHML_MATH: [ {
+          MATHML_TEXT: [ {
+            LABEL: [ {
+              TEXT_LEAF: []
+            } ],
+          } ],
+        } ],
+      });
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <math id="invalidLabel">
+    <label>Text</label>
+  </math>
+
+  <math id="validLabel">
+    <mtext>
+      <label>Text</label>
+    </mtext>
+  </math>
+
+</body>
+</html>

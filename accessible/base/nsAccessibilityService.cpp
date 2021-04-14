@@ -225,6 +225,9 @@ static int32_t sPlatformDisabledState = 0;
 
 static const MarkupMapInfo sHTMLMarkupMapList[] = {
 #include "HTMLMarkupMap.h"
+};
+
+static const MarkupMapInfo sMathMLMarkupMapList[] = {
 #include "MathMLMarkupMap.h"
 };
 
@@ -265,7 +268,8 @@ uint32_t nsAccessibilityService::gConsumers = 0;
 nsAccessibilityService::nsAccessibilityService()
     : DocManager(),
       FocusManager(),
-      mHTMLMarkupMap(ArrayLength(sHTMLMarkupMapList))
+      mHTMLMarkupMap(ArrayLength(sHTMLMarkupMapList)),
+      mMathMLMarkupMap(ArrayLength(sMathMLMarkupMapList))
 #ifdef MOZ_XUL
       ,
       mXULMarkupMap(ArrayLength(sXULMarkupMapList))
@@ -1121,7 +1125,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
 
     } else if (content->IsMathMLElement()) {
       const MarkupMapInfo* markupMap =
-          mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
+          mMathMLMarkupMap.Get(content->NodeInfo()->NameAtom());
       if (markupMap && markupMap->new_func) {
         newAcc = markupMap->new_func(content->AsElement(), aContext);
       }
@@ -1196,6 +1200,9 @@ bool nsAccessibilityService::Init() {
   for (uint32_t i = 0; i < ArrayLength(sHTMLMarkupMapList); i++) {
     mHTMLMarkupMap.InsertOrUpdate(sHTMLMarkupMapList[i].tag,
                                   &sHTMLMarkupMapList[i]);
+  }
+  for (const auto& info : sMathMLMarkupMapList) {
+    mMathMLMarkupMap.InsertOrUpdate(info.tag, &info);
   }
 
 #ifdef MOZ_XUL
