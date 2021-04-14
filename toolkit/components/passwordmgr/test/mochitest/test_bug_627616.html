@@ -133,11 +133,19 @@
       let dialogObserverTopic = authPromptIsCommonDialog
         ? "common-dialog-loaded" : "tabmodal-dialog-loaded";
 
-      function dialogObserver(subj, topic, data) {
+      async function dialogObserver(subj, topic, data) {
         if (authPromptIsCommonDialog) {
-          subj.Dialog.ui.prompt.document
-          .getElementById("commonDialog")
-          .acceptDialog();
+          // Work around https://bugzilla.mozilla.org/show_bug.cgi?id=1699844 by
+          // waiting before closing this prompt:
+
+          let doc = subj.Dialog.ui.prompt.document;
+          await (async function() {
+            let rAFCount = 3;
+            while (rAFCount--) {
+              await new Promise(doc.ownerGlobal.requestAnimationFrame);
+            }
+          })();
+          doc.getElementById("commonDialog").acceptDialog();
         } else {
           let prompt = subj.ownerGlobal.gBrowser.selectedBrowser
             .tabModalPromptBox.getPrompt(subj);
