@@ -102,15 +102,11 @@ DEFINE_GETTER_FUNCTIONS(ImportEntryObject, localName, LocalNameSlot)
 DEFINE_GETTER_FUNCTIONS(ImportEntryObject, lineNumber, LineNumberSlot)
 DEFINE_GETTER_FUNCTIONS(ImportEntryObject, columnNumber, ColumnNumberSlot)
 
+DEFINE_ATOM_ACCESSOR_METHOD(ImportEntryObject, moduleRequest)
 DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ImportEntryObject, importName)
 DEFINE_ATOM_ACCESSOR_METHOD(ImportEntryObject, localName)
 DEFINE_UINT32_ACCESSOR_METHOD(ImportEntryObject, lineNumber)
 DEFINE_UINT32_ACCESSOR_METHOD(ImportEntryObject, columnNumber)
-
-ModuleRequestObject* ImportEntryObject::moduleRequest() const {
-  Value value = getReservedSlot(ModuleRequestSlot);
-  return &value.toObject().as<ModuleRequestObject>();
-}
 
 /* static */
 bool ImportEntryObject::isInstance(HandleValue value) {
@@ -144,7 +140,7 @@ bool GlobalObject::initImportEntryProto(JSContext* cx,
 
 /* static */
 ImportEntryObject* ImportEntryObject::create(
-    JSContext* cx, HandleObject moduleRequest, HandleAtom maybeImportName,
+    JSContext* cx, HandleAtom moduleRequest, HandleAtom maybeImportName,
     HandleAtom localName, uint32_t lineNumber, uint32_t columnNumber) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateImportEntryPrototype(cx, cx->global()));
@@ -158,7 +154,7 @@ ImportEntryObject* ImportEntryObject::create(
     return nullptr;
   }
 
-  self->initReservedSlot(ModuleRequestSlot, ObjectValue(*moduleRequest));
+  self->initReservedSlot(ModuleRequestSlot, StringValue(moduleRequest));
   self->initReservedSlot(ImportNameSlot, StringOrNullValue(maybeImportName));
   self->initReservedSlot(LocalNameSlot, StringValue(localName));
   self->initReservedSlot(LineNumberSlot, NumberValue(lineNumber));
@@ -180,15 +176,11 @@ DEFINE_GETTER_FUNCTIONS(ExportEntryObject, lineNumber, LineNumberSlot)
 DEFINE_GETTER_FUNCTIONS(ExportEntryObject, columnNumber, ColumnNumberSlot)
 
 DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ExportEntryObject, exportName)
+DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ExportEntryObject, moduleRequest)
 DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ExportEntryObject, importName)
 DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ExportEntryObject, localName)
 DEFINE_UINT32_ACCESSOR_METHOD(ExportEntryObject, lineNumber)
 DEFINE_UINT32_ACCESSOR_METHOD(ExportEntryObject, columnNumber)
-
-ModuleRequestObject* ExportEntryObject::moduleRequest() const {
-  Value value = getReservedSlot(ModuleRequestSlot);
-  return &value.toObject().as<ModuleRequestObject>();
-}
 
 /* static */
 bool ExportEntryObject::isInstance(HandleValue value) {
@@ -223,7 +215,7 @@ bool GlobalObject::initExportEntryProto(JSContext* cx,
 
 /* static */
 ExportEntryObject* ExportEntryObject::create(
-    JSContext* cx, HandleAtom maybeExportName, HandleObject moduleRequest,
+    JSContext* cx, HandleAtom maybeExportName, HandleAtom maybeModuleRequest,
     HandleAtom maybeImportName, HandleAtom maybeLocalName, uint32_t lineNumber,
     uint32_t columnNumber) {
   // Line and column numbers are optional for export entries since direct
@@ -242,7 +234,8 @@ ExportEntryObject* ExportEntryObject::create(
   }
 
   self->initReservedSlot(ExportNameSlot, StringOrNullValue(maybeExportName));
-  self->initReservedSlot(ModuleRequestSlot, ObjectValue(*moduleRequest));
+  self->initReservedSlot(ModuleRequestSlot,
+                         StringOrNullValue(maybeModuleRequest));
   self->initReservedSlot(ImportNameSlot, StringOrNullValue(maybeImportName));
   self->initReservedSlot(LocalNameSlot, StringOrNullValue(maybeLocalName));
   self->initReservedSlot(LineNumberSlot, NumberValue(lineNumber));
@@ -257,17 +250,14 @@ ExportEntryObject* ExportEntryObject::create(
     "RequestedModule",
     JSCLASS_HAS_RESERVED_SLOTS(RequestedModuleObject::SlotCount)};
 
-DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, moduleRequest, ModuleRequestSlot)
+DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, moduleSpecifier,
+                        ModuleSpecifierSlot)
 DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, lineNumber, LineNumberSlot)
 DEFINE_GETTER_FUNCTIONS(RequestedModuleObject, columnNumber, ColumnNumberSlot)
 
+DEFINE_ATOM_ACCESSOR_METHOD(RequestedModuleObject, moduleSpecifier)
 DEFINE_UINT32_ACCESSOR_METHOD(RequestedModuleObject, lineNumber)
 DEFINE_UINT32_ACCESSOR_METHOD(RequestedModuleObject, columnNumber)
-
-ModuleRequestObject* RequestedModuleObject::moduleRequest() const {
-  Value value = getReservedSlot(ModuleRequestSlot);
-  return &value.toObject().as<ModuleRequestObject>();
-}
 
 /* static */
 bool RequestedModuleObject::isInstance(HandleValue value) {
@@ -278,7 +268,7 @@ bool RequestedModuleObject::isInstance(HandleValue value) {
 bool GlobalObject::initRequestedModuleProto(JSContext* cx,
                                             Handle<GlobalObject*> global) {
   static const JSPropertySpec protoAccessors[] = {
-      JS_PSG("moduleRequest", RequestedModuleObject_moduleRequestGetter, 0),
+      JS_PSG("moduleSpecifier", RequestedModuleObject_moduleSpecifierGetter, 0),
       JS_PSG("lineNumber", RequestedModuleObject_lineNumberGetter, 0),
       JS_PSG("columnNumber", RequestedModuleObject_columnNumberGetter, 0),
       JS_PS_END};
@@ -299,7 +289,7 @@ bool GlobalObject::initRequestedModuleProto(JSContext* cx,
 
 /* static */
 RequestedModuleObject* RequestedModuleObject::create(JSContext* cx,
-                                                     HandleObject moduleRequest,
+                                                     HandleAtom moduleSpecifier,
                                                      uint32_t lineNumber,
                                                      uint32_t columnNumber) {
   RootedObject proto(
@@ -314,63 +304,9 @@ RequestedModuleObject* RequestedModuleObject::create(JSContext* cx,
     return nullptr;
   }
 
-  self->initReservedSlot(ModuleRequestSlot, ObjectValue(*moduleRequest));
+  self->initReservedSlot(ModuleSpecifierSlot, StringValue(moduleSpecifier));
   self->initReservedSlot(LineNumberSlot, NumberValue(lineNumber));
   self->initReservedSlot(ColumnNumberSlot, NumberValue(columnNumber));
-  return self;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// ModuleRequestObject
-/* static */ const JSClass ModuleRequestObject::class_ = {
-    "ModuleRequest",
-    JSCLASS_HAS_RESERVED_SLOTS(ModuleRequestObject::SlotCount)};
-
-DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, specifier, SpecifierSlot)
-
-DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ModuleRequestObject, specifier)
-
-/* static */
-bool ModuleRequestObject::isInstance(HandleValue value) {
-  return value.isObject() && value.toObject().is<ModuleRequestObject>();
-}
-
-/* static */
-bool GlobalObject::initModuleRequestProto(JSContext* cx,
-                                          Handle<GlobalObject*> global) {
-  static const JSPropertySpec protoAccessors[] = {
-      JS_PSG("specifier", ModuleRequestObject_specifierGetter, 0), JS_PS_END};
-
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return false;
-  }
-
-  if (!DefinePropertiesAndFunctions(cx, proto, protoAccessors, nullptr)) {
-    return false;
-  }
-
-  global->initReservedSlot(MODULE_REQUEST_PROTO, ObjectValue(*proto));
-  return true;
-}
-
-/* static */
-ModuleRequestObject* ModuleRequestObject::create(JSContext* cx,
-                                                 HandleAtom specifier) {
-  RootedObject proto(
-      cx, GlobalObject::getOrCreateModuleRequestPrototype(cx, cx->global()));
-  if (!proto) {
-    return nullptr;
-  }
-
-  ModuleRequestObject* self =
-      NewObjectWithGivenProto<ModuleRequestObject>(cx, proto);
-  if (!self) {
-    return nullptr;
-  }
-
-  self->initReservedSlot(SpecifierSlot, StringOrNullValue(specifier));
   return self;
 }
 
@@ -1515,7 +1451,6 @@ static ArrayObject* ModuleBuilderInitArray(
   RootedAtom importName(cx);
   RootedAtom exportName(cx);
   RootedObject req(cx);
-  RootedObject moduleRequest(cx);
 
   for (uint32_t i = 0; i < vector.length(); ++i) {
     const frontend::StencilModuleEntry& entry = vector[i];
@@ -1548,24 +1483,18 @@ static ArrayObject* ModuleBuilderInitArray(
       MOZ_ASSERT(!exportName);
     }
 
-    moduleRequest = ModuleRequestObject::create(cx, specifier);
-    if (!moduleRequest) {
-      return nullptr;
-    }
-
     switch (arrayType) {
       case ModuleArrayType::ImportEntryObject:
         MOZ_ASSERT(localName);
-        req = ImportEntryObject::create(cx, moduleRequest, importName,
-                                        localName, entry.lineno, entry.column);
+        req = ImportEntryObject::create(cx, specifier, importName, localName,
+                                        entry.lineno, entry.column);
         break;
       case ModuleArrayType::ExportEntryObject:
-        req =
-            ExportEntryObject::create(cx, exportName, moduleRequest, importName,
-                                      localName, entry.lineno, entry.column);
+        req = ExportEntryObject::create(cx, exportName, specifier, importName,
+                                        localName, entry.lineno, entry.column);
         break;
       case ModuleArrayType::RequestedModuleObject:
-        req = RequestedModuleObject::create(cx, moduleRequest, entry.lineno,
+        req = RequestedModuleObject::create(cx, specifier, entry.lineno,
                                             entry.column);
         // TODO: Make this consistent with other object types.
         if (req && !FreezeObject(cx, req)) {
@@ -2059,15 +1988,14 @@ JSObject* js::GetOrCreateModuleMetaObject(JSContext* cx,
 
 JSObject* js::CallModuleResolveHook(JSContext* cx,
                                     HandleValue referencingPrivate,
-                                    HandleObject moduleRequest) {
+                                    HandleString specifier) {
   JS::ModuleResolveHook moduleResolveHook = cx->runtime()->moduleResolveHook;
   if (!moduleResolveHook) {
     JS_ReportErrorASCII(cx, "Module resolve hook not set");
     return nullptr;
   }
 
-  RootedObject result(cx,
-                      moduleResolveHook(cx, referencingPrivate, moduleRequest));
+  RootedObject result(cx, moduleResolveHook(cx, referencingPrivate, specifier));
   if (!result) {
     return nullptr;
   }
@@ -2297,24 +2225,7 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                  script->sourceObject()->canonicalPrivate());
   cx->runtime()->addRefScriptPrivate(referencingPrivate);
 
-  RootedAtom specifierAtom(cx, AtomizeString(cx, specifier));
-  if (!specifierAtom) {
-    if (!RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
-    }
-    return promise;
-  }
-
-  RootedObject moduleRequest(cx,
-                             ModuleRequestObject::create(cx, specifierAtom));
-  if (!moduleRequest) {
-    if (!RejectPromiseWithPendingError(cx, promise)) {
-      return nullptr;
-    }
-    return promise;
-  }
-
-  if (!importHook(cx, referencingPrivate, moduleRequest, promise)) {
+  if (!importHook(cx, referencingPrivate, specifier, promise)) {
     cx->runtime()->releaseScriptPrivate(referencingPrivate);
 
     // If there's no exception pending then the script is terminating
@@ -2367,25 +2278,15 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
                                            ExtraFromHandler<ListObject>(args));
   MOZ_ASSERT(resolvedModuleParams->length() == 2);
   RootedValue referencingPrivate(cx, resolvedModuleParams->get(0));
-
-  RootedAtom specifier(
-      cx, AtomizeString(cx, resolvedModuleParams->get(1).toString()));
-  if (!specifier) {
-    return false;
-  }
+  RootedString specifier(cx, resolvedModuleParams->get(1).toString());
 
   Rooted<PromiseObject*> promise(cx, TargetFromHandler<PromiseObject>(args));
 
   auto releasePrivate = mozilla::MakeScopeExit(
       [&] { cx->runtime()->releaseScriptPrivate(referencingPrivate); });
 
-  RootedObject moduleRequest(cx, ModuleRequestObject::create(cx, specifier));
-  if (!moduleRequest) {
-    return RejectPromiseWithPendingError(cx, promise);
-  }
-
-  RootedObject result(
-      cx, CallModuleResolveHook(cx, referencingPrivate, moduleRequest));
+  RootedObject result(cx,
+                      CallModuleResolveHook(cx, referencingPrivate, specifier));
 
   if (!result) {
     return RejectPromiseWithPendingError(cx, promise);
@@ -2430,14 +2331,13 @@ static bool OnRejectedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
 bool FinishDynamicModuleImport_impl(JSContext* cx,
                                     HandleObject evaluationPromise,
                                     HandleValue referencingPrivate,
-                                    HandleObject moduleRequest,
+                                    HandleString specifier,
                                     HandleObject promiseArg) {
   Rooted<ListObject*> resolutionArgs(cx, ListObject::create(cx));
   if (!resolutionArgs->append(cx, referencingPrivate)) {
     return false;
   }
-  Rooted<Value> stringValue(
-      cx, StringValue(moduleRequest->as<ModuleRequestObject>().specifier()));
+  Rooted<Value> stringValue(cx, StringValue(specifier));
   if (!resolutionArgs->append(cx, stringValue)) {
     return false;
   }
@@ -2465,7 +2365,7 @@ bool FinishDynamicModuleImport_impl(JSContext* cx,
 bool js::FinishDynamicModuleImport(JSContext* cx,
                                    HandleObject evaluationPromise,
                                    HandleValue referencingPrivate,
-                                   HandleObject moduleRequest,
+                                   HandleString specifier,
                                    HandleObject promiseArg) {
   // If we do not have an evaluation promise for the module, we can assume that
   // evaluation has failed or been interrupted -- we can reject the dynamic
@@ -2479,7 +2379,7 @@ bool js::FinishDynamicModuleImport(JSContext* cx,
   }
 
   if (!FinishDynamicModuleImport_impl(cx, evaluationPromise, referencingPrivate,
-                                      moduleRequest, promiseArg)) {
+                                      specifier, promiseArg)) {
     return false;
   }
 
@@ -2490,7 +2390,7 @@ bool js::FinishDynamicModuleImport(JSContext* cx,
 bool js::FinishDynamicModuleImport_NoTLA(JSContext* cx,
                                          JS::DynamicImportStatus status,
                                          HandleValue referencingPrivate,
-                                         HandleObject moduleRequest,
+                                         HandleString specifier,
                                          HandleObject promiseArg) {
   MOZ_ASSERT_IF(cx->isExceptionPending(),
                 status == JS::DynamicImportStatus::Failed);
@@ -2504,8 +2404,8 @@ bool js::FinishDynamicModuleImport_NoTLA(JSContext* cx,
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  RootedObject result(
-      cx, CallModuleResolveHook(cx, referencingPrivate, moduleRequest));
+  RootedObject result(cx,
+                      CallModuleResolveHook(cx, referencingPrivate, specifier));
   if (!result) {
     return RejectPromiseWithPendingError(cx, promise);
   }
@@ -2533,7 +2433,7 @@ XDRResult js::XDRExportEntries(XDRState<mode>* xdr,
   Rooted<GCVector<ExportEntryObject*>> expVec(cx);
   RootedExportEntryObject expObj(cx);
   RootedAtom exportName(cx);
-  RootedModuleRequestObject moduleRequest(cx);
+  RootedAtom moduleRequest(cx);
   RootedAtom importName(cx);
   RootedAtom localName(cx);
 
@@ -2558,7 +2458,7 @@ XDRResult js::XDRExportEntries(XDRState<mode>* xdr,
     }
 
     MOZ_TRY(XDRAtomOrNull(xdr, &exportName));
-    MOZ_TRY(XDRModuleRequestObject(xdr, &moduleRequest, true));
+    MOZ_TRY(XDRAtomOrNull(xdr, &moduleRequest));
     MOZ_TRY(XDRAtomOrNull(xdr, &importName));
     MOZ_TRY(XDRAtomOrNull(xdr, &localName));
 
@@ -2593,48 +2493,23 @@ template <XDRMode mode>
 XDRResult js::XDRRequestedModuleObject(
     XDRState<mode>* xdr, MutableHandleRequestedModuleObject reqObj) {
   JSContext* cx = xdr->cx();
-  RootedModuleRequestObject moduleRequest(cx);
+  RootedAtom moduleSpecifier(cx);
   uint32_t lineNumber = 0;
   uint32_t columnNumber = 0;
   if (mode == XDR_ENCODE) {
-    moduleRequest = reqObj->moduleRequest();
+    moduleSpecifier = reqObj->moduleSpecifier();
     lineNumber = reqObj->lineNumber();
     columnNumber = reqObj->columnNumber();
   }
 
-  MOZ_TRY(XDRModuleRequestObject(xdr, &moduleRequest, false));
+  MOZ_TRY(XDRAtom(xdr, &moduleSpecifier));
   MOZ_TRY(xdr->codeUint32(&lineNumber));
   MOZ_TRY(xdr->codeUint32(&columnNumber));
 
   if (mode == XDR_DECODE) {
-    reqObj.set(RequestedModuleObject::create(cx, moduleRequest, lineNumber,
+    reqObj.set(RequestedModuleObject::create(cx, moduleSpecifier, lineNumber,
                                              columnNumber));
     if (!reqObj) {
-      return xdr->fail(JS::TranscodeResult::Throw);
-    }
-  }
-
-  return Ok();
-}
-
-template <XDRMode mode>
-XDRResult js::XDRModuleRequestObject(
-    XDRState<mode>* xdr, MutableHandleModuleRequestObject moduleRequestObj,
-    bool allowNullSpecifier) {
-  JSContext* cx = xdr->cx();
-  RootedAtom specifier(cx);
-  if (mode == XDR_ENCODE) {
-    specifier = moduleRequestObj->specifier();
-  }
-
-  MOZ_TRY(XDRAtomOrNull(xdr, &specifier));
-
-  if (mode == XDR_DECODE) {
-    if (!allowNullSpecifier && !specifier) {
-      return xdr->fail(JS::TranscodeResult::Throw);
-    }
-    moduleRequestObj.set(ModuleRequestObject::create(cx, specifier));
-    if (!moduleRequestObj) {
       return xdr->fail(JS::TranscodeResult::Throw);
     }
   }
@@ -2646,7 +2521,7 @@ template <XDRMode mode>
 XDRResult js::XDRImportEntryObject(XDRState<mode>* xdr,
                                    MutableHandleImportEntryObject impObj) {
   JSContext* cx = xdr->cx();
-  RootedModuleRequestObject moduleRequest(cx);
+  RootedAtom moduleRequest(cx);
   RootedAtom importName(cx);
   RootedAtom localName(cx);
   uint32_t lineNumber = 0;
@@ -2659,7 +2534,7 @@ XDRResult js::XDRImportEntryObject(XDRState<mode>* xdr,
     columnNumber = impObj->columnNumber();
   }
 
-  MOZ_TRY(XDRModuleRequestObject(xdr, &moduleRequest, true));
+  MOZ_TRY(XDRAtomOrNull(xdr, &moduleRequest));
   MOZ_TRY(XDRAtomOrNull(xdr, &importName));
   MOZ_TRY(XDRAtomOrNull(xdr, &localName));
   MOZ_TRY(xdr->codeUint32(&lineNumber));

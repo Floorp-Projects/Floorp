@@ -5691,19 +5691,10 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   ShellContext* sc = GetShellContext(cx);
+  RootedString specifier(cx, args[0].toString());
   RootedModuleObject module(cx, &args[1].toObject().as<ModuleObject>());
 
-  RootedAtom specifier(cx, AtomizeString(cx, args[0].toString()));
-  if (!specifier) {
-    return false;
-  }
-
-  RootedObject moduleRequest(cx, ModuleRequestObject::create(cx, specifier));
-  if (!moduleRequest) {
-    return false;
-  }
-
-  if (!sc->moduleLoader->registerTestModule(cx, moduleRequest, module)) {
+  if (!sc->moduleLoader->registerTestModule(cx, specifier, module)) {
     return false;
   }
 
