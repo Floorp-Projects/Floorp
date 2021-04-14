@@ -145,9 +145,6 @@ this container is a toolbar. This avoids double-speaking. -->
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
 
-<!ENTITY customizeMode.autoHideDownloadsButton.label "Auto-hide">
-
-
 <!ENTITY uiTour.infoPanel.close "Close">
 
 <!ENTITY panicButton.thankyou.msg1                "Your recent history is cleared.">
