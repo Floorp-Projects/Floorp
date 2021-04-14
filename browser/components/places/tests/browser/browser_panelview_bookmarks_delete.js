@@ -66,7 +66,7 @@ add_task(async function test_panelview_bookmarks_delete() {
   let placesContextDelete = document.getElementById(
     "placesContext_deleteBookmark"
   );
-  EventUtils.synthesizeMouseAtCenter(placesContextDelete, {});
+  placesContext.activateItem(placesContextDelete, {});
   await promise;
 
   await gCUITestUtils.hideMainMenu();
