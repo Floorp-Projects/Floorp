@@ -4,7 +4,7 @@
 
 toolbar-context-menu-open-a-new-tab =
     .label = Open a New Tab
-    .accesskey = O
+    .accesskey = w
 toolbar-context-menu-reload-selected-tab =
     .label = Reload Selected Tab
     .accesskey = R
