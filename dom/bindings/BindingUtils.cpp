@@ -22,7 +22,7 @@
 
 #include "AccessCheck.h"
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJit{Getter,Setter}Op, JSJitInfo
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimitConservative
+#include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/Id.h"
 #include "js/JSON.h"
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
@@ -2155,7 +2155,8 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
   // transplanting code, since it has no good way to handle errors. This uses
   // the untrusted script limit, which is not strictly necessary since no
   // actual script should run.
-  if (!js::CheckRecursionLimitConservative(aCx)) {
+  js::AutoCheckRecursionLimit recursion(aCx);
+  if (!recursion.checkConservative(aCx)) {
     aError.StealExceptionFromJSContext(aCx);
     return;
   }
