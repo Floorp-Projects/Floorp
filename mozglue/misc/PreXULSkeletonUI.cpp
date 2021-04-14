@@ -165,7 +165,7 @@ static double sCSSToDevPixelScaling;
 
 static Maybe<PreXULSkeletonUIError> sErrorReason;
 
-static const int kAnimationCSSPixelsPerFrame = 21;
+static const int kAnimationCSSPixelsPerFrame = 11;
 static const int kAnimationCSSExtraWindowSize = 300;
 
 // NOTE: these values were pulled out of thin air as round numbers that are
@@ -745,34 +745,40 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
   int horizontalOffset =
       sNonClientHorizontalMargins - (sMaximized ? 0 : chromeHorMargin);
 
-  // found in browser-aero.css, ":root[sizemode=normal][tabsintitlebar]"
-  int topBorderHeight =
-      sMaximized ? 0 : CSSToDevPixels(1, sCSSToDevPixelScaling);
-  // found in tabs.inc.css, "--tab-min-height" - depends on uidensity variable
-  int tabBarHeight = CSSToDevPixels(33, sCSSToDevPixelScaling) + verticalOffset;
-  // found in tabs.inc.css, ".titlebar-spacer"
-  int titlebarSpacerWidth = horizontalOffset;
+  // found in tabs.inc.css, "--tab-min-height" + 2 * "--proton-tab-block-margin"
+  int tabBarHeight = CSSToDevPixels(44, sCSSToDevPixelScaling);
+  int selectedTabBorderWidth = CSSToDevPixels(2, sCSSToDevPixelScaling);
+  // found in tabs.inc.css, "--proton-tab-block-margin"
+  int titlebarSpacerWidth = horizontalOffset +
+                            CSSToDevPixels(2, sCSSToDevPixelScaling) -
+                            selectedTabBorderWidth;
   if (!sMaximized && !menubarShown) {
+    // found in tabs.inc.css, ".titlebar-spacer"
     titlebarSpacerWidth += CSSToDevPixels(40, sCSSToDevPixelScaling);
   }
-  // found in tabs.inc.css, ".tab-line"
-  int tabLineHeight = CSSToDevPixels(2, sCSSToDevPixelScaling) + verticalOffset;
-  int selectedTabWidth = CSSToDevPixels(224, sCSSToDevPixelScaling);
-  int toolbarHeight = CSSToDevPixels(39, sCSSToDevPixelScaling);
+  // found in tabs.inc.css, "--proton-tab-block-margin"
+  int selectedTabMarginTop =
+      CSSToDevPixels(4, sCSSToDevPixelScaling) - selectedTabBorderWidth;
+  int selectedTabMarginBottom =
+      CSSToDevPixels(4, sCSSToDevPixelScaling) - selectedTabBorderWidth;
+  int selectedTabBorderRadius = CSSToDevPixels(4, sCSSToDevPixelScaling);
+  int selectedTabWidth =
+      CSSToDevPixels(221, sCSSToDevPixelScaling) + 2 * selectedTabBorderWidth;
+  int toolbarHeight = CSSToDevPixels(40, sCSSToDevPixelScaling);
   // found in browser.css, "#PersonalToolbar"
   int bookmarkToolbarHeight = CSSToDevPixels(28, sCSSToDevPixelScaling);
   if (bookmarksToolbarShown) {
     toolbarHeight += bookmarkToolbarHeight;
   }
   // found in urlbar-searchbar.inc.css, "#urlbar[breakout]"
-  int urlbarTopOffset = CSSToDevPixels(5, sCSSToDevPixelScaling);
-  int urlbarHeight = CSSToDevPixels(30, sCSSToDevPixelScaling);
+  int urlbarTopOffset = CSSToDevPixels(4, sCSSToDevPixelScaling);
+  int urlbarHeight = CSSToDevPixels(32, sCSSToDevPixelScaling);
   // found in browser-aero.css, "#navigator-toolbox::after" border-bottom
   int chromeContentDividerHeight = CSSToDevPixels(1, sCSSToDevPixelScaling);
 
-  int tabPlaceholderBarMarginTop = CSSToDevPixels(13, sCSSToDevPixelScaling);
+  int tabPlaceholderBarMarginTop = CSSToDevPixels(14, sCSSToDevPixelScaling);
   int tabPlaceholderBarMarginLeft = CSSToDevPixels(10, sCSSToDevPixelScaling);
-  int tabPlaceholderBarHeight = CSSToDevPixels(8, sCSSToDevPixelScaling);
+  int tabPlaceholderBarHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
   int tabPlaceholderBarWidth = CSSToDevPixels(120, sCSSToDevPixelScaling);
 
   int toolbarPlaceholderHeight = CSSToDevPixels(10, sCSSToDevPixelScaling);
@@ -792,9 +798,9 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
       CSSToDevPixels(5, sCSSToDevPixelScaling) + horizontalOffset;
 
   int urlbarTextPlaceholderMarginTop =
-      CSSToDevPixels(10, sCSSToDevPixelScaling);
+      CSSToDevPixels(12, sCSSToDevPixelScaling);
   int urlbarTextPlaceholderMarginLeft =
-      CSSToDevPixels(10, sCSSToDevPixelScaling);
+      CSSToDevPixels(12, sCSSToDevPixelScaling);
   int urlbarTextPlaceHolderWidth = CSSToDevPixels(
       std::clamp(urlbarCSSSpan.end - urlbarCSSSpan.start - 10.0, 0.0, 260.0),
       sCSSToDevPixelScaling);
@@ -809,21 +815,10 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
 
   Vector<ColorRect> rects;
 
-  ColorRect topBorder = {};
-  topBorder.color = 0x00000000;
-  topBorder.x = 0;
-  topBorder.y = 0;
-  topBorder.width = sWindowWidth;
-  topBorder.height = topBorderHeight;
-  topBorder.flipIfRTL = false;
-  if (!rects.append(topBorder)) {
-    return Err(PreXULSkeletonUIError::OOM);
-  }
-
   ColorRect menubar = {};
   menubar.color = currentTheme.tabBarColor;
   menubar.x = 0;
-  menubar.y = topBorder.height;
+  menubar.y = verticalOffset;
   menubar.width = sWindowWidth;
   menubar.height = menubarHeightDevPixels;
   menubar.flipIfRTL = false;
@@ -831,18 +826,15 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
     return Err(PreXULSkeletonUIError::OOM);
   }
 
-  int placeholderBorderRadius = CSSToDevPixels(2, sCSSToDevPixelScaling);
+  int placeholderBorderRadius = CSSToDevPixels(4, sCSSToDevPixelScaling);
   // found in browser.css "--toolbarbutton-border-radius"
-  int urlbarBorderRadius = CSSToDevPixels(2, sCSSToDevPixelScaling);
-  // found in urlbar-searchbar.inc.css "#urlbar-background"
-  int urlbarBorderWidth = CSSToDevPixelsFloor(1, sCSSToDevPixelScaling);
-  int urlbarBorderColor = currentTheme.urlbarBorderColor;
+  int urlbarBorderRadius = CSSToDevPixels(4, sCSSToDevPixelScaling);
 
   // The (traditionally dark blue on Windows) background of the tab bar.
   ColorRect tabBar = {};
   tabBar.color = currentTheme.tabBarColor;
   tabBar.x = 0;
-  tabBar.y = menubar.height + topBorder.height;
+  tabBar.y = menubar.y + menubar.height;
   tabBar.width = sWindowWidth;
   tabBar.height = tabBarHeight;
   tabBar.flipIfRTL = false;
@@ -850,25 +842,17 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
     return Err(PreXULSkeletonUIError::OOM);
   }
 
-  // The blue highlight at the top of the initial selected tab
-  ColorRect tabLine = {};
-  tabLine.color = currentTheme.tabLineColor;
-  tabLine.x = titlebarSpacerWidth;
-  tabLine.y = menubar.height + topBorder.height;
-  tabLine.width = selectedTabWidth;
-  tabLine.height = tabLineHeight;
-  tabLine.flipIfRTL = true;
-  if (!rects.append(tabLine)) {
-    return Err(PreXULSkeletonUIError::OOM);
-  }
-
   // The initial selected tab
   ColorRect selectedTab = {};
-  selectedTab.color = currentTheme.backgroundColor;
+  selectedTab.color = currentTheme.tabColor;
   selectedTab.x = titlebarSpacerWidth;
-  selectedTab.y = tabLine.y + tabLineHeight;
+  selectedTab.y = menubar.y + menubar.height + selectedTabMarginTop;
   selectedTab.width = selectedTabWidth;
-  selectedTab.height = tabBar.y + tabBar.height - selectedTab.y;
+  selectedTab.height =
+      tabBar.y + tabBar.height - selectedTab.y - selectedTabMarginBottom;
+  selectedTab.borderColor = currentTheme.tabOutlineColor;
+  selectedTab.borderWidth = selectedTabBorderWidth;
+  selectedTab.borderRadius = selectedTabBorderRadius;
   selectedTab.flipIfRTL = true;
   if (!rects.append(selectedTab)) {
     return Err(PreXULSkeletonUIError::OOM);
@@ -876,7 +860,7 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
 
   // A placeholder rect representing text that will fill the selected tab title
   ColorRect tabTextPlaceholder = {};
-  tabTextPlaceholder.color = sToolbarForegroundColor;
+  tabTextPlaceholder.color = currentTheme.toolbarForegroundColor;
   tabTextPlaceholder.x = selectedTab.x + tabPlaceholderBarMarginLeft;
   tabTextPlaceholder.y = selectedTab.y + tabPlaceholderBarMarginTop;
   tabTextPlaceholder.width = tabPlaceholderBarWidth;
@@ -920,9 +904,9 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
   urlbar.width = CSSToDevPixels((urlbarCSSSpan.end - urlbarCSSSpan.start),
                                 sCSSToDevPixelScaling);
   urlbar.height = urlbarHeight;
+  urlbar.borderColor = currentTheme.urlbarBorderColor;
+  urlbar.borderWidth = CSSToDevPixels(1, sCSSToDevPixelScaling);
   urlbar.borderRadius = urlbarBorderRadius;
-  urlbar.borderWidth = urlbarBorderWidth;
-  urlbar.borderColor = urlbarBorderColor;
   urlbar.flipIfRTL = false;
   if (!rects.append(urlbar)) {
     return Err(PreXULSkeletonUIError::OOM);
@@ -932,7 +916,7 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
   // If rtl is enabled, it is flipped relative to the the urlbar rectangle, not
   // sWindowWidth.
   ColorRect urlbarTextPlaceholder = {};
-  urlbarTextPlaceholder.color = sToolbarForegroundColor;
+  urlbarTextPlaceholder.color = currentTheme.toolbarForegroundColor;
   urlbarTextPlaceholder.x =
       rtlEnabled
           ? ((urlbar.x + urlbar.width) - urlbarTextPlaceholderMarginLeft -
@@ -961,8 +945,8 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
         searchbarCSSSpan.end - searchbarCSSSpan.start, sCSSToDevPixelScaling);
     searchbarRect.height = urlbarHeight;
     searchbarRect.borderRadius = urlbarBorderRadius;
-    searchbarRect.borderWidth = urlbarBorderWidth;
-    searchbarRect.borderColor = urlbarBorderColor;
+    searchbarRect.borderColor = currentTheme.urlbarBorderColor;
+    searchbarRect.borderWidth = CSSToDevPixels(1, sCSSToDevPixelScaling);
     searchbarRect.flipIfRTL = false;
     if (!rects.append(searchbarRect)) {
       return Err(PreXULSkeletonUIError::OOM);
@@ -973,7 +957,7 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
     // If rtl is enabled, it is flipped relative to the the searchbar rectangle,
     // not sWindowWidth.
     ColorRect searchbarTextPlaceholder = {};
-    searchbarTextPlaceholder.color = sToolbarForegroundColor;
+    searchbarTextPlaceholder.color = currentTheme.toolbarForegroundColor;
     searchbarTextPlaceholder.x =
         rtlEnabled
             ? ((searchbarRect.x + searchbarRect.width) -
@@ -1062,7 +1046,7 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
 
     // The placeholder rects should all be y-aligned.
     ColorRect placeholderRect = {};
-    placeholderRect.color = sToolbarForegroundColor;
+    placeholderRect.color = currentTheme.toolbarForegroundColor;
     placeholderRect.x = start;
     placeholderRect.y = urlbarTextPlaceholder.y;
     placeholderRect.width = end - start;
@@ -1377,57 +1361,35 @@ ThemeColors GetTheme(ThemeMode themeId) {
       // Dark theme or default theme when in dark mode
 
       // controlled by css variable --toolbar-bgcolor
-      theme.backgroundColor = 0x323234;
-      theme.toolbarForegroundColor = 0x6a6a6b;
+      theme.backgroundColor = 0x2b2a33;
+      theme.tabColor = 0x42414d;
+      theme.toolbarForegroundColor = 0x6a6a6d;
+      theme.tabOutlineColor = 0x1c1b22;
       // controlled by css variable --lwt-accent-color
-      theme.tabBarColor = 0x0c0c0d;
+      theme.tabBarColor = 0x1c1b22;
       // controlled by --toolbar-non-lwt-textcolor in browser.css
       theme.chromeContentDividerColor = 0x0c0c0d;
-      // controlled by css variable --tab-line-color
-      theme.tabLineColor = 0x0a84ff;
       // controlled by css variable --lwt-toolbar-field-background-color
-      theme.urlbarColor = 0x474749;
-      // controlled by css variable --lwt-toolbar-field-border-color
-      theme.urlbarBorderColor = 0x5a5a5c;
+      theme.urlbarColor = 0x42414d;
+      theme.urlbarBorderColor = 0x42414d;
       theme.animationColor = theme.urlbarColor;
       return theme;
     case ThemeMode::Light:
-      // Light theme
-
-      // controlled by --toolbar-bgcolor
-      theme.backgroundColor = 0xf5f6f7;
-      theme.toolbarForegroundColor = 0xd9dadb;
-      // controlled by css variable --lwt-accent-color
-      theme.tabBarColor = 0xe3e4e6;
-      // --chrome-content-separator-color in browser.css
-      theme.chromeContentDividerColor = 0xcccccc;
-      // controlled by css variable --tab-line-color
-      theme.tabLineColor = 0x0a84ff;
-      // by css variable --lwt-toolbar-field-background-color
-      theme.urlbarColor = 0xffffff;
-      // controlled by css variable --lwt-toolbar-field-border-color
-      theme.urlbarBorderColor = 0xcccccc;
-      theme.animationColor = theme.backgroundColor;
-      return theme;
     case ThemeMode::Default:
     default:
-      // Default theme when not in dark mode
-      MOZ_ASSERT(themeId == ThemeMode::Default);
-
       // --toolbar-non-lwt-bgcolor in browser.css
-      theme.backgroundColor = 0xf9f9fa;
-      theme.toolbarForegroundColor = 0xe5e5e5;
+      theme.backgroundColor = 0xf9f9fb;
+      theme.tabColor = 0xf9f9fb;
+      theme.toolbarForegroundColor = 0xdddde1;
+      theme.tabOutlineColor = 0xdddde1;
       // found in browser-aero.css ":root[tabsintitlebar]:not(:-moz-lwtheme)"
       // (set to "hsl(235,33%,19%)")
-      theme.tabBarColor = 0x202340;
+      theme.tabBarColor = 0xf0f0f4;
       // --chrome-content-separator-color in browser.css
-      theme.chromeContentDividerColor = 0xe2e1e3;
-      // controlled by css variable --tab-line-color
-      theme.tabLineColor = 0x0a84ff;
+      theme.chromeContentDividerColor = 0xe1e1e2;
       // controlled by css variable --toolbar-color
       theme.urlbarColor = 0xffffff;
-      // controlled by css variable --lwt-toolbar-field-border-color
-      theme.urlbarBorderColor = 0xbebebe;
+      theme.urlbarBorderColor = 0xdddde1;
       theme.animationColor = theme.backgroundColor;
       return theme;
   }
