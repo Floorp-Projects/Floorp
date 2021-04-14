@@ -19,7 +19,7 @@
 #include "frontend/Parser.h"
 #include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
 #include "js/Conversions.h"
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
+#include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/Vector.h"
 #include "util/StringBuffer.h"  // StringBuffer
 #include "vm/StringType.h"
@@ -84,7 +84,8 @@ static bool ListContainsHoistedDeclaration(JSContext* cx, ListNode* list,
 // |node| being completely eliminated as dead.
 static bool ContainsHoistedDeclaration(JSContext* cx, ParseNode* node,
                                        bool* result) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 

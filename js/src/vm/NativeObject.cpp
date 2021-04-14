@@ -20,7 +20,7 @@
 #include "jit/BaselineIC.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/friend/StackLimits.h"    // js::CheckRecursionLimit{,DontReport}
+#include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/Result.h"
 #include "js/Value.h"
 #include "util/Memory.h"
@@ -1172,7 +1172,8 @@ template bool js::NativeLookupOwnProperty<NoGC>(
 
 static bool CallJSAddPropertyOp(JSContext* cx, JSAddPropertyOp op,
                                 HandleObject obj, HandleId id, HandleValue v) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
@@ -2132,7 +2133,8 @@ bool js::NativeGetOwnPropertyDescriptor(
 
 static bool GetCustomDataProperty(JSContext* cx, HandleObject obj, HandleId id,
                                   MutableHandleValue vp) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
@@ -2244,7 +2246,8 @@ static inline bool GeneralizedGetProperty(JSContext* cx, HandleObject obj,
                                           HandleId id, HandleValue receiver,
                                           IsNameLookup nameLookup,
                                           MutableHandleValue vp) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
   if (nameLookup) {
@@ -2423,7 +2426,8 @@ bool js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg,
 
 static bool SetCustomDataProperty(JSContext* cx, HandleObject obj, HandleId id,
                                   HandleValue v, ObjectOpResult& result) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
@@ -2795,7 +2799,8 @@ bool js::NativeSetElement(JSContext* cx, HandleNativeObject obj, uint32_t index,
 static bool CallJSDeletePropertyOp(JSContext* cx, JSDeletePropertyOp op,
                                    HandleObject receiver, HandleId id,
                                    ObjectOpResult& result) {
-  if (!CheckRecursionLimit(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.check(cx)) {
     return false;
   }
 
