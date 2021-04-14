@@ -3106,10 +3106,12 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   geckoEvent.mButton = MouseButton::eSecondary;
   geckoEvent.mClickCount = [theEvent clickCount];
 
-  mGeckoChild->DispatchInputEvent(&geckoEvent);
+  nsIWidget::ContentAndAPZEventStatus eventStatus
+      = mGeckoChild->DispatchInputEvent(&geckoEvent);
   if (!mGeckoChild) return;
 
-  if (!StaticPrefs::ui_context_menus_after_mouseup()) {
+  if (!StaticPrefs::ui_context_menus_after_mouseup() &&
+      eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
     // Let the superclass do the context menu stuff.
     [super rightMouseDown:theEvent];
   }
@@ -3131,10 +3133,12 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   geckoEvent.mClickCount = [theEvent clickCount];
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  mGeckoChild->DispatchInputEvent(&geckoEvent);
+  nsIWidget::ContentAndAPZEventStatus eventStatus
+      = mGeckoChild->DispatchInputEvent(&geckoEvent);
   if (!mGeckoChild) return;
 
-  if (StaticPrefs::ui_context_menus_after_mouseup()) {
+  if (StaticPrefs::ui_context_menus_after_mouseup() &&
+      eventStatus.mApzStatus != nsEventStatus_eConsumeNoDefault) {
     // Let the superclass do the context menu stuff, but pretend it's rightMouseDown.
     NSEvent* dupeEvent = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown
                                             location:theEvent.locationInWindow
