@@ -152,7 +152,13 @@ add_task(async function testBasicViewTelemetry() {
 
   assertAboutAddonsTelemetryEvents(
     [
-      ["addonsManager", "view", "aboutAddons", "discover"],
+      [
+        "addonsManager",
+        "view",
+        "aboutAddons",
+        "discover",
+        { taar_enabled: "0" },
+      ],
       ["addonsManager", "view", "aboutAddons", "list", { type: "theme" }],
       [
         "addonsManager",

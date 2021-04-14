@@ -4591,6 +4591,16 @@ AMTelemetry = {
       };
     }
 
+    if (
+      telemetryInfo?.source === "disco" &&
+      typeof telemetryInfo?.taarRecommended === "boolean"
+    ) {
+      extra = {
+        ...extra,
+        taar_based: this.convertToString(telemetryInfo.taarRecommended),
+      };
+    }
+
     this.recordEvent({ method, object, value: install.hashedAddonId, extra });
   },
 
@@ -4784,6 +4794,9 @@ AMTelemetry = {
    */
   recordActionEvent({ object, action, value, addon, view, extra }) {
     extra = { ...extra, action, addon, view };
+    if (action === "installFromRecommendation") {
+      extra.taar_based = !!addon.taarRecommended;
+    }
     this.recordEvent({
       method: "action",
       object,
@@ -4806,13 +4819,20 @@ AMTelemetry = {
    * @param {string} opts.type
    *        An optional type for the view. If opts.addon is set it will
    *        overwrite this value with the type of the add-on.
+   * @param {boolean} opts.taarEnabled
+   *        Set to true if taar-based discovery was enabled when the user
+   *        did switch between about:addons views.
    */
-  recordViewEvent({ view, addon, type }) {
+  recordViewEvent({ view, addon, type, taarEnabled }) {
     this.recordEvent({
       method: "view",
       object: "aboutAddons",
       value: view,
-      extra: this.formatExtraVars({ type, addon }),
+      extra: this.formatExtraVars({
+        type,
+        addon,
+        taar_enabled: taarEnabled,
+      }),
     });
   },
 

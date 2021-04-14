@@ -1,13 +1,7 @@
 /* eslint max-len: ["error", 80] */
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
-);
-
-const {
-  ExtensionUtils: { promiseEvent, promiseObserved },
-} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+loadTestSubscript("head_disco.js");
 
 // The response to the discovery API, as documented at:
 // https://addons-server.readthedocs.io/en/latest/topics/api/discovery.html
@@ -25,8 +19,6 @@ const ArrayBufferInputStream = Components.Constructor(
   "nsIArrayBufferInputStream",
   "setData"
 );
-
-AddonTestUtils.initMochitest(this);
 
 const amoServer = AddonTestUtils.createHttpServer({ hosts: [AMO_TEST_HOST] });
 
@@ -52,26 +44,6 @@ function getTestExpectationFromApiResult(result) {
     dailyUsers: result.addon.average_daily_users,
     rating: result.addon.ratings.average,
   };
-}
-
-// Read the content of API_RESPONSE_FILE, and replaces any embedded URLs with
-// URLs that point to the `amoServer` test server.
-async function readAPIResponseFixture() {
-  let apiText = await OS.File.read(API_RESPONSE_FILE, { encoding: "utf-8" });
-  apiText = apiText.replace(/\bhttps?:\/\/[^"]+(?=")/g, url => {
-    try {
-      url = new URL(url);
-    } catch (e) {
-      // Responses may contain "http://*/*"; ignore it.
-      return url;
-    }
-    // In this test, we only need to distinguish between different file types,
-    // so just use the file extension as path name for amoServer.
-    let ext = url.pathname.split(".").pop();
-    return `http://${AMO_TEST_HOST}/${ext}?${url.pathname}${url.search}`;
-  });
-
-  return apiText;
 }
 
 // A helper to declare a response to discovery API requests.
@@ -128,14 +100,6 @@ function getActionName(actionElement) {
   return actionElement.getAttribute("action");
 }
 
-function getDiscoveryElement(win) {
-  return win.document.querySelector("discovery-pane");
-}
-
-function getCardContainer(win) {
-  return getDiscoveryElement(win).querySelector("recommended-addon-list");
-}
-
 function getCardByAddonId(win, addonId) {
   for (let card of win.document.querySelectorAll("recommended-addon-card")) {
     if (card.addonId === addonId) {
@@ -143,14 +107,6 @@ function getCardByAddonId(win, addonId) {
     }
   }
   return null;
-}
-
-// Wait until the current `<discovery-pane>` element has finished loading its
-// cards. This can be used after the cards have been loaded.
-function promiseDiscopaneUpdate(win) {
-  let { cardsReady } = getCardContainer(win);
-  ok(cardsReady, "Discovery cards should have started to initialize");
-  return cardsReady;
 }
 
 // Switch to a different view so we can switch back to the discopane later.
@@ -195,49 +151,6 @@ async function waitForAllImagesLoaded(win) {
     await promiseEvent(win.document, "load", true, areAllImagesLoaded);
   }
   return imgs.length;
-}
-
-// A helper that waits until an installation has been requested from `amoServer`
-// and proceeds with approving the installation.
-async function promiseAddonInstall(amoServer, extensionData) {
-  let description = extensionData.manifest.description;
-  let xpiFile = AddonTestUtils.createTempWebExtensionFile(extensionData);
-  amoServer.registerFile("/xpi", xpiFile);
-
-  let addonId = extensionData.manifest.applications.gecko.id;
-  let installedPromise = waitAppMenuNotificationShown(
-    "addon-installed",
-    addonId,
-    true
-  );
-
-  if (!extensionData.manifest.theme) {
-    info(`${description}: Waiting for permission prompt`);
-    // Extensions have install prompts.
-    let panel = await promisePopupNotificationShown("addon-webext-permissions");
-    panel.button.click();
-  } else {
-    info(`${description}: Waiting for install prompt`);
-    let panel = await promisePopupNotificationShown(
-      "addon-install-confirmation"
-    );
-    panel.button.click();
-  }
-
-  info("Waiting for post-install doorhanger");
-  await installedPromise;
-
-  let addon = await AddonManager.getAddonByID(addonId);
-  Assert.deepEqual(
-    addon.installTelemetryInfo,
-    {
-      // This is the expected source because before the HTML-based discopane,
-      // "disco" was already used to mark installs from the AMO-hosted
-      // discopane.
-      source: "disco",
-    },
-    "The installed add-on should have the expected telemetry info"
-  );
 }
 
 // Install an add-on by clicking on the card.
@@ -306,11 +219,14 @@ add_task(async function setup() {
 // Test that the discopane can be loaded and that meaningful results are shown.
 // This relies on response data from the AMO API, stored in API_RESPONSE_FILE.
 add_task(async function discopane_with_real_api_data() {
-  const apiText = await readAPIResponseFixture();
+  const apiText = await readAPIResponseFixture(
+    AMO_TEST_HOST,
+    API_RESPONSE_FILE
+  );
   let apiHandler = new DiscoveryAPIHandler(apiText);
 
   const apiResultArray = JSON.parse(apiText).results;
-  ok(apiResultArray.length, `Mock has ${Array.length} results`);
+  ok(apiResultArray.length, `Mock has ${apiResultArray.length} results`);
 
   apiHandler.blockNextResponses();
   let win = await loadInitialView("discover");
@@ -416,7 +332,10 @@ add_task(async function discopane_with_real_api_data() {
 // and that they are shown at the bottom of the list when the discopane is
 // reopened.
 add_task(async function install_from_discopane() {
-  const apiText = await readAPIResponseFixture();
+  const apiText = await readAPIResponseFixture(
+    AMO_TEST_HOST,
+    API_RESPONSE_FILE
+  );
   const apiResultArray = JSON.parse(apiText).results;
   let getAddonIdByAMOAddonType = type =>
     apiResultArray.find(r => r.addon.type === type).addon.guid;

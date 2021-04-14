@@ -550,6 +550,8 @@ class DiscoAddonWrapper {
     this.editorialDescription = details.description_text;
     this.iconURL = details.addon.icon_url;
     this.amoListingUrl = details.addon.url;
+
+    this.taarRecommended = details.is_recommendation;
   }
 }
 
@@ -3746,7 +3748,10 @@ class RecommendedAddonCard extends HTMLElement {
     let url = addon.sourceURI.spec;
     let install = await AddonManager.getInstallForURL(url, {
       name: addon.name,
-      telemetryInfo: { source: "disco" },
+      telemetryInfo: {
+        source: "disco",
+        taarRecommended: addon.taarRecommended,
+      },
     });
     // We are hosted in a <browser> in about:addons, but we can just use the
     // main tab's browser since all of it is using the system principal.
