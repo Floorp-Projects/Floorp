@@ -35,12 +35,6 @@ this.screenshots = class extends ExtensionAPI {
           isHistoryEnabled() {
             return Services.prefs.getBoolPref("places.history.enabled", true);
           },
-          isUploadDisabled() {
-            return Services.prefs.getBoolPref(
-              "extensions.screenshots.upload-disabled",
-              false
-            );
-          },
           setIcon: isActive => {
             Services.obs.notifyObservers(
               null,

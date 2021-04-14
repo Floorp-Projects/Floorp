@@ -1994,9 +1994,6 @@ pref("browser.suppress_first_window_animation", true);
 
 // Preference that allows individual users to disable Screenshots.
 pref("extensions.screenshots.disabled", false);
-// Preference that allows individual users to leave Screenshots enabled, but
-// disable uploading to the server.
-pref("extensions.screenshots.upload-disabled", false);
 
 // DoH Rollout: whether to enable automatic performance-based TRR-selection.
 // This pref is controlled by a Normandy rollout so we don't overload providers.
