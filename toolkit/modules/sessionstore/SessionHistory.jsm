@@ -42,13 +42,8 @@ var SessionHistory = Object.freeze({
     return SessionHistoryInternal.collect(docShell, aFromIdx);
   },
 
-  collectFromParent(uri, documentHasChildNodes, history, aFromIdx = -1) {
-    return SessionHistoryInternal.collectCommon(
-      uri,
-      documentHasChildNodes,
-      history,
-      aFromIdx
-    );
+  collectFromParent(uri, body, history, aFromIdx = -1) {
+    return SessionHistoryInternal.collectCommon(uri, body, history, aFromIdx);
   },
 
   restore(docShell, tabData) {
@@ -106,15 +101,10 @@ var SessionHistoryInternal = {
     let uri = webNavigation.currentURI.displaySpec;
     let body = webNavigation.document.body;
     let history = webNavigation.sessionHistory;
-    return this.collectCommon(
-      uri,
-      body && body.hasChildNodes(),
-      history.legacySHistory,
-      aFromIdx
-    );
+    return this.collectCommon(uri, body, history.legacySHistory, aFromIdx);
   },
 
-  collectCommon(uri, documentHasChildNodes, shistory, aFromIdx) {
+  collectCommon(uri, body, shistory, aFromIdx) {
     let data = {
       entries: [],
       requestedIndex: shistory.requestedIndex + 1,
@@ -152,7 +142,7 @@ var SessionHistoryInternal = {
       // or it's a blank tab that was modified (like a custom newtab page),
       // record it. For about:blank we explicitly want an empty array without
       // an 'index' property to denote that there are no history entries.
-      if (uri != "about:blank" || documentHasChildNodes) {
+      if (uri != "about:blank" || (body && body.hasChildNodes())) {
         data.entries.push({
           url: uri,
           triggeringPrincipal_base64: E10SUtils.SERIALIZED_SYSTEMPRINCIPAL,
