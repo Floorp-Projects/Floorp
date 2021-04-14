@@ -520,13 +520,15 @@ description#identity-popup-content-verifier,
 .protections-popup-category:-moz-focusring,
 .protections-popup-category:hover,
 .protections-popup-footer-button:-moz-focusring,
-.protections-popup-footer-button:hover {
+.protections-popup-footer-button:hover,
+#protections-popup-show-report-stack:hover > .protections-popup-footer-button {
   background-color: var(--arrowpanel-dimmed);
   outline: none;
 }
 
 .protections-popup-category:hover:active,
-.protections-popup-footer-button:hover:active {
+.protections-popup-footer-button:hover:active,
+#protections-popup-show-report-stack:hover:active > .protections-popup-footer-button {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
@@ -1222,12 +1224,14 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-category:hover,
-.protections-popup-footer-button:hover {
+.protections-popup-footer-button:hover,
+#protections-popup-show-report-stack:hover > .protections-popup-footer-button {
   background-color: var(--button-hover-bgcolor);
 }
 
 .protections-popup-category:hover:active,
-.protections-popup-footer-button:hover:active {
+.protections-popup-footer-button:hover:active,
+#protections-popup-show-report-stack:hover:active > .protections-popup-footer-button {
   background-color: var(--button-active-bgcolor);
 }
 
