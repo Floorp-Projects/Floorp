@@ -17,11 +17,38 @@ function showAndWaitForModal(callback) {
   return promise;
 }
 
-add_task(async function not_now() {
+add_task(async function proton_shows_prompt() {
+  ShellService._checkedThisSession = false;
   await SpecialPowers.pushPrefEnv({
-    set: [[CHECK_PREF, true]],
+    set: [
+      [CHECK_PREF, true],
+      ["browser.defaultbrowser.notificationbar", true],
+      ["browser.proton.enabled", true],
+      ["browser.shell.didSkipDefaultBrowserCheckOnFirstRun", true],
+    ],
   });
 
+  const willPrompt = await DefaultBrowserCheck.willCheckDefaultBrowser();
+
+  Assert.equal(
+    willPrompt,
+    !AppConstants.DEBUG,
+    "Show default browser prompt with proton on non-debug builds"
+  );
+});
+
+add_task(async function not_proton_shows_notificationbar() {
+  Services.prefs.setBoolPref("browser.proton.enabled", false);
+
+  const willPrompt = await DefaultBrowserCheck.willCheckDefaultBrowser();
+
+  Assert.ok(
+    !willPrompt,
+    "Not proton shows notificationbar as set in previous task"
+  );
+});
+
+add_task(async function not_now() {
   await showAndWaitForModal(win => {
     win.document
       .querySelector("dialog")
@@ -37,10 +64,6 @@ add_task(async function not_now() {
 });
 
 add_task(async function stop_asking() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[CHECK_PREF, true]],
-  });
-
   await showAndWaitForModal(win => {
     const dialog = win.document.querySelector("dialog");
     dialog.querySelector("checkbox").click();
