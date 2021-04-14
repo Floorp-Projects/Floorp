@@ -138,8 +138,7 @@ bool edge(unsigned src_index, unsigned dest_index) {
 }
 
 void run() {
-  finder =
-      new TestComponentFinder(cx->nativeStackLimit[JS::StackForSystemCode]);
+  finder = new TestComponentFinder(cx);
   for (unsigned i = 0; i < vertex_count; ++i) {
     finder->addNode(&Vertex[i]);
   }
@@ -212,7 +211,7 @@ BEGIN_TEST(testFindSCCsStackLimit) {
     CHECK(vertices[i].gcGraphEdges.put(&vertices[i + 1]));
   }
 
-  TestComponentFinder finder(cx->nativeStackLimit[JS::StackForSystemCode]);
+  TestComponentFinder finder(cx);
   for (unsigned i = 0; i < max; ++i) {
     finder.addNode(&vertices[i]);
   }
