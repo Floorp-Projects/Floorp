@@ -135,11 +135,11 @@ class TransceiverImpl : public nsISupports,
 
   static nsresult NegotiatedDetailsToAudioCodecConfigs(
       const JsepTrackNegotiatedDetails& aDetails,
-      std::vector<UniquePtr<AudioCodecConfig>>* aConfigs);
+      std::vector<AudioCodecConfig>* aConfigs);
 
   static nsresult NegotiatedDetailsToVideoCodecConfigs(
       const JsepTrackNegotiatedDetails& aDetails,
-      std::vector<UniquePtr<VideoCodecConfig>>* aConfigs);
+      std::vector<VideoCodecConfig>* aConfigs);
 
   static void UpdateConduitRtpExtmap(
       MediaSessionConduit& aConduit, const JsepTrackNegotiatedDetails& aDetails,

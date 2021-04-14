@@ -41,7 +41,7 @@ TEST_F(AudioConduitTest, TestConfigureSendMediaCodec) {
 
   // defaults
   AudioCodecConfig codecConfig(114, "opus", 48000, 2, false);
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -62,13 +62,9 @@ TEST_F(AudioConduitTest, TestConfigureSendMediaCodec) {
     ASSERT_EQ(f.parameters.find("maxptime"), f.parameters.end());
   }
 
-  // null codec
-  ec = mAudioConduit->ConfigureSendMediaCodec(nullptr);
-  ASSERT_EQ(ec, kMediaConduitMalformedArgument);
-
   // empty codec name
   codecConfig = AudioCodecConfig(114, "", 48000, 2, false);
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
 }
 
@@ -77,7 +73,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMono) {
 
   // opus mono
   AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 1, false);
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -103,7 +99,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusFEC) {
 
   // opus with inband Forward Error Correction
   AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, true);
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -131,7 +127,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMaxPlaybackRate) {
 
   AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
   codecConfig.mMaxPlaybackRate = 1234;
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -159,7 +155,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMaxAverageBitrate) {
 
   AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
   codecConfig.mMaxAverageBitrate = 12345;
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -187,7 +183,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusDtx) {
 
   AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
   codecConfig.mDTXEnabled = true;
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -215,7 +211,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusCbr) {
 
   AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
   codecConfig.mCbrEnabled = true;
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -243,7 +239,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusPtime) {
 
   AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
   codecConfig.mFrameSizeMs = 100;
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -271,7 +267,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMinPtime) {
 
   AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
   codecConfig.mMinFrameSizeMs = 201;
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -299,7 +295,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusMaxPtime) {
 
   AudioCodecConfig codecConfig = AudioCodecConfig(114, "opus", 48000, 2, false);
   codecConfig.mMaxFrameSizeMs = 321;
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -333,7 +329,7 @@ TEST_F(AudioConduitTest, TestConfigureSendOpusAllParams) {
   codecConfig.mFrameSizeMs = 999;
   codecConfig.mMinFrameSizeMs = 123;
   codecConfig.mMaxFrameSizeMs = 789;
-  ec = mAudioConduit->ConfigureSendMediaCodec(&codecConfig);
+  ec = mAudioConduit->ConfigureSendMediaCodec(codecConfig);
   ASSERT_EQ(ec, kMediaConduitNoError);
   mAudioConduit->StartTransmitting();
   {
@@ -367,8 +363,8 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
   MediaConduitErrorCode ec;
 
   // just default opus stereo
-  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
-  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
+  std::vector<mozilla::AudioCodecConfig> codecs;
+  codecs.emplace_back(AudioCodecConfig(114, "opus", 48000, 2, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
@@ -392,8 +388,8 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
 
   // multiple codecs
   codecs.clear();
-  codecs.emplace_back(new AudioCodecConfig(9, "g722", 16000, 2, false));
-  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
+  codecs.emplace_back(AudioCodecConfig(9, "g722", 16000, 2, false));
+  codecs.emplace_back(AudioCodecConfig(114, "opus", 48000, 2, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
@@ -420,21 +416,15 @@ TEST_F(AudioConduitTest, TestConfigureReceiveMediaCodecs) {
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
 
-  // null codec
-  codecs.clear();
-  codecs.push_back(nullptr);
-  ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
-  ASSERT_EQ(ec, kMediaConduitMalformedArgument);
-
   // invalid codec name
   codecs.clear();
-  codecs.emplace_back(new AudioCodecConfig(114, "", 48000, 2, false));
+  codecs.emplace_back(AudioCodecConfig(114, "", 48000, 2, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
 
   // invalid number of channels
   codecs.clear();
-  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 42, false));
+  codecs.emplace_back(AudioCodecConfig(114, "opus", 48000, 42, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
 }
@@ -443,8 +433,8 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMono) {
   MediaConduitErrorCode ec;
 
   // opus mono
-  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
-  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 1, false));
+  std::vector<mozilla::AudioCodecConfig> codecs;
+  codecs.emplace_back(AudioCodecConfig(114, "opus", 48000, 1, false));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
@@ -471,9 +461,9 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusDtx) {
   MediaConduitErrorCode ec;
 
   // opus mono
-  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
-  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
-  codecs[0]->mDTXEnabled = true;
+  std::vector<mozilla::AudioCodecConfig> codecs;
+  codecs.emplace_back(AudioCodecConfig(114, "opus", 48000, 2, false));
+  codecs[0].mDTXEnabled = true;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
@@ -502,8 +492,8 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusFEC) {
   MediaConduitErrorCode ec;
 
   // opus with inband Forward Error Correction
-  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
-  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, true));
+  std::vector<mozilla::AudioCodecConfig> codecs;
+  codecs.emplace_back(AudioCodecConfig(114, "opus", 48000, 2, true));
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(Call()->mAudioReceiveConfig.sync_group, "");
@@ -531,10 +521,10 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusFEC) {
 TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxPlaybackRate) {
   MediaConduitErrorCode ec;
 
-  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
-  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
+  std::vector<mozilla::AudioCodecConfig> codecs;
+  codecs.emplace_back(AudioCodecConfig(114, "opus", 48000, 2, false));
 
-  codecs[0]->mMaxPlaybackRate = 0;
+  codecs[0].mMaxPlaybackRate = 0;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
@@ -555,7 +545,7 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxPlaybackRate) {
     ASSERT_EQ(f.parameters.find("maxptime"), f.parameters.end());
   }
 
-  codecs[0]->mMaxPlaybackRate = 8000;
+  codecs[0].mMaxPlaybackRate = 8000;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
@@ -580,10 +570,10 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxPlaybackRate) {
 TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxAverageBitrate) {
   MediaConduitErrorCode ec;
 
-  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
-  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, false));
+  std::vector<mozilla::AudioCodecConfig> codecs;
+  codecs.emplace_back(AudioCodecConfig(114, "opus", 48000, 2, false));
 
-  codecs[0]->mMaxAverageBitrate = 0;
+  codecs[0].mMaxAverageBitrate = 0;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
@@ -604,7 +594,7 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxAverageBitrate) {
     ASSERT_EQ(f.parameters.find("maxptime"), f.parameters.end());
   }
 
-  codecs[0]->mMaxAverageBitrate = 8000;
+  codecs[0].mMaxAverageBitrate = 8000;
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);
   ASSERT_EQ(Call()->mAudioReceiveConfig.decoder_map.size(), 1U);
@@ -629,16 +619,16 @@ TEST_F(AudioConduitTest, TestConfigureReceiveOpusMaxAverageBitrate) {
 TEST_F(AudioConduitTest, TestConfigureReceiveOpusAllParameters) {
   MediaConduitErrorCode ec;
 
-  std::vector<UniquePtr<mozilla::AudioCodecConfig>> codecs;
-  codecs.emplace_back(new AudioCodecConfig(114, "opus", 48000, 2, true));
+  std::vector<mozilla::AudioCodecConfig> codecs;
+  codecs.emplace_back(AudioCodecConfig(114, "opus", 48000, 2, true));
 
-  codecs[0]->mMaxPlaybackRate = 8000;
-  codecs[0]->mMaxAverageBitrate = 9000;
-  codecs[0]->mDTXEnabled = true;
-  codecs[0]->mCbrEnabled = true;
-  codecs[0]->mFrameSizeMs = 10;
-  codecs[0]->mMinFrameSizeMs = 20;
-  codecs[0]->mMaxFrameSizeMs = 30;
+  codecs[0].mMaxPlaybackRate = 8000;
+  codecs[0].mMaxAverageBitrate = 9000;
+  codecs[0].mDTXEnabled = true;
+  codecs[0].mCbrEnabled = true;
+  codecs[0].mFrameSizeMs = 10;
+  codecs[0].mMinFrameSizeMs = 20;
+  codecs[0].mMaxFrameSizeMs = 30;
 
   ec = mAudioConduit->ConfigureRecvMediaCodecs(codecs);
   ASSERT_EQ(ec, kMediaConduitNoError);

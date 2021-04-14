@@ -596,7 +596,7 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
     TransceiverImpl::UpdateConduitRtpExtmap(
         *conduit, details, MediaSessionConduitLocalDirection::kRecv);
 
-    std::vector<UniquePtr<VideoCodecConfig>> configs;
+    std::vector<VideoCodecConfig> configs;
     nsresult rv = TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(
         details, &configs);
 
@@ -642,7 +642,7 @@ nsresult RTCRtpReceiver::UpdateAudioConduit() {
   if (mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() &&
       mJsepTransceiver->mRecvTrack.GetActive()) {
     const auto& details(*mJsepTransceiver->mRecvTrack.GetNegotiatedDetails());
-    std::vector<UniquePtr<AudioCodecConfig>> configs;
+    std::vector<AudioCodecConfig> configs;
     nsresult rv = TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
         details, &configs);
 

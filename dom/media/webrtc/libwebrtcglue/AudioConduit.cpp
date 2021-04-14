@@ -254,7 +254,7 @@ MediaConduitErrorCode WebrtcAudioConduit::SetReceiverTransport(
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::ConfigureSendMediaCodec(
-    const AudioCodecConfig* codecConfig) {
+    const AudioCodecConfig& codecConfig) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
@@ -278,13 +278,13 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureSendMediaCodec(
     return kMediaConduitMalformedArgument;
   }
 
-  mDtmfEnabled = codecConfig->mDtmfEnabled;
+  mDtmfEnabled = codecConfig.mDtmfEnabled;
 
   return kMediaConduitNoError;
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
-    const std::vector<UniquePtr<AudioCodecConfig>>& codecConfigList) {
+    const std::vector<AudioCodecConfig>& codecConfigList) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
@@ -310,46 +310,46 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
   mRecvStreamConfig.decoder_map.clear();
   for (const auto& codec : codecConfigList) {
     // if the codec param is invalid or diplicate, return error
-    if ((condError = ValidateCodecConfig(codec.get(), false)) !=
+    if ((condError = ValidateCodecConfig(codec, false)) !=
         kMediaConduitNoError) {
       return condError;
     }
 
     webrtc::SdpAudioFormat::Parameters parameters;
-    if (codec->mName == "opus") {
-      if (codec->mChannels == 2) {
+    if (codec.mName == "opus") {
+      if (codec.mChannels == 2) {
         parameters["stereo"] = "1";
       }
-      if (codec->mFECEnabled) {
+      if (codec.mFECEnabled) {
         parameters["useinbandfec"] = "1";
       }
-      if (codec->mDTXEnabled) {
+      if (codec.mDTXEnabled) {
         parameters["usedtx"] = "1";
       }
-      if (codec->mMaxPlaybackRate) {
-        parameters["maxplaybackrate"] = std::to_string(codec->mMaxPlaybackRate);
+      if (codec.mMaxPlaybackRate) {
+        parameters["maxplaybackrate"] = std::to_string(codec.mMaxPlaybackRate);
       }
-      if (codec->mMaxAverageBitrate) {
+      if (codec.mMaxAverageBitrate) {
         parameters["maxaveragebitrate"] =
-            std::to_string(codec->mMaxAverageBitrate);
+            std::to_string(codec.mMaxAverageBitrate);
       }
-      if (codec->mFrameSizeMs) {
-        parameters["ptime"] = std::to_string(codec->mFrameSizeMs);
+      if (codec.mFrameSizeMs) {
+        parameters["ptime"] = std::to_string(codec.mFrameSizeMs);
       }
-      if (codec->mMinFrameSizeMs) {
-        parameters["minptime"] = std::to_string(codec->mMinFrameSizeMs);
+      if (codec.mMinFrameSizeMs) {
+        parameters["minptime"] = std::to_string(codec.mMinFrameSizeMs);
       }
-      if (codec->mMaxFrameSizeMs) {
-        parameters["maxptime"] = std::to_string(codec->mMaxFrameSizeMs);
+      if (codec.mMaxFrameSizeMs) {
+        parameters["maxptime"] = std::to_string(codec.mMaxFrameSizeMs);
       }
-      if (codec->mCbrEnabled) {
+      if (codec.mCbrEnabled) {
         parameters["cbr"] = "1";
       }
     }
 
-    webrtc::SdpAudioFormat format(codec->mName, codec->mFreq, codec->mChannels,
+    webrtc::SdpAudioFormat format(codec.mName, codec.mFreq, codec.mChannels,
                                   parameters);
-    mRecvStreamConfig.decoder_map.emplace(codec->mType, format);
+    mRecvStreamConfig.decoder_map.emplace(codec.mType, format);
     success = true;
   }  // end for
 
@@ -759,46 +759,46 @@ bool WebrtcAudioConduit::SendRtcp(const uint8_t* data, size_t len) {
  */
 
 bool WebrtcAudioConduit::CodecConfigToWebRTCCodec(
-    const AudioCodecConfig* codecInfo,
+    const AudioCodecConfig& codecInfo,
     webrtc::AudioSendStream::Config& config) {
   config.encoder_factory = webrtc::CreateBuiltinAudioEncoderFactory();
 
   webrtc::SdpAudioFormat::Parameters parameters;
-  if (codecInfo->mName == "opus") {
-    if (codecInfo->mChannels == 2) {
+  if (codecInfo.mName == "opus") {
+    if (codecInfo.mChannels == 2) {
       parameters["stereo"] = "1";
     }
-    if (codecInfo->mFECEnabled) {
+    if (codecInfo.mFECEnabled) {
       parameters["useinbandfec"] = "1";
     }
-    if (codecInfo->mDTXEnabled) {
+    if (codecInfo.mDTXEnabled) {
       parameters["usedtx"] = "1";
     }
-    if (codecInfo->mMaxPlaybackRate) {
+    if (codecInfo.mMaxPlaybackRate) {
       parameters["maxplaybackrate"] =
-          std::to_string(codecInfo->mMaxPlaybackRate);
+          std::to_string(codecInfo.mMaxPlaybackRate);
     }
-    if (codecInfo->mMaxAverageBitrate) {
+    if (codecInfo.mMaxAverageBitrate) {
       parameters["maxaveragebitrate"] =
-          std::to_string(codecInfo->mMaxAverageBitrate);
+          std::to_string(codecInfo.mMaxAverageBitrate);
     }
-    if (codecInfo->mFrameSizeMs) {
-      parameters["ptime"] = std::to_string(codecInfo->mFrameSizeMs);
+    if (codecInfo.mFrameSizeMs) {
+      parameters["ptime"] = std::to_string(codecInfo.mFrameSizeMs);
     }
-    if (codecInfo->mMinFrameSizeMs) {
-      parameters["minptime"] = std::to_string(codecInfo->mMinFrameSizeMs);
+    if (codecInfo.mMinFrameSizeMs) {
+      parameters["minptime"] = std::to_string(codecInfo.mMinFrameSizeMs);
     }
-    if (codecInfo->mMaxFrameSizeMs) {
-      parameters["maxptime"] = std::to_string(codecInfo->mMaxFrameSizeMs);
+    if (codecInfo.mMaxFrameSizeMs) {
+      parameters["maxptime"] = std::to_string(codecInfo.mMaxFrameSizeMs);
     }
-    if (codecInfo->mCbrEnabled) {
+    if (codecInfo.mCbrEnabled) {
       parameters["cbr"] = "1";
     }
   }
 
-  webrtc::SdpAudioFormat format(codecInfo->mName, codecInfo->mFreq,
-                                codecInfo->mChannels, parameters);
-  webrtc::AudioSendStream::Config::SendCodecSpec spec(codecInfo->mType, format);
+  webrtc::SdpAudioFormat format(codecInfo.mName, codecInfo.mFreq,
+                                codecInfo.mChannels, parameters);
+  webrtc::AudioSendStream::Config::SendCodecSpec spec(codecInfo.mType, format);
   config.send_codec_spec = spec;
 
   return true;
@@ -833,19 +833,14 @@ unsigned int WebrtcAudioConduit::GetNum10msSamplesForFrequency(
  * Verifies if the codec is already applied.
  */
 MediaConduitErrorCode WebrtcAudioConduit::ValidateCodecConfig(
-    const AudioCodecConfig* codecInfo, bool send) {
-  if (!codecInfo) {
-    CSFLogError(LOGTAG, "%s Null CodecConfig ", __FUNCTION__);
-    return kMediaConduitMalformedArgument;
-  }
-
-  if (codecInfo->mName.empty()) {
+    const AudioCodecConfig& codecInfo, bool send) {
+  if (codecInfo.mName.empty()) {
     CSFLogError(LOGTAG, "%s Empty Payload Name ", __FUNCTION__);
     return kMediaConduitMalformedArgument;
   }
 
   // Only mono or stereo channels supported
-  if ((codecInfo->mChannels != 1) && (codecInfo->mChannels != 2)) {
+  if ((codecInfo.mChannels != 1) && (codecInfo.mChannels != 2)) {
     CSFLogError(LOGTAG, "%s Channel Unsupported ", __FUNCTION__);
     return kMediaConduitMalformedArgument;
   }
