@@ -9,6 +9,7 @@ import org.mozilla.focus.BuildConfig
 
 object AppConstants {
     private const val BUILD_TYPE_RELEASE = "release"
+    private const val BUILD_TYPE_BETA = "beta"
     private const val BUILD_TYPE_DEBUG = "debug"
     private const val PRODUCT_FLAVOR_KLAR = "klar"
 
@@ -17,6 +18,9 @@ object AppConstants {
 
     val isReleaseBuild: Boolean
         get() = BUILD_TYPE_RELEASE == BuildConfig.BUILD_TYPE
+
+    val isBetaBuild: Boolean
+        get() = BUILD_TYPE_BETA == BuildConfig.BUILD_TYPE
 
     val isDevBuild: Boolean
         get() = BUILD_TYPE_DEBUG == BuildConfig.BUILD_TYPE
