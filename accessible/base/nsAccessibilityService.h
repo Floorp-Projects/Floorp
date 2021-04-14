@@ -67,7 +67,7 @@ struct MarkupAttrInfo {
   nsStaticAtom* DOMAttrValue;
 };
 
-struct HTMLMarkupMapInfo {
+struct MarkupMapInfo {
   const nsStaticAtom* const tag;
   New_Accessible* new_func;
   a11y::role role;
@@ -255,7 +255,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
                                     bool* aIsSubtreeHidden = nullptr);
 
   mozilla::a11y::role MarkupRole(const nsIContent* aContent) const {
-    const mozilla::a11y::HTMLMarkupMapInfo* markupMap =
+    const mozilla::a11y::MarkupMapInfo* markupMap =
         mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
     return markupMap ? markupMap->role : mozilla::a11y::roles::NOTHING;
   }
@@ -266,7 +266,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    */
   nsStaticAtom* MarkupAttribute(const nsIContent* aContent,
                                 nsStaticAtom* aAtom) const {
-    const mozilla::a11y::HTMLMarkupMapInfo* markupMap =
+    const mozilla::a11y::MarkupMapInfo* markupMap =
         mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
     if (markupMap) {
       for (size_t i = 0; i < mozilla::ArrayLength(markupMap->attrs); i++) {
@@ -363,8 +363,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    */
   static uint32_t gConsumers;
 
-  nsTHashMap<nsPtrHashKey<const nsAtom>,
-             const mozilla::a11y::HTMLMarkupMapInfo*>
+  nsTHashMap<nsPtrHashKey<const nsAtom>, const mozilla::a11y::MarkupMapInfo*>
       mHTMLMarkupMap;
 #ifdef MOZ_XUL
   nsTHashMap<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*>
