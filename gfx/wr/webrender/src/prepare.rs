@@ -23,7 +23,7 @@ use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor};
 use crate::picture::{PicturePrimitive, SliceId, TileCacheLogger, ClusterFlags, SurfaceRenderTasks};
-use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode};
+use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance};
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, FastLinearGradientCacheKey, GradientStopKey, CachedGradientSegment};
 use crate::prim_store::gradient::LinearGradientPrimitive;
 use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
@@ -172,7 +172,7 @@ fn prepare_prim_for_render(
             pic_context.surface_spatial_node_index,
             pic_context.raster_spatial_node_index,
             pic_context.surface_index,
-            pic_context.subpixel_mode,
+            &pic_context.subpixel_mode,
             frame_state,
             frame_context,
             scratch,
@@ -361,49 +361,22 @@ fn prepare_interned_prim_for_render(
 
             let pic = &store.pictures[pic_context.pic_index.0];
             let surface = &frame_state.surfaces[pic_context.surface_index.0];
+            let prim_info = &prim_instance.vis;
             let root_scaling_factor = match pic.raster_config {
                 Some(ref raster_config) => raster_config.root_scaling_factor,
                 None => 1.0
             };
 
-            // If subpixel AA is disabled due to the backing surface the glyphs
-            // are being drawn onto, disable it (unless we are using the
-            // specifial subpixel mode that estimates background color).
-            let allow_subpixel = match prim_instance.vis.state {
-                VisibilityState::Culled |
-                VisibilityState::Unset |
-                VisibilityState::Coarse { .. } |
-                VisibilityState::PassThrough => {
-                    panic!("bug: invalid visibility state");
-                }
-                VisibilityState::Detailed { ref filter, .. } => {
-                    // For now, we only allow subpixel AA on primary sub-slices. In future we
-                    // may support other sub-slices if we find content that does this.
-                    if filter.sub_slice_index.is_primary() {
-                        match pic_context.subpixel_mode {
-                            SubpixelMode::Allow => true,
-                            SubpixelMode::Deny => false,
-                            SubpixelMode::Conditional { allowed_rect } => {
-                                // Conditional mode allows subpixel AA to be enabled for this
-                                // text run, so long as it's inside the allowed rect.
-                                allowed_rect.contains_rect(&prim_instance.vis.clip_chain.pic_clip_rect)
-                            }
-                        }
-                    } else {
-                        false
-                    }
-                }
-            };
-
             run.request_resources(
                 prim_offset,
+                prim_info.clip_chain.pic_clip_rect,
                 &prim_data.font,
                 &prim_data.glyphs,
                 &transform.to_transform().with_destination::<_>(),
                 surface,
                 prim_spatial_node_index,
                 root_scaling_factor,
-                allow_subpixel,
+                &pic_context.subpixel_mode,
                 frame_state.resource_cache,
                 frame_state.gpu_cache,
                 frame_context.spatial_tree,
