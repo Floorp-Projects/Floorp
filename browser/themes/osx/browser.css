@@ -86,12 +86,12 @@
 #tabbrowser-tabs {
   --tab-line-color: -moz-accent-color;
 }
-} /* END !proton */
 
 #navigator-toolbox toolbarbutton:-moz-lwtheme {
   color: inherit;
   text-shadow: inherit;
 }
+} /* END !proton */
 
 @media not (-moz-proton) {
 :root[macOSNativeFullscreen]:not(:-moz-lwtheme) :is(#navigator-toolbox, #sidebar-box) {
