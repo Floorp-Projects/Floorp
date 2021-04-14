@@ -27,7 +27,8 @@ function commonDialogOnLoad() {
 
   let needIconifiedHeader =
     args.modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT ||
-    ["promptUserAndPass", "promptPassword"].includes(args.promptType);
+    ["promptUserAndPass", "promptPassword"].includes(args.promptType) ||
+    args.headerIconURL;
   let root = document.documentElement;
   if (needIconifiedHeader) {
     root.setAttribute("neediconheader", "true");
@@ -61,7 +62,9 @@ function commonDialogOnLoad() {
         title = { l10nId: "common-dialog-title-unknown" };
       }
     }
-
+    if (args.headerIconURL) {
+      root.style.setProperty("--icon-url", `url('${args.headerIconURL}')`);
+    }
     dialog.setAttribute("buttonpack", "end");
   }
   title.shouldUseMaskFade = true;
