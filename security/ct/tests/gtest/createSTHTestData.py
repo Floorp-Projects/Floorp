@@ -31,9 +31,7 @@ import os
 import sys
 
 sys.path.append(
-    os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "manager", "ssl", "tests", "unit"
-    )
+    os.path.join(os.path.dirname(__file__), "..", "..", "..", "manager", "tools")
 )
 import pykey
 

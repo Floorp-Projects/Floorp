@@ -56,6 +56,7 @@ MACH_MODULES = [
     "python/mozperftest/mozperftest/mach_commands.py",
     "python/mozrelease/mozrelease/mach_commands.py",
     "remote/mach_commands.py",
+    "security/manager/tools/mach_commands.py",
     "taskcluster/mach_commands.py",
     "testing/awsy/mach_commands.py",
     "testing/condprofile/mach_commands.py",
