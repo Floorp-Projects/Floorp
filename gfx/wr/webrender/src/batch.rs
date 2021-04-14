@@ -29,7 +29,7 @@ use crate::renderer::{BlendMode, ShaderColorMode};
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
-use crate::visibility::{PrimitiveVisibilityFlags, VisibilityState};
+use crate::visibility::{PrimitiveVisibility, PrimitiveVisibilityFlags, VisibilityState};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use crate::util::{project_rect, MaxRect, TransformedRectKind};
@@ -887,6 +887,73 @@ impl BatchBuilder {
                 );
             }
         }
+    }
+
+    // If an image is being drawn as a compositor surface, we don't want
+    // to draw the surface itself into the tile. Instead, we draw a transparent
+    // rectangle that writes to the z-buffer where this compositor surface is.
+    // That ensures we 'cut out' the part of the tile that has the compositor
+    // surface on it, allowing us to draw this tile as an overlay on top of
+    // the compositor surface.
+    // TODO(gw): There's a slight performance cost to doing this cutout rectangle
+    //           if we end up not needing to use overlay mode. Consider skipping
+    //           the cutout completely in this path.
+    fn emit_placeholder(
+        &mut self,
+        prim_rect: LayoutRect,
+        prim_info: &PrimitiveVisibility,
+        batch_filter: &BatchFilter,
+        z_id: ZBufferId,
+        transform_id: TransformPaletteId,
+        batch_features: BatchFeatures,
+        ctx: &RenderTargetContext,
+        gpu_cache: &mut GpuCache,
+        prim_headers: &mut PrimitiveHeaders,
+        render_tasks: &RenderTaskGraph,
+    ) {
+        let batch_params = BrushBatchParameters::shared(
+            BrushBatchKind::Solid,
+            TextureSet::UNTEXTURED,
+            [get_shader_opacity(0.0), 0, 0, 0],
+            0,
+        );
+
+        let prim_cache_address = gpu_cache.get_address(
+            &ctx.globals.default_transparent_rect_handle,
+        );
+
+        let prim_header = PrimitiveHeader {
+            local_rect: prim_rect,
+            local_clip_rect: prim_info.combined_local_clip_rect,
+            specific_prim_address: prim_cache_address,
+            transform_id,
+        };
+
+        let prim_header_index = prim_headers.push(
+            &prim_header,
+            z_id,
+            batch_params.prim_user_data,
+        );
+
+        let bounding_rect = &prim_info.clip_chain.pic_clip_rect;
+        let transform_kind = transform_id.transform_kind();
+
+        self.add_segmented_prim_to_batch(
+            None,
+            PrimitiveOpacity::translucent(),
+            &batch_params,
+            BlendMode::None,
+            BlendMode::None,
+            batch_features,
+            prim_header_index,
+            bounding_rect,
+            transform_kind,
+            z_id,
+            prim_info.clip_task_index,
+            batch_filter,
+            ctx,
+            render_tasks,
+        );
     }
 
     // Adds a primitive to a batch.
@@ -2324,7 +2391,21 @@ impl BatchBuilder {
                 );
             }
             PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, is_compositor_surface, .. } => {
-                debug_assert!(!is_compositor_surface);
+                if is_compositor_surface {
+                    self.emit_placeholder(
+                        prim_rect,
+                        prim_info,
+                        batch_filter,
+                        z_id,
+                        transform_id,
+                        batch_features,
+                        ctx,
+                        gpu_cache,
+                        prim_headers,
+                        render_tasks,
+                    );
+                    return;
+                }
 
                 let yuv_image_data = &ctx.data_stores.yuv_image[data_handle].kind;
                 let mut textures = TextureSet::UNTEXTURED;
@@ -2429,8 +2510,21 @@ impl BatchBuilder {
                 );
             }
             PrimitiveInstanceKind::Image { data_handle, image_instance_index, is_compositor_surface, .. } => {
-                debug_assert!(!is_compositor_surface);
-
+                if is_compositor_surface {
+                    self.emit_placeholder(
+                        prim_rect,
+                        prim_info,
+                        batch_filter,
+                        z_id,
+                        transform_id,
+                        batch_features,
+                        ctx,
+                        gpu_cache,
+                        prim_headers,
+                        render_tasks,
+                    );
+                    return;
+                }
                 let image_data = &ctx.data_stores.image[data_handle].kind;
                 let common_data = &ctx.data_stores.image[data_handle].common;
                 let image_instance = &ctx.prim_store.images[image_instance_index];
