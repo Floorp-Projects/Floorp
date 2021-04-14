@@ -579,6 +579,13 @@
 :root[lwt-toolbar-field-focus-brighttext] #urlbar[focused="true"] .urlbar-addon-page-action[style*=".svg"] {
   filter: grayscale(100%) brightness(20%) invert();
 }
+
+@media (prefers-color-scheme: dark) {
+  /* As above, but for the default theme in dark mode, which suffers from the same issue */
+  :root:not(:-moz-lwtheme) .urlbar-addon-page-action[style*=".svg"] {
+    filter: grayscale(100%) brightness(20%) invert();
+  }
+}
 } /*** END proton ***/
 
 @media not (-moz-proton) {
