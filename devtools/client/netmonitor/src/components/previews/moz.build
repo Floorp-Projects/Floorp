@@ -3,9 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "FontPreview.js",
-    "HtmlPreview.js",
-    "ImagePreview.js",
-    "SourcePreview.js",
-    "UrlPreview.js",
+    "HtmlPreview.js", "ImagePreview.js", "SourcePreview.js", "UrlPreview.js"
 )
