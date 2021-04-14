@@ -2277,7 +2277,8 @@ static inline bool GeneralizedGetProperty(JSContext* cx, JSObject* obj, jsid id,
                                           const Value& receiver,
                                           IsNameLookup nameLookup,
                                           FakeMutableHandle<Value> vp) {
-  if (!CheckRecursionLimitDontReport(cx)) {
+  AutoCheckRecursionLimit recursion(cx);
+  if (!recursion.checkDontReport(cx)) {
     return false;
   }
   if (nameLookup) {
