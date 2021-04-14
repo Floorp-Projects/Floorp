@@ -34,9 +34,9 @@ const MANIFEST = {
         type: "json",
         fallbackPref: "browser.aboutwelcome.screens",
       },
-      design: {
-        type: "string",
-        fallbackPref: "browser.aboutwelcome.design",
+      isProton: {
+        type: "boolean",
+        fallbackPref: "browser.proton.enabled",
       },
       skipFocus: {
         type: "boolean",

@@ -430,7 +430,7 @@ const RULES = [
   {
     description: "Proton Default AW content",
     getDefaults(featureConfig) {
-      if (featureConfig?.design === "proton") {
+      if (featureConfig?.isProton) {
         return { ...DEFAULT_PROTON_WELCOME_CONTENT };
       }
 

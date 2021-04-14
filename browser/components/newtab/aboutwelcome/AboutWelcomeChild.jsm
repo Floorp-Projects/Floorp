@@ -244,7 +244,11 @@ class AboutWelcomeChild extends JSWindowActorChild {
     }
 
     return Cu.cloneInto(
-      { ...experimentMetadata, ...featureConfig },
+      {
+        ...experimentMetadata,
+        ...featureConfig,
+        design: featureConfig.isProton ? "proton" : "",
+      },
       this.contentWindow
     );
   }
