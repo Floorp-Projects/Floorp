@@ -99,8 +99,6 @@ bool Axis::AdjustDisplacement(
     return false;
   }
 
-  EndOverscrollAnimation();
-
   ParentLayerCoord displacement = aDisplacement;
 
   // First consume any overscroll in the opposite direction along this axis.

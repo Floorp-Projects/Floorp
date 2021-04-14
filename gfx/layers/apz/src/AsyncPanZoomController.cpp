@@ -2669,13 +2669,28 @@ nsEventStatus AsyncPanZoomController::OnPan(
     return OnPanBegin(aEvent);
   }
 
-  if (mState == OVERSCROLL_ANIMATION &&
-      aFingersOnTouchpad == FingersOnTouchpad::No) {
-    return nsEventStatus_eConsumeNoDefault;
-  }
-
   auto [logicalPanDisplacement, physicalPanDisplacement] =
       GetDisplacementsForPanGesture(aEvent);
+
+  if (mState == OVERSCROLL_ANIMATION &&
+      aFingersOnTouchpad == FingersOnTouchpad::No) {
+    // If there is an on-going overscroll animation, we tell the animation
+    // whether the displacements should be handled by the animation or not.
+    OverscrollAnimation* overscrollAnimation =
+        mAnimation->AsOverscrollAnimation();
+    overscrollAnimation->HandlePanMomentum(logicalPanDisplacement);
+    // And then as a result of the above call, if the animation is currently
+    // affecting on the axis, drop the displacement value on the axis so that we
+    // stop further oversrolling on the axis.
+    if (overscrollAnimation->IsManagingXAxis()) {
+      logicalPanDisplacement.x = 0;
+      physicalPanDisplacement.x = 0;
+    }
+    if (overscrollAnimation->IsManagingYAxis()) {
+      logicalPanDisplacement.y = 0;
+      physicalPanDisplacement.y = 0;
+    }
+  }
 
   // We need to update the axis velocity in order to get a useful display port
   // size and position. We need to do so even if this is a momentum pan (i.e.
@@ -2687,10 +2702,17 @@ nsEventStatus AsyncPanZoomController::OnPan(
   // aEvent.mLocalStartPoint) would mess up velocity calculation. (This is
   // the only caller of UpdateWithTouchAtDevicePoint() for pan events, so
   // there is no risk of other calls resetting the position.)
-  mX.UpdateWithTouchAtDevicePoint(mX.GetPos() - logicalPanDisplacement.x,
-                                  aEvent.mTimeStamp);
-  mY.UpdateWithTouchAtDevicePoint(mY.GetPos() - logicalPanDisplacement.y,
-                                  aEvent.mTimeStamp);
+  // Also note that if there is an on-going overscroll animation in the axis,
+  // we shouldn't call UpdateWithTouchAtDevicePoint because the call changes
+  // the velocity which should be managed by the overscroll animation.
+  if (logicalPanDisplacement.x != 0) {
+    mX.UpdateWithTouchAtDevicePoint(mX.GetPos() - logicalPanDisplacement.x,
+                                    aEvent.mTimeStamp);
+  }
+  if (logicalPanDisplacement.y != 0) {
+    mY.UpdateWithTouchAtDevicePoint(mY.GetPos() - logicalPanDisplacement.y,
+                                    aEvent.mTimeStamp);
+  }
 
   HandlePanningUpdate(physicalPanDisplacement);
 
