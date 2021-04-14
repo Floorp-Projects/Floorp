@@ -366,10 +366,20 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   using MarkupMap = nsTHashMap<nsPtrHashKey<const nsAtom>,
                                const mozilla::a11y::MarkupMapInfo*>;
   MarkupMap mHTMLMarkupMap;
+  MarkupMap mMathMLMarkupMap;
 
   const mozilla::a11y::MarkupMapInfo* GetMarkupMapInfoForNode(
       const nsIContent* aContent) const {
-    return mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+    if (aContent->IsHTMLElement()) {
+      return mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+    }
+    if (aContent->IsMathMLElement()) {
+      return mMathMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
+    }
+    // This function can be called by MarkupAttribute, etc. which might in turn
+    // be called on a XUL, SVG, etc. element. For example, this can happen
+    // with nsAccUtils::SetLiveContainerAttributes.
+    return nullptr;
   }
 
 #ifdef MOZ_XUL
