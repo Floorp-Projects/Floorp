@@ -11,6 +11,7 @@ import androidx.preference.PreferenceFragmentCompat
 import mozilla.components.service.fxa.SyncEngine
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SyncPreferenceView
@@ -39,17 +40,17 @@ class CreditCardsSettingFragment : PreferenceFragmentCompat() {
             onSignInToSyncClicked = {
                 val directions =
                     CreditCardsSettingFragmentDirections.actionCreditCardsSettingFragmentToTurnOnSyncFragment()
-                findNavController().navigate(directions)
+                findNavController().navigateBlockingForAsyncNavGraph(directions)
             },
             onSyncStatusClicked = {
                 val directions =
                     CreditCardsSettingFragmentDirections.actionGlobalAccountSettingsFragment()
-                findNavController().navigate(directions)
+                findNavController().navigateBlockingForAsyncNavGraph(directions)
             },
             onReconnectClicked = {
                 val directions =
                     CreditCardsSettingFragmentDirections.actionGlobalAccountProblemFragment()
-                findNavController().navigate(directions)
+                findNavController().navigateBlockingForAsyncNavGraph(directions)
             }
         )
     }
@@ -61,13 +62,13 @@ class CreditCardsSettingFragment : PreferenceFragmentCompat() {
                 val directions =
                     CreditCardsSettingFragmentDirections
                         .actionCreditCardsSettingFragmentToCreditCardEditorFragment()
-                findNavController().navigate(directions)
+                findNavController().navigateBlockingForAsyncNavGraph(directions)
             }
             getPreferenceKey(R.string.pref_key_credit_cards_manage_saved_cards) -> {
                 val directions =
                     CreditCardsSettingFragmentDirections
                         .actionCreditCardsSettingFragmentToCreditCardsManagementFragment()
-                findNavController().navigate(directions)
+                findNavController().navigateBlockingForAsyncNavGraph(directions)
             }
         }
 

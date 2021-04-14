@@ -17,11 +17,11 @@
         android:layout_width="match_parent"
         android:layout_height="56dp" />
 
+    <!--The navGraph is set dynamically in NavGraphProvider -->
     <fragment
         android:id="@+id/container"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/nav_graph" />
+        app:defaultNavHost="true"/>
 </LinearLayout>

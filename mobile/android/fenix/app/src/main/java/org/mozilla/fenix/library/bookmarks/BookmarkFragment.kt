@@ -202,7 +202,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 true
             }
             R.id.add_bookmark_folder -> {
-                navigate(
+                navigateToBookmarkFragment(
                     BookmarkFragmentDirections
                         .actionBookmarkFragmentToBookmarkAddFolderFragment()
                 )
@@ -226,7 +226,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 val shareTabs = bookmarkStore.state.mode.selectedItems.map {
                     ShareData(url = it.url, title = it.title)
                 }
-                navigate(
+                navigateToBookmarkFragment(
                     BookmarkFragmentDirections.actionGlobalShareFragment(
                         data = shareTabs.toTypedArray()
                     )
@@ -243,10 +243,10 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     private fun showTabTray() {
         invokePendingDeletion()
-        navigate(BookmarkFragmentDirections.actionGlobalTabTrayDialogFragment())
+        navigateToBookmarkFragment(BookmarkFragmentDirections.actionGlobalTabTrayDialogFragment())
     }
 
-    private fun navigate(directions: NavDirections) {
+    private fun navigateToBookmarkFragment(directions: NavDirections) {
         invokePendingDeletion()
         findNavController().nav(
             R.id.bookmarkFragment,

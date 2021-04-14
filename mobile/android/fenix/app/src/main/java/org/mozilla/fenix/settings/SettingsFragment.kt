@@ -45,6 +45,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.navigateToNotificationsSettings
 import org.mozilla.fenix.ext.requireComponents
@@ -480,7 +481,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun navigateFromSettings(directions: NavDirections) {
         view?.findNavController()?.let { navController ->
             if (navController.currentDestination?.id == R.id.settingsFragment) {
-                navController.navigate(directions)
+                navController.navigateBlockingForAsyncNavGraph(directions)
             }
         }
     }

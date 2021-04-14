@@ -21,6 +21,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.SearchWidgetCreator
 import org.mozilla.fenix.ext.alreadyOnDestination
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.home.intent.DeepLinkIntentProcessor.DeepLinkVerifier
 import org.mozilla.fenix.settings.SupportUtils
 
@@ -76,7 +77,7 @@ class DeepLinkIntentProcessor(
         }
 
         if (!navController.alreadyOnDestination(globalDirections.destinationId)) {
-            navController.navigate(globalDirections.navDirections)
+            navController.navigateBlockingForAsyncNavGraph(globalDirections.navDirections)
         }
     }
 

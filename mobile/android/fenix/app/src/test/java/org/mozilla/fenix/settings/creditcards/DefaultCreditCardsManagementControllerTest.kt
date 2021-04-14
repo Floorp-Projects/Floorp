@@ -9,14 +9,19 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardsManagementController
+import org.mozilla.fenix.helpers.DisableNavGraphProviderAssertionRule
 
 class DefaultCreditCardsManagementControllerTest {
 
     private val navController: NavController = mockk(relaxed = true)
 
     private lateinit var controller: DefaultCreditCardsManagementController
+
+    @get:Rule
+    val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
 
     @Before
     fun setup() {

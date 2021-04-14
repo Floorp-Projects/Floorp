@@ -12,6 +12,7 @@ import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -42,7 +43,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
         exceptionsCategory.onPreferenceClickListener = OnPreferenceClickListener {
             val directions = SitePermissionsFragmentDirections.actionSitePermissionsToExceptions()
-            Navigation.findNavController(requireView()).navigate(directions)
+            Navigation.findNavController(requireView()).navigateBlockingForAsyncNavGraph(directions)
             true
         }
     }
@@ -76,6 +77,6 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
             requireComponents.analytics.metrics.track(Event.AutoPlaySettingVisited)
         }
 
-        Navigation.findNavController(requireView()).navigate(directions)
+        Navigation.findNavController(requireView()).navigateBlockingForAsyncNavGraph(directions)
     }
 }

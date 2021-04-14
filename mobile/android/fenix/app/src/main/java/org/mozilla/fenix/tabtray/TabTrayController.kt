@@ -26,6 +26,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.home.HomeFragment
 
 /**
@@ -104,7 +105,8 @@ class DefaultTabTrayController(
     override fun handleNewTabTapped(private: Boolean) {
         val startTime = profiler?.getProfilerTime()
         browsingModeManager.mode = BrowsingMode.fromBoolean(private)
-        navController.navigate(TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
+        navController.navigateBlockingForAsyncNavGraph(
+            TabTrayDialogFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
         dismissTabTray()
         profiler?.addMarker(
             "DefaultTabTrayController.onNewTabTapped",
@@ -113,7 +115,8 @@ class DefaultTabTrayController(
     }
 
     override fun handleTabSettingsClicked() {
-        navController.navigate(TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment())
+        navController.navigateBlockingForAsyncNavGraph(
+            TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment())
     }
 
     override fun handleTabTrayDismissed() {
@@ -148,7 +151,7 @@ class DefaultTabTrayController(
         val directions = TabTrayDialogFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
         )
-        navController.navigate(directions)
+        navController.navigateBlockingForAsyncNavGraph(directions)
     }
 
     override fun handleShareSelectedTabsClicked(selectedTabs: Set<Tab>) {
@@ -158,7 +161,7 @@ class DefaultTabTrayController(
         val directions = TabTrayDialogFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
         )
-        navController.navigate(directions)
+        navController.navigateBlockingForAsyncNavGraph(directions)
     }
 
     override fun handleBookmarkSelectedTabs(selectedTabs: Set<Tab>) {
@@ -236,13 +239,13 @@ class DefaultTabTrayController(
 
     override fun handleRecentlyClosedClicked() {
         val directions = TabTrayDialogFragmentDirections.actionGlobalRecentlyClosed()
-        navController.navigate(directions)
+        navController.navigateBlockingForAsyncNavGraph(directions)
         metrics.track(Event.RecentlyClosedTabsOpened)
     }
 
     override fun handleGoToTabsSettingClicked() {
         val directions = TabTrayDialogFragmentDirections.actionGlobalTabSettingsFragment()
-        navController.navigate(directions)
+        navController.navigateBlockingForAsyncNavGraph(directions)
         metrics.track(Event.TabsTrayCfrTapped)
     }
 }

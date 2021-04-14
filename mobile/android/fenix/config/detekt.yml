@@ -122,6 +122,9 @@ mozilla-detekt-rules:
     excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
   MozillaUseLazyMonitored:
     active: true
+  MozillaNavigateCheck:
+    active: true
+    excludes: "**/*Test.kt, **/*Spec.kt, **/test/**, **/androidTest/**"
 
 empty-blocks:
   active: true

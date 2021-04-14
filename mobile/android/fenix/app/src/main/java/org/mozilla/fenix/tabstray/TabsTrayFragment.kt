@@ -33,6 +33,7 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
@@ -241,7 +242,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         }
 
         if (!navController.popBackStack(R.id.browserFragment, false)) {
-            navController.navigate(R.id.browserFragment)
+            navController.navigateBlockingForAsyncNavGraph(R.id.browserFragment)
         }
     }
 
@@ -301,7 +302,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     private fun dismissTabTrayAndNavigateHome(sessionId: String) {
         homeViewModel.sessionToDelete = sessionId
         val directions = NavGraphDirections.actionGlobalHome()
-        findNavController().navigate(directions)
+        findNavController().navigateBlockingForAsyncNavGraph(directions)
         dismissAllowingStateLoss()
     }
 }

@@ -31,6 +31,7 @@ import mozilla.components.support.ktx.kotlin.isExtensionUrl
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.share.listadapters.AppShareOption
@@ -121,7 +122,7 @@ class DefaultShareController(
 
     override fun handleAddNewDevice() {
         val directions = ShareFragmentDirections.actionShareFragmentToAddNewDeviceFragment()
-        navController.navigate(directions)
+        navController.navigateBlockingForAsyncNavGraph(directions)
     }
 
     override fun handleShareToDevice(device: Device) {

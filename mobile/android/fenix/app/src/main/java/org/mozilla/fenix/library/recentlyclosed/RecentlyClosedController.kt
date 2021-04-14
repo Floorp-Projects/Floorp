@@ -19,6 +19,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 
 interface RecentlyClosedController {
     fun handleOpen(item: RecoverableTab, mode: BrowsingMode? = null)
@@ -48,7 +49,7 @@ class DefaultRecentlyClosedController(
     }
 
     override fun handleNavigateToHistory() {
-        navController.navigate(
+        navController.navigateBlockingForAsyncNavGraph(
             RecentlyClosedFragmentDirections.actionGlobalHistoryFragment(),
             NavOptions.Builder().setPopUpTo(R.id.historyFragment, true).build()
         )
@@ -64,7 +65,7 @@ class DefaultRecentlyClosedController(
     }
 
     override fun handleShare(item: RecoverableTab) {
-        navController.navigate(
+        navController.navigateBlockingForAsyncNavGraph(
             RecentlyClosedFragmentDirections.actionGlobalShareFragment(
                 data = arrayOf(ShareData(url = item.url, title = item.title))
             )

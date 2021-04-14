@@ -15,6 +15,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.library.LibraryPageView
 import org.mozilla.fenix.selection.SelectionInteractor
 
@@ -119,7 +120,7 @@ class BookmarkView(
             adapter = bookmarkAdapter
         }
         view.bookmark_folders_sign_in.setOnClickListener {
-            navController.navigate(NavGraphDirections.actionGlobalTurnOnSync())
+            navController.navigateBlockingForAsyncNavGraph(NavGraphDirections.actionGlobalTurnOnSync())
         }
         view.swipe_refresh.setOnRefreshListener {
             interactor.onRequestSync()

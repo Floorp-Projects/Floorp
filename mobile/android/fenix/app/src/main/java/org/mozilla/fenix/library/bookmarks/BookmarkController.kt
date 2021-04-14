@@ -88,7 +88,7 @@ class DefaultBookmarkController(
     }
 
     override fun handleBookmarkEdit(node: BookmarkNode) {
-        navigate(BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkEditFragment(node.guid))
+        navigateToGivenDirection(BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkEditFragment(node.guid))
     }
 
     override fun handleBookmarkSelected(node: BookmarkNode) {
@@ -118,7 +118,7 @@ class DefaultBookmarkController(
     }
 
     override fun handleBookmarkSharing(item: BookmarkNode) {
-        navigate(
+        navigateToGivenDirection(
             BookmarkFragmentDirections.actionGlobalShareFragment(
                 data = arrayOf(ShareData(url = item.url, title = item.title))
             )
@@ -182,7 +182,7 @@ class DefaultBookmarkController(
         }
     }
 
-    private fun navigate(directions: NavDirections) {
+    private fun navigateToGivenDirection(directions: NavDirections) {
         invokePendingDeletion.invoke()
         navController.nav(R.id.bookmarkFragment, directions)
     }

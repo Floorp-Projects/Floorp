@@ -7,6 +7,7 @@ package org.mozilla.fenix.nimbus
 import androidx.navigation.NavController
 import mozilla.components.service.nimbus.ui.NimbusExperimentsAdapterDelegate
 import org.mozilla.experiments.nimbus.EnrolledExperiment
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 
 /**
  * View used for managing Nimbus experiments.
@@ -21,6 +22,6 @@ class NimbusExperimentsView(
                 experiment.userFacingName
             )
 
-        navController.navigate(directions)
+        navController.navigateBlockingForAsyncNavGraph(directions)
     }
 }

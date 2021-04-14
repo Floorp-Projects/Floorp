@@ -304,10 +304,10 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
         val directions = HistoryFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
         )
-        navigate(directions)
+        navigateToHistoryFragment(directions)
     }
 
-    private fun navigate(directions: NavDirections) {
+    private fun navigateToHistoryFragment(directions: NavDirections) {
         invokePendingDeletion()
         findNavController().nav(
             R.id.historyFragment,

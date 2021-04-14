@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.creditcards.controller
 
 import androidx.navigation.NavController
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.settings.creditcards.CreditCardsManagementFragmentDirections
 
 /**
@@ -27,7 +28,7 @@ class DefaultCreditCardsManagementController(
 ) : CreditCardsManagementController {
 
     override fun handleCreditCardClicked() {
-        navController.navigate(
+        navController.navigateBlockingForAsyncNavGraph(
             CreditCardsManagementFragmentDirections
                 .actionCreditCardsManagementFragmentToCreditCardEditorFragment()
         )
