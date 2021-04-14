@@ -21,6 +21,7 @@ struct FrameMetrics;
 
 class WheelScrollAnimation;
 class KeyboardScrollAnimation;
+class OverscrollAnimation;
 class SmoothMsdScrollAnimation;
 class SmoothScrollAnimation;
 
@@ -78,6 +79,7 @@ class AsyncPanZoomAnimation {
     return nullptr;
   }
   virtual SmoothScrollAnimation* AsSmoothScrollAnimation() { return nullptr; }
+  virtual OverscrollAnimation* AsOverscrollAnimation() { return nullptr; }
 
   virtual bool WantsRepaints() { return true; }
 
