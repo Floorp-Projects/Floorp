@@ -4811,7 +4811,7 @@ void GCRuntime::groupZonesForSweeping(JS::GCReason reason) {
 #endif
 
   JSContext* cx = rt->mainContextFromOwnThread();
-  ZoneComponentFinder finder(cx->nativeStackLimit[JS::StackForSystemCode]);
+  ZoneComponentFinder finder(cx);
   if (!isIncremental || !findSweepGroupEdges()) {
     finder.useOneComponent();
   }
