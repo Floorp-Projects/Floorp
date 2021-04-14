@@ -1464,7 +1464,8 @@
       if (!tab) {
         return;
       }
-      tab._sharingState = {};
+      // If WebRTC was used, leave object to enable tracking of grace periods.
+      tab._sharingState = tab._sharingState?.webRTC ? { webRTC: {} } : {};
       tab.removeAttribute("sharing");
       this._tabAttrModified(tab, ["sharing"]);
       if (aBrowser == this.selectedBrowser) {
@@ -1490,7 +1491,6 @@
             tab.setAttribute("sharing", aState.webRTC.sharing);
           }
         } else {
-          tab._sharingState.webRTC = null;
           tab.removeAttribute("sharing");
         }
         this._tabAttrModified(tab, ["sharing"]);
@@ -4463,7 +4463,7 @@
         aTab.selected ||
         aTab.closing ||
         // Tabs that are sharing the screen, microphone or camera cannot be hidden.
-        (aTab._sharingState && aTab._sharingState.webRTC)
+        aTab._sharingState?.webRTC?.sharing
       ) {
         return;
       }

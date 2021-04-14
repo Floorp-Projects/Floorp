@@ -1889,6 +1889,7 @@ var gBrowserInit = {
       "PermissionStateChange",
       function() {
         gIdentityHandler.refreshIdentityBlock();
+        gPermissionPanel.updateSharingIndicator();
       },
       true
     );
