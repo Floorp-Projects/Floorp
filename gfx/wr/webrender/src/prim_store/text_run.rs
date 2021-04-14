@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, FontInstanceFlags, GlyphInstance, RasterSpace, Shadow};
-use api::units::{LayoutToWorldTransform, LayoutVector2D};
+use api::units::{LayoutToWorldTransform, LayoutVector2D, PictureRect};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use crate::gpu_cache::GpuCache;
 use crate::intern;
 use crate::internal_types::LayoutPrimitiveInfo;
-use crate::picture::SurfaceInfo;
+use crate::picture::{SubpixelMode, SurfaceInfo};
 use crate::prim_store::{PrimitiveOpacity,  PrimitiveScratchBuffer};
 use crate::prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
@@ -244,8 +244,9 @@ impl TextRunPrimitive {
         surface: &SurfaceInfo,
         spatial_node_index: SpatialNodeIndex,
         transform: &LayoutToWorldTransform,
-        mut allow_subpixel: bool,
+        subpixel_mode: &SubpixelMode,
         raster_space: RasterSpace,
+        prim_rect: PictureRect,
         root_scaling_factor: f32,
         spatial_tree: &SpatialTree,
     ) -> bool {
@@ -353,6 +354,21 @@ impl TextRunPrimitive {
             ..specified_font.clone()
         };
 
+        // If subpixel AA is disabled due to the backing surface the glyphs
+        // are being drawn onto, disable it (unless we are using the
+        // specifial subpixel mode that estimates background color).
+        let mut allow_subpixel = match subpixel_mode {
+            SubpixelMode::Allow => true,
+            SubpixelMode::Deny => false,
+            SubpixelMode::Conditional { allowed_rect, excluded_rects } => {
+                // Conditional mode allows subpixel AA to be enabled for this
+                // text run, so long as it doesn't intersect with any of the
+                // cutout rectangles in the list, and it's inside the allowed rect.
+                allowed_rect.contains_rect(&prim_rect) &&
+                excluded_rects.iter().all(|rect| !rect.intersects(&prim_rect))
+            }
+        };
+
         // If we are using special estimated background subpixel blending, then
         // we can allow it regardless of what the surface says.
         allow_subpixel |= self.used_font.bg_color.a != 0;
@@ -403,13 +419,14 @@ impl TextRunPrimitive {
     pub fn request_resources(
         &mut self,
         prim_offset: LayoutVector2D,
+        prim_rect: PictureRect,
         specified_font: &FontInstance,
         glyphs: &[GlyphInstance],
         transform: &LayoutToWorldTransform,
         surface: &SurfaceInfo,
         spatial_node_index: SpatialNodeIndex,
         root_scaling_factor: f32,
-        allow_subpixel: bool,
+        subpixel_mode: &SubpixelMode,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         spatial_tree: &SpatialTree,
@@ -425,8 +442,9 @@ impl TextRunPrimitive {
             surface,
             spatial_node_index,
             transform,
-            allow_subpixel,
+            subpixel_mode,
             raster_space,
+            prim_rect,
             root_scaling_factor,
             spatial_tree,
         );
