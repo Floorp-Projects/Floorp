@@ -926,6 +926,7 @@ const UNSUPPORTED_FEATURES = {
   unknown: "unknown",
   forms: "forms",
   javaScript: "javaScript",
+  signatures: "signatures",
   smask: "smask",
   shadingPattern: "shadingPattern",
   font: "font",
@@ -1752,7 +1753,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.8.320',
+    apiVersion: '2.9.44',
     source: {
       data: source.data,
       url: source.url,
@@ -1896,7 +1897,7 @@ class PDFDocumentProxy {
   }
 
   get annotationStorage() {
-    return (0, _util.shadow)(this, "annotationStorage", new _annotation_storage.AnnotationStorage());
+    return this._transport.annotationStorage;
   }
 
   get numPages() {
@@ -1991,8 +1992,8 @@ class PDFDocumentProxy {
     return this._transport.getStats();
   }
 
-  cleanup() {
-    return this._transport.startCleanup();
+  cleanup(keepLoadedFonts = false) {
+    return this._transport.startCleanup(keepLoadedFonts || this.isPureXfa);
   }
 
   destroy() {
@@ -2007,8 +2008,8 @@ class PDFDocumentProxy {
     return this._transport.loadingTask;
   }
 
-  saveDocument(annotationStorage) {
-    return this._transport.saveDocument(annotationStorage);
+  saveDocument() {
+    return this._transport.saveDocument();
   }
 
   getFieldObjects() {
@@ -2083,12 +2084,12 @@ class PDFPageProxy {
   getAnnotations({
     intent = null
   } = {}) {
-    if (!this.annotationsPromise || this.annotationsIntent !== intent) {
-      this.annotationsPromise = this._transport.getAnnotations(this._pageIndex, intent);
-      this.annotationsIntent = intent;
+    if (!this._annotationsPromise || this._annotationsIntent !== intent) {
+      this._annotationsPromise = this._transport.getAnnotations(this._pageIndex, intent);
+      this._annotationsIntent = intent;
     }
 
-    return this.annotationsPromise;
+    return this._annotationsPromise;
   }
 
   getJSActions() {
@@ -2109,7 +2110,7 @@ class PDFPageProxy {
     imageLayer = null,
     canvasFactory = null,
     background = null,
-    annotationStorage = null,
+    includeAnnotationStorage = false,
     optionalContentConfigPromise = null
   }) {
     if (this._stats) {
@@ -2142,6 +2143,7 @@ class PDFPageProxy {
     const webGLContext = new _webgl.WebGLContext({
       enable: enableWebGL
     });
+    const annotationStorage = includeAnnotationStorage ? this._transport.annotationStorage.serializable : null;
 
     if (!intentState.displayReadyCapability) {
       intentState.displayReadyCapability = (0, _util.createPromiseCapability)();
@@ -2159,16 +2161,12 @@ class PDFPageProxy {
         pageIndex: this._pageIndex,
         intent: renderingIntent,
         renderInteractiveForms: renderInteractiveForms === true,
-        annotationStorage: annotationStorage?.serializable || null
+        annotationStorage
       });
     }
 
     const complete = error => {
-      const i = intentState.renderTasks.indexOf(internalRenderTask);
-
-      if (i >= 0) {
-        intentState.renderTasks.splice(i, 1);
-      }
+      intentState.renderTasks.delete(internalRenderTask);
 
       if (this.cleanupAfterRender || renderingIntent === "print") {
         this.pendingCleanup = true;
@@ -2212,12 +2210,7 @@ class PDFPageProxy {
       useRequestAnimationFrame: renderingIntent !== "print",
       pdfBug: this._pdfBug
     });
-
-    if (!intentState.renderTasks) {
-      intentState.renderTasks = [];
-    }
-
-    intentState.renderTasks.push(internalRenderTask);
+    (intentState.renderTasks ||= new Set()).add(internalRenderTask);
     const renderTask = internalRenderTask.task;
     Promise.all([intentState.displayReadyCapability.promise, optionalContentConfigPromise]).then(([transparency, optionalContentConfig]) => {
       if (this.pendingCleanup) {
@@ -2242,11 +2235,7 @@ class PDFPageProxy {
     function operatorListChanged() {
       if (intentState.operatorList.lastChunk) {
         intentState.opListReadCapability.resolve(intentState.operatorList);
-        const i = intentState.renderTasks.indexOf(opListTask);
-
-        if (i >= 0) {
-          intentState.renderTasks.splice(i, 1);
-        }
+        intentState.renderTasks.delete(opListTask);
       }
     }
 
@@ -2266,8 +2255,7 @@ class PDFPageProxy {
       opListTask = Object.create(null);
       opListTask.operatorListChanged = operatorListChanged;
       intentState.opListReadCapability = (0, _util.createPromiseCapability)();
-      intentState.renderTasks = [];
-      intentState.renderTasks.push(opListTask);
+      (intentState.renderTasks ||= new Set()).add(opListTask);
       intentState.operatorList = {
         fnArray: [],
         argsArray: [],
@@ -2289,13 +2277,15 @@ class PDFPageProxy {
 
   streamTextContent({
     normalizeWhitespace = false,
-    disableCombineTextItems = false
+    disableCombineTextItems = false,
+    includeMarkedContent = false
   } = {}) {
     const TEXT_CONTENT_CHUNK_SIZE = 100;
     return this._transport.messageHandler.sendWithStream("GetTextContent", {
       pageIndex: this._pageIndex,
       normalizeWhitespace: normalizeWhitespace === true,
-      combineTextItems: disableCombineTextItems !== true
+      combineTextItems: disableCombineTextItems !== true,
+      includeMarkedContent: includeMarkedContent === true
     }, {
       highWaterMark: TEXT_CONTENT_CHUNK_SIZE,
 
@@ -2334,6 +2324,10 @@ class PDFPageProxy {
     });
   }
 
+  getStructTree() {
+    return this._structTreePromise ||= this._transport.getStructTree(this._pageIndex);
+  }
+
   _destroy() {
     this.destroyed = true;
     this._transport.pageCache[this._pageIndex] = null;
@@ -2357,9 +2351,10 @@ class PDFPageProxy {
     }
 
     this.objs.clear();
-    this.annotationsPromise = null;
+    this._annotationsPromise = null;
     this._jsActionsPromise = null;
     this._xfaPromise = null;
+    this._structTreePromise = null;
     this.pendingCleanup = false;
     return Promise.all(waitOn);
   }
@@ -2378,7 +2373,7 @@ class PDFPageProxy {
       renderTasks,
       operatorList
     } of this._intentStates.values()) {
-      if (renderTasks.length !== 0 || !operatorList.lastChunk) {
+      if (renderTasks.size > 0 || !operatorList.lastChunk) {
         return false;
       }
     }
@@ -2386,9 +2381,10 @@ class PDFPageProxy {
     this._intentStates.clear();
 
     this.objs.clear();
-    this.annotationsPromise = null;
+    this._annotationsPromise = null;
     this._jsActionsPromise = null;
     this._xfaPromise = null;
+    this._structTreePromise = null;
 
     if (resetStats && this._stats) {
       this._stats = new _display_utils.StatTimer();
@@ -2422,8 +2418,8 @@ class PDFPageProxy {
 
     intentState.operatorList.lastChunk = operatorListChunk.lastChunk;
 
-    for (let i = 0; i < intentState.renderTasks.length; i++) {
-      intentState.renderTasks[i].operatorListChanged();
+    for (const internalRenderTask of intentState.renderTasks) {
+      internalRenderTask.operatorListChanged();
     }
 
     if (operatorListChunk.lastChunk) {
@@ -2469,8 +2465,8 @@ class PDFPageProxy {
         if (intentState.operatorList) {
           intentState.operatorList.lastChunk = true;
 
-          for (let i = 0; i < intentState.renderTasks.length; i++) {
-            intentState.renderTasks[i].operatorListChanged();
+          for (const internalRenderTask of intentState.renderTasks) {
+            internalRenderTask.operatorListChanged();
           }
 
           this._tryCleanup();
@@ -2501,7 +2497,7 @@ class PDFPageProxy {
     }
 
     if (!force) {
-      if (intentState.renderTasks.length !== 0) {
+      if (intentState.renderTasks.size > 0) {
         return;
       }
 
@@ -2959,8 +2955,8 @@ class WorkerTransport {
     this.setupMessageHandler();
   }
 
-  get loadingTaskSettled() {
-    return this.loadingTask._capability.settled;
+  get annotationStorage() {
+    return (0, _util.shadow)(this, "annotationStorage", new _annotation_storage.AnnotationStorage());
   }
 
   destroy() {
@@ -2983,18 +2979,13 @@ class WorkerTransport {
     });
     this.pageCache.length = 0;
     this.pagePromises.length = 0;
-    const terminated = this.messageHandler.sendWithPromise("Terminate", null);
-    waitOn.push(terminated);
 
-    if (this.loadingTaskSettled) {
-      const annotationStorageResetModified = this.loadingTask.promise.then(pdfDocument => {
-        if (pdfDocument.hasOwnProperty("annotationStorage")) {
-          pdfDocument.annotationStorage.resetModified();
-        }
-      }).catch(() => {});
-      waitOn.push(annotationStorageResetModified);
+    if (this.hasOwnProperty("annotationStorage")) {
+      this.annotationStorage.resetModified();
     }
 
+    const terminated = this.messageHandler.sendWithPromise("Terminate", null);
+    waitOn.push(terminated);
     Promise.all(waitOn).then(() => {
       this.commonObjs.clear();
       this.fontLoader.clear();
@@ -3388,15 +3379,13 @@ class WorkerTransport {
     });
   }
 
-  saveDocument(annotationStorage) {
+  saveDocument() {
     return this.messageHandler.sendWithPromise("SaveDocument", {
       numPages: this._numPages,
-      annotationStorage: annotationStorage?.serializable || null,
+      annotationStorage: this.annotationStorage.serializable,
       filename: this._fullReader?.filename ?? null
     }).finally(() => {
-      if (annotationStorage) {
-        annotationStorage.resetModified();
-      }
+      this.annotationStorage.resetModified();
     });
   }
 
@@ -3470,6 +3459,12 @@ class WorkerTransport {
     });
   }
 
+  getStructTree(pageIndex) {
+    return this.messageHandler.sendWithPromise("GetStructTree", {
+      pageIndex
+    });
+  }
+
   getOutline() {
     return this.messageHandler.sendWithPromise("GetOutline", null);
   }
@@ -3503,24 +3498,34 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise("GetStats", null);
   }
 
-  startCleanup() {
-    return this.messageHandler.sendWithPromise("Cleanup", null).then(() => {
-      for (let i = 0, ii = this.pageCache.length; i < ii; i++) {
-        const page = this.pageCache[i];
+  async startCleanup(keepLoadedFonts = false) {
+    await this.messageHandler.sendWithPromise("Cleanup", null);
 
-        if (page) {
-          const cleanupSuccessful = page.cleanup();
+    if (this.destroyed) {
+      return;
+    }
 
-          if (!cleanupSuccessful) {
-            throw new Error(`startCleanup: Page ${i + 1} is currently rendering.`);
-          }
-        }
+    for (let i = 0, ii = this.pageCache.length; i < ii; i++) {
+      const page = this.pageCache[i];
+
+      if (!page) {
+        continue;
       }
 
-      this.commonObjs.clear();
+      const cleanupSuccessful = page.cleanup();
+
+      if (!cleanupSuccessful) {
+        throw new Error(`startCleanup: Page ${i + 1} is currently rendering.`);
+      }
+    }
+
+    this.commonObjs.clear();
+
+    if (!keepLoadedFonts) {
       this.fontLoader.clear();
-      this._hasJSActionsPromise = null;
-    });
+    }
+
+    this._hasJSActionsPromise = null;
   }
 
   get loadingParams() {
@@ -3775,9 +3780,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.8.320';
+const version = '2.9.44';
 exports.version = version;
-const build = 'ca7f54682';
+const build = '6cf307000';
 exports.build = build;
 
 /***/ }),
@@ -4074,8 +4079,6 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.AnnotationStorage = void 0;
 
-var _display_utils = __w_pdfjs_require__(1);
-
 var _util = __w_pdfjs_require__(2);
 
 class AnnotationStorage {
@@ -4090,18 +4093,6 @@ class AnnotationStorage {
     const obj = this._storage.get(key);
 
     return obj !== undefined ? obj : defaultValue;
-  }
-
-  getOrCreateValue(key, defaultValue) {
-    (0, _display_utils.deprecated)("Use getValue instead.");
-
-    if (this._storage.has(key)) {
-      return this._storage.get(key);
-    }
-
-    this._storage.set(key, defaultValue);
-
-    return defaultValue;
   }
 
   setValue(key, value) {
@@ -10874,6 +10865,25 @@ const renderTextLayer = function renderTextLayerClosure() {
 
     _processItems(items, styleCache) {
       for (let i = 0, len = items.length; i < len; i++) {
+        if (items[i].str === undefined) {
+          if (items[i].type === "beginMarkedContentProps" || items[i].type === "beginMarkedContent") {
+            const parent = this._container;
+            this._container = document.createElement("span");
+
+            this._container.classList.add("markedContent");
+
+            if (items[i].id !== null) {
+              this._container.setAttribute("id", `${items[i].id}`);
+            }
+
+            parent.appendChild(this._container);
+          } else if (items[i].type === "endMarkedContent") {
+            this._container = this._container.parentNode;
+          }
+
+          continue;
+        }
+
         this._textContentItemsStr.push(items[i].str);
 
         appendText(this, items[i], styleCache, this._layoutTextCtx);
@@ -11454,8 +11464,8 @@ var _svg = __w_pdfjs_require__(21);
 
 var _xfa_layer = __w_pdfjs_require__(22);
 
-const pdfjsVersion = '2.8.320';
-const pdfjsBuild = 'ca7f54682';
+const pdfjsVersion = '2.9.44';
+const pdfjsBuild = '6cf307000';
 ;
 })();
 
