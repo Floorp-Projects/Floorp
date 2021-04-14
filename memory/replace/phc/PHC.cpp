@@ -232,7 +232,7 @@ void StackTrace::Fill() {
   void* stackEnd = pthread_get_stackaddr_np(pthread_self());
   FramePointerStackWalk(StackWalkCallback, kMaxFrames, this, fp, stackEnd);
 #else
-  MozStackWalk(StackWalkCallback, /* aSkipFrames = */ 0, kMaxFrames, this);
+  MozStackWalk(StackWalkCallback, nullptr, kMaxFrames, this);
 #endif
 }
 
