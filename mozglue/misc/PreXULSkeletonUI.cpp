@@ -1117,7 +1117,10 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
 
   // Then, we just fill the rest with FillRect
   RECT rect = {0, sTotalChromeHeight, sWindowWidth, sWindowHeight};
-  HBRUSH brush = sCreateSolidBrush(currentTheme.backgroundColor);
+  HBRUSH brush =
+      sCreateSolidBrush(RGB((currentTheme.backgroundColor & 0xff0000) >> 16,
+                            (currentTheme.backgroundColor & 0x00ff00) >> 8,
+                            (currentTheme.backgroundColor & 0x0000ff) >> 0));
   int fillRectResult = sFillRect(hdc, &rect, brush);
 
   sDeleteObject(brush);
