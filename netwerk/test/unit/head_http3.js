@@ -64,7 +64,7 @@ CheckHttp3Listener.prototype = {
       try {
         httpVersion = request.protocolVersion;
       } catch (e) {}
-      Assert.equal(httpVersion, "h3");
+      Assert.equal(httpVersion, "h3-27");
       this.finish(true);
     } else {
       dump("try again to get alt svc mapping\n");

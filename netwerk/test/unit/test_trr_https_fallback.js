@@ -601,7 +601,7 @@ add_task(async function testH3Connection() {
 
   let chan = makeChan(`https://test.h3.com`);
   let [req] = await channelOpenPromise(chan);
-  Assert.equal(req.protocolVersion, "h3");
+  Assert.equal(req.protocolVersion, "h3-27");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
 
@@ -808,7 +808,7 @@ add_task(async function testHttp3ExcludedList() {
 
   chan = makeChan(`https://test.h3_excluded.org`);
   let [req] = await channelOpenPromise(chan);
-  Assert.equal(req.protocolVersion, "h3");
+  Assert.equal(req.protocolVersion, "h3-27");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
 
@@ -933,7 +933,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
   // give the first record one more shot.
   chan = makeChan(`https://www.h3_all_excluded.org`);
   [req] = await channelOpenPromise(chan);
-  Assert.equal(req.protocolVersion, "h3");
+  Assert.equal(req.protocolVersion, "h3-27");
   let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
   Assert.equal(internal.remotePort, h3Port);
 

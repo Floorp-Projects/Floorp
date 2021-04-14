@@ -108,7 +108,7 @@ WaitForHttp3Listener.prototype.onStopRequest = function testOnStopRequest(
   Http3Listener.prototype.onStopRequest.call(this, request, status);
 
   if (this.routed == h3Route) {
-    Assert.equal(this.httpVersion, "h3");
+    Assert.equal(this.httpVersion, "h3-27");
     run_next_test();
   } else {
     dump("poll later for alt svc mapping\n");
