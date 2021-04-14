@@ -1846,19 +1846,20 @@ void TypeAnalyzer::replaceRedundantPhi(MPhi* phi) {
   block->insertBefore(*(block->begin()), c);
   phi->justReplaceAllUsesWith(c);
 
-  if (shouldSpecializeOsrPhis() && block == graph.osrPreHeaderBlock()) {
+  if (shouldSpecializeOsrPhis()) {
     // See shouldSpecializeOsrPhis comment. This is part of the third step,
     // guard the incoming MOsrValue is of this type.
     MBasicBlock* osrBlock = graph.osrBlock();
-    MOZ_ASSERT(block->getPredecessor(1) == osrBlock);
-    MDefinition* def = phi->getOperand(1);
-    if (def->isOsrValue()) {
-      MGuardValue* guard = MGuardValue::New(alloc(), def, v);
-      guard->setBailoutKind(BailoutKind::SpeculativePhi);
-      osrBlock->insertBefore(osrBlock->lastIns(), guard);
-    } else {
-      MOZ_ASSERT(def->isConstant());
-      MOZ_ASSERT(def->type() == phi->type());
+    for (uint32_t i = 0; i < phi->numOperands(); i++) {
+      MDefinition* def = phi->getOperand(i);
+      if (def->isOsrValue()) {
+        MOZ_ASSERT(def->block() == osrBlock);
+        MGuardValue* guard = MGuardValue::New(alloc(), def, v);
+        guard->setBailoutKind(BailoutKind::SpeculativePhi);
+        osrBlock->insertBefore(osrBlock->lastIns(), guard);
+      } else {
+        MOZ_ASSERT(def->type() == phi->type());
+      }
     }
   }
 }
