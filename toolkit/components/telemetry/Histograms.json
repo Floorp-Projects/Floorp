@@ -15750,11 +15750,11 @@
       "nohlmeier@mozilla.com",
       "padenot@mozilla.com"
     ],
-    "expires_in_version": "90",
+    "expires_in_version": "96",
     "kind": "linear",
     "high": 60,
     "n_buckets": 10,
-    "bug_numbers": [1490074, 1570634, 1606206, 1652196],
+    "bug_numbers": [1490074, 1570634, 1606206, 1652196, 1700828],
     "description": "How long the AudioContext would become audible since it was created, time unit is seconds.",
     "releaseChannelCollection": "opt-out"
   },
@@ -15780,10 +15780,10 @@
       "padenot@mozilla.com",
       "ktomlinson@mozilla.com"
     ],
-    "expires_in_version": "90",
+    "expires_in_version": "96",
     "kind": "categorical",
     "labels": ["NeverBlocked", "AllowedAfterBlocked", "NeverAllowed"],
-    "bug_numbers": [1512277, 1652196],
+    "bug_numbers": [1512277, 1652196, 1700828],
     "description": "The number of times an AudioContext is allowed to start after being blocked, or the number of AudioContexts attempting to start which were never blocked or never allowed.",
     "releaseChannelCollection": "opt-out"
   },
