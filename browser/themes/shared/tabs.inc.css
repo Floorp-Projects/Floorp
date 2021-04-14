@@ -388,6 +388,7 @@
   top: -4.5px;
   inset-inline-end: -9px;
   z-index: 1; /* Overlay tab title */
+  padding: 2px;
 }
 
 @media not (-moz-proton) {
@@ -395,6 +396,7 @@
   top: -4.5px;
   inset-inline-end: -9px;
   z-index: 1; /* Overlay tab title */
+  padding: 0;
 }
 } /*** END !proton ***/
 
@@ -432,6 +434,7 @@
 .tab-icon-overlay@tabIndicatorReplacesIcon@ {
   border-radius: 2px;
   fill-opacity: 0.75;
+  padding: 2px;
 }
 .tab-icon-overlay@tabIndicatorReplacesIcon@:hover {
   background-color: color-mix(in srgb, currentColor 15%, transparent);
@@ -524,14 +527,14 @@
   margin-inline-end: calc(var(--inline-tab-padding) / -2);
   width: 24px;
   height: 24px;
-  padding: 5px;
+  padding: 7px;
   border-radius: var(--tab-border-radius);
 }
 
 /* The following rulesets allow showing more of the tab title */
 .tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-close-button {
   padding-inline-start: 0;
-  width: 19px;
+  width: 17px;
 }
 
 .tabbrowser-tab[visuallyselected=true]:hover,
@@ -1033,7 +1036,7 @@
 }
 
 #tabbrowser-tabs[hiddensoundplaying] ~ #alltabs-button > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: transparent url(chrome://browser/skin/tabbrowser/badge-audio-playing.svg);
+  background: transparent url(chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg);
   box-shadow: none;
   /* Match the color of the button, rather than label default. */
   color: inherit;
