@@ -1,1 +1,1 @@
-|jit-test| test-also=--wasm-compiler=ion; test-also=--wasm-function-references --wasm-gc; include:wasm.js
+|jit-test| test-also=--wasm-compiler=optimizing; test-also=--wasm-function-references --wasm-gc; include:wasm.js

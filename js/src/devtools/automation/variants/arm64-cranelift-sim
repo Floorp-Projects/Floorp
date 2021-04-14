@@ -1,5 +1,5 @@
 {
-    "configure-args": "--enable-simulator=arm64 --enable-rust-simd",
+    "configure-args": "--enable-simulator=arm64 --enable-rust-simd --enable-cranelift",
     "optimize": true,
     "debug": true,
     "env": {

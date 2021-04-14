@@ -555,30 +555,42 @@ set_define("MOZ_RUST_SIMD", rust_simd)
 # Support for wasm code generation with Cranelift
 # ==============================================================
 
+option(
+    "--enable-cranelift",
+    default=False,
+    help="{Enable|Disable} Cranelift code generator for wasm",
+)
+
 
 @depends(
-    milestone.is_nightly,
+    "--enable-cranelift",
     "--enable-jit",
     "--enable-simulator",
     target,
     target_is_windows,
 )
-def cranelift_default(is_nightly, jit_enabled, simulator, target, is_windows):
-    if is_nightly and jit_enabled and not is_windows:
-        if target.cpu == "aarch64":
-            return True
-        if simulator and simulator[0] == "arm64":
-            return True
+def enable_cranelift(value, jit_enabled, simulator, target, is_windows):
+    if not value:
+        return
+
+    if not jit_enabled:
+        die("--enable-cranelift requires --enable-jit")
+
+    if not (
+        target.cpu == "aarch64"
+        or (target.cpu == "x86_64" and simulator and simulator[0] == "arm64")
+    ):
+        die("--enable-cranelift is only supported on arm64")
+
+    if is_windows:
+        die("--enable-cranelift is not supported on windows")
+
+    return True
 
 
-option(
-    "--enable-cranelift",
-    default=cranelift_default,
-    help="{Enable|Disable} Cranelift code generator for wasm",
-)
+set_config("ENABLE_WASM_CRANELIFT", enable_cranelift)
+set_define("ENABLE_WASM_CRANELIFT", enable_cranelift)
 
-set_config("ENABLE_WASM_CRANELIFT", depends_if("--enable-cranelift")(lambda x: True))
-set_define("ENABLE_WASM_CRANELIFT", depends_if("--enable-cranelift")(lambda x: True))
 
 # Telemetry to measure compile time and generated-code runtime
 # ============================================================
