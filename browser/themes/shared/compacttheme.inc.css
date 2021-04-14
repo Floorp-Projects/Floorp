@@ -14,5 +14,10 @@
 @media (-moz-proton) {
 #urlbar:not([focused="true"]) {
   --urlbar-box-bgcolor: var(--lwt-toolbar-field-focus);
+  --urlbar-box-hover-bgcolor: var(--button-hover-bgcolor);
+}
+#urlbar[focused="true"] {
+  --urlbar-box-bgcolor: var(--button-bgcolor);
+  --urlbar-box-hover-bgcolor: var(--button-hover-bgcolor);
 }
 } /** END Proton **/
