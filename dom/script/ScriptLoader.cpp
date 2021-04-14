@@ -1016,12 +1016,12 @@ static LoadedScript* GetLoadedScriptOrNull(
   return script;
 }
 
-// 8.1.3.8.1 HostResolveImportedModule(referencingModule, specifier)
+// 8.1.3.8.1 HostResolveImportedModule(referencingModule, moduleRequest)
 JSObject* HostResolveImportedModule(JSContext* aCx,
                                     JS::Handle<JS::Value> aReferencingPrivate,
-                                    JS::Handle<JSString*> aSpecifier) {
+                                    JS::Handle<JSObject*> aModuleRequest) {
   JS::Rooted<JSObject*> module(aCx);
-  ScriptLoader::ResolveImportedModule(aCx, aReferencingPrivate, aSpecifier,
+  ScriptLoader::ResolveImportedModule(aCx, aReferencingPrivate, aModuleRequest,
                                       &module);
   return module;
 }
@@ -1029,15 +1029,22 @@ JSObject* HostResolveImportedModule(JSContext* aCx,
 /* static */
 void ScriptLoader::ResolveImportedModule(
     JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
-    JS::Handle<JSString*> aSpecifier, JS::MutableHandle<JSObject*> aModuleOut) {
+    JS::Handle<JSObject*> aModuleRequest,
+    JS::MutableHandle<JSObject*> aModuleOut) {
   MOZ_ASSERT(!aModuleOut);
 
   RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aCx, aReferencingPrivate));
 
+  JS::Rooted<JSString*> specifierString(
+      aCx, JS::GetModuleRequestSpecifier(aCx, aModuleRequest));
+  if (!specifierString) {
+    return;
+  }
+
   // Let url be the result of resolving a module specifier given referencing
   // module script and specifier.
   nsAutoJSString string;
-  if (!string.init(aCx, aSpecifier)) {
+  if (!string.init(aCx, specifierString)) {
     return;
   }
 
@@ -1097,13 +1104,19 @@ bool HostPopulateImportMeta(JSContext* aCx,
 
 bool HostImportModuleDynamically(JSContext* aCx,
                                  JS::Handle<JS::Value> aReferencingPrivate,
-                                 JS::Handle<JSString*> aSpecifier,
+                                 JS::Handle<JSObject*> aModuleRequest,
                                  JS::Handle<JSObject*> aPromise) {
   RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aCx, aReferencingPrivate));
 
+  JS::Rooted<JSString*> specifierString(
+      aCx, JS::GetModuleRequestSpecifier(aCx, aModuleRequest));
+  if (!specifierString) {
+    return false;
+  }
+
   // Attempt to resolve the module specifier.
   nsAutoJSString specifier;
-  if (!specifier.init(aCx, aSpecifier)) {
+  if (!specifier.init(aCx, specifierString)) {
     return false;
   }
 
@@ -1159,7 +1172,8 @@ bool HostImportModuleDynamically(JSContext* aCx,
   }
 
   RefPtr<ModuleLoadRequest> request = ModuleLoadRequest::CreateDynamicImport(
-      uri, options, baseURL, loader, aReferencingPrivate, aSpecifier, aPromise);
+      uri, options, baseURL, loader, aReferencingPrivate, specifierString,
+      aPromise);
 
   loader->StartDynamicImport(request);
   return true;
@@ -1220,8 +1234,14 @@ void ScriptLoader::FinishDynamicImport_NoTLA(JSContext* aCx,
   JS::Rooted<JSString*> specifier(aCx, aRequest->mDynamicSpecifier);
   JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
 
-  JS::FinishDynamicModuleImport_NoTLA(aCx, status, referencingScript, specifier,
-                                      promise);
+  JS::Rooted<JSObject*> moduleRequest(aCx,
+                                      JS::CreateModuleRequest(aCx, specifier));
+  if (!moduleRequest) {
+    JS_ReportOutOfMemory(aCx);
+  }
+
+  JS::FinishDynamicModuleImport_NoTLA(aCx, status, referencingScript,
+                                      moduleRequest, promise);
 
   // FinishDynamicModuleImport clears any pending exception.
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
@@ -1254,8 +1274,14 @@ void ScriptLoader::FinishDynamicImport(
   JS::Rooted<JSString*> specifier(aCx, aRequest->mDynamicSpecifier);
   JS::Rooted<JSObject*> promise(aCx, aRequest->mDynamicPromise);
 
+  JS::Rooted<JSObject*> moduleRequest(aCx,
+                                      JS::CreateModuleRequest(aCx, specifier));
+  if (!moduleRequest) {
+    JS_ReportOutOfMemory(aCx);
+  }
+
   JS::FinishDynamicModuleImport(aCx, aEvaluationPromise, referencingScript,
-                                specifier, promise);
+                                moduleRequest, promise);
 
   // FinishDynamicModuleImport clears any pending exception.
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));

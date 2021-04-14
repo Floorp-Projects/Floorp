@@ -211,6 +211,11 @@ extern JS_PUBLIC_API void GetRequestedModuleSourcePos(
  */
 extern JS_PUBLIC_API JSScript* GetModuleScript(Handle<JSObject*> moduleRecord);
 
+extern JS_PUBLIC_API JSObject* CreateModuleRequest(
+    JSContext* cx, Handle<JSString*> specifierArg);
+extern JS_PUBLIC_API JSString* GetModuleRequestSpecifier(
+    JSContext* cx, Handle<JSObject*> moduleRequestArg);
+
 }  // namespace JS
 
 #endif  // js_Modules_h

@@ -195,3 +195,25 @@ JS_PUBLIC_API JSScript* JS::GetModuleScript(JS::HandleObject moduleRecord) {
 
   return moduleRecord->as<ModuleObject>().script();
 }
+
+JS_PUBLIC_API JSObject* JS::CreateModuleRequest(
+    JSContext* cx, Handle<JSString*> specifierArg) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  js::RootedAtom specifierAtom(cx, AtomizeString(cx, specifierArg));
+  if (!specifierAtom) {
+    return nullptr;
+  }
+
+  return js::ModuleRequestObject::create(cx, specifierAtom);
+}
+
+JS_PUBLIC_API JSString* JS::GetModuleRequestSpecifier(
+    JSContext* cx, Handle<JSObject*> moduleRequestArg) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(moduleRequestArg);
+
+  return moduleRequestArg->as<js::ModuleRequestObject>().specifier();
+}
