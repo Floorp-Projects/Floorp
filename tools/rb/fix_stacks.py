@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 # vim:sw=4:ts=4:et:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,8 @@ import os
 import platform
 import re
 import sys
+
+import six
 
 # Matches lines produced by MozFormatCodeAddress(), e.g.
 # `#01: ???[tests/example +0x43a0]`.
@@ -74,8 +76,9 @@ def fixSymbols(
     line, jsonMode=False, slowWarning=False, breakpadSymsDir=None, hide_errors=False
 ):
 
-    line_str = line.decode("utf-8") if isinstance(line, bytes) else line
-    if line_re.search(line_str) is None:
+    line = six.ensure_str(line)
+    result = line_re.search(line)
+    if result is None:
         return line
 
     if not fix_stacks:
@@ -85,17 +88,14 @@ def fixSymbols(
     # to `fix-stacks` it will wait until it receives a newline, causing this
     # script to hang. So we add a newline if one is missing and then remove it
     # from the output.
-    is_missing_newline = not line_str.endswith("\n")
+    is_missing_newline = not line.endswith("\n")
     if is_missing_newline:
-        line_str = line_str + "\n"
-    fix_stacks.stdin.write(line_str)
+        line = line + "\n"
+    fix_stacks.stdin.write(line)
     fix_stacks.stdin.flush()
     out = fix_stacks.stdout.readline()
     if is_missing_newline:
         out = out[:-1]
-
-    if not isinstance(out, bytes):
-        out = out.encode("utf-8")
     return out
 
 
