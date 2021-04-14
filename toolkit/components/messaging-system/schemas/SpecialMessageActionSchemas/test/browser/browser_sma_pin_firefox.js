@@ -5,11 +5,24 @@
 
 add_task(async function test_PIN_FIREFOX_TO_TASKBAR() {
   const sandbox = sinon.createSandbox();
-  const shell = {
+  let shell = {
+    checkPinCurrentAppToTaskbar() {},
     QueryInterface: () => shell,
+    get shellService() {
+      return this;
+    },
+
     isCurrentAppPinnedToTaskbarAsync: sandbox.stub(),
     pinCurrentAppToTaskbar: sandbox.stub(),
   };
+
+  // Prefer the mocked implementation and fall back to the original version,
+  // which can call back into the mocked version (via this.shellService).
+  shell = new Proxy(shell, {
+    get(target, prop) {
+      return (prop in target ? target : ShellService)[prop];
+    },
+  });
 
   const test = () =>
     SMATestUtils.executeAndValidateAction(
