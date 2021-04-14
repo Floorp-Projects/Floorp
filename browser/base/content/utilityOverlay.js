@@ -709,6 +709,7 @@ function openLinkIn(url, where, params) {
 
 // Used as an onclick handler for UI elements with link-like behavior.
 // e.g. onclick="checkForMiddleClick(this, event);"
+// Not needed for menuitems because those fire command events even on middle clicks.
 function checkForMiddleClick(node, event) {
   // We should be using the disabled property here instead of the attribute,
   // but some elements that this function is used with don't support it (e.g.
