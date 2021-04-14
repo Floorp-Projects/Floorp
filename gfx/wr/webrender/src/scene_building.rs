@@ -1999,6 +1999,7 @@ impl<'a> SceneBuilder<'a> {
         {
             self.tile_cache_builder.add_tile_cache(
                 stacking_context.prim_list,
+                stacking_context.clip_chain_id,
                 &self.spatial_tree,
                 &self.clip_store,
                 self.interners,
