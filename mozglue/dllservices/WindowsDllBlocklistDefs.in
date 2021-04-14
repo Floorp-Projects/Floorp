@@ -234,8 +234,9 @@ ALL_PROCESSES += [
     # Old version of COMODO Firewall, bug 1407712 and bug 1624336
     DllBlocklistEntry("guard64.dll", (8, 4, 0, 65535)),
 
-    # Old version of Panda Security, bug 1637984
+    # Old version of Panda Security, bug 1637984 and bug 1705125
     DllBlocklistEntry("PavLspHook64.dll", (9, 2, 2, 1), BLOCK_WIN7_AND_OLDER),
+    DllBlocklistEntry("PavSHook64.dll", (9, 2, 2, 1), BLOCK_WIN7_AND_OLDER),
 
     # Webroot SecureAnywhere causes crashes, bug 1700281
     DllBlocklistEntry("WRDll.x64.dll", (1, 1, 0, 227)),
