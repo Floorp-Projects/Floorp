@@ -225,6 +225,7 @@ static int32_t sPlatformDisabledState = 0;
 
 static const MarkupMapInfo sHTMLMarkupMapList[] = {
 #include "HTMLMarkupMap.h"
+#include "MathMLMarkupMap.h"
 };
 
 #undef MARKUPMAP
