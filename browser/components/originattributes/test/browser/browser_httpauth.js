@@ -35,7 +35,7 @@ function fileHandler(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
-async function onCommonDialogLoaded(subject) {
+function onCommonDialogLoaded(subject) {
   let dialog;
   if (commonDialogEnabled) {
     dialog = subject.Dialog;
@@ -47,14 +47,6 @@ async function onCommonDialogLoaded(subject) {
   // Submit random account and password
   dialog.ui.loginTextbox.setAttribute("value", Math.random());
   dialog.ui.password1Textbox.setAttribute("value", Math.random());
-  // Work around https://bugzilla.mozilla.org/show_bug.cgi?id=1699844 by
-  // waiting before closing this prompt:
-  await (async function() {
-    let rAFCount = 3;
-    while (rAFCount--) {
-      await new Promise(requestAnimationFrame);
-    }
-  })();
   dialog.ui.button0.click();
 }
 

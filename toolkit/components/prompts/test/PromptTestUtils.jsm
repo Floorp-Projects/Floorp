@@ -85,7 +85,7 @@ let PromptTestUtils = {
    * @returns {Promise} - A promise which resolves once the prompt has been
    * closed.
    */
-  async handlePrompt(
+  handlePrompt(
     dialog,
     {
       checkboxState = null,
@@ -131,18 +131,6 @@ let PromptTestUtils = {
     if (!button) {
       throw new Error("Could not find button with index " + buttonNumClick);
     }
-
-    if (dialog.ui.prompt?.docShell?.chromeEventHandler) {
-      // For embedded windows, work around bug 1699844 by
-      // waiting before closing this prompt:
-      await (async function() {
-        let rAFCount = 3;
-        while (rAFCount--) {
-          await new Promise(win.requestAnimationFrame);
-        }
-      })();
-    }
-
     button.click();
 
     return promptClosePromise;
