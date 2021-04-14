@@ -1555,7 +1555,10 @@ function assertAboutAddonsTelemetryEvents(events, filters = {}) {
       filters.methods
         ? filters.methods.includes(actual)
         : ABOUT_ADDONS_METHODS.has(actual),
-    object: "aboutAddons",
+    object: actual =>
+      filters.objects
+        ? filters.objects.includes(actual)
+        : actual === "aboutAddons",
   });
 }
 
