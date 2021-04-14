@@ -5,18 +5,18 @@ requests.structures
 ~~~~~~~~~~~~~~~~~~~
 
 Data structures that power Requests.
-
 """
 
-import collections
+from collections import OrderedDict
+
+from .compat import Mapping, MutableMapping
 
 
-class CaseInsensitiveDict(collections.MutableMapping):
-    """
-    A case-insensitive ``dict``-like object.
+class CaseInsensitiveDict(MutableMapping):
+    """A case-insensitive ``dict``-like object.
 
     Implements all methods and operations of
-    ``collections.MutableMapping`` as well as dict's ``copy``. Also
+    ``MutableMapping`` as well as dict's ``copy``. Also
     provides ``lower_items``.
 
     All keys are expected to be strings. The structure remembers the
@@ -37,10 +37,10 @@ class CaseInsensitiveDict(collections.MutableMapping):
     If the constructor, ``.update``, or equality comparison
     operations are given keys that have equal ``.lower()``s, the
     behavior is undefined.
-
     """
+
     def __init__(self, data=None, **kwargs):
-        self._store = dict()
+        self._store = OrderedDict()
         if data is None:
             data = {}
         self.update(data, **kwargs)
@@ -71,7 +71,7 @@ class CaseInsensitiveDict(collections.MutableMapping):
         )
 
     def __eq__(self, other):
-        if isinstance(other, collections.Mapping):
+        if isinstance(other, Mapping):
             other = CaseInsensitiveDict(other)
         else:
             return NotImplemented
@@ -84,6 +84,7 @@ class CaseInsensitiveDict(collections.MutableMapping):
 
     def __repr__(self):
         return str(dict(self.items()))
+
 
 class LookupDict(dict):
     """Dictionary lookup object."""

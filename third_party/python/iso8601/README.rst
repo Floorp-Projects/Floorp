@@ -12,7 +12,7 @@ See the LICENSE file for the license this package is released under.
 
 If you want more full featured parsing look at:
 
-- http://labix.org/python-dateutil - python-dateutil
+- https://labix.org/python-dateutil - python-dateutil
 
 Parsed Formats
 ==============
@@ -57,19 +57,17 @@ Known differences from the ISO 8601 spec:
 Homepage
 ========
 
-- Documentation: http://pyiso8601.readthedocs.org/
-- Source: https://bitbucket.org/micktwomey/pyiso8601/
-
-This was originally hosted at https://code.google.com/p/pyiso8601/
+- Documentation: https://pyiso8601.readthedocs.org/
+- Source: https://github.com/micktwomey/pyiso8601
 
 References
 ==========
 
-- http://en.wikipedia.org/wiki/ISO_8601
+- https://en.wikipedia.org/wiki/ISO_8601
 
-- http://www.cl.cam.ac.uk/~mgk25/iso-time.html - simple overview
+- https://www.cl.cam.ac.uk/~mgk25/iso-time.html - simple overview
 
-- http://hydracen.com/dx/iso8601.htm - more detailed enumeration of valid formats.
+- https://web.archive.org/web/20090309040208/http://hydracen.com/dx/iso8601.htm - more detailed enumeration of valid formats.
 
 Testing
 =======
@@ -77,7 +75,7 @@ Testing
 1. pip install -r dev-requirements.txt
 2. tox
 
-Note that you need all the pythons installed to perform a tox run (see below). Homebrew helps a lot on the mac, however you wind up having to add cellars to your PATH or symlinking the pythonX.Y executables.
+Note that you need all the pythons installed to perform a tox run (see below). pyenv helps hugely, use pyenv install for the versions you need then use 'pyenv local version ...' to link them in (the tox-pyenv plugin will pick them up).
 
 Alternatively, to test only with your current python:
 
@@ -89,17 +87,15 @@ Supported Python Versions
 
 Tested against:
 
-- Python 2.6
 - Python 2.7
-- Python 3.2
-- Python 3.3
-- Python 3.4
 - Python 3.5
 - Python 3.6
+- Python 3.7
+- Python 3.8
 - PyPy
 - PyPy 3
 
-Python 3.0 and 3.1 are untested but should work (tests didn't run under them when last tried).
+Python 3.0, 3.1 and 3.2 are untested but should work (tests didn't run under them when last tried).
 
 Jython is untested but should work (tests failed to run).
 
@@ -107,6 +103,25 @@ Python 2.5 is not supported (too old for the tests for the most part). It could 
 
 Changes
 =======
+
+0.1.14
+------
+
+* Add GitHub build actions for project
+* Add project URLs in setup.py (thanks to Steve Piercy)
+* Update README links (thanks to Steve Piercy)
+* Fix handling of README in setup.py (encoding fun in 3.5, 3.6 and pypy3)
+* Fix README links (thanks to Chris Barker)
+* Add Python 3.9 to test matrix (thanks to Luciano Mammino)
+* Add type hints (thanks to Brett Cannon)
+* Derive `ParseError` from `ValueError` (thanks to Lex Robinson)
+
+0.1.13
+------
+
+* Move to GitHub (https://github.com/micktwomey/pyiso8601). Thanks go to Martin Häcker for pointing out the bitbucket project had been deleted by Atlassian!
+* Remove python 2.6, 3.2, 3.3 and 3.4 from tests
+* Add python 3.7 and 3.8 to tests
 
 0.1.12
 ------
@@ -120,7 +135,7 @@ Changes
 * Add support for , as separator for fractional part (thanks to ecksun in https://bitbucket.org/micktwomey/pyiso8601/pull-requests/5/add-support-for-as-separator-for/diff)
 * Add Python 3.4 and 3.5 to tox test config.
 * Add PyPy 3 to tox test config.
-* Link to documentation at http://pyiso8601.readthedocs.org/
+* Link to documentation at https://pyiso8601.readthedocs.org/
 
 
 0.1.10
