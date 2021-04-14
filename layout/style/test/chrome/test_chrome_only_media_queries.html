@@ -6,6 +6,25 @@
 <script>
 const SHEET = document.querySelector('style');
 
+SimpleTest.waitForExplicitFinish();
+
+async function testWithPref() {
+  await new Promise(r => {
+    SpecialPowers.pushPrefEnv(
+      {
+        set: [
+          ["layout.css.forced-colors.enabled", false],
+        ],
+      },
+      r
+    );
+  });
+  expectParseable("(forced-colors: none)");
+  expectParseable("(forced-colors: active)");
+  expectParseable("(forced-colors)");
+  SimpleTest.finish();
+}
+
 function expect(q, shouldBeParseable) {
   const NOT_PARSEABLE_TEXT = "@media screen, not all {\n}";
 
@@ -63,5 +82,11 @@ expectParseable("(prefers-contrast: no-preference)")
 expectParseable("(prefers-contrast: less)");
 expectParseable("(prefers-contrast)")
 
+expectParseable("(forced-colors: none)");
+expectParseable("(forced-colors: active)");
+expectParseable("(forced-colors)");
+
 expectNonParseable("(-moz-os-version: )");
+
+testWithPref();
 </script>
