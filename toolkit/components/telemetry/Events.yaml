@@ -172,7 +172,7 @@ addonsManager:
         The method used by the source to install the add-on (included when the source can use more than one,
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method),
         one of "amWebAPI", "drag-and-drop", "installTrigger", "install-from-file", "link",
-        "management-webext-api", "sideload", "url".
+        "management-webext-api", "sideload", "url", "product-updates".
       num_strings: The number of permission description strings in the extension permission doorhanger
       updated_from: Determine if an update has been requested by the user or the application ("app" / "user")
       step: >
