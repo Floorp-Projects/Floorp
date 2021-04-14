@@ -997,37 +997,44 @@ var SessionStoreInternal = {
     }
   },
 
-  // Create a sHistoryListener and register it.
-  // We also need to save the SHistoryLister into this._browserSHistoryListener.
+  // Create a new SessionHistory listener on the provided browser element and
+  // save a reference to that listener on the _browserSHistoryListener map.
   addSHistoryListener(aBrowser) {
-    function SHistoryListener(browser) {
-      browser.browsingContext.sessionHistory.addSHistoryListener(this);
-
-      this.browserId = browser.browsingContext.browserId;
-      this._fromIdx = kNoIndex;
-      this._sHistoryChanges = false;
-      this._permanentKey = browser.permanentKey;
-      if (browser.currentURI && browser.ownerGlobal) {
-        this._lastKnownBody = browser.ownerGlobal.document.body;
+    class SHistoryListener {
+      constructor(browser) {
+        this._browserId = browser.browsingContext.browserId;
+        this._fromIndex = kNoIndex;
+        this._permanentKey = browser.permanentKey;
       }
-    }
-    SHistoryListener.prototype = {
-      QueryInterface: ChromeUtils.generateQI([
-        "nsISHistoryListener",
-        "nsISupportsWeakReference",
-      ]),
-
-      notifySHistoryChanges(index) {
-        if (this._fromIdx <= index) {
-          // If we already know that we need to update history from index N we can ignore any changes
-          // that happened with an element with index larger than N.
-          // Note: initially we use kNoIndex which is MAX_SAFE_INTEGER which means we don't ignore anything
-          // here, and in case of navigation in the history back and forth we use kLastIndex which ignores
+      uninstall() {
+        let bc = BrowsingContext.getCurrentTopByBrowserId(this._browserId);
+        if (bc?.sessionHistory) {
+          bc.sessionHistory.removeSHistoryListener(this);
+        }
+        SessionStoreInternal._browserSHistoryListener.delete(
+          this._permanentKey
+        );
+      }
+      reset() {
+        this._fromIndex = kNoIndex;
+      }
+      didCollect() {
+        return this._fromIndex !== kNoIndex;
+      }
+      collectFrom(index) {
+        if (this._fromIndex <= index) {
+          // If we already know that we need to update history from index N we
+          // can ignore any changes that happened with an element with index
+          // larger than N.
+          //
+          // Note: initially we use kNoIndex which is MAX_SAFE_INTEGER which
+          // means we don't ignore anything here, and in case of navigation in
+          // the history back and forth cases we use kLastIndex which ignores
           // only the subsequent navigations, but not any new elements added.
           return;
         }
 
-        let browser = BrowsingContext.getCurrentTopByBrowserId(this.browserId)
+        let browser = BrowsingContext.getCurrentTopByBrowserId(this._browserId)
           ?.embedderElement;
 
         if (!browser) {
@@ -1035,70 +1042,57 @@ var SessionStoreInternal = {
           return;
         }
 
-        if (!this._sHistoryChanges) {
-          browser.frameLoader.requestSHistoryUpdate(/*aImmediately*/ false);
-          this._sHistoryChanges = true;
+        if (!this.didCollect()) {
+          browser.frameLoader.requestSHistoryUpdate(/* aImmediately */ false);
         }
-        this._fromIdx = index;
-        if (browser.currentURI && browser.ownerGlobal) {
-          this._lastKnownBody = browser.ownerGlobal.document.body;
-        }
-      },
 
-      uninstall() {
-        let bc = BrowsingContext.getCurrentTopByBrowserId(this.browserId);
-
-        if (bc?.sessionHistory) {
-          bc.sessionHistory.removeSHistoryListener(this);
-        }
-        SessionStoreInternal._browserSHistoryListener.delete(
-          this._permanentKey
-        );
-      },
-
+        this._fromIndex = index;
+      }
       OnHistoryNewEntry(newURI, oldIndex) {
-        // We use oldIndex - 1 to collect the current entry as well. This makes sure to
-        // collect any changes that were made to the entry while the document was active.
-        this.notifySHistoryChanges(oldIndex == -1 ? oldIndex : oldIndex - 1);
-      },
-
+        // We use oldIndex - 1 to collect the current entry as well. This makes
+        // sure to collect any changes that were made to the entry while the
+        // document was active.
+        this.collectFrom(oldIndex == -1 ? oldIndex : oldIndex - 1);
+      }
       OnHistoryGotoIndex() {
-        this.notifySHistoryChanges(kLastIndex);
-      },
+        this.collectFrom(kLastIndex);
+      }
       OnHistoryPurge() {
-        this.notifySHistoryChanges(-1);
-      },
-
+        this.collectFrom(-1);
+      }
       OnHistoryReload() {
-        this.notifySHistoryChanges(-1);
+        this.collectFrom(-1);
         return true;
-      },
-
+      }
       OnHistoryReplaceEntry() {
-        this.notifySHistoryChanges(-1);
-      },
-    };
+        this.collectFrom(-1);
+      }
+    }
+    SHistoryListener.prototype.QueryInterface = ChromeUtils.generateQI([
+      "nsISHistoryListener",
+      "nsISupportsWeakReference",
+    ]);
 
-    // Don't bother registering another listener if we already have one for this
-    // browser. We would've already updated the listener's state in response to
-    // the history event that was triggered by the navigation.
-    if (this._browserSHistoryListener.has(aBrowser.permanentKey)) {
-      return;
+    if (!Services.appinfo.sessionHistoryInParent) {
+      throw new Error("This function should only be used with SHIP");
     }
 
-    // XXX: When can this happen?
-    if (!aBrowser.browsingContext?.sessionHistory) {
-      throw new Error("no SessionHistory object");
-    }
+    if (
+      aBrowser &&
+      aBrowser.browsingContext?.sessionHistory &&
+      !this._browserSHistoryListener.has(aBrowser.permanentKey)
+    ) {
+      let listener = new SHistoryListener(aBrowser);
+      aBrowser.browsingContext.sessionHistory.addSHistoryListener(listener);
+      this._browserSHistoryListener.set(aBrowser.permanentKey, listener);
 
-    let listener = new SHistoryListener(aBrowser);
-    this._browserSHistoryListener.set(aBrowser.permanentKey, listener);
-
-    // Collect data if we start with a non-empty shistory.
-    let uri = aBrowser.currentURI.displaySpec;
-    let history = aBrowser.frameLoader.browsingContext.sessionHistory;
-    if (uri != "about:blank" || history.count != 0) {
-      aBrowser.frameLoader.requestSHistoryUpdate(/*aImmediately*/ true);
+      // Immediately collect data if we start with a non-empty SHistory.
+      if (
+        aBrowser.currentURI.spec !== "about:blank" ||
+        aBrowser.browsingContext.sessionHistory.count !== 0
+      ) {
+        aBrowser.frameLoader?.requestSHistoryUpdate(/* aImmediately */ true);
+      }
     }
   },
 
@@ -1235,62 +1229,42 @@ var SessionStoreInternal = {
       return;
     }
 
-    let sHistoryChangedInListener = false;
-    let listener = this._browserSHistoryListener.get(aBrowser.permanentKey);
-    if (listener) {
-      sHistoryChangedInListener = listener._sHistoryChanges;
-    }
-
-    if (aData.sHistoryNeeded || sHistoryChangedInListener) {
-      if (!listener) {
-        debug(
-          "updateSessionStoreFromTablistener() with aData.sHistoryNeeded, but no SHlistener. Add again!!!"
-        );
+    if (
+      Services.appinfo.sessionHistoryInParent &&
+      aBrowsingContext === aBrowsingContext.top
+    ) {
+      if (!this._browserSHistoryListener.has(aBrowser.permanentKey)) {
         this.addSHistoryListener(aBrowser);
-        listener = this._browserSHistoryListener.get(aBrowser.permanentKey);
+      }
+      let listener = this._browserSHistoryListener.get(aBrowser.permanentKey);
+      if (!listener) {
+        throw new Error("failed to create SHistoryListener");
       }
 
-      if (listener) {
-        if (!aData.sHistoryNeeded && listener._fromIdx == kNoIndex) {
-          // No shistory changes needed.
-          listener._sHistoryChanges = false;
-        } else if (aBrowsingContext.sessionHistory) {
-          let uri = aBrowsingContext.currentURI?.displaySpec;
-          let body =
-            aBrowser.ownerGlobal?.document.body ?? listener._lastKnownBody;
-          // If aData.sHistoryNeeded we need to collect all session
-          // history entries, because with SHIP this indicates that we
-          // either saw 'DOMTitleChanged' in
-          // mozilla::dom::TabListener::HandleEvent or
-          // 'OnDocumentStart/OnDocumentEnd' was called on
-          // mozilla::dom::ContentSessionStore, and both needs a full
-          // collect.
-          aData.data.historychange = SessionHistory.collectFromParent(
-            uri,
-            body,
-            aBrowsingContext.sessionHistory,
-            listener._sHistoryChanges && !aData.sHistoryNeeded
-              ? listener._fromIdx
-              : -1
-          );
-          listener._sHistoryChanges = false;
-          listener._fromIdx = kNoIndex;
-        } else {
-          debug(
-            "updateSessionStoreFromTablistener() with sHistoryNeeded, but no sessionHistory.\n"
-          );
+      let needsFullCollect = !!aData.sHistoryNeeded;
+      if (needsFullCollect || listener.didCollect()) {
+        // If |needsFullCollect| we need to collect all session history entries,
+        // because with SHIP this indicates that we either saw 'DOMTitleChanged'
+        // in mozilla::dom::TabListener::HandleEvent or 'OnDocument{Start,End}'
+        // was called on mozilla::dom::ContentSessionStore, and both need a full
+        // collect.
+        let fromIndex = -1;
+        if (listener.didCollect() && !needsFullCollect) {
+          fromIndex = listener._fromIndex;
         }
-      } else {
-        debug(
-          "updateSessionStoreFromTablistener() with sHistoryNeeded, but no sHlistener.\n"
+
+        aData.data.historychange = SessionHistory.collectFromParent(
+          aBrowsingContext.currentURI?.spec,
+          true, // Bug 1704574
+          aBrowsingContext.sessionHistory,
+          fromIndex
         );
+
+        listener.reset();
       }
     }
 
-    if ("sHistoryNeeded" in aData) {
-      delete aData.sHistoryNeeded;
-    }
-
+    delete aData.sHistoryNeeded; // Avoid saving this to disk.
     TabState.update(aBrowser, aData);
     let win = aBrowser.ownerGlobal;
     this.saveStateDelayed(win);
