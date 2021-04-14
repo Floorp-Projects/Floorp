@@ -500,15 +500,15 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
       NS_IMETHOD Run() override {
         MOZ_ASSERT(NS_IsMainThread());
-        sHighPriorityEnabled = mozilla::BrowserTabsRemoteAutostart();
+        sVsyncPriorityEnabled = mozilla::BrowserTabsRemoteAutostart();
 
         mObserver->NotifyParentProcessVsync();
         return NS_OK;
       }
 
       NS_IMETHOD GetPriority(uint32_t* aPriority) override {
-        *aPriority = sHighPriorityEnabled
-                         ? nsIRunnablePriority::PRIORITY_HIGH
+        *aPriority = sVsyncPriorityEnabled
+                         ? nsIRunnablePriority::PRIORITY_VSYNC
                          : nsIRunnablePriority::PRIORITY_NORMAL;
         return NS_OK;
       }
@@ -516,7 +516,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
      private:
       ~ParentProcessVsyncNotifier() = default;
       RefPtr<RefreshDriverVsyncObserver> mObserver;
-      static mozilla::Atomic<bool> sHighPriorityEnabled;
+      static mozilla::Atomic<bool> sVsyncPriorityEnabled;
     };
 
     bool NotifyVsync(const VsyncEvent& aVsync) override {
@@ -794,7 +794,7 @@ NS_IMPL_ISUPPORTS_INHERITED(
     Runnable, nsIRunnablePriority)
 
 mozilla::Atomic<bool> VsyncRefreshDriverTimer::RefreshDriverVsyncObserver::
-    ParentProcessVsyncNotifier::sHighPriorityEnabled(false);
+    ParentProcessVsyncNotifier::sVsyncPriorityEnabled(false);
 
 /**
  * Since the content process takes some time to setup
@@ -1461,7 +1461,7 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
                              self->mActiveTimer->MostRecentRefresh());
                 }
               }),
-          EventQueuePriority::High);
+          EventQueuePriority::Vsync);
     }
   }
 
