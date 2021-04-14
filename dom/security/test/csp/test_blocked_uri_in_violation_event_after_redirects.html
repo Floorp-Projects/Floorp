@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1542194 - Check blockedURI in violation reports after redirects</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id='testframe'></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let seenViolations = 0;
+let expectedViolations = 3;
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+
+  seenViolations++;
+
+  let blockedURI = event.data.blockedURI;
+
+  if (blockedURI.includes("test1")) {
+    is(blockedURI,
+       "http://example.com/tests/dom/security/test/csp/file_blocked_uri_in_violation_event_after_redirects.sjs?test1a",
+       "Test 1 should be the URI before redirect");
+  } else if (blockedURI.includes("test2")) {
+    is(blockedURI,
+      "http://test2.example.com/",
+      "Test 2 should be the redirected pre-path URI");
+  } else if (blockedURI.includes("test3")) {
+    is(blockedURI,
+      "http://test3.example.com/",
+      "Test 3 should be the redirected pre-path URI");
+  } else {
+  	ok(false, "sanity: how can we end up here?");
+  }
+
+  if (seenViolations < expectedViolations) {
+  	return;
+  }
+
+  window.removeEventListener("message", receiveMessage);
+  SimpleTest.finish();
+}
+
+let testframe = document.getElementById("testframe");
+testframe.src = "file_blocked_uri_in_violation_event_after_redirects.html";
+
+</script>
+</body>
+</html>
