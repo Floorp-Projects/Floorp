@@ -826,6 +826,18 @@ void CompileTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   state.condVar().notify_one(); /* failed or finished */
 }
 
+ThreadType CompileTask::threadType() {
+  switch (compilerEnv.mode()) {
+    case CompileMode::Once:
+    case CompileMode::Tier1:
+      return ThreadType::THREAD_TYPE_WASM_COMPILE_TIER1;
+    case CompileMode::Tier2:
+      return ThreadType::THREAD_TYPE_WASM_COMPILE_TIER2;
+    default:
+      MOZ_CRASH();
+  }
+}
+
 bool ModuleGenerator::locallyCompileCurrentTask() {
   if (!ExecuteCompileTask(currentTask_, error_)) {
     return false;

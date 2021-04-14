@@ -80,7 +80,7 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask {
   }
 
   ThreadType threadType() override {
-    return ThreadType::THREAD_TYPE_WASM_TIER2;
+    return ThreadType::THREAD_TYPE_WASM_GENERATOR_TIER2;
   }
 };
 

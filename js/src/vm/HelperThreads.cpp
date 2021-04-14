@@ -1655,7 +1655,8 @@ size_t GlobalHelperThreadState::maxIonCompilationThreads() const {
 }
 
 size_t GlobalHelperThreadState::maxWasmCompilationThreads() const {
-  if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM)) {
+  if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER1) ||
+      IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER2)) {
     return 1;
   }
   return cpuCount;
@@ -1666,7 +1667,8 @@ size_t GlobalHelperThreadState::maxWasmTier2GeneratorThreads() const {
 }
 
 size_t GlobalHelperThreadState::maxPromiseHelperThreads() const {
-  if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM)) {
+  if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER1) ||
+      IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER2)) {
     return 1;
   }
   return cpuCount;
@@ -1737,21 +1739,24 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetWasmCompile(
   size_t physCoresAvailable = size_t(ceil(cpuCount / 3.0));
 
   size_t threads;
+  ThreadType threadType;
   if (mode == wasm::CompileMode::Tier2) {
     if (tier2oversubscribed) {
       threads = maxWasmCompilationThreads();
     } else {
       threads = physCoresAvailable;
     }
+    threadType = THREAD_TYPE_WASM_COMPILE_TIER2;
   } else {
     if (tier2oversubscribed) {
       threads = 0;
     } else {
       threads = maxWasmCompilationThreads();
     }
+    threadType = THREAD_TYPE_WASM_COMPILE_TIER1;
   }
 
-  if (!threads || !checkTaskThreadLimit(THREAD_TYPE_WASM, threads, lock)) {
+  if (!threads || !checkTaskThreadLimit(threadType, threads, lock)) {
     return nullptr;
   }
 
@@ -1761,7 +1766,7 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetWasmCompile(
 HelperThreadTask* GlobalHelperThreadState::maybeGetWasmTier2GeneratorTask(
     const AutoLockHelperThreadState& lock) {
   if (wasmTier2GeneratorWorklist(lock).empty() ||
-      !checkTaskThreadLimit(THREAD_TYPE_WASM_TIER2,
+      !checkTaskThreadLimit(THREAD_TYPE_WASM_GENERATOR_TIER2,
                             maxWasmTier2GeneratorThreads(),
                             /*isMaster=*/true, lock)) {
     return nullptr;
