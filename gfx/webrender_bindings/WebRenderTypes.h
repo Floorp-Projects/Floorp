@@ -766,6 +766,7 @@ enum class WebRenderError : int8_t {
   MAKE_CURRENT,
   RENDER,
   NEW_SURFACE,
+  BEGIN_DRAW,
   VIDEO_OVERLAY,
   EXCESSIVE_RESETS,
 
