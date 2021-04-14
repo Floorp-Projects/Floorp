@@ -540,11 +540,6 @@ var gMainPane = {
         "media-keyboard-control";
       let link = document.getElementById("mediaControlLearnMore");
       link.setAttribute("href", mediaControlLearnMoreUrl);
-      setEventListener(
-        "mediaControlToggleEnabled",
-        "command",
-        gMainPane.updateMediaControlTelemetry
-      );
     }
 
     // Initializes the fonts dropdowns displayed in this pane.
@@ -1547,14 +1542,6 @@ var gMainPane = {
    */
   showContainerSettings() {
     gotoPref("containers");
-  },
-
-  updateMediaControlTelemetry() {
-    const telemetry = Services.telemetry.getHistogramById(
-      "MEDIA_CONTROL_SETTING_CHANGE"
-    );
-    const checkbox = document.getElementById("mediaControlToggleEnabled");
-    telemetry.add(checkbox.checked ? "EnableFromUI" : "DisableFromUI");
   },
 
   /**
