@@ -1397,7 +1397,7 @@ pref("prompts.windowPromptSubDialog", true);
 pref("browser.newtab.preload", true);
 
 // Preference to enable the entire new newtab experience at once.
-pref("browser.newtabpage.activity-stream.newNewtabExperience.enabled", true);
+pref("browser.newtabpage.activity-stream.newNewtabExperience.enabled", false);
 
 // A preference which allows us to enable the fly out customization overlay
 // on the newtab page.
@@ -1471,7 +1471,7 @@ pref("browser.newtabpage.activity-stream.feeds.section.topstories", true);
 // The pref controls if search hand-off is enabled for Activity Stream.
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", true);
 
-pref("browser.newtabpage.activity-stream.logowordmark.alwaysVisible", true);
+pref("browser.newtabpage.activity-stream.logowordmark.alwaysVisible", false);
 
 // Used to display triplet cards on newtab
 pref("trailhead.firstrun.newtab.triplets", "");
