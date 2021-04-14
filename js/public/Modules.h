@@ -34,7 +34,7 @@ union Utf8Unit;
 namespace JS {
 
 using ModuleResolveHook = JSObject* (*)(JSContext*, Handle<Value>,
-                                        Handle<JSObject*>);
+                                        Handle<JSString*>);
 
 /**
  * Get the HostResolveImportedModule hook for the runtime.
@@ -64,7 +64,7 @@ extern JS_PUBLIC_API void SetModuleMetadataHook(JSRuntime* rt,
 
 using ModuleDynamicImportHook = bool (*)(JSContext* cx,
                                          Handle<Value> referencingPrivate,
-                                         Handle<JSObject*> moduleRequest,
+                                         Handle<JSString*> specifier,
                                          Handle<JSObject*> promise);
 
 /**
@@ -97,7 +97,7 @@ enum class DynamicImportStatus { Failed = 0, Ok };
  */
 extern JS_PUBLIC_API bool FinishDynamicModuleImport(
     JSContext* cx, Handle<JSObject*> evaluationPromise,
-    Handle<Value> referencingPrivate, Handle<JSObject*> moduleRequest,
+    Handle<Value> referencingPrivate, Handle<JSString*> specifier,
     Handle<JSObject*> promise);
 
 /**
@@ -111,7 +111,7 @@ extern JS_PUBLIC_API bool FinishDynamicModuleImport(
  */
 extern JS_PUBLIC_API bool FinishDynamicModuleImport_NoTLA(
     JSContext* cx, DynamicImportStatus status, Handle<Value> referencingPrivate,
-    Handle<JSObject*> moduleRequest, Handle<JSObject*> promise);
+    Handle<JSString*> specifier, Handle<JSObject*> promise);
 
 /**
  * Parse the given source buffer as a module in the scope of the current global
@@ -210,11 +210,6 @@ extern JS_PUBLIC_API void GetRequestedModuleSourcePos(
  * Get the top-level script for a module which has not yet been executed.
  */
 extern JS_PUBLIC_API JSScript* GetModuleScript(Handle<JSObject*> moduleRecord);
-
-extern JS_PUBLIC_API JSObject* CreateModuleRequest(
-    JSContext* cx, Handle<JSString*> specifierArg);
-extern JS_PUBLIC_API JSString* GetModuleRequestSpecifier(
-    JSContext* cx, Handle<JSObject*> moduleRequestArg);
 
 }  // namespace JS
 
