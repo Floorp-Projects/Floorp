@@ -44,7 +44,7 @@ use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlen
 use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDisplayItem, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
-use api::{ReferenceTransformBinding, Rotation, FillRule};
+use api::{ReferenceTransformBinding, Rotation};
 use api::units::*;
 use crate::image_tiling::simplify_repeated_primitive;
 use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind};
@@ -1387,8 +1387,6 @@ impl<'a> SceneBuilder<'a> {
                     info.id,
                     &info.parent_space_and_clip,
                     &image_mask,
-                    info.fill_rule,
-                    item.points(),
                 );
             }
             DisplayItem::RoundedRectClip(ref info) => {
@@ -1491,8 +1489,7 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::SetGradientStops |
             DisplayItem::SetFilterOps |
             DisplayItem::SetFilterData |
-            DisplayItem::SetFilterPrimitives |
-            DisplayItem::SetPoints => {}
+            DisplayItem::SetFilterPrimitives => {}
 
             // Special items that are handled in the parent method
             DisplayItem::PushStackingContext(..) |
@@ -2329,8 +2326,6 @@ impl<'a> SceneBuilder<'a> {
         new_node_id: ClipId,
         space_and_clip: &SpaceAndClipInfo,
         image_mask: &ImageMask,
-        fill_rule: FillRule,
-        points_range: ItemRange<LayoutPoint>,
     ) {
         let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
 
@@ -2338,9 +2333,8 @@ impl<'a> SceneBuilder<'a> {
             &image_mask.rect,
             spatial_node_index,
         );
-        let points = points_range.iter().collect();
         let item = ClipItemKey {
-            kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect, points, fill_rule),
+            kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect),
         };
 
         let handle = self
