@@ -35,7 +35,7 @@ function bookmarksMenuPanelShown() {
  * controller of some view. Returns a Promise that resolves as soon
  * as the context menu is closed.
  *
- * @param aItemWithContextMenu the item that we need to synthesize hte
+ * @param aItemWithContextMenu the item that we need to synthesize the
  *        right click on in order to open the context menu.
  */
 function checkPlacesContextMenu(aItemWithContextMenu) {
@@ -56,7 +56,11 @@ function checkPlacesContextMenu(aItemWithContextMenu) {
     );
 
     info("Closing context menu");
-    await closePopup(contextMenu);
+    let hiddenPromise = popupHidden(contextMenu);
+    // Use hidePopup instead of the closePopup helper because macOS native
+    // context menus can't be closed by synthesized ESC in automation.
+    contextMenu.hidePopup();
+    await hiddenPromise;
   })();
 }
 
