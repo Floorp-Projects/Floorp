@@ -13,6 +13,7 @@
 #  endif
 #  define MOZ_CONSTEXPR
 #else  // __cplusplus
+#  include "mozilla/Attributes.h"
 #  define MOZ_CONSTEXPR constexpr
 #endif
 /*

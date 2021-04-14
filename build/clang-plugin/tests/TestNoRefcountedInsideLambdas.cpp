@@ -1,3 +1,5 @@
+#include <mozilla/StaticAnalysisFunctions.h>
+
 #include <functional>
 #define MOZ_STRONG_REF
 #define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
@@ -666,6 +668,9 @@ R::privateMethod() {
   std::function<void()>([&]() {
     privateMethod();
   });
+
+  std::function<void()>(
+      [instance = MOZ_KnownLive(this)]() { instance->privateMethod(); });
 
   // It should be OK to go through `this` if we have captured a reference to it.
   std::function<void()>([this, self]() {
