@@ -18,12 +18,14 @@ add_task(async function test() {
     "http://mochi.test:8888/browser/dom/xhr/tests/browser_xhr_onchange_leak.html";
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let browser = gBrowser.selectedBrowser;
-  let done = await ContentTask.spawn(browser, null, async function() {
-    let promise = ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true);
-    content.location = "http://mochi.test:8888/";
-    await promise;
-    return true;
-  });
-  is(done, true, "need to check something");
+  let pageShowPromise = BrowserTestUtils.waitForContentEvent(
+    browser,
+    "pageshow",
+    true
+  );
+  BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/");
+  await pageShowPromise;
+
+  ok(pageShowPromise, "need to check something");
   BrowserTestUtils.removeTab(newTab);
 });
