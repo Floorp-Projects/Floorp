@@ -287,9 +287,15 @@ async function runBackgroundTask() {
     return EXIT_CODE.DEFAULT_PROFILE_CANNOT_BE_READ;
   }
 
-  // Now that we have prefs from the default profile, we can configure Firefox-on-Glean.  The final
-  // leaf is for the benefit of `FileUtils`.  To help debugging, use the `GLEAN_LOG_PINGS` and
-  // `GLEAN_DEBUG_VIEW_TAG` environment variables: see
+  // Now that we have prefs from the default profile, we can configure Firefox-on-Glean.
+
+  // Glean has a preinit queue for metric operations that happen before init, so
+  // this is safe.  We want to have these metrics set before the first possible
+  // time we might send (built-in) pings.
+  await BackgroundUpdate.recordUpdateEnvironment();
+
+  // The final leaf is for the benefit of `FileUtils`.  To help debugging, use
+  // the `GLEAN_LOG_PINGS` and `GLEAN_DEBUG_VIEW_TAG` environment variables: see
   // https://mozilla.github.io/glean/book/user/debugging/index.html.
   let gleanRoot = FileUtils.getFile("UpdRootD", [
     "backgroundupdate",
@@ -300,7 +306,7 @@ async function runBackgroundTask() {
   let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
   FOG.initializeFOG(gleanRoot);
 
-  // For convenience, mirror our loglevel to a few other places.
+  // For convenience, mirror our loglevel.
   Services.prefs.setCharPref(
     "toolkit.backgroundtasks.loglevel",
     Services.prefs.getCharPref("app.update.background.loglevel", "error")
