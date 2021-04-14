@@ -480,6 +480,10 @@ bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
     wantRestart = gfxPlatform::FallbackFromAcceleration(
         gfx::FeatureStatus::Unavailable, "Failed to create new surface",
         "FEATURE_FAILURE_WEBRENDER_NEW_SURFACE"_ns);
+  } else if (aError == wr::WebRenderError::BEGIN_DRAW) {
+    wantRestart = gfxPlatform::FallbackFromAcceleration(
+        gfx::FeatureStatus::Unavailable, "BeginDraw() failed",
+        "FEATURE_FAILURE_WEBRENDER_BEGIN_DRAW"_ns);
   } else if (aError == wr::WebRenderError::EXCESSIVE_RESETS) {
     wantRestart = gfxPlatform::FallbackFromAcceleration(
         gfx::FeatureStatus::Unavailable, "Device resets exceeded threshold",
