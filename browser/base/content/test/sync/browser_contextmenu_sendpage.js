@@ -431,12 +431,13 @@ async function openContentContextMenu(selector, openSubmenuId = null) {
   await awaitPopupShown;
 
   if (openSubmenuId) {
-    const menuPopup = document.getElementById(openSubmenuId).menupopup;
+    const menu = document.getElementById(openSubmenuId);
+    const menuPopup = menu.menupopup;
     const menuPopupPromise = BrowserTestUtils.waitForEvent(
       menuPopup,
       "popupshown"
     );
-    menuPopup.openPopup();
+    menu.openMenu(true);
     await menuPopupPromise;
   }
 }
