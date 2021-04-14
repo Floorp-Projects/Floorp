@@ -4598,9 +4598,6 @@ ContentPermissionPrompt.prototype = {
 
 var DefaultBrowserCheck = {
   async prompt(win) {
-    const shellService = win.getShellService();
-    const needPin = await shellService.doesAppNeedPin();
-
     win.MozXULElement.insertFTLIfNeeded("branding/brand.ftl");
     win.MozXULElement.insertFTLIfNeeded(
       "browser/defaultBrowserNotification.ftl"
@@ -4609,22 +4606,10 @@ var DefaultBrowserCheck = {
     // string values
     let [promptTitle, promptMessage, askLabel, yesButton, notNowButton] = (
       await win.document.l10n.formatMessages([
-        {
-          id: needPin
-            ? "default-browser-prompt-title-pin"
-            : "default-browser-prompt-title-alt",
-        },
-        {
-          id: needPin
-            ? "default-browser-prompt-message-pin"
-            : "default-browser-prompt-message-alt",
-        },
+        { id: "default-browser-prompt-title-alt" },
+        { id: "default-browser-prompt-message-alt" },
         { id: "default-browser-prompt-checkbox-label" },
-        {
-          id: needPin
-            ? "default-browser-prompt-button-primary-pin"
-            : "default-browser-prompt-button-primary-alt",
-        },
+        { id: "default-browser-prompt-button-primary-alt" },
         { id: "default-browser-prompt-button-secondary" },
       ])
     ).map(({ value }) => value);
@@ -4647,10 +4632,9 @@ var DefaultBrowserCheck = {
       stopAsk
     );
     if (rv == 0) {
-      shellService.setAsDefault();
-      shellService.pinToTaskbar();
+      win.getShellService().setAsDefault();
     } else if (stopAsk.value) {
-      shellService.shouldCheckDefaultBrowser = false;
+      win.getShellService().shouldCheckDefaultBrowser = false;
     }
 
     try {
