@@ -59,7 +59,10 @@ use crate::viaduct_uploader::ViaductUploader;
 /// This assembles client information and the Glean configuration and then initializes the global
 /// Glean instance.
 #[no_mangle]
-pub unsafe extern "C" fn fog_init(data_path_override: &nsACString) -> nsresult {
+pub unsafe extern "C" fn fog_init(
+    data_path_override: &nsACString,
+    app_id_override: &nsACString,
+) -> nsresult {
     fog::metrics::fog::initialization.start();
 
     log::debug!("Initializing FOG.");
@@ -110,11 +113,17 @@ pub unsafe extern "C" fn fog_init(data_path_override: &nsACString) -> nsresult {
         String::from(SERVER)
     };
 
+    let application_id = if app_id_override.is_empty() {
+        "firefox.desktop".to_string()
+    } else {
+        app_id_override.to_utf8().to_string()
+    };
+
     let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
     let configuration = Configuration {
         upload_enabled,
         data_path,
-        application_id: "firefox.desktop".to_string(),
+        application_id,
         max_events: None,
         delay_ping_lifetime_io: false,
         channel: Some(channel),
