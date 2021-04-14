@@ -457,22 +457,8 @@ nsresult nsHttpChannel::PrepareToConnect() {
   // notify "http-on-modify-request" observers
   CallOnModifyRequestObservers();
 
-  if (mCanceled) {
-    return mStatus;
-  }
-
-  if (mSuspendCount) {
-    // We abandon the connection here if there was one.
-    LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
-    MOZ_ASSERT(!mCallOnResume);
-    mCallOnResume = [](nsHttpChannel* self) {
-      self->HandleOnBeforeConnect();
-      return NS_OK;
-    };
-    return NS_OK;
-  }
-
-  return OnBeforeConnect();
+  return CallOrWaitForResume(
+      [](auto* self) { return self->OnBeforeConnect(); });
 }
 
 void nsHttpChannel::HandleContinueCancellingByURLClassifier(
@@ -496,27 +482,6 @@ void nsHttpChannel::HandleContinueCancellingByURLClassifier(
   LOG(("nsHttpChannel::HandleContinueCancellingByURLClassifier [this=%p]\n",
        this));
   ContinueCancellingByURLClassifier(aErrorCode);
-}
-
-void nsHttpChannel::HandleOnBeforeConnect() {
-  MOZ_ASSERT(!mCallOnResume, "How did that happen?");
-  nsresult rv;
-
-  if (mSuspendCount) {
-    LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
-    mCallOnResume = [](nsHttpChannel* self) {
-      self->HandleOnBeforeConnect();
-      return NS_OK;
-    };
-    return;
-  }
-
-  LOG(("nsHttpChannel::HandleOnBeforeConnect [this=%p]\n", this));
-  rv = OnBeforeConnect();
-  if (NS_FAILED(rv)) {
-    CloseCacheEntry(false);
-    Unused << AsyncAbort(rv);
-  }
 }
 
 nsresult nsHttpChannel::OnBeforeConnect() {
@@ -739,44 +704,10 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   // notify "http-on-before-connect" observers
   gHttpHandler->OnBeforeConnect(this);
 
-  // Check if request was cancelled during http-on-before-connect.
-  if (mCanceled) {
-    return mStatus;
-  }
-
-  if (mSuspendCount) {
-    // We abandon the connection here if there was one.
-    LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
-    MOZ_ASSERT(!mCallOnResume);
-    mCallOnResume = [](nsHttpChannel* self) {
-      self->OnBeforeConnectContinue();
-      return NS_OK;
-    };
-    return NS_OK;
-  }
-
-  return Connect();
-}
-
-void nsHttpChannel::OnBeforeConnectContinue() {
-  MOZ_ASSERT(!mCallOnResume, "How did that happen?");
-  nsresult rv;
-
-  if (mSuspendCount) {
-    LOG(("Waiting until resume OnBeforeConnect [this=%p]\n", this));
-    mCallOnResume = [](nsHttpChannel* self) {
-      self->OnBeforeConnectContinue();
-      return NS_OK;
-    };
-    return;
-  }
-
-  LOG(("nsHttpChannel::OnBeforeConnectContinue [this=%p]\n", this));
-  rv = Connect();
-  if (NS_FAILED(rv)) {
-    CloseCacheEntry(false);
-    Unused << AsyncAbort(rv);
-  }
+  return CallOrWaitForResume(
+      [](auto* self) {
+        return self->Connect();
+      });
 }
 
 nsresult nsHttpChannel::Connect() {
@@ -6093,7 +6024,7 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
   }
 
   mCanceled = true;
-  mStatus = status;
+  mStatus = NS_FAILED(status) ? status : NS_ERROR_ABORT;
   if (mProxyRequest) mProxyRequest->Cancel(status);
   CancelNetworkRequest(status);
   mCacheInputStream.CloseAndRelease();
@@ -6331,7 +6262,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   if (mCanceled) {
     ReleaseListeners();
-    return mStatus;
+    return NS_FAILED(mStatus) ? mStatus : NS_ERROR_FAILURE;
   }
 
   if (MaybeWaitForUploadStreamLength(listener, nullptr)) {
@@ -6419,7 +6350,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   return NS_OK;
 }
 
-nsresult nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp) {
+void nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp) {
   // Added due to PauseTask/DelayHttpChannel
   if (mLoadGroup) mLoadGroup->AddRequest(this, nullptr);
 
@@ -6435,46 +6366,37 @@ nsresult nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp) {
   // just once and early, AsyncOpen is the best place.
   StoreCustomAuthHeader(mRequestHead.HasHeader(nsHttp::Authorization));
 
-  if (!NS_ShouldClassifyChannel(this)) {
-    return MaybeResolveProxyAndBeginConnect();
-  }
-
+  bool willCallback = false;
   // We are about to do an async lookup to check if the URI is a tracker. If
   // yes, this channel will be canceled by channel classifier.  Chances are the
   // lookup is not needed so CheckIsTrackerWithLocalTable() will return an
   // error and then we can MaybeResolveProxyAndBeginConnect() right away.
-  RefPtr<nsHttpChannel> self = this;
-  bool willCallback = NS_SUCCEEDED(
-      AsyncUrlChannelClassifier::CheckChannel(this, [self]() -> void {
-        nsCOMPtr<nsIURI> uri;
-        self->GetURI(getter_AddRefs(uri));
-        MOZ_ASSERT(uri);
+  if (NS_ShouldClassifyChannel(this)) {
+    RefPtr<nsHttpChannel> self = this;
+    willCallback = NS_SUCCEEDED(
+        AsyncUrlChannelClassifier::CheckChannel(this, [self]() -> void {
+          nsCOMPtr<nsIURI> uri;
+          self->GetURI(getter_AddRefs(uri));
+          MOZ_ASSERT(uri);
 
-        // Finish the AntiTracking Heuristic before BeginConnect().
-        FinishAntiTrackingRedirectHeuristic(self, uri);
+          // Finish the AntiTracking Heuristic before
+          // MaybeResolveProxyAndBeginConnect().
+          FinishAntiTrackingRedirectHeuristic(self, uri);
 
-        nsresult rv = self->MaybeResolveProxyAndBeginConnect();
-        if (NS_FAILED(rv)) {
-          // Since this error is thrown asynchronously so that the caller
-          // of BeginConnect() will not do clean up for us. We have to do
-          // it on our own.
-          self->CloseCacheEntry(false);
-          Unused << self->AsyncAbort(rv);
-        }
-      }));
+          self->MaybeResolveProxyAndBeginConnect();
+        }));
+  }
 
   if (!willCallback) {
     // We can do MaybeResolveProxyAndBeginConnect immediately if
     // CheckIsTrackerWithLocalTable is failed. Note that we don't need to
     // handle the failure because BeginConnect() will return synchronously and
     // the caller will be responsible for handling it.
-    return MaybeResolveProxyAndBeginConnect();
+    MaybeResolveProxyAndBeginConnect();
   }
-
-  return NS_OK;
 }
 
-nsresult nsHttpChannel::MaybeResolveProxyAndBeginConnect() {
+void nsHttpChannel::MaybeResolveProxyAndBeginConnect() {
   nsresult rv;
 
   // The common case for HTTP channels is to begin proxy resolution and return
@@ -6484,7 +6406,7 @@ nsresult nsHttpChannel::MaybeResolveProxyAndBeginConnect() {
   if (!mProxyInfo &&
       !(mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_NO_NETWORK_IO)) &&
       NS_SUCCEEDED(ResolveProxy())) {
-    return NS_OK;
+    return;
   }
 
   rv = BeginConnect();
@@ -6492,8 +6414,6 @@ nsresult nsHttpChannel::MaybeResolveProxyAndBeginConnect() {
     CloseCacheEntry(false);
     Unused << AsyncAbort(rv);
   }
-
-  return NS_OK;
 }
 
 nsresult nsHttpChannel::AsyncOpenOnTailUnblock() {
@@ -6533,7 +6453,7 @@ uint16_t nsHttpChannel::GetProxyDNSStrategy() {
 }
 
 // BeginConnect() SHOULD NOT call AsyncAbort(). AsyncAbort will be called by
-// functions that called BeginConnect if needed. Only AsyncOpenFinal,
+// functions that called BeginConnect if needed. Only
 // MaybeResolveProxyAndBeginConnect and OnProxyAvailable ever call
 // BeginConnect.
 nsresult nsHttpChannel::BeginConnect() {
@@ -6787,7 +6707,10 @@ nsresult nsHttpChannel::BeginConnect() {
     return NS_OK;
   }
 
-  rv = ContinueBeginConnectWithResult();
+  rv = CallOrWaitForResume(
+    [](nsHttpChannel* self) {
+      return self->PrepareToConnect();
+    });
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -7039,44 +6962,6 @@ nsHttpChannel::SetPriority(int32_t value) {
   }
 
   return NS_OK;
-}
-
-nsresult nsHttpChannel::ContinueBeginConnectWithResult() {
-  LOG(("nsHttpChannel::ContinueBeginConnectWithResult [this=%p]", this));
-  MOZ_ASSERT(!mCallOnResume, "How did that happen?");
-
-  nsresult rv;
-
-  if (mSuspendCount) {
-    LOG(("Waiting until resume to do async connect [this=%p]\n", this));
-    mCallOnResume = [](nsHttpChannel* self) {
-      self->ContinueBeginConnect();
-      return NS_OK;
-    };
-    rv = NS_OK;
-  } else if (mCanceled) {
-    // We may have been cancelled already, by nsChannelClassifier in that
-    // case, we should not send the request to the server
-    rv = mStatus;
-  } else {
-    rv = PrepareToConnect();
-  }
-
-  LOG(
-      ("nsHttpChannel::ContinueBeginConnectWithResult result [this=%p "
-       "rv=%" PRIx32 " mCanceled=%u]\n",
-       this, static_cast<uint32_t>(rv), static_cast<bool>(mCanceled)));
-  return rv;
-}
-
-void nsHttpChannel::ContinueBeginConnect() {
-  LOG(("nsHttpChannel::ContinueBeginConnect this=%p", this));
-
-  nsresult rv = ContinueBeginConnectWithResult();
-  if (NS_FAILED(rv)) {
-    CloseCacheEntry(false);
-    Unused << AsyncAbort(rv);
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -9800,16 +9685,20 @@ nsresult nsHttpChannel::TriggerNetwork() {
   return ContinueConnect();
 }
 
-nsresult nsHttpChannel::MaybeRaceCacheWithNetwork() {
+void nsHttpChannel::MaybeRaceCacheWithNetwork() {
   nsresult rv;
 
   nsCOMPtr<nsINetworkLinkService> netLinkSvc =
       do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   uint32_t linkType;
   rv = netLinkSvc->GetLinkType(&linkType);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   if (!(linkType == nsINetworkLinkService::LINK_TYPE_ETHERNET ||
 #ifndef MOZ_WIDGET_ANDROID
@@ -9818,22 +9707,22 @@ nsresult nsHttpChannel::MaybeRaceCacheWithNetwork() {
 #endif
         linkType == nsINetworkLinkService::LINK_TYPE_USB ||
         linkType == nsINetworkLinkService::LINK_TYPE_WIFI)) {
-    return NS_OK;
+    return;
   }
 
   // Don't trigger the network if the load flags say so.
   if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_NO_NETWORK_IO)) {
-    return NS_OK;
+    return;
   }
 
   // We must not race if the channel has a failure status code.
   if (NS_FAILED(mStatus)) {
-    return NS_OK;
+    return;
   }
 
   // If a CORS Preflight is required we must not race.
   if (LoadRequireCORSPreflight() && !LoadIsCorsPreflightDone()) {
-    return NS_OK;
+    return;
   }
 
   if (CacheFileUtils::CachePerfStats::IsCacheSlow()) {
@@ -9858,7 +9747,7 @@ nsresult nsHttpChannel::MaybeRaceCacheWithNetwork() {
   LOG(("nsHttpChannel::MaybeRaceCacheWithNetwork [this=%p, delay=%u]\n", this,
        mRaceDelay));
 
-  return TriggerNetworkWithDelay(mRaceDelay);
+  TriggerNetworkWithDelay(mRaceDelay);
 }
 
 NS_IMETHODIMP
