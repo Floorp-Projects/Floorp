@@ -403,12 +403,12 @@ class ScriptLoader final : public nsISupports {
    *
    * @param aReferencingPrivate A JS::Value which is either undefined
    *                            or contains a LoadedScript private pointer.
-   * @param aSpecifier The module specifier.
+   * @param aModuleRequest A module request object.
    * @param aModuleOut This is set to the module found.
    */
   static void ResolveImportedModule(JSContext* aCx,
                                     JS::Handle<JS::Value> aReferencingPrivate,
-                                    JS::Handle<JSString*> aSpecifier,
+                                    JS::Handle<JSObject*> aModuleRequest,
                                     JS::MutableHandle<JSObject*> aModuleOut);
 
   void StartDynamicImport(ModuleLoadRequest* aRequest);
