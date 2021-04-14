@@ -1734,10 +1734,6 @@ BrowserGlue.prototype = {
       this._updateAutoplayPref
     );
     Services.prefs.addObserver(
-      "media.hardwaremediakeys.enabled",
-      this._updateMediaControlPref
-    );
-    Services.prefs.addObserver(
       "privacy.trackingprotection",
       this._setPrefExpectations
     );
@@ -1756,16 +1752,6 @@ BrowserGlue.prototype = {
     if (blocked in labels) {
       telemetry.add(labels[blocked]);
     }
-  },
-
-  _updateMediaControlPref() {
-    const enabled = Services.prefs.getBoolPref(
-      "media.hardwaremediakeys.enabled"
-    );
-    const telemetry = Services.telemetry.getHistogramById(
-      "MEDIA_CONTROL_SETTING_CHANGE"
-    );
-    telemetry.add(enabled ? "EnableTotal" : "DisableTotal");
   },
 
   _setPrefExpectations() {
