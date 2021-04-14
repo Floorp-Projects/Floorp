@@ -1082,7 +1082,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(
           rv = OnPanBegin(panGestureInput);
           break;
         case PanGestureInput::PANGESTURE_PAN:
-          rv = OnPan(panGestureInput, true);
+          rv = OnPan(panGestureInput, FingersOnTouchpad::Yes);
           break;
         case PanGestureInput::PANGESTURE_END:
           rv = OnPanEnd(panGestureInput);
@@ -1091,7 +1091,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(
           rv = OnPanMomentumStart(panGestureInput);
           break;
         case PanGestureInput::PANGESTURE_MOMENTUMPAN:
-          rv = OnPan(panGestureInput, false);
+          rv = OnPan(panGestureInput, FingersOnTouchpad::No);
           break;
         case PanGestureInput::PANGESTURE_MOMENTUMEND:
           rv = OnPanMomentumEnd(panGestureInput);
@@ -2564,7 +2564,7 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(
   }
 
   // Call into OnPan in order to process any delta included in this event.
-  OnPan(aEvent, true);
+  OnPan(aEvent, FingersOnTouchpad::Yes);
 
   return nsEventStatus_eConsumeNoDefault;
 }
@@ -2639,12 +2639,12 @@ AsyncPanZoomController::GetDisplacementsForPanGesture(
   return {logicalPanDisplacement, physicalPanDisplacement};
 }
 
-nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
-                                            bool aFingersOnTouchpad) {
+nsEventStatus AsyncPanZoomController::OnPan(
+    const PanGestureInput& aEvent, FingersOnTouchpad aFingersOnTouchpad) {
   APZC_LOG("%p got a pan-pan in state %d\n", this, mState);
 
   if (mState == SMOOTHMSD_SCROLL) {
-    if (!aFingersOnTouchpad) {
+    if (aFingersOnTouchpad == FingersOnTouchpad::No) {
       // When a SMOOTHMSD_SCROLL scroll is being processed on a frame, mouse
       // wheel and trackpad momentum scroll position updates will not cancel the
       // SMOOTHMSD_SCROLL scroll animations, enabling scripts that depend on
@@ -2661,7 +2661,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
     // This event block was interrupted by something else. If the user's fingers
     // are still on on the touchpad we want to resume scrolling, otherwise we
     // ignore the rest of the scroll gesture.
-    if (!aFingersOnTouchpad) {
+    if (aFingersOnTouchpad == FingersOnTouchpad::No) {
       return nsEventStatus_eConsumeNoDefault;
     }
     // Resume / restart the pan.
@@ -2669,7 +2669,8 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
     return OnPanBegin(aEvent);
   }
 
-  if (mState == OVERSCROLL_ANIMATION && !aFingersOnTouchpad) {
+  if (mState == OVERSCROLL_ANIMATION &&
+      aFingersOnTouchpad == FingersOnTouchpad::No) {
     return nsEventStatus_eConsumeNoDefault;
   }
 
@@ -2678,7 +2679,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
 
   // We need to update the axis velocity in order to get a useful display port
   // size and position. We need to do so even if this is a momentum pan (i.e.
-  // aFingersOnTouchpad == false); in that case the "with touch" part is not
+  // aFingersOnTouchpad == No); in that case the "with touch" part is not
   // really appropriate, so we may want to rethink this at some point.
   // Note that we have to make all simulated positions relative to
   // Axis::GetPos(), because the current position is an invented position, and
@@ -2718,7 +2719,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
   const ParentLayerPoint velocity = GetVelocityVector();
   bool consumed = CallDispatchScroll(startPoint, endPoint, handoffState);
 
-  if (!aFingersOnTouchpad) {
+  if (aFingersOnTouchpad == FingersOnTouchpad::No) {
     if (IsOverscrolled() && mState != OVERSCROLL_ANIMATION) {
       StartOverscrollAnimation(velocity);
     } else if (!consumed) {
@@ -2739,7 +2740,7 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
 
   if (aEvent.mPanDisplacement != ScreenPoint{}) {
     // Call into OnPan in order to process the delta included in this event.
-    OnPan(aEvent, true);
+    OnPan(aEvent, FingersOnTouchpad::Yes);
   }
 
   EndTouch(aEvent.mTimeStamp);
@@ -2802,7 +2803,7 @@ nsEventStatus AsyncPanZoomController::OnPanMomentumStart(
   ScrollSnapToDestination();
 
   // Call into OnPan in order to process any delta included in this event.
-  OnPan(aEvent, false);
+  OnPan(aEvent, FingersOnTouchpad::No);
 
   return nsEventStatus_eConsumeNoDefault;
 }
@@ -2816,7 +2817,7 @@ nsEventStatus AsyncPanZoomController::OnPanMomentumEnd(
   }
 
   // Call into OnPan in order to process any delta included in this event.
-  OnPan(aEvent, false);
+  OnPan(aEvent, FingersOnTouchpad::No);
 
   // We need to reset the velocity to zero. We don't really have a "touch"
   // here because the touch has already ended long before the momentum
