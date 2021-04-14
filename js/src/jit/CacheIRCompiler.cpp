@@ -6130,6 +6130,7 @@ bool CacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
   callvm.prepare();
   masm.Push(Imm32(gc::DefaultHeap));
   masm.Push(Imm32(int32_t(allocKind)));
+  emitLoadStubField(shapeSlot, shape);  // This might have been overwritten.
   masm.Push(shape);
 
   using Fn =
