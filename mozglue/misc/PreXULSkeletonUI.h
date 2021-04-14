@@ -62,8 +62,9 @@ struct ThemeColors {
   uint32_t backgroundColor;
   uint32_t toolbarForegroundColor;
   uint32_t tabBarColor;
+  uint32_t tabColor;
+  uint32_t tabOutlineColor;
   uint32_t chromeContentDividerColor;
-  uint32_t tabLineColor;
   uint32_t urlbarColor;
   uint32_t urlbarBorderColor;
   uint32_t animationColor;
