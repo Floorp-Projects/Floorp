@@ -6173,7 +6173,8 @@ nsresult nsContentUtils::DispatchXULCommand(nsIContent* aTarget, bool aTrusted,
                                             Event* aSourceEvent,
                                             PresShell* aPresShell, bool aCtrl,
                                             bool aAlt, bool aShift, bool aMeta,
-                                            uint16_t aInputSource) {
+                                            uint16_t aInputSource,
+                                            int16_t aButton) {
   NS_ENSURE_STATE(aTarget);
   Document* doc = aTarget->OwnerDoc();
   nsPresContext* presContext = doc->GetPresContext();
@@ -6182,8 +6183,8 @@ nsresult nsContentUtils::DispatchXULCommand(nsIContent* aTarget, bool aTrusted,
       new XULCommandEvent(doc, presContext, nullptr);
   xulCommand->InitCommandEvent(u"command"_ns, true, true,
                                nsGlobalWindowInner::Cast(doc->GetInnerWindow()),
-                               0, aCtrl, aAlt, aShift, aMeta, 0, aSourceEvent,
-                               aInputSource, IgnoreErrors());
+                               0, aCtrl, aAlt, aShift, aMeta, aButton,
+                               aSourceEvent, aInputSource, IgnoreErrors());
 
   if (aPresShell) {
     nsEventStatus status = nsEventStatus_eIgnore;
