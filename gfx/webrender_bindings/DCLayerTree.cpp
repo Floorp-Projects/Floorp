@@ -971,7 +971,7 @@ GLuint DCLayerTree::CreateEGLSurfaceForCompositionSurface(
   if (FAILED(hr)) {
     gfxCriticalNote << "DCompositionSurface::BeginDraw failed: "
                     << gfx::hexa(hr);
-    RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
+    RenderThread::Get()->HandleWebRenderError(WebRenderError::BEGIN_DRAW);
     return false;
   }
 
