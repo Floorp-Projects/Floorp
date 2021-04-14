@@ -223,7 +223,7 @@ static int32_t sPlatformDisabledState = 0;
 #define MARKUPMAP(atom, new_func, r, ...) \
   {nsGkAtoms::atom, new_func, static_cast<a11y::role>(r), {__VA_ARGS__}},
 
-static const HTMLMarkupMapInfo sHTMLMarkupMapList[] = {
+static const MarkupMapInfo sHTMLMarkupMapList[] = {
 #include "MarkupMap.h"
 };
 
@@ -887,7 +887,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     // display:contents element doesn't have a frame, but retains the semantics.
     // All its children are unaffected.
     if (nsCoreUtils::IsDisplayContents(content)) {
-      const HTMLMarkupMapInfo* markupMap =
+      const MarkupMapInfo* markupMap =
           mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
       if (markupMap && markupMap->new_func) {
         RefPtr<LocalAccessible> newAcc =
@@ -997,7 +997,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
         frame->AccessibleType() == eOuterDocType) {
       // Prefer to use markup to decide if and what kind of accessible to
       // create,
-      const HTMLMarkupMapInfo* markupMap =
+      const MarkupMapInfo* markupMap =
           mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
       if (markupMap && markupMap->new_func) {
         newAcc = markupMap->new_func(content->AsElement(), aContext);
@@ -1120,7 +1120,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
       }
 
     } else if (content->IsMathMLElement()) {
-      const HTMLMarkupMapInfo* markupMap =
+      const MarkupMapInfo* markupMap =
           mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
       if (markupMap && markupMap->new_func) {
         newAcc = markupMap->new_func(content->AsElement(), aContext);
@@ -1444,7 +1444,7 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
 
 void nsAccessibilityService::MarkupAttributes(
     const nsIContent* aContent, nsIPersistentProperties* aAttributes) const {
-  const mozilla::a11y::HTMLMarkupMapInfo* markupMap =
+  const mozilla::a11y::MarkupMapInfo* markupMap =
       mHTMLMarkupMap.Get(aContent->NodeInfo()->NameAtom());
   if (!markupMap) return;
 
