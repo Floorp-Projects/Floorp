@@ -8,6 +8,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/TimeStamp.h"
@@ -430,6 +431,33 @@ class ImageResource : public Image {
   bool UpdateImageContainer(const Maybe<gfx::IntRect>& aDirtyRect);
 
   void ReleaseImageContainer();
+
+  class MOZ_RAII AutoProfilerImagePaintMarker {
+   public:
+    explicit AutoProfilerImagePaintMarker(ImageResource* self)
+        : mStartTime(TimeStamp::NowUnfuzzed()) {
+      nsAutoCString spec;
+      if (self->mURI && profiler_can_accept_markers()) {
+        static const size_t sMaxTruncatedLength = 1024;
+        self->mURI->GetSpec(mSpec);
+        if (mSpec.Length() >= sMaxTruncatedLength) {
+          mSpec.Truncate(sMaxTruncatedLength);
+        }
+      }
+    }
+
+    ~AutoProfilerImagePaintMarker() {
+      if (!mSpec.IsEmpty()) {
+        PROFILER_MARKER_TEXT("Image Paint", GRAPHICS,
+                             MarkerTiming::IntervalUntilNowFrom(mStartTime),
+                             mSpec);
+      }
+    }
+
+   protected:
+    TimeStamp mStartTime;
+    nsAutoCString mSpec;
+  };
 
  private:
   void SetCurrentImage(layers::ImageContainer* aContainer,
