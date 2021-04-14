@@ -122,5 +122,12 @@ partial interface MouseEvent
    */
   [ChromeOnly]
   void preventClickEvent();
+
+  /**
+   * Returns true if the following "click", "auxclick" and "dblclick"
+   * events of "mousedown" and "mouseup" events are prevented.
+   */
+  [ChromeOnly]
+  boolean clickEventPrevented();
 };
 
