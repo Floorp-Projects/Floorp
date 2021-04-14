@@ -522,9 +522,7 @@ class ContentSessionStore {
     this.contentRestoreInitialized = false;
 
     this.handlers = [this.messageQueue];
-    if (Services.appinfo.sessionHistoryInParent) {
-      this.mm.sendAsyncMessage("SessionStore:addSHistoryListener");
-    } else {
+    if (!Services.appinfo.sessionHistoryInParent) {
       this.handlers.push(new EventListener(this));
       this.handlers.push(new SessionHistoryListener(this));
 
