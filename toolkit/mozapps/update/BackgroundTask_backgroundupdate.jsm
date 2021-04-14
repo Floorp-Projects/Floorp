@@ -79,7 +79,7 @@ async function _attemptBackgroundUpdate() {
       "@mozilla.org/updates/update-sync-manager;1"
     ].getService(Ci.nsIUpdateSyncManager);
     if (syncManager.isOtherInstanceRunning()) {
-      reasons = BackgroundUpdate.REASON.OTHER_INSTANCE;
+      reasons.push(BackgroundUpdate.REASON.OTHER_INSTANCE);
     }
   }
 
@@ -248,7 +248,7 @@ async function runBackgroundTask() {
     await ExtensionUtils.promiseTimeout(500);
   } catch (e) {
     // TODO: in the future, we might want to classify failures into transient and persistent and
-    // backoff the update task in the fast of continuous persistent errors.
+    // backoff the update task in the face of continuous persistent errors.
     log.error(`${SLUG}: caught exception attempting background update`, e);
 
     result = EXIT_CODE.EXCEPTION;
