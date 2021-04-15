@@ -140,7 +140,7 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
           a.launchServiceWorkerEnd(), a.dispatchFetchEventStart(),
           a.dispatchFetchEventEnd(), a.handleFetchEventStart(),
           a.handleFetchEventEnd(), a.forceMainDocumentChannel(),
-          a.navigationStartTimeStamp(), a.hasNonEmptySandboxingFlag());
+          a.navigationStartTimeStamp());
     }
     case HttpChannelCreationArgs::THttpChannelConnectArgs: {
       const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
@@ -393,8 +393,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const TimeStamp& aHandleFetchEventStart,
     const TimeStamp& aHandleFetchEventEnd,
     const bool& aForceMainDocumentChannel,
-    const TimeStamp& aNavigationStartTimeStamp,
-    const bool& aHasNonEmptySandboxingFlag) {
+    const TimeStamp& aNavigationStartTimeStamp) {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
     // URIParams does MOZ_ASSERT if null, but we need to protect opt builds from
@@ -475,10 +474,6 @@ bool HttpChannelParent::DoAsyncOpen(
 
   if (aForceMainDocumentChannel) {
     httpChannel->SetIsMainDocumentChannel(true);
-  }
-
-  if (aHasNonEmptySandboxingFlag) {
-    httpChannel->SetHasNonEmptySandboxingFlag(true);
   }
 
   for (uint32_t i = 0; i < requestHeaders.Length(); i++) {
