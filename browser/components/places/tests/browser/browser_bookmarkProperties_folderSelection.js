@@ -156,6 +156,11 @@ add_task(async function test_selectBookmarksMenu() {
     win
   );
 
+  // TODO Bug 1695011: This delay is to stop the test impacting on other tests.
+  // It is likely that we need a different wait here, however we need to figure
+  // out what is going on in the background to impact the other tests.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 100));
   await TestUtils.waitForCondition(
     () =>
       menuList.getAttribute("selectedGuid") == PlacesUtils.bookmarks.menuGuid,
