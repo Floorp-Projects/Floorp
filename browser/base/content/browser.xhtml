@@ -219,12 +219,14 @@
     -->
     <menupopup id="backForwardMenu"
                onpopupshowing="return FillHistoryMenu(event.target);"
-               oncommand="gotoHistoryIndex(event); event.stopPropagation();"/>
+               oncommand="gotoHistoryIndex(event); event.stopPropagation();"
+               onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" page="true"/>
     <tooltip id="remoteBrowserTooltip"/>
 
     <menupopup id="new-tab-button-popup"
-               onpopupshowing="return CreateContainerTabMenu(event);"/>
+               onpopupshowing="return CreateContainerTabMenu(event);"
+               onclick="checkForMiddleClick(this, event);"/>
     <!-- for search and content formfill/pw manager -->
 
     <panel is="autocomplete-richlistbox-popup"

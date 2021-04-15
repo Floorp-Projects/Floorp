@@ -14,7 +14,6 @@ add_task(async function newtabPreloaded() {
       false,
       false,
       false,
-      0,
       null,
       0
     );

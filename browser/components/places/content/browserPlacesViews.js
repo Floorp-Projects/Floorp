@@ -806,6 +806,10 @@ PlacesViewBase.prototype = {
           "PlacesUIUtils.getViewForNode(this));"
       );
       aPopup._endOptOpenAllInTabs.setAttribute(
+        "onclick",
+        "checkForMiddleClick(this, event); event.stopPropagation();"
+      );
+      aPopup._endOptOpenAllInTabs.setAttribute(
         "label",
         gNavigatorBundle.getString("menuOpenAllInTabs.label")
       );

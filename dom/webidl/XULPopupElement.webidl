@@ -18,12 +18,11 @@ dictionary OpenPopupOptions {
   Event? triggerEvent = null;
 };
 
-dictionary ActivateMenuItemOptions {
+dictionary ActivateMenuItemModifiers {
   boolean altKey = false;
   boolean metaKey = false;
   boolean ctrlKey = false;
   boolean shiftKey = false;
-  short button = 0;
 };
 
 typedef (DOMString or OpenPopupOptions) StringOrOpenPopupOptions;
@@ -132,12 +131,11 @@ interface XULPopupElement : XULElement
    * menuitem is not inside this menu, or if the menuitem is hidden.
    *
    * @param itemElement The menuitem to activate.
-   * @param options Which modifier keys and button should be set on the command
-   *                event.
+   * @param modifierKeys Which modifier keys should be set on the command event.
    */
   [Throws]
   void activateItem(Element itemElement,
-                    optional ActivateMenuItemOptions options = {});
+                    optional ActivateMenuItemModifiers modifierKeys = {});
 
   /**
    * Attribute getter and setter for label.

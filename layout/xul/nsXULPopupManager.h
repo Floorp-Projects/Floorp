@@ -262,11 +262,10 @@ class nsXULMenuCommandEvent : public mozilla::Runnable {
  public:
   nsXULMenuCommandEvent(mozilla::dom::Element* aMenu, bool aIsTrusted,
                         mozilla::Modifiers aModifiers, bool aUserInput,
-                        bool aFlipChecked, int16_t aButton)
+                        bool aFlipChecked)
       : mozilla::Runnable("nsXULMenuCommandEvent"),
         mMenu(aMenu),
         mModifiers(aModifiers),
-        mButton(aButton),
         mIsTrusted(aIsTrusted),
         mUserInput(aUserInput),
         mFlipChecked(aFlipChecked),
@@ -285,7 +284,6 @@ class nsXULMenuCommandEvent : public mozilla::Runnable {
   RefPtr<mozilla::dom::Element> mMenu;
 
   mozilla::Modifiers mModifiers;
-  int16_t mButton;
   bool mIsTrusted;
   bool mUserInput;
   bool mFlipChecked;
@@ -540,7 +538,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * Returns true if a native menu was open.
    */
   bool ActivateNativeMenuItem(nsIContent* aItem, mozilla::Modifiers aModifiers,
-                              int16_t aButton, mozilla::ErrorResult& aRv);
+                              mozilla::ErrorResult& aRv);
 
   /**
    * Return true if the popup for the supplied content node is open.

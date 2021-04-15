@@ -116,9 +116,10 @@ async function testBackForwardMenu(useContextMenu) {
         url => url == "http://example.com/"
       );
 
-      EventUtils.synthesizeMouseAtCenter(popupEvent.target.children[2], {
-        button: 1,
-      });
+      EventUtils.sendMouseEvent(
+        { type: "click", button: 1 },
+        popupEvent.target.children[2]
+      );
 
       let newtab = await newTabPromise;
       gBrowser.removeTab(newtab);

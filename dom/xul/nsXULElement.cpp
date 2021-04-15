@@ -943,14 +943,12 @@ nsresult nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
     // handling.
     RefPtr<Event> event = aVisitor.mDOMEvent;
     uint16_t inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
-    int16_t button = 0;
     while (event) {
       NS_ENSURE_STATE(event->GetOriginalTarget() != commandElt);
       RefPtr<XULCommandEvent> commandEvent = event->AsXULCommandEvent();
       if (commandEvent) {
         event = commandEvent->GetSourceEvent();
         inputSource = commandEvent->InputSource();
-        button = commandEvent->Button();
       } else {
         event = nullptr;
       }
@@ -959,7 +957,7 @@ nsresult nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
     nsContentUtils::DispatchXULCommand(
         commandElt, orig->IsTrusted(), MOZ_KnownLive(aVisitor.mDOMEvent),
         nullptr, orig->IsControl(), orig->IsAlt(), orig->IsShift(),
-        orig->IsMeta(), inputSource, button);
+        orig->IsMeta(), inputSource);
   } else {
     NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
   }
