@@ -165,17 +165,6 @@
         throw new Error("Invalid notification priority " + aPriority);
       }
 
-      // check for where the notification should be inserted according to
-      // priority. If two are equal, the existing one appears on top.
-      var notifications = this.allNotifications;
-      var insertPos = null;
-      for (var n = notifications.length - 1; n >= 0; n--) {
-        if (notifications[n].priority < aPriority) {
-          break;
-        }
-        insertPos = notifications[n];
-      }
-
       MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
 
       // Create the Custom Element and connect it to the document immediately.
@@ -194,7 +183,27 @@
           aNotificationIs ? { is: aNotificationIs } : {}
         );
       }
-      this.stack.insertBefore(newitem, insertPos);
+
+      if (this.gProton) {
+        // Append or prepend notification, based on stack preference.
+        if (this.stack.hasAttribute("prepend-notifications")) {
+          this.stack.prepend(newitem);
+        } else {
+          this.stack.append(newitem);
+        }
+      } else {
+        // check for where the notification should be inserted according to
+        // priority. If two are equal, the existing one appears on top.
+        var notifications = this.allNotifications;
+        var insertPos = null;
+        for (var n = notifications.length - 1; n >= 0; n--) {
+          if (notifications[n].priority < aPriority) {
+            break;
+          }
+          insertPos = notifications[n];
+        }
+        this.stack.insertBefore(newitem, insertPos);
+      }
 
       // Custom notification classes may not have the messageText property.
       if (newitem.messageText) {
@@ -232,7 +241,10 @@
         newitem.setAttribute("type", "warning");
       }
 
-      if (!insertPos) {
+      // Animate the notification for proton (all notifications visible)
+      // or if this isn't proton and this is the visible notification (it
+      // was inserted at the top of the stack).
+      if (this.gProton || !insertPos) {
         newitem.style.display = "block";
         newitem.style.position = "fixed";
         newitem.style.top = "100%";
