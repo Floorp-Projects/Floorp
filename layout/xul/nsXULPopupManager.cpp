@@ -1829,37 +1829,30 @@ bool nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup) {
 
   nsCOMPtr<nsPIDOMWindowOuter> rootWin = root->GetWindow();
 
-  if (XRE_IsParentProcess()) {
-    // chrome shells can always open popups, but other types of shells can only
-    // open popups when they are focused and visible
-    if (docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
-      // only allow popups in active windows
-      nsFocusManager* fm = nsFocusManager::GetFocusManager();
-      if (!fm || !rootWin) {
-        return false;
-      }
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess(),
+                     "Cannot have XUL in content process showing popups.");
 
-      nsCOMPtr<nsPIDOMWindowOuter> activeWindow = fm->GetActiveWindow();
-      if (activeWindow != rootWin) {
-        return false;
-      }
-
-      // only allow popups in visible frames
-      // TODO: This visibility check should be replaced with a check of
-      // bc->IsActive(). It is okay for now since this is only called
-      // in the parent process. Bug 1698533.
-      bool visible;
-      baseWin->GetVisibility(&visible);
-      if (!visible) {
-        return false;
-      }
-    }
-  } else {
+  // chrome shells can always open popups, but other types of shells can only
+  // open popups when they are focused and visible
+  if (docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
+    // only allow popups in active windows
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    BrowsingContext* bc = docShell->GetBrowsingContext();
-    if (!fm || !bc || fm->GetActiveBrowsingContext() != bc->Top()) {
-      // fm->GetActiveBrowsingContext() == bc->Top() would imply bc->IsActive(),
-      // so we don't bother checking/early returning for !bc->IsActive().
+    if (!fm || !rootWin) {
+      return false;
+    }
+
+    nsCOMPtr<nsPIDOMWindowOuter> activeWindow = fm->GetActiveWindow();
+    if (activeWindow != rootWin) {
+      return false;
+    }
+
+    // only allow popups in visible frames
+    // TODO: This visibility check should be replaced with a check of
+    // bc->IsActive(). It is okay for now since this is only called
+    // in the parent process. Bug 1698533.
+    bool visible;
+    baseWin->GetVisibility(&visible);
+    if (!visible) {
       return false;
     }
   }
