@@ -499,7 +499,7 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for Transform3D<f32, Src, Dst> {
      *  a  b  0  1
      */
     fn is_2d_scale_translation(&self) -> bool {
-        (self.m33 - 1.0).abs() < NEARLY_ZERO && 
+        (self.m33 - 1.0).abs() < NEARLY_ZERO &&
             (self.m44 - 1.0).abs() < NEARLY_ZERO &&
             self.m12.abs() < NEARLY_ZERO && self.m13.abs() < NEARLY_ZERO && self.m14.abs() < NEARLY_ZERO &&
             self.m21.abs() < NEARLY_ZERO && self.m23.abs() < NEARLY_ZERO && self.m24.abs() < NEARLY_ZERO &&
@@ -667,6 +667,9 @@ pub mod test {
     use euclid::default::{Point2D, Rect, Size2D, Transform3D};
     use euclid::{Angle, approxeq::ApproxEq};
     use std::f32::consts::PI;
+    use crate::clip::{is_left_of_line, polygon_contains_point};
+    use crate::prim_store::PolygonKey;
+    use api::FillRule;
 
     #[test]
     fn inverse_project() {
@@ -837,6 +840,84 @@ pub mod test {
         let origin = m.inverse_project_2d_origin().unwrap();
         assert_eq!(origin, Point2D::new(1.0, 0.5));
         assert_eq!(m.transform_point2d(origin), Some(Point2D::zero()));
+    }
+
+    #[test]
+    fn polygon_clip_is_left_of_point() {
+        // Define points of a line through (1, -3) and (-2, 6) to test against.
+        // If the triplet consisting of these two points and the test point
+        // form a counter-clockwise triangle, then the test point is on the
+        // left. The easiest way to visualize this is with an "ascending"
+        // line from low-Y to high-Y.
+        let p0_x = 1.0;
+        let p0_y = -3.0;
+        let p1_x = -2.0;
+        let p1_y = 6.0;
+
+        // Test some points to the left of the line.
+        assert!(is_left_of_line(-9.0, 0.0, p0_x, p0_y, p1_x, p1_y) > 0.0);
+        assert!(is_left_of_line(-1.0, 1.0, p0_x, p0_y, p1_x, p1_y) > 0.0);
+        assert!(is_left_of_line(1.0, -4.0, p0_x, p0_y, p1_x, p1_y) > 0.0);
+
+        // Test some points on the line.
+        assert!(is_left_of_line(-3.0, 9.0, p0_x, p0_y, p1_x, p1_y) == 0.0);
+        assert!(is_left_of_line(0.0, 0.0, p0_x, p0_y, p1_x, p1_y) == 0.0);
+        assert!(is_left_of_line(100.0, -300.0, p0_x, p0_y, p1_x, p1_y) == 0.0);
+
+        // Test some points to the right of the line.
+        assert!(is_left_of_line(0.0, 1.0, p0_x, p0_y, p1_x, p1_y) < 0.0);
+        assert!(is_left_of_line(-4.0, 13.0, p0_x, p0_y, p1_x, p1_y) < 0.0);
+        assert!(is_left_of_line(5.0, -12.0, p0_x, p0_y, p1_x, p1_y) < 0.0);
+    }
+
+    #[test]
+    fn polygon_clip_contains_point() {
+        // We define the points of a self-overlapping polygon, which we will
+        // use to create polygons with different windings and fill rules.
+        let p0 = LayoutPoint::new(4.0, 4.0);
+        let p1 = LayoutPoint::new(6.0, 4.0);
+        let p2 = LayoutPoint::new(4.0, 7.0);
+        let p3 = LayoutPoint::new(2.0, 1.0);
+        let p4 = LayoutPoint::new(8.0, 1.0);
+        let p5 = LayoutPoint::new(6.0, 7.0);
+
+        let poly_clockwise_nonzero = PolygonKey::new(
+            &[p5, p4, p3, p2, p1, p0].to_vec(), FillRule::Nonzero
+        );
+        let poly_clockwise_evenodd = PolygonKey::new(
+            &[p5, p4, p3, p2, p1, p0].to_vec(), FillRule::Evenodd
+        );
+        let poly_counter_clockwise_nonzero = PolygonKey::new(
+            &[p0, p1, p2, p3, p4, p5].to_vec(), FillRule::Nonzero
+        );
+        let poly_counter_clockwise_evenodd = PolygonKey::new(
+            &[p0, p1, p2, p3, p4, p5].to_vec(), FillRule::Evenodd
+        );
+
+        // We define a rect that provides a bounding clip area of
+        // the polygon.
+        let rect = LayoutRect::new(LayoutPoint::new(0.0, 0.0),
+                                   LayoutSize::new(10.0, 10.0));
+
+        // And we'll test three points of interest.
+        let p_inside_once = LayoutPoint::new(5.0, 3.0);
+        let p_inside_twice = LayoutPoint::new(5.0, 5.0);
+        let p_outside = LayoutPoint::new(9.0, 9.0);
+
+        // We should get the same results for both clockwise and
+        // counter-clockwise polygons.
+        // For nonzero polygons, the inside twice point is considered inside.
+        for poly_nonzero in vec![poly_clockwise_nonzero, poly_counter_clockwise_nonzero].iter() {
+            assert_eq!(polygon_contains_point(&p_inside_once, &rect, &poly_nonzero), true);
+            assert_eq!(polygon_contains_point(&p_inside_twice, &rect, &poly_nonzero), true);
+            assert_eq!(polygon_contains_point(&p_outside, &rect, &poly_nonzero), false);
+        }
+        // For evenodd polygons, the inside twice point is considered outside.
+        for poly_evenodd in vec![poly_clockwise_evenodd, poly_counter_clockwise_evenodd].iter() {
+            assert_eq!(polygon_contains_point(&p_inside_once, &rect, &poly_evenodd), true);
+            assert_eq!(polygon_contains_point(&p_inside_twice, &rect, &poly_evenodd), false);
+            assert_eq!(polygon_contains_point(&p_outside, &rect, &poly_evenodd), false);
+        }
     }
 }
 

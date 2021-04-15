@@ -6,6 +6,8 @@ use api::{BorderRadius, ClipMode, HitTestItem, HitTestResult, ItemTag, Primitive
 use api::{PipelineId, ApiHitTester, ClipId};
 use api::units::*;
 use crate::clip::{ClipItemKind, ClipStore, ClipNode, rounded_rectangle_contains_point};
+use crate::clip::{polygon_contains_point};
+use crate::prim_store::PolygonKey;
 use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo};
 use std::ops;
@@ -88,8 +90,7 @@ impl HitTestClipNode {
             }
             ClipItemKind::Image { rect, polygon, .. } => {
                 if polygon.point_count > 0 {
-                    // TODO(bradwerth): implement this.
-                    HitTestRegion::Invalid
+                    HitTestRegion::Polygon(rect, polygon)
                 } else {
                     HitTestRegion::Rectangle(rect, ClipMode::Clip)
                 }
@@ -278,6 +279,7 @@ enum HitTestRegion {
     Invalid,
     Rectangle(LayoutRect, ClipMode),
     RoundedRectangle(LayoutRect, BorderRadius, ClipMode),
+    Polygon(LayoutRect, PolygonKey),
 }
 
 impl HitTestRegion {
@@ -291,6 +293,8 @@ impl HitTestRegion {
                 rounded_rectangle_contains_point(point, &rect, &radii),
             HitTestRegion::RoundedRectangle(rect, radii, ClipMode::ClipOut) =>
                 !rounded_rectangle_contains_point(point, &rect, &radii),
+            HitTestRegion::Polygon(rect, polygon) =>
+                polygon_contains_point(point, &rect, &polygon),
             HitTestRegion::Invalid => true,
         }
     }
