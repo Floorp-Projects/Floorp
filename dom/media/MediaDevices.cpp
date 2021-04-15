@@ -47,7 +47,7 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
     if (!owner->IsSecureContext()) {
       doc->SetUseCounter(eUseCounter_custom_GetUserMediaInsec);
     }
-    Document* topDoc = doc->GetTopLevelContentDocument();
+    Document* topDoc = doc->GetTopLevelContentDocumentIfSameProcess();
     IgnoredErrorResult ignored;
     if (topDoc && !topDoc->HasFocus(ignored)) {
       doc->SetUseCounter(eUseCounter_custom_GetUserMediaUnfocused);
@@ -101,7 +101,7 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
     if (!owner->IsSecureContext()) {
       doc->SetUseCounter(eUseCounter_custom_EnumerateDevicesInsec);
     }
-    Document* topDoc = doc->GetTopLevelContentDocument();
+    Document* topDoc = doc->GetTopLevelContentDocumentIfSameProcess();
     IgnoredErrorResult ignored;
     if (topDoc && !topDoc->HasFocus(ignored)) {
       doc->SetUseCounter(eUseCounter_custom_EnumerateDevicesUnfocused);

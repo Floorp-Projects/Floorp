@@ -610,7 +610,7 @@ already_AddRefed<PaymentRequest> PaymentRequest::Constructor(
   }
 
   // Get the top level principal
-  nsCOMPtr<Document> topLevelDoc = doc->GetTopLevelContentDocument();
+  RefPtr<Document> topLevelDoc = doc->GetTopLevelContentDocumentIfSameProcess();
   MOZ_ASSERT(topLevelDoc);
   nsCOMPtr<nsIPrincipal> topLevelPrincipal = topLevelDoc->NodePrincipal();
 

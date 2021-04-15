@@ -15081,7 +15081,7 @@ WindowContext* Document::GetTopLevelWindowContext() const {
   return windowContext ? windowContext->TopWindowContext() : nullptr;
 }
 
-Document* Document::GetTopLevelContentDocument() {
+Document* Document::GetTopLevelContentDocumentIfSameProcess() {
   Document* parent;
 
   if (!mLoadedAsData) {
@@ -15115,38 +15115,8 @@ Document* Document::GetTopLevelContentDocument() {
   return parent;
 }
 
-const Document* Document::GetTopLevelContentDocument() const {
-  const Document* parent;
-
-  if (!mLoadedAsData) {
-    parent = this;
-  } else {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
-    if (!window) {
-      return nullptr;
-    }
-
-    parent = window->GetExtantDoc();
-    if (!parent) {
-      return nullptr;
-    }
-  }
-
-  do {
-    if (parent->IsTopLevelContentDocument()) {
-      break;
-    }
-
-    // If we ever have a non-content parent before we hit a toplevel content
-    // parent, then we're never going to find one.  Just bail.
-    if (!parent->IsContentDocument()) {
-      return nullptr;
-    }
-
-    parent = parent->GetInProcessParentDocument();
-  } while (parent);
-
-  return parent;
+const Document* Document::GetTopLevelContentDocumentIfSameProcess() const {
+  return const_cast<Document*>(this)->GetTopLevelContentDocumentIfSameProcess();
 }
 
 void Document::PropagateImageUseCounters(Document* aReferencingDocument) {
