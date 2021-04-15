@@ -3,6 +3,13 @@
 // and that at the end we're reset to the correct state.
 let enabledOnStartup = false;
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "pktApi",
+  "chrome://pocket/content/pktApi.jsm"
+);
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+
 // PocketEnabled/Disabled promises return true if it was already
 // Enabled/Disabled, and false if it need to Enable/Disable.
 function promisePocketEnabled() {

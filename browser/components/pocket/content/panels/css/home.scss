@@ -1,0 +1,111 @@
+.pkt_ext_containerhome,
+.pkt_ext_wrapperhome {
+  overflow: hidden;
+}
+
+.pkt_ext_home {
+  line-height: 20px;
+  font-size: 12px;
+  color: #363636;
+
+  a {
+    color: #008078;
+    text-decoration: none;
+  }
+
+  .pkt_ext_hr {
+    height: 1px;
+    background: linear-gradient(90deg, #83EDB8 0%, #83EDB8 0%, #83EDB8 0.01%, #1CB0A8 33.15%, #EF4056 67.4%, #FCB643 100%);
+  }
+  
+  .pkt_ext_detail {
+    margin: 18px 20px;
+  }
+
+  .pkt_ext_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .pkt_ext_mylist_icon {
+      background: url(../img/list-view.svg) no-repeat;
+      background-size: contain;
+      height: 16px;
+      width: 16px;
+      margin-inline-end: 8px;
+    }
+    a {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      padding: 0 8px;
+      margin: 12px;
+      border-radius: 4px;
+      &:hover {
+        background: #F5F5F5;
+      }
+    }
+    .pkt_ext_logo {
+      background: url(../img/pocketlogo.svg) bottom right no-repeat;
+      background-size: contain;
+      height: 32px;
+      width: 123px;
+      margin: 0 20px;
+    }
+  }
+  .pkt_ext_detail {
+    a {
+      display: block;
+    }
+    h2 {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    h2,
+    p {
+      margin: 8px 0;
+    }
+    h3 {
+      font-weight: 600;
+      margin: 12px 0;
+    }
+    .pkt_ext_more {
+      margin: 19px 0;
+      .pkt_ext_chevron_right {
+        background: url(../img/chevron-right.svg) no-repeat;
+        background-size: contain;
+        height: 16px;
+        width: 16px;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+        line-height: 14px;
+        li {
+          a {
+            height: 44px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+            border-bottom: 1px solid #EAEAEA;
+          }
+        }
+      }
+    }
+    .pkt_ext_discover {
+      line-height: 12px;
+      margin: 20px 0;
+      height: 40px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 4px;
+      &:hover {
+        background: #F5F5F5;
+      }
+    }
+  }
+}

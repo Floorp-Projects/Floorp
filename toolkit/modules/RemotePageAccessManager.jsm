@@ -118,6 +118,11 @@ let RemotePageAccessManager = {
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
     },
+    "about:pocket-home": {
+      RPMSendAsyncMessage: ["*"],
+      RPMAddMessageListener: ["*"],
+      RPMRemoveMessageListener: ["*"],
+    },
     "about:privatebrowsing": {
       RPMSendAsyncMessage: [
         "OpenPrivateWindow",

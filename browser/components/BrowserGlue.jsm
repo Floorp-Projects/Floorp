@@ -274,7 +274,11 @@ let JSWINDOWACTORS = {
       },
     },
 
-    matches: ["about:pocket-saved*", "about:pocket-signup*"],
+    matches: [
+      "about:pocket-saved*",
+      "about:pocket-signup*",
+      "about:pocket-home*",
+    ],
   },
 
   AboutPrivateBrowsing: {

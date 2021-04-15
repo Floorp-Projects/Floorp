@@ -1,0 +1,12 @@
+<h3>{{explorepopulartopics}}</h3>
+<ul>
+  {{#each topics}}
+    <li>
+      <a class="pkt_ext_topic" href="https://{{@root.pockethost}}/explore/{{this.topic}}?utm_source={{@root.utmsource}}">
+        {{this.title}}
+        <span class="pkt_ext_chevron_right"></span>
+      </a>
+    </li>
+  {{/each}}
+</ul>
+<a class="pkt_ext_discover" href="https://{{pockethost}}/explore?utm_source={{utmsource}}">{{discovermore}}</a>
