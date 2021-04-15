@@ -1094,44 +1094,44 @@ class NativeObject : public JSObject {
   GetterSetter* getGetterSetter(uint32_t slot) const {
     return getSlot(slot).toGCThing()->as<GetterSetter>();
   }
-  GetterSetter* getGetterSetter(Shape* shape) const {
-    MOZ_ASSERT(shape->isAccessorDescriptor());
-    return getGetterSetter(shape->slot());
+  GetterSetter* getGetterSetter(ShapeProperty prop) const {
+    MOZ_ASSERT(prop.isAccessorProperty());
+    return getGetterSetter(prop.slot());
   }
 
-  // Returns the (possibly nullptr) getter or setter object. The shape must be
-  // for an accessor property.
+  // Returns the (possibly nullptr) getter or setter object. |prop| and |slot|
+  // must be (for) an accessor property.
   JSObject* getGetter(uint32_t slot) const {
     return getGetterSetter(slot)->getter();
   }
-  JSObject* getGetter(Shape* shape) const {
-    return getGetterSetter(shape)->getter();
+  JSObject* getGetter(ShapeProperty prop) const {
+    return getGetterSetter(prop)->getter();
   }
-  JSObject* getSetter(Shape* shape) const {
-    return getGetterSetter(shape)->setter();
+  JSObject* getSetter(ShapeProperty prop) const {
+    return getGetterSetter(prop)->setter();
   }
 
-  // Returns true if the property has a non-nullptr getter or setter object. The
-  // shape can be any property shape.
-  bool hasGetter(Shape* shape) const {
-    return shape->hasGetterValue() && getGetter(shape);
+  // Returns true if the property has a non-nullptr getter or setter object.
+  // |prop| can be any property.
+  bool hasGetter(ShapeProperty prop) const {
+    return prop.isAccessorProperty() && getGetter(prop);
   }
-  bool hasSetter(Shape* shape) const {
-    return shape->hasSetterValue() && getSetter(shape);
+  bool hasSetter(ShapeProperty prop) const {
+    return prop.isAccessorProperty() && getSetter(prop);
   }
 
   // If the property has a non-nullptr getter/setter, return it as ObjectValue.
-  // Else return |undefined|. The shape must be for an accessor property.
-  Value getGetterValue(Shape* shape) const {
-    MOZ_ASSERT(shape->hasGetterValue());
-    if (JSObject* getterObj = getGetter(shape)) {
+  // Else return |undefined|. |prop| must be an accessor property.
+  Value getGetterValue(ShapeProperty prop) const {
+    MOZ_ASSERT(prop.isAccessorProperty());
+    if (JSObject* getterObj = getGetter(prop)) {
       return ObjectValue(*getterObj);
     }
     return UndefinedValue();
   }
-  Value getSetterValue(Shape* shape) const {
-    MOZ_ASSERT(shape->hasSetterValue());
-    if (JSObject* setterObj = getSetter(shape)) {
+  Value getSetterValue(ShapeProperty prop) const {
+    MOZ_ASSERT(prop.isAccessorProperty());
+    if (JSObject* setterObj = getSetter(prop)) {
       return ObjectValue(*setterObj);
     }
     return UndefinedValue();

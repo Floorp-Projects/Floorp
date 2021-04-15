@@ -134,6 +134,7 @@ class ShapeProperty {
 
   inline bool isDataProperty() const;
   inline bool isCustomDataProperty() const;
+  inline bool isAccessorProperty() const;
   inline uint32_t slot() const;
 
   inline uint8_t attributes() const;
@@ -1224,6 +1225,8 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) != 0;
   }
 
+  bool isAccessorProperty() const { return isAccessorDescriptor(); }
+
   uint32_t entryCount() {
     JS::AutoCheckCannotGC nogc;
     if (ShapeTable* table = maybeTable(nogc)) {
@@ -1614,6 +1617,10 @@ inline bool ShapeProperty::isDataProperty() const {
 
 inline bool ShapeProperty::isCustomDataProperty() const {
   return shape_->isCustomDataProperty();
+}
+
+inline bool ShapeProperty::isAccessorProperty() const {
+  return shape_->isAccessorProperty();
 }
 
 inline uint32_t ShapeProperty::slot() const { return shape_->slot(); }
