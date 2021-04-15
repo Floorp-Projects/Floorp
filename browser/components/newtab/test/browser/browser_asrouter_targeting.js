@@ -1135,3 +1135,19 @@ add_task(async function check_openUrlTrigger_context() {
     `should select ${message.id} mesage`
   );
 });
+
+add_task(async function check_is_major_upgrade() {
+  let message = {
+    id: "check_is_major_upgrade",
+    targeting: `isMajorUpgrade != undefined && isMajorUpgrade == ${
+      Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler)
+        .majorUpgrade
+    }`,
+  };
+
+  is(
+    (await ASRouterTargeting.findMatchingMessage({ messages: [message] })).id,
+    message.id,
+    "Should select the message"
+  );
+});

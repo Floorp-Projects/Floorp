@@ -50,6 +50,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [newtabSettings](#newtabsettings)
 * [isFissionExperimentEnabled](#isfissionexperimentenabled)
 * [activeNotifications](#activenotifications)
+* [isMajorUpgrade](#ismajorupgrade)
 
 ## Detailed usage
 
@@ -826,3 +827,7 @@ A boolean. `true` if we're running Fission experiment, `false` otherwise.
 
 True when an infobar style message is displayed or when the awesomebar is
 expanded to show a message (for example onboarding tips).
+
+### `isMajorUpgrade`
+
+A boolean. `true` is the browser just updated to a new major version.
