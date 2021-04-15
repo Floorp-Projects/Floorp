@@ -84,7 +84,7 @@ add_task(async function test_change_location_from_Toolbar() {
       let properties = document.getElementById(
         "placesContext_show_bookmark:info"
       );
-      EventUtils.synthesizeMouseAtCenter(properties, {});
+      placesContext.activateItem(properties);
     },
     async function test(dialogWin) {
       // Check the initial location.
