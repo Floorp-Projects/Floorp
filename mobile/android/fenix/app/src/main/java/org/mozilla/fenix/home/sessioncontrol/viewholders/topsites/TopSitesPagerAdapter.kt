@@ -12,6 +12,7 @@ import kotlinx.android.synthetic.main.component_top_sites.view.*
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.home.sessioncontrol.AdapterItem
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
+import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSitePagerViewHolder.Companion.TOP_SITES_PER_PAGE
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSiteViewHolder
 
 class TopSitesPagerAdapter(
@@ -36,7 +37,7 @@ class TopSitesPagerAdapter(
                 val adapter = holder.itemView.top_sites_list.adapter as TopSitesAdapter
                 val payload = payloads[0] as AdapterItem.TopSitePagerPayload
                 for (item in payload.changed) {
-                    adapter.notifyItemChanged(item.first, item.second)
+                    adapter.notifyItemChanged(item.first % TOP_SITES_PER_PAGE, item.second)
                 }
             }
         }
