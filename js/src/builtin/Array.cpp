@@ -825,9 +825,10 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
 
   // Step 20.
   if (attrs & JSPROP_READONLY) {
-    RootedShape lengthShape(cx, arr->lookup(cx, id));
-    MOZ_ASSERT(lengthShape->isCustomDataProperty());
-    unsigned attrs = lengthShape->attributes() | JSPROP_READONLY;
+    Maybe<ShapeProperty> lengthProp = arr->lookup(cx, id);
+    MOZ_ASSERT(lengthProp.isSome());
+    MOZ_ASSERT(lengthProp->isCustomDataProperty());
+    unsigned attrs = lengthProp->attributes() | JSPROP_READONLY;
     if (!NativeObject::changeCustomDataPropAttributes(cx, arr, id, attrs)) {
       return false;
     }
@@ -4061,15 +4062,16 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   state_ = State::Disabled;
 
   // Look up Array.prototype[@@iterator] and ensure it's a data property.
-  Shape* ctorShape = arrayProto->lookup(cx, NameToId(cx->names().constructor));
-  if (!ctorShape || !ctorShape->isDataProperty()) {
+  Maybe<ShapeProperty> ctorProp =
+      arrayProto->lookup(cx, NameToId(cx->names().constructor));
+  if (ctorProp.isNothing() || !ctorProp->isDataProperty()) {
     return;
   }
 
   // Get the referred value, and ensure it holds the canonical Array
   // constructor.
   JSFunction* ctorFun;
-  if (!IsFunctionObject(arrayProto->getSlot(ctorShape->slot()), &ctorFun)) {
+  if (!IsFunctionObject(arrayProto->getSlot(ctorProp->slot()), &ctorFun)) {
     return;
   }
   if (ctorFun != arrayCtor) {
@@ -4077,15 +4079,16 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   }
 
   // Look up the '@@species' value on Array
-  Shape* speciesShape =
+  Maybe<ShapeProperty> speciesProp =
       arrayCtor->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
-  if (!speciesShape || !arrayCtor->hasGetter(speciesShape)) {
+  if (speciesProp.isNothing() ||
+      !arrayCtor->hasGetter(speciesProp->shapeDeprecated())) {
     return;
   }
 
   // Get the referred value, ensure it holds the canonical Array[@@species]
   // function.
-  uint32_t speciesGetterSlot = speciesShape->slot();
+  uint32_t speciesGetterSlot = speciesProp->slot();
   JSObject* speciesGetter = arrayCtor->getGetter(speciesGetterSlot);
   if (!speciesGetter || !speciesGetter->is<JSFunction>()) {
     return;
@@ -4100,7 +4103,6 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   MOZ_ASSERT(!IsInsideNursery(arrayProto));
   MOZ_ASSERT(!IsInsideNursery(arrayCtor));
   MOZ_ASSERT(!IsInsideNursery(arrayCtor->lastProperty()));
-  MOZ_ASSERT(!IsInsideNursery(speciesShape));
   MOZ_ASSERT(!IsInsideNursery(speciesFun));
   MOZ_ASSERT(!IsInsideNursery(arrayProto->lastProperty()));
 
@@ -4111,7 +4113,7 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
   arraySpeciesGetterSlot_ = speciesGetterSlot;
   canonicalSpeciesFunc_ = speciesFun;
   arrayProtoShape_ = arrayProto->lastProperty();
-  arrayProtoConstructorSlot_ = ctorShape->slot();
+  arrayProtoConstructorSlot_ = ctorProp->slot();
 }
 
 void js::ArraySpeciesLookup::reset() {

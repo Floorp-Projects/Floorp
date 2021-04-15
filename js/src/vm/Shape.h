@@ -133,6 +133,7 @@ class ShapeProperty {
   explicit ShapeProperty(Shape* shape) : shape_(shape) { MOZ_ASSERT(shape); }
 
   inline bool isDataProperty() const;
+  inline bool isCustomDataProperty() const;
   inline uint32_t slot() const;
 
   inline uint8_t attributes() const;
@@ -1609,6 +1610,10 @@ MOZ_ALWAYS_INLINE bool ShapeIC::search(jsid id, Shape** foundShape) {
 
 inline bool ShapeProperty::isDataProperty() const {
   return shape_->isDataProperty();
+}
+
+inline bool ShapeProperty::isCustomDataProperty() const {
+  return shape_->isCustomDataProperty();
 }
 
 inline uint32_t ShapeProperty::slot() const { return shape_->slot(); }

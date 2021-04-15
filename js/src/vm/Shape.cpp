@@ -1270,8 +1270,7 @@ Shape* NativeObject::replaceWithNewEquivalentShape(JSContext* cx,
                                                    Shape* newShape) {
   MOZ_ASSERT(cx->isInsideCurrentZone(oldShape));
   MOZ_ASSERT_IF(oldShape != obj->lastProperty(),
-                obj->inDictionaryMode() &&
-                    obj->lookup(cx, oldShape->propidRef()) == oldShape);
+                obj->inDictionaryMode() && obj->contains(cx, oldShape));
 
   if (!obj->inDictionaryMode()) {
     RootedShape newRoot(cx, newShape);

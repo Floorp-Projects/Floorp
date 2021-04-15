@@ -3474,19 +3474,19 @@ bool js::CheckLexicalNameConflict(
     HandleObject varObj, HandlePropertyName name) {
   const char* redeclKind = nullptr;
   RootedId id(cx, NameToId(name));
-  RootedShape shape(cx);
+  mozilla::Maybe<ShapeProperty> prop;
   if (varObj->is<GlobalObject>() &&
       varObj->as<GlobalObject>().realm()->isInVarNames(name)) {
     // ES 15.1.11 step 5.a
     redeclKind = "var";
-  } else if ((shape = lexicalEnv->lookup(cx, name))) {
+  } else if ((prop = lexicalEnv->lookup(cx, name))) {
     // ES 15.1.11 step 5.b
-    redeclKind = shape->writable() ? "let" : "const";
+    redeclKind = prop->writable() ? "let" : "const";
   } else if (varObj->is<NativeObject>() &&
-             (shape = varObj->as<NativeObject>().lookup(cx, name))) {
+             (prop = varObj->as<NativeObject>().lookup(cx, name))) {
     // Faster path for ES 15.1.11 step 5.c-d when the shape can be found
     // without going through a resolve hook.
-    if (!shape->configurable()) {
+    if (!prop->configurable()) {
       redeclKind = "non-configurable global property";
     }
   } else {
@@ -3511,8 +3511,9 @@ bool js::CheckLexicalNameConflict(
 [[nodiscard]] static bool CheckVarNameConflict(
     JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
     HandlePropertyName name) {
-  if (Shape* shape = lexicalEnv->lookup(cx, name)) {
-    ReportRuntimeRedeclaration(cx, name, shape->writable() ? "let" : "const");
+  mozilla::Maybe<ShapeProperty> prop = lexicalEnv->lookup(cx, name);
+  if (prop.isSome()) {
+    ReportRuntimeRedeclaration(cx, name, prop->writable() ? "let" : "const");
     return false;
   }
   return true;
@@ -4226,20 +4227,22 @@ JSObject* js::MaybeOptimizeBindGlobalName(JSContext* cx,
   // 'let') at compile time.
   Rooted<GlobalLexicalEnvironmentObject*> env(cx,
                                               &global->lexicalEnvironment());
-  if (Shape* shape = env->lookup(cx, name)) {
-    if (shape->writable() &&
-        !env->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
+  mozilla::Maybe<ShapeProperty> prop = env->lookup(cx, name);
+  if (prop.isSome()) {
+    if (prop->writable() &&
+        !env->getSlot(prop->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
       return env;
     }
     return nullptr;
   }
 
-  if (Shape* shape = global->lookup(cx, name)) {
+  prop = global->lookup(cx, name);
+  if (prop.isSome()) {
     // If the property does not currently exist on the global lexical
     // scope, we can bind name to the global object if the property
     // exists on the global and is non-configurable, as then it cannot
     // be shadowed.
-    if (!shape->configurable()) {
+    if (!prop->configurable()) {
       return global;
     }
   }
