@@ -3752,12 +3752,12 @@ bool BaselineCompilerCodeGen::emit_GetImport() {
 
   jsid id = NameToId(script->getName(handler.pc()));
   ModuleEnvironmentObject* targetEnv;
-  Shape* shape;
-  MOZ_ALWAYS_TRUE(env->lookupImport(id, &targetEnv, &shape));
+  Maybe<ShapeProperty> prop;
+  MOZ_ALWAYS_TRUE(env->lookupImport(id, &targetEnv, &prop));
 
   frame.syncStack(0);
 
-  uint32_t slot = shape->slot();
+  uint32_t slot = prop->slot();
   Register scratch = R0.scratchReg();
   masm.movePtr(ImmGCPtr(targetEnv), scratch);
   if (slot < targetEnv->numFixedSlots()) {
@@ -3772,7 +3772,7 @@ bool BaselineCompilerCodeGen::emit_GetImport() {
 
   // Imports are initialized by this point except in rare circumstances, so
   // don't emit a check unless we have to.
-  if (targetEnv->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
+  if (targetEnv->getSlot(slot).isMagic(JS_UNINITIALIZED_LEXICAL)) {
     if (!emitUninitializedLexicalCheck(R0)) {
       return false;
     }

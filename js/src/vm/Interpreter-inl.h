@@ -93,7 +93,6 @@ static inline bool IsUninitializedLexicalSlot(HandleObject obj,
     return false;
   }
 
-  MOZ_ASSERT(obj->as<NativeObject>().containsPure(shapeProp.shapeDeprecated()));
   return IsUninitializedLexical(
       obj->as<NativeObject>().getSlot(shapeProp.slot()));
 }
