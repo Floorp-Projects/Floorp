@@ -9,6 +9,8 @@ import android.view.View
 import android.widget.ArrayAdapter
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.fragment_credit_card_editor.*
+import mozilla.components.concept.storage.CreditCardNumber
+import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.ext.toEditable
@@ -30,6 +32,7 @@ class CreditCardEditorView(
     /**
      * Binds the given [CreditCardEditorState] in the [CreditCardEditorFragment].
      */
+    @Suppress("MagicNumber")
     fun bind(state: CreditCardEditorState) {
         if (state.isEditing) {
             delete_button.apply {
@@ -48,18 +51,29 @@ class CreditCardEditorView(
         save_button.setOnClickListener {
             containerView.hideKeyboard()
 
-            val creditCardFields = UpdatableCreditCardFields(
-                billingName = name_on_card_input.text.toString(),
-                cardNumber = card_number_input.text.toString(),
-                expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
-                expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                cardType = CARD_TYPE_PLACEHOLDER
-            )
-
+            // TODO same as in the corresponding fragment, plaintext number if it's being updated or
+            //  round-tripped otherwise. Also, why is there so much duplication?
+            val cardNumber = card_number_input.text.toString()
             if (state.isEditing) {
-                interactor.onUpdateCreditCard(state.guid, creditCardFields)
+                val fields = UpdatableCreditCardFields(
+                    billingName = name_on_card_input.text.toString(),
+                    cardNumber = CreditCardNumber.Encrypted(cardNumber),
+                    cardNumberLast4 = cardNumber.substring(cardNumber.length - 4),
+                    expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
+                    expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
+                    cardType = CARD_TYPE_PLACEHOLDER
+                )
+                interactor.onUpdateCreditCard(state.guid, fields)
             } else {
-                interactor.onSaveCreditCard(creditCardFields)
+                val fields = NewCreditCardFields(
+                    billingName = name_on_card_input.text.toString(),
+                    plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
+                    cardNumberLast4 = cardNumber.substring(cardNumber.length - 4),
+                    expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
+                    expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
+                    cardType = CARD_TYPE_PLACEHOLDER
+                )
+                interactor.onSaveCreditCard(fields)
             }
         }
 

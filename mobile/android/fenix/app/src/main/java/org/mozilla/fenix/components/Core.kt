@@ -291,7 +291,7 @@ class Core(
     val lazyHistoryStorage = lazyMonitored { PlacesHistoryStorage(context, crashReporter) }
     val lazyBookmarksStorage = lazyMonitored { PlacesBookmarksStorage(context) }
     val lazyPasswordsStorage = lazyMonitored { SyncableLoginsStorage(context, passwordsEncryptionKey) }
-    val lazyAutofillStorage = lazyMonitored { AutofillCreditCardsAddressesStorage(context) }
+    private val lazyAutofillStorage = lazyMonitored { AutofillCreditCardsAddressesStorage(context, lazySecurePrefs) }
 
     /**
      * The storage component to sync and persist tabs in a Firefox Sync account.
@@ -390,6 +390,7 @@ class Core(
      * Shared Preferences that encrypt/decrypt using Android KeyStore and lib-dataprotect for 23+
      * only on Nightly/Debug for now, otherwise simply stored.
      * See https://github.com/mozilla-mobile/fenix/issues/8324
+     * Also, this needs revision. See https://github.com/mozilla-mobile/fenix/issues/19155
      */
     private fun getSecureAbove22Preferences() =
         SecureAbove22Preferences(
@@ -397,6 +398,9 @@ class Core(
             name = KEY_STORAGE_NAME,
             forceInsecure = !Config.channel.isNightlyOrDebug
         )
+
+    // Temporary. See https://github.com/mozilla-mobile/fenix/issues/19155
+    private val lazySecurePrefs = lazyMonitored { getSecureAbove22Preferences() }
 
     private val passwordsEncryptionKey by lazyMonitored {
         getSecureAbove22Preferences().getString(PASSWORDS_KEY)

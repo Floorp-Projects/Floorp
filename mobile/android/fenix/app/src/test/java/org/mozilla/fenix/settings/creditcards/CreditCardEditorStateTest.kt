@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.creditcards
 
 import mozilla.components.concept.storage.CreditCard
+import mozilla.components.concept.storage.CreditCardNumber
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -17,7 +18,8 @@ class CreditCardEditorStateTest {
     private val creditCard = CreditCard(
         guid = "id",
         billingName = "Banana Apple",
-        cardNumber = "4111111111111110",
+        encryptedCardNumber = CreditCardNumber.Encrypted("4111111111111110"),
+        cardNumberLast4 = "1110",
         expiryMonth = 5,
         expiryYear = 2030,
         cardType = "amex",
@@ -36,7 +38,7 @@ class CreditCardEditorStateTest {
         with(state) {
             assertEquals(creditCard.guid, guid)
             assertEquals(creditCard.billingName, billingName)
-            assertEquals(creditCard.cardNumber, cardNumber)
+            assertEquals(creditCard.encryptedCardNumber.number, cardNumber)
             assertEquals(creditCard.expiryMonth.toInt(), expiryMonth)
             assertEquals(Pair(startYear, endYear), expiryYears)
             assertTrue(isEditing)

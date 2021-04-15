@@ -14,6 +14,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_credit_card_editor.*
+import mozilla.components.concept.storage.CreditCardNumber
+import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
@@ -69,6 +71,7 @@ class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) 
         menu.findItem(R.id.delete_credit_card_button).isVisible = isEditing
     }
 
+    @Suppress("MagicNumber")
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.delete_credit_card_button -> {
             args.creditCard?.let { interactor.onDeleteCardButtonClicked(it.guid) }
@@ -78,18 +81,30 @@ class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) 
             view?.hideKeyboard()
 
             val creditCard = args.creditCard
-            val creditCardFields = UpdatableCreditCardFields(
-                billingName = name_on_card_input.text.toString(),
-                cardNumber = card_number_input.text.toString(),
-                expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
-                expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                cardType = CARD_TYPE_PLACEHOLDER
-            )
+
+            // TODO need to know if we're updating a number, or just round-tripping it
+            val cardNumber = card_number_input.text.toString()
 
             if (creditCard != null) {
-                interactor.onUpdateCreditCard(creditCard.guid, creditCardFields)
+                val fields = UpdatableCreditCardFields(
+                        billingName = name_on_card_input.text.toString(),
+                        cardNumber = CreditCardNumber.Plaintext(cardNumber),
+                        cardNumberLast4 = cardNumber.substring(cardNumber.length - 5, cardNumber.length - 1),
+                        expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
+                        expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
+                        cardType = CARD_TYPE_PLACEHOLDER
+                    )
+                interactor.onUpdateCreditCard(creditCard.guid, fields)
             } else {
-                interactor.onSaveCreditCard(creditCardFields)
+                val fields = NewCreditCardFields(
+                    billingName = name_on_card_input.text.toString(),
+                    plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
+                    cardNumberLast4 = cardNumber.substring(cardNumber.length - 5, cardNumber.length - 1),
+                    expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
+                    expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
+                    cardType = CARD_TYPE_PLACEHOLDER
+                )
+                interactor.onSaveCreditCard(fields)
             }
 
             true

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.creditcards.interactor
 
+import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import org.mozilla.fenix.settings.creditcards.controller.CreditCardEditorController
 
@@ -30,9 +31,9 @@ interface CreditCardEditorInteractor {
      * Saves the provided credit card field into the credit card storage. Called when a user
      * taps on the save menu item or "Save" button.
      *
-     * @param creditCardFields A [UpdatableCreditCardFields] record to add.
+     * @param creditCardFields A [NewCreditCardFields] record to add.
      */
-    fun onSaveCreditCard(creditCardFields: UpdatableCreditCardFields)
+    fun onSaveCreditCard(creditCardFields: NewCreditCardFields)
 
     /**
      * Updates the provided credit card with the new credit card fields. Called when a user
@@ -62,7 +63,7 @@ class DefaultCreditCardEditorInteractor(
         controller.handleDeleteCreditCard(guid)
     }
 
-    override fun onSaveCreditCard(creditCardFields: UpdatableCreditCardFields) {
+    override fun onSaveCreditCard(creditCardFields: NewCreditCardFields) {
         controller.handleSaveCreditCard(creditCardFields)
     }
 

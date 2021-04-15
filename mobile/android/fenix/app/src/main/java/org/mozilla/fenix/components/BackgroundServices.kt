@@ -95,8 +95,8 @@ class BackgroundServices(
     private val syncConfig = SyncConfig(supportedEngines, PeriodicSyncConfig(periodMinutes = 240)) // four hours
 
     init {
-        /* Make the "history", "bookmark", "passwords", and "tabs" stores accessible to workers
-           spawned by the sync manager. */
+        // Make the "history", "bookmark", "passwords", "tabs" stores
+        // accessible to workers spawned by the sync manager.
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarkStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)

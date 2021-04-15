@@ -10,6 +10,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.android.synthetic.main.fragment_credit_card_editor.view.*
 import mozilla.components.concept.storage.CreditCard
+import mozilla.components.concept.storage.CreditCardNumber
+import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -35,7 +37,8 @@ class CreditCardEditorViewTest {
     private val creditCard = CreditCard(
         guid = "id",
         billingName = "Banana Apple",
-        cardNumber = "4111111111111110",
+        encryptedCardNumber = CreditCardNumber.Encrypted("4111111111111110"),
+        cardNumberLast4 = "1110",
         expiryMonth = 5,
         expiryYear = 2030,
         cardType = "amex",
@@ -83,7 +86,7 @@ class CreditCardEditorViewTest {
     fun `GIVEN a credit card THEN credit card form inputs are displaying the provided credit card information`() {
         creditCardEditorView.bind(creditCard.toCreditCardEditorState())
 
-        assertEquals(creditCard.cardNumber, view.card_number_input.text.toString())
+        assertEquals(creditCard.encryptedCardNumber.number, view.card_number_input.text.toString())
         assertEquals(creditCard.billingName, view.name_on_card_input.text.toString())
 
         with(view.expiry_month_drop_down) {
@@ -139,9 +142,10 @@ class CreditCardEditorViewTest {
 
         verify {
             interactor.onSaveCreditCard(
-                UpdatableCreditCardFields(
+                NewCreditCardFields(
                     billingName = billingName,
-                    cardNumber = cardNumber,
+                    plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
+                    cardNumberLast4 = "1110",
                     expiryMonth = expiryMonth.toLong(),
                     expiryYear = expiryYear.toLong(),
                     cardType = CARD_TYPE_PLACEHOLDER
@@ -161,7 +165,8 @@ class CreditCardEditorViewTest {
                 guid = creditCard.guid,
                 creditCardFields = UpdatableCreditCardFields(
                     billingName = creditCard.billingName,
-                    cardNumber = creditCard.cardNumber,
+                    cardNumber = creditCard.encryptedCardNumber,
+                    cardNumberLast4 = creditCard.cardNumberLast4,
                     expiryMonth = creditCard.expiryMonth,
                     expiryYear = creditCard.expiryYear,
                     cardType = CARD_TYPE_PLACEHOLDER

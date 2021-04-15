@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.creditcards
 
 import mozilla.components.concept.storage.CreditCard
+import mozilla.components.concept.storage.CreditCardNumber
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -17,7 +18,8 @@ class CreditCardsAdapterTest {
         val creditCard1 = CreditCard(
             guid = "id",
             billingName = "Banana Apple",
-            cardNumber = "4111111111111110",
+            encryptedCardNumber = CreditCardNumber.Encrypted("4111111111111110"),
+            cardNumberLast4 = "1110",
             expiryMonth = 1,
             expiryYear = 2030,
             cardType = "amex",
@@ -29,7 +31,8 @@ class CreditCardsAdapterTest {
         val creditCard2 = CreditCard(
             guid = "id",
             billingName = "Banana Apple",
-            cardNumber = "4111111111111110",
+            encryptedCardNumber = CreditCardNumber.Encrypted("4111111111111110"),
+            cardNumberLast4 = "1110",
             expiryMonth = 1,
             expiryYear = 2030,
             cardType = "amex",
@@ -49,7 +52,8 @@ class CreditCardsAdapterTest {
         val creditCard3 = CreditCard(
             guid = "id3",
             billingName = "Banana Apple",
-            cardNumber = "4111111111111110",
+            encryptedCardNumber = CreditCardNumber.Encrypted("4111111111111110"),
+            cardNumberLast4 = "1110",
             expiryMonth = 1,
             expiryYear = 2030,
             cardType = "amex",

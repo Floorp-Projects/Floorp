@@ -37,7 +37,8 @@ fun CreditCard.toCreditCardEditorState(): CreditCardEditorState {
     return CreditCardEditorState(
         guid = guid,
         billingName = billingName,
-        cardNumber = cardNumber,
+        // TODO - need to represented a full CreditCardNumber object here, along with last4
+        cardNumber = encryptedCardNumber.number,
         expiryMonth = expiryMonth.toInt(),
         expiryYears = Pair(startYear, endYear),
         isEditing = true

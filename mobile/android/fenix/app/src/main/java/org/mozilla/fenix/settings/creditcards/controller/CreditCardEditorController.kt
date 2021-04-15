@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment
@@ -33,7 +34,7 @@ interface CreditCardEditorController {
     /**
      * @see [CreditCardEditorInteractor.onSaveCreditCard]
      */
-    fun handleSaveCreditCard(creditCardFields: UpdatableCreditCardFields)
+    fun handleSaveCreditCard(creditCardFields: NewCreditCardFields)
 
     /**
      * @see [CreditCardEditorInteractor.onUpdateCreditCard]
@@ -71,7 +72,7 @@ class DefaultCreditCardEditorController(
         }
     }
 
-    override fun handleSaveCreditCard(creditCardFields: UpdatableCreditCardFields) {
+    override fun handleSaveCreditCard(creditCardFields: NewCreditCardFields) {
         lifecycleScope.launch(ioDispatcher) {
             storage.addCreditCard(creditCardFields)
 
