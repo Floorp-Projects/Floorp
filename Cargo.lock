@@ -3287,6 +3287,7 @@ name = "mozwer_s"
 version = "0.1.0"
 dependencies = [
  "libc",
+ "mozilla-central-workspace-hack",
  "rust-ini",
  "serde",
  "serde_json",

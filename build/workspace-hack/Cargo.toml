@@ -15,7 +15,19 @@ version = "0.1.0"
 
 [build-dependencies]
 void = { features = ["std", "default"], version = "1.0.2" }
-syn = { features = ["clone-impls", "default", "derive", "extra-traits", "fold", "full", "parsing", "printing", "proc-macro", "quote", "visit"],  version = "1.0" }
+syn = { features = [
+    "clone-impls",
+    "default",
+    "derive",
+    "extra-traits",
+    "fold",
+    "full",
+    "parsing",
+    "printing",
+    "proc-macro",
+    "quote",
+    "visit",
+], version = "1.0" }
 serde = { features = ["default", "derive", "rc", "serde_derive", "std"], version = "1.0.66" }
 serde_derive = { features = ["default", "deserialize_in_place"], version = "1.0.66" }
 quote = { features = ["default", "proc-macro"], version = "1.0" }
@@ -45,6 +57,7 @@ features = [
     "impl-default",
     "ioapiset",
     "libloaderapi",
+    "knownfolders",
     "memoryapi",
     "minwinbase",
     "minwindef",
@@ -55,8 +68,10 @@ features = [
     "objbase",
     "processenv",
     "profileapi",
+    "psapi",
     "rpcndr",
     "setupapi",
+    "shlobj",
     "std",
     "synchapi",
     "sysinfoapi",
@@ -72,5 +87,5 @@ features = [
     "ws2ipdef",
     "ws2tcpip",
     "wtypes",
-    "wtypesbase"
+    "wtypesbase",
 ]

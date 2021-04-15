@@ -6,22 +6,12 @@ edition = "2018"
 
 [dependencies]
 libc = "0.2.0"
+mozilla-central-workspace-hack = { path = "../../../build/workspace-hack" }
 rust-ini = "0.10"
-serde = { version = "1.0", features = ["derive"] }
+serde = "1.0"
 serde_json = { version = "1.0" }
 uuid = { version = "0.8.1", features = ["v4"] }
-winapi = { version = "0.3", features = [
-    "combaseapi",
-    "handleapi",
-    "impl-default",
-    "knownfolders",
-    "memoryapi",
-    "psapi",
-    "shlobj",
-    "winerror",
-    "winbase",
-    "winnt",
-] }
+winapi = "0.3"
 
 [lib]
 name = "mozwer_s"
