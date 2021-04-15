@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 
 #include <algorithm>
 #include <stdint.h>
@@ -919,13 +920,15 @@ class NativeObject : public JSObject {
   }
 
   /* Contextless; can be called from other pure code. */
-  Shape* lookupPure(jsid id);
-  Shape* lookupPure(PropertyName* name) { return lookupPure(NameToId(name)); }
+  mozilla::Maybe<ShapeProperty> lookupPure(jsid id);
+  mozilla::Maybe<ShapeProperty> lookupPure(PropertyName* name) {
+    return lookupPure(NameToId(name));
+  }
 
-  bool containsPure(jsid id) { return lookupPure(id) != nullptr; }
+  bool containsPure(jsid id) { return lookupPure(id).isSome(); }
   bool containsPure(PropertyName* name) { return containsPure(NameToId(name)); }
   bool containsPure(Shape* shape) {
-    return lookupPure(shape->propid()) == shape;
+    return lookupPure(shape->propid())->shapeDeprecated() == shape;
   }
 
   /*

@@ -304,9 +304,10 @@ Shape* js::NativeObject::lookup(JSContext* cx, jsid id) {
   return Shape::search(cx, lastProperty(), id);
 }
 
-Shape* js::NativeObject::lookupPure(jsid id) {
+mozilla::Maybe<ShapeProperty> js::NativeObject::lookupPure(jsid id) {
   MOZ_ASSERT(is<NativeObject>());
-  return Shape::searchNoHashify(lastProperty(), id);
+  Shape* shape = Shape::searchNoHashify(lastProperty(), id);
+  return shape ? mozilla::Some(ShapeProperty(shape)) : mozilla::Nothing();
 }
 
 bool NativeObject::ensureSlotsForDictionaryObject(JSContext* cx,
