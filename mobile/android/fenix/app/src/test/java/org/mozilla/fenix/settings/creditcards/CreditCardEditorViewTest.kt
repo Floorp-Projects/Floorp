@@ -18,6 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment.Companion.CARD_TYPE_PLACEHOLDER
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment.Companion.NUMBER_OF_YEARS_TO_SHOW
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardEditorInteractor
 import org.mozilla.fenix.settings.creditcards.view.CreditCardEditorView
@@ -73,6 +74,8 @@ class CreditCardEditorViewTest {
             assertEquals(startYear.toString(), selectedItem.toString())
             assertEquals(endYear.toString(), getItemAtPosition(count - 1).toString())
         }
+
+        assertEquals(View.GONE, view.delete_button.visibility)
     }
 
     @Test
@@ -97,6 +100,17 @@ class CreditCardEditorViewTest {
     }
 
     @Test
+    fun `GIVEN a credit card WHEN the delete card button is clicked THEN interactor is called`() {
+        creditCardEditorView.bind(creditCard.toCreditCardEditorState())
+
+        assertEquals(View.VISIBLE, view.delete_button.visibility)
+
+        view.delete_button.performClick()
+
+        verify { interactor.onDeleteCardButtonClicked(creditCard.guid) }
+    }
+
+    @Test
     fun `WHEN the cancel button is clicked THEN interactor is called`() {
         creditCardEditorView.bind(getInitialCreditCardEditorState())
 
@@ -118,7 +132,7 @@ class CreditCardEditorViewTest {
                     cardNumber = creditCard.cardNumber,
                     expiryMonth = creditCard.expiryMonth,
                     expiryYear = creditCard.expiryYear,
-                    cardType = "amex"
+                    cardType = CARD_TYPE_PLACEHOLDER
                 )
             )
         }

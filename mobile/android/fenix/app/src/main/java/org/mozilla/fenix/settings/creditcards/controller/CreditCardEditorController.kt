@@ -24,6 +24,11 @@ interface CreditCardEditorController {
     fun handleCancelButtonClicked()
 
     /**
+     * @see [CreditCardEditorInteractor.onDeleteCardButtonClicked]
+     */
+    fun handleDeleteCreditCard(guid: String)
+
+    /**
      * @see [CreditCardEditorInteractor.onSaveButtonClicked]
      */
     fun handleSaveCreditCard(creditCardFields: UpdatableCreditCardFields)
@@ -47,6 +52,16 @@ class DefaultCreditCardEditorController(
 
     override fun handleCancelButtonClicked() {
         navController.popBackStack()
+    }
+
+    override fun handleDeleteCreditCard(guid: String) {
+        lifecycleScope.launch(ioDispatcher) {
+            storage.deleteCreditCard(guid)
+
+            lifecycleScope.launch(Dispatchers.Main) {
+                navController.popBackStack()
+            }
+        }
     }
 
     override fun handleSaveCreditCard(creditCardFields: UpdatableCreditCardFields) {

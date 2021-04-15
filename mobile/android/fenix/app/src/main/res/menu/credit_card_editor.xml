@@ -5,6 +5,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/delete_credit_card_button"
+        android:icon="@drawable/ic_delete"
+        android:title="@string/credit_cards_menu_delete_card"
+        android:visible="false"
+        app:iconTint="?primaryText"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/save_credit_card_button"
         android:icon="@drawable/mozac_ic_check"
         android:title="@string/credit_cards_menu_save"

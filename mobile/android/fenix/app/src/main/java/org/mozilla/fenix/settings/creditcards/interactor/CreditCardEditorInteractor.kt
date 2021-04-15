@@ -19,6 +19,14 @@ interface CreditCardEditorInteractor {
     fun onCancelButtonClicked()
 
     /**
+     * Deletes the provided credit card in the credit card storage. Called when a user
+     * taps on the delete menu item or "Delete card" button.
+     *
+     * @param guid Unique identifier for the credit card to be deleted.
+     */
+    fun onDeleteCardButtonClicked(guid: String)
+
+    /**
      * Saves the provided credit card field into the credit card storage. Called when a user
      * taps on the save menu item or "Save" button.
      *
@@ -39,6 +47,10 @@ class DefaultCreditCardEditorInteractor(
 
     override fun onCancelButtonClicked() {
         controller.handleCancelButtonClicked()
+    }
+
+    override fun onDeleteCardButtonClicked(guid: String) {
+        controller.handleDeleteCreditCard(guid)
     }
 
     override fun onSaveButtonClicked(creditCardFields: UpdatableCreditCardFields) {

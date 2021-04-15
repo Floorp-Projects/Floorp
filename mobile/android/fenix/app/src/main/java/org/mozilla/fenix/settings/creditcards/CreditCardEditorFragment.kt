@@ -65,9 +65,15 @@ class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) 
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.credit_card_editor, menu)
+
+        menu.findItem(R.id.delete_credit_card_button).isVisible = isEditing
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+        R.id.delete_credit_card_button -> {
+            args.creditCard?.let { interactor.onDeleteCardButtonClicked(it.guid) }
+            true
+        }
         R.id.save_credit_card_button -> {
             saveCreditCard()
             true
@@ -88,7 +94,7 @@ class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) 
                 cardNumber = card_number_input.text.toString(),
                 expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
                 expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                cardType = "amex"
+                cardType = CARD_TYPE_PLACEHOLDER
             )
         )
     }
@@ -96,5 +102,9 @@ class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) 
     companion object {
         // Number of years to show in the expiry year dropdown.
         const val NUMBER_OF_YEARS_TO_SHOW = 10
+
+        // Placeholder for the card type. This will be replaced when we can identify the card type.
+        // This is dependent on https://github.com/mozilla-mobile/android-components/issues/9813.
+        const val CARD_TYPE_PLACEHOLDER = ""
     }
 }

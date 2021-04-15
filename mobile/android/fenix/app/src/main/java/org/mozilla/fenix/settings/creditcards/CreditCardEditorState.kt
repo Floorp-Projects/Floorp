@@ -11,13 +11,15 @@ import java.util.Calendar
 /**
  * The state for the [CreditCardEditorFragment].
  *
+ * @property guid The unique identifier for the edited credit card.
  * @property billingName The credit card billing name to display.
  * @property cardNumber The credit card number to display.
  * @property expiryMonth The selected credit card expiry month.
  * @property expiryYears The range of expiry years to display.
- * @property isEditing Whether or not the credit is being edited.
+ * @property isEditing Whether or not the credit card is being edited.
  */
 data class CreditCardEditorState(
+    val guid: String = "",
     val billingName: String = "",
     val cardNumber: String = "",
     val expiryMonth: Int = 1,
@@ -33,6 +35,7 @@ fun CreditCard.toCreditCardEditorState(): CreditCardEditorState {
     val endYear = startYear + NUMBER_OF_YEARS_TO_SHOW
 
     return CreditCardEditorState(
+        guid = guid,
         billingName = billingName,
         cardNumber = cardNumber,
         expiryMonth = expiryMonth.toInt(),

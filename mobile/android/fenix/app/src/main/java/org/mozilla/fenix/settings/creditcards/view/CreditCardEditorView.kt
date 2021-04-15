@@ -12,6 +12,7 @@ import kotlinx.android.synthetic.main.fragment_credit_card_editor.*
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.ext.toEditable
+import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment.Companion.CARD_TYPE_PLACEHOLDER
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorState
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardEditorInteractor
 import java.text.SimpleDateFormat
@@ -30,6 +31,16 @@ class CreditCardEditorView(
      * Binds the given [CreditCardEditorState] in the [CreditCardEditorFragment].
      */
     fun bind(state: CreditCardEditorState) {
+        if (state.isEditing) {
+            delete_button.apply {
+                visibility = View.VISIBLE
+
+                setOnClickListener {
+                    interactor.onDeleteCardButtonClicked(state.guid)
+                }
+            }
+        }
+
         cancel_button.setOnClickListener {
             interactor.onCancelButtonClicked()
         }
@@ -99,7 +110,7 @@ class CreditCardEditorView(
                 cardNumber = card_number_input.text.toString(),
                 expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
                 expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                cardType = "amex"
+                cardType = CARD_TYPE_PLACEHOLDER
             )
         )
     }

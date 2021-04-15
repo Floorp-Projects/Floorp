@@ -34,6 +34,7 @@ class CreditCardEditorStateTest {
         val endYear = startYear + NUMBER_OF_YEARS_TO_SHOW
 
         with(state) {
+            assertEquals(creditCard.guid, guid)
             assertEquals(creditCard.billingName, billingName)
             assertEquals(creditCard.cardNumber, cardNumber)
             assertEquals(creditCard.expiryMonth.toInt(), expiryMonth)
@@ -50,6 +51,7 @@ class CreditCardEditorStateTest {
         val endYear = startYear + NUMBER_OF_YEARS_TO_SHOW
 
         with(state) {
+            assertEquals("", guid)
             assertEquals("", billingName)
             assertEquals("", cardNumber)
             assertEquals(1, expiryMonth)
