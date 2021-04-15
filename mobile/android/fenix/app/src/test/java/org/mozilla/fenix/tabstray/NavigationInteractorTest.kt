@@ -13,6 +13,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab as createStateTab
@@ -189,8 +191,9 @@ class NavigationInteractorTest {
         unmockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() {
+    fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() = runBlockingTest {
         navigationInteractor.onSaveToBookmarks(listOf(createTrayTab()))
         coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
     }
