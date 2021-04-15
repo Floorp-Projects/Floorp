@@ -70,6 +70,27 @@ add_task(async function setup() {
   });
 });
 
+function assertEngineParameters({
+  name,
+  searchURL,
+  suggestionURL,
+  messageSnippet,
+}) {
+  let engine = Services.search.getEngineByName(name);
+  Assert.ok(engine, `Should have found ${name}`);
+
+  Assert.equal(
+    engine.getSubmission("{searchTerms}").uri.spec,
+    encodeURI(searchURL),
+    `Should have ${messageSnippet} the suggestion url.`
+  );
+  Assert.equal(
+    engine.getSubmission("{searchTerms}", URLTYPE_SUGGEST_JSON)?.uri.spec,
+    suggestionURL ? encodeURI(suggestionURL) : suggestionURL,
+    `Should ${messageSnippet} the submission URL.`
+  );
+}
+
 add_task(async function test_extension_changing_to_app_provided_default() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -99,19 +120,11 @@ add_task(async function test_extension_changing_to_app_provided_default() {
     "Should have switched the default engine."
   );
 
-  let engine = Services.search.getEngineByName("MozParamsTest2");
-  Assert.ok(engine, "Should have found the engine");
-
-  Assert.equal(
-    engine.getSubmission("{searchTerms}").uri.spec,
-    encodeURI("https://example.com/2/?q={searchTerms}&simple2=5"),
-    "Should have not changed the submission url."
-  );
-  Assert.equal(
-    engine.getSubmission("{searchTerms}", URLTYPE_SUGGEST_JSON),
-    null,
-    "Should not have set a suggestion URL."
-  );
+  assertEngineParameters({
+    name: "MozParamsTest2",
+    searchURL: "https://example.com/2/?q={searchTerms}&simple2=5",
+    messageSnippet: "left unchanged",
+  });
 
   let promiseDefaultBrowserChange = SearchTestUtils.promiseSearchNotification(
     "engine-default",
@@ -165,6 +178,8 @@ add_task(async function test_extension_overriding_app_provided_default() {
     useAddonManager: "permanent",
   });
 
+  info("startup");
+
   await ext1.startup();
   await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
@@ -173,22 +188,58 @@ add_task(async function test_extension_overriding_app_provided_default() {
     "MozParamsTest2",
     "Should have switched the default engine."
   );
+  assertEngineParameters({
+    name: "MozParamsTest2",
+    searchURL: kSearchEngineURL,
+    suggestionURL: `${kSuggestURL}?${kSuggestURLParams}`,
+    messageSnippet: "changed",
+  });
 
-  let engine = Services.search.getEngineByName("MozParamsTest2");
-  Assert.ok(engine, "Should have found the engine");
-
-  Assert.equal(
-    engine.getSubmission("{searchTerms}").uri.spec,
-    encodeURI(kSearchEngineURL),
-    "Should have changed the suggestion url."
-  );
-  Assert.equal(
-    engine.getSubmission("{searchTerms}", URLTYPE_SUGGEST_JSON).uri.spec,
-    encodeURI(`${kSuggestURL}?${kSuggestURLParams}`),
-    "Should set a submission URL."
-  );
+  info("disable");
 
   let promiseDefaultBrowserChange = SearchTestUtils.promiseSearchNotification(
+    "engine-default",
+    "browser-search-engine-modified"
+  );
+  await ext1.addon.disable();
+  await promiseDefaultBrowserChange;
+
+  Assert.equal(
+    Services.search.defaultEngine.name,
+    "MozParamsTest",
+    "Should have reverted to the original default engine."
+  );
+  assertEngineParameters({
+    name: "MozParamsTest2",
+    searchURL: "https://example.com/2/?q={searchTerms}&simple2=5",
+    messageSnippet: "reverted",
+  });
+
+  info("enable");
+
+  promiseDefaultBrowserChange = SearchTestUtils.promiseSearchNotification(
+    "engine-default",
+    "browser-search-engine-modified"
+  );
+  await ext1.addon.enable();
+  await promiseDefaultBrowserChange;
+
+  Assert.equal(
+    Services.search.defaultEngine.name,
+    "MozParamsTest2",
+    "Should have switched the default engine."
+  );
+
+  assertEngineParameters({
+    name: "MozParamsTest2",
+    searchURL: kSearchEngineURL,
+    suggestionURL: `${kSuggestURL}?${kSuggestURLParams}`,
+    messageSnippet: "changed",
+  });
+
+  info("unload");
+
+  promiseDefaultBrowserChange = SearchTestUtils.promiseSearchNotification(
     "engine-default",
     "browser-search-engine-modified"
   );
@@ -201,17 +252,10 @@ add_task(async function test_extension_overriding_app_provided_default() {
     "Should have reverted to the original default engine."
   );
 
-  engine = Services.search.getEngineByName("MozParamsTest2");
-  Assert.ok(engine, "Should have found the engine");
-
-  Assert.equal(
-    engine.getSubmission("{searchTerms}").uri.spec,
-    encodeURI("https://example.com/2/?q={searchTerms}&simple2=5"),
-    "Should have reverted the submission url."
-  );
-  Assert.equal(
-    engine.getSubmission("{searchTerms}", URLTYPE_SUGGEST_JSON),
-    null,
-    "Should have reverted the suggestion URL."
-  );
+  assertEngineParameters({
+    name: "MozParamsTest2",
+    searchURL: "https://example.com/2/?q={searchTerms}&simple2=5",
+    messageSnippet: "reverted",
+  });
+  sinon.restore();
 });
