@@ -480,6 +480,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
      */
     private fun getClickListenerForMakeDefaultBrowser(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
+            if (isDefaultBrowserExperimentBranch() && !isFirefoxDefaultBrowser()) {
+                requireContext().metrics.track(Event.SetDefaultBrowserSettingsScreenClicked)
+            }
             activity?.openSetDefaultBrowserOption()
             true
         }

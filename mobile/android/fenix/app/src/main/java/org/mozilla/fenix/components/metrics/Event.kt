@@ -230,6 +230,7 @@ sealed class Event {
     object CloseExperimentCardClicked : Event()
     object ToolbarMenuShown : Event()
     object SetDefaultBrowserToolbarMenuClicked : Event()
+    object SetDefaultBrowserSettingsScreenClicked : Event()
 
     // Home menu interaction
     object HomeMenuSettingsItemClicked : Event()

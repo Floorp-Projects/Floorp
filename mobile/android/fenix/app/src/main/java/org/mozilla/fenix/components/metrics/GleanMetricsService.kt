@@ -56,6 +56,7 @@ import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchSuggestions
 import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.GleanMetrics.SetDefaultNewtabExperiment
+import org.mozilla.fenix.GleanMetrics.SetDefaultSettingExperiment
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
@@ -834,6 +835,9 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.SetDefaultBrowserClicked -> EventWrapper<NoExtraKeys>(
             { SetDefaultNewtabExperiment.setDefaultBrowserClicked.record(it) }
+        )
+        is Event.SetDefaultBrowserSettingsScreenClicked -> EventWrapper<NoExtraKeys>(
+            { SetDefaultSettingExperiment.setDefaultBrowserClicked.record(it) }
         )
         is Event.HomeScreenDisplayed -> EventWrapper<NoExtraKeys>(
             { HomeScreen.homeScreenDisplayed.record(it) }

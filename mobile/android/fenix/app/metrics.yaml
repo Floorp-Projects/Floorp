@@ -5377,3 +5377,18 @@ set_default_newtab_experiment:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-10-01"
+
+set_default_setting_experiment:
+  set_default_browser_clicked:
+    type: event
+    description: |
+      Set default browser was clicked from settings screen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18852
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/19047
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2021-10-01"
