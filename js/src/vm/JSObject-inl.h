@@ -14,6 +14,7 @@
 #include "vm/EnvironmentObject.h"
 #include "vm/JSFunction.h"
 #include "vm/Probes.h"
+#include "vm/PropertyResult.h"
 #include "vm/TypedArrayObject.h"
 
 #include "gc/FreeOp-inl.h"
