@@ -337,89 +337,9 @@ class TouchSimulator {
     return true;
   }
 
-  sendTouchEvent(evt, target, name) {
-    const win = target.ownerGlobal;
-    const content = this.getContent(target);
-    if (!content) {
-      return;
-    }
-
-    // To avoid duplicating logic for creating and dispatching touch events on the JS
-    // side, we should use what's already implemented for WindowUtils.sendTouchEvent.
-    const utils = win.windowUtils;
-    utils.sendTouchEvent(
-      name,
-      [0],
-      [evt.clientX],
-      [evt.clientY],
-      [1],
-      [1],
-      [0],
-      [1],
-      0,
-      false
-    );
-  }
-
   getContent(target) {
     const win = target?.ownerDocument ? target.ownerGlobal : null;
     return win;
-  }
-
-  getDelayBeforeMouseEvent(evt) {
-    // On mobile platforms, Firefox inserts a 300ms delay between
-    // touch events and accompanying mouse events, except if the
-    // content window is not zoomable and the content window is
-    // auto-zoomed to device-width.
-
-    // If the preference dom.meta-viewport.enabled is set to false,
-    // we couldn't read viewport's information from getViewportInfo().
-    // So we always simulate 300ms delay when the
-    // dom.meta-viewport.enabled is false.
-    const savedMetaViewportEnabled = Services.prefs.getBoolPref(
-      "dom.meta-viewport.enabled"
-    );
-    if (!savedMetaViewportEnabled) {
-      return 300;
-    }
-
-    const content = this.getContent(evt.target);
-    if (!content) {
-      return 0;
-    }
-
-    const utils = content.windowUtils;
-
-    const allowZoom = {};
-    const minZoom = {};
-    const maxZoom = {};
-    const autoSize = {};
-
-    utils.getViewportInfo(
-      content.innerWidth,
-      content.innerHeight,
-      {},
-      allowZoom,
-      minZoom,
-      maxZoom,
-      {},
-      {},
-      autoSize
-    );
-
-    // FIXME: On Safari and Chrome mobile platform, if the css property
-    // touch-action set to none or manipulation would also suppress 300ms
-    // delay. But Firefox didn't support this property now, we can't get
-    // this value from utils.getVisitedDependentComputedStyle() to check
-    // if we should suppress 300ms delay.
-    if (
-      !allowZoom.value || // user-scalable = no
-      minZoom.value === maxZoom.value || // minimum-scale = maximum-scale
-      autoSize.value // width = device-width
-    ) {
-      return 0;
-    }
-    return 300;
   }
 }
 
