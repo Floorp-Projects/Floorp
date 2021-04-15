@@ -21,6 +21,7 @@
 #include "js/Result.h"
 #include "proxy/Proxy.h"
 #include "vm/JSContext.h"
+#include "vm/PropertyResult.h"
 #include "vm/ProxyObject.h"
 #include "vm/TypedArrayObject.h"
 
