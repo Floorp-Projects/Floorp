@@ -2528,6 +2528,13 @@ pref("first-startup.timeout", 30000);
   pref("app.normandy.test-prefs.string", "");
 #endif
 
+// Shows 'View Image Info' item in the image context menu
+#ifdef MOZ_DEV_EDITION
+  pref("browser.menu.showViewImageInfo", true);
+#else
+  pref("browser.menu.showViewImageInfo", false);
+#endif
+
 // Mozilla-controlled domains that are allowed to use non-standard
 // context properties for SVG images for use in the browser UI. Please
 // keep this list short. This preference (and SVG `context-` keyword support)
