@@ -18,6 +18,9 @@ const {
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -43,6 +46,7 @@ const REMOTE_CONFIGURATION_NEWTAB = {
     { variables: { remoteValue: 2 }, enabled: false, targeting: "false" },
   ],
 };
+const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
 
 async function setup() {
   const client = RemoteSettings("nimbus-desktop-defaults");
@@ -63,6 +67,8 @@ async function setup() {
   registerCleanupFunction(async () => {
     await client.db.clear();
   });
+
+  return client;
 }
 
 add_task(async function setup() {
@@ -79,21 +85,27 @@ add_task(async function setup() {
 });
 
 add_task(async function test_remote_fetch_and_ready() {
+  const sandbox = sinon.createSandbox();
   const featureInstance = NimbusFeatures.aboutwelcome;
   const newtabFeature = NimbusFeatures.newtab;
-  let stub = sinon.stub();
+  let stub = sandbox.stub();
+  let spy = sandbox.spy(ExperimentAPI._store, "finalizeRemoteConfigs");
 
   featureInstance.onUpdate(stub);
 
+  console.log(JSON.stringify(ExperimentAPI._store._store.data));
+  console.log(JSON.stringify(ExperimentAPI._store._nonPersistentStore));
   Assert.equal(
     featureInstance.getValue().remoteValue,
     undefined,
     "This prop does not exist before we sync"
   );
 
-  await setup();
+  let rsClient = await setup();
 
   await RemoteDefaultsLoader.syncRemoteDefaults();
+
+  Assert.ok(spy.calledOnce, "Called finalize after processing remote configs");
 
   // We need to await here because remote configurations are processed
   // async to evaluate targeting
@@ -118,12 +130,38 @@ add_task(async function test_remote_fetch_and_ready() {
     "We receive events on remote defaults updates"
   );
 
+  Assert.ok(
+    Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}newtab`),
+    "Pref cache is set"
+  );
+
+  // Clear RS db and load again. No configurations so should clear the cache.
+  await rsClient.db.clear();
+  await RemoteDefaultsLoader.syncRemoteDefaults();
+
+  Assert.ok(spy.calledTwice, "Called a second time by syncRemoteDefaults");
+
+  Assert.ok(stub.calledTwice, "Second update is from the removal");
+  Assert.equal(
+    stub.secondCall.args[1],
+    "remote-defaults-update",
+    "We receive events when the remote configuration is removed"
+  );
+
+  Assert.ok(
+    !Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}newtab`, ""),
+    "Should clear the pref"
+  );
+  Assert.ok(!newtabFeature.getValue().remoteValue, "Should be missing");
+
   featureInstance.off(stub);
-  ExperimentAPI._store._deleteForTests("__REMOTE_DEFAULTS");
+  ExperimentAPI._store._deleteForTests("aboutwelcome");
+  ExperimentAPI._store._deleteForTests("newtab");
   // The Promise for remote defaults has been resolved so we need
   // clean state for the next run
   NimbusFeatures.aboutwelcome = new ExperimentFeature("aboutwelcome");
   NimbusFeatures.newtab = new ExperimentFeature("newtab");
+  sandbox.restore();
 });
 
 add_task(async function test_remote_fetch_on_updateRecipes() {
@@ -149,4 +187,142 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
   Assert.ok(syncRemoteDefaultsStub.calledOnce, "Timer calls function");
   timerManager.unregisterTimer("rs-experiment-loader-timer");
   sandbox.restore();
+});
+
+// Test that awaiting `feature.ready()` resolves even when there is no remote
+// data
+add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
+  const featureInstance = NimbusFeatures.aboutwelcome;
+  const featureFoo = new ExperimentFeature("foo", {
+    foo: { description: "mochitests" },
+  });
+  const stub = sinon.stub();
+
+  ExperimentAPI._store.on("remote-defaults-finalized", stub);
+
+  await setup();
+
+  await RemoteDefaultsLoader.syncRemoteDefaults();
+
+  // featureFoo will also resolve when the remote defaults cycle finishes
+  await Promise.all([featureInstance.ready(), featureFoo.ready()]);
+
+  Assert.equal(stub.callCount, 1, "Notified all features");
+
+  ExperimentAPI._store.off("remote-defaults-finalized", stub);
+  ExperimentAPI._store._deleteForTests("aboutwelcome");
+  ExperimentAPI._store._deleteForTests("foo");
+  // The Promise for remote defaults has been resolved so we need
+  // clean state for the next run
+  NimbusFeatures.aboutwelcome = new ExperimentFeature("aboutwelcome");
+  NimbusFeatures.newtab = new ExperimentFeature("newtab");
+});
+
+// Test that awaiting `feature.ready()` resolves even when there is no remote
+// data
+add_task(async function test_remote_fetch_no_data_noWaitRemoteLoad() {
+  const featureInstance = NimbusFeatures.aboutwelcome;
+  const featureFoo = new ExperimentFeature("foo", {
+    foo: { description: "mochitests" },
+  });
+  const stub = sinon.stub();
+
+  ExperimentAPI._store.on("remote-defaults-finalized", stub);
+
+  await setup();
+
+  // Don't wait to load remote defaults; make sure there is no blocking issue
+  // with the `ready` call
+  RemoteDefaultsLoader.syncRemoteDefaults();
+
+  // featureFoo will also resolve when the remote defaults cycle finishes
+  await Promise.all([featureInstance.ready(), featureFoo.ready()]);
+
+  Assert.equal(stub.callCount, 1, "Notified all features");
+
+  ExperimentAPI._store.off("remote-defaults-finalized", stub);
+  ExperimentAPI._store._deleteForTests("aboutwelcome");
+  ExperimentAPI._store._deleteForTests("foo");
+  // The Promise for remote defaults has been resolved so we need
+  // clean state for the next run
+  NimbusFeatures.aboutwelcome = new ExperimentFeature("aboutwelcome");
+  NimbusFeatures.newtab = new ExperimentFeature("newtab");
+});
+
+add_task(async function test_remote_ready_from_experiment() {
+  const featureFoo = new ExperimentFeature("foo", {
+    foo: { description: "mochitests" },
+  });
+
+  await ExperimentAPI._store.ready();
+
+  let {
+    enrollmentPromise,
+    doExperimentCleanup,
+  } = ExperimentFakes.enrollmentHelper(
+    ExperimentFakes.recipe("mochitest-1-foo", {
+      branches: [
+        {
+          slug: "mochitest-1-foo",
+          feature: {
+            enabled: true,
+            featureId: "foo",
+            value: null,
+          },
+        },
+      ],
+      active: true,
+    })
+  );
+
+  await enrollmentPromise;
+  // featureFoo will also resolve when the remote defaults cycle finishes
+  await featureFoo.ready();
+
+  Assert.ok(
+    true,
+    "We resolved the remote defaults ready by enrolling in an experiment that targets this feature"
+  );
+
+  await doExperimentCleanup();
+});
+
+add_task(async function test_finalizeRemoteConfigs_cleanup() {
+  const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
+  const featureFoo = new ExperimentFeature("foo", {
+    foo: { description: "mochitests" },
+  });
+  const featureBar = new ExperimentFeature("bar", {
+    foo: { description: "mochitests" },
+  });
+  let stubFoo = sinon.stub();
+  let stubBar = sinon.stub();
+  featureFoo.onUpdate(stubFoo);
+  featureBar.onUpdate(stubBar);
+
+  Services.prefs.setStringPref(
+    `${SYNC_DEFAULTS_PREF_BRANCH}foo`,
+    JSON.stringify({ foo: true })
+  );
+  Services.prefs.setStringPref(
+    `${SYNC_DEFAULTS_PREF_BRANCH}bar`,
+    JSON.stringify({ bar: true })
+  );
+
+  ExperimentAPI._store.remoteDefaultsSession = new Set(["foo"]);
+
+  ExperimentAPI._store.finalizeRemoteConfigs();
+
+  Assert.ok(stubFoo.notCalled, "Not called, feature seen in session");
+  Assert.ok(stubBar.called, "Called, feature not seen in session");
+  Assert.ok(
+    Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}foo`),
+    "Pref is not cleared"
+  );
+  Assert.ok(
+    !Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar`, ""),
+    "Pref was cleared"
+  );
+  // cleanup
+  Services.prefs.clearUserPref(`${SYNC_DEFAULTS_PREF_BRANCH}foo`);
 });

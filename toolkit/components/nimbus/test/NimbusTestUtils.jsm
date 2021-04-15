@@ -68,6 +68,15 @@ const ExperimentFakes = {
 
     return new Promise(resolve => ExperimentAPI.on("update", options, resolve));
   },
+  remoteDefaultsHelper({
+    feature,
+    store = ExperimentManager.store,
+    configuration,
+  }) {
+    store.updateRemoteConfigs(feature.featureId, configuration);
+
+    return feature.ready();
+  },
   enrollmentHelper(recipe = {}, { manager = ExperimentManager } = {}) {
     let enrollmentPromise = new Promise(resolve =>
       manager.store.on(`update:${recipe.slug}`, (event, experiment) => {
