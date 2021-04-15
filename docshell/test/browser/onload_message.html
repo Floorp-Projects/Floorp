@@ -2,14 +2,24 @@
   <head>
     <meta charset="utf-8">
     <script>
-    if (opener) {
       addEventListener("load", function() {
-        opener.postMessage("load", "*");
+        // This file is used in couple of different tests.
+        if (opener) {
+          opener.postMessage("load", "*");
+        } else {
+          var bc = new BroadcastChannel("browser_browsingContext");
+          bc.onmessage = function(event) {
+            if (event.data == "back") {
+              bc.close();
+              history.back();
+            }
+          };
+          bc.postMessage({event: "load", framesLength: frames.length });
+        }
       });
-    }
     </script>
   </head>
   <body>
-    This file posts a message containing "load" to opener on load completion.
+    This file posts a message containing "load" to opener or BroadcastChannel on load completion.
   </body>
 </html>
