@@ -18,7 +18,7 @@ import static org.junit.Assert.fail;
 import android.annotation.TargetApi;
 import android.graphics.Matrix;
 import android.opengl.GLES11Ext;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.support.test.filters.SmallTest;
 import android.util.Log;
 import java.nio.ByteBuffer;

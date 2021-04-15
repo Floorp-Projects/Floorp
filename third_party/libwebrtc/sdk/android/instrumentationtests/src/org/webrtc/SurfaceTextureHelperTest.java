@@ -16,7 +16,7 @@ import static org.junit.Assert.fail;
 
 import android.opengl.GLES20;
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.support.test.filters.MediumTest;
 import android.support.test.filters.SmallTest;
 import java.nio.ByteBuffer;
