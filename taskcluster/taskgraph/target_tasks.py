@@ -786,7 +786,7 @@ def target_tasks_live_site_perf_testing(full_task_graph, parameters, graph_confi
         if "android" in platform:
             if not accept_raptor_android_build(platform):
                 return False
-            elif "-wr" not in try_name:
+            elif "-qr" not in platform:
                 return False
             elif "fenix" not in try_name:
                 return False
@@ -796,7 +796,7 @@ def target_tasks_live_site_perf_testing(full_task_graph, parameters, graph_confi
             return False
 
         for test in LIVE_SITES:
-            if re.search(test + r"(-fis|-wr)?$", try_name):
+            if re.search(test + r"(-fis)?$", try_name):
                 # These tests run 3 times a week, ignore them
                 return False
         return True
@@ -825,11 +825,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
 
         def _run_live_site():
             for test in LIVE_SITES:
-                if try_name.endswith(test + "-wr") or try_name.endswith(
-                    test + "-wr-e10s"
-                ):
-                    return True
-                elif try_name.endswith(test) or try_name.endswith(test + "-e10s"):
+                if try_name.endswith(test) or try_name.endswith(test + "-e10s"):
                     return True
             return False
 
@@ -857,8 +853,6 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     return True
                 if "-fis" in try_name:
                     return False
-                if "-wr" in try_name:
-                    return False
                 if "linux" in platform:
                     if "speedometer" in try_name:
                         return True
@@ -877,7 +871,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             if "fennec" in try_name:
                 return False
             # Only run webrender tests
-            if "chrome-m" not in try_name and "-wr" not in try_name:
+            if "chrome-m" not in try_name and "-qr" not in platform:
                 return False
             # Select live site tests
             if "-live" in try_name and ("fenix" in try_name or "chrome-m" in try_name):
