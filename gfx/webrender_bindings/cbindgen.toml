@@ -16,9 +16,11 @@ namespaces = ["mozilla", "wr"]
 
 [export]
 item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "functions", "constants"]
+include = ["POLYGON_CLIP_VERTEX_MAX"]
 
 [parse]
 parse_deps = true
+extra_bindings = ["webrender_api"]
 include = ["log", "euclid", "webrender", "webrender_api"]
 
 [fn]

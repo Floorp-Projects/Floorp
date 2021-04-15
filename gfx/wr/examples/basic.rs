@@ -221,6 +221,8 @@ impl Example for App {
         let mask_clip_id = builder.define_clip_image_mask(
             &root_space_and_clip,
             mask,
+            &vec![],
+            FillRule::Nonzero,
         );
         let clip_id = builder.define_clip_rounded_rect(
             &SpaceAndClipInfo {

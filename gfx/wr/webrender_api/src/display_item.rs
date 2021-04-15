@@ -1491,6 +1491,8 @@ impl ComplexClipRegion {
     }
 }
 
+pub const POLYGON_CLIP_VERTEX_MAX: usize = 16;
+
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize, Eq, Hash, PeekPoke)]
 pub enum FillRule {
