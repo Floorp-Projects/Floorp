@@ -554,21 +554,6 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
     "Default engine is Bing"
   );
   await ext2.unload();
-
-  let opened = promisePopupNotificationShown(
-    "addon-webext-defaultsearch",
-    window
-  );
-
-  let panel = await opened;
-  panel.button.click();
-  await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");
-
-  is(
-    (await Services.search.getDefault()).name,
-    "DuckDuckGo",
-    "Default engine is DuckDuckGo"
-  );
   await ext1.unload();
 
   is(
@@ -657,21 +642,6 @@ add_task(async function test_two_addons_with_first_disabled() {
     "Default engine is Bing"
   );
   await ext2.unload();
-
-  let opened = promisePopupNotificationShown(
-    "addon-webext-defaultsearch",
-    window
-  );
-
-  let panel = await opened;
-  panel.button.click();
-  await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");
-
-  is(
-    (await Services.search.getDefault()).name,
-    "DuckDuckGo",
-    "Default engine is DuckDuckGo"
-  );
   await ext1.unload();
 
   is(
@@ -754,17 +724,8 @@ add_task(async function test_two_addons_with_second_disabled() {
     "engine-default",
     "browser-search-engine-modified"
   );
-  let enabledPromise = awaitEvent("ready", EXTENSION2_ID);
-  let opened = promisePopupNotificationShown(
-    "addon-webext-defaultsearch",
-    window
-  );
-
+  // No prompt, because this is switching to an app-provided engine.
   await addon2.enable();
-  await enabledPromise;
-  let panel = await opened;
-  panel.button.click();
-  await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");
   await defaultPromise;
 
   is(
