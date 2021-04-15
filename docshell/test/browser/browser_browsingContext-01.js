@@ -112,6 +112,9 @@ add_task(async function() {
 });
 
 add_task(async function() {
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({ set: [["fission.bfcacheInParent", true]] });
+
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -127,78 +130,46 @@ add_task(async function() {
         "http://example.com"
       );
       await SpecialPowers.spawn(browser, [path], async function(path) {
+        var bc = new content.BroadcastChannel("browser_browsingContext");
         function waitForMessage(command) {
-          let r;
           let p = new Promise(resolve => {
-            content.window.addEventListener(
-              "message",
-              e => resolve({ result: r, event: e }),
-              { once: true }
-            );
+            bc.addEventListener("message", e => resolve(e), { once: true });
           });
-          r = command();
+          command();
           return p;
         }
 
         // Open a new window and wait for the message.
-        let { result: win, event: e1 } = await waitForMessage(_ =>
-          content.window.open(path + "onpageshow_message.html")
+        let e1 = await waitForMessage(_ =>
+          content.window.open(path + "onpageshow_message.html", "", "noopener")
         );
 
-        is(e1.data, "pageshow");
+        is(e1.data, "pageshow", "Got page show");
 
-        {
-          // Create, attach and load an iframe into the window's document.
-          let frame = win.document.createElement("iframe");
-          win.document.body.appendChild(frame);
-          frame.src = "dummy_page.html";
-          await ContentTaskUtils.waitForEvent(frame, "load");
-        }
+        let e2 = await waitForMessage(_ => bc.postMessage("createiframe"));
+        is(e2.data.framesLength, 1, "Here we should have an iframe");
 
-        is(win.frames.length, 1, "Here we should have an iframe");
+        let e3 = await waitForMessage(_ => bc.postMessage("nextpage"));
 
-        // The frame should have expected browsing context and docshell.
-        let frameBC = win.frames[0].docShell.browsingContext;
-        let winDocShell = win.frames[0].docShell;
-
-        // Navigate the window and wait for the message.
-        let { event: e2 } = await waitForMessage(
-          _ => (win.location = path + "onload_message.html")
-        );
-
-        is(e2.data, "load");
-        is(win.frames.length, 0, "Here there shouldn't be an iframe");
+        is(e3.data.event, "load");
+        is(e3.data.framesLength, 0, "Here there shouldn't be an iframe");
 
         // Return to the previous document. N.B. we expect to trigger
         // BFCache here, hence we wait for pageshow.
-        let { event: e3 } = await waitForMessage(_ => win.history.back());
+        let e4 = await waitForMessage(_ => bc.postMessage("back"));
 
-        is(e3.data, "pageshow");
-        is(win.frames.length, 1, "And again there should be an iframe");
+        is(e4.data, "pageshow");
 
-        is(winDocShell, win.frames[0].docShell, "BF cache cached docshell");
-        is(
-          frameBC,
-          win.frames[0].docShell.browsingContext,
-          "BF cache cached BC"
-        );
-        is(
-          frameBC.id,
-          win.frames[0].docShell.browsingContext.id,
-          "BF cached BC's have same id"
-        );
-        is(
-          win.docShell.browsingContext.children[0],
-          frameBC,
-          "BF cached BC's should still be a child of its parent"
-        );
-        is(
-          win.docShell.browsingContext,
-          frameBC.parent,
-          "BF cached BC's should still be a connected to its parent"
-        );
+        let e5 = await waitForMessage(_ => bc.postMessage("queryframes"));
+        is(e5.data.framesLength, 1, "And again there should be an iframe");
 
-        win.close();
+        is(e5.outerWindowId, e2.outerWindowId, "BF cache cached outer window");
+        is(e5.browsingContextId, e2.browsingContextId, "BF cache cached BC");
+
+        let e6 = await waitForMessage(_ => bc.postMessage("close"));
+        is(e6.data, "closed");
+
+        bc.close();
       });
     }
   );
