@@ -11826,7 +11826,7 @@
   "BROWSER_ATTRIBUTION_ERRORS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "90",
+    "expires_in_version": "100",
     "kind": "categorical",
     "labels": ["read_error", "decode_error", "write_error", "quarantine_error"],
     "description": "Count for the number of errors encountered trying to determine attribution data: on Windows, from the installers (stub and full); on macOS, from the quarantine database.",
