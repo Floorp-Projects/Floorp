@@ -639,7 +639,8 @@ async function testTouchEventsOverride(ui, expected) {
   const { document } = ui.toolWindow;
   const touchButton = document.getElementById("touch-simulation-button");
 
-  const flag = await ui.responsiveFront.getTouchEventsOverride();
+  const flag = gBrowser.selectedBrowser.browsingContext.touchEventsOverride;
+
   is(
     flag === "enabled",
     expected,

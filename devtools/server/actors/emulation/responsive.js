@@ -46,7 +46,7 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
 
   destroy() {
     this.clearNetworkThrottling();
-    this.clearTouchEventsOverride();
+    this.toggleTouchSimulator({ enable: false });
     this.clearMetaViewportOverride();
     this.clearUserAgentOverride();
 
@@ -201,35 +201,30 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     this.touchSimulator.setElementPickerState(state, pickerType);
   },
 
-  setTouchEventsOverride(flag) {
-    if (this.getTouchEventsOverride() == flag) {
+  /**
+   * Start or stop the touch simulator depending on the parameter
+   *
+   * @param {Object} options
+   * @param {Boolean} options.enable: Pass true to start the touch simulator. Any other
+   *                  value will stop it. Defaults to false.
+   * @returns {Boolean} Whether or not any action was done on the touch simulator.
+   */
+  toggleTouchSimulator({ enable = false } = {}) {
+    if (enable) {
+      if (this.touchSimulator.enabled) {
+        return false;
+      }
+
+      this.touchSimulator.start();
+      return true;
+    }
+
+    if (!this.touchSimulator.enabled) {
       return false;
     }
-    if (this._previousTouchEventsOverride === undefined) {
-      this._previousTouchEventsOverride = this.getTouchEventsOverride();
-    }
 
-    // Start or stop the touch simulator depending on the override flag
-    // See BrowsingContext.webidl `TouchEventsOverride` enum for values.
-    if (flag == "enabled") {
-      this.touchSimulator.start();
-    } else {
-      this.touchSimulator.stop();
-    }
-
-    this.docShell.browsingContext.touchEventsOverride = flag;
+    this.touchSimulator.stop();
     return true;
-  },
-
-  getTouchEventsOverride() {
-    return this.docShell.browsingContext.touchEventsOverride;
-  },
-
-  clearTouchEventsOverride() {
-    if (this._previousTouchEventsOverride !== undefined) {
-      return this.setTouchEventsOverride(this._previousTouchEventsOverride);
-    }
-    return false;
   },
 
   /* Meta viewport override */

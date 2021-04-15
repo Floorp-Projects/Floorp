@@ -20,6 +20,7 @@ types.addDictType("target-configuration.configuration", {
   printSimulationEnabled: "nullable:boolean",
   restoreFocus: "nullable:boolean",
   serviceWorkersTestingEnabled: "nullable:boolean",
+  touchEventsOverride: "nullable:string",
 });
 
 const targetConfigurationSpec = generateActorSpec({
