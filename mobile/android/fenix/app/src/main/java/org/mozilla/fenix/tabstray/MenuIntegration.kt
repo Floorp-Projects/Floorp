@@ -43,6 +43,8 @@ class MenuIntegration(
         Do exhaustive when (item) {
             is TabsTrayMenu.Item.ShareAllTabs ->
                 navigationInteractor.onShareTabsOfTypeClicked(isPrivateMode)
+            is TabsTrayMenu.Item.OpenAccountSettings ->
+                navigationInteractor.onAccountSettingsClicked()
             is TabsTrayMenu.Item.OpenTabSettings ->
                 navigationInteractor.onTabSettingsClicked()
             is TabsTrayMenu.Item.CloseAllTabs ->

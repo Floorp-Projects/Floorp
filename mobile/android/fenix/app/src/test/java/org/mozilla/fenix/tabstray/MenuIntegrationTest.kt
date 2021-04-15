@@ -35,6 +35,15 @@ class MenuIntegrationTest {
     }
 
     @Test
+    fun `WHEN the open account settings menu item is clicked THEN invoke the action`() {
+        val menu = MenuIntegration(mockk(), mockk(), tabsTrayStore, mockk(), interactor)
+
+        menu.handleMenuClicked(TabsTrayMenu.Item.OpenAccountSettings)
+
+        verify { interactor.onAccountSettingsClicked() }
+    }
+
+    @Test
     fun `WHEN the open settings menu item is clicked THEN invoke the action`() {
         val menu = MenuIntegration(mockk(), mockk(), tabsTrayStore, mockk(), interactor)
 

@@ -67,6 +67,7 @@ class NavigationInteractorTest {
     @Test
     fun `navigation interactor calls the overridden functions`() {
         var tabTrayDismissed = false
+        var accountSettingsClicked = false
         var tabSettingsClicked = false
         var openRecentlyClosedClicked = false
         var shareTabsOfTypeClicked = false
@@ -83,6 +84,10 @@ class NavigationInteractorTest {
 
             override fun onShareTabs(tabs: Collection<Tab>) {
                 onShareTabs = true
+            }
+
+            override fun onAccountSettingsClicked() {
+                accountSettingsClicked = true
             }
 
             override fun onTabSettingsClicked() {
@@ -113,6 +118,8 @@ class NavigationInteractorTest {
         val navigationInteractor: NavigationInteractor = TestNavigationInteractor()
         navigationInteractor.onTabTrayDismissed()
         assertTrue(tabTrayDismissed)
+        navigationInteractor.onAccountSettingsClicked()
+        assertTrue(accountSettingsClicked)
         navigationInteractor.onTabSettingsClicked()
         assertTrue(tabSettingsClicked)
         navigationInteractor.onOpenRecentlyClosedClicked()
@@ -133,6 +140,12 @@ class NavigationInteractorTest {
     fun `onTabTrayDismissed calls dismissTabTray on DefaultNavigationInteractor`() {
         navigationInteractor.onTabTrayDismissed()
         verify(exactly = 1) { dismissTabTray() }
+    }
+
+    @Test
+    fun `onAccountSettingsClicked calls navigation on DefaultNavigationInteractor`() {
+        navigationInteractor.onAccountSettingsClicked()
+        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalAccountSettingsFragment()) }
     }
 
     @Test

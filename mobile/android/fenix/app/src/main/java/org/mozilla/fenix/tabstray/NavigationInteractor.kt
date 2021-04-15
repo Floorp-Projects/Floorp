@@ -36,6 +36,11 @@ interface NavigationInteractor {
     fun onTabTrayDismissed()
 
     /**
+     * Called when clicking the account settings button.
+     */
+    fun onAccountSettingsClicked()
+
+    /**
      * Called when sharing a list of [Tab]s.
      */
     fun onShareTabs(tabs: Collection<Tab>)
@@ -89,6 +94,11 @@ class DefaultNavigationInteractor(
 
     override fun onTabTrayDismissed() {
         dismissTabTray()
+    }
+
+    override fun onAccountSettingsClicked() {
+        navController.navigateBlockingForAsyncNavGraph(
+            TabsTrayFragmentDirections.actionGlobalAccountSettingsFragment())
     }
 
     override fun onTabSettingsClicked() {
