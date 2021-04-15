@@ -20,10 +20,176 @@
 #include <type_traits>
 #include <utility>
 
-// This data structure supports stacky LIFO allocation (mark/release and
-// LifoAllocScope). It does not maintain one contiguous segment; instead, it
-// maintains a bunch of linked memory segments. In order to prevent malloc/free
-// thrashing, unused segments are deallocated when garbage collection occurs.
+// [SMDOC] LifoAlloc bump allocator
+//
+// This file defines an allocator named LifoAlloc which is a Bump allocator,
+// which has the property of making fast allocation but is not able to reclaim
+// individual allocations.
+//
+// * Allocation principle
+//
+// In practice a LifoAlloc is implemented using a list of BumpChunks, which are
+// contiguous memory areas which are chained in a single linked list.
+//
+// When an allocation is performed, we check if there is space in the last
+// chunk. If there is we bump the pointer of the last chunk and return the
+// previous value of the pointer. Otherwise we allocate a new chunk which is
+// large enough and perform the allocation the same way.
+//
+// Each allocation is made with 2 main functions, called
+// BumpChunk::nextAllocBase and BumpChunk::nextAllocEnd. These functions are
+// made to avoid duplicating logic, such as allocating, checking if we can
+// allocate or reserving a given buffer space. They are made to align the
+// pointer for the next allocation (8-byte aligned), and also to reserve some
+// red-zones to improve reports of our security instrumentation. (see Security
+// features below)
+//
+// The Chunks sizes are following the heuristics implemented in NextSize
+// (LifoAlloc.cpp), which doubles the size until we reach 1 MB and then
+// continues with a smaller geometric series. This heuristic is meant to reduce
+// the number of allocations, such that we spend less time allocating/freeing
+// chunks of a few KB at a time.
+//
+// ** Oversize allocations
+//
+// When allocating with a LifoAlloc, we distinguish 2 different kinds of
+// allocations, the small allocations and the large allocations. The reason for
+// splitting in 2 sets is to avoid wasting memory.
+//
+// If you had a single linked list of chunks, then making oversized allocations
+// can cause chunks to contain a lot of wasted space as new chunks would have to
+// be allocated to fit these allocations, and the space of the previous chunk
+// would remain unused.
+//
+// Oversize allocation size can be disabled or customized with disableOversize
+// and setOversizeThreshold, which must be smaller than the default chunk size
+// with which the LifoAlloc was initialized.
+//
+// ** LifoAllocScope (mark & release)
+//
+// As the memory cannot be reclaimed except when the LifoAlloc structure is
+// deleted, the LifoAllocScope structure is used to create scopes, related to a
+// stacked task. When going out of a LifoAllocScope the memory associated to the
+// scope is marked as unused but not reclaimed. This implies that the memory
+// allocated for one task can be reused for a similar task later on. (see
+// Safety)
+//
+// LifoAllocScope is based on mark and release functions. The mark function is
+// used to recall the offsets at which a LifoAllocScope got created. The release
+// function takes the Mark as input and will flag all memory allocated after the
+// mark creation as unused.
+//
+// When releasing all the memory of BumpChunks, these are moved to a list of
+// unused chunks which will later be reused by new allocations.
+//
+// A bump chunk allocator normally has a single bump pointers, whereas we have
+// 2. (see Oversize allocations) By doing so, we lose the ordering of allocation
+// coming from a single linked list of allocation.
+//
+// However, we rely on the ordering of allocation with LifoAllocScope, i-e when
+// mark and release functions are used. Thus the LifoAlloc::Mark is composed of
+// 2 marks, One for each singled linked list of allocations, to keep both lists
+// of allocations ordered.
+//
+// ** Infallible Allocator
+//
+// LifoAlloc can also be used as an infallible allocator. This requires the user
+// to periodically ensure that enough space has been reserved to satisfy the
+// upcoming set of allocations by calling LifoAlloc::ensureUnusedApproximate or
+// LifoAlloc::allocEnsureUnused functions. Between 2 calls of these functions,
+// functions such as allocInfallible can be used without checking against
+// nullptr, as long as there is a bounded number of such calls and that all
+// allocations including their red-zone fit in the reserved space.
+//
+// The infallible allocator mode can be toggle as being the default by calling
+// setAsInfallibleByDefault, in which case an AutoFallibleScope should be used
+// to make any large allocations. Failing to do so will raise an issue when
+// running the LifoAlloc with the OOM Simulator. (see Security features)
+//
+// * LifoAlloc::Enum Iterator
+//
+// A LifoAlloc is used for backing the store-buffer of the Garbage Collector
+// (GC). The store-buffer is appending data as it is being reported during
+// incremental GC. The LifoAlloc::Enum class is used for iterating over the set
+// of allocations made within the LifoAlloc.
+//
+// However, one must take extra care into having the proper associated types for
+// the data which are being written and read out of the LifoAlloc. The iterator
+// is reusing the same logic as the allocator in order to skip red-zones.
+//
+// At the moment, the iterator will cause a hard failure if any oversize
+// allocation are made.
+//
+// * Safety
+//
+// A LifoAlloc is neither thread-safe nor interrupt-safe. It should only be
+// manipulated in one thread of execution at a time. It can be transferred from
+// one thread to another but should not be used concurrently.
+//
+// When using LifoAllocScope, no pointer to the data allocated within a
+// LifoAllocScope should be stored in data allocated before the latest
+// LifoAllocScope. This kind of issue can hide in different forms, such as
+// appending to a Vector backed by a LifoAlloc, which can resize and move the
+// data below the LifoAllocScope. Thus causing a use-after-free once leaving a
+// LifoAllocScope.
+//
+// * Security features
+//
+// ** Single Linked List
+//
+// For sanity reasons this LifoAlloc implementation makes use of its own single
+// linked list implementation based on unique pointers (UniquePtr). The reason
+// for this is to ensure that a BumpChunk is owned only once, thus preventing
+// use-after-free issues.
+//
+// ** OOM Simulator
+//
+// The OOM simulator is controlled by the JS_OOM_BREAKPOINT macro, and used to
+// check any fallible allocation for potential OOM. Fallible functions are
+// instrumented with JS_OOM_POSSIBLY_FAIL(); function calls, and are expected to
+// return null on failures.
+//
+// Except for simulating OOMs, LifoAlloc is instrumented in DEBUG and OOM
+// Simulator builds to checks for the correctness of the Infallible Allocator
+// state. When using a LifoAlloc as an infallible allocator, enough space should
+// always be reserved for the next allocations. Therefore, to check this
+// invariant LifoAlloc::newChunkWithCapacity checks that any new chunks are
+// allocated within a fallible scope, under AutoFallibleScope.
+//
+// ** Address Sanitizers & Valgrind
+//
+// When manipulating memory in a LifoAlloc, the memory remains contiguous and
+// therefore subject to potential buffer overflow/underflow. To check for these
+// memory corruptions, the macro LIFO_HAVE_MEM_CHECK is used to add red-zones
+// with LIFO_MAKE_MEM_NOACCESS and LIFO_MAKE_MEM_UNDEFINED.
+//
+// The red-zone is a minimum space left in between 2 allocations. Any access to
+// these red-zones should warn in both valgrind / ASan builds.
+//
+// The red-zone size is defined in BumpChunk::RedZoneSize and default to 0 if
+// not instrumentation is expected, and 16 otherwise.
+//
+// ** Magic Number
+//
+// A simple sanity check is present in all BumpChunk under the form of a
+// constant field which is never mutated. the BumpChunk::magic_ is initalized to
+// the "Lif" string. Any mutation of this value indicate a memory corruption.
+//
+// This magic number is enabled in all MOZ_DIAGNOSTIC_ASSERT_ENABLED builds,
+// which implies that all Nightly and dev-edition versions of
+// Firefox/SpiderMonkey contain this instrumentation.
+//
+// ** Memory protection
+//
+// LifoAlloc chunks are holding a lot of memory. When the memory is known to be
+// unused, unchanged for some period of time, such as moving from one thread to
+// another. Then the memory can be set as read-only with LifoAlloc::setReadOnly
+// and reset as read-write with LifoAlloc::setReadWrite.
+//
+// This code is guarded by LIFO_CHUNK_PROTECT and at the moment only enabled in
+// DEBUG builds in order to avoid the fragmentation of the TLB which might run
+// out-of-memory when calling mprotect.
+//
 
 #include "js/UniquePtr.h"
 #include "util/Memory.h"
