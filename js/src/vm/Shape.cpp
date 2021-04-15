@@ -2041,5 +2041,3 @@ JS::ubi::Node::Size JS::ubi::Concrete<js::BaseShape>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
   return js::gc::Arena::thingSize(get().asTenured().getAllocKind());
 }
-
-void PropertyResult::trace(JSTracer* trc) {}

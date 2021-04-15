@@ -84,9 +84,10 @@ class TypedObject : public JSObject {
 
   static const ObjectOps objectOps_;
 
-  [[nodiscard]] static bool obj_lookupProperty(
-      JSContext* cx, HandleObject obj, HandleId id, MutableHandleObject objp,
-      MutableHandle<PropertyResult> propp);
+  [[nodiscard]] static bool obj_lookupProperty(JSContext* cx, HandleObject obj,
+                                               HandleId id,
+                                               MutableHandleObject objp,
+                                               PropertyResult* propp);
 
   [[nodiscard]] static bool obj_defineProperty(JSContext* cx, HandleObject obj,
                                                HandleId id,
