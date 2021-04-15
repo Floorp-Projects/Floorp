@@ -54,7 +54,7 @@ async function test() {
   // For the latter two, we expect the hit-test to hit the OOPIF.
 
   checkHitResult(await fissionHitTest({x: 20, y: 100}, iframe),
-                 APZHitResultFlags.VISIBLE,
+                 APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
                  utils.getViewId(document.scrollingElement),
                  utils.getLayersId(),
                  "opaque part of overlay should hit parent doc hosting the OOPIF");

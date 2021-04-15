@@ -35,6 +35,8 @@ async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
+  const wrTag = config.isWebRender ? "WebRender" : "Layers";
+
   // layerize the iframe
   var subwindow = document.getElementById("sub").contentWindow;
   var subscroller = subwindow.document.scrollingElement;
@@ -51,29 +53,29 @@ async function test() {
       APZHitResultFlags.VISIBLE,
       iframeViewId,
       layersId,
-      "(simple) uninteresting point inside the iframe");
+      `${wrTag} (simple) uninteresting point inside the iframe`);
   checkHitResult(hitTest({ x: 500, y: 10 }),
       APZHitResultFlags.VISIBLE,
       rootViewId,
       layersId,
-      "(simple) uninteresting point in the root scroller");
+      `${wrTag} (simple) uninteresting point in the root scroller`);
   checkHitResult(hitTest({ x: 110, y: 110 }),
       APZHitResultFlags.VISIBLE,
       iframeViewId,
       layersId,
-      "(simple) point in the iframe behind overlaying div, but outside the bounding box of the clip path");
+      `${wrTag} (simple) point in the iframe behind overlaying div, but outside the bounding box of the clip path`);
   checkHitResult(hitTest({ x: 160, y: 160 }),
       config.isWebRender ? APZHitResultFlags.VISIBLE
                          : APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
       config.isWebRender ? iframeViewId : rootViewId,
       layersId,
-      "(simple) point in the iframe behind overlaying div, inside the bounding box of the clip path, but outside the actual clip shape");
+      `${wrTag} (simple) point in the iframe behind overlaying div, inside the bounding box of the clip path, but outside the actual clip shape`);
   checkHitResult(hitTest({ x: 300, y: 200 }),
       config.isWebRender ? APZHitResultFlags.VISIBLE
                          : APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
       rootViewId,
       layersId,
-      "(simple) point inside the clip shape of the overlaying div");
+      `${wrTag} (simple) point inside the clip shape of the overlaying div`);
 
   // Now we turn the "simple" clip-path that WR can handle into a more complex
   // one that needs a mask. Then run the checks again; the expected results for
@@ -85,27 +87,29 @@ async function test() {
       APZHitResultFlags.VISIBLE,
       iframeViewId,
       layersId,
-      "(complex) uninteresting point inside the iframe");
+      `${wrTag} (complex) uninteresting point inside the iframe`);
   checkHitResult(hitTest({ x: 500, y: 10 }),
       APZHitResultFlags.VISIBLE,
       rootViewId,
       layersId,
-      "(complex) uninteresting point in the root scroller");
+      `${wrTag} (complex) uninteresting point in the root scroller`);
   checkHitResult(hitTest({ x: 110, y: 110 }),
       APZHitResultFlags.VISIBLE,
       iframeViewId,
       layersId,
-      "(complex) point in the iframe behind overlaying div, but outside the bounding box of the clip path");
+      `${wrTag} (complex) point in the iframe behind overlaying div, but outside the bounding box of the clip path`);
   checkHitResult(hitTest({ x: 160, y: 160 }),
-      APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
-      rootViewId,
+      config.isWebRender ? APZHitResultFlags.VISIBLE
+                         : APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+      config.isWebRender ? iframeViewId : rootViewId,
       layersId,
-      "(complex) point in the iframe behind overlaying div, inside the bounding box of the clip path, but outside the actual clip shape");
+      `${wrTag} (complex) point in the iframe behind overlaying div, inside the bounding box of the clip path, but outside the actual clip shape`);
   checkHitResult(hitTest({ x: 300, y: 200 }),
-      APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
-      rootViewId,
+      config.isWebRender ? APZHitResultFlags.VISIBLE
+                         : APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+      config.isWebRender ? iframeViewId : rootViewId,
       layersId,
-      "(complex) point inside the clip shape of the overlaying div");
+      `${wrTag} (complex) point inside the clip shape of the overlaying div`);
 }
 
 waitUntilApzStable()
