@@ -579,6 +579,19 @@ class nsContextMenu {
     // Send media URL (but not for canvas, since it's a big data: URL)
     this.showItem("context-sendimage", this.onImage || showBGImage);
 
+    // View Image Info defaults to false, user can enable
+    var showViewImageInfo =
+      this.onImage &&
+      Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false);
+
+    this.showItem("context-viewimageinfo", showViewImageInfo);
+    // The image info popup is broken for WebExtension popups, since the browser
+    // is destroyed when the popup is closed.
+    this.setItemAttr(
+      "context-viewimageinfo",
+      "disabled",
+      this.webExtBrowserType === "popup"
+    );
     // Open the link to more details about the image. Does not apply to
     // background images.
     this.showItem(
@@ -1329,6 +1342,16 @@ class nsContextMenu {
       this.contentData.docLocation,
       null,
       null,
+      null,
+      this.browser
+    );
+  }
+
+  viewImageInfo() {
+    BrowserPageInfo(
+      this.contentData.docLocation,
+      "mediaTab",
+      this.imageInfo,
       null,
       this.browser
     );

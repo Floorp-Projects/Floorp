@@ -236,6 +236,10 @@
       <menuitem id="context-sendaudio"
                 data-l10n-id="main-context-menu-audio-email"
                 oncommand="gContextMenu.sendMedia();"/>
+      <menuitem id="context-viewimageinfo"
+                hidden="true"
+                data-l10n-id="main-context-menu-image-info"
+                oncommand="gContextMenu.viewImageInfo();"/>
       <menuitem id="context-viewimagedesc"
                 data-l10n-id="main-context-menu-image-desc"
                 oncommand="gContextMenu.viewImageDesc(event);"
