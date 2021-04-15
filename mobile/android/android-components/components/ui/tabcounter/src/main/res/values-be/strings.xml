@@ -10,6 +10,8 @@
     <string name="mozac_browser_menu_new_private_tab">Новая прыватная картка</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Закрыць картку</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Дубляваць картку</string>
     <!-- Content description of the tab counter toolbar button -->
     <string name="mozac_tab_counter_content_description">Кнопка лічыльніка картак на панэлі інструментаў.</string>
 </resources>
