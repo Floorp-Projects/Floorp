@@ -95,8 +95,9 @@ dialog[subdialog] #infoContainer,
 dialog[subdialog] #checkboxContainer {
   /* Needed to ensure text wrapping happens correctly. Without this, when
    * text wraps unexpectedly, the overall dialog height is off by the height
-   * of a line of text. */
-  max-width: calc(100vw - 32px);
+   * of a line of text. This is 100% of the width, minus the grid padding, 8px
+   * of which is inline padding on the contents of these containers. */
+  max-width: calc(100vw - 2 * var(--grid-padding) + 8px);
 }
 
 .sizeDetermined #infoRow {
@@ -109,9 +110,10 @@ dialog[subdialog] #iconContainer {
 
 /* Fix padding/spacing */
 dialog[subdialog] {
+  --grid-padding: 1.16em;
   /* All the inner items should have 4px inline margin, leading to 1.16em spacing
    * between the dialog and its contents, and 8px horizontal spacing between items. */
-  padding: 1.16em calc(1.16em - 4px);
+  padding: var(--grid-padding) calc(var(--grid-padding) - 4px);
 }
 
 /* Use an ID selector for the dialog to win on specificity... */
@@ -140,7 +142,7 @@ dialog[subdialog] {
 
 /* Add vertical spaces between rows: */
 dialog[subdialog] .dialogRow {
-  margin-block: 0 1.16em;
+  margin-block: 0 var(--grid-padding);
 }
 
 /* Start-align labels: */
