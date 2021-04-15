@@ -90,8 +90,8 @@ async function testMenuPopup(toolbox) {
   );
 
   menu.popup(0, 0, toolbox.doc);
-
-  ok(toolbox.topDoc.querySelector("#menu-popup"), "A popup is in the DOM");
+  const popup = toolbox.topDoc.querySelector("#menu-popup");
+  ok(popup, "A popup is in the DOM");
 
   const menuSeparators = toolbox.topDoc.querySelectorAll(
     "#menu-popup > menuseparator"
@@ -123,7 +123,7 @@ async function testMenuPopup(toolbox) {
 
   await once(menu, "open");
   const closed = once(menu, "close");
-  EventUtils.synthesizeMouseAtCenter(menuItems[0], {}, toolbox.topWindow);
+  popup.activateItem(menuItems[0]);
   await closed;
   ok(clickFired, "Click has fired");
 
@@ -167,7 +167,8 @@ async function testSubmenu(toolbox) {
   );
 
   menu.popup(0, 0, toolbox.doc);
-  ok(toolbox.topDoc.querySelector("#menu-popup"), "A popup is in the DOM");
+  const popup = toolbox.topDoc.querySelector("#menu-popup");
+  ok(popup, "A popup is in the DOM");
   is(
     toolbox.topDoc.querySelectorAll("#menu-popup > menuitem").length,
     0,
@@ -213,7 +214,7 @@ async function testSubmenu(toolbox) {
   await shown;
 
   info("Clicking the submenu item");
-  EventUtils.synthesizeMouseAtCenter(subMenuItems[0], {}, toolbox.topWindow);
+  popup.activateItem(subMenuItems[0]);
 
   await closed;
   ok(clickFired, "Click has fired");
