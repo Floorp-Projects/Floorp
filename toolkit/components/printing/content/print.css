@@ -165,7 +165,9 @@ input[type="text"] {
 
 #open-dialog-link::after {
   display: block;
-  content: url(chrome://global/skin/icons/open-in-new.svg);
+  content: "";
+  background: url(chrome://global/skin/icons/open-in-new.svg) no-repeat center;
+  background-size: 12px;
   -moz-context-properties: fill;
   fill: currentColor;
   width: 12px;
