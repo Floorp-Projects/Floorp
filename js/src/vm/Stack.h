@@ -587,8 +587,7 @@ class InterpreterFrame {
    */
 
   JSFunction& callee() const {
-    MOZ_ASSERT(isFunctionFrame() || isModuleFrame());
-    MOZ_ASSERT_IF(isModuleFrame(), script()->isAsync());
+    MOZ_ASSERT(isFunctionFrame());
     return calleev().toObject().as<JSFunction>();
   }
 
