@@ -366,6 +366,11 @@ window.onload = function() {
   let menu = document.getElementById("categories");
   for (let category of menu.children) {
     category.addEventListener("click", () => show(category));
+    category.addEventListener("keypress", function(event) {
+      if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
+        show(category);
+      }
+    });
   }
 
   if (location.hash) {
