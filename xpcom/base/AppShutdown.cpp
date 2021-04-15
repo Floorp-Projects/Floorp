@@ -7,6 +7,7 @@
 #include "ShutdownPhase.h"
 #ifdef XP_WIN
 #  include <windows.h>
+#  include "mozilla/PreXULSkeletonUI.h"
 #else
 #  include <unistd.h>
 #endif
@@ -144,6 +145,7 @@ void AppShutdown::MaybeDoRestart() {
     if (sSavedProfLDEnvVar && !EnvHasValue("XRE_PROFILE_LOCAL_PATH")) {
       SetEnvironmentVariableW(L"XRE_PROFILE_LOCAL_PATH", sSavedProfLDEnvVar);
     }
+    Unused << NotePreXULSkeletonUIRestarting();
 #else
     if (sSavedProfDEnvVar && !EnvHasValue("XRE_PROFILE_PATH")) {
       PR_SetEnv(sSavedProfDEnvVar);
