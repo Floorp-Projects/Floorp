@@ -750,7 +750,7 @@ static bool DefineMappedIndex(JSContext* cx, Handle<MappedArgumentsObject*> obj,
   MOZ_ASSERT(!desc.hasWritable() || desc.writable());
 
   // First, resolve the property to simplify the code below.
-  Rooted<PropertyResult> prop(cx);
+  PropertyResult prop;
   if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &prop)) {
     return false;
   }

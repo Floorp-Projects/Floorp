@@ -277,12 +277,12 @@ extern bool GetPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> obj,
 extern bool LookupProperty(JSContext* cx, JS::Handle<JSObject*> obj,
                            JS::Handle<jsid> id,
                            JS::MutableHandle<JSObject*> objp,
-                           MutableHandle<PropertyResult> propp);
+                           PropertyResult* propp);
 
 inline bool LookupProperty(JSContext* cx, JS::Handle<JSObject*> obj,
                            PropertyName* name,
                            JS::MutableHandle<JSObject*> objp,
-                           MutableHandle<PropertyResult> propp) {
+                           PropertyResult* propp) {
   JS::Rooted<jsid> id(cx, NameToId(name));
   return LookupProperty(cx, obj, id, objp, propp);
 }

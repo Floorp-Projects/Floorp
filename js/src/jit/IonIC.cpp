@@ -350,7 +350,7 @@ bool IonGetNameIC::update(JSContext* cx, HandleScript outerScript,
 
   RootedObject obj(cx);
   RootedObject holder(cx);
-  Rooted<PropertyResult> prop(cx);
+  PropertyResult prop;
   if (!LookupName(cx, name, envChain, &obj, &holder, &prop)) {
     return false;
   }

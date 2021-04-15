@@ -837,8 +837,7 @@ extern bool ReadPropertyDescriptors(
 /* Read the name using a dynamic lookup on the scopeChain. */
 extern bool LookupName(JSContext* cx, HandlePropertyName name,
                        HandleObject scopeChain, MutableHandleObject objp,
-                       MutableHandleObject pobjp,
-                       MutableHandle<PropertyResult> propp);
+                       MutableHandleObject pobjp, PropertyResult* propp);
 
 extern bool LookupNameNoGC(JSContext* cx, PropertyName* name,
                            JSObject* scopeChain, JSObject** objp,

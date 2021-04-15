@@ -385,10 +385,10 @@ bool RttValue::lookupProperty(JSContext* cx, HandleTypedObject object, jsid id,
 /* static */
 bool TypedObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
                                      HandleId id, MutableHandleObject objp,
-                                     MutableHandle<PropertyResult> propp) {
+                                     PropertyResult* propp) {
   RootedTypedObject typedObj(cx, &obj->as<TypedObject>());
   if (typedObj->rttValue().hasProperty(cx, typedObj, id)) {
-    propp.setTypedObjectProperty();
+    propp->setTypedObjectProperty();
     objp.set(obj);
     return true;
   }
@@ -396,7 +396,7 @@ bool TypedObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
   RootedObject proto(cx, obj->staticPrototype());
   if (!proto) {
     objp.set(nullptr);
-    propp.setNotFound();
+    propp->setNotFound();
     return true;
   }
 

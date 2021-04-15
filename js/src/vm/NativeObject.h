@@ -1702,8 +1702,7 @@ extern bool NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
 template <AllowGC allowGC>
 extern bool NativeLookupOwnProperty(
     JSContext* cx, typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
-    typename MaybeRooted<jsid, allowGC>::HandleType id,
-    typename MaybeRooted<PropertyResult, allowGC>::MutableHandleType propp);
+    typename MaybeRooted<jsid, allowGC>::HandleType id, PropertyResult* propp);
 
 /*
  * Get a property from `receiver`, after having already done a lookup and found
