@@ -1144,14 +1144,6 @@
   value: false
   mirror: always
 
-# Whether the toolbar is dark/light/auto.
-# Controls @media -moz-toolbar-prefers-color-scheme.
-- name: browser.theme.dark-toolbar-theme
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Enable Proton restyle. Requires restart.
 - name: browser.proton.enabled
   type: RelaxedAtomicBool
