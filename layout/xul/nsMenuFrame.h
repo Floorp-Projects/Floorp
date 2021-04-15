@@ -171,7 +171,7 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   void ToggleMenuState();
 
   // Activate this menu item.
-  void ActivateItem(mozilla::Modifiers aModifiers, int16_t aButton);
+  void ActivateItem(mozilla::Modifiers aModifiers);
 
   // indiciate that the menu's popup has just been opened, so that the menu
   // can update its open state. This method modifies the open attribute on
@@ -245,8 +245,7 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   bool ShouldBlink();
   void StartBlinking();
   void StopBlinking();
-  void CreateMenuCommandEvent(bool aIsTrusted, mozilla::Modifiers aModifiers,
-                              int16_t aButton);
+  void CreateMenuCommandEvent(bool aIsTrusted, mozilla::Modifiers aModifiers);
   void PassMenuCommandEventToPopupManager();
 
  protected:

@@ -4607,7 +4607,6 @@ var CustomizableUI = {
               event.altKey,
               event.shiftKey,
               event.metaKey,
-              0,
               event.sourceEvent,
               0
             );

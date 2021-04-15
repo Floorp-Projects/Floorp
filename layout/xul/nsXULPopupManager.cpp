@@ -1460,7 +1460,6 @@ void nsXULPopupManager::ExecuteMenu(nsIContent* aMenu,
 
 bool nsXULPopupManager::ActivateNativeMenuItem(nsIContent* aItem,
                                                mozilla::Modifiers aModifiers,
-                                               int16_t aButton,
                                                mozilla::ErrorResult& aRv) {
   if (mNativeMenu && aItem->IsElement() &&
       mNativeMenu->Element()->Contains(aItem)) {
@@ -2953,7 +2952,7 @@ nsXULMenuCommandEvent::Run() {
     nsContentUtils::DispatchXULCommand(
         menu, mIsTrusted, nullptr, presShell, mModifiers & MODIFIER_CONTROL,
         mModifiers & MODIFIER_ALT, mModifiers & MODIFIER_SHIFT,
-        mModifiers & MODIFIER_META, 0, mButton);
+        mModifiers & MODIFIER_META);
   }
 
   if (popup && mCloseMenuMode != CloseMenuMode_None)
