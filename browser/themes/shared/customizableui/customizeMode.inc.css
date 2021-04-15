@@ -214,6 +214,13 @@ toolbarpaletteitem[mousedown] > toolbaritem.toolbaritem-combined-buttons {
   transform: scale(1.1);
 }
 
+toolbarpaletteitem[mousedown] > #search-container > #searchbar,
+toolbarpaletteitem[mousedown] > #urlbar-container > #urlbar > #urlbar-background
+{
+  outline: 1px solid color-mix(in srgb, currentColor 60%, transparent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.13);
+}
+
 /* Override the toolkit styling for items being dragged over. */
 toolbarpaletteitem[place="toolbar"] {
   border-inline-width: 0;
