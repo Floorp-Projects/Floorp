@@ -1709,11 +1709,11 @@ extern bool NativeLookupOwnProperty(
  * Get a property from `receiver`, after having already done a lookup and found
  * the property on a native object `obj`.
  *
- * `shape` must not be null and must not be an implicit dense property. It must
- * be present in obj's shape chain.
+ * `prop` must be present in obj's shape.
  */
 extern bool NativeGetExistingProperty(JSContext* cx, HandleObject receiver,
-                                      HandleNativeObject obj, HandleShape shape,
+                                      HandleNativeObject obj, HandleId id,
+                                      ShapeProperty prop,
                                       MutableHandleValue vp);
 
 /* * */
