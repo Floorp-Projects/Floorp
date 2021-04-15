@@ -597,15 +597,19 @@ xul|search-textbox:not([disabled="true"], [focused]):hover {
 
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):focus,
 html|textarea:focus,
-xul|search-textbox[focused] {
-  border-color: var(--in-content-focus-outline-color);
-  outline: 1px solid var(--in-content-focus-outline-color);
+xul|search-textbox[focused],
+xul|tree:focus-visible,
+xul|richlistbox:focus-visible {
+  border-color: transparent;
+  outline: 2px solid var(--in-content-focus-outline-color);
+  outline-offset: -1px; /* Prevents antialising around the corners */
 }
 
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
 html|textarea:-moz-ui-invalid {
-  border-color: var(--in-content-border-invalid);
-  outline: 1px solid var(--in-content-border-invalid);
+  border-color: transparent;
+  outline: 2px solid var(--in-content-border-invalid);
+  outline-offset: -1px; /* Prevents antialising around the corners */
 }
 
 @media not (-moz-proton) {
@@ -1124,12 +1128,6 @@ xul|tree {
   background-color: var(--in-content-box-background);
   color: inherit;
   margin: 0;
-}
-
-xul|tree:-moz-focusring,
-xul|richlistbox:-moz-focusring {
-  border-color: var(--in-content-focus-outline-color);
-  outline: 1px solid var(--in-content-focus-outline-color);
 }
 
 xul|treecols {
