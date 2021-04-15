@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+background-update:
+  description: |
+    This ping measures the technical health of the background update system.
+    Said system downloads and processes updates when Firefox is not running.  It
+    is expected that this ping will be analyzed by humans to gain confidence in
+    the implementation as the staged rollout of the system proceeds to the
+    release channel, before settling into an automated analysis to detect spikes
+    in background update failure rates.  This ping will also help to
+    characterize the update-related settings of our user population.
+
+    Right now the background update system, and therefore this ping, is
+    restricted to Windows.
+
+    This ping is submitted only by the background update task.  It should be
+    submitted once per background update task invocation.  The expected schedule
+    is every 7 hours, controlled by the pref `app.update.background.interval`,
+    and subject to scheduling decisions made by the OS.
+  include_client_id: false
+  send_if_empty: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+  notification_emails:
+    - install-update@mozilla.com
