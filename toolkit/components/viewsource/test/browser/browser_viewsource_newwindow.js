@@ -88,7 +88,7 @@ add_task(async function() {
         "popuphidden"
       );
       let item = document.getElementById("context-viewpartialsource-selection");
-      EventUtils.synthesizeMouseAtCenter(item, {});
+      contentAreaContextMenuPopup.activateItem(item);
       await popupHiddenPromise;
       dump("Before winPromise");
       let win = await winPromise;
