@@ -95,7 +95,7 @@ async function checkTextBox(textBox, toolbox) {
 
   info("Closing the menu");
   const onContextMenuHidden = toolbox.once("menu-close");
-  EventUtils.sendKey("ESCAPE", toolbox.win);
+  textboxContextMenu.hidePopup();
   await onContextMenuHidden;
 
   textboxContextMenu = toolbox.getTextBoxContextMenu();
