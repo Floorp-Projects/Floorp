@@ -423,6 +423,7 @@ impl FrameBuilder {
                     &visibility_context,
                     &mut visibility_state,
                     tile_caches,
+                    true,
                 );
             }
 

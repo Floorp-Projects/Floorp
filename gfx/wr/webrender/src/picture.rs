@@ -2908,7 +2908,7 @@ impl TileCacheInstance {
         flags: PrimitiveFlags,
         prim_clip_chain: &ClipChainInstance,
         prim_spatial_node_index: SpatialNodeIndex,
-        on_picture_surface: bool,
+        is_root_tile_cache: bool,
         sub_slice_index: usize,
         frame_context: &FrameVisibilityContext,
     ) -> SurfacePromotionResult {
@@ -2930,9 +2930,9 @@ impl TileCacheInstance {
             return SurfacePromotionResult::Failed;
         }
 
-        // If not on the same surface as the picture cache, it has some kind of
+        // If not on the root picture cache, it has some kind of
         // complex effect (such as a filter, mix-blend-mode or 3d transform).
-        if !on_picture_surface {
+        if !is_root_tile_cache {
             return SurfacePromotionResult::Failed;
         }
 
@@ -3261,7 +3261,7 @@ impl TileCacheInstance {
 
         // For compositor surfaces, if we didn't find an earlier sub-slice to add to,
         // we know we can append to the current slice.
-        debug_assert!(sub_slice_index < self.sub_slices.len() - 1);
+        assert!(sub_slice_index < self.sub_slices.len() - 1);
         let sub_slice = &mut self.sub_slices[sub_slice_index];
 
         // Each compositor surface allocates a unique z-id
@@ -3301,6 +3301,7 @@ impl TileCacheInstance {
         surface_stack: &[SurfaceIndex],
         composite_state: &mut CompositeState,
         gpu_cache: &mut GpuCache,
+        is_root_tile_cache: bool,
     ) {
         // This primitive exists on the last element on the current surface stack.
         profile_scope!("update_prim_dependencies");
@@ -3465,7 +3466,7 @@ impl TileCacheInstance {
                 match self.can_promote_to_surface(image_key.common.flags,
                                                   prim_clip_chain,
                                                   prim_spatial_node_index,
-                                                  on_picture_surface,
+                                                  is_root_tile_cache,
                                                   sub_slice_index,
                                                   frame_context) {
                     SurfacePromotionResult::Failed => {
@@ -3531,7 +3532,7 @@ impl TileCacheInstance {
                                             prim_data.common.flags,
                                             prim_clip_chain,
                                             prim_spatial_node_index,
-                                            on_picture_surface,
+                                            is_root_tile_cache,
                                             sub_slice_index,
                                             frame_context) {
                     SurfacePromotionResult::Failed => false,
