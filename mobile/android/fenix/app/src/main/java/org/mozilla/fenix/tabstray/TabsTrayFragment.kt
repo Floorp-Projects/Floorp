@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.component_tabstray2.view.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.tab_tray_overflow
 import kotlinx.android.synthetic.main.component_tabstray2.view.tab_wrapper
 import kotlinx.android.synthetic.main.component_tabstray_fab.*
+import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.tabs_tray_tab_counter2.*
 import kotlinx.android.synthetic.main.tabstray_multiselect_items.*
 import kotlinx.android.synthetic.main.tabstray_multiselect_items.view.*
@@ -143,6 +144,11 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             browserTrayInteractor,
             syncedTabsTrayInteractor
         )
+
+        setupBackgroundDismissalListener {
+            requireComponents.analytics.metrics.track(Event.TabsTrayClosed)
+            dismissAllowingStateLoss()
+        }
 
         behavior.addBottomSheetCallback(
             TraySheetBehaviorCallback(
@@ -309,6 +315,11 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
             menu.showWithTheme(anchor)
         }
+    }
+
+    private fun setupBackgroundDismissalListener(block: (View) -> Unit) {
+        tabLayout.setOnClickListener(block)
+        handle.setOnClickListener(block)
     }
 
     private val homeViewModel: HomeScreenViewModel by activityViewModels()
