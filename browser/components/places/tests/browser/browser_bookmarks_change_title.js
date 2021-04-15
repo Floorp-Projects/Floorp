@@ -128,10 +128,20 @@ add_task(async function test_change_title_from_Toolbar() {
       let namepicker = dialogWin.document.getElementById(
         "editBMPanel_namePicker"
       );
-      Assert.ok(
-        dialogWin.document.title.includes(titleAfterFirstUpdate),
-        "Dialog window title should include bookmark title."
+
+      let protonModals = Services.prefs.getBoolPref(
+        "browser.proton.modals.enabled",
+        false
       );
+
+      if (protonModals) {
+        let editBookmarkDialogTitle = dialogWin.document.getElementById("titleText");
+        Assert.equal(
+          PlacesUtils.getString("dialogTitleEditBookmark2"),
+          editBookmarkDialogTitle
+        );
+      }
+
       Assert.equal(
         namepicker.value,
         titleAfterFirstUpdate,
