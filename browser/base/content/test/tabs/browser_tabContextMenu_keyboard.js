@@ -20,6 +20,13 @@ async function closeContextMenu() {
 }
 
 add_task(async function test() {
+  if (Services.prefs.getBoolPref("widget.macos.native-context-menus", false)) {
+    ok(
+      true,
+      "This bug is not possible when native context menus are enabled on macOS."
+    );
+    return;
+  }
   // Ensure tabs are focusable.
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
 
