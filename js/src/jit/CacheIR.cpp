@@ -909,6 +909,8 @@ static void EmitCallGetterResultGuards(CacheIRWriter& writer, NativeObject* obj,
   // is a Window as GuardHasGetterSetter doesn't support this yet (Window may
   // require outerizing).
 
+  MOZ_ASSERT(holder->containsPure(id, prop));
+
   if (mode == ICState::Mode::Specialized || IsWindow(obj)) {
     TestMatchingNativeReceiver(writer, obj, objId);
 
@@ -2096,13 +2098,13 @@ AttachDecision GetPropIRGenerator::tryAttachModuleNamespace(HandleObject obj,
 
   auto* ns = &obj->as<ModuleNamespaceObject>();
   ModuleEnvironmentObject* env = nullptr;
-  Shape* shape = nullptr;
-  if (!ns->bindings().lookup(id, &env, &shape)) {
+  Maybe<ShapeProperty> prop;
+  if (!ns->bindings().lookup(id, &env, &prop)) {
     return AttachDecision::NoAction;
   }
 
   // Don't emit a stub until the target binding has been initialized.
-  if (env->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
+  if (env->getSlot(prop->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
     return AttachDecision::NoAction;
   }
 
@@ -2111,7 +2113,7 @@ AttachDecision GetPropIRGenerator::tryAttachModuleNamespace(HandleObject obj,
   writer.guardSpecificObject(objId, ns);
 
   ObjOperandId envId = writer.loadObject(env);
-  EmitLoadSlotResult(writer, envId, env, ShapeProperty(shape));
+  EmitLoadSlotResult(writer, envId, env, *prop);
   writer.returnFromIC();
 
   trackAttached("ModuleNamespace");
@@ -4590,18 +4592,18 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
   NativeObject* holder = nobj;
 
   // The property must be the last added property of the object.
-  Shape* propShape = shapeProp.shapeDeprecated();
-  MOZ_RELEASE_ASSERT(holder->lastProperty() == propShape);
+  Shape* newShape = holder->lastProperty();
+  MOZ_RELEASE_ASSERT(ShapeProperty(newShape) == shapeProp);
 
   // Old shape should be parent of new shape. Object flag updates may make this
   // false even for simple data properties. It may be possible to support these
   // transitions in the future, but ignore now for simplicity.
-  if (propShape->previous() != oldShape) {
+  if (newShape->previous() != oldShape) {
     return AttachDecision::NoAction;
   }
 
   // Basic shape checks.
-  if (propShape->inDictionary() || !shapeProp.isDataProperty() ||
+  if (newShape->inDictionary() || !shapeProp.isDataProperty() ||
       !shapeProp.writable()) {
     return AttachDecision::NoAction;
   }
@@ -4623,18 +4625,18 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
 
   if (holder->isFixedSlot(shapeProp.slot())) {
     size_t offset = NativeObject::getFixedSlotOffset(shapeProp.slot());
-    writer.addAndStoreFixedSlot(objId, offset, rhsValId, propShape);
+    writer.addAndStoreFixedSlot(objId, offset, rhsValId, newShape);
     trackAttached("AddSlot");
   } else {
     size_t offset = holder->dynamicSlotIndex(shapeProp.slot()) * sizeof(Value);
     uint32_t numOldSlots = NativeObject::calculateDynamicSlots(oldShape);
     uint32_t numNewSlots = holder->numDynamicSlots();
     if (numOldSlots == numNewSlots) {
-      writer.addAndStoreDynamicSlot(objId, offset, rhsValId, propShape);
+      writer.addAndStoreDynamicSlot(objId, offset, rhsValId, newShape);
       trackAttached("AddSlot");
     } else {
       MOZ_ASSERT(numNewSlots > numOldSlots);
-      writer.allocateAndStoreDynamicSlot(objId, offset, rhsValId, propShape,
+      writer.allocateAndStoreDynamicSlot(objId, offset, rhsValId, newShape,
                                          numNewSlots);
       trackAttached("AllocateSlot");
     }

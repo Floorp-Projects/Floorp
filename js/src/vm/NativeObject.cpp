@@ -1487,9 +1487,7 @@ static bool GetExistingPropertyValue(JSContext* cx, HandleNativeObject obj,
   }
 
   MOZ_ASSERT(!cx->isHelperThreadContext());
-
-  MOZ_ASSERT(prop.shapeProperty().shapeDeprecated()->propid() == id);
-  MOZ_ASSERT(obj->contains(cx, prop.shapeProperty().shapeDeprecated()));
+  MOZ_ASSERT(obj->containsPure(id, prop.shapeProperty()));
 
   RootedValue receiver(cx, ObjectValue(*obj));
   return GetExistingProperty<CanGC>(cx, receiver, obj, id, prop.shapeProperty(),
