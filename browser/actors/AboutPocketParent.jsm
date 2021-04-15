@@ -58,6 +58,10 @@ class AboutPocketParent extends JSWindowActorParent {
         this.browsingContext.topChromeWindow?.pktUI.onShowSaved();
         break;
       }
+      case "PKT_show_home": {
+        this.browsingContext.topChromeWindow?.pktUI.onShowHome();
+        break;
+      }
       case "PKT_close": {
         this.browsingContext.topChromeWindow?.pktUI.closePanel();
         break;

@@ -21,6 +21,9 @@ let templates = [
   `saved_shell`,
   `saved_tmplogin`,
   `signup_shell`,
+  `home_shell`,
+  `popular_topics`,
+  `explore_more`,
   `signupstoryboard_shell`,
   `item_recs`,
 ];

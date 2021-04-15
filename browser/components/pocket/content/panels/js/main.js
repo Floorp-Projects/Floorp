@@ -83,6 +83,7 @@ function onDOMLoaded() {
           pocketHost +
           "/privacy?s=ffi&t=privacypolicy&tv=panel_tryit",
       ],
+      pockethomeparagraph: ["Pocket"],
     },
     function(resp) {
       const { data } = resp;
