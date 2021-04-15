@@ -202,6 +202,7 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
             ContextualParseError::UnsupportedCounterStyleDescriptorDeclaration(s, err) |
             ContextualParseError::InvalidMediaRule(s, err) |
             ContextualParseError::UnsupportedValue(s, err) => (s.into(), err.kind),
+            ContextualParseError::NeverMatchingHostSelector(s) |
             ContextualParseError::InvalidCounterStyleWithoutSymbols(s) |
             ContextualParseError::InvalidCounterStyleNotEnoughSymbols(s) => (
                 s.into(),
@@ -389,6 +390,9 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
                 (err, Action::Nothing)
             },
             ContextualParseError::UnsupportedRule(..) => (cstr!("PEDeclDropped"), Action::Nothing),
+            ContextualParseError::NeverMatchingHostSelector(..) => {
+                (cstr!("PENeverMatchingHostSelector"), Action::Nothing)
+            },
             ContextualParseError::UnsupportedViewportDescriptorDeclaration(..) |
             ContextualParseError::UnsupportedCounterStyleDescriptorDeclaration(..) |
             ContextualParseError::InvalidCounterStyleWithoutSymbols(..) |
