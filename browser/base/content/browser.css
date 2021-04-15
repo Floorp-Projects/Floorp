@@ -51,30 +51,34 @@ body {
 
 /* TODO bug 1695280: Remove these media selectors and merge the rule below
    with the ruleset above. We must set background properties on :root and not
-   #navigator-toolbox on Windows 7/8 due to a WebRender bug that hides the
-   minimize/maximize/close buttons. */
+   #navigator-toolbox on Windows due to our accent-color-in-title-bar
+   behaviour in Firefox <89 and a WebRender bug that hides the
+   minimize/maximize/close buttons on Windows 7/8 */
 @media not (-moz-os-version: windows-win7) {
   @media not (-moz-os-version: windows-win8) {
-    #navigator-toolbox:-moz-lwtheme {
-      background-color: var(--lwt-accent-color);
+    @media not (-moz-os-version: windows-win10) {
+      #navigator-toolbox:-moz-lwtheme {
+        background-color: var(--lwt-accent-color);
+      }
+
+      /* When a theme defines both theme_frame and additional_backgrounds, show
+        the latter atop the former. */
+      :root[lwtheme-image] #navigator-toolbox {
+        background-image: var(--lwt-header-image), var(--lwt-additional-images);
+        background-repeat: no-repeat, var(--lwt-background-tiling);
+        background-position: right top, var(--lwt-background-alignment);
+      }
+
+      #navigator-toolbox:-moz-window-inactive:-moz-lwtheme {
+        background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+      }
     }
-
-    /* When a theme defines both theme_frame and additional_backgrounds, show
-       the latter atop the former. */
-   :root[lwtheme-image] #navigator-toolbox {
-     background-image: var(--lwt-header-image), var(--lwt-additional-images);
-     background-repeat: no-repeat, var(--lwt-background-tiling);
-     background-position: right top, var(--lwt-background-alignment);
-   }
-
-   #navigator-toolbox:-moz-window-inactive:-moz-lwtheme {
-     background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
-   }
   }
 }
 /* TODO bug 1695280: Remove this block. */
 @media (-moz-os-version: windows-win7),
-       (-moz-os-version: windows-win8) {
+       (-moz-os-version: windows-win8),
+       (-moz-os-version: windows-win10) {
   :root:-moz-lwtheme {
     background-color: var(--lwt-accent-color);
   }
