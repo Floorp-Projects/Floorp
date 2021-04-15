@@ -184,7 +184,7 @@
 }
 
 .popup-notification-icon.microphone-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/microphone-detailed.svg);
+  list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
 }
 
 .screen-icon {
