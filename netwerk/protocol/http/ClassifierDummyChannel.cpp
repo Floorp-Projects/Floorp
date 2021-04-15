@@ -666,11 +666,6 @@ void ClassifierDummyChannel::SetIPv4Disabled() {}
 
 void ClassifierDummyChannel::SetIPv6Disabled() {}
 
-bool ClassifierDummyChannel::GetHasNonEmptySandboxingFlag() { return false; }
-
-void ClassifierDummyChannel::SetHasNonEmptySandboxingFlag(
-    bool aHasNonEmptySandboxingFlag) {}
-
 NS_IMETHODIMP ClassifierDummyChannel::ComputeCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginOpenerPolicy aInitiatorPolicy,
     nsILoadInfo::CrossOriginOpenerPolicy* aOutPolicy) {

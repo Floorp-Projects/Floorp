@@ -320,7 +320,6 @@ struct HttpChannelOpenArgs
   TimeStamp                   handleFetchEventEnd;
   bool                        forceMainDocumentChannel;
   TimeStamp                   navigationStartTimeStamp;
-  bool                        hasNonEmptySandboxingFlag;
 };
 
 struct HttpChannelConnectArgs

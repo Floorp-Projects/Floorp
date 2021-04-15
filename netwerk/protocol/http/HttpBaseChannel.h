@@ -328,13 +328,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD HasCrossOriginOpenerPolicyMismatch(bool* aIsMismatch) override;
   NS_IMETHOD GetResponseEmbedderPolicy(
       nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) override;
-  virtual bool GetHasNonEmptySandboxingFlag() override {
-    return LoadHasNonEmptySandboxingFlag();
-  }
-  virtual void SetHasNonEmptySandboxingFlag(
-      bool aHasNonEmptySandboxingFlag) override {
-    StoreHasNonEmptySandboxingFlag(aHasNonEmptySandboxingFlag);
-  }
 
   inline void CleanRedirectCacheChainIfNecessary() {
     mRedirectedCachekeys = nullptr;
@@ -843,9 +836,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
     // Defaults to true.  This is set to false when it is no longer possible
     // to upgrade the request to a secure channel.
     (uint32_t, UpgradableToSecure, 1),
-
-    // True if the docshell's sandboxing flag set is not empty.
-    (uint32_t, HasNonEmptySandboxingFlag, 1),
 
     // Tainted origin flag of a request, specified by
     // WHATWG Fetch Standard 2.2.5.
