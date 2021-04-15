@@ -3207,7 +3207,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       } else {
         // Path for when Top Level Await is enabled
         JS::Rooted<JSObject*> aEvaluationPromise(cx);
-        if (NS_SUCCEEDED(rv)) {
+        if (rval.isObject()) {
           // If the user cancels the evaluation on an infinite loop, we need
           // to skip this step. In that case, ModuleEvaluate will not return a
           // promise, rval will be undefined. We should treat it as a failed
