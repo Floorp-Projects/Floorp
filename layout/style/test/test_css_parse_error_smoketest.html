@@ -121,6 +121,10 @@
       error: "Unknown property ‘unknown’.  Declaration dropped.",
       cssSelectors: "a, .b, #c"
     },
+    {
+      css: ":host:hover { color: red; }",
+      error: ":host selector in ‘:host:hover’ is not featureless and will never match. Maybe you intended to use :host()?"
+    },
   ];
 
   // Tests that apply only to constructed style sheets
