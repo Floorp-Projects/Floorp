@@ -1497,9 +1497,7 @@ impl Device {
         let supports_texture_storage = allow_texture_storage_support && !cfg!(target_os = "macos") &&
             match gl.get_type() {
                 gl::GlType::Gl => supports_extension(&extensions, "GL_ARB_texture_storage"),
-                // ES 3 technically always supports glTexStorage, but only check here for the extension
-                // necessary to interact with BGRA.
-                gl::GlType::Gles => supports_extension(&extensions, "GL_EXT_texture_storage"),
+                gl::GlType::Gles => true,
             };
         let supports_texture_swizzle = allow_texture_swizzling &&
             match gl.get_type() {
@@ -1529,7 +1527,9 @@ impl Device {
             // glTexStorage is always supported in GLES 3, but because the GL_EXT_texture_storage
             // extension is supported we can use glTexStorage with BGRA8 as the internal format.
             // Prefer BGRA textures over RGBA.
-            gl::GlType::Gles if supports_gles_bgra && supports_texture_storage => (
+            gl::GlType::Gles if supports_gles_bgra
+                && supports_extension(&extensions, "GL_EXT_texture_storage") =>
+            (
                 TextureFormatPair::from(ImageFormat::BGRA8),
                 TextureFormatPair { internal: gl::BGRA8_EXT, external: gl::BGRA_EXT },
                 gl::UNSIGNED_BYTE,
