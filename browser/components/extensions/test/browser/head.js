@@ -950,8 +950,5 @@ async function getIncognitoWindow(url = "about:privatebrowsing") {
  **/
 function backgroundColorSetOnRoot() {
   const os = ClientEnvironmentBase.os;
-  if (!os.isWindows) {
-    return false;
-  }
-  return os.windowsVersion < 10;
+  return os.isWindows;
 }
