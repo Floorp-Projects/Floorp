@@ -96,12 +96,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.newtabpage.activity-stream.feeds.snippets",
   true
 );
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "TrackingDBService",
-  "@mozilla.org/tracking-db-service;1",
-  "nsITrackingDBService"
-);
+
+XPCOMUtils.defineLazyServiceGetters(this, {
+  BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
+  TrackingDBService: [
+    "@mozilla.org/tracking-db-service;1",
+    "nsITrackingDBService",
+  ],
+});
 
 const FXA_USERNAME_PREF = "services.sync.username";
 
@@ -649,6 +651,10 @@ const TargetingGetters = {
     }
 
     return false;
+  },
+
+  get isMajorUpgrade() {
+    return BrowserHandler.majorUpgrade;
   },
 };
 
