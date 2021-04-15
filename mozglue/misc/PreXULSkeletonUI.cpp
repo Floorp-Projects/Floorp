@@ -1960,6 +1960,11 @@ static Result<Ok, PreXULSkeletonUIError> CreateAndStorePreXULSkeletonUIImpl(
                                                              sFlagsRegSuffix)));
   flags.deserialize(flagsUint);
 
+  if (flags.contains(SkeletonUIFlag::TouchDensity) ||
+      flags.contains(SkeletonUIFlag::CompactDensity)) {
+    return Err(PreXULSkeletonUIError::BadUIDensity);
+  }
+
   uint32_t theme;
   MOZ_TRY_VAR(theme, ReadRegUint(regKey, GetRegValueName(binPath.get(),
                                                          sThemeRegSuffix)));
@@ -2124,6 +2129,13 @@ Result<Ok, PreXULSkeletonUIError> PersistPreXULSkeletonUIValues(
   if (settings.rtlEnabled) {
     flags += SkeletonUIFlag::RtlEnabled;
   }
+  if (settings.uiDensity == SkeletonUIDensity::Touch) {
+    flags += SkeletonUIFlag::TouchDensity;
+  }
+  if (settings.uiDensity == SkeletonUIDensity::Compact) {
+    flags += SkeletonUIFlag::CompactDensity;
+  }
+
   uint32_t flagsUint = flags.serialize();
   MOZ_TRY(WriteRegUint(regKey, GetRegValueName(binPath.get(), sFlagsRegSuffix),
                        flagsUint));
