@@ -201,6 +201,10 @@ class ObjectOpResult {
   }
 };
 
+}  // namespace JS
+
+namespace js {
+
 class PropertyResult {
   enum class Kind : uint8_t {
     NotFound,
@@ -286,13 +290,9 @@ class PropertyResult {
   void trace(JSTracer* trc);
 };
 
-}  // namespace JS
-
-namespace js {
-
 template <class Wrapper>
-class WrappedPtrOperations<JS::PropertyResult, Wrapper> {
-  const JS::PropertyResult& value() const {
+class WrappedPtrOperations<js::PropertyResult, Wrapper> {
+  const js::PropertyResult& value() const {
     return static_cast<const Wrapper*>(this)->get();
   }
 
@@ -315,9 +315,9 @@ class WrappedPtrOperations<JS::PropertyResult, Wrapper> {
 };
 
 template <class Wrapper>
-class MutableWrappedPtrOperations<JS::PropertyResult, Wrapper>
-    : public WrappedPtrOperations<JS::PropertyResult, Wrapper> {
-  JS::PropertyResult& value() { return static_cast<Wrapper*>(this)->get(); }
+class MutableWrappedPtrOperations<js::PropertyResult, Wrapper>
+    : public WrappedPtrOperations<js::PropertyResult, Wrapper> {
+  js::PropertyResult& value() { return static_cast<Wrapper*>(this)->get(); }
 
  public:
   void setNotFound() { value().setNotFound(); }
@@ -454,7 +454,7 @@ namespace js {
 
 typedef bool (*LookupPropertyOp)(JSContext* cx, JS::HandleObject obj,
                                  JS::HandleId id, JS::MutableHandleObject objp,
-                                 JS::MutableHandle<JS::PropertyResult> propp);
+                                 JS::MutableHandle<PropertyResult> propp);
 typedef bool (*DefinePropertyOp)(JSContext* cx, JS::HandleObject obj,
                                  JS::HandleId id,
                                  JS::Handle<JS::PropertyDescriptor> desc,
