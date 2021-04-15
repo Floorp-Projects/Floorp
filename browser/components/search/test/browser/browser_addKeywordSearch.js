@@ -15,7 +15,7 @@ var testData = [
 
 add_task(async function() {
   const TEST_URL =
-    "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+    "http://example.org/browser/browser/components/search/test/browser/test.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   let count = 0;
