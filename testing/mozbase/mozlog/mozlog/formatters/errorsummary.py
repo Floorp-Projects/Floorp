@@ -67,17 +67,25 @@ class ErrorSummaryFormatter(BaseFormatter):
         return self._output("test_groups", {"groups": list(item["tests"].keys())})
 
     def suite_end(self, data):
-        return "".join(
-            self._output(
-                "group_result",
-                {
-                    "group": group,
-                    "status": info["status"],
-                    "duration": info["end"] - info["start"],
-                },
+        output = []
+        for group, info in self.groups.items():
+            if info["start"] is None or info["end"] is None:
+                duration = None
+            else:
+                duration = info["end"] - info["start"]
+
+            output.append(
+                self._output(
+                    "group_result",
+                    {
+                        "group": group,
+                        "status": info["status"],
+                        "duration": duration,
+                    },
+                )
             )
-            for group, info in self.groups.items()
-        )
+
+        return "".join(output)
 
     def test_start(self, item):
         group = self.test_to_group.get(item["test"], None)

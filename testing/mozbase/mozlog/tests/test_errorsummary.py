@@ -2,7 +2,6 @@
 
 import json
 import time
-from textwrap import dedent
 
 import mozunit
 import pytest
@@ -32,15 +31,39 @@ import pytest
                 ("test_end", "test_baz", "PASS", "FAIL"),
                 ("suite_end",),
             ],
-            dedent(
-                """
+            """
                 {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
                 {"test": "test_baz", "subtest": null, "group": "manifestA", "status": "PASS", "expected": "FAIL", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 8}
                 {"group": "manifestA", "status": "ERROR", "duration": 70, "action": "group_result", "line": 9}
                 {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
-            """
-            ).lstrip("\n"),
+            """.strip(),
             id="basic",
+        ),
+        pytest.param(
+            [
+                ("suite_start", {"manifest": ["test_foo"]}),
+                ("test_start", "test_foo"),
+                ("suite_end",),
+            ],
+            """
+                {"groups": ["manifest"], "action": "test_groups", "line": 0}
+                {"group": "manifest", "status": null, "duration": null, "action": "group_result", "line": 2}
+            """.strip(),
+            id="missing_test_end",
+        ),
+        pytest.param(
+            [
+                ("suite_start", {"manifest": ["test_foo"]}),
+                ("test_start", "test_foo"),
+                ("test_status", "test_foo", "subtest", "PASS"),
+                ("suite_end",),
+            ],
+            """
+                {"groups": ["manifest"], "action": "test_groups", "line": 0}
+                {"group": "manifest", "status": "ERROR", "duration": null, "action": "group_result", "line": 3}
+            """.strip(),
+            id="missing_test_end_with_test_status_ok",
+            marks=pytest.mark.xfail,  # status is OK but should be ERROR
         ),
     ),
 )
