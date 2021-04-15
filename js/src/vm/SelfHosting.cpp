@@ -1901,9 +1901,9 @@ static bool intrinsic_CreateNamespaceBinding(JSContext* cx, unsigned argc,
   MOZ_ASSERT(args[2].toObject().is<ModuleNamespaceObject>());
   // The property already exists in the evironment but is not writable, so set
   // the slot directly.
-  RootedShape shape(cx, environment->lookup(cx, name));
-  MOZ_ASSERT(shape);
-  environment->setSlot(shape->slot(), args[2]);
+  mozilla::Maybe<ShapeProperty> prop = environment->lookup(cx, name);
+  MOZ_ASSERT(prop.isSome());
+  environment->setSlot(prop->slot(), args[2]);
   args.rval().setUndefined();
   return true;
 }
@@ -1918,9 +1918,10 @@ static bool intrinsic_EnsureModuleEnvironmentNamespace(JSContext* cx,
   RootedModuleEnvironmentObject environment(cx, &module->initialEnvironment());
   // The property already exists in the evironment but is not writable, so set
   // the slot directly.
-  RootedShape shape(cx, environment->lookup(cx, cx->names().starNamespaceStar));
-  MOZ_ASSERT(shape);
-  environment->setSlot(shape->slot(), args[1]);
+  mozilla::Maybe<ShapeProperty> prop =
+      environment->lookup(cx, cx->names().starNamespaceStar);
+  MOZ_ASSERT(prop.isSome());
+  environment->setSlot(prop->slot(), args[1]);
   args.rval().setUndefined();
   return true;
 }
@@ -2789,7 +2790,7 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
         PropertyName* name = loc.getPropertyName(script);
         id = NameToId(name);
 
-        if (!shg->lookupPure(id)) {
+        if (shg->lookupPure(id).isNothing()) {
           // cellIter disallows GCs, but error reporting wants to
           // have them, so we need to move it out of the loop.
           nameMissing = true;

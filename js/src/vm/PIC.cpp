@@ -66,15 +66,15 @@ bool js::ForOfPIC::Chain::initialize(JSContext* cx) {
   disabled_ = true;
 
   // Look up Array.prototype[@@iterator], ensure it's a slotful shape.
-  Shape* iterShape =
+  mozilla::Maybe<ShapeProperty> iterProp =
       arrayProto->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
-  if (!iterShape || !iterShape->isDataProperty()) {
+  if (iterProp.isNothing() || !iterProp->isDataProperty()) {
     return true;
   }
 
   // Get the referred value, and ensure it holds the canonical ArrayValues
   // function.
-  Value iterator = arrayProto->getSlot(iterShape->slot());
+  Value iterator = arrayProto->getSlot(iterProp->slot());
   JSFunction* iterFun;
   if (!IsFunctionObject(iterator, &iterFun)) {
     return true;
@@ -84,14 +84,15 @@ bool js::ForOfPIC::Chain::initialize(JSContext* cx) {
   }
 
   // Look up the 'next' value on ArrayIterator.prototype
-  Shape* nextShape = arrayIteratorProto->lookup(cx, cx->names().next);
-  if (!nextShape || !nextShape->isDataProperty()) {
+  mozilla::Maybe<ShapeProperty> nextProp =
+      arrayIteratorProto->lookup(cx, cx->names().next);
+  if (nextProp.isNothing() || !nextProp->isDataProperty()) {
     return true;
   }
 
   // Get the referred value, ensure it holds the canonical ArrayIteratorNext
   // function.
-  Value next = arrayIteratorProto->getSlot(nextShape->slot());
+  Value next = arrayIteratorProto->getSlot(nextProp->slot());
   JSFunction* nextFun;
   if (!IsFunctionObject(next, &nextFun)) {
     return true;
@@ -102,10 +103,10 @@ bool js::ForOfPIC::Chain::initialize(JSContext* cx) {
 
   disabled_ = false;
   arrayProtoShape_ = arrayProto->lastProperty();
-  arrayProtoIteratorSlot_ = iterShape->slot();
+  arrayProtoIteratorSlot_ = iterProp->slot();
   canonicalIteratorFunc_ = iterator;
   arrayIteratorProtoShape_ = arrayIteratorProto->lastProperty();
-  arrayIteratorProtoNextSlot_ = nextShape->slot();
+  arrayIteratorProtoNextSlot_ = nextProp->slot();
   canonicalNextFunc_ = next;
   return true;
 }

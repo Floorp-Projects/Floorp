@@ -680,9 +680,9 @@ static MOZ_ALWAYS_INLINE bool CallResolveOp(
 
   MOZ_ASSERT(!obj->is<TypedArrayObject>());
 
-  RootedShape shape(cx, obj->lookup(cx, id));
-  if (shape) {
-    propp.setNativeProperty(shape);
+  mozilla::Maybe<ShapeProperty> prop = obj->lookup(cx, id);
+  if (prop.isSome()) {
+    propp.setNativeProperty(prop->shapeDeprecated());
   } else {
     propp.setNotFound();
   }

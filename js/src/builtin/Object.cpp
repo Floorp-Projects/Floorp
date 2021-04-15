@@ -938,18 +938,18 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     nextKey = fromPropShape->propid();
     propValue = fromPlain->getSlot(fromPropShape->slot());
 
-    Shape* toShape;
+    Maybe<ShapeProperty> toProp;
     if (toWasEmpty) {
       MOZ_ASSERT(!toPlain->containsPure(nextKey));
-      toShape = nullptr;
+      MOZ_ASSERT(toProp.isNothing());
     } else {
-      toShape = toPlain->lookup(cx, nextKey);
+      toProp = toPlain->lookup(cx, nextKey);
     }
 
-    if (toShape) {
-      MOZ_ASSERT(toShape->isDataProperty());
-      MOZ_ASSERT(toShape->writable());
-      toPlain->setSlot(toShape->slot(), propValue);
+    if (toProp.isSome()) {
+      MOZ_ASSERT(toProp->isDataProperty());
+      MOZ_ASSERT(toProp->writable());
+      toPlain->setSlot(toProp->slot(), propValue);
     } else {
       if (!AddDataPropertyNonPrototype(cx, toPlain, nextKey, propValue)) {
         return false;
@@ -1738,14 +1738,12 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
       if (JSID_IS_INT(id) && nobj->containsDenseElement(JSID_TO_INT(id))) {
         value.set(nobj->getDenseElement(JSID_TO_INT(id)));
       } else {
-        shape = nobj->lookup(cx, id);
-        if (!shape || !shape->enumerable()) {
+        Maybe<ShapeProperty> prop = nobj->lookup(cx, id);
+        if (prop.isNothing() || !prop->enumerable()) {
           continue;
         }
-        if (shape->isDataProperty()) {
-          if (!NativeGetExistingProperty(cx, nobj, nobj, shape, &value)) {
-            return false;
-          }
+        if (prop->isDataProperty()) {
+          value = nobj->getSlot(prop->slot());
         } else if (!GetProperty(cx, obj, obj, id, &value)) {
           return false;
         }
