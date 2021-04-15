@@ -985,6 +985,33 @@ var gPrivacyPane = {
             );
             break;
         }
+        let cookieBehaviorPBM = defaults.getIntPref(
+          "network.cookie.cookieBehavior.pbmode"
+        );
+        switch (cookieBehaviorPBM) {
+          case Ci.nsICookieService.BEHAVIOR_ACCEPT:
+            rulesArray.push("cookieBehaviorPBM0");
+            break;
+          case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+            rulesArray.push("cookieBehaviorPBM1");
+            break;
+          case Ci.nsICookieService.BEHAVIOR_REJECT:
+            rulesArray.push("cookieBehaviorPBM2");
+            break;
+          case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+            rulesArray.push("cookieBehaviorPBM3");
+            break;
+          case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+            rulesArray.push("cookieBehaviorPBM4");
+            break;
+          case BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
+            rulesArray.push(
+              gIsFirstPartyIsolated
+                ? "cookieBehaviorPBM4"
+                : "cookieBehaviorPBM5"
+            );
+            break;
+        }
         rulesArray.push(
           defaults.getBoolPref(
             "privacy.trackingprotection.cryptomining.enabled"
@@ -1028,6 +1055,9 @@ var gPrivacyPane = {
       ).hidden = true;
       document.querySelector(
         selector + " .third-party-tracking-cookies-option"
+      ).hidden = true;
+      document.querySelector(
+        selector + " .all-third-party-cookies-private-windows-option"
       ).hidden = true;
       document.querySelector(
         selector + " .all-third-party-cookies-option"
@@ -1122,6 +1152,16 @@ var gPrivacyPane = {
               ? " .cross-site-cookies-option"
               : " .third-party-tracking-cookies-plus-isolate-option";
             document.querySelector(selector + cookieSelector).hidden = false;
+            break;
+          case "cookieBehaviorPBM5":
+            // We only need to show the cookie option for private windows if the
+            // cookieBehaviors are different between regular windows and private
+            // windows.
+            if (!rulesArray.includes("cookieBehavior5")) {
+              document.querySelector(
+                selector + " .all-third-party-cookies-private-windows-option"
+              ).hidden = false;
+            }
             break;
         }
       }
