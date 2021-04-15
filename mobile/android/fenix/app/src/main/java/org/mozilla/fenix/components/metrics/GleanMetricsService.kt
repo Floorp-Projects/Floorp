@@ -833,7 +833,7 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.CloseExperimentCardClicked -> EventWrapper<NoExtraKeys>(
             { SetDefaultNewtabExperiment.closeExperimentCardClicked.record(it) }
         )
-        is Event.SetDefaultBrowserClicked -> EventWrapper<NoExtraKeys>(
+        is Event.SetDefaultBrowserNewTabClicked -> EventWrapper<NoExtraKeys>(
             { SetDefaultNewtabExperiment.setDefaultBrowserClicked.record(it) }
         )
         is Event.SetDefaultBrowserSettingsScreenClicked -> EventWrapper<NoExtraKeys>(

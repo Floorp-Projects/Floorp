@@ -567,7 +567,7 @@ class DefaultSessionControlController(
 
     override fun handleSetDefaultBrowser() {
         settings.userDismissedExperimentCard = true
-        metrics.track(Event.SetDefaultBrowserClicked)
+        metrics.track(Event.SetDefaultBrowserNewTabClicked)
         activity.openSetDefaultBrowserOption()
     }
 
