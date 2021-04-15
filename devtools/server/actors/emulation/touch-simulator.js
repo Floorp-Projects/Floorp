@@ -45,16 +45,20 @@ const TOUCH_STATES = {
 
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
-function TouchSimulator(simulatorTarget) {
-  this.simulatorTarget = simulatorTarget;
-  this._currentPickerMap = new Map();
-}
-
 /**
  * Simulate touch events for platforms where they aren't generally available.
  */
-TouchSimulator.prototype = {
-  events: [
+class TouchSimulator {
+  /**
+   * @param {ChromeEventHandler} simulatorTarget: The object we'll use to listen for click
+   *                             and touch events to handle.
+   */
+  constructor(simulatorTarget) {
+    this.simulatorTarget = simulatorTarget;
+    this._currentPickerMap = new Map();
+  }
+
+  events = [
     "mousedown",
     "mousemove",
     "mouseup",
@@ -64,13 +68,9 @@ TouchSimulator.prototype = {
     "mouseover",
     "mouseout",
     "mouseleave",
-  ],
-
-  contextMenuTimeout: null,
-
-  simulatorTarget: null,
-
-  enabled: false,
+  ];
+  contextMenuTimeout = null;
+  enabled = false;
 
   start() {
     if (this.enabled) {
@@ -85,7 +85,7 @@ TouchSimulator.prototype = {
     });
 
     this.enabled = true;
-  },
+  }
 
   stop() {
     if (!this.enabled) {
@@ -96,12 +96,12 @@ TouchSimulator.prototype = {
       this.simulatorTarget.removeEventListener(evt, this, true);
     });
     this.enabled = false;
-  },
+  }
 
   _isPicking() {
     const types = Object.values(PICKER_TYPES);
     return types.some(type => this._currentPickerMap.get(type));
-  },
+  }
 
   /**
    * Set the state value for one of DevTools pickers (either eyedropper or
@@ -123,7 +123,7 @@ TouchSimulator.prototype = {
       );
     }
     this._currentPickerMap.set(pickerType, state);
-  },
+  }
 
   // eslint-disable-next-line complexity
   handleEvent(evt) {
@@ -286,7 +286,7 @@ TouchSimulator.prototype = {
       evt.preventDefault();
       evt.stopImmediatePropagation();
     }
-  },
+  }
 
   sendContextMenu({ target, clientX, clientY, screenX, screenY }) {
     const view = target.ownerGlobal;
@@ -306,7 +306,7 @@ TouchSimulator.prototype = {
     }, clickHoldDelay);
 
     return timeout;
-  },
+  }
 
   /**
    * Synthesizes a native touch action on a given target element. The `x` and `y` values
@@ -335,7 +335,7 @@ TouchSimulator.prototype = {
 
     utils.sendNativeTouchPoint(0, TOUCH_STATES[type], pt.x, pt.y, 1, 90, null);
     return true;
-  },
+  }
 
   sendTouchEvent(evt, target, name) {
     const win = target.ownerGlobal;
@@ -359,12 +359,12 @@ TouchSimulator.prototype = {
       0,
       false
     );
-  },
+  }
 
   getContent(target) {
     const win = target?.ownerDocument ? target.ownerGlobal : null;
     return win;
-  },
+  }
 
   getDelayBeforeMouseEvent(evt) {
     // On mobile platforms, Firefox inserts a 300ms delay between
@@ -420,7 +420,7 @@ TouchSimulator.prototype = {
       return 0;
     }
     return 300;
-  },
-};
+  }
+}
 
 exports.TouchSimulator = TouchSimulator;
