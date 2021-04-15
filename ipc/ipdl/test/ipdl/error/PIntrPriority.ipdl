@@ -2,5 +2,5 @@
 
 intr protocol PIntrPriority {
 child:
-  [Priority=high] intr Msg();
+  [Priority=vsync] intr Msg();
 };
