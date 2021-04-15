@@ -1145,6 +1145,8 @@ richlistitem .text-link:hover {
   padding-inline-start: 38px;
   display: flex;
   align-items: center;
+  -moz-context-properties: fill;
+  fill: #FFBF00;
 }
 
 #pane-experimental-search-results-header:-moz-locale-dir(rtl),
