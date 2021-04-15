@@ -13,33 +13,6 @@ XPCOMUtils.defineLazyGetter(this, "gFluentStrings", function() {
   return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);
 });
 
-if (AppConstants.TSAN) {
-  // A test in this folder used to rely on the initial timer of
-  // TestUtils.waitForCondition. Removing these timers makes
-  // browser_bookmarkProperties_folderSelection.js and a few of the
-  // following tests fail frequently on tsan builds.
-  // See bug 1695011.
-  const originalWaitForCondition = TestUtils.waitForCondition;
-  TestUtils.waitForCondition = async function(
-    condition,
-    msg,
-    interval = 100,
-    maxTries = 50
-  ) {
-    // Using the window global setTimeout will fail for modal dialogs.
-    const { setTimeout } = ChromeUtils.import(
-      "resource://gre/modules/Timer.jsm"
-    );
-    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    return originalWaitForCondition(condition, msg, interval, maxTries);
-  };
-  registerCleanupFunction(function() {
-    TestUtils.waitForCondition = originalWaitForCondition;
-  });
-}
-
 function openLibrary(callback, aLeftPaneRoot) {
   let library = window.openDialog(
     "chrome://browser/content/places/places.xhtml",
