@@ -18,7 +18,10 @@ const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 const REMOTE_DEFAULTS_KEY = "__REMOTE_DEFAULTS";
 
+// This branch is used to store experiment data
 const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
+// This branch is used to store remote rollouts
+const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
 let tryJSONParse = data => {
   try {
     return JSON.parse(data);
@@ -35,26 +38,49 @@ XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
     }
   } catch (e) {}
 
-  let prefBranch = Services.prefs.getBranch(SYNC_DATA_PREF_BRANCH);
+  let experimentsPrefBranch = Services.prefs.getBranch(SYNC_DATA_PREF_BRANCH);
+  let defaultsPrefBranch = Services.prefs.getBranch(SYNC_DEFAULTS_PREF_BRANCH);
   return {
-    get(featureId) {
+    _tryParsePrefValue(branch, pref) {
       try {
-        return tryJSONParse(prefBranch.getStringPref(featureId, ""));
+        return tryJSONParse(branch.getStringPref(pref, ""));
       } catch (e) {
         /* This is expected if we don't have anything stored */
       }
 
       return null;
     },
-    set(featureId, value) {
+    _trySetPrefValue(branch, pref, value) {
       try {
-        prefBranch.setStringPref(featureId, JSON.stringify(value));
+        branch.setStringPref(pref, JSON.stringify(value));
       } catch (e) {
         Cu.reportError(e);
       }
     },
+    get(featureId) {
+      return this._tryParsePrefValue(experimentsPrefBranch, featureId);
+    },
+    getDefault(featureId) {
+      return this._tryParsePrefValue(defaultsPrefBranch, featureId);
+    },
+    set(featureId, value) {
+      this._trySetPrefValue(experimentsPrefBranch, featureId, value);
+    },
+    setDefault(featureId, value) {
+      this._trySetPrefValue(defaultsPrefBranch, featureId, value);
+    },
+    getAllDefaultBranches() {
+      return defaultsPrefBranch.getChildList("");
+    },
     delete(featureId) {
-      prefBranch.clearUserPref(featureId);
+      try {
+        experimentsPrefBranch.clearUserPref(featureId);
+      } catch (e) {}
+    },
+    deleteDefault(featureId) {
+      try {
+        defaultsPrefBranch.clearUserPref(featureId);
+      } catch (e) {}
     },
   };
 });
@@ -67,6 +93,11 @@ const SYNC_ACCESS_FEATURES = ["newtab", "aboutwelcome"];
 class ExperimentStore extends SharedDataMap {
   constructor(sharedDataKey, options = { isParent: IS_MAIN_PROCESS }) {
     super(sharedDataKey || DEFAULT_STORE_ID, options);
+
+    // Keep a session cache of all remote default configurations processed.
+    // This is used to clear the preference cache when a configuration is
+    // removed.
+    this.remoteDefaultsSession = new Set();
   }
 
   /**
@@ -197,6 +228,31 @@ class ExperimentStore extends SharedDataMap {
     this._emitExperimentUpdates(updatedExperiment);
   }
 
+  finalizeRemoteConfigs() {
+    for (let featureId of syncDataStore.getAllDefaultBranches()) {
+      if (
+        !this.remoteDefaultsSession.has(featureId) &&
+        this.getRemoteConfig(featureId)
+      ) {
+        // If we haven't seen this feature in any of the configurations
+        // processed then we should clear the matching pref cache and session
+        // data.
+        const remoteConfigState = this.get(REMOTE_DEFAULTS_KEY);
+        delete remoteConfigState?.[featureId];
+        this.setNonPersistent(REMOTE_DEFAULTS_KEY, { ...remoteConfigState });
+        syncDataStore.deleteDefault(featureId);
+        this._emitFeatureUpdate(featureId, "remote-defaults-update");
+      }
+    }
+
+    // Reset the cache to prepare for the next update cycle.
+    this.remoteDefaultsSession = new Set();
+    // Notify all ExperimentFeature instances that the Remote Defaults cycle finished
+    // this will resolve the `onRemoteReady` promise for features that do not
+    // have any remote data available.
+    this.emit("remote-defaults-finalized");
+  }
+
   /**
    * Store the remote configuration once loaded from Remote Settings.
    * @param {string} featureId The feature we want to update with remote defaults
@@ -208,6 +264,10 @@ class ExperimentStore extends SharedDataMap {
       ...remoteConfigState,
       [featureId]: { ...configuration },
     });
+    if (SYNC_ACCESS_FEATURES.includes(featureId)) {
+      syncDataStore.setDefault(featureId, configuration);
+    }
+    this.remoteDefaultsSession.add(featureId);
     this._emitFeatureUpdate(featureId, "remote-defaults-update");
   }
 
@@ -217,6 +277,15 @@ class ExperimentStore extends SharedDataMap {
    * @returns {{RemoteDefaults}|undefined} Remote defaults if available
    */
   getRemoteConfig(featureId) {
-    return this.get(REMOTE_DEFAULTS_KEY)?.[featureId];
+    return (
+      this.get(REMOTE_DEFAULTS_KEY)?.[featureId] ||
+      syncDataStore.getDefault(featureId)
+    );
+  }
+
+  _deleteForTests(featureId) {
+    super._deleteForTests(featureId);
+    syncDataStore.deleteDefault(featureId);
+    syncDataStore.delete(featureId);
   }
 }

@@ -1,6 +1,7 @@
 "use strict";
 
 const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
+const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
 
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
@@ -13,6 +14,7 @@ const { ExperimentStore } = ChromeUtils.import(
 function cleanupStorePrefCache() {
   try {
     Services.prefs.deleteBranch(SYNC_DATA_PREF_BRANCH);
+    Services.prefs.deleteBranch(SYNC_DEFAULTS_PREF_BRANCH);
   } catch (e) {
     // Expected if nothing is cached
   }
@@ -376,6 +378,47 @@ add_task(async function test_sync_access_unenroll_2() {
   );
 });
 
+add_task(async function test_syncDataStore_setDefault() {
+  cleanupStorePrefCache();
+  const store = ExperimentFakes.store();
+
+  await store.init();
+
+  Assert.equal(
+    Services.prefs.getStringPref(
+      `${SYNC_DEFAULTS_PREF_BRANCH}aboutwelcome`,
+      ""
+    ),
+    "",
+    "Pref is empty"
+  );
+
+  store.updateRemoteConfigs("aboutwelcome", { remote: true });
+
+  Assert.ok(
+    Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}aboutwelcome`),
+    "Stored in pref"
+  );
+
+  cleanupStorePrefCache();
+});
+
+add_task(async function test_syncDataStore_getDefault() {
+  cleanupStorePrefCache();
+  const store = ExperimentFakes.store();
+
+  Services.prefs.setStringPref(
+    `${SYNC_DEFAULTS_PREF_BRANCH}aboutwelcome`,
+    JSON.stringify({ remote: true })
+  );
+
+  let data = store.getRemoteConfig("aboutwelcome");
+
+  Assert.ok(data.remote, "Restore data from pref");
+
+  cleanupStorePrefCache();
+});
+
 add_task(async function test_updateRemoteConfigs() {
   const sandbox = sinon.createSandbox();
   const store = ExperimentFakes.store();
@@ -398,4 +441,46 @@ add_task(async function test_updateRemoteConfigs() {
     "remote-defaults-update",
     "Called for correct reason"
   );
+});
+
+add_task(async function test_finalizaRemoteConfigs_cleanup() {
+  cleanupStorePrefCache();
+  const store = ExperimentFakes.store();
+
+  Services.prefs.setStringPref(
+    `${SYNC_DEFAULTS_PREF_BRANCH}unit-test-feature`,
+    JSON.stringify({ remote: true })
+  );
+
+  // We are able to sync-read data without needing to initialize the store
+  let data = store.getRemoteConfig("unit-test-feature");
+  Assert.ok(data.remote, "Restore data from pref");
+
+  // We need to initialize the store for the cleanup step
+  await store.init();
+
+  store.finalizeRemoteConfigs();
+  data = store.getRemoteConfig("unit-test-feature");
+
+  Assert.ok(!data, `Data was removed ${JSON.stringify(data)}`);
+
+  cleanupStorePrefCache();
+});
+
+add_task(async function test_finalizaRemoteConfigs_cleanup() {
+  cleanupStorePrefCache();
+  const store = ExperimentFakes.store();
+  await store.init();
+
+  store.updateRemoteConfigs("aboutwelcome", { remote: true });
+
+  let data = store.getRemoteConfig("aboutwelcome");
+  Assert.ok(data.remote, "Restore data from pref");
+
+  store.finalizeRemoteConfigs();
+  data = store.getRemoteConfig("aboutwelcome");
+
+  Assert.ok(data.remote, "Data was kept");
+
+  cleanupStorePrefCache();
 });

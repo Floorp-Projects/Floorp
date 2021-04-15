@@ -87,8 +87,31 @@ add_task(async function readyCallAfterStore_with_remote_value() {
   await feature.ready();
 
   Assert.ok(feature.getValue().skipFocus, "Loads value from store");
-  manager.store._deleteForTests("remoteDefaults");
+  manager.store._deleteForTests("aboutwelcome");
   sandbox.restore();
+});
+
+add_task(async function has_sync_value_before_ready() {
+  let { manager } = await setupForExperimentFeature();
+  let feature = new ExperimentFeature("aboutwelcome");
+
+  Assert.equal(
+    feature.getValue().remoteValue,
+    undefined,
+    "Feature is not defined"
+  );
+
+  Services.prefs.setStringPref(
+    "nimbus.syncdefaultsstore.aboutwelcome",
+    JSON.stringify(REMOTE_CONFIGURATION.configurations[0])
+  );
+
+  Assert.equal(
+    feature.getValue().remoteValue,
+    REMOTE_CONFIGURATION.configurations[0].variables.remoteValue,
+    "Sync load from pref"
+  );
+  manager.store._deleteForTests("aboutwelcome");
 });
 
 add_task(async function update_remote_defaults_onUpdate() {
@@ -117,7 +140,7 @@ add_task(async function update_remote_defaults_onUpdate() {
     "Correct reason"
   );
 
-  manager.store._deleteForTests("remoteDefaults");
+  manager.store._deleteForTests("aboutwelcome");
   sandbox.restore();
 });
 
@@ -142,9 +165,7 @@ add_task(async function update_remote_defaults_readyPromise() {
 
   await promise;
 
-  Assert.ok(feature._remoteReady, "Ready state updated");
-
-  manager.store._deleteForTests("remoteDefaults");
+  manager.store._deleteForTests("aboutwelcome");
   sandbox.restore();
 });
 
@@ -171,6 +192,6 @@ add_task(async function update_remote_defaults_enabled() {
     "Feature is disabled by remote configuration"
   );
 
-  manager.store._deleteForTests("remoteDefaults");
+  manager.store._deleteForTests("aboutwelcome");
   sandbox.restore();
 });
