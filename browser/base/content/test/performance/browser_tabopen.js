@@ -108,7 +108,7 @@ add_task(async function() {
                     // The '+' icon moves with an animation. At the end of the animation
                     // the former and new positions can touch each other causing the rect
                     // to have twice the icon's width.
-                    (r.h == 14 && r.w <= 2 * 14 + kMaxEmptyPixels) ||
+                    (r.h == 13 && r.w <= 2 * 13 + kMaxEmptyPixels) ||
                     // We sometimes have a rect for the right most 2px of the '+' button.
                     (r.h == 2 && r.w == 2) ||
                     // Same for the 'X' icon.
