@@ -21,7 +21,7 @@ add_task(async function() {
 
   await testInitialFocus(inspector, boxmodel);
   await testChangingLevels(inspector, boxmodel);
-  await testTabbingWrapAround(inspector, boxmodel);
+  await testTabbingThroughItems(inspector, boxmodel);
   await testChangingLevelsByClicking(inspector, boxmodel);
 });
 
@@ -33,7 +33,7 @@ function testInitialFocus(inspector, boxmodel) {
   EventUtils.synthesizeKey("KEY_Enter");
 
   is(
-    container.getAttribute("activedescendant"),
+    container.dataset.activeDescendantClassName,
     "boxmodel-main devtools-monospace",
     "Should be set to the position layout."
   );
@@ -49,82 +49,132 @@ function testChangingLevels(inspector, boxmodel) {
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(
-    container.getAttribute("activedescendant"),
+    container.dataset.activeDescendantClassName,
     "boxmodel-margins",
     "Should be set to the margin layout."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(
-    container.getAttribute("activedescendant"),
+    container.dataset.activeDescendantClassName,
     "boxmodel-borders",
     "Should be set to the border layout."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(
-    container.getAttribute("activedescendant"),
+    container.dataset.activeDescendantClassName,
     "boxmodel-paddings",
     "Should be set to the padding layout."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(
-    container.getAttribute("activedescendant"),
+    container.dataset.activeDescendantClassName,
     "boxmodel-contents",
     "Should be set to the content layout."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
   is(
-    container.getAttribute("activedescendant"),
+    container.dataset.activeDescendantClassName,
     "boxmodel-paddings",
     "Should be set to the padding layout."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
   is(
-    container.getAttribute("activedescendant"),
+    container.dataset.activeDescendantClassName,
     "boxmodel-borders",
     "Should be set to the border layout."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
   is(
-    container.getAttribute("activedescendant"),
+    container.dataset.activeDescendantClassName,
     "boxmodel-margins",
     "Should be set to the margin layout."
   );
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
   is(
-    container.getAttribute("activedescendant"),
+    container.dataset.activeDescendantClassName,
     "boxmodel-main devtools-monospace",
     "Should be set to the position layout."
   );
 }
 
-function testTabbingWrapAround(inspector, boxmodel) {
-  info("Test that using arrow keys updates level.");
+function testTabbingThroughItems(inspector, boxmodel) {
+  info("Test that using Tab key moves focus to next/previous input field.");
   const doc = boxmodel.document;
   const container = doc.querySelector(".boxmodel-container");
   container.focus();
   EventUtils.synthesizeKey("KEY_Enter");
 
-  const editLevel = container.getAttribute("activedescendant").split(" ")[0];
-  const dataLevel = doc.querySelector(`.${editLevel}`).getAttribute("data-box");
-  const editBoxes = [
-    ...doc.querySelectorAll(`[data-box="${dataLevel}"].boxmodel-editable`),
+  const editBoxes = [...doc.querySelectorAll("[data-box].boxmodel-editable")];
+
+  const editBoxesInfo = [
+    { name: "position-top", itemId: "position-top-id" },
+    { name: "position-right", itemId: "position-right-id" },
+    { name: "position-bottom", itemId: "position-bottom-id" },
+    { name: "position-left", itemId: "position-left-id" },
+    { name: "margin-top", itemId: "margin-top-id" },
+    { name: "margin-right", itemId: "margin-right-id" },
+    { name: "margin-bottom", itemId: "margin-bottom-id" },
+    { name: "margin-left", itemId: "margin-left-id" },
+    { name: "border-top-width", itemId: "border-top-width-id" },
+    { name: "border-right-width", itemId: "border-right-width-id" },
+    { name: "border-bottom-width", itemId: "border-bottom-width-id" },
+    { name: "border-left-width", itemId: "border-left-width-id" },
+    { name: "padding-top", itemId: "padding-top-id" },
+    { name: "padding-right", itemId: "padding-right-id" },
+    { name: "padding-bottom", itemId: "padding-bottom-id" },
+    { name: "padding-left", itemId: "padding-left-id" },
+    { name: "width", itemId: "width-id" },
+    { name: "height", itemId: "height-id" },
   ];
 
-  EventUtils.synthesizeKey("KEY_Escape");
-  editBoxes[3].focus();
-  EventUtils.synthesizeKey("KEY_Tab");
-  is(editBoxes[0], doc.activeElement, "Top edit box should have focus.");
+  // Check whether tabbing through box model items works
+  // Note that the test checks whether wrapping around the box model works
+  // by letting the loop run beyond the number of indexes to start with
+  // the first item again.
+  for (let i = 0; i <= editBoxesInfo.length; i++) {
+    const itemIndex = i % editBoxesInfo.length;
+    const editBoxInfo = editBoxesInfo[itemIndex];
+    is(
+      editBoxes[itemIndex].parentElement.id,
+      editBoxInfo.itemId,
+      `${editBoxInfo.name} item is current`
+    );
+    is(
+      editBoxes[itemIndex].previousElementSibling?.localName,
+      "input",
+      `Input shown for ${editBoxInfo.name} item`
+    );
 
-  editBoxes[0].focus();
-  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
-  is(editBoxes[3], doc.activeElement, "Left edit box should have focus.");
+    // Pressing Tab should not be synthesized for the last item to
+    // wrap to the very last item again when tabbing in reversed order.
+    if (i < editBoxesInfo.length) {
+      EventUtils.synthesizeKey("KEY_Tab");
+    }
+  }
+
+  // Check whether reversed tabbing through box model items works
+  for (let i = editBoxesInfo.length; i >= 0; i--) {
+    const itemIndex = i % editBoxesInfo.length;
+    const editBoxInfo = editBoxesInfo[itemIndex];
+    is(
+      editBoxes[itemIndex].parentElement.id,
+      editBoxInfo.itemId,
+      `${editBoxInfo.name} item is current`
+    );
+    is(
+      editBoxes[itemIndex].previousElementSibling?.localName,
+      "input",
+      `Input shown for ${editBoxInfo.name} item`
+    );
+    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+  }
 }
 
 function testChangingLevelsByClicking(inspector, boxmodel) {
@@ -142,9 +192,9 @@ function testChangingLevelsByClicking(inspector, boxmodel) {
   layouts.forEach(layout => {
     layout.click();
     is(
-      container.getAttribute("activedescendant"),
+      container.dataset.activeDescendantClassName,
       layout.className,
-      "Should be set to" + layout.getAttribute("data-box") + "layout."
+      `Should be set to ${layout.getAttribute("data-box")} layout.`
     );
   });
 }
