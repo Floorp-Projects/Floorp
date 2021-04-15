@@ -2037,6 +2037,8 @@ JS::ubi::Node::Size JS::ubi::Concrete<js::BaseShape>::size(
 
 void PropertyResult::trace(JSTracer* trc) {
   if (isNativeProperty()) {
-    TraceRoot(trc, &shape_, "PropertyResult::shape_");
+    Shape* shape = shapeProp_.shapeDeprecated();
+    TraceRoot(trc, &shape, "PropertyResult::shapeProp_");
+    shapeProp_ = ShapeProperty(shape);
   }
 }

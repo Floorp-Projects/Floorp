@@ -88,13 +88,14 @@ static inline bool IsUninitializedLexicalSlot(HandleObject obj,
     return false;
   }
 
-  Shape* shape = prop.shape();
-  if (!shape->isDataProperty()) {
+  ShapeProperty shapeProp = prop.shapeProperty();
+  if (!shapeProp.isDataProperty()) {
     return false;
   }
 
-  MOZ_ASSERT(obj->as<NativeObject>().containsPure(shape));
-  return IsUninitializedLexical(obj->as<NativeObject>().getSlot(shape->slot()));
+  MOZ_ASSERT(obj->as<NativeObject>().containsPure(shapeProp.shapeDeprecated()));
+  return IsUninitializedLexical(
+      obj->as<NativeObject>().getSlot(shapeProp.slot()));
 }
 
 static inline bool CheckUninitializedLexical(JSContext* cx, PropertyName* name_,
@@ -158,14 +159,15 @@ inline bool FetchName(JSContext* cx, HandleObject receiver, HandleObject holder,
       return false;
     }
   } else {
-    RootedShape shape(cx, prop.shape());
-    if (shape->isDataProperty()) {
+    ShapeProperty shapeProp = prop.shapeProperty();
+    if (shapeProp.isDataProperty()) {
       /* Fast path for Object instance properties. */
-      vp.set(holder->as<NativeObject>().getSlot(shape->slot()));
+      vp.set(holder->as<NativeObject>().getSlot(shapeProp.slot()));
     } else {
       // Unwrap 'with' environments for reasons given in
       // GetNameBoundInEnvironment.
       RootedObject normalized(cx, MaybeUnwrapWithEnvironment(receiver));
+      RootedShape shape(cx, shapeProp.shapeDeprecated());
       if (!NativeGetExistingProperty(cx, normalized, holder.as<NativeObject>(),
                                      shape, vp)) {
         return false;
@@ -188,12 +190,12 @@ inline bool FetchNameNoGC(NativeObject* pobj, PropertyResult prop, Value* vp) {
     return false;
   }
 
-  Shape* shape = prop.shape();
-  if (!shape->isDataProperty()) {
+  ShapeProperty shapeProp = prop.shapeProperty();
+  if (!shapeProp.isDataProperty()) {
     return false;
   }
 
-  *vp = pobj->getSlot(shape->slot());
+  *vp = pobj->getSlot(shapeProp.slot());
   return !IsUninitializedLexical(*vp);
 }
 

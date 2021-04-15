@@ -757,18 +757,17 @@ static bool DefineMappedIndex(JSContext* cx, Handle<MappedArgumentsObject*> obj,
 
   MOZ_ASSERT(prop.isNativeProperty());
 
-  Shape* shape = prop.shape();
-  MOZ_ASSERT(shape);
-  MOZ_ASSERT(shape->writable());
-  MOZ_ASSERT(shape->isCustomDataProperty());
+  ShapeProperty shapeProp = prop.shapeProperty();
+  MOZ_ASSERT(shapeProp.writable());
+  MOZ_ASSERT(shapeProp.isCustomDataProperty());
 
   // Change the property's attributes by implementing the relevant parts of
   // ValidateAndApplyPropertyDescriptor (ES2021 draft, 10.1.6.3), in particular
   // steps 4 and 9.
 
   // Determine whether the property should be configurable and/or enumerable.
-  bool configurable = shape->configurable();
-  bool enumerable = shape->enumerable();
+  bool configurable = shapeProp.configurable();
+  bool enumerable = shapeProp.enumerable();
   if (configurable) {
     if (desc.hasConfigurable()) {
       configurable = desc.configurable();
