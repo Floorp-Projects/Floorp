@@ -418,13 +418,13 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
              count));
   }
 
-  bool bJustStartedLoading = false;
+  bool justStartedLoading = false;
 
   nsLoadFlags loadFlags = 0;
   request->GetLoadFlags(&loadFlags);
 
   if (!mIsLoadingDocument && (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
-    bJustStartedLoading = true;
+    justStartedLoading = true;
     mIsLoadingDocument = true;
     mDocumentOpenedButNotLoaded = false;
     ClearInternalProgress();  // only clear our progress if we are starting a
@@ -459,7 +459,7 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
       // Only fire the start document load notification for the first
       // document URI...  Do not fire it again for redirections
       //
-      if (bJustStartedLoading) {
+      if (justStartedLoading) {
         // Update the progress status state
         mProgressStateFlags = nsIWebProgressListener::STATE_START;
 
@@ -484,7 +484,7 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
   // Fixing any of those bugs may cause unpredictable consequences in any part
   // of the browser, so we just add a custom flag for this exact situation.
   int32_t extraFlags = 0;
-  if (mIsLoadingDocument && !bJustStartedLoading &&
+  if (mIsLoadingDocument && !justStartedLoading &&
       (loadFlags & nsIChannel::LOAD_DOCUMENT_URI) &&
       (loadFlags & nsIChannel::LOAD_REPLACE)) {
     extraFlags = nsIWebProgressListener::STATE_IS_REDIRECTED_DOCUMENT;
@@ -514,7 +514,7 @@ nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
              (mDocumentOpenedButNotLoaded ? "true" : "false"), count));
   }
 
-  bool bFireTransferring = false;
+  bool fireTransferring = false;
 
   //
   // Set the Maximum progress to the same value as the current progress.
@@ -563,7 +563,7 @@ nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
       //
       if (channel) {
         if (NS_SUCCEEDED(aStatus)) {
-          bFireTransferring = true;
+          fireTransferring = true;
         }
         //
         // If the request failed (for any reason other than being
@@ -588,7 +588,7 @@ nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
                 // established to the server... So, fire the notification
                 // even though a failure occurred later...
                 //
-                bFireTransferring = true;
+                fireTransferring = true;
               }
             }
           }
@@ -597,7 +597,7 @@ nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     }
   }
 
-  if (bFireTransferring) {
+  if (fireTransferring) {
     // Send a STATE_TRANSFERRING notification for the request.
     int32_t flags;
 
