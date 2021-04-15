@@ -76,7 +76,7 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
                 app:layout_constraintBottom_toTopOf="@+id/horizonatal_divider"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/mozac_ic_close"
+                app:srcCompat="@drawable/ic_close"
                 app:tint="@color/photonInk80" />
 
             <View

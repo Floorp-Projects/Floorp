@@ -5,9 +5,9 @@
     android:width="24dp"
     android:height="24dp"
     android:autoMirrored="true"
-    android:viewportWidth="7"
-    android:viewportHeight="13">
+    android:viewportWidth="24"
+    android:viewportHeight="24">
     <path
         android:fillColor="?primaryText"
-        android:pathData="M0.9998,12.4877C0.5954,12.4877 0.2309,12.244 0.0761,11.8704C-0.0786,11.4967 0.0069,11.0667 0.2928,10.7807L4.5858,6.4877L0.2928,2.1947C-0.0862,1.8023 -0.0807,1.1786 0.305,0.7929C0.6907,0.4072 1.3144,0.4017 1.7068,0.7807L6.7068,5.7807C7.0972,6.1712 7.0972,6.8042 6.7068,7.1947L1.7068,12.1947C1.5193,12.3823 1.265,12.4877 0.9998,12.4877Z" />
+        android:pathData="M14.289,12 L7.57,5.28a0.75,0.75 0,1 1,1.061 -1.061l7.37,7.37v0.821l-7.37,7.37a0.748,0.748 0,0 1,-1.061 0,0.75 0.75,0 0,1 0,-1.061L14.289,12z" />
 </vector>

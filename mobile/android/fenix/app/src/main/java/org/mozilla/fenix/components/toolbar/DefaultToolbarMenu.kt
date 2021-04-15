@@ -91,7 +91,8 @@ open class DefaultToolbarMenu(
             endOfMenuAlwaysVisible = shouldUseBottomToolbar,
             store = store,
             style = WebExtensionBrowserMenuBuilder.Style(
-                webExtIconTintColorResource = primaryTextColor()
+                webExtIconTintColorResource = primaryTextColor(),
+                addonsManagerMenuItemDrawableRes = R.drawable.ic_addons_extensions
             ),
             onAddonsManagerTapped = {
                 onItemTapped.invoke(ToolbarMenu.Item.AddonsManager)

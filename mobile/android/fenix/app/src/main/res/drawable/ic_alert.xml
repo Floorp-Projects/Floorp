@@ -8,6 +8,12 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
   <path
-      android:pathData="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-7c0.6 0 1-0.4 1-1V8a1 1 0 0 0-2 0v4c0 0.6 0.4 1 1 1zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"
-      android:fillColor="@color/sync_error_text_color"/>
-</vector>
+      android:fillColor="@color/sync_error_text_color"
+      android:pathData="M11.75,7C11.336,7 11,7.336 11,7.75V13.25C11,13.664 11.336,14 11.75,14C12.164,14 12.5,13.664 12.5,13.25V7.75C12.5,7.336 12.164,7 11.75,7Z" />
+  <path
+      android:fillColor="@color/sync_error_text_color"
+      android:pathData="M12.2,17H11.3L11,16.7V15.8L11.3,15.5H12.2L12.5,15.8V16.7L12.2,17Z" />
+  <path
+      android:fillColor="@color/sync_error_text_color"
+      android:pathData="M11.75,4C16.161,4 19.75,7.589 19.75,12C19.75,16.411 16.161,20 11.75,20C7.339,20 3.75,16.411 3.75,12C3.75,7.589 7.339,4 11.75,4ZM11.75,2.5C6.503,2.5 2.25,6.753 2.25,12C2.25,17.247 6.503,21.5 11.75,21.5C16.997,21.5 21.25,17.247 21.25,12C21.25,6.753 16.997,2.5 11.75,2.5Z" />
+ </vector>

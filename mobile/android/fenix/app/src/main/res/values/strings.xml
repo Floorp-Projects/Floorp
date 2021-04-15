@@ -433,9 +433,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Learn more</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Turned off globally, go to Settings to turn it on.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
