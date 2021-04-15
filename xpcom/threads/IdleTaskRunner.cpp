@@ -171,7 +171,7 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
   TimeStamp now = TimeStamp::Now();
   bool useRefreshDriver = false;
   if (now >= mStartTime) {
-    // Detect whther the refresh driver is ticking by checking whether
+    // Detect whether the refresh driver is ticking by checking if
     // GetIdleDeadlineHint returns its input parameter.
     useRefreshDriver = (nsRefreshDriver::GetIdleDeadlineHint(now) != now);
   } else {
