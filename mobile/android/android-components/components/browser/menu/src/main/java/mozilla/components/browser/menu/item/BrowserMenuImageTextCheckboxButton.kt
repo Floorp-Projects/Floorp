@@ -37,7 +37,7 @@ import mozilla.components.support.ktx.android.util.dpToPx
 class BrowserMenuImageTextCheckboxButton(
     @DrawableRes imageResource: Int,
     private val label: String,
-    @ColorRes internal val iconTintColorResource: Int = NO_ID,
+    @ColorRes iconTintColorResource: Int = NO_ID,
     @ColorRes internal val textColorResource: Int = NO_ID,
     @VisibleForTesting internal val labelListener: () -> Unit,
     @DrawableRes val primaryStateIconResource: Int,

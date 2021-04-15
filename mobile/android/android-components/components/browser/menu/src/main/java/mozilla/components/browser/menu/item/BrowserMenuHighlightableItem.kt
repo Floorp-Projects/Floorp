@@ -42,7 +42,7 @@ private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0, 0
 class BrowserMenuHighlightableItem(
     private val label: String,
     @DrawableRes private val startImageResource: Int,
-    @ColorRes private val iconTintColorResource: Int = NO_ID,
+    @ColorRes iconTintColorResource: Int = NO_ID,
     @ColorRes private val textColorResource: Int = NO_ID,
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,

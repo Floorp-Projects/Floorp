@@ -273,7 +273,9 @@ open class DefaultComponents(private val applicationContext: Context) {
         WebExtensionBrowserMenuBuilder(
             menuItems,
             store = store,
-            webExtIconTintColorResource = R.color.photonGrey90,
+            style = WebExtensionBrowserMenuBuilder.Style(
+                webExtIconTintColorResource = R.color.photonGrey90
+            ),
             onAddonsManagerTapped = {
                 val intent = Intent(applicationContext, AddonsActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK

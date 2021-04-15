@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getColor
@@ -52,9 +53,11 @@ internal fun TextView.setColorResource(@ColorRes textColorResource: Int) {
 open class BrowserMenuImageText(
     private val label: String,
     @DrawableRes
-    private val imageResource: Int,
+    @VisibleForTesting
+    internal val imageResource: Int,
     @ColorRes
-    private val iconTintColorResource: Int = NO_ID,
+    @VisibleForTesting
+    internal val iconTintColorResource: Int = NO_ID,
     @ColorRes
     private val textColorResource: Int = NO_ID,
     override val isCollapsingMenuLimit: Boolean = false,

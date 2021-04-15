@@ -56,6 +56,47 @@ class WebExtensionBrowserMenuBuilderTest {
     }
 
     @Test
+    fun `GIVEN style is provided WHEN creating extension menu THEN styles should be applied to items`() {
+        val browserAction = WebExtensionBrowserAction("browser_action", true, mock(), "", 0, 0) {}
+        val extensions = mapOf(
+            "id" to WebExtensionState(
+                "id",
+                "url",
+                "name",
+                true,
+                browserAction = browserAction
+            )
+        )
+
+        val store = BrowserStore(BrowserState(extensions = extensions))
+        val style = WebExtensionBrowserMenuBuilder.Style(
+            addonsManagerMenuItemDrawableRes = R.drawable.mozac_ic_extensions,
+            backPressMenuItemDrawableRes = R.drawable.mozac_ic_back
+        )
+        val builder = WebExtensionBrowserMenuBuilder(
+            listOf(mockMenuItem()),
+            store = store,
+            style = style,
+            appendExtensionSubMenuAtStart = true
+        )
+
+        val menu = builder.build(testContext)
+        val anchor = ImageButton(testContext)
+        menu.show(anchor)
+
+        val parentMenuItem = menu.adapter.visibleItems[0] as ParentBrowserMenuItem
+        val subMenuItemIndex = parentMenuItem.subMenu.adapter.visibleItems.lastIndex
+        val backPressMenuItem = parentMenuItem.subMenu.adapter.visibleItems[0] as BackPressMenuItem
+        val addonsManagerItem = parentMenuItem.subMenu.adapter.visibleItems[subMenuItemIndex] as BrowserMenuImageText
+
+        assertEquals(style.backPressMenuItemDrawableRes, backPressMenuItem.imageResource)
+        assertEquals(style.webExtIconTintColorResource, backPressMenuItem.iconTintColorResource)
+
+        assertEquals(style.webExtIconTintColorResource, addonsManagerItem.iconTintColorResource)
+        assertEquals(style.webExtIconTintColorResource, addonsManagerItem.iconTintColorResource)
+    }
+
+    @Test
     fun `web extension sub menu add-ons manager sub menu item invokes onAddonsManagerTapped when clicked`() {
         val browserAction = WebExtensionBrowserAction("browser_action", true, mock(), "", 0, 0) {}
         val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
