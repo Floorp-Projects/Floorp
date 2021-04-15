@@ -77,7 +77,7 @@ static inline bool IsUninitializedLexical(const Value& val) {
 }
 
 static inline bool IsUninitializedLexicalSlot(HandleObject obj,
-                                              Handle<PropertyResult> prop) {
+                                              const PropertyResult& prop) {
   MOZ_ASSERT(prop.isFound());
   if (obj->is<WithEnvironmentObject>()) {
     return false;
@@ -138,7 +138,7 @@ enum class GetNameMode { Normal, TypeOf };
 
 template <GetNameMode mode>
 inline bool FetchName(JSContext* cx, HandleObject receiver, HandleObject holder,
-                      HandlePropertyName name, Handle<PropertyResult> prop,
+                      HandlePropertyName name, const PropertyResult& prop,
                       MutableHandleValue vp) {
   if (prop.isNotFound()) {
     switch (mode) {
@@ -212,7 +212,7 @@ inline bool GetEnvironmentName(JSContext* cx, HandleObject envChain,
     }
   }
 
-  Rooted<PropertyResult> prop(cx);
+  PropertyResult prop;
   RootedObject obj(cx), pobj(cx);
   if (!LookupName(cx, name, envChain, &obj, &pobj, &prop)) {
     return false;

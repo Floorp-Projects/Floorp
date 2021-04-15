@@ -448,8 +448,7 @@ class ModuleEnvironmentObject : public EnvironmentObject {
 
  private:
   static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-                             MutableHandleObject objp,
-                             MutableHandle<PropertyResult> propp);
+                             MutableHandleObject objp, PropertyResult* propp);
   static bool hasProperty(JSContext* cx, HandleObject obj, HandleId id,
                           bool* foundp);
   static bool getProperty(JSContext* cx, HandleObject obj, HandleValue receiver,

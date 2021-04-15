@@ -2403,7 +2403,7 @@ bool DebuggerObject::forceLexicalInitializationByName(
 
   RootedObject globalLexical(cx, &referent->lexicalEnvironment());
   RootedObject pobj(cx);
-  Rooted<PropertyResult> prop(cx);
+  PropertyResult prop;
   if (!LookupProperty(cx, globalLexical, id, &pobj, &prop)) {
     return false;
   }
