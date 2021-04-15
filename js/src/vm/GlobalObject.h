@@ -749,13 +749,13 @@ class GlobalObject : public NativeObject {
     }
 
     NativeObject* holder = &slot.toObject().as<NativeObject>();
-    Shape* shape = holder->lookupPure(name);
-    if (!shape) {
+    mozilla::Maybe<ShapeProperty> prop = holder->lookupPure(name);
+    if (prop.isNothing()) {
       *vp = UndefinedValue();
       return false;
     }
 
-    *vp = holder->getSlot(shape->slot());
+    *vp = holder->getSlot(prop->slot());
     return true;
   }
 

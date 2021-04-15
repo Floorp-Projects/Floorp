@@ -633,9 +633,9 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
   bool lengthIsWritable = arr->lengthIsWritable();
 #ifdef DEBUG
   {
-    RootedShape lengthShape(cx, arr->lookupPure(id));
-    MOZ_ASSERT(lengthShape);
-    MOZ_ASSERT(lengthShape->writable() == lengthIsWritable);
+    mozilla::Maybe<ShapeProperty> lengthProp = arr->lookupPure(id);
+    MOZ_ASSERT(lengthProp.isSome());
+    MOZ_ASSERT(lengthProp->writable() == lengthIsWritable);
   }
 #endif
   uint32_t oldLen = arr->length();

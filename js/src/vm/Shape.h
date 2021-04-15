@@ -123,6 +123,26 @@ namespace js {
 class Shape;
 struct StackShape;
 
+// ShapeProperty contains information (attributes, slot number) for a property
+// stored in the Shape tree. At this point it's just a wrapper around the
+// property's Shape, but that will change in a later patch.
+class ShapeProperty {
+  Shape* shape_;
+
+ public:
+  explicit ShapeProperty(Shape* shape) : shape_(shape) { MOZ_ASSERT(shape); }
+
+  inline bool isDataProperty() const;
+  inline uint32_t slot() const;
+
+  inline uint8_t attributes() const;
+  inline bool writable() const;
+  inline bool configurable() const;
+  inline bool enumerable() const;
+
+  Shape* shapeDeprecated() const { return shape_; }
+};
+
 struct ShapeHasher : public DefaultHasher<Shape*> {
   using Key = Shape*;
   using Lookup = StackShape;
@@ -1586,6 +1606,24 @@ MOZ_ALWAYS_INLINE bool ShapeIC::search(jsid id, Shape** foundShape) {
 
   return false;
 }
+
+inline bool ShapeProperty::isDataProperty() const {
+  return shape_->isDataProperty();
+}
+
+inline uint32_t ShapeProperty::slot() const { return shape_->slot(); }
+
+inline uint8_t ShapeProperty::attributes() const {
+  return shape_->attributes();
+}
+
+inline bool ShapeProperty::writable() const { return shape_->writable(); }
+
+inline bool ShapeProperty::configurable() const {
+  return shape_->configurable();
+}
+
+inline bool ShapeProperty::enumerable() const { return shape_->enumerable(); }
 
 }  // namespace js
 

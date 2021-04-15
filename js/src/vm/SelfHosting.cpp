@@ -2966,10 +2966,10 @@ static void GetUnclonedValue(NativeObject* selfHostedObject,
   // non-permanent atoms here should be impossible.
   MOZ_ASSERT_IF(JSID_IS_STRING(id), JSID_TO_STRING(id)->isPermanentAtom());
 
-  Shape* shape = selfHostedObject->lookupPure(id);
-  MOZ_ASSERT(shape);
-  MOZ_ASSERT(shape->isDataProperty());
-  *vp = selfHostedObject->getSlot(shape->slot());
+  mozilla::Maybe<ShapeProperty> prop = selfHostedObject->lookupPure(id);
+  MOZ_ASSERT(prop.isSome());
+  MOZ_ASSERT(prop->isDataProperty());
+  *vp = selfHostedObject->getSlot(prop->slot());
 }
 
 static bool CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject,

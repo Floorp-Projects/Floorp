@@ -3626,20 +3626,19 @@ static void EmitStoreSlotAndReturn(CacheIRWriter& writer, ObjOperandId objId,
 }
 
 static Shape* LookupShapeForSetSlot(JSOp op, NativeObject* obj, jsid id) {
-  Shape* shape = obj->lookupPure(id);
-  if (!shape || !shape->isDataProperty() || !shape->writable()) {
+  Maybe<ShapeProperty> prop = obj->lookupPure(id);
+  if (prop.isNothing() || !prop->isDataProperty() || !prop->writable()) {
     return nullptr;
   }
 
   // If this is an op like JSOp::InitElem / [[DefineOwnProperty]], the
   // property's attributes may have to be changed too, so make sure it's a
   // simple data property.
-  if (IsPropertyInitOp(op) &&
-      (!shape->configurable() || !shape->enumerable())) {
+  if (IsPropertyInitOp(op) && (!prop->configurable() || !prop->enumerable())) {
     return nullptr;
   }
 
-  return shape;
+  return prop->shapeDeprecated();
 }
 
 static bool CanAttachNativeSetSlot(JSOp op, JSObject* obj, JS::PropertyKey id,
@@ -4700,13 +4699,13 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   MOZ_ASSERT(IsCacheableProtoChain(fun, hasInstanceHolder));
 
   // Ensure that the function's prototype slot is the same.
-  Shape* shape = fun->lookupPure(cx_->names().prototype);
-  if (!shape || !shape->isDataProperty()) {
+  Maybe<ShapeProperty> prop = fun->lookupPure(cx_->names().prototype);
+  if (prop.isNothing() || !prop->isDataProperty()) {
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
 
-  uint32_t slot = shape->slot();
+  uint32_t slot = prop->slot();
 
   MOZ_ASSERT(fun->numFixedSlots() == 0, "Stub code relies on this");
   if (!fun->getSlot(slot).isObject()) {
@@ -4918,12 +4917,12 @@ static bool IsArrayPrototypeOptimizable(JSContext* cx, ArrayObject* arr,
   }
 
   // Ensure that Array.prototype's @@iterator slot is unchanged.
-  Shape* shape = proto->lookupPure(iteratorKey);
-  if (!shape || !shape->isDataProperty()) {
+  Maybe<ShapeProperty> prop = proto->lookupPure(iteratorKey);
+  if (prop.isNothing() || !prop->isDataProperty()) {
     return false;
   }
 
-  *slot = shape->slot();
+  *slot = prop->slot();
   MOZ_ASSERT(proto->numFixedSlots() == 0, "Stub code relies on this");
 
   const Value& iterVal = proto->getSlot(*slot);
@@ -4946,12 +4945,12 @@ static bool IsArrayIteratorPrototypeOptimizable(JSContext* cx,
   *arrIterProto = proto;
 
   // Ensure that %ArrayIteratorPrototype%'s "next" slot is unchanged.
-  Shape* shape = proto->lookupPure(cx->names().next);
-  if (!shape || !shape->isDataProperty()) {
+  Maybe<ShapeProperty> prop = proto->lookupPure(cx->names().next);
+  if (prop.isNothing() || !prop->isDataProperty()) {
     return false;
   }
 
-  *slot = shape->slot();
+  *slot = prop->slot();
   MOZ_ASSERT(proto->numFixedSlots() == 0, "Stub code relies on this");
 
   const Value& nextVal = proto->getSlot(*slot);
@@ -9211,10 +9210,10 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
       // expect. Note that getThisForScripted checked newTarget is a function
       // with a non-configurable .prototype data property.
       JSFunction* newTarget = &newTarget_.toObject().as<JSFunction>();
-      Shape* shape = newTarget->lookupPure(cx_->names().prototype);
-      MOZ_ASSERT(shape);
+      Maybe<ShapeProperty> prop = newTarget->lookupPure(cx_->names().prototype);
+      MOZ_ASSERT(prop.isSome());
       MOZ_ASSERT(newTarget->numFixedSlots() == 0, "Stub code relies on this");
-      uint32_t slot = shape->slot();
+      uint32_t slot = prop->slot();
       JSObject* prototypeObject = &newTarget->getSlot(slot).toObject();
 
       ValOperandId newTargetValId = writer.loadArgumentDynamicSlot(
