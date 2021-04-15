@@ -73,7 +73,8 @@
         <androidx.preference.Preference
             app:iconSpaceReserved="false"
             android:key="@string/pref_key_credit_cards"
-            android:title="@string/preferences_credit_cards" />
+            android:title="@string/preferences_credit_cards"
+            app:isPreferenceVisible="false" />
 
         <androidx.preference.Preference
             android:key="@string/pref_key_accessibility"
