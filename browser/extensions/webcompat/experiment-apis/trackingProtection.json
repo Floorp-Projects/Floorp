@@ -41,10 +41,14 @@
                 },
                 "optional": true
               },
-              "willBeShimming": {
-                "description": "Whether requests are allowed for shimming",
+              "hostOptIns": {
+                "description": "Hosts where a shim should not be used, but the requests should be allowed after user opt-in.",
                 "type": "boolean",
-                "optional": false
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "optional": true
               }
             }
           }
