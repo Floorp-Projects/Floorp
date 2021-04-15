@@ -4,6 +4,8 @@
 
 var EXPORTED_SYMBOLS = ["ThemeVariableMap", "ThemeContentPropertyList"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const ThemeVariableMap = [
   [
     "--lwt-accent-color-inactive",
@@ -55,6 +57,22 @@ const ThemeVariableMap = [
     "--toolbar-bgcolor",
     {
       lwtProperty: "toolbarColor",
+      processColor(rgbaChannels, element) {
+        if (!rgbaChannels) {
+          Services.prefs.setBoolPref(
+            "browser.theme.dark-toolbar-theme",
+            element.ownerGlobal.matchMedia("(prefers-color-scheme: dark)")
+              .matches
+          );
+          return null;
+        }
+        const { r, g, b, a } = rgbaChannels;
+        Services.prefs.setBoolPref(
+          "browser.theme.dark-toolbar-theme",
+          _isColorDark(r, g, b)
+        );
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      },
     },
   ],
   [
@@ -183,3 +201,8 @@ const ThemeContentPropertyList = [
   "sidebar_highlight_text",
   "sidebar_text",
 ];
+
+// This is copied from LightweightThemeConsumer.jsm.
+function _isColorDark(r, g, b) {
+  return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
+}
