@@ -29,3 +29,49 @@ add_task(async function test_all_images_mentioned() {
     }
   );
 });
+
+add_task(async function test_view_image_info() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.menu.showViewImageInfo", true]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    TEST_PATH + "all_images.html",
+
+    async function(browser) {
+      let contextMenu = document.getElementById("contentAreaContextMenu");
+      let viewImageInfo = document.getElementById("context-viewimageinfo");
+
+      let imageInfo = await SpecialPowers.spawn(browser, [], async () => {
+        let testImg = content.document.querySelector("img");
+        return {
+          src: testImg.src,
+        };
+      });
+
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "img",
+        { type: "contextmenu", button: 2 },
+        browser
+      );
+
+      await BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+
+      let promisePageInfoLoaded = BrowserTestUtils.domWindowOpened().then(win =>
+        BrowserTestUtils.waitForEvent(win, "page-info-init")
+      );
+
+      contextMenu.activateItem(viewImageInfo);
+
+      let pageInfo = (await promisePageInfoLoaded).target.ownerGlobal;
+      let pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
+
+      Assert.equal(
+        pageInfoImg.src,
+        imageInfo.src,
+        "selected image is the correct"
+      );
+      await BrowserTestUtils.closeWindow(pageInfo);
+    }
+  );
+});

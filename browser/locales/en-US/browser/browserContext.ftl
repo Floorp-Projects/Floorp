@@ -291,6 +291,10 @@ main-context-menu-image-set-image-as-background =
     .label = Set Image as Desktop Background…
     .accesskey = S
 
+main-context-menu-image-info =
+    .label = View Image Info
+    .accesskey = f
+
 main-context-menu-image-desc =
     .label = View Description
     .accesskey = D
