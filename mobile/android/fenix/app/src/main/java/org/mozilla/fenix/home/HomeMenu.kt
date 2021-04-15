@@ -63,6 +63,7 @@ class HomeMenu(
         context.getColorFromAttr(R.attr.syncDisconnectedBackground)
 
     private val shouldUseBottomToolbar = context.settings().shouldUseBottomToolbar
+    private val accountManager = context.components.backgroundServices.accountManager
 
     // 'Reconnect' and 'Quit' items aren't needed most of the time, so we'll only create the if necessary.
     private val reconnectToSyncItem by lazy {
@@ -88,6 +89,17 @@ class HomeMenu(
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Quit)
+        }
+    }
+
+    private fun getSyncItemTitle(): String {
+        val authenticatedAccount = accountManager.authenticatedAccount() != null
+        val email = accountManager.accountProfile()?.email
+
+        return if (authenticatedAccount && email != null) {
+            email
+        } else {
+            context.getString(R.string.sync_menu_sign_in)
         }
     }
 
@@ -157,16 +169,8 @@ class HomeMenu(
             onItemTapped.invoke(Item.Settings)
         }
 
-        val accountManager = context.components.backgroundServices.accountManager
-        val account = accountManager.authenticatedAccount()
-        val syncItemTitle = if (account != null && accountManager.accountProfile()?.email != null) {
-            context.getString(R.string.sync_signed_as, accountManager.accountProfile()?.email)
-        } else {
-            context.getString(R.string.sync_menu_sign_in)
-        }
-
         val syncedTabsItem = BrowserMenuImageText(
-            syncItemTitle,
+            getSyncItemTitle(),
             R.drawable.ic_synced_tabs,
             primaryTextColor
         ) {
