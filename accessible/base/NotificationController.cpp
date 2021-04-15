@@ -331,7 +331,7 @@ void NotificationController::CoalesceMutationEvents() {
         }
 
         LocalAccessible* parent = acc->LocalParent();
-        if (parent->ReorderEventTarget()) {
+        if (parent && parent->ReorderEventTarget()) {
           AccReorderEvent* reorder = downcast_accEvent(
               mMutationMap.GetEvent(parent, EventMap::ReorderEvent));
 
