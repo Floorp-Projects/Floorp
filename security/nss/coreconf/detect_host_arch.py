@@ -19,6 +19,8 @@ def main():
         pass
     elif host_arch.startswith('arm'):
         host_arch = 'arm'
+    elif host_arch.startswith('mips64'):
+        host_arch = 'mips64'
     elif host_arch.startswith('mips'):
         host_arch = 'mips'
     print(host_arch)

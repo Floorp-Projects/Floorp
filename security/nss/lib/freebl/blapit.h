@@ -245,6 +245,7 @@ struct SHA256ContextStr;
 struct SHA512ContextStr;
 struct AESKeyWrapContextStr;
 struct SEEDContextStr;
+struct ChaCha20ContextStr;
 struct ChaCha20Poly1305ContextStr;
 struct Blake2bContextStr;
 
@@ -265,6 +266,7 @@ typedef struct SHA512ContextStr SHA512Context;
 typedef struct SHA512ContextStr SHA384Context;
 typedef struct AESKeyWrapContextStr AESKeyWrapContext;
 typedef struct SEEDContextStr SEEDContext;
+typedef struct ChaCha20ContextStr ChaCha20Context;
 typedef struct ChaCha20Poly1305ContextStr ChaCha20Poly1305Context;
 typedef struct Blake2bContextStr BLAKE2BContext;
 
