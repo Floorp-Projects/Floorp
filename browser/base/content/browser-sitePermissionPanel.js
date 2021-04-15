@@ -14,6 +14,12 @@ var gPermissionPanel = {
     if (!this._popupInitialized) {
       let wrapper = document.getElementById("template-permission-popup");
       wrapper.replaceWith(wrapper.content);
+
+      let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+      document.getElementById(
+        "permission-popup-storage-access-permission-learn-more"
+      ).href = baseURL + "site-information-third-party-access";
+
       this._popupInitialized = true;
     }
   },

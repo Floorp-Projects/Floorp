@@ -788,10 +788,13 @@ description#identity-popup-content-verifier,
 
 #permission-popup-storage-access-permission-list-hint {
   margin-top: 0.25em;
-  font-size: 0.85em;
+  color: var(--panel-description-color);
+}
+
+#permission-popup-storage-access-permission-list-hint,
+#permission-popup-storage-access-permission-learn-more {
   /* Matches offset for items - 3px margin + 16px icon + 10px margin */
   margin-inline-start: calc(3px + 16px + 10px);
-  color: var(--panel-description-color);
 }
 
 .protections-popup-category-icon,
