@@ -3402,15 +3402,21 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
     return false;
   }
 
-  if (gfxVars::UseSoftwareWebRender()) {
-    // Continue using Software WebRender (disabled fallback to Basic).
-    gfxCriticalNoteOnce << "Fallback remains SW-WR";
-  } else {
-    // Continue using WebRender (disabled fallback to Basic and Software
-    // WebRender).
-    gfxCriticalNoteOnce << "Fallback remains WR";
-  }
   MOZ_ASSERT(gfxVars::UseWebRender());
+
+  if (!gfxVars::UseSoftwareWebRender()) {
+    // Software WebRender may be disabled due to a startup issue with the
+    // blocklist, despite it being our only fallback option based on the prefs.
+    // If WebRender is unable to be initialized, this means that user would
+    // otherwise get stuck with WebRender. As such, force a switch to Software
+    // WebRender in this case.
+    gfxCriticalNoteOnce << "Fallback WR to SW-WR, forced";
+    gfxVars::SetUseSoftwareWebRender(true);
+    return true;
+  }
+
+  // Continue using Software WebRender (disabled fallback to Basic).
+  gfxCriticalNoteOnce << "Fallback remains SW-WR";
   return false;
 }
 
