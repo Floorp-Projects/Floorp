@@ -1702,7 +1702,10 @@ void nsHttpTransaction::Close(nsresult reason) {
   mStatus = reason;
   mTransactionDone = true;  // forcibly flag the transaction as complete
   mClosed = true;
-  mResolver = nullptr;
+  if (mResolver) {
+    mResolver->Close();
+    mResolver = nullptr;
+  }
   ReleaseBlockingTransaction();
 
   // release some resources that we no longer need
@@ -3064,6 +3067,11 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
   LOG(("nsHttpTransaction::OnHTTPSRRAvailable [this=%p] mActivated=%d", this,
        mActivated));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  if (!mResolver) {
+    LOG(("The transaction is not interested in HTTPS record anymore."));
+    return NS_OK;
+  }
 
   {
     MutexAutoLock lock(mLock);
