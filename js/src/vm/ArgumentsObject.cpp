@@ -502,9 +502,9 @@ bool ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj,
         return false;
       }
     }
-  } else if (JSID_IS_ATOM(id, cx->names().length)) {
+  } else if (id.isAtom(cx->names().length)) {
     argsobj.markLengthOverridden();
-  } else if (JSID_IS_ATOM(id, cx->names().callee)) {
+  } else if (id.isAtom(cx->names().callee)) {
     argsobj.as<MappedArgumentsObject>().markCalleeOverridden();
   } else if (JSID_IS_SYMBOL(id) &&
              JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().iterator) {
@@ -517,8 +517,8 @@ bool ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj,
 bool ArgumentsObject::obj_mayResolve(const JSAtomState& names, jsid id,
                                      JSObject*) {
   // Arguments might resolve indexes, Symbol.iterator, or length/callee.
-  if (JSID_IS_ATOM(id)) {
-    JSAtom* atom = JSID_TO_ATOM(id);
+  if (id.isAtom()) {
+    JSAtom* atom = id.toAtom();
     return atom->isIndex() || atom == names.length || atom == names.callee;
   }
 
@@ -537,12 +537,12 @@ bool js::MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
     if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
       vp.set(argsobj.element(arg));
     }
-  } else if (JSID_IS_ATOM(id, cx->names().length)) {
+  } else if (id.isAtom(cx->names().length)) {
     if (!argsobj.hasOverriddenLength()) {
       vp.setInt32(argsobj.initialLength());
     }
   } else {
-    MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().callee));
+    MOZ_ASSERT(id.isAtom(cx->names().callee));
     if (!argsobj.hasOverriddenCallee()) {
       vp.setObject(argsobj.callee());
     }
@@ -570,8 +570,7 @@ bool js::MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
       return result.succeed();
     }
   } else {
-    MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().length) ||
-               JSID_IS_ATOM(id, cx->names().callee));
+    MOZ_ASSERT(id.isAtom(cx->names().length) || id.isAtom(cx->names().callee));
   }
 
   /*
@@ -676,12 +675,12 @@ bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     }
 
     attrs |= JSPROP_ENUMERATE;
-  } else if (JSID_IS_ATOM(id, cx->names().length)) {
+  } else if (id.isAtom(cx->names().length)) {
     if (argsobj->hasOverriddenLength()) {
       return true;
     }
   } else {
-    if (!JSID_IS_ATOM(id, cx->names().callee)) {
+    if (!id.isAtom(cx->names().callee)) {
       return true;
     }
 
@@ -887,7 +886,7 @@ bool js::UnmappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
       vp.set(argsobj.element(arg));
     }
   } else {
-    MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().length));
+    MOZ_ASSERT(id.isAtom(cx->names().length));
     if (!argsobj.hasOverriddenLength()) {
       vp.setInt32(argsobj.initialLength());
     }
@@ -915,7 +914,7 @@ bool js::UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
       return result.succeed();
     }
   } else {
-    MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().length));
+    MOZ_ASSERT(id.isAtom(cx->names().length));
   }
 
   /*
@@ -947,7 +946,7 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  if (JSID_IS_ATOM(id, cx->names().callee)) {
+  if (id.isAtom(cx->names().callee)) {
     RootedObject throwTypeError(
         cx, GlobalObject::getOrCreateThrowTypeError(cx, cx->global()));
     if (!throwTypeError) {
@@ -973,7 +972,7 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     }
 
     attrs |= JSPROP_ENUMERATE;
-  } else if (JSID_IS_ATOM(id, cx->names().length)) {
+  } else if (id.isAtom(cx->names().length)) {
     if (argsobj->hasOverriddenLength()) {
       return true;
     }
