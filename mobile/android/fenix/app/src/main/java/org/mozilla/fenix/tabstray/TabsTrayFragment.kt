@@ -59,6 +59,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     private val selectionBannerBinding = ViewBoundFeatureWrapper<SelectionBannerBinding>()
     private val selectionHandleBinding = ViewBoundFeatureWrapper<SelectionHandleBinding>()
     private val tabsTrayCtaBinding = ViewBoundFeatureWrapper<TabsTrayInfoBannerBinding>()
+    private val closeOnLastTabBinding = ViewBoundFeatureWrapper<CloseOnLastTabBinding>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -224,6 +225,16 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
                 store = tabsTrayStore,
                 handle = handle,
                 containerLayout = tab_wrapper
+            ),
+            owner = this,
+            view = view
+        )
+
+        closeOnLastTabBinding.set(
+            feature = CloseOnLastTabBinding(
+                browserStore = requireComponents.core.store,
+                tabsTrayStore = tabsTrayStore,
+                navigationInteractor = navigationInteractor
             ),
             owner = this,
             view = view
