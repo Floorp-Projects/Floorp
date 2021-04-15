@@ -3,11 +3,39 @@
     <meta charset="utf-8">
     <script>
       addEventListener("pageshow", function() {
-        opener.postMessage("pageshow", "*");
+        var bc = new BroadcastChannel("browser_browsingContext");
+        function frameData() {
+          var win = SpecialPowers.wrap(frames[0]);
+          bc.postMessage(
+            { framesLength: frames.length,
+              browsingContextId: win.docShell.browsingContext.id,
+              outerWindowId: win.docShell.outerWindowID
+            });
+        }
+
+        bc.onmessage = function(event) {
+          if (event.data == "createiframe") {
+            let frame = document.createElement("iframe");
+            frame.src = "dummy_page.html";
+            document.body.appendChild(frame);
+            frame.onload = frameData;
+          } else if (event.data == "nextpage") {
+            bc.close();
+            location.href = "onload_message.html";
+          } else if (event.data == "queryframes") {
+            frameData();
+          } else if (event.data == "close") {
+            bc.postMessage("closed");
+            bc.close();
+            window.close();
+          }
+        }
+        bc.postMessage("pageshow");
       });
     </script>
   </head>
   <body>
-    This file posts a message containing "pageshow" to opener on pageshow.
+    This file posts a message containing "pageshow" to a BroadcastChannel and
+    keep the channel open for commands.
   </body>
 </html>
