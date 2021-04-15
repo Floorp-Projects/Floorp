@@ -83,10 +83,8 @@ class WebProgressListener final : public nsIWebProgressListener,
 
     // Our caller keeps a strong reference, so it is safe to remove the listener
     // from the BrowsingContext's nsIWebProgress.
-    auto RemoveListener = [&] {
-      nsCOMPtr<nsIWebProgress> webProgress = browsingContext->GetWebProgress();
-      webProgress->RemoveProgressListener(this);
-    };
+    nsCOMPtr<nsIWebProgress> webProgress = browsingContext->GetWebProgress();
+    webProgress->RemoveProgressListener(this);
 
     RefPtr<dom::WindowGlobalParent> wgp =
         browsingContext->GetCurrentWindowGlobal();
@@ -95,17 +93,8 @@ class WebProgressListener final : public nsIWebProgressListener,
       rv.ThrowInvalidStateError("Unable to open window");
       mPromise->Reject(rv, __func__);
       mPromise = nullptr;
-      RemoveListener();
       return NS_OK;
     }
-
-    if (NS_WARN_IF(wgp->IsInitialDocument())) {
-      // This is the load of the initial document, which is not the document we
-      // care about for the purposes of checking same-originness of the URL.
-      return NS_OK;
-    }
-
-    RemoveListener();
 
     // Check same origin. If the origins do not match, resolve with null (per
     // step 7.2.7.1 of the openWindow spec).
@@ -115,7 +104,7 @@ class WebProgressListener final : public nsIWebProgressListener,
         wgp->DocumentPrincipal()->OriginAttributesRef().mPrivateBrowsingId > 0;
     nsresult rv = securityManager->CheckSameOriginURI(
         wgp->GetDocumentURI(), mBaseURI, false, isPrivateWin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
       mPromise->Resolve(CopyableErrorResult(), __func__);
       mPromise = nullptr;
       return NS_OK;
