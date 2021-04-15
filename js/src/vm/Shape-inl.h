@@ -216,7 +216,7 @@ static inline uint8_t GetPropertyAttributes(JSObject* obj,
     return JSPROP_ENUMERATE;
   }
 
-  return prop.shape()->attributes();
+  return prop.shapeProperty().attributes();
 }
 
 /*

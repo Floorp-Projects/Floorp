@@ -2029,7 +2029,7 @@ bool js::LookupNameUnqualified(JSContext* cx, HandlePropertyName name,
         return false;
       }
     } else if (env->is<LexicalEnvironmentObject>() &&
-               !prop.shape()->writable()) {
+               !prop.shapeProperty().writable()) {
       // Assigning to a named lambda callee name is a no-op in sloppy mode.
       if (!(env->is<BlockLexicalEnvironmentObject>() &&
             env->as<BlockLexicalEnvironmentObject>().scope().kind() ==
@@ -2103,12 +2103,12 @@ static inline bool NativeGetPureInline(NativeObject* pobj, jsid id,
   }
 
   // Fail if we have a custom getter.
-  Shape* shape = prop.shape();
-  if (!shape->isDataProperty()) {
+  ShapeProperty shapeProp = prop.shapeProperty();
+  if (!shapeProp.isDataProperty()) {
     return false;
   }
 
-  *vp = pobj->getSlot(shape->slot());
+  *vp = pobj->getSlot(shapeProp.slot());
   MOZ_ASSERT(!vp->isMagic());
   return true;
 }
@@ -2151,7 +2151,7 @@ static inline bool NativeGetGetterPureInline(NativeObject* holder,
                                              JSFunction** fp) {
   MOZ_ASSERT(prop.isNativeProperty());
 
-  ShapeProperty shapeProp = ShapeProperty(prop.shape());
+  ShapeProperty shapeProp = prop.shapeProperty();
   if (holder->hasGetter(shapeProp)) {
     JSObject* getter = holder->getGetter(shapeProp);
     if (getter->is<JSFunction>()) {
@@ -2211,7 +2211,7 @@ bool js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id,
     return true;
   }
 
-  ShapeProperty shapeProp = ShapeProperty(prop.shape());
+  ShapeProperty shapeProp = prop.shapeProperty();
 
   NativeObject* nobj = &obj->as<NativeObject>();
   if (!nobj->hasGetter(shapeProp)) {
@@ -2239,7 +2239,7 @@ bool js::HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id,
     return false;
   }
 
-  *result = prop.isNativeProperty() && prop.shape()->isDataProperty();
+  *result = prop.isNativeProperty() && prop.shapeProperty().isDataProperty();
   return true;
 }
 

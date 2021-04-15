@@ -474,7 +474,7 @@ bool ModuleEnvironmentObject::lookupProperty(
   ModuleEnvironmentObject* env;
   if (bindings.lookup(id, &env, &shape)) {
     objp.set(env);
-    propp.setNativeProperty(shape);
+    propp.setNativeProperty(ShapeProperty(shape));
     return true;
   }
 
@@ -3706,15 +3706,15 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
     MOZ_ASSERT(varObj->is<NativeObject>() ||
                varObj->is<DebugEnvironmentProxy>());
     if (varObj->is<GlobalObject>()) {
-      Shape* shape = prop.shape();
-      if (shape->configurable()) {
+      ShapeProperty shapeProp = prop.shapeProperty();
+      if (shapeProp.configurable()) {
         if (!DefineDataProperty(cx, varObj, name, rval, attrs)) {
           return false;
         }
       } else {
-        MOZ_ASSERT(shape->isDataDescriptor());
-        MOZ_ASSERT(shape->writable());
-        MOZ_ASSERT(shape->enumerable());
+        MOZ_ASSERT(shapeProp.isDataProperty());
+        MOZ_ASSERT(shapeProp.writable());
+        MOZ_ASSERT(shapeProp.enumerable());
       }
 
       // Careful: the presence of a shape, even one appearing to derive from

@@ -580,7 +580,7 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
   if (prop.isNativeProperty()) {
     MOZ_ASSERT(baseHolder);
     *holder = baseHolder;
-    *shape = prop.shape();
+    *shape = prop.shapeProperty().shapeDeprecated();
 
     if (IsCacheableGetPropReadSlot(nobj, *holder, *shape)) {
       return CanAttachReadSlot;
@@ -3836,7 +3836,7 @@ static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, JSObject* obj,
     return false;
   }
 
-  *propShape = prop.shape();
+  *propShape = prop.shapeProperty().shapeDeprecated();
   if (!IsCacheableSetPropCallScripted(nobj, *holder, *propShape) &&
       !IsCacheableSetPropCallNative(nobj, *holder, *propShape)) {
     return false;
@@ -4601,7 +4601,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
   }
   auto* nobj = &obj->as<NativeObject>();
 
-  Shape* propShape = prop.shape();
+  Shape* propShape = prop.shapeProperty().shapeDeprecated();
   NativeObject* holder = nobj;
 
   MOZ_ASSERT(propShape);
@@ -4709,9 +4709,9 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
 
   // If the above succeeded, then these should be true about @@hasInstance,
   // because the property on Function.__proto__ is an immutable data property:
-  MOZ_ASSERT(hasInstanceProp.shape()->isDataProperty());
-  MOZ_ASSERT(!hasInstanceProp.shape()->configurable());
-  MOZ_ASSERT(!hasInstanceProp.shape()->writable());
+  MOZ_ASSERT(hasInstanceProp.shapeProperty().isDataProperty());
+  MOZ_ASSERT(!hasInstanceProp.shapeProperty().configurable());
+  MOZ_ASSERT(!hasInstanceProp.shapeProperty().writable());
 
   MOZ_ASSERT(IsCacheableProtoChain(fun, hasInstanceHolder));
 
