@@ -20,43 +20,6 @@
   margin-inline-end: 0.2em;
 }
 
-.content-blocking-checkbox .checkbox-icon {
-  margin-inline: 4px 8px;
-  width: 16px;
-}
-
-#contentBlockingTrackingProtectionCheckbox > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/tracker-image.svg");
-}
-
-#contentBlockingTrackingProtectionCheckbox[checked] > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/tracker-image-disabled.svg");
-}
-
-#contentBlockingBlockCookiesCheckbox > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/3rdpartycookies.svg");
-}
-
-#contentBlockingBlockCookiesCheckbox[checked] > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg");
-}
-
-#contentBlockingCryptominersCheckbox > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/cryptominers.svg");
-}
-
-#contentBlockingCryptominersCheckbox[checked] > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/cryptominers-disabled.svg");
-}
-
-#contentBlockingFingerprintersCheckbox > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/fingerprinters.svg");
-}
-
-#contentBlockingFingerprintersCheckbox[checked] > .checkbox-label-box {
-  list-style-image: url("chrome://browser/skin/controlcenter/fingerprinters-disabled.svg");
-}
-
 .content-blocking-icon,
 .permission-icon,
 .content-blocking-category .checkbox-label-box,
@@ -308,29 +271,9 @@
   margin-top: 0;
 }
 
-.content-blocking-trackers-image {
-  list-style-image: url("chrome://browser/skin/controlcenter/tracker-image-disabled.svg");
-  margin-inline-end: 5px;
-}
-
-.content-blocking-social-media-image {
-  list-style-image: url("chrome://browser/skin/controlcenter/socialblock-disabled.svg");
-  margin-inline-end: 5px;
-}
-
-.content-blocking-cookies-image {
-  list-style-image: url("chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg");
-  margin-inline-end: 5px;
-}
-
-.content-blocking-cryptominers-image {
-  list-style-image: url("chrome://browser/skin/controlcenter/cryptominers-disabled.svg");
-  margin-inline-end: 5px;
-}
-
-.content-blocking-fingerprinters-image {
-  list-style-image: url("chrome://browser/skin/controlcenter/fingerprinters-disabled.svg");
-  margin-inline-end: 5px;
+.content-blocking-label {
+  display: list-item;
+  line-height: 1.2em;
 }
 
 .content-blocking-warning-image {
