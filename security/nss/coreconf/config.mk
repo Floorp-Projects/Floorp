@@ -231,8 +231,13 @@ DEFINES += -DNSS_DISABLE_ARM32_NEON
 endif
 
 # Avoid building with PowerPC's Altivec acceleration
-ifdef NSS_DISABLE_ALTIVEC
+ifeq ($(NSS_DISABLE_ALTIVEC),1)
 DEFINES += -DNSS_DISABLE_ALTIVEC
+endif
+
+# Avoid building with PowerPC's Crypto and VSX instructions
+ifeq ($(NSS_DISABLE_CRYPTO_VSX),1)
+DEFINES += -DNSS_DISABLE_CRYPTO_VSX
 endif
 
 # This allows all library and tools code to use the util function

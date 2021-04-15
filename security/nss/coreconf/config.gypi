@@ -107,6 +107,7 @@
     'disable_libpkix%': 1,
     'disable_werror%': 0,
     'disable_altivec%': 0,
+    'disable_crypto_vsx%': 0,
     'disable_arm32_neon%': 0,
     'mozilla_client%': 0,
     'comm_client%': 0,
