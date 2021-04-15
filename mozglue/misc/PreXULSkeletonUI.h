@@ -170,6 +170,7 @@ MFBT_API Result<Ok, PreXULSkeletonUIError> SetPreXULSkeletonUIEnabledIfAllowed(
 MFBT_API void PollPreXULSkeletonUIEvents();
 MFBT_API Result<Ok, PreXULSkeletonUIError> SetPreXULSkeletonUIThemeId(
     ThemeMode theme);
+MFBT_API Result<Ok, PreXULSkeletonUIError> NotePreXULSkeletonUIRestarting();
 
 }  // namespace mozilla
 

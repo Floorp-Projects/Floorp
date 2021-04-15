@@ -102,6 +102,7 @@ static HWND sPreXULSkeletonUIWindow;
 static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
 static LPWSTR const gIDCWait = MAKEINTRESOURCEW(32514);
 static HANDLE sPreXULSKeletonUIAnimationThread;
+static HANDLE sPreXULSKeletonUILockFile = INVALID_HANDLE_VALUE;
 
 static uint32_t* sPixelBuffer = nullptr;
 static Vector<ColorRect>* sAnimatedRects = nullptr;
@@ -299,6 +300,10 @@ static Result<Ok, PreXULSkeletonUIError> GetSkeletonUILock() {
     return Err(PreXULSkeletonUIError::FilesystemFailure);
   }
 
+  if (sPreXULSKeletonUILockFile != INVALID_HANDLE_VALUE) {
+    return Ok();
+  }
+
   // Note: because we're in mozglue, we cannot easily access things from
   // toolkit, like `GetInstallHash`. We could move `GetInstallHash` into
   // mozglue, and rip out all of its usage of types defined in toolkit headers.
@@ -332,13 +337,13 @@ static Result<Ok, PreXULSkeletonUIError> GetSkeletonUILock() {
   // We want to hold onto this handle until the application exits, and hold
   // onto it with exclusive rights. If this check fails, then we assume that
   // another instance of the executable is holding it, and thus return false.
-  HANDLE lockFile =
+  sPreXULSKeletonUILockFile =
       ::CreateFileW(lockFilePath.c_str(), GENERIC_READ | GENERIC_WRITE,
                     0,  // No sharing - this is how the lock works
                     nullptr, CREATE_ALWAYS,
                     FILE_FLAG_DELETE_ON_CLOSE,  // Don't leave this lying around
                     nullptr);
-  if (lockFile == INVALID_HANDLE_VALUE) {
+  if (sPreXULSKeletonUILockFile == INVALID_HANDLE_VALUE) {
     return Err(PreXULSkeletonUIError::FailedGettingLock);
   }
 
@@ -1696,8 +1701,10 @@ static Result<Ok, PreXULSkeletonUIError> ValidateCmdlineArguments(
 }
 
 static Result<Ok, PreXULSkeletonUIError> ValidateEnvVars() {
-  if (EnvHasValue("MOZ_SAFE_MODE_RESTART") || EnvHasValue("XRE_PROFILE_PATH") ||
-      EnvHasValue("MOZ_RESET_PROFILE_RESTART") || EnvHasValue("MOZ_HEADLESS")) {
+  if (EnvHasValue("MOZ_SAFE_MODE_RESTART") ||
+      EnvHasValue("MOZ_RESET_PROFILE_RESTART") || EnvHasValue("MOZ_HEADLESS") ||
+      (EnvHasValue("XRE_PROFILE_PATH") &&
+       !EnvHasValue("MOZ_SKELETON_UI_RESTARTING"))) {
     return Err(PreXULSkeletonUIError::EnvVars);
   }
 
@@ -2205,6 +2212,23 @@ MFBT_API void PollPreXULSkeletonUIEvents() {
     MSG outMsg = {};
     PeekMessageW(&outMsg, sPreXULSkeletonUIWindow, 0, 0, 0);
   }
+}
+
+Result<Ok, PreXULSkeletonUIError> NotePreXULSkeletonUIRestarting() {
+  if (!sPreXULSkeletonUIEnabled) {
+    return Err(PreXULSkeletonUIError::Disabled);
+  }
+
+  ::SetEnvironmentVariableW(L"MOZ_SKELETON_UI_RESTARTING", L"1");
+
+  // We assume that we are going to exit the application very shortly after
+  // this. It should thus be fine to release this lock, and we'll need to,
+  // since during a restart we launch the new instance before closing this
+  // one.
+  if (sPreXULSKeletonUILockFile != INVALID_HANDLE_VALUE) {
+    ::CloseHandle(sPreXULSKeletonUILockFile);
+  }
+  return Ok();
 }
 
 }  // namespace mozilla
