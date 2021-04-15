@@ -1294,8 +1294,8 @@ static bool ChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
   // If we're redefining a getter/setter property but the getter and setter
   // objects are still the same, use the existing GetterSetter.
   if (existing->isNativeProperty()) {
-    Shape* prop = existing->shape();
-    if (prop->isAccessorDescriptor()) {
+    ShapeProperty prop = ShapeProperty(existing->shape());
+    if (prop.isAccessorProperty()) {
       GetterSetter* current = obj->getGetterSetter(prop);
       if (current->getter() == getter && current->setter() == setter) {
         gs = current;
@@ -1551,12 +1551,12 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
   } else {
     if (desc.hasGetterObject() &&
         (!(shapeAttrs & JSPROP_GETTER) ||
-         desc.getterObject() != obj->getGetter(prop.shape()))) {
+         desc.getterObject() != obj->getGetter(ShapeProperty(prop.shape())))) {
       return true;
     }
     if (desc.hasSetterObject() &&
         (!(shapeAttrs & JSPROP_SETTER) ||
-         desc.setterObject() != obj->getSetter(prop.shape()))) {
+         desc.setterObject() != obj->getSetter(ShapeProperty(prop.shape())))) {
       return true;
     }
   }
@@ -1730,8 +1730,9 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
       desc.setValue(currentValue);
       desc.setWritable(IsWritable(shapeAttrs));
     } else {
-      desc.setGetterObject(obj->getGetter(prop.shape()));
-      desc.setSetterObject(obj->getSetter(prop.shape()));
+      ShapeProperty shapeProp = ShapeProperty(prop.shape());
+      desc.setGetterObject(obj->getGetter(shapeProp));
+      desc.setSetterObject(obj->getSetter(shapeProp));
     }
   } else if (desc.isDataDescriptor() != IsDataDescriptor(shapeAttrs)) {
     // Step 6.
@@ -1783,7 +1784,8 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     }
   } else {
     // Step 8.
-    MOZ_ASSERT(prop.shape()->isAccessorDescriptor());
+    ShapeProperty shapeProp = ShapeProperty(prop.shape());
+    MOZ_ASSERT(shapeProp.isAccessorProperty());
     MOZ_ASSERT(desc.isAccessorDescriptor());
 
     // The spec says to use SameValue, but since the values in
@@ -1791,22 +1793,22 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
     if (desc.hasSetterObject()) {
       // Step 8.a.i.
       if (!IsConfigurable(shapeAttrs) &&
-          desc.setterObject() != obj->getSetter(prop.shape())) {
+          desc.setterObject() != obj->getSetter(shapeProp)) {
         return result.fail(JSMSG_CANT_REDEFINE_PROP);
       }
     } else {
       // Fill in desc.[[Set]] from shape.
-      desc.setSetterObject(obj->getSetter(prop.shape()));
+      desc.setSetterObject(obj->getSetter(shapeProp));
     }
     if (desc.hasGetterObject()) {
       // Step 8.a.ii.
       if (!IsConfigurable(shapeAttrs) &&
-          desc.getterObject() != obj->getGetter(prop.shape())) {
+          desc.getterObject() != obj->getGetter(shapeProp)) {
         return result.fail(JSMSG_CANT_REDEFINE_PROP);
       }
     } else {
       // Fill in desc.[[Get]] from shape.
-      desc.setGetterObject(obj->getGetter(prop.shape()));
+      desc.setGetterObject(obj->getGetter(shapeProp));
     }
 
     // Step 8.a.iii (Omitted).
@@ -2090,14 +2092,15 @@ bool js::NativeGetOwnPropertyDescriptor(
     // JSPROP_GETTER or JSPROP_SETTER but not both. In these cases, rather
     // than return true with desc incomplete, we fill out the missing
     // getter or setter with a null, following CompletePropertyDescriptor.
+    ShapeProperty shapeProp = ShapeProperty(prop.shape());
     if (desc.hasGetterObject()) {
-      desc.setGetterObject(obj->getGetter(prop.shape()));
+      desc.setGetterObject(obj->getGetter(shapeProp));
     } else {
       desc.setGetterObject(nullptr);
       desc.attributesRef() |= JSPROP_GETTER;
     }
     if (desc.hasSetterObject()) {
-      desc.setSetterObject(obj->getSetter(prop.shape()));
+      desc.setSetterObject(obj->getSetter(shapeProp));
     } else {
       desc.setSetterObject(nullptr);
       desc.attributesRef() |= JSPROP_SETTER;
@@ -2168,7 +2171,8 @@ static inline bool CallGetter(JSContext* cx, HandleNativeObject obj,
   MOZ_ASSERT(!shape->isDataProperty());
 
   if (shape->hasGetterValue()) {
-    RootedValue getter(cx, obj->getGetterValue(shape));
+    ShapeProperty prop = ShapeProperty(shape);
+    RootedValue getter(cx, obj->getGetterValue(prop));
     return js::CallGetter(cx, receiver, getter, vp);
   }
 
@@ -2184,14 +2188,15 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
     typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
     typename MaybeRooted<Shape*, allowGC>::HandleType shape,
     typename MaybeRooted<Value, allowGC>::MutableHandleType vp) {
-  if (shape->isDataProperty()) {
-    vp.set(obj->getSlot(shape->slot()));
+  ShapeProperty prop = ShapeProperty(shape);
+  if (prop.isDataProperty()) {
+    vp.set(obj->getSlot(prop.slot()));
     return true;
   }
 
   vp.setUndefined();
 
-  if (!shape->isCustomDataProperty() && !obj->hasGetter(shape)) {
+  if (!prop.isCustomDataProperty() && !obj->hasGetter(prop)) {
     return true;
   }
 
@@ -2689,9 +2694,10 @@ static bool SetExistingProperty(JSContext* cx, HandleId id, HandleValue v,
   }
 
   // Steps 6-11.
-  MOZ_ASSERT(shape->isAccessorDescriptor());
+  ShapeProperty shapeProp = ShapeProperty(shape);
+  MOZ_ASSERT(shapeProp.isAccessorProperty());
 
-  JSObject* setterObject = pobj->getSetter(shape);
+  JSObject* setterObject = pobj->getSetter(shapeProp);
   if (!setterObject) {
     return result.fail(JSMSG_GETTER_ONLY);
   }

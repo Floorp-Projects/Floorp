@@ -116,8 +116,7 @@ void js::PromiseLookup::initialize(JSContext* cx) {
   // Look up the '@@species' value on Promise.
   mozilla::Maybe<ShapeProperty> speciesProp =
       promiseCtor->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
-  if (speciesProp.isNothing() ||
-      !promiseCtor->hasGetter(speciesProp->shapeDeprecated())) {
+  if (speciesProp.isNothing() || !promiseCtor->hasGetter(*speciesProp)) {
     return;
   }
 
