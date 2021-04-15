@@ -706,6 +706,13 @@ ProductID:
   type: string
   ping: true
 
+ProfilerChildShutdownPhase:
+  description: >
+    When a child process shuts down, this describes if the profiler is running,
+    and the point the profiler shutdown sequence has reached.
+  type: string
+  ping: true
+
 ProxyStreamSize:
   description: >
     Size of an IPC proxy stream.
