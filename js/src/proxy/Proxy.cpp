@@ -806,7 +806,7 @@ void Proxy::trace(JSTracer* trc, JSObject* proxy) {
 
 static bool proxy_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                                  MutableHandleObject objp,
-                                 MutableHandle<JS::PropertyResult> propp) {
+                                 MutableHandle<PropertyResult> propp) {
   bool found;
   if (!Proxy::has(cx, obj, id, &found)) {
     return false;
