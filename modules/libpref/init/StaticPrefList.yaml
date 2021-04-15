@@ -580,7 +580,11 @@
 
 - name: apz.overscroll.enabled
   type: RelaxedAtomicBool
+#if defined(XP_MACOSX)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 # The "test async scroll offset" (used via reftest-async-scroll
