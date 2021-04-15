@@ -63,9 +63,14 @@ add_task(async function test_main() {
     { file: "helper_fission_large_subframe.html" },
     // add additional tests here
   ];
+  // These tests are to ensure hit-testing works perfectly on the WR
+  // codepath. The layers codepath may need a main-thread fallback to get
+  // these working, but we can't use our synchronous hitTest(...) helpers
+  // for those anyway.
   if (isWebRender) {
     subtests = subtests.concat([
       { file: "helper_fission_inactivescroller_positionedcontent.html" },
+      { file: "helper_fission_irregular_areas.html" },
       // add WebRender-specific tests here
     ]);
   } else {
