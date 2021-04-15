@@ -317,6 +317,7 @@ identity-https-only-info-no-upgrade = Unable to upgrade connection from HTTP.
 
 identity-permissions-storage-access-header = Cross-site cookies
 identity-permissions-storage-access-hint = These parties can use cross-site cookies and site data while you are on this site.
+identity-permissions-storage-access-learn-more = Learn more
 
 identity-permissions-reload-hint = You may need to reload the page for changes to apply.
 identity-clear-site-data =
