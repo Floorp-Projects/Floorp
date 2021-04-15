@@ -306,11 +306,11 @@ web-platform-tests-wdspec-headless:
         by-variant:
             fission:
                 by-test-platform:
-                    linux.*64-qr/debug: ['trunk']
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64(-shippable)?-qr/opt: ['trunk']
+                    (linux.*64|windows10-64)-qr/debug: ['trunk']
+                    (linux.*64|windows10-64)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan/opt: ['trunk']
                     default: []
+            webrender-sw: []
             default: built-projects
     tier:
         by-variant:

@@ -300,6 +300,7 @@ windows10-64-qr/debug:
         - mochitest-webgpu
         - windows-qr-tests
         - web-platform-tests
+        - web-platform-tests-wdspec-headless
 
 windows10-64-qr/opt:
     build-platform: win64/opt
