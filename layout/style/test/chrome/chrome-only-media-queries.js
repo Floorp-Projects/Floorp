@@ -39,6 +39,4 @@ const CHROME_ONLY_QUERIES = [
   "(-moz-os-version: windows-win7)",
   "(-moz-os-version: windows-win8)",
   "(-moz-os-version: windows-win10)",
-  "(-moz-toolbar-prefers-color-scheme: dark)",
-  "(-moz-toolbar-prefers-color-scheme: light)",
 ];
