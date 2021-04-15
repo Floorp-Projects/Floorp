@@ -470,7 +470,7 @@ this.LoginHelper = {
       "signon.userInputRequiredToCapture.enabled"
     );
     this.remoteRecipesEnabled = Services.prefs.getBoolPref(
-      "signon.recipes.remoteRecipesEnabled"
+      "signon.recipes.remoteRecipes.enabled"
     );
     this.relatedRealmsEnabled = Services.prefs.getBoolPref(
       "signon.relatedRealms.enabled"
