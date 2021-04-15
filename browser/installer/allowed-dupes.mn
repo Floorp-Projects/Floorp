@@ -96,8 +96,16 @@ browser/chrome/browser/search-extensions/ddg/favicon.ico
 browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/google-com.ico
 browser/chrome/browser/search-extensions/google/favicon.ico
 
-# Bug 1699889 - Temporarily cloned icons will be resolved when toolkit svgs updated
+# Bug 1698146, bug 1699586 - Deduplicate chevrons/arrows in the tree
 chrome/toolkit/skin/classic/global/icons/arrow-dropdown-12.svg
-browser/chrome/devtools/skin/images/arrow-dropdown-12.svg
+chrome/toolkit/skin/classic/global/icons/twisty-expanded.svg
+chrome/toolkit/skin/classic/global/icons/menu-arrow-left.svg
+chrome/toolkit/skin/classic/global/icons/twisty-collapsed-rtl.svg
+chrome/toolkit/skin/classic/global/icons/arrow-dropdown-16.svg
+chrome/toolkit/skin/classic/global/icons/find-next-arrow.svg
+chrome/toolkit/skin/classic/global/icons/arrow-up-16.svg
+chrome/toolkit/skin/classic/global/icons/find-previous-arrow.svg
+
+# Bug 1704669 - Deduplicate checkmark icons in the tree
+chrome/toolkit/skin/classic/global/icons/success.svg
 chrome/toolkit/skin/classic/global/icons/check.svg
-browser/chrome/devtools/skin/images/check.svg
