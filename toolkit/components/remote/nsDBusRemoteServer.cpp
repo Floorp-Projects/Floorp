@@ -35,7 +35,7 @@ static const char* introspect_template =
     " </interface>\n"
     " <interface name=\"org.mozilla.%s\">\n"
     "   <method name=\"OpenURL\">\n"
-    "     <arg name=\"url\" direction=\"in\" type=\"s\"/>\n"
+    "     <arg name=\"url\" direction=\"in\" type=\"ay\"/>\n"
     "   </method>\n"
     " </interface>\n"
     "</node>\n";
