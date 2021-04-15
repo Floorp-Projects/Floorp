@@ -2,8 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="context-fill" fill-opacity="context-fill-opacity" fill-rule="evenodd">
-  <path d="M16 12.25 16 4a2 2 0 0 0-2-2L2 2a2 2 0 0 0-2 2l0 8.25a2 2 0 0 0 2 2l12 0a2 2 0 0 0 2-2zm-14.75.15 0-8.55.6-.6 4.9 0 0 9.75-4.9 0-.6-.6zM8 13l6.15 0 .6-.6 0-8.55-.6-.6-6.15 0L8 13z"/>
-  <path d="M5.5 10.5A.5.5 0 0 0 5 10l-2 0a.5.5 0 0 0 0 1l2 0a.5.5 0 0 0 .5-.5z"/>
-  <path d="M5.5 8a.5.5 0 0 0-.5-.5l-2 0a.5.5 0 0 0 0 1l2 0a.5.5 0 0 0 .5-.5z"/>
-  <path d="M5.5 5.5A.5.5 0 0 0 5 5L3 5a.5.5 0 0 0 0 1l2 0a.5.5 0 0 0 .5-.5z"/>
+  <path d="M0 12.25 0 4a2 2 0 0 1 2-2l12 0a2 2 0 0 1 2 2l0 8.25a2 2 0 0 1-2 2l-12 0a2 2 0 0 1-2-2zm14.75.15 0-8.55-.6-.6-4.9 0 0 9.75 4.9 0 .6-.6zM8 13l-6.15 0-.6-.6 0-8.55.6-.6 6.15 0L8 13z"/>
+  <path d="M10.5 10.5a.5.5 0 0 1 .5-.5l2 0a.5.5 0 0 1 0 1l-2 0a.5.5 0 0 1-.5-.5z"/>
+  <path d="M10.5 8a.5.5 0 0 1 .5-.5l2 0a.5.5 0 0 1 0 1l-2 0a.5.5 0 0 1-.5-.5z"/>
+  <path d="M10.5 5.5A.5.5 0 0 1 11 5l2 0a.5.5 0 0 1 0 1l-2 0a.5.5 0 0 1-.5-.5z"/>
 </svg>
