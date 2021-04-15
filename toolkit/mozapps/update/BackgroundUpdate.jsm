@@ -41,15 +41,6 @@ XPCOMUtils.defineLazyGetter(this, "localization", () => {
   );
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "UpdateService",
-  "@mozilla.org/updates/update-service;1",
-  "nsIApplicationUpdateService"
-);
-
-Cu.importGlobalProperties(["Glean"]);
-
 var BackgroundUpdate = {
   _initialized: false,
 
@@ -476,49 +467,6 @@ var BackgroundUpdate = {
       return false;
     }
   },
-
-  /**
-   * Record parts of the update environment for our custom Glean ping.
-   *
-   * This is just like the Telemetry Environment, but pared down to what we're
-   * likely to use in background update-specific analyses.
-   *
-   * Right now this is only for use in the background update task, but after Bug
-   * 1703313 (migrating AUS telemetry to be Glean-aware) we might use it more
-   * generally.
-   */
-  async recordUpdateEnvironment() {
-    try {
-      Glean.update.serviceEnabled.set(
-        Services.prefs.getBoolPref("app.update.service.enabled", false)
-      );
-    } catch (e) {
-      // It's fine if some or all of these are missing.
-    }
-
-    // In the background update task, this should always be enabled, but let's
-    // find out if there's an error in the system.
-    Glean.update.autoDownload.set(await UpdateUtils.getAppUpdateAutoEnabled());
-    Glean.update.backgroundUpdate.set(
-      await UpdateUtils.readUpdateConfigSetting("app.update.background.enabled")
-    );
-
-    Glean.update.channel.set(UpdateUtils.UpdateChannel);
-    Glean.update.enabled.set(
-      !Services.policies || Services.policies.isAllowed("appUpdate")
-    );
-
-    Glean.update.canUsuallyApplyUpdates.set(
-      UpdateService.canUsuallyApplyUpdates
-    );
-    Glean.update.canUsuallyCheckForUpdates.set(
-      UpdateService.canUsuallyCheckForUpdates
-    );
-    Glean.update.canUsuallyStageUpdates.set(
-      UpdateService.canUsuallyStageUpdates
-    );
-    Glean.update.canUsuallyUseBits.set(UpdateService.canUsuallyUseBits);
-  },
 };
 
 BackgroundUpdate.REASON = {
@@ -535,6 +483,7 @@ BackgroundUpdate.REASON = {
   NO_MOZ_BACKGROUNDTASKS: "MOZ_BACKGROUNDTASKS=0",
   NO_OMNIJAR: "no omnijar",
   WINDOWS_CANNOT_USUALLY_USE_BITS: "on Windows but cannot usually use BITS",
+  OTHER_INSTANCE: "other instance is running",
 };
 
 /**
@@ -550,6 +499,4 @@ BackgroundUpdate.EXIT_CODE = {
   DEFAULT_PROFILE_DOES_NOT_EXIST: 11,
   DEFAULT_PROFILE_CANNOT_BE_LOCKED: 12,
   DEFAULT_PROFILE_CANNOT_BE_READ: 13,
-  // Another instance is running.
-  OTHER_INSTANCE: 21,
 };
