@@ -61,7 +61,7 @@ add_task(async function test_open_bookmark_from_library() {
       let properties = library.document.getElementById(
         "placesContext_new:bookmark"
       );
-      EventUtils.synthesizeMouseAtCenter(properties, {}, library);
+      placesContext.activateItem(properties, {});
     },
     async dialogWin => {
       let promiseLocationChange = PlacesTestUtils.waitForNotification(
