@@ -8,7 +8,9 @@
 
 #include "ProfilerChild.h"
 
+#include "mozilla/ProfilerState.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "nsExceptionHandler.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;
@@ -53,6 +55,11 @@ void ChildProfilerController::Shutdown() {
 void ChildProfilerController::ShutdownAndMaybeGrabShutdownProfileFirst(
     nsCString* aOutShutdownProfile) {
   if (mThread) {
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::ProfilerChildShutdownPhase,
+        profiler_is_active()
+            ? "Profiling - Dispatching ShutdownProfilerChild"_ns
+            : "Not profiling - Dispatching ShutdownProfilerChild"_ns);
     mThread->Dispatch(NewRunnableMethod<nsCString*>(
                           "ChildProfilerController::ShutdownProfilerChild",
                           this, &ChildProfilerController::ShutdownProfilerChild,
@@ -90,11 +97,25 @@ void ChildProfilerController::ShutdownProfilerChild(
     nsCString* aOutShutdownProfile) {
   MOZ_RELEASE_ASSERT(mThread == NS_GetCurrentThread());
 
+  const bool isProfiling = profiler_is_active();
   if (aOutShutdownProfile) {
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::ProfilerChildShutdownPhase,
+        isProfiling ? "Profiling - GrabShutdownProfile"_ns
+                    : "Not profiling - GrabShutdownProfile"_ns);
     *aOutShutdownProfile = mProfilerChild->GrabShutdownProfile();
   }
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::ProfilerChildShutdownPhase,
+      isProfiling ? "Profiling - Destroying ProfilerChild"_ns
+                  : "Not profiling - Destroying ProfilerChild"_ns);
   mProfilerChild->Destroy();
   mProfilerChild = nullptr;
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::ProfilerChildShutdownPhase,
+      isProfiling
+          ? "Profiling - ShutdownProfilerChild complete, waiting for thread shutdown"_ns
+          : "Not Profiling - ShutdownProfilerChild complete, waiting for thread shutdown"_ns);
 }
 
 }  // namespace mozilla
