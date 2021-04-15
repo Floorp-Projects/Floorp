@@ -7615,22 +7615,6 @@ telemetry.test:
 
 # The following section contains counters for corruption of internal omni jar files.
 corroborate:
-  omnijar_corrupted:
-    bug_numbers:
-      - 1515712
-    description: >-
-          Whether the omni jar (omni.ja) was found to be missing or corrupt when checked during startup.
-    expires: "80"
-    kind: boolean
-    notification_emails:
-      - rhelmer@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - main
-
   omnijar_mismatch:
     bug_numbers:
       - 1608308
