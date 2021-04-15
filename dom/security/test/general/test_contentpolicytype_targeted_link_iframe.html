@@ -17,14 +17,11 @@
  * type used for content policy checks is of TYPE_SUBDOCUMENT.
  */
 
+/* eslint-env mozilla/frame-script */
 function createChromeScript() {
-  var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(
-    Ci.nsICategoryManager
-  );
-
   const POLICYNAME = "@mozilla.org/testpolicy;1";
   const POLICYID = Components.ID("{6cc95ef3-40e1-4d59-87f0-86f100373227}");
-  const EXPECTED_URL = 
+  const EXPECTED_URL =
         "http://mochi.test:8888/tests/dom/security/test/general/file_contentpolicytype_targeted_link_iframe.sjs?innerframe";
 
   var policy = {
@@ -43,7 +40,7 @@ function createChromeScript() {
     shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
       if (contentLocation.asciiSpec === EXPECTED_URL) {
         sendAsyncMessage("loadBlocked", { policyType: loadInfo.externalContentPolicyType});
-        categoryManager.deleteCategoryEntry(
+        Services.catMan.deleteCategoryEntry(
           "content-policy",
           POLICYNAME,
           false
@@ -70,7 +67,7 @@ function createChromeScript() {
     POLICYNAME,
     policy
   );
-  categoryManager.addCategoryEntry(
+  Services.catMan.addCategoryEntry(
     "content-policy",
     POLICYNAME,
     POLICYNAME,

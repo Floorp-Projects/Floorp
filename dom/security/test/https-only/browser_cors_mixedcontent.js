@@ -97,6 +97,7 @@ async function runTest(test) {
 
     await loaded;
 
+    // eslint-disable-next-line no-shadow
     await SpecialPowers.spawn(browser, [test], async function(test) {
       const promise = new Promise(resolve => {
         content.addEventListener("FetchEnded", resolve, {

@@ -15,14 +15,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1450853
 <script type="application/javascript">
 
 /** Test for Bug 1450853 **/
-CONST_GENERIC_ERROR_MESSAGE = "Failed to open media";
+var CONST_GENERIC_ERROR_MESSAGE = "Failed to open media";
 
 add_task(function() {
   return new Promise((resolve) => {
       let audioElement = document.getElementById("audio");
 
       audioElement.onerror = function() {
-      let err = this.error;    
+      let err = this.error;
       let message = err.message;
       info(`Got Audio Error -> ${message}`);
       ok(message.includes("404"), "Same-Origin Error Message may contain status data");
@@ -37,9 +37,9 @@ add_task(function() {
       let audioElement = document.getElementById("audio");
 
       audioElement.onerror = function() {
-      let err = this.error;    
+      let err = this.error;
       let message = err.message;
-      
+
       info(`Got Audio Error -> ${message}`);
       is(message,CONST_GENERIC_ERROR_MESSAGE, "Cross-Origin Error Message is only Generic");
       resolve();

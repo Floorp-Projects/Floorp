@@ -19,7 +19,7 @@
         SimpleTest.finish();
       }
 
-      link = document.createElement('link');
+      let link = document.createElement('link');
       document.head.appendChild(link);
       link.setAttribute('rel', 'stylesheet');
       link.onerror = good_correctlyBlockedStylesheet;

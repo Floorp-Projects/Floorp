@@ -17,8 +17,6 @@
         const CROSS_ORIGIN = "http://example.com/";
         const PATH = "file_cache_splitting_server.sjs";
 
-        const Ci = SpecialPowers.Ci;
-
         async function getCount() {
             return fetch(`${PATH}?state`).then(r => r.text());
         }
@@ -26,7 +24,7 @@
             return fetch(`${PATH}?flush`).then(r => r.text());
         }
         async function ensureLoaded() {
-            // This Fetch is geting the Response "1", once file_cache_splitting_isloaded 
+            // This Fetch is geting the Response "1", once file_cache_splitting_isloaded
             // gets a request without a query String issued from the cache_splitting_window.html
             info("Waiting for Pageload");
             let result = await fetch("file_cache_splitting_isloaded.sjs?wait").then(r => r.text);
@@ -39,7 +37,7 @@
             let isLoaded =  ensureLoaded();
             let url = `${origin}tests/dom/security/test/general/file_cache_splitting_window.html`;
             let w = window.open(url);
-            let ew = SpecialPowers.wrap(w);
+            // let ew = SpecialPowers.wrap(w);
             await isLoaded;
             return w;
         }
@@ -79,7 +77,7 @@
 
         add_task(
             async () =>
-                await runTest({
+                runTest({
                     name: `Isolated Cache`,
                     steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
                     prefs: {
@@ -93,7 +91,7 @@
         // acess the cache of SAME_ORIGIN
         add_task(
             async () =>
-                await runTest({
+                runTest({
                     name: `Non Isolated Cache`,
                     steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 1]],
                     prefs: {
@@ -106,7 +104,7 @@
         // Test that FPI does not affect Cache Isolation
         add_task(
             async () =>
-                await runTest({
+                runTest({
                     name: `FPI interaction`,
                     steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
                     prefs: {
@@ -118,10 +116,10 @@
                 })
         );
         // Test that cookieBehavior does not affect Cache Isolation
-        for (let i = 0; i < Ci.nsICookieService.BEHAVIOR_LAST ; i++) {
+        for (let i = 0; i < SpecialPowers.Ci.nsICookieService.BEHAVIOR_LAST ; i++) {
             add_task(
                 async () =>
-                    await runTest({
+                    runTest({
                         name: `cookieBehavior interaction ${i}`,
                         steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
                         prefs: {
@@ -136,7 +134,7 @@
         }
         add_task(
             async () =>
-                await runTest({
+                runTest({
                     name: `FPI interaction - 2`,
                     steps: [[SAME_ORIGIN, 1], [SAME_ORIGIN, 1], [CROSS_ORIGIN, 2]],
                     prefs: {
