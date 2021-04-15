@@ -23,16 +23,28 @@ function handleRequest(request, response) {
       <script>
         globalThis.initialMatchesPrefersDarkColorScheme =
           window.matchMedia("(prefers-color-scheme: dark)").matches;
+        globalThis.initialMatchesCoarsePointer =
+          window.matchMedia("(pointer: coarse)").matches;
         globalThis.initialDevicePixelRatio = window.devicePixelRatio;
       </script>
       <style>
         html { background: cyan;}
+
+        button {
+          font-size: 2em;
+          padding-inline: 1em;
+        }
+
         @media (prefers-color-scheme: dark) {
           html {background: darkred;}
         }
+
       </style>
     </head>
-    <body>Iframe</body>
+    <body>
+      <h1>Iframe</h1>
+      <button>Target</button>
+    </body>
   </html>`;
 
   const HTML = `
@@ -44,16 +56,29 @@ function handleRequest(request, response) {
       <script type="application/javascript">
         "use strict";
 
-        /* Store the result of dark color-scheme match very early in the document loading process
+        /*
+         * Store the result of dark color-scheme match very early in the document loading process
          * so we can assert in tests that the simulation starts early enough.
          */
         globalThis.initialMatchesPrefersDarkColorScheme =
           window.matchMedia("(prefers-color-scheme: dark)").matches;
+        globalThis.initialMatchesCoarsePointer =
+          window.matchMedia("(pointer: coarse)").matches;
         globalThis.initialDevicePixelRatio = window.devicePixelRatio
       </script>
       <style>
+        iframe {
+          display: block;
+          margin-top: 1em;
+        }
+
+        button {
+          font-size: 2em;
+          padding-inline: 1em;
+        }
+
         @media (prefers-color-scheme: dark) {
-        html {
+          html {
             background-color: darkblue;
           }
         }
@@ -61,6 +86,7 @@ function handleRequest(request, response) {
     </head>
     <body>
       <h1>Test color-scheme simulation</h1>
+      <button>Target</button>
       <iframe src='${iframeOrigin}/document-builder.sjs?html=${encodeURI(
     IFRAME_HTML
   )}'></iframe>
