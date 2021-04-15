@@ -57,7 +57,7 @@ function checkIndividualResults(aTestname, aExpectedImg, aName) {
           var results = xhr.response;
           info(JSON.stringify(xhr.response));
 
-          for (i in aName) {
+          for (let i in aName) {
             ok(aName[i] in results.tests, aName[i] + " tests have to be performed.");
             is(results.tests[aName[i]].policy, aExpectedImg[i], aTestname + ' --- ' + results.tests[aName[i]].policy + ' (' + results.tests[aName[i]].referrer + ')');
           }
@@ -183,4 +183,3 @@ var tests = (function*() {
 
 </body>
 </html>
-

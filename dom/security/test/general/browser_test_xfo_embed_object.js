@@ -13,7 +13,6 @@ let xfoBlocked = false;
 
 function onXFOMessage(msgObj) {
   const message = msgObj.message;
-  const logLevel = msgObj.logLevel;
 
   if (message.includes(errorMessage)) {
     ok(true, "XFO error message logged");
@@ -26,7 +25,7 @@ add_task(async function open_test_xfo_embed_blocked() {
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     Services.console.registerListener(onXFOMessage);
     BrowserTestUtils.loadURI(browser, kTestXFOEmbedURI);
-    await BrowserTestUtils.waitForCondition(() => xfoBlocked == true);
+    await BrowserTestUtils.waitForCondition(() => xfoBlocked);
     Services.console.unregisterListener(onXFOMessage);
   });
 });
@@ -36,7 +35,7 @@ add_task(async function open_test_xfo_object_blocked() {
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     Services.console.registerListener(onXFOMessage);
     BrowserTestUtils.loadURI(browser, kTestXFOObjectURI);
-    await BrowserTestUtils.waitForCondition(() => xfoBlocked == true);
+    await BrowserTestUtils.waitForCondition(() => xfoBlocked);
     Services.console.unregisterListener(onXFOMessage);
   });
 });

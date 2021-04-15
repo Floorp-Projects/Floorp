@@ -19,6 +19,7 @@ function checkTestsDone() {
   }
 }
 
+/* eslint-env mozilla/frame-script */
 var script = SpecialPowers.loadChromeScript(() => {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -45,7 +46,7 @@ var script = SpecialPowers.loadChromeScript(() => {
 
     // Sec-Fetch-User should not be present
     try {
-      let secFetchSite = channel.getRequestHeader("Sec-Fetch-User");
+      channel.getRequestHeader("Sec-Fetch-User");
       ok(false, "testing sec-fetch-user");
     }
     catch (e) {

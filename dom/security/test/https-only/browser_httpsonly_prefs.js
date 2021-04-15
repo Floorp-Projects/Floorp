@@ -18,6 +18,7 @@ async function runPrefTest(
     await ContentTask.spawn(
       browser,
       { aExecuteFromPBM, aDesc, aAssertURLStartsWith },
+      // eslint-disable-next-line no-shadow
       async function({ aExecuteFromPBM, aDesc, aAssertURLStartsWith }) {
         const responseURL = await new Promise(resolve => {
           let xhr = new XMLHttpRequest();
