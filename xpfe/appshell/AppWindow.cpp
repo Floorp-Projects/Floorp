@@ -71,6 +71,7 @@
 
 #ifdef XP_WIN
 #  include "mozilla/PreXULSkeletonUI.h"
+#  include "nsIWindowsUIUtils.h"
 #endif
 
 #ifdef MOZ_NEW_XULSTORE
@@ -1915,6 +1916,37 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
   }
 
   settings.rtlEnabled = intl::LocaleService::GetInstance()->IsAppLocaleRTL();
+
+  bool isInTabletMode = false;
+  bool autoTouchModePref =
+      Preferences::GetBool("browser.touchmode.auto", false);
+  if (autoTouchModePref) {
+    nsCOMPtr<nsIWindowsUIUtils> uiUtils(
+        do_GetService("@mozilla.org/windows-ui-utils;1"));
+    if (!NS_WARN_IF(!uiUtils)) {
+      uiUtils->GetInTabletMode(&isInTabletMode);
+    }
+  }
+
+  if (isInTabletMode) {
+    settings.uiDensity = SkeletonUIDensity::Touch;
+  } else {
+    int uiDensityPref = Preferences::GetInt("browser.uidensity", 0);
+    switch (uiDensityPref) {
+      case 0: {
+        settings.uiDensity = SkeletonUIDensity::Default;
+        break;
+      }
+      case 1: {
+        settings.uiDensity = SkeletonUIDensity::Compact;
+        break;
+      }
+      case 2: {
+        settings.uiDensity = SkeletonUIDensity::Touch;
+        break;
+      }
+    }
+  }
 
   Unused << PersistPreXULSkeletonUIValues(settings);
 #endif
