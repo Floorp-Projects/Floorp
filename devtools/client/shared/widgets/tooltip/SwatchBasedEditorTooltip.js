@@ -9,7 +9,6 @@ const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const {
   HTMLTooltip,
 } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
-const InlineTooltip = require("devtools/client/shared/widgets/tooltip/InlineTooltip");
 
 loader.lazyRequireGetter(
   this,
@@ -18,39 +17,27 @@ loader.lazyRequireGetter(
   true
 );
 
-const INLINE_TOOLTIP_CLASS = "inline-tooltip-container";
-
 /**
  * Base class for all (color, gradient, ...)-swatch based value editors inside
  * tooltips
  *
  * @param {Document} document
- *        The document to attach the SwatchBasedEditorTooltip. This is either the toolbox
- *        document if the tooltip is a popup tooltip or the panel's document if it is an
- *        inline editor.
- * @param {Boolean} useInline
- *        A boolean flag representing whether or not the InlineTooltip should be used.
+ *        The document to attach the SwatchBasedEditorTooltip. This should be the
+ *        toolbox document
  */
 
 class SwatchBasedEditorTooltip {
-  constructor(document, useInline) {
+  constructor(document) {
     EventEmitter.decorate(this);
 
-    this.useInline = useInline;
-
-    // Creating a tooltip instance
-    if (useInline) {
-      this.tooltip = new InlineTooltip(document);
-    } else {
-      // This one will consume outside clicks as it makes more sense to let the user
-      // close the tooltip by clicking out
-      // It will also close on <escape> and <enter>
-      this.tooltip = new HTMLTooltip(document, {
-        type: "arrow",
-        consumeOutsideClicks: true,
-        useXulWrapper: true,
-      });
-    }
+    // This one will consume outside clicks as it makes more sense to let the user
+    // close the tooltip by clicking out
+    // It will also close on <escape> and <enter>
+    this.tooltip = new HTMLTooltip(document, {
+      type: "arrow",
+      consumeOutsideClicks: true,
+      useXulWrapper: true,
+    });
 
     // By default, swatch-based editor tooltips revert value change on <esc> and
     // commit value change on <enter>
@@ -268,9 +255,7 @@ class SwatchBasedEditorTooltip {
   }
 
   get tooltipAnchor() {
-    return this.useInline
-      ? this.activeSwatch.closest(`.${INLINE_TOOLTIP_CLASS}`)
-      : this.activeSwatch;
+    return this.activeSwatch;
   }
 
   destroy() {

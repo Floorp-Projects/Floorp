@@ -153,7 +153,7 @@ TextPropertyEditor.prototype = {
     this.element._textPropertyEditor = this;
 
     this.container = createChild(this.element, "div", {
-      class: "ruleview-propertycontainer inline-tooltip-container",
+      class: "ruleview-propertycontainer",
     });
 
     // The enable checkbox will disable or enable the rule.
