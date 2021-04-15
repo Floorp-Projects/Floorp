@@ -12,7 +12,7 @@ package org.webrtc;
 
 import static org.junit.Assert.assertEquals;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.support.test.filters.SmallTest;
 import java.util.ArrayList;
 import java.util.HashMap;

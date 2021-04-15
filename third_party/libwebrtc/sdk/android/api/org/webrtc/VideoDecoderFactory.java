@@ -10,7 +10,7 @@
 
 package org.webrtc;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /** Factory for creating VideoDecoders. */
 public interface VideoDecoderFactory {

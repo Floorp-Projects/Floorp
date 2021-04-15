@@ -11,7 +11,7 @@
 package org.webrtc;
 
 // Explicit imports necessary for JNI generation.
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import org.webrtc.VideoEncoder;
 
 /**
