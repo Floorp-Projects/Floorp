@@ -2318,6 +2318,11 @@ class nsContentUtils {
       const Document* aDocument);
 
   /**
+   * Like FindPresShellForDocument, but returns the shell's PresContext instead.
+   */
+  static nsPresContext* FindPresContextForDocument(const Document* aDocument);
+
+  /**
    * Returns the widget for this document if there is one. Looks at all ancestor
    * documents to try to find a widget, so for example this can still find a
    * widget for documents in display:none frames that have no presentation.

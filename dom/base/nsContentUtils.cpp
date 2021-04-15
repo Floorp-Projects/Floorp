@@ -6495,6 +6495,15 @@ PresShell* nsContentUtils::FindPresShellForDocument(const Document* aDocument) {
   return nullptr;
 }
 
+/* static */
+nsPresContext* nsContentUtils::FindPresContextForDocument(
+    const Document* aDocument) {
+  if (PresShell* presShell = FindPresShellForDocument(aDocument)) {
+    return presShell->GetPresContext();
+  }
+  return nullptr;
+}
+
 nsIWidget* nsContentUtils::WidgetForDocument(const Document* aDocument) {
   PresShell* presShell = FindPresShellForDocument(aDocument);
   if (!presShell) {
@@ -10212,15 +10221,20 @@ bool nsContentUtils::StringifyJSON(JSContext* aCx,
 bool nsContentUtils::
     HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
         Document* aDocument) {
-  if (!aDocument || aDocument->IsLoadedAsData()) {
-    return false;
-  }
+  MOZ_ASSERT(XRE_IsContentProcess(),
+             "This function only makes sense in content processes");
 
-  Document* topLevel = aDocument->GetTopLevelContentDocument();
-  return topLevel && topLevel->GetPresShell() &&
-         topLevel->GetPresShell()->GetPresContext() &&
-         !topLevel->GetPresShell()->GetPresContext()->HadContentfulPaint() &&
-         nsThreadManager::MainThreadHasPendingHighPriorityEvents();
+  if (aDocument && !aDocument->IsLoadedAsData()) {
+    if (nsPresContext* presContext = FindPresContextForDocument(aDocument)) {
+      MOZ_ASSERT(!presContext->IsChrome(),
+                 "Should never have a chrome PresContext in a content process");
+
+      return !presContext->GetInProcessRootContentDocumentPresContext()
+                  ->HadContentfulPaint() &&
+             nsThreadManager::MainThreadHasPendingHighPriorityEvents();
+    }
+  }
+  return false;
 }
 
 /* static */
