@@ -31,6 +31,18 @@ const TOUCH_STATES = {
   touchend: TOUCH_REMOVE,
 };
 
+const EVENTS_TO_HANDLE = [
+  "mousedown",
+  "mousemove",
+  "mouseup",
+  "touchstart",
+  "touchend",
+  "mouseenter",
+  "mouseover",
+  "mouseout",
+  "mouseleave",
+];
+
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
 /**
@@ -46,18 +58,6 @@ class TouchSimulator {
     this._currentPickerMap = new Map();
   }
 
-  events = [
-    "mousedown",
-    "mousemove",
-    "mouseup",
-    "touchstart",
-    "touchend",
-    "mouseenter",
-    "mouseover",
-    "mouseout",
-    "mouseleave",
-  ];
-  contextMenuTimeout = null;
   enabled = false;
 
   start() {
@@ -66,7 +66,7 @@ class TouchSimulator {
       return;
     }
 
-    this.events.forEach(evt => {
+    EVENTS_TO_HANDLE.forEach(evt => {
       // Only listen trusted events to prevent messing with
       // event dispatched manually within content documents
       this.simulatorTarget.addEventListener(evt, this, true, false);
@@ -80,7 +80,7 @@ class TouchSimulator {
       // Simulator isn't running
       return;
     }
-    this.events.forEach(evt => {
+    EVENTS_TO_HANDLE.forEach(evt => {
       this.simulatorTarget.removeEventListener(evt, this, true);
     });
     this.enabled = false;
@@ -208,7 +208,7 @@ class TouchSimulator {
         // into contextmenu events.
         // Just don't do it if the event occurred on a scrollbar.
         if (isClickHoldEnabled && !evt.originalTarget.closest("scrollbar")) {
-          this.contextMenuTimeout = this.sendContextMenu(evt);
+          this._contextMenuTimeout = this.sendContextMenu(evt);
         }
 
         this.startX = evt.pageX;
@@ -237,7 +237,7 @@ class TouchSimulator {
         }
         this.target = null;
 
-        content.clearTimeout(this.contextMenuTimeout);
+        content.clearTimeout(this._contextMenuTimeout);
         type = "touchend";
 
         // Only register click listener after mouseup to ensure
