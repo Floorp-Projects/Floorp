@@ -155,6 +155,7 @@ pub enum DisplayItem {
     SetFilterOps,
     SetFilterData,
     SetFilterPrimitives,
+    SetPoints,
 
     // These marker items terminate a scope introduced by a previous item.
     PopReferenceFrame,
@@ -203,6 +204,7 @@ pub enum DebugDisplayItem {
     SetFilterOps(Vec<FilterOp>),
     SetFilterData(FilterData),
     SetFilterPrimitives(Vec<FilterPrimitive>),
+    SetPoints(Vec<LayoutPoint>),
 
     PopReferenceFrame,
     PopStackingContext,
@@ -214,7 +216,8 @@ pub struct ImageMaskClipDisplayItem {
     pub id: ClipId,
     pub parent_space_and_clip: SpaceAndClipInfo,
     pub image_mask: ImageMask,
-}
+    pub fill_rule: FillRule,
+} // IMPLICIT points: Vec<LayoutPoint>
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct RectClipDisplayItem {
@@ -1488,6 +1491,32 @@ impl ComplexClipRegion {
     }
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Deserialize, MallocSizeOf, PartialEq, Serialize, Eq, Hash, PeekPoke)]
+pub enum FillRule {
+    Nonzero = 0x1, // Behaves as the SVG fill-rule definition for nonzero.
+    Evenodd = 0x2, // Behaves as the SVG fill-rule definition for evenodd.
+}
+
+impl From<u8> for FillRule {
+    fn from(fill_rule: u8) -> Self {
+        match fill_rule {
+            0x1 => FillRule::Nonzero,
+            0x2 => FillRule::Evenodd,
+            _ => panic!("Unexpected FillRule value."),
+        }
+    }
+}
+
+impl From<FillRule> for u8 {
+    fn from(fill_rule: FillRule) -> Self {
+        match fill_rule {
+            FillRule::Nonzero => 0x1,
+            FillRule::Evenodd => 0x2,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize, PeekPoke)]
 pub struct ClipChainId(pub u64, pub PipelineId);
 
@@ -1615,6 +1644,7 @@ impl DisplayItem {
             DisplayItem::SetFilterOps => "set_filter_ops",
             DisplayItem::SetFilterData => "set_filter_data",
             DisplayItem::SetFilterPrimitives => "set_filter_primitives",
+            DisplayItem::SetPoints => "set_points",
             DisplayItem::RadialGradient(..) => "radial_gradient",
             DisplayItem::Rectangle(..) => "rectangle",
             DisplayItem::ScrollFrame(..) => "scroll_frame",
@@ -1656,6 +1686,7 @@ impl_default_for_enums! {
     FilterOp => Identity,
     ComponentTransferFuncType => Identity,
     ClipMode => Clip,
+    FillRule => Nonzero,
     ClipId => ClipId::invalid(),
     ReferenceFrameKind => Transform {
         is_2d_scale_translation: false,
