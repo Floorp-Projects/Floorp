@@ -683,7 +683,7 @@ static MOZ_ALWAYS_INLINE bool CallResolveOp(
 
   mozilla::Maybe<ShapeProperty> prop = obj->lookup(cx, id);
   if (prop.isSome()) {
-    propp.setNativeProperty(prop->shapeDeprecated());
+    propp.setNativeProperty(*prop);
   } else {
     propp.setNotFound();
   }
@@ -746,7 +746,7 @@ static MOZ_ALWAYS_INLINE bool NativeLookupOwnPropertyInline(
   // Check for a native property. Call Shape::search directly (instead of
   // NativeObject::lookup) because it's inlined.
   if (Shape* shape = obj->lastProperty()->search(cx, id)) {
-    propp.setNativeProperty(shape);
+    propp.setNativeProperty(ShapeProperty(shape));
     return true;
   }
 

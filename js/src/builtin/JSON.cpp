@@ -487,7 +487,8 @@ static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
                                             &prop)) {
         return false;
       }
-      MOZ_ASSERT(prop.isNativeProperty() && prop.shape()->isDataDescriptor());
+      MOZ_ASSERT(prop.isNativeProperty() &&
+                 prop.shapeProperty().isDataDescriptor());
     }
 #endif  // DEBUG
     if (!GetProperty(cx, obj, obj, id, &outputValue)) {

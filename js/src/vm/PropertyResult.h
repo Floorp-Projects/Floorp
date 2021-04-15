@@ -26,7 +26,7 @@ class PropertyResult {
   };
   union {
     // Set if kind is NativeProperty.
-    js::Shape* shape_;
+    ShapeProperty shapeProp_;
     // Set if kind is DenseElement.
     uint32_t denseIndex_;
     // Set if kind is TypedArrayElement.
@@ -36,7 +36,9 @@ class PropertyResult {
   bool ignoreProtoChain_ = false;
 
  public:
-  PropertyResult() = default;
+  // Note: because ShapeProperty does not have a default constructor, we can't
+  // use |= default| here.
+  PropertyResult() {}
 
   // When a property is not found, we may additionally indicate that the
   // prototype chain should be ignored. This occurs for:
@@ -54,9 +56,9 @@ class PropertyResult {
   bool isTypedArrayElement() const { return kind_ == Kind::TypedArrayElement; }
   bool isNativeProperty() const { return kind_ == Kind::NativeProperty; }
 
-  js::Shape* shape() const {
+  ShapeProperty shapeProperty() const {
     MOZ_ASSERT(isNativeProperty());
-    return shape_;
+    return shapeProp_;
   }
 
   uint32_t denseElementIndex() const {
@@ -71,9 +73,9 @@ class PropertyResult {
 
   void setNotFound() { kind_ = Kind::NotFound; }
 
-  void setNativeProperty(js::Shape* propertyShape) {
+  void setNativeProperty(ShapeProperty prop) {
     kind_ = Kind::NativeProperty;
-    shape_ = propertyShape;
+    shapeProp_ = prop;
   }
 
   void setTypedObjectProperty() { kind_ = Kind::NonNativeProperty; }
@@ -110,7 +112,7 @@ class WrappedPtrOperations<PropertyResult, Wrapper> {
  public:
   bool isNotFound() const { return value().isNotFound(); }
   bool isFound() const { return value().isFound(); }
-  Shape* shape() const { return value().shape(); }
+  ShapeProperty shapeProperty() const { return value().shapeProperty(); }
   uint32_t denseElementIndex() const { return value().denseElementIndex(); }
   size_t typedArrayElementIndex() const {
     return value().typedArrayElementIndex();
@@ -132,7 +134,9 @@ class MutableWrappedPtrOperations<PropertyResult, Wrapper>
 
  public:
   void setNotFound() { value().setNotFound(); }
-  void setNativeProperty(js::Shape* shape) { value().setNativeProperty(shape); }
+  void setNativeProperty(ShapeProperty prop) {
+    value().setNativeProperty(prop);
+  }
   void setTypedObjectProperty() { value().setTypedObjectProperty(); }
   void setProxyProperty() { value().setProxyProperty(); }
   void setDenseElement(uint32_t index) { value().setDenseElement(index); }
