@@ -141,11 +141,14 @@ class SharedDataMap extends EventEmitter {
     }
     if (this.has(key)) {
       delete this._store.data[key];
-      delete this._nonPersistentStore[key];
-      this._store.saveSoon();
-      this._syncToChildren();
-      this._notifyUpdate();
     }
+    if (this._nonPersistentStore) {
+      delete this._nonPersistentStore.__REMOTE_DEFAULTS?.[key];
+    }
+
+    this._store.saveSoon();
+    this._syncToChildren();
+    this._notifyUpdate();
   }
 
   has(key) {
