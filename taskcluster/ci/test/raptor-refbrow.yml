@@ -4,8 +4,6 @@
 job-defaults:
     max-run-time: 1800
     suite: raptor
-    webrender-run-on-projects: []
-    variants: ["webrender"]
     run-on-projects: []
     tier: 2
     test-manifest-loader: null  # don't load tests in the taskgraph
