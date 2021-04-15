@@ -1579,6 +1579,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Hantera sparade kreditkort</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Lägg till kreditkort</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Redigera kort</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Kortnummer</string>
     <!-- The header for the expiration date of a credit card -->

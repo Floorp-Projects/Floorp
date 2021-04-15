@@ -1610,6 +1610,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">저장된 카드 관리</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">카드 추가</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">카드 편집</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">카드 번호</string>
     <!-- The header for the expiration date of a credit card -->

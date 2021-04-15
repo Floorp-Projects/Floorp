@@ -609,12 +609,16 @@
     <string name="tabs_header_private_title">جلسة خاصة</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">الألسنة الخاصة</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">الألسنة المُزامنة</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">أضِف لسانًا</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">أضِف لسانًا خاصًا</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">خاص</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">زامِن</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">الألسنة المفتوحة</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -1180,6 +1184,8 @@
     <string name="onboarding_whats_new_description">ألديك أسئلة عن متصفّح %s الذي أعدنا تصميمه؟ أتريد معرفة ما تغيّر؟</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ستجد هنا إجابات أسئلتك</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">زامِن Firefox بين الأجهزة</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_description">اسحب العلامات والتأريخ وكلمات السر إلى Firefox على هذا الجهاز.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
@@ -1554,8 +1560,12 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">أضِف بطاقة ائتمان</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">أدِر البطاقات المحفوظة</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">أضِف بطاقة</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">حرّر البطاقة</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">رقم البطاقة</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1572,6 +1582,9 @@
     <string name="credit_cards_save_button">احفظ</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">ألغِ</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">البطاقات المحفوظة</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">أضِف محرك بحث</string>
@@ -1731,6 +1744,9 @@
 	<string name="top_sites_rename_dialog_ok">حسنا</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ألغِ</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">اضبط روابط المواقع والبريد الإلكتروني والرسائل لتفتح تلقائيًا في Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">أزِل</string>

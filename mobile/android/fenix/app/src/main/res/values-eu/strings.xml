@@ -1576,6 +1576,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Kudeatu gordetako txartelak</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Gehitu txartela</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Editatu txartela</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Txartelaren zenbakia</string>
     <!-- The header for the expiration date of a credit card -->

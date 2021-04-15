@@ -1550,6 +1550,8 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Dodaj kreditno kartico</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Upravljanje shranjenih kartic</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Dodaj kartico</string>
     <!-- The header for the card number of a credit card -->
@@ -1566,6 +1568,9 @@
     <string name="credit_cards_save_button">Shrani</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Prekliči</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Shranjene kartice</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Dodaj iskalnik</string>

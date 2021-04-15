@@ -1750,6 +1750,9 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Annuleren</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Koppelingen van websites, e-mail en berichten automatisch in Firefox openen.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Verwijderen</string>
 

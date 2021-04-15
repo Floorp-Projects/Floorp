@@ -1563,6 +1563,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Skłaźone kórty zastojaś</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kórtu pśidaś</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Kórtu wobźěłaś</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Kórtowy numer</string>
     <!-- The header for the expiration date of a credit card -->

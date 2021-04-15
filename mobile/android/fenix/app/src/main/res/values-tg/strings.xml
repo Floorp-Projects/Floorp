@@ -1743,6 +1743,9 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Бекор кардан</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Пайванҳоеро, танзим кунед, ки онҳо аз сомонаҳо, почтаи электронӣ ва паёмҳо дар браузери Firefox ба таври худкор кушода шаванд.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Тоза кардан</string>
 

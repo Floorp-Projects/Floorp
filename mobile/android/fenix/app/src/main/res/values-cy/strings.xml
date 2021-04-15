@@ -1740,6 +1740,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Diddymu</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Gosod dolenni o wefannau, e-byst, a negeseuon i agor yn awtomatig yn Firefox.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Tynnu</string>
 

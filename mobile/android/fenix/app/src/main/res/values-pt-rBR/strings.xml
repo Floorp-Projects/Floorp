@@ -1565,6 +1565,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Gerenciar cartões salvos</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Adicionar cartão</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Editar cartão</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Número do cartão</string>
     <!-- The header for the expiration date of a credit card -->

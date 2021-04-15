@@ -1603,6 +1603,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">管理存放的信用卡</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">添加信用卡</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">编辑信用卡</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">卡号</string>
     <!-- The header for the expiration date of a credit card -->
