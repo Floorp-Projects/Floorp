@@ -75,28 +75,26 @@ class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) 
             true
         }
         R.id.save_credit_card_button -> {
-            saveCreditCard()
-            true
-        }
-        else -> false
-    }
+            view?.hideKeyboard()
 
-    /**
-     * Helper function called by the the "Save" button and menu item to save a new credit card
-     * from the entered credit card fields.
-     */
-    private fun saveCreditCard() {
-        view?.hideKeyboard()
-
-        interactor.onSaveButtonClicked(
-            UpdatableCreditCardFields(
+            val creditCard = args.creditCard
+            val creditCardFields = UpdatableCreditCardFields(
                 billingName = name_on_card_input.text.toString(),
                 cardNumber = card_number_input.text.toString(),
                 expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
                 expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
                 cardType = CARD_TYPE_PLACEHOLDER
             )
-        )
+
+            if (creditCard != null) {
+                interactor.onUpdateCreditCard(creditCard.guid, creditCardFields)
+            } else {
+                interactor.onSaveCreditCard(creditCardFields)
+            }
+
+            true
+        }
+        else -> false
     }
 
     companion object {

@@ -57,7 +57,21 @@ class DefaultCreditCardEditorInteractorTest {
             expiryYear = 2030,
             cardType = "discover"
         )
-        interactor.onSaveButtonClicked(creditCardFields)
+        interactor.onSaveCreditCard(creditCardFields)
         verify { controller.handleSaveCreditCard(creditCardFields) }
+    }
+
+    @Test
+    fun onUpdateCreditCard() {
+        val guid = "id"
+        val creditCardFields = UpdatableCreditCardFields(
+            billingName = "Banana Apple",
+            cardNumber = "4111111111111112",
+            expiryMonth = 1,
+            expiryYear = 2034,
+            cardType = "discover"
+        )
+        interactor.onUpdateCreditCard(guid, creditCardFields)
+        verify { controller.handleUpdateCreditCard(guid, creditCardFields) }
     }
 }

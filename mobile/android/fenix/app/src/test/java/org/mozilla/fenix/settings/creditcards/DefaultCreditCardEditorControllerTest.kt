@@ -104,4 +104,34 @@ class DefaultCreditCardEditorControllerTest {
             navController.popBackStack()
         }
     }
+
+    @Test
+    fun handleUpdateCreditCard() = testCoroutineScope.runBlockingTest {
+        val creditCard = CreditCard(
+            guid = "id",
+            billingName = "Banana Apple",
+            cardNumber = "4111111111111110",
+            expiryMonth = 1,
+            expiryYear = 2030,
+            cardType = "amex",
+            timeCreated = 1L,
+            timeLastUsed = 1L,
+            timeLastModified = 1L,
+            timesUsed = 1L
+        )
+        val creditCardFields = UpdatableCreditCardFields(
+            billingName = "Banana Apple",
+            cardNumber = "4111111111111112",
+            expiryMonth = 1,
+            expiryYear = 2034,
+            cardType = "discover"
+        )
+
+        controller.handleUpdateCreditCard(creditCard.guid, creditCardFields)
+
+        coVerify {
+            storage.updateCreditCard(creditCard.guid, creditCardFields)
+            navController.popBackStack()
+        }
+    }
 }

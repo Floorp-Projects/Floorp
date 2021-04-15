@@ -46,7 +46,21 @@ class CreditCardEditorView(
         }
 
         save_button.setOnClickListener {
-            saveCreditCard()
+            containerView.hideKeyboard()
+
+            val creditCardFields = UpdatableCreditCardFields(
+                billingName = name_on_card_input.text.toString(),
+                cardNumber = card_number_input.text.toString(),
+                expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
+                expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
+                cardType = CARD_TYPE_PLACEHOLDER
+            )
+
+            if (state.isEditing) {
+                interactor.onUpdateCreditCard(state.guid, creditCardFields)
+            } else {
+                interactor.onSaveCreditCard(creditCardFields)
+            }
         }
 
         card_number_input.text = state.cardNumber.toEditable()
@@ -95,24 +109,6 @@ class CreditCardEditorView(
         }
 
         expiry_year_drop_down.adapter = adapter
-    }
-
-    /**
-     * Helper function called by the the "Save" button and menu item to save a new credit card
-     * from the entered credit card fields.
-     */
-    private fun saveCreditCard() {
-        containerView.hideKeyboard()
-
-        interactor.onSaveButtonClicked(
-            UpdatableCreditCardFields(
-                billingName = name_on_card_input.text.toString(),
-                cardNumber = card_number_input.text.toString(),
-                expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
-                expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                cardType = CARD_TYPE_PLACEHOLDER
-            )
-        )
     }
 
     companion object {

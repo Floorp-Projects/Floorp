@@ -17,6 +17,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.toEditable
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment.Companion.CARD_TYPE_PLACEHOLDER
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment.Companion.NUMBER_OF_YEARS_TO_SHOW
@@ -120,14 +121,45 @@ class CreditCardEditorViewTest {
     }
 
     @Test
+    fun `GIVEN the credit input are filled WHEN the save button is clicked THEN interactor is called`() {
+        creditCardEditorView.bind(getInitialCreditCardEditorState())
+
+        val calendar = Calendar.getInstance()
+
+        val billingName = "Banana Apple"
+        val cardNumber = "4111111111111110"
+        val expiryMonth = 5
+        val expiryYear = calendar.get(Calendar.YEAR)
+
+        view.card_number_input.text = cardNumber.toEditable()
+        view.name_on_card_input.text = billingName.toEditable()
+        view.expiry_month_drop_down.setSelection(expiryMonth - 1)
+
+        view.save_button.performClick()
+
+        verify {
+            interactor.onSaveCreditCard(
+                UpdatableCreditCardFields(
+                    billingName = billingName,
+                    cardNumber = cardNumber,
+                    expiryMonth = expiryMonth.toLong(),
+                    expiryYear = expiryYear.toLong(),
+                    cardType = CARD_TYPE_PLACEHOLDER
+                )
+            )
+        }
+    }
+
+    @Test
     fun `GIVEN a credit card WHEN the save button is clicked THEN interactor is called`() {
         creditCardEditorView.bind(creditCard.toCreditCardEditorState())
 
         view.save_button.performClick()
 
         verify {
-            interactor.onSaveButtonClicked(
-                UpdatableCreditCardFields(
+            interactor.onUpdateCreditCard(
+                guid = creditCard.guid,
+                creditCardFields = UpdatableCreditCardFields(
                     billingName = creditCard.billingName,
                     cardNumber = creditCard.cardNumber,
                     expiryMonth = creditCard.expiryMonth,

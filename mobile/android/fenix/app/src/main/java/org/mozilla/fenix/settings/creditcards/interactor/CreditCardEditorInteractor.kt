@@ -32,7 +32,16 @@ interface CreditCardEditorInteractor {
      *
      * @param creditCardFields A [UpdatableCreditCardFields] record to add.
      */
-    fun onSaveButtonClicked(creditCardFields: UpdatableCreditCardFields)
+    fun onSaveCreditCard(creditCardFields: UpdatableCreditCardFields)
+
+    /**
+     * Updates the provided credit card with the new credit card fields. Called when a user
+     * taps on the save menu item or "Save" button when editing an existing credit card.
+     *
+     * @param guid Unique identifier for the desired credit card.
+     * @param creditCardFields The credit card fields to update.
+     */
+    fun onUpdateCreditCard(guid: String, creditCardFields: UpdatableCreditCardFields)
 }
 
 /**
@@ -53,7 +62,11 @@ class DefaultCreditCardEditorInteractor(
         controller.handleDeleteCreditCard(guid)
     }
 
-    override fun onSaveButtonClicked(creditCardFields: UpdatableCreditCardFields) {
+    override fun onSaveCreditCard(creditCardFields: UpdatableCreditCardFields) {
         controller.handleSaveCreditCard(creditCardFields)
+    }
+
+    override fun onUpdateCreditCard(guid: String, creditCardFields: UpdatableCreditCardFields) {
+        controller.handleUpdateCreditCard(guid, creditCardFields)
     }
 }
