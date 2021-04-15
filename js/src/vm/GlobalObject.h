@@ -768,8 +768,8 @@ class GlobalObject : public NativeObject {
       return false;
     }
 
-    if (Shape* shape = holder->lookup(cx, name)) {
-      vp.set(holder->getSlot(shape->slot()));
+    if (mozilla::Maybe<ShapeProperty> prop = holder->lookup(cx, name)) {
+      vp.set(holder->getSlot(prop->slot()));
       *exists = true;
     } else {
       *exists = false;

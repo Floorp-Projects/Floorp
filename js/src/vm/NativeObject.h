@@ -906,17 +906,18 @@ class NativeObject : public JSObject {
 
   bool empty() const { return lastProperty()->isEmptyShape(); }
 
-  Shape* lookup(JSContext* cx, jsid id);
-  Shape* lookup(JSContext* cx, PropertyName* name) {
+  mozilla::Maybe<ShapeProperty> lookup(JSContext* cx, jsid id);
+  mozilla::Maybe<ShapeProperty> lookup(JSContext* cx, PropertyName* name) {
     return lookup(cx, NameToId(name));
   }
 
-  bool contains(JSContext* cx, jsid id) { return lookup(cx, id) != nullptr; }
+  bool contains(JSContext* cx, jsid id) { return lookup(cx, id).isSome(); }
   bool contains(JSContext* cx, PropertyName* name) {
-    return lookup(cx, name) != nullptr;
+    return lookup(cx, name).isSome();
   }
   bool contains(JSContext* cx, Shape* shape) {
-    return lookup(cx, shape->propid()) == shape;
+    mozilla::Maybe<ShapeProperty> prop = lookup(cx, shape->propid());
+    return prop.isSome() && prop->shapeDeprecated() == shape;
   }
 
   /* Contextless; can be called from other pure code. */
@@ -928,7 +929,8 @@ class NativeObject : public JSObject {
   bool containsPure(jsid id) { return lookupPure(id).isSome(); }
   bool containsPure(PropertyName* name) { return containsPure(NameToId(name)); }
   bool containsPure(Shape* shape) {
-    return lookupPure(shape->propid())->shapeDeprecated() == shape;
+    mozilla::Maybe<ShapeProperty> prop = lookupPure(shape->propid());
+    return prop.isSome() && prop->shapeDeprecated() == shape;
   }
 
   /*

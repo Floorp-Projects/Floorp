@@ -2734,8 +2734,9 @@ static bool CanAttachGlobalName(JSContext* cx,
   // The property must be found, and it must be found as a normal data property.
   NativeObject* current = globalLexical;
   while (true) {
-    *shape = current->lookup(cx, id);
-    if (*shape) {
+    mozilla::Maybe<ShapeProperty> prop = current->lookup(cx, id);
+    if (prop.isSome()) {
+      *shape = prop->shapeDeprecated();
       break;
     }
 
@@ -2908,13 +2909,13 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   }
 
   JSObject* env = env_;
-  Shape* shape = nullptr;
+  Maybe<ShapeProperty> prop;
   NativeObject* holder = nullptr;
 
   while (env) {
     if (env->is<GlobalObject>()) {
-      shape = env->as<GlobalObject>().lookup(cx_, id);
-      if (shape) {
+      prop = env->as<GlobalObject>().lookup(cx_, id);
+      if (prop.isSome()) {
         break;
       }
       return AttachDecision::NoAction;
@@ -2927,8 +2928,8 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
     // Check for an 'own' property on the env. There is no need to
     // check the prototype as non-with scopes do not inherit properties
     // from any prototype.
-    shape = env->as<NativeObject>().lookup(cx_, id);
-    if (shape) {
+    prop = env->as<NativeObject>().lookup(cx_, id);
+    if (prop.isSome()) {
       break;
     }
 
@@ -2936,10 +2937,10 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   }
 
   holder = &env->as<NativeObject>();
-  if (!IsCacheableGetPropReadSlot(holder, holder, shape)) {
+  if (!IsCacheableGetPropReadSlot(holder, holder, prop->shapeDeprecated())) {
     return AttachDecision::NoAction;
   }
-  if (holder->getSlot(shape->slot()).isMagic()) {
+  if (holder->getSlot(prop->slot()).isMagic()) {
     return AttachDecision::NoAction;
   }
 
@@ -2958,12 +2959,12 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
     env = env->enclosingEnvironment();
   }
 
-  if (holder->isFixedSlot(shape->slot())) {
+  if (holder->isFixedSlot(prop->slot())) {
     writer.loadEnvironmentFixedSlotResult(
-        lastObjId, NativeObject::getFixedSlotOffset(shape->slot()));
+        lastObjId, NativeObject::getFixedSlotOffset(prop->slot()));
   } else {
     size_t dynamicSlotOffset =
-        holder->dynamicSlotIndex(shape->slot()) * sizeof(Value);
+        holder->dynamicSlotIndex(prop->slot()) * sizeof(Value);
     writer.loadEnvironmentDynamicSlotResult(lastObjId, dynamicSlotOffset);
   }
   writer.returnFromIC();
@@ -3015,10 +3016,10 @@ AttachDecision BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId,
   MOZ_ASSERT(globalLexical->isGlobal());
 
   JSObject* result = nullptr;
-  if (Shape* shape = globalLexical->lookup(cx_, id)) {
+  if (Maybe<ShapeProperty> prop = globalLexical->lookup(cx_, id)) {
     // If this is an uninitialized lexical or a const, we need to return a
     // RuntimeLexicalErrorObject.
-    if (globalLexical->getSlot(shape->slot()).isMagic() || !shape->writable()) {
+    if (globalLexical->getSlot(prop->slot()).isMagic() || !prop->writable()) {
       return AttachDecision::NoAction;
     }
     result = globalLexical;
@@ -3034,8 +3035,8 @@ AttachDecision BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId,
     // If the property exists on the global and is non-configurable, it cannot
     // be shadowed by the lexical scope so we can just return the global without
     // a shape guard.
-    Shape* shape = result->as<GlobalObject>().lookup(cx_, id);
-    if (!shape || shape->configurable()) {
+    Maybe<ShapeProperty> prop = result->as<GlobalObject>().lookup(cx_, id);
+    if (prop.isNothing() || prop->configurable()) {
       writer.guardShape(objId, globalLexical->lastProperty());
     }
     ObjOperandId globalId = writer.loadEnclosingEnvironment(objId);
@@ -3054,7 +3055,7 @@ AttachDecision BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   }
 
   JSObject* env = env_;
-  Shape* shape = nullptr;
+  Maybe<ShapeProperty> prop;
   while (true) {
     if (!env->is<GlobalObject>() && !env->is<EnvironmentObject>()) {
       return AttachDecision::NoAction;
@@ -3072,8 +3073,8 @@ AttachDecision BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
     // Check for an 'own' property on the env. There is no need to
     // check the prototype as non-with scopes do not inherit properties
     // from any prototype.
-    shape = env->as<NativeObject>().lookup(cx_, id);
-    if (shape) {
+    prop = env->as<NativeObject>().lookup(cx_, id);
+    if (prop.isSome()) {
       break;
     }
 
@@ -3083,8 +3084,8 @@ AttachDecision BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   // If this is an uninitialized lexical or a const, we need to return a
   // RuntimeLexicalErrorObject.
   auto* holder = &env->as<NativeObject>();
-  if (shape && holder->is<EnvironmentObject>() &&
-      (holder->getSlot(shape->slot()).isMagic() || !shape->writable())) {
+  if (prop.isSome() && holder->is<EnvironmentObject>() &&
+      (holder->getSlot(prop->slot()).isMagic() || !prop->writable())) {
     return AttachDecision::NoAction;
   }
 
@@ -4527,8 +4528,8 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
     }
 
     // If prototype defines this property in a non-plain way, don't optimize.
-    Shape* protoShape = proto->as<NativeObject>().lookup(cx_, id);
-    if (protoShape && !protoShape->isDataDescriptor()) {
+    Maybe<ShapeProperty> protoProp = proto->as<NativeObject>().lookup(cx_, id);
+    if (protoProp.isSome() && !protoProp->isDataProperty()) {
       return false;
     }
 

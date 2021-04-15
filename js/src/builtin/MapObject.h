@@ -381,13 +381,13 @@ template <SetInitGetPrototypeOp getPrototypeOp, SetInitIsBuiltinOp isBuiltinOp>
   }
 
   // Look up the 'add' value on the prototype object.
-  Shape* addShape = setProto->lookup(cx, cx->names().add);
-  if (!addShape || !addShape->isDataProperty()) {
+  mozilla::Maybe<ShapeProperty> addProp = setProto->lookup(cx, cx->names().add);
+  if (addProp.isNothing() || !addProp->isDataProperty()) {
     return true;
   }
 
   // Get the referred value, ensure it holds the canonical add function.
-  RootedValue add(cx, setProto->getSlot(addShape->slot()));
+  RootedValue add(cx, setProto->getSlot(addProp->slot()));
   if (!isBuiltinOp(add)) {
     return true;
   }

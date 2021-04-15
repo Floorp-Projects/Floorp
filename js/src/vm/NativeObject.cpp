@@ -299,9 +299,10 @@ bool js::NativeObject::isNumFixedSlots(uint32_t nfixed) const {
 
 #endif /* DEBUG */
 
-Shape* js::NativeObject::lookup(JSContext* cx, jsid id) {
+mozilla::Maybe<ShapeProperty> js::NativeObject::lookup(JSContext* cx, jsid id) {
   MOZ_ASSERT(is<NativeObject>());
-  return Shape::search(cx, lastProperty(), id);
+  Shape* shape = Shape::search(cx, lastProperty(), id);
+  return shape ? mozilla::Some(ShapeProperty(shape)) : mozilla::Nothing();
 }
 
 mozilla::Maybe<ShapeProperty> js::NativeObject::lookupPure(jsid id) {

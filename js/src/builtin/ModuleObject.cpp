@@ -407,9 +407,9 @@ bool IndirectBindingMap::put(JSContext* cx, HandleId name,
     map_.emplace(cx->zone());
   }
 
-  RootedShape shape(cx, environment->lookup(cx, localName));
-  MOZ_ASSERT(shape);
-  if (!map_->put(name, Binding(environment, shape))) {
+  mozilla::Maybe<ShapeProperty> prop = environment->lookup(cx, localName);
+  MOZ_ASSERT(prop.isSome());
+  if (!map_->put(name, Binding(environment, prop->shapeDeprecated()))) {
     ReportOutOfMemory(cx);
     return false;
   }
