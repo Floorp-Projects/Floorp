@@ -83,7 +83,7 @@ class MediaDevice : public nsIMediaDevice {
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      bool aIsChrome);
+      dom::CallerType aCallerType);
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowId,
@@ -319,7 +319,8 @@ class MediaManager final : public nsIMediaManagerService,
       const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
 
   RefPtr<BadConstraintsPromise> SelectSettings(
-      const dom::MediaStreamConstraints& aConstraints, bool aIsChrome,
+      const dom::MediaStreamConstraints& aConstraints,
+      dom::CallerType aCallerType,
       const RefPtr<MediaDeviceSetRefCnt>& aSources);
 
   void GetPref(nsIPrefBranch* aBranch, const char* aPref, const char* aData,
