@@ -2151,8 +2151,9 @@ static inline bool NativeGetGetterPureInline(NativeObject* holder,
                                              JSFunction** fp) {
   MOZ_ASSERT(prop.isNativeProperty());
 
-  if (holder->hasGetter(prop.shape())) {
-    JSObject* getter = holder->getGetter(prop.shape());
+  ShapeProperty shapeProp = ShapeProperty(prop.shape());
+  if (holder->hasGetter(shapeProp)) {
+    JSObject* getter = holder->getGetter(shapeProp);
     if (getter->is<JSFunction>()) {
       *fp = &getter->as<JSFunction>();
       return true;
@@ -2210,12 +2211,14 @@ bool js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id,
     return true;
   }
 
+  ShapeProperty shapeProp = ShapeProperty(prop.shape());
+
   NativeObject* nobj = &obj->as<NativeObject>();
-  if (!nobj->hasGetter(prop.shape())) {
+  if (!nobj->hasGetter(shapeProp)) {
     return true;
   }
 
-  JSObject* getterObj = nobj->getGetter(prop.shape());
+  JSObject* getterObj = nobj->getGetter(shapeProp);
   if (!getterObj->is<JSFunction>()) {
     return true;
   }
@@ -3175,17 +3178,19 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
     out.printf("id %p", reinterpret_cast<void*>(JSID_BITS(id)));
   }
 
-  if (shape.isDataProperty()) {
+  ShapeProperty prop = ShapeProperty(&shape);
+
+  if (prop.isDataProperty()) {
     out.printf(": ");
-    dumpValue(obj->getSlot(shape.maybeSlot()), out);
-  } else if (shape.isAccessorDescriptor()) {
-    out.printf(": getter %p setter %p", obj->getGetter(&shape),
-               obj->getSetter(&shape));
+    dumpValue(obj->getSlot(prop.slot()), out);
+  } else if (prop.isAccessorProperty()) {
+    out.printf(": getter %p setter %p", obj->getGetter(prop),
+               obj->getSetter(prop));
   }
 
   out.printf(" (shape %p", (void*)&shape);
 
-  uint8_t attrs = shape.attributes();
+  uint8_t attrs = prop.attributes();
   if (attrs & JSPROP_ENUMERATE) {
     out.put(" enumerate");
   }
@@ -3196,7 +3201,7 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
     out.put(" permanent");
   }
 
-  if (shape.isCustomDataProperty()) {
+  if (prop.isCustomDataProperty()) {
     out.printf(" <custom-data-prop>");
   }
 

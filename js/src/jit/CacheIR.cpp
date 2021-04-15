@@ -482,11 +482,13 @@ static NativeGetPropCacheability IsCacheableGetPropCall(NativeObject* obj,
   MOZ_ASSERT(shape);
   MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
 
-  if (!shape->hasGetterValue()) {
+  ShapeProperty prop = ShapeProperty(shape);
+
+  if (!prop.isAccessorProperty()) {
     return CanAttachNone;
   }
 
-  JSObject* getterObject = holder->getGetter(shape);
+  JSObject* getterObject = holder->getGetter(prop);
   if (!getterObject || !getterObject->is<JSFunction>()) {
     return CanAttachNone;
   }
@@ -855,7 +857,8 @@ static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
                                          NativeObject* obj,
                                          NativeObject* holder, Shape* shape,
                                          ValOperandId receiverId) {
-  JSFunction* target = &holder->getGetter(shape)->as<JSFunction>();
+  ShapeProperty prop = ShapeProperty(shape);
+  JSFunction* target = &holder->getGetter(prop)->as<JSFunction>();
   bool sameRealm = cx->realm() == target->realm();
 
   switch (IsCacheableGetPropCall(obj, holder, shape)) {
@@ -926,7 +929,8 @@ static void EmitCallGetterResultGuards(CacheIRWriter& writer, NativeObject* obj,
       EmitGuardGetterSetterSlot(writer, holder, shape, objId);
     }
   } else {
-    GetterSetter* gs = holder->getGetterSetter(shape);
+    ShapeProperty prop = ShapeProperty(shape);
+    GetterSetter* gs = holder->getGetterSetter(prop);
     writer.guardHasGetterSetter(objId, shape->propid(), gs);
   }
 }
@@ -985,8 +989,9 @@ static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
                                      Shape* shape, ICState::Mode mode) {
   MOZ_ASSERT(type == JSJitInfo::Getter || type == JSJitInfo::Setter);
 
-  JSObject* accessor = type == JSJitInfo::Getter ? holder->getGetter(shape)
-                                                 : holder->getSetter(shape);
+  ShapeProperty prop = ShapeProperty(shape);
+  JSObject* accessor = type == JSJitInfo::Getter ? holder->getGetter(prop)
+                                                 : holder->getSetter(prop);
   JSFunction* fun = &accessor->as<JSFunction>();
 
   return CanAttachDOMCall(cx, type, obj, fun, mode);
@@ -995,7 +1000,8 @@ static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
 static void EmitCallDOMGetterResultNoGuards(CacheIRWriter& writer,
                                             NativeObject* holder, Shape* shape,
                                             ObjOperandId objId) {
-  JSFunction* getter = &holder->getGetter(shape)->as<JSFunction>();
+  ShapeProperty prop = ShapeProperty(shape);
+  JSFunction* getter = &holder->getGetter(prop)->as<JSFunction>();
   writer.callDOMGetterResult(objId, getter->jitInfo());
   writer.returnFromIC();
 }
@@ -1161,7 +1167,8 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
     case CanAttachNativeGetter: {
       // Make sure the native getter is okay with the IC passing the Window
       // instead of the WindowProxy as |this| value.
-      JSFunction* callee = &holder->getGetter(shape)->as<JSFunction>();
+      ShapeProperty prop = ShapeProperty(shape);
+      JSFunction* callee = &holder->getGetter(prop)->as<JSFunction>();
       MOZ_ASSERT(callee->isNativeWithoutJitEntry());
       if (!callee->hasJitInfo() ||
           callee->jitInfo()->needsOuterizedThisObject()) {
@@ -1760,7 +1767,8 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  JSFunction& fun = holder->getGetter(shape)->as<JSFunction>();
+  ShapeProperty prop = ShapeProperty(shape);
+  JSFunction& fun = holder->getGetter(prop)->as<JSFunction>();
   if (isLength) {
     if (!TypedArrayObject::isOriginalLengthGetter(fun.native())) {
       return AttachDecision::NoAction;
@@ -1843,7 +1851,8 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  auto& fun = holder->getGetter(shape)->as<JSFunction>();
+  ShapeProperty prop = ShapeProperty(shape);
+  auto& fun = holder->getGetter(prop)->as<JSFunction>();
   if (isByteOffset) {
     if (!DataViewObject::isOriginalByteOffsetGetter(fun.native())) {
       return AttachDecision::NoAction;
@@ -1907,7 +1916,8 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
     return AttachDecision::NoAction;
   }
 
-  auto& fun = holder->getGetter(shape)->as<JSFunction>();
+  ShapeProperty prop = ShapeProperty(shape);
+  auto& fun = holder->getGetter(prop)->as<JSFunction>();
   if (buf->is<ArrayBufferObject>()) {
     if (!ArrayBufferObject::isOriginalByteLengthGetter(fun.native())) {
       return AttachDecision::NoAction;
@@ -1958,7 +1968,8 @@ AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  auto& fun = holder->getGetter(shape)->as<JSFunction>();
+  ShapeProperty prop = ShapeProperty(shape);
+  auto& fun = holder->getGetter(prop)->as<JSFunction>();
   JS::RegExpFlags flags = JS::RegExpFlag::NoFlags;
   if (!RegExpObject::isOriginalFlagGetter(fun.native(), &flags)) {
     return AttachDecision::NoAction;
@@ -3755,11 +3766,12 @@ static bool IsCacheableSetPropCallNative(NativeObject* obj,
   MOZ_ASSERT(shape);
   MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
 
-  if (!shape->hasSetterValue()) {
+  ShapeProperty prop = ShapeProperty(shape);
+  if (!prop.isAccessorProperty()) {
     return false;
   }
 
-  JSObject* setterObject = holder->getSetter(shape);
+  JSObject* setterObject = holder->getSetter(prop);
   if (!setterObject || !setterObject->is<JSFunction>()) {
     return false;
   }
@@ -3789,11 +3801,12 @@ static bool IsCacheableSetPropCallScripted(NativeObject* obj,
     return false;
   }
 
-  if (!shape->hasSetterValue()) {
+  ShapeProperty prop = ShapeProperty(shape);
+  if (!prop.isAccessorProperty()) {
     return false;
   }
 
-  JSObject* setterObject = holder->getSetter(shape);
+  JSObject* setterObject = holder->getSetter(prop);
   if (!setterObject || !setterObject->is<JSFunction>()) {
     return false;
   }
@@ -3836,7 +3849,8 @@ static void EmitCallSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
                                    NativeObject* obj, NativeObject* holder,
                                    Shape* shape, ObjOperandId objId,
                                    ValOperandId rhsId) {
-  JSFunction* target = &holder->getSetter(shape)->as<JSFunction>();
+  ShapeProperty prop = ShapeProperty(shape);
+  JSFunction* target = &holder->getSetter(prop)->as<JSFunction>();
   bool sameRealm = cx->realm() == target->realm();
 
   if (target->isNativeWithoutJitEntry()) {
@@ -3854,7 +3868,8 @@ static void EmitCallSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
 static void EmitCallDOMSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
                                       NativeObject* holder, Shape* shape,
                                       ObjOperandId objId, ValOperandId rhsId) {
-  JSFunction* setter = &holder->getSetter(shape)->as<JSFunction>();
+  ShapeProperty prop = ShapeProperty(shape);
+  JSFunction* setter = &holder->getSetter(prop)->as<JSFunction>();
   MOZ_ASSERT(cx->realm() == setter->realm());
 
   writer.callDOMSetter(objId, setter->jitInfo(), rhsId);
@@ -3893,7 +3908,8 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
       EmitGuardGetterSetterSlot(writer, holder, propShape, objId);
     }
   } else {
-    GetterSetter* gs = holder->getGetterSetter(propShape);
+    ShapeProperty prop = ShapeProperty(propShape);
+    GetterSetter* gs = holder->getGetterSetter(prop);
     writer.guardHasGetterSetter(objId, id, gs);
   }
 
