@@ -3149,7 +3149,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 108;
+    const UI_VERSION = 109;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3745,6 +3745,24 @@ BrowserGlue.prototype = {
         );
       }
       Services.prefs.clearUserPref(oldPrefName);
+    }
+
+    if (currentUIVersion < 109) {
+      // Migrate old pref to new pref
+      if (
+        Services.prefs.prefHasUserValue("signon.recipes.remoteRecipesEnabled")
+      ) {
+        // Fetch the previous value of signon.recipes.remoteRecipesEnabled and assign it to signon.recipes.remoteRecipes.enabled.
+        Services.prefs.setBoolPref(
+          "signon.recipes.remoteRecipes.enabled",
+          Services.prefs.getBoolPref(
+            "signon.recipes.remoteRecipesEnabled",
+            true
+          )
+        );
+        //Then clear user pref
+        Services.prefs.clearUserPref("signon.recipes.remoteRecipesEnabled");
+      }
     }
 
     // Update the migration version.
