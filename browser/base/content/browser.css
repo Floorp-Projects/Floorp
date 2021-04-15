@@ -1621,7 +1621,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   margin: 0;
   -moz-box-flex: 1;
   /* Default dialog dimensions */
-  width: 59.5ch;
+  width: 34em;
   /* will get overridden, but need to change the default so small
    * dialogs don't end up being 150px tall */
   height: 80px;
