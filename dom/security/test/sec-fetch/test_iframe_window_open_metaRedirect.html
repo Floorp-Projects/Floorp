@@ -24,6 +24,7 @@ const REQUEST_URL = "https://example.com/tests/dom/security/test/sec-fetch/file_
 let testPassCounter = 0;
 let testWindow;
 
+/* eslint-env mozilla/frame-script */
 var script = SpecialPowers.loadChromeScript(() => {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -60,7 +61,7 @@ var script = SpecialPowers.loadChromeScript(() => {
     let matchedOne = false;
     for (const [query, headers] of Object.entries(expectedHeaders)) {
       if (!channel.URI.spec.endsWith(query)) {
-        continue; 
+        continue;
       }
       matchedOne = true;
 
@@ -88,7 +89,7 @@ script.addMessageListener("test-pass", async () => {
     testWindow.close();
   }
 
-  // If we received "test-pass" 3 times we know that all loads had Sec-Fetch-* headers set appropriately. 
+  // If we received "test-pass" 3 times we know that all loads had Sec-Fetch-* headers set appropriately.
   SimpleTest.finish();
 });
 

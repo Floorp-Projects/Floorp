@@ -35,7 +35,6 @@ let TEST_URL = "http://example.com/tests/dom/security/test/https-only/file_insec
 // verify that https-only page appeared
 async function verifyErrorPage() {
   let errorPageL10nId = "about-httpsonly-title-alert";
-  let body = content.document.body;
   let innerHTML = content.document.body.innerHTML;
   ok(innerHTML.includes(errorPageL10nId), "the error page should be shown for ");
   let button = content.document.getElementById("openInsecure");

@@ -36,7 +36,7 @@ async function receiveMessage(event) {
   if (!checkButtonClicked){
     // expected window location ( expected URL)
     ok(data.result == "https://example.com/tests/dom/security/test/https-only/file_fragment.html", "location is correct");
-    ok(data.button == true, "button is clicked");
+    ok(data.button, "button is clicked");
     // checks if loading was successful
     ok(data.info == "onload", "Onloading worked");
     // button was clicked
@@ -45,7 +45,7 @@ async function receiveMessage(event) {
   }
   // if Button was clicked once -> test finished
   // check if hash exist and if hash of location is correct
-  ok(data.button == true, "button is clicked");
+  ok(data.button, "button is clicked");
   ok(data.result == "#foo", "location (hash) is correct");
   // check that page is scrolled not reloaded
   ok(data.info == "scrolled-to-foo","Scrolled successfully without reloading!");
