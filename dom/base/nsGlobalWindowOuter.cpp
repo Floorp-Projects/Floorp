@@ -3800,7 +3800,7 @@ Maybe<CSSIntSize> nsGlobalWindowOuter::GetRDMDeviceSize(
 
   // Bug 1576256: This does not work for cross-process subframes.
   const Document* topInProcessContentDoc =
-      aDocument.GetTopLevelContentDocument();
+      aDocument.GetTopLevelContentDocumentIfSameProcess();
   BrowsingContext* bc = topInProcessContentDoc
                             ? topInProcessContentDoc->GetBrowsingContext()
                             : nullptr;
