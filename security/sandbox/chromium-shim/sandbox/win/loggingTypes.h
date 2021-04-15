@@ -18,7 +18,7 @@ typedef void (*LogFunction) (const char* aMessageType,
                              const char* aFunctionName,
                              const char* aContext,
                              const bool aShouldLogStackTrace,
-                             const void* aFirstFramePC);
+                             uint32_t aFramesToSkip);
 typedef void (*ProvideLogFunctionCb) (LogFunction aLogFunction);
 
 } // sandboxing
