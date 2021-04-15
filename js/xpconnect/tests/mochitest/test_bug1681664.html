@@ -20,7 +20,7 @@
 
         Services.obs.addObserver(observer, "process-hang-report");
         try {
-          await import("test_bug1681664.js");
+          await import("test_bug1681664_helper.js");
           result.textContent = "FAIL";
         } catch (ex) {
           result.textContent = "PASS";
