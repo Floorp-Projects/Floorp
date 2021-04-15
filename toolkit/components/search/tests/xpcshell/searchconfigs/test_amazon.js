@@ -150,6 +150,7 @@ const test = new SearchConfigTest({
           },
         },
       ],
+      searchUrlCode: "tag=mozillaaustra-22",
       noSuggestionsURL: true,
     },
     {
@@ -204,6 +205,7 @@ const test = new SearchConfigTest({
           },
         },
       ],
+      searchUrlCode: "tag=mozillacanada-20",
       suggestionUrlBase: "https://completion.amazon.ca/search/complete",
       suggestUrlCode: "mkt=7",
     },
