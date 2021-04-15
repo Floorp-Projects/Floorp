@@ -67,6 +67,7 @@ ChromeUtils.defineModuleGetter(
 
 const POCKET_ONSAVERECS_PREF = "extensions.pocket.onSaveRecs";
 const POCKET_ONSAVERECS_LOCLES_PREF = "extensions.pocket.onSaveRecs.locales";
+const POCKET_HOME_PREF = "extensions.pocket.showHome";
 
 var pktUI = (function() {
   // -- Initialization (on startup and new windows) -- //
@@ -92,10 +93,16 @@ var pktUI = (function() {
     saved: {
       control: { height: 133, width: 350 },
     },
+    home: {
+      control: { height: 474, width: 328 },
+      // This is for non English sizes, this is not for an AB experiment.
+      no_topics: { height: 247, width: 328 },
+    },
   };
 
   var onSaveRecsEnabledPref;
   var onSaveRecsLocalesPref;
+  var pocketHomePref;
 
   function initPrefs() {
     onSaveRecsEnabledPref = Services.prefs.getBoolPref(
@@ -106,6 +113,7 @@ var pktUI = (function() {
       POCKET_ONSAVERECS_LOCLES_PREF,
       ""
     );
+    pocketHomePref = Services.prefs.getBoolPref(POCKET_HOME_PREF);
   }
   initPrefs();
 
@@ -124,16 +132,20 @@ var pktUI = (function() {
       url = ReaderMode.getOriginalUrl(url);
     }
 
-    // If the user is logged in, go ahead and save the current page
-    if (pktApi.isUserLoggedIn()) {
-      _titleToSave = title;
-      _urlToSave = url;
-      saveAndShowConfirmation();
+    // If the user is not logged in, show the logged-out state to prompt them to authenticate
+    if (!pktApi.isUserLoggedIn()) {
+      showSignUp();
       return;
     }
 
-    // If the user is not logged in, show the logged-out state to prompt them to authenticate
-    showSignUp();
+    _titleToSave = title;
+    _urlToSave = url;
+    // If the user is logged in, and the url is valid, go ahead and save the current page
+    if (!pocketHomePref || isValidURL()) {
+      saveAndShowConfirmation();
+      return;
+    }
+    showPocketHome();
   }
 
   // -- Panel UI -- //
@@ -226,6 +238,27 @@ var pktUI = (function() {
   }
 
   /**
+   * Show the Pocket home panel state
+   */
+  function showPocketHome() {
+    const locale = getUILocale();
+    let homeVersion = "no_topics";
+    // We have different height for non English because of topics.
+    // In order to have a clean panel load, we optimize the starting height.
+    if (locale.startsWith("en-")) {
+      homeVersion = "control";
+    }
+    const sizes = initialPanelSize.home[homeVersion];
+    showPanel(
+      "about:pocket-home?pockethost=" +
+        Services.prefs.getCharPref("extensions.pocket.site") +
+        "&locale=" +
+        locale,
+      sizes
+    );
+  }
+
+  /**
    * Open a generic panel
    */
   function showPanel(url, options) {
@@ -255,6 +288,20 @@ var pktUI = (function() {
           {
             action: "click",
             source: "save_button",
+          },
+        ],
+      })
+    );
+  }
+
+  function onShowHome() {
+    // A successful home button click.
+    pktTelemetry.sendStructuredIngestionEvent(
+      pktTelemetry.createPingPayload({
+        events: [
+          {
+            action: "click",
+            source: "home_button",
           },
         ],
       })
@@ -459,11 +506,14 @@ var pktUI = (function() {
 
     // We don't track every click, only clicks with a known source.
     if (data.source) {
+      const { position, source } = data;
       const payload = pktTelemetry.createPingPayload({
         events: [
           {
             action: "click",
-            source: data.source,
+            source,
+            // Add in position if needed, for example, topic links have a position.
+            ...(position || position === 0 ? { position } : {}),
           },
         ],
       });
@@ -575,6 +625,7 @@ var pktUI = (function() {
     onOpenTabWithPocketUrl,
     onShowSaved,
     onShowSignup,
+    onShowHome,
 
     getAndShowRecsForItem,
     tryToSaveUrl,

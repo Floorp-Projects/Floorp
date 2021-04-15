@@ -1932,6 +1932,9 @@ pref("extensions.pocket.site", "getpocket.com");
 pref("extensions.pocket.onSaveRecs", true);
 pref("extensions.pocket.onSaveRecs.locales", "en-US,en-GB,en-CA");
 
+// Enable Pocket button home panel for non link pages.
+pref("extensions.pocket.showHome", true);
+
 // Control what version of the logged out doorhanger is displayed
 // Possibilities are: `control`, `control-one-button`, `variant_a`, `variant_b`, `variant_c`
 pref("extensions.pocket.loggedOutVariant", "control");
