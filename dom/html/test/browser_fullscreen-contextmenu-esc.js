@@ -83,9 +83,23 @@ add_task(async function() {
   await popupShownPromise;
   is(contextMenu.state, "open", "Should have opened context menu");
 
-  info("Send the first escape");
   let popupHidePromise = promiseWaitForEvent(window, "popuphidden");
-  EventUtils.synthesizeKey("KEY_Escape");
+
+  if (
+    !AppConstants.platform == "macosx" ||
+    !Services.prefs.getBoolPref("widget.macos.native-context-menus", false)
+  ) {
+    info("Send the first escape");
+    EventUtils.synthesizeKey("KEY_Escape");
+  } else {
+    // We cannot synthesize key events at native macOS menus.
+    // We also do not see key events that are processed by native macOS menus,
+    // so we cannot accidentally exit fullscreen when the user closes a native
+    // menu with Escape.
+    // Close the menu normally.
+    info("Close the context menu");
+    contextMenu.hidePopup();
+  }
   await popupHidePromise;
   is(contextMenu.state, "closed", "Should have closed context menu");
 
