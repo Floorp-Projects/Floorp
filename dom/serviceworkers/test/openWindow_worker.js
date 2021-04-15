@@ -25,7 +25,7 @@ function testForUrl(url, throwType, clientProperties, resultsArray) {
       } else if (clientProperties) {
         resultsArray.push({
           result: e instanceof WindowClient,
-          message: "openWindow should resolve to a WindowClient",
+          message: `openWindow should resolve to a WindowClient for url ${url}, got ${e}`,
         });
         resultsArray.push({
           result: e.url == clientProperties.url,
