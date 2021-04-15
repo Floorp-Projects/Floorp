@@ -10,7 +10,7 @@
 
 package org.webrtc;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * Lightweight abstraction for an object that can receive video frames, process them, and pass them
