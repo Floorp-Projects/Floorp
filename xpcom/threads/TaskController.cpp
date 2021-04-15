@@ -579,7 +579,7 @@ bool TaskController::HasMainThreadPendingTasks() {
       }
     }
 
-    // Thi would break down if we have a non-suspended task depending on a
+    // This would break down if we have a non-suspended task depending on a
     // suspended task. This is why for the moment we do not allow tasks
     // to be dependent on tasks managed by another taskmanager.
     if (mMainThreadTasks.size() > totalSuspended) {
