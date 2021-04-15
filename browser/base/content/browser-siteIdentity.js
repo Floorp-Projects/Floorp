@@ -930,9 +930,10 @@ var gIdentityHandler = {
    */
   refreshIdentityPopup() {
     // Update cookies and site data information and show the
-    // "Clear Site Data" button if the site is storing local data.
+    // "Clear Site Data" button if the site is storing local data, and
+    // if the page is not controlled by a WebExtension.
     this._clearSiteDataFooter.hidden = true;
-    if (this._uriHasHost) {
+    if (this._uriHasHost && !this._pageExtensionPolicy) {
       SiteDataManager.hasSiteData(this._uri.asciiHost).then(hasData => {
         this._clearSiteDataFooter.hidden = !hasData;
       });
