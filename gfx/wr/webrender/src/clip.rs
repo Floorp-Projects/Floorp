@@ -93,7 +93,7 @@
 //!
 
 use api::{BorderRadius, ClipMode, ComplexClipRegion, ImageMask};
-use api::{BoxShadowClipMode, ClipId, ImageKey, ImageRendering, PipelineId};
+use api::{BoxShadowClipMode, ClipId, FillRule, ImageKey, ImageRendering, PipelineId};
 use api::units::*;
 use crate::image_tiling::{self, Repetition};
 use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
@@ -105,7 +105,7 @@ use crate::gpu_types::{BoxShadowStretchMode};
 use crate::intern::{self, ItemUid};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::prim_store::{VisibleMaskImageTile};
-use crate::prim_store::{PointKey, SizeKey, RectangleKey};
+use crate::prim_store::{PointKey, SizeKey, RectangleKey, PolygonKey};
 use crate::render_task_cache::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
@@ -398,11 +398,12 @@ impl From<ClipItemKey> for ClipNode {
                     mode,
                 }
             }
-            ClipItemKeyKind::ImageMask(rect, image, repeat) => {
+            ClipItemKeyKind::ImageMask(rect, image, repeat, polygon) => {
                 ClipItemKind::Image {
                     image,
                     rect: rect.into(),
                     repeat,
+                    polygon,
                 }
             }
             ClipItemKeyKind::BoxShadow(shadow_rect_fract_offset, shadow_rect_size, shadow_radius, prim_shadow_rect, blur_radius, clip_mode) => {
@@ -609,7 +610,7 @@ impl ClipNodeInfo {
 
         let mut visible_tiles = None;
 
-        if let ClipItemKind::Image { rect, image, repeat } = node.item.kind {
+        if let ClipItemKind::Image { rect, image, repeat, .. } = node.item.kind {
             let request = ImageRequest {
                 key: image,
                 rendering: ImageRendering::Auto,
@@ -1378,7 +1379,7 @@ impl ClipRegion<Option<ComplexClipRegion>> {
 pub enum ClipItemKeyKind {
     Rectangle(RectangleKey, ClipMode),
     RoundedRectangle(RectangleKey, BorderRadiusAu, ClipMode),
-    ImageMask(RectangleKey, ImageKey, bool),
+    ImageMask(RectangleKey, ImageKey, bool, PolygonKey),
     BoxShadow(PointKey, SizeKey, BorderRadiusAu, RectangleKey, Au, BoxShadowClipMode),
 }
 
@@ -1400,11 +1401,13 @@ impl ClipItemKeyKind {
         }
     }
 
-    pub fn image_mask(image_mask: &ImageMask, mask_rect: LayoutRect) -> Self {
+    pub fn image_mask(image_mask: &ImageMask, mask_rect: LayoutRect,
+                      points: Vec<LayoutPoint>, fill_rule: FillRule) -> Self {
         ClipItemKeyKind::ImageMask(
             mask_rect.into(),
             image_mask.image,
             image_mask.repeat,
+            PolygonKey::new(&points, fill_rule)
         )
     }
 
@@ -1486,6 +1489,7 @@ pub enum ClipItemKind {
         image: ImageKey,
         rect: LayoutRect,
         repeat: bool,
+        polygon: PolygonKey,
     },
     BoxShadow {
         source: BoxShadowClipSource,

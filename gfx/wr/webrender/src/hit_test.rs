@@ -86,8 +86,13 @@ impl HitTestClipNode {
             ClipItemKind::RoundedRectangle { rect, radius, mode } => {
                 HitTestRegion::RoundedRectangle(rect, radius, mode)
             }
-            ClipItemKind::Image { rect, .. } => {
-                HitTestRegion::Rectangle(rect, ClipMode::Clip)
+            ClipItemKind::Image { rect, polygon, .. } => {
+                if polygon.point_count > 0 {
+                    // TODO(bradwerth): implement this.
+                    HitTestRegion::Invalid
+                } else {
+                    HitTestRegion::Rectangle(rect, ClipMode::Clip)
+                }
             }
             ClipItemKind::BoxShadow { .. } => HitTestRegion::Invalid,
         };
