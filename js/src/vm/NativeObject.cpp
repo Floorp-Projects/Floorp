@@ -1471,7 +1471,7 @@ template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE bool GetExistingProperty(
     JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType receiver,
     typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
-    typename MaybeRooted<Shape*, allowGC>::HandleType shape,
+    typename MaybeRooted<jsid, allowGC>::HandleType id, ShapeProperty prop,
     typename MaybeRooted<Value, allowGC>::MutableHandleType vp);
 
 static bool GetExistingPropertyValue(JSContext* cx, HandleNativeObject obj,
@@ -1492,8 +1492,8 @@ static bool GetExistingPropertyValue(JSContext* cx, HandleNativeObject obj,
   MOZ_ASSERT(obj->contains(cx, prop.shapeProperty().shapeDeprecated()));
 
   RootedValue receiver(cx, ObjectValue(*obj));
-  RootedShape shape(cx, prop.shapeProperty().shapeDeprecated());
-  return GetExistingProperty<CanGC>(cx, receiver, obj, shape, vp);
+  return GetExistingProperty<CanGC>(cx, receiver, obj, id, prop.shapeProperty(),
+                                    vp);
 }
 
 /*
@@ -2123,8 +2123,8 @@ bool js::NativeGetOwnPropertyDescriptor(
       // property, so mask away the JSPROP_CUSTOM_DATA_PROP flag.
       desc.attributesRef() &= ~JSPROP_CUSTOM_DATA_PROP;
 
-      RootedShape shape(cx, prop.shapeProperty().shapeDeprecated());
-      if (!NativeGetExistingProperty(cx, obj, obj, shape, desc.value())) {
+      if (!NativeGetExistingProperty(cx, obj, obj, id, prop.shapeProperty(),
+                                     desc.value())) {
         return false;
       }
     }
@@ -2167,19 +2167,17 @@ static bool GetCustomDataProperty(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 static inline bool CallGetter(JSContext* cx, HandleNativeObject obj,
-                              HandleValue receiver, HandleShape shape,
-                              MutableHandleValue vp) {
-  MOZ_ASSERT(!shape->isDataProperty());
+                              HandleValue receiver, HandleId id,
+                              ShapeProperty prop, MutableHandleValue vp) {
+  MOZ_ASSERT(!prop.isDataProperty());
 
-  if (shape->hasGetterValue()) {
-    ShapeProperty prop = ShapeProperty(shape);
+  if (prop.isAccessorProperty()) {
     RootedValue getter(cx, obj->getGetterValue(prop));
     return js::CallGetter(cx, receiver, getter, vp);
   }
 
-  MOZ_ASSERT(shape->isCustomDataProperty());
+  MOZ_ASSERT(prop.isCustomDataProperty());
 
-  RootedId id(cx, shape->propid());
   return GetCustomDataProperty(cx, obj, id, vp);
 }
 
@@ -2187,9 +2185,8 @@ template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE bool GetExistingProperty(
     JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType receiver,
     typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
-    typename MaybeRooted<Shape*, allowGC>::HandleType shape,
+    typename MaybeRooted<jsid, allowGC>::HandleType id, ShapeProperty prop,
     typename MaybeRooted<Value, allowGC>::MutableHandleType vp) {
-  ShapeProperty prop = ShapeProperty(shape);
   if (prop.isDataProperty()) {
     vp.set(obj->getSlot(prop.slot()));
     return true;
@@ -2204,15 +2201,15 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
   if constexpr (!allowGC) {
     return false;
   } else {
-    return CallGetter(cx, obj, receiver, shape, vp);
+    return CallGetter(cx, obj, receiver, id, prop, vp);
   }
 }
 
 bool js::NativeGetExistingProperty(JSContext* cx, HandleObject receiver,
-                                   HandleNativeObject obj, HandleShape shape,
-                                   MutableHandleValue vp) {
+                                   HandleNativeObject obj, HandleId id,
+                                   ShapeProperty prop, MutableHandleValue vp) {
   RootedValue receiverValue(cx, ObjectValue(*receiver));
-  return GetExistingProperty<CanGC>(cx, receiverValue, obj, shape, vp);
+  return GetExistingProperty<CanGC>(cx, receiverValue, obj, id, prop, vp);
 }
 
 enum IsNameLookup { NotNameLookup = false, NameLookup = true };
@@ -2316,7 +2313,8 @@ bool js::GetSparseElementHelper(JSContext* cx, HandleArrayObject obj,
 
   RootedValue receiver(cx, ObjectValue(*obj));
   RootedShape shape(cx, rawShape);
-  return GetExistingProperty<CanGC>(cx, receiver, obj, shape, result);
+  return GetExistingProperty<CanGC>(cx, receiver, obj, id, ShapeProperty(shape),
+                                    result);
 }
 
 template <AllowGC allowGC>
@@ -2349,9 +2347,8 @@ static MOZ_ALWAYS_INLINE bool NativeGetPropertyInline(
         return tarr->template getElement<allowGC>(cx, idx, vp);
       }
 
-      typename MaybeRooted<Shape*, allowGC>::RootType shape(
-          cx, prop.shapeProperty().shapeDeprecated());
-      return GetExistingProperty<allowGC>(cx, receiver, pobj, shape, vp);
+      return GetExistingProperty<allowGC>(cx, receiver, pobj, id,
+                                          prop.shapeProperty(), vp);
     }
 
     // Steps 4.a-b.
@@ -2483,21 +2480,21 @@ static bool MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id) {
  * conforms to no standard and there is a lot of legacy baggage here.
  */
 static bool NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj,
-                                          HandleShape shape, HandleValue v,
+                                          HandleId id, ShapeProperty prop,
+                                          HandleValue v,
                                           ObjectOpResult& result) {
   MOZ_ASSERT(obj->is<NativeObject>());
-  MOZ_ASSERT(shape->isDataDescriptor());
+  MOZ_ASSERT(prop.isDataDescriptor());
 
-  if (shape->isDataProperty()) {
+  if (prop.isDataProperty()) {
     // The common path. Standard data property.
-    obj->setSlot(shape->slot(), v);
+    obj->setSlot(prop.slot(), v);
     return result.succeed();
   }
 
-  MOZ_ASSERT(shape->isCustomDataProperty());
+  MOZ_ASSERT(prop.isCustomDataProperty());
   MOZ_ASSERT(!obj->is<WithEnvironmentObject>());  // See bug 1128681.
 
-  RootedId id(cx, shape->propid());
   return SetCustomDataProperty(cx, obj, id, v, result);
 }
 
@@ -2684,11 +2681,10 @@ static bool SetExistingProperty(JSContext* cx, HandleId id, HandleValue v,
     if (receiver.isObject() && pobj == &receiver.toObject()) {
       // Pure optimization for the common case. There's no point performing
       // the lookup in step 5.c again, as our caller just did it for us. The
-      // result is |shape|.
+      // result is |shapeProp|.
 
       // Steps 5.e.i-ii.
-      RootedShape shape(cx, shapeProp.shapeDeprecated());
-      return NativeSetExistingDataProperty(cx, pobj, shape, v, result);
+      return NativeSetExistingDataProperty(cx, pobj, id, shapeProp, v, result);
     }
 
     // Shadow pobj[id] by defining a new data property receiver[id].
