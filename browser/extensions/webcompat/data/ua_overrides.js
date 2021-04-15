@@ -638,6 +638,44 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1704663 - Add UA override for automotivesuperstore.com.au
+     * Webcompat issue #65664 - https://webcompat.com/issues/65664
+     *
+     * Page jumps back to top after scrolling down due to incorrect
+     * UA detection
+     */
+    id: "bug1704663",
+    platform: "android",
+    domain: "automotivesuperstore.com.au",
+    bug: "1704663",
+    config: {
+      matches: ["*://automotivesuperstore.com.au/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1704673 - Add UA override for app.xiaomi.com
+     * Webcompat issue #66163 - https://webcompat.com/issues/66163
+     *
+     * The page isn’t redirecting properly error message received.
+     * Spoofing as Chrome makes the page load
+     */
+    id: "bug1704673",
+    platform: "android",
+    domain: "app.xiaomi.com",
+    bug: "1704673",
+    config: {
+      matches: ["*://app.xiaomi.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
 ];
 
 const UAHelpers = {

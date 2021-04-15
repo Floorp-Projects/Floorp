@@ -58,9 +58,9 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1654907-reactine.ca-hide-unsupported.css",
     "injections/css/bug1655049-dev.to-unclickable-button-fix.css",
     "injections/css/bug1666771-zilow-map-overdraw.css",
-    "injections/css/bug1690091-binance.com-page-overflow.css",
     "injections/css/bug1690158-slack.com-webkit-scrollbar.css",
     "injections/css/bug1694470-myvidster.com-content-not-shown.css",
+    "injections/css/bug1704653-tsky.in-clear-float.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [

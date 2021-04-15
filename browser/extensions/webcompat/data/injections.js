@@ -405,20 +405,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1690091",
-    platform: "desktop",
-    domain: "binance.com",
-    bug: "1690091",
-    contentScripts: {
-      matches: ["*://*.binance.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1690091-binance.com-page-overflow.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1694470",
     platform: "android",
     domain: "m.myvidster.com",
@@ -428,6 +414,20 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1694470-myvidster.com-content-not-shown.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1704653",
+    platform: "all",
+    domain: "tsky.in",
+    bug: "1704653",
+    contentScripts: {
+      matches: ["*://tsky.in/*"],
+      css: [
+        {
+          file: "injections/css/bug1704653-tsky.in-clear-float.css",
         },
       ],
     },
