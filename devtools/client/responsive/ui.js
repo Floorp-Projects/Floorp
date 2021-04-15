@@ -870,22 +870,23 @@ class ResponsiveUI {
   async updateTouchSimulation(enabled) {
     let reloadNeeded;
     if (enabled) {
+      reloadNeeded = await this.commands.targetConfigurationCommand.setTouchEventsOverride(
+        "enabled"
+      );
+
       const metaViewportEnabled = Services.prefs.getBoolPref(
         "devtools.responsive.metaViewport.enabled",
         false
       );
-
-      reloadNeeded = await this.responsiveFront.setTouchEventsOverride(
-        "enabled"
-      );
-
       if (metaViewportEnabled) {
         reloadNeeded |= await this.responsiveFront.setMetaViewportOverride(
           Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_ENABLED
         );
       }
     } else {
-      reloadNeeded = await this.responsiveFront.clearTouchEventsOverride();
+      reloadNeeded = await this.commands.targetConfigurationCommand.setTouchEventsOverride(
+        null
+      );
       reloadNeeded |= await this.responsiveFront.clearMetaViewportOverride();
     }
     return reloadNeeded;

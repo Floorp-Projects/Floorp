@@ -34,6 +34,8 @@ const SUPPORTED_OPTIONS = {
   restoreFocus: true,
   // Enable service worker testing over HTTP (instead of HTTPS only).
   serviceWorkersTestingEnabled: true,
+  // Enable touch events simulation
+  touchEventsOverride: true,
 };
 /* eslint-disable sort-keys */
 
@@ -165,6 +167,9 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
         case "overrideDPPX":
           this._setDPPXOverride(value);
           break;
+        case "touchEventsOverride":
+          this._setTouchEventsOverride(value);
+          break;
       }
     }
   },
@@ -190,6 +195,10 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     // specific actor.
     if (this._initialDPPXOverride !== undefined) {
       this._setDPPXOverride(this._initialDPPXOverride);
+    }
+
+    if (this._initialTouchEventsOverride !== undefined) {
+      this._setTouchEventsOverride(this._initialTouchEventsOverride);
     }
   },
 
@@ -237,6 +246,30 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
 
     if (dppx !== undefined) {
       this._browsingContext.overrideDPPX = dppx;
+    }
+  },
+
+  /**
+   * Set the touchEventsOverride on the browsing context.
+   *
+   * @param {String} flag: See BrowsingContext.webidl `TouchEventsOverride` enum for values.
+   */
+  _setTouchEventsOverride(flag) {
+    if (this._browsingContext.touchEventsOverride === flag) {
+      return;
+    }
+
+    if (!flag && this._initialTouchEventsOverride) {
+      flag = this._initialTouchEventsOverride;
+    } else if (
+      flag !== undefined &&
+      this._initialTouchEventsOverride === undefined
+    ) {
+      this._initialTouchEventsOverride = this._browsingContext.touchEventsOverride;
+    }
+
+    if (flag !== undefined) {
+      this._browsingContext.touchEventsOverride = flag;
     }
   },
 
