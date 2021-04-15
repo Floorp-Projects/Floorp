@@ -3253,8 +3253,11 @@ class Document : public nsINode,
 
   WindowContext* GetTopLevelWindowContext() const;
 
-  Document* GetTopLevelContentDocument();
-  const Document* GetTopLevelContentDocument() const;
+  // If the top-level ancestor content document for this document is in the same
+  // process, returns it. Otherwise, returns null. This function is not
+  // Fission-compatible, and should not be used in new code.
+  Document* GetTopLevelContentDocumentIfSameProcess();
+  const Document* GetTopLevelContentDocumentIfSameProcess() const;
 
   // Returns the associated app window if this is a top-level chrome document,
   // null otherwise.

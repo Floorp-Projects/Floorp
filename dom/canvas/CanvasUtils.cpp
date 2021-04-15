@@ -86,7 +86,8 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
     return true;
   }
 
-  dom::Document* topLevelDocument = aDocument->GetTopLevelContentDocument();
+  dom::Document* topLevelDocument =
+      aDocument->GetTopLevelContentDocumentIfSameProcess();
   nsIURI* topLevelDocURI =
       topLevelDocument ? topLevelDocument->GetDocumentURI() : nullptr;
   nsCString topLevelDocURISpec;
