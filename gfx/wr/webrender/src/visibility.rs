@@ -171,6 +171,7 @@ pub fn update_primitive_visibility(
     frame_context: &FrameVisibilityContext,
     frame_state: &mut FrameVisibilityState,
     tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
+    is_root_tile_cache: bool,
 ) -> Option<PictureRect> {
     profile_scope!("update_visibility");
     let (mut prim_list, surface_index, apply_local_clip_rect, world_culling_rect, is_composite) = {
@@ -299,6 +300,7 @@ pub fn update_primitive_visibility(
                         frame_context,
                         frame_state,
                         tile_caches,
+                        false,
                     );
 
                     if is_passthrough {
@@ -472,6 +474,7 @@ pub fn update_primitive_visibility(
                         &frame_state.surface_stack,
                         &mut frame_state.composite_state,
                         &mut frame_state.gpu_cache,
+                        is_root_tile_cache,
                 );
 
                 // Skip post visibility prim update if this primitive was culled above.
