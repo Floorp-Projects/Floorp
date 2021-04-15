@@ -13,18 +13,6 @@ loader.lazyRequireGetter(
   "devtools/shared/picker-constants"
 );
 
-var systemAppOrigin = (function() {
-  let systemOrigin = "_";
-  try {
-    systemOrigin = Services.io.newURI(
-      Services.prefs.getCharPref("b2g.system_manifest_url")
-    ).prePath;
-  } catch (e) {
-    // Fall back to default value
-  }
-  return systemOrigin;
-})();
-
 var isClickHoldEnabled = Services.prefs.getBoolPref(
   "ui.click_hold_context_menus"
 );
@@ -132,20 +120,14 @@ class TouchSimulator {
       return;
     }
 
-    // The gaia system window use an hybrid system even on the device which is
-    // a mix of mouse/touch events. So let's not cancel *all* mouse events
-    // if it is the current target.
     const content = this.getContent(evt.target);
     if (!content) {
       return;
     }
-    const isSystemWindow = content.location
-      .toString()
-      .startsWith(systemAppOrigin);
 
     // App touchstart & touchend should also be dispatched on the system app
     // to match on-device behavior.
-    if (evt.type.startsWith("touch") && !isSystemWindow) {
+    if (evt.type.startsWith("touch")) {
       const sysFrame = content.realFrameElement;
       if (!sysFrame) {
         return;
@@ -275,10 +257,8 @@ class TouchSimulator {
       this.synthesizeNativeTouch(content, evt.screenX, evt.screenY, type);
     }
 
-    if (!isSystemWindow) {
-      evt.preventDefault();
-      evt.stopImmediatePropagation();
-    }
+    evt.preventDefault();
+    evt.stopImmediatePropagation();
   }
 
   sendContextMenu({ target, clientX, clientY, screenX, screenY }) {
