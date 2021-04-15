@@ -239,6 +239,26 @@ add_task(async function test_ExperimentFeature_isEnabled_remote_over_default() {
   sandbox.restore();
 });
 
+add_task(async function test_ExperimentFeature_test_helper_ready() {
+  const { manager } = await setupForExperimentFeature();
+  await manager.store.ready();
+
+  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+
+  await ExperimentFakes.remoteDefaultsHelper({
+    feature: featureInstance,
+    store: manager.store,
+    configuration: { variables: { remoteValue: "mochitest" }, enabled: true },
+  });
+
+  Assert.equal(featureInstance.isEnabled(), true, "enabled by remote config");
+  Assert.equal(
+    featureInstance.getValue().remoteValue,
+    "mochitest",
+    "set by remote config"
+  );
+});
+
 add_task(
   async function test_ExperimentFeature_isEnabled_prefer_experiment_over_remote() {
     const { sandbox, manager } = await setupForExperimentFeature();
