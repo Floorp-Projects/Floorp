@@ -57,6 +57,11 @@ NS_IMETHODIMP HTTPSRecordResolver::OnLookupComplete(nsICancelable* aRequest,
     return NS_OK;
   }
 
+  if (!mTransaction) {
+    // The connecttion is not interesed in a response anymore.
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDNSHTTPSSVCRecord> record = do_QueryInterface(aRecord);
   if (!record || NS_FAILED(aStatus)) {
     return mTransaction->OnHTTPSRRAvailable(nullptr, nullptr);
@@ -74,6 +79,7 @@ NS_IMETHODIMP HTTPSRecordResolver::OnLookupComplete(nsICancelable* aRequest,
 
 void HTTPSRecordResolver::PrefetchAddrRecord(const nsACString& aTargetName,
                                              bool aRefreshDNS) {
+  MOZ_ASSERT(mTransaction);
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
   if (!dns) {
     return;
@@ -94,6 +100,8 @@ void HTTPSRecordResolver::PrefetchAddrRecord(const nsACString& aTargetName,
       mTransaction->ConnectionInfo()->GetOriginAttributes(),
       getter_AddRefs(tmpOutstanding));
 }
+
+void HTTPSRecordResolver::Close() { mTransaction = nullptr; }
 
 }  // namespace net
 }  // namespace mozilla

@@ -26,6 +26,8 @@ class HTTPSRecordResolver : public nsIDNSListener {
                                 nsICancelable** aDNSRequest);
   void PrefetchAddrRecord(const nsACString& aTargetName, bool aRefreshDNS);
 
+  void Close();
+
  protected:
   virtual ~HTTPSRecordResolver();
 
