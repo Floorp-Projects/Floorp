@@ -53,7 +53,7 @@ add_task(async function() {
 
   info("Closing context menu");
   let onContextMenuClose = toolbox.once("menu-close");
-  EventUtils.sendKey("ESCAPE", toolbox.win);
+  searchContextMenu.hidePopup();
   await onContextMenuClose;
 
   info("Copy text in search field using the context menu");
@@ -69,7 +69,7 @@ add_task(async function() {
   await waitForClipboardPromise(() => cmdCopy.click(), TEST_INPUT);
 
   onContextMenuClose = toolbox.once("menu-close");
-  EventUtils.sendKey("ESCAPE", toolbox.win);
+  searchContextMenu.hidePopup();
   await onContextMenuClose;
 
   info("Reopen context menu and check command properties");
@@ -94,6 +94,6 @@ add_task(async function() {
   is(cmdPaste.getAttribute("disabled"), "", "cmdPaste is enabled");
 
   const onContextMenuHidden = toolbox.once("menu-close");
-  EventUtils.sendKey("ESCAPE", toolbox.win);
+  searchContextMenu.hidePopup();
   await onContextMenuHidden;
 });
