@@ -1899,7 +1899,6 @@ var PanelView = class extends AssociatedToNode {
           event.altKey,
           event.shiftKey,
           event.metaKey,
-          0,
           null,
           0
         );

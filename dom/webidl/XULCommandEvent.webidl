@@ -22,12 +22,6 @@ interface XULCommandEvent : UIEvent
   readonly attribute boolean metaKey;
 
   /**
-   * Command events use the same button values as mouse events.
-   * The button will be 0 if the command was not caused by a mouse event.
-   */
-  readonly attribute short button;
-
-  /**
    * The input source, if this event was triggered by a mouse event.
    */
   readonly attribute unsigned short inputSource;
@@ -52,7 +46,6 @@ interface XULCommandEvent : UIEvent
                         optional boolean altKey = false,
                         optional boolean shiftKey = false,
                         optional boolean metaKey = false,
-                        optional short buttonArg = 0,
                         optional Event? sourceEvent = null,
                         optional unsigned short inputSource = 0);
 };
