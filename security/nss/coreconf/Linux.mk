@@ -54,6 +54,11 @@ ifeq (,$(filter-out ppc64 ppc64le,$(OS_TEST)))
 ifeq ($(USE_64),1)
 	ARCHFLAG	= -m64
 endif
+ifeq (,$(filter-out ppc ppc64,$(OS_TEST)))
+ifneq ($(NSS_DISABLE_CRYPTO_VSX),0)
+	NSS_DISABLE_CRYPTO_VSX=1
+endif
+endif
 else
 ifeq ($(OS_TEST),alpha)
         OS_REL_CFLAGS   = -D_ALPHA_
