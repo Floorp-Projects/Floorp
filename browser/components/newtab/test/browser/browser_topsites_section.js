@@ -4,14 +4,19 @@
 test_newtab({
   before: setTestTopSites,
   // it should be able to click the topsites add button to reveal the add top site modal and overlay.
-  test: function topsites_edit() {
+  test: async function topsites_edit() {
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector(".top-sites .context-menu-button"),
+      "Should find a visible topsite context menu button [topsites_edit]"
+    );
+
     // Open the section context menu.
     content.document.querySelector(".top-sites .context-menu-button").click();
 
-    let contextMenu = content.document.querySelector(
-      ".top-sites .context-menu"
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector(".top-sites .context-menu"),
+      "Should find a visible topsite context menu [topsites_edit]"
     );
-    ok(contextMenu, "Should find a visible topsite context menu");
 
     const topsitesAddBtn = content.document.querySelector(
       ".top-sites li:nth-child(2) button"
@@ -89,12 +94,25 @@ test_newtab({
     ).set;
     let event = new content.Event("input", { bubbles: true });
 
-    // Find the add topsites button
+    // Wait for context menu button to load
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector(".top-sites .context-menu-button"),
+      "Should find a visible topsite context menu button [topsites_add]"
+    );
+
     content.document.querySelector(".top-sites .context-menu-button").click();
 
+    // Wait for context menu to load
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector(".top-sites .context-menu"),
+      "Should find a visible topsite context menu [topsites_add]"
+    );
+
+    // Find topsites edit button
     const topsitesAddBtn = content.document.querySelector(
       ".top-sites li:nth-child(2) button"
     );
+
     topsitesAddBtn.click();
 
     await ContentTaskUtils.waitForCondition(
