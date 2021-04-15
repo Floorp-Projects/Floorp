@@ -240,6 +240,14 @@ async function testDoorHanger(
       BrowserTestUtils.is_visible(permissionItem),
       "Permission item visible in the identity panel"
     );
+    let permissionLearnMoreLink = document.getElementById(
+      "permission-popup-storage-access-permission-learn-more"
+    );
+    ok(permissionLearnMoreLink, "Permission learn more link exists");
+    ok(
+      BrowserTestUtils.is_visible(permissionLearnMoreLink),
+      "Permission learn more link is visible in the identity panel"
+    );
     permissionPopupPromise = BrowserTestUtils.waitForEvent(
       gPermissionPanel._permissionPopup,
       "popuphidden"
