@@ -203,13 +203,19 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
       id: "AW_SET_DEFAULT",
       order: 0,
       content: {
-        title: "Welcome to Firefox",
-        subtitle: "An inspiring headline goes here",
+        title: {
+          string_id: "mr1-onboarding-welcome-header",
+        },
+        subtitle: {
+          string_id: "mr1-welcome-screen-hero-text",
+        },
         help_text: {
-          text: "Placeholder Name - Metal drummer, Firefox aficianado",
+          text: "Sam Moqadam - Metal drummer, Firefox aficionado",
         },
         primary_button: {
-          label: "Always use Firefox",
+          label: {
+            string_id: "mr1-onboarding-set-default-only-primary-button-label",
+          },
           action: {
             navigate: true,
             type: "SET_DEFAULT_BROWSER",
@@ -217,8 +223,7 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
         },
         secondary_button: {
           label: {
-            string_id:
-              "onboarding-multistage-set-default-secondary-button-label",
+            string_id: "mr1-onboarding-set-default-secondary-button-label",
           },
           action: {
             navigate: true,
@@ -226,7 +231,7 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
         },
         secondary_button_top: {
           label: {
-            string_id: "onboarding-multistage-welcome-secondary-button-label",
+            string_id: "mr1-onboarding-sign-in-button-label",
           },
           action: {
             data: {
@@ -242,11 +247,16 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
       id: "AW_IMPORT_SETTINGS",
       order: 1,
       content: {
-        title: "Dive right in",
-        subtitle: "Import your passwords, bookmarks, and more",
+        title: {
+          string_id: "mr1-onboarding-import-header",
+        },
+        subtitle: {
+          string_id: "mr1-onboarding-import-subtitle",
+        },
         primary_button: {
           label: {
-            string_id: "onboarding-multistage-import-primary-button-label",
+            string_id:
+              "mr1-onboarding-import-primary-button-label-no-attribution",
           },
           action: {
             type: "SHOW_MIGRATION_WIZARD",
@@ -255,7 +265,7 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
         },
         secondary_button: {
           label: {
-            string_id: "onboarding-multistage-import-secondary-button-label",
+            string_id: "mr1-onboarding-import-secondary-button-label",
           },
           action: {
             navigate: true,
@@ -267,9 +277,11 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
       id: "AW_CHOOSE_THEME",
       order: 2,
       content: {
-        title: "Get a fresh look",
+        title: {
+          string_id: "mr1-onboarding-theme-header",
+        },
         subtitle: {
-          string_id: "onboarding-multistage-theme-subtitle",
+          string_id: "mr1-onboarding-theme-subtitle",
         },
         tiles: {
           type: "theme",
@@ -279,54 +291,57 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
           data: [
             {
               theme: "automatic",
-              label: "Automatic",
+              label: {
+                string_id: "mr1-onboarding-theme-label-system",
+              },
               tooltip: {
-                string_id: "onboarding-multistage-theme-tooltip-automatic-2",
+                string_id: "mr1-onboarding-theme-tooltip-system",
               },
               description: {
-                string_id:
-                  "onboarding-multistage-theme-description-automatic-2",
+                string_id: "mr1-onboarding-theme-description-system",
               },
             },
             {
               theme: "light",
               label: {
-                string_id: "onboarding-multistage-theme-label-light",
+                string_id: "mr1-onboarding-theme-label-light",
               },
               tooltip: {
-                string_id: "onboarding-multistage-theme-tooltip-light-2",
+                string_id: "mr1-onboarding-theme-tooltip-light",
               },
               description: {
-                string_id: "onboarding-multistage-theme-description-light",
+                string_id: "mr1-onboarding-theme-description-light",
               },
             },
             {
               theme: "dark",
               label: {
-                string_id: "onboarding-multistage-theme-label-dark",
+                string_id: "mr1-onboarding-theme-label-dark",
               },
               tooltip: {
-                string_id: "onboarding-multistage-theme-tooltip-dark-2",
+                string_id: "mr1-onboarding-theme-tooltip-dark",
               },
               description: {
-                string_id: "onboarding-multistage-theme-description-dark",
+                string_id: "mr1-onboarding-theme-description-dark",
               },
             },
             {
               theme: "alpenglow",
-              label: "Alpenglow",
+              label: {
+                string_id: "mr1-onboarding-theme-label-alpenglow",
+              },
               tooltip: {
-                string_id: "onboarding-multistage-theme-tooltip-alpenglow-2",
+                string_id: "mr1-onboarding-theme-tooltip-alpenglow",
               },
               description: {
-                string_id: "onboarding-multistage-theme-description-alpenglow",
+                string_id: "mr1-onboarding-theme-description-alpenglow",
               },
             },
           ],
         },
         primary_button: {
           label: {
-            string_id: "onboarding-multistage-theme-primary-button-label2",
+            string_id: "mr1-onboarding-theme-primary-button-label",
           },
           action: {
             navigate: true,
@@ -334,7 +349,7 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
         },
         secondary_button: {
           label: {
-            string_id: "onboarding-multistage-theme-secondary-button-label",
+            string_id: "mr1-onboarding-theme-secondary-button-label",
           },
           action: {
             theme: "automatic",
