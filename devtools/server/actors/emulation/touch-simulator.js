@@ -272,14 +272,7 @@ class TouchSimulator {
 
     const target = eventTarget || this.target;
     if (target && type) {
-      this.synthesizeNativeTouch(
-        this.getContent(evt.target),
-        evt.clientX,
-        evt.clientY,
-        evt.screenX,
-        evt.screenY,
-        type
-      );
+      this.synthesizeNativeTouch(content, evt.screenX, evt.screenY, type);
     }
 
     if (!isSystemWindow) {
@@ -309,16 +302,10 @@ class TouchSimulator {
   }
 
   /**
-   * Synthesizes a native touch action on a given target element. The `x` and `y` values
-   * passed to this function should be relative to the layout viewport (what is returned
-   * by `MouseEvent.clientX/clientY`) and are reported in CSS pixels.
+   * Synthesizes a native touch action on a given target element.
    *
    * @param {Window} win
    *        The target window.
-   * @param {Number} x
-   *        The `x` CSS coordinate relative to the layout viewport.
-   * @param {Number} y
-   *        The `y` CSS coordinate relative to the layout viewport.
    * @param {Number} screenX
    *        The `x` screen coordinate relative to the screen origin.
    * @param {Number} screenY
@@ -326,7 +313,7 @@ class TouchSimulator {
    * @param {String} type
    *        A key appearing in the TOUCH_STATES associative array.
    */
-  synthesizeNativeTouch(win, x, y, screenX, screenY, type) {
+  synthesizeNativeTouch(win, screenX, screenY, type) {
     // Native events work in device pixels, so calculate device coordinates from
     // the screen coordinates.
     const utils = win.windowUtils;
