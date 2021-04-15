@@ -27,9 +27,7 @@ async function testContextmenu(menuitem) {
   });
   await promiseEvent;
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, null);
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  BrowserTestUtils.waitForEvent(menuitem, "DOMMenuItemActive");
-  EventUtils.sendKey("return");
+  cm.activateItem(doc.getElementById("placesContext_open:newtab"));
   let newTab = await promiseTabOpened;
   return newTab;
 }
