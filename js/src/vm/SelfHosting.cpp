@@ -2063,8 +2063,8 @@ static bool intrinsic_AddModuleNamespaceBinding(JSContext* cx, unsigned argc,
       cx, &args[0].toObject().as<ModuleNamespaceObject>());
   RootedAtom exportedName(cx, &args[1].toString()->asAtom());
   RootedModuleObject targetModule(cx, &args[2].toObject().as<ModuleObject>());
-  RootedAtom localName(cx, &args[3].toString()->asAtom());
-  if (!namespace_->addBinding(cx, exportedName, targetModule, localName)) {
+  RootedAtom targetName(cx, &args[3].toString()->asAtom());
+  if (!namespace_->addBinding(cx, exportedName, targetModule, targetName)) {
     return false;
   }
 

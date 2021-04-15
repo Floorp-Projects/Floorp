@@ -170,14 +170,14 @@ class IndirectBindingMap {
   void trace(JSTracer* trc);
 
   bool put(JSContext* cx, HandleId name,
-           HandleModuleEnvironmentObject environment, HandleId localName);
+           HandleModuleEnvironmentObject environment, HandleId targetName);
 
   size_t count() const { return map_ ? map_->count() : 0; }
 
   bool has(jsid name) const { return map_ ? map_->has(name) : false; }
 
   bool lookup(jsid name, ModuleEnvironmentObject** envOut,
-              Shape** shapeOut) const;
+              mozilla::Maybe<ShapeProperty>* propOut) const;
 
   template <typename Func>
   void forEachExportedName(Func func) const {
@@ -192,9 +192,13 @@ class IndirectBindingMap {
 
  private:
   struct Binding {
-    Binding(ModuleEnvironmentObject* environment, Shape* shape);
+    Binding(ModuleEnvironmentObject* environment, jsid targetName,
+            ShapeProperty prop);
     HeapPtr<ModuleEnvironmentObject*> environment;
-    HeapPtr<Shape*> shape;
+#ifdef DEBUG
+    HeapPtr<jsid> targetName;
+#endif
+    ShapeProperty prop;
   };
 
   using Map =
@@ -218,7 +222,7 @@ class ModuleNamespaceObject : public ProxyObject {
   IndirectBindingMap& bindings();
 
   bool addBinding(JSContext* cx, HandleAtom exportedName,
-                  HandleModuleObject targetModule, HandleAtom localName);
+                  HandleModuleObject targetModule, HandleAtom targetName);
 
  private:
   struct ProxyHandler : public BaseProxyHandler {

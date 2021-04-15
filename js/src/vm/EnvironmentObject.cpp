@@ -453,10 +453,10 @@ bool ModuleEnvironmentObject::hasImportBinding(HandlePropertyName name) {
   return importBindings().has(NameToId(name));
 }
 
-bool ModuleEnvironmentObject::lookupImport(jsid name,
-                                           ModuleEnvironmentObject** envOut,
-                                           Shape** shapeOut) {
-  return importBindings().lookup(name, envOut, shapeOut);
+bool ModuleEnvironmentObject::lookupImport(
+    jsid name, ModuleEnvironmentObject** envOut,
+    mozilla::Maybe<ShapeProperty>* propOut) {
+  return importBindings().lookup(name, envOut, propOut);
 }
 
 void ModuleEnvironmentObject::fixEnclosingEnvironmentAfterRealmMerge(
@@ -470,11 +470,11 @@ bool ModuleEnvironmentObject::lookupProperty(
     MutableHandle<PropertyResult> propp) {
   const IndirectBindingMap& bindings =
       obj->as<ModuleEnvironmentObject>().importBindings();
-  Shape* shape;
+  mozilla::Maybe<ShapeProperty> shapeProp;
   ModuleEnvironmentObject* env;
-  if (bindings.lookup(id, &env, &shape)) {
+  if (bindings.lookup(id, &env, &shapeProp)) {
     objp.set(env);
-    propp.setNativeProperty(ShapeProperty(shape));
+    propp.setNativeProperty(*shapeProp);
     return true;
   }
 
@@ -505,10 +505,10 @@ bool ModuleEnvironmentObject::getProperty(JSContext* cx, HandleObject obj,
                                           MutableHandleValue vp) {
   const IndirectBindingMap& bindings =
       obj->as<ModuleEnvironmentObject>().importBindings();
-  Shape* shape;
+  mozilla::Maybe<ShapeProperty> prop;
   ModuleEnvironmentObject* env;
-  if (bindings.lookup(id, &env, &shape)) {
-    vp.set(env->getSlot(shape->slot()));
+  if (bindings.lookup(id, &env, &prop)) {
+    vp.set(env->getSlot(prop->slot()));
     return true;
   }
 
@@ -535,12 +535,12 @@ bool ModuleEnvironmentObject::getOwnPropertyDescriptor(
     MutableHandle<PropertyDescriptor> desc) {
   const IndirectBindingMap& bindings =
       obj->as<ModuleEnvironmentObject>().importBindings();
-  Shape* shape;
+  mozilla::Maybe<ShapeProperty> prop;
   ModuleEnvironmentObject* env;
-  if (bindings.lookup(id, &env, &shape)) {
+  if (bindings.lookup(id, &env, &prop)) {
     desc.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
     desc.object().set(obj);
-    RootedValue value(cx, env->getSlot(shape->slot()));
+    RootedValue value(cx, env->getSlot(prop->slot()));
     desc.setValue(value);
     desc.assertComplete();
     return true;

@@ -378,8 +378,13 @@ ModuleRequestObject* ModuleRequestObject::create(JSContext* cx,
 // IndirectBindingMap
 
 IndirectBindingMap::Binding::Binding(ModuleEnvironmentObject* environment,
-                                     Shape* shape)
-    : environment(environment), shape(shape) {}
+                                     jsid targetName, ShapeProperty prop)
+    : environment(environment),
+#ifdef DEBUG
+      targetName(targetName),
+#endif
+      prop(prop) {
+}
 
 void IndirectBindingMap::trace(JSTracer* trc) {
   if (!map_) {
@@ -389,7 +394,9 @@ void IndirectBindingMap::trace(JSTracer* trc) {
   for (Map::Enum e(*map_); !e.empty(); e.popFront()) {
     Binding& b = e.front().value();
     TraceEdge(trc, &b.environment, "module bindings environment");
-    TraceEdge(trc, &b.shape, "module bindings shape");
+#ifdef DEBUG
+    TraceEdge(trc, &b.targetName, "module bindings target name");
+#endif
     mozilla::DebugOnly<jsid> prev(e.front().key());
     TraceEdge(trc, &e.front().mutableKey(), "module bindings binding name");
     MOZ_ASSERT(e.front().key() == prev);
@@ -398,7 +405,7 @@ void IndirectBindingMap::trace(JSTracer* trc) {
 
 bool IndirectBindingMap::put(JSContext* cx, HandleId name,
                              HandleModuleEnvironmentObject environment,
-                             HandleId localName) {
+                             HandleId targetName) {
   // This object might have been allocated on the background parsing thread in
   // different zone to the final module. Lazily allocate the map so we don't
   // have to switch its zone when merging realms.
@@ -407,9 +414,9 @@ bool IndirectBindingMap::put(JSContext* cx, HandleId name,
     map_.emplace(cx->zone());
   }
 
-  mozilla::Maybe<ShapeProperty> prop = environment->lookup(cx, localName);
+  mozilla::Maybe<ShapeProperty> prop = environment->lookup(cx, targetName);
   MOZ_ASSERT(prop.isSome());
-  if (!map_->put(name, Binding(environment, prop->shapeDeprecated()))) {
+  if (!map_->put(name, Binding(environment, targetName, *prop))) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -418,7 +425,7 @@ bool IndirectBindingMap::put(JSContext* cx, HandleId name,
 }
 
 bool IndirectBindingMap::lookup(jsid name, ModuleEnvironmentObject** envOut,
-                                Shape** shapeOut) const {
+                                mozilla::Maybe<ShapeProperty>* propOut) const {
   if (!map_) {
     return false;
   }
@@ -430,10 +437,10 @@ bool IndirectBindingMap::lookup(jsid name, ModuleEnvironmentObject** envOut,
 
   const Binding& binding = ptr->value();
   MOZ_ASSERT(binding.environment);
-  MOZ_ASSERT(!binding.environment->inDictionaryMode());
-  MOZ_ASSERT(binding.environment->containsPure(binding.shape));
+  MOZ_ASSERT(
+      binding.environment->containsPure(binding.targetName, binding.prop));
   *envOut = binding.environment;
-  *shapeOut = binding.shape;
+  *propOut = mozilla::Some(binding.prop);
   return true;
 }
 
@@ -493,12 +500,12 @@ bool ModuleNamespaceObject::hasBindings() const {
 
 bool ModuleNamespaceObject::addBinding(JSContext* cx, HandleAtom exportedName,
                                        HandleModuleObject targetModule,
-                                       HandleAtom localName) {
+                                       HandleAtom targetName) {
   RootedModuleEnvironmentObject environment(
       cx, &targetModule->initialEnvironment());
   RootedId exportedNameId(cx, AtomToId(exportedName));
-  RootedId localNameId(cx, AtomToId(localName));
-  return bindings().put(cx, exportedNameId, environment, localNameId);
+  RootedId targetNameId(cx, AtomToId(targetName));
+  return bindings().put(cx, exportedNameId, environment, targetNameId);
 }
 
 const char ModuleNamespaceObject::ProxyHandler::family = 0;
@@ -567,12 +574,12 @@ bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
 
   const IndirectBindingMap& bindings = ns->bindings();
   ModuleEnvironmentObject* env;
-  Shape* shape;
-  if (!bindings.lookup(id, &env, &shape)) {
+  mozilla::Maybe<ShapeProperty> prop;
+  if (!bindings.lookup(id, &env, &prop)) {
     return true;
   }
 
-  RootedValue value(cx, env->getSlot(shape->slot()));
+  RootedValue value(cx, env->getSlot(prop->slot()));
   if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
     ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
     return false;
@@ -633,12 +640,12 @@ bool ModuleNamespaceObject::ProxyHandler::defineProperty(
   const IndirectBindingMap& bindings =
       proxy->as<ModuleNamespaceObject>().bindings();
   ModuleEnvironmentObject* env;
-  Shape* shape;
-  if (!bindings.lookup(id, &env, &shape)) {
+  mozilla::Maybe<ShapeProperty> prop;
+  if (!bindings.lookup(id, &env, &prop)) {
     return result.fail(JSMSG_CANT_DEFINE_PROP_OBJECT_NOT_EXTENSIBLE);
   }
 
-  RootedValue value(cx, env->getSlot(shape->slot()));
+  RootedValue value(cx, env->getSlot(prop->slot()));
   if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
     ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
     return false;
@@ -674,13 +681,13 @@ bool ModuleNamespaceObject::ProxyHandler::get(JSContext* cx, HandleObject proxy,
   }
 
   ModuleEnvironmentObject* env;
-  Shape* shape;
-  if (!ns->bindings().lookup(id, &env, &shape)) {
+  mozilla::Maybe<ShapeProperty> prop;
+  if (!ns->bindings().lookup(id, &env, &prop)) {
     vp.setUndefined();
     return true;
   }
 
-  RootedValue value(cx, env->getSlot(shape->slot()));
+  RootedValue value(cx, env->getSlot(prop->slot()));
   if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
     ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
     return false;

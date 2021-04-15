@@ -1217,7 +1217,8 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
        */
       Shape* aprop = obj->lastProperty();
       for (int n = 50; --n >= 0 && aprop->parent; aprop = aprop->parent) {
-        MOZ_ASSERT_IF(aprop != shape, obj->contains(cx, aprop));
+        MOZ_ASSERT_IF(aprop != shape,
+                      obj->contains(cx, aprop->propid(), ShapeProperty(aprop)));
       }
 #endif
     }
@@ -1263,6 +1264,12 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
   return true;
 }
 
+#ifdef DEBUG
+static bool ContainsShape(NativeObject* obj, Shape* shape, JSContext* cx) {
+  return obj->lastProperty()->search(cx, shape->propid()) == shape;
+}
+#endif
+
 /* static */
 Shape* NativeObject::replaceWithNewEquivalentShape(JSContext* cx,
                                                    HandleNativeObject obj,
@@ -1270,7 +1277,7 @@ Shape* NativeObject::replaceWithNewEquivalentShape(JSContext* cx,
                                                    Shape* newShape) {
   MOZ_ASSERT(cx->isInsideCurrentZone(oldShape));
   MOZ_ASSERT_IF(oldShape != obj->lastProperty(),
-                obj->inDictionaryMode() && obj->contains(cx, oldShape));
+                obj->inDictionaryMode() && ContainsShape(obj, oldShape, cx));
 
   if (!obj->inDictionaryMode()) {
     RootedShape newRoot(cx, newShape);
@@ -2035,10 +2042,4 @@ JS::ubi::Node::Size JS::ubi::Concrete<js::BaseShape>::size(
   return js::gc::Arena::thingSize(get().asTenured().getAllocKind());
 }
 
-void PropertyResult::trace(JSTracer* trc) {
-  if (isNativeProperty()) {
-    Shape* shape = shapeProp_.shapeDeprecated();
-    TraceRoot(trc, &shape, "PropertyResult::shapeProp_");
-    shapeProp_ = ShapeProperty(shape);
-  }
-}
+void PropertyResult::trace(JSTracer* trc) {}
