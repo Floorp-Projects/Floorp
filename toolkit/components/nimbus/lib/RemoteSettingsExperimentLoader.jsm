@@ -63,17 +63,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const RemoteDefaultsLoader = {
   _initialized: false,
 
-  async loadRemoteDefaults() {
-    if (!this._initialized) {
-      log.debug("Fetching remote defaults for NimbusFeatures.");
-      this._initialized = true;
-      try {
-        this._onUpdatesReady(await this._remoteSettingsClient.get());
-      } catch (e) {
-        Cu.reportError(e);
-      }
-      log.debug("Finished fetching remote defaults.");
+  async syncRemoteDefaults() {
+    log.debug("Fetching remote defaults for NimbusFeatures.");
+    try {
+      this._onUpdatesReady(await this._remoteSettingsClient.get());
+    } catch (e) {
+      Cu.reportError(e);
     }
+    log.debug("Finished fetching remote defaults.");
   },
 
   async _onUpdatesReady(remoteDefaults = []) {
@@ -166,7 +163,7 @@ class _RemoteSettingsExperimentLoader {
 
     await Promise.all([
       this.updateRecipes(),
-      RemoteDefaultsLoader.loadRemoteDefaults(),
+      RemoteDefaultsLoader.syncRemoteDefaults(),
     ]);
   }
 
@@ -292,10 +289,13 @@ class _RemoteSettingsExperimentLoader {
    * Sets a timer to update recipes every this.intervalInSeconds
    */
   setTimer() {
-    // When this function is called, updateRecipes is also called immediately
+    // The callbacks will be called soon after the timer is registered
     timerManager.registerTimer(
       TIMER_NAME,
-      () => this.updateRecipes("timer"),
+      () => {
+        this.updateRecipes("timer");
+        RemoteDefaultsLoader.syncRemoteDefaults();
+      },
       this.intervalInSeconds
     );
     log.debug("Registered update timer");
