@@ -17,8 +17,9 @@ import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList
  */
 abstract class BaseBrowserTabViewHolder(
     containerView: View,
+    tabsTrayStore: TabsTrayStore,
     interactor: TabsTrayInteractor,
-    tabsTrayStore: TabsTrayStore
+    private val currentTabIndex: Int
 ) : AbstractTrayViewHolder(containerView) {
 
     private val trayList: BaseBrowserTrayList = itemView.findViewById(R.id.tray_list_item)
@@ -33,7 +34,24 @@ abstract class BaseBrowserTabViewHolder(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
         layoutManager: RecyclerView.LayoutManager
     ) {
+        adapter.registerAdapterDataObserver(OneTimeAdapterObserver(adapter) {
+            trayList.scrollToPosition(currentTabIndex)
+        })
+
         trayList.layoutManager = layoutManager
         trayList.adapter = adapter
+    }
+}
+
+/**
+ * Observes the adapter and invokes the callback when data is first inserted.
+ */
+class OneTimeAdapterObserver(
+    private val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
+    private val onAdapterReady: () -> Unit
+) : RecyclerView.AdapterDataObserver() {
+    override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+        onAdapterReady.invoke()
+        adapter.unregisterAdapterDataObserver(this)
     }
 }

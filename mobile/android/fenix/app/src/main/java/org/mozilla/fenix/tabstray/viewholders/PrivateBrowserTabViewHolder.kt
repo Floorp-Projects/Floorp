@@ -15,8 +15,14 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 class PrivateBrowserTabViewHolder(
     containerView: View,
     store: TabsTrayStore,
-    interactor: TabsTrayInteractor
-) : BaseBrowserTabViewHolder(containerView, interactor, store) {
+    interactor: TabsTrayInteractor,
+    currentTabIndex: Int
+) : BaseBrowserTabViewHolder(
+    containerView,
+    store,
+    interactor,
+    currentTabIndex
+) {
     companion object {
         const val LAYOUT_ID = R.layout.private_browser_tray_list
     }
