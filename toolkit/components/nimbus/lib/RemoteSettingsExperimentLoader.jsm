@@ -61,11 +61,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * Remote Settings.
  */
 const RemoteDefaultsLoader = {
+  _initialized: false,
+
   async syncRemoteDefaults() {
     log.debug("Fetching remote defaults for NimbusFeatures.");
     try {
-      await this._onUpdatesReady(await this._remoteSettingsClient.get());
-      ExperimentManager.store.finalizeRemoteConfigs();
+      this._onUpdatesReady(await this._remoteSettingsClient.get());
     } catch (e) {
       Cu.reportError(e);
     }
