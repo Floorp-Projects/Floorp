@@ -6,10 +6,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import json
 import os
 import signal
-import time
 import unittest
 import xml.etree.ElementTree as ET
 from textwrap import dedent
@@ -25,14 +23,8 @@ from mozlog.formatters import (
     HTMLFormatter,
     XUnitFormatter,
     GroupingFormatter,
-    ErrorSummaryFormatter,
 )
 from mozlog.handlers import StreamHandler
-
-formatters = {
-    "mach": MachFormatter,
-    "errorsummary": ErrorSummaryFormatter,
-}
 
 FORMATS = {
     # A list of tuples consisting of (name, options, expected string).
@@ -297,20 +289,6 @@ FORMATS = {
             ).lstrip("\n"),
         ),
     ],
-    "ERRORSUMMARY": [
-        (
-            "errorsummary",
-            {},
-            dedent(
-                """
-            {"groups": ["manifestA", "manifestB"], "action": "test_groups", "line": 0}
-            {"test": "test_baz", "subtest": null, "group": "manifestA", "status": "PASS", "expected": "FAIL", "message": null, "stack": null, "known_intermittent": [], "action": "test_result", "line": 8}
-            {"group": "manifestA", "status": "ERROR", "duration": 70, "action": "group_result", "line": 9}
-            {"group": "manifestB", "status": "OK", "duration": 10, "action": "group_result", "line": 9}
-            """
-            ).lstrip("\n"),
-        ),
-    ],
 }
 
 
@@ -330,21 +308,6 @@ def timestamp(monkeypatch):
         return 0
 
     monkeypatch.setattr(MachFormatter, "_time", fake_time)
-
-
-@pytest.fixture
-def get_logger():
-    # Ensure a new state instance is created for each test function.
-    StructuredLogger._logger_states = {}
-
-    def inner(name, **fmt_args):
-        buf = StringIO()
-        fmt = formatters[name](**fmt_args)
-        logger = StructuredLogger("test_logger")
-        logger.add_handler(StreamHandler(buf, fmt))
-        return logger
-
-    return inner
 
 
 @pytest.mark.parametrize("name,opts,expected", FORMATS["PASS"], ids=ids("PASS"))
@@ -446,50 +409,6 @@ def test_known_intermittent(get_logger, name, opts, expected):
     print("Dumping result for copy/paste:")
     print(result)
     assert result == expected
-
-
-@pytest.mark.parametrize(
-    "name,opts,expected", FORMATS["ERRORSUMMARY"], ids=ids("ERRORSUMMARY")
-)
-def test_errorsummary(monkeypatch, get_logger, name, opts, expected):
-
-    ts = {"ts": 0}  # need to use dict since 'nonlocal' doesn't exist on PY2
-
-    def fake_time():
-        ts["ts"] += 0.01
-        return ts["ts"]
-
-    monkeypatch.setattr(time, "time", fake_time)
-    logger = get_logger(name, **opts)
-
-    logger.suite_start(
-        {
-            "manifestA": ["test_foo", "test_bar", "test_baz"],
-            "manifestB": ["test_something"],
-        }
-    )
-    logger.test_start("test_foo")
-    logger.test_end("test_foo", "SKIP")
-    logger.test_start("test_bar")
-    logger.test_end("test_bar", "OK")
-    logger.test_start("test_something")
-    logger.test_end("test_something", "OK")
-    logger.test_start("test_baz")
-    logger.test_end("test_baz", "PASS", "FAIL")
-    logger.suite_end()
-
-    buf = logger.handlers[0].stream
-    result = buf.getvalue()
-    print("Dumping result for copy/paste:")
-    print(result)
-
-    expected = expected.split("\n")
-    for i, line in enumerate(result.split("\n")):
-        if not line:
-            continue
-
-        data = json.loads(line)
-        assert data == json.loads(expected[i])
 
 
 class FormatterTest(unittest.TestCase):
