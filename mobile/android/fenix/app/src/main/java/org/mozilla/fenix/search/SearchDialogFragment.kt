@@ -434,12 +434,11 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                             dialog.cancel()
                         }
                         setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
-                            (activity as HomeActivity)
-                                .openToBrowserAndLoad(
-                                    searchTermOrURL = result,
-                                    newTab = store.state.tabId == null,
-                                    from = BrowserDirection.FromSearchDialog
-                                )
+                            (activity as? HomeActivity)?.openToBrowserAndLoad(
+                                searchTermOrURL = result,
+                                newTab = store.state.tabId == null,
+                                from = BrowserDirection.FromSearchDialog
+                            )
                             dialog.dismiss()
                         }
                         create()
