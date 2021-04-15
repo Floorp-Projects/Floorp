@@ -107,17 +107,17 @@ function loadTestSubscript(filePath) {
 }
 
 /**
- * Windows 7 and 8 set the window's background-color on :root instead of
- * #navigator-toolbox to avoid bug 1695280. When that bug is fixed, this
- * function and the assertions it gates can be removed.
+ * Windows sets the window's background-color on :root instead of
+ * #navigator-toolbox to avoid bug 1695280 and to support accent
+ * colors in the title bar in Firefox <89. When 1695280 bug is fixed,
+ * this function and the assertions it gates can be removed. After the
+ * Proton pref is removed, we can modify it to return false for
+ * Windows 10.
  *
  * @returns {boolean} True if the window's background-color is set on :root
  *   rather than #navigator-toolbox.
  **/
 function backgroundColorSetOnRoot() {
   const os = ClientEnvironmentBase.os;
-  if (!os.isWindows) {
-    return false;
-  }
-  return os.windowsVersion < 10;
+  return os.isWindows;
 }
