@@ -147,14 +147,16 @@ var BookmarkPropertiesPanel = {
         return this._strings.getString("dialogTitleAddMulti");
       }
 
-      return this._strings.getString("dialogTitleAddBookmarkFolder");
+      return this._strings.getString("dialogTitleAddBookmarksFolder");
     }
     if (this._action == ACTION_EDIT) {
       if (this._itemType === BOOKMARK_ITEM) {
-        return this._strings.getString("dialogTitleEditBookmark2");
+        return this._strings.getFormattedString("dialogTitleEditBookmark", [
+          this._title,
+        ]);
       }
 
-      return this._strings.getString("dialogTitleEditBookmarkFolder");
+      return this._strings.getString("dialogTitleEditBookmarksFolder");
     }
     return "";
   },
