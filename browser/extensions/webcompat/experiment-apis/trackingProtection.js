@@ -43,17 +43,17 @@ class Manager {
           }
           for (const allowList of this._allowLists.values()) {
             for (const entry of allowList.values()) {
-              const { matcher, hosts, notHosts, willBeShimming } = entry;
+              const { matcher, hosts, notHosts, hostOptIns } = entry;
               if (matcher.matches(url)) {
                 if (
                   !notHosts?.has(topHost) &&
                   (hosts === true || hosts.has(topHost))
                 ) {
                   this._unblockedChannelIds.add(channelId);
-                  if (willBeShimming) {
-                    channel.replace();
+                  if (hostOptIns.has(topHost)) {
+                    channel.allow(); // we just allow the request
                   } else {
-                    channel.allow();
+                    channel.replace(); // we will be shimming
                   }
                   return;
                 }
@@ -86,7 +86,7 @@ class Manager {
     return this._unblockedChannelIds?.has(channelId);
   }
 
-  allow(allowListId, patterns, { hosts, notHosts, willBeShimming }) {
+  allow(allowListId, patterns, { hosts, notHosts, hostOptIns = [] }) {
     this._ensureStarted();
 
     if (!this._allowLists.has(allowListId)) {
@@ -97,10 +97,13 @@ class Manager {
       if (!allowList.has(pattern)) {
         allowList.set(pattern, {
           matcher: new MatchPattern(pattern),
+          hostOptIns: new Set(),
         });
       }
       const allowListPattern = allowList.get(pattern);
-      allowListPattern.willBeShimming = willBeShimming;
+      for (const host of hostOptIns) {
+        allowListPattern.hostOptIns.add(host);
+      }
       if (!hosts) {
         allowListPattern.hosts = true;
       } else if (allowListPattern.hosts !== true) {
