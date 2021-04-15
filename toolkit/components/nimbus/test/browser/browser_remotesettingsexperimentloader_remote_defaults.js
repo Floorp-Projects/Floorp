@@ -9,8 +9,21 @@ const { RemoteSettings } = ChromeUtils.import(
 const { ExperimentFeature, NimbusFeatures, ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
-const { RemoteDefaultsLoader } = ChromeUtils.import(
+const {
+  RemoteDefaultsLoader,
+  RemoteSettingsExperimentLoader,
+} = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
+);
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "timerManager",
+  "@mozilla.org/updates/timer-manager;1",
+  "nsIUpdateTimerManager"
 );
 
 const REMOTE_CONFIGURATION_AW = {
@@ -54,7 +67,10 @@ async function setup() {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["messaging-system.log", "all"]],
+    set: [
+      ["messaging-system.log", "all"],
+      ["app.normandy.run_interval_seconds", 1],
+    ],
   });
 
   registerCleanupFunction(async () => {
@@ -77,11 +93,7 @@ add_task(async function test_remote_fetch_and_ready() {
 
   await setup();
 
-  // We need to re-run RS loading because we just finished
-  // setting up the fake RS data and missed the `ExperimentManager.onStartup`
-  // call.
-  RemoteDefaultsLoader._initialized = false;
-  await RemoteDefaultsLoader.loadRemoteDefaults();
+  await RemoteDefaultsLoader.syncRemoteDefaults();
 
   // We need to await here because remote configurations are processed
   // async to evaluate targeting
@@ -107,9 +119,34 @@ add_task(async function test_remote_fetch_and_ready() {
   );
 
   featureInstance.off(stub);
-  ExperimentAPI._store._deleteForTests("remoteDefaults");
+  ExperimentAPI._store._deleteForTests("__REMOTE_DEFAULTS");
   // The Promise for remote defaults has been resolved so we need
   // clean state for the next run
   NimbusFeatures.aboutwelcome = new ExperimentFeature("aboutwelcome");
   NimbusFeatures.newtab = new ExperimentFeature("newtab");
+});
+
+add_task(async function test_remote_fetch_on_updateRecipes() {
+  let sandbox = sinon.createSandbox();
+  let syncRemoteDefaultsStub = sandbox.stub(
+    RemoteDefaultsLoader,
+    "syncRemoteDefaults"
+  );
+  timerManager.unregisterTimer("rs-experiment-loader-timer");
+  Services.prefs.clearUserPref(
+    "app.update.lastUpdateTime.rs-experiment-loader-timer"
+  );
+
+  Assert.ok(syncRemoteDefaultsStub.notCalled, "Not called");
+
+  RemoteSettingsExperimentLoader.setTimer();
+
+  await BrowserTestUtils.waitForCondition(
+    () => syncRemoteDefaultsStub.called,
+    "Wait for timer to call"
+  );
+
+  Assert.ok(syncRemoteDefaultsStub.calledOnce, "Timer calls function");
+  timerManager.unregisterTimer("rs-experiment-loader-timer");
+  sandbox.restore();
 });
