@@ -436,10 +436,10 @@ struct MOZ_STACK_CLASS WordSplitState {
   // rules.
   bool ShouldSkipWord(int32_t aStart, int32_t aLength) const;
 
-  // Checks to see if there's a DOM word separator before aBeforeOffset within
-  // it. This function does not modify aSeparatorOffset when it returns false.
-  bool GetDOMWordSeparatorOffset(int32_t aOffset,
-                                 int32_t* aSeparatorOffset) const;
+  // Finds the last sequence of DOM word separators before aBeforeOffset and
+  // returns the offset to its first element.
+  Maybe<int32_t> FindOffsetOfLastDOMWordSeparatorSequence(
+      int32_t aBeforeOffset) const;
 
   char16_t GetUnicharAt(int32_t aIndex) const;
 };
@@ -627,9 +627,9 @@ bool WordSplitState<T>::ShouldSkipWord(int32_t aStart, int32_t aLength) const {
 }
 
 template <class T>
-bool WordSplitState<T>::GetDOMWordSeparatorOffset(
-    int32_t aOffset, int32_t* aSeparatorOffset) const {
-  for (int32_t i = aOffset - 1; i >= 0; --i) {
+Maybe<int32_t> WordSplitState<T>::FindOffsetOfLastDOMWordSeparatorSequence(
+    const int32_t aBeforeOffset) const {
+  for (int32_t i = aBeforeOffset - 1; i >= 0; --i) {
     if (IsDOMWordSeparator(mDOMWordText[i]) ||
         (!IsAmbiguousDOMWordSeprator(mDOMWordText[i]) &&
          ClassifyCharacter(i, true) == CHAR_CLASS_SEPARATOR)) {
@@ -643,11 +643,10 @@ bool WordSplitState<T>::GetDOMWordSeparatorOffset(
           break;
         }
       }
-      *aSeparatorOffset = i;
-      return true;
+      return Some(i);
     }
   }
-  return false;
+  return Nothing();
 }
 
 template <>
@@ -689,12 +688,26 @@ static bool TextNodeContainsDOMWordSeparator(nsIContent* aContent,
   if (textFragment->Is2b()) {
     nsDependentSubstring targetText(textFragment->Get2b(), end);
     WordSplitState<nsDependentSubstring> state(targetText);
-    return state.GetDOMWordSeparatorOffset(end, aSeparatorOffset);
+    const Maybe<int32_t> separatorOffset =
+        state.FindOffsetOfLastDOMWordSeparatorSequence(end);
+    if (separatorOffset) {
+      *aSeparatorOffset = *separatorOffset;
+      return true;
+    }
+
+    return false;
   }
 
   nsDependentCSubstring targetText(textFragment->Get1b(), end);
   WordSplitState<nsDependentCSubstring> state(targetText);
-  return state.GetDOMWordSeparatorOffset(end, aSeparatorOffset);
+  const Maybe<int32_t> separatorOffset =
+      state.FindOffsetOfLastDOMWordSeparatorSequence(end);
+  if (separatorOffset) {
+    *aSeparatorOffset = *separatorOffset;
+    return true;
+  }
+
+  return false;
 }
 
 /**
