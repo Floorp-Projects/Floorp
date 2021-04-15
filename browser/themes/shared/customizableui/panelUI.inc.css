@@ -725,6 +725,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 @media (-moz-proton) {
 .addon-banner-item::after {
+  margin-inline-end: 8px;
   -moz-context-properties: fill, stroke;
   fill: var(--panel-banner-item-warning-icon-bgcolor);
   stroke: var(--arrowpanel-background);
