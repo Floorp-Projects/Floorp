@@ -10100,10 +10100,6 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
     }
   }
 
-  if (httpChannelInternal && aBrowsingContext->GetSandboxFlags() != 0) {
-    httpChannelInternal->SetHasNonEmptySandboxingFlag(true);
-  }
-
   nsCOMPtr<nsIURI> rpURI;
   aLoadInfo->GetResultPrincipalURI(getter_AddRefs(rpURI));
   Maybe<nsCOMPtr<nsIURI>> originalResultPrincipalURI;

@@ -428,8 +428,6 @@ interface nsIHttpChannelInternal : nsISupports
     [noscript]
     nsILoadInfo_CrossOriginEmbedderPolicy getResponseEmbedderPolicy();
 
-    [notxpcom, nostdcall] attribute boolean hasNonEmptySandboxingFlag;
-
     [noscript, notxpcom, nostdcall]
     void DoDiagnosticAssertWhenOnStopNotCalledOnDestroy();
 

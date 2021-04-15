@@ -1057,21 +1057,6 @@ void nsViewSourceChannel::SetIPv6Disabled() {
   }
 }
 
-bool nsViewSourceChannel::GetHasNonEmptySandboxingFlag() {
-  if (mHttpChannelInternal) {
-    return mHttpChannelInternal->GetHasNonEmptySandboxingFlag();
-  }
-  return false;
-}
-
-void nsViewSourceChannel::SetHasNonEmptySandboxingFlag(
-    bool aHasNonEmptySandboxingFlag) {
-  if (mHttpChannelInternal) {
-    mHttpChannelInternal->SetHasNonEmptySandboxingFlag(
-        aHasNonEmptySandboxingFlag);
-  }
-}
-
 void nsViewSourceChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {
   if (mHttpChannelInternal) {
     mHttpChannelInternal->DoDiagnosticAssertWhenOnStopNotCalledOnDestroy();
