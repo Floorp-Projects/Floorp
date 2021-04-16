@@ -352,7 +352,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             val menu = MenuIntegration(
                 context = requireContext(),
                 browserStore = requireComponents.core.store,
-                tabsTrayStore = TabsTrayStore(),
+                tabsTrayStore = tabsTrayStore,
                 tabLayout = tab_layout,
                 navigationInteractor = navigationInteractor
             ).build()
