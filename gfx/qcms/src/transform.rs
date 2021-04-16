@@ -88,14 +88,14 @@ impl Default for PrecacheOuput {
 #[derive(Clone, Default)]
 pub struct qcms_transform {
     pub matrix: [[f32; 4]; 3],
-    pub input_gamma_table_r: Option<Vec<f32>>,
-    pub input_gamma_table_g: Option<Vec<f32>>,
-    pub input_gamma_table_b: Option<Vec<f32>>,
+    pub input_gamma_table_r: Option<Box<[f32; 256]>>,
+    pub input_gamma_table_g: Option<Box<[f32; 256]>>,
+    pub input_gamma_table_b: Option<Box<[f32; 256]>>,
     pub input_clut_table_length: u16,
     pub clut: Option<Vec<f32>>,
     pub grid_size: u16,
     pub output_clut_table_length: u16,
-    pub input_gamma_table_gray: Option<Vec<f32>>,
+    pub input_gamma_table_gray: Option<Box<[f32; 256]>>,
     pub out_gamma_r: f32,
     pub out_gamma_g: f32,
     pub out_gamma_b: f32,
