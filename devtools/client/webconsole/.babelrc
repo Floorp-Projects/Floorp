@@ -1,6 +1,0 @@
-{
-  "plugins": [
-    "@babel/transform-flow-strip-types",
-    "@babel/plugin-transform-react-jsx",
-  ]
-}
