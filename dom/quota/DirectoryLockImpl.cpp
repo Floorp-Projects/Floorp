@@ -45,17 +45,25 @@ DirectoryLockImpl::DirectoryLockImpl(
 DirectoryLockImpl::~DirectoryLockImpl() {
   AssertIsOnOwningThread();
 
-  for (NotNull<RefPtr<DirectoryLockImpl>> blockingLock : mBlocking) {
-    blockingLock->MaybeUnblock(*this);
-  }
-
-  mBlocking.Clear();
-
+  // We must call UnregisterDirectoryLock before unblocking other locks because
+  // UnregisterDirectoryLock also updates the origin last access time and the
+  // access flag (if the last lock for given origin is unregistered). One of the
+  // blocked locks could be requested by the clear/reset operation which stores
+  // cached information about origins in storage.sqlite. So if the access flag
+  // is not updated before unblocking the lock for reset/clear, we might store
+  // invalid information which can lead to omitting origin initialization during
+  // next temporary storage initialization.
   if (mRegistered) {
     mQuotaManager->UnregisterDirectoryLock(*this);
   }
 
   MOZ_ASSERT(!mRegistered);
+
+  for (NotNull<RefPtr<DirectoryLockImpl>> blockingLock : mBlocking) {
+    blockingLock->MaybeUnblock(*this);
+  }
+
+  mBlocking.Clear();
 }
 
 #ifdef DEBUG
