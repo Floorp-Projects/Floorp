@@ -42,12 +42,6 @@
   font-weight: normal;
 }
 
-#login-sort:-moz-focusring { /* This is a workaround due to Bug 1580935 */
-  color: transparent !important;
-  fill: var(--in-content-text-color);
-  text-shadow: 0 0 0 var(--in-content-text-color);
-}
-
 .count {
   flex-grow: 1;
   text-align: end;
