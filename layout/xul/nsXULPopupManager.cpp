@@ -2668,6 +2668,16 @@ nsresult nsXULPopupManager::UpdateIgnoreKeys(bool aIgnoreKeys) {
   return NS_OK;
 }
 
+nsPopupState nsXULPopupManager::GetPopupState(
+    mozilla::dom::Element* aPopupElement) {
+  nsMenuPopupFrame* menuPopupFrame =
+      do_QueryFrame(aPopupElement->GetPrimaryFrame());
+  if (menuPopupFrame) {
+    return menuPopupFrame->PopupState();
+  }
+  return ePopupClosed;
+}
+
 nsresult nsXULPopupManager::KeyUp(KeyboardEvent* aKeyEvent) {
   // don't do anything if a menu isn't open or a menubar isn't active
   if (!mActiveMenuBar) {
