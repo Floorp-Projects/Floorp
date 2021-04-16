@@ -8,6 +8,7 @@
 #include "gmock/gmock.h"
 #include "mozilla/Assertions.h"
 #include "WebrtcCallWrapper.h"
+#include "PeerConnectionCtx.h"
 
 // libwebrtc
 #include "api/call/audio_sink.h"
@@ -256,13 +257,27 @@ class MockCall : public webrtc::Call {
 
 class MockCallWrapper : public mozilla::WebrtcCallWrapper {
  public:
-  MockCallWrapper()
+  MockCallWrapper(
+      RefPtr<mozilla::SharedWebrtcState> aSharedState,
+      mozilla::UniquePtr<webrtc::VideoBitrateAllocatorFactory>
+          aVideoBitrateAllocatorFactory,
+      mozilla::UniquePtr<webrtc::RtcEventLog> aEventLog,
+      mozilla::UniquePtr<webrtc::TaskQueueFactory> aTaskQueueFactory,
+      const mozilla::dom::RTCStatsTimestampMaker& aTimestampMaker,
+      mozilla::UniquePtr<mozilla::media::ShutdownBlockingTicket>
+          aShutdownTicket)
       : mozilla::WebrtcCallWrapper(
-            mozilla::AbstractThread::MainThread(), nullptr, nullptr, nullptr,
-            nullptr, mozilla::dom::RTCStatsTimestampMaker(), nullptr) {}
+            std::move(aSharedState), std::move(aVideoBitrateAllocatorFactory),
+            std::move(aEventLog), std::move(aTaskQueueFactory), aTimestampMaker,
+            std::move(aShutdownTicket)) {}
 
-  static RefPtr<testing::NiceMock<MockCallWrapper>> Create() {
-    auto wrapper = mozilla::MakeRefPtr<testing::NiceMock<MockCallWrapper>>();
+  static RefPtr<MockCallWrapper> Create() {
+    auto state = mozilla::MakeRefPtr<mozilla::SharedWebrtcState>(
+        mozilla::AbstractThread::GetCurrent(), webrtc::AudioState::Config(),
+        nullptr, nullptr);
+    auto wrapper = mozilla::MakeRefPtr<MockCallWrapper>(
+        state, nullptr, nullptr, nullptr,
+        mozilla::dom::RTCStatsTimestampMaker(), nullptr);
     wrapper->SetCall(mozilla::WrapUnique(new MockCall));
     return wrapper;
   }

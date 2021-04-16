@@ -15,42 +15,25 @@ namespace mozilla {
 /* static */ RefPtr<WebrtcCallWrapper> WebrtcCallWrapper::Create(
     const dom::RTCStatsTimestampMaker& aTimestampMaker,
     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-    const RefPtr<SharedWebrtcState>& aSharedState,
-    webrtc::WebRtcKeyValueConfig* aTrials) {
-  return Create(
-      aTimestampMaker, std::move(aShutdownTicket),
-      aSharedState->mCallWorkerThread.get(),
-      [aSharedState] { return aSharedState->GetModuleThread(); },
-      aSharedState->mAudioStateConfig, aSharedState->mAudioDecoderFactory,
-      aTrials);
-}
-
-/* static */ RefPtr<WebrtcCallWrapper> WebrtcCallWrapper::Create(
-    const dom::RTCStatsTimestampMaker& aTimestampMaker,
-    UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-    RefPtr<AbstractThread> aCallThread,
-    std::function<webrtc::SharedModuleThread*()> aModuleThreadGetter,
-    const webrtc::AudioState::Config& aAudioStateConfig,
-    webrtc::AudioDecoderFactory* aAudioDecoderFactory,
-    webrtc::WebRtcKeyValueConfig* aTrials) {
+    const RefPtr<SharedWebrtcState>& aSharedState) {
   auto eventLog = MakeUnique<webrtc::RtcEventLogNull>();
-  webrtc::Call::Config config(eventLog.get());
-  config.audio_state = webrtc::AudioState::Create(aAudioStateConfig);
   auto taskQueueFactory = MakeUnique<SharedThreadPoolWebRtcTaskQueueFactory>();
-  config.task_queue_factory = taskQueueFactory.get();
-  config.trials = aTrials;
   auto videoBitrateAllocatorFactory =
       WrapUnique(webrtc::CreateBuiltinVideoBitrateAllocatorFactory().release());
   RefPtr<WebrtcCallWrapper> wrapper = new WebrtcCallWrapper(
-      std::move(aCallThread), aAudioDecoderFactory,
-      std::move(videoBitrateAllocatorFactory), std::move(eventLog),
-      std::move(taskQueueFactory), aTimestampMaker, std::move(aShutdownTicket));
+      aSharedState, std::move(videoBitrateAllocatorFactory),
+      std::move(eventLog), std::move(taskQueueFactory), aTimestampMaker,
+      std::move(aShutdownTicket));
 
-  wrapper->mCallThread->Dispatch(NS_NewRunnableFunction(
-      __func__, [wrapper, config = std::move(config),
-                 moduleThreadGetter = std::move(aModuleThreadGetter)] {
-        wrapper->SetCall(
-            WrapUnique(webrtc::Call::Create(config, moduleThreadGetter())));
+  wrapper->mCallThread->Dispatch(
+      NS_NewRunnableFunction(__func__, [wrapper, aSharedState] {
+        webrtc::Call::Config config(wrapper->mEventLog.get());
+        config.audio_state =
+            webrtc::AudioState::Create(aSharedState->mAudioStateConfig);
+        config.task_queue_factory = wrapper->mTaskQueueFactory.get();
+        config.trials = aSharedState->mTrials.get();
+        wrapper->SetCall(WrapUnique(
+            webrtc::Call::Create(config, aSharedState->GetModuleThread())));
       }));
 
   return wrapper;
@@ -106,18 +89,18 @@ const dom::RTCStatsTimestampMaker& WebrtcCallWrapper::GetTimestampMaker()
 WebrtcCallWrapper::~WebrtcCallWrapper() { MOZ_ASSERT(!mCall); }
 
 WebrtcCallWrapper::WebrtcCallWrapper(
-    RefPtr<AbstractThread> aCallThread,
-    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
+    RefPtr<SharedWebrtcState> aSharedState,
     UniquePtr<webrtc::VideoBitrateAllocatorFactory>
         aVideoBitrateAllocatorFactory,
     UniquePtr<webrtc::RtcEventLog> aEventLog,
     UniquePtr<webrtc::TaskQueueFactory> aTaskQueueFactory,
     const dom::RTCStatsTimestampMaker& aTimestampMaker,
     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket)
-    : mTimestampMaker(aTimestampMaker),
+    : mSharedState(std::move(aSharedState)),
+      mTimestampMaker(aTimestampMaker),
       mShutdownTicket(std::move(aShutdownTicket)),
-      mCallThread(std::move(aCallThread)),
-      mAudioDecoderFactory(std::move(aAudioDecoderFactory)),
+      mCallThread(mSharedState->mCallWorkerThread),
+      mAudioDecoderFactory(mSharedState->mAudioDecoderFactory),
       mVideoBitrateAllocatorFactory(std::move(aVideoBitrateAllocatorFactory)),
       mEventLog(std::move(aEventLog)),
       mTaskQueueFactory(std::move(aTaskQueueFactory)) {}
