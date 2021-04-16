@@ -604,8 +604,12 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
     transparent 25px,
     rgba(255,255,255,.3) 25px,
     rgba(255,255,255,.3) 50px);
+  background-attachment: fixed;
   background-color: rgba(255,170,68,.8);
   color: black;
+  /* Override the usual breakout animation so the gradient doesn't shift around
+     when the panel opens. */
+  animation: none !important;
 }
 
 /* Show the url scheme in a static box when overflowing to the left */
