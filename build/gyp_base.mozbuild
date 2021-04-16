@@ -32,6 +32,7 @@ arches = {
     'x86_64': 'x64',
     'x86': 'ia32',
     'aarch64': 'arm64',
+    'ppc64': 'ppc64le' if CONFIG['TARGET_ENDIANNESS'] == 'little' else 'ppc64',
 }
 
 gyp_vars['host_arch'] = arches.get(CONFIG['HOST_CPU_ARCH'], CONFIG['HOST_CPU_ARCH'])
