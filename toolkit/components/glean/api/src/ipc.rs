@@ -29,7 +29,7 @@ pub struct IPCPayload {
     pub events: HashMap<MetricId, Vec<EventRecord>>,
     pub memory_samples: HashMap<MetricId, Vec<u64>>,
     pub string_lists: HashMap<MetricId, Vec<String>>,
-    pub timing_samples: HashMap<MetricId, Vec<u128>>,
+    pub timing_samples: HashMap<MetricId, Vec<u64>>,
     pub labeled_counters: HashMap<MetricId, HashMap<String, i32>>,
 }
 
@@ -141,8 +141,10 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
             strings.iter().for_each(|s| metric.add(s));
         }
     }
-    for (id, _samples) in ipc_payload.timing_samples.into_iter() {
-        log::info!("Cannot yet replay child process timing dist {:?}", id);
+    for (id, samples) in ipc_payload.timing_samples.into_iter() {
+        if let Some(metric) = __glean_metric_maps::TIMING_DISTRIBUTION_MAP.get(&id) {
+            metric.accumulate_raw_samples_nanos(samples);
+        }
     }
     for (id, labeled_counts) in ipc_payload.labeled_counters.into_iter() {
         if let Some(metric) = __glean_metric_maps::LABELED_COUNTER_MAP.get(&id) {
