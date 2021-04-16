@@ -17,7 +17,6 @@
   --autocomplete-popup-highlight-background: Highlight;
   --autocomplete-popup-highlight-color: HighlightText;
 
-  --urlbar-result-hover-bgcolor: var(--arrowpanel-dimmed);
   --urlbar-popup-action-color: hsl(178, 100%, 28%);
 
   /* Colors copied from in-content button styling */
@@ -278,7 +277,7 @@
 
 .urlbarView-row:not([type=tip], [type=dynamic], [has-help]):hover > .urlbarView-row-inner,
 .urlbarView-row[has-help] > .urlbarView-row-inner:not([selected]):hover {
-  background-color: var(--urlbar-result-hover-bgcolor);
+  background-color: var(--autocomplete-popup-hover-background);
 }
 
 .urlbarView-row:not([type=tip], [type=dynamic])[selected] > .urlbarView-row-inner,
@@ -742,6 +741,13 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 } /*** END proton ***/
+
+/* TODO (bug 1705507): Move this rule (sans `#urlbar`) to searchbar.inc.css so
+   search buttons in both the urlbar and search bar panels use the color. */
+#urlbar .searchbar-engine-one-off-item:not([selected]):hover,
+#urlbar .addengine-item:hover {
+  background-color: var(--autocomplete-popup-hover-background);
+}
 
 #urlbar .searchbar-engine-one-off-item:last-child {
   /* This applies to both the last one-off and the compact settings button */
