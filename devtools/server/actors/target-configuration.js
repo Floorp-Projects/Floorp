@@ -30,6 +30,8 @@ const SUPPORTED_OPTIONS = {
   paintFlashing: true,
   // Enable print simulation mode.
   printSimulationEnabled: true,
+  // Page orientation (used in RDM and doesn't apply if RDM isn't enabled)
+  rdmPaneOrientation: true,
   // Restore focus in the page after closing DevTools.
   restoreFocus: true,
   // Enable service worker testing over HTTP (instead of HTTPS only).
@@ -102,9 +104,17 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       return;
     }
 
+    const rdmEnabledInPreviousBrowsingContext = this._browsingContext.inRDMPane;
+
     // We need to store the browsing context as this.watcherActor.browserElement.browsingContext
     // can still refer to the previous browsing context at this point.
     this._browsingContext = browsingContext;
+
+    // If `inRDMPane` was set in the previous browsing context, set it again on the new one,
+    // otherwise some RDM-related configuration won't be applied (e.g. orientation).
+    if (rdmEnabledInPreviousBrowsingContext) {
+      this._browsingContext.inRDMPane = true;
+    }
     this._updateParentProcessConfiguration(this._getConfiguration());
   },
 
@@ -155,17 +165,20 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
 
     for (const [key, value] of Object.entries(configuration)) {
       switch (key) {
-        case "printSimulationEnabled":
-          this._setPrintSimulationEnabled(value);
-          break;
         case "colorSchemeSimulation":
           this._setColorSchemeSimulation(value);
           break;
-        case "serviceWorkersTestingEnabled":
-          this._setServiceWorkersTestingEnabled(value);
-          break;
         case "overrideDPPX":
           this._setDPPXOverride(value);
+          break;
+        case "printSimulationEnabled":
+          this._setPrintSimulationEnabled(value);
+          break;
+        case "rdmPaneOrientation":
+          this._setRDMPaneOrientation(value);
+          break;
+        case "serviceWorkersTestingEnabled":
+          this._setServiceWorkersTestingEnabled(value);
           break;
         case "touchEventsOverride":
           this._setTouchEventsOverride(value);
@@ -271,6 +284,18 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (flag !== undefined) {
       this._browsingContext.touchEventsOverride = flag;
     }
+  },
+
+  /**
+   * Set an orientation and an angle on the browsing context. This will be applied only
+   * if Responsive Design Mode is enabled.
+   *
+   * @param {Object} options
+   * @param {String} options.type: The orientation type of the rotated device.
+   * @param {Number} options.angle: The rotated angle of the device.
+   */
+  _setRDMPaneOrientation({ type, angle }) {
+    this._browsingContext.setRDMPaneOrientation(type, angle);
   },
 
   destroy() {
