@@ -80,6 +80,7 @@ class NativeMenuMac : public NativeMenu,
   RefPtr<nsMenuX> GetOpenMenuContainingElement(dom::Element* aElement);
 
   RefPtr<dom::Element> mElement;
+  RefPtr<CancelableRunnable> mOpenRunnable;
   RefPtr<nsMenuGroupOwnerX> mMenuGroupOwner;
   RefPtr<nsMenuX> mMenu;
   nsTArray<NativeMenu::Observer*> mObservers;
