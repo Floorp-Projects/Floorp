@@ -480,7 +480,7 @@ PlacesController.prototype = {
     attr = aMenuItem.getAttribute("hideifnodetypeisonly");
     if (attr) {
       let rules = attr.split("|");
-      if (aMetaData.every(d => rules.every(r => r in d))) {
+      if (rules.some(r => aMetaData.every(d => r in d))) {
         return false;
       }
     }
@@ -527,7 +527,7 @@ PlacesController.prototype = {
    *     hides the menuitem if the nodes match at least one of the rules.
    *     It takes priority over `nodetype`.
    *  7) The `hideifnodetypeisonly` accepts the same rules as `nodetype`, but
-   *     hides the menuitem if all the nodes match the rules.
+   *     hides the menuitem if any of the rules match all of the nodes.
    *  8) The boolean `hideifnoinsertionpoint` attribute may be set to hide a
    *     menuitem when there's no insertion point. An insertion point represents
    *     a point in the view where a new item can be inserted.
@@ -603,6 +603,11 @@ PlacesController.prototype = {
 
       if (item.id === "placesContext_deleteBookmark") {
         document.l10n.setAttributes(item, "places-remove-bookmark", {
+          count: metadata.length,
+        });
+      }
+      if (item.id === "placesContext_deleteFolder") {
+        document.l10n.setAttributes(item, "places-remove-folder", {
           count: metadata.length,
         });
       }

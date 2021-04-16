@@ -212,8 +212,8 @@ add_task(async function test_separator_contextmenu_contents() {
 add_task(async function test_folder_contextmenu_contents() {
   let optionItems = [
     "placesContext_openBookmarkContainer:tabs",
-    "placesContext_show:info",
-    "placesContext_delete",
+    "placesContext_show_folder:info",
+    "placesContext_deleteFolder",
     "placesContext_cut",
     "placesContext_copy",
     "placesContext_paste_group",
@@ -246,6 +246,92 @@ add_task(async function test_folder_contextmenu_contents() {
     await popupShownPromise;
     return contextMenu;
   }, optionItems);
+});
+
+add_task(async function test_sidebar_folder_contextmenu_contents() {
+  let optionItems = [
+    "placesContext_show_folder:info",
+    "placesContext_deleteFolder",
+    "placesContext_cut",
+    "placesContext_copy",
+    "placesContext_openBookmarkContainer:tabs",
+    "placesContext_sortBy:name",
+    "placesContext_paste_group",
+    "placesContext_new:bookmark",
+    "placesContext_new:folder",
+    "placesContext_new:separator",
+  ];
+
+  await withSidebarTree("bookmarks", async tree => {
+    await checkContextMenu(
+      async bookmark => {
+        let folder = await PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          title: "folder",
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        });
+        tree.selectItems([folder.guid]);
+
+        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
+          "placesContext"
+        );
+        let popupShownPromise = BrowserTestUtils.waitForEvent(
+          contextMenu,
+          "popupshown"
+        );
+        synthesizeClickOnSelectedTreeCell(tree, { type: "contextmenu" });
+        await popupShownPromise;
+        return contextMenu;
+      },
+      optionItems,
+      SidebarUI.browser.contentDocument
+    );
+  });
+});
+
+add_task(async function test_sidebar_multiple_folders_contextmenu_contents() {
+  let optionItems = [
+    "placesContext_show_folder:info",
+    "placesContext_deleteFolder",
+    "placesContext_cut",
+    "placesContext_copy",
+    "placesContext_sortBy:name",
+    "placesContext_paste_group",
+    "placesContext_new:bookmark",
+    "placesContext_new:folder",
+    "placesContext_new:separator",
+  ];
+
+  await withSidebarTree("bookmarks", async tree => {
+    await checkContextMenu(
+      async bookmark => {
+        let folder1 = await PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          title: "folder 1",
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        });
+        let folder2 = await PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          title: "folder 2",
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        });
+        tree.selectItems([folder1.guid, folder2.guid]);
+
+        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
+          "placesContext"
+        );
+        let popupShownPromise = BrowserTestUtils.waitForEvent(
+          contextMenu,
+          "popupshown"
+        );
+        synthesizeClickOnSelectedTreeCell(tree, { type: "contextmenu" });
+        await popupShownPromise;
+        return contextMenu;
+      },
+      optionItems,
+      SidebarUI.browser.contentDocument
+    );
+  });
 });
 
 add_task(async function test_sidebar_bookmark_contextmenu_contents() {
