@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "AndroidDecoderModule.h"
+#endif
+
 #include "BrowserChild.h"
 #include "ContentChild.h"
 #include "GeckoProfiler.h"
@@ -4255,6 +4259,14 @@ mozilla::ipc::IPCResult ContentChild::RecvCanSavePresentation(
 
   aResolver(canSave);
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvDecoderSupportedMimeTypes(
+    nsTArray<nsCString>&& aSupportedTypes) {
+#ifdef MOZ_WIDGET_ANDROID
+  AndroidDecoderModule::SetSupportedMimeTypes(std::move(aSupportedTypes));
+#endif
   return IPC_OK();
 }
 
