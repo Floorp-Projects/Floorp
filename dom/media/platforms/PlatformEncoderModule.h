@@ -43,6 +43,7 @@ class PlatformEncoderModule {
  protected:
   PlatformEncoderModule() = default;
   virtual ~PlatformEncoderModule() = default;
+  ;
 };
 
 class MediaDataEncoder {
@@ -64,7 +65,6 @@ class MediaDataEncoder {
     Opus,
     G722,
     _EndAudio_,
-    Unknown,
   };
 
   struct H264Specific final {
