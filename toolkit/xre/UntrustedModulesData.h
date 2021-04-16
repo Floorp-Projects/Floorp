@@ -127,8 +127,7 @@ class ProcessedModuleLoadEvent final {
  public:
   ProcessedModuleLoadEvent();
   ProcessedModuleLoadEvent(glue::EnhancedModuleLoadInfo&& aModLoadInfo,
-                           RefPtr<ModuleRecord>&& aModuleRecord,
-                           bool aIsDependent);
+                           RefPtr<ModuleRecord>&& aModuleRecord);
 
   explicit operator bool() const { return mModule && *mModule; }
   bool IsXULLoad() const;

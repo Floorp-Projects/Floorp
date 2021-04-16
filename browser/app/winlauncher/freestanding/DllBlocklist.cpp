@@ -467,7 +467,7 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
   if (nt::RtlGetProcessHeap()) {
     ModuleLoadFrame::NotifySectionMap(
         nt::AllocatedUnicodeString(sectionFileName), *aBaseAddress, stubStatus,
-        loadStatus);
+        loadStatus, isDependent);
   }
 
   if (loadStatus == ModuleLoadInfo::Status::Loaded ||
