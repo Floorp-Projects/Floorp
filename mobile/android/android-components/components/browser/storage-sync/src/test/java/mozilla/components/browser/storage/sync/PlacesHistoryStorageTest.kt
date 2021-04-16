@@ -12,6 +12,7 @@ import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.FrecencyThresholdOption
+import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
@@ -924,6 +925,290 @@ class PlacesHistoryStorageTest {
             assertEquals(1586838164613, this.visitTime)
             assertEquals(VisitType.LINK, this.visitType)
         }
+    }
+
+    @Test
+    fun `add and get latest history metadata by url`() = runBlocking {
+        assertNull(history.getLatestHistoryMetadataForUrl("http://www.mozilla.org"))
+
+        val currentTime = System.currentTimeMillis()
+
+        val meta1 = HistoryMetadata(
+            url = "https://doc.rust-lang.org/std/macro.assert_eq.html",
+            title = "std::assert_eq - Rust",
+            createdAt = currentTime,
+            updatedAt = currentTime + 5000,
+            totalViewTime = 2000,
+            searchTerm = "rust assert_eq",
+            isMedia = false,
+            parentUrl = "http://www.google.com"
+        )
+        history.addHistoryMetadata(meta1)
+
+        assertHistoryMetadataRecord(meta1.copy(parentUrl = "www.google.com"), history.getLatestHistoryMetadataForUrl("https://doc.rust-lang.org/std/macro.assert_eq.html")!!)
+
+        // now let's add another one, but newer:
+        val meta2 = HistoryMetadata(
+            url = "https://doc.rust-lang.org/std/macro.assert_eq.html",
+            title = "std::assert_eq - Rust 2000", // This changed in the newer record
+            createdAt = currentTime + 10000,
+            updatedAt = currentTime + 50000,
+            totalViewTime = 2000,
+            searchTerm = "rust assert_eq",
+            isMedia = true, // and it's playing music now, too!
+            parentUrl = "http://www.shmoogle.com" // finally, a private search engine that works
+        )
+        history.addHistoryMetadata(meta2)
+
+        // NB: title change isn't respected atm.
+        assertHistoryMetadataRecord(meta2.copy(title = "std::assert_eq - Rust", parentUrl = "www.shmoogle.com"), history.getLatestHistoryMetadataForUrl("https://doc.rust-lang.org/std/macro.assert_eq.html")!!)
+
+        // now let's add another one, but with all optional fields as null
+        val meta3 = HistoryMetadata(
+            url = "https://doc.rust-lang.org/std/macro.assert_eq.html",
+            title = null, // This changed in the newer record
+            createdAt = currentTime + 10001,
+            updatedAt = currentTime + 50001,
+            totalViewTime = 2000,
+            searchTerm = null,
+            isMedia = true, // and it's playing music now, too!
+            parentUrl = null // finally, a private search engine that works
+        )
+        history.addHistoryMetadata(meta3)
+
+        // NB: again, title remains as-is on the first write. The rest of the changes are reflected though.
+        assertHistoryMetadataRecord(meta3.copy(title = "std::assert_eq - Rust"), history.getLatestHistoryMetadataForUrl("https://doc.rust-lang.org/std/macro.assert_eq.html")!!)
+    }
+
+    @Test
+    fun `get history query`() = runBlocking {
+        val currentTime = System.currentTimeMillis()
+
+        assertEquals(0, history.queryHistoryMetadata("keystore", 1).size)
+
+        val meta1 = HistoryMetadata(
+            url = "https://sql.telemetry.mozilla.org/dashboard/android-keystore-reliability-experiment",
+            title = "Android Keystore Reliability Experiment",
+            createdAt = currentTime,
+            updatedAt = currentTime,
+            totalViewTime = 20000,
+            searchTerm = "keystore reliability",
+            isMedia = false,
+            parentUrl = "http://self.mozilla.com"
+        )
+
+        val meta2 = HistoryMetadata(
+            url = "https://www.youtube.com/watch?v=F7PQdCDiE44",
+            title = "Are we ready for the next crisis? | DW Documentary - YouTube",
+            createdAt = currentTime + 1200,
+            updatedAt = currentTime + 1200,
+            totalViewTime = 30000,
+            searchTerm = "crisis",
+            isMedia = true,
+            parentUrl = "https://www.google.com/search?client=firefox-b-d&q=dw+crisis"
+        )
+
+        val meta3 = HistoryMetadata(
+            url = "https://www.cbc.ca/news/canada/toronto/covid-19-ontario-april-16-2021-new-restrictions-modelling-1.5990092",
+            title = "Ford announces new restrictions as cases threaten to remain high all summer | CBC News",
+            createdAt = currentTime + 5000,
+            updatedAt = currentTime + 6000,
+            totalViewTime = 20000,
+            searchTerm = "ford covid19",
+            isMedia = false,
+            parentUrl = "https://duckduckgo.com/?q=ford+covid19&t=hc&va=u&ia=web"
+        )
+
+        val meta4 = HistoryMetadata(
+            url = "https://www.youtube.com/watch?v=TfXbzbJQHuw",
+            title = "New York City rich and poor — the inequality crisis - YouTube",
+            createdAt = currentTime + 10000,
+            updatedAt = currentTime + 12000,
+            totalViewTime = 20000,
+            searchTerm = "dw nyc rich",
+            isMedia = true,
+            parentUrl = "https://duckduckgo.com/?q=dw+nyc+rich&t=hc&va=u&ia=web"
+        )
+
+        history.addHistoryMetadata(meta1)
+        history.addHistoryMetadata(meta2)
+        history.addHistoryMetadata(meta3)
+        history.addHistoryMetadata(meta4)
+
+        assertEquals(0, history.queryHistoryMetadata("keystore", 0).size)
+        // query by url
+        with(history.queryHistoryMetadata("dashboard", 10)) {
+            assertEquals(1, this.size)
+            assertHistoryMetadataRecord(meta1.copy(parentUrl = "self.mozilla.com"), this[0])
+        }
+
+        // query by title
+        with(history.queryHistoryMetadata("next crisis", 10)) {
+            assertEquals(1, this.size)
+            assertHistoryMetadataRecord(meta2.copy(parentUrl = "www.google.com"), this[0])
+        }
+
+        // query by search term
+        with(history.queryHistoryMetadata("covid19", 10)) {
+            assertEquals(1, this.size)
+            assertHistoryMetadataRecord(meta3.copy(parentUrl = "duckduckgo.com"), this[0])
+        }
+
+        // multiple results, mixed search targets
+        with(history.queryHistoryMetadata("dw", 10)) {
+            assertEquals(2, this.size)
+            assertHistoryMetadataRecord(meta2.copy(parentUrl = "www.google.com"), this[0])
+            assertHistoryMetadataRecord(meta4.copy(parentUrl = "duckduckgo.com"), this[1])
+        }
+
+        // limit is respected
+        with(history.queryHistoryMetadata("dw", 1)) {
+            assertEquals(1, this.size)
+            assertHistoryMetadataRecord(meta2.copy(parentUrl = "www.google.com"), this[0])
+        }
+    }
+
+    @Test
+    fun `get history metadata between`() = runBlocking {
+        assertEquals(0, history.getHistoryMetadataBetween(-1, 0).size)
+        assertEquals(0, history.getHistoryMetadataBetween(0, Long.MAX_VALUE).size)
+        assertEquals(0, history.getHistoryMetadataBetween(Long.MAX_VALUE, Long.MIN_VALUE).size)
+        assertEquals(0, history.getHistoryMetadataBetween(Long.MIN_VALUE, Long.MAX_VALUE).size)
+
+        val currentTime = System.currentTimeMillis()
+
+        val meta1 = HistoryMetadata(
+            url = "https://www.youtube.com/watch?v=lNeRQuiKBd4",
+            title = "Pixels and Painting: Artist Talk with Kristoffer Zetterstrand - YouTube",
+            createdAt = currentTime,
+            updatedAt = currentTime,
+            totalViewTime = 20000,
+            searchTerm = null,
+            isMedia = true,
+            parentUrl = "http://www.twitter.com"
+        )
+        history.addHistoryMetadata(meta1)
+
+        val meta2 = HistoryMetadata(
+            url = "https://www.youtube.com/watch?v=Cs1b5qvCZ54",
+            title = "Тайна валдайской дачи Путина - YouTube",
+            createdAt = currentTime + 1500,
+            updatedAt = currentTime + 1700,
+            totalViewTime = 200,
+            searchTerm = "путин валдай",
+            isMedia = true,
+            parentUrl = "http://www.yandex.ru"
+        )
+        history.addHistoryMetadata(meta2)
+
+        val meta3 = HistoryMetadata(
+            url = "https://www.ifixit.com/News/35377/which-wireless-earbuds-are-the-least-evil",
+            title = "Are All Wireless Earbuds As Evil As AirPods? - iFixit",
+            createdAt = currentTime + 1000,
+            updatedAt = currentTime + 2000,
+            totalViewTime = 2000,
+            searchTerm = "repairable wireless headset",
+            isMedia = false,
+            parentUrl = "http://www.google.com"
+        )
+        history.addHistoryMetadata(meta3)
+
+        assertEquals(3, history.getHistoryMetadataBetween(0, Long.MAX_VALUE).size)
+        assertEquals(0, history.getHistoryMetadataBetween(Long.MAX_VALUE, 0).size)
+        assertEquals(0, history.getHistoryMetadataBetween(Long.MIN_VALUE, 0).size)
+
+        with(history.getHistoryMetadataBetween(currentTime, currentTime + 1700)) {
+            assertEquals(2, this.size)
+            assertEquals("https://www.youtube.com/watch?v=Cs1b5qvCZ54", this[0].url)
+            assertEquals("https://www.youtube.com/watch?v=lNeRQuiKBd4", this[1].url)
+        }
+        with(history.getHistoryMetadataBetween(currentTime, currentTime + 1699)) {
+            assertEquals(1, this.size)
+            assertEquals("https://www.youtube.com/watch?v=lNeRQuiKBd4", this[0].url)
+        }
+        with(history.getHistoryMetadataBetween(currentTime + 1, currentTime + 1700)) {
+            assertEquals(1, this.size)
+            assertEquals("https://www.youtube.com/watch?v=Cs1b5qvCZ54", this[0].url)
+        }
+    }
+
+    @Test
+    fun `get history metadata since`() = runBlocking {
+        val currentTime = System.currentTimeMillis()
+
+        assertEquals(0, history.getHistoryMetadataSince(-1).size)
+        assertEquals(0, history.getHistoryMetadataSince(0).size)
+        assertEquals(0, history.getHistoryMetadataSince(Long.MIN_VALUE).size)
+        assertEquals(0, history.getHistoryMetadataSince(Long.MAX_VALUE).size)
+
+        assertEquals(0, history.getHistoryMetadataSince(currentTime).size)
+
+        val meta1 = HistoryMetadata(
+            url = "https://www.youtube.com/watch?v=lNeRQuiKBd4",
+            title = "Pixels and Painting: Artist Talk with Kristoffer Zetterstrand - YouTube",
+            createdAt = currentTime,
+            updatedAt = currentTime,
+            totalViewTime = 20000,
+            searchTerm = null,
+            isMedia = true,
+            parentUrl = "http://www.twitter.com"
+        )
+        history.addHistoryMetadata(meta1)
+
+        val meta2 = HistoryMetadata(
+            url = "https://www.ifixit.com/News/35377/which-wireless-earbuds-are-the-least-evil",
+            title = "Are All Wireless Earbuds As Evil As AirPods? - iFixit",
+            createdAt = currentTime + 1000,
+            updatedAt = currentTime + 2000,
+            totalViewTime = 2000,
+            searchTerm = "repairable wireless headset",
+            isMedia = false,
+            parentUrl = "http://www.google.com"
+        )
+        history.addHistoryMetadata(meta2)
+
+        val meta3 = HistoryMetadata(
+            url = "https://www.youtube.com/watch?v=Cs1b5qvCZ54",
+            title = "Тайна валдайской дачи Путина - YouTube",
+            createdAt = currentTime + 1500,
+            updatedAt = currentTime + 1700,
+            totalViewTime = 200,
+            searchTerm = "путин валдай",
+            isMedia = true,
+            parentUrl = "http://www.yandex.ru"
+        )
+        history.addHistoryMetadata(meta3)
+
+        // order is by updatedAt
+        with(history.getHistoryMetadataSince(currentTime)) {
+            assertEquals(3, this.size)
+            assertHistoryMetadataRecord(meta2.copy(parentUrl = "www.google.com"), this[0])
+            assertHistoryMetadataRecord(meta3.copy(parentUrl = "www.yandex.ru"), this[1])
+            assertHistoryMetadataRecord(meta1.copy(parentUrl = "www.twitter.com"), this[2])
+        }
+
+        // search is inclusive of time
+        with(history.getHistoryMetadataSince(currentTime + 1700)) {
+            assertEquals(2, this.size)
+            assertHistoryMetadataRecord(meta2.copy(parentUrl = "www.google.com"), this[0])
+            assertHistoryMetadataRecord(meta3.copy(parentUrl = "www.yandex.ru"), this[1])
+        }
+
+        with(history.getHistoryMetadataSince(currentTime + 1900)) {
+            assertEquals(1, this.size)
+            assertHistoryMetadataRecord(meta2.copy(parentUrl = "www.google.com"), this[0])
+        }
+    }
+
+    private fun assertHistoryMetadataRecord(local_meta: HistoryMetadata, db_meta: HistoryMetadata) {
+        assertEquals(local_meta.url, db_meta.url)
+        assertEquals(local_meta.title, db_meta.title)
+        assertEquals(local_meta.createdAt, db_meta.createdAt)
+        assertEquals(local_meta.updatedAt, db_meta.updatedAt)
+        assertEquals(local_meta.totalViewTime, db_meta.totalViewTime)
+        assertEquals(local_meta.searchTerm, db_meta.searchTerm)
+        assertEquals(local_meta.isMedia, db_meta.isMedia)
+        assertEquals(local_meta.parentUrl, db_meta.parentUrl)
     }
 }
 

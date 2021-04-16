@@ -14,6 +14,7 @@ import mozilla.appservices.places.SyncAuthInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.FrecencyThresholdOption
+import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
@@ -100,4 +101,40 @@ internal fun BookmarkTreeNode.asBookmarkNode(): BookmarkNode {
             BookmarkNode(BookmarkNodeType.SEPARATOR, this.guid, this.parentGUID, this.position, null, null, null)
         }
     }
+}
+
+internal fun mozilla.appservices.places.HistoryMetadata.into(): HistoryMetadata {
+    // Protobuf doesn't support passing around `null` value, so these get converted to some defaults
+    // as they go from Rust to Kotlin. E.g. an empty string in place of a `null`.
+    // That means places.HistoryMetadata will never have `null` values.
+    // But, we actually do want a real `null` value here - hence the explicit check.
+    return HistoryMetadata(
+        guid = this.guid,
+        url = this.url,
+        title = if (this.title.isNullOrEmpty()) null else this.title,
+        createdAt = this.createdAt,
+        updatedAt = this.updatedAt,
+        totalViewTime = this.totalViewTime,
+        searchTerm = if (this.searchTerm.isNullOrEmpty()) null else this.searchTerm,
+        isMedia = this.isMedia,
+        parentUrl = if (this.parentUrl.isNullOrEmpty()) null else this.parentUrl
+    )
+}
+
+internal fun List<mozilla.appservices.places.HistoryMetadata>.into(): List<HistoryMetadata> {
+    return map { it.into() }
+}
+
+internal fun HistoryMetadata.into(): mozilla.appservices.places.HistoryMetadata {
+    return mozilla.appservices.places.HistoryMetadata(
+        guid = this.guid,
+        url = this.url,
+        title = this.title,
+        createdAt = this.createdAt,
+        updatedAt = this.updatedAt,
+        totalViewTime = this.totalViewTime,
+        searchTerm = this.searchTerm,
+        isMedia = this.isMedia,
+        parentUrl = this.parentUrl
+    )
 }

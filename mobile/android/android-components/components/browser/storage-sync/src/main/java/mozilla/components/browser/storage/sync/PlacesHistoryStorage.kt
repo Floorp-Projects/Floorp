@@ -12,6 +12,8 @@ import mozilla.appservices.places.VisitObservation
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryAutocompleteResult
+import mozilla.components.concept.storage.HistoryMetadata
+import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.PageVisit
@@ -32,10 +34,11 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
 /**
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
+@Suppress("TooManyFunctions")
 open class PlacesHistoryStorage(
     context: Context,
     crashReporter: CrashReporting? = null
-) : PlacesStorage(context, crashReporter), HistoryStorage, SyncableStore {
+) : PlacesStorage(context, crashReporter), HistoryStorage, HistoryMetadataStorage, SyncableStore {
 
     override val logger = Logger("PlacesHistoryStorage")
 
@@ -233,5 +236,33 @@ open class PlacesHistoryStorage(
     override fun registerWithSyncManager() {
         // See https://github.com/mozilla-mobile/android-components/issues/10128
         throw NotImplementedError("Use getHandle instead")
+    }
+
+    override suspend fun getLatestHistoryMetadataForUrl(url: String): HistoryMetadata? {
+        return places.reader().getLatestHistoryMetadataForUrl(url)?.into()
+    }
+
+    override suspend fun getHistoryMetadataSince(since: Long): List<HistoryMetadata> {
+        return places.reader().getHistoryMetadataSince(since).into()
+    }
+
+    override suspend fun getHistoryMetadataBetween(start: Long, end: Long): List<HistoryMetadata> {
+        return places.reader().getHistoryMetadataBetween(start, end).into()
+    }
+
+    override suspend fun queryHistoryMetadata(query: String, limit: Int): List<HistoryMetadata> {
+        return places.reader().queryHistoryMetadata(query, limit).into()
+    }
+
+    override suspend fun addHistoryMetadata(metadata: HistoryMetadata): String {
+        return places.writer().addHistoryMetadata(metadata.into())
+    }
+
+    override suspend fun updateHistoryMetadata(guid: String, totalViewTime: Int) {
+        places.writer().updateHistoryMetadata(guid, totalViewTime)
+    }
+
+    override suspend fun deleteHistoryMetadataOlderThan(olderThan: Long) {
+        places.writer().deleteOlderThan(olderThan)
     }
 }
