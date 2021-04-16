@@ -1022,7 +1022,7 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
 
   if (cacheKind_ == CacheKind::GetProp ||
       cacheKind_ == CacheKind::GetPropSuper) {
-    writer.megamorphicLoadSlotResult(objId, JSID_TO_ATOM(id)->asPropertyName());
+    writer.megamorphicLoadSlotResult(objId, id.toAtom()->asPropertyName());
   } else {
     MOZ_ASSERT(cacheKind_ == CacheKind::GetElem ||
                cacheKind_ == CacheKind::GetElemSuper);
@@ -2686,7 +2686,7 @@ void GetPropIRGenerator::maybeEmitIdGuard(jsid id) {
   if (cacheKind_ == CacheKind::GetProp ||
       cacheKind_ == CacheKind::GetPropSuper) {
     // Constant PropertyName, no guards necessary.
-    MOZ_ASSERT(&idVal_.toString()->asAtom() == JSID_TO_ATOM(id));
+    MOZ_ASSERT(&idVal_.toString()->asAtom() == id.toAtom());
     return;
   }
 
@@ -2698,7 +2698,7 @@ void GetPropIRGenerator::maybeEmitIdGuard(jsid id) {
 void SetPropIRGenerator::maybeEmitIdGuard(jsid id) {
   if (cacheKind_ == CacheKind::SetProp) {
     // Constant PropertyName, no guards necessary.
-    MOZ_ASSERT(&idVal_.toString()->asAtom() == JSID_TO_ATOM(id));
+    MOZ_ASSERT(&idVal_.toString()->asAtom() == id.toAtom());
     return;
   }
 
@@ -3687,8 +3687,7 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   // Don't attach a megamorphic store slot stub for ops like JSOp::InitElem.
   if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp &&
       IsPropertySetOp(JSOp(*pc_))) {
-    writer.megamorphicStoreSlot(objId, JSID_TO_ATOM(id)->asPropertyName(),
-                                rhsId);
+    writer.megamorphicStoreSlot(objId, id.toAtom()->asPropertyName(), rhsId);
     writer.returnFromIC();
     trackAttached("MegamorphicNativeSlot");
     return AttachDecision::Attach;
