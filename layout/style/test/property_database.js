@@ -278,6 +278,9 @@ var validNonUrlImageValues = [
         "image-set(url(foobar.png) 1x, url(bar.png) 2x, url(baz.png) 3x)",
         "image-set('foobar.png', 'bar.png' 2x, url(baz.png) 3x)",
         "image-set(image-set('foobar.png', 'bar.png' 2x) 1x, url(baz.png) 3x)",
+        "image-set(url(foobar.png) type('image/png'))",
+        "image-set(url(foobar.png) 1x type('image/png'))",
+        "image-set(url(foobar.png) type('image/png') 1x)",
       ]
     : []),
 
@@ -824,6 +827,11 @@ var invalidNonUrlImageValues = [
         "image-set(garbage)",
         "image-set(image-set(garbage))",
         "image-set()",
+        "image-set(type('image/png') url(foobar.png) 1x)",
+        "image-set(url(foobar.png) type('image/png') 1x type('image/png'))",
+        "image-set(url(foobar.png) type('image/png') type('image/png'))",
+        "image-set(url(foobar.png) type(image/png))",
+        "image-set(url(foobar.png) epyt('image/png'))",
       ]
     : []),
 

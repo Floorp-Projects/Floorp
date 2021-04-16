@@ -8,12 +8,15 @@
 
 #include "mozilla/GeckoBindings.h"
 
+#include <string>
+
 #include "ChildIterator.h"
 #include "ErrorReporter.h"
 #include "GeckoProfiler.h"
 #include "gfxFontFamilyList.h"
 #include "gfxFontFeatures.h"
 #include "gfxTextRun.h"
+#include "imgLoader.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSFrameConstructor.h"
@@ -1267,6 +1270,13 @@ void Gecko_GetComputedImageURLSpec(const StyleComputedUrl* aURL,
   }
 
   aOut->AssignLiteral("about:invalid");
+}
+
+bool Gecko_IsSupportedImageMimeType(const uint8_t* mime_type,
+                                    const uint32_t len) {
+  std::string aMimeType(reinterpret_cast<const char*>(mime_type), len);
+  return imgLoader::SupportImageWithMimeType(
+      aMimeType.c_str(), AcceptedMimeTypes::IMAGES_AND_DOCUMENTS);
 }
 
 void Gecko_nsIURI_Debug(nsIURI* aURI, nsCString* aOut) {
