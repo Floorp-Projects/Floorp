@@ -1049,6 +1049,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Feature is temporarily removed; disabling test. See https://github.com/mozilla-mobile/fenix/issues/18656")
     @Test
     fun selectTabsButtonVisibilityTest() {
         homeScreen {

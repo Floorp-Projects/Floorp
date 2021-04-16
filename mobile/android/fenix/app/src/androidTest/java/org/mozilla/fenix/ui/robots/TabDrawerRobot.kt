@@ -160,7 +160,10 @@ class TabDrawerRobot {
 
     fun clickTabMediaControlButton() = tabMediaControlButton().click()
 
-    fun clickSelectTabs() = onView(withText("Select tabs")).click()
+    fun clickSelectTabs() {
+        threeDotMenu().click()
+        onView(withText("Select tabs")).click()
+    }
 
     fun clickAddNewCollection() = addNewCollectionButton().click()
 
