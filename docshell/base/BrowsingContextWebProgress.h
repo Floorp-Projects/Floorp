@@ -40,6 +40,8 @@ class BrowsingContextWebProgress final : public nsIWebProgress,
     unsigned long mNotifyMask;
   };
 
+  void ContextDiscarded();
+
  private:
   virtual ~BrowsingContextWebProgress() = default;
 
@@ -59,7 +61,7 @@ class BrowsingContextWebProgress final : public nsIWebProgress,
   // events that happen during process switch. With this flag, we allow
   // onStateChange STATE_START event from the old BrowserParent, but not the
   // same event from the new BrowserParent during a process switch.
-  bool mSuspendOnStateStartChangeEvents = false;
+  bool mAwaitingStop = false;
 };
 
 }  // namespace dom

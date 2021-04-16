@@ -892,6 +892,10 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
     mTabMediaController = nullptr;
   }
 
+  if (mWebProgress) {
+    RefPtr{mWebProgress}->ContextDiscarded();
+  }
+
   if (IsTop()) {
     BackgroundSessionStorageManager::RemoveManager(Id());
   }
