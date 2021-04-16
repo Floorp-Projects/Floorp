@@ -348,61 +348,6 @@
   height: 16px;
 }
 
-#tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon,
-#tracking-protection-icon-box:not([active]) > #tracking-protection-icon-animatable-box {
-  display: none;
-}
-
-#tracking-protection-icon-animatable-box {
-  display: block;
-  position: absolute;
-  overflow: hidden;
-  width: 16px;
-  height: 16px;
-}
-
-#tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image {
-  /* Overrides the default 'display: -moz-box' to prevent icon shifting issue
-     with scaled text, see Bug 1591049 */
-  display: block;
-  background-image: url(chrome://browser/skin/tracking-protection-animation.svg);
-  transform: translateX(-256px);
-  width: 272px;
-  background-size: auto;
-  height: 16px;
-  min-height: 16px;
-  -moz-context-properties: fill, fill-opacity;
-}
-
-#tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
-  transform: translateX(0);
-}
-
-#tracking-protection-icon-box[hasException]:-moz-locale-dir(rtl)::before {
-  left: 0;
-  right: unset;
-  /* This is needed in order to put the dot in front of the shield icon in rtl
-     mode */
-  z-index: 1;
-}
-
-:root[lwt-toolbar-field-brighttext] #tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image {
-  background-image: url(chrome://browser/skin/tracking-protection-animation-brighttext.svg);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  #tracking-protection-icon-box[active][animate] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image {
-    animation-name: tp-icon-animation;
-    animation-timing-function: steps(16);
-    animation-duration: 1s;
-    animation-fill-mode: forwards;
-  }
-
-  #tracking-protection-icon-box[active][animate] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
-    animation-name: tp-icon-animation-rtl;
-  }
-}
-
 #tracking-protection-icon-tooltip {
   max-width: 500px;
 }
@@ -415,26 +360,16 @@
   list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
 }
 
+#urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon {
+  list-style-image: url(chrome://browser/skin/tracking-protection-active.svg);
+}
+
+:root[lwt-toolbar-field-brighttext] #urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon {
+  list-style-image: url(chrome://browser/skin/tracking-protection-active-brighttext.svg);
+}
+
 #urlbar-input-container[pageproxystate="invalid"] > #tracking-protection-icon-container {
   visibility: collapse;
-}
-
-@keyframes tp-icon-animation {
-  from {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-256px);
-  }
-}
-
-@keyframes tp-icon-animation-rtl {
-  from {
-    transform: translateX(256px);
-  }
-  100% {
-    transform: translateX(0);
-  }
 }
 
 /* REMOTE CONTROL ICON */
