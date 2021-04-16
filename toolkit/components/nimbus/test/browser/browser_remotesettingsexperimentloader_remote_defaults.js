@@ -412,3 +412,32 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
   // cleanup
   Services.prefs.clearUserPref(`${SYNC_DEFAULTS_PREF_BRANCH}foo`);
 });
+
+add_task(async function remote_defaults_resolve_telemetry_off() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["app.shield.optoutstudies.enabled", false]],
+  });
+  let stub = sinon.stub();
+  ExperimentAPI._store.on("remote-defaults-finalized", stub);
+
+  const feature = new ExperimentFeature("foo", {
+    foo: { description: "test" },
+  });
+  let promise = feature.ready();
+
+  RemoteSettingsExperimentLoader.init();
+
+  await promise;
+
+  Assert.equal(stub.callCount, 1, "init returns early and resolves the await");
+});
+
+add_task(async function remote_defaults_resolve_timeout() {
+  const feature = new ExperimentFeature("foo", {
+    foo: { description: "test" },
+  });
+
+  await feature.ready(0);
+
+  Assert.ok(true, "Resolves waitForRemote");
+});

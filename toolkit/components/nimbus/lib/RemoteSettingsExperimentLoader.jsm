@@ -39,7 +39,6 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
 const COLLECTION_ID_FALLBACK = "nimbus-desktop-experiments";
-// TODO: Create a real collection
 const COLLECTION_REMOTE_DEFAULTS = "nimbus-desktop-defaults";
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
@@ -192,6 +191,8 @@ class _RemoteSettingsExperimentLoader {
 
   async init() {
     if (this._initialized || !this.enabled || !this.studiesEnabled) {
+      // Resolves any Promise waiting for Remote Settings data
+      ExperimentManager.store.finalizeRemoteConfigs([]);
       return;
     }
 
