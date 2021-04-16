@@ -89,10 +89,6 @@ var supported_properties = {
     "cy": [ test_length_transition, test_percent_transition,
             test_length_unclamped, test_percent_unclamped ],
     "-moz-image-region": [ test_rect_transition ],
-    "-moz-outline-radius-bottomleft": [ test_radius_transition ],
-    "-moz-outline-radius-bottomright": [ test_radius_transition ],
-    "-moz-outline-radius-topleft": [ test_radius_transition ],
-    "-moz-outline-radius-topright": [ test_radius_transition ],
     "background-color": [ test_color_transition,
                           test_currentcolor_transition ],
     "background-position": [ test_background_position_transition,
@@ -355,6 +351,12 @@ var supported_properties = {
 
 if (IsCSSPropertyPrefEnabled("layout.css.backdrop-filter.enabled") && IsWebRenderEnabled()) {
   supported_properties["backdrop-filter"] = [ test_filter_transition ];
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.moz-outline-radius.enabled")) {
+  for (let corner of ["bottomleft", "bottomright", "topleft", "topright"]) {
+    supported_properties["-moz-outline-radius-" + corner] = [ test_radius_transition ];
+  }
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {

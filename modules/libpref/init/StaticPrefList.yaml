@@ -6486,6 +6486,13 @@
   mirror: always
   rust: true
 
+# Whether the `-moz-outline-radius` pseudo-class is exposed to content.
+- name: layout.css.moz-outline-radius.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether the `aspect-ratio` in css-sizing-4 is enabled.
 - name: layout.css.aspect-ratio.enabled
   type: bool

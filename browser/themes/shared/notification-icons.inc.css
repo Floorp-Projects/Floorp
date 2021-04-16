@@ -36,7 +36,6 @@
 .notification-anchor-icon:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: calc(var(--urlbar-icon-padding) - 2px);
-  -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
 
 @media not (-moz-proton) {

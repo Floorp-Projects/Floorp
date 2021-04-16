@@ -122,7 +122,6 @@
 .keyboard-focused-tab > .tab-stack > .tab-background,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-background {
   outline: var(--focus-outline);
-  -moz-outline-radius: var(--tab-border-radius);
   outline-offset: -2px;
 }
 } /*** END proton ***/

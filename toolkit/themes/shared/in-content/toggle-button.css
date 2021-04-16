@@ -57,7 +57,6 @@ input[type="checkbox"].toggle-button::before {
   margin: var(--dot-margin);
   border-radius: 50%;
   outline: 1px solid var(--border-color);
-  -moz-outline-radius: 50%;
   transition: transform 100ms;
 }
 input[type="checkbox"].toggle-button:checked::before {

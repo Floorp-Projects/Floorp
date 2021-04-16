@@ -144,7 +144,6 @@ checkbox {
 .spotlight {
   background-color: color-mix(in srgb, var(--in-content-accent-color) 15%, transparent);
   outline: var(--in-content-accent-color) 1px dotted;
-  -moz-outline-radius: 2px;
   animation: fade-out 0.5s ease-out 2s forwards;
   /* Show the border to spotlight the components in high-contrast mode. */
   border: 1px solid transparent;

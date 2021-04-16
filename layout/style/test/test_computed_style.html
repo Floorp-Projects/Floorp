@@ -23,15 +23,18 @@ var noframe_container = document.getElementById("content");
   // Test handling of horizontal and vertical percentages for border-radius
   // and -moz-outline-radius.
   var p = document.createElement("p");
+  const supportsOutlineRadius = CSS.supports('-moz-outline-radius: initial');
   p.setAttribute("style", "width: 256px; height: 128px");
   p.style.borderTopLeftRadius = "1.5625%"; /* 1/64 == 4px 2px */
   p.style.borderTopRightRadius = "5px";
   p.style.borderBottomRightRadius = "5px 3px";
   p.style.borderBottomLeftRadius = "1.5625% 3.125%" /* 1/64 1/32 == 4px 4px */
-  p.style.MozOutlineRadiusTopleft = "1.5625%"; /* 1/64 == 4px 2px */
-  p.style.MozOutlineRadiusTopright = "5px";
-  p.style.MozOutlineRadiusBottomright = "5px 3px";
-  p.style.MozOutlineRadiusBottomleft = "1.5625% 3.125%" /* 1/64 1/32 == 4px 4px */
+  if (supportsOutlineRadius) {
+    p.style.MozOutlineRadiusTopleft = "1.5625%"; /* 1/64 == 4px 2px */
+    p.style.MozOutlineRadiusTopright = "5px";
+    p.style.MozOutlineRadiusBottomright = "5px 3px";
+    p.style.MozOutlineRadiusBottomleft = "1.5625% 3.125%" /* 1/64 1/32 == 4px 4px */
+  }
   var cs = getComputedStyle(p, "");
 
   frame_container.appendChild(p);
@@ -43,14 +46,16 @@ var noframe_container = document.getElementById("content");
      "computed value of px border-radius, with frame");
   is(cs.borderBottomLeftRadius, "1.5625% 3.125%",
      "computed value of % border-radius, with frame");
-  is(cs.MozOutlineRadiusTopleft, "1.5625%",
-     "computed value of % outline-radius, with frame");
-  is(cs.MozOutlineRadiusTopright, "5px",
-     "computed value of px outline-radius, with frame");
-  is(cs.MozOutlineRadiusBottomright, "5px 3px",
-     "computed value of px outline-radius, with frame");
-  is(cs.MozOutlineRadiusBottomleft, "1.5625% 3.125%",
-     "computed value of % outline-radius, with frame");
+  if (supportsOutlineRadius) {
+    is(cs.MozOutlineRadiusTopleft, "1.5625%",
+       "computed value of % outline-radius, with frame");
+    is(cs.MozOutlineRadiusTopright, "5px",
+       "computed value of px outline-radius, with frame");
+    is(cs.MozOutlineRadiusBottomright, "5px 3px",
+       "computed value of px outline-radius, with frame");
+    is(cs.MozOutlineRadiusBottomleft, "1.5625% 3.125%",
+       "computed value of % outline-radius, with frame");
+  }
 
   noframe_container.appendChild(p);
   is(cs.borderTopLeftRadius, "1.5625%",
@@ -61,14 +66,16 @@ var noframe_container = document.getElementById("content");
      "computed value of px border-radius, without frame");
   is(cs.borderBottomLeftRadius, "1.5625% 3.125%",
      "computed value of % border-radius, without frame");
-  is(cs.MozOutlineRadiusTopleft, "1.5625%",
-     "computed value of % outline-radius, without frame");
-  is(cs.MozOutlineRadiusTopright, "5px",
-     "computed value of px outline-radius, without frame");
-  is(cs.MozOutlineRadiusBottomright, "5px 3px",
-     "computed value of px outline-radius, without frame");
-  is(cs.MozOutlineRadiusBottomleft, "1.5625% 3.125%",
-     "computed value of % outline-radius, without frame");
+  if (supportsOutlineRadius) {
+    is(cs.MozOutlineRadiusTopleft, "1.5625%",
+       "computed value of % outline-radius, without frame");
+    is(cs.MozOutlineRadiusTopright, "5px",
+       "computed value of px outline-radius, without frame");
+    is(cs.MozOutlineRadiusBottomright, "5px 3px",
+       "computed value of px outline-radius, without frame");
+    is(cs.MozOutlineRadiusBottomleft, "1.5625% 3.125%",
+       "computed value of % outline-radius, without frame");
+  }
 
   p.remove();
 })();

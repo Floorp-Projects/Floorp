@@ -75,7 +75,6 @@ th:hover > a {
 
 body > table > tbody > tr:hover {
   outline: 1px solid ThreeDLightShadow;
-  -moz-outline-radius: .3em;
 }
 
 /* let 'Size' and 'Last Modified' take only as much space as they need and 'Name' all the rest */

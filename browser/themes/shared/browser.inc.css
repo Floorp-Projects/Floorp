@@ -245,7 +245,6 @@
 #PersonalToolbar[customizing] {
   outline: 1px dashed;
   outline-offset: -3px;
-  -moz-outline-radius: 2px;
 }
 
 #PersonalToolbar[customizing]:empty {
