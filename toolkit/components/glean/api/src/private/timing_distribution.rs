@@ -67,18 +67,6 @@ impl TimingDistributionMetric {
             }
         }
     }
-
-    pub(crate) fn accumulate_raw_samples_nanos(&self, samples: Vec<u64>) {
-        match self {
-            TimingDistributionMetric::Parent { inner, .. } => {
-                inner.accumulate_raw_samples_nanos(samples);
-            }
-            TimingDistributionMetric::Child(_) => {
-                // TODO: Instrument this error
-                log::error!("Can't record samples for a timing distribution from a child metric");
-            }
-        }
-    }
 }
 
 #[inherent(pub)]
@@ -138,13 +126,7 @@ impl TimingDistribution for TimingDistributionMetric {
                     .write()
                     .expect("Write lock must've been poisoned.");
                 if let Some(start) = map.remove(&id) {
-                    let sample = match start.elapsed().as_nanos().try_into() {
-                        Ok(sample) => sample,
-                        Err(_) => {
-                            log::warn!("Elapsed time larger than fits into 64-bytes. Saturating at u64::MAX.");
-                            u64::MAX
-                        }
-                    };
+                    let sample = start.elapsed().as_nanos();
                     with_ipc_payload(move |payload| {
                         if let Some(v) = payload.timing_samples.get_mut(&c.metric_id) {
                             v.push(sample);
@@ -281,19 +263,10 @@ mod test {
             child_metric.cancel(id2);
         }
 
+        // TODO: implement replay. See bug 1646165.
+        // For now let's ensure there's something in the buffer and replay doesn't error.
         let buf = ipc::take_buf().unwrap();
         assert!(buf.len() > 0);
         assert!(ipc::replay_from_buf(&buf).is_ok());
-
-        let data = parent_metric
-            .test_get_value("store1")
-            .expect("should have some data");
-
-        assert_eq!(
-            2,
-            data.values.len(),
-            "record 2 values, one parent, one child measurement"
-        );
-        assert!(0 < data.sum, "record some time");
     }
 }
