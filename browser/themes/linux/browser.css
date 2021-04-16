@@ -35,6 +35,12 @@
 :root:not(:-moz-lwtheme) {
   --focus-outline-color: -moz-accent-color;
 }
+
+#TabsToolbar:not(:-moz-lwtheme),
+#TabsToolbar[brighttext]:not(:-moz-lwtheme) {
+  --attention-icon-color: -moz-accent-color;
+}
+
 } /*** END proton ***/
 
 @media not (-moz-proton) {
