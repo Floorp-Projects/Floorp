@@ -227,6 +227,8 @@ module.exports = {
     "func-style": "off",
     // Only useful in a node environment.
     "handle-callback-err": "off",
+    // componentDidUnmount is not a real lifecycle method, use componentWillUnmount.
+    "id-denylist": ["error", "componentDidUnmount"],
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": ["error", 3],
     // Don't limit the number of parameters that can be used in a function.
