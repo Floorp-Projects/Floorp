@@ -27,6 +27,14 @@ function showAndWaitForDialog(callback) {
   return promise;
 }
 
+function AssertEvents(message, ...events) {
+  info(`Checking telemetry events: ${message}`);
+  TelemetryTestUtils.assertEvents(
+    events.map(event => ["upgrade_dialog", ...event]),
+    { category: "upgrade_dialog" }
+  );
+}
+
 add_task(async function open_close_dialog() {
   mockShell();
 
@@ -186,31 +194,40 @@ add_task(async function exit_early() {
   );
 });
 
-function AssertTelemetry(telemetry, message) {
-  Assert.stringContains(
-    Services.telemetry
-      .snapshotEvents(Services.telemetry.DATASET_ALL_CHANNELS)
-      .parent.map(e => e.join("#"))
-      .toString(),
-    telemetry.join("#"),
-    message
-  );
-}
-
-add_task(async function not_major_upgrade() {
+add_task(async function quit_app() {
   Services.telemetry.clearEvents();
+  mockShell();
 
-  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+  await showAndWaitForDialog(() => {
+    const cancelled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
+      Ci.nsISupportsPRBool
+    );
+    cancelled.data = true;
+    Services.obs.notifyObservers(
+      cancelled,
+      "quit-application-requested",
+      "test"
+    );
+  });
 
-  AssertTelemetry(
-    ["upgrade_dialog", "trigger", "reason", "not-major"],
-    "Not major upgrade for upgrade dialog requirements"
+  AssertEvents(
+    "Dialog closed on quit request",
+    ["content", "show", "0"],
+    ["content", "close", "quit-application-requested"]
   );
 });
 
-add_task(async function remote_disabled() {
-  Services.telemetry.clearEvents();
+add_task(async function not_major_upgrade() {
+  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
 
+  AssertEvents("Not major upgrade for upgrade dialog requirements", [
+    "trigger",
+    "reason",
+    "not-major",
+  ]);
+});
+
+add_task(async function remote_disabled() {
   await ExperimentFakes.remoteDefaultsHelper({
     feature: NimbusFeatures.upgradeDialog,
     configuration: { enabled: false, variables: {} },
@@ -224,10 +241,12 @@ add_task(async function remote_disabled() {
 
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
 
-  AssertTelemetry(
-    ["upgrade_dialog", "trigger", "reason", "disabled"],
-    "Feature disabled for upgrade dialog requirements"
-  );
+  AssertEvents("Feature disabled for upgrade dialog requirements", [
+    "trigger",
+    "reason",
+    "disabled",
+  ]);
+
   // Re-enable back
   await ExperimentFakes.remoteDefaultsHelper({
     feature: NimbusFeatures.upgradeDialog,
@@ -236,32 +255,26 @@ add_task(async function remote_disabled() {
 });
 
 add_task(async function show_major_upgrade() {
-  Services.telemetry.clearEvents();
-
   const promise = waitForDialog();
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
   await promise;
 
-  Assert.ok(true, "Upgrade dialog opened and closed from major upgrade");
-  AssertTelemetry(
-    ["upgrade_dialog", "trigger", "reason", "satisfied"],
-    "Satisfied upgrade dialog requirements"
-  );
-  AssertTelemetry(
-    ["upgrade_dialog", "content", "close", "external"],
-    "Telemetry tracked dialog close"
+  AssertEvents(
+    "Upgrade dialog opened and closed from major upgrade",
+    ["trigger", "reason", "satisfied"],
+    ["content", "show", "0"],
+    ["content", "close", "external"]
   );
 });
 
 add_task(async function dont_reshow() {
-  Services.telemetry.clearEvents();
-
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
 
-  AssertTelemetry(
-    ["upgrade_dialog", "trigger", "reason", "already-shown"],
-    "Shouldn't reshow for upgrade dialog requirements"
-  );
+  AssertEvents("Shouldn't reshow for upgrade dialog requirements", [
+    "trigger",
+    "reason",
+    "already-shown",
+  ]);
 });
 
 registerCleanupFunction(() => {
