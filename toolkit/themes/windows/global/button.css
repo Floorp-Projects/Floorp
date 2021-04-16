@@ -44,7 +44,7 @@ button:-moz-focusring {
        default, hovered or focused state. However, if these states overlap with
        the active, disabled, open or checked state, the appearance reverts back
        to the default background. */
-    button:is([default="true"],:hover,:focus):not(:active,[disabled="true"],[open="true"],[checked="true"]) {
+    button:where([default="true"],:hover,:focus):not(:active,[disabled="true"],[open="true"],[checked="true"]) {
       color: HighlightText;
     }
   }
