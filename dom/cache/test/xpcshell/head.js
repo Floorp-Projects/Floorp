@@ -15,7 +15,10 @@ const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const osWindowsName = "WINNT";
 const pathDelimiter = "/";
 
+const persistentPersistence = "persistent";
+
 const storageDirName = "storage";
+const persistentPersistenceDirName = "permanent";
 const defaultPersistenceDirName = "default";
 
 function cacheClientDirName() {
@@ -84,6 +87,10 @@ function initStorage() {
 
 function initTemporaryStorage() {
   return Services.qms.initTemporaryStorage();
+}
+
+function initPersistentOrigin(principal) {
+  return Services.qms.initializePersistentOrigin(principal);
 }
 
 function initTemporaryOrigin(principal) {
