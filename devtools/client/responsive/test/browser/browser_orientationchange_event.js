@@ -5,7 +5,12 @@
 
 // Test that the "orientationchange" event is fired when the "rotate button" is clicked.
 
-const TEST_URL = "data:text/html;charset=utf-8,";
+// TODO: This test should also check that the orientation is set properly on the iframe.
+// This is currently not working and should be worked on in Bug 1704830.
+
+const TEST_DOCUMENT = `doc_with_remote_iframe_and_isolated_cross_origin_capabilities.sjs`;
+const TEST_COM_URL = URL_ROOT_COM_SSL + TEST_DOCUMENT;
+
 const testDevice = {
   name: "Fake Phone RDM Test",
   width: 320,
@@ -21,77 +26,221 @@ const testDevice = {
 // Add the new device to the list
 addDeviceForTest(testDevice);
 
-addRDMTask(TEST_URL, async function({ ui }) {
-  info("Rotate viewport to trigger 'orientationchange' event.");
+addRDMTask(TEST_COM_URL, async function({ ui }) {
   await pushPref("devtools.responsive.viewport.angle", 0);
+
+  info("Check the original orientation values before the orientationchange");
+  is(
+    await getScreenOrientationType(ui.getViewportBrowser()),
+    "portrait-primary",
+    "Primary orientation type is portrait-primary"
+  );
+
+  is(
+    await getScreenOrientationAngle(ui.getViewportBrowser()),
+    0,
+    "Original angle is set at 0 degrees"
+  );
+
+  info(
+    "Check that rotating the viewport does trigger an orientationchange event"
+  );
+  let waitForOrientationChangeEvent = isOrientationChangeEventEmitted(
+    ui.getViewportBrowser()
+  );
   rotateViewport(ui);
+  is(
+    await waitForOrientationChangeEvent,
+    true,
+    "'orientationchange' event fired"
+  );
 
-  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
-    info("Check the original orientation values before the orientationchange");
-    is(
-      content.screen.orientation.type,
-      "portrait-primary",
-      "Primary orientation type is portrait-primary."
-    );
-    is(
-      content.screen.orientation.angle,
-      0,
-      "Original angle is set at 0 degrees"
-    );
+  is(
+    await getScreenOrientationType(ui.getViewportBrowser()),
+    "landscape-primary",
+    "Orientation state was updated to landscape-primary"
+  );
 
-    const orientationChange = new Promise(resolve => {
-      content.window.addEventListener("orientationchange", () => {
-        ok(true, "'orientationchange' event fired");
-        is(
-          content.screen.orientation.type,
-          "landscape-primary",
-          "Orientation state was updated to landscape-primary"
-        );
-        is(
-          content.screen.orientation.angle,
-          90,
-          "Orientation angle was updated to 90 degrees."
-        );
-        resolve();
-      });
-    });
-
-    await orientationChange;
-  });
+  is(
+    await getScreenOrientationAngle(ui.getViewportBrowser()),
+    90,
+    "Orientation angle was updated to 90 degrees"
+  );
 
   info("Check that the viewport orientation values persist after reload");
   const browser = ui.getViewportBrowser();
-  const reload = waitForViewportLoad(ui);
+  let onViewportLoad = waitForViewportLoad(ui);
   browser.reload();
-  await reload;
+  await onViewportLoad;
 
-  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
-    info("Check that we still have the previous orientation values.");
-    is(content.screen.orientation.angle, 90, "Orientation angle is still 90");
-    is(
-      content.screen.orientation.type,
-      "landscape-primary",
-      "Orientation is still landscape-primary."
-    );
-  });
+  is(
+    await getScreenOrientationType(ui.getViewportBrowser()),
+    "landscape-primary",
+    "Orientation is still landscape-primary"
+  );
+  is(
+    await getInitialScreenOrientationType(ui.getViewportBrowser()),
+    "landscape-primary",
+    "orientation type was set on the page very early in its lifecycle"
+  );
+  is(
+    await getScreenOrientationAngle(ui.getViewportBrowser()),
+    90,
+    "Orientation angle is still 90"
+  );
+  is(
+    await getInitialScreenOrientationAngle(ui.getViewportBrowser()),
+    90,
+    "orientation angle was set on the page early in its lifecycle"
+  );
+
+  info(
+    "Check that the viewport orientation values persist after navigating to a page that forces the creation of a new browsing context"
+  );
+  const previousBrowsingContextId = browser.browsingContext.id;
+  const onPageReloaded = BrowserTestUtils.browserLoaded(browser, true);
+  onViewportLoad = waitForViewportLoad(ui);
+  BrowserTestUtils.loadURI(
+    browser,
+    URL_ROOT_ORG_SSL + TEST_DOCUMENT + "?crossOriginIsolated=true"
+  );
+  await Promise.all([onPageReloaded, onViewportLoad]);
+
+  isnot(
+    browser.browsingContext.id,
+    previousBrowsingContextId,
+    "A new browsing context was created"
+  );
+
+  is(
+    await getScreenOrientationType(ui.getViewportBrowser()),
+    "landscape-primary",
+    "Orientation is still landscape-primary after navigating to a new browsing context"
+  );
+  is(
+    await getInitialScreenOrientationType(ui.getViewportBrowser()),
+    "landscape-primary",
+    "orientation type was set on the page very early in its lifecycle"
+  );
+  is(
+    await getScreenOrientationAngle(ui.getViewportBrowser()),
+    90,
+    "Orientation angle is still 90 after navigating to a new browsing context"
+  );
+  is(
+    await getInitialScreenOrientationAngle(ui.getViewportBrowser()),
+    90,
+    "orientation angle was set on the page early in its lifecycle"
+  );
 
   info(
     "Check the orientationchange event is not dispatched when changing devices."
   );
-  const onViewportOrientationChange = once(
-    ui,
-    "only-viewport-orientation-changed"
+  waitForOrientationChangeEvent = isOrientationChangeEventEmitted(
+    ui.getViewportBrowser()
   );
-  await selectDevice(ui, "Fake Phone RDM Test");
-  await onViewportOrientationChange;
 
-  await ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
-    info("Check the new orientation values after selecting device.");
-    is(content.screen.orientation.angle, 0, "Orientation angle is 0");
-    is(
-      content.screen.orientation.type,
-      "portrait-primary",
-      "New orientation is portrait-primary."
-    );
+  await selectDevice(ui, testDevice.name);
+  is(
+    await waitForOrientationChangeEvent,
+    false,
+    "orientationchange event was not dispatched when changing devices"
+  );
+
+  info("Check the new orientation values after selecting device.");
+  is(
+    await getScreenOrientationType(ui.getViewportBrowser()),
+    "portrait-primary",
+    "New orientation type is portrait-primary"
+  );
+
+  is(
+    await getScreenOrientationAngle(ui.getViewportBrowser()),
+    0,
+    "Orientation angle is 0"
+  );
+
+  info(
+    "Check the orientationchange event is not dispatched when calling the command with the same orientation."
+  );
+  waitForOrientationChangeEvent = isOrientationChangeEventEmitted(
+    ui.getViewportBrowser()
+  );
+
+  // We're directly calling the command here as there's no way to do such action from the UI.
+  await ui.commands.targetConfigurationCommand.updateConfiguration({
+    rdmPaneOrientation: {
+      type: "portrait-primary",
+      angle: 0,
+      isViewportRotated: true,
+    },
   });
+  is(
+    await waitForOrientationChangeEvent,
+    false,
+    "orientationchange event was not dispatched after trying to set the same orientation again"
+  );
 });
+
+function getScreenOrientationType(browserOrBrowsingContext) {
+  return SpecialPowers.spawn(browserOrBrowsingContext, [], () => {
+    return content.screen.orientation.type;
+  });
+}
+
+function getScreenOrientationAngle(browserOrBrowsingContext) {
+  return SpecialPowers.spawn(
+    browserOrBrowsingContext,
+    [],
+    () => content.screen.orientation.angle
+  );
+}
+
+function getInitialScreenOrientationType(browserOrBrowsingContext) {
+  return SpecialPowers.spawn(
+    browserOrBrowsingContext,
+    [],
+    () => content.wrappedJSObject.initialOrientationType
+  );
+}
+
+function getInitialScreenOrientationAngle(browserOrBrowsingContext) {
+  return SpecialPowers.spawn(
+    browserOrBrowsingContext,
+    [],
+    () => content.wrappedJSObject.initialOrientationAngle
+  );
+}
+
+async function isOrientationChangeEventEmitted(browserOrBrowsingContext) {
+  const onTimeout = wait(1000).then(() => "TIMEOUT");
+  const onOrientationChangeEvent = SpecialPowers.spawn(
+    browserOrBrowsingContext,
+    [],
+    () => {
+      content.eventController = new content.AbortController();
+      return new Promise(resolve => {
+        content.window.addEventListener(
+          "orientationchange",
+          () => {
+            resolve();
+          },
+          {
+            signal: content.eventController.signal,
+            once: true,
+          }
+        );
+      });
+    }
+  );
+
+  const result = await Promise.race([onTimeout, onOrientationChangeEvent]);
+
+  // Remove the event listener
+  await SpecialPowers.spawn(browserOrBrowsingContext, [], () => {
+    content.eventController.abort();
+    delete content.eventController;
+  });
+
+  return result !== "TIMEOUT";
+}

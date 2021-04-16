@@ -282,42 +282,12 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     return false;
   },
 
-  setScreenOrientation(type, angle) {
-    if (
-      this.win.screen.orientation.angle !== angle ||
-      this.win.screen.orientation.type !== type
-    ) {
-      this.docShell.browsingContext.setRDMPaneOrientation(type, angle);
-    }
-  },
-
   /**
-   * Simulates the "orientationchange" event when device screen is rotated.
-   *
-   * @param {String} type
-   *        The orientation type of the rotated device.
-   * @param {Number} angle
-   *        The rotated angle of the device.
-   * @param {Boolean} isViewportRotated
-   *        Whether or not screen orientation change is a result of rotating the viewport.
-   *        If true, then dispatch the "orientationchange" event on the content window.
+   * Dispatches an "orientationchange" event.
    */
-  async simulateScreenOrientationChange(
-    type,
-    angle,
-    isViewportRotated = false
-  ) {
-    // Don't dispatch the "orientationchange" event if orientation change is a result
-    // of switching to a new device, location change, or opening RDM.
-    if (!isViewportRotated) {
-      this.setScreenOrientation(type, angle);
-      return;
-    }
-
+  async dispatchOrientationChangeEvent() {
     const { CustomEvent } = this.win;
     const orientationChangeEvent = new CustomEvent("orientationchange");
-
-    this.setScreenOrientation(type, angle);
     this.win.dispatchEvent(orientationChangeEvent);
   },
 

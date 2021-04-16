@@ -95,12 +95,8 @@ const responsiveSpec = generateActorSpec({
       response: {},
     },
 
-    simulateScreenOrientationChange: {
-      request: {
-        orientation: Arg(0, "string"),
-        angle: Arg(1, "number"),
-        deviceChange: Arg(2, "boolean"),
-      },
+    dispatchOrientationChangeEvent: {
+      request: {},
       response: {},
     },
 
