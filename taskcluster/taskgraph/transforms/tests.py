@@ -1030,31 +1030,37 @@ def setup_browsertime(config, tasks):
                 "linux64-chromedriver-87",
                 "linux64-chromedriver-88",
                 "linux64-chromedriver-89",
+                "linux64-chromedriver-90",
             ],
             "linux.*": [
                 "linux64-chromedriver-87",
                 "linux64-chromedriver-88",
                 "linux64-chromedriver-89",
+                "linux64-chromedriver-90",
             ],
             "macosx.*": [
                 "mac64-chromedriver-87",
                 "mac64-chromedriver-88",
                 "mac64-chromedriver-89",
+                "mac64-chromedriver-90",
             ],
             "windows.*aarch64.*": [
                 "win32-chromedriver-87",
                 "win32-chromedriver-88",
                 "win32-chromedriver-89",
+                "win32-chromedriver-90",
             ],
             "windows.*-32.*": [
                 "win32-chromedriver-87",
                 "win32-chromedriver-88",
                 "win32-chromedriver-89",
+                "win32-chromedriver-90",
             ],
             "windows.*-64.*": [
                 "win32-chromedriver-87",
                 "win32-chromedriver-88",
                 "win32-chromedriver-89",
+                "win32-chromedriver-90",
             ],
         }
 
