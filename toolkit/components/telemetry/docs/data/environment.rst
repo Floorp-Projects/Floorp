@@ -504,7 +504,9 @@ For each experiment we collect the
 - ``type`` (Optional. Like ``normandy-exp``, max length 20 characters)
 - ``enrollmentId`` (Optional. Like ``5bae2134-e121-46c2-aa00-232f3f5855c5``, max length 40 characters)
 
-In the event any of these fields are truncated, a warning is printed to the console.
+In the event any of these fields are truncated, a warning is printed to the console
+
+Note that this list includes other types of deliveries, including Normandy rollouts and Nimbus feature defaults.
 
 Version History
 ---------------

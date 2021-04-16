@@ -29,21 +29,50 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUpdateTimerManager"
 );
 
+const { TelemetryEnvironment } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryEnvironment.jsm"
+);
+
 const REMOTE_CONFIGURATION_AW = {
   id: "aboutwelcome",
   description: "about:welcome",
   configurations: [
-    { variables: { remoteValue: 24 }, enabled: false, targeting: "false" },
-    { variables: { remoteValue: 42 }, enabled: true, targeting: "true" },
+    {
+      slug: "a",
+      variables: { remoteValue: 24 },
+      enabled: false,
+      targeting: "false",
+    },
+    {
+      slug: "b",
+      variables: { remoteValue: 42 },
+      enabled: true,
+      targeting: "true",
+    },
   ],
 };
 const REMOTE_CONFIGURATION_NEWTAB = {
   id: "newtab",
   description: "about:newtab",
   configurations: [
-    { variables: { remoteValue: 1 }, enabled: false, targeting: "false" },
-    { variables: { remoteValue: 3 }, enabled: true, targeting: "true" },
-    { variables: { remoteValue: 2 }, enabled: false, targeting: "false" },
+    {
+      slug: "a",
+      variables: { remoteValue: 1 },
+      enabled: false,
+      targeting: "false",
+    },
+    {
+      slug: "b",
+      variables: { remoteValue: 3 },
+      enabled: true,
+      targeting: "true",
+    },
+    {
+      slug: "c",
+      variables: { remoteValue: 2 },
+      enabled: false,
+      targeting: "false",
+    },
   ],
 };
 const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
@@ -90,6 +119,14 @@ add_task(async function test_remote_fetch_and_ready() {
   const newtabFeature = NimbusFeatures.newtab;
   let stub = sandbox.stub();
   let spy = sandbox.spy(ExperimentAPI._store, "finalizeRemoteConfigs");
+  const setExperimentActiveStub = sandbox.stub(
+    TelemetryEnvironment,
+    "setExperimentActive"
+  );
+  const setExperimentInactiveStub = sandbox.stub(
+    TelemetryEnvironment,
+    "setExperimentInactive"
+  );
 
   featureInstance.onUpdate(stub);
 
@@ -117,12 +154,12 @@ add_task(async function test_remote_fetch_and_ready() {
   Assert.equal(
     featureInstance.getValue().remoteValue,
     REMOTE_CONFIGURATION_AW.configurations[1].variables.remoteValue,
-    "Set by remote defaults"
+    "aboutwelcome is set by remote defaults"
   );
   Assert.equal(
     newtabFeature.getValue().remoteValue,
     REMOTE_CONFIGURATION_NEWTAB.configurations[1].variables.remoteValue,
-    "Set by remote defaults"
+    "newtab is set by remote defaults"
   );
 
   Assert.equal(stub.callCount, 1, "Called by RS sync");
@@ -135,6 +172,36 @@ add_task(async function test_remote_fetch_and_ready() {
   Assert.ok(
     Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}newtab`),
     "Pref cache is set"
+  );
+
+  // Check if we sent active experiment data for defaults
+  Assert.equal(
+    setExperimentActiveStub.callCount,
+    2,
+    "setExperimentActive called once per feature"
+  );
+
+  Assert.ok(
+    setExperimentActiveStub.calledWith(
+      "default-aboutwelcome",
+      REMOTE_CONFIGURATION_AW.configurations[1].slug,
+      {
+        type: "nimbus-default",
+        enrollmentId: "__NO_ENROLLMENT_ID__",
+      }
+    ),
+    "should call setExperimentActive with aboutwelcome"
+  );
+  Assert.ok(
+    setExperimentActiveStub.calledWith(
+      "default-newtab",
+      REMOTE_CONFIGURATION_NEWTAB.configurations[1].slug,
+      {
+        type: "nimbus-default",
+        enrollmentId: "__NO_ENROLLMENT_ID__",
+      }
+    ),
+    "should call setExperimentActive with newtab"
   );
 
   // Clear RS db and load again. No configurations so should clear the cache.
@@ -151,6 +218,22 @@ add_task(async function test_remote_fetch_and_ready() {
     stub.secondCall.args[1],
     "remote-defaults-update",
     "We receive events when the remote configuration is removed"
+  );
+
+  // Check if we sent active experiment data for defaults
+  Assert.equal(
+    setExperimentInactiveStub.callCount,
+    2,
+    "setExperimentInactive called once per feature"
+  );
+
+  Assert.ok(
+    setExperimentInactiveStub.calledWith("default-aboutwelcome"),
+    "should call setExperimentInactive with aboutwelcome"
+  );
+  Assert.ok(
+    setExperimentInactiveStub.calledWith("default-newtab"),
+    "should call setExperimentInactive with aboutnewtab"
   );
 
   Assert.ok(
@@ -314,9 +397,7 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
     JSON.stringify({ bar: true })
   );
 
-  ExperimentAPI._store.remoteDefaultsSession = new Set(["foo"]);
-
-  ExperimentAPI._store.finalizeRemoteConfigs();
+  ExperimentAPI._store.finalizeRemoteConfigs(["foo"]);
 
   Assert.ok(stubFoo.notCalled, "Not called, feature seen in session");
   Assert.ok(stubBar.called, "Called, feature not seen in session");
