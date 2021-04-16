@@ -210,7 +210,7 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
           string_id: "mr1-welcome-screen-hero-text",
         },
         help_text: {
-          text: "Sam Moqadam - Metal drummer, Firefox aficionado",
+          text: "Sam Moqadam - Metal drummer, Firefox fan",
         },
         primary_button: {
           label: {
