@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace pkix {
 struct CertPolicyId;
-}
+}  // namespace pkix
 }  // namespace mozilla
 
 namespace mozilla {
@@ -32,13 +32,12 @@ nsresult LoadExtendedValidationInfo();
  *        The OID tag of the found policy.
  * @return true if a suitable policy was found, false otherwise.
  */
-bool GetFirstEVPolicy(CERTCertificate& cert,
-                      /*out*/ mozilla::pkix::CertPolicyId& policy,
-                      /*out*/ SECOidTag& policyOidTag);
+bool GetFirstEVPolicy(const nsTArray<uint8_t>& cert,
+                      /*out*/ mozilla::pkix::CertPolicyId& policy);
 
 // CertIsAuthoritativeForEVPolicy does NOT evaluate whether the cert is trusted
 // or distrusted.
-bool CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
+bool CertIsAuthoritativeForEVPolicy(const nsTArray<uint8_t>& cert,
                                     const mozilla::pkix::CertPolicyId& policy);
 
 }  // namespace psm

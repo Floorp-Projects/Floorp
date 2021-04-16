@@ -49,6 +49,11 @@ namespace psm {
 
 typedef mozilla::pkix::Result Result;
 
+enum class EVStatus : uint8_t {
+  NotEV = 0,
+  EV = 1,
+};
+
 // These values correspond to the CERT_CHAIN_KEY_SIZE_STATUS telemetry.
 enum class KeySizeStatus {
   NeverChecked = 0,
@@ -173,7 +178,7 @@ class CertVerifier {
       /*optional in*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS = Nothing(),
       /*optional in*/ const OriginAttributes& originAttributes =
           OriginAttributes(),
-      /*optional out*/ SECOidTag* evOidPolicy = nullptr,
+      /*optional out*/ EVStatus* evStatus = nullptr,
       /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr,
       /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
       /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,
@@ -194,7 +199,7 @@ class CertVerifier {
       /*optional*/ const Maybe<DelegatedCredentialInfo>& dcInfo = Nothing(),
       /*optional*/ const OriginAttributes& originAttributes =
           OriginAttributes(),
-      /*optional out*/ SECOidTag* evOidPolicy = nullptr,
+      /*optional out*/ EVStatus* evStatus = nullptr,
       /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus = nullptr,
       /*optional out*/ KeySizeStatus* keySizeStatus = nullptr,
       /*optional out*/ SHA1ModeResult* sha1ModeResult = nullptr,

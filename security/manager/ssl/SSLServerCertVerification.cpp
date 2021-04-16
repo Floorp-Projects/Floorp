@@ -748,7 +748,7 @@ void GatherCertificateTransparencyTelemetry(
 // CertVerificationThread. When the socket process is used this will be called
 // on the parent process.
 static void CollectCertTelemetry(
-    mozilla::pkix::Result aCertVerificationResult, SECOidTag aEvOidPolicy,
+    mozilla::pkix::Result aCertVerificationResult, EVStatus aEVStatus,
     CertVerifier::OCSPStaplingStatus aOcspStaplingStatus,
     KeySizeStatus aKeySizeStatus, SHA1ModeResult aSha1ModeResult,
     const PinningTelemetryInfo& aPinningTelemetryInfo,
@@ -756,8 +756,8 @@ static void CollectCertTelemetry(
     const CertificateTransparencyInfo& aCertificateTransparencyInfo,
     const CRLiteLookupResult& aCRLiteLookupResult) {
   uint32_t evStatus = (aCertVerificationResult != Success) ? 0  // 0 = Failure
-                      : (aEvOidPolicy == SEC_OID_UNKNOWN)  ? 1  // 1 = DV
-                                                           : 2;  // 2 = EV
+                      : (aEVStatus != EVStatus::EV)        ? 1  // 1 = DV
+                                                           : 2;        // 2 = EV
   Telemetry::Accumulate(Telemetry::CERT_EV_STATUS, evStatus);
 
   if (aOcspStaplingStatus != CertVerifier::OCSP_STAPLING_NEVER_CHECKED) {
@@ -788,9 +788,9 @@ static void CollectCertTelemetry(
 
   if (aCertVerificationResult == Success) {
     GatherSuccessfulValidationTelemetry(aBuiltCertChain);
-    GatherCertificateTransparencyTelemetry(
-        aBuiltCertChain,
-        /*isEV*/ aEvOidPolicy != SEC_OID_UNKNOWN, aCertificateTransparencyInfo);
+    GatherCertificateTransparencyTelemetry(aBuiltCertChain,
+                                           aEVStatus == EVStatus::EV,
+                                           aCertificateTransparencyInfo);
   }
 
   switch (aCRLiteLookupResult) {
@@ -870,7 +870,7 @@ Result AuthCertificate(
     const Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags,
     Time time, uint32_t certVerifierFlags,
     /*out*/ UniqueCERTCertList& builtCertChain,
-    /*out*/ SECOidTag& evOidPolicy,
+    /*out*/ EVStatus& evStatus,
     /*out*/ CertificateTransparencyInfo& certificateTransparencyInfo,
     /*out*/ bool& aIsCertChainRootBuiltInRoot) {
   MOZ_ASSERT(cert);
@@ -894,12 +894,12 @@ Result AuthCertificate(
   Result rv = certVerifier.VerifySSLServerCert(
       cert, time, aPinArg, aHostName, builtCertChain, certVerifierFlags,
       Some(std::move(peerCertsBytes)), stapledOCSPResponse,
-      sctsFromTLSExtension, dcInfo, aOriginAttributes, &evOidPolicy,
+      sctsFromTLSExtension, dcInfo, aOriginAttributes, &evStatus,
       &ocspStaplingStatus, &keySizeStatus, &sha1ModeResult,
       &pinningTelemetryInfo, &certificateTransparencyInfo, &crliteTelemetryInfo,
       &aIsCertChainRootBuiltInRoot);
 
-  CollectCertTelemetry(rv, evOidPolicy, ocspStaplingStatus, keySizeStatus,
+  CollectCertTelemetry(rv, evStatus, ocspStaplingStatus, keySizeStatus,
                        sha1ModeResult, pinningTelemetryInfo, builtCertChain,
                        certificateTransparencyInfo, crliteTelemetryInfo);
 
@@ -1085,13 +1085,13 @@ SSLServerCertVerificationJob::Run() {
 
   TimeStamp jobStartTime = TimeStamp::Now();
   UniqueCERTCertList builtCertChain;
-  SECOidTag evOidPolicy;
+  EVStatus evStatus;
   CertificateTransparencyInfo certificateTransparencyInfo;
   bool isCertChainRootBuiltInRoot = false;
   Result rv = AuthCertificate(
       *certVerifier, mPinArg, mCert, mPeerCertChain, mHostName,
       mOriginAttributes, mStapledOCSPResponse, mSCTsFromTLSExtension, mDCInfo,
-      mProviderFlags, mTime, mCertVerifierFlags, builtCertChain, evOidPolicy,
+      mProviderFlags, mTime, mCertVerifierFlags, builtCertChain, evStatus,
       certificateTransparencyInfo, isCertChainRootBuiltInRoot);
 
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
@@ -1104,8 +1104,6 @@ SSLServerCertVerificationJob::Run() {
 
     certBytesArray =
         TransportSecurityInfo::CreateCertBytesArray(builtCertChain);
-    EVStatus evStatus =
-        evOidPolicy == SEC_OID_UNKNOWN ? EVStatus::NotEV : EVStatus::EV;
     mResultTask->Dispatch(
         nsc, std::move(certBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(

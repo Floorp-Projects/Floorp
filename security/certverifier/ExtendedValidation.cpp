@@ -1002,74 +1002,36 @@ static const struct EVInfo kEVInfos[] = {
     // clang-format on
 };
 
-static SECOidTag sEVInfoOIDTags[ArrayLength(kEVInfos)];
-
-static_assert(SEC_OID_UNKNOWN == 0,
-              "We depend on zero-initialized globals being interpreted as "
-              "SEC_OID_UNKNOWN.");
+static CertPolicyId sEVInfoIds[ArrayLength(kEVInfos)];
 static_assert(
-    ArrayLength(sEVInfoOIDTags) == ArrayLength(kEVInfos),
+    ArrayLength(sEVInfoIds) == ArrayLength(kEVInfos),
     "These arrays are used in parallel and must have the same length.");
+static CertPolicyId sCABForumEVId = {};
 
-static SECOidTag RegisterOID(const SECItem& oidItem, const char* oidName) {
-  SECOidData od;
-  od.oid.len = oidItem.len;
-  od.oid.data = oidItem.data;
-  od.offset = SEC_OID_UNKNOWN;
-  od.desc = oidName;
-  od.mechanism = CKM_INVALID_MECHANISM;
-  od.supportedExtension = INVALID_CERT_EXTENSION;
-  return SECOID_AddEntry(&od);
-}
-
-static SECOidTag sCABForumEVOIDTag = SEC_OID_UNKNOWN;
-
-static bool isEVPolicy(SECOidTag policyOIDTag) {
-  if (policyOIDTag != SEC_OID_UNKNOWN && policyOIDTag == sCABForumEVOIDTag) {
-    return true;
-  }
-
-  for (const SECOidTag& oidTag : sEVInfoOIDTags) {
-    if (policyOIDTag == oidTag) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-bool CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
+bool CertIsAuthoritativeForEVPolicy(const nsTArray<uint8_t>& certBytes,
                                     const mozilla::pkix::CertPolicyId& policy) {
-  MOZ_ASSERT(cert);
-  if (!cert) {
+  nsTArray<uint8_t> fingerprint;
+  nsresult rv = Digest::DigestBuf(SEC_OID_SHA256, certBytes.Elements(),
+                                  certBytes.Length(), fingerprint);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  if (fingerprint.Length() != SHA256_LENGTH) {
     return false;
   }
 
-  unsigned char fingerprint[SHA256_LENGTH];
-  SECStatus srv = PK11_HashBuf(SEC_OID_SHA256, fingerprint, cert->derCert.data,
-                               AssertedCast<int32_t>(cert->derCert.len));
-  if (srv != SECSuccess) {
-    return false;
-  }
-
-  const SECOidData* cabforumOIDData = SECOID_FindOIDByTag(sCABForumEVOIDTag);
   for (size_t i = 0; i < ArrayLength(kEVInfos); ++i) {
     const EVInfo& entry = kEVInfos[i];
 
     // This check ensures that only the specific roots we approve for EV get
     // that status, and not certs (roots or otherwise) that happen to have an
     // OID that's already been approved for EV.
-    if (!ArrayEqual(fingerprint, entry.sha256Fingerprint)) {
+    if (!ArrayEqual(&fingerprint[0], &entry.sha256Fingerprint[0],
+                    SHA256_LENGTH)) {
       continue;
     }
 
-    if (cabforumOIDData && cabforumOIDData->oid.len == policy.numBytes &&
-        ArrayEqual(cabforumOIDData->oid.data, policy.bytes, policy.numBytes)) {
-      return true;
-    }
-    const SECOidData* oidData = SECOID_FindOIDByTag(sEVInfoOIDTags[i]);
-    if (oidData && oidData->oid.len == policy.numBytes &&
-        ArrayEqual(oidData->oid.data, policy.bytes, policy.numBytes)) {
+    if (policy == sCABForumEVId || policy == sEVInfoIds[i]) {
       return true;
     }
   }
@@ -1079,17 +1041,18 @@ bool CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
 
 nsresult LoadExtendedValidationInfo() {
   static const char* sCABForumOIDString = "2.23.140.1.1";
-  static const char* sCABForumOIDDescription = "CA/Browser Forum EV OID";
 
   ScopedAutoSECItem cabforumOIDItem;
   if (SEC_StringToOID(nullptr, &cabforumOIDItem, sCABForumOIDString, 0) !=
       SECSuccess) {
     return NS_ERROR_FAILURE;
   }
-  sCABForumEVOIDTag = RegisterOID(cabforumOIDItem, sCABForumOIDDescription);
-  if (sCABForumEVOIDTag == SEC_OID_UNKNOWN) {
-    return NS_ERROR_FAILURE;
+  if (cabforumOIDItem.len > CertPolicyId::MAX_BYTES) {
+    return NS_ERROR_UNEXPECTED;
   }
+
+  sCABForumEVId.numBytes = cabforumOIDItem.len;
+  PodCopy(sCABForumEVId.bytes, cabforumOIDItem.data, sCABForumEVId.numBytes);
 
   for (size_t i = 0; i < ArrayLength(kEVInfos); ++i) {
     const EVInfo& entry = kEVInfos[i];
@@ -1157,71 +1120,91 @@ nsresult LoadExtendedValidationInfo() {
     if (srv != SECSuccess) {
       return NS_ERROR_FAILURE;
     }
-    sEVInfoOIDTags[i] = RegisterOID(evOIDItem, entry.oidName);
-    if (sEVInfoOIDTags[i] == SEC_OID_UNKNOWN) {
-      return NS_ERROR_FAILURE;
+    if (evOIDItem.len > CertPolicyId::MAX_BYTES) {
+      return NS_ERROR_UNEXPECTED;
     }
+    sEVInfoIds[i].numBytes = evOIDItem.len;
+    PodCopy(sEVInfoIds[i].bytes, evOIDItem.data, sEVInfoIds[i].numBytes);
   }
 
   return NS_OK;
 }
 
-// Helper function for GetFirstEVPolicy(): returns the first suitable policy
-// from the given list of policies.
-bool GetFirstEVPolicyFromPolicyList(
-    const UniqueCERTCertificatePolicies& policies,
-    /*out*/ mozilla::pkix::CertPolicyId& policy,
-    /*out*/ SECOidTag& policyOidTag) {
-  for (size_t i = 0; policies->policyInfos[i]; i++) {
-    const CERTPolicyInfo* policyInfo = policies->policyInfos[i];
-    SECOidTag policyInfoOID = policyInfo->oid;
-    if (policyInfoOID == SEC_OID_UNKNOWN || !isEVPolicy(policyInfoOID)) {
-      continue;
-    }
-
-    const SECOidData* oidData = SECOID_FindOIDByTag(policyInfoOID);
-    MOZ_ASSERT(oidData);
-    MOZ_ASSERT(oidData->oid.data);
-    MOZ_ASSERT(oidData->oid.len > 0);
-    MOZ_ASSERT(oidData->oid.len <= mozilla::pkix::CertPolicyId::MAX_BYTES);
-    if (!oidData || !oidData->oid.data || oidData->oid.len == 0 ||
-        oidData->oid.len > mozilla::pkix::CertPolicyId::MAX_BYTES) {
-      continue;
-    }
-
-    policy.numBytes = AssertedCast<uint16_t>(oidData->oid.len);
-    PodCopy(policy.bytes, oidData->oid.data, policy.numBytes);
-    policyOidTag = policyInfoOID;
+// Helper function for GetFirstEVPolicy(): reads an EV Policy if there is one
+bool FindMatchingEVPolicy(Reader& idReader,
+                          mozilla::pkix::CertPolicyId& policy) {
+  Input cabForumEVIdBytes;
+  Result rv =
+      cabForumEVIdBytes.Init(sCABForumEVId.bytes, sCABForumEVId.numBytes);
+  if (rv == Success && idReader.MatchRest(cabForumEVIdBytes)) {
+    policy = sCABForumEVId;
     return true;
   }
 
-  return false;
-}
-
-bool GetFirstEVPolicy(CERTCertificate& cert,
-                      /*out*/ mozilla::pkix::CertPolicyId& policy,
-                      /*out*/ SECOidTag& policyOidTag) {
-  if (!cert.extensions) {
-    return false;
-  }
-
-  for (size_t i = 0; cert.extensions[i]; i++) {
-    const CERTCertExtension* extension = cert.extensions[i];
-    if (SECOID_FindOIDTag(&extension->id) !=
-        SEC_OID_X509_CERTIFICATE_POLICIES) {
-      continue;
-    }
-
-    UniqueCERTCertificatePolicies policies(
-        CERT_DecodeCertificatePoliciesExtension(&extension->value));
-    if (!policies) {
-      continue;
-    }
-
-    if (GetFirstEVPolicyFromPolicyList(policies, policy, policyOidTag)) {
+  for (const CertPolicyId& id : sEVInfoIds) {
+    Input idBytes;
+    rv = idBytes.Init(id.bytes, id.numBytes);
+    if (rv == Success && idReader.MatchRest(idBytes)) {
+      policy = id;
       return true;
     }
   }
+  return false;
+}
+
+bool GetFirstEVPolicy(const nsTArray<uint8_t>& certBytes,
+                      /*out*/ mozilla::pkix::CertPolicyId& policy) {
+  Input certInput;
+  Result rv = certInput.Init(certBytes.Elements(), certBytes.Length());
+  if (rv != Success) {
+    return false;
+  }
+  // we don't use the certificate for path building, so this parameter
+  // doesn't matter
+  EndEntityOrCA notUsedForPaths = EndEntityOrCA::MustBeEndEntity;
+  BackCert cert(certInput, notUsedForPaths, nullptr);
+  rv = cert.Init();
+  if (rv != Success) {
+    return false;
+  }
+
+  const Input* policies = cert.GetCertificatePolicies();
+  if (!policies) {
+    return false;
+  }
+
+  Reader extension(*policies);
+  Reader certificatePolicies;
+  // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
+  // PolicyInformation ::= SEQUENCE {
+  //   policyIdentifier   CertPolicyId,
+  //   ...
+  // }
+  // CertPolicyId ::= OBJECT IDENTIFIER
+  rv = der::ExpectTagAndGetValue(extension, der::SEQUENCE, certificatePolicies);
+  if (rv != Success || !extension.AtEnd()) {
+    return false;
+  }
+
+  do {
+    Reader policyInformation;
+    rv = der::ExpectTagAndGetValue(certificatePolicies, der::SEQUENCE,
+                                   policyInformation);
+    if (rv != Success) {
+      return false;
+    }
+
+    Reader policyOid;
+    rv = der::ExpectTagAndGetValue(policyInformation, der::OIDTag, policyOid);
+    if (rv != Success) {
+      return false;
+    }
+
+    // we don't validate policy qualifiers here
+    if (FindMatchingEVPolicy(policyOid, policy)) {
+      return true;
+    }
+  } while (!certificatePolicies.AtEnd());
 
   return false;
 }

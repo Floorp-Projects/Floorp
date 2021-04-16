@@ -1263,7 +1263,7 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
 
   UniqueCERTCertList resultChain;
-  SECOidTag evOidPolicy;
+  EVStatus evStatus;
   mozilla::pkix::Result result;
 
   if (!aHostname.IsVoid() && aUsage == certificateUsageSSLServer) {
@@ -1275,7 +1275,7 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
                                           Nothing(),  // stapledOCSPResponse
                                           Nothing(),  // sctsFromTLSExtension
                                           Nothing(),  // dcInfo
-                                          OriginAttributes(), &evOidPolicy);
+                                          OriginAttributes(), &evStatus);
   } else {
     const nsCString& flatHostname = PromiseFlatCString(aHostname);
     result = certVerifier->VerifyCert(
@@ -1285,7 +1285,7 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
         Nothing(),  // extraCertificates
         Nothing(),  // stapledOCSPResponse
         Nothing(),  // sctsFromTLSExtension
-        OriginAttributes(), &evOidPolicy);
+        OriginAttributes(), &evStatus);
   }
 
   if (result == mozilla::pkix::Success) {
@@ -1296,7 +1296,7 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
       return rv;
     }
 
-    if (evOidPolicy != SEC_OID_UNKNOWN) {
+    if (evStatus == EVStatus::EV) {
       *aHasEVPolicy = true;
     }
   }

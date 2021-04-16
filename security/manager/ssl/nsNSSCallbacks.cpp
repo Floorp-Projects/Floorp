@@ -1095,7 +1095,7 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
     flags |= CertVerifier::FLAG_TLS_IGNORE_STATUS_REQUEST;
   }
 
-  SECOidTag evOidPolicy;
+  EVStatus evStatus;
   CertificateTransparencyInfo certificateTransparencyInfo;
   UniqueCERTCertList builtChain;
   bool isBuiltCertChainRootBuiltInRoot = false;
@@ -1103,7 +1103,7 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
       cert, mozilla::pkix::Now(), infoObject, infoObject->GetHostName(),
       builtChain, flags, maybePeerCertsBytes, stapledOCSPResponse,
       sctsFromTLSExtension, Nothing(), infoObject->GetOriginAttributes(),
-      &evOidPolicy,
+      &evStatus,
       nullptr,  // OCSP stapling telemetry
       nullptr,  // key size telemetry
       nullptr,  // SHA-1 telemetry
@@ -1118,7 +1118,7 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
   }
 
   RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(cert.get()));
-  if (rv == Success && evOidPolicy != SEC_OID_UNKNOWN) {
+  if (rv == Success && evStatus == EVStatus::EV) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("HandshakeCallback using NEW cert %p (is EV)", nssc.get()));
     infoObject->SetServerCert(nssc, EVStatus::EV);
