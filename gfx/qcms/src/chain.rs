@@ -545,9 +545,12 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Vec<Box<dyn ModularT
 
         // Prepare A curve.
         let mut transform = Box::new(GammaTable::default());
-        transform.input_clut_table[0] = build_input_gamma_table(lut.a_curves[0].as_deref());
-        transform.input_clut_table[1] = build_input_gamma_table(lut.a_curves[1].as_deref());
-        transform.input_clut_table[2] = build_input_gamma_table(lut.a_curves[2].as_deref());
+        transform.input_clut_table[0] = build_input_gamma_table(lut.a_curves[0].as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
+        transform.input_clut_table[1] = build_input_gamma_table(lut.a_curves[1].as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
+        transform.input_clut_table[2] = build_input_gamma_table(lut.a_curves[2].as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
 
         if lut.num_grid_points[0] as i32 != lut.num_grid_points[1] as i32
             || lut.num_grid_points[1] as i32 != lut.num_grid_points[2] as i32
@@ -571,9 +574,12 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Vec<Box<dyn ModularT
 
         // Prepare M curve
         let mut transform = Box::new(GammaTable::default());
-        transform.input_clut_table[0] = build_input_gamma_table(lut.m_curves[0].as_deref());
-        transform.input_clut_table[1] = build_input_gamma_table(lut.m_curves[1].as_deref());
-        transform.input_clut_table[2] = build_input_gamma_table(lut.m_curves[2].as_deref());
+        transform.input_clut_table[0] = build_input_gamma_table(lut.m_curves[0].as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
+        transform.input_clut_table[1] = build_input_gamma_table(lut.m_curves[1].as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
+        transform.input_clut_table[2] = build_input_gamma_table(lut.m_curves[2].as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
         transforms.push(transform);
 
         // Prepare Matrix
@@ -591,9 +597,12 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Vec<Box<dyn ModularT
     if lut.b_curves[0].is_some() {
         // Prepare B curve
         let mut transform = Box::new(GammaTable::default());
-        transform.input_clut_table[0] = build_input_gamma_table(lut.b_curves[0].as_deref());
-        transform.input_clut_table[1] = build_input_gamma_table(lut.b_curves[1].as_deref());
-        transform.input_clut_table[2] = build_input_gamma_table(lut.b_curves[2].as_deref());
+        transform.input_clut_table[0] = build_input_gamma_table(lut.b_curves[0].as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
+        transform.input_clut_table[1] = build_input_gamma_table(lut.b_curves[1].as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
+        transform.input_clut_table[2] = build_input_gamma_table(lut.b_curves[2].as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
         transforms.push(transform);
     } else {
         // B curve is mandatory
@@ -678,9 +687,12 @@ fn modular_transform_create_input(input: &Profile) -> Option<Vec<Box<dyn Modular
         }
     } else {
         let mut transform = Box::new(GammaTable::default());
-        transform.input_clut_table[0] = build_input_gamma_table(input.redTRC.as_deref());
-        transform.input_clut_table[1] = build_input_gamma_table(input.greenTRC.as_deref());
-        transform.input_clut_table[2] = build_input_gamma_table(input.blueTRC.as_deref());
+        transform.input_clut_table[0] =
+            build_input_gamma_table(input.redTRC.as_deref()).map(|x| (x as Box<[f32]>).into_vec());
+        transform.input_clut_table[1] = build_input_gamma_table(input.greenTRC.as_deref())
+            .map(|x| (x as Box<[f32]>).into_vec());
+        transform.input_clut_table[2] =
+            build_input_gamma_table(input.blueTRC.as_deref()).map(|x| (x as Box<[f32]>).into_vec());
         if transform.input_clut_table[0].is_none()
             || transform.input_clut_table[1].is_none()
             || transform.input_clut_table[2].is_none()
