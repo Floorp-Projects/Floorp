@@ -2275,6 +2275,29 @@ class CreateMachEnvironment(MachCommandBase):
         from mozboot.util import get_mach_virtualenv_root
         from mozbuild.virtualenv import VirtualenvManager
 
+        if (
+            sys.platform.startswith("darwin")
+            and not os.environ.get("MACH_I_DO_WANT_TO_USE_ROSETTA")
+        ):
+            # If running on arm64 mac, check whether we're running under
+            # Rosetta and advise against it.
+            proc = subprocess.run(
+                ["sysctl", "-n", "sysctl.proc_translated"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
+            if (
+                proc.returncode == 0
+                and proc.stdout.decode("ascii", "replace").strip() == "1"
+            ):
+                print(
+                    "Python is being emulated under Rosetta. Please use a native "
+                    "Python instead. If you still really want to go ahead, set "
+                    "the MACH_I_DO_WANT_TO_USE_ROSETTA environment variable.",
+                    file=sys.stderr,
+                )
+                return 1
+
         virtualenv_path = get_mach_virtualenv_root()
         if sys.executable.startswith(virtualenv_path):
             print(
