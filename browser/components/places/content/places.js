@@ -235,6 +235,9 @@ var PlacesOrganizer = {
     contextMenu.removeChild(
       document.getElementById("placesContext_show_bookmark:info")
     );
+    contextMenu.removeChild(
+      document.getElementById("placesContext_show_folder:info")
+    );
 
     if (!Services.policies.isAllowed("profileImport")) {
       document
