@@ -6,9 +6,9 @@ package org.mozilla.fenix.tabstray
 
 import androidx.annotation.VisibleForTesting
 import com.google.android.material.tabs.TabLayout
-import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_NORMAL_TABS
@@ -22,9 +22,9 @@ import org.mozilla.fenix.utils.Do
 class TabLayoutMediator(
     private val tabLayout: TabLayout,
     interactor: TabsTrayInteractor,
-    private val browserStore: BrowserStore,
+    private val browsingModeManager: BrowsingModeManager,
     private val tabsTrayStore: TabsTrayStore,
-    private val metrics: MetricController
+    metrics: MetricController
 ) : LifecycleAwareFeature {
 
     private val observer = TabLayoutObserver(interactor, metrics)
@@ -44,10 +44,8 @@ class TabLayoutMediator(
 
     @VisibleForTesting
     internal fun selectActivePage() {
-        val selectedTab = browserStore.state.selectedTab ?: return
-
         val selectedPagerPosition =
-            when (selectedTab.content.private) {
+            when (browsingModeManager.mode.isPrivate) {
                 true -> POSITION_PRIVATE_TABS
                 false -> POSITION_NORMAL_TABS
             }

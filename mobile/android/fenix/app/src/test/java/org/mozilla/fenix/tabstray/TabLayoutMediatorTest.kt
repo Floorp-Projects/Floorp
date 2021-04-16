@@ -8,12 +8,11 @@ import com.google.android.material.tabs.TabLayout
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.ContentState
-import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.state.store.BrowserStore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_NORMAL_TABS
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_PRIVATE_TABS
@@ -21,15 +20,18 @@ import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.POSITION_SYNCED_TAB
 
 @RunWith(FenixRobolectricTestRunner::class)
 class TabLayoutMediatorTest {
+    private val modeManager: BrowsingModeManager = mockk(relaxed = true)
+    private val tabsTrayStore: TabsTrayStore = mockk(relaxed = true)
+    private val interactor: TabsTrayInteractor = mockk(relaxed = true)
+    private val metrics: MetricController = mockk(relaxed = true)
+    private val tabLayout: TabLayout = mockk(relaxed = true)
+    private val tab: TabLayout.Tab = mockk(relaxed = true)
 
     @Test
-    fun `page to normal tab position when selected tab is also normal`() {
-        val store = createStore("123")
-        val tabsTrayStore: TabsTrayStore = mockk(relaxed = true)
-        val tabLayout: TabLayout = mockk(relaxed = true)
-        val tab: TabLayout.Tab = mockk(relaxed = true)
-        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, tabsTrayStore, mockk())
+    fun `page to normal tab position when mode is also normal`() {
+        val mediator = TabLayoutMediator(tabLayout, interactor, modeManager, tabsTrayStore, metrics)
 
+        every { modeManager.mode }.answers { BrowsingMode.Normal }
         every { tabLayout.getTabAt(POSITION_NORMAL_TABS) }.answers { tab }
 
         mediator.selectActivePage()
@@ -39,13 +41,10 @@ class TabLayoutMediatorTest {
     }
 
     @Test
-    fun `page to private tab position when selected tab is also private`() {
-        val store = createStore("456")
-        val tabsTrayStore: TabsTrayStore = mockk(relaxed = true)
-        val tabLayout: TabLayout = mockk(relaxed = true)
-        val tab: TabLayout.Tab = mockk(relaxed = true)
-        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, tabsTrayStore, mockk())
+    fun `page to private tab position when mode is also private`() {
+        val mediator = TabLayoutMediator(tabLayout, interactor, modeManager, tabsTrayStore, metrics)
 
+        every { modeManager.mode }.answers { BrowsingMode.Private }
         every { tabLayout.getTabAt(POSITION_PRIVATE_TABS) }.answers { tab }
 
         mediator.selectActivePage()
@@ -56,11 +55,7 @@ class TabLayoutMediatorTest {
 
     @Test
     fun `selectTabAtPosition will dispatch the correct TabsTrayStore action`() {
-        val store = createStore("456")
-        val tabsTrayStore: TabsTrayStore = mockk(relaxed = true)
-        val tabLayout: TabLayout = mockk(relaxed = true)
-        val tab: TabLayout.Tab = mockk(relaxed = true)
-        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, tabsTrayStore, mockk())
+        val mediator = TabLayoutMediator(tabLayout, interactor, modeManager, tabsTrayStore, metrics)
 
         every { tabLayout.getTabAt(POSITION_NORMAL_TABS) }.answers { tab }
         every { tabLayout.getTabAt(POSITION_PRIVATE_TABS) }.answers { tab }
@@ -81,10 +76,9 @@ class TabLayoutMediatorTest {
 
     @Test
     fun `lifecycle methods adds and removes observer`() {
-        val store = createStore("456")
-        val tabsTrayStore: TabsTrayStore = mockk(relaxed = true)
-        val tabLayout: TabLayout = mockk(relaxed = true)
-        val mediator = TabLayoutMediator(tabLayout, mockk(relaxed = true), store, tabsTrayStore, mockk())
+        val mediator = TabLayoutMediator(tabLayout, interactor, modeManager, tabsTrayStore, metrics)
+
+        every { modeManager.mode }.answers { BrowsingMode.Private }
 
         mediator.start()
 
@@ -95,26 +89,4 @@ class TabLayoutMediatorTest {
 
         verify { tabLayout.removeOnTabSelectedListener(any()) }
     }
-
-    private fun createStore(selectedId: String) = BrowserStore(
-        initialState = BrowserState(
-            tabs = listOf(
-                TabSessionState(
-                    id = "123",
-                    content = ContentState(
-                        private = false,
-                        url = "https://firefox.com"
-                    )
-                ),
-                TabSessionState(
-                    id = "456",
-                    content = ContentState(
-                        private = true,
-                        url = "https://mozilla.org"
-                    )
-                )
-            ),
-            selectedTabId = selectedId
-        )
-    )
 }

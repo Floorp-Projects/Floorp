@@ -192,7 +192,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             feature = TabLayoutMediator(
                 tabLayout = tab_layout,
                 interactor = this,
-                browserStore = requireComponents.core.store,
+                browsingModeManager = activity.browsingModeManager,
                 tabsTrayStore = tabsTrayStore,
                 metrics = requireComponents.analytics.metrics
             ), owner = this,
