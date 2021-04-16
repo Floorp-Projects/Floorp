@@ -95,6 +95,25 @@
   padding: 5px;
 }
 
+/* Expanders */
+
+.expander-up,
+.expander-down {
+  min-width: 0;
+  padding: 2px 0;
+  padding-inline-start: 2px;
+}
+
+.expander-up > .button-box {
+  appearance: auto;
+  -moz-default-appearance: button-arrow-up;
+}
+
+.expander-down > .button-box {
+  appearance: auto;
+  -moz-default-appearance: button-arrow-down;
+}
+
 /* Downloads pane */
 #clearDownloadsButton > .toolbarbutton-icon {
   display: none;
