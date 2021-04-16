@@ -34,13 +34,30 @@ class nsIWidget;
 @property BOOL menuIsInMenubar;
 @end
 
+class nsMenuXObserver {
+ public:
+  // Called when a menu in this menu subtree opens, before popupshowing.
+  // No strong reference is held to the observer during the call.
+  virtual void OnMenuWillOpen(mozilla::dom::Element* aPopupElement) = 0;
+
+  // Called when a menu in this menu subtree opened, after popupshown.
+  // No strong reference is held to the observer during the call.
+  virtual void OnMenuDidOpen(mozilla::dom::Element* aPopupElement) = 0;
+
+  // Called when a menu in this menu subtree closed, after popuphidden.
+  // No strong reference is held to the observer during the call.
+  virtual void OnMenuClosed(mozilla::dom::Element* aPopupElement) = 0;
+};
+
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
 class nsMenuX final : public nsMenuParentX,
                       public nsChangeObserver,
-                      public nsMenuItemIconX::Listener {
+                      public nsMenuItemIconX::Listener,
+                      public nsMenuXObserver {
  public:
   using MenuChild = mozilla::Variant<RefPtr<nsMenuX>, RefPtr<nsMenuItemX>>;
+  using Observer = nsMenuXObserver;
 
   // aParent is optional.
   nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent);
@@ -56,6 +73,11 @@ class nsMenuX final : public nsMenuParentX,
 
   // nsMenuItemIconX::Listener
   void IconUpdated() override;
+
+  // nsMenuXObserver, to forward notifications from our children to our observer.
+  void OnMenuWillOpen(mozilla::dom::Element* aPopupElement) override;
+  void OnMenuDidOpen(mozilla::dom::Element* aPopupElement) override;
+  void OnMenuClosed(mozilla::dom::Element* aPopupElement) override;
 
   // Unregisters nsMenuX from the nsMenuGroupOwner, and nulls out the group owner pointer, on this
   // nsMenuX and also all nested nsMenuX and nsMenuItemX objects.
@@ -127,17 +149,6 @@ class nsMenuX final : public nsMenuParentX,
   void Dump(uint32_t aIndent) const;
 
   static bool IsXULHelpMenu(nsIContent* aMenuContent);
-
-  class Observer {
-   public:
-    // Called when the menu opened, after popupshown.
-    // No strong reference is held to the observer during the call.
-    virtual void OnMenuOpened() = 0;
-
-    // Called when the menu closed, after popuphidden.
-    // No strong reference is held to the observer during the call.
-    virtual void OnMenuClosed() = 0;
-  };
 
   // Set an observer that gets notified of menu opening and closing.
   // The menu does not keep a strong reference the observer. The observer must

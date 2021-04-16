@@ -320,6 +320,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // NativeMenu::Observer
   void OnNativeMenuOpened() override;
   void OnNativeMenuClosed() override;
+  void OnNativeSubMenuWillOpen(mozilla::dom::Element* aPopupElement) override {}
+  void OnNativeSubMenuDidOpen(mozilla::dom::Element* aPopupElement) override {}
+  void OnNativeSubMenuClosed(mozilla::dom::Element* aPopupElement) override {}
 
   static nsXULPopupManager* sInstance;
 
