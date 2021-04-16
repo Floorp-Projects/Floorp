@@ -21,6 +21,8 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+use std::convert::TryInto;
+
 use crate::{
     iccread::{curveType, Profile},
     s15Fixed16Number_to_float,
@@ -121,19 +123,23 @@ pub fn lut_interp_linear_float(mut value: f32, table: &[f32]) -> f32 {
     /* scale the value */
     value
 }
-fn compute_curve_gamma_table_type1(gamma_table: &mut Vec<f32>, gamma: u16) {
+fn compute_curve_gamma_table_type1(gamma: u16) -> Box<[f32; 256]> {
+    let mut gamma_table = Vec::with_capacity(256);
     let gamma_float: f32 = u8Fixed8Number_to_float(gamma);
     for i in 0..256 {
         // 0..1^(0..255 + 255/256) will always be between 0 and 1
         gamma_table.push((i as f64 / 255.0f64).powf(gamma_float as f64) as f32);
     }
+    gamma_table.into_boxed_slice().try_into().unwrap()
 }
-fn compute_curve_gamma_table_type2(gamma_table: &mut Vec<f32>, table: &[u16]) {
+fn compute_curve_gamma_table_type2(table: &[u16]) -> Box<[f32; 256]> {
+    let mut gamma_table = Vec::with_capacity(256);
     for i in 0..256 {
         gamma_table.push(lut_interp_linear(i as f64 / 255.0f64, table));
     }
+    gamma_table.into_boxed_slice().try_into().unwrap()
 }
-fn compute_curve_gamma_table_type_parametric(gamma_table: &mut Vec<f32>, params: &[f32]) {
+fn compute_curve_gamma_table_type_parametric(params: &[f32]) -> Box<[f32; 256]> {
     let g: f32 = params[0];
     let (a, b, c, d, e, f) = match &params[1..] {
         [] => (1., 0., 0., -1., 0., 0.),
@@ -143,6 +149,7 @@ fn compute_curve_gamma_table_type_parametric(gamma_table: &mut Vec<f32>, params:
         [a, b, c, d, e, f] => (*a, *b, *c, *d, *e, *f),
         _ => panic!(),
     };
+    let mut gamma_table = Vec::with_capacity(256);
     for i in 0..256 {
         let X = i as f32 / 255.;
         gamma_table.push(clamp_float(if X >= d {
@@ -151,31 +158,29 @@ fn compute_curve_gamma_table_type_parametric(gamma_table: &mut Vec<f32>, params:
             c * X + f
         }))
     }
+    gamma_table.into_boxed_slice().try_into().unwrap()
 }
 
-fn compute_curve_gamma_table_type0(gamma_table: &mut Vec<f32>) {
+fn compute_curve_gamma_table_type0() -> Box<[f32; 256]> {
+    let mut gamma_table = Vec::with_capacity(256);
     for i in 0..256 {
         gamma_table.push((i as f64 / 255.0f64) as f32);
     }
+    gamma_table.into_boxed_slice().try_into().unwrap()
 }
-pub(crate) fn build_input_gamma_table(TRC: Option<&curveType>) -> Option<Vec<f32>> {
+pub(crate) fn build_input_gamma_table(TRC: Option<&curveType>) -> Option<Box<[f32; 256]>> {
     let TRC = match TRC {
         Some(TRC) => TRC,
         None => return None,
     };
-    let mut gamma_table = Vec::with_capacity(256);
-    match TRC {
-        curveType::Parametric(params) => {
-            compute_curve_gamma_table_type_parametric(&mut gamma_table, params)
-        }
+    Some(match TRC {
+        curveType::Parametric(params) => compute_curve_gamma_table_type_parametric(params),
         curveType::Curve(data) => match data.len() {
-            0 => compute_curve_gamma_table_type0(&mut gamma_table),
-            1 => compute_curve_gamma_table_type1(&mut gamma_table, data[0]),
-            _ => compute_curve_gamma_table_type2(&mut gamma_table, data),
+            0 => compute_curve_gamma_table_type0(),
+            1 => compute_curve_gamma_table_type1(data[0]),
+            _ => compute_curve_gamma_table_type2(data),
         },
-    }
-
-    Some(gamma_table)
+    })
 }
 pub fn build_colorant_matrix(p: &Profile) -> Matrix {
     let mut result: Matrix = Matrix {
@@ -332,11 +337,10 @@ pub fn compute_precache_linear(output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
 pub(crate) fn compute_precache(trc: &curveType, output: &mut [u8; PRECACHE_OUTPUT_SIZE]) -> bool {
     match trc {
         curveType::Parametric(params) => {
-            let mut gamma_table = Vec::with_capacity(256);
             let mut gamma_table_uint: [u16; 256] = [0; 256];
 
             let mut inverted_size: i32 = 256;
-            compute_curve_gamma_table_type_parametric(&mut gamma_table, params);
+            let gamma_table = compute_curve_gamma_table_type_parametric(params);
             let mut i: u16 = 0u16;
             while (i as i32) < 256 {
                 gamma_table_uint[i as usize] = (gamma_table[i as usize] * 65535f32) as u16;
@@ -396,9 +400,8 @@ fn build_pow_table(gamma: f32, length: i32) -> Vec<u16> {
 pub(crate) fn build_output_lut(trc: &curveType) -> Vec<u16> {
     match trc {
         curveType::Parametric(params) => {
-            let mut gamma_table = Vec::with_capacity(256);
             let mut output = Vec::with_capacity(256);
-            compute_curve_gamma_table_type_parametric(&mut gamma_table, params);
+            let gamma_table = compute_curve_gamma_table_type_parametric(params);
             for i in 0..256 {
                 output.push((gamma_table[i as usize] * 65535f32) as u16);
             }
