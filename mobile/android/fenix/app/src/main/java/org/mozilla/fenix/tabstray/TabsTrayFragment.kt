@@ -28,8 +28,11 @@ import kotlinx.android.synthetic.main.tabstray_multiselect_items.*
 import kotlinx.android.synthetic.main.tabstray_multiselect_items.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
+import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
@@ -47,8 +50,10 @@ import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.SelectionHandleBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
+import org.mozilla.fenix.tabstray.ext.getTrayPosition
 import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
+import org.mozilla.fenix.utils.allowUndo
 import kotlin.math.max
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -188,7 +193,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
                 tabLayout = tab_layout,
                 interactor = this,
                 browserStore = requireComponents.core.store,
-                trayStore = tabsTrayStore,
+                tabsTrayStore = tabsTrayStore,
                 metrics = requireComponents.analytics.metrics
             ), owner = this,
             view = view
@@ -262,6 +267,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     override fun setCurrentTrayPosition(position: Int, smoothScroll: Boolean) {
         tabsTray.setCurrentItem(position, smoothScroll)
+        tab_layout.getTabAt(position)?.select()
+        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(position)))
     }
 
     override fun navigateToBrowser() {
@@ -279,18 +286,42 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     }
 
     override fun onDeleteTab(tabId: String) {
-        // TODO re-implement these methods
-        // showUndoSnackbarForTab(sessionId)
-        // removeIfNotLastTab(sessionId)
+        val browserStore = requireComponents.core.store
+        val tab = browserStore.state.findTab(tabId)
 
-        // Temporary
-        requireComponents.useCases.tabsUseCases.removeTab(tabId)
+        tab?.let {
+            requireComponents.useCases.tabsUseCases.removeTab(tabId)
+            if (browserStore.state.getNormalOrPrivateTabs(it.content.private).isNotEmpty()) {
+                showUndoSnackbarForTab(it)
+            }
+        }
     }
 
     override fun onDeleteTabs(tabs: Collection<Tab>) {
         tabs.forEach {
             onDeleteTab(it.id)
         }
+    }
+
+    private fun showUndoSnackbarForTab(removedTab: TabSessionState) {
+        val snackbarMessage =
+            when (removedTab.content.private) {
+                true -> getString(R.string.snackbar_private_tab_closed)
+                false -> getString(R.string.snackbar_tab_closed)
+            }
+
+        lifecycleScope.allowUndo(
+            requireView(),
+            snackbarMessage,
+            getString(R.string.snackbar_deleted_undo),
+            {
+                requireComponents.useCases.tabsUseCases.undo.invoke()
+                tabLayoutMediator.withFeature { it.selectTabAtPosition(removedTab.getTrayPosition()) }
+            },
+            operation = { },
+            elevation = ELEVATION,
+            anchorView = new_tab_button
+        )
     }
 
     private fun setupPager(
@@ -355,5 +386,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
         // Minimum number of grid items for which to show the tabs tray as expanded.
         private const val EXPAND_AT_GRID_SIZE = 3
+
+        // Elevation for undo toasts
+        private const val ELEVATION = 80f
     }
 }

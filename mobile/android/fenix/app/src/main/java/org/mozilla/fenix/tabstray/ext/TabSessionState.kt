@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray.ext
 
 import mozilla.components.browser.state.state.TabSessionState
+import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList.BrowserTabType.PRIVATE
 import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList.Configuration
 
@@ -13,3 +14,9 @@ fun TabSessionState.filterFromConfig(configuration: Configuration): Boolean {
 
     return content.private == isPrivate
 }
+
+fun TabSessionState.getTrayPosition(): Int =
+    when (content.private) {
+        true -> Page.NormalTabs.ordinal
+        false -> Page.NormalTabs.ordinal
+    }

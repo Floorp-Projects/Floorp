@@ -104,6 +104,15 @@ class TabsTrayStoreTest {
     }
 
     @Test
+    fun `WHEN position is converted to page THEN page is correct`() {
+        assert(Page.positionToPage(0) == Page.NormalTabs)
+        assert(Page.positionToPage(1) == Page.PrivateTabs)
+        assert(Page.positionToPage(2) == Page.SyncedTabs)
+        assert(Page.positionToPage(3) == Page.SyncedTabs)
+        assert(Page.positionToPage(-1) == Page.SyncedTabs)
+    }
+
+    @Test
     fun `WHEN sync now action is triggered THEN update the sync now boolean`() {
         val store = TabsTrayStore()
 

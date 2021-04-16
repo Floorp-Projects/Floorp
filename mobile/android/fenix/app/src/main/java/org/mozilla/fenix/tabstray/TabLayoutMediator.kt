@@ -23,11 +23,11 @@ class TabLayoutMediator(
     private val tabLayout: TabLayout,
     interactor: TabsTrayInteractor,
     private val browserStore: BrowserStore,
-    trayStore: TabsTrayStore,
+    private val tabsTrayStore: TabsTrayStore,
     private val metrics: MetricController
 ) : LifecycleAwareFeature {
 
-    private val observer = TabLayoutObserver(interactor, trayStore, metrics)
+    private val observer = TabLayoutObserver(interactor, metrics)
 
     /**
      * Start observing the [TabLayout] and select the current tab for initial state.
@@ -46,13 +46,18 @@ class TabLayoutMediator(
     internal fun selectActivePage() {
         val selectedTab = browserStore.state.selectedTab ?: return
 
-        val selectedPagerPosition = if (selectedTab.content.private) {
-            POSITION_PRIVATE_TABS
-        } else {
-            POSITION_NORMAL_TABS
-        }
+        val selectedPagerPosition =
+            when (selectedTab.content.private) {
+                true -> POSITION_PRIVATE_TABS
+                false -> POSITION_NORMAL_TABS
+            }
 
-        tabLayout.getTabAt(selectedPagerPosition)?.select()
+        selectTabAtPosition(selectedPagerPosition)
+    }
+
+    fun selectTabAtPosition(position: Int) {
+        tabLayout.getTabAt(position)?.select()
+        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(position)))
     }
 }
 
@@ -61,7 +66,6 @@ class TabLayoutMediator(
  */
 internal class TabLayoutObserver(
     private val interactor: TabsTrayInteractor,
-    private val trayStore: TabsTrayStore,
     private val metrics: MetricController
 ) : TabLayout.OnTabSelectedListener {
 
@@ -78,9 +82,7 @@ internal class TabLayoutObserver(
 
         interactor.setCurrentTrayPosition(tab.position, animate)
 
-        trayStore.dispatch(TabsTrayAction.PageSelected(tab.toPage()))
-
-        Do exhaustive when (tab.toPage()) {
+        Do exhaustive when (Page.positionToPage(tab.position)) {
             Page.NormalTabs -> metrics.track(Event.TabsTrayNormalModeTapped)
             Page.PrivateTabs -> metrics.track(Event.TabsTrayPrivateModeTapped)
             Page.SyncedTabs -> metrics.track(Event.TabsTraySyncedModeTapped)
@@ -89,10 +91,4 @@ internal class TabLayoutObserver(
 
     override fun onTabUnselected(tab: TabLayout.Tab) = Unit
     override fun onTabReselected(tab: TabLayout.Tab) = Unit
-}
-
-fun TabLayout.Tab.toPage() = when (this.position) {
-    0 -> Page.NormalTabs
-    1 -> Page.PrivateTabs
-    else -> Page.SyncedTabs
 }
