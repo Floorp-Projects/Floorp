@@ -410,6 +410,7 @@ void RenderCompositorOGLSWGL::TileOGL::Unmap(const gfx::IntRect& aDirtyRect) {
     mTexture->Update(mSurface, &dirty);
     gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
   } else {
+    mSurface->Unmap();
     mTexture->Update(mSurface, &dirty);
   }
 }
