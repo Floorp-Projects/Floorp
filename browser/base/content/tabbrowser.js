@@ -3809,7 +3809,7 @@
       }
 
       let notificationBox = this.readNotificationBox(browser);
-      notificationBox?.stack.remove();
+      notificationBox?._stack?.remove();
 
       if (aTab.linkedPanel) {
         if (!adoptedByTab && !gMultiProcessBrowser) {
