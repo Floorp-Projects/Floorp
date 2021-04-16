@@ -2990,3 +2990,54 @@ bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
   masm.tagValue(JSVAL_TYPE_OBJECT, result, output.valueReg());
   return true;
 }
+
+bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
+                                                       uint32_t numDynamicSlots,
+                                                       gc::AllocKind allocKind,
+                                                       uint32_t shapeOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegister obj(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegisterMaybeOutput shape(allocator, masm, output);
+
+  Address shapeAddr(stubAddress(shapeOffset));
+  masm.loadPtr(shapeAddr, shape);
+
+  allocator.discardStack(masm);
+
+  Label done;
+  Label fail;
+
+  masm.createPlainGCObject(obj, shape, scratch, shape, numFixedSlots,
+                           numDynamicSlots, allocKind, gc::DefaultHeap, &fail);
+  masm.jump(&done);
+
+  {
+    masm.bind(&fail);
+
+    // We get here if the nursery is full (unlikely) but also for tenured
+    // allocations if the current arena is full and we need to allocate a new
+    // one (fairly common).
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(Imm32(gc::DefaultHeap));
+    masm.Push(Imm32(int32_t(allocKind)));
+    masm.loadPtr(shapeAddr, shape);  // This might have been overwritten.
+    masm.Push(shape);
+
+    using Fn =
+        JSObject* (*)(JSContext*, HandleShape, gc::AllocKind, gc::InitialHeap);
+    callVM<Fn, NewPlainObject>(masm);
+
+    stubFrame.leave(masm);
+    masm.mov(ReturnReg, obj);
+  }
+
+  masm.bind(&done);
+  masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+  return true;
+}
