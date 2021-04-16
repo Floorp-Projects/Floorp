@@ -122,7 +122,7 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
       }));
 }
 
-Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
+Result<int64_t, nsresult> GetPaddingSizeFromDB(
     nsIFile& aDir, nsIFile& aDBFile, const OriginMetadata& aOriginMetadata) {
   QuotaInfo quotaInfo;
   static_cast<OriginMetadata&>(quotaInfo) = aOriginMetadata;
@@ -145,13 +145,13 @@ Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
   CACHE_TRY_INSPECT(const auto& conn, OpenDBConnection(quotaInfo, aDBFile));
 
   // Make sure that the database has the latest schema before we try to read
-  // from it. We have to do this because LockedGetPaddingSizeFromDB is called
+  // from it. We have to do this because GetPaddingSizeFromDB is called
   // by InitOrigin. And it means that SetupAction::RunSyncWithDBOnTarget hasn't
   // checked the schema for the given origin yet).
   CACHE_TRY(db::CreateOrMigrateSchema(*conn));
 
-  CACHE_TRY_RETURN(LockedDirectoryPaddingRestore(aDir, *conn,
-                                                 /* aMustRestore */ false));
+  CACHE_TRY_RETURN(DirectoryPaddingRestore(aDir, *conn,
+                                           /* aMustRestore */ false));
 }
 
 }  // namespace
@@ -159,8 +159,7 @@ Result<int64_t, nsresult> LockedGetPaddingSizeFromDB(
 const nsLiteralString kCachesSQLiteFilename = u"caches.sqlite"_ns;
 const nsLiteralString kMorgueDirectoryFilename = u"morgue"_ns;
 
-CacheQuotaClient::CacheQuotaClient()
-    : mDirPaddingFileMutex("DOMCacheQuotaClient.mDirPaddingFileMutex") {
+CacheQuotaClient::CacheQuotaClient() {
   AssertIsOnBackgroundThread();
   MOZ_DIAGNOSTIC_ASSERT(!sInstance);
   sInstance = this;
@@ -191,7 +190,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
 
   CACHE_TRY_INSPECT(
       const auto& cachesSQLiteFile,
-      ([dir, this]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
+      ([dir]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
         CACHE_TRY_INSPECT(const auto& cachesSQLite,
                           CloneFileAndAppend(*dir, kCachesSQLiteFilename));
 
@@ -210,15 +209,11 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
           // XXX Long term, we might even think about removing entire origin
           // directory because missing caches.sqlite while other files exist can
           // be interpreted as database corruption.
-          {
-            MutexAutoLock lock(mDirPaddingFileMutex);
+          CACHE_TRY(mozilla::dom::cache::DirectoryPaddingDeleteFile(
+              *dir, DirPaddingFile::TMP_FILE));
 
-            CACHE_TRY(mozilla::dom::cache::LockedDirectoryPaddingDeleteFile(
-                *dir, DirPaddingFile::TMP_FILE));
-
-            CACHE_TRY(mozilla::dom::cache::LockedDirectoryPaddingDeleteFile(
-                *dir, DirPaddingFile::FILE));
-          }
+          CACHE_TRY(mozilla::dom::cache::DirectoryPaddingDeleteFile(
+              *dir, DirPaddingFile::FILE));
 
           CACHE_TRY_INSPECT(const auto& morgueDir,
                             CloneFileAndAppend(*dir, kMorgueDirectoryFilename));
@@ -245,13 +240,11 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
 
   CACHE_TRY_INSPECT(
       const auto& paddingSize,
-      ([this, dir, cachesSQLiteFile,
+      ([dir, cachesSQLiteFile,
         &aOriginMetadata]() -> Result<int64_t, nsresult> {
-        MutexAutoLock lock(mDirPaddingFileMutex);
-
         if (!DirectoryPaddingFileExists(*dir, DirPaddingFile::TMP_FILE)) {
           const auto& maybePaddingSize = [dir]() -> Maybe<int64_t> {
-            CACHE_TRY_RETURN(LockedDirectoryPaddingGet(*dir).map(Some<int64_t>),
+            CACHE_TRY_RETURN(DirectoryPaddingGet(*dir).map(Some<int64_t>),
                              Nothing{});
           }();
 
@@ -263,8 +256,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
         // If the temporary file still exists or failing to get the padding size
         // from the padding file, then we need to get the padding size from the
         // database and restore the padding file.
-        CACHE_TRY_RETURN(LockedGetPaddingSizeFromDB(*dir, *cachesSQLiteFile,
-                                                    aOriginMetadata));
+        CACHE_TRY_RETURN(
+            GetPaddingSizeFromDB(*dir, *cachesSQLiteFile, aOriginMetadata));
       }()));
 
   CACHE_TRY_INSPECT(
@@ -428,9 +421,7 @@ nsresult CacheQuotaClient::UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) {
   AssertIsOnIOThread();
   MOZ_DIAGNOSTIC_ASSERT(aDirectory);
 
-  MutexAutoLock lock(mDirPaddingFileMutex);
-
-  CACHE_TRY(LockedDirectoryPaddingInit(*aDirectory));
+  CACHE_TRY(DirectoryPaddingInit(*aDirectory));
 
   return NS_OK;
 }
@@ -441,11 +432,9 @@ nsresult CacheQuotaClient::RestorePaddingFileInternal(
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aConn);
 
-  MutexAutoLock lock(mDirPaddingFileMutex);
-
   CACHE_TRY_INSPECT(const int64_t& dummyPaddingSize,
-                    LockedDirectoryPaddingRestore(*aBaseDir, *aConn,
-                                                  /* aMustRestore */ true));
+                    DirectoryPaddingRestore(*aBaseDir, *aConn,
+                                            /* aMustRestore */ true));
   Unused << dummyPaddingSize;
 
   return NS_OK;
@@ -455,8 +444,6 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
                                                    nsIFile* aBaseDir) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
-
-  MutexAutoLock lock(mDirPaddingFileMutex);
 
   MOZ_ASSERT(DirectoryPaddingFileExists(*aBaseDir, DirPaddingFile::FILE));
 
@@ -471,7 +458,7 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
               directoryPaddingGetResult,
               ([&aBaseDir]() -> Result<Maybe<int64_t>, nsresult> {
                 CACHE_TRY_RETURN(
-                    LockedDirectoryPaddingGet(*aBaseDir).map(Some<int64_t>),
+                    DirectoryPaddingGet(*aBaseDir).map(Some<int64_t>),
                     Maybe<int64_t>{});
               }()));
         }
@@ -491,13 +478,12 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
     DecreaseUsageForQuotaInfo(aQuotaInfo, paddingSize);
   }
 
-  CACHE_TRY(LockedDirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::FILE));
+  CACHE_TRY(DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::FILE));
 
   // Remove temporary file if we have one.
-  CACHE_TRY(
-      LockedDirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::TMP_FILE));
+  CACHE_TRY(DirectoryPaddingDeleteFile(*aBaseDir, DirPaddingFile::TMP_FILE));
 
-  CACHE_TRY(LockedDirectoryPaddingInit(*aBaseDir));
+  CACHE_TRY(DirectoryPaddingInit(*aBaseDir));
 
   return NS_OK;
 }

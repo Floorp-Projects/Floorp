@@ -81,38 +81,33 @@ class CacheQuotaClient final : public quota::Client {
       return NS_OK;
     }
 
-    {
-      MutexAutoLock lock(mDirPaddingFileMutex);
+    // Don't delete the temporary padding file in case of an error to force the
+    // next action recalculate the padding size.
+    CACHE_TRY(UpdateDirectoryPaddingFile(aBaseDir, aConn, aIncreaseSize,
+                                         aDecreaseSize,
+                                         temporaryPaddingFileExist));
 
-      // Don't delete the temporary padding file in case of an error to force
-      // the next action recalculate the padding size.
-      CACHE_TRY(LockedUpdateDirectoryPaddingFile(aBaseDir, aConn, aIncreaseSize,
-                                                 aDecreaseSize,
-                                                 temporaryPaddingFileExist));
+    // Don't delete the temporary padding file in case of an error to force the
+    // next action recalculate the padding size.
+    CACHE_TRY(aCommitHook());
 
-      // Don't delete the temporary padding file in case of an error to force
-      // the next action recalculate the padding size.
-      CACHE_TRY(aCommitHook());
+    QM_TRY(QM_OR_ELSE_WARN(
+        ToResult(DirectoryPaddingFinalizeWrite(aBaseDir)),
+        ([&aBaseDir](const nsresult) -> Result<Ok, nsresult> {
+          // Force restore file next time.
+          Unused << DirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
 
-      QM_TRY(QM_OR_ELSE_WARN(
-          ToResult(LockedDirectoryPaddingFinalizeWrite(aBaseDir)),
-          ([&aBaseDir](const nsresult) -> Result<Ok, nsresult> {
-            // Force restore file next time.
-            Unused << LockedDirectoryPaddingDeleteFile(aBaseDir,
-                                                       DirPaddingFile::FILE);
+          // Ensure that we are able to force the padding file
+          // to be restored.
+          MOZ_ASSERT(
+              DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE));
 
-            // Ensure that we are able to force the padding file to
-            // be restored.
-            MOZ_ASSERT(
-                DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE));
-
-            // Since both the body file and header have been stored
-            // in the file-system, just make the action be resolve
-            // and let the padding file be restored in the next
-            // action.
-            return Ok{};
-          })));
-    }
+          // Since both the body file and header have been
+          // stored in the file-system, just make the action be
+          // resolve and let the padding file be restored in the
+          // next action.
+          return Ok{};
+        })));
 
     return NS_OK;
   }
@@ -133,10 +128,6 @@ class CacheQuotaClient final : public quota::Client {
   void FinalizeShutdown() override;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheQuotaClient, override)
-
-  // Mutex lock to protect directroy padding files. It should only be acquired
-  // in DOM Cache IO threads and Quota IO thread.
-  mozilla::Mutex mDirPaddingFileMutex;
 };
 
 }  // namespace cache
