@@ -24,11 +24,10 @@ add_task(async function() {
   await pocketPanelShowing;
 
   let pocketPanel = document.getElementById("customizationui-widget-panel");
-
   let pocketIframe = pocketPanel.querySelector("iframe");
-  is(
-    pocketIframe.src.split("?")[0],
-    "about:pocket-home",
+
+  await ContentTaskUtils.waitForCondition(
+    () => pocketIframe.src.split("?")[0] === "about:pocket-home",
     "pocket home panel is showing"
   );
 
