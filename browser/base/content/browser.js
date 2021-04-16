@@ -5857,7 +5857,7 @@ var TabsProgressListener = {
       gBrowser.resetBrowserSharing(aBrowser);
     }
 
-    gBrowser.getNotificationBox(aBrowser).removeTransientNotifications();
+    gBrowser.readNotificationBox(aBrowser)?.removeTransientNotifications();
 
     FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     CaptivePortalWatcher.onLocationChange(aBrowser);
