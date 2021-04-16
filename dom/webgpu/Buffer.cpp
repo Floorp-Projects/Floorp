@@ -42,8 +42,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Buffer)
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize)
-    : ChildOf(aParent), mId(aId), mSize(aSize) {
+Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
+               bool aMappable)
+    : ChildOf(aParent), mId(aId), mSize(aSize), mMappable(aMappable) {
   mozilla::HoldJSObjects(this);
 }
 
@@ -81,6 +82,10 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
   }
   if (mMapped) {
     aRv.ThrowInvalidStateError("Unable to map a buffer that is already mapped");
+    return nullptr;
+  }
+  if (!mMappable) {
+    aRv.ThrowInvalidStateError("Unable to map a buffer that is not mappable");
     return nullptr;
   }
   // Initialize with a dummy shmem, it will become real after the promise is
@@ -156,7 +161,8 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
     }
   };
 
-  mParent->UnmapBuffer(mId, std::move(mMapped->mShmem), mMapped->mWritable);
+  mParent->UnmapBuffer(mId, std::move(mMapped->mShmem), mMapped->mWritable,
+                       mMappable);
   mMapped.reset();
 }
 
