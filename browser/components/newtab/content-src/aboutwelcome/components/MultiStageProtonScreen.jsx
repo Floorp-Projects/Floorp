@@ -86,14 +86,16 @@ export class MultiStageProtonScreen extends React.PureComponent {
               <nav
                 className="steps"
                 data-l10n-id={"onboarding-welcome-steps-indicator"}
-                data-l10n-args={`{"current": ${parseInt(this.props.order, 10) +
-                  1}, "total": ${this.props.totalNumberOfScreens}}`}
+                data-l10n-args={JSON.stringify({
+                  current: this.props.order,
+                  total: this.props.totalNumberOfScreens,
+                })}
               >
                 {/* These empty elements are here to help trigger the nav for screen readers. */}
                 <br />
                 <p />
                 <StepsIndicator
-                  order={this.props.order}
+                  order={this.props.order - 1}
                   totalNumberOfScreens={this.props.totalNumberOfScreens}
                 />
               </nav>
