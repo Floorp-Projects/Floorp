@@ -109,3 +109,7 @@ chrome/toolkit/skin/classic/global/icons/find-previous-arrow.svg
 # Bug 1704669 - Deduplicate checkmark icons in the tree
 chrome/toolkit/skin/classic/global/icons/success.svg
 chrome/toolkit/skin/classic/global/icons/check.svg
+
+# Bug 1699631 - De-duplicate the stop/close icons
+browser/chrome/browser/skin/classic/browser/stop.svg
+chrome/toolkit/skin/classic/global/icons/close.svg
