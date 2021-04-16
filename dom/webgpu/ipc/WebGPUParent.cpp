@@ -13,6 +13,8 @@ namespace webgpu {
 
 const uint64_t POLL_TIME_MS = 100;
 
+static mozilla::LazyLogModule sLogger("WebGPU");
+
 // A helper class to force error checks coming across FFI.
 // It will assert in destructor if unchecked.
 // TODO: refactor this to avoid stack-allocating the buffer all the time.
@@ -269,6 +271,8 @@ ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aSelfId) {
 
 ipc::IPCResult WebGPUParent::RecvBufferReturnShmem(RawId aSelfId,
                                                    Shmem&& aShmem) {
+  MOZ_LOG(sLogger, LogLevel::Info,
+          ("RecvBufferReturnShmem %" PRIu64 "\n", aSelfId));
   mSharedMemoryMap[aSelfId] = aShmem;
   return IPC_OK();
 }
@@ -310,9 +314,17 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aSelfId,
                                            ffi::WGPUHostMap aHostMap,
                                            uint64_t aOffset, uint64_t aSize,
                                            BufferMapResolver&& aResolver) {
+  MOZ_LOG(sLogger, LogLevel::Info,
+          ("RecvBufferMap %" PRIu64 " offset=%" PRIu64 " size=%" PRIu64 "\n",
+           aSelfId, aOffset, aSize));
+  auto& shmem = mSharedMemoryMap[aSelfId];
+  if (!shmem.IsReadable()) {
+    MOZ_LOG(sLogger, LogLevel::Error, ("\tshmem is empty\n"));
+    return IPC_OK();
+  }
+
   auto* request = new MapRequest(mContext, aSelfId, aHostMap, aOffset,
-                                 std::move(mSharedMemoryMap[aSelfId]),
-                                 std::move(aResolver));
+                                 std::move(shmem), std::move(aResolver));
   ffi::WGPUBufferMapOperation mapOperation = {
       aHostMap, &MapCallback, reinterpret_cast<uint8_t*>(request)};
   ffi::wgpu_server_buffer_map(mContext, aSelfId, aOffset, aSize, mapOperation);
@@ -320,7 +332,7 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aSelfId,
 }
 
 ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aSelfId, Shmem&& aShmem,
-                                             bool aFlush) {
+                                             bool aFlush, bool aKeepShmem) {
   if (aFlush) {
     // TODO: flush exact modified sub-range
     uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
@@ -331,17 +343,25 @@ ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aSelfId, Shmem&& aShmem,
 
   ffi::wgpu_server_buffer_unmap(mContext, aSelfId);
 
+  MOZ_LOG(sLogger, LogLevel::Info,
+          ("RecvBufferUnmap %" PRIu64 " flush=%d\n", aSelfId, aFlush));
   const auto iter = mSharedMemoryMap.find(aSelfId);
-  if (iter == mSharedMemoryMap.end()) {
-    DeallocShmem(aShmem);
-  } else {
+  if (iter != mSharedMemoryMap.end()) {
     iter->second = aShmem;
+  } else if (aKeepShmem) {
+    mSharedMemoryMap[aSelfId] = aShmem;
+  } else {
+    // we are here if the buffer was mapped at creation, but doesn't have any
+    // mapping flags
+    DeallocShmem(aShmem);
   }
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aSelfId) {
   ffi::wgpu_server_buffer_drop(mContext, aSelfId);
+  MOZ_LOG(sLogger, LogLevel::Info,
+          ("RecvBufferDestroy %" PRIu64 "\n", aSelfId));
 
   const auto iter = mSharedMemoryMap.find(aSelfId);
   if (iter != mSharedMemoryMap.end()) {

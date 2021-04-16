@@ -45,7 +45,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(Buffer)
   GPU_DECL_JS_WRAP(Buffer)
 
-  Buffer(Device* const aParent, RawId aId, BufferAddress aSize);
+  Buffer(Device* const aParent, RawId aId, BufferAddress aSize, bool aMappable);
   void SetMapped(ipc::Shmem&& aShmem, bool aWritable);
 
   const RawId mId;
@@ -58,6 +58,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   // (which may be smaller than `BufferAddress`), but general not all buffers
   // are mapped.
   const BufferAddress mSize;
+  const bool mMappable;
   nsString mLabel;
   // Information about the currently active mapping.
   Maybe<MappedInfo> mMapped;

@@ -40,7 +40,7 @@ parent:
   async AdapterDestroy(RawId selfId);
   async BufferReturnShmem(RawId selfId, Shmem shmem);
   async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (Shmem sm);
-  async BufferUnmap(RawId selfId, Shmem shmem, bool flush);
+  async BufferUnmap(RawId selfId, Shmem shmem, bool flush, bool keepShmem);
   async BufferDestroy(RawId selfId);
   async TextureDestroy(RawId selfId);
   async TextureViewDestroy(RawId selfId);
