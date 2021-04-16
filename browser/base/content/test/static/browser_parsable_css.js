@@ -115,6 +115,9 @@ let propNameWhitelist = [
   { propName: "--bezier-diagonal-color", isFromDevTools: true },
   { propName: "--bezier-grid-color", isFromDevTools: true },
   { propName: "--page-border", isFromDevTools: false },
+
+  // This variable is used from CSS embedded in JS in adjustableTitle.js
+  { propName: "--icon-url", isFromDevTools: false },
 ];
 
 // Add suffix to stylesheets' URI so that we always load them here and

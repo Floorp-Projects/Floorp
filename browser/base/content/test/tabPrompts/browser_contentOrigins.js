@@ -7,6 +7,8 @@ const { PromptTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromptTestUtils.jsm"
 );
 
+let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+
 const TEST_ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
@@ -48,10 +50,16 @@ async function checkBeforeunload(
   return checkDialog(pageToLoad, openFn, expectedTitle, expectedIcon);
 }
 
-async function checkDialog(pageToLoad, openFn, expectedTitle, expectedIcon) {
+async function checkDialog(
+  pageToLoad,
+  openFn,
+  expectedTitle,
+  expectedIcon,
+  modalType = Ci.nsIPrompt.MODAL_TYPE_CONTENT
+) {
   return BrowserTestUtils.withNewTab(pageToLoad, async browser => {
     let promptPromise = PromptTestUtils.waitForPrompt(browser, {
-      modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
+      modalType,
     });
     let spawnPromise = openFn(browser);
     let dialog = await promptPromise;
@@ -126,15 +134,19 @@ async function checkDialog(pageToLoad, openFn, expectedTitle, expectedIcon) {
   });
 }
 
-add_task(async function test_check_prompt_origin_display() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.proton.enabled", true],
       ["browser.proton.modals.enabled", true],
       ["prompts.contentPromptSubDialog", true],
+      ["prompts.modalType.httpAuth", Ci.nsIPrompt.MODAL_TYPE_TAB],
+      ["prompts.tabChromePromptSubDialog", true],
     ],
   });
+});
 
+add_task(async function test_check_prompt_origin_display() {
   await checkAlert("https://example.com/", { value: "example.com" });
   await checkAlert("http://example.com/", { value: "example.com" });
   await checkAlert("data:text/html,<body>", {
@@ -149,4 +161,60 @@ add_task(async function test_check_prompt_origin_display() {
   await checkBeforeunload(TEST_ROOT + "file_beforeunload_stop.html", {
     value: "example.com",
   });
+});
+
+add_task(async function test_check_auth() {
+  let server = new HttpServer();
+  registerCleanupFunction(() => {
+    return new Promise(resolve => {
+      server.stop(() => {
+        server = null;
+        resolve();
+      });
+    });
+  });
+
+  function forbiddenHandler(meta, res) {
+    res.setStatusLine(meta.httpVersion, 401, "Unauthorized");
+    res.setHeader("WWW-Authenticate", 'Basic realm="Realm"');
+  }
+  function pageHandler(meta, res) {
+    res.setStatusLine(meta.httpVersion, 200, "OK");
+    res.setHeader("Content-Type", "text/html");
+    let body = "<html><body></body></html>";
+    res.bodyOutputStream.write(body, body.length);
+  }
+  server.registerPathHandler("/forbidden", forbiddenHandler);
+  server.registerPathHandler("/page", pageHandler);
+  server.start(-1);
+
+  const HOST = `localhost:${server.identity.primaryPort}`;
+  const AUTH_URI = `http://${HOST}/forbidden`;
+
+  // Try a simple load:
+  await checkDialog(
+    "https://example.com/",
+    browser => BrowserTestUtils.loadURI(browser, AUTH_URI),
+    HOST,
+    "chrome://global/skin/icons/defaultFavicon.svg",
+    Ci.nsIPrompt.MODAL_TYPE_TAB
+  );
+
+  let subframeLoad = function(browser) {
+    return SpecialPowers.spawn(browser, [AUTH_URI], uri => {
+      let f = content.document.createElement("iframe");
+      f.src = uri;
+      content.document.body.appendChild(f);
+    });
+  };
+
+  // Try x-origin subframe:
+  await checkDialog(
+    "http://example.org/1",
+    subframeLoad,
+    HOST,
+    /* Because this is x-origin, we expect a different icon: */
+    "chrome://global/skin/icons/security-broken.svg",
+    Ci.nsIPrompt.MODAL_TYPE_TAB
+  );
 });

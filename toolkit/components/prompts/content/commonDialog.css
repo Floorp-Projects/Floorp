@@ -6,6 +6,10 @@
   min-width: 29em;
 }
 
+dialog[insecureauth] {
+  --icon-url: url("chrome://global/skin/icons/security-broken.svg");
+}
+
 #dialogGrid {
   display: grid;
   grid-template-columns: auto 1fr;

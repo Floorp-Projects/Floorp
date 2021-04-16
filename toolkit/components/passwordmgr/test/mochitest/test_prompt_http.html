@@ -73,7 +73,7 @@ runInParent(() => {
 
 add_task(async function test_iframe() {
   let state = {
-    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
+    msg: "This site is asking you to sign in.",
     title: "Authentication Required",
     textValue: "mochiuser1",
     passValue: "mochipass1",
@@ -102,7 +102,7 @@ add_task(async function test_iframe() {
                             iframe);
 
   state = {
-    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest2”",
+    msg: "This site is asking you to sign in.",
     title: "Authentication Required",
     textValue: "mochiuser2",
     passValue: "mochipass2",
@@ -143,7 +143,7 @@ add_task(async function test_iframe() {
   // expected password (to trigger an auth prompt, and change-password
   // popup notification).
   state = {
-    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest”",
+    msg: "This site is asking you to sign in.",
     title: "Authentication Required",
     textValue: "mochiuser1",
     passValue: "mochipass1",
@@ -175,7 +175,7 @@ add_task(async function test_iframe() {
   // to (but have an existing saved login for, so that we'll trigger
   // a change-password popup notification.
   state = {
-    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest3”",
+    msg: "This site is asking you to sign in.",
     title: "Authentication Required",
     textValue: "mochiuser3",
     passValue: "mochipass3-old",
@@ -220,7 +220,7 @@ add_task(async function test_iframe() {
   });
 
   state = {
-    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest3”",
+    msg: "This site is asking you to sign in.",
     title: "Authentication Required",
     textValue: "",
     passValue: "",
@@ -254,8 +254,8 @@ add_task(async function test_iframe() {
 
 add_task(async function test_schemeUpgrade() {
   let state = {
-    msg: "https://example.com is requesting your username and password. " +
-                  "WARNING: Your password will not be sent to the website you are currently visiting!",
+    msg: "This site is asking you to sign in. Warning: Your login information " +
+      "will be shared with example.com, not the website you are currently visiting.",
     title: "Authentication Required",
     textValue: "httpUser",
     passValue: "httpPass",
@@ -287,8 +287,8 @@ add_task(async function test_schemeUpgrade() {
 
 add_task(async function test_schemeDowngrade() {
   let state = {
-    msg: "http://example.com is requesting your username and password. " +
-                  "WARNING: Your password will not be sent to the website you are currently visiting!",
+    msg: "This site is asking you to sign in. Warning: Your login information " +
+      "will be shared with example.com, not the website you are currently visiting.",
     title: "Authentication Required",
     textValue: "", // empty because we shouldn't downgrade
     passValue: "",
@@ -318,8 +318,8 @@ add_task(async function test_schemeDowngrade() {
 
 add_task(async function test_schemeUpgrade_dedupe() {
   let state = {
-    msg: "https://example.org is requesting your username and password. " +
-                  "WARNING: Your password will not be sent to the website you are currently visiting!",
+    msg: "This site is asking you to sign in. Warning: Your login information " +
+      "will be shared with example.org, not the website you are currently visiting.",
     title: "Authentication Required",
     textValue: "dedupeUser",
     passValue: "httpsPass",
