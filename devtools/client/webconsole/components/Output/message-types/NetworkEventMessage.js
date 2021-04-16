@@ -28,7 +28,6 @@ loader.lazyRequireGetter(
 const {
   getHTTPStatusCodeURL,
 } = require("devtools/client/netmonitor/src/utils/mdn-utils");
-const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 loader.lazyRequireGetter(
   this,
   "BLOCKED_REASON_MESSAGES",
@@ -155,11 +154,7 @@ function NetworkEventMessage({
   const xhr = isXHR
     ? dom.span({ className: "xhr" }, l10n.getStr("webConsoleXhrIndicator"))
     : null;
-  const unicodeURL = getUnicodeUrl(url);
-  const requestUrl = dom.span(
-    { className: "url", title: unicodeURL },
-    unicodeURL
-  );
+  const requestUrl = dom.span({ className: "url", title: url }, url);
   const statusBody = statusInfo
     ? dom.a({ className: "status" }, statusInfo)
     : null;
