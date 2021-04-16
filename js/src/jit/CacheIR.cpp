@@ -102,6 +102,7 @@ size_t js::jit::NumInputsForCacheKind(CacheKind kind) {
     case CacheKind::BindName:
     case CacheKind::Call:
     case CacheKind::OptimizeSpreadCall:
+    case CacheKind::NewArray:
       return 1;
     case CacheKind::Compare:
     case CacheKind::GetElem:
@@ -11037,6 +11038,68 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
 
   writer.returnFromIC();
   return AttachDecision::Attach;
+}
+
+NewArrayIRGenerator::NewArrayIRGenerator(JSContext* cx, HandleScript script,
+                                         jsbytecode* pc, ICState::Mode mode,
+                                         JSOp op, HandleObject templateObj)
+    : IRGenerator(cx, script, pc, CacheKind::NewArray, mode),
+#ifdef JS_CACHEIR_SPEW
+      op_(op),
+#endif
+      templateObject_(templateObj) {
+  MOZ_ASSERT(templateObject_);
+}
+
+void NewArrayIRGenerator::trackAttached(const char* name) {
+#ifdef JS_CACHEIR_SPEW
+  if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+    sp.opcodeProperty("op", op_);
+  }
+#endif
+}
+
+AttachDecision NewArrayIRGenerator::tryAttachArrayObject() {
+  ArrayObject* arrayObj = &templateObject_->as<ArrayObject>();
+
+  MOZ_ASSERT(arrayObj->numUsedFixedSlots() == 0);
+  MOZ_ASSERT(arrayObj->numDynamicSlots() == 0);
+  MOZ_ASSERT(!arrayObj->hasPrivate());
+  MOZ_ASSERT(!arrayObj->isSharedMemory());
+
+  // The macro assembler only supports creating arrays with fixed elements.
+  if (arrayObj->hasDynamicElements()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Stub doesn't support metadata builder
+  if (cx_->realm()->hasAllocationMetadataBuilder()) {
+    return AttachDecision::NoAction;
+  }
+
+  writer.guardNoAllocationMetadataBuilder();
+
+  // Length input is not currently used.
+  mozilla::Unused << writer.setInputOperandId(0);
+
+  Shape* shape = arrayObj->lastProperty();
+  uint32_t length = arrayObj->length();
+
+  writer.newArrayObjectResult(length, shape);
+
+  writer.returnFromIC();
+
+  trackAttached("NewArrayObject");
+  return AttachDecision::Attach;
+}
+
+AttachDecision NewArrayIRGenerator::tryAttachStub() {
+  AutoAssertNoPendingException aanpe(cx_);
+
+  TRY_ATTACH(tryAttachArrayObject());
+
+  trackAttached(IRGenerator::NotAttached);
+  return AttachDecision::NoAction;
 }
 
 NewObjectIRGenerator::NewObjectIRGenerator(JSContext* cx, HandleScript script,
