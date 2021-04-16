@@ -1203,7 +1203,7 @@ bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
 }
 
 MOZ_CAN_RUN_SCRIPT
-void RestoreFormEntry(Element* aNode, const FormEntryValue& aValue) {
+void RestoreFormEntry(Element* aNode, FormEntryValue aValue) {
   using Type = sessionstore::FormEntryValue::Type;
   switch (aValue.type()) {
     case Type::TCheckbox:
@@ -1216,26 +1216,24 @@ void RestoreFormEntry(Element* aNode, const FormEntryValue& aValue) {
       if (RefPtr<HTMLInputElement> input = HTMLInputElement::FromNode(aNode);
           input && input->ControlType() == NS_FORM_INPUT_FILE) {
         CollectedFileListValue value;
-        value.mFileList = aValue.get_FileList().valueList().Clone();
+        value.mFileList = std::move(aValue.get_FileList().valueList());
         SetElementAsFiles(input, value);
       }
       break;
     }
-    case Type::TSingleSelect: {
-      if (RefPtr<HTMLSelectElement> select = HTMLSelectElement::FromNode(aNode);
-          select && !select->Multiple()) {
-        CollectedNonMultipleSelectValue value;
-        value.mSelectedIndex = aValue.get_SingleSelect().index();
-        value.mValue = aValue.get_SingleSelect().value();
-        SetElementAsSelect(select, value);
-      }
-      break;
-    }
+    case Type::TSingleSelect:
     case Type::TMultipleSelect: {
-      if (RefPtr<HTMLSelectElement> select = HTMLSelectElement::FromNode(aNode);
-          select && select->Multiple()) {
-        SetElementAsMultiSelect(select,
-                                aValue.get_MultipleSelect().valueList());
+      if (RefPtr<HTMLSelectElement> select =
+              HTMLSelectElement::FromNode(aNode)) {
+        if (!select->Multiple()) {
+          CollectedNonMultipleSelectValue value;
+          value.mSelectedIndex = aValue.get_SingleSelect().index();
+          value.mValue = aValue.get_SingleSelect().value();
+          SetElementAsSelect(select, value);
+        } else {
+          SetElementAsMultiSelect(select,
+                                  aValue.get_MultipleSelect().valueList());
+        }
       }
       break;
     }
