@@ -12,6 +12,7 @@
 #define nsXULPopupManager_h__
 
 #include "mozilla/Logging.h"
+#include "nsHashtablesFwd.h"
 #include "nsIContent.h"
 #include "nsIRollupListener.h"
 #include "nsIDOMEventListener.h"
@@ -362,9 +363,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // NativeMenu::Observer
   void OnNativeMenuOpened() override;
   void OnNativeMenuClosed() override;
-  void OnNativeSubMenuWillOpen(mozilla::dom::Element* aPopupElement) override {}
-  void OnNativeSubMenuDidOpen(mozilla::dom::Element* aPopupElement) override {}
-  void OnNativeSubMenuClosed(mozilla::dom::Element* aPopupElement) override {}
+  void OnNativeSubMenuWillOpen(mozilla::dom::Element* aPopupElement) override;
+  void OnNativeSubMenuDidOpen(mozilla::dom::Element* aPopupElement) override;
+  void OnNativeSubMenuClosed(mozilla::dom::Element* aPopupElement) override;
 
   static nsXULPopupManager* sInstance;
 
@@ -884,6 +885,15 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // native menu is open.
   // mNativeMenu has a strong reference to the menupopup nsIContent.
   RefPtr<mozilla::widget::NativeMenu> mNativeMenu;
+
+  // If a popup is displayed as a native menu, this map contains the popup state
+  // for any of its non-closed submenus. This state cannot be stored on the
+  // submenus' nsMenuPopupFrames, because we usually don't generate frames for
+  // the contents of native menus.
+  // If a submenu is not present in this map, it means it's closed.
+  // This map is empty if mNativeMenu is null.
+  nsTHashMap<RefPtr<mozilla::dom::Element>, nsPopupState>
+      mNativeMenuSubmenuStates;
 };
 
 #endif
