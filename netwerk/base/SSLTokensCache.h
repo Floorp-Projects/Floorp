@@ -13,7 +13,8 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPtr.h"
 #include "nsXULAppAPI.h"
-#include "TransportSecurityInfo.h"  // For EVStatus
+#include "TransportSecurityInfo.h"
+#include "CertVerifier.h"  // For EVStatus
 
 namespace mozilla {
 namespace net {
