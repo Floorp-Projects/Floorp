@@ -17,7 +17,10 @@ const pathDelimiter = "/";
 
 const storageDirName = "storage";
 const defaultPersistenceDirName = "default";
-const cacheClientDirName = "cache";
+
+function cacheClientDirName() {
+  return "cache";
+}
 
 // services required be initialized in order to run CacheStorage
 var ss = Cc["@mozilla.org/storage/service;1"].createInstance(
@@ -164,7 +167,7 @@ function create_test_profile(zipFileName) {
 
 function getCacheDir() {
   return getRelativeFile(
-    `${storageDirName}/${defaultPersistenceDirName}/chrome/${cacheClientDirName}`
+    `${storageDirName}/${defaultPersistenceDirName}/chrome/${cacheClientDirName()}`
   );
 }
 
