@@ -1094,12 +1094,6 @@ var gProtectionsHandler = {
       "tracking-protection-icon-box"
     ));
   },
-  get animatedIcon() {
-    delete this.animatedIcon;
-    return (this.animatedIcon = document.getElementById(
-      "tracking-protection-icon-animatable-image"
-    ));
-  },
   get _protectionsIconBox() {
     delete this._protectionsIconBox;
     return (this._protectionsIconBox = document.getElementById(
@@ -1298,10 +1292,6 @@ var gProtectionsHandler = {
   },
 
   init() {
-    this.animatedIcon.addEventListener("animationend", () =>
-      this.iconBox.removeAttribute("animate")
-    );
-
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "_protectionsPopupToastTimeout",
@@ -1701,7 +1691,6 @@ var gProtectionsHandler = {
   onContentBlockingEvent(event, webProgress, isSimulated, previousState) {
     // Don't deal with about:, file: etc.
     if (!ContentBlockingAllowList.canHandle(gBrowser.selectedBrowser)) {
-      this.iconBox.removeAttribute("animate");
       this.iconBox.removeAttribute("active");
       this.iconBox.removeAttribute("hasException");
       return;
@@ -1736,17 +1725,6 @@ var gProtectionsHandler = {
     this._categoryItemOrderInvalidated = true;
 
     // Now, update the icon UI:
-
-    // Reset the animation in case the user is switching tabs or if no blockers were detected
-    // (this is most likely happening because the user navigated on to a different site). This
-    // allows us to play it from the start without choppiness next time.
-    if (isSimulated || !this.anyBlocking) {
-      this.iconBox.removeAttribute("animate");
-      // Only play the animation when the shield is not already shown on the page (the visibility
-      // of the shield based on this onSecurityChange be determined afterwards).
-    } else if (this.anyBlocking && !this.iconBox.hasAttribute("active")) {
-      this.iconBox.setAttribute("animate", "true");
-    }
 
     // We consider the shield state "active" when some kind of blocking activity
     // occurs on the page.  Note that merely allowing the loading of content that

@@ -93,11 +93,11 @@
   skin/classic/browser/notification-icons/block-social-dark.svg             (../shared/notification-icons/block-social-dark.svg)
   skin/classic/browser/notification-icons/block-social.svg                  (../shared/notification-icons/block-social.svg)
 
-  skin/classic/browser/tracking-protection.svg                 (../shared/identity-block/tracking-protection.svg)
-  skin/classic/browser/tracking-protection-disabled.svg        (../shared/identity-block/tracking-protection-disabled.svg)
-  skin/classic/browser/tracking-protection-animation.svg        (../shared/identity-block/tracking-protection-animation.svg)
-  skin/classic/browser/tracking-protection-animation-brighttext.svg (../shared/identity-block/tracking-protection-animation-brighttext.svg)
-  skin/classic/browser/toolbar-drag-indicator.svg              (../shared/toolbar-drag-indicator.svg)
+  skin/classic/browser/tracking-protection.svg                        (../shared/identity-block/tracking-protection.svg)
+  skin/classic/browser/tracking-protection-disabled.svg               (../shared/identity-block/tracking-protection-disabled.svg)
+  skin/classic/browser/tracking-protection-active.svg                 (../shared/identity-block/tracking-protection-active.svg)
+  skin/classic/browser/tracking-protection-active-brighttext.svg      (../shared/identity-block/tracking-protection-active-brighttext.svg)
+  skin/classic/browser/toolbar-drag-indicator.svg                     (../shared/toolbar-drag-indicator.svg)
 
   skin/classic/browser/protections/resolved-breach.svg         (../shared/protections/resolved-breach.svg)
   skin/classic/browser/protections/resolved-breach-gray.svg         (../shared/protections/resolved-breach-gray.svg)
