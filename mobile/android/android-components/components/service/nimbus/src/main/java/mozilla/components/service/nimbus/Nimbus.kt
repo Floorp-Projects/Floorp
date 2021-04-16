@@ -27,6 +27,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.locale.getLocaleTag
 import org.mozilla.experiments.nimbus.AppContext
+import org.mozilla.experiments.nimbus.AvailableExperiment
 import org.mozilla.experiments.nimbus.AvailableRandomizationUnits
 import org.mozilla.experiments.nimbus.Branch
 import org.mozilla.experiments.nimbus.EnrolledExperiment
@@ -55,6 +56,13 @@ interface NimbusApi : Observable<NimbusApi.Observer> {
      * @return A list of [EnrolledExperiment]s
      */
     fun getActiveExperiments(): List<EnrolledExperiment> = listOf()
+
+    /**
+     * Get the list of available experiments
+     *
+     * @return A list of [AvailableExperiment]s
+     */
+    fun getAvailableExperiments(): List<AvailableExperiment> = listOf()
 
     /**
      * Get the currently enrolled branch for the given experiment
@@ -293,6 +301,10 @@ class Nimbus(
     @WorkerThread
     override fun getActiveExperiments(): List<EnrolledExperiment> =
         nimbus.getActiveExperiments()
+
+    @WorkerThread
+    override fun getAvailableExperiments(): List<AvailableExperiment> =
+        nimbus.getAvailableExperiments()
 
     override fun getExperimentBranch(experimentId: String): String? {
         recordExposure(experimentId)
