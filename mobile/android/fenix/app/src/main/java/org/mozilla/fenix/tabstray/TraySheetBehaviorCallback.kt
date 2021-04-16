@@ -26,3 +26,19 @@ class TraySheetBehaviorCallback(
 
     override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
 }
+
+fun BottomSheetBehavior<ConstraintLayout>.setUpTrayBehavior(
+    isLandscape: Boolean,
+    maxNumberOfTabs: Int,
+    numberForExpandingTray: Int,
+    navigationInteractor: DefaultNavigationInteractor
+) {
+    addBottomSheetCallback(
+        TraySheetBehaviorCallback(this, navigationInteractor)
+    )
+    state = if (isLandscape || maxNumberOfTabs >= numberForExpandingTray) {
+        BottomSheetBehavior.STATE_EXPANDED
+    } else {
+        BottomSheetBehavior.STATE_COLLAPSED
+    }
+}

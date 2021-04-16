@@ -14,6 +14,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_SETTLIN
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
 import io.mockk.Called
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import org.junit.Test
 
@@ -52,5 +53,41 @@ class TraySheetBehaviorCallbackTest {
 
         verify { behavior wasNot Called }
         verify { interactor wasNot Called }
+    }
+
+    @Test
+    fun `GIVEN portraitMode and 5 tabs WHEN setUpTrayBehavior THEN add TraySheetBehaviorCallback and STATE_COLLAPSED`() {
+        // given
+        val behavior = spyk(BottomSheetBehavior<ConstraintLayout>())
+        val interactor = mockk<DefaultNavigationInteractor>(relaxed = true)
+
+        // when
+        behavior.setUpTrayBehavior(
+            isLandscape = false,
+            maxNumberOfTabs = 5,
+            numberForExpandingTray = TabsTrayFragment.EXPAND_AT_LIST_SIZE,
+            navigationInteractor = interactor
+        )
+
+        // then
+        assert(behavior.state == STATE_EXPANDED)
+    }
+
+    @Test
+    fun `GIVEN portraitMode and 2 tabs WHEN setUpTrayBehavior THEN add TraySheetBehaviorCallback and STATE_COLLAPSED`() {
+        // given
+        val behavior = spyk(BottomSheetBehavior<ConstraintLayout>())
+        val interactor = mockk<DefaultNavigationInteractor>(relaxed = true)
+
+        // when
+        behavior.setUpTrayBehavior(
+            isLandscape = false,
+            maxNumberOfTabs = 2,
+            numberForExpandingTray = TabsTrayFragment.EXPAND_AT_LIST_SIZE,
+            navigationInteractor = interactor
+        )
+
+        // then
+        assert(behavior.state == STATE_COLLAPSED)
     }
 }

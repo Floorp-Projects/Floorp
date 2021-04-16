@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray
 
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -27,6 +28,8 @@ import kotlinx.android.synthetic.main.tabstray_multiselect_items.*
 import kotlinx.android.synthetic.main.tabstray_multiselect_items.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
@@ -34,8 +37,10 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
@@ -44,6 +49,7 @@ import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
 import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
+import kotlin.math.max
 
 @Suppress("TooManyFunctions", "LargeClass")
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
@@ -150,11 +156,18 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             dismissAllowingStateLoss()
         }
 
-        behavior.addBottomSheetCallback(
-            TraySheetBehaviorCallback(
-                behavior,
-                navigationInteractor
-            )
+        behavior.setUpTrayBehavior(
+            isLandscape = requireContext().resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            maxNumberOfTabs = max(
+                requireContext().components.core.store.state.normalTabs.size,
+                requireContext().components.core.store.state.privateTabs.size
+            ),
+            numberForExpandingTray = if (requireContext().settings().gridTabView) {
+                EXPAND_AT_GRID_SIZE
+            } else {
+                EXPAND_AT_LIST_SIZE
+            },
+            navigationInteractor = navigationInteractor
         )
 
         tabsTrayCtaBinding.set(
@@ -334,5 +347,13 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     private fun dismissTabsTray() {
         dismissAllowingStateLoss()
         requireComponents.analytics.metrics.track(Event.TabsTrayClosed)
+    }
+
+    companion object {
+        // Minimum number of list items for which to show the tabs tray as expanded.
+        const val EXPAND_AT_LIST_SIZE = 4
+
+        // Minimum number of grid items for which to show the tabs tray as expanded.
+        private const val EXPAND_AT_GRID_SIZE = 3
     }
 }
