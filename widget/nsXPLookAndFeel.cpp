@@ -422,6 +422,7 @@ static constexpr nsLiteralCString kBoolMediaQueryPrefs[] = {
     "browser.proton.modals.enabled"_ns,
     "browser.proton.doorhangers.enabled"_ns,
     "browser.proton.places-tooltip.enabled"_ns,
+    "browser.theme.dark-toolbar-theme"_ns,
 };
 
 // Read values from the user's preferences.
