@@ -18,5 +18,5 @@ default-browser-prompt-button-primary-pin = Make primary browser
 default-browser-prompt-title-alt = Make { -brand-short-name } your default browser?
 default-browser-prompt-message-alt = Get speed, safety, and privacy every time you browse.
 default-browser-prompt-button-primary-alt = Set as default browser
-default-browser-prompt-checkbox-label = Don’t ask again
+default-browser-prompt-checkbox-not-again-label = Don’t show this message again
 default-browser-prompt-button-secondary = Not now
