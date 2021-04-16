@@ -8,32 +8,13 @@
  */
 
 add_task(async function() {
-  info("Test requests blocked by CSP in the top level document");
-  await testRequestsBlockedByCSP(
-    EXAMPLE_URL,
-    EXAMPLE_URL + "html_csp-test-page.html"
-  );
-
-  // The html_csp-frame-test-page.html (in the .com domain) includes
-  // an iframe from the .org domain
-  info("Test requests blocked by CSP in remote frames");
-  await testRequestsBlockedByCSP(
-    EXAMPLE_ORG_URL,
-    EXAMPLE_URL + "html_csp-frame-test-page.html"
-  );
-});
-
-async function testRequestsBlockedByCSP(baseUrl, page) {
-  const { tab, monitor } = await initNetMonitor(page, { requestCount: 3 });
+  const { tab, monitor } = await initNetMonitor(CSP_URL, { requestCount: 3 });
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   const { getDisplayedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index"
   );
-
-  const scriptFileName = "js_websocket-worker-test.js";
-  const styleFileName = "internal-loaded.css";
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -45,17 +26,15 @@ async function testRequestsBlockedByCSP(baseUrl, page) {
   const displayedRequests = getDisplayedRequests(store.getState());
 
   const styleRequest = displayedRequests.find(request =>
-    request.url.includes(styleFileName)
+    request.url.includes("internal-loaded.css")
   );
-
-  info("Ensure the attempt to load a CSS file shows a blocked CSP error");
-
+  // Ensure the attempt to load a CSS file shows a blocked CSP error
   verifyRequestItemTarget(
     document,
     displayedRequests,
     styleRequest,
     "GET",
-    baseUrl + styleFileName,
+    EXAMPLE_URL + "internal-loaded.css",
     {
       transferred: "CSP",
       cause: { type: "stylesheet" },
@@ -64,17 +43,15 @@ async function testRequestsBlockedByCSP(baseUrl, page) {
   );
 
   const scriptRequest = displayedRequests.find(request =>
-    request.url.includes(scriptFileName)
+    request.url.includes("js_websocket-worker-test.js")
   );
-
-  info("Test that the attempt to load a JS file shows a blocked CSP error");
-
+  // Ensure the attempt to load a JS file shows a blocked CSP error
   verifyRequestItemTarget(
     document,
     displayedRequests,
     scriptRequest,
     "GET",
-    baseUrl + scriptFileName,
+    EXAMPLE_URL + "js_websocket-worker-test.js",
     {
       transferred: "CSP",
       cause: { type: "script" },
@@ -82,30 +59,5 @@ async function testRequestsBlockedByCSP(baseUrl, page) {
     }
   );
 
-  info("Test that header infomation is available for blocked CSP requests");
-
-  const requestEl = document.querySelector(
-    `.requests-list-column[title*="${scriptFileName}"]`
-  ).parentNode;
-
-  const waitForHeadersPanel = waitUntil(() =>
-    document.querySelector("#headers-panel .panel-container")
-  );
-  clickElement(requestEl, monitor);
-  await waitForHeadersPanel;
-
-  ok(
-    document.querySelector(".headers-overview"),
-    "There is request overview details"
-  );
-  ok(
-    document.querySelector(".accordion #requestHeaders"),
-    "There is request header information"
-  );
-  ok(
-    !document.querySelector(".accordion #responseHeaders"),
-    "There is no response header information"
-  );
-
   await teardown(monitor);
-}
+});
