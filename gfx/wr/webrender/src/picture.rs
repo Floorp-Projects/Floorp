@@ -97,7 +97,7 @@
 use api::{MixBlendMode, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive};
 use api::{DebugFlags, ImageKey, ColorF, ColorU, PrimitiveFlags};
-use api::{ImageRendering, ColorDepth, YuvColorSpace, YuvFormat};
+use api::{ImageRendering, ColorDepth, YuvColorSpace, YuvFormat, AlphaType};
 use api::units::*;
 use crate::batch::BatchFilter;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
@@ -3475,6 +3475,12 @@ impl TileCacheInstance {
                         promote_to_surface = true;
                         promote_with_flip_y = flip_y;
                     }
+                }
+
+                // Native OS compositors (DC and CA, at least) support premultiplied alpha
+                // only. If we have an image that's not pre-multiplied alpha, we can't promote it.
+                if image_data.alpha_type == AlphaType::Alpha {
+                    promote_to_surface = false;
                 }
 
                 if let Some(image_properties) = resource_cache.get_image_properties(image_data.key) {
