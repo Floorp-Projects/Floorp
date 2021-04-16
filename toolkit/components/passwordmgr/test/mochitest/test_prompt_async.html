@@ -187,13 +187,13 @@
         ];
 
         let expected1 = Object.assign({}, state, {
-          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          msg: "This site is asking you to sign in. Warning: Your login information will be shared with example.com, not the website you are currently visiting.",
           textValue: "user1name",
           passValue: "user1pass",
         });
 
         let expected2 = Object.assign({}, state, {
-          msg: "http://example.org is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          msg: "This site is asking you to sign in. Warning: Your login information will be shared with example.org, not the website you are currently visiting.",
           textValue: "user2name",
           passValue: "user2pass",
         });
@@ -276,7 +276,7 @@
         await handlePrompt(state, action);
 
         Object.assign(state, {
-          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          msg: "This site is asking you to sign in. Warning: Your login information will be shared with example.com, not the website you are currently visiting.",
           textValue: "user3name",
           passValue: "user3pass",
         });
@@ -375,7 +375,7 @@
         await handlePrompt(state, action);
 
         Object.assign(state, {
-          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          msg: "This site is asking you to sign in. Warning: Your login information will be shared with example.com, not the website you are currently visiting.",
           textValue: "user4name",
           passValue: "user4pass",
         });
@@ -470,7 +470,7 @@
         await handlePrompt(state, action);
 
         Object.assign(state, {
-          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          msg: "This site is asking you to sign in. Warning: Your login information will be shared with example.com, not the website you are currently visiting.",
           textValue: "user5name",
           passValue: "user5pass",
         });
@@ -505,7 +505,7 @@
         });
 
         let state = {
-          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          msg: "This site is asking you to sign in. Warning: Your login information will be shared with example.com, not the website you are currently visiting.",
           title: "Authentication Required",
           textValue: "user5name",
           passValue: "user5pass",
@@ -584,7 +584,7 @@
         await handlePrompt(state, action);
 
         Object.assign(state, {
-          msg: "http://example.com is requesting your username and password. WARNING: Your password will not be sent to the website you are currently visiting!",
+          msg: "This site is asking you to sign in. Warning: Your login information will be shared with example.com, not the website you are currently visiting.",
           textValue: "user6name",
           passValue: "user6pass",
         });

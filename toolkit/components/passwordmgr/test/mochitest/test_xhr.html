@@ -84,7 +84,7 @@ add_task(function setup() {
 
 add_task(async function test1() {
   let state = {
-    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “xhr”",
+    msg: "This site is asking you to sign in.",
     title: "Authentication Required",
     textValue: "xhruser1",
     passValue: "xhrpass1",
@@ -118,7 +118,7 @@ add_task(async function test2() {
   newWin.focus();
 
   let state = {
-    msg: "http://mochi.test:8888 is requesting your username and password. The site says: “xhr2”",
+    msg: "This site is asking you to sign in.",
     title: "Authentication Required",
     textValue: "xhruser2",
     passValue: "xhrpass2",
