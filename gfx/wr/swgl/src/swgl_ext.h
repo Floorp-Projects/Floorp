@@ -661,10 +661,10 @@ static int blendTextureLinearRepeat(S sampler, vec2 uv, int span,
       float(swgl_StepSize) * vec2_scalar{uv.x.y - uv.x.x, uv.y.y - uv.y.x};
   uv_scale = swgl_linearQuantizeStep(sampler, uv_scale);
   uv_offset = swgl_linearQuantize(sampler, uv_offset);
-  vec2_scalar min_uv =
-      swgl_linearQuantize(sampler, vec2_scalar{uv_rect.x, uv_rect.y});
-  vec2_scalar max_uv =
-      swgl_linearQuantize(sampler, vec2_scalar{uv_rect.z, uv_rect.w});
+  vec2_scalar min_uv = max(
+      swgl_linearQuantize(sampler, vec2_scalar{uv_rect.x, uv_rect.y}), 0.0f);
+  vec2_scalar max_uv = max(
+      swgl_linearQuantize(sampler, vec2_scalar{uv_rect.z, uv_rect.w}), min_uv);
   for (P* end = buf + span; buf < end; buf += swgl_StepSize, uv += uv_step) {
     int steps = int(end - buf) / swgl_StepSize;
     // Find the sub-span before UVs repeat to avoid expensive repeat math
