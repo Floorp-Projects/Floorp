@@ -62,20 +62,29 @@ class Shim {
     }, pref);
 
     this.ready = Promise.all([
-      browser.aboutConfigPrefs.getPref(pref).then(value => {
-        this._disabledPrefValue = value;
-      }),
-      platformPromise.then(platform => {
-        this._disabledByPlatform =
-          this.platform !== "all" && this.platform !== platform;
-        return platform;
-      }),
-      releaseBranchPromise.then(branch => {
-        this._disabledByReleaseBranch =
-          this.branches && !this.branches.includes(branch);
-        return branch;
-      }),
-    ]).then(([_, platform, branch]) => {
+      browser.aboutConfigPrefs.getPref(pref),
+      platformPromise,
+      releaseBranchPromise,
+    ]).then(([disabledPrefValue, platform, branch]) => {
+      this._disabledPrefValue = disabledPrefValue;
+
+      this._disabledByPlatform =
+        this.platform !== "all" && this.platform !== platform;
+
+      this._disabledByReleaseBranch = false;
+      for (const supportedBranchAndPlatform of this.branches || []) {
+        const [
+          supportedBranch,
+          supportedPlatform,
+        ] = supportedBranchAndPlatform.split(":");
+        if (
+          (!supportedPlatform || supportedPlatform == platform) &&
+          supportedBranch != branch
+        ) {
+          this._disabledByReleaseBranch = true;
+        }
+      }
+
       this._preprocessOptions(platform, branch);
       this._onEnabledStateChanged();
     });
@@ -136,6 +145,7 @@ class Shim {
     return browser.trackingProtection.allow(this.id, this.matches, {
       hosts: this.hosts,
       notHosts: this.notHosts,
+      hostOptIns: Array.from(this._hostOptIns),
     });
   }
 
@@ -169,10 +179,13 @@ class Shim {
   }
 
   async onUserOptIn(host) {
-    const { unblocksOnOptIn } = this;
+    const { matches, unblocksOnOptIn } = this;
     if (unblocksOnOptIn) {
-      await browser.trackingProtection.allow(this.id, unblocksOnOptIn, {
-        hosts: [host],
+      this.userHasOptedIn = true;
+      const toUnblock = matches.concat(unblocksOnOptIn);
+      await browser.trackingProtection.allow(this.id, toUnblock, {
+        hosts: this.hosts,
+        hostOptIns: [host],
       });
     }
 
@@ -227,7 +240,7 @@ class Shims {
       return;
     }
 
-    const urls = [...allShimPatterns];
+    const urls = Array.from(allShimPatterns);
     debug("Shimming these match patterns", urls);
 
     browser.webRequest.onBeforeRequest.addListener(
@@ -424,7 +437,7 @@ class Shims {
       return { cancel: true };
     }
 
-    debug("allowing", url);
+    debug("ignoring", url);
     return undefined;
   }
 }

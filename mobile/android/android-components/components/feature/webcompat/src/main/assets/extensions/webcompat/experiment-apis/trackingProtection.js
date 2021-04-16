@@ -6,10 +6,6 @@
 
 /* global ExtensionAPI, ExtensionCommon, ExtensionParent, Services, XPCOMUtils */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-});
-
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "ChannelWrapper"]);
 
 class Manager {
@@ -47,14 +43,18 @@ class Manager {
           }
           for (const allowList of this._allowLists.values()) {
             for (const entry of allowList.values()) {
-              const { matcher, hosts, notHosts } = entry;
+              const { matcher, hosts, notHosts, hostOptIns } = entry;
               if (matcher.matches(url)) {
                 if (
                   !notHosts?.has(topHost) &&
                   (hosts === true || hosts.has(topHost))
                 ) {
                   this._unblockedChannelIds.add(channelId);
-                  channel.unblock();
+                  if (hostOptIns.has(topHost)) {
+                    channel.allow(); // we just allow the request
+                  } else {
+                    channel.replace(); // we will be shimming
+                  }
                   return;
                 }
               }
@@ -83,10 +83,10 @@ class Manager {
   }
 
   wasChannelIdUnblocked(channelId) {
-    return this._unblockedChannelIds.has(channelId);
+    return this._unblockedChannelIds?.has(channelId);
   }
 
-  allow(allowListId, patterns, { hosts, notHosts }) {
+  allow(allowListId, patterns, { hosts, notHosts, hostOptIns = [] }) {
     this._ensureStarted();
 
     if (!this._allowLists.has(allowListId)) {
@@ -97,12 +97,16 @@ class Manager {
       if (!allowList.has(pattern)) {
         allowList.set(pattern, {
           matcher: new MatchPattern(pattern),
+          hostOptIns: new Set(),
         });
       }
       const allowListPattern = allowList.get(pattern);
+      for (const host of hostOptIns) {
+        allowListPattern.hostOptIns.add(host);
+      }
       if (!hosts) {
         allowListPattern.hosts = true;
-      } else {
+      } else if (allowListPattern.hosts !== true) {
         if (!allowListPattern.hosts) {
           allowListPattern.hosts = new Set();
         }

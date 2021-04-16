@@ -40,6 +40,15 @@
                   "type": "string"
                 },
                 "optional": true
+              },
+              "hostOptIns": {
+                "description": "Hosts where a shim should not be used, but the requests should be allowed after user opt-in.",
+                "type": "boolean",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "optional": true
               }
             }
           }

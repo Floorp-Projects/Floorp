@@ -6,10 +6,6 @@
 
 /* global ExtensionAPI, ExtensionCommon, Services, XPCOMUtils */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-});
-
 this.aboutConfigPrefs = class extends ExtensionAPI {
   getAPI(context) {
     const EventManager = ExtensionCommon.EventManager;

@@ -8,23 +8,29 @@
  * Bug 1449347 - Rich Relevance
  */
 
-"use strict";
-
 if (!window.r3_common) {
   const noopfn = () => {};
 
   window.rr_flush_onload = noopfn;
   window.r3 = noopfn;
-  window.r3_home = noopfn;
   window.RR = noopfn;
+
+  window.r3_home = function() {};
+
+  window.r3_search = function() {};
+  window.r3_search.prototype = {
+    setTerms: noopfn,
+  };
+
   window.r3_common = function() {};
   window.r3_common.prototype = {
     addContext: noopfn,
+    addItemId: noopfn,
     addPlacementType: noopfn,
-    setUserId: noopfn,
-    setSessionId: noopfn,
-    setClickthruServer: noopfn,
-    setBaseUrl: noopfn,
     setApiKey: noopfn,
+    setBaseUrl: noopfn,
+    setClickthruServer: noopfn,
+    setSessionId: noopfn,
+    setUserId: noopfn,
   };
 }
