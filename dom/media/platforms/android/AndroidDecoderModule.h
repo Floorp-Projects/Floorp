@@ -7,6 +7,7 @@
 
 #include "PlatformDecoderModule.h"
 #include "mozilla/MediaDrmCDMProxy.h"
+#include "mozilla/StaticPtr.h"  // for StaticAutoPtr
 
 namespace mozilla {
 
@@ -29,10 +30,15 @@ class AndroidDecoderModule : public PlatformDecoderModule {
 
   static bool SupportsMimeType(const nsACString& aMimeType);
 
+  static nsTArray<nsCString> GetSupportedMimeTypes();
+
+  static void SetSupportedMimeTypes(nsTArray<nsCString>&& aSupportedTypes);
+
  private:
   explicit AndroidDecoderModule(CDMProxy* aProxy = nullptr);
   virtual ~AndroidDecoderModule() = default;
   RefPtr<MediaDrmCDMProxy> mProxy;
+  static StaticAutoPtr<nsTArray<nsCString>> sSupportedMimeTypes;
 };
 
 extern LazyLogModule sAndroidDecoderModuleLog;
