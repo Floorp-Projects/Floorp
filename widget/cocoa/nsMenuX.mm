@@ -591,6 +591,14 @@ void nsMenuX::ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierF
 bool nsMenuX::Close() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (mDidFirePopupshowingAndIsApprovedToOpen && !mIsOpen) {
+    // Close is being called right after this menu was opened, but before MenuOpened() had a chance
+    // to run. Call it here so that we can go through the entire popupshown -> popuphiding ->
+    // popuphidden sequence. Some callers expect to get a popuphidden event even if they close the
+    // popup before it was fully open.
+    MenuOpened();
+  }
+
   FlushMenuOpenedRunnable();
 
   bool wasOpen = mIsOpenForGecko;
@@ -603,6 +611,9 @@ bool nsMenuX::Close() {
     // If we do get here, it's usually because we're running an automated test. Close the menu
     // without the fade-out animation so that we don't unnecessarily slow down the automated tests.
     [mNativeMenu cancelTrackingWithoutAnimation];
+
+    // Handle closing synchronously.
+    MenuClosed();
   }
 
   FlushMenuClosedRunnable();
