@@ -87,7 +87,8 @@ class Device final : public DOMEventTargetHelper {
   RefPtr<MappingPromise> MapBufferAsync(RawId aId, uint32_t aMode,
                                         size_t aOffset, size_t aSize,
                                         ErrorResult& aRv);
-  void UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush);
+  void UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush,
+                   bool aKeepShmem);
   already_AddRefed<Texture> InitSwapChain(
       const dom::GPUSwapChainDescriptor& aDesc,
       const dom::GPUExtent3DDict& aExtent3D,
