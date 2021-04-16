@@ -218,7 +218,7 @@
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Ùn permette micca</string>
     <!-- Search suggestion onboarding hint title text -->
-    <string name="search_suggestions_onboarding_title">Permette e suggestioni di ricerca in e sessioni private ?</string>
+    <string name="search_suggestions_onboarding_title">Permette e sugestioni di ricerca in e sessioni private ?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s manderà tuttu ciò chì vò scriverete in a barra di ricerca à u vostru mutore di ricerca predefinitu.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
@@ -334,13 +334,13 @@
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">Affissà i mutori di ricerca</string>
     <!-- Preference title for switch preference to show search suggestions -->
-    <string name="preferences_show_search_suggestions">Affissà e suggestioni di ricerca</string>
+    <string name="preferences_show_search_suggestions">Affissà e sugestioni di ricerca</string>
     <!-- Preference title for switch preference to show voice search button -->
     <string name="preferences_show_voice_search">Affissà a ricerca vucale</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Affissà durante e sessioni di navigazione privata</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
-    <string name="preferences_show_clipboard_suggestions">Affissà e suggestioni di u preme’papei</string>
+    <string name="preferences_show_clipboard_suggestions">Affissà e sugestioni di u preme’papei</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">Ricercà in a cronolugia di navigazione</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
@@ -1575,6 +1575,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Amministrà e carte arregistrate</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Aghjunghje una carta</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Mudificà a carta</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Numeru di carta</string>
 

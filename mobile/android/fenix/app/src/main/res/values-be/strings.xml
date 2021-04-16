@@ -1541,6 +1541,11 @@
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Крэдытныя карты</string>
 
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Дадаць крэдытную карту</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Кіраванне захаванымі картамі</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Дадаць пашукавік</string>
     <!-- Title of the Edit search engine screen -->

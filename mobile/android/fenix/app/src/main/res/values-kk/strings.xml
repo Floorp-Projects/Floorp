@@ -595,7 +595,9 @@
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Жекелік сессиясы</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_tabs_title">Жекелік бетьер</string>
+    <string name="tabs_header_private_tabs_title">Жекелік беттер</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Синхрондалған беттер</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Жаңа бетті қосу</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1554,6 +1556,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Сақталған карталарды басқару</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Картаны қосу</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Картаны түзету</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Карта нөмірі</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1731,6 +1735,9 @@
 	<string name="top_sites_rename_dialog_ok">ОК</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Бас тарту</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Веб-сайттар, эл. пошта хаттары және хабарламалардан сілтемелерді Firefox-та автоматты түрде ашылатындай етіп баптау.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Өшіру</string>

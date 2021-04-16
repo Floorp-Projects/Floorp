@@ -624,6 +624,8 @@
     <string name="tab_tray_menu_item_share">Compartilhar todas as abas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Abas fechadas recentemente</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Configurações de contas</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Configurações de abas</string>
     <!-- Text shown in the menu for closing all tabs -->

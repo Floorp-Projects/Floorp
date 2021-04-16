@@ -16,6 +16,15 @@
     <string name="content_description_disable_private_browsing_button">Disactivar le Navigation anonyme.</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Insere un adresse o face un recerca</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Tu schedas aperte essera monstrate hic.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Tu schedas anonyme essera monstrate hic.</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 scheda aperte. Tocca pro mutar schedas.
+</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s schedas aperte. Tocca pro mutar schedas.</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d seligite</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -24,22 +33,47 @@
     <string name="tab_tray_add_new_collection_name">Nomine</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Eliger un collection</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Exir del modo multiselection</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Salvar schedas eligite al collection</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">Selecte %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s deseligite</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Exite del modo multiselection</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Inserite modo multiselection, elige schedas a salvar a in un collection</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Seligite</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s es producite per Mozilla.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Tu es in un session anonyme</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s clara tu chronologia de recerca e de navigation del schedas anonyme quando tu claude los o quita le app. Ben que isto non te rende anonyme al sitos web o a tu fornitor de servicio internet, isto rende plus facile mantener lo que tu face online reservatemente contra quicunque altere usa iste apparato.</string>
     <string name="private_browsing_common_myths">
        Mythos commun re le navigation anonyme
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Deler le session</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Adde un via-breve pro aperir schedas anonyme de tu Pagina initial.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Adder via-breve</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">No, gratias</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Tu pote configurar Firefox pro aperir automaticamente ligamines in apps.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Ir a parametros</string>
     <!-- Text for the negative action button -->
@@ -614,6 +648,8 @@
     <string name="tab_tray_menu_item_share">Compartir tote le schedas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Schedas claudite recentemente</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Parametros de conto</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Parametros del schedas</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1276,12 +1312,29 @@
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">RETENTAR</string>
 
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Scander le codice</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Aperi Firefox sur tu computator e va a  <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Preste a scander</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Accede con tu camera</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Alteremente usa un email</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Nulle conto? <u>Crea un</u>pro synchronisar Firefox inter apparatos.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox cessara synchronisar con tu conto, ma non delera ulle tu datos de navigation sur iste apparato.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s cessara synchronisar con tu conto, ma non delera ulle tu datos de navigation sur iste apparato.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Disconnecter</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Cancellar</string>
+
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Impossibile rediger plicas predefinite</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
@@ -1290,24 +1343,49 @@
     <string name="preference_enhanced_tracking_protection">Protection antitraciamento reinfortiate</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Naviga sin lassar te sequer</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Mantene tu datos pro te mesme. %s te protege contra multe del plus commun traciatores que seque lo que tu face online.
+</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saper plus</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (predefinite)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Equilibrio inter confidentialitate e prestation. Le paginas carga normalmente.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Lo que es blocate per standard protection de traciamento</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Stricte</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Bloca plus traciatores assi que le paginas se carga plus veloce, ma alcun functionalitate sur le pagina pote corrumper se.</string>
 
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Lo que es blocate per standard protection de traciamento</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Personalisate</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Elige qual traciatores e scripts blocar.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Lo que es blocate per rigorose protection de traciamento</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Traciatores inter sitos e de retes social</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookie de sitos web non visitate</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Tote le cookies de tertie-partes (pote causar que sitos web collabe)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Tote le cookies (causara que sitos web collabe)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Contento traciante</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">In tote le schedas</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Solo in Schedas anonyme</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Solo in Schedas personalisate</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominatores</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1317,12 +1395,51 @@
     <string name="enhanced_tracking_protection_allowed">Permittite</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Traciatores de retes social</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Limita le capacitate de retes social de traciar tu activitate de navigation circum le web.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Cookies de traciamento inter sitos</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Bloca cookies que retes e companias de analyse datos publicitari usa pro compilar tu datos de navigation inter multe sitos.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominatores</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Impedi scripts maligne de ganiar accesso a tu apparato pro minar moneta digital.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Dactylogrammatores</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Impedi al datos identificative unic, que pote esser usate pro scopos de traciamento, de esser colligite re tu apparato.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Contento traciante</string>
+
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Impedi cargar avisos publicitari, videos e altere contento externe que contine codification de traciamento. Pote interessar le functionalitate de alcun sito web.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_cfr_message">Cata vice le escudo es purpuree, %s ha blocate traciatores sur un sito. Tocca pro altere informationes.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Le protectiones es ACTIVE pro iste sito</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Protectiones es INACTIVE pro iste sito</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Le protection contra-traciamento reinfortiate es inactive pro iste sitos web</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Naviga a retro</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Tu derectos</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Le bibliothecas open-source que nos usa</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Lo que es nove in %s</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Bibliothecas OSS</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Traciatores de re-direction</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Clara cookies definite per re-directiones a note sitos web de traciamento.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Supporto</string>
@@ -1332,6 +1449,16 @@
     <string name="about_privacy_notice">Aviso de confidentialitate</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Prende acto de tu derectos</string>
+
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Informationes de licentias</string>
+
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Bibliothecas que nos usa</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menu de depuration: %1$d clic(s) restate pro activar</string>
+    <string name="about_debug_menu_toast_done">Menu de depuration activate</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 scheda</string>
@@ -1357,8 +1484,24 @@
     <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
     <string name="add_to_homescreen_continue">Continuar al sito web</string>
 
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Nomine via-breve</string>
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Tu pote facilemente adder iste sito web al Pagina initial de tu apparato pro haber accesso instantanee e navigar plus veloce con un experientia simile al app.</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Credentiales e contrasignos
+</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Salvar credentiales e contrasignos</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Demandar pro salvar</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Jammais salvar</string>
     <!-- Preference for autofilling saved logins in Fenix -->
     <string name="preferences_passwords_autofill">Autoplenar</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Synchronisar credentiales</string>
     <!-- Syncing saved logins in Fenix is on -->
     <string name="preferences_passwords_sync_logins_on">Active</string>
     <!-- Syncing saved logins in Fenix is off -->
@@ -1369,45 +1512,96 @@
     <string name="preferences_passwords_sync_logins_sign_in">Authenticar se a Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Authenticationes salvate</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Le credentiales que tu salva o synchronisa a in %s apparera hic.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Apprender plus re Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Exceptiones</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Credentiales e contrasignos que non es salvate essera monstrate hic.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Credentiales e contrasignos non sera salvate pro iste sitos.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Deler tote le exceptiones</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Cercar credentiales</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
     <string name="preferences_passwords_saved_logins_alphabetically">Alphabeticamente</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Usate recentemente</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sito</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Nomine de usator</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Contrasigno</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Reinsere tu PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Disbloca pro vider tu credentiales salvate</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Iste connexion non es secur. Le credentiales inserite hic pote esser compromittite.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Saper plus</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Vole tu que %s salva iste credentiales?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Salvar</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Non salvar</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Contrasigno copiate in le area de transferentia</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Nomine de usator copiate al area de transferentia</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Sito copiate al area de transferentia</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copiar le contrasigno</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Clarar contrasigno</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Copiar le nomine de usator</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Clarar nomine de usator</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Copiar sito</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Aperir sito in navigator</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Monstrar contrasigno</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Celar contrasigno</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Disbloca pro vider tu credentiales salvate</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Assecurar tu credentiales e contrasignos</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Implementa un patrono de blocada apparato, PIN o contrasigno pro proteger tu credentiales e contrasignos salvate de esser accedite, si alcuno altere ha tu apparato.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later"></string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Implementar ora</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Disbloca tu apparato</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Aggrandir tote le sitos web</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Activar pro permitter le &quot;prisa e zoom&quot;, mesmo sur sitos web que impedi iste gesto.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Nomine (A-Z)</string>
 
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Ultimemente usate</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordinar menu de credentiales</string>
+
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Cartas de credito</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Gerer le cartas salvate</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Datos es cryptate</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1415,8 +1609,12 @@
 
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Adde un carta de credito</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Gerer le cartas salvate</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Adder carta</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Rediger carta</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Numero del carta</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1425,6 +1623,8 @@
     <string name="credit_cards_name_on_card">Nomine sur le carta</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Pseudonymo del carta</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Deler carta</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Salvar</string>
     <!-- The text for the "Save" button for saving a credit card -->
@@ -1432,6 +1632,13 @@
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Cancellar</string>
 
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Cartas salvate</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Adder motor de recerca</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Rediger motor de recerca</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Adder</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
@@ -1446,12 +1653,28 @@
     <string name="search_add_custom_engine_label_other">Altere</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Nomine</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Catena de recerca a usar</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Replaciar le recerca con “%s”. Exemplo:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Saper plus</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Detalios del motor de recerca personalisate</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">Saper plus ligamines</string>
 
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Insere nomine del motor de recerca</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Un motor de recerca con nomine “%s” existe jam.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Insere un catena de recerca</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Verifica que le catena de recerca concorda con le formato de exemplo</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Error de connexion a “%s”</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">Create %s</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1459,21 +1682,68 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Delite %s</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Benvenite in un %s tote nove</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Un navigator completemente redesignate te attende, con prestation e functionalitates meliorate pro te adjutar a facer plus online.\n\nAttende durante que nos actualisa %s con tu:</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Actualisation de %s...</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Initiar %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Migration completate</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Contrasignos</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Pro permitter lo:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Va a Parametros de Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tocca <b>Permissos</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Commuta <b>%1$s</b> a Active]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Connexion secur</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Connexion non secur</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Es tu secur que tu vole clarar tote le permissos sur tote le sitos?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Es tu secur que tu vole clarar tote le permissos pro iste sito?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Es tu secur que tu vole clarar iste permisso pro iste sito?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Nulle exceptiones sito</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">Principal articulos</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Desira tu vermente deler iste marcapagina?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Adder a sitos principal</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Verificate per: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Deler</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Rediger</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Desira tu vermente deler iste credentiales?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Deler</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Optiones de apertura de session</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Le campo de texto redigibile pro le adresse web del credentiales.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Le campo de texto redigibile pro le nomine de usator del accesso.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Le campo de texto redigibile pro le contrasigno del credentiales.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Salvar cambiamentos a credentiales.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Refusar le modificationes</string>
     <!--  The page title for editing a saved login. -->
@@ -1486,11 +1756,28 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Parla ora</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Un credential con ille nomine de usator existe jam</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Connecter un altere apparato.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Per favor re-authentica te.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Activa le synchronisation del scheda.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Tu non ha schedas aperte in Firefox sur tu altere apparatos.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Vider un lista de schedas de tu altere apparatos.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Aperi session pro synchronisar</string>
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Nulle schedas aperite</string>
 
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Attingite limite del numero de sitos principal</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">De accordo</string>
     <!-- Title text displayed in the rename top site dialog. -->

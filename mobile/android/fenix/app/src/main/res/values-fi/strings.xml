@@ -633,6 +633,8 @@
     <string name="tab_tray_menu_item_share">Jaa kaikki välilehdet</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Viimeksi suljetut välilehdet</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Tilin asetukset</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Välilehtiasetukset</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1230,6 +1232,8 @@
     <string name="onboarding_tracking_protection_strict_button">Tiukka (suositeltu)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Tiukka</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Estää enemmän seuraimia, joten sivut latautuvat nopeammin, mutta jotkin sivujen toiminnot saattavat rikkoutua.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Valitse työkalupalkin sijoitus</string>
     <!-- text for the toolbar position card description -->
@@ -1576,6 +1580,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Hallinnoi tallennettuja kortteja</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Lisää kortti</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Muokkaa korttia</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Kortin numero</string>
     <!-- The header for the expiration date of a credit card -->

@@ -1595,6 +1595,8 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="preferences_credit_cards_manage_saved_cards">Gérer les cartes enregistrées</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Ajouter une carte</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Modifier la carte</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Numéro de carte</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1772,6 +1774,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Annuler</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Faites en sorte que les liens des sites web, des courriels et des messages s’ouvrent automatiquement dans Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Supprimer</string>

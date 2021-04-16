@@ -637,6 +637,8 @@
     <string name="tab_tray_menu_item_share">Compartir todas las pestañas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Pestañas recientemente cerradas</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Configuración de la cuenta</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Configuración de pestañas</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1581,6 +1583,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Administrar tarjetas guardadas</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Agregar tarjeta</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Editar tarjeta</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Número de tarjeta</string>
     <!-- The header for the expiration date of a credit card -->

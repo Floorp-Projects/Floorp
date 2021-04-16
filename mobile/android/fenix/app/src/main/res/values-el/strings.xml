@@ -1581,6 +1581,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Διαχείριση αποθηκευμένων καρτών</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Προσθήκη κάρτας</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Επεξεργασία κάρτας</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Αριθμός κάρτας</string>
     <!-- The header for the expiration date of a credit card -->

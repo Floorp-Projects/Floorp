@@ -1599,6 +1599,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Gestione carte salvate</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Aggiungi carta</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Modifica carta</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Numero carta</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1779,6 +1781,9 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Annulla</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Apri link da siti web, email e messaggi in Firefox per impostazione predefinita.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Elimina</string>

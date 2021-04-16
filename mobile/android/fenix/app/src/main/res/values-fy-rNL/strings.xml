@@ -1562,6 +1562,8 @@
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kaart tafoegje</string>
 
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Kaart bewurkje</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Kaartnûmer</string>
     <!-- The header for the expiration date of a credit card -->

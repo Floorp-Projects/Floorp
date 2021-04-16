@@ -606,12 +606,16 @@
     <string name="tabs_header_private_title">Privatna sesija</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Privatne kartice</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Sinkronizirane kartice</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Dodaj karticu</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Dodaj privatnu karticu</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Privatno</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sinkroniziraj</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Otvorene kartice</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -1565,8 +1569,12 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Dodaj kreditnu karticu</string>
 
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Upravljaj spremljenim karticama</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Dodaj karticu</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Uredi karticu</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Broj kartice</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1583,6 +1591,9 @@
     <string name="credit_cards_save_button">Spremi</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Odustani</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Spremljene kartice</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Dodaj tražilicu</string>
@@ -1745,6 +1756,9 @@
 	<string name="top_sites_rename_dialog_ok">U redu</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Odustani</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Postavi automatsko otvaranje poveznica web stranica, e-pošte i poruka u Firefoxu.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Ukloni</string>
