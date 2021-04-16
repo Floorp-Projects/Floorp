@@ -101,15 +101,17 @@
 }
 } /*** END !proton ***/
 
+/* We don't handle `:active` because it doesn't work on the search or settings
+   buttons due to event.preventDefault() in SearchOneOffs._on_mousedown(). */
 .searchbar-engine-one-off-item:not([selected]):hover,
 .addengine-item:hover {
-  background-color: var(--arrowpanel-dimmed);
+  background-color: var(--autocomplete-popup-hover-background);
   color: inherit;
 }
 
 .searchbar-engine-one-off-item[selected] {
   background-color: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
+  color: var(--autocomplete-popup-highlight-color) !important; /* Override button.css on Linux */
 }
 
 .searchbar-engine-one-off-item > .button-box {
@@ -205,6 +207,12 @@
   padding: 1px 3px;
 }
 
+@media (-moz-proton) {
+.search-panel-tree > .autocomplete-richlistitem:hover {
+  background-color: var(--autocomplete-popup-hover-background);
+}
+} /*** END proton ***/
+
 .search-panel-tree > .autocomplete-richlistitem > .ac-type-icon {
   display: -moz-box;
   width: 14px;
@@ -231,6 +239,10 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
+.search-setting-button {
+  padding: var(--arrowpanel-menuitem-margin);
+}
+
 .searchbar-separator {
   appearance: none;
   margin: var(--panel-separator-margin);
@@ -253,12 +265,6 @@
 .searchbar-separator {
   display: none;
 }
-} /*** END !proton ***/
-
-.search-setting-button-compact {
-  max-height: 32px;
-  align-self: end;
-}
 
 .search-setting-button:not([selected]):hover {
   background-color: var(--arrowpanel-dimmed);
@@ -271,6 +277,25 @@
 }
 .search-setting-button[selected]:hover {
   color: var(--autocomplete-popup-highlight-color) !important;
+}
+} /*** END !proton ***/
+
+@media (-moz-proton) {
+/* We don't handle `:active` because it doesn't work on the search or settings
+   buttons due to event.preventDefault() in SearchOneOffs._on_mousedown(). */
+.search-setting-button:hover {
+  background-color: var(--panelview-toolbarbutton-hover-bgcolor);
+  color: var(--panelview-toolbarbutton-hover-color) !important; /* Overriding `color` from non-`:hover` above */
+}
+
+.search-setting-button[selected] {
+  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
+}
+} /*** END proton ***/
+
+.search-setting-button-compact {
+  max-height: 32px;
+  align-self: end;
 }
 
 .search-setting-button-compact > .button-box > .button-icon {

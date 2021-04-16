@@ -742,13 +742,6 @@
 }
 } /*** END proton ***/
 
-/* TODO (bug 1705507): Move this rule (sans `#urlbar`) to searchbar.inc.css so
-   search buttons in both the urlbar and search bar panels use the color. */
-#urlbar .searchbar-engine-one-off-item:not([selected]):hover,
-#urlbar .addengine-item:hover {
-  background-color: var(--autocomplete-popup-hover-background);
-}
-
 #urlbar .searchbar-engine-one-off-item:last-child {
   /* This applies to both the last one-off and the compact settings button */
   margin-inline-end: 0;
