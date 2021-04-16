@@ -115,6 +115,10 @@ function initTemporaryStorage() {
   return Services.qms.initTemporaryStorage();
 }
 
+function initPersistentOrigin(principal) {
+  return Services.qms.initializePersistentOrigin(principal);
+}
+
 function initTemporaryOrigin(persistence, principal) {
   return Services.qms.initializeTemporaryOrigin(persistence, principal);
 }

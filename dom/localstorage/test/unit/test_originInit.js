@@ -4,18 +4,34 @@
  */
 
 async function testSteps() {
+  const storageDirName = "storage";
+  const persistenceTypeDefaultDirName = "default";
+  const persistenceTypePersistentDirName = "permanent";
+
   const principal = getPrincipal("http://example.com");
 
+  const originDirName = "http+++example.com";
+
+  const clientLSDirName = "ls";
+
   const dataFile = getRelativeFile(
-    "storage/default/http+++example.com/ls/data.sqlite"
+    `${storageDirName}/${persistenceTypeDefaultDirName}/${originDirName}/` +
+      `${clientLSDirName}/data.sqlite`
   );
 
   const usageJournalFile = getRelativeFile(
-    "storage/default/http+++example.com/ls/usage-journal"
+    `${storageDirName}/${persistenceTypeDefaultDirName}/${originDirName}/` +
+      `${clientLSDirName}/usage-journal`
   );
 
   const usageFile = getRelativeFile(
-    "storage/default/http+++example.com/ls/usage"
+    `${storageDirName}/${persistenceTypeDefaultDirName}/${originDirName}/` +
+      `${clientLSDirName}/usage`
+  );
+
+  const persistentLSDir = getRelativeFile(
+    `${storageDirName}/${persistenceTypePersistentDirName}/${originDirName}/` +
+      `${clientLSDirName}`
   );
 
   const data = {};
@@ -39,7 +55,11 @@ async function testSteps() {
   }
 
   function createEmptyFile(file) {
-    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0644", 8));
+    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o0644);
+  }
+
+  function createEmptyDirectory(dir) {
+    dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o0755);
   }
 
   function getBinaryOutputStream(file) {
@@ -92,6 +112,25 @@ async function testSteps() {
 
   async function clearTestOrigin() {
     let request = clearOrigin(principal, "default");
+    await requestFinished(request);
+  }
+
+  async function initPersistentTestOrigin() {
+    let request = initStorage();
+    await requestFinished(request);
+
+    request = initTemporaryStorage();
+    await requestFinished(request);
+
+    request = initPersistentOrigin(principal);
+    await requestFinished(request);
+  }
+
+  async function clearPersistentTestOrigin() {
+    let request = Services.qms.clearStoragesForPrincipal(
+      principal,
+      "persistent"
+    );
     await requestFinished(request);
   }
 
@@ -299,4 +338,14 @@ async function testSteps() {
   await checkFiles(/* wantData */ true, /* wantUsage */ true);
 
   await clearTestOrigin();
+
+  info("Stage 12 - any ls directory in permanent repository exists");
+
+  await createEmptyDirectory(persistentLSDir);
+
+  await initPersistentTestOrigin();
+
+  await clearPersistentTestOrigin();
+
+  ok(true, "A persistent ls directory didn't cause InitializeOrigin to fail");
 }
