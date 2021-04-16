@@ -6,21 +6,12 @@
 /**
  * This test is mainly to verify initTemporaryStorage() does call
  * QuotaManager::EnsureTemporaryStorageIsInitialized() which does various
- * things, for example,
- *  - it restores the directory metadata if it's broken or missing.
- *  - it isn't blocked by a cache directory in an origin that ends with period.
+ * things, for example, it restores the directory metadata if it's broken or
+ * missing.
  */
 
 async function testSteps() {
-  const defaultRepositoryPath = "storage/default";
-  const originDirPaths = [
-    `${defaultRepositoryPath}/https+++foo.example.com`,
-    // Bug 1647316: We should have a test that checks all possible combinations
-    // that we can get during cache origin initialization. Once we have a test
-    // for that, we can revert this change.
-    `${defaultRepositoryPath}/https+++example.com.`,
-  ];
-
+  const originDirPath = "storage/default/https+++foo.example.com";
   const metadataFileName = ".metadata-v2";
 
   info("Initializing");
@@ -34,20 +25,8 @@ async function testSteps() {
 
   info("Creating an empty directory");
 
-  let originDirs = [];
-  for (let originDirPath of originDirPaths) {
-    let originDir = getRelativeFile(originDirPath);
-    originDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
-    originDirs.push(originDir);
-  }
-
-  info("Creating an empty cache directory for origin that ends with period");
-
-  let originDirPathEndsWithPeriod = originDirPaths.find(path =>
-    path.endsWith(".")
-  );
-  let cacheDir = getRelativeFile(`${originDirPathEndsWithPeriod}/cache`);
-  cacheDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+  let originDir = getRelativeFile(originDirPath);
+  originDir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
 
   info("Initializing the temporary storage");
 
@@ -59,12 +38,10 @@ async function testSteps() {
       "initTemporaryStorage()"
   );
 
-  for (let originDir of originDirs) {
-    let metadataFile = originDir.clone();
-    metadataFile.append(metadataFileName);
+  let metadataFile = originDir.clone();
+  metadataFile.append(metadataFileName);
 
-    ok(metadataFile.exists(), "Directory metadata file does exist");
-  }
+  ok(metadataFile.exists(), "Directory metadata file does exist");
 
   info("Verifying initialization status");
 
