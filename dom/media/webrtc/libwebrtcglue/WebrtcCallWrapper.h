@@ -27,17 +27,7 @@ class WebrtcCallWrapper {
   static RefPtr<WebrtcCallWrapper> Create(
       const dom::RTCStatsTimestampMaker& aTimestampMaker,
       UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-      const RefPtr<SharedWebrtcState>& aSharedState,
-      webrtc::WebRtcKeyValueConfig* aTrials);
-
-  static RefPtr<WebrtcCallWrapper> Create(
-      const dom::RTCStatsTimestampMaker& aTimestampMaker,
-      UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket,
-      RefPtr<AbstractThread> aCallThread,
-      std::function<webrtc::SharedModuleThread*()> aModuleThreadGetter,
-      const webrtc::AudioState::Config& aAudioStateConfig,
-      webrtc::AudioDecoderFactory* aAudioDecoderFactory,
-      webrtc::WebRtcKeyValueConfig* aTrials);
+      const RefPtr<SharedWebrtcState>& aSharedState);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcCallWrapper)
 
@@ -83,8 +73,7 @@ class WebrtcCallWrapper {
  protected:
   virtual ~WebrtcCallWrapper();
 
-  WebrtcCallWrapper(RefPtr<AbstractThread> aCallThread,
-                    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
+  WebrtcCallWrapper(RefPtr<SharedWebrtcState> aSharedState,
                     UniquePtr<webrtc::VideoBitrateAllocatorFactory>
                         aVideoBitrateAllocatorFactory,
                     UniquePtr<webrtc::RtcEventLog> aEventLog,
@@ -93,6 +82,8 @@ class WebrtcCallWrapper {
                     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket);
 
   explicit WebrtcCallWrapper(UniquePtr<webrtc::Call> aCall);
+
+  const RefPtr<SharedWebrtcState> mSharedState;
 
   // Allows conduits to know about one another, to avoid remote SSRC
   // collisions.

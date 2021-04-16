@@ -259,11 +259,10 @@ class NoTrialsConfig : public webrtc::WebRtcKeyValueConfig {
 
 class TestAgent {
  public:
-  TestAgent(const RefPtr<SharedWebrtcState>& aSharedState,
-            webrtc::WebRtcKeyValueConfig* aTrials)
+  explicit TestAgent(const RefPtr<SharedWebrtcState>& aSharedState)
       : audio_config_(109, "opus", 48000, 2, false),
         call_(WebrtcCallWrapper::Create(mozilla::dom::RTCStatsTimestampMaker(),
-                                        nullptr, aSharedState, aTrials)),
+                                        nullptr, aSharedState)),
         audio_conduit_(
             AudioSessionConduit::Create(call_, test_utils->sts_target())),
         audio_pipeline_(),
@@ -362,9 +361,8 @@ class TestAgent {
 
 class TestAgentSend : public TestAgent {
  public:
-  TestAgentSend(const RefPtr<SharedWebrtcState>& aSharedState,
-                webrtc::WebRtcKeyValueConfig* aTrials)
-      : TestAgent(aSharedState, aTrials) {
+  explicit TestAgentSend(const RefPtr<SharedWebrtcState>& aSharedState)
+      : TestAgent(aSharedState) {
     using Promise = MozPromise<MediaConduitErrorCode, bool, true>;
     auto rv = WaitFor(InvokeAsync(call_->mCallThread, __func__, [&] {
       return Promise::CreateAndResolve(
@@ -396,9 +394,8 @@ class TestAgentSend : public TestAgent {
 
 class TestAgentReceive : public TestAgent {
  public:
-  TestAgentReceive(const RefPtr<SharedWebrtcState>& aSharedState,
-                   webrtc::WebRtcKeyValueConfig* aTrials)
-      : TestAgent(aSharedState, aTrials) {
+  explicit TestAgentReceive(const RefPtr<SharedWebrtcState>& aSharedState)
+      : TestAgent(aSharedState) {
     std::vector<AudioCodecConfig> codecs;
     codecs.push_back(audio_config_);
 
@@ -465,10 +462,10 @@ class MediaPipelineTest : public ::testing::Test {
         shared_state_(MakeAndAddRef<SharedWebrtcState>(
             AbstractThread::MainThread(), CreateAudioStateConfig(),
             already_AddRefed(
-                webrtc::CreateBuiltinAudioDecoderFactory().release()))),
-        trials_(new NoTrialsConfig()),
-        p1_(shared_state_, trials_.get()),
-        p2_(shared_state_, trials_.get()) {}
+                webrtc::CreateBuiltinAudioDecoderFactory().release()),
+            WrapUnique(new NoTrialsConfig()))),
+        p1_(shared_state_),
+        p2_(shared_state_) {}
 
   ~MediaPipelineTest() {
     p1_.Shutdown();
@@ -593,7 +590,6 @@ class MediaPipelineTest : public ::testing::Test {
   // we're destroyed.
   UniquePtr<TaskQueueWrapper> main_task_queue_;
   const RefPtr<SharedWebrtcState> shared_state_;
-  const UniquePtr<webrtc::WebRtcKeyValueConfig> trials_;
   TestAgentSend p1_;
   TestAgentReceive p2_;
 };

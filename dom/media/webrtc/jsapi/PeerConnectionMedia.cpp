@@ -656,7 +656,6 @@ void PeerConnectionMedia::ShutdownMediaTransport_s() {
 nsresult PeerConnectionMedia::AddTransceiver(
     JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack* aSendTrack,
     SharedWebrtcState* aSharedWebrtcState,
-    webrtc::WebRtcKeyValueConfig* aTrials,
     RefPtr<TransceiverImpl>* aTransceiverImpl) {
   if (!mCall) {
     mCall = WebrtcCallWrapper::Create(
@@ -664,7 +663,7 @@ nsresult PeerConnectionMedia::AddTransceiver(
         MakeUnique<media::ShutdownBlockingTicket>(
             u"WebrtcCallWrapper shutdown blocker"_ns,
             NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
-        aSharedWebrtcState, aTrials);
+        aSharedWebrtcState);
   }
 
   RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(
