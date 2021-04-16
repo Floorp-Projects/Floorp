@@ -17,6 +17,7 @@
   --in-content-box-border-color: rgb(143, 143, 157);
   --in-content-box-info-background: #f0f0f4;
   --in-content-item-hover: color-mix(in srgb, var(--in-content-primary-button-background) 20%, transparent);
+  --in-content-item-hover-text: var(--in-content-page-color);
   --in-content-item-selected: var(--in-content-primary-button-background);
   --in-content-item-selected-text: var(--in-content-primary-button-text-color);
   --in-content-icon-color: rgb(91,91,102);
@@ -224,6 +225,72 @@
 }
 }
 
+@media (prefers-contrast) {
+  :host,
+  :root {
+    --in-content-page-color: -moz-DialogText;
+    --in-content-page-background: -moz-Dialog;
+    --in-content-deemphasized-text: GrayText;
+
+    --in-content-box-background: -moz-Dialog;
+    --in-content-box-background-odd: -moz-Dialog;
+    --in-content-box-border-color: ThreeDShadow;
+    --in-content-box-info-background: -moz-Dialog;
+
+    --in-content-item-hover: ButtonFace;
+    --in-content-item-hover-text: ButtonText;
+    --in-content-item-selected: Highlight;
+    --in-content-item-selected-text: HighlightText;
+    --in-content-icon-color: -moz-DialogText;
+
+    --in-content-accent-color: -moz-DialogText;
+    --in-content-accent-color-active: -moz-DialogText;
+
+    --in-content-border-hover: ThreeDShadow;
+    /* This is not great, but there is no suitable keyword for this.
+     * In theory, we shouldn't be conveying invalid state just with a colour
+     * change... */
+    --in-content-border-invalid: ThreeDShadow;
+    --in-content-border-color: ThreeDShadow;
+
+    --in-content-link-color: -moz-nativehyperlinktext;
+    --in-content-link-color-hover: -moz-nativehyperlinktext;
+    --in-content-link-color-active: -moz-nativehyperlinktext;
+    --in-content-link-color-visited: -moz-nativehyperlinktext;
+
+    --in-content-button-background: ButtonFace;
+    --in-content-button-background-hover: -moz-ButtonHoverFace;
+    --in-content-button-background-active: ButtonFace;
+
+    --in-content-primary-button-text-color: HighlightText;
+    --in-content-primary-button-background: Highlight;
+    --in-content-primary-button-background-hover: Highlight;
+    --in-content-primary-button-background-active: Highlight;
+
+    --in-content-danger-button-background: Highlight;
+    --in-content-danger-button-background-hover: Highlight;
+    --in-content-danger-button-background-active: Highlight;
+
+    --in-content-table-border-dark-color: ThreeDDarkShadow;
+    --in-content-table-background: -moz-Dialog;
+    --in-content-table-header-background: -moz-Dialog;
+    --in-content-dialog-header-background: -moz-Dialog;
+
+    --dialog-warning-text-color: -moz-FieldText;
+
+    --checkbox-border-color: ThreeDShadow;
+    --checkbox-unchecked-bgcolor: -moz-Field;
+    --checkbox-unchecked-hover-bgcolor: -moz-ButtonHoverFace;
+    --checkbox-unchecked-active-bgcolor: -moz-Field;
+    --checkbox-checked-bgcolor: -moz-Field;
+    --checkbox-checked-color: -moz-FieldText;
+    --checkbox-checked-border-color: -moz-FieldText;
+    --checkbox-checked-hover-bgcolor: -moz-Field;
+    --checkbox-checked-active-bgcolor: -moz-Field;
+
+  }
+}
+
 :root {
   font: message-box;
   appearance: none;
@@ -315,7 +382,7 @@ xul|menulist {
   min-height: 32px;
   /* !important overrides button.css for disabled and default XUL buttons: */
   color: inherit !important;
-  border: 1px solid transparent; /* needed for high-contrast mode, where it'll show up */
+  border: 1px solid transparent; /* shows up in high-contrast mode */
   border-radius: var(--in-content-button-border-radius);
   background-color: var(--in-content-button-background);
   font-weight: 400;
@@ -324,6 +391,15 @@ xul|menulist {
   margin: 4px 8px;
   /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
   font-size: 1em;
+}
+
+@media (prefers-contrast) {
+  button:not(.primary, [default], [type="submit"], [autofocus]),
+  html|select,
+  html|input[type="color"],
+  xul|menulist {
+    border-color: ThreeDShadow;
+  }
 }
 
 @media (-moz-proton) {
@@ -525,7 +601,7 @@ xul|menulist > xul|menupopup xul|menuitem {
 
 xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[_moz-menuactive="true"],
 xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[_moz-menuactive="true"] {
-  color: var(--in-content-text-color);
+  color: var(--in-content-item-hover-text);
   background-color: var(--in-content-item-hover);
 }
 
@@ -1081,6 +1157,7 @@ xul|treechildren::-moz-tree-row(multicol, odd) {
 html|select[size][multiple] > html|option:hover,
 xul|treechildren::-moz-tree-row(hover) {
   background-color: var(--in-content-item-hover);
+  color: var(--in-content-item-hover-text);
 }
 
 xul|richlistbox > xul|richlistitem[selected],
