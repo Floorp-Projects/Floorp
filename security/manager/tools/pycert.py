@@ -702,7 +702,7 @@ class Certificate(object):
         (scts, critical) = self.savedEmbeddedSCTListData
         encodedSCTs = []
         for sctSpec in scts.split(","):
-            match = re.search("(\w+):(\d{8})", sctSpec)
+            match = re.search(r"(\w+):(\d{8})", sctSpec)
             if not match:
                 raise InvalidSCTSpecification(sctSpec)
             keySpec = match.group(1)
