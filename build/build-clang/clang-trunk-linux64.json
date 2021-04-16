@@ -1,0 +1,23 @@
+{
+  "stages": "2",
+  "build_libcxx": true,
+  "build_wasm": true,
+  "build_type": "Release",
+  "assertions": false,
+  "python_path": "/usr/bin/python2.7",
+  "gcc_dir": "{MOZ_FETCHES_DIR}/gcc",
+  "cc": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+  "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
+  "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
+  "wasi-sysroot": "{MOZ_FETCHES_DIR}/wasi-sysroot",
+  "patches": [
+    "static-llvm-symbolizer_clang_12.patch",
+    "find_symbolizer_linux_clang_10.patch",
+    "android-mangling-error_clang_12.patch",
+    "unpoison-thread-stacks_clang_10.patch",
+    "downgrade-mangling-error_clang_12.patch",
+    "revert-llvmorg-12-init-7827-g2a078c307204.patch",
+    "loosen-msvc-detection.patch",
+    "clang-trunk-missing-define.patch"
+  ]
+}

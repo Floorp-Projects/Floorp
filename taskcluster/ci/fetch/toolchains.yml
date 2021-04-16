@@ -441,6 +441,15 @@ clang-12:
         repo: https://github.com/llvm/llvm-project
         revision: 31001be371e8f2c74470e727e54503fb2aabec8b
 
+clang-trunk:
+    description: clang main branch source code
+    attributes:
+        cached_task: false
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        branch: main
+
 rust-1.47.0-dev:
     description: Rust 1.47.0-dev source code
     fetch:
