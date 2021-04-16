@@ -10,21 +10,30 @@ EXPORTS += [
     "WMF.h",
     "WMFAudioMFTManager.h",
     "WMFDecoderModule.h",
+    "WMFEncoderModule.h",
     "WMFMediaDataDecoder.h",
+    "WMFMediaDataEncoder.h",
     "WMFUtils.h",
     "WMFVideoMFTManager.h",
 ]
 UNIFIED_SOURCES += [
     "DXVA2Manager.cpp",
     "MFTDecoder.cpp",
+    "MFTEncoder.cpp",
     "WMFAudioMFTManager.cpp",
     "WMFDecoderModule.cpp",
+    "WMFEncoderModule.cpp",
     "WMFMediaDataDecoder.cpp",
+    'WMFMediaDataEncoder.cpp',
     "WMFVideoMFTManager.cpp",
 ]
 
 SOURCES += [
     "WMFUtils.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/media/libyuv/libyuv/include",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
