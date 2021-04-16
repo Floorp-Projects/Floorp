@@ -43,8 +43,10 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
 
   const RawId mId;
   const nsString mName;
-  const RefPtr<AdapterFeatures> mFeatures;
-  const RefPtr<AdapterLimits> mLimits;
+  // Cant have them as `const` right now, since we wouldn't be able
+  // to unlink them in CC unlink.
+  RefPtr<AdapterFeatures> mFeatures;
+  RefPtr<AdapterLimits> mLimits;
 
  public:
   Adapter(Instance* const aParent, const ffi::WGPUAdapterInformation& aInfo);

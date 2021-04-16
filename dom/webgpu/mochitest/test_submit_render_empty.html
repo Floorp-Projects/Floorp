@@ -17,14 +17,14 @@ const func = async function() {
   const texture = device.createTexture({
     size: { width: 100, height: 100, depth: 1 },
     format: "rgba8unorm",
-    usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+    usage: GPUTextureUsage.RENDER_ATTACHMENT,
   });
   const view = texture.createView();
 
   const encoder = device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
     colorAttachments: [{
-      attachment: view,
+      view,
       loadValue: { r: 0, g: 0, b: 0, a: 0 },
       storeOp: "store",
     }],
