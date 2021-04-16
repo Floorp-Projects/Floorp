@@ -188,7 +188,6 @@
 .textTrackList > .textTrackItem:focus-visible {
   outline: var(--control-focus-outline);
   outline-offset: var(--control-focus-outline-offset);
-  -moz-outline-radius: 2px;
 }
 
 .touch .controlBar > .button {
@@ -558,10 +557,6 @@
   opacity: 0.8;
   position: relative;
   top: 20px;
-}
-
-.clickToPlay:focus-visible {
-  -moz-outline-radius: 50%;
 }
 
 .controlsSpacerStack:hover > .clickToPlay,

@@ -374,12 +374,6 @@ xul|tab:-moz-focusring > .tab-middle > .tab-text {
   box-shadow: none;
   outline: 2px solid var(--in-content-focus-outline-color);
   outline-offset: 2px;
-  -moz-outline-radius: 6px;
-}
-
-html|input[type="radio"]:-moz-focusring,
-xul|radio[focused="true"] > .radio-check {
-  -moz-outline-radius: 100%;
 }
 
 html|select:not([size], [multiple]) {
@@ -728,7 +722,6 @@ html|a:-moz-focusring,
 .text-link:-moz-focusring {
   outline: 2px solid var(--in-content-focus-outline-color);
   outline-offset: 1px;
-  -moz-outline-radius: 4px;
   border-radius: 4px;
 }
 
@@ -1336,7 +1329,6 @@ xul|*.sidebar-footer-link {
 .sidebar-footer-link:-moz-focusring {
   outline: 2px solid var(--in-content-focus-outline-color);
   outline-offset: -2px;
-  -moz-outline-radius: 6px;
 }
 
 .sidebar-footer-icon {

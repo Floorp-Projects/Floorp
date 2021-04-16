@@ -942,7 +942,6 @@
   display: block;
   outline: 2px solid #000;
   outline-offset: -2px;
-  -moz-outline-radius: 4px;
 }
 
 :-moz-native-anonymous .tabbing-order.focused .tabbing-order-bounds {

@@ -77,7 +77,6 @@
 #tracking-protection-icon-container:not(:active):-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: -2px;
-  -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
 
 .identity-box-button {

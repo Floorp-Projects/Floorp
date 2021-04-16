@@ -70,7 +70,6 @@
 .expand-button[warning]:not(:focus) {
   outline: 2px solid var(--yellow-60);
   outline-offset: -1px;
-  -moz-outline-radius: 3px;
   box-shadow: 0 0 0 4px var(--yellow-60-a30);
 }
 

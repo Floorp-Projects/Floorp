@@ -88,18 +88,6 @@
 .toolbarButton:-moz-focusring {
   outline: 2px solid var(--border-active-shadow);
 }
-.toolbarButton.startItem:-moz-focusring,
-.toolbarButton.endItem:-moz-locale-dir(rtl):-moz-focusring {
-  -moz-outline-radius: 8px;
-  -moz-outline-radius-topright: 0;
-  -moz-outline-radius-bottomright: 0;
-}
-.toolbarButton.endItem:-moz-focusring,
-.toolbarButton.startItem:-moz-locale-dir(rtl):-moz-focusring {
-  -moz-outline-radius: 8px;
-  -moz-outline-radius-topleft: 0;
-  -moz-outline-radius-bottomleft: 0;
-}
 
 .toolbarCenter {
   flex-shrink: 0;

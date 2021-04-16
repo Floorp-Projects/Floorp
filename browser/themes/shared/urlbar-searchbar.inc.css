@@ -372,7 +372,6 @@
 
 @media not (-moz-proton) {
 #urlbar-search-mode-indicator {
-  -moz-outline-radius: 2px;
   min-width: 16px; /* So the close button never causes motion */
   background-color: #d6ebff;
   outline: 1px solid #0060df; /* Blue 60 */
@@ -666,7 +665,6 @@
 .urlbar-icon-wrapper:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: -2px;
-  -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
 
 #urlbar-go-button,
@@ -958,7 +956,6 @@
 #urlbar-zoom-button:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: calc(var(--focus-outline-width) * -1);
-  -moz-outline-radius: 1em;
 }
 
 #urlbar-zoom-button > .toolbarbutton-text {
