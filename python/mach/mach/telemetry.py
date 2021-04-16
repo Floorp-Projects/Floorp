@@ -7,7 +7,6 @@ from __future__ import print_function, absolute_import
 import os
 import sys
 
-import six
 from mock import Mock
 
 from mozboot.util import get_state_dir, get_mach_virtualenv_binary
@@ -78,7 +77,7 @@ def create_telemetry_from_environment(settings):
     """
 
     is_mach_virtualenv = mozpack.path.normpath(sys.executable) == mozpack.path.normpath(
-        get_mach_virtualenv_binary(py2=six.PY2)
+        get_mach_virtualenv_binary()
     )
 
     if not (
