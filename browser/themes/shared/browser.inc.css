@@ -31,6 +31,8 @@
   --buttons-destructive-active-bgcolor: #810220;
   --buttons-destructive-color: #fbfbfe;
 
+  --autocomplete-popup-hover-background: var(--arrowpanel-dimmed);
+
   --identity-box-margin-inline: 4px;
   --identity-box-label-opacity: .8;
   --urlbar-box-bgcolor: var(--button-bgcolor);
