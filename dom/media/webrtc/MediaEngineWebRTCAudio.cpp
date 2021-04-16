@@ -186,7 +186,7 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
       mode = AudioProcessing::Config::GainController1::kAdaptiveDigital;
     }
 #if defined(WEBRTC_IOS) || defined(ATA) || defined(WEBRTC_ANDROID)
-    if (mode == GainControl::Mode::kAdaptiveAnalog) {
+    if (mode == AudioProcessing::Config::GainController1::kAdaptiveAnalog) {
       LOG_ERROR(
           "AudioInputProcessing %p Invalid AGC mode kAdaptiveAnalog on "
           "mobile",

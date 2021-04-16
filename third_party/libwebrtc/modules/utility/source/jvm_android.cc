@@ -223,7 +223,6 @@ std::string JNIEnvironment::JavaToStdString(const jstring& j_string) {
 
 // static
 void JVM::Initialize(JavaVM* jvm) {
-  ALOGD("JVM::Initialize%s", GetThreadInfo().c_str());
   if (g_jvm) {
     return;
   }
