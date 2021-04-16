@@ -7,7 +7,7 @@
 #ifndef TransportSecurityInfo_h
 #define TransportSecurityInfo_h
 
-#include "CertVerifier.h"  // For CertificateTransparencyInfo
+#include "CertVerifier.h"  // For CertificateTransparencyInfo, EVStatus
 #include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "mozilla/Assertions.h"
@@ -26,11 +26,6 @@
 
 namespace mozilla {
 namespace psm {
-
-enum class EVStatus : uint8_t {
-  NotEV = 0,
-  EV = 1,
-};
 
 class TransportSecurityInfo : public nsITransportSecurityInfo,
                               public nsIInterfaceRequestor,

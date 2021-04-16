@@ -149,8 +149,7 @@ Result IsCertChainRootBuiltInRoot(const UniqueCERTCertList& chain,
   return IsCertBuiltInRoot(root, result);
 }
 
-Result IsDelegatedCredentialAcceptable(const DelegatedCredentialInfo& dcInfo,
-                                       SECOidTag evOidPolicyTag) {
+Result IsDelegatedCredentialAcceptable(const DelegatedCredentialInfo& dcInfo) {
   bool isEcdsa = dcInfo.scheme == ssl_sig_ecdsa_secp256r1_sha256 ||
                  dcInfo.scheme == ssl_sig_ecdsa_secp384r1_sha384 ||
                  dcInfo.scheme == ssl_sig_ecdsa_secp521r1_sha512;
@@ -475,7 +474,7 @@ Result CertVerifier::VerifyCert(
     /*optional*/ const Maybe<nsTArray<uint8_t>>& stapledOCSPResponseArg,
     /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS,
     /*optional*/ const OriginAttributes& originAttributes,
-    /*optional out*/ SECOidTag* evOidPolicy,
+    /*optional out*/ EVStatus* evStatus,
     /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus,
     /*optional out*/ KeySizeStatus* keySizeStatus,
     /*optional out*/ SHA1ModeResult* sha1ModeResult,
@@ -496,8 +495,8 @@ Result CertVerifier::VerifyCert(
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  if (evOidPolicy) {
-    *evOidPolicy = SEC_OID_UNKNOWN;
+  if (evStatus) {
+    *evStatus = EVStatus::NotEV;
   }
   if (ocspStaplingStatus) {
     if (usage != certificateUsageSSLServer) {
@@ -608,8 +607,6 @@ Result CertVerifier::VerifyCert(
                         MOZ_ARRAY_LENGTH(sha1ModeResults),
                     "digestAlgorithm array lengths differ");
 
-      rv = Result::ERROR_UNKNOWN_ERROR;
-
       // Try to validate for EV first.
       NSSCertDBTrustDomain::OCSPFetching evOCSPFetching =
           (mOCSPDownloadConfig == ocspOff) || (flags & FLAG_LOCAL_ONLY)
@@ -617,8 +614,9 @@ Result CertVerifier::VerifyCert(
               : NSSCertDBTrustDomain::FetchOCSPForEV;
 
       CertPolicyId evPolicy;
-      SECOidTag evPolicyOidTag;
-      bool foundEVPolicy = GetFirstEVPolicy(*cert, evPolicy, evPolicyOidTag);
+      nsTArray<uint8_t> certBytes(cert->derCert.data, cert->derCert.len);
+      bool foundEVPolicy = GetFirstEVPolicy(certBytes, evPolicy);
+      rv = Result::ERROR_UNKNOWN_ERROR;
       for (size_t i = 0;
            i < sha1ModeConfigurationsCount && rv != Success && foundEVPolicy;
            i++) {
@@ -671,8 +669,8 @@ Result CertVerifier::VerifyCert(
           MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
                   ("cert is EV with status %i\n",
                    static_cast<int>(sha1ModeResults[i])));
-          if (evOidPolicy) {
-            *evOidPolicy = evPolicyOidTag;
+          if (evStatus) {
+            *evStatus = foundEVPolicy ? EVStatus::EV : EVStatus::NotEV;
           }
           if (sha1ModeResult) {
             *sha1ModeResult = sha1ModeResults[i];
@@ -907,7 +905,7 @@ Result CertVerifier::VerifySSLServerCert(
     /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS,
     /*optional*/ const Maybe<DelegatedCredentialInfo>& dcInfo,
     /*optional*/ const OriginAttributes& originAttributes,
-    /*optional out*/ SECOidTag* evOidPolicy,
+    /*optional out*/ EVStatus* evStatus,
     /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus,
     /*optional out*/ KeySizeStatus* keySizeStatus,
     /*optional out*/ SHA1ModeResult* sha1ModeResult,
@@ -919,14 +917,12 @@ Result CertVerifier::VerifySSLServerCert(
   // XXX: MOZ_ASSERT(pinarg);
   MOZ_ASSERT(!hostname.IsEmpty());
 
-  SECOidTag evPolicyOidTag = SEC_OID_UNKNOWN;
-
   if (isBuiltCertChainRootBuiltInRoot) {
     *isBuiltCertChainRootBuiltInRoot = false;
   }
 
-  if (evOidPolicy) {
-    *evOidPolicy = evPolicyOidTag;
+  if (evStatus) {
+    *evStatus = EVStatus::NotEV;
   }
 
   if (hostname.IsEmpty()) {
@@ -938,7 +934,7 @@ Result CertVerifier::VerifySSLServerCert(
   Result rv = VerifyCert(peerCert.get(), certificateUsageSSLServer, time,
                          pinarg, PromiseFlatCString(hostname).get(), builtChain,
                          flags, extraCertificates, stapledOCSPResponse,
-                         sctsFromTLS, originAttributes, &evPolicyOidTag,
+                         sctsFromTLS, originAttributes, evStatus,
                          ocspStaplingStatus, keySizeStatus, sha1ModeResult,
                          pinningTelemetryInfo, ctInfo, crliteLookupResult);
   if (rv != Success) {
@@ -970,7 +966,7 @@ Result CertVerifier::VerifySSLServerCert(
   }
 
   if (dcInfo) {
-    rv = IsDelegatedCredentialAcceptable(*dcInfo, evPolicyOidTag);
+    rv = IsDelegatedCredentialAcceptable(*dcInfo);
     if (rv != Success) {
       return rv;
     }
@@ -1029,10 +1025,6 @@ Result CertVerifier::VerifySSLServerCert(
     }
 
     return rv;
-  }
-
-  if (evOidPolicy) {
-    *evOidPolicy = evPolicyOidTag;
   }
 
   return Success;

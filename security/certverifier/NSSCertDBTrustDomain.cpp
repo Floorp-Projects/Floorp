@@ -504,7 +504,10 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
               result = Success;
               return;
             }
-            if (CertIsAuthoritativeForEVPolicy(candidateCert, policy)) {
+
+            nsTArray<uint8_t> certBytes(candidateCert->derCert.data,
+                                        candidateCert->derCert.len);
+            if (CertIsAuthoritativeForEVPolicy(certBytes, policy)) {
               trustLevel = TrustLevel::TrustAnchor;
               result = Success;
               return;

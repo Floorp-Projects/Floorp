@@ -9,6 +9,7 @@
 #include "nsIOService.h"
 #include "nsNSSIOLayer.h"
 #include "TransportSecurityInfo.h"
+#include "CertVerifier.h"
 #include "ssl.h"
 #include "sslexp.h"
 
