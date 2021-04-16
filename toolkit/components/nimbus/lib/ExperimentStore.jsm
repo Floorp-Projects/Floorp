@@ -93,11 +93,6 @@ const SYNC_ACCESS_FEATURES = ["newtab", "aboutwelcome"];
 class ExperimentStore extends SharedDataMap {
   constructor(sharedDataKey, options = { isParent: IS_MAIN_PROCESS }) {
     super(sharedDataKey || DEFAULT_STORE_ID, options);
-
-    // Keep a session cache of all remote default configurations processed.
-    // This is used to clear the preference cache when a configuration is
-    // removed.
-    this.remoteDefaultsSession = new Set();
   }
 
   /**
@@ -228,25 +223,24 @@ class ExperimentStore extends SharedDataMap {
     this._emitExperimentUpdates(updatedExperiment);
   }
 
-  finalizeRemoteConfigs() {
-    for (let featureId of syncDataStore.getAllDefaultBranches()) {
-      if (
-        !this.remoteDefaultsSession.has(featureId) &&
-        this.getRemoteConfig(featureId)
-      ) {
-        // If we haven't seen this feature in any of the configurations
-        // processed then we should clear the matching pref cache and session
-        // data.
-        const remoteConfigState = this.get(REMOTE_DEFAULTS_KEY);
-        delete remoteConfigState?.[featureId];
-        this.setNonPersistent(REMOTE_DEFAULTS_KEY, { ...remoteConfigState });
-        syncDataStore.deleteDefault(featureId);
-        this._emitFeatureUpdate(featureId, "remote-defaults-update");
+  /**
+   * Remove any unused remote configurations and send the end event
+   *
+   * @param {Array} activeFeatureIds The set of all feature ids with matching configs during an update
+   * @memberof ExperimentStore
+   */
+  finalizeRemoteConfigs(activeFeatureConfigIds) {
+    if (!activeFeatureConfigIds) {
+      throw new Error("You must pass in an array of active feature ids.");
+    }
+    // If we haven't seen this feature in any of the configurations
+    // processed then we should clean up the matching pref cache and in-memory store
+    for (let featureId of this.getAllExistingRemoteConfigIds()) {
+      if (!activeFeatureConfigIds.includes(featureId)) {
+        this.deleteRemoteConfig(featureId);
       }
     }
 
-    // Reset the cache to prepare for the next update cycle.
-    this.remoteDefaultsSession = new Set();
     // Notify all ExperimentFeature instances that the Remote Defaults cycle finished
     // this will resolve the `onRemoteReady` promise for features that do not
     // have any remote data available.
@@ -267,7 +261,14 @@ class ExperimentStore extends SharedDataMap {
     if (SYNC_ACCESS_FEATURES.includes(featureId)) {
       syncDataStore.setDefault(featureId, configuration);
     }
-    this.remoteDefaultsSession.add(featureId);
+    this._emitFeatureUpdate(featureId, "remote-defaults-update");
+  }
+
+  deleteRemoteConfig(featureId) {
+    const remoteConfigState = this.get(REMOTE_DEFAULTS_KEY);
+    delete remoteConfigState?.[featureId];
+    this.setNonPersistent(REMOTE_DEFAULTS_KEY, { ...remoteConfigState });
+    syncDataStore.deleteDefault(featureId);
     this._emitFeatureUpdate(featureId, "remote-defaults-update");
   }
 
@@ -281,6 +282,19 @@ class ExperimentStore extends SharedDataMap {
       this.get(REMOTE_DEFAULTS_KEY)?.[featureId] ||
       syncDataStore.getDefault(featureId)
     );
+  }
+
+  /**
+   * Get all existing active remote config ids
+   * @returns {Array<string>}
+   */
+  getAllExistingRemoteConfigIds() {
+    return [
+      ...new Set([
+        ...syncDataStore.getAllDefaultBranches(),
+        ...Object.keys(this.get(REMOTE_DEFAULTS_KEY) || {}),
+      ]),
+    ];
   }
 
   _deleteForTests(featureId) {

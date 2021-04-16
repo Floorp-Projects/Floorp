@@ -330,7 +330,6 @@ class _ExperimentManager {
    * Sets Telemetry when activating an experiment.
    *
    * @param {Enrollment} experiment
-   * @memberof _ExperimentManager
    */
   setExperimentActive(experiment) {
     TelemetryEnvironment.setExperimentActive(
@@ -341,6 +340,39 @@ class _ExperimentManager {
         enrollmentId:
           experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       }
+    );
+  }
+
+  /**
+   * Returns identifier for Telemetry experiment environment
+   *
+   * @param {string} featureId e.g. "aboutwelcome"
+   * @returns {string} the identifier, e.g. "default-aboutwelcome"
+   */
+  getRemoteDefaultTelemetryIdentifierForFeature(featureId) {
+    return `default-${featureId}`;
+  }
+
+  /**
+   * Sets Telemetry when activating a remote default.
+   *
+   * @param {featureId} string The feature identifier e.g. "aboutwelcome"
+   * @param {configId} string The identifier of the active configuration
+   */
+  setRemoteDefaultActive(featureId, configId) {
+    TelemetryEnvironment.setExperimentActive(
+      this.getRemoteDefaultTelemetryIdentifierForFeature(featureId),
+      configId,
+      {
+        type: `${TELEMETRY_EXPERIMENT_ACTIVE_PREFIX}default`,
+        enrollmentId: TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+      }
+    );
+  }
+
+  setRemoteDefaultInactive(featureId) {
+    TelemetryEnvironment.setExperimentInactive(
+      this.getRemoteDefaultTelemetryIdentifierForFeature(featureId)
     );
   }
 
