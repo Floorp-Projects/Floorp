@@ -100,8 +100,14 @@
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
-    SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTests);
+    const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    if (AppConstants.platform == "macosx" &&
+        Services.prefs.getBoolPref("widget.macos.native-context-menus", false)) {
+      ok(true, "Native context menus handle accessibility notifications natively and cannot be tested with synthesized key events.");
+    } else {
+      SimpleTest.waitForExplicitFinish();
+      addA11yLoadEvent(doTests);
+    }
   </script>
 </head>
 
