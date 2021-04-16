@@ -1792,7 +1792,7 @@ static bool MaybeTypedArrayIndexString(jsid id) {
   MOZ_ASSERT(id.isAtom() || JSID_IS_SYMBOL(id));
 
   if (MOZ_LIKELY(id.isAtom())) {
-    JSAtom* str = JSID_TO_ATOM(id);
+    JSAtom* str = id.toAtom();
     if (str->length() > 0) {
       // Only check the first character because we want this function to be
       // fast.
