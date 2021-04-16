@@ -188,8 +188,10 @@ function onLoad(ready) {
     document.l10n.setAttributes(primary, await strings.primary);
     document.l10n.setAttributes(secondary, strings.secondary);
 
-    // Ensure the primary button is focused on each screen.
+    // Wait for initial translations to load before getting sizing information.
+    await document.l10n.ready;
     requestAnimationFrame(() => {
+      // Ensure the primary button is focused on each screen.
       primary.focus();
 
       // Save first screen height, so later screens can flex and anchor content.
