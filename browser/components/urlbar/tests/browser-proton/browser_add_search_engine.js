@@ -194,18 +194,7 @@ add_task(async function context_many() {
       for (let i = 0; i < 4; ++i) {
         let elt = popup.parentNode.getMenuItem(`add-engine-${i}`);
         Assert.equal(elt.parentNode, menu.menupopup);
-        if (
-          AppConstants.platform != "macosx" ||
-          !Services.prefs.getBoolPref(
-            "widget.macos.native-context-menus",
-            false
-          )
-        ) {
-          // When openMenu is called on macOS native context menus, the menuitem
-          // is not visible. It is only open from the test's perspective (i.e.,
-          // popupshown is fired).
-          Assert.ok(BrowserTestUtils.is_visible(elt));
-        }
+        Assert.ok(BrowserTestUtils.is_visible(elt));
       }
 
       info("Click on the first engine to install it");
