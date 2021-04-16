@@ -2469,7 +2469,7 @@
     disambiguationIdLo: UInt32Imm
 
 - name: NewPlainObjectResult
-  shared: true
+  shared: false
   transpile: false
   cost_estimate: 4
   args:
