@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
   Any copyright is dedicated to the Public Domain.
   http://creativecommons.org/publicdomain/zero/1.0/
@@ -8,4 +9,13 @@
     fill: green;
   }
 </style>
-<img src="file_context_fill_fallback_red.svg" style="width: 100px; height: 100px;"/>
+<script>
+  async function awaitPaintAndMessageParent() {
+    // Wait through two rAF ticks to be sure we've gotten at least one paint:
+    await new Promise(resolve  => requestAnimationFrame(resolve));
+    await new Promise(resolve  => requestAnimationFrame(resolve));
+    window.parent.postMessage("painted", "*");
+  }
+</script>
+<body onload="awaitPaintAndMessageParent()">
+<img src="file_context_fill_fallback_red.svg" style="width: 100px; height: 100px;">

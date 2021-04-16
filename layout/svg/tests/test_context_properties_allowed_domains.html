@@ -19,6 +19,20 @@
     }
 
     /**
+     * Returns a promise that resolves when we receive the message
+     * "painted" from a child iframe. (It sends this message to indicate
+     * that it has loaded and then performed at least one paint.)
+     */
+    function waitForLoadAndPaint() {
+      return new Promise(resolve => {
+        window.addEventListener('message', () => {
+          if (event.data == "painted") {
+            resolve();
+          }}, { once: true });
+      });
+    }
+
+    /**
      * Given an iframe, loads src in it, and waits for the load event
      * for the iframe to fire. Then it snapshots the iframe and returns
      * the snapshot.
@@ -32,13 +46,17 @@
 
       if (!src.startsWith("http")) {
         frame.srcdoc = src;
+        await waitForLoad(frame);
       } else {
         frame.src = src;
+        await waitForLoadAndPaint();
       }
-      await waitForLoad(frame);
 
       // Wait through two rAF ticks to be sure we've gotten at least one paint
-      // after the iframe loads:
+      // in the outer document after the iframe told us it was ready to be
+      // snapshotted.
+      // XXXdholbert (This might be overkill; we could probably remove this part
+      // once the test is reliably passing.)
       await new Promise(resolve  => requestAnimationFrame(resolve));
       await new Promise(resolve  => requestAnimationFrame(resolve));
 
