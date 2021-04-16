@@ -96,6 +96,13 @@ function closeDialog(reason) {
   close();
 }
 
+// Detect quit requests to proactively dismiss to allow the quit prompt to show
+// as otherwise gDialogBox queues the prompt as these share the same display.
+const QUIT_TOPIC = "quit-application-requested";
+const QUIT_OBSERVER = () => closeDialog(QUIT_TOPIC);
+Services.obs.addObserver(QUIT_OBSERVER, QUIT_TOPIC);
+CLEANUP.push(() => Services.obs.removeObserver(QUIT_OBSERVER, QUIT_TOPIC));
+
 // Hook up dynamic behaviors of the dialog.
 function onLoad(ready) {
   const title = document.getElementById("title");
