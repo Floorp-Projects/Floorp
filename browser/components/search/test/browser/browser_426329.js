@@ -297,13 +297,14 @@ add_task(async function testClearHistory() {
   });
   await popupShownPromise;
   // Close the context menu.
-  EventUtils.synthesizeKey("KEY_Escape");
+  let contextMenu = document.querySelector(".textbox-contextmenu");
+  contextMenu.hidePopup();
 
   let menuitem = searchBar._menupopup.querySelector(".searchbar-clear-history");
   ok(!menuitem.disabled, "Clear history menuitem enabled");
 
   let historyCleared = promiseObserver("satchel-storage-changed");
-  menuitem.click();
+  searchBar._menupopup.activateItem(menuitem);
   await historyCleared;
   let count = await FormHistoryTestUtils.count(
     textbox.getAttribute("autocompletesearchparam")
