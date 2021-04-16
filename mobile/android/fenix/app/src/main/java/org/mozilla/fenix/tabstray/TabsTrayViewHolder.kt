@@ -38,6 +38,7 @@ import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.selection.SelectionInteractor
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
+import org.mozilla.fenix.tabstray.ext.isSelect
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
@@ -206,7 +207,7 @@ abstract class TabsTrayViewHolder(
         itemView.setOnClickListener {
             val selected = holder.selectedItems
             when {
-                selected.isEmpty() -> interactor.open(item)
+                selected.isEmpty() && trayStore.state.mode.isSelect().not() -> interactor.open(item)
                 item in selected -> interactor.deselect(item)
                 else -> interactor.select(item)
             }
