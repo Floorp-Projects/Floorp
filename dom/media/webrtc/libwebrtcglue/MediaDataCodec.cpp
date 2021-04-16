@@ -15,7 +15,7 @@ namespace mozilla {
 /* static */
 WebrtcVideoEncoder* MediaDataCodec::CreateEncoder(
     webrtc::VideoCodecType aCodecType) {
-#if defined(MOZ_APPLEMEDIA) || defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_APPLEMEDIA) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WMF)
   if (aCodecType == webrtc::VideoCodecType::kVideoCodecH264) {
     return new WebrtcVideoEncoderProxy(new WebrtcMediaDataEncoder());
   }
