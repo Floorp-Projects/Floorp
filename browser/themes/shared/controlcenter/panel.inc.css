@@ -1053,10 +1053,6 @@ description#identity-popup-content-verifier,
   color: var(--panel-description-color);
 }
 
-.protections-popup-description {
-  border-bottom: 1px solid var(--panel-separator-color);
-}
-
 .protections-popup-description > description {
   margin: 10px 24px;
 }
