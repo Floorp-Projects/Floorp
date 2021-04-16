@@ -176,6 +176,27 @@ void nsMenuX::DetachFromGroupOwnerRecursive() {
   }
 }
 
+void nsMenuX::OnMenuWillOpen(dom::Element* aPopupElement) {
+  RefPtr<nsMenuX> kungFuDeathGrip(this);
+  if (mObserver) {
+    mObserver->OnMenuWillOpen(aPopupElement);
+  }
+}
+
+void nsMenuX::OnMenuDidOpen(dom::Element* aPopupElement) {
+  RefPtr<nsMenuX> kungFuDeathGrip(this);
+  if (mObserver) {
+    mObserver->OnMenuDidOpen(aPopupElement);
+  }
+}
+
+void nsMenuX::OnMenuClosed(dom::Element* aPopupElement) {
+  RefPtr<nsMenuX> kungFuDeathGrip(this);
+  if (mObserver) {
+    mObserver->OnMenuClosed(aPopupElement);
+  }
+}
+
 void nsMenuX::UnregisterCommands() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -222,6 +243,7 @@ void nsMenuX::AddMenuItem(RefPtr<nsMenuItemX>&& aMenuItem) {
 void nsMenuX::AddMenu(RefPtr<nsMenuX>&& aMenu) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  aMenu->SetObserver(this);
   mMenuChildren.AppendElement(aMenu);
 
   if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(aMenu->Content())) {
@@ -315,6 +337,7 @@ nsresult nsMenuX::RemoveAll() {
         [](const RefPtr<nsMenuX>& aMenu) {
           aMenu->DetachFromGroupOwnerRecursive();
           aMenu->DetachFromParent();
+          aMenu->SetObserver(nullptr);
         },
         [](const RefPtr<nsMenuItemX>& aMenuItem) {
           aMenuItem->DetachFromGroupOwner();
@@ -411,15 +434,16 @@ void nsMenuX::MenuOpenedAsync() {
     mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, u"true"_ns, true);
   }
 
+  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
+
   // Notify our observer.
   if (mObserver) {
-    mObserver->OnMenuOpened();
+    mObserver->OnMenuDidOpen(popupContent->AsElement());
   }
 
   // Fire popupshown.
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShown, nullptr, WidgetMouseEvent::eReal);
-  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 }
@@ -519,7 +543,7 @@ void nsMenuX::MenuClosedAsync() {
 
   // Notify our observer.
   if (mObserver) {
-    mObserver->OnMenuClosed();
+    mObserver->OnMenuClosed(popupContent->AsElement());
   }
 }
 
@@ -731,10 +755,14 @@ bool nsMenuX::OnOpen() {
                "seems odd.");
   }
 
+  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
+
+  if (mObserver) {
+    mObserver->OnMenuWillOpen(popupContent->AsElement());
+  }
+
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShowing, nullptr, WidgetMouseEvent::eReal);
-
-  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
 
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
