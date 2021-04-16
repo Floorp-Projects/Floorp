@@ -3,24 +3,32 @@
 
 "use strict";
 
-function assertNotificationBoxHidden(notificationBox, reason) {
-  let { stack } = notificationBox;
-  let name = stack.getAttribute("name");
+function assertNotificationBoxHidden(reason, browser) {
+  let notificationBox = gBrowser.readNotificationBox(browser);
+
+  if (!notificationBox) {
+    ok(!notificationBox, `Notification box has not been created ${reason}`);
+    return;
+  }
+
+  let name = notificationBox._stack.getAttribute("name");
   ok(name, `Notification box has a name ${reason}`);
 
-  let { selectedViewName } = stack.parentElement;
+  let { selectedViewName } = notificationBox._stack.parentElement;
   ok(
     selectedViewName != name,
     `Box is not shown ${reason} ${selectedViewName} != ${name}`
   );
 }
 
-function assertNotificationBoxShown(notificationBox, reason) {
-  let { stack } = notificationBox;
-  let name = stack.getAttribute("name");
+function assertNotificationBoxShown(reason, browser) {
+  let notificationBox = gBrowser.readNotificationBox(browser);
+  ok(notificationBox, `Notification box has been created ${reason}`);
+
+  let name = notificationBox._stack.getAttribute("name");
   ok(name, `Notification box has a name ${reason}`);
 
-  let { selectedViewName } = stack.parentElement;
+  let { selectedViewName } = notificationBox._stack.parentElement;
   is(selectedViewName, name, `Box is shown ${reason}`);
 }
 
@@ -45,14 +53,13 @@ add_task(async function setup() {
 add_task(async function testNotificationInBackgroundTab() {
   let firstTab = gBrowser.selectedTab;
 
-  // Navigating to a page will create the notification box, so go to example.com
+  // Navigating to a page should not create the notification box
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     let notificationBox = gBrowser.readNotificationBox(browser);
-    ok(notificationBox, "The notification box has already been created");
+    ok(!notificationBox, "The notification box has not been created");
 
-    assertNotificationBoxShown(notificationBox, "initial tab creation");
     gBrowser.selectedTab = firstTab;
-    assertNotificationBoxHidden(notificationBox, "initial tab creation");
+    assertNotificationBoxHidden("initial first tab");
 
     createNotification({
       browser,
@@ -62,7 +69,7 @@ add_task(async function testNotificationInBackgroundTab() {
     });
 
     gBrowser.selectedTab = gBrowser.getTabForBrowser(browser);
-    assertNotificationBoxShown(notificationBox, "initial tab creation");
+    assertNotificationBoxShown("notification created");
   });
 });
 
@@ -77,9 +84,7 @@ add_task(async function testNotificationInActiveTab() {
       value: "test-notification",
       priority: "PRIORITY_INFO_LOW",
     });
-    let notificationBox = gBrowser.readNotificationBox(browser);
-    ok(notificationBox, "Notification box was created");
-    assertNotificationBoxShown(notificationBox, "after appendNotification");
+    assertNotificationBoxShown("after appendNotification");
   });
 });
 
@@ -105,10 +110,12 @@ add_task(async function testNotificationMultipleTabs() {
 
   ok(!notificationBoxOne, "no initial tab box");
   ok(!notificationBoxTwo, "no about:blank box");
-  ok(notificationBoxThree, "example.com has a notification box");
+  ok(!notificationBoxThree, "no example.com box");
 
   // Verify the correct box is shown after creating tabs.
-  assertNotificationBoxShown(notificationBoxThree, "after open");
+  assertNotificationBoxHidden("after open", browserOne);
+  assertNotificationBoxHidden("after open", browserTwo);
+  assertNotificationBoxHidden("after open", browserThree);
 
   createNotification({
     browser: browserTwo,
@@ -119,9 +126,9 @@ add_task(async function testNotificationMultipleTabs() {
   notificationBoxTwo = gBrowser.readNotificationBox(browserTwo);
   ok(notificationBoxTwo, "Notification box was created");
 
-  // Verify the selected browser's notification box is still shown.
-  assertNotificationBoxHidden(notificationBoxTwo, "hidden create");
-  assertNotificationBoxShown(notificationBoxThree, "other create");
+  // Verify the selected browser's notification box is still hidden.
+  assertNotificationBoxHidden("hidden create", browserTwo);
+  assertNotificationBoxHidden("other create", browserThree);
 
   createNotification({
     browser: browserThree,
@@ -130,14 +137,14 @@ add_task(async function testNotificationMultipleTabs() {
     priority: "PRIORITY_CRITICAL_LOW",
   });
   // Verify the selected browser's notification box is still shown.
-  assertNotificationBoxHidden(notificationBoxTwo, "active create");
-  assertNotificationBoxShown(notificationBoxThree, "active create");
+  assertNotificationBoxHidden("active create", browserTwo);
+  assertNotificationBoxShown("active create", browserThree);
 
   gBrowser.selectedTab = tabTwo;
 
   // Verify the notification box for the tab that has one gets shown.
-  assertNotificationBoxShown(notificationBoxTwo, "tab switch");
-  assertNotificationBoxHidden(notificationBoxThree, "tab switch");
+  assertNotificationBoxShown("tab switch", browserTwo);
+  assertNotificationBoxHidden("tab switch", browserThree);
 
   BrowserTestUtils.removeTab(tabTwo);
   BrowserTestUtils.removeTab(tabThree);
