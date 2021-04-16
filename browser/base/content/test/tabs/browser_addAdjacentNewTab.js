@@ -39,7 +39,7 @@ add_task(async function() {
   });
   await popupShownPromise;
 
-  EventUtils.synthesizeMouseAtCenter(menuItemOpenANewTab, {});
+  contextMenu.activateItem(menuItemOpenANewTab);
 
   let newTab = await newTabPromise;
 
