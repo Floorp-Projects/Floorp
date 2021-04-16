@@ -25,9 +25,6 @@
   margin-block: 32px 8px;
 }
 
-.summary > div {
-  font-weight: bold;
-}
 
 .summary > a {
   margin-top: 12px;
@@ -45,8 +42,8 @@
 }
 
 .count-details {
+  margin-top: 8px;
   text-align: center;
-  font-weight: bold;
 }
 
 .result-count {
