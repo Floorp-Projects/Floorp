@@ -1243,7 +1243,8 @@ var SessionStoreInternal = {
 
     if (
       Services.appinfo.sessionHistoryInParent &&
-      aBrowsingContext === aBrowsingContext.top
+      aBrowsingContext === aBrowsingContext.top &&
+      aBrowsingContext.sessionHistory
     ) {
       if (!this._browserSHistoryListener.has(aBrowser.permanentKey)) {
         this.addSHistoryListener(aBrowser, aBrowsingContext);
