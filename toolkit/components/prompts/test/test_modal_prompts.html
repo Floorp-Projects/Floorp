@@ -1147,11 +1147,15 @@ async function runTests(util) {
     realm: "",
   };
 
+  let msg =
+    util.modalType == Ci.nsIPrompt.MODAL_TYPE_TAB
+      ? "This site is asking you to sign in."
+      : "http://example.com is requesting your username and password.";
   // =====
   // (promptAuth is only accessible from the prompt service)
   info("Starting test: promptAuth with empty realm");
   state = {
-    msg: "http://example.com is requesting your username and password.",
+    msg,
     title: "TestTitle",
     iconClass: "authentication-icon question-icon",
     titleHidden: true,
@@ -1187,13 +1191,17 @@ async function runTests(util) {
 
   // =====
   // (promptAuth is only accessible from the prompt service)
+  msg =
+    util.modalType == Ci.nsIPrompt.MODAL_TYPE_TAB
+      ? "This site is asking you to sign in."
+      : "http://example.com is requesting your username and password. The site " +
+        "says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
+        "abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
+        "abcdefghi \u2026\u201d";
+
   info("Starting test: promptAuth with long realm");
   state = {
-    msg:
-      "http://example.com is requesting your username and password. The site " +
-      "says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
-      "abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
-      "abcdefghi \u2026\u201d",
+    msg,
     title: "TestTitle",
     iconClass: "authentication-icon question-icon",
     titleHidden: true,
@@ -1232,6 +1240,12 @@ async function runTests(util) {
     await promptDone;
   }
 
+  msg =
+    util.modalType == Ci.nsIPrompt.MODAL_TYPE_TAB
+      ? ("This site is asking you to sign in. Warning: Your login information " +
+        "will be shared with example.com, not the website you are currently visiting.")
+      : ("http://example.com is requesting your username and password. " +
+        "WARNING: Your password will not be sent to the website you are currently visiting!");
   info("Starting test: promptAuth for a cross-origin and a empty realm");
   authinfo = {
     username: "",
@@ -1244,9 +1258,7 @@ async function runTests(util) {
     realm: "",
   };
   state = {
-    msg:
-      "http://example.com is requesting your username and password. " +
-      "WARNING: Your password will not be sent to the website you are currently visiting!",
+    msg,
     title: "TestTitle",
     iconClass: "authentication-icon question-icon",
     titleHidden: true,
@@ -1291,9 +1303,7 @@ async function runTests(util) {
     realm: "Something!!!",
   };
   state = {
-    msg:
-      "http://example.com is requesting your username and password. " +
-      "WARNING: Your password will not be sent to the website you are currently visiting!",
+    msg, // Same as previous test, see above.
     title: "TestTitle",
     iconClass: "authentication-icon question-icon",
     titleHidden: true,

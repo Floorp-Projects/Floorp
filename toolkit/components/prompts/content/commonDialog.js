@@ -61,6 +61,8 @@ function commonDialogOnLoad() {
       } else {
         title = { l10nId: "common-dialog-title-unknown" };
       }
+    } else if (args.authOrigin) {
+      title = { raw: args.authOrigin };
     }
     if (args.headerIconURL) {
       root.style.setProperty("--icon-url", `url('${args.headerIconURL}')`);
@@ -69,6 +71,9 @@ function commonDialogOnLoad() {
   }
   title.shouldUseMaskFade = true;
   root.setAttribute("headertitle", JSON.stringify(title));
+  if (args.isInsecureAuth) {
+    dialog.setAttribute("insecureauth", "true");
+  }
 
   let ui = {
     prompt: window,
