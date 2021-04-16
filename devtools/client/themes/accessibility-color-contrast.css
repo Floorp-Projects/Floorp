@@ -70,7 +70,6 @@
   background-color: var(--badge-background-color);
   color: var(--badge-color);
   outline: 1px solid var(--badge-border-color);
-  -moz-outline-radius: 3px;
   padding: 0px 2px;
   margin-inline-start: 6px;
   line-height: initial;

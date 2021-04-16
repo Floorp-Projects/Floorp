@@ -726,7 +726,6 @@ button.tab-button[selected] {
 
 button.tab-button:-moz-focusring {
   outline-offset: -2px;
-  -moz-outline-radius: 0;
 }
 
 .tab-group[last-input-type="mouse"] > button.tab-button:-moz-focusring {

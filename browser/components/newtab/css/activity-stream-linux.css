@@ -1821,8 +1821,7 @@ main {
         background-color: var(--customize-menu-primary-action-text);
         transition: transform 250ms;
         border-radius: 50%;
-        outline: 1px solid rgba(0, 0, 0, 0.15);
-        -moz-outline-radius: 11px; }
+        outline: 1px solid rgba(0, 0, 0, 0.15); }
     .home-section .section .switch input:focus-visible + .slider {
       border: 1px solid var(--newtab-focus-border-selected);
       outline: 0;

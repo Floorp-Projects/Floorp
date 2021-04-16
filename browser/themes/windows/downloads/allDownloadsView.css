@@ -45,7 +45,6 @@
     background-clip: content-box;
     border-radius: 6px;
     outline: 1px solid rgb(124,163,206);
-    -moz-outline-radius: 3px;
     outline-offset: -2px;
   }
 }

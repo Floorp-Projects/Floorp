@@ -991,7 +991,6 @@ description#identity-popup-content-verifier,
   border-radius: 10px;
   background: white;
   outline: 1px solid var(--panel-separator-color);
-  -moz-outline-radius: 11px;
 }
 
 .protections-popup-tp-switch[enabled] {

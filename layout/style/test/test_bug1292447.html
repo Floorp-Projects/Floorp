@@ -207,7 +207,10 @@ document.body.offsetWidth;
 
 doATest("text-indent", "indent", 400, 50);
 doATest("border-top-left-radius", "radius", 80, 20);
-doATest("-moz-outline-radius-topleft", "outlineradius", 160, 20);
+if (CSS.supports("-moz-outline-radius: initial")) {
+  doATest("-moz-outline-radius-topleft", "outlineradius", 160, 20);
+}
+
 
 doATest("width", "widthheight-", 440, 0, true);
 doATest("height", "widthheight-", 0, 0, true);

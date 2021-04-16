@@ -129,7 +129,6 @@ body {
   outline-offset: -2px;
   box-shadow: 0 0 0 2px var(--accessibility-toolbar-focus-alpha30);
   border-radius: 2px;
-  -moz-outline-radius: 2px;
 }
 
 .devtools-toolbar {
@@ -492,7 +491,6 @@ body {
   outline: 2px solid var(--accessibility-toolbar-focus);
   outline-offset: -2px;
   box-shadow: 0 0 0 2px var(--accessibility-toolbar-focus-alpha30);
-  -moz-outline-radius: 2px;
 }
 
 .treeTable:focus-within .treeRow.selected .badges .badge {

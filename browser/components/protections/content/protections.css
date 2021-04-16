@@ -1048,7 +1048,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #monitor-breaches-link:focus {
   outline: 2px solid var(--in-content-focus-outline-color);
   outline-offset: 2px;
-  -moz-outline-radius: 6px;
 }
 
 .monitor-card.loading::after,

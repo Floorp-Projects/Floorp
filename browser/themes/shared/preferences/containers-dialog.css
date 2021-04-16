@@ -23,7 +23,6 @@
   user-select: none;
   outline: 2px solid transparent;
   outline-offset: 4px;
-  -moz-outline-radius: 100%;
   min-block-size: 24px;
   min-inline-size: 24px;
   border-radius: 50%;
