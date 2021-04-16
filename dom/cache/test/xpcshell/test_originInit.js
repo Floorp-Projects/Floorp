@@ -31,6 +31,11 @@ async function testSteps() {
     `${basePath}/${originDirName}/${cacheClientDirName()}/morgue`
   );
 
+  const persistentCacheDir = getRelativeFile(
+    `${storageDirName}/${persistentPersistenceDirName}/${originDirName}/` +
+      `${cacheClientDirName()}`
+  );
+
   async function createNormalCacheOrigin() {
     async function sandboxScript() {
       const cache = await caches.open("myCache");
@@ -68,6 +73,10 @@ async function testSteps() {
 
   function createEmptyFile(file) {
     file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
+  }
+
+  function createEmptyDirectory(dir) {
+    dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o0755);
   }
 
   function checkFiles(
@@ -163,6 +172,25 @@ async function testSteps() {
     await requestFinished(request);
   }
 
+  async function initPersistentTestOrigin() {
+    let request = initStorage();
+    await requestFinished(request);
+
+    request = initTemporaryStorage();
+    await requestFinished(request);
+
+    request = initPersistentOrigin(principal);
+    await requestFinished(request);
+  }
+
+  async function clearPersistentTestOrigin() {
+    let request = Services.qms.clearStoragesForPrincipal(
+      principal,
+      persistentPersistence
+    );
+    await requestFinished(request);
+  }
+
   // Test all possible combinations.
   for (let createCachesDatabase of [false, true]) {
     for (let createPaddingFile of [false, true]) {
@@ -178,4 +206,24 @@ async function testSteps() {
       }
     }
   }
+
+  async function testPermanentCacheDir() {
+    info(
+      `Testing InitializeOrigin doesn't fail when there is a cache ` +
+        `directory in the ${persistentPersistenceDirName} repository`
+    );
+
+    createEmptyDirectory(persistentCacheDir);
+
+    await initPersistentTestOrigin();
+
+    ok(
+      true,
+      "A persistent cache directory didn't cause InitializeOrigin to fail"
+    );
+
+    await clearPersistentTestOrigin();
+  }
+
+  await testPermanentCacheDir();
 }
