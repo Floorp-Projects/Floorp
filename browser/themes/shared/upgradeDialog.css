@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 body {
-  background: url(chrome://branding/content/about-logo.svg) center 45px / 64px no-repeat;
+  background: url(chrome://branding/content/about-logo.svg) center 45px / 54px no-repeat;
   display: flex;
   flex-direction: column;
-  padding: 120px 30px 10px;
-  width: 600px;
+  padding: 110px 30px 10px;
+  width: 544px;
 }
 
 body > .hidden {
@@ -20,7 +20,7 @@ spacer {
 
 #title {
   font-size: 24px;
-  font-weight: normal;
+  font-weight: 600;
   line-height: 36px;
   margin: 5px auto;
   text-align: center;
