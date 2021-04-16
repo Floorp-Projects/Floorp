@@ -11,6 +11,7 @@
 
 #include <utility>
 
+#include "mozilla/fallible.h"
 #include "mozilla/jni/Utils.h"
 #include "nsError.h"  // for nsresult
 #include "nsString.h"
@@ -723,6 +724,28 @@ class StringParam : public String::Ref {
     return result;
   }
 
+  static jstring GetString(JNIEnv* env, const nsAString& str,
+                           const fallible_t&) {
+    const jstring result = env->NewString(
+        reinterpret_cast<const jchar*>(str.BeginReading()), str.Length());
+    if (env->ExceptionCheck()) {
+#ifdef MOZ_CHECK_JNI
+      env->ExceptionDescribe();
+#endif
+      env->ExceptionClear();
+    }
+    return result;
+  }
+
+  static jstring GetString(JNIEnv* env, const nsACString& str,
+                           const fallible_t& aFallible) {
+    nsAutoString utf16;
+    if (!CopyUTF8toUTF16(str, utf16, aFallible)) {
+      return nullptr;
+    }
+    return GetString(env, utf16, aFallible);
+  }
+
  public:
   MOZ_IMPLICIT StringParam(decltype(nullptr)) : Ref(nullptr), mEnv(nullptr) {}
 
@@ -730,6 +753,10 @@ class StringParam : public String::Ref {
 
   MOZ_IMPLICIT StringParam(const nsAString& str, JNIEnv* env = Ref::FindEnv())
       : Ref(GetString(env, str)), mEnv(env) {}
+
+  MOZ_IMPLICIT StringParam(const nsAString& str, JNIEnv* env,
+                           const fallible_t& aFallible)
+      : Ref(GetString(env, str, aFallible)), mEnv(env) {}
 
   MOZ_IMPLICIT StringParam(const nsLiteralString& str,
                            JNIEnv* env = Ref::FindEnv())
@@ -740,6 +767,10 @@ class StringParam : public String::Ref {
 
   MOZ_IMPLICIT StringParam(const nsACString& str, JNIEnv* env = Ref::FindEnv())
       : Ref(GetString(env, NS_ConvertUTF8toUTF16(str))), mEnv(env) {}
+
+  MOZ_IMPLICIT StringParam(const nsACString& str, JNIEnv* env,
+                           const fallible_t& aFallible)
+      : Ref(GetString(env, str, aFallible)), mEnv(env) {}
 
   MOZ_IMPLICIT StringParam(const nsLiteralCString& str,
                            JNIEnv* env = Ref::FindEnv())
