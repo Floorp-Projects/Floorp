@@ -657,14 +657,14 @@ mod gtest {
             #[cfg(target_arch = "arm")]
             {
                 if is_arm_feature_detected!("neon") {
-                    assert!(self.ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_neon))
+                    assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgb_out_lut_neon)))
                 }
             }
 
             #[cfg(target_arch = "aarch64")]
             {
                 if is_aarch64_feature_detected!("neon") {
-                    assert!(self.ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_neon))
+                    assert!(self.ProduceVerifyOutput(Some(qcms_transform_data_rgb_out_lut_neon)))
                 }
             }
 
