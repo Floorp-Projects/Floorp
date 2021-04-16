@@ -824,6 +824,9 @@ class ContentChild final : public PContentChild,
       const MaybeDiscarded<BrowsingContext>& aContext,
       FlushTabStateResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvDecoderSupportedMimeTypes(
+      nsTArray<nsCString>&& aSupportedTypes);
+
  public:
   static void DispatchBeforeUnloadToSubtree(
       BrowsingContext* aStartingAt,

@@ -931,8 +931,10 @@ child:
   async FlushTabState(MaybeDiscardedBrowsingContext aBrowsingContext)
       returns(bool aHadContext);
 
-parent:
+  // Send the list of the supported mimetypes in the given process. GeckoView-specific
+  async DecoderSupportedMimeTypes(nsCString[] supportedTypes);
 
+parent:
 
     async SynchronizeLayoutHistoryState(MaybeDiscardedBrowsingContext aContext,
                                         nsILayoutHistoryState aState);
