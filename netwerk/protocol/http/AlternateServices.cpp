@@ -18,6 +18,7 @@
 #include "nsHttpTransaction.h"
 #include "nsISSLSocketControl.h"
 #include "nsIWellKnownOpportunisticUtils.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/SyncRunnable.h"
@@ -865,7 +866,9 @@ TransactionObserver::OnStopRequest(nsIRequest* aRequest, nsresult code) {
 }
 
 void AltSvcCache::EnsureStorageInited() {
-  if (mStorage) {
+  static Atomic<bool> initialized(false);
+
+  if (initialized) {
     return;
   }
 
@@ -883,6 +886,8 @@ void AltSvcCache::EnsureStorageInited() {
 
     if (NS_FAILED(mStorage->Init(nullptr))) {
       mStorage = nullptr;
+    } else {
+      initialized = true;
     }
 
     mStorageEpoch = NowInSeconds();
