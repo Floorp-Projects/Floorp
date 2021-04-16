@@ -251,6 +251,7 @@ class WebExtensionBrowserMenuBuilderTest {
     fun `web extension is moved to main menu when extension id equals WebExtensionPlaceholderMenuItem id`() {
         val promotableWebExtensionId = "promotable extension id"
         val promotableWebExtensionTitle = "promotable extension action title"
+        val testIconTintColorResource = R.color.accent_material_dark
 
         val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
         val pageActionPromotableWebExtension = WebExtensionBrowserAction(promotableWebExtensionTitle, true, mock(), "", 0, 0) {}
@@ -282,7 +283,10 @@ class WebExtensionBrowserMenuBuilderTest {
 
         // 4 items initially on the main menu
         val items = listOf(
-            WebExtensionPlaceholderMenuItem(id = promotableWebExtensionId),
+            WebExtensionPlaceholderMenuItem(
+                id = promotableWebExtensionId,
+                iconTintColorResource = testIconTintColorResource
+            ),
             mockMenuItem(),
             submenuPlaceholderMenuItem,
             mockMenuItem())
@@ -313,6 +317,9 @@ class WebExtensionBrowserMenuBuilderTest {
 
         // the replaced item should have the action title of the WebExtensionBrowserMenuItem
         assertEquals(promotableWebExtensionTitle, (replacedItem as WebExtensionBrowserMenuItem).action.title)
+
+        // the replaced item should have the icon tint set by placeholder
+        assertEquals(testIconTintColorResource, replacedItem.iconTintColorResource)
 
         val parentMenuItem = menu.adapter.visibleItems[2] as? ParentBrowserMenuItem
         val subMenuItemSize = parentMenuItem!!.subMenu.adapter.visibleItems.size

@@ -56,6 +56,9 @@ class WebExtensionBrowserMenuBuilder(
             }
             // Replace placeholder with corresponding web extension, and remove it from extensions menu list
             if (index != -1) {
+                webExtensionBrowserMenuItem.setIconTint(
+                    (finalList[index] as? WebExtensionPlaceholderMenuItem)?.iconTintColorResource
+                )
                 finalList[index] = webExtensionBrowserMenuItem
             }
             index == -1

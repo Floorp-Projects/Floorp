@@ -5,6 +5,7 @@
 package mozilla.components.browser.menu.item
 
 import android.view.View
+import androidx.annotation.ColorRes
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
@@ -14,9 +15,12 @@ import mozilla.components.browser.menu.R
  * The id of the web extension to be inserted has to correspond to the id of the browser menu item.
  *
  * @param id The id of this menu item.
+ * @param iconTintColorResource Optional ID of color resource to tint the icon.
  */
 class WebExtensionPlaceholderMenuItem(
-    val id: String
+    val id: String,
+    @ColorRes
+    val iconTintColorResource: Int = NO_ID
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { false }
 

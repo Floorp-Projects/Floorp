@@ -13,6 +13,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.menu.R
 import mozilla.components.browser.menu.WebExtensionBrowserMenu
@@ -282,5 +283,39 @@ class WebExtensionBrowserMenuItemTest {
         verify(badgeView).text = "overrideBadge"
         verify(labelView).invalidate()
         verify(badgeView).invalidate()
+    }
+
+    @Test
+    fun `GIVEN setIcon was called, WHEN bind is called, icon setup uses the tint set`() = runBlocking {
+        val webExtMenuItem = spy(WebExtensionBrowserMenuItem(mock(), mock()))
+        val testIconTintColorResource = R.color.accent_material_dark
+        val menu: WebExtensionBrowserMenu = mock()
+        val imageView: ImageView = mock()
+        val badgeView: TextView = mock()
+        val labelView: TextView = mock()
+        val container = View(testContext)
+        val view: View = mock()
+
+        whenever(view.findViewById<ImageView>(R.id.action_image)).thenReturn(imageView)
+        whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(badgeView)
+        whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
+        whenever(view.findViewById<View>(R.id.container)).thenReturn(container)
+        whenever(view.context).thenReturn(mock())
+        whenever(imageView.measuredHeight).thenReturn(2)
+
+        webExtMenuItem.setIconTint(testIconTintColorResource)
+        webExtMenuItem.bind(menu, view)
+
+        val viewCaptor = argumentCaptor<View>()
+        val imageViewCaptor = argumentCaptor<ImageView>()
+        val tintCaptor = argumentCaptor<Int>()
+
+        verify(webExtMenuItem).setupIcon(viewCaptor.capture(), imageViewCaptor.capture(), tintCaptor.capture())
+
+        assertEquals(testIconTintColorResource, tintCaptor.value)
+        assertEquals(view, viewCaptor.value)
+        assertEquals(imageView, imageViewCaptor.value)
+
+        assertEquals(testIconTintColorResource, webExtMenuItem.iconTintColorResource)
     }
 }

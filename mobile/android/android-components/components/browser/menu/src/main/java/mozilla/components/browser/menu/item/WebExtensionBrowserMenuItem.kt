@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.graphics.drawable.toDrawable
 import kotlinx.coroutines.MainScope
@@ -44,6 +45,9 @@ class WebExtensionBrowserMenuItem(
 
     override fun getLayoutResource() = R.layout.mozac_browser_menu_web_extension
 
+    @VisibleForTesting
+    internal var iconTintColorResource: Int? = null
+
     @Suppress("TooGenericExceptionCaught")
     override fun bind(menu: BrowserMenu, view: View) {
         val imageView = view.findViewById<ImageView>(R.id.action_image)
@@ -61,11 +65,7 @@ class WebExtensionBrowserMenuItem(
         action.badgeTextColor?.let { badgeView.setTextColor(it) }
         action.badgeBackgroundColor?.let { badgeView.background?.setTint(it) }
 
-        MainScope().launch {
-            loadIcon(view.context, imageView.measuredHeight)?.let {
-                imageView.setImageDrawable(it)
-            }
-        }
+        setupIcon(view, imageView, iconTintColorResource)
 
         container.setOnClickListener {
             listener.invoke()
@@ -107,6 +107,16 @@ class WebExtensionBrowserMenuItem(
         onClick = listener
     )
 
+    @VisibleForTesting
+    internal fun setupIcon(view: View, imageView: ImageView, iconTintColorResource: Int?) {
+        MainScope().launch {
+            loadIcon(view.context, imageView.measuredHeight)?.let {
+                iconTintColorResource?.let { tint -> it.setTint(tint) }
+                imageView.setImageDrawable(it)
+            }
+        }
+    }
+
     @Suppress("TooGenericExceptionCaught")
     private suspend fun loadIcon(context: Context, height: Int): Drawable? {
         return try {
@@ -121,6 +131,12 @@ class WebExtensionBrowserMenuItem(
 
             getDrawable(context, R.drawable.mozac_ic_web_extension_default_icon)
         }
+    }
+    /**
+     * Sets the tint to be applied to the extension icon
+     */
+    fun setIconTint(iconTintColorResource: Int?) {
+        iconTintColorResource?.let { this.iconTintColorResource = it }
     }
 }
 
