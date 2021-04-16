@@ -20,6 +20,7 @@ from voluptuous import (
     Optional,
     Required,
     Extra,
+    Any,
 )
 
 from mozpack import path as mozpath
@@ -142,7 +143,9 @@ def make_task(config, jobs):
             "attributes": attributes,
             "name": name,
             "description": job["description"],
-            "expires-after": expires,
+            "expires-after": "2 days"
+            if attributes.get("cached_task") is False
+            else expires,
             "label": "fetch-%s" % name,
             "run-on-projects": [],
             "treeherder": {
@@ -292,7 +295,7 @@ def create_fetch_url_task(config, name, fetch):
     "git",
     schema={
         Required("repo"): text_type,
-        Required("revision"): text_type,
+        Required(Any("revision", "branch")): text_type,
         Optional("artifact-name"): text_type,
         Optional("path-prefix"): text_type,
         # ssh-key is a taskcluster secret path (e.g. project/civet/github-deploy-key)
@@ -310,8 +313,18 @@ def create_git_fetch_task(config, name, fetch):
     if not artifact_name:
         artifact_name = "{}.tar.zst".format(path_prefix)
 
-    if not re.match(r"[0-9a-fA-F]{40}", fetch["revision"]):
-        raise Exception('Revision is not a sha1 in fetch task "{}"'.format(name))
+    if "revision" in fetch and "branch" in fetch:
+        raise Exception("revision and branch cannot be used in the same context")
+
+    revision_or_branch = None
+
+    if "revision" in fetch:
+        revision_or_branch = fetch["revision"]
+        if not re.match(r"[0-9a-fA-F]{40}", fetch["revision"]):
+            raise Exception('Revision is not a sha1 in fetch task "{}"'.format(name))
+    else:
+        # we are sure we are dealing with a branch
+        revision_or_branch = fetch["branch"]
 
     args = [
         "/builds/worker/bin/fetch-content",
@@ -319,7 +332,7 @@ def create_git_fetch_task(config, name, fetch):
         "--path-prefix",
         path_prefix,
         fetch["repo"],
-        fetch["revision"],
+        revision_or_branch,
         "/builds/worker/artifacts/%s" % artifact_name,
     ]
 
@@ -331,7 +344,7 @@ def create_git_fetch_task(config, name, fetch):
     return {
         "command": args,
         "artifact_name": artifact_name,
-        "digest_data": [fetch["revision"], path_prefix, artifact_name],
+        "digest_data": [revision_or_branch, path_prefix, artifact_name],
         "secret": ssh_key,
     }
 
