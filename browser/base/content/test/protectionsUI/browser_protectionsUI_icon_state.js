@@ -1,6 +1,6 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 /*
- * Test that the Content Blocking icon is properly animated in the identity
+ * Test that the Content Blocking icon state is properly updated in the identity
  * block when loading tabs and switching between tabs.
  * See also Bug 1175858.
  */
@@ -16,8 +16,6 @@ const COOKIE_PAGE =
   "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 
-requestLongerTimeout(2);
-
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.prefs.clearUserPref(TP_PREF);
@@ -26,13 +24,7 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(DTSCBN_PREF);
 });
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["ui.prefersReducedMotion", 0]],
-  });
-});
-
-async function testTrackingProtectionAnimation(tabbrowser) {
+async function testTrackingProtectionIconState(tabbrowser) {
   Services.prefs.setBoolPref(DTSCBN_PREF, true);
 
   info("Load a test page not containing tracking elements");
@@ -43,10 +35,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   let gProtectionsHandler = tabbrowser.ownerGlobal.gProtectionsHandler;
 
   ok(!gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox not active");
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("animate"),
-    "iconBox not animating"
-  );
 
   info("Load a test page containing tracking elements");
   let trackingTab = await BrowserTestUtils.openNewForegroundTab(
@@ -55,11 +43,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   );
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(gProtectionsHandler.iconBox.hasAttribute("animate"), "iconBox animating");
-  await BrowserTestUtils.waitForEvent(
-    gProtectionsHandler.animatedIcon,
-    "animationend"
-  );
 
   info("Load a test page containing tracking cookies");
   let trackingCookiesTab = await BrowserTestUtils.openNewForegroundTab(
@@ -68,11 +51,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   );
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(gProtectionsHandler.iconBox.hasAttribute("animate"), "iconBox animating");
-  await BrowserTestUtils.waitForEvent(
-    gProtectionsHandler.animatedIcon,
-    "animationend"
-  );
 
   info("Switch from tracking cookie -> benign tab");
   let securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -80,10 +58,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   await securityChanged;
 
   ok(!gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox not active");
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("animate"),
-    "iconBox not animating"
-  );
 
   info("Switch from benign -> tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -91,10 +65,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   await securityChanged;
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("animate"),
-    "iconBox not animating"
-  );
 
   info("Switch from tracking -> tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -102,10 +72,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   await securityChanged;
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("animate"),
-    "iconBox not animating"
-  );
 
   info("Reload tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -117,11 +83,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   await Promise.all([securityChanged, contentBlockingEvent]);
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(gProtectionsHandler.iconBox.hasAttribute("animate"), "iconBox animating");
-  await BrowserTestUtils.waitForEvent(
-    gProtectionsHandler.animatedIcon,
-    "animationend"
-  );
 
   info("Reload tracking tab");
   securityChanged = waitForSecurityChange(2, tabbrowser.ownerGlobal);
@@ -131,11 +92,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   await Promise.all([securityChanged, contentBlockingEvent]);
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(gProtectionsHandler.iconBox.hasAttribute("animate"), "iconBox animating");
-  await BrowserTestUtils.waitForEvent(
-    gProtectionsHandler.animatedIcon,
-    "animationend"
-  );
 
   info("Inject tracking cookie inside tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -147,10 +103,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   is(result, undefined, "No securityChange events should be received");
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("animate"),
-    "iconBox not animating"
-  );
 
   info("Inject tracking element inside tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -162,10 +114,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   is(result, undefined, "No securityChange events should be received");
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("animate"),
-    "iconBox not animating"
-  );
 
   tabbrowser.selectedTab = trackingCookiesTab;
 
@@ -179,10 +127,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   is(result, undefined, "No securityChange events should be received");
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("animate"),
-    "iconBox not animating"
-  );
 
   info("Inject tracking element inside tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
@@ -194,10 +138,6 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   is(result, undefined, "No securityChange events should be received");
 
   ok(gProtectionsHandler.iconBox.hasAttribute("active"), "iconBox active");
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("animate"),
-    "iconBox not animating"
-  );
 
   while (tabbrowser.tabs.length > 1) {
     tabbrowser.removeCurrentTab();
@@ -232,7 +172,7 @@ add_task(async function testNormalBrowsing() {
     "ThirdPartyCookies is enabled after setting the pref"
   );
 
-  await testTrackingProtectionAnimation(gBrowser);
+  await testTrackingProtectionIconState(gBrowser);
 });
 
 add_task(async function testPrivateBrowsing() {
@@ -266,7 +206,7 @@ add_task(async function testPrivateBrowsing() {
     "ThirdPartyCookies is enabled after setting the pref"
   );
 
-  await testTrackingProtectionAnimation(tabbrowser);
+  await testTrackingProtectionIconState(tabbrowser);
 
   privateWin.close();
 });
