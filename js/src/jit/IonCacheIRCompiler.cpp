@@ -520,7 +520,6 @@ bool IonCacheIRCompiler::init() {
     case CacheKind::TypeOf:
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
-    case CacheKind::NewArray:
     case CacheKind::NewObject:
       MOZ_CRASH("Unsupported IC");
   }
@@ -625,7 +624,6 @@ void IonCacheIRCompiler::assertFloatRegisterAvailable(FloatRegister reg) {
     case CacheKind::TypeOf:
     case CacheKind::ToBool:
     case CacheKind::GetIntrinsic:
-    case CacheKind::NewArray:
     case CacheKind::NewObject:
       MOZ_CRASH("Unsupported IC");
   }
@@ -2027,16 +2025,4 @@ bool IonCacheIRCompiler::emitReflectGetPrototypeOfResult(ObjOperandId objId) {
 bool IonCacheIRCompiler::emitHasClassResult(ObjOperandId objId,
                                             uint32_t claspOffset) {
   MOZ_CRASH("Call ICs not used in ion");
-}
-
-bool IonCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
-                                                  uint32_t shapeOffset) {
-  MOZ_CRASH("NewArray ICs not used in ion");
-}
-
-bool IonCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
-                                                  uint32_t numDynamicSlots,
-                                                  gc::AllocKind allocKind,
-                                                  uint32_t shapeOffset) {
-  MOZ_CRASH("NewObject ICs not used in ion");
 }

@@ -2623,18 +2623,11 @@ bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
   MaybeNotifyWarp(frame->outerScript(), stub);
   FallbackICSpew(cx, stub, "NewArray");
 
-  RootedArrayObject templateObject(cx, stub->templateObject());
-  if (!templateObject) {
-    templateObject = NewArrayOperation(cx, length, TenuredObject);
+  if (!stub->templateObject()) {
+    ArrayObject* templateObject = NewArrayOperation(cx, length, TenuredObject);
     if (!templateObject) {
       return false;
     }
-
-    RootedScript script(cx, frame->script());
-    jsbytecode* pc = stub->icEntry()->pc(script);
-    TryAttachStub<NewArrayIRGenerator>("NewArray", cx, frame, stub, JSOp(*pc),
-                                       templateObject);
-
     stub->setTemplateObject(templateObject);
   }
 

@@ -209,8 +209,7 @@ class TypedOperandId : public OperandId {
   _(Call)                 \
   _(UnaryArith)           \
   _(BinaryArith)          \
-  _(NewObject)            \
-  _(NewArray)
+  _(NewObject)
 
 enum class CacheKind : uint8_t {
 #define DEFINE_KIND(kind) kind,
@@ -1912,22 +1911,6 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
                          HandleValue rhs, HandleValue res);
 
   AttachDecision tryAttachStub();
-};
-
-class MOZ_RAII NewArrayIRGenerator : public IRGenerator {
-#ifdef JS_CACHEIR_SPEW
-  JSOp op_;
-#endif
-  HandleObject templateObject_;
-
-  void trackAttached(const char* name);
-
- public:
-  NewArrayIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
-                      ICState::Mode, JSOp op, HandleObject templateObj);
-
-  AttachDecision tryAttachStub();
-  AttachDecision tryAttachArrayObject();
 };
 
 class MOZ_RAII NewObjectIRGenerator : public IRGenerator {
