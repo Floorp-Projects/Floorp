@@ -4626,7 +4626,7 @@ var DefaultBrowserCheck = {
             ? "default-browser-prompt-message-pin"
             : "default-browser-prompt-message-alt",
         },
-        { id: "default-browser-prompt-checkbox-label" },
+        { id: "default-browser-prompt-checkbox-not-again-label" },
         {
           id: needPin
             ? "default-browser-prompt-button-primary-pin"
