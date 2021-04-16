@@ -67,8 +67,8 @@ let gPrevTheme = AddonManager.getAddonsByTypes(["theme"]).then(addons => {
     }
   }
 
-  // Assuming there's always one active theme, this won't happen.
-  return {};
+  // If there were no active themes, the default will be selected.
+  return { id: THEME_IDS[0] };
 });
 
 // Helper to switch themes.
