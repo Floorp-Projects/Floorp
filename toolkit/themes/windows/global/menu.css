@@ -345,8 +345,8 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
 
 @media (-moz-proton-contextmenus) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
-  menupopup[needsgutter] menu:not([icon]),
-  menupopup[needsgutter] menuitem:not([checked="true"]):not([icon]) {
+  menupopup[needsgutter] menu:not([icon], .menu-iconic),
+  menupopup[needsgutter] menuitem:not([checked="true"], [icon], .menuitem-iconic) {
     padding-inline-start: 36px;
   }
 
@@ -361,7 +361,7 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
 
   .menu-iconic > .menu-iconic-left,
   .menuitem-iconic > .menu-iconic-left {
-    margin-inline-end: 1em;
+    margin-inline-end: 8px;
   }
 
   menuitem[checked="true"] {

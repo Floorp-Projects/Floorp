@@ -280,7 +280,10 @@ var gMenuBuilder = {
     if (forceManifestIcons) {
       for (let rootElement of children) {
         // Display the extension icon on the root element.
-        if (root.extension.manifest.icons) {
+        if (
+          root.extension.manifest.icons &&
+          rootElement.getAttribute("type") !== "checkbox"
+        ) {
           this.setMenuItemIcon(
             rootElement,
             root.extension,
