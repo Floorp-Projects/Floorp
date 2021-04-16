@@ -111,6 +111,11 @@ NS_IMPL_ISUPPORTS_INHERITED(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 static void RollUpPopups() {
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   NS_ENSURE_TRUE_VOID(rollupListener);
+
+  if (rollupListener->RollupNativeMenu()) {
+    return;
+  }
+
   nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
   if (!rollupWidget) return;
   rollupListener->Rollup(0, true, nullptr, nullptr);
