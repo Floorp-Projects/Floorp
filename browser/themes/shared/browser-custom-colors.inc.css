@@ -57,7 +57,7 @@
 
     --autocomplete-popup-highlight-background: var(--arrowpanel-dimmed);
     --autocomplete-popup-highlight-color: rgb(21,20,26);
-    --urlbar-result-hover-bgcolor: rgb(240,240,244);
+    --autocomplete-popup-hover-background: rgb(240,240,244);
   }
   } /** END Proton **/
 }

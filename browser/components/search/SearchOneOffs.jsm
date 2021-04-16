@@ -1153,7 +1153,9 @@ class SearchOneOffs {
     if (target.classList.contains("addengine-menu-button")) {
       return;
     }
-    // Required to receive click events from the buttons on Linux.
+    // This is necessary to prevent the input from losing focus and closing the
+    // popup. Unfortunately it also has the side effect of preventing the
+    // buttons from receiving the `:active` pseudo-class.
     event.preventDefault();
   }
 
