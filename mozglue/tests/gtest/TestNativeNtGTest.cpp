@@ -9,12 +9,19 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/NativeNt.h"
+#include "nsHashKeys.h"
+#include "nsTHashSet.h"
 
 TEST(TestNativeNtGTest, GenerateDependentModuleSet)
 {
   mozilla::nt::PEHeaders executable(::GetModuleHandleW(nullptr));
-  auto dependentModules = executable.GenerateDependentModuleSet();
-  EXPECT_NE(dependentModules.GetEntry(u"mozglue.dll"_ns), nullptr);
-  EXPECT_NE(dependentModules.GetEntry(u"MOZGLUE.dll"_ns), nullptr);
-  EXPECT_EQ(dependentModules.GetEntry(u"xxx.dll"_ns), nullptr);
+  nsTHashSet<nsStringCaseInsensitiveHashKey> dependentModules;
+  executable.EnumImportChunks([&](const char* aModule) {
+    dependentModules.Insert(
+        mozilla::nt::GetLeafName(NS_ConvertASCIItoUTF16(aModule)));
+  });
+
+  EXPECT_TRUE(dependentModules.Contains(u"mozglue.dll"_ns));
+  EXPECT_TRUE(dependentModules.Contains(u"MOZGLUE.dll"_ns));
+  EXPECT_FALSE(dependentModules.Contains(u"xxx.dll"_ns));
 }

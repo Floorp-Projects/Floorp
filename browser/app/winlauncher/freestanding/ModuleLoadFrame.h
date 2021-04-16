@@ -37,7 +37,8 @@ class MOZ_RAII ModuleLoadFrame final {
    */
   static void NotifySectionMap(nt::AllocatedUnicodeString&& aSectionName,
                                const void* aMapBaseAddr, NTSTATUS aMapNtStatus,
-                               ModuleLoadInfo::Status aLoadStatus);
+                               ModuleLoadInfo::Status aLoadStatus,
+                               bool aIsDependent);
   static bool ExistsTopFrame();
 
   /**
@@ -57,12 +58,12 @@ class MOZ_RAII ModuleLoadFrame final {
    */
   ModuleLoadFrame(nt::AllocatedUnicodeString&& aSectionName,
                   const void* aMapBaseAddr, NTSTATUS aNtStatus,
-                  ModuleLoadInfo::Status aLoadStatus);
+                  ModuleLoadInfo::Status aLoadStatus, bool aIsDependent);
 
   void SetLSPSubstitutionRequired(PCUNICODE_STRING aLeafName);
   void OnSectionMap(nt::AllocatedUnicodeString&& aSectionName,
                     const void* aMapBaseAddr, NTSTATUS aMapNtStatus,
-                    ModuleLoadInfo::Status aLoadStatus);
+                    ModuleLoadInfo::Status aLoadStatus, bool aIsDependent);
 
   /**
    * A "bare" section mapping is one that was mapped without the code passing
@@ -71,7 +72,8 @@ class MOZ_RAII ModuleLoadFrame final {
    */
   static void OnBareSectionMap(nt::AllocatedUnicodeString&& aSectionName,
                                const void* aMapBaseAddr, NTSTATUS aMapNtStatus,
-                               ModuleLoadInfo::Status aLoadStatus);
+                               ModuleLoadInfo::Status aLoadStatus,
+                               bool aIsDependent);
 
  private:
   // Link to the previous frame

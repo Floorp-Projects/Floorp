@@ -205,7 +205,7 @@ ProcessedModuleLoadEvent::ProcessedModuleLoadEvent()
 
 ProcessedModuleLoadEvent::ProcessedModuleLoadEvent(
     glue::EnhancedModuleLoadInfo&& aModLoadInfo,
-    RefPtr<ModuleRecord>&& aModuleRecord, bool aIsDependent)
+    RefPtr<ModuleRecord>&& aModuleRecord)
     : mProcessUptimeMS(QPCTimeStampToProcessUptimeMilliseconds(
           aModLoadInfo.mNtLoadInfo.mBeginTimestamp)),
       mLoadDurationMS(QPCLoadDurationToMilliseconds(aModLoadInfo.mNtLoadInfo)),
@@ -214,7 +214,7 @@ ProcessedModuleLoadEvent::ProcessedModuleLoadEvent(
       mBaseAddress(
           reinterpret_cast<uintptr_t>(aModLoadInfo.mNtLoadInfo.mBaseAddr)),
       mModule(std::move(aModuleRecord)),
-      mIsDependent(aIsDependent),
+      mIsDependent(aModLoadInfo.mNtLoadInfo.mIsDependent),
       mLoadStatus(static_cast<uint32_t>(aModLoadInfo.mNtLoadInfo.mStatus)) {
   if (!mModule || !(*mModule)) {
     return;
