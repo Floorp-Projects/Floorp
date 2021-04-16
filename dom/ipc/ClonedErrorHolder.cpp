@@ -229,9 +229,10 @@ JSObject* ClonedErrorHolder::ReadStructuredClone(
   return &errorVal.toObject();
 }
 
-static JS::UniqueTwoByteChars ToJSStringBuffer(JSContext* aCx,
-                                               const nsString& aStr) {
-  size_t nbytes = aStr.Length() * sizeof(char16_t);
+static JS::UniqueTwoByteChars ToNullTerminatedJSStringBuffer(
+    JSContext* aCx, const nsString& aStr) {
+  // Since nsString is null terminated, we can simply copy + 1 characters.
+  size_t nbytes = (aStr.Length() + 1) * sizeof(char16_t);
   JS::UniqueTwoByteChars buffer(static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
   if (buffer) {
     memcpy(buffer.get(), aStr.get(), nbytes);
@@ -301,7 +302,13 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
       JS::Rooted<JSObject*> errObj(aCx, &aResult.toObject());
       if (JSErrorReport* err = JS_ErrorFromException(aCx, errObj)) {
         NS_ConvertUTF8toUTF16 sourceLine(mSourceLine);
-        if (JS::UniqueTwoByteChars buffer = ToJSStringBuffer(aCx, sourceLine)) {
+        // Because this string ends up being consumed as an nsDependentString
+        // in nsXPCComponents_Utils::ReportError, this needs to be a null
+        // terminated string.
+        //
+        // See Bug 1699569.
+        if (JS::UniqueTwoByteChars buffer =
+                ToNullTerminatedJSStringBuffer(aCx, sourceLine)) {
           err->initOwnedLinebuf(buffer.release(), sourceLine.Length(),
                                 mTokenOffset);
         } else {
