@@ -138,6 +138,12 @@ var gTabsPanel = {
   showAllTabsPanel(event) {
     this.init();
     if (this.canOpen) {
+      if (!gProton) {
+        PanelMultiView.getViewNode(
+          document,
+          "allTabsMenu-searchTabs"
+        ).classList.add("subviewbutton-iconic");
+      }
       PanelUI.showSubView(
         this.kElements.allTabsView,
         this.allTabsButton,
