@@ -124,6 +124,8 @@
   margin-inline-end: -4px !important;
   min-width: 12px;
   min-height: 12px;
+  -moz-context-properties: fill;
+  fill: var(--toolbar-bgcolor);
 }
 
 #PanelUI-menu-button[badge-status="update-available"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
@@ -131,12 +133,12 @@
 #PanelUI-menu-button[badge-status="update-manual"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="update-other-instance"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  background: var(--panel-banner-item-update-supported-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
   background-size: 10px;
 }
 
 #PanelUI-menu-button[badge-status="update-unsupported"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #FFE900 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  background: var(--panel-banner-item-warning-icon-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
   background-size: 10px;
 }
 
@@ -210,9 +212,10 @@
 
 @media (-moz-proton) {
 #PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
-#PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+#PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+#fxa-toolbar-menu-button[badge-status="login_failed"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   -moz-context-properties: stroke, fill;
-  stroke: var(--arrowpanel-background);
+  stroke: var(--toolbar-bgcolor);
   fill: var(--panel-banner-item-warning-icon-bgcolor);
 }
 }
@@ -221,12 +224,14 @@
   filter: grayscale(100%);
 }
 
+@media not (-moz-proton) {
 #nav-bar[brighttext] #PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #nav-bar[brighttext] #PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   -moz-context-properties: fill, stroke;
   fill: #FFE900;
   stroke: transparent;
 }
+} /* End NOT Proton */
 
 .cui-widget-panel,
 #widget-overflow {
