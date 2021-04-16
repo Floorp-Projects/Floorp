@@ -530,10 +530,11 @@ void RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
               DiagnosticFlags::CONTAINER, compositionBounds.ToUnknownRect(),
               aClipRect.ToUnknownRect(),
               asyncTransform * aContainer->GetEffectiveTransform());
-          asyncTransform =
-              sampler->GetCurrentAsyncTransformWithOverscroll(wrapper)
-                  .ToUnknownMatrix() *
-              asyncTransform;
+          asyncTransform = sampler
+                               ->GetCurrentAsyncTransformWithOverscroll(
+                                   wrapper, LayoutAndVisual)
+                               .ToUnknownMatrix() *
+                           asyncTransform;
         }
       }
 

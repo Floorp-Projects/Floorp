@@ -99,6 +99,7 @@ fuzzy-if(!webrender,111-112,600-600) pref(apz.allow_zooming,true) == async-scrol
 
 # on Android we have a different overscroll effect so this test is disabled
 skip-if(!asyncPan||Android) pref(apz.overscroll.enabled,true) pref(apz.overscroll.test_async_scroll_offset.enabled,true) == overscroll.html overscroll-ref.html
+fails-if(webrender) skip-if(!asyncPan||Android) pref(apz.overscroll.enabled,true) pref(apz.overscroll.test_async_scroll_offset.enabled,true) == overscroll-fixed.html overscroll-ref.html
 
 # for this test, apz.allow_zooming is needed to ensure we take the containerless scrolling codepath that creates
 # an async zoom container (since we are testing a regression in that codepath)
