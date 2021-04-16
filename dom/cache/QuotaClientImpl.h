@@ -132,10 +132,6 @@ class CacheQuotaClient final : public quota::Client {
   void ForceKillActors() override;
   void FinalizeShutdown() override;
 
-  Result<UsageInfo, nsresult> GetUsageForOriginInternal(
-      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
-      const AtomicBool& aCanceled, bool aInitializing);
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheQuotaClient, override)
 
   // Mutex lock to protect directroy padding files. It should only be acquired
