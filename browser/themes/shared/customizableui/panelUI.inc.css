@@ -2497,6 +2497,12 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   margin: 0 calc(-10px + var(--horizontal-padding)) var(--vertical-section-padding);
 }
 
+@media (-moz-proton-doorhangers) {
+#protections-popup-message .whatsNew-message-body {
+  margin-inline: 6px;
+}
+}
+
 #PanelUI-whatsNew .whatsNew-message-body.has-icon {
   display: grid;
   grid-template-columns: auto 32px;
