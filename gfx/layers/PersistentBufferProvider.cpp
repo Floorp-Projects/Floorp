@@ -11,6 +11,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "pratom.h"
 #include "gfxPlatform.h"
@@ -364,25 +365,35 @@ PersistentBufferProviderShared::BorrowDrawTarget(
     }
   }
 
-  if (!tex || !tex->Lock(OpenMode::OPEN_READ_WRITE)) {
+  if (!tex) {
     return nullptr;
+  }
+
+  {
+    Maybe<TextureClientAutoLock> autoReadLock;
+    TextureClient* previous = nullptr;
+    if (mBack != previousBackBuffer && !aPersistedRect.IsEmpty()) {
+      previous = GetTexture(previousBackBuffer);
+      if (previous) {
+        autoReadLock.emplace(previous, OpenMode::OPEN_READ);
+      }
+    }
+
+    if (!tex->Lock(OpenMode::OPEN_READ_WRITE)) {
+      return nullptr;
+    }
+
+    if (autoReadLock.isSome() && autoReadLock->Succeeded() && previous) {
+      DebugOnly<bool> success =
+          previous->CopyToTextureClient(tex, &aPersistedRect, nullptr);
+      MOZ_ASSERT(success);
+    }
   }
 
   // Clear dirty texture, since new back texture is selected.
   mTextureLockIsUnreliable = Nothing();
 
   mDrawTarget = tex->BorrowDrawTarget();
-  if (mBack != previousBackBuffer && !aPersistedRect.IsEmpty()) {
-    TextureClient* previous = GetTexture(previousBackBuffer);
-    if (previous && previous->Lock(OpenMode::OPEN_READ)) {
-      DebugOnly<bool> success =
-          previous->CopyToTextureClient(tex, &aPersistedRect, nullptr);
-      MOZ_ASSERT(success);
-
-      previous->Unlock();
-    }
-  }
-
   if (mDrawTarget) {
     // This is simply to ensure the DrawTarget gets initialized, and will detect
     // a device reset, even if we're on the main thread.
