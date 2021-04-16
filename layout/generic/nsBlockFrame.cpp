@@ -1886,10 +1886,11 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
   if (NS_UNCONSTRAINEDSIZE != aReflowInput.ComputedBSize()) {
     // Note: We don't use blockEndEdgeOfChildren because it includes the
     // previous margin.
-    nscoord contentBSize = aState.mBCoord + nonCarriedOutBDirMargin;
-    finalSize.BSize(wm) =
-        ComputeFinalBSize(aReflowInput, aState.mReflowStatus, contentBSize,
-                          borderPadding, aState.mConsumedBSize);
+    const nscoord contentBSizeWithBStartBP =
+        aState.mBCoord + nonCarriedOutBDirMargin;
+    finalSize.BSize(wm) = ComputeFinalBSize(
+        aReflowInput, aState.mReflowStatus, contentBSizeWithBStartBP,
+        borderPadding, aState.mConsumedBSize);
 
     // If the content block-size is larger than the effective computed
     // block-size, we extend the block-size to contain all the content.
@@ -1897,10 +1898,11 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     if (aReflowInput.mFlags.mIsBSizeSetByAspectRatio &&
         ShouldApplyAutomaticMinimumOnBlockAxis(wm, aReflowInput.mStyleDisplay,
                                                aReflowInput.mStylePosition)) {
-      // Note: finalSize.BSize(wm) includes border + padding, so we have to
-      // compare it with contentBSize + border + padding.
-      finalSize.BSize(wm) = std::max(
-          finalSize.BSize(wm), contentBSize + borderPadding.BStartEnd(wm));
+      // Note: finalSize.BSize(wm) is the border-box size, so we compare it with
+      // the content's block-size plus our border and padding..
+      finalSize.BSize(wm) =
+          std::max(finalSize.BSize(wm),
+                   contentBSizeWithBStartBP + borderPadding.BEnd(wm));
     }
 
     // Don't carry out a block-end margin when our BSize is fixed.
