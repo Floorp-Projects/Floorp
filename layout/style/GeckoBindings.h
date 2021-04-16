@@ -461,6 +461,10 @@ void Gecko_GetComputedURLSpec(const mozilla::StyleComputedUrl* url,
 void Gecko_GetComputedImageURLSpec(const mozilla::StyleComputedUrl* url,
                                    nsCString* spec);
 
+// Return true if the given image MIME type is supported
+bool Gecko_IsSupportedImageMimeType(const uint8_t* mime_type,
+                                    const uint32_t len);
+
 void Gecko_nsIURI_Debug(nsIURI*, nsCString* spec);
 
 void Gecko_nsIReferrerInfo_Debug(nsIReferrerInfo* aReferrerInfo,
