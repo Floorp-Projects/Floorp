@@ -3810,8 +3810,6 @@ BrowserGlue.prototype = {
         return "disallow-postUpdate";
       }
 
-      // Check enabled last to avoid waiting on remote data in the common case.
-      await NimbusFeatures.upgradeDialog.ready();
       return NimbusFeatures.upgradeDialog.isEnabled() ? "" : "disabled";
     })();
 
