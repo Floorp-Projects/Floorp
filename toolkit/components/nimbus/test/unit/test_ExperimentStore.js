@@ -459,7 +459,7 @@ add_task(async function test_finalizaRemoteConfigs_cleanup() {
   // We need to initialize the store for the cleanup step
   await store.init();
 
-  store.finalizeRemoteConfigs();
+  store.finalizeRemoteConfigs([]);
   data = store.getRemoteConfig("unit-test-feature");
 
   Assert.ok(!data, `Data was removed ${JSON.stringify(data)}`);
@@ -477,10 +477,35 @@ add_task(async function test_finalizaRemoteConfigs_cleanup() {
   let data = store.getRemoteConfig("aboutwelcome");
   Assert.ok(data.remote, "Restore data from pref");
 
-  store.finalizeRemoteConfigs();
+  store.finalizeRemoteConfigs(["aboutwelcome"]);
   data = store.getRemoteConfig("aboutwelcome");
 
   Assert.ok(data.remote, "Data was kept");
+
+  cleanupStorePrefCache();
+});
+
+add_task(async function test_getAllExistingRemoteConfigIds() {
+  cleanupStorePrefCache();
+  const store = ExperimentFakes.store();
+
+  Services.prefs.setStringPref(
+    `${SYNC_DEFAULTS_PREF_BRANCH}unit-test-feature`,
+    JSON.stringify({ remote: true })
+  );
+
+  await store.init();
+
+  store.updateRemoteConfigs("aboutwelcome", { remote: true });
+  store.updateRemoteConfigs("unit-test-feature", { remote: true });
+
+  let data = store.getAllExistingRemoteConfigIds();
+
+  Assert.deepEqual(
+    data,
+    ["aboutwelcome", "unit-test-feature"],
+    "Should return ids from sync pref cache and in memory store without duplication"
+  );
 
   cleanupStorePrefCache();
 });
