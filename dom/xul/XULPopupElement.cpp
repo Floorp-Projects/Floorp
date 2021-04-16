@@ -211,9 +211,8 @@ void XULPopupElement::GetState(nsString& aState) {
   // set this here in case there's no frame for the popup
   aState.AssignLiteral("closed");
 
-  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
-  if (menuPopupFrame) {
-    switch (menuPopupFrame->PopupState()) {
+  if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+    switch (pm->GetPopupState(this)) {
       case ePopupShown:
         aState.AssignLiteral("open");
         break;
