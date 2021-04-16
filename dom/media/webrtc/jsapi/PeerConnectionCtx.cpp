@@ -171,10 +171,12 @@ using namespace dom;
 SharedWebrtcState::SharedWebrtcState(
     RefPtr<AbstractThread> aCallWorkerThread,
     webrtc::AudioState::Config&& aAudioStateConfig,
-    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory)
+    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
+    UniquePtr<webrtc::WebRtcKeyValueConfig> aTrials)
     : mCallWorkerThread(std::move(aCallWorkerThread)),
       mAudioStateConfig(std::move(aAudioStateConfig)),
-      mAudioDecoderFactory(std::move(aAudioDecoderFactory)) {}
+      mAudioDecoderFactory(std::move(aAudioDecoderFactory)),
+      mTrials(std::move(aTrials)) {}
 
 SharedWebrtcState::~SharedWebrtcState() = default;
 
@@ -479,14 +481,14 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
                                     webrtc::TaskQueueFactory::Priority::NORMAL)
             .release());
 
+    UniquePtr<webrtc::WebRtcKeyValueConfig> trials =
+        WrapUnique(new NoTrialsConfig());
+
     mSharedWebrtcState = MakeAndAddRef<SharedWebrtcState>(
         new CallWorkerThread(std::move(callWorkerThread)),
         std::move(audioStateConfig),
-        already_AddRefed(CreateBuiltinAudioDecoderFactory().release()));
-
-    if (!mTrials) {
-      mTrials.reset(new NoTrialsConfig());
-    }
+        already_AddRefed(CreateBuiltinAudioDecoderFactory().release()),
+        std::move(trials));
   }
   mPeerConnections[aKey] = aPeerConnection;
 }

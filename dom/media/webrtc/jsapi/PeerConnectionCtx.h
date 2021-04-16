@@ -41,7 +41,8 @@ class SharedWebrtcState {
 
   SharedWebrtcState(RefPtr<AbstractThread> aCallWorkerThread,
                     webrtc::AudioState::Config&& aAudioStateConfig,
-                    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory);
+                    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
+                    UniquePtr<webrtc::WebRtcKeyValueConfig> aTrials);
 
   webrtc::SharedModuleThread* GetModuleThread();
 
@@ -58,6 +59,10 @@ class SharedWebrtcState {
   // AudioDecoderFactory instance shared between calls, to limit the number of
   // instances in large calls.
   const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
+
+  // Trials instance shared between calls, to limit the number of instances in
+  // large calls.
+  const UniquePtr<webrtc::WebRtcKeyValueConfig> mTrials;
 
  private:
   virtual ~SharedWebrtcState();
@@ -100,8 +105,6 @@ class PeerConnectionCtx {
   }
 
   SharedWebrtcState* GetSharedWebrtcState() const;
-
-  webrtc::WebRtcKeyValueConfig* GetTrials() const { return mTrials.get(); }
 
   // WebrtcGlobalInformation uses this; we put it here so we don't need to
   // create another shutdown observer class.
@@ -155,13 +158,9 @@ class PeerConnectionCtx {
 
   // State used by libwebrtc that needs to be shared across all PeerConnections
   // and all Call instances. Set while there is at least one peer connection
-  // registered.
+  // registered. CallWrappers can hold a ref to this object to be sure members
+  // are alive long enough.
   RefPtr<SharedWebrtcState> mSharedWebrtcState;
-
-  // Trials instance shared between calls, to limit the number of instances in
-  // large calls. Note that this has to outlive the Call instances owned by
-  // PeerConnections, and as such is not unset prior to the ctx dtor.
-  UniquePtr<webrtc::WebRtcKeyValueConfig> mTrials;
 
   static PeerConnectionCtx* gInstance;
 
