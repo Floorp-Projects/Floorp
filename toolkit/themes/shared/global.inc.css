@@ -112,6 +112,10 @@ xul|label[disabled="true"] {
 
 .tooltip-label {
   margin: 0;
+  word-wrap: break-word;
+  /* We must specify a min-width, otherwise word-wrap:break-word doesn't work.
+     See Bug 630864. */
+  min-width: 1px;
 }
 
 /* Links */
