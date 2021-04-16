@@ -2275,9 +2275,8 @@ class CreateMachEnvironment(MachCommandBase):
         from mozboot.util import get_mach_virtualenv_root
         from mozbuild.virtualenv import VirtualenvManager
 
-        if (
-            sys.platform.startswith("darwin")
-            and not os.environ.get("MACH_I_DO_WANT_TO_USE_ROSETTA")
+        if sys.platform.startswith("darwin") and not os.environ.get(
+            "MACH_I_DO_WANT_TO_USE_ROSETTA"
         ):
             # If running on arm64 mac, check whether we're running under
             # Rosetta and advise against it.
