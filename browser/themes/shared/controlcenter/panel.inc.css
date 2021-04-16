@@ -583,6 +583,7 @@ description#identity-popup-content-verifier,
 #protections-popup-sendReportView-collection-url {
   appearance: none;
   border: none;
+  margin: 4px auto;
 }
 
 #protections-popup-sendReportView-collection-comments {
@@ -673,7 +674,7 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-list {
-  padding: 5px 20px;
+  padding: 5px 24px;
   -moz-box-flex: 1;
   overflow: auto;
 }
@@ -1345,6 +1346,19 @@ description#identity-popup-content-verifier,
   font-size: 0.8em;
   color: var(--panel-description-color);
 }
+
+#protections-popup-sendReportView-footer > button {
+  flex: none;
+}
+
+.protections-popup-description > description {
+  margin: 10px 16px;
+}
+
+.protections-popup-list {
+  padding: 5px 16px;
+}
+
 }/** END Proton **/
 
 /** Shim-allow warning and indicator icons **/
