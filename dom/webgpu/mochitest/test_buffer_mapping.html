@@ -21,7 +21,7 @@ const func = async function() {
 
   const encoder = device.createCommandEncoder();
   encoder.copyBufferToBuffer(bufferWrite, 0, bufferRead, 0, 4);
-  device.defaultQueue.submit([encoder.finish()]);
+  device.queue.submit([encoder.finish()]);
 
   await bufferRead.mapAsync(GPUMapMode.READ);
   const data = bufferRead.getMappedRange();
