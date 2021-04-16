@@ -151,12 +151,14 @@ def docker_worker_toolchain(config, job, taskdesc):
     if "toolchain-alias" in run:
         attributes["toolchain-alias"] = run.pop("toolchain-alias")
 
-    if not taskgraph.fast:
+    digest_data = get_digest_data(config, run, taskdesc)
+
+    if job.get("attributes", {}).get("cached_task") is not False and not taskgraph.fast:
         name = taskdesc["label"].replace("{}-".format(config.kind), "", 1)
         taskdesc["cache"] = {
             "type": CACHE_TYPE,
             "name": name,
-            "digest-data": get_digest_data(config, run, taskdesc),
+            "digest-data": digest_data,
         }
 
     run["using"] = "run-task"
@@ -211,12 +213,14 @@ def generic_worker_toolchain(config, job, taskdesc):
     if "toolchain-alias" in run:
         attributes["toolchain-alias"] = run.pop("toolchain-alias")
 
-    if not taskgraph.fast:
+    digest_data = get_digest_data(config, run, taskdesc)
+
+    if job.get("attributes", {}).get("cached_task") is not False and not taskgraph.fast:
         name = taskdesc["label"].replace("{}-".format(config.kind), "", 1)
         taskdesc["cache"] = {
             "type": CACHE_TYPE,
             "name": name,
-            "digest-data": get_digest_data(config, run, taskdesc),
+            "digest-data": digest_data,
         }
 
     run["using"] = "run-task"

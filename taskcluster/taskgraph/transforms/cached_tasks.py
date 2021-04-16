@@ -55,7 +55,10 @@ def cache_task(config, tasks):
 
     digests = {}
     for task in config.kind_dependencies_tasks.values():
-        if "cached_task" in task.attributes:
+        if (
+            "cached_task" in task.attributes
+            and task.attributes["cached_task"] is not False
+        ):
             digests[task.label] = format_task_digest(task.attributes["cached_task"])
 
     for task in order_tasks(config, tasks):

@@ -38,6 +38,10 @@ def add_optimization(
         task.
     :type digest_data: list of bytes or None
     """
+    cached_task = taskdesc.get("attributes", {}).get("cached_task")
+    if cached_task is False:
+        return
+
     if (digest is None) == (digest_data is None):
         raise Exception("Must pass exactly one of `digest` and `digest_data`.")
     if digest is None:

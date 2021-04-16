@@ -162,6 +162,17 @@ jobs:
       when:
           - {hour: 10, minute: 0}
 
+    - name: linux64-bp-clang-trunk
+      job:
+          type: decision-task
+          treeherder-symbol: linux64-bp-clang-trunk
+          target-tasks-method: linux64_bp_clang_trunk
+      run-on-projects:
+          - mozilla-central
+          - mozilla-release
+      when:
+          - {hour: 2, minute: 0}
+
     - name: updatebot-cron-job
       job:
           type: decision-task

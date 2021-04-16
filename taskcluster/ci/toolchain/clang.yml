@@ -147,6 +147,29 @@ linux64-clang-11:
             - linux64-toolchain-sysroot
             - wasi-sysroot-11
 
+linux64-clang-trunk:
+    description: "Clang trunk toolchain build"
+    attributes:
+        cached_task: false
+    treeherder:
+        symbol: TL(clang-trunk)
+    run:
+        using: toolchain-script
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-trunk-linux64.json'
+        resources:
+            - 'build/build-clang/clang-trunk-linux64.json'
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-trunk
+        toolchain:
+            - linux64-binutils
+            - linux64-gcc-7
+            - linux64-toolchain-sysroot
+            - wasi-sysroot
+
 linux64-clang-11-android-cross:
     description: "Clang 11 toolchain build"
     treeherder:
