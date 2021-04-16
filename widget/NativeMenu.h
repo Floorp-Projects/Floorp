@@ -64,6 +64,15 @@ class NativeMenu {
     // Called when the menu closed, after popuphidden.
     // No strong reference is held to the observer during the call.
     virtual void OnNativeMenuClosed() = 0;
+
+    // Called before the popupshowing event of a submenu fires.
+    virtual void OnNativeSubMenuWillOpen(dom::Element* aPopupElement) = 0;
+
+    // Called after the popupshown event of a submenu fired.
+    virtual void OnNativeSubMenuDidOpen(dom::Element* aPopupElement) = 0;
+
+    // Called after the popuphidden event of a submenu fired.
+    virtual void OnNativeSubMenuClosed(dom::Element* aPopupElement) = 0;
   };
 
   // Add an observer that gets notified of menu opening and closing.
