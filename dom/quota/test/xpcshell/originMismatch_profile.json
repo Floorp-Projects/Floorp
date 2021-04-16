@@ -61,10 +61,7 @@
                 "dir": true,
                 "entries": [
                   { "name": ".metadata-v2", "dir": false },
-                  { "name": "cache",
-                     "dir": true,
-                     "entries": [{ "name": ".padding", "dir": false }]
-                  }
+                  { "name": "cache", "dir": true }
                 ]
               }
             ]
