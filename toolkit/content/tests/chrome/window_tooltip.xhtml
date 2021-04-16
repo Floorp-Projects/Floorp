@@ -10,7 +10,7 @@
   <script type="application/javascript" src="popup_shared.js"></script>
 
 <tooltip id="thetooltip">
-  <label id="label" value="This is a tooltip"/>
+  <label id="label" class="tooltip-label" value="This is a tooltip"/>
 </tooltip>
 
 <box id="parent" tooltiptext="Box Tooltip" style="margin: 10px">
@@ -312,6 +312,33 @@ var popupTests = [
   test() {
     document.getElementById("thetooltip").hidePopup();
   },
+},
+{
+  testname: "hover tooltip with long unbreakable text",
+  events: [ "popupshowing thetooltip", "popupshown thetooltip" ],
+  autohide: "thetooltip",
+  test() {
+    var label = document.getElementById("label");
+    label.removeAttribute("value");
+    label.textContent = "This_tooltip_contains_no_whitespace_and_is_longer_than_the_maximum_tooltip_width_It_should_wrap_onto_a_second_line_instead_of_being_truncated";
+    gButton = document.getElementById("withtooltip");
+    disableNonTestMouse(true);
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
+    disableNonTestMouse(false);
+  },
+  result(testname) {
+    var rect = document.getElementById("thetooltip").getBoundingClientRect();
+
+    var labelrect = document.getElementById("label").getBoundingClientRect();
+    ok(labelrect.right < rect.right, testname + " tooltip width");
+    ok(labelrect.bottom < rect.bottom, testname + " tooltip height");
+
+    // make sure that the tooltip contains more than one line of text, by checking
+    // that the original height has increased by at least 10 pixels
+    ok(gOriginalHeight + 10 < rect.bottom - rect.top, testname + " tooltip is wrapped");
+  }
 }
 ];
 
