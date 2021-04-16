@@ -96,6 +96,28 @@ void BrowsingContextWebProgress::UpdateAndNotifyListeners(
   mListenerInfoList.Compact();
 }
 
+void BrowsingContextWebProgress::ContextDiscarded() {
+  if (!mAwaitingStop) {
+    return;
+  }
+
+  // This matches what nsDocLoader::doStopDocumentLoad does, except we don't
+  // bother notifying for `STATE_STOP | STATE_IS_DOCUMENT`,
+  // nsBrowserStatusFilter would filter it out before it gets to the parent
+  // process.
+  const int32_t flags = STATE_STOP | STATE_IS_WINDOW | STATE_IS_NETWORK;
+  UpdateAndNotifyListeners(((flags >> 16) & nsIWebProgress::NOTIFY_STATE_ALL),
+                           [&](nsIWebProgressListener* listener) {
+                             // TODO(emilio): We might want to stash the
+                             // request from OnStateChange on a member or
+                             // something if having no request causes trouble
+                             // here. Ditto for the webprogress instance.
+                             listener->OnStateChange(this,
+                                                     /* aRequest = */ nullptr,
+                                                     flags, NS_ERROR_ABORT);
+                           });
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 
@@ -118,9 +140,9 @@ BrowsingContextWebProgress::OnStateChange(nsIWebProgress* aWebProgress,
   // If we receive a matching STATE_START for a top-level document event,
   // and we are currently not suspending this event, start suspending all
   // further matching STATE_START events after this one.
-  if (isTopLevelStartDocumentEvent && !mSuspendOnStateStartChangeEvents) {
-    mSuspendOnStateStartChangeEvents = true;
-  } else if (mSuspendOnStateStartChangeEvents) {
+  if (isTopLevelStartDocumentEvent && !mAwaitingStop) {
+    mAwaitingStop = true;
+  } else if (mAwaitingStop) {
     // If we are currently suspending matching STATE_START events, check if this
     // is a corresponding STATE_STOP event.
     const uint32_t stopWindowFlags = nsIWebProgressListener::STATE_STOP |
@@ -130,7 +152,7 @@ BrowsingContextWebProgress::OnStateChange(nsIWebProgress* aWebProgress,
     if (isTopLevelStopWindowEvent) {
       // If this is a STATE_STOP event corresponding to the initial STATE_START
       // event, stop suspending matching STATE_START events.
-      mSuspendOnStateStartChangeEvents = false;
+      mAwaitingStop = false;
     } else if (isTopLevelStartDocumentEvent) {
       // We have received a matching STATE_START event at least twice, but
       // haven't received the corresponding STATE_STOP event for the first one.
