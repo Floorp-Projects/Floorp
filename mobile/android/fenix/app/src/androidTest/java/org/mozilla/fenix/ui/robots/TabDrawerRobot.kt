@@ -162,7 +162,14 @@ class TabDrawerRobot {
 
     fun clickSelectTabs() {
         threeDotMenu().click()
-        onView(withText("Select tabs")).click()
+
+        mDevice.waitNotNull(
+            Until.findObject(text("Select tabs")),
+            waitingTime
+        )
+
+        val selectTabsButton = mDevice.findObject(text("Select tabs"))
+        selectTabsButton.click()
     }
 
     fun clickAddNewCollection() = addNewCollectionButton().click()
@@ -201,13 +208,13 @@ class TabDrawerRobot {
         }
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            mDevice.findObject(UiSelector().resourceId("org.mozilla.fenix.debug:id/tab_button"))
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/tab_button"))
                 .waitForExists(waitingTime)
 
             tabsCounter().click()
 
             org.mozilla.fenix.ui.robots.mDevice.waitNotNull(
-                Until.findObject(By.res("org.mozilla.fenix.debug:id/tab_layout")),
+                Until.findObject(By.res("$packageName:id/tab_layout")),
                 waitingTime
             )
 
