@@ -75,7 +75,7 @@ public class VideoCodecInfo {
   }
 
   @CalledByNative
-  Map getParams() {
+  Map<String, String> getParams() {
     return params;
   }
 }

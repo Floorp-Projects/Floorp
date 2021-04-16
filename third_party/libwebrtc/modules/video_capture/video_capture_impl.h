@@ -79,6 +79,9 @@ class VideoCaptureImpl : public VideoCaptureModule {
   VideoCaptureImpl();
   ~VideoCaptureImpl() override;
 
+  // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
+  int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
+
   char* _deviceUniqueId;  // current Device unique name;
   Mutex api_lock_;
   VideoCaptureCapability _requestedCapability;  // Should be set by platform
@@ -87,7 +90,6 @@ class VideoCaptureImpl : public VideoCaptureModule {
  private:
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
-  int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
 
   // last time the module process function was called.
   int64_t _lastProcessTimeNanos;
