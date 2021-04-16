@@ -45,7 +45,7 @@ Log(const char* aMessageType,
     const char* aFunctionName,
     const char* aContext,
     const bool aShouldLogStackTrace = false,
-    uint32_t aFramesToSkip = 0)
+    const void* aFirstFramePC = nullptr)
 {
   std::ostringstream msgStream;
   msgStream << "Process Sandbox " << aMessageType << ": " << aFunctionName;
@@ -61,7 +61,7 @@ Log(const char* aMessageType,
         StaticPrefs::security_sandbox_windows_log_stackTraceDepth();
     if (stackTraceDepth) {
       msgStream << std::endl << "Stack Trace:";
-      MozStackWalk(StackFrameToOStringStream, aFramesToSkip, stackTraceDepth,
+      MozStackWalk(StackFrameToOStringStream, aFirstFramePC, stackTraceDepth,
                    &msgStream);
     }
   }

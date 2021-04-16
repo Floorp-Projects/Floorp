@@ -663,12 +663,7 @@ static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
     void* stackEnd = pthread_get_stackaddr_np(pthread_self());
     FramePointerStackWalk(StackWalkCallback, MaxFrames, &tmp, fp, stackEnd);
 #else
-#  if defined(XP_WIN) && defined(_M_X64)
-    int skipFrames = 1;
-#  else
-    int skipFrames = 2;
-#  endif
-    MozStackWalk(StackWalkCallback, skipFrames, MaxFrames, &tmp);
+    MozStackWalk(StackWalkCallback, nullptr, MaxFrames, &tmp);
 #endif
   }
 

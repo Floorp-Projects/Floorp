@@ -25,11 +25,10 @@ namespace sandboxing {
 void ProvideLogFunction(LogFunction aLogFunction);
 
 // Log a "BLOCKED" msg to the browser console and, if DEBUG build, stderr.
-// If the logging of a stack trace is enabled then the default aFramesToSkip
-// will start from our caller's caller, which should normally be the function
-// that triggered the interception.
-void LogBlocked(const char* aFunctionName, const char* aContext = nullptr,
-                uint32_t aFramesToSkip = 2);
+// If the logging of a stack trace is enabled then a trace starting from the
+// caller of the relevant LogBlocked overload will be logged, which should
+// normally be the function that triggered the interception.
+void LogBlocked(const char* aFunctionName, const char* aContext = nullptr);
 
 // Convenience functions to convert to char*.
 void LogBlocked(const char* aFunctionName, const wchar_t* aContext);
