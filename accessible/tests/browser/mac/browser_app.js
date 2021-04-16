@@ -123,17 +123,11 @@ add_task(async () => {
       // 3. Content area (#tabbrowser-tabpanels)
       // 4. Some fullscreen pointer grabber (#fullscreen-and-pointerlock-wrapper)
       // 5. Accessibility announcements dialog (#a11y-announcement)
-      // 6. Tab notification deck (#tab-notification-deck) (proton only)
-      let baseRootChildCount = Services.prefs.getBoolPref(
-        "browser.proton.enabled",
-        false
-      )
-        ? 6
-        : 5;
+      let baseRootChildCount = 5;
       is(
         rootChildCount(),
         baseRootChildCount,
-        "Root with no popups has 6 children"
+        "Root with no popups has 5 children"
       );
 
       // Open a context menu
