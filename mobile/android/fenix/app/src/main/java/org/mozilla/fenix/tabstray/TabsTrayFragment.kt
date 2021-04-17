@@ -71,7 +71,6 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     private val selectionBannerBinding = ViewBoundFeatureWrapper<SelectionBannerBinding>()
     private val selectionHandleBinding = ViewBoundFeatureWrapper<SelectionHandleBinding>()
     private val tabsTrayCtaBinding = ViewBoundFeatureWrapper<TabsTrayInfoBannerBinding>()
-    private val closeOnLastTabBinding = ViewBoundFeatureWrapper<CloseOnLastTabBinding>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -253,16 +252,6 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             owner = this,
             view = view
         )
-
-        closeOnLastTabBinding.set(
-            feature = CloseOnLastTabBinding(
-                browserStore = requireComponents.core.store,
-                tabsTrayStore = tabsTrayStore,
-                navigationInteractor = navigationInteractor
-            ),
-            owner = this,
-            view = view
-        )
     }
 
     override fun setCurrentTrayPosition(position: Int, smoothScroll: Boolean) {
@@ -290,9 +279,11 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         val tab = browserStore.state.findTab(tabId)
 
         tab?.let {
-            requireComponents.useCases.tabsUseCases.removeTab(tabId)
-            if (browserStore.state.getNormalOrPrivateTabs(it.content.private).isNotEmpty()) {
+            if (browserStore.state.getNormalOrPrivateTabs(it.content.private).size != 1) {
+                requireComponents.useCases.tabsUseCases.removeTab(tabId)
                 showUndoSnackbarForTab(it)
+            } else {
+                dismissTabsTrayAndNavigateHome(tabId)
             }
         }
     }
