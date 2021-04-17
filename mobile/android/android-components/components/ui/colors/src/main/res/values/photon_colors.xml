@@ -78,6 +78,7 @@
 
     <!-- Ink -->
     <color name="photonInk20">#312A65</color>
+    <color name="photonInk20A48">#7A312A65</color>
     <color name="photonInk50">#291D4F</color>
     <color name="photonInk70">#363959</color>
     <color name="photonInk80">#20123A</color>
@@ -110,10 +111,15 @@
     <color name="photonDarkGrey40">#3A3944</color>
     <color name="photonDarkGrey50">#32313C</color>
     <color name="photonDarkGrey80">#1C1B22</color>
+    <color name="photonDarkGrey90">#15141A</color>
 
     <!-- Violet -->
+    <color name="photonViolet05">#E7DFFF</color>
     <color name="photonViolet50">#9059FF</color>
+    <color name="photonViolet50A32">#529059FF</color>
+    <color name="photonViolet50A48">#7A9059FF</color>
     <color name="photonViolet70">#592ACB</color>
+    <color name="photonViolet70A12">#1F592ACB</color>
 
     <!-- White -->
     <color name="photonWhite">#ffffff</color>
