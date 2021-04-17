@@ -67,6 +67,9 @@
     <string name="mozac_browser_errorpages_content_crashed_title">Эчтәлеге ватык</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Эчтәлекне кодлау хатаcы</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Адрес табылмады</string>
 
     <!-- The document title and heading of an error page. -->

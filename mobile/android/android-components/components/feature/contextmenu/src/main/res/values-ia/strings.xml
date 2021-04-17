@@ -24,12 +24,18 @@
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Nove scheda aperite</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Nove scheda anonyme aperite</string>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Ligamine copiate al area de transferentia</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Commutar</string>
+    <!-- Text for context menu item to open the link in an external app. -->
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Aperir le ligamine in un application externe</string>
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">Compartir le adresse email</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_email_address">Copiar le adresse email</string>
+    <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Adresse email copiate al area de transferentia</string>
     <!-- Text for context menu item to add to a contact. -->
     <string name="mozac_feature_contextmenu_add_to_contact">Adder al contactos</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
