@@ -31,7 +31,7 @@ const {
  * ----- Start of model -----
  *
  * Everything below this comment up to the "End of model" comment is copied from:
- * https://github.com/mozilla-services/fathom-login-forms/blob/3a2f8806cc8c3716be2aa426a6e9a6d2bebd737d/new-password/rulesets.js#L14-L540
+ * https://github.com/mozilla-services/fathom-login-forms/blob/78d4bf8f301b5aa6d62c06b45e826a0dd9df1afa/new-password/rulesets.js#L14-L613
  * Deviations from that file:
  *   - Remove import statements, instead using ``ChromeUtils.defineModuleGetter`` and destructuring assignments above.
  *   - Set ``DEVELOPMENT`` constant to ``false``.
@@ -44,48 +44,49 @@ const DEVELOPMENT = false;
 // Run me with confidence cutoff = 0.75.
 const coefficients = {
   new: [
-    ["hasNewLabel", 2.531618356704712],
-    ["hasConfirmLabel", 1.9212454557418823],
-    ["hasCurrentLabel", -1.5062531232833862],
-    ["closestLabelMatchesNew", 2.4905529022216797],
-    ["closestLabelMatchesConfirm", 2.188796281814575],
-    ["closestLabelMatchesCurrent", -2.5512311458587646],
-    ["hasNewAriaLabel", 1.9324924945831299],
-    ["hasConfirmAriaLabel", 1.7427018880844116],
-    ["hasCurrentAriaLabel", -0.45434775948524475],
-    ["hasNewPlaceholder", 1.3900811672210693],
-    ["hasConfirmPlaceholder", 2.120662212371826],
-    ["hasCurrentPlaceholder", -2.464745283126831],
-    ["forgotPasswordInFormLinkTextContent", -0.34269317984580994],
-    ["forgotPasswordInFormLinkHref", -1.100291132926941],
-    ["forgotPasswordInFormLinkTitle", -2.5948476791381836],
-    ["forgotInFormLinkTextContent", -1.104567050933838],
-    ["forgotInFormLinkHref", 0.43580958247184753],
-    ["forgotPasswordInFormButtonTextContent", -2.2410218715667725],
-    ["forgotPasswordOnPageLinkTextContent", -0.7233141660690308],
-    ["forgotPasswordOnPageLinkHref", -0.3587746322154999],
-    ["forgotPasswordOnPageLinkTitle", 0.5892723798751831],
-    ["forgotPasswordOnPageButtonTextContent", -0.0006637098849751055],
-    ["elementAttrsMatchNew", 2.36958646774292],
-    ["elementAttrsMatchConfirm", 1.79710853099823],
-    ["elementAttrsMatchCurrent", -2.0240602493286133],
-    ["elementAttrsMatchPassword1", 1.9658048152923584],
-    ["elementAttrsMatchPassword2", 1.6933585405349731],
-    ["elementAttrsMatchLogin", 1.1432386636734009],
-    ["formAttrsMatchRegister", 1.8227713108062744],
-    ["formHasRegisterAction", 1.9209907054901123],
-    ["formButtonIsRegister", 2.889024496078491],
-    ["formAttrsMatchLogin", -1.166875958442688],
-    ["formHasLoginAction", -0.4696630537509918],
-    ["formButtonIsLogin", -2.284656524658203],
-    ["hasAutocompleteCurrentPassword", -0.04689808934926987],
-    ["formHasRememberMeCheckbox", 0.5008370280265808],
-    ["formHasRememberMeLabel", -0.022740153595805168],
-    ["formHasNewsletterCheckbox", 1.5111156702041626],
-    ["formHasNewsletterLabel", 2.277301549911499],
-    ["closestHeaderAboveIsLoginy", -2.2182235717773438],
-    ["closestHeaderAboveIsRegistery", 1.930107593536377],
-    ["nextInputIsConfirmy", 2.5108766555786133],
+    ["hasNewLabel", 2.5705015659332275],
+    ["hasConfirmLabel", 1.968616247177124],
+    ["hasCurrentLabel", -2.0171477794647217],
+    ["closestLabelMatchesNew", 2.5639004707336426],
+    ["closestLabelMatchesConfirm", 2.0995113849639893],
+    ["closestLabelMatchesCurrent", -2.6844682693481445],
+    ["hasNewAriaLabel", 2.6036999225616455],
+    ["hasConfirmAriaLabel", 1.6274890899658203],
+    ["hasCurrentAriaLabel", -0.5365085005760193],
+    ["hasNewPlaceholder", 1.2246830463409424],
+    ["hasConfirmPlaceholder", 1.7248882055282593],
+    ["hasCurrentPlaceholder", -2.9133150577545166],
+    ["forgotPasswordInFormLinkTextContent", -0.5529725551605225],
+    ["forgotPasswordInFormLinkHref", -1.314806342124939],
+    ["forgotPasswordInFormLinkTitle", -2.088702917098999],
+    ["forgotInFormLinkTextContent", -0.9314834475517273],
+    ["forgotInFormLinkHref", 0.2886754274368286],
+    ["forgotPasswordInFormButtonTextContent", -1.3742481470108032],
+    ["forgotPasswordOnPageLinkTextContent", -0.8459364175796509],
+    ["forgotPasswordOnPageLinkHref", 0.11753738671541214],
+    ["forgotPasswordOnPageLinkTitle", -0.6204848289489746],
+    ["forgotPasswordOnPageButtonTextContent", -0.7494243383407593],
+    ["elementAttrsMatchNew", 2.5985605716705322],
+    ["elementAttrsMatchConfirm", 1.632151484489441],
+    ["elementAttrsMatchCurrent", -3.041818857192993],
+    ["elementAttrsMatchPassword1", 1.6156086921691895],
+    ["elementAttrsMatchPassword2", 1.3372191190719604],
+    ["elementAttrsMatchLogin", 1.423768401145935],
+    ["formAttrsMatchRegister", 1.827048420906067],
+    ["formHasRegisterAction", 1.8044408559799194],
+    ["formButtonIsRegister", 3.0288844108581543],
+    ["formAttrsMatchLogin", -0.7580564022064209],
+    ["formHasLoginAction", -0.47973933815956116],
+    ["formButtonIsLogin", -2.0724077224731445],
+    ["hasAutocompleteCurrentPassword", -0.06478194147348404],
+    ["formHasRememberMeCheckbox", 0.7470659613609314],
+    ["formHasRememberMeLabel", 0.05482526868581772],
+    ["formHasNewsletterCheckbox", 1.4263468980789185],
+    ["formHasNewsletterLabel", 1.7910864353179932],
+    ["closestHeaderAboveIsLoginy", -1.9214844703674316],
+    ["closestHeaderAboveIsRegistery", 1.7715871334075928],
+    ["nextInputIsConfirmy", 2.340878486633301],
+    ["formHasMultipleVisibleInput", 2.9857382774353027],
   ],
 };
 
@@ -93,7 +94,7 @@ const biases = [["new", 0.08310158550739288]];
 
 const passwordStringRegex = /password|passwort|رمز عبور|mot de passe|パスワード|비밀번호|암호|wachtwoord|senha|Пароль|parol|密码|contraseña|heslo|كلمة السر|kodeord|Κωδικός|pass code|Kata sandi|hasło|รหัสผ่าน|Şifre/i;
 const passwordAttrRegex = /pw|pwd|passwd|pass/i;
-const newStringRegex = /new|erstellen|create|choose|設定|신규/i;
+const newStringRegex = /new|erstellen|create|choose|設定|신규|Créer/i;
 const newAttrRegex = /new/i;
 const confirmStringRegex = /wiederholen|wiederholung|confirm|repeat|confirmation|verify|retype|repite|確認|の確認|تکرار|re-enter|확인|bevestigen|confirme|Повторите|tassyklamak|再次输入|ještě jednou|gentag|re-type|confirmar|Répéter|conferma|Repetaţi|again|reenter/i;
 const confirmAttrRegex = /confirm|retype/i;
@@ -104,7 +105,7 @@ const password1Regex = /pw1|pwd1|pass1|passwd1|password1|pwone|pwdone|passone|pa
 const password2Regex = /pw2|pwd2|pass2|passwd2|password2|pwtwo|pwdtwo|passtwo|passwdtwo|passwordtwo|pwsecond|pwdsecond|passsecond|passwdsecond|passwordsecond/i;
 const loginRegex = /login|log in|log on|log-on|Войти|sign in|sigin|sign\/in|sign-in|sign on|sign-on|ورود|登录|Přihlásit se|Přihlaste|Авторизоваться|Авторизация|entrar|ログイン|로그인|inloggen|Συνδέσου|accedi|ログオン|Giriş Yap|登入|connecter|connectez-vous|Connexion|Вход/i;
 const loginFormAttrRegex = /login|log in|log on|log-on|sign in|sigin|sign\/in|sign-in|sign on|sign-on/i;
-const registerStringRegex = /create[a-zA-Z\s]+account|Zugang anlegen|Angaben prüfen|Konto erstellen|register|sign up|ثبت نام|登録|注册|cadastr|Зарегистрироваться|Регистрация|Bellige alynmak|تسجيل|ΕΓΓΡΑΦΗΣ|Εγγραφή|Créer mon compte|Mendaftar|가입하기|inschrijving|Zarejestruj się|Deschideți un cont|Создать аккаунт|ร่วม|Üye Ol|registr|new account|ساخت حساب کاربری|Schrijf je/i;
+const registerStringRegex = /create[a-zA-Z\s]+account|activate[a-zA-Z\s]+account|Zugang anlegen|Angaben prüfen|Konto erstellen|register|sign up|ثبت نام|登録|注册|cadastr|Зарегистрироваться|Регистрация|Bellige alynmak|تسجيل|ΕΓΓΡΑΦΗΣ|Εγγραφή|Créer mon compte|Créer un compte|Mendaftar|가입하기|inschrijving|Zarejestruj się|Deschideți un cont|Создать аккаунт|ร่วม|Üye Ol|registr|new account|ساخت حساب کاربری|Schrijf je|S'inscrire/i;
 const registerActionRegex = /register|signup|sign-up|create-account|account\/create|join|new_account|user\/create|sign\/up|membership\/create/i;
 const registerFormAttrRegex = /signup|join|register|regform|registration|new_user|AccountCreate|create_customer|CreateAccount|CreateAcct|create-account|reg-form|newuser|new-reg|new-form|new_membership/i;
 const rememberMeAttrRegex = /remember|auto_login|auto-login|save_mail|save-mail|ricordami|manter|mantenha|savelogin|auto login/i;
@@ -321,6 +322,46 @@ function makeRuleset(coeffs, biases) {
     return false;
   }
 
+  /**
+   * Returns true when the number of visible input found in the form is over
+   * the given threshold.
+   *
+   * Since the idea in the signal is based on the fact that registration pages
+   * often have multiple inputs, this rule only selects inputs whose type is
+   * either email, password, text, tel or empty, which are more likely a input
+   * field for users to fill their information.
+   */
+  function formHasMultipleVisibleInput(element, selector, threshold) {
+    let form = element.form;
+    if (!form) {
+      // For password fields that don't have an associated form, we apply a heuristic
+      // to find a "form" for it. The heuristic works as follow:
+      // 1. Locate the closest preceding input.
+      // 2. Find the lowest common ancestor of the password field and the closet
+      //    preceding input.
+      // 3. Assume the common ancestor is the "form" of the password input.
+      const previous = closestElementAbove(element, selector);
+      if (!previous) {
+        return false;
+      }
+      form = findLowestCommonAncestor(previous, element);
+      if (!form) {
+        return false;
+      }
+    }
+    const inputs = Array.from(form.querySelectorAll(selector));
+    for (const input of inputs) {
+      // don't need to check visibility for the element we're testing against
+      if (element === input || isVisible(input)) {
+        threshold--;
+        if (threshold === 0) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   function hasSomeMatchingPredicateForSelectorWithinElement(
     element,
     selector,
@@ -339,26 +380,50 @@ function makeRuleset(coeffs, biases) {
   }
 
   function closestHeaderAboveMatchesRegex(element, regex) {
-    const closestHeader = closestHeaderAbove(element);
+    const closestHeader = closestElementAbove(
+      element,
+      "h1,h2,h3,h4,h5,h6,div[class*=heading],div[class*=header],div[class*=title],legend"
+    );
     if (closestHeader !== null) {
       return regex.test(closestHeader.textContent);
     }
     return false;
   }
 
-  function closestHeaderAbove(element) {
-    let headers = Array.from(
-      element.ownerDocument.querySelectorAll(
-        "h1,h2,h3,h4,h5,h6,div[class*=heading],div[class*=header],div[class*=title],legend"
-      )
-    );
-    for (let i = headers.length - 1; i >= 0; --i) {
-      const header = headers[i];
+  function closestElementAbove(element, selector) {
+    let elements = Array.from(element.ownerDocument.querySelectorAll(selector));
+    for (let i = elements.length - 1; i >= 0; --i) {
       if (
-        element.compareDocumentPosition(header) &
+        element.compareDocumentPosition(elements[i]) &
         Node.DOCUMENT_POSITION_PRECEDING
       ) {
-        return header;
+        return elements[i];
+      }
+    }
+    return null;
+  }
+
+  function findLowestCommonAncestor(elementA, elementB) {
+    // Walk up the ancestor chain of both elements and compare whether the
+    // ancestors in the depth are the same. If they are not the same, the
+    // ancestor in the previous run is the lowest common ancestor.
+    function getAncestorChain(element) {
+      let ancestors = [];
+      let p = element.parentNode;
+      while (p) {
+        ancestors.push(p);
+        p = p.parentNode;
+      }
+      return ancestors;
+    }
+
+    let aAncestors = getAncestorChain(elementA);
+    let bAncestors = getAncestorChain(elementB);
+    let posA = aAncestors.length - 1;
+    let posB = bAncestors.length - 1;
+    for (; posA >= 0 && posB >= 0; posA--, posB--) {
+      if (aAncestors[posA] != bAncestors[posB]) {
+        return aAncestors[posA + 1];
       }
     }
     return null;
@@ -559,6 +624,12 @@ function makeRuleset(coeffs, biases) {
         closestHeaderAboveIsRegistery: fnode =>
           closestHeaderAboveMatchesRegex(fnode.element, registerStringRegex),
         nextInputIsConfirmy,
+        formHasMultipleVisibleInput: fnode =>
+          formHasMultipleVisibleInput(
+            fnode.element,
+            "input[type=email],input[type=password],input[type=text],input[type=tel]",
+            3
+          ),
       }),
       rule(type("new"), out("new")),
     ],
