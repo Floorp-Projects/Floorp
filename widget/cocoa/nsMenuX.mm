@@ -437,7 +437,7 @@ void nsMenuX::MenuOpenedAsync() {
   nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
 
   // Notify our observer.
-  if (mObserver) {
+  if (mObserver && popupContent) {
     mObserver->OnMenuDidOpen(popupContent->AsElement());
   }
 
@@ -542,7 +542,7 @@ void nsMenuX::MenuClosedAsync() {
   EventDispatcher::Dispatch(dispatchTo, nullptr, &popupHidden, nullptr, &status);
 
   // Notify our observer.
-  if (mObserver) {
+  if (mObserver && popupContent) {
     mObserver->OnMenuClosed(popupContent->AsElement());
   }
 }
@@ -768,7 +768,7 @@ bool nsMenuX::OnOpen() {
 
   nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
 
-  if (mObserver) {
+  if (mObserver && popupContent) {
     mObserver->OnMenuWillOpen(popupContent->AsElement());
   }
 
