@@ -423,7 +423,8 @@ struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
 
       const size_t dataSize = stride * surfSize.height;
       const auto& begin = map.GetData();
-      if (!view.Write(begin, begin + dataSize)) {
+      const auto range = Range<const uint8_t>{begin, dataSize};
+      if (!view.WriteFromRange(range)) {
         return view.GetStatus();
       }
     }
@@ -448,23 +449,15 @@ struct QueueParamTraits<webgl::TexUnpackBlobDesc> {
           !view.ReadParam(&stride)) {
         return view.GetStatus();
       }
-      auto& surf = out->dataSurf;
-      surf = gfx::Factory::CreateDataSourceSurfaceWithStride(surfSize, format,
-                                                             stride, true);
-      if (!surf) {
-        return QueueStatus::kOOMError;
-      }
-
-      gfx::DataSourceSurface::ScopedMap map(surf,
-                                            gfx::DataSourceSurface::WRITE);
-      if (!map.IsMapped()) {
-        return QueueStatus::kOOMError;
-      }
       const size_t dataSize = stride * surfSize.height;
-      const auto& begin = map.GetData();
-      if (!view.Read(begin, begin + dataSize)) {
-        return view.GetStatus();
-      }
+      const auto range = view.template ReadRange<uint8_t>(dataSize);
+      if (!range) return view.GetStatus();
+
+      // DataSourceSurface demands pointer-to-mutable.
+      const auto bytes = const_cast<uint8_t*>(range->begin().get());
+      out->dataSurf = gfx::Factory::CreateWrappingDataSourceSurface(
+          bytes, stride, surfSize, format);
+      MOZ_ASSERT(out->dataSurf);
     }
     return QueueStatus::kSuccess;
   }
