@@ -143,12 +143,12 @@ var PrintUtils = {
     }
   },
 
-  createPreviewBrowsers(aBrowsingContext, aDialogBrowser) {
+  createPreviewBrowsers(aBrowsingContext, aDialogBrowser, aPrintFrameOnly) {
     let _createPreviewBrowser = previewType => {
-      // When we're not previewing the selection we want to make
-      // sure that the top-level browser is being printed.
+      // When we're not previewing the selection or printing only the frame, we
+      // want to make sure that the top-level browser is being printed.
       let browsingContext =
-        previewType == "selection"
+        previewType == "selection" || aPrintFrameOnly
           ? aBrowsingContext
           : aBrowsingContext.top.embedderElement.browsingContext;
       let browser = gBrowser.createBrowser({

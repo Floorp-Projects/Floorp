@@ -965,14 +965,14 @@ child:
      *
      * @param aPrintData The serialized print settings to use to layout the
      *   print preview document.
-     * @param aSourceOuterWindowID Optionally, the ID of the nsGlobalWindowOuter
-     *   that contains the document from which the print preview is to be
-     *   generated.  This should only be passed on the first call.  It should
-     *   not be passed for any subsequent calls that are made to update the
-     *   existing print preview document with a new print settings object.
+     * @param aSourceBrowsingContext Optionally, the browsing context that
+     *   contains the document from which the print preview is to be generated.
+     *   This should only be passed on the first call.  It should not be passed
+     *   for any subsequent calls that are made to update the existing print
+     *   preview document with a new print settings object.
      */
     async PrintPreview(PrintData aPrintData,
-                       uint64_t? aSourceOuterWindowID) returns (PrintPreviewResultInfo aInfo);
+                       MaybeDiscardedBrowsingContext aSourceBrowsingContext) returns (PrintPreviewResultInfo aInfo);
 
     /**
      * Inform the print preview document that we're done with it.
