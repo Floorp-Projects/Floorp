@@ -124,16 +124,19 @@ interface FrameLoader {
    *
    * @param aPrintSettings The print settings to use to layout the print
    *   preview document.
-   * @param aSourceOuterWindowID Optionally, the ID of the nsGlobalWindowOuter
-   *   that contains the document from which the print preview is to be
-   *   generated.  This should only be passed on the first call.  It should not
-   *   be passed for any subsequent calls that are made to update the existing
-   *   print preview document with a new print settings object.
+   * @param aSourceBrowsingContext Optionally, the browsing context that
+   *   contains the document from which the print preview is to be generated,
+   *   which must be in the same process as the browsing context of the frame
+   *   loader itself.
+   *
+   *   This should only be passed on the first call.  It should not be passed
+   *   for any subsequent calls that are made to update the existing print
+   *   preview document with a new print settings object.
    * @return A Promise that resolves with a PrintPreviewSuccessInfo on success.
    */
   [ChromeOnly, Throws]
   Promise<unsigned long> printPreview(nsIPrintSettings aPrintSettings,
-                                      optional unsigned long long aSourceOuterWindowID);
+                                      BrowsingContext? aSourceBrowsingContext);
 
   /**
    * Inform the print preview document that we're done with it.

@@ -3253,8 +3253,8 @@ void nsFrameLoader::RequestSHistoryUpdate(bool aImmediately) {
 }
 
 already_AddRefed<Promise> nsFrameLoader::PrintPreview(
-    nsIPrintSettings* aPrintSettings,
-    const Optional<uint64_t>& aSourceOuterWindowID, ErrorResult& aRv) {
+    nsIPrintSettings* aPrintSettings, BrowsingContext* aSourceBrowsingContext,
+    ErrorResult& aRv) {
   auto* ownerDoc = GetOwnerDoc();
   if (!ownerDoc) {
     aRv.ThrowNotSupportedError("No owner document");
@@ -3299,11 +3299,7 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
       return promise.forget();
     }
 
-    auto winID(aSourceOuterWindowID.WasPassed()
-                   ? Some(aSourceOuterWindowID.Value())
-                   : Nothing());
-
-    browserParent->SendPrintPreview(printData, winID)
+    browserParent->SendPrintPreview(printData, aSourceBrowsingContext)
         ->Then(
             GetMainThreadSerialEventTarget(), __func__, std::move(resolve),
             [promise](const mozilla::ipc::ResponseRejectReason) {
@@ -3314,9 +3310,9 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
   }
 
   RefPtr<nsGlobalWindowOuter> sourceWindow;
-  if (aSourceOuterWindowID.WasPassed()) {
+  if (aSourceBrowsingContext) {
     sourceWindow =
-        nsGlobalWindowOuter::GetOuterWindowWithId(aSourceOuterWindowID.Value());
+        nsGlobalWindowOuter::Cast(aSourceBrowsingContext->GetDOMWindow());
   } else {
     auto* ourDocshell = static_cast<nsDocShell*>(GetExistingDocShell());
     if (NS_WARN_IF(!ourDocshell)) {
@@ -3331,7 +3327,7 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
   }
 
   nsIDocShell* docShellToCloneInto = nullptr;
-  if (aSourceOuterWindowID.WasPassed()) {
+  if (aSourceBrowsingContext) {
     // We're going to call `Print()` below on a window that is not our own,
     // which happens when we are creating a new print preview document instead
     // of just applying a settings change to the existing PP document.  In this

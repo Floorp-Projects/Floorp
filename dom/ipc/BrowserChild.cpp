@@ -2302,8 +2302,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleAccessKey(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
-    const PrintData& aPrintData,
-    const mozilla::Maybe<uint64_t>& aSourceOuterWindowID,
+    const PrintData& aPrintData, const MaybeDiscardedBrowsingContext& aSourceBC,
     PrintPreviewResolver&& aCallback) {
 #ifdef NS_PRINTING
   // If we didn't succeed in passing off ownership of aCallback, then something
@@ -2315,10 +2314,13 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
     }
   });
 
+  if (NS_WARN_IF(aSourceBC.IsDiscarded())) {
+    return IPC_OK();
+  }
+
   RefPtr<nsGlobalWindowOuter> sourceWindow;
-  if (aSourceOuterWindowID) {
-    sourceWindow =
-        nsGlobalWindowOuter::GetOuterWindowWithId(aSourceOuterWindowID.value());
+  if (!aSourceBC.IsNull()) {
+    sourceWindow = nsGlobalWindowOuter::Cast(aSourceBC.get()->GetDOMWindow());
     if (NS_WARN_IF(!sourceWindow)) {
       return IPC_OK();
     }
@@ -2343,7 +2345,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
 
   nsCOMPtr<nsIDocShell> docShellToCloneInto;
-  if (aSourceOuterWindowID) {
+  if (!aSourceBC.IsNull()) {
     docShellToCloneInto = do_GetInterface(WebNavigation());
     if (NS_WARN_IF(!docShellToCloneInto)) {
       return IPC_OK();
@@ -2371,11 +2373,14 @@ mozilla::ipc::IPCResult BrowserChild::RecvExitPrintPreview() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvPrint(const uint64_t& aOuterWindowID,
-                                                const PrintData& aPrintData) {
+mozilla::ipc::IPCResult BrowserChild::RecvPrint(
+    const MaybeDiscardedBrowsingContext& aBc, const PrintData& aPrintData) {
 #ifdef NS_PRINTING
+  if (NS_WARN_IF(aBc.IsNullOrDiscarded())) {
+    return IPC_OK();
+  }
   RefPtr<nsGlobalWindowOuter> outerWindow =
-      nsGlobalWindowOuter::GetOuterWindowWithId(aOuterWindowID);
+      nsGlobalWindowOuter::Cast(aBc.get()->GetDOMWindow());
   if (NS_WARN_IF(!outerWindow)) {
     return IPC_OK();
   }

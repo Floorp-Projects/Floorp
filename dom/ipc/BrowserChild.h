@@ -545,10 +545,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
                                               nsTArray<uint32_t>&& aCharCodes);
 
-  mozilla::ipc::IPCResult RecvPrintPreview(
-      const PrintData& aPrintData,
-      const mozilla::Maybe<uint64_t>& aSourceOuterWindowID,
-      PrintPreviewResolver&& aCallback);
+  mozilla::ipc::IPCResult RecvPrintPreview(const PrintData& aPrintData,
+                                           const MaybeDiscardedBrowsingContext&,
+                                           PrintPreviewResolver&& aCallback);
 
   mozilla::ipc::IPCResult RecvExitPrintPreview();
 
