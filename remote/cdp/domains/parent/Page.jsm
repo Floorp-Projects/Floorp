@@ -608,7 +608,7 @@ class Page extends Domain {
 
     const { linkedBrowser } = this.session.target.tab;
 
-    await linkedBrowser.print(linkedBrowser.outerWindowID, printSettings);
+    await linkedBrowser.browsingContext.print(printSettings);
 
     // Bug 1603739 - With e10s enabled the promise returned by print() resolves
     // too early, which means the file hasn't been completely written.

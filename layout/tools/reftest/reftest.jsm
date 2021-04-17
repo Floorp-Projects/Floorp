@@ -1697,7 +1697,7 @@ function RecvStartPrint(isPrintSelection, printRange)
                 getService(Ci.nsIPrefBranch);
     ps.printInColor = prefs.getBoolPref("print.print_in_color", true);
 
-    g.browser.print(g.browser.outerWindowID, ps)
+    g.browser.browsingContext.print(ps)
         .then(() => SendPrintDone(Cr.NS_OK, file.path))
         .catch(exception => SendPrintDone(exception.code, file.path));
 }

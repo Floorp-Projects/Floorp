@@ -552,8 +552,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvExitPrintPreview();
 
-  mozilla::ipc::IPCResult RecvPrint(const uint64_t& aOuterWindowID,
-                                    const PrintData& aPrintData);
+  mozilla::ipc::IPCResult RecvPrint(const MaybeDiscardedBrowsingContext&,
+                                    const PrintData&);
 
   mozilla::ipc::IPCResult RecvUpdateNativeWindowHandle(
       const uintptr_t& aNewHandle);

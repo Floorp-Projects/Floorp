@@ -414,7 +414,7 @@ var PrintEventHandler = {
       this.printProgressIndicator.hidden = false;
 
       let bc = this.currentPreviewBrowser.browsingContext;
-      await this._doPrint(bc, settings);
+      await bc.print(settings);
     } catch (e) {
       Cu.reportError(e);
     }
@@ -1011,17 +1011,6 @@ var PrintEventHandler = {
 
   reportPrintingError(aMessage) {
     Services.telemetry.keyedScalarAdd("printing.error", aMessage, 1);
-  },
-
-  /**
-   * Prints the window. This method has been abstracted into a helper for
-   * testing purposes.
-   */
-  _doPrint(aBrowsingContext, aSettings) {
-    return aBrowsingContext.top.embedderElement.print(
-      aBrowsingContext.currentWindowGlobal.outerWindowId,
-      aSettings
-    );
   },
 
   /**

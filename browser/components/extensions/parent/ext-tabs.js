@@ -1407,8 +1407,8 @@ this.tabs = class extends ExtensionAPI {
                   printSettings.footerStrRight = pageSettings.footerRight;
                 }
 
-                activeTab.linkedBrowser
-                  .print(activeTab.linkedBrowser.outerWindowID, printSettings)
+                activeTab.linkedBrowser.browsingContext
+                  .print(printSettings)
                   .then(() => resolve(retval == 0 ? "saved" : "replaced"))
                   .catch(() =>
                     resolve(retval == 0 ? "not_saved" : "not_replaced")

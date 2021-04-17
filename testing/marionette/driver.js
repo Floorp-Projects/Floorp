@@ -3099,11 +3099,7 @@ GeckoDriver.prototype.print = async function(cmd) {
   assert.boolean(settings.printBackground);
 
   const linkedBrowser = this.curBrowser.tab.linkedBrowser;
-  const filePath = await print.printToFile(
-    linkedBrowser,
-    linkedBrowser.outerWindowID,
-    settings
-  );
+  const filePath = await print.printToFile(linkedBrowser, settings);
 
   // return all data as a base64 encoded string
   let bytes;

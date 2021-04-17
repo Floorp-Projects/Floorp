@@ -1731,14 +1731,6 @@
       };
     }
 
-    print(aOuterWindowID, aPrintSettings) {
-      if (!this.frameLoader) {
-        throw Components.Exception("No frame loader.", Cr.NS_ERROR_FAILURE);
-      }
-
-      return this.frameLoader.print(aOuterWindowID, aPrintSettings);
-    }
-
     async drawSnapshot(x, y, w, h, scale, backgroundColor) {
       let rect = new DOMRect(x, y, w, h);
       try {

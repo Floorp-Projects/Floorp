@@ -982,10 +982,10 @@ child:
     /**
      * Tell the child to print the current page with the given settings.
      *
-     * @param aOuterWindowID the ID of the outer window to print
+     * @param aBrowsingContext the browsing context to print.
      * @param aPrintData the serialized settings to print with
      */
-    async Print(uint64_t aOuterWindowID, PrintData aPrintData);
+    async Print(MaybeDiscardedBrowsingContext aBC, PrintData aPrintData);
 
     /**
      * Update the child with the tab's current top-level native window handle.
