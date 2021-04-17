@@ -164,11 +164,12 @@ already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
     return nullptr;
   }
   nsCOMPtr<nsPIDOMWindowInner> owner = do_QueryInterface(global);
-  /* If the relevant global object of this does not have transient activation,
+  /* TODO: bug 1705289
+   * If the relevant global object of this does not have transient activation,
    * return a promise rejected with a DOMException object whose name attribute
    * has the value InvalidStateError. */
   WindowContext* wc = owner->GetWindowContext();
-  if (!wc || !wc->HasValidTransientUserGestureActivation()) {
+  if (!wc || !wc->HasBeenUserGestureActivated()) {
     p->MaybeRejectWithInvalidStateError(
         "getDisplayMedia must be called from a user gesture handler.");
     return p.forget();
