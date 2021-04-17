@@ -19,14 +19,17 @@ class WebGLMethodDispatcher
 template <typename MethodT, MethodT Method>
 size_t IdByMethod() = delete;
 
-#define DEFINE_METHOD_DISPATCHER(_ID, _METHOD)                    \
-  template <>                                                     \
-  class WebGLMethodDispatcher<_ID>                                \
-      : public MethodDispatcher<WebGLMethodDispatcher, _ID,       \
-                                decltype(&_METHOD), &_METHOD> {}; \
-  template <>                                                     \
-  inline size_t IdByMethod<decltype(&_METHOD), &_METHOD>() {      \
-    return _ID;                                                   \
+#define DEFINE_METHOD_DISPATCHER(_ID, _METHOD)                  \
+  template <>                                                   \
+  class WebGLMethodDispatcher<_ID>                              \
+      : public MethodDispatcher<WebGLMethodDispatcher, _ID,     \
+                                decltype(&_METHOD), &_METHOD> { \
+   public:                                                      \
+    static inline const char* Name() { return #_METHOD; }       \
+  };                                                            \
+  template <>                                                   \
+  inline size_t IdByMethod<decltype(&_METHOD), &_METHOD>() {    \
+    return _ID;                                                 \
   }
 
 // Defines each method the WebGLMethodDispatcher handles.  The COUNTER value

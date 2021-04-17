@@ -8,6 +8,7 @@
 
 #include <type_traits>
 #include "mozilla/FunctionTypeTraits.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "QueueParamTraits.h"
 #include "WebGLTypes.h"
@@ -151,12 +152,16 @@ void Serialize(Range<uint8_t> dest, const Args&... args) {
 
 // -
 
-inline bool Deserialize(RangeConsumerView& view) { return true; }
+inline Maybe<uint16_t> Deserialize(RangeConsumerView&, size_t) { return {}; }
 
 template <typename Arg, typename... Args>
-inline bool Deserialize(RangeConsumerView& view, Arg& arg, Args&... args) {
-  if (!webgl::QueueParamTraits<Arg>::Read(view, &arg)) return false;
-  return Deserialize(view, args...);
+inline Maybe<uint16_t> Deserialize(RangeConsumerView& view,
+                                   const uint16_t argId, Arg& arg,
+                                   Args&... args) {
+  if (!webgl::QueueParamTraits<Arg>::Read(view, &arg)) {
+    return Some(argId);
+  }
+  return Deserialize(view, argId + 1, args...);
 }
 
 }  // namespace webgl
@@ -190,9 +195,13 @@ template <template <size_t> typename Derived>
 class EmptyMethodDispatcher {
  public:
   template <typename ObjectT>
-  static MOZ_ALWAYS_INLINE bool DispatchCommand(ObjectT&, const size_t,
+  static MOZ_ALWAYS_INLINE bool DispatchCommand(ObjectT&, const size_t id,
                                                 webgl::RangeConsumerView&) {
-    MOZ_CRASH("Illegal ID in DispatchCommand");
+    const nsPrintfCString cstr(
+        "MethodDispatcher<%i> not found. Please file a bug!", int(id));
+    const auto str = ToString(cstr);
+    gfxCriticalError() << str;
+    return false;
   }
 };
 
@@ -225,9 +234,17 @@ class MethodDispatcher {
     if (id == kId) {
       auto argsTuple = ArgsTuple(method);
 
+      const auto viewWas = view;
+      (void)viewWas;  // For debugging.
       return std::apply(
           [&](auto&... args) {
-            if (!webgl::Deserialize(view, args...)) return false;
+            const auto badArgId = webgl::Deserialize(view, 1, args...);
+            if (badArgId) {
+              const auto& name = DerivedType::Name();
+              gfxCriticalError() << "webgl::Deserialize failed for " << name
+                                 << " arg " << *badArgId;
+              return false;
+            }
             (obj.*method)(args...);
             return true;
           },
