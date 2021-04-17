@@ -416,8 +416,13 @@ var tests =
       return ntf;
     },
     result(nb, ntf) {
+      let expectedValue = "10";
+      if (PROTON_ENABLED) {
+        expectedValue = "3";
+        ntf = nb.getNotificationWithValue(expectedValue);
+      }
       is(nb.currentNotification, ntf, "appendNotification last notification");
-      is(nb.currentNotification.getAttribute("value"), "10", "appendNotification order");
+      is(nb.currentNotification.getAttribute("value"), expectedValue, "appendNotification order");
       return 1;
     }
   },
@@ -425,6 +430,11 @@ var tests =
     // test closing notifications to make sure that the current notification is still set properly
     repeat: true,
     test(nb, testidx) {
+      if (PROTON_ENABLED) {
+        this.repeat = false;
+        return undefined;
+      }
+
       switch (testidx) {
         case 1:
           nb.getNotificationWithValue("10").close();
@@ -448,6 +458,19 @@ var tests =
       return testidx;
     },
     result(nb, arr) {
+      if (PROTON_ENABLED) {
+        let notificationOrder = [4, 7, 2, 8, 5, 6, 1, 9, 10, 3];
+        let allNotificationValues = [...nb.stack.children].map(n => n.getAttribute("value"));
+        is(allNotificationValues.length, notificationOrder.length, "Expected number of notifications");
+        for (let i = 0; i < allNotificationValues.length; i++) {
+          is(
+            allNotificationValues[i],
+            notificationOrder[i].toString(),
+            `Notification ${i} matches`
+          );
+        }
+        return undefined;
+      }
       // arr is [testindex, expectedvalue]
       is(nb.currentNotification.getAttribute("value"), "" + arr[1], "close order " + arr[0]);
       is(nb.allNotifications.length, 10 - arr[0], "close order " + arr[0] + " count");
@@ -557,7 +580,7 @@ function testtag_notification_State(nb, ntf, testid, label, value, image, priori
 function checkPopupTest(nb, ntf)
 {
   if (nb._animating) {
-    setTimeout(checkPopupTest, ntf);
+    setTimeout(checkPopupTest, 50, nb, ntf);
   } else {
     var evt = new Event("");
     ntf.dispatchEvent(evt);
