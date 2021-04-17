@@ -39,6 +39,13 @@ Maybe<Range<uint8_t>> WebGLChild::AllocPendingCmdBytes(const size_t size) {
     }
     mPendingCmdsShmem = std::move(shmem);
     mPendingCmdsPos = 0;
+
+    if (kIsDebug) {
+      const auto range = mPendingCmdsShmem.ByteRange();
+      const auto initialOffset =
+          AlignmentOffset(kUniversalAlignment, range.begin().get());
+      MOZ_ALWAYS_TRUE(!initialOffset);
+    }
   }
   const auto range = mPendingCmdsShmem.ByteRange();
 
