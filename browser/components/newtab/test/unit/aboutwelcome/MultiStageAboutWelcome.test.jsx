@@ -10,10 +10,8 @@ import { MultiStageProtonScreen } from "content-src/aboutwelcome/components/Mult
 import { Themes } from "content-src/aboutwelcome/components/Themes";
 import React from "react";
 import { shallow, mount } from "enzyme";
-import { AboutWelcomeDefaults } from "aboutwelcome/lib/AboutWelcomeDefaults.jsm";
+import { DEFAULT_WELCOME_CONTENT } from "aboutwelcome/lib/AboutWelcomeDefaults.jsm";
 import { AboutWelcomeUtils } from "content-src/lib/aboutwelcome-utils";
-
-const DEFAULT_WELCOME_CONTENT = AboutWelcomeDefaults.getDefaults();
 
 describe("MultiStageAboutWelcome module", () => {
   let globals;
