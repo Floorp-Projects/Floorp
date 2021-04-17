@@ -3,16 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const EXPORTED_SYMBOLS = ["AboutWelcomeDefaults"];
+const EXPORTED_SYMBOLS = ["AboutWelcomeDefaults", "DEFAULT_WELCOME_CONTENT"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ShellService: "resource:///modules/ShellService.jsm",
-  AttributionCode: "resource:///modules/AttributionCode.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AttributionCode: "resource:///modules/AttributionCode.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  ShellService: "resource:///modules/ShellService.jsm",
 });
 
 const DEFAULT_WELCOME_CONTENT = {
@@ -209,8 +210,9 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
         subtitle: {
           string_id: "mr1-welcome-screen-hero-text",
         },
+        // This is dynamically removed for non-en locales below.
         help_text: {
-          text: "Sam Moqadam - Metal drummer, Firefox fan",
+          text: "Photograph by Sam Moqadam via Unsplash",
         },
         primary_button: {
           label: {
@@ -218,7 +220,7 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
           },
           action: {
             navigate: true,
-            type: "SET_DEFAULT_BROWSER",
+            type: "PIN_AND_DEFAULT",
           },
         },
         secondary_button: {
@@ -361,19 +363,6 @@ const DEFAULT_PROTON_WELCOME_CONTENT = {
   ],
 };
 
-// Helper function to determine if Windows platform supports
-// automated pinning to taskbar.
-// See https://searchfox.org/mozilla-central/rev/002023eb262be9db3479142355e1675645d52d52/browser/components/shell/nsIWindowsShellService.idl#17
-function canPinCurrentAppToTaskbar() {
-  try {
-    ShellService.QueryInterface(
-      Ci.nsIWindowsShellService
-    ).checkPinCurrentAppToTaskbar();
-    return true;
-  } catch (e) {}
-  return false;
-}
-
 async function getAddonFromRepository(data) {
   const [addonInfo] = await AddonRepository.getAddonsByIDs([data]);
   if (addonInfo.sourceURI.scheme !== "https") {
@@ -444,9 +433,23 @@ async function getAttributionContent() {
 const RULES = [
   {
     description: "Proton Default AW content",
-    getDefaults(featureConfig) {
+    async getDefaults(featureConfig) {
       if (featureConfig?.isProton) {
-        return { ...DEFAULT_PROTON_WELCOME_CONTENT };
+        const content = { ...DEFAULT_PROTON_WELCOME_CONTENT };
+
+        // Switch to "primary" if we also need to pin.
+        if (await ShellService.doesAppNeedPin()) {
+          content.screens[0].content.primary_button.label.string_id =
+            "mr1-onboarding-set-default-pin-primary-button-label";
+          content.screens[0].id = "AW_PIN_AND_DEFAULT";
+        }
+
+        // Remove the English-only image caption.
+        if (Services.locale.appLocaleAsBCP47.split("-")[0] !== "en") {
+          delete content.screens[0].content.help_text;
+        }
+
+        return content;
       }
 
       return null;
@@ -454,8 +457,8 @@ const RULES = [
   },
   {
     description: "Windows pin to task bar screen",
-    getDefaults() {
-      if (canPinCurrentAppToTaskbar()) {
+    async getDefaults() {
+      if (await ShellService.doesAppNeedPin()) {
         return {
           template: "multistage",
           screens: [
@@ -521,9 +524,9 @@ const RULES = [
   },
 ];
 
-function getDefaults(featureConfig) {
+async function getDefaults(featureConfig) {
   for (const rule of RULES) {
-    const result = rule.getDefaults(featureConfig);
+    const result = await rule.getDefaults(featureConfig);
     if (result) {
       return result;
     }
