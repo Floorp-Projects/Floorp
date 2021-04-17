@@ -45,14 +45,6 @@ body {
   --welcome-button-background-hover-color: #003EAA;
   --welcome-button-background-active-color: #002275;
   --about-welcome-media-fade: linear-gradient(transparent, transparent 35%, #F9F9FA, #F9F9FA);
-  --proton-solid-L-fill: #FFF;
-  --proton-text-primary-color: #0C0C0D;
-  --proton-primary-button-color: #0060DF;
-  --proton-primary-button-text-color: #FFF;
-  --proton-secondary-button-color: #0060DF;
-  --proton-indicator-color: #606064;
-  --proton-indicator-active-color: #0090ED;
-  --proton-content-background-color: #FFF;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px;
   position: relative;
@@ -72,15 +64,7 @@ body {
     --newtab-card-shadow: 0 1px 8px 0 rgba(12, 12, 13, 0.4);
     --welcome-header-text-color-1: #7542E5;
     --welcome-button-box-shadow-color: #0A84FF;
-    --about-welcome-media-fade: linear-gradient(transparent, transparent 35%, #1D1133, #1D1133);
-    --proton-solid-L-fill: #42414D;
-    --proton-text-primary-color: #FFF;
-    --proton-primary-button-color: #0DF;
-    --proton-primary-button-text-color: #000;
-    --proton-secondary-button-color: #0DF;
-    --proton-indicator-color: #FFF;
-    --proton-indicator-active-color: #0DF;
-    --proton-content-background-color: #42414D; }
+    --about-welcome-media-fade: linear-gradient(transparent, transparent 35%, #1D1133, #1D1133); }
 
 .onboardingContainer {
   text-align: center;
@@ -284,12 +268,12 @@ body {
 @keyframes fadein {
   from {
     opacity: 0; } }
-  .onboardingContainer button {
+  .onboardingContainer:not(.proton) button {
     font-family: inherit;
     cursor: pointer;
     border: 0;
     border-radius: 4px; }
-    .onboardingContainer button.primary {
+    .onboardingContainer:not(.proton) button.primary {
       font-size: 16px;
       margin-inline-start: 12px;
       margin: 20px 0 0;
@@ -301,14 +285,14 @@ body {
       position: relative;
       z-index: 1;
       border: 1px solid transparent; }
-      .onboardingContainer button.primary:focus {
+      .onboardingContainer:not(.proton) button.primary:focus {
         background: var(--welcome-button-background-hover-color);
         box-shadow: 0 0 0 4px var(--welcome-button-box-shadow-color); }
-      .onboardingContainer button.primary:hover {
+      .onboardingContainer:not(.proton) button.primary:hover {
         background: var(--welcome-button-background-hover-color); }
-      .onboardingContainer button.primary:active {
+      .onboardingContainer:not(.proton) button.primary:active {
         background: var(--welcome-button-background-active-color); }
-    .onboardingContainer button.secondary {
+    .onboardingContainer:not(.proton) button.secondary {
       background-color: initial;
       text-decoration: underline;
       display: block;
@@ -316,7 +300,7 @@ body {
       width: auto;
       color: var(--newtab-button-secondary-color);
       margin-top: 14px; }
-      .onboardingContainer button.secondary:hover, .onboardingContainer button.secondary:active {
+      .onboardingContainer:not(.proton) button.secondary:hover, .onboardingContainer:not(.proton) button.secondary:active {
         background-color: initial; }
   .onboardingContainer .secondary-cta {
     display: flex;
@@ -390,14 +374,20 @@ body {
       display: flex;
       flex-direction: column;
       justify-content: center; }
+    .onboardingContainer.proton .main-content {
+      background-color: var(--in-content-page-background);
+      border-radius: 20px;
+      height: 100%;
+      padding: 0;
+      z-index: 1; }
     .onboardingContainer.proton .welcome-text h1,
     .onboardingContainer.proton .welcome-text h2 {
+      color: var(--in-content-page-color);
       width: 376px; }
     .onboardingContainer.proton .welcome-text h1 {
-      color: var(--proton-text-primary-color);
       font-size: 24px;
       line-height: 36px;
-      font-weight: normal;
+      font-weight: 600;
       letter-spacing: -0.02em; }
     .onboardingContainer.proton .welcome-text h2 {
       font-size: 16px;
@@ -406,13 +396,14 @@ body {
       background: url("chrome://branding/content/about-logo.svg") top center/80px no-repeat;
       padding: 80px 0 10px; }
     .onboardingContainer.proton .primary {
-      background: var(--proton-primary-button-color);
-      color: var(--proton-primary-button-text-color);
       font-size: 13px;
-      line-height: 16px; }
+      line-height: 16px;
+      padding: 11px 15px; }
     .onboardingContainer.proton .secondary {
-      color: var(--proton-secondary-button-color);
+      background: none;
+      color: var(--in-content-link-color) !important;
       font-size: 14px;
+      font-weight: normal;
       line-height: 20px; }
     .onboardingContainer.proton .secondary-cta.top {
       position: absolute;
@@ -420,17 +411,17 @@ body {
       inset-inline-end: 47px;
       z-index: 2; }
       .onboardingContainer.proton .secondary-cta.top button {
-        color: #FFF; }
+        color: #FFF !important; }
     .onboardingContainer.proton .steps {
-      padding-bottom: 15px; }
+      padding-bottom: 0; }
       .onboardingContainer.proton .steps .indicator {
         width: 6px;
         height: 6px;
-        background: var(--proton-indicator-color); }
+        background: var(--checkbox-border-color); }
         .onboardingContainer.proton .steps .indicator.current {
-          background: var(--proton-indicator-active-color); }
+          background: var(--checkbox-checked-bgcolor); }
     .onboardingContainer.proton .tiles-theme-section {
-      border: var(--tiles-theme-section-border-width) solid var(--proton-content-background-color); }
+      border: var(--tiles-theme-section-border-width) solid var(--in-content-page-background); }
       .onboardingContainer.proton .tiles-theme-section:focus-within {
         border: var(--tiles-theme-section-border-width) dotted; }
     .onboardingContainer.proton .theme {
@@ -438,40 +429,31 @@ body {
       width: auto;
       min-width: 50px;
       height: initial;
-      background-color: var(--proton-content-background-color);
+      background-color: inherit;
       box-shadow: none; }
       .onboardingContainer.proton .theme:focus, .onboardingContainer.proton .theme:active {
         outline: initial;
         outline-offset: initial; }
       .onboardingContainer.proton .theme .text {
+        color: var(--in-content-page-color);
         font-weight: normal;
         line-height: 20px; }
       .onboardingContainer.proton .theme .icon {
         width: 40px;
         height: 40px;
         border-radius: 40px;
-        margin-inline-start: 12px; }
-        .onboardingContainer.proton .theme .icon.selected {
-          outline: 4px solid #0090ED;
-          outline-offset: -4px; }
-        .onboardingContainer.proton .theme .icon:focus, .onboardingContainer.proton .theme .icon:active {
-          outline: 4px solid #0090ED;
-          outline-offset: -4px; }
+        margin-inline-start: 12px;
+        outline: 1px solid var(--in-content-border-color); }
+        .onboardingContainer.proton .theme .icon:focus, .onboardingContainer.proton .theme .icon:active, .onboardingContainer.proton .theme .icon.selected {
+          outline: 2px solid var(--in-content-primary-button-background); }
         .onboardingContainer.proton .theme .icon.light {
-          background-image: none;
-          background-color: #F0F0F4;
-          border: 1px solid #BFBFC9; }
+          background: linear-gradient(45deg, #F0F0F4, #F9F9FB); }
         .onboardingContainer.proton .theme .icon.dark {
-          background-image: none;
-          background-color: #15141A;
-          border: 1px solid #8F8F9D; }
+          background: linear-gradient(45deg, #1C1B22 50%, #42414D); }
         .onboardingContainer.proton .theme .icon.alpenglow {
-          background-image: none;
-          background: linear-gradient(51.22deg, #9059FF 8.75%, #FF4AA2 56.28%, #FFBD4F 100.01%); }
+          background: linear-gradient(45deg, #9059FF, #FF4AA2, #FFBD4F); }
         .onboardingContainer.proton .theme .icon.automatic {
-          background-image: none;
-          background-color: rgba(21, 20, 26, 0.4);
-          border: 1px solid #BFBFC9; }
+          background: linear-gradient(45deg, #F0F0F4 50%, #23222B 50%); }
     .onboardingContainer.proton .noodle {
       display: block;
       background-repeat: no-repeat;
@@ -482,7 +464,7 @@ body {
     .onboardingContainer.proton .solid-L {
       background-image: url("chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg");
       -moz-context-properties: fill;
-      fill: var(--proton-solid-L-fill); }
+      fill: var(--in-content-page-background); }
     .onboardingContainer.proton .purple-C {
       background-image: url("chrome://activity-stream/content/data/content/assets/noodle-C.svg"); }
     .onboardingContainer.proton .yellow-circle {
@@ -603,7 +585,7 @@ body {
     .onboardingContainer.proton .screen-1 .section-main {
       z-index: 1;
       width: 504px;
-      height: 403px;
+      height: 503px;
       margin: auto; }
       @media (max-width: 866px) {
         .onboardingContainer.proton .screen-1 .section-main {
@@ -613,10 +595,6 @@ body {
         .onboardingContainer.proton .screen-1 .section-main {
           width: 420px;
           height: auto; } }
-    .onboardingContainer.proton .screen-1 .main-content {
-      z-index: 1;
-      background-color: var(--proton-content-background-color);
-      border-radius: 20px; }
     .onboardingContainer.proton .screen-1 .outline-L {
       width: 87px;
       height: 80px;
@@ -664,10 +642,6 @@ body {
         .onboardingContainer.proton .screen-2 .section-main {
           width: 420px;
           height: auto; } }
-    .onboardingContainer.proton .screen-2 .main-content {
-      z-index: 1;
-      background-color: var(--proton-content-background-color);
-      border-radius: 20px; }
     .onboardingContainer.proton .screen-2 .outline-L {
       width: 87px;
       height: 80px;
