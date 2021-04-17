@@ -32,15 +32,6 @@ body {
   --welcome-button-background-hover-color: #003EAA;
   --welcome-button-background-active-color: #002275;
   --about-welcome-media-fade: linear-gradient(transparent, transparent 35%, #F9F9FA, #F9F9FA);
-  //Proton-specific variables
-  --proton-solid-L-fill: #FFF;
-  --proton-text-primary-color: #0C0C0D;
-  --proton-primary-button-color: #0060DF;
-  --proton-primary-button-text-color: #FFF;
-  --proton-secondary-button-color: #0060DF;
-  --proton-indicator-color: #606064;
-  --proton-indicator-active-color: #0090ED;
-  --proton-content-background-color: #FFF;
 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu',
   'Helvetica Neue', sans-serif;
@@ -64,15 +55,6 @@ body {
     --welcome-header-text-color-1: #7542E5;
     --welcome-button-box-shadow-color: #0A84FF;
     --about-welcome-media-fade: linear-gradient(transparent, transparent 35%, #1D1133, #1D1133);
-    //Proton-specific variables
-    --proton-solid-L-fill: #42414D;
-    --proton-text-primary-color: #FFF;
-    --proton-primary-button-color: #0DF;
-    --proton-primary-button-text-color: #000;
-    --proton-secondary-button-color: #0DF;
-    --proton-indicator-color: #FFF;
-    --proton-indicator-active-color: #0DF;
-    --proton-content-background-color: #42414D;
   }
 }
 
@@ -394,52 +376,54 @@ body {
     from { opacity: 0; }
   }
 
-  button {
-    font-family: inherit;
-    cursor: pointer;
-    border: 0;
-    border-radius: 4px;
+  &:not(.proton) {
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: 0;
+      border-radius: 4px;
 
-    &.primary {
-      font-size: 16px;
-      margin-inline-start: 12px;
-      margin: 20px 0 0;
-      padding: 12px 20px;
-      white-space: nowrap;
-      background-color: var(--newtab-button-primary-color);
-      color: var(--welcome-button-text-color);
-      fill: currentColor;
-      position: relative;
-      z-index: 1;
-      // This transparent border will show up in Windows High Contrast Mode to improve accessibility.
-      border: 1px solid transparent;
+      &.primary {
+        font-size: 16px;
+        margin-inline-start: 12px;
+        margin: 20px 0 0;
+        padding: 12px 20px;
+        white-space: nowrap;
+        background-color: var(--newtab-button-primary-color);
+        color: var(--welcome-button-text-color);
+        fill: currentColor;
+        position: relative;
+        z-index: 1;
+        // This transparent border will show up in Windows High Contrast Mode to improve accessibility.
+        border: 1px solid transparent;
 
-      &:focus {
-        background: var(--welcome-button-background-hover-color);
-        box-shadow: 0 0 0 4px var(--welcome-button-box-shadow-color);
+        &:focus {
+          background: var(--welcome-button-background-hover-color);
+          box-shadow: 0 0 0 4px var(--welcome-button-box-shadow-color);
+        }
+
+        &:hover {
+          background: var(--welcome-button-background-hover-color);
+        }
+
+        &:active {
+          background: var(--welcome-button-background-active-color);
+        }
       }
 
-      &:hover {
-        background: var(--welcome-button-background-hover-color);
-      }
-
-      &:active {
-        background: var(--welcome-button-background-active-color);
-      }
-    }
-
-    &.secondary {
-      background-color: initial;
-      text-decoration: underline;
-      display: block;
-      padding: 0;
-      width: auto;
-      color: var(--newtab-button-secondary-color);
-      margin-top: 14px;
-
-      &:hover,
-      &:active {
+      &.secondary {
         background-color: initial;
+        text-decoration: underline;
+        display: block;
+        padding: 0;
+        width: auto;
+        color: var(--newtab-button-secondary-color);
+        margin-top: 14px;
+
+        &:hover,
+        &:active {
+          background-color: initial;
+        }
       }
     }
   }
@@ -554,17 +538,25 @@ body {
       justify-content: center;
     }
 
+    .main-content {
+      background-color: var(--in-content-page-background);
+      border-radius: 20px;
+      height: 100%;
+      padding: 0;
+      z-index: 1;
+    }
+
     .welcome-text {
       h1,
       h2 {
+        color: var(--in-content-page-color);
         width: 376px;
       }
 
       h1 {
-        color: var(--proton-text-primary-color);
         font-size: 24px;
         line-height: 36px;
-        font-weight: normal;
+        font-weight: 600;
         letter-spacing: -0.02em;
       }
 
@@ -581,15 +573,16 @@ body {
     }
 
     .primary {
-      background: var(--proton-primary-button-color);
-      color: var(--proton-primary-button-text-color);
       font-size: 13px;
       line-height: 16px;
+      padding: 11px 15px;
     }
 
     .secondary {
-      color: var(--proton-secondary-button-color);
+      background: none;
+      color: var(--in-content-link-color) !important; // sass-lint:disable-line no-important
       font-size: 14px;
+      font-weight: normal;
       line-height: 20px;
     }
 
@@ -600,20 +593,20 @@ body {
       z-index: 2;
 
       button {
-        color: #FFF;
+        color: #FFF !important; // sass-lint:disable-line no-important
       }
     }
 
     .steps {
-      padding-bottom: 15px;
+      padding-bottom: 0;
 
       .indicator {
         width: 6px;
         height: 6px;
-        background: var(--proton-indicator-color);
+        background: var(--checkbox-border-color);
 
         &.current {
-          background: var(--proton-indicator-active-color);
+          background: var(--checkbox-checked-bgcolor);
         }
       }
     }
@@ -621,7 +614,7 @@ body {
     .tiles-theme-section {
       border: var(--tiles-theme-section-border-width)
       solid
-      var(--proton-content-background-color);
+      var(--in-content-page-background);
 
       &:focus-within {
         border: var(--tiles-theme-section-border-width) dotted;
@@ -633,7 +626,7 @@ body {
       width: auto;
       min-width: 50px;
       height: initial;
-      background-color: var(--proton-content-background-color);
+      background-color: inherit;
       box-shadow: none;
 
       &:focus,
@@ -643,6 +636,7 @@ body {
       }
 
       .text {
+        color: var(--in-content-page-color);
         font-weight: normal;
         line-height: 20px;
       }
@@ -652,39 +646,28 @@ body {
         height: 40px;
         border-radius: 40px;
         margin-inline-start: 12px;
-
-        &.selected {
-          outline: 4px solid #0090ED;
-          outline-offset: -4px;
-        }
+        outline: 1px solid var(--in-content-border-color);
 
         &:focus,
-        &:active {
-          outline: 4px solid #0090ED;
-          outline-offset: -4px;
+        &:active,
+        &.selected {
+          outline: 2px solid var(--in-content-primary-button-background);
         }
 
         &.light {
-          background-image: none;
-          background-color: #F0F0F4;
-          border: 1px solid #BFBFC9;
+          background: linear-gradient(45deg, #F0F0F4, #F9F9FB);
         }
 
         &.dark {
-          background-image: none;
-          background-color: #15141A;
-          border: 1px solid #8F8F9D;
+          background: linear-gradient(45deg, #1C1B22 50%, #42414D);
         }
 
         &.alpenglow {
-          background-image: none;
-          background: linear-gradient(51.22deg, #9059FF 8.75%, #FF4AA2 56.28%, #FFBD4F 100.01%);
+          background: linear-gradient(45deg, #9059FF, #FF4AA2, #FFBD4F);
         }
 
         &.automatic {
-          background-image: none;
-          background-color: rgba(21, 20, 26, 0.4);
-          border: 1px solid #BFBFC9;
+          background: linear-gradient(45deg, #F0F0F4 50%, #23222B 50%);
         }
       }
     }
@@ -703,7 +686,7 @@ body {
     .solid-L {
       background-image: url('chrome://activity-stream/content/data/content/assets/noodle-solid-L.svg');
       -moz-context-properties: fill;
-      fill: var(--proton-solid-L-fill);
+      fill: var(--in-content-page-background);
     }
 
     .purple-C {
@@ -879,7 +862,7 @@ body {
       .section-main {
         z-index: 1;
         width: 504px;
-        height: 403px;
+        height: 503px;
         margin: auto;
 
         @media (max-width: $break-point-large) {
@@ -891,12 +874,6 @@ body {
           width: 420px;
           height: auto;
         }
-      }
-
-      .main-content {
-        z-index: 1;
-        background-color: var(--proton-content-background-color);
-        border-radius: 20px;
       }
 
       //Position of noodles on second screen
@@ -971,12 +948,6 @@ body {
           width: 420px;
           height: auto;
         }
-      }
-
-      .main-content {
-        z-index: 1;
-        background-color: var(--proton-content-background-color);
-        border-radius: 20px;
       }
 
       // Position of noodles on third screen

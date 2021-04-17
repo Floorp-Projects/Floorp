@@ -154,7 +154,7 @@ export const SecondaryCTA = props => {
       </Localized>
       <Localized text={props.content[targetElement].label}>
         <button
-          className="secondary"
+          className="secondary text-link"
           value={targetElement}
           onClick={props.handleAction}
         />
