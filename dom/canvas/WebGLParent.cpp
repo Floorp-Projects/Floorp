@@ -46,13 +46,28 @@ IPCResult WebGLParent::RecvDispatchCommands(Shmem&& rawShmem,
       Range<const uint8_t>{shmemBytes.begin(), shmemBytes.begin() + byteSize};
   auto view = webgl::RangeConsumerView{cmdsBytes};
 
+  if (kIsDebug) {
+    const auto initialOffset =
+        AlignmentOffset(kUniversalAlignment, cmdsBytes.begin().get());
+    MOZ_ALWAYS_TRUE(!initialOffset);
+  }
+
   while (true) {
     view.AlignTo(kUniversalAlignment);
     size_t id = 0;
     const auto status = view.ReadParam(&id);
     if (status != QueueStatus::kSuccess) break;
 
-    WebGLMethodDispatcher<0>::DispatchCommand(*mHost, id, view);
+    const auto ok = WebGLMethodDispatcher<0>::DispatchCommand(*mHost, id, view);
+    if (!ok) {
+      const nsPrintfCString cstr(
+          "DispatchCommand(id: %i) failed. Please file a bug!", int(id));
+      const auto str = ToString(cstr);
+      gfxCriticalError() << str;
+      mHost->JsWarning(str);
+      mHost->OnContextLoss(webgl::ContextLossReason::None);
+      break;
+    }
   }
 
   return IPC_OK();
