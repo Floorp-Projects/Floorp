@@ -2826,6 +2826,8 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
       return rv;
     }
 
+    MaybeEnableNextGenLocalStorage();
+
     return NS_OK;
   }
 
