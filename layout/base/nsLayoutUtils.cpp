@@ -9022,15 +9022,18 @@ CSSRect nsLayoutUtils::GetBoundingFrameRect(
     MOZ_ASSERT(subFrame);
     // Get the bounds of the scroll frame in the same coordinate space
     // as |result|.
-    CSSRect subFrameRect =
-        CSSRect::FromAppUnits(nsLayoutUtils::TransformFrameRectToAncestor(
-            subFrame, subFrame->GetRectRelativeToSelf(), relativeTo));
+    nsRect subFrameRect = subFrame->GetRectRelativeToSelf();
+    TransformResult res =
+        nsLayoutUtils::TransformRect(subFrame, relativeTo, subFrameRect);
+    MOZ_ASSERT(res == TRANSFORM_SUCCEEDED || res == NONINVERTIBLE_TRANSFORM);
+    if (res == TRANSFORM_SUCCEEDED) {
+      CSSRect subFrameRectCSS = CSSRect::FromAppUnits(subFrameRect);
+      if (aOutNearestScrollClip) {
+        *aOutNearestScrollClip = Some(subFrameRectCSS);
+      }
 
-    if (aOutNearestScrollClip) {
-      *aOutNearestScrollClip = Some(subFrameRect);
+      result = subFrameRectCSS.Intersect(result);
     }
-
-    result = subFrameRect.Intersect(result);
   }
   return result;
 }
