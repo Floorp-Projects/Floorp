@@ -433,7 +433,10 @@ const TEST_GLOBAL = {
     },
   },
   EventEmitter,
-  ShellService: { isDefaultBrowser: () => true },
+  ShellService: {
+    doesAppNeedPin: () => false,
+    isDefaultBrowser: () => true,
+  },
   FilterExpressions: {
     eval() {
       return Promise.resolve(false);
