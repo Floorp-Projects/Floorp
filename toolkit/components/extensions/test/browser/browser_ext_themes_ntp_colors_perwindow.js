@@ -93,8 +93,8 @@ function test_ntp_default_theme(browser, url) {
     browser,
     [
       {
-        background: hexToCSS("#F9F9FA"),
-        color: hexToCSS("#0C0C0D"),
+        background: hexToCSS("#FFFFFF"),
+        color: hexToCSS("#15141A"),
       },
     ],
     function({ background, color }) {
