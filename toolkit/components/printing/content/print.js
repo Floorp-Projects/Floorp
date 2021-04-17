@@ -432,7 +432,7 @@ var PrintEventHandler = {
    * testing purposes.
    */
   _doPrint(aBrowsingContext, aSettings) {
-    return aBrowsingContext.print(settings);
+    return aBrowsingContext.print(aSettings);
   },
 
   cancelPrint() {
