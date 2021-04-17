@@ -142,18 +142,6 @@ interface FrameLoader {
   void exitPrintPreview();
 
   /**
-   * Print the current document.
-   *
-   * @param aOuterWindowID the ID of the outer window to print
-   * @param aPrintSettings optional print settings to use; printSilent can be
-   *                       set to prevent prompting.
-   * @return A Promise that resolves once printing is finished.
-   */
-  [Throws]
-  Promise<void> print(unsigned long long aOuterWindowID,
-                      nsIPrintSettings aPrintSettings);
-
-  /**
    * The element which owns this frame loader.
    *
    * For example, if this is a frame loader for an <iframe>, this attribute

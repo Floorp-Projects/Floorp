@@ -785,11 +785,7 @@ browserRect.height: ${browserRect.height}`);
       printBackground: true,
     });
 
-    const filePath = await print.printToFile(
-      win.gBrowser.frameLoader,
-      win.gBrowser.outerWindowID,
-      settings
-    );
+    const filePath = await print.printToFile(win.gBrowser, settings);
 
     const fp = await OS.File.open(filePath, { read: true });
     try {
