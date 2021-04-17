@@ -269,6 +269,9 @@ add_task(async function test_image() {
         true,
         "context-sendimage",
         true,
+        ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
+          ? ["context-viewimageinfo", true]
+          : []),
         "---",
         null,
         "context-setDesktopBackground",
@@ -928,6 +931,9 @@ add_task(async function test_image_in_iframe() {
     true,
     "context-sendimage",
     true,
+    ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
+      ? ["context-viewimageinfo", true]
+      : []),
     "---",
     null,
     "context-setDesktopBackground",
@@ -1514,6 +1520,9 @@ add_task(async function test_imagelink() {
     true,
     "context-sendimage",
     true,
+    ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
+      ? ["context-viewimageinfo", true]
+      : []),
     "---",
     null,
     "context-setDesktopBackground",
@@ -1609,6 +1618,9 @@ add_task(async function test_longdesc() {
     true,
     "context-sendimage",
     true,
+    ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
+      ? ["context-viewimageinfo", true]
+      : []),
     "context-viewimagedesc",
     true,
     "---",
