@@ -2684,7 +2684,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
   return rv;
 }
 
-bool imgLoader::SupportImageWithMimeType(const char* aMimeType,
+bool imgLoader::SupportImageWithMimeType(const nsACString& aMimeType,
                                          AcceptedMimeTypes aAccept
                                          /* = AcceptedMimeTypes::IMAGES */) {
   nsAutoCString mimeType(aMimeType);

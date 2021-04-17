@@ -9806,7 +9806,7 @@ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
     return nsIObjectLoadingContent::TYPE_NULL;
   }
 
-  if (imgLoader::SupportImageWithMimeType(aMIMEType.get())) {
+  if (imgLoader::SupportImageWithMimeType(aMIMEType)) {
     return nsIObjectLoadingContent::TYPE_IMAGE;
   }
 
