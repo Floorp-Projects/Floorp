@@ -14,11 +14,11 @@
   <link rel="localization" href="browser/upgradeDialog.ftl">
   <script src="chrome://browser/content/upgradeDialog.js"></script>
 </head>
-<body>
+<body role="dialog" aria-labelledby="title" aria-describedby="subtitle" aria-live="polite">
   <h1 id="title"></h1>
   <h2 id="subtitle" data-l10n-id="upgrade-dialog-new-subtitle"></h2>
-  <spacer></spacer>
-  <ul class="items">
+  <spacer role="presentation"></spacer>
+  <ul id="items" class="items">
     <li>
       <h2 data-l10n-id="upgrade-dialog-new-item-menu-title"></h2>
       <p data-l10n-id="upgrade-dialog-new-item-menu-description"></p>
@@ -39,9 +39,9 @@
     <input type="radio" name="theme" data-l10n-id="upgrade-dialog-theme-alpenglow"></input>
     <input type="radio" name="theme" data-l10n-id="upgrade-dialog-theme-keep"></input>
   </div>
-  <spacer></spacer>
-  <button id="primary" class="primary"></button>
+  <spacer role="presentation"></spacer>
+  <button id="primary" class="primary" aria-describedby="items"></button>
   <button id="secondary" class="text-link"></button>
-  <h3 class="steps"><span>•</span> • </h3>
+  <h3 class="steps" aria-hidden="true"><span>•</span> • </h3>
 </body>
 </html>
