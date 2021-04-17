@@ -42,6 +42,11 @@
 #include "nsIBrowser.h"
 #include "nsTHashSet.h"
 
+#ifdef NS_PRINTING
+#  include "mozilla/embedding/printingui/PrintingParent.h"
+#  include "nsIWebBrowserPrint.h"
+#endif
+
 using namespace mozilla::ipc;
 
 extern mozilla::LazyLogModule gAutoplayPermissionLog;
@@ -477,6 +482,120 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
   newEntry->SetForInitialLoad(forInitialLoad);
 
   return MakeUnique<LoadingSessionHistoryInfo>(newEntry, aInfo->mLoadId);
+}
+
+#ifdef NS_PRINTING
+class PrintListenerAdapter final : public nsIWebProgressListener {
+ public:
+  explicit PrintListenerAdapter(Promise* aPromise) : mPromise(aPromise) {}
+
+  NS_DECL_ISUPPORTS
+
+  // NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_IMETHOD OnStateChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
+                           uint32_t aStateFlags, nsresult aStatus) override {
+    if (aStateFlags & nsIWebProgressListener::STATE_STOP &&
+        aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT && mPromise) {
+      mPromise->MaybeResolveWithUndefined();
+      mPromise = nullptr;
+    }
+    return NS_OK;
+  }
+  NS_IMETHOD OnStatusChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
+                            nsresult aStatus,
+                            const char16_t* aMessage) override {
+    if (aStatus != NS_OK && mPromise) {
+      mPromise->MaybeReject(ErrorResult(aStatus));
+      mPromise = nullptr;
+    }
+    return NS_OK;
+  }
+  NS_IMETHOD OnProgressChange(nsIWebProgress* aWebProgress,
+                              nsIRequest* aRequest, int32_t aCurSelfProgress,
+                              int32_t aMaxSelfProgress,
+                              int32_t aCurTotalProgress,
+                              int32_t aMaxTotalProgress) override {
+    return NS_OK;
+  }
+  NS_IMETHOD OnLocationChange(nsIWebProgress* aWebProgress,
+                              nsIRequest* aRequest, nsIURI* aLocation,
+                              uint32_t aFlags) override {
+    return NS_OK;
+  }
+  NS_IMETHOD OnSecurityChange(nsIWebProgress* aWebProgress,
+                              nsIRequest* aRequest, uint32_t aState) override {
+    return NS_OK;
+  }
+  NS_IMETHOD OnContentBlockingEvent(nsIWebProgress* aWebProgress,
+                                    nsIRequest* aRequest,
+                                    uint32_t aEvent) override {
+    return NS_OK;
+  }
+
+ private:
+  ~PrintListenerAdapter() = default;
+
+  RefPtr<Promise> mPromise;
+};
+
+NS_IMPL_ISUPPORTS(PrintListenerAdapter, nsIWebProgressListener)
+#endif
+
+already_AddRefed<Promise> CanonicalBrowsingContext::Print(
+    nsIPrintSettings* aPrintSettings, ErrorResult& aRv) {
+  RefPtr<Promise> promise = Promise::Create(GetIncumbentGlobal(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return promise.forget();
+  }
+
+#ifndef NS_PRINTING
+  promise->MaybeReject(ErrorResult(NS_ERROR_NOT_AVAILABLE));
+  return promise.forget();
+#else
+
+  auto listener = MakeRefPtr<PrintListenerAdapter>(promise);
+  if (IsInProcess()) {
+    RefPtr<nsGlobalWindowOuter> outerWindow =
+        nsGlobalWindowOuter::Cast(GetDOMWindow());
+    if (NS_WARN_IF(!outerWindow)) {
+      promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
+      return promise.forget();
+    }
+
+    ErrorResult rv;
+    outerWindow->Print(aPrintSettings, listener,
+                       /* aDocShellToCloneInto = */ nullptr,
+                       nsGlobalWindowOuter::IsPreview::No,
+                       nsGlobalWindowOuter::IsForWindowDotPrint::No,
+                       /* aPrintPreviewCallback = */ nullptr, rv);
+    if (rv.Failed()) {
+      promise->MaybeReject(std::move(rv));
+    }
+    return promise.forget();
+  }
+
+  auto* browserParent = GetBrowserParent();
+  if (NS_WARN_IF(!browserParent)) {
+    promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
+    return promise.forget();
+  }
+
+  RefPtr<embedding::PrintingParent> printingParent =
+      browserParent->Manager()->GetPrintingParent();
+
+  embedding::PrintData printData;
+  nsresult rv = printingParent->SerializeAndEnsureRemotePrintJob(
+      aPrintSettings, listener, nullptr, &printData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(ErrorResult(rv));
+    return promise.forget();
+  }
+
+  if (NS_WARN_IF(!browserParent->SendPrint(this, printData))) {
+    promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
+  }
+  return promise.forget();
+#endif
 }
 
 void CanonicalBrowsingContext::CallOnAllTopDescendants(

@@ -6,6 +6,7 @@
 interface URI;
 interface nsIDocShell;
 interface nsISecureBrowserUI;
+interface nsIPrintSettings;
 interface nsIWebProgress;
 
 interface mixin LoadContextMixin {
@@ -256,6 +257,17 @@ interface CanonicalBrowsingContext : BrowsingContext {
    */
   [Throws]
   void loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
+
+   /**
+    * Print the current document.
+    *
+    * @param aOuterWindowID the ID of the outer window to print
+    * @param aPrintSettings print settings to use; printSilent can be
+    *                       set to prevent prompting.
+    * @return A Promise that resolves once printing is finished.
+    */
+  [Throws]
+  Promise<void> print(nsIPrintSettings aPrintSettings);
 
   /**
    * These methods implement the nsIWebNavigation methods of the same names

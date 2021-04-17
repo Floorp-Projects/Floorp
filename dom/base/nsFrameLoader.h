@@ -236,10 +236,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void ExitPrintPreview();
 
-  already_AddRefed<Promise> Print(uint64_t aOuterWindowID,
-                                  nsIPrintSettings* aPrintSettings,
-                                  mozilla::ErrorResult& aRv);
-
   void StartPersistence(BrowsingContext* aContext,
                         nsIWebBrowserPersistDocumentReceiver* aRecv,
                         mozilla::ErrorResult& aRv);

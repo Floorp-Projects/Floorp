@@ -98,7 +98,7 @@ function getPrintSettings(settings, filePath) {
   return printSettings;
 }
 
-print.printToFile = async function(browser, outerWindowID, settings) {
+print.printToFile = async function(browser, settings) {
   // Create a unique filename for the temporary PDF file
   const basePath = OS.Path.join(OS.Constants.Path.tmpDir, "marionette.pdf");
   const { file, path: filePath } = await OS.File.openUnique(basePath);
@@ -106,7 +106,7 @@ print.printToFile = async function(browser, outerWindowID, settings) {
 
   let printSettings = getPrintSettings(settings, filePath);
 
-  await browser.print(outerWindowID, printSettings);
+  await browser.browsingContext.print(printSettings);
 
   // Bug 1603739 - With e10s enabled the promise returned by print() resolves
   // too early, which means the file hasn't been completely written.
