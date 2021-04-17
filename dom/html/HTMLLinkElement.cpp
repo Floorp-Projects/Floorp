@@ -762,8 +762,7 @@ bool HTMLLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
   }
   if (policyType == nsIContentPolicy::TYPE_IMAGE) {
     return imgLoader::SupportImageWithMimeType(
-        NS_ConvertUTF16toUTF8(type).get(),
-        AcceptedMimeTypes::IMAGES_AND_DOCUMENTS);
+        NS_ConvertUTF16toUTF8(type), AcceptedMimeTypes::IMAGES_AND_DOCUMENTS);
   }
   if (policyType == nsIContentPolicy::TYPE_SCRIPT) {
     return nsContentUtils::IsJavascriptMIMEType(type);
