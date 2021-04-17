@@ -208,15 +208,10 @@ class TabDrawerRobot {
         }
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/tab_button"))
-                .waitForExists(waitingTime)
-
+            mDevice.waitForIdle(waitingTime)
             tabsCounter().click()
-
-            org.mozilla.fenix.ui.robots.mDevice.waitNotNull(
-                Until.findObject(By.res("$packageName:id/tab_layout")),
-                waitingTime
-            )
+            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/tab_layout")),
+                waitingTime)
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
