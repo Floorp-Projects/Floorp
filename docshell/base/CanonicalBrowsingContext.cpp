@@ -893,7 +893,8 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
   }
 
   if (mWebProgress) {
-    RefPtr{mWebProgress}->ContextDiscarded();
+    RefPtr<BrowsingContextWebProgress> progress = mWebProgress;
+    progress->ContextDiscarded();
   }
 
   if (IsTop()) {
