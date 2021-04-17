@@ -23,7 +23,7 @@ $shadow-secondary: 0 1px 4px 0 $grey-90-20;
 // Default theme
 body {
   // General styles
-  --newtab-background-color: #{$grey-10};
+  --newtab-background-color: #{$in-content-page-background};
   --newtab-border-primary-color: #{$grey-40};
   --newtab-border-secondary-color: #{$grey-30};
   --newtab-element-active-color: #{$grey-30-60};
@@ -38,7 +38,7 @@ body {
   --newtab-link-primary-color: #{$blue-60};
   --newtab-link-secondary-color: #{$teal-70};
   --newtab-text-conditional-color: #{$grey-60};
-  --newtab-text-primary-color: #{$grey-90};
+  --newtab-text-primary-color: #{$in-content-page-color};
   --newtab-text-secondary-color: #{$grey-50};
   --newtab-textbox-background-color: #{$white};
   --newtab-textbox-border: #{$grey-90-20};
@@ -128,7 +128,7 @@ body {
 
   &[lwt-newtab-brighttext] {
     // General styles
-    --newtab-background-color: #{$grey-80};
+    --newtab-background-color: #{$in-content-page-background-dark};
     --newtab-border-primary-color: #{$grey-10-80};
     --newtab-border-secondary-color: #{$grey-10-10};
     --newtab-button-primary-color: #{$blue-60};
@@ -144,7 +144,7 @@ body {
     --newtab-link-primary-color: #{$blue-40};
     --newtab-link-secondary-color: #{$pocket-teal};
     --newtab-text-conditional-color: #{$grey-10};
-    --newtab-text-primary-color: #{$grey-10};
+    --newtab-text-primary-color: #{$in-content-page-color-dark};
     --newtab-text-secondary-color: #{$grey-10-80};
     --newtab-textbox-background-color: #{$grey-70};
     --newtab-textbox-border: #{$grey-10-20};
