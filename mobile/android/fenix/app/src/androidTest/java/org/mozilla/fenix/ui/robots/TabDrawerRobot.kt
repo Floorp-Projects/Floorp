@@ -174,7 +174,15 @@ class TabDrawerRobot {
 
     fun clickAddNewCollection() = addNewCollectionButton().click()
 
-    fun selectTab(title: String) = tab(title).click()
+    fun selectTab(title: String) {
+        mDevice.waitNotNull(
+            findObject(text(title)),
+            waitingTime
+        )
+
+        val tab = mDevice.findObject(text(title))
+        tab.click()
+    }
 
     fun clickSaveCollection() = saveTabsToCollectionButton().click()
 
