@@ -366,8 +366,7 @@ nsFaviconService::ReplaceFaviconData(nsIURI* aFaviconURI,
   NS_ENSURE_ARG(aData.Length() > 0);
   NS_ENSURE_ARG(aMimeType.Length() > 0);
   NS_ENSURE_ARG(imgLoader::SupportImageWithMimeType(
-      PromiseFlatCString(aMimeType).get(),
-      AcceptedMimeTypes::IMAGES_AND_DOCUMENTS));
+      aMimeType, AcceptedMimeTypes::IMAGES_AND_DOCUMENTS));
 
   PRTime now = PR_Now();
   if (aExpiration < now + MIN_FAVICON_EXPIRATION) {

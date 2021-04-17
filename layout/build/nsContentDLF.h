@@ -50,7 +50,7 @@ class nsContentDLF final : public nsIDocumentLoaderFactory {
 
  private:
   static nsresult EnsureUAStyleSheet();
-  static bool IsImageContentType(const char* aContentType);
+  static bool IsImageContentType(const nsACString&);
 };
 
 nsresult NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);

@@ -273,8 +273,7 @@ class imgLoader final : public imgILoader,
    * @param aAcceptedMimeTypes Which kinds of MIME types to treat as images.
    */
   static bool SupportImageWithMimeType(
-      const char* aMimeType,
-      AcceptedMimeTypes aAccept = AcceptedMimeTypes::IMAGES);
+      const nsACString&, AcceptedMimeTypes aAccept = AcceptedMimeTypes::IMAGES);
 
   static void GlobalInit();  // for use by the factory
   static void Shutdown();    // for use by the factory
