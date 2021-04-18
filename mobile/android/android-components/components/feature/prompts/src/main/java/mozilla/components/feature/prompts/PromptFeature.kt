@@ -127,10 +127,12 @@ class PromptFeature private constructor(
     private val loginPickerView: LoginPickerView? = null,
     private val onManageLogins: () -> Unit = {},
     onNeedToRequestPermissions: OnNeedToRequestPermissions
-) : LifecycleAwareFeature, PermissionsFeature, Prompter, ActivityResultHandler, UserInteractionHandler {
+) : LifecycleAwareFeature, PermissionsFeature, Prompter, ActivityResultHandler,
+    UserInteractionHandler {
     // These three scopes have identical lifetimes. We do not yet have a way of combining scopes
     private var handlePromptScope: CoroutineScope? = null
     private var dismissPromptScope: CoroutineScope? = null
+
     @VisibleForTesting
     var activePromptRequest: PromptRequest? = null
 
@@ -207,7 +209,7 @@ class PromptFeature private constructor(
             ?: fragment?.let { PromptContainer.Fragment(it) }
             ?: throw IllegalStateException(
                 "activity and fragment references " +
-                        "must not be both null, at least one must be initialized."
+                    "must not be both null, at least one must be initialized."
             ),
         store = store,
         customTabId = customTabId,
@@ -489,8 +491,8 @@ class PromptFeature private constructor(
                 if (loginValidationDelegate == null) {
                     logger.debug(
                         "Ignoring received SaveLoginPrompt because PromptFeature." +
-                                "loginValidationDelegate is null. If you are trying to autofill logins, " +
-                                "try attaching a LoginValidationDelegate to PromptFeature"
+                            "loginValidationDelegate is null. If you are trying to autofill logins, " +
+                            "try attaching a LoginValidationDelegate to PromptFeature"
                     )
                     return
                 }
@@ -642,7 +644,8 @@ class PromptFeature private constructor(
 
             is Repost -> {
                 val title = container.context.getString(R.string.mozac_feature_prompt_repost_title)
-                val message = container.context.getString(R.string.mozac_feature_prompt_repost_message)
+                val message =
+                    container.context.getString(R.string.mozac_feature_prompt_repost_message)
                 val positiveAction =
                     container.context.getString(R.string.mozac_feature_prompt_repost_positive_button_text)
                 val negativeAction =
