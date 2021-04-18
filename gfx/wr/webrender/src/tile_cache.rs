@@ -36,6 +36,8 @@ pub struct PendingTileCache {
     pub prim_list: PrimitiveList,
     /// Parameters that define the tile cache (such as background color, shared clips, reference spatial node)
     pub params: TileCacheParams,
+    /// A list of additional clip chains that get applied to the shared clips unconditionally for this tile cache
+    pub extra_clips: Vec<ClipChainId>,
 }
 
 /// Used during scene building to construct the list of pending tile caches.
@@ -117,6 +119,7 @@ impl TileCacheBuilder {
         clip_store: &ClipStore,
         interners: &Interners,
         config: &FrameBuilderConfig,
+        extra_clips: &[ClipChainId],
     ) {
         assert!(self.can_add_container_tile_cache());
 
@@ -250,6 +253,7 @@ impl TileCacheBuilder {
         self.pending_tile_caches.push(PendingTileCache {
             prim_list,
             params,
+            extra_clips: extra_clips.to_vec(),
         });
 
         // Add a tile cache barrier so that the next prim definitely gets added to a
@@ -269,6 +273,7 @@ impl TileCacheBuilder {
         interners: &Interners,
         config: &FrameBuilderConfig,
         quality_settings: &QualitySettings,
+        extra_tile_cache_clips: &[ClipChainId],
     ) {
         // Check if we want to create a new slice based on the current / next scroll root
         let scroll_root = self.find_scroll_root(spatial_node_index, spatial_tree);
@@ -419,6 +424,7 @@ impl TileCacheBuilder {
                 self.pending_tile_caches.push(PendingTileCache {
                     prim_list: PrimitiveList::empty(),
                     params,
+                    extra_clips: extra_tile_cache_clips.to_vec(),
                 });
 
                 self.force_new_tile_cache = None;
@@ -460,6 +466,7 @@ impl TileCacheBuilder {
                 &mut result.picture_cache_spatial_nodes,
                 config,
                 &mut result.tile_caches,
+                &pending_tile_cache.extra_clips,
             );
 
             tile_cache_pictures.push(pic_index);
@@ -514,6 +521,23 @@ fn add_clips(
     }
 }
 
+// Walk a clip-chain, and accumulate all clip instances into supplied `prim_clips` array.
+fn add_all_clips(
+    clip_chain_id: ClipChainId,
+    prim_clips: &mut Vec<ClipInstance>,
+    clip_store: &ClipStore,
+) {
+    let mut current_clip_chain_id = clip_chain_id;
+
+    while current_clip_chain_id != ClipChainId::NONE {
+        let clip_chain_node = &clip_store
+            .clip_chain_nodes[current_clip_chain_id.0 as usize];
+
+        prim_clips.push(ClipInstance::new(clip_chain_node.handle, clip_chain_node.spatial_node_index));
+        current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
+    }
+}
+
 /// Given a PrimitiveList and scroll root, construct a tile cache primitive instance
 /// that wraps the primitive list.
 fn create_tile_cache(
@@ -522,12 +546,13 @@ fn create_tile_cache(
     scroll_root: SpatialNodeIndex,
     prim_list: PrimitiveList,
     background_color: Option<ColorF>,
-    shared_clips: Vec<ClipInstance>,
+    mut shared_clips: Vec<ClipInstance>,
     prim_store: &mut PrimitiveStore,
     clip_store: &mut ClipStore,
     picture_cache_spatial_nodes: &mut FastHashSet<SpatialNodeIndex>,
     frame_builder_config: &FrameBuilderConfig,
     tile_caches: &mut FastHashMap<SliceId, TileCacheParams>,
+    extra_clips: &[ClipChainId],
 ) -> PictureIndex {
     // Add this spatial node to the list to check for complex transforms
     // at the start of a frame build.
@@ -539,6 +564,16 @@ fn create_tile_cache(
     // a simple local clip rect in the vertex shader. However, this should in theory
     // also work with any complex clips, such as rounded rects and image masks, by
     // producing a clip mask that is applied to the picture cache tiles.
+
+    // Accumulate any clip instances from the extra_clips array into the shared clips
+    // that will be applied by this tile cache during compositing.
+    for clip_chain_id in extra_clips {
+        add_all_clips(
+            *clip_chain_id,
+            &mut shared_clips,
+            clip_store,
+        );
+    }
 
     let mut parent_clip_chain_id = ClipChainId::NONE;
     for clip_instance in &shared_clips {
