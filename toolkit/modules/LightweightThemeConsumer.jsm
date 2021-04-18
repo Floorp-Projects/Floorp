@@ -478,6 +478,7 @@ function _rgbaToString(parsedColor) {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
+// There is a second copy of this in ThemeVariableMap.jsm.
 function _isColorDark(r, g, b) {
   return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
 }
