@@ -13,13 +13,13 @@
 }
 
 /* Only overwrite the deemphasized text color in non-dark mode. */
-@media not (prefers-color-scheme: dark) {
+@media not (-moz-toolbar-prefers-color-scheme: dark) {
   :host {
     --in-content-deemphasized-text: #737373;
   }
 }
 
-@media (prefers-color-scheme: dark) {
+@media (-moz-toolbar-prefers-color-scheme: dark) {
   :host {
     --reveal-checkbox-opacity: .8;
     --reveal-checkbox-opacity-hover: 1;
