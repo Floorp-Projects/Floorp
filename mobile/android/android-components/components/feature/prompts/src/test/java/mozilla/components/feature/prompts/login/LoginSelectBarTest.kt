@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.prompts.R
+import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.support.test.ext.appCompatContext
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -34,7 +35,7 @@ class LoginSelectBarTest {
     fun `showPicker updates visibility`() {
         val bar = LoginSelectBar(appCompatContext)
 
-        bar.showPicker(listOf(login, login2))
+        bar.showPrompt(listOf(login, login2))
 
         assertTrue(bar.isVisible)
     }
@@ -43,7 +44,7 @@ class LoginSelectBarTest {
     fun `hidePicker updates visibility`() {
         val bar = spy(LoginSelectBar(appCompatContext))
 
-        bar.hidePicker()
+        bar.hidePrompt()
 
         verify(bar).visibility = View.GONE
     }
@@ -51,7 +52,7 @@ class LoginSelectBarTest {
     @Test
     fun `listener is invoked when clicking manage logins option`() {
         val bar = LoginSelectBar(appCompatContext)
-        val listener: LoginPickerView.Listener = mock()
+        val listener: SelectablePromptView.Listener<Login> = mock()
 
         assertNull(bar.listener)
 
@@ -60,18 +61,18 @@ class LoginSelectBarTest {
 
         bar.findViewById<AppCompatTextView>(R.id.manage_logins).performClick()
 
-        verify(listener).onManageLogins()
+        verify(listener).onManageOptions()
     }
 
     @Test
     fun `listener is invoked when clicking a login option`() {
         val bar = LoginSelectBar(appCompatContext)
-        val listener: LoginPickerView.Listener = mock()
+        val listener: SelectablePromptView.Listener<Login> = mock()
 
         assertNull(bar.listener)
 
         bar.listener = listener
-        bar.showPicker(listOf(login, login2))
+        bar.showPrompt(listOf(login, login2))
 
         val adapter = bar.findViewById<RecyclerView>(R.id.logins_list).adapter as BasicLoginAdapter
         val holder = adapter.onCreateViewHolder(LinearLayout(testContext), 0)
@@ -79,14 +80,14 @@ class LoginSelectBarTest {
 
         holder.itemView.performClick()
 
-        verify(listener).onLoginSelected(login)
+        verify(listener).onOptionSelect(login)
     }
 
     @Test
     fun `view is expanded when clicking header`() {
         val bar = LoginSelectBar(appCompatContext)
 
-        bar.showPicker(listOf(login, login2))
+        bar.showPrompt(listOf(login, login2))
 
         bar.findViewById<AppCompatTextView>(R.id.saved_logins_header).performClick()
 

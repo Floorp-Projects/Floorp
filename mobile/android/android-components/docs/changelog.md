@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-contextmenu**:
   * ⚠️ Long pressing on web content won't show a contextual menu if the URL of the touch target is one blocked from loading in the browser.
 
+* **feature-prompts**:
+  * Refactor `LoginPickerView` into a more generic view `SelectablePromptView` that can be reused by any prompts that displays a list of selectable options. [#10216](https://github.com/mozilla-mobile/android-components/issues/10216)
+
 * **concept-engine**
   * 🌟️ `getBlockedSchemes()` now exposes the list of url shemes that the engine won't load.
 

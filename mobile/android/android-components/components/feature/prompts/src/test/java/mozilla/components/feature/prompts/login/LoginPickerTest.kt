@@ -61,7 +61,7 @@ class LoginPickerTest {
         whenever(state.customTabs).thenReturn(listOf(customTab))
         loginPicker = LoginPicker(store, loginSelectBar, onManageLogins, customTab.id)
         loginPicker.handleSelectLoginRequest(request)
-        verify(loginSelectBar).showPicker(request.logins)
+        verify(loginSelectBar).showPrompt(request.logins)
     }
 
     @Test
@@ -69,7 +69,7 @@ class LoginPickerTest {
         prepareSelectedSession(request)
         loginPicker = LoginPicker(store, loginSelectBar, onManageLogins)
         loginPicker.handleSelectLoginRequest(request)
-        verify(loginSelectBar).showPicker(request.logins)
+        verify(loginSelectBar).showPrompt(request.logins)
     }
 
     @Test
@@ -79,10 +79,10 @@ class LoginPickerTest {
 
         loginPicker.handleSelectLoginRequest(request)
 
-        loginPicker.onLoginSelected(login)
+        loginPicker.onOptionSelect(login)
 
         assertEquals(confirmedLogin, login)
-        verify(loginSelectBar).hidePicker()
+        verify(loginSelectBar).hidePrompt()
     }
 
     @Test
@@ -95,11 +95,11 @@ class LoginPickerTest {
 
         loginPicker.handleSelectLoginRequest(request)
 
-        loginPicker.onManageLogins()
+        loginPicker.onManageOptions()
 
         assertTrue(manageLoginsCalled)
         assertTrue(onDismissWasCalled)
-        verify(loginSelectBar).hidePicker()
+        verify(loginSelectBar).hidePrompt()
     }
 
     private fun prepareSelectedSession(request: PromptRequest? = null): TabSessionState {

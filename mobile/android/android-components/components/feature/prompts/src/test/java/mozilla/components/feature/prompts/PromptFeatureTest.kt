@@ -50,7 +50,7 @@ import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
 import mozilla.components.feature.prompts.login.LoginPicker
-import mozilla.components.feature.prompts.login.LoginPickerView
+import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -273,7 +273,7 @@ class PromptFeatureTest {
     @Test
     fun `GIVEN loginPickerView is visible WHEN dismissLoginSelectPrompt THEN dismissCurrentLoginSelect called and true returned`() {
         // given
-        val loginPickerView: LoginPickerView = mock()
+        val loginPickerView: SelectablePromptView<Login> = mock()
         val feature = spy(
             PromptFeature(
                 mock<Activity>(),
@@ -299,7 +299,7 @@ class PromptFeatureTest {
     @Test
     fun `GIVEN loginPickerView is not visible WHEN dismissLoginSelectPrompt THEN dismissCurrentLoginSelect called and false returned`() {
         // given
-        val loginPickerView: LoginPickerView = mock()
+        val loginPickerView: SelectablePromptView<Login> = mock()
         val feature = spy(
             PromptFeature(
                 mock<Activity>(),
@@ -324,7 +324,7 @@ class PromptFeatureTest {
     @Test
     fun `GIVEN PromptFeature WHEN onBackPressed THEN dismissLoginSelectPrompt is called`() {
         // given
-        val loginPickerView: LoginPickerView = mock()
+        val loginPickerView: SelectablePromptView<Login> = mock()
         val feature = spy(
             PromptFeature(
                 mock<Activity>(),
@@ -349,7 +349,7 @@ class PromptFeatureTest {
 
     @Test
     fun `Calling dismissLoginSelectPrompt should dismiss the login picker if the login prompt is active`() {
-        val loginPickerView: LoginPickerView = mock()
+        val loginPickerView: SelectablePromptView<Login> = mock()
         val feature = spy(
             PromptFeature(
                 mock<Activity>(),
@@ -1096,7 +1096,7 @@ class PromptFeatureTest {
 
     @Test
     fun `When page is refreshed login dialog is dismissed`() {
-        val loginPickerView: LoginPickerView = mock()
+        val loginPickerView: SelectablePromptView<Login> = mock()
         val feature =
             PromptFeature(
                 activity = mock(), store = store, fragmentManager = fragmentManager,
