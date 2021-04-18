@@ -9,13 +9,4 @@
     fill: green;
   }
 </style>
-<script>
-  async function awaitPaintAndMessageParent() {
-    // Wait through two rAF ticks to be sure we've gotten at least one paint:
-    await new Promise(resolve  => requestAnimationFrame(resolve));
-    await new Promise(resolve  => requestAnimationFrame(resolve));
-    window.parent.postMessage("painted", "*");
-  }
-</script>
-<body onload="awaitPaintAndMessageParent()">
 <img src="file_context_fill_fallback_red.svg" style="width: 100px; height: 100px;">
