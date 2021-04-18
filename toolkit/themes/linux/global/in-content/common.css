@@ -10,7 +10,7 @@
 }
 }
 
-@media (prefers-color-scheme: dark) {
+@media (-moz-toolbar-prefers-color-scheme: dark) {
   /* Don't apply scrollbar-color since it removes the native scrollbar style on Linux */
   :root {
     scrollbar-color: initial;
