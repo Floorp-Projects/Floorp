@@ -299,7 +299,7 @@
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Vlastný server pre synchronizáciu</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Server pre účet Fierfox alebo synchronizáciu bol zmenený. Pre použitie zmien sa teraz aplikácia ukončí…</string>
+    <string name="toast_override_fxa_sync_server_done">Server pre účet Firefox alebo synchronizáciu bol zmenený. Pre použitie zmien sa teraz aplikácia ukončí…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Účet</string>
     <!-- Preference shown on banner to sign into account -->
@@ -612,6 +612,8 @@
     <string name="tabs_header_private_title">Súkromné prehliadanie</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Súkromné karty</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Synchronizované karty</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Pridať kartu</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -630,6 +632,8 @@
     <string name="tab_tray_menu_item_share">Zobraziť všetky karty</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Nedávno zatvorené karty</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Nastavenia účtu</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Nastavenia kariet</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -891,7 +895,7 @@
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Obsah chránený pomocou DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
-    <string name="preference_option_phone_feature_ask_to_allow">Vždy sa spýtať</string>
+    <string name="preference_option_phone_feature_ask_to_allow">Vždy sa opýtať</string>
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">Zablokované</string>
     <!-- Label that indicates that a permission must be allowed -->
@@ -987,8 +991,6 @@
     <string name="share_link_all_apps_subheader">Všetky akcie</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Naposledy použité</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Prihlásený ako %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Prihlásiť sa k synchronizácii</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1130,7 +1132,7 @@
     <string name="preferences_delete_browsing_data_button">Odstrániť údaje o prehliadaní</string>
 
     <!-- Title for the Delete browsing data on quit preference -->
-    <string name="preferences_delete_browsing_data_on_quit">Odstrániť údaje o prehliadaní pri ukončení aplikácie</string>
+    <string name="preferences_delete_browsing_data_on_quit">Odstraňovať údaje o prehliadaní pri ukončení aplikácie</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Automaticky odstráni údaje o prehliadaní po stlačení tlačidla „Ukončiť“ v hlavnej ponuke</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
@@ -1278,7 +1280,7 @@
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Naskenovať kód</string>
     <!-- Instructions on how to access pairing -->
-    <string name="sign_in_instructions"><![CDATA[Otvorte Firefox na svojom počítači a navštívte stránku <b>https://firefox.com/pair</b>]]></string>
+    <string name="sign_in_instructions"><![CDATA[Spustite Firefox na svojom počítači a navštívte stránku <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Skenovanie je pripravené</string>
     <!-- Text shown for settings option for sign with pairing -->
@@ -1452,7 +1454,7 @@
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Ukladanie prihlasovacích údajov</string>
     <!-- Preference option for asking to save passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_ask_to_save">Pred uložením sa spýtať</string>
+    <string name="preferences_passwords_save_logins_ask_to_save">Pred uložením sa opýtať</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Neukladať</string>
     <!-- Preference for autofilling saved logins in Fenix -->
@@ -1569,6 +1571,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Spravovať uložené karty</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Pridať kartu</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Upraviť kartu</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Číslo karty</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1577,6 +1581,8 @@
     <string name="credit_cards_name_on_card">Meno na karte</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Prezývka karty</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Odstrániť kartu</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Odstrániť kartu</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1746,6 +1752,9 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Zrušiť</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Nastavte si automatické otváranie webových stránok, e-mailov a správ vo Firefoxe.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Odstrániť</string>

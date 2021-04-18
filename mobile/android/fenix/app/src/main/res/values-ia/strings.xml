@@ -215,7 +215,7 @@
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Non permitter</string>
     <!-- Search suggestion onboarding hint title text -->
-    <string name="search_suggestions_onboarding_title">Permitter suggestiones de recerca in sessiones anonyme?&lt;</string>
+    <string name="search_suggestions_onboarding_title">Permitter suggestiones de recerca in sessiones anonyme?</string>
 
 
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -1015,8 +1015,6 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Usate recentemente</string>
 
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Authenticate como %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Accede pro synchronisar</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1623,6 +1621,8 @@
     <string name="credit_cards_name_on_card">Nomine sur le carta</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Pseudonymo del carta</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Deler carta</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Deler carta</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1777,17 +1777,41 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Attingite limite del numero de sitos principal</string>
+    <string name="top_sites_max_limit_title">Attingite limite del numero de sitos</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Pro adder un altere sito principal, remove un. Tocca e retene le sito e selige remover.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">De accordo</string>
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Monstrar le sitos plus visitate</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nomine</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Nomine de sito principal</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Cancellar</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Stabilir qual ligamines de sitos web, e-mails e messages se aperi automaticamente in Firefox.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Remover</string>
 
-    </resources>
+    <!-- Deprecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Obtene le maximo de %s.</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Clicca pro altere detalios</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">Collige le objectos que te interessa</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">Gruppa insimul recercas simile, sitos e schedas pro acceder rapidemente plus tarde.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Tu es authenticate como %s sur un altere navigator Firefox sur iste telephono. Vole tu acceder con iste conto?</string>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Tu pote facilemente adder iste sito web al pagina initial de tu telephono pro acceder instantaneemente e navigar plus velocemente, como in un app.</string>
+</resources>

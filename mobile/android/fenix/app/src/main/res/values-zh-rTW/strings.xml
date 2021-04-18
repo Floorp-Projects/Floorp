@@ -1005,8 +1005,6 @@
     <string name="share_link_all_apps_subheader">所有動作</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">最近使用</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">已登入為 %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">登入進行同步</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1603,6 +1601,8 @@
     <string name="credit_cards_name_on_card">持卡人姓名</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">卡片暱稱</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">刪除卡片</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">刪除卡片</string>
     <!-- The title for the "Save" menu item for saving a credit card -->

@@ -181,6 +181,9 @@
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Дадаць</string>
 
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Змяніць</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Немагчыма злучыцца. Невядомая схема URL.</string>
@@ -606,12 +609,16 @@
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Прыватныя карткі</string>
 
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Сінхранізаваныя карткі</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Дадаць картку</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Дадаць прыватную картку</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Прыватная</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Сінхранізацыя</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Адкрытыя карткі</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -622,6 +629,8 @@
     <string name="tab_tray_menu_item_share">Падзяліцца ўсімі карткамі</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Нядаўна закрытыя карткі</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Налады ўліковага запісу</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Налады картак</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -981,6 +990,8 @@
     <string name="share_link_all_apps_subheader">Усе дзеянні</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Нядаўна выкарыстаныя</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Увайсці ў сінхранізацыю</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Увайсці ў сінхранізацыю</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1188,6 +1199,8 @@
     <string name="onboarding_whats_new_description_linktext">Адказы тут</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Сінхранізуйце Firefox паміж прыладамі</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">Перанясіце закладкі, гісторыю і паролі ў Firefox на гэтай прыладзе.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->

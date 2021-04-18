@@ -628,6 +628,8 @@
     <string name="tab_tray_menu_item_share">Az összes lap megosztása</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Nemrég bezárt lapok</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Fiókbeállítások</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Lapbeállítások</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -984,8 +986,6 @@
     <string name="share_link_all_apps_subheader">Összes művelet</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Nemrég használt</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Bejelentkezve mint %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Jelentkezzen be a szinkronizálásba</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1583,6 +1583,8 @@
     <string name="credit_cards_name_on_card">Kártyán szereplő név</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Kártya beceneve</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Kártya törlése</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kártya törlése</string>
     <!-- The title for the "Save" menu item for saving a credit card -->

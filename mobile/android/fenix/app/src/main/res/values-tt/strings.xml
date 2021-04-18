@@ -404,6 +404,8 @@
     <string name="preferences_telemetry">Телеметрия</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Маркетинг мәгълүматлары</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Тикшеренүләр</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">Mozilla урнашу хезмәте</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
@@ -525,6 +527,8 @@
     <string name="tabs_header_private_title">Хосусый утырыш</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Хосусый таблар</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Синхронланган таблар</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Таб өстәү</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -545,6 +549,8 @@
     <string name="tab_tray_menu_item_share">Барлык табларны уртаклашу</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Күптән түгел ябылган таблар</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Хисап көйләүләре</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Таб көйләүләре</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1297,6 +1303,9 @@
     <string name="search_add_custom_engine_search_string_hint">Эзләнәчәк сүз я сүзтезмә</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Күбрәк белү</string>
+
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Күбрәк белү сылтамасы</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Эзләү системасының исемен кертегез</string>

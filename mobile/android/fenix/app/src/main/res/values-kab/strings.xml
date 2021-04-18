@@ -634,6 +634,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tab_tray_menu_item_share">Bḍu akk accaren</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Iccaren imedlen melmi kan</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Iɣewwaṛen n umiḍan</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Iɣewwaren n yiccer</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -992,8 +994,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="share_link_all_apps_subheader">Tigawin meṛṛa</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Ttwasqedcen melmi kan</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Tkecmeḍ d %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Kcem akken ad tsemtawiḍ</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1228,6 +1228,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_tracking_protection_strict_button">Uḥriṣ (yelha)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Uḥris</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Isewḥal ugar n ineḍfaren akken isebtar ad d-allin s wudem aurad, maca kra n tmahilin n usebter zemrent ad rẓent.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Fren adig n ufeggag-ik·im n yifecka</string>
     <!-- text for the toolbar position card description -->
@@ -1321,6 +1323,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ayen iweḥlen s ummeten n tizeɣt mgal aḍfaṛ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Uḥriṣ</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Isewḥal ugar n ineḍfaren akken isebtar ad d-allin s wudem aurad, maca kra n tmahilin n usebter zemrent ad rẓent.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ayen iweḥlen s ummeten n uḥriṣ mgal aḍfaṛ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1562,14 +1566,20 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Tikarḍiwin n usmad</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Asekles d taččart tawurmant n tkarḍiwin</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Isefka ttwawgelhen</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Mtawi tikarḍiwin gar yibenkan</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Rnu takarḍa n usmad</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Sefrek tikerḍiwin yettwaskelsen</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Rnu takarḍa</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Ẓreg takarḍa</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Uṭṭun n tkarḍa</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1578,6 +1588,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="credit_cards_name_on_card">Isem ɣef tkarḍa</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Mefferisemn tkarḍa</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Kkes takarḍa</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kkes takarḍa</string>
     <!-- The title for the "Save" menu item for saving a credit card -->

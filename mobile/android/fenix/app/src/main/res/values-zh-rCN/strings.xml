@@ -1016,8 +1016,6 @@
     <string name="share_link_all_apps_subheader">所有动作</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">最近使用</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">已登录为 %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">登录同步服务</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1606,7 +1604,7 @@
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">添加信用卡</string>
     <!-- Title of the "Edit card" screen -->
-    <string name="credit_cards_edit_card">编辑信用卡</string>
+    <string name="credit_cards_edit_card">编辑此卡</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">卡号</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1615,6 +1613,8 @@
     <string name="credit_cards_name_on_card">卡上姓名</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">卡的昵称</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">删除此卡</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">删除此卡</string>
     <!-- The title for the "Save" menu item for saving a credit card -->

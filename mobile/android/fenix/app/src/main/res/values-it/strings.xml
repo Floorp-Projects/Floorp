@@ -637,6 +637,8 @@
     <string name="tab_tray_menu_item_share">Condividi tutte le schede</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Schede chiuse di recente</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Impostazioni account</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Impostazioni schede</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1007,8 +1009,6 @@
     <string name="share_link_all_apps_subheader">Tutte le azioni</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Utilizzate di recente</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Accesso effettuato come %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Accedi per sincronizzare</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1610,6 +1610,8 @@
 
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Nickname della carta</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Elimina carta</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Elimina carta</string>
     <!-- The title for the "Save" menu item for saving a credit card -->

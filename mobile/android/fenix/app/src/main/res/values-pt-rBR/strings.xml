@@ -981,8 +981,6 @@
     <string name="share_link_all_apps_subheader">Todas as ações</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Usado recentemente</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Conectado como %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Entrar para sincronizar</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1577,6 +1575,8 @@
     <string name="credit_cards_name_on_card">Nome no cartão</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Apelido do cartão</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Excluir cartão</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Excluir cartão</string>
     <!-- The title for the "Save" menu item for saving a credit card -->

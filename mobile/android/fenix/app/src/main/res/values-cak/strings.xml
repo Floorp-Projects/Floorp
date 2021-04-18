@@ -22,10 +22,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Wawe\' xkeq\'alajin pe ri ichinan taq ruwi\'.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 ruwi\' jaqon. Tachapa\' richin nak\'ëx ruwi\'.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -189,6 +185,12 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Ke\'ichinäx rutz\'etoj sik\'inem</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Titz\'aqatisäx</string>
+
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Tinuk\'</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Man nok ta. Man netamäx ta ruwa ruch\'akulal URL.</string>
@@ -624,12 +626,16 @@
     <string name="tabs_header_private_title">Ichinan molojri\'ïl</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Ichinan taq ruwi\'</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Ximon taq ruwi\'</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Titz\'aqatisäx ruwi\'</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Titz\'aqatisäx ichinan ruwi\'</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Ichinan</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Tixim</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Kejaq taq Ruwi\'</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -640,6 +646,8 @@
     <string name="tab_tray_menu_item_share">Kekomonïx ronojel taq ruwi\'</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Taq ruwi\' nimakol ketz\'apïx</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Kinuk\'ulem rub\'i\' taqoya\'l</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Kinuk\'ulem ruwi\'</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1001,6 +1009,8 @@
     <string name="share_link_all_apps_subheader">Ronojel b\'anoj</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">K\'a b\'a ke\'okisäx</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Tatikirisaj molojri\'ïl richin nixim</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Tatikirisaj molojri\'ïl pa Sync</string>
 
@@ -1198,9 +1208,6 @@
     <string name="onboarding_header">¡Niya\' rutzil awäch pa %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">¿La k\'o chik jun rub\'i\' ataqoya\'l?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Tawetamaj ruwa %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Tatz\'eta\' ri k\'ak\'a\'</string>
 
@@ -1209,10 +1216,6 @@
     <string name="onboarding_whats_new_description">¿La k\'o ak\'utunik chi rij ri xwachib\'ëx chik chi rij ri %s? ¿La nawajo\' nawetamaj achike ri xjalatäj?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Wawe\' e k\'o ri tzolin taq tzij</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Tachapa\' kiximik taq yaketal, ewan taq tzij chuqa\' ch\'aqa\' chik rik\'in ri rub\'i\' ataqoya\'l richin Firefox.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Tetamäx ch\'aqa\' chik</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1221,8 +1224,6 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Ja\', titikirisäx molojri\'ïl</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Nitikirisäx molojri\'ïl…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Titikirisäx molojri\'ïl pa Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Jantape\' chupül</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1230,27 +1231,12 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Xsach toq xtikirisäx molojri\'ïl</string>
 
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Ichinanem pa ruyonil</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Ri runuk\'ulem ichinanem chuqa\' jikomal yekiq\'ät ri ojqanela\', itzel taq kema\' chuqa\' ri ajk\'aymoloj yatkojqaj.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Junaman (k\'o wi)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Yeruq\'ät jub\'a\' ojqanela\'. Ütz xkesamajïx ri taq ruxaq.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">K\'atzinel (chilab\'en)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Nimaläj</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Ke\'aq\'ata\' k\'ïy ojqanela\', taq rutzijol chuqa\' elenel taq tzuwäch. Anin xkesamajitäj ri taq ruxaq, xa xe chi yatikïr ye\'asäch jujun taq rusamajib\'al.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Tajikib\'a\' atzij</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Tatojtob\'ej ri okem pa k\'amaya\'l rik\'in jun aq\'a\' pa ri ikim rukajtz\'ik samajib\'äl o tasiloj ajsik.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Tawichinaj ri awokem</string>
     <!-- text for the private browsing onboarding card description
@@ -1264,7 +1250,7 @@
     <string name="onboarding_privacy_notice_header">Awichinanem</string>
 
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Xqawachib\'ej %s richin nachajij ri nakomonij pa k\'amab\'ey chuqa\' ri nakomonij qik\'in.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Tasik\'ij ri rutzijol qichinanem</string>
@@ -1278,8 +1264,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Tacha\' ri awachinel</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Takolo\' jub\'a\' awuchuq\'ab\'al chuqa\' tachajij ri atzub\'al: Tatzija\' ri  q\'equ\'m rub\'anikil.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Yonil</string>
 
@@ -1335,15 +1319,11 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tetamäx ch\'aqa\' chik</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Junaman (k\'o wi)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Yeruq\'ät jub\'a\' ojqanela\'. Ütz xkesamajïx ri taq ruxaq.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Achike ri q\'aton ruma ri relik ruchajixik ojqanem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Nimaläj</string>
 
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Ke\'aq\'ata\' k\'ïy ojqanela\', taq rutzijol chuqa\' elenel taq tzuwäch. Anin xkesamajitäj ri taq ruxaq, xa xe chi yatikïr ye\'asäch jujun taq rusamajib\'al.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Achike ri q\'aton ruma ri ruchajixik ojqanem k\'o</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

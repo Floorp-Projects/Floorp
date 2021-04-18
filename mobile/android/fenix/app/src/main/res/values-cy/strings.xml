@@ -623,6 +623,8 @@
     <string name="tab_tray_menu_item_share">Rhannu pob tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Tabiau wedi’u cau’n ddiweddar</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Gosodiadau cyfrif</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Gosodiadau tabiau</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -979,8 +981,6 @@
     <string name="share_link_all_apps_subheader">Pob gweithred</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Defnyddiwyd yn ddiweddar</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Mewngofnodwyd fel %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Mewngofnodi i gydweddu</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1561,6 +1561,8 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="preferences_credit_cards_manage_saved_cards">Rheoli cardiau wedi’u cadw</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Ychwanegu cerdyn</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Golygu cerdyn</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Rhif y Cerdyn</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1569,6 +1571,8 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="credit_cards_name_on_card">Enw ar y Cerdyn</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Llysenw Cerdyn</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Dileu cerdyn</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Dileu cerdyn</string>
     <!-- The title for the "Save" menu item for saving a credit card -->

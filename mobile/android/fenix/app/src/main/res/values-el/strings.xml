@@ -333,7 +333,7 @@
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Εργαλεία προγραμματιστή</string>
     <!-- Preference for developers -->
-    <string name="preferences_remote_debugging">Απομακρυσμένος εντοπισμός σφαλμάτων μέσω USB</string>
+    <string name="preferences_remote_debugging">Απομακρυσμένος έλεγχος σφαλμάτων μέσω USB</string>
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">Εμφάνιση μηχανών αναζήτησης</string>
     <!-- Preference title for switch preference to show search suggestions -->
@@ -634,6 +634,8 @@
     <string name="tab_tray_menu_item_share">Κοινή χρήση όλων των καρτελών</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Πρόσφατα κλεισμένες καρτέλες</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Ρυθμίσεις λογαριασμού</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Ρυθμίσεις καρτελών</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -989,8 +991,6 @@
     <string name="share_link_all_apps_subheader">Όλες οι ενέργειες</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Πρόσφατη χρήση</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Έγινε σύνδεση ως %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Σύνδεση για συγχρονισμό</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1591,6 +1591,8 @@
     <string name="credit_cards_name_on_card">Όνομα στην κάρτα</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Ψευδώνυμο κάρτας</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Διαγραφή κάρτας</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Διαγραφή κάρτας</string>
     <!-- The title for the "Save" menu item for saving a credit card -->

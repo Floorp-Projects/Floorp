@@ -340,6 +340,9 @@
     <!-- Preference for notifications -->
     <string name="preferences_notifications">గమనింపులు</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">అభిమత పొడగింతల సేకరణ</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">సరే</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -349,6 +352,9 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">సేకరణ యజమాని (వాడుకరి ID)</string>
 
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">పొడగింతకు తోడ్పాటు లేదు</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">పొడగింత ఇప్పటికే స్థాపితమైవుంది</string>
 
@@ -578,6 +584,8 @@
     <string name="tabs_header_private_title">అంతరంగిక సెషను</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">అంతరంగిక ట్యాబులు</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">సింకైన ట్యాబులు</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ట్యాబును చేర్చు</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -594,6 +602,8 @@
     <string name="tab_tray_menu_item_share">అన్ని ట్యాబులను పంచుకో</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">ఇటీవల మూసిన ట్యాబులు</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">ఖాతా అమరికలు</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">ట్యాబు అమరికలు</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -857,6 +867,8 @@
     <string name="preference_phone_feature_location">స్థానం</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">గమనింపులు</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">నిరంతర నిల్వ</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">అనుమతిని అడుగు</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1155,6 +1167,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">అవును, నన్ను ప్రవేశింపజేయి</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">ప్రవేశింపజేస్తూంది…</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">నమోదవ్వండి</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">నిష్క్రమించే ఉండు</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1495,6 +1509,8 @@
     <string name="preferences_credit_cards_add_credit_card">క్రెడిట్ కార్డును చేర్చు</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">కార్డును చేర్చు</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">కార్డును మార్చు</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">కార్డు నెంబరు</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1503,6 +1519,8 @@
     <string name="credit_cards_name_on_card">కార్డు మీద పేరు</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">కార్డు మారుపేరు</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">కార్డును తొలగించు</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">కార్డును తొలగించు</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
