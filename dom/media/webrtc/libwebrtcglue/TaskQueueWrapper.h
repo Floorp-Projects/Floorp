@@ -104,18 +104,25 @@ class SharedThreadPoolWebRtcTaskQueueFactory : public webrtc::TaskQueueFactory {
   SharedThreadPoolWebRtcTaskQueueFactory() {}
 
   UniquePtr<TaskQueueWrapper> CreateTaskQueueWrapper(absl::string_view aName,
+                                                     bool aSupportTailDispatch,
                                                      Priority aPriority) const {
     // XXX Do something with aPriority
     nsCString name(aName.data(), aName.size());
     auto taskQueue = MakeRefPtr<TaskQueue>(
-        GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER), name.get());
+        GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER), name.get(),
+        aSupportTailDispatch);
     return MakeUnique<TaskQueueWrapper>(std::move(taskQueue));
   }
 
   std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
   CreateTaskQueue(absl::string_view aName, Priority aPriority) const override {
+    // libwebrtc will dispatch some tasks sync, i.e., block the origin thread
+    // until they've run, and that doesn't play nice with tail dispatching since
+    // there will never be a tail.
+    constexpr bool supportTailDispatch = false;
     return std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>(
-        CreateTaskQueueWrapper(std::move(aName), aPriority).release(),
+        CreateTaskQueueWrapper(std::move(aName), supportTailDispatch, aPriority)
+            .release(),
         webrtc::TaskQueueDeleter());
   }
 };

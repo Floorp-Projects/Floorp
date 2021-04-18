@@ -475,9 +475,10 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
         new rtc::RefCountedObject<FakeAudioDeviceModule>();
 
     SharedThreadPoolWebRtcTaskQueueFactory taskQueueFactory;
+    constexpr bool supportTailDispatch = true;
     auto callWorkerThread = WrapUnique(
         taskQueueFactory
-            .CreateTaskQueueWrapper("CallWorker",
+            .CreateTaskQueueWrapper("CallWorker", supportTailDispatch,
                                     webrtc::TaskQueueFactory::Priority::NORMAL)
             .release());
 
