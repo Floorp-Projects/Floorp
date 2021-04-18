@@ -29,7 +29,7 @@ p {
   height: 52px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (-moz-toolbar-prefers-color-scheme: dark) {
   #header > img {
     -moz-context-properties: fill;
     fill: currentColor;
