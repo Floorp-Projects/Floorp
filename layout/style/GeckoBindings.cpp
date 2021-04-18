@@ -8,8 +8,6 @@
 
 #include "mozilla/GeckoBindings.h"
 
-#include <string>
-
 #include "ChildIterator.h"
 #include "ErrorReporter.h"
 #include "GeckoProfiler.h"
