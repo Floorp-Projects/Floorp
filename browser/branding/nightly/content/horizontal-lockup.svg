@@ -123,7 +123,7 @@
       fill: url(#o);
     }
 
-    @media (prefers-color-scheme: dark) {
+    @media (-moz-toolbar-prefers-color-scheme: dark) {
       .channel-name {
         fill: url(#p);
       }
