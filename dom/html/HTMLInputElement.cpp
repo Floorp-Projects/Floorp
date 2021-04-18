@@ -5055,12 +5055,18 @@ bool HTMLInputElement::ParseTime(const nsAString& aValue, uint32_t* aResult) {
 
 /* static */
 bool HTMLInputElement::IsDateTimeTypeSupported(uint8_t aDateTimeInputType) {
-  return aDateTimeInputType == NS_FORM_INPUT_DATE ||
-         aDateTimeInputType == NS_FORM_INPUT_TIME ||
-         ((aDateTimeInputType == NS_FORM_INPUT_MONTH ||
-           aDateTimeInputType == NS_FORM_INPUT_WEEK ||
-           aDateTimeInputType == NS_FORM_INPUT_DATETIME_LOCAL) &&
-          StaticPrefs::dom_forms_datetime_others());
+  switch (aDateTimeInputType) {
+    case NS_FORM_INPUT_DATE:
+    case NS_FORM_INPUT_TIME:
+      return true;
+    case NS_FORM_INPUT_DATETIME_LOCAL:
+      return StaticPrefs::dom_forms_datetime_local();
+    case NS_FORM_INPUT_MONTH:
+    case NS_FORM_INPUT_WEEK:
+      return StaticPrefs::dom_forms_datetime_others();
+    default:
+      return false;
+  }
 }
 
 bool HTMLInputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -5579,14 +5585,6 @@ void HTMLInputElement::SetDirectionFromValue(bool aNotify) {
   }
 }
 
-namespace {
-
-bool IsDateOrTime(uint8_t aType) {
-  return (aType == NS_FORM_INPUT_DATE) || (aType == NS_FORM_INPUT_TIME);
-}
-
-}  // namespace
-
 NS_IMETHODIMP
 HTMLInputElement::Reset() {
   // We should be able to reset all dirty flags regardless of the type.
@@ -5597,7 +5595,7 @@ HTMLInputElement::Reset() {
   switch (GetValueMode()) {
     case VALUE_MODE_VALUE: {
       nsresult result = SetDefaultValueAsValue();
-      if (IsDateOrTime(mType)) {
+      if (CreatesDateTimeWidget()) {
         // mFocusedValue has to be set here, so that `FireChangeEventIfNeeded`
         // can fire a change event if necessary.
         GetValue(mFocusedValue, CallerType::System);
@@ -5860,7 +5858,7 @@ void HTMLInputElement::DoneCreatingElement() {
     // before the type change.)
     SetValueInternal(aValue, ValueSetterOption::ByInternalAPI);
 
-    if (IsDateOrTime(mType)) {
+    if (CreatesDateTimeWidget()) {
       // mFocusedValue has to be set here, so that `FireChangeEventIfNeeded` can
       // fire a change event if necessary.
       mFocusedValue = aValue;
