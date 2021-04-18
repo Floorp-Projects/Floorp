@@ -5,6 +5,7 @@
 #ifndef _RTCDTMFSender_h_
 #define _RTCDTMFSender_h_
 
+#include "MediaEventSource.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/RefPtr.h"
 #include "js/RootingAPI.h"
@@ -17,15 +18,26 @@ namespace mozilla {
 class AudioSessionConduit;
 class TransceiverImpl;
 
+struct DtmfEvent {
+  DtmfEvent(int aPayloadType, int aPayloadFrequency, int aEventCode,
+            int aLengthMs)
+      : mPayloadType(aPayloadType),
+        mPayloadFrequency(aPayloadFrequency),
+        mEventCode(aEventCode),
+        mLengthMs(aLengthMs) {}
+  const int mPayloadType;
+  const int mPayloadFrequency;
+  const int mEventCode;
+  const int mLengthMs;
+};
+
 namespace dom {
 
 class RTCDTMFSender : public DOMEventTargetHelper,
                       public nsITimerCallback,
                       public nsINamed {
  public:
-  explicit RTCDTMFSender(nsPIDOMWindowInner* aWindow,
-                         TransceiverImpl* aTransceiver,
-                         AudioSessionConduit* aConduit);
+  RTCDTMFSender(nsPIDOMWindowInner* aWindow, TransceiverImpl* aTransceiver);
 
   // nsISupports
   NS_DECL_NSITIMERCALLBACK
@@ -36,6 +48,7 @@ class RTCDTMFSender : public DOMEventTargetHelper,
   // webidl
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+  void SetPayloadType(int32_t aPayloadType, int32_t aPayloadFrequency);
   void InsertDTMF(const nsAString& aTones, uint32_t aDuration,
                   uint32_t aInterToneGap, ErrorResult& aRv);
   void GetToneBuffer(nsAString& aOutToneBuffer);
@@ -43,13 +56,17 @@ class RTCDTMFSender : public DOMEventTargetHelper,
 
   void StopPlayout();
 
+  MediaEventSource<DtmfEvent>& OnDtmfEvent() { return mDtmfEvent; }
+
  private:
   virtual ~RTCDTMFSender() = default;
 
   void StartPlayout(uint32_t aDelay);
 
   RefPtr<TransceiverImpl> mTransceiver;
-  RefPtr<AudioSessionConduit> mConduit;
+  MediaEventProducer<DtmfEvent> mDtmfEvent;
+  Maybe<int32_t> mPayloadType;
+  Maybe<int32_t> mPayloadFrequency;
   nsString mToneBuffer;
   uint32_t mDuration = 0;
   uint32_t mInterToneGap = 0;
