@@ -105,9 +105,4 @@ WebrtcCallWrapper::WebrtcCallWrapper(
       mEventLog(std::move(aEventLog)),
       mTaskQueueFactory(std::move(aTaskQueueFactory)) {}
 
-WebrtcCallWrapper::WebrtcCallWrapper(UniquePtr<webrtc::Call> aCall)
-    : mCall(std::move(aCall)) {
-  MOZ_ASSERT(mCall);
-}
-
 }  // namespace mozilla
