@@ -29,11 +29,8 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 LazyLogModule gDtmfLog("RTCDTMFSender");
 
 RTCDTMFSender::RTCDTMFSender(nsPIDOMWindowInner* aWindow,
-                             TransceiverImpl* aTransceiver,
-                             AudioSessionConduit* aConduit)
-    : DOMEventTargetHelper(aWindow),
-      mTransceiver(aTransceiver),
-      mConduit(aConduit) {}
+                             TransceiverImpl* aTransceiver)
+    : DOMEventTargetHelper(aWindow), mTransceiver(aTransceiver) {}
 
 JSObject* RTCDTMFSender::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -65,6 +62,13 @@ static bool IsUnrecognizedChar(const char c) {
   static const std::bitset<256> recognized =
       GetCharacterBitset("0123456789ABCD#*,");
   return !recognized[c];
+}
+
+void RTCDTMFSender::SetPayloadType(int32_t aPayloadType,
+                                   int32_t aPayloadFrequency) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mPayloadType = Some(aPayloadType);
+  mPayloadFrequency = Some(aPayloadFrequency);
 }
 
 void RTCDTMFSender::InsertDTMF(const nsAString& aTones, uint32_t aDuration,
@@ -129,9 +133,8 @@ nsresult RTCDTMFSender::Notify(nsITimer* timer) {
     } else {
       // Reset delay if necessary
       StartPlayout(mDuration + mInterToneGap);
-      // Note: We default to channel 0, not inband, and 6dB attenuation.
-      //      here. We might want to revisit these choices in the future.
-      mConduit->InsertDTMFTone(0, tone, true, mDuration, 6);
+      mDtmfEvent.Notify(DtmfEvent(mPayloadType.ref(), mPayloadFrequency.ref(),
+                                  tone, mDuration));
     }
   }
 

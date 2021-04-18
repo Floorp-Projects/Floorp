@@ -79,8 +79,7 @@ TransceiverImpl::TransceiverImpl(
                                  aMainThread, aStsThread, mConduit, this);
 
   if (!IsVideo()) {
-    mDtmf = new RTCDTMFSender(
-        aWindow, this, static_cast<AudioSessionConduit*>(mConduit.get()));
+    mDtmf = new RTCDTMFSender(aWindow, this);
   }
 
   mTransmitPipeline =
@@ -727,7 +726,7 @@ nsresult TransceiverImpl::UpdateAudioConduit() {
             [](const auto& a, const auto& b) { return a.mFreq < b.mFreq; });
       }
       MOZ_ASSERT(dtmfIterator != dtmfConfigs.end());
-      conduit->SetDtmfPayloadType(dtmfIterator->mType, dtmfIterator->mFreq);
+      mDtmf->SetPayloadType(dtmfIterator->mType, dtmfIterator->mFreq);
     }
 
     auto error = conduit->ConfigureSendMediaCodec(configs[0]);
