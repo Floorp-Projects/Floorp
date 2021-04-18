@@ -4,6 +4,7 @@
 
 #include "jsapi/TransceiverImpl.h"
 #include "mozilla/UniquePtr.h"
+#include <algorithm>
 #include <string>
 #include <vector>
 #include "libwebrtcglue/AudioConduit.h"
@@ -704,13 +705,29 @@ nsresult TransceiverImpl::UpdateAudioConduit() {
       return rv;
     }
 
-    for (const auto& value : configs) {
-      if (value.mName == "telephone-event") {
-        // we have a telephone event codec, so we need to make sure
-        // the dynamic pt is set properly
-        conduit->SetDtmfPayloadType(value.mType, value.mFreq);
-        break;
+    std::vector<AudioCodecConfig> dtmfConfigs;
+    std::copy_if(
+        configs.begin(), configs.end(), std::back_inserter(dtmfConfigs),
+        [](const auto& value) { return value.mName == "telephone-event"; });
+
+    const AudioCodecConfig& sendCodec = configs[0];
+
+    if (!dtmfConfigs.empty()) {
+      // There is at least one telephone-event codec.
+      // We primarily choose the codec whose frequency matches the send codec.
+      // Secondarily we choose the one with the lowest frequency.
+      auto dtmfIterator =
+          std::find_if(dtmfConfigs.begin(), dtmfConfigs.end(),
+                       [&sendCodec](const auto& dtmfCodec) {
+                         return dtmfCodec.mFreq == sendCodec.mFreq;
+                       });
+      if (dtmfIterator == dtmfConfigs.end()) {
+        dtmfIterator = std::min_element(
+            dtmfConfigs.begin(), dtmfConfigs.end(),
+            [](const auto& a, const auto& b) { return a.mFreq < b.mFreq; });
       }
+      MOZ_ASSERT(dtmfIterator != dtmfConfigs.end());
+      conduit->SetDtmfPayloadType(dtmfIterator->mType, dtmfIterator->mFreq);
     }
 
     auto error = conduit->ConfigureSendMediaCodec(configs[0]);
