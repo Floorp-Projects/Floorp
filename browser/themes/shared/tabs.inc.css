@@ -14,7 +14,7 @@
   --tabpanel-background-color: #f9f9fa;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (-moz-toolbar-prefers-color-scheme: dark) {
   :root {
     /* Value for --in-content-page-background for dark mode in in-content/common.inc.css */
     --tabpanel-background-color: #2a2a2e;
@@ -36,7 +36,7 @@
   /* Value for --in-content-page-background in in-content/common.inc.css */
   --tabpanel-background-color: #fff;
 }
-@media (prefers-color-scheme: dark) {
+@media (-moz-toolbar-prefers-color-scheme: dark) {
   :root {
     /* Value for --in-content-page-background for dark mode in in-content/common.inc.css */
     --tabpanel-background-color: rgb(28,27,34);

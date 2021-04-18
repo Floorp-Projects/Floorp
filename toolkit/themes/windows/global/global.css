@@ -57,7 +57,7 @@
      -moz-lwtheme isn't used and the colors are selected based only on the
      system color scheme. Some of these occur in-content (for example
      about:preferences), but some do not (like the library/places window). */
-  @media (prefers-color-scheme: dark) {
+  @media (-moz-toolbar-prefers-color-scheme: dark) {
     :host(:not(:-moz-lwtheme)),
     :root:not(:-moz-lwtheme) {
       --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
