@@ -108,7 +108,6 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
       viewSourceChannel->SetContentType(type);
     } else if (IsImageContentType(type)) {
       // If it's an image, we want to display it the same way we normally would.
-      // Also note the lifetime of "type" allows us to safely use "get()" here.
       contentType = type;
     } else {
       viewSourceChannel->SetContentType(nsLiteralCString(TEXT_PLAIN));
