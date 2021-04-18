@@ -160,7 +160,7 @@
   fill: var(--in-content-icon-color);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (-moz-toolbar-prefers-color-scheme: dark) {
   .container.infobar {
     background: rgb(66,65,77);
   }
@@ -263,7 +263,7 @@ strong {
   color: rgb(226,40,80);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (-moz-toolbar-prefers-color-scheme: dark) {
   :host([type=info]) .icon {
     color: rgb(128,235,255);
   }
