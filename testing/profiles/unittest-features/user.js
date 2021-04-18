@@ -22,6 +22,7 @@ user_pref("media.mediasource.webm.enabled", true);
 user_pref("media.av1.enabled", true);
 user_pref("media.eme.enabled", true);
 user_pref("dom.forms.datetime.others", true);
+user_pref("dom.forms.datetime-local", true);
 // Enable Gamepad
 user_pref("dom.gamepad.enabled", true);
 user_pref("dom.gamepad.non_standard_events.enabled", true);
