@@ -7,9 +7,11 @@ package mozilla.components.browser.engine.gecko.prompt
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.browser.engine.gecko.ext.toAutocompleteCreditCard
 import mozilla.components.browser.engine.gecko.ext.toLoginEntry
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.Choice
+import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
@@ -30,10 +32,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.Autocomplete
 import org.mozilla.geckoview.GeckoResult
@@ -756,6 +758,75 @@ class GeckoPromptDelegateTest {
     )
 
     @Test
+    fun `Calling onCreditCardSelect must provide as CreditCardSelectOption PromptRequest`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var onConfirmWasCalled = false
+        var onDismissWasCalled = false
+
+        var selectCreditCardPrompt: PromptRequest.SelectCreditCard = mock()
+
+        val promptDelegate = spy(GeckoPromptDelegate(mockSession))
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                selectCreditCardPrompt = promptRequest as PromptRequest.SelectCreditCard
+            }
+        })
+
+        val creditCard1 = CreditCard(
+            guid = "1",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "5",
+            expiryYear = "2030",
+            cardType = "amex"
+        )
+        val creditCardSelectOption1 =
+            Autocomplete.CreditCardSelectOption(creditCard1.toAutocompleteCreditCard())
+
+        val creditCard2 = CreditCard(
+            guid = "2",
+            name = "Orange Pineapple",
+            number = "4111111111115555",
+            expiryMonth = "1",
+            expiryYear = "2040",
+            cardType = "amex"
+        )
+        val creditCardSelectOption2 =
+            Autocomplete.CreditCardSelectOption(creditCard2.toAutocompleteCreditCard())
+
+        var geckoResult = promptDelegate.onCreditCardSelect(
+            mock(),
+            geckoSelectCreditCardPrompt(arrayOf(creditCardSelectOption1, creditCardSelectOption2))
+        )
+
+        geckoResult!!.accept {
+            onDismissWasCalled = true
+        }
+
+        selectCreditCardPrompt.onDismiss()
+        assertTrue(onDismissWasCalled)
+
+        val geckoPrompt =
+            geckoSelectCreditCardPrompt(arrayOf(creditCardSelectOption1, creditCardSelectOption2))
+        geckoResult = promptDelegate.onCreditCardSelect(mock(), geckoPrompt)
+
+        geckoResult!!.accept {
+            onConfirmWasCalled = true
+        }
+
+        selectCreditCardPrompt.onConfirm(creditCard1)
+
+        assertTrue(onConfirmWasCalled)
+
+        whenever(geckoPrompt.isComplete).thenReturn(true)
+        onConfirmWasCalled = false
+        selectCreditCardPrompt.onConfirm(creditCard1)
+
+        assertFalse(onConfirmWasCalled)
+    }
+
+    @Test
     fun `Calling onAuthPrompt must provide an Authentication PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
         var authRequest: PromptRequest.Authentication = mock()
@@ -1409,5 +1480,14 @@ class GeckoPromptDelegateTest {
 
     private fun geckoRepostPrompt(): GeckoSession.PromptDelegate.RepostConfirmPrompt {
         return mock()
+    }
+
+    private fun geckoSelectCreditCardPrompt(
+        creditCards: Array<Autocomplete.CreditCardSelectOption>
+    ): GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSelectOption> {
+        val prompt: GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSelectOption> =
+            mock()
+        ReflectionUtils.setField(prompt, "options", creditCards)
+        return prompt
     }
 }

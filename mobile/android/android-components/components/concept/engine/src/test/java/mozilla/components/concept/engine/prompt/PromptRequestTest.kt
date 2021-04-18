@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.Popup
 import mozilla.components.concept.engine.prompt.PromptRequest.Repost
 import mozilla.components.concept.engine.prompt.PromptRequest.SaveLoginPrompt
+import mozilla.components.concept.engine.prompt.PromptRequest.SelectCreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest.SelectLoginPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
@@ -24,6 +25,7 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Date
@@ -255,5 +257,48 @@ class PromptRequestTest {
 
         assertTrue(onAcceptWasCalled)
         assertTrue(onDismissWasCalled)
+    }
+
+    @Test
+    fun `GIVEN a list of credit cards WHEN SelectCreditCard is confirmed or dismissed THEN their respective callback is invoked`() {
+        val creditCard = CreditCard(
+            guid = "id",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "5",
+            expiryYear = "2030",
+            cardType = "amex"
+        )
+        var onDismissCalled = false
+        var onConfirmCalled = false
+        var confirmedCreditCard: CreditCard? = null
+
+        val selectCreditCardPrompt = SelectCreditCard(
+            creditCards = listOf(creditCard),
+            onDismiss = {
+                onDismissCalled = true
+            },
+            onConfirm = {
+                confirmedCreditCard = it
+                onConfirmCalled = true
+            }
+        )
+
+        assertEquals(selectCreditCardPrompt.creditCards, listOf(creditCard))
+
+        selectCreditCardPrompt.onConfirm(creditCard)
+
+        assertTrue(onConfirmCalled)
+        assertFalse(onDismissCalled)
+        assertEquals(creditCard, confirmedCreditCard)
+
+        onConfirmCalled = false
+        confirmedCreditCard = null
+
+        selectCreditCardPrompt.onDismiss()
+
+        assertTrue(onDismissCalled)
+        assertFalse(onConfirmCalled)
+        assertNull(confirmedCreditCard)
     }
 }

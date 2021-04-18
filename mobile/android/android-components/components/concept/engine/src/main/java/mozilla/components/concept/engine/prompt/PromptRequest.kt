@@ -13,7 +13,6 @@ import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
 
 /**
  * Value type that represents a request for showing a native dialog for prompt web content.
- *
  */
 sealed class PromptRequest {
     /**
@@ -66,6 +65,18 @@ sealed class PromptRequest {
         val onLeave: () -> Unit,
         val onStay: () -> Unit
     ) : PromptRequest()
+
+    /**
+     * Value type that represents a request for a select credit card prompt.
+     * @property creditCards a list of [CreditCard]s to select from.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
+     * @property onConfirm callback that is called when the user confirms the credit card selection.
+     */
+    data class SelectCreditCard(
+        val creditCards: List<CreditCard>,
+        override val onDismiss: () -> Unit,
+        val onConfirm: (CreditCard) -> Unit
+    ) : PromptRequest(), Dismissible
 
     /**
      * Value type that represents a request for a save login prompt.

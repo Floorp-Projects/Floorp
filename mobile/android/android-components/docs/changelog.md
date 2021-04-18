@@ -20,6 +20,8 @@ permalink: /changelog/
 
 * **concept-engine**
   * 🌟️ `getBlockedSchemes()` now exposes the list of url shemes that the engine won't load.
+  * Adds a new `CreditCard` data class which is a parallel of GeckoView's `Autocomplete.CreditCard`. [#10205](https://github.com/mozilla-mobile/android-components/issues/10205)
+  * Adds a new `SelectCreditCard` in `PromptRequest` to display a prompt for selecting a credit card to autocomplete. [#10205](https://github.com/mozilla-mobile/android-components/issues/10205)
 
 * **browser-menu**:
   * 🚒 Bug fixed [issue #10133](https://github.com/mozilla-mobile/android-components/issues/10133) - A BrowserMenuCompoundButton used in our BrowserMenu setup with a DynamicWidthRecyclerView is not clipped anymore.
@@ -34,6 +36,7 @@ permalink: /changelog/
 
 * **browser-engine-gecko(-nightly/beta)**
   * ⚠️ From now on there will be only one `concept-engine` implementation using [GeckoView](https://mozilla.github.io/geckoview/). On `master` this will be the Nightly version. In release versions it will be the corresponding Beta or Release version. More about this in [RFC 7](https://mozac.org/rfc/0007-synchronized-releases).
+  * Implements `onCreditCardSelect` in `GeckoPromptDelegate` to handle a credit card selection prompt request. [#10205](https://github.com/mozilla-mobile/android-components/issues/10205)
 
 * **concept-sync**, **browser-storage-sync**
   * ⚠️ **This is a breaking change**: `SyncableStore` now has a `registerWithSyncManager` method for use in newer storage layers.
