@@ -19,48 +19,27 @@
     }
 
     /**
-     * Returns a promise that resolves when we receive the message
-     * "painted" from a child iframe. (It sends this message to indicate
-     * that it has loaded and then performed at least one paint.)
-     */
-    function waitForLoadAndPaint() {
-      return new Promise(resolve => {
-        window.addEventListener('message', () => {
-          if (event.data == "painted") {
-            resolve();
-          }}, { once: true });
-      });
-    }
-
-    /**
-     * Given an iframe, loads src in it, and waits for the load event
+     * Creates an iframe, loads src in it, and waits for the load event
      * for the iframe to fire. Then it snapshots the iframe and returns
-     * the snapshot.
+     * the snapshot (and removes the iframe from the document, to clean up).
      *
      * src can be a URL starting with http, or is otherwise assumed to be
      * a srcdoc string.
      */
-    async function loadSrcImageAndSnapshot(frame, src) {
-      frame.removeAttribute("src");
-      frame.removeAttribute("srcdoc");
+    async function loadSrcImageAndSnapshot(src) {
+      let frame = document.createElement("iframe");
+      document.body.appendChild(frame);
 
       if (!src.startsWith("http")) {
         frame.srcdoc = src;
-        await waitForLoad(frame);
       } else {
         frame.src = src;
-        await waitForLoadAndPaint();
       }
+      await waitForLoad(frame);
 
-      // Wait through two rAF ticks to be sure we've gotten at least one paint
-      // in the outer document after the iframe told us it was ready to be
-      // snapshotted.
-      // XXXdholbert (This might be overkill; we could probably remove this part
-      // once the test is reliably passing.)
-      await new Promise(resolve  => requestAnimationFrame(resolve));
-      await new Promise(resolve  => requestAnimationFrame(resolve));
-
-      return await snapshotWindow(frame, false);
+      let snapshot = await snapshotWindow(frame, false);
+      document.body.removeChild(frame);
+      return snapshot;
     }
 
     add_task(async () => {
@@ -75,26 +54,23 @@
         set: [["svg.context-properties.content.allowed-domains", ALLOWED_DOMAIN]]
       });
 
-      let frame = document.getElementById("frame");
-
-      // When the context properties are allowed, we expect a green square. When they are
-      // not allowed, we expected a red square.
+      // When the context properties are allowed, we expect a green
+      // square. When they are not allowed, we expected a red square.
 
       let redReference = await loadSrcImageAndSnapshot(
-        frame,
         `<div style="width: 100px; height: 100px; background: red"></div>`
       );
 
       let greenReference = await loadSrcImageAndSnapshot(
-        frame,
         `<div style="width: 100px; height: 100px; background: green"></div>`
       );
 
-      let allowedSnapshot = await loadSrcImageAndSnapshot(frame, ALLOWED);
-      let disallowedSnapshot = await loadSrcImageAndSnapshot(frame, DISALLOWED);
+      let allowedSnapshot = await loadSrcImageAndSnapshot(ALLOWED);
+
+      let disallowedSnapshot = await loadSrcImageAndSnapshot(DISALLOWED);
 
       const kNoFuzz = null;
-      info("Sanity-check");
+      info("Reference snapshots should look different from each other");
       assertSnapshots(redReference, greenReference, false, kNoFuzz, "red", "green");
 
       info("Allowed domain should be green");
@@ -106,6 +82,5 @@
   </script>
 </head>
 <body>
-<iframe id="frame"></iframe>
 </body>
 </html>
