@@ -1375,6 +1375,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                                          ComputedStyle&);
   static const FrameConstructionData* FindSearchControlData(const Element&,
                                                             ComputedStyle&);
+  static const FrameConstructionData* FindDateTimeLocalInputData(
+      const Element&, ComputedStyle&);
   static const FrameConstructionData* FindInputData(const Element&,
                                                     ComputedStyle&);
   static const FrameConstructionData* FindObjectData(const Element&,

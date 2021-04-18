@@ -3398,6 +3398,21 @@ nsCSSFrameConstructor::FindSearchControlData(const Element& aElement,
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindDateTimeLocalInputData(const Element& aElement,
+                                                  ComputedStyle& aStyle) {
+  if (StaticPrefs::dom_forms_datetime_local_widget()) {
+    static const FrameConstructionData sDateTimeData =
+        SIMPLE_FCDATA(NS_NewDateTimeControlFrame);
+    return &sDateTimeData;
+  }
+
+  static const FrameConstructionData sTextControlData =
+      SIMPLE_FCDATA(NS_NewTextControlFrame);
+  return &sTextControlData;
+}
+
+/* static */
+const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindInputData(const Element& aElement,
                                      ComputedStyle& aStyle) {
   static const FrameConstructionDataByInt sInputData[] = {
@@ -3425,8 +3440,8 @@ nsCSSFrameConstructor::FindInputData(const Element& aElement,
       SIMPLE_INT_CREATE(NS_FORM_INPUT_MONTH, NS_NewTextControlFrame),
       // TODO: this is temporary until a frame is written: bug 888320
       SIMPLE_INT_CREATE(NS_FORM_INPUT_WEEK, NS_NewTextControlFrame),
-      // TODO: this is temporary until a frame is written: bug 888320
-      SIMPLE_INT_CREATE(NS_FORM_INPUT_DATETIME_LOCAL, NS_NewTextControlFrame),
+      SIMPLE_INT_CHAIN(NS_FORM_INPUT_DATETIME_LOCAL,
+                       FindDateTimeLocalInputData),
       {NS_FORM_INPUT_SUBMIT,
        FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
                                   PseudoStyleType::buttonContent)},
