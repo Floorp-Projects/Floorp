@@ -1287,7 +1287,6 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
     gotPosition = true;
   }
 
-  bool allowSlop = false;
   if (gotPosition) {
     // our position will be relative to our parent, if any
     nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
@@ -1304,10 +1303,9 @@ bool AppWindow::LoadPositionFromXUL(int32_t aSpecWidth, int32_t aSpecHeight) {
       }
     } else {
       StaggerPosition(specX, specY, cssWidth, cssHeight);
-      allowSlop = true;
     }
   }
-  mWindow->ConstrainPosition(allowSlop, &specX, &specY);
+  mWindow->ConstrainPosition(false, &specX, &specY);
   if (specX != currX || specY != currY) {
     SetPositionDesktopPix(specX, specY);
   }
