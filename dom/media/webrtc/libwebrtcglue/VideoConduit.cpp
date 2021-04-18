@@ -314,9 +314,10 @@ WebrtcVideoConduit::WebrtcVideoConduit(
     : mTransportMonitor("WebrtcVideoConduit"),
       mStsThread(aStsThread),
       mMutex("WebrtcVideoConduit::mMutex"),
-      mDecoderFactory(MakeUnique<WebrtcVideoDecoderFactory>(aPCHandle)),
-      mEncoderFactory(
-          MakeUnique<WebrtcVideoEncoderFactory>(std::move(aPCHandle))),
+      mDecoderFactory(MakeUnique<WebrtcVideoDecoderFactory>(
+          GetMainThreadSerialEventTarget(), aPCHandle)),
+      mEncoderFactory(MakeUnique<WebrtcVideoEncoderFactory>(
+          GetMainThreadSerialEventTarget(), std::move(aPCHandle))),
       mVideoAdapter(MakeUnique<cricket::VideoAdapter>()),
       mBufferPool(false, SCALER_BUFFER_POOL_SIZE),
       mEngineTransmitting(false),
