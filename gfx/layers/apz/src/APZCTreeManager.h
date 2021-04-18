@@ -997,7 +997,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * the main-thread gecko code. This can only be accessed on the updater
    * thread. */
   std::unordered_map<ScrollableLayerGuid, ZoomConstraints,
-                     ScrollableLayerGuid::HashFn>
+                     ScrollableLayerGuid::HashIgnoringPresShellFn,
+                     ScrollableLayerGuid::EqualIgnoringPresShellFn>
       mZoomConstraints;
   /* A list of keyboard shortcuts to use for translating keyboard inputs into
    * keyboard actions. This is gathered on the main thread from XBL bindings.
