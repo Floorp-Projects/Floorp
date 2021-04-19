@@ -407,6 +407,8 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
       ParseContext::Scope& scope);
   mozilla::Maybe<LexicalScope::ParserData*> newLexicalScopeData(
       ParseContext::Scope& scope);
+  mozilla::Maybe<ClassBodyScope::ParserData*> newClassBodyScopeData(
+      ParseContext::Scope& scope);
 
  protected:
   enum InvokedPrediction { PredictUninvoked = false, PredictInvoked = true };
@@ -512,6 +514,8 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   bool finishFunctionScopes(bool isStandaloneFunction);
   LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope, Node body,
                                           ScopeKind kind = ScopeKind::Lexical);
+  ClassBodyScopeNodeType finishClassBodyScope(ParseContext::Scope& scope,
+                                              Node body);
   bool finishFunction(bool isStandaloneFunction = false);
 
   inline NameNodeType newName(TaggedParserAtomIndex name);
@@ -698,6 +702,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::checkOptionsCalled_;
 #endif
   using Base::checkForUndefinedPrivateFields;
+  using Base::finishClassBodyScope;
   using Base::finishFunctionScopes;
   using Base::finishLexicalScope;
   using Base::foldConstants_;
@@ -1646,6 +1651,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
 #endif
   using Base::checkForUndefinedPrivateFields;
   using Base::cx_;
+  using Base::finishClassBodyScope;
   using Base::finishFunctionScopes;
   using Base::finishLexicalScope;
   using Base::innerFunction;

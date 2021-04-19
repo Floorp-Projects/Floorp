@@ -65,6 +65,7 @@ using ParserScopeSlotInfo = typename Scope::SlotInfo;
 using ParserGlobalScopeSlotInfo = ParserScopeSlotInfo<GlobalScope>;
 using ParserEvalScopeSlotInfo = ParserScopeSlotInfo<EvalScope>;
 using ParserLexicalScopeSlotInfo = ParserScopeSlotInfo<LexicalScope>;
+using ParserClassBodyScopeSlotInfo = ParserScopeSlotInfo<ClassBodyScope>;
 using ParserFunctionScopeSlotInfo = ParserScopeSlotInfo<FunctionScope>;
 using ParserModuleScopeSlotInfo = ParserScopeSlotInfo<ModuleScope>;
 using ParserVarScopeSlotInfo = ParserScopeSlotInfo<VarScope>;
@@ -307,6 +308,11 @@ class ScopeStencil {
       LexicalScope::ParserData* dataArg, uint32_t firstFrameSlot,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
+  static bool createForClassBodyScope(
+      JSContext* cx, CompilationState& compilationState, ScopeKind kind,
+      ClassBodyScope::ParserData* dataArg, uint32_t firstFrameSlot,
+      mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
+
   static bool createForVarScope(JSContext* cx,
                                 CompilationState& compilationState,
                                 ScopeKind kind, VarScope::ParserData* dataArg,
@@ -416,9 +422,11 @@ class ScopeStencil {
       case ScopeKind::Catch:
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
-      case ScopeKind::FunctionLexical:
-      case ScopeKind::ClassBody: {
+      case ScopeKind::FunctionLexical: {
         return std::is_same_v<ScopeT, LexicalScope>;
+      }
+      case ScopeKind::ClassBody: {
+        return std::is_same_v<ScopeT, ClassBodyScope>;
       }
       case ScopeKind::FunctionBodyVar: {
         return std::is_same_v<ScopeT, VarScope>;
