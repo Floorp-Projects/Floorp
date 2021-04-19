@@ -4157,7 +4157,8 @@ class Document : public nsINode,
              mCommand != mozilla::Command::Copy &&
              mCommand != mozilla::Command::Paste &&
              mCommand != mozilla::Command::SetDocumentReadOnly &&
-             mCommand != mozilla::Command::GetHTML;
+             mCommand != mozilla::Command::GetHTML &&
+             mCommand != mozilla::Command::SelectAll;
     }
     bool IsCutOrCopyCommand() const {
       return mCommand == mozilla::Command::Cut ||
