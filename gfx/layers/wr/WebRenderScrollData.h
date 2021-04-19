@@ -161,6 +161,7 @@ class WebRenderLayerScrollData final {
   Maybe<ScrollableLayerGuid::ViewID> GetAsyncZoomContainerId() const {
     return mAsyncZoomContainerId;
   }
+  bool IsAsyncZoomContainer() const { return mAsyncZoomContainerId.isSome(); }
 
   void Dump(std::ostream& aOut, const WebRenderScrollData& aOwner) const;
 

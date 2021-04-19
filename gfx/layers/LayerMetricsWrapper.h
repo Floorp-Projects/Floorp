@@ -477,10 +477,10 @@ class MOZ_STACK_CLASS LayerMetricsWrapper final {
     return mLayer->IsBackfaceHidden();
   }
 
-  Maybe<ScrollableLayerGuid::ViewID> GetAsyncZoomContainerId() const {
+  Maybe<ScrollableLayerGuid::ViewID> IsAsyncZoomContainer() const {
     MOZ_ASSERT(IsValid());
 
-    return mLayer->GetAsyncZoomContainerId();
+    return mLayer->IsAsyncZoomContainer();
   }
 
   // Expose an opaque pointer to the layer. Mostly used for printf

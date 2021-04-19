@@ -528,10 +528,10 @@ class Layer {
     }
   }
 
-  void SetAsyncZoomContainerId(const Maybe<FrameMetrics::ViewID>& aViewId) {
-    if (mSimpleAttrs.SetAsyncZoomContainerId(aViewId)) {
+  void SetIsAsyncZoomContainer(const Maybe<FrameMetrics::ViewID>& aViewId) {
+    if (mSimpleAttrs.SetIsAsyncZoomContainer(aViewId)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(
-          this, ("Layer::Mutated(%p) AsyncZoomContainerId", this));
+          this, ("Layer::Mutated(%p) IsAsyncZoomContainer", this));
       MutatedSimple();
     }
   }
@@ -679,8 +679,8 @@ class Layer {
   virtual float GetPostXScale() const { return mSimpleAttrs.GetPostXScale(); }
   virtual float GetPostYScale() const { return mSimpleAttrs.GetPostYScale(); }
   bool GetIsFixedPosition() { return mSimpleAttrs.IsFixedPosition(); }
-  Maybe<FrameMetrics::ViewID> GetAsyncZoomContainerId() {
-    return mSimpleAttrs.GetAsyncZoomContainerId();
+  Maybe<FrameMetrics::ViewID> IsAsyncZoomContainer() {
+    return mSimpleAttrs.IsAsyncZoomContainer();
   }
   bool GetTransformIsPerspective() const {
     return mSimpleAttrs.GetTransformIsPerspective();
