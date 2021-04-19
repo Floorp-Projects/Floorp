@@ -511,6 +511,10 @@ class nsDocShell final : public nsDocLoader,
   // This returns true only when using session history in parent.
   bool IsLoadingFromSessionHistory();
 
+  NS_IMETHODIMP OnStartRequest(nsIRequest* aRequest) override;
+  NS_IMETHODIMP OnStopRequest(nsIRequest* aRequest,
+                              nsresult aStatusCode) override;
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
@@ -712,6 +716,8 @@ class nsDocShell final : public nsDocLoader,
                 nsIPrincipal* aPartitionedPrincipalToInehrit,
                 nsIContentSecurityPolicy* aCsp, bool aFireOnLocationChange,
                 bool aAddToGlobalHistory, bool aCloneSHChildren);
+
+  void RecordSingleChannelId();
 
  public:
   // Helper method that is called when a new document (including any
@@ -1214,6 +1220,9 @@ class nsDocShell final : public nsDocLoader,
   // Whether or not handling of the <meta name="viewport"> tag is overridden.
   // Possible values are defined as constants in nsIDocShell.idl.
   MetaViewportOverride mMetaViewportOverride;
+
+  // See WindowGlobalParent::mSingleChannelId.
+  mozilla::Maybe<uint64_t> mSingleChannelId;
 
   // The following two fields cannot be declared as bit fields
   // because of uses with AutoRestore.
