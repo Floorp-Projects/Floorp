@@ -9,7 +9,6 @@
 #define frontend_ObjLiteral_h
 
 #include "mozilla/BloomFilter.h"  // mozilla::BitBloomFilter
-#include "mozilla/EndianUtils.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Span.h"
 
@@ -251,8 +250,7 @@ struct ObjLiteralWriterBase {
     if (!prepareBytes(cx, sizeof(T), &p)) {
       return false;
     }
-    mozilla::NativeEndian::copyAndSwapToLittleEndian(reinterpret_cast<void*>(p),
-                                                     &data, 1);
+    memcpy(p, &data, sizeof(T));
     return true;
   }
 
@@ -435,8 +433,7 @@ struct ObjLiteralReaderBase {
     if (!readBytes(sizeof(T), &p)) {
       return false;
     }
-    mozilla::NativeEndian::copyAndSwapFromLittleEndian(
-        data, reinterpret_cast<const void*>(p), 1);
+    memcpy(data, p, sizeof(T));
     return true;
   }
 
@@ -605,9 +602,8 @@ struct ObjLiteralModifier : private ObjLiteralReaderBase {
   void mapOneAtom(MapT map, frontend::TaggedParserAtomIndex atom,
                   size_t atomCursor) {
     auto atomIndex = map(atom);
-    mozilla::NativeEndian::copyAndSwapToLittleEndian(
-        reinterpret_cast<void*>(mutableData_.data() + atomCursor),
-        atomIndex.rawDataRef(), 1);
+    memcpy(mutableData_.data() + atomCursor, atomIndex.rawDataRef(),
+           sizeof(frontend::TaggedParserAtomIndex));
   }
 
   // Map atoms in single instruction.
