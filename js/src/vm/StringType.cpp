@@ -590,6 +590,15 @@ void CopyChars(Latin1Char* dest, const JSLinearString& str) {
 
 } /* namespace js */
 
+template <typename CharT>
+static constexpr uint32_t StringFlagsForCharType(uint32_t baseFlags) {
+  if constexpr (std::is_same_v<CharT, char16_t>) {
+    return baseFlags;
+  }
+
+  return baseFlags | JSString::LATIN1_CHARS_BIT;
+}
+
 template <JSRope::UsingBarrier b, typename CharT>
 JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
   /*
@@ -731,10 +740,7 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
       if (left.inStringToAtomCache()) {
         flags |= IN_STRING_TO_ATOM_CACHE;
       }
-      if constexpr (std::is_same_v<CharT, Latin1Char>) {
-        flags |= LATIN1_CHARS_BIT;
-      }
-      left.setLengthAndFlags(left_len, flags);
+      left.setLengthAndFlags(left_len, StringFlagsForCharType<CharT>(flags));
       left.d.s.u3.base = (JSLinearString*)this; /* will be true on exit */
       goto visit_right_child;
     }
@@ -792,11 +798,8 @@ visit_right_child : {
 finish_node : {
   if (str == this) {
     MOZ_ASSERT(pos == wholeChars + wholeLength);
-    if constexpr (std::is_same_v<CharT, char16_t>) {
-      str->setLengthAndFlags(wholeLength, EXTENSIBLE_FLAGS);
-    } else {
-      str->setLengthAndFlags(wholeLength, EXTENSIBLE_FLAGS | LATIN1_CHARS_BIT);
-    }
+    str->setLengthAndFlags(wholeLength,
+                           StringFlagsForCharType<CharT>(EXTENSIBLE_FLAGS));
     str->setNonInlineChars(wholeChars);
     str->d.s.u3.capacity = wholeCapacity;
 
@@ -810,12 +813,8 @@ finish_node : {
   JSString* parent;
   uintptr_t flattenFlags;
   uint32_t len = pos - str->nonInlineCharsRaw<CharT>();
-  if constexpr (std::is_same_v<CharT, char16_t>) {
-    parent = str->unsetFlattenData(len, INIT_DEPENDENT_FLAGS, &flattenFlags);
-  } else {
-    parent = str->unsetFlattenData(len, INIT_DEPENDENT_FLAGS | LATIN1_CHARS_BIT,
-                                   &flattenFlags);
-  }
+  parent = str->unsetFlattenData(
+      len, StringFlagsForCharType<CharT>(INIT_DEPENDENT_FLAGS), &flattenFlags);
   str->d.s.u3.base = (JSLinearString*)this; /* will be true on exit */
 
   // Every interior (rope) node in the rope's tree will be visited during
