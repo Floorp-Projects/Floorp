@@ -8,7 +8,10 @@ const {
   TYPES: { THREAD_STATE },
 } = require("devtools/server/actors/resources/index");
 
-const { PAUSE_REASONS } = require("devtools/server/actors/thread");
+const {
+  PAUSE_REASONS,
+  STATES: THREAD_STATES,
+} = require("devtools/server/actors/thread");
 
 // Possible values of breakpoint's resource's `state` attribute
 const STATES = {
@@ -51,6 +54,15 @@ class BreakpointWatcher {
     const { threadActor } = targetActor;
     this.threadActor = threadActor;
     this.onAvailable = onAvailable;
+
+    // If this watcher is created during target creation, attach the thread actor automatically.
+    // Otherwise it would not pause on anything (especially debugger statements).
+    // However, do not attach the thread actor for Workers. They use a codepath
+    // which releases the worker on `attach`. For them, the client will call `attach`. (bug 1691986)
+    const isTargetCreation = this.threadActor.state == THREAD_STATES.DETACHED;
+    if (isTargetCreation && !targetActor.targetType.endsWith("worker")) {
+      await this.threadActor.attach({});
+    }
 
     this.isInterrupted = false;
 
