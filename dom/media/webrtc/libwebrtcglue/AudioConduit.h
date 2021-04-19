@@ -168,10 +168,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const override;
   webrtc::Call::Stats GetCallStats() const override;
 
-  bool SetDtmfPayloadType(unsigned char type, int freq) override;
-
-  bool InsertDTMFTone(int channel, int eventCode, bool outOfBand, int lengthMs,
-                      int attenuationDb) override;
+  bool InsertDTMFTone(unsigned char payloadType, int payloadFrequency,
+                      int eventCode, int lengthMs) override;
 
   bool IsSamplingFreqSupported(int freq) const override;
 
@@ -241,8 +239,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   // Accessed only on the Call thread.
   bool mDtmfEnabled;
-  int mDtmfPayloadType = -1;
-  int mDtmfPayloadFrequency = -1;
 
   Mutex mMutex;
 
