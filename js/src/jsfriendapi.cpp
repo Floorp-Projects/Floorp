@@ -167,6 +167,12 @@ JS_FRIEND_API bool JS_WrapPropertyDescriptor(
   return cx->compartment()->wrap(cx, desc);
 }
 
+JS_FRIEND_API bool JS_WrapPropertyDescriptor(
+    JSContext* cx,
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc) {
+  return cx->compartment()->wrap(cx, desc);
+}
+
 JS_FRIEND_API void JS_TraceShapeCycleCollectorChildren(JS::CallbackTracer* trc,
                                                        JS::GCCellPtr shape) {
   MOZ_ASSERT(shape.is<Shape>());

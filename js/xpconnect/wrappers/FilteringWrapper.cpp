@@ -82,7 +82,7 @@ bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
 template <typename Base, typename Policy>
 bool FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const {
   MOZ_CRASH("FilteringWrappers are now always opaque");
 }
 

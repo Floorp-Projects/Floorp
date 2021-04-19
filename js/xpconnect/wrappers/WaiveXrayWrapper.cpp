@@ -34,11 +34,26 @@ static bool WaiveAccessors(JSContext* cx,
 
 bool WaiveXrayWrapper::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
-  return CrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id,
-                                                           desc) &&
-         WrapperFactory::WaiveXrayAndWrap(cx, desc.value()) &&
-         WaiveAccessors(cx, desc);
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const {
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc_(cx);
+  if (!CrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id,
+                                                         &desc_)) {
+    return false;
+  }
+
+  if (desc_.isNothing()) {
+    desc.reset();
+    return true;
+  }
+
+  Rooted<PropertyDescriptor> pd(cx, *desc_);
+  if (!WrapperFactory::WaiveXrayAndWrap(cx, pd.value()) ||
+      !WaiveAccessors(cx, &pd)) {
+    return false;
+  }
+
+  desc.set(mozilla::Some(pd.get()));
+  return true;
 }
 
 bool WaiveXrayWrapper::get(JSContext* cx, HandleObject wrapper,

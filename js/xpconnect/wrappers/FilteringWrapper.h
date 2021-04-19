@@ -9,6 +9,7 @@
 
 #include "XrayWrapper.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/Wrapper.h"
 
@@ -25,7 +26,8 @@ class FilteringWrapper : public Base {
 
   virtual bool getOwnPropertyDescriptor(
       JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc)
+      const override;
   virtual bool ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                JS::MutableHandleIdVector props) const override;
 
