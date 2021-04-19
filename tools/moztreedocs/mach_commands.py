@@ -107,7 +107,6 @@ class Documentation(MachCommandBase):
     )
     def build_docs(
         self,
-        command_context,
         path=None,
         fmt="html",
         outdir=None,
@@ -391,7 +390,7 @@ class Documentation(MachCommandBase):
         "mach-telemetry",
         description="Generate documentation from Glean metrics.yaml files",
     )
-    def generate_telemetry_docs(self, command_context):
+    def generate_telemetry_docs(self):
         args = [
             sys.executable,
             "-m" "glean_parser",
