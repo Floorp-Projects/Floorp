@@ -1439,6 +1439,7 @@ void RuntimeScopeData<SlotInfo>::trace(JSTracer* trc) {
   TraceBindingNames(trc, GetScopeDataTrailingNamesPointer(this), length);
 }
 template void RuntimeScopeData<LexicalScope::SlotInfo>::trace(JSTracer* trc);
+template void RuntimeScopeData<ClassBodyScope::SlotInfo>::trace(JSTracer* trc);
 template void RuntimeScopeData<VarScope::SlotInfo>::trace(JSTracer* trc);
 template void RuntimeScopeData<GlobalScope::SlotInfo>::trace(JSTracer* trc);
 template void RuntimeScopeData<EvalScope::SlotInfo>::trace(JSTracer* trc);
@@ -1492,9 +1493,14 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
       case ScopeKind::Catch:
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
-      case ScopeKind::FunctionLexical:
-      case ScopeKind::ClassBody: {
+      case ScopeKind::FunctionLexical: {
         LexicalScope::RuntimeData& data = scope->as<LexicalScope>().data();
+        names = GetScopeDataTrailingNames(&data);
+        break;
+      }
+
+      case ScopeKind::ClassBody: {
+        ClassBodyScope::RuntimeData& data = scope->as<ClassBodyScope>().data();
         names = GetScopeDataTrailingNames(&data);
         break;
       }
