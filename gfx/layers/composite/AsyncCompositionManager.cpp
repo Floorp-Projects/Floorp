@@ -694,7 +694,7 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
         // scroll portion of the async transform to those layers (as the zoom
         // portion will go on the async zoom container).
         if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
-                layer->IsAsyncZoomContainer()) {
+                layer->GetAsyncZoomContainerId()) {
           zoomContainer = layer;
           ForEachNode<ForwardIterator>(
               LayerMetricsWrapper(layer),
@@ -966,7 +966,7 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
           }
 
           if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
-                  layer->IsAsyncZoomContainer()) {
+                  layer->GetAsyncZoomContainerId()) {
             if (zoomedMetrics) {
               AsyncTransform zoomTransform = sampler->GetCurrentAsyncTransform(
                   *zoomedMetrics, {AsyncTransformComponent::eVisual});
