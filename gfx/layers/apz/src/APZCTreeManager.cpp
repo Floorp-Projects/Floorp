@@ -1355,7 +1355,9 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
                                       apzc->TestHasAsyncKeyScrolled());
     }
 
-    if (newApzc) {
+    // We must update the zoom constraints even if the apzc isn't new because it
+    // might have moved.
+    if (node->IsPrimaryHolder()) {
       if (aZoomConstraints) {
         apzc->UpdateZoomConstraints(*aZoomConstraints);
 
