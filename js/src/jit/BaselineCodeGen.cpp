@@ -4737,6 +4737,19 @@ bool BaselineCodeGen<Handler>::emit_PushLexicalEnv() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_PushClassBodyEnv() {
+  prepareVMCall();
+  masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+
+  pushScriptGCThingArg(ScriptGCThingType::Scope, R1.scratchReg(),
+                       R2.scratchReg());
+  pushArg(R0.scratchReg());
+
+  using Fn = bool (*)(JSContext*, BaselineFrame*, Handle<ClassBodyScope*>);
+  return callVM<Fn, jit::PushClassBodyEnv>();
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_PopLexicalEnv() {
   frame.syncStack(0);
 

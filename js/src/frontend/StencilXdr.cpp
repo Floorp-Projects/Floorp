@@ -224,6 +224,7 @@ template <XDRMode mode>
   AssertScopeSpecificDataIsEncodable<FunctionScope>();
   AssertScopeSpecificDataIsEncodable<VarScope>();
   AssertScopeSpecificDataIsEncodable<LexicalScope>();
+  AssertScopeSpecificDataIsEncodable<ClassBodyScope>();
   AssertScopeSpecificDataIsEncodable<EvalScope>();
   AssertScopeSpecificDataIsEncodable<GlobalScope>();
   AssertScopeSpecificDataIsEncodable<ModuleScope>();

@@ -111,10 +111,10 @@ static inline void AssertScopeMatchesEnvironment(Scope* scope,
         case ScopeKind::StrictNamedLambda:
         case ScopeKind::FunctionLexical:
         case ScopeKind::ClassBody:
-          MOZ_ASSERT(&env->as<BlockLexicalEnvironmentObject>().scope() ==
+          MOZ_ASSERT(&env->as<ScopedLexicalEnvironmentObject>().scope() ==
                      si.scope());
           env =
-              &env->as<BlockLexicalEnvironmentObject>().enclosingEnvironment();
+              &env->as<ScopedLexicalEnvironmentObject>().enclosingEnvironment();
           break;
 
         case ScopeKind::With:
@@ -296,6 +296,18 @@ bool InterpreterFrame::recreateLexicalEnvironment(JSContext* cx) {
   }
 
   replaceInnermostEnvironment(*fresh);
+  return true;
+}
+
+bool InterpreterFrame::pushClassBodyEnvironment(JSContext* cx,
+                                                Handle<ClassBodyScope*> scope) {
+  ClassBodyLexicalEnvironmentObject* env =
+      ClassBodyLexicalEnvironmentObject::createForFrame(cx, scope, this);
+  if (!env) {
+    return false;
+  }
+
+  pushOnEnvironmentChain(*env);
   return true;
 }
 
