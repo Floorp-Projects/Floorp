@@ -6992,6 +6992,7 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
   return doc && canSavePresentation;
 }
 
+/* static */
 void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
   // There are 11 possible reasons to make a request fails to use BFCache
   // (see BFCacheStatus in dom/base/Document.h), and we'd like to record

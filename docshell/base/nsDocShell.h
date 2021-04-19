@@ -717,8 +717,6 @@ class nsDocShell final : public nsDocLoader,
                 nsIContentSecurityPolicy* aCsp, bool aFireOnLocationChange,
                 bool aAddToGlobalHistory, bool aCloneSHChildren);
 
-  void RecordSingleChannelId();
-
  public:
   // Helper method that is called when a new document (including any
   // sub-documents - ie. frames) has been completely loaded.
@@ -865,7 +863,7 @@ class nsDocShell final : public nsDocLoader,
   bool CanSavePresentation(uint32_t aLoadType, nsIRequest* aNewRequest,
                            mozilla::dom::Document* aNewDocument);
 
-  void ReportBFCacheComboTelemetry(uint16_t aCombo);
+  static void ReportBFCacheComboTelemetry(uint16_t aCombo);
 
   // Captures the state of the supporting elements of the presentation
   // (the "window" object, docshell tree, meta-refresh loads, and security
@@ -1084,6 +1082,8 @@ class nsDocShell final : public nsDocLoader,
 
   bool ShouldOpenInBlankTarget(const nsAString& aOriginalTarget,
                                nsIURI* aLinkURI, nsIContent* aContent);
+
+  void RecordSingleChannelId();
 
  private:  // data members
   nsString mTitle;
