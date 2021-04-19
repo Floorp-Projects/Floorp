@@ -280,6 +280,9 @@ class WindowGlobalParent final : public WindowContext,
 
   mozilla::ipc::IPCResult RecvResetSessionStore(uint32_t aEpoch);
 
+  mozilla::ipc::IPCResult RecvUpdateBFCacheStatus(const uint16_t& aOnFlags,
+                                                  const uint16_t& aOffFlags);
+
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,
@@ -352,6 +355,8 @@ class WindowGlobalParent final : public WindowContext,
   // Whether we have sent our page use counters, and so should ignore any
   // subsequent ExpectPageUseCounters calls.
   bool mSentPageUseCounters = false;
+
+  uint16_t mBFCacheStatus = 0;
 };
 
 }  // namespace dom
