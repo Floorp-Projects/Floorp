@@ -113,6 +113,8 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   [[nodiscard]] bool enterLexical(BytecodeEmitter* bce, ScopeKind kind,
                                   LexicalScope::ParserData* bindings);
+  [[nodiscard]] bool enterClassBody(BytecodeEmitter* bce, ScopeKind kind,
+                                    ClassBodyScope::ParserData* bindings);
   [[nodiscard]] bool enterNamedLambda(BytecodeEmitter* bce,
                                       FunctionBox* funbox);
   [[nodiscard]] bool enterFunction(BytecodeEmitter* bce, FunctionBox* funbox);

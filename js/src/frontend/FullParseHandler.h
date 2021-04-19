@@ -874,6 +874,11 @@ class FullParseHandler {
     return new_<LexicalScopeNode>(bindings, body, kind);
   }
 
+  ClassBodyScopeNodeType newClassBodyScope(ClassBodyScope::ParserData* bindings,
+                                           Node body) {
+    return new_<ClassBodyScopeNode>(bindings, body);
+  }
+
   CallNodeType newNewExpression(uint32_t begin, Node ctor, Node args,
                                 bool isSpread) {
     return new_<CallNode>(ParseNodeKind::NewExpr,
