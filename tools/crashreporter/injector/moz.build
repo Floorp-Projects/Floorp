@@ -1,0 +1,36 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SharedLibrary("breakpadinjector")
+
+UNIFIED_SOURCES += [
+    "/toolkit/crashreporter/breakpad-client/linux/crash_generation/crash_generation_client.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/dump_writer_common/thread_info.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/dump_writer_common/ucontext_reader.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/handler/exception_handler.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/handler/guid_generator.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/handler/minidump_descriptor.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/log/log.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/microdump_writer/microdump_writer.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/minidump_writer/linux_dumper.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/minidump_writer/linux_ptrace_dumper.cc",
+    "/toolkit/crashreporter/breakpad-client/linux/minidump_writer/minidump_writer.cc",
+    "/toolkit/crashreporter/breakpad-client/minidump_file_writer.cc",
+    "injector.cc",
+]
+
+USE_LIBS += [
+    "breakpad_common_s",
+    "breakpad_linux_common_s",
+]
+
+DisableStlWrapping()
+
+# On Linux we override the guid_creator.h header and use our own instead
+if CONFIG["OS_TARGET"] in ("Linux", "Android"):
+    DEFINES["COMMON_LINUX_GUID_CREATOR_H__"] = 1
+
+include("/toolkit/crashreporter/crashreporter.mozbuild")
