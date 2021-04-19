@@ -428,6 +428,10 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
     ancestorTransforms.push(AncestorTransform());
     state.mParentHasPerspective.push(false);
     state.mOverrideFlags.push(EventRegionsOverride::NoOverride);
+    nsTArray<Maybe<ZoomConstraints>> zoomConstraintsStack;
+
+    // push a nothing to be used for anything outside an async zoom container
+    zoomConstraintsStack.AppendElement(Nothing());
 
     mApzcTreeLog << "[start]\n";
     mTreeLock.AssertCurrentThreadIn();
@@ -437,12 +441,21 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
         [&](ScrollNode aLayerMetrics) {
           mApzcTreeLog << aLayerMetrics.Name() << '\t';
 
-          if (aLayerMetrics.GetAsyncZoomContainerId()) {
+          if (auto asyncZoomContainerId =
+                  aLayerMetrics.GetAsyncZoomContainerId()) {
             if (asyncZoomContainerNestingDepth > 0) {
               haveNestedAsyncZoomContainers = true;
             }
             mAsyncZoomContainerSubtree = Some(layersId);
             ++asyncZoomContainerNestingDepth;
+
+            auto it = mZoomConstraints.find(
+                ScrollableLayerGuid(layersId, 0, *asyncZoomContainerId));
+            if (it != mZoomConstraints.end()) {
+              zoomConstraintsStack.AppendElement(Some(it->second));
+            } else {
+              zoomConstraintsStack.AppendElement(Nothing());
+            }
           }
 
           if (aLayerMetrics.Metrics().IsRootContent()) {
@@ -466,7 +479,8 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
 
           HitTestingTreeNode* node = PrepareNodeForLayer(
               lock, aLayerMetrics, aLayerMetrics.Metrics(), layersId,
-              ancestorTransforms.top(), parent, next, state);
+              zoomConstraintsStack.LastElement(), ancestorTransforms.top(),
+              parent, next, state);
           MOZ_ASSERT(node);
           AsyncPanZoomController* apzc = node->GetApzc();
           aLayerMetrics.SetApzc(apzc);
@@ -553,6 +567,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
         [&](ScrollNode aLayerMetrics) {
           if (aLayerMetrics.GetAsyncZoomContainerId()) {
             --asyncZoomContainerNestingDepth;
+            zoomConstraintsStack.RemoveLastElement();
           }
           if (aLayerMetrics.GetReferentId()) {
             state.mOverrideFlags.pop();
@@ -1137,6 +1152,7 @@ template <class ScrollNode>
 HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     const RecursiveMutexAutoLock& aProofOfTreeLock, const ScrollNode& aLayer,
     const FrameMetrics& aMetrics, LayersId aLayersId,
+    const Maybe<ZoomConstraints>& aZoomConstraints,
     const AncestorTransform& aAncestorTransform, HitTestingTreeNode* aParent,
     HitTestingTreeNode* aNextSibling, TreeBuildingState& aState) {
   bool needsApzc = true;
@@ -1340,18 +1356,27 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     }
 
     if (newApzc) {
-      auto it = mZoomConstraints.find(guid);
-      if (it != mZoomConstraints.end()) {
-        // We have a zoomconstraints for this guid, apply it.
-        apzc->UpdateZoomConstraints(it->second);
-      } else if (!apzc->HasNoParentWithSameLayersId()) {
-        // This is a sub-APZC, so inherit the zoom constraints from its parent.
-        // This ensures that if e.g. user-scalable=no was specified, none of the
-        // APZCs for that subtree allow double-tap to zoom.
-        apzc->UpdateZoomConstraints(apzc->GetParent()->GetZoomConstraints());
+      if (aZoomConstraints) {
+        apzc->UpdateZoomConstraints(*aZoomConstraints);
+
+#ifdef DEBUG
+        auto it = mZoomConstraints.find(guid);
+        if (it != mZoomConstraints.end()) {
+          MOZ_ASSERT(it->second == *aZoomConstraints);
+        }
+      } else {
+        // We'd like to assert these things but they are not true because xul
+        // root content gets zoomable zoom constraints, but which is not
+        // zoomable because it doesn't have a root scroll frame.
+        // clang-format off
+        // MOZ_ASSERT(mZoomConstraints.find(guid) == mZoomConstraints.end());
+        // auto it = mZoomConstraints.find(guid);
+        // if (it != mZoomConstraints.end()) {
+        //   MOZ_ASSERT(!it->second.mAllowZoom && !it->second.mAllowDoubleTapZoom);
+        // }
+        // clang-format on
+#endif
       }
-      // Otherwise, this is the root of a layers id, but we didn't have a saved
-      // zoom constraints. Leave it empty for now.
     }
 
     // Add a guid -> APZC mapping for the newly created APZC.
