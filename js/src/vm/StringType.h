@@ -725,8 +725,9 @@ class JSRope : public JSString {
   JSLinearString* flattenInternal();
   template <UsingBarrier usingBarrier>
   JSLinearString* flattenInternal();
+
   template <UsingBarrier usingBarrier, typename CharT>
-  JSLinearString* flattenInternal();
+  static JSLinearString* flattenInternal(JSRope* root);
 
   template <UsingBarrier usingBarrier>
   static void ropeBarrierDuringFlattening(JSString* str);

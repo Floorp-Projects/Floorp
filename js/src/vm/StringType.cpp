@@ -624,16 +624,17 @@ JSLinearString* JSRope::flattenInternal() {
 template <JSRope::UsingBarrier usingBarrier>
 JSLinearString* JSRope::flattenInternal() {
   if (hasTwoByteChars()) {
-    return flattenInternal<usingBarrier, char16_t>();
+    return flattenInternal<usingBarrier, char16_t>(this);
   }
 
-  return flattenInternal<usingBarrier, Latin1Char>();
+  return flattenInternal<usingBarrier, Latin1Char>(this);
 }
 
 template <JSRope::UsingBarrier usingBarrier, typename CharT>
-JSLinearString* JSRope::flattenInternal() {
+/* static */
+JSLinearString* JSRope::flattenInternal(JSRope* root) {
   /*
-   * Consider the DAG of JSRopes rooted at this JSRope, with non-JSRopes as
+   * Consider the DAG of JSRopes rooted at |root|, with non-JSRopes as
    * its leaves. Mutate the root JSRope into a JSExtensibleString containing
    * the full flattened text that the root represents, and mutate all other
    * JSRopes in the interior of the DAG into JSDependentStrings that refer to
@@ -685,10 +686,10 @@ JSLinearString* JSRope::flattenInternal() {
    * change its address, only its owning JSExtensibleString, so all chars()
    * pointers in the JSDependentStrings are still valid.
    */
-  const size_t wholeLength = length();
+  const size_t wholeLength = root->length();
   size_t wholeCapacity;
   CharT* wholeChars;
-  JSString* str = this;
+  JSString* str = root;
   CharT* pos;
 
   // JSString::setFlattenData() is used to store a tagged pointer to the parent
@@ -698,10 +699,10 @@ JSLinearString* JSRope::flattenInternal() {
 
   AutoCheckCannotGC nogc;
 
-  gc::StoreBuffer* bufferIfNursery = storeBuffer();
+  gc::StoreBuffer* bufferIfNursery = root->storeBuffer();
 
   /* Find the left most string, containing the first string. */
-  JSRope* leftMostRope = this;
+  JSRope* leftMostRope = root;
   while (leftMostRope->leftChild()->isRope()) {
     leftMostRope = &leftMostRope->leftChild()->asRope();
   }
@@ -716,7 +717,7 @@ JSLinearString* JSRope::flattenInternal() {
 
       // registerMallocedBuffer is fallible, so attempt it first before doing
       // anything irreversible.
-      Nursery& nursery = runtimeFromMainThread()->gc.nursery();
+      Nursery& nursery = root->runtimeFromMainThread()->gc.nursery();
       bool inTenured = !bufferIfNursery;
       if (!inTenured && left.isTenured()) {
         // tenured leftmost child is giving its chars buffer to the
@@ -763,17 +764,17 @@ JSLinearString* JSRope::flattenInternal() {
         flags |= IN_STRING_TO_ATOM_CACHE;
       }
       left.setLengthAndFlags(left_len, StringFlagsForCharType<CharT>(flags));
-      left.d.s.u3.base = (JSLinearString*)this; /* will be true on exit */
+      left.d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
       goto visit_right_child;
     }
   }
 
-  if (!AllocChars(this, wholeLength, &wholeChars, &wholeCapacity)) {
+  if (!AllocChars(root, wholeLength, &wholeChars, &wholeCapacity)) {
     return nullptr;
   }
 
-  if (!isTenured()) {
-    Nursery& nursery = runtimeFromMainThread()->gc.nursery();
+  if (!root->isTenured()) {
+    Nursery& nursery = root->runtimeFromMainThread()->gc.nursery();
     if (!nursery.registerMallocedBuffer(wholeChars,
                                         wholeCapacity * sizeof(CharT))) {
       js_free(wholeChars);
@@ -809,7 +810,7 @@ visit_right_child : {
 }
 
 finish_node : {
-  if (str == this) {
+  if (str == root) {
     MOZ_ASSERT(pos == wholeChars + wholeLength);
     str->setLengthAndFlags(wholeLength,
                            StringFlagsForCharType<CharT>(EXTENSIBLE_FLAGS));
@@ -821,14 +822,14 @@ finish_node : {
                     MemoryUse::StringContents);
     }
 
-    return &this->asLinear();
+    return &root->asLinear();
   }
   JSString* parent;
   uintptr_t flattenFlags;
   uint32_t len = pos - str->nonInlineCharsRaw<CharT>();
   parent = str->unsetFlattenData(
       len, StringFlagsForCharType<CharT>(INIT_DEPENDENT_FLAGS), &flattenFlags);
-  str->d.s.u3.base = (JSLinearString*)this; /* will be true on exit */
+  str->d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
 
   // Every interior (rope) node in the rope's tree will be visited during
   // the traversal and post-barriered here, so earlier additions of
@@ -838,7 +839,7 @@ finish_node : {
   // the nursery. Note that the root was a rope but will be an extensible
   // string when we return, so it will not point to any strings and need
   // not be barriered.
-  gc::StoreBuffer* bufferIfNursery = storeBuffer();
+  gc::StoreBuffer* bufferIfNursery = root->storeBuffer();
   if (bufferIfNursery && str->isTenured()) {
     bufferIfNursery->putWholeCell(str);
   }
