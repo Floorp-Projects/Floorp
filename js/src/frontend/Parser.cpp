@@ -74,6 +74,7 @@ using namespace js;
 
 using mozilla::AssertedCast;
 using mozilla::AsVariant;
+using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::PointerRangeSize;
@@ -1470,6 +1471,7 @@ Maybe<LexicalScope::ParserData*> ParserBase::newLexicalScopeData(
 Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
     JSContext* cx, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc) {
+  ParserBindingNameVector privateBrand(cx);
   ParserBindingNameVector synthetics(cx);
   ParserBindingNameVector privateMethods(cx);
 
@@ -1481,8 +1483,15 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
                               allBindingsClosedOver || bi.closedOver());
     switch (bi.kind()) {
       case BindingKind::Synthetic:
-        if (!synthetics.append(binding)) {
-          return Nothing();
+        if (bi.name() == TaggedParserAtomIndex::WellKnown::dotPrivateBrand()) {
+          MOZ_ASSERT(privateBrand.empty());
+          if (!privateBrand.append(binding)) {
+            return Nothing();
+          }
+        } else {
+          if (!synthetics.append(binding)) {
+            return Nothing();
+          }
         }
         break;
 
@@ -1498,20 +1507,42 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
     }
   }
 
+  // We should have zero or one private brands.
+  MOZ_ASSERT(privateBrand.length() == 0 || privateBrand.length() == 1);
+
   ClassBodyScope::ParserData* bindings = nullptr;
-  uint32_t numBindings = synthetics.length() + privateMethods.length();
+  uint32_t numBindings =
+      privateBrand.length() + synthetics.length() + privateMethods.length();
 
   if (numBindings > 0) {
     bindings = NewEmptyBindingData<ClassBodyScope>(cx, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
+    // To simplify initialization of the bindings, we concatenate the
+    // synthetics+privateBrand vector such that the private brand is always the
+    // first element, as ordering is important. See comments in ClassBodyScope.
+    ParserBindingNameVector brandAndSynthetics(cx);
+    if (!brandAndSynthetics.appendAll(privateBrand)) {
+      return Nothing();
+    }
+    if (!brandAndSynthetics.appendAll(synthetics)) {
+      return Nothing();
+    }
 
     // The ordering here is important. See comments in ClassBodyScope.
-    InitializeBindingData(bindings, numBindings, synthetics,
+    InitializeBindingData(bindings, numBindings, brandAndSynthetics,
                           &ParserClassBodyScopeSlotInfo::privateMethodStart,
                           privateMethods);
   }
+
+  // `EmitterScope::lookupPrivate()` requires `.privateBrand` to be stored in a
+  // predictable slot: the first slot available in the environment object,
+  // `JSSLOT_FREE(&ClassBodyLexicalEnvironmentObject::class_)`. We assume that
+  // if `.privateBrand` is first in the scope, it will be stored there.
+  MOZ_ASSERT_IF(!privateBrand.empty(),
+                GetScopeDataTrailingNames(bindings)[0].name() ==
+                    TaggedParserAtomIndex::WellKnown::dotPrivateBrand());
 
   return Some(bindings);
 }
