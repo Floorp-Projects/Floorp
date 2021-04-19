@@ -398,11 +398,13 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     }
     MOZ_RELEASE_ASSERT(contentIndex < styleContent->ContentCount());
     MOZ_RELEASE_ASSERT(styleContent->ContentAt(contentIndex).IsImage());
-    auto& imageUrl = styleContent->ContentAt(contentIndex).AsImage();
-    MOZ_ASSERT(imageUrl.IsImageRequestType(),
+    const StyleImage& image = styleContent->ContentAt(contentIndex).AsImage();
+    MOZ_ASSERT(image.IsImageRequestType(),
                "Content image should only parse url() type");
+    auto [finalImage, resolution] = image.FinalImageAndResolution();
     Document* doc = PresContext()->Document();
-    if (imgRequestProxy* proxy = imageUrl.GetImageRequest()) {
+    if (imgRequestProxy* proxy = finalImage->GetImageRequest()) {
+      mContentURLRequestResolution = resolution;
       proxy->Clone(mListener, doc, getter_AddRefs(mContentURLRequest));
       SetupForContentURLRequest();
     }
@@ -454,6 +456,20 @@ void nsImageFrame::SetupForContentURLRequest() {
   }
 }
 
+static void ScaleIntrinsicSizeForDensity(IntrinsicSize& aSize,
+                                         double aDensity) {
+  if (aDensity == 1.0) {
+    return;
+  }
+
+  if (aSize.width) {
+    aSize.width = Some(NSToCoordRound(double(*aSize.width) / aDensity));
+  }
+  if (aSize.height) {
+    aSize.height = Some(NSToCoordRound(double(*aSize.height) / aDensity));
+  }
+}
+
 static void ScaleIntrinsicSizeForDensity(nsIContent& aContent,
                                          IntrinsicSize& aSize) {
   auto* image = HTMLImageElement::FromNode(aContent);
@@ -468,16 +484,7 @@ static void ScaleIntrinsicSizeForDensity(nsIContent& aContent,
 
   double density = selector->GetSelectedImageDensity();
   MOZ_ASSERT(density >= 0.0);
-  if (density == 1.0) {
-    return;
-  }
-
-  if (aSize.width) {
-    aSize.width = Some(NSToCoordRound(double(*aSize.width) / density));
-  }
-  if (aSize.height) {
-    aSize.height = Some(NSToCoordRound(double(*aSize.height) / density));
-  }
+  ScaleIntrinsicSizeForDensity(aSize, density);
 }
 
 static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
@@ -496,6 +503,9 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
     intrinsicSize.height = size.height == -1 ? Nothing() : Some(size.height);
     if (aKind == nsImageFrame::Kind::ImageElement) {
       ScaleIntrinsicSizeForDensity(*aFrame.GetContent(), intrinsicSize);
+    } else {
+      ScaleIntrinsicSizeForDensity(intrinsicSize,
+                                   aFrame.GetContentURLRequestResolution());
     }
     return intrinsicSize;
   }
@@ -1476,7 +1486,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
       nsRect dest(flushRight ? inner.XMost() - size : inner.x, inner.y, size,
                   size);
       result = nsLayoutUtils::DrawSingleImage(
-          aRenderingContext, PresContext(), imgCon,
+          aRenderingContext, PresContext(), imgCon, /* aResolution = */ 1.0f,
           nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
           /* no SVGImageContext */ Nothing(), aFlags);
     }
@@ -2080,8 +2090,10 @@ ImgDrawResult nsImageFrame::PaintImage(gfxContext& aRenderingContext,
   Maybe<SVGImageContext> svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
 
+  // We've already accounted for resolution via mIntrinsicSize, which influences
+  // the dest rect, so we don't need to worry about it here..
   ImgDrawResult result = nsLayoutUtils::DrawSingleImage(
-      aRenderingContext, PresContext(), aImage,
+      aRenderingContext, PresContext(), aImage, /* aResolution = */ 1.0f,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
       svgContext, flags, &anchorPoint);
 
