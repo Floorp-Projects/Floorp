@@ -3566,15 +3566,13 @@ EditorDOMRange WSRunScanner::GetRangeForDeletingBlockElementBoundaries(
 // static
 EditorDOMRange
 WSRunScanner::GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
-    const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange) {
+    Element* aEditingHost, const EditorDOMRange& aRange) {
   MOZ_ASSERT(aRange.IsPositionedAndValid());
   MOZ_ASSERT(aRange.EndRef().IsSetAndValid());
   MOZ_ASSERT(aRange.StartRef().IsSetAndValid());
 
-  const Element* editingHost = aHTMLEditor.GetActiveEditingHost();
-
   EditorDOMRange result;
-  TextFragmentData textFragmentDataAtStart(aRange.StartRef(), editingHost);
+  TextFragmentData textFragmentDataAtStart(aRange.StartRef(), aEditingHost);
   if (NS_WARN_IF(!textFragmentDataAtStart.IsInitialized())) {
     return EditorDOMRange();  // TODO: Make here return error with Err.
   }
@@ -3607,7 +3605,7 @@ WSRunScanner::GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
     result.SetStart(aRange.StartRef());
   }
 
-  TextFragmentData textFragmentDataAtEnd(aRange.EndRef(), editingHost);
+  TextFragmentData textFragmentDataAtEnd(aRange.EndRef(), aEditingHost);
   if (NS_WARN_IF(!textFragmentDataAtEnd.IsInitialized())) {
     return EditorDOMRange();  // TODO: Make here return error with Err.
   }
