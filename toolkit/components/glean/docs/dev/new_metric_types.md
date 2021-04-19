@@ -48,6 +48,18 @@ we split the metric into three pieces:
     * If it does support operations in non-parent processes it stores the
       `MetricId` that identifies this particular metric in a cross-process fashion.
 
+## Mirrors
+
+FOG can mirror Glean metrics to Telemetry probes via the
+[Glean Interface For Firefox Telemetry](../user/gifft.md).
+
+Can this metric type be mirrored?
+Should it be mirrored?
+
+If so, add an appropriate Telemetry probe for it to mirror to,
+documenting the compatibility in
+[the GIFFT docs](../user/gifft.md).
+
 ## Rust
 
 FOG uses the Rust Language Binding APIs (the `glean` crate) with a layer of IPC on top.
