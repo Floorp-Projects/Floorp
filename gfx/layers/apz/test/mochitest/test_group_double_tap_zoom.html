@@ -22,6 +22,11 @@ var visualviewport_and_doubletap_prefs = [
   ["dom.visualviewport.enabled", true],
 ];
 
+var logging_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["apz.test.logging_enabled", true],
+];
+
 var subtests = [
   {"file": "helper_doubletap_zoom.html", "prefs": doubletap_prefs},
   {"file": "helper_doubletap_zoom_img.html", "prefs": doubletap_prefs},
@@ -29,6 +34,7 @@ var subtests = [
   {"file": "helper_doubletap_zoom_horizontal_center.html", "prefs": visualviewport_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_bug1702464.html", "prefs": visualviewport_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_large_overflow.html", "prefs": doubletap_prefs},
+  {"file": "helper_doubletap_zoom_fixedpos.html", "prefs": logging_and_doubletap_prefs},
 ];
 
 if (getPlatform() == "mac") {
@@ -42,7 +48,8 @@ if (getPlatform() == "mac") {
     {"file": "helper_doubletap_zoom_bug1702464.html?touchpad", "prefs": visualviewport_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_htmlelement.html", "prefs": doubletap_prefs}, // scrollbars don't receive events or take space on android
     {"file": "helper_doubletap_zoom_htmlelement.html?touchpad", "prefs": doubletap_prefs},
-    {"file": "helper_doubletap_zoom_large_overflow.html?touchpad", "prefs": doubletap_prefs}
+    {"file": "helper_doubletap_zoom_large_overflow.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_doubletap_zoom_fixedpos.html?touchpad", "prefs": logging_and_doubletap_prefs},
   );
 }
 

@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check that double tapping active scrollable elements in fixed pos work</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script>
+
+async function makeActive(x, y, targetId) {
+  let theTarget = document.getElementById(targetId);
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "click",
+    target: theTarget,
+    offsetX: x,
+    offsetY: y,
+  });
+
+  await promiseApzFlushedRepaints();
+
+  ok(isLayerized(targetId), "target should be layerized at this point");
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  let targetScrollId = utils.getViewId(theTarget);
+  ok(targetScrollId > 0, "target should have a scroll id");
+}
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  await makeActive(100, 50, "target");
+
+  let target = document.getElementById("target");
+
+  // Check that double-tapping once zooms in
+  await doubleTapOn(target, 100, 50, useTouchpad);
+  let prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  // Check that double-tapping again on the same spot zooms out
+  await doubleTapOn(target, 100, 50, useTouchpad);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+<style>
+.fixed {
+  top: 100px;
+  width: 500px;
+  height: 300px;
+  background: blue;
+  position: fixed;
+}
+.abox {
+  width: 200px;
+  height: 100px;
+  background: yellow;
+  overflow: auto;
+}
+.spacer {
+  height: 400vh;
+  background: lightgrey;
+}
+</style>
+</head>
+<body>
+
+<div class="fixed">
+  <div class="abox" id="target">
+    <div class="spacer" style="width: 50px;"></div>
+  </div>
+</div>
+<div class="spacer" style="width: 100px;"></div>
+
+</body>
+</html>
