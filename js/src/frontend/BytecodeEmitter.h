@@ -526,7 +526,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitObjLiteralValue(ObjLiteralWriter& writer,
                                          ParseNode* value);
 
-  enum class FieldPlacement { Instance, Static };
   mozilla::Maybe<MemberInitializers> setupMemberInitializers(
       ListNode* classMembers, FieldPlacement placement);
   [[nodiscard]] bool emitCreateFieldKeys(ListNode* obj,

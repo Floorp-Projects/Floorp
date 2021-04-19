@@ -106,8 +106,9 @@ bool PrivateOpEmitter::skipReference() {
 }
 
 bool PrivateOpEmitter::emitGet() {
-  //                [stack] OBJ KEY
   MOZ_ASSERT(state_ == State::Reference);
+
+  //                [stack] OBJ NAME
 
   if (loc_.bindingKind() == BindingKind::PrivateMethod) {
     // Note that the decision of what we leave on the stack depends on kind_,
@@ -121,12 +122,28 @@ bool PrivateOpEmitter::emitGet() {
       //            [stack] OBJ BRAND true
       return false;
     }
-    if (!bce_->emitPopN(isCall() ? 2 : 3)) {
-      //            [stack] OBJ?
-      return false;
+
+    if (isCompoundAssignment()) {
+      if (!bce_->emit1(JSOp::Pop)) {
+        //          [stack] OBJ BRAND
+        return false;
+      }
+    } else if (isCall()) {
+      if (!bce_->emitPopN(2)) {
+        //          [stack] OBJ
+        return false;
+      }
+    } else {
+      if (!bce_->emitPopN(3)) {
+        //          [stack]
+        return false;
+      }
     }
+
     if (!emitLoad(name_, loc_)) {
-      //            [stack] OBJ? METHOD
+      //            [stack] OBJ BRAND METHOD  # if isCompoundAssignment
+      //            [stack] OBJ METHOD        # if call
+      //            [stack] METHOD            # otherwise
       return false;
     }
   } else {
@@ -152,13 +169,15 @@ bool PrivateOpEmitter::emitGet() {
 
     if (isCompoundAssignment()) {
       if (!bce_->emit1(JSOp::Dup2)) {
-        //          [stack] OBJ? OBJ NAME OBJ NAME
+        //          [stack] OBJ NAME OBJ NAME
         return false;
       }
     }
 
     if (!bce_->emitElemOpBase(JSOp::GetElem, ShouldInstrument::Yes)) {
-      //            [stack] OBJ? OBJ NAME VALUE
+      //            [stack] OBJ NAME VALUE  # if isCompoundAssignment
+      //            [stack] OBJ METHOD      # if Call
+      //            [stack] VALUE           # otherwise
       return false;
     }
   }
@@ -170,7 +189,8 @@ bool PrivateOpEmitter::emitGet() {
     }
   }
 
-  //                [stack] METHOD OBJ      # if Call
+  //                [stack] OBJ NAME VALUE  # if isCompoundAssignment
+  //                [stack] METHOD OBJ      # if call
   //                [stack] VALUE           # otherwise
 
 #ifdef DEBUG
@@ -182,11 +202,9 @@ bool PrivateOpEmitter::emitGet() {
 bool PrivateOpEmitter::emitGetForCallOrNew() { return emitGet(); }
 
 bool PrivateOpEmitter::emitAssignment() {
-  MOZ_ASSERT(isSimpleAssignment() || isFieldInit() || isCompoundAssignment() ||
-             isIncDec());
-  bool alreadyEmittedGet = isCompoundAssignment() || isIncDec();
-  MOZ_ASSERT_IF(!alreadyEmittedGet, state_ == State::Reference);
-  MOZ_ASSERT_IF(alreadyEmittedGet, state_ == State::Get);
+  MOZ_ASSERT(isSimpleAssignment() || isFieldInit() || isCompoundAssignment());
+  MOZ_ASSERT_IF(!isCompoundAssignment(), state_ == State::Reference);
+  MOZ_ASSERT_IF(isCompoundAssignment(), state_ == State::Get);
 
   //                [stack] OBJ KEY RHS
 
@@ -198,14 +216,14 @@ bool PrivateOpEmitter::emitAssignment() {
 
     // Balance the expression stack.
     if (!bce_->emitPopN(2)) {
-      //          [stack] OBJ
+      //            [stack] OBJ
       return false;
     }
   } else {
     // Emit a brand check. If this is compound assignment, emitGet() already
     // emitted a check for this object and key. There's no point checking
     // again--a private field can't be removed from an object.
-    if (!alreadyEmittedGet) {
+    if (!isCompoundAssignment()) {
       if (!bce_->emitUnpickN(2)) {
         //          [stack] RHS OBJ KEY
         return false;
@@ -276,8 +294,9 @@ bool PrivateOpEmitter::emitIncDec() {
     return false;
   }
 
-  if (!emitAssignment()) {
+  if (!bce_->emitElemOpBase(JSOp::StrictSetElem, ShouldInstrument::Yes)) {
     //              [stack] N? N+1
+    return false;
   }
 
   if (isPostIncDec()) {
