@@ -274,7 +274,9 @@ bool NameOpEmitter::emitAssignment() {
       break;
     case NameLocation::Kind::FrameSlot: {
       JSOp op = JSOp::SetLocal;
-      if (loc_.isLexical()) {
+      // Lexicals, Synthetics and Private Methods have very similar handling
+      // around a variety of areas, including initialization.
+      if (loc_.isLexical() || loc_.isPrivateMethod() || loc_.isSynthetic()) {
         if (isInitialize()) {
           op = JSOp::InitLexical;
         } else {
@@ -305,7 +307,9 @@ bool NameOpEmitter::emitAssignment() {
     }
     case NameLocation::Kind::EnvironmentCoordinate: {
       JSOp op = JSOp::SetAliasedVar;
-      if (loc_.isLexical()) {
+      // Lexicals, Synthetics and Private Methods have very similar handling
+      // around a variety of areas, including initialization.
+      if (loc_.isLexical() || loc_.isPrivateMethod() || loc_.isSynthetic()) {
         if (isInitialize()) {
           op = JSOp::InitAliasedLexical;
         } else {

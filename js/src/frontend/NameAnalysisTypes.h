@@ -120,13 +120,13 @@ static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
       return BindingKind::Let;
 
     case DeclarationKind::Const:
-    case DeclarationKind::PrivateName:
       return BindingKind::Const;
 
     case DeclarationKind::Import:
       return BindingKind::Import;
 
     case DeclarationKind::Synthetic:
+    case DeclarationKind::PrivateName:
       return BindingKind::Synthetic;
 
     case DeclarationKind::PrivateMethod:
