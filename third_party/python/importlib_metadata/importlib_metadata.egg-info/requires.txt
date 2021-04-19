@@ -1,17 +1,27 @@
 zipp>=0.5
 
-[:python_version < "3"]
-pathlib2
-contextlib2
-configparser>=3.5
+[:python_version < "3.8"]
+typing-extensions>=3.6.4
 
 [docs]
 sphinx
-rst.linker
+jaraco.packaging>=8.2
+rst.linker>=1.9
 
 [testing]
+pytest>=4.6
+pytest-checkdocs>=2.4
+pytest-flake8
+pytest-cov
+pytest-enabler>=1.0.1
 packaging
 pep517
+pyfakefs
+flufl.flake8
+
+[testing:platform_python_implementation != "PyPy" and python_version < "3.10"]
+pytest-black>=0.3.7
+pytest-mypy
 
 [testing:python_version < "3.9"]
 importlib_resources>=1.3

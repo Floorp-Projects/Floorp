@@ -1,9 +1,30 @@
-=========================
- ``importlib_metadata``
-=========================
+.. image:: https://img.shields.io/pypi/v/importlib_metadata.svg
+   :target: `PyPI link`_
 
-``importlib_metadata`` is a library to access the metadata for a Python
-package.  It is intended to be ported to Python 3.8.
+.. image:: https://img.shields.io/pypi/pyversions/importlib_metadata.svg
+   :target: `PyPI link`_
+
+.. _PyPI link: https://pypi.org/project/importlib_metadata
+
+.. image:: https://github.com/python/importlib_metadata/workflows/tests/badge.svg
+   :target: https://github.com/python/importlib_metadata/actions?query=workflow%3A%22tests%22
+   :alt: tests
+
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+   :alt: Code style: Black
+
+.. image:: https://readthedocs.org/projects/importlib-metadata/badge/?version=latest
+   :target: https://importlib-metadata.readthedocs.io/en/latest/?badge=latest
+
+
+Library to access the metadata for a Python package.
+
+As of Python 3.8, this functionality has been added to the
+`Python standard library
+<https://docs.python.org/3/library/importlib.metadata.html>`_.
+This package supplies backports of that functionality including
+improvements added to subsequent Python versions.
 
 
 Usage
@@ -30,7 +51,7 @@ tools (or other conforming packages). It does not support:
 Project details
 ===============
 
- * Project home: https://gitlab.com/python-devs/importlib_metadata
- * Report bugs at: https://gitlab.com/python-devs/importlib_metadata/issues
- * Code hosting: https://gitlab.com/python-devs/importlib_metadata.git
- * Documentation: http://importlib_metadata.readthedocs.io/
+ * Project home: https://github.com/python/importlib_metadata
+ * Report bugs at: https://github.com/python/importlib_metadata/issues
+ * Code hosting: https://github.com/python/importlib_metadata
+ * Documentation: https://importlib_metadata.readthedocs.io/
