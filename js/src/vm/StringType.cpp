@@ -814,6 +814,7 @@ first_visit_node : {
   CopyChars(pos, left.asLinear());
   pos += left.length();
 }
+
 visit_right_child : {
   JSString& right = *str->d.s.u3.right;
   if (right.isRope()) {
@@ -828,19 +829,9 @@ visit_right_child : {
 
 finish_node : {
   if (str == root) {
-    MOZ_ASSERT(pos == wholeChars + wholeLength);
-    str->setLengthAndFlags(wholeLength,
-                           StringFlagsForCharType<CharT>(EXTENSIBLE_FLAGS));
-    str->setNonInlineChars(wholeChars);
-    str->d.s.u3.capacity = wholeCapacity;
-
-    if (str->isTenured()) {
-      AddCellMemory(str, str->asLinear().allocSize(),
-                    MemoryUse::StringContents);
-    }
-
-    return &root->asLinear();
+    goto finish_root;
   }
+
   JSString* parent;
   uintptr_t flattenFlags;
   uint32_t len = pos - str->nonInlineCharsRaw<CharT>();
@@ -867,6 +858,21 @@ finish_node : {
   MOZ_ASSERT(flattenFlags == Flag_FinishNode);
   goto finish_node;
 }
+
+finish_root:
+  // We traversed all the way back up to the root so we're finished.
+  MOZ_ASSERT(str == root);
+  MOZ_ASSERT(pos == wholeChars + wholeLength);
+
+  str->setLengthAndFlags(wholeLength,
+                         StringFlagsForCharType<CharT>(EXTENSIBLE_FLAGS));
+  str->setNonInlineChars(wholeChars);
+  str->d.s.u3.capacity = wholeCapacity;
+  if (str->isTenured()) {
+    AddCellMemory(str, str->asLinear().allocSize(), MemoryUse::StringContents);
+  }
+
+  return &root->asLinear();
 }
 
 template <JSRope::UsingBarrier usingBarrier>
