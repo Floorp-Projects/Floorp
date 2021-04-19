@@ -45,12 +45,6 @@ add_task(async function test_settingsOpen_button() {
       url: notificationURL,
     },
     async function tabTask(aBrowser) {
-      // Ensure preferences is loaded before removing the tab.
-      let syncPaneLoadedPromise = TestUtils.topicObserved(
-        "sync-pane-loaded",
-        () => true
-      );
-
       info("Waiting for notification");
       await openNotification(aBrowser, "showNotification2");
 
@@ -61,6 +55,11 @@ add_task(async function test_settingsOpen_button() {
         return;
       }
 
+      // Ensure preferences is loaded before removing the tab.
+      let syncPaneLoadedPromise = TestUtils.topicObserved(
+        "sync-pane-loaded",
+        () => true
+      );
       let closePromise = promiseWindowClosed(alertWindow);
       let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, expectedURL);
       let openSettingsMenuItem = alertWindow.document.getElementById(

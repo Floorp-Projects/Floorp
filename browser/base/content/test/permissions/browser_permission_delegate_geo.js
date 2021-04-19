@@ -58,12 +58,15 @@ async function checkNotificationBothOrigins(
 }
 
 async function checkGeolocation(browser, frameId, expect) {
-  let waitForPrompt = BrowserTestUtils.waitForEvent(
-    PopupNotifications.panel,
-    "popupshown"
-  );
-
   let isPrompt = expect == PromptResult.PROMPT;
+  let waitForPrompt;
+  if (isPrompt) {
+    waitForPrompt = BrowserTestUtils.waitForEvent(
+      PopupNotifications.panel,
+      "popupshown"
+    );
+  }
+
   await SpecialPowers.spawn(
     browser,
     [{ frameId, expect, isPrompt }],
