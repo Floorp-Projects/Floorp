@@ -2276,7 +2276,7 @@ LayerManager* nsDisplayListBuilder::GetWidgetLayerManager(nsView** aView) {
 Layer* GetLayerForRootMetadata(Layer* aRootLayer, ViewID aRootScrollId) {
   Layer* asyncZoomContainer = DepthFirstSearch<ForwardIterator>(
       aRootLayer, [aRootScrollId](Layer* aLayer) {
-        if (auto id = aLayer->IsAsyncZoomContainer()) {
+        if (auto id = aLayer->GetAsyncZoomContainerId()) {
           return *id == aRootScrollId;
         }
         return false;
@@ -7275,7 +7275,7 @@ already_AddRefed<Layer> nsDisplayAsyncZoom::BuildLayer(
   RefPtr<Layer> layer =
       nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, containerParameters);
 
-  layer->SetIsAsyncZoomContainer(Some(mViewID));
+  layer->SetAsyncZoomContainerId(Some(mViewID));
 
   layer->SetPostScale(1.0f / presShell->GetResolution(),
                       1.0f / presShell->GetResolution());

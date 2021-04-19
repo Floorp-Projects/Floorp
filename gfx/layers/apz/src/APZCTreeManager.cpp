@@ -437,7 +437,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
         [&](ScrollNode aLayerMetrics) {
           mApzcTreeLog << aLayerMetrics.Name() << '\t';
 
-          if (aLayerMetrics.IsAsyncZoomContainer()) {
+          if (aLayerMetrics.GetAsyncZoomContainerId()) {
             if (asyncZoomContainerNestingDepth > 0) {
               haveNestedAsyncZoomContainers = true;
             }
@@ -551,7 +551,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
               aLayerMetrics.TransformIsPerspective());
         },
         [&](ScrollNode aLayerMetrics) {
-          if (aLayerMetrics.IsAsyncZoomContainer()) {
+          if (aLayerMetrics.GetAsyncZoomContainerId()) {
             --asyncZoomContainerNestingDepth;
           }
           if (aLayerMetrics.GetReferentId()) {
@@ -1130,7 +1130,7 @@ void SetHitTestData(HitTestingTreeNode* aNode, const ScrollNode& aLayer,
                         aLayer.GetRemoteDocumentSize(),
                         aLayer.GetTransformTyped(), aClipRegion, aOverrideFlags,
                         aLayer.IsBackfaceHidden(),
-                        !!aLayer.IsAsyncZoomContainer());
+                        aLayer.GetAsyncZoomContainerId());
 }
 
 template <class ScrollNode>
@@ -3583,7 +3583,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
         /* there is an async zoom container on this subtree */
         mAsyncZoomContainerSubtree == Some(aNode->GetLayersId()) &&
         /* it's not us */
-        !aNode->IsAsyncZoomContainer();
+        !aNode->GetAsyncZoomContainerId();
     AsyncTransformComponents components =
         visualTransformIsInheritedFromAncestor
             ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
@@ -3595,7 +3595,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
     return aNode->GetTransform() *
            CompleteAsyncTransform(apzc->GetCurrentAsyncTransformWithOverscroll(
                AsyncPanZoomController::eForHitTesting, components));
-  } else if (aNode->IsAsyncZoomContainer()) {
+  } else if (aNode->GetAsyncZoomContainerId()) {
     if (AsyncPanZoomController* rootContent =
             FindRootContentApzcForLayersId(aNode->GetLayersId())) {
       if (aOutSourceOfOverscrollTransform) {
