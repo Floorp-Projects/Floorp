@@ -39,7 +39,7 @@ add_task(async function() {
 
   info("Blackbox files in this directory.");
   rightClickEl(dbg, sourceTreeFolderNodeEls[1]);
-  selectContextMenuItem(dbg, NODE_SELECTORS.nodeBlackBoxAll);
+  openContextMenuSubmenu(dbg, NODE_SELECTORS.nodeBlackBoxAll);
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Ignore files in this directory");
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllOutside, "Ignore files outside this directory");
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeBlackBoxAllInside);
@@ -55,7 +55,7 @@ add_task(async function() {
 
   info("Unblackbox files outside this directory.");
   rightClickEl(dbg, sourceTreeFolderNodeEls[2]);
-  selectContextMenuItem(dbg, NODE_SELECTORS.nodeBlackBoxAll);
+  openContextMenuSubmenu(dbg, NODE_SELECTORS.nodeBlackBoxAll);
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Ignore files in this directory");
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeUnBlackBoxAllOutside, "Unignore files outside this directory");
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeUnBlackBoxAllOutside);

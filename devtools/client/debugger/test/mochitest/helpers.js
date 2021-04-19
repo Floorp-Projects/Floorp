@@ -1568,7 +1568,12 @@ async function waitForContextMenu(dbg, selector) {
 
 function selectContextMenuItem(dbg, selector) {
   const item = findContextMenu(dbg, selector);
-  return EventUtils.synthesizeMouseAtCenter(item, {}, dbg.toolbox.topWindow);
+  item.closest("menupopup").activateItem(item);
+}
+
+function openContextMenuSubmenu(dbg, selector) {
+  const item = findContextMenu(dbg, selector);
+  item.openMenu(true);
 }
 
 async function assertContextMenuLabel(dbg, selector, label) {
