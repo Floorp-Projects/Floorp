@@ -378,7 +378,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * be included into the range.
    */
   static EditorDOMRange GetRangesForDeletingAtomicContent(
-      const HTMLEditor& aHTMLEditor, const nsIContent& aAtomicContent);
+      dom::Element* aEditingHost, const nsIContent& aAtomicContent);
 
   /**
    * GetRangeForDeleteBlockElementBoundaries() returns a range starting from end
