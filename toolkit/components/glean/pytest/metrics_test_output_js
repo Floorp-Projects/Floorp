@@ -30,8 +30,8 @@ using metric_entry_t = uint64_t;
 static_assert(GLEAN_INDEX_BITS + GLEAN_ID_BITS < sizeof(metric_entry_t) * 8, "Index and ID bits need to fit into an category_entry_t");
 static_assert(GLEAN_ID_BITS < sizeof(uint32_t) * 8, "Metric IDs need to fit into less than 32 bit");
 static_assert(2 < UINT32_MAX, "Too many metric categories generated.");
-static_assert(17 < 134217728, "Too many metrics generated.");
-static_assert(13 < 32, "Too many different metric types.");
+static_assert(18 < 134217728, "Too many metrics generated.");
+static_assert(14 < 32, "Too many different metric types.");
 
 static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
   uint32_t typeId = GLEAN_TYPE_ID(id);
@@ -89,6 +89,10 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
     case 13: /* event */
     {
       return MakeAndAddRef<GleanEvent>(metricId);
+    }
+    case 14: /* quantity */
+    {
+      return MakeAndAddRef<GleanQuantity>(metricId);
     }
     default:
     MOZ_ASSERT_UNREACHABLE("Invalid type ID reached when trying to instantiate a new metric");
@@ -208,29 +212,31 @@ constexpr char gMetricStringTable[] = {
   /*   352 - "testNested.datetimeMetric" */ 't', 'e', 's', 't', 'N', 'e', 's', 't', 'e', 'd', '.', 'd', 'a', 't', 'e', 't', 'i', 'm', 'e', 'M', 'e', 't', 'r', 'i', 'c', '\0',
   /*   378 - "testNested.eventMetric" */ 't', 'e', 's', 't', 'N', 'e', 's', 't', 'e', 'd', '.', 'e', 'v', 'e', 'n', 't', 'M', 'e', 't', 'r', 'i', 'c', '\0',
   /*   401 - "testNested.eventMetricWithExtra" */ 't', 'e', 's', 't', 'N', 'e', 's', 't', 'e', 'd', '.', 'e', 'v', 'e', 'n', 't', 'M', 'e', 't', 'r', 'i', 'c', 'W', 'i', 't', 'h', 'E', 'x', 't', 'r', 'a', '\0',
+  /*   433 - "testNested.quantityMetric" */ 't', 'e', 's', 't', 'N', 'e', 's', 't', 'e', 'd', '.', 'q', 'u', 'a', 'n', 't', 'i', 't', 'y', 'M', 'e', 't', 'r', 'i', 'c', '\0',
 };
 
 
 static_assert(sizeof(gMetricStringTable) < 4294967296, "Metric string table is too large.");
 
 const metric_entry_t sMetricByNameLookupEntries[] = {
+  5764607578868810028,
+  8070450609557340593,
+  6341068335467200842,
   1729382274090139725,
+  7493989852958949777,
   3458764552475246789,
-  1152921513196781587,
+  2882303791581888666,
+  1152921517491748909,
+  7493989848663982458,
+  4611686065672028410,
   2305843030688530528,
   5188146822270419214,
-  7493989848663982458,
-  1152921517491748909,
-  576460756598390784,
   4035225309073637604,
-  6341068335467200842,
-  6917529092065591648,
-  4611686065672028410,
-  7493989852958949777,
-  2305843034983497850,
-  5764607578868810028,
   3458764548180279468,
-  2882303791581888666
+  1152921513196781587,
+  576460756598390784,
+  6917529092065591648,
+  2305843034983497850
 };
 
 
@@ -239,10 +245,10 @@ static Maybe<uint32_t>
 MetricByNameLookup(const nsACString& aKey)
 {
   static const uint8_t BASES[] = {
-       0,   0,   0,   2,   0,   0,   0,   1,   1,   0,   0,   0,   0,   0,   0,   0,
-       2,   0,   0,   0,   1,   0,   0,   1,   0,   5,   0,   0,   4,   0,   1,   0,
-       2,   0,   0,   0,   0,   0,   0,   0,   4,   0,   0,   2,   0,   6,   0,   0,
-       0,   0,  20,   0,   0,   3,   0,   0,   0,   0,   0,   0,   0,   0,   0,  10,
+       0,   0,   0,   1,   0,   1,   0,   1,   1,   0,   0,   0,   0,   0,   0,   0,
+       1,   0,   0,   0,   3,   0,   0,   1,   0,   1,   0,   0,   2,   0,   3,   0,
+       1,   0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   4,   0,   3,   0,   0,
+       0,   0,   6,   0,   0,   4,   0,   0,   0,   0,   0,   0,   0,   0,   0,  17,
   };
   
 
