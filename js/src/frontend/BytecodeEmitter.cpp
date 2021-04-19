@@ -1786,7 +1786,7 @@ bool BytecodeEmitter::emitTDZCheckIfNeeded(TaggedParserAtomIndex name,
   // Dynamic accesses have TDZ checks built into their VM code and should
   // never emit explicit TDZ checks.
   MOZ_ASSERT(loc.hasKnownSlot());
-  MOZ_ASSERT(loc.isLexical());
+  MOZ_ASSERT(loc.isLexical() || loc.isPrivateMethod() || loc.isSynthetic());
 
   // Private names are implemented as lexical bindings, but it's just an
   // implementation detail. Per spec there's no TDZ check when using them.

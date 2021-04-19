@@ -2296,7 +2296,6 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
       const auto* data =
           static_cast<const ClassBodyScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
-      json.property("constStart", data->slotInfo.constStart);
       json.property("privateMethodStart", data->slotInfo.privateMethodStart);
 
       trailingNames = GetScopeDataTrailingNames(data);
