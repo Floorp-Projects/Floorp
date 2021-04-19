@@ -455,21 +455,21 @@ else:
 
 if use_minidump:
     env.setdefault("MINIDUMP_SAVE_PATH", env["MOZ_UPLOAD_DIR"])
-    env.setdefault("DUMP_SYMS", os.path.join(DIR.fetches, "dump_syms", "dump_syms"))
-    injector_lib = None
-    if platform.system() == "Linux":
-        injector_lib = os.path.join(
-            DIR.tooltool, "breakpad-tools", "libbreakpadinjector.so"
-        )
-        env.setdefault(
-            "MINIDUMP_STACKWALK",
-            os.path.join(DIR.tooltool, "breakpad-tools", "minidump_stackwalk"),
-        )
-    elif platform.system() == "Darwin":
-        injector_lib = os.path.join(
-            DIR.tooltool, "breakpad-tools", "breakpadinjector.dylib"
-        )
-    if not injector_lib or not os.path.exists(injector_lib):
+
+    injector_basename = {
+        "Linux": "libbreakpadinjector.so",
+        "Darwin": "breakpadinjector.dylib",
+    }.get(platform.system())
+
+    injector_lib = resolve_path((DIR.fetches,), "injector", injector_basename)
+    stackwalk = resolve_path((DIR.fetches,), "minidump_stackwalk", "minidump_stackwalk")
+    if stackwalk is not None:
+        env.setdefault("MINIDUMP_STACKWALK", stackwalk)
+    dump_syms = resolve_path((DIR.fetches,), "dump_syms", "dump_syms")
+    if dump_syms is not None:
+        env.setdefault("DUMP_SYMS", dump_syms)
+
+    if injector_lib is None:
         use_minidump = False
 
     info("use_minidump is {}".format(use_minidump))
