@@ -469,21 +469,23 @@ bool TypedObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id,
 
 bool TypedObject::obj_getOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
   Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
 
   uint32_t offset;
   FieldType type;
   if (typedObj->rttValue().lookupProperty(cx, typedObj, id, &offset, &type)) {
-    if (!typedObj->loadValue(cx, offset, type, desc.value())) {
+    Rooted<PropertyDescriptor> desc_(cx);
+    if (!typedObj->loadValue(cx, offset, type, desc_.value())) {
       return false;
     }
-    desc.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
-    desc.object().set(obj);
+    desc_.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
+    desc_.object().set(obj);
+    desc.set(mozilla::Some(desc_.get()));
     return true;
   }
 
-  desc.object().set(nullptr);
+  desc.reset();
   return true;
 }
 

@@ -455,9 +455,9 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   static bool setProperty(JSContext* cx, HandleObject obj, HandleId id,
                           HandleValue v, HandleValue receiver,
                           JS::ObjectOpResult& result);
-  static bool getOwnPropertyDescriptor(JSContext* cx, HandleObject obj,
-                                       HandleId id,
-                                       MutableHandle<PropertyDescriptor> desc);
+  static bool getOwnPropertyDescriptor(
+      JSContext* cx, HandleObject obj, HandleId id,
+      MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc);
   static bool deleteProperty(JSContext* cx, HandleObject obj, HandleId id,
                              ObjectOpResult& result);
   static bool newEnumerate(JSContext* cx, HandleObject obj,

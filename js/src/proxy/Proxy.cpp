@@ -171,16 +171,15 @@ JS_FRIEND_API void js::assertEnteredPolicy(JSContext* cx, JSObject* proxy,
 }
 #endif
 
-bool Proxy::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy,
-                                     HandleId id,
-                                     MutableHandle<PropertyDescriptor> desc) {
+bool Proxy::getOwnPropertyDescriptor(
+    JSContext* cx, HandleObject proxy, HandleId id,
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
   AutoCheckRecursionLimit recursion(cx);
   if (!recursion.check(cx)) {
     return false;
   }
   const BaseProxyHandler* handler = proxy->as<ProxyObject>().handler();
-  desc.object().set(
-      nullptr);  // default result if we refuse to perform this action
+  desc.reset();  // default result if we refuse to perform this action
   AutoEnterPolicy policy(cx, handler, proxy, id,
                          BaseProxyHandler::GET_PROPERTY_DESCRIPTOR, true);
   if (!policy.allowed()) {
@@ -191,18 +190,7 @@ bool Proxy::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy,
   // this would be incorrect.
   MOZ_ASSERT_IF(handler->useProxyExpandoObjectForPrivateFields(),
                 !id.isPrivateName());
-
-  Rooted<mozilla::Maybe<PropertyDescriptor>> desc_(cx);
-  if (!handler->getOwnPropertyDescriptor(cx, proxy, id, &desc_)) {
-    return false;
-  }
-
-  if (desc_.isNothing()) {
-    desc.object().set(nullptr);
-  } else {
-    desc.set(*desc_);
-  }
-  return true;
+  return handler->getOwnPropertyDescriptor(cx, proxy, id, desc);
 }
 
 bool Proxy::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
