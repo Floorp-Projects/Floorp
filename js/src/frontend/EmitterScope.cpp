@@ -11,6 +11,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/TDZCheckCache.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
+#include "vm/EnvironmentObject.h"     // ClassBodyLexicalEnvironmentObject
 #include "vm/GlobalObject.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
@@ -987,6 +988,26 @@ NameLocation EmitterScope::lookup(BytecodeEmitter* bce,
     return *loc;
   }
   return searchAndCache(bce, name);
+}
+
+NameLocation EmitterScope::lookupPrivate(
+    BytecodeEmitter* bce, TaggedParserAtomIndex name,
+    mozilla::Maybe<NameLocation>& brandLoc) {
+  NameLocation loc = lookup(bce, name);
+
+  // The parser ensures that `name` is the name of a private member in the
+  // current scope. Since classes are strict mode code, we're certain to find
+  // that scope statically; there will be no intervening dynamic scope.
+  MOZ_RELEASE_ASSERT(loc.kind() == NameLocation::Kind::EnvironmentCoordinate);
+
+  if (loc.bindingKind() == BindingKind::PrivateMethod) {
+    brandLoc = Some(NameLocation::EnvironmentCoordinate(
+        BindingKind::Synthetic, loc.environmentCoordinate().hops(),
+        JSSLOT_FREE(&ClassBodyLexicalEnvironmentObject::class_)));
+  } else {
+    brandLoc = Nothing();
+  }
+  return loc;
 }
 
 Maybe<NameLocation> EmitterScope::locationBoundInScope(

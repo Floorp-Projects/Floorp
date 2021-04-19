@@ -160,6 +160,42 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   NameLocation lookup(BytecodeEmitter* bce, TaggedParserAtomIndex name);
 
+  // Find both the slot associated with a private name and the location of the
+  // corresponding `.privateBrand` binding.
+  //
+  // Simply doing two separate lookups, one for `name` and another for
+  // `.privateBrand`, would give the wrong answer in this case:
+  //
+  //     class Outer {
+  //       #outerMethod() { reutrn "ok"; }
+  //
+  //       test() {
+  //         class Inner {
+  //           #innerMethod() {}
+  //           test(outer) {
+  //             return outer.#outerMethod();
+  //           }
+  //         }
+  //         return new Inner().test(this);
+  //       }
+  //     }
+  //
+  //    new Outer().test();  // should return "ok"
+  //
+  // At the point in Inner.test where `#outerMethod` is called, we need to
+  // check for the private brand of `Outer`, not `Inner`; but both class bodies
+  // have `.privateBrand` bindings. In a normal `lookup`, the inner binding
+  // would shadow the outer one.
+  //
+  // This method instead sets `brandLoc` to the location of the `.privateBrand`
+  // binding in the same class body as the private name `name`, ignoring
+  // shadowing. If `name` refers to a name that is actually stamped onto the
+  // target object (anything other than a non-static private method), then
+  // `brandLoc` is set to Nothing.
+  //
+  NameLocation lookupPrivate(BytecodeEmitter* bce, TaggedParserAtomIndex name,
+                             mozilla::Maybe<NameLocation>& brandLoc);
+
   mozilla::Maybe<NameLocation> locationBoundInScope(TaggedParserAtomIndex name,
                                                     EmitterScope* target);
 };

@@ -1860,7 +1860,7 @@ void BaseAbstractBindingIter<NameT>::init(
        /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
        /* firstFrameSlot= */ firstFrameSlot,
        /* firstEnvironmentSlot= */
-       JSSLOT_FREE(&LexicalEnvironmentObject::class_),
+       JSSLOT_FREE(&ClassBodyLexicalEnvironmentObject::class_),
        /* names= */ GetScopeDataTrailingNames(&data));
 }
 
