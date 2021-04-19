@@ -250,6 +250,10 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // is set independently of whether we actually use an `arguments` binding. The
   // conditions are specified in the ECMAScript spec.
   HasMappedArgsObj = 1 << 28,
+
+  // Large self-hosted methods that should be inlined anyway by the JIT for
+  // performance reasons can be marked with this flag.
+  IsInlinableLargeFunction = 1 << 29,
 };
 
 enum class MutableScriptFlagsEnum : uint32_t {
@@ -300,9 +304,7 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // has failed.
   Uninlineable = 1 << 19,
 
-  // Large self-hosted methods that should be inlined anyway by the JIT for
-  // performance reasons can be marked with this flag.
-  IsInlinableLargeFunction = 1 << 20,
+  // (1 << 20) is unused.
 
   // *****************************************************************
   // The flags below are set when we bail out and invalidate a script.
