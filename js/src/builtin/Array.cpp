@@ -4174,12 +4174,15 @@ bool js::ArraySpeciesLookup::tryOptimizeArray(JSContext* cx,
   // non-deletable "length" property. This serves as a quick check to make
   // sure |array| doesn't define an own "constructor" property which may
   // shadow Array.prototype.constructor.
-  Shape* shape = array->shape();
-  if (shape->previous() && !shape->previous()->isEmptyShape()) {
+  ShapePropertyIter<NoGC> iter(array->shape());
+  MOZ_ASSERT(!iter.done(), "Array must have at least one property");
+  DebugOnly<JS::PropertyKey> key = iter->key();
+  iter++;
+  if (!iter.done()) {
     return false;
   }
 
-  MOZ_ASSERT(shape->propidRaw().isAtom(cx->names().length));
+  MOZ_ASSERT(key.inspect().isAtom(cx->names().length));
   return true;
 }
 
