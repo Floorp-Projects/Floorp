@@ -206,7 +206,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
       AutoRangeArray& aRangesToDelete);
   nsresult ComputeRangesToDeleteTextAroundCollapsedRanges(
-      const HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
+      Element* aEditingHost, nsIEditor::EDirection aDirectionAndAmount,
       AutoRangeArray& aRangesToDelete) const;
 
   /**
@@ -1666,7 +1666,8 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
       return NS_ERROR_FAILURE;
     }
     rv = ComputeRangesToDeleteTextAroundCollapsedRanges(
-        aHTMLEditor, aDirectionAndAmount, aRangesToDelete);
+        aWSRunScannerAtCaret.GetEditingHost(), aDirectionAndAmount,
+        aRangesToDelete);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "AutoDeleteRangesHandler::"
@@ -1897,10 +1898,8 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
 
 nsresult HTMLEditor::AutoDeleteRangesHandler::
     ComputeRangesToDeleteTextAroundCollapsedRanges(
-        const HTMLEditor& aHTMLEditor,
-        nsIEditor::EDirection aDirectionAndAmount,
+        Element* aEditingHost, nsIEditor::EDirection aDirectionAndAmount,
         AutoRangeArray& aRangesToDelete) const {
-  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
              aDirectionAndAmount == nsIEditor::ePrevious);
 
@@ -1913,7 +1912,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::
   EditorDOMRangeInTexts rangeToDelete;
   if (aDirectionAndAmount == nsIEditor::eNext) {
     Result<EditorDOMRangeInTexts, nsresult> result =
-        WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(aHTMLEditor,
+        WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(aEditingHost,
                                                              caretPosition);
     if (result.isErr()) {
       NS_WARNING(
@@ -1926,7 +1925,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::
     }
   } else {
     Result<EditorDOMRangeInTexts, nsresult> result =
-        WSRunScanner::GetRangeInTextNodesToBackspaceFrom(aHTMLEditor,
+        WSRunScanner::GetRangeInTextNodesToBackspaceFrom(aEditingHost,
                                                          caretPosition);
     if (result.isErr()) {
       NS_WARNING("WSRunScanner::GetRangeInTextNodesToBackspaceFrom() failed");
@@ -1953,8 +1952,13 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedRanges(
   MOZ_ASSERT(aDirectionAndAmount == nsIEditor::eNext ||
              aDirectionAndAmount == nsIEditor::ePrevious);
 
+  RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return EditActionResult(NS_ERROR_FAILURE);
+  }
+
   nsresult rv = ComputeRangesToDeleteTextAroundCollapsedRanges(
-      aHTMLEditor, aDirectionAndAmount, aRangesToDelete);
+      editingHost, aDirectionAndAmount, aRangesToDelete);
   if (NS_FAILED(rv)) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
