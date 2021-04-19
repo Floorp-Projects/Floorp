@@ -38,9 +38,9 @@ pyasn1==0.4.8
 pytest==3.6.2
 python-hglib==2.4
 pytoml==0.1.10
-pyyaml==5.3.1
+pyyaml==5.4.1
 redo==2.0.3
-requests==2.9.1
+requests==2.25.1
 responses==0.10.6
 sentry-sdk==0.14.3
 six==1.13.0
