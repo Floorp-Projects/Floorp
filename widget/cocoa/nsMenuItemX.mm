@@ -308,9 +308,9 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
     } else if (aAttribute == nsGkAtoms::hidden || aAttribute == nsGkAtoms::collapsed) {
       bool isVisible = !nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
       if (isVisible != mIsVisible) {
+        mIsVisible = isVisible;
         RefPtr<nsMenuItemX> self = this;
         mMenuParent->MenuChildChangedVisibility(nsMenuParentX::MenuChild(self), isVisible);
-        mIsVisible = isVisible;
         if (mIsVisible) {
           SetupIcon();
         }

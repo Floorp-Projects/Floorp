@@ -841,6 +841,7 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
       return;
     }
 
+    mVisible = newVisible;
     if (mParent) {
       RefPtr<nsMenuX> self = this;
       mParent->MenuChildChangedVisibility(MenuChild(self), newVisible);
@@ -848,7 +849,6 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
     if (mVisible) {
       SetupIcon();
     }
-    mVisible = newVisible;
   } else if (aAttribute == nsGkAtoms::image) {
     SetupIcon();
   }
