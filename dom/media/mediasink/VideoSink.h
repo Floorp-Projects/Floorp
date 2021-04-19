@@ -44,6 +44,8 @@ class VideoSink : public MediaSink {
 
   void SetVolume(double aVolume) override;
 
+  void SetStreamName(const nsAString& aStreamName) override;
+
   void SetPreservesPitch(bool aPreservesPitch) override;
 
   void SetPlaying(bool aPlaying) override;

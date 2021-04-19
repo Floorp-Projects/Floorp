@@ -221,6 +221,8 @@ class AudioStream final {
   // 0 (meaning muted) to 1 (meaning full volume).  Thread-safe.
   void SetVolume(double aVolume);
 
+  void SetStreamName(const nsAString& aStreamName);
+
   // Start the stream and return a promise that will be resolve when the
   // playback completes.
   Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> Start();

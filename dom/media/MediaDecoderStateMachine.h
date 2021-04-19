@@ -388,6 +388,7 @@ class MediaDecoderStateMachine
   void SetPlaybackRate(double aPlaybackRate);
   void PreservesPitchChanged();
   void LoopingChanged();
+  void StreamNameChanged();
   void UpdateSecondaryVideoContainer();
   void UpdateOutputCaptured();
   void OutputTracksChanged();
@@ -720,6 +721,9 @@ class MediaDecoderStateMachine
   // Whether to seek back to the start of the media resource
   // upon reaching the end.
   Mirror<bool> mLooping;
+
+  // Audio stream name
+  Mirror<nsAutoString> mStreamName;
 
   // The device used with SetSink, or nullptr if no explicit device has been
   // set.
