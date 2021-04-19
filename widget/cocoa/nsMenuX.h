@@ -173,7 +173,6 @@ class nsMenuX final : public nsMenuParentX,
   void LoadMenuItem(nsIContent* aMenuItemContent);
   void LoadSubMenu(nsIContent* aMenuContent);
   GeckoNSMenu* CreateMenuWithGeckoString(nsString& aMenuTitle);
-  void UnregisterCommands();
   void DidFirePopupShowing();
 
   // Calculates the index at which aChild's NSMenuItem should be inserted into our NSMenu.

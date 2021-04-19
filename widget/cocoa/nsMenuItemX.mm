@@ -90,6 +90,13 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType
 
   mIsVisible = !nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
 
+  // All menu items share the same target and action, and are differentiated
+  // be a unique (representedObject, tag) pair.
+  mNativeMenuItem.target = nsMenuBarX::sNativeEventTarget;
+  mNativeMenuItem.action = @selector(menuItemHit:);
+  mNativeMenuItem.representedObject = mMenuGroupOwner->GetRepresentedObject();
+  mNativeMenuItem.tag = mMenuGroupOwner->RegisterForCommand(this);
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -109,6 +116,8 @@ nsMenuItemX::~nsMenuItemX() {
 
 void nsMenuItemX::DetachFromGroupOwner() {
   if (mMenuGroupOwner) {
+    mMenuGroupOwner->UnregisterCommand(mNativeMenuItem.tag);
+
     if (mContent) {
       mMenuGroupOwner->UnregisterForContentChanges(mContent);
     }
