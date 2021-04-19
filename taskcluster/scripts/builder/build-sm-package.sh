@@ -8,7 +8,7 @@ set -xe
 mkdir -p $UPLOAD_DIR
 
 # Package up the sources into the release tarball.
-AUTOMATION=1 DIST=$UPLOAD_DIR $GECKO_PATH/js/src/make-source-package.sh
+AUTOMATION=1 DIST=$UPLOAD_DIR $GECKO_PATH/js/src/make-source-package.py
 
 # Extract the tarball into a new directory in the workspace.
 
