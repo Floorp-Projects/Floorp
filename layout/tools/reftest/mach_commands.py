@@ -236,7 +236,7 @@ class MachCommands(MachCommandBase):
         description="Run reftests (layout and graphics correctness).",
         parser=get_parser,
     )
-    def run_reftest(self, **kwargs):
+    def run_reftest(self, command_context, **kwargs):
         kwargs["suite"] = "reftest"
         return self._run_reftest(**kwargs)
 
@@ -246,7 +246,7 @@ class MachCommands(MachCommandBase):
         description="Run js/src/tests in the browser.",
         parser=get_parser,
     )
-    def run_jstestbrowser(self, **kwargs):
+    def run_jstestbrowser(self, command_context, **kwargs):
         if "--enable-js-shell" not in self.mozconfig["configure_args"]:
             raise Exception(
                 "jstestbrowser requires --enable-js-shell be specified in mozconfig."
@@ -263,7 +263,7 @@ class MachCommands(MachCommandBase):
         description="Run crashtests (Check if crashes on a page).",
         parser=get_parser,
     )
-    def run_crashtest(self, **kwargs):
+    def run_crashtest(self, command_context, **kwargs):
         kwargs["suite"] = "crashtest"
         return self._run_reftest(**kwargs)
 

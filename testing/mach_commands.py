@@ -170,6 +170,7 @@ class AddTest(MachCommandBase):
     )
     def addtest(
         self,
+        command_context,
         suite=None,
         test=None,
         doc=None,
@@ -351,7 +352,7 @@ class Test(MachCommandBase):
         description="Run tests (detects the kind of test and runs it).",
         parser=get_test_parser,
     )
-    def test(self, what, extra_args, **log_args):
+    def test(self, command_context, what, extra_args, **log_args):
         """Run tests from names or paths.
 
         mach test accepts arguments specifying which tests to run. Each argument
@@ -724,7 +725,9 @@ class CramTest(MachCommandBase):
         help="Extra arguments to pass down to the cram binary. See "
         "'./mach python -m cram -- -h' for a list of available options.",
     )
-    def cramtest(self, cram_args=None, test_paths=None, test_objects=None):
+    def cramtest(
+        self, command_context, cram_args=None, test_paths=None, test_objects=None
+    ):
         self.activate_virtualenv()
         import mozinfo
         from manifestparser import TestManifest

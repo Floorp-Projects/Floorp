@@ -216,6 +216,6 @@ class MozharnessCommands(MachCommandBase):
         conditions=[conditions.is_firefox_or_android],
         parser=get_parser,
     )
-    def mozharness(self, **kwargs):
+    def mozharness(self, command_context, **kwargs):
         runner = self._spawn(MozharnessRunner)
         return runner.run_suite(kwargs.pop("suite_name")[0], **kwargs)
