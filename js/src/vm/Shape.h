@@ -178,6 +178,23 @@ class ShapePropertyWithKey : public ShapeProperty {
   explicit ShapePropertyWithKey(Shape* shape);
 
   JS::PropertyKey key() const { return key_; }
+
+  void trace(JSTracer* trc) {
+    TraceRoot(trc, &key_, "ShapePropertyWithKey-key");
+  }
+};
+
+template <class Wrapper>
+class WrappedPtrOperations<ShapePropertyWithKey, Wrapper> {
+  const ShapePropertyWithKey& value() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  bool isDataProperty() const { return value().isDataProperty(); }
+  uint32_t slot() const { return value().slot(); }
+  JS::PropertyKey key() const { return value().key(); }
+  uint8_t attributes() const { return value().attributes(); }
 };
 
 struct ShapeHasher : public DefaultHasher<Shape*> {
@@ -1647,6 +1664,8 @@ inline ShapeProperty::ShapeProperty(Shape* shape)
 
 inline ShapePropertyWithKey::ShapePropertyWithKey(Shape* shape)
     : ShapeProperty(shape), key_(shape->propid()) {}
+
+using ShapePropertyVector = GCVector<ShapePropertyWithKey, 8>;
 
 // Iterator for iterating over a shape's properties. It can be used like this:
 //

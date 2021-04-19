@@ -110,3 +110,13 @@ function testFrozenProto() {
     assertEq(target.x, 1);
 }
 testFrozenProto();
+
+function testReuseShape() {
+    var from = {};
+    from.x = 1;
+    from.y = 2;
+    var to = Object.assign({}, from);
+    assertEq(to.x, 1);
+    assertEq(to.y, 2);
+}
+testReuseShape();
