@@ -151,10 +151,6 @@ DispatcherDelegate.prototype = {
     this._replies.clear();
   },
 
-  shutdown() {
-    this._dispatcher.shutdown();
-  },
-
   receiveMessage(aMsg) {
     const { uuid, type } = aMsg.data;
     const reply = this._replies.get(uuid);
@@ -286,12 +282,4 @@ var EventDispatcher = {
 if (IS_PARENT_PROCESS) {
   Services.mm.addMessageListener("GeckoView:Messaging", EventDispatcher);
   Services.ppmm.addMessageListener("GeckoView:Messaging", EventDispatcher);
-
-  function xpcomShutdown() {
-    Services.mm.removeMessageListener("GeckoView:Messaging", EventDispatcher);
-    Services.ppmm.removeMessageListener("GeckoView:Messaging", EventDispatcher);
-    Services.obs.removeObserver(xpcomShutdown, "xpcom-shutdown");
-  }
-
-  Services.obs.addObserver(xpcomShutdown, "xpcom-shutdown");
 }
