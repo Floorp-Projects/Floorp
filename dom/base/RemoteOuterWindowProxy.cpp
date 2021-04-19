@@ -6,6 +6,7 @@
 
 #include "AccessCheck.h"
 #include "js/Proxy.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/RemoteObjectProxy.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -33,7 +34,7 @@ class RemoteOuterWindowProxy
   // Standard internal methods
   bool getOwnPropertyDescriptor(
       JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
-      JS::MutableHandle<JS::PropertyDescriptor> aDesc) const final;
+      JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) const final;
   bool ownPropertyKeys(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                        JS::MutableHandleVector<jsid> aProps) const final;
 
@@ -77,19 +78,22 @@ BrowsingContext* GetBrowsingContext(JSObject* aProxy) {
 
 bool WrapResult(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                 BrowsingContext* aResult, unsigned attrs,
-                JS::MutableHandle<JS::PropertyDescriptor> aDesc) {
+                JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) {
   JS::Rooted<JS::Value> v(aCx);
   if (!ToJSValue(aCx, WindowProxyHolder(aResult), &v)) {
     return false;
   }
-  aDesc.setDataDescriptor(v, attrs);
-  aDesc.object().set(aProxy);
+
+  JS::Rooted<JS::PropertyDescriptor> desc(aCx);
+  desc.setDataDescriptor(v, attrs);
+  desc.object().set(aProxy);
+  aDesc.set(Some(desc.get()));
   return true;
 }
 
 bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
     JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
-    JS::MutableHandle<JS::PropertyDescriptor> aDesc) const {
+    JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) const {
   BrowsingContext* bc = GetBrowsingContext(aProxy);
   uint32_t index = GetArrayIndexFromId(aId);
   if (IsArrayIndex(index)) {
@@ -102,7 +106,7 @@ bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
   }
 
   bool ok = CrossOriginGetOwnPropertyHelper(aCx, aProxy, aId, aDesc);
-  if (!ok || aDesc.object()) {
+  if (!ok || aDesc.isSome()) {
     return ok;
   }
 

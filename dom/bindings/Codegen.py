@@ -13659,7 +13659,20 @@ class CGResolveOwnProperty(CGAbstractStaticMethod):
         )
 
     def definition_body(self):
-        return "return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc);\n"
+        return dedent("""
+        JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> ownDesc(cx);
+        if (!js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, &ownDesc)) {
+            return false;
+        }
+
+        if (ownDesc.isNothing()) {
+            desc.object().set(nullptr);
+        } else {
+            desc.set(*ownDesc);
+        }
+
+        return true;
+        """)
 
 
 class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
@@ -15785,7 +15798,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             Argument("JSContext*", "cx"),
             Argument("JS::Handle<JSObject*>", "proxy"),
             Argument("JS::Handle<jsid>", "id"),
-            Argument("JS::MutableHandle<JS::PropertyDescriptor>", "desc"),
+            Argument("JS::MutableHandle<Maybe<JS::PropertyDescriptor>>", "desc"),
         ]
         ClassMethod.__init__(
             self,
@@ -15830,7 +15843,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             }
 
             // Step 3.
-            if (desc.object()) {
+            if (desc.isSome()) {
               return true;
             }
 

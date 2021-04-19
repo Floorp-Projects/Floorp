@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TextUtils.h"
 
 #include "jsapi.h"
@@ -55,7 +56,7 @@ class BaseDOMProxyHandler : public js::BaseProxyHandler {
   // other lower-level methods.
   bool getOwnPropertyDescriptor(
       JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+      JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc) const override;
   virtual bool ownPropertyKeys(
       JSContext* cx, JS::Handle<JSObject*> proxy,
       JS::MutableHandleVector<jsid> props) const override;
@@ -223,6 +224,14 @@ inline void FillPropertyDescriptor(
     const JS::Value& v, bool readonly, bool enumerable = true) {
   desc.value().set(v);
   FillPropertyDescriptor(desc, obj, readonly, enumerable);
+}
+
+inline void FillPropertyDescriptor(
+    JSContext* cx, JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc,
+    JSObject* obj, const JS::Value& v, bool readonly, bool enumerable = true) {
+  JS::Rooted<JS::PropertyDescriptor> pd(cx);
+  FillPropertyDescriptor(&pd, obj, v, readonly, enumerable);
+  desc.set(Some(pd.get()));
 }
 
 inline void FillPropertyDescriptor(
