@@ -25,7 +25,7 @@ tar -xvf $UPLOAD_DIR/mozjs-*.tar.*z*
 status=0
 (
     # Build the freshly extracted, packaged SpiderMonkey.
-    cd ./mozjs-*/js/src
+    cd ./mozjs-*
 
     # MOZ_AUTOMATION enforces certain requirements that don't apply to
     # packaged builds. Unset it.
@@ -37,7 +37,8 @@ status=0
     export CARGO="$MOZ_FETCHES_DIR/rustc/bin/cargo"
     export CBINDGEN="$MOZ_FETCHES_DIR/cbindgen/cbindgen"
 
-    AUTOMATION=1 $PYTHON3 ./devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
+    ./mach create-mach-environment
+    AUTOMATION=1 $PYTHON3 js/src/devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
 ) || status=$?
 
 # Copy artifacts for upload by TaskCluster
