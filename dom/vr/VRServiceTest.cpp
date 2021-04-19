@@ -16,21 +16,11 @@ namespace mozilla {
 using namespace gfx;
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(VRMockDisplay)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(VRMockDisplay, DOMEventTargetHelper,
+                                   mVRServiceTest)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(VRMockDisplay,
-                                                  DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(VRMockDisplay,
-                                                DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VRMockDisplay)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
-
-NS_IMPL_ADDREF_INHERITED(VRMockDisplay, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(VRMockDisplay, DOMEventTargetHelper)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(VRMockDisplay,
+                                               DOMEventTargetHelper)
 
 namespace {
 template <class T>
@@ -346,21 +336,11 @@ void VRMockDisplay::SetPose(const Nullable<Float32Array>& aPosition,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(VRMockController)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(VRMockController, DOMEventTargetHelper,
+                                   mVRServiceTest)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(VRMockController,
-                                                  DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(VRMockController,
-                                                DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VRMockController)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
-
-NS_IMPL_ADDREF_INHERITED(VRMockController, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(VRMockController, DOMEventTargetHelper)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(VRMockController,
+                                               DOMEventTargetHelper)
 
 VRMockController::VRMockController(VRServiceTest* aVRServiceTest,
                                    uint32_t aControllerIdx)
@@ -556,21 +536,11 @@ void VRMockController::SetPose(
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(VRServiceTest)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(VRServiceTest, DOMEventTargetHelper,
+                                   mDisplay, mControllers, mWindow)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(VRServiceTest,
-                                                  DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(VRServiceTest,
-                                                DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VRServiceTest)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
-
-NS_IMPL_ADDREF_INHERITED(VRServiceTest, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(VRServiceTest, DOMEventTargetHelper)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(VRServiceTest,
+                                               DOMEventTargetHelper)
 
 JSObject* VRServiceTest::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
