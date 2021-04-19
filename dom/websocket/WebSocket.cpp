@@ -1276,13 +1276,6 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
-
-    nsCOMPtr<nsIScriptGlobalObject> sgo =
-        do_QueryInterface(aGlobal.GetAsSupports());
-    if (!sgo) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
   }
 
   nsTArray<nsString> protocolArray;
@@ -1314,7 +1307,9 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
   if (NS_IsMainThread()) {
     // We're keeping track of all main thread web sockets to be able to
     // avoid throttling timeouts when we have active web sockets.
-    webSocket->GetOwner()->UpdateWebSocketCount(1);
+    if (webSocket->GetOwner()) {
+      webSocket->GetOwner()->UpdateWebSocketCount(1);
+    }
 
     nsCOMPtr<nsIPrincipal> loadingPrincipal;
     aRv = webSocketImpl->GetLoadingPrincipal(getter_AddRefs(loadingPrincipal));
@@ -1429,14 +1424,17 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     nsCOMPtr<nsPIDOMWindowInner> ownerWindow = do_QueryInterface(global);
 
     UniquePtr<SerializedStackHolder> stack;
-    BrowsingContext* browsingContext = ownerWindow->GetBrowsingContext();
-    if (browsingContext && browsingContext->WatchedByDevTools()) {
-      stack = GetCurrentStackForNetMonitor(aGlobal.Context());
-    }
-
     uint64_t windowID = 0;
-    if (WindowContext* wc = ownerWindow->GetWindowContext()) {
-      windowID = wc->InnerWindowId();
+
+    if (ownerWindow) {
+      BrowsingContext* browsingContext = ownerWindow->GetBrowsingContext();
+      if (browsingContext && browsingContext->WatchedByDevTools()) {
+        stack = GetCurrentStackForNetMonitor(aGlobal.Context());
+      }
+
+      if (WindowContext* wc = ownerWindow->GetWindowContext()) {
+        windowID = wc->InnerWindowId();
+      }
     }
 
     aRv = webSocket->mImpl->AsyncOpen(principal, windowID, aTransportProvider,
