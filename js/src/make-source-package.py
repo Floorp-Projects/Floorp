@@ -257,8 +257,7 @@ This release is based on a revision of Mozilla {major_version}:
   https://hg.mozilla.org/releases/
 The changes in the patches/ directory were applied.
 
-MDN hosts the latest SpiderMonkey {major_version} release notes:
-  https://developer.mozilla.org/en-US/docs/SpiderMonkey/{major_version}
+See https://spidermonkey.dev/ for documentation, examples, and release notes.
 """.format(
     major_version=major_version
 )
