@@ -27,7 +27,7 @@ class Proxy {
   /* Standard internal methods. */
   static bool getOwnPropertyDescriptor(
       JSContext* cx, HandleObject proxy, HandleId id,
-      MutableHandle<JS::PropertyDescriptor> desc);
+      MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
   static bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
                              Handle<JS::PropertyDescriptor> desc,
                              ObjectOpResult& result);

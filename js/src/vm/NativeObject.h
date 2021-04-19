@@ -1644,7 +1644,7 @@ extern bool NativeHasProperty(JSContext* cx, HandleNativeObject obj,
 
 extern bool NativeGetOwnPropertyDescriptor(
     JSContext* cx, HandleNativeObject obj, HandleId id,
-    MutableHandle<JS::PropertyDescriptor> desc);
+    MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 
 extern bool NativeGetProperty(JSContext* cx, HandleNativeObject obj,
                               HandleValue receiver, HandleId id,

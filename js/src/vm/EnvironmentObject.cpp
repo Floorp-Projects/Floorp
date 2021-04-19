@@ -534,22 +534,24 @@ bool ModuleEnvironmentObject::setProperty(JSContext* cx, HandleObject obj,
 /* static */
 bool ModuleEnvironmentObject::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc_) {
   const IndirectBindingMap& bindings =
       obj->as<ModuleEnvironmentObject>().importBindings();
   mozilla::Maybe<ShapeProperty> prop;
   ModuleEnvironmentObject* env;
   if (bindings.lookup(id, &env, &prop)) {
+    Rooted<PropertyDescriptor> desc(cx);
     desc.setAttributes(JSPROP_ENUMERATE | JSPROP_PERMANENT);
     desc.object().set(obj);
     RootedValue value(cx, env->getSlot(prop->slot()));
     desc.setValue(value);
     desc.assertComplete();
+    desc_.set(mozilla::Some(desc.get()));
     return true;
   }
 
   RootedNativeObject self(cx, &obj->as<NativeObject>());
-  return NativeGetOwnPropertyDescriptor(cx, self, id, desc);
+  return NativeGetOwnPropertyDescriptor(cx, self, id, desc_);
 }
 
 /* static */
@@ -791,7 +793,7 @@ static bool with_SetProperty(JSContext* cx, HandleObject obj, HandleId id,
 
 static bool with_GetOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
   MOZ_ASSERT(!IsInternalDotName(cx, id));
   RootedObject actual(cx, &obj->as<WithEnvironmentObject>().object());
   return GetOwnPropertyDescriptor(cx, actual, id, desc);
@@ -1247,7 +1249,7 @@ static bool lexicalError_SetProperty(JSContext* cx, HandleObject obj,
 
 static bool lexicalError_GetOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
   ReportRuntimeLexicalErrorId(
       cx, obj->as<RuntimeLexicalErrorObject>().errorNumber(), id);
   return false;

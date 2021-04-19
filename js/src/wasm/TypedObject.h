@@ -8,6 +8,7 @@
 #define wasm_TypedObject_h
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Maybe.h"
 
 #include "gc/Allocator.h"
 #include "vm/ArrayBufferObject.h"
@@ -108,7 +109,7 @@ class TypedObject : public JSObject {
 
   [[nodiscard]] static bool obj_getOwnPropertyDescriptor(
       JSContext* cx, HandleObject obj, HandleId id,
-      MutableHandle<PropertyDescriptor> desc);
+      MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc);
 
   [[nodiscard]] static bool obj_deleteProperty(JSContext* cx, HandleObject obj,
                                                HandleId id,

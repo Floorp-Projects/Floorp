@@ -346,7 +346,7 @@ static bool EnumerateProxyProperties(JSContext* cx, HandleObject pobj,
       return false;
     }
 
-    Rooted<PropertyDescriptor> desc(cx);
+    Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
     for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
       bool enumerable = false;
 
@@ -355,7 +355,7 @@ static bool EnumerateProxyProperties(JSContext* cx, HandleObject pobj,
         if (!Proxy::getOwnPropertyDescriptor(cx, pobj, proxyProps[n], &desc)) {
           return false;
         }
-        enumerable = desc.enumerable();
+        enumerable = desc.isSome() && desc->enumerable();
       }
 
       if (!Enumerate<CheckForDuplicates>(cx, pobj, proxyProps[n], enumerable,
