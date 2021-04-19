@@ -1004,25 +1004,6 @@ static bool intrinsic_SetCanonicalName(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_SetIsInlinableLargeFunction(JSContext* cx, unsigned argc,
-                                                  Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-
-  RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
-  MOZ_ASSERT(fun->isSelfHostedBuiltin());
-
-  // _SetIsInlinableLargeFunction can only be called on top-level function
-  // declarations.
-  MOZ_ASSERT(fun->kind() == FunctionFlags::NormalFunction);
-  MOZ_ASSERT(!fun->isLambda());
-
-  fun->baseScript()->setIsInlinableLargeFunction();
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool intrinsic_GeneratorObjectIsClosed(JSContext* cx, unsigned argc,
                                               Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2343,8 +2324,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<ArrayIteratorObject>>, 2, 0),
 
     JS_FN("_SetCanonicalName", intrinsic_SetCanonicalName, 2, 0),
-    JS_FN("_SetIsInlinableLargeFunction", intrinsic_SetIsInlinableLargeFunction,
-          1, 0),
 
     JS_INLINABLE_FN("GuardToArrayIterator",
                     intrinsic_GuardToBuiltin<ArrayIteratorObject>, 1, 0,
