@@ -527,6 +527,7 @@ dependencies = [
  "crossbeam-utils 0.8.1",
  "cstr",
  "log",
+ "malloc_size_of_derive",
  "memmap",
  "moz_task",
  "nserror",
@@ -539,6 +540,7 @@ dependencies = [
  "tempfile",
  "thin-vec",
  "time",
+ "wr_malloc_size_of",
  "xpcom",
 ]
 

@@ -22,11 +22,17 @@ extern crate thin_vec;
 extern crate time;
 #[macro_use]
 extern crate xpcom;
+#[macro_use]
+extern crate malloc_size_of_derive;
 extern crate storage_variant;
 extern crate tempfile;
 
+extern crate wr_malloc_size_of;
+use wr_malloc_size_of as malloc_size_of;
+
 use byteorder::{LittleEndian, NetworkEndian, ReadBytesExt, WriteBytesExt};
 use crossbeam_utils::atomic::AtomicCell;
+use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use memmap::Mmap;
 use moz_task::{create_background_task_queue, is_main_thread, Task, TaskRunnable};
 use nserror::{
@@ -54,8 +60,9 @@ use storage_variant::VariantType;
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
     nsICRLiteState, nsICertInfo, nsICertStorage, nsICertStorageCallback, nsIFile,
-    nsIIssuerAndSerialRevocationState, nsIObserver, nsIPrefBranch, nsIRevocationState,
-    nsISerialEventTarget, nsISubjectAndPubKeyRevocationState, nsISupports,
+    nsIHandleReportCallback, nsIIssuerAndSerialRevocationState, nsIMemoryReporter,
+    nsIMemoryReporterManager, nsIObserver, nsIPrefBranch, nsIRevocationState, nsISerialEventTarget,
+    nsISubjectAndPubKeyRevocationState, nsISupports,
 };
 use xpcom::{nsIID, GetterAddrefs, RefPtr, ThreadBoundRefPtr, XpCom};
 
@@ -103,6 +110,23 @@ struct EnvAndStore {
     store: SingleStore,
 }
 
+impl MallocSizeOf for EnvAndStore {
+    fn size_of(&self, _ops: &mut MallocSizeOfOps) -> usize {
+        self.env
+            .read()
+            .and_then(|reader| {
+                let iter = self.store.iter_start(&reader)?.into_iter();
+                Ok(iter
+                    .map(|r| {
+                        r.map(|(k, v)| k.len() + v.serialized_size().unwrap_or(0) as usize)
+                            .unwrap_or(0)
+                    })
+                    .sum())
+            })
+            .unwrap_or(0)
+    }
+}
+
 // In Rust, structs cannot have self references (if a struct gets moved, the compiler has no
 // guarantees that the references are still valid). In our case, since the memmapped data is at a
 // particular place in memory (and that's what we're referencing), we can use the rental crate to
@@ -120,10 +144,12 @@ rental! {
 }
 
 /// `SecurityState`
+#[derive(MallocSizeOf)]
 struct SecurityState {
     profile_path: PathBuf,
     env_and_store: Option<EnvAndStore>,
     int_prefs: HashMap<String, u32>,
+    #[ignore_malloc_size_of = "rental crate does not allow impls for rental structs"]
     crlite_filter: Option<holding::CRLiteFilter>,
     /// Maps issuer spki hashes to sets of seiral numbers.
     crlite_stash: Option<HashMap<Vec<u8>, HashSet<Vec<u8>>>>,
@@ -1154,10 +1180,12 @@ fn do_construct_cert_storage(
 ) -> Result<(), SecurityStateError> {
     let path_buf = get_profile_path()?;
 
+    let security_state = Arc::new(RwLock::new(SecurityState::new(path_buf.clone())?));
     let cert_storage = CertStorage::allocate(InitCertStorage {
-        security_state: Arc::new(RwLock::new(SecurityState::new(path_buf.clone())?)),
+        security_state: security_state.clone(),
         queue: create_background_task_queue(cstr!("cert_storage"))?,
     });
+    let memory_reporter = MemoryReporter::allocate(InitMemoryReporter { security_state });
 
     // Dispatch a task to the background task queue to asynchronously read the CRLite stash file (if
     // present) and load it into cert_storage. This task does not hold the
@@ -1186,6 +1214,14 @@ fn do_construct_cert_storage(
             .map_err(|res| SecurityStateError {
                 message: (*res.error_name()).as_str_unchecked().to_owned(),
             })?;
+
+        if let Some(reporter) = memory_reporter.query_interface::<nsIMemoryReporter>() {
+            if let Some(reporter_manager) = xpcom::get_service::<nsIMemoryReporterManager>(cstr!(
+                "@mozilla.org/memory-reporter-manager;1"
+            )) {
+                reporter_manager.RegisterStrongReporter(&*reporter);
+            }
+        }
 
         return cert_storage.setup_prefs();
     };
@@ -1815,6 +1851,46 @@ impl CertStorage {
             }
             _ => (),
         }
+        NS_OK
+    }
+}
+
+extern "C" {
+    fn cert_storage_malloc_size_of(ptr: *const xpcom::reexports::libc::c_void) -> usize;
+}
+
+#[derive(xpcom)]
+#[xpimplements(nsIMemoryReporter)]
+#[refcnt = "atomic"]
+struct InitMemoryReporter {
+    security_state: Arc<RwLock<SecurityState>>,
+}
+
+#[allow(non_snake_case)]
+impl MemoryReporter {
+    unsafe fn CollectReports(
+        &self,
+        callback: *const nsIHandleReportCallback,
+        data: *const nsISupports,
+        _anonymize: bool,
+    ) -> nserror::nsresult {
+        let ss = try_ns!(self.security_state.read());
+        let mut ops = MallocSizeOfOps::new(cert_storage_malloc_size_of, None);
+        let size = ss.size_of(&mut ops);
+        let callback = match RefPtr::from_raw(callback) {
+            Some(ptr) => ptr,
+            None => return NS_ERROR_UNEXPECTED,
+        };
+        // This does the same as MOZ_COLLECT_REPORT
+        callback.Callback(
+            &nsCStr::new() as &nsACString,
+            &nsCStr::from("explicit/cert-storage/storage") as &nsACString,
+            nsIMemoryReporter::KIND_HEAP as i32,
+            nsIMemoryReporter::UNITS_BYTES as i32,
+            size as i64,
+            &nsCStr::from("Memory used by certificate storage") as &nsACString,
+            data,
+        );
         NS_OK
     }
 }
