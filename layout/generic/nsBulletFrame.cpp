@@ -781,12 +781,9 @@ void nsBulletFrame::GetDesiredSize(nsPresContext* aCX,
 
   RemoveStateBits(BULLET_FRAME_IMAGE_LOADING);
 
-  if (RefPtr<imgIContainer> image = GetImage()) {
-    int32_t w = 0;
-    int32_t h = 0;
-    image->GetWidth(&w);
-    image->GetHeight(&h);
-    LogicalSize size(GetWritingMode(), CSSPixel::ToAppUnits(CSSIntSize(w, h)));
+  if (Maybe<CSSIntSize> intrinsicSize =
+          StyleList()->mListStyleImage.GetIntrinsicSize()) {
+    LogicalSize size(GetWritingMode(), CSSPixel::ToAppUnits(*intrinsicSize));
     // auto size the image
     finalSize.ISize(wm) = size.ISize(wm);
     finalSize.BSize(wm) = size.BSize(wm);

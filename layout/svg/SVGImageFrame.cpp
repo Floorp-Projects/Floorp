@@ -405,7 +405,7 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
       // That method needs our image to have a fixed native width & height,
       // and that's not always true for TYPE_VECTOR images.
       aImgParams.result &= nsLayoutUtils::DrawSingleImage(
-          aContext, PresContext(), mImageContainer,
+          aContext, PresContext(), mImageContainer, /* aResolution = */ 1.0f,
           nsLayoutUtils::GetSamplingFilterForFrame(this), destRect,
           aDirtyRect ? dirtyRect : destRect, context, flags);
     } else {  // mImageContainer->GetType() == TYPE_RASTER
