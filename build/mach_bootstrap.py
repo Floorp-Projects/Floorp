@@ -373,15 +373,18 @@ def bootstrap(topsrcdir):
     for category, meta in CATEGORIES.items():
         driver.define_category(category, meta["short"], meta["long"], meta["priority"])
 
+    # Sparse checkouts may not have all mach_commands.py files. Ignore
+    # errors from missing files. Same for spidermonkey tarballs.
     repo = resolve_repository()
+    missing_ok = (
+        repo is not None and repo.sparse_checkout_present()
+    ) or os.path.exists(os.path.join(topsrcdir, "INSTALL"))
 
     for path in MACH_MODULES:
-        # Sparse checkouts may not have all mach_commands.py files. Ignore
-        # errors from missing files.
         try:
             driver.load_commands_from_file(os.path.join(topsrcdir, path))
         except mach.base.MissingFileError:
-            if not repo or not repo.sparse_checkout_present():
+            if not missing_ok:
                 raise
 
     return driver
