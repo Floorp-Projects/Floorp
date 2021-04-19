@@ -6097,7 +6097,6 @@ com.st
 consulado.st
 edu.st
 embaixada.st
-gov.st
 mil.st
 net.st
 org.st
@@ -7125,7 +7124,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-03-27T15:15:50Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-04-17T15:15:54Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -9104,9 +9103,6 @@ nab
 // nagoya : 2013-10-24 GMO Registry, Inc.
 nagoya
 
-// nationwide : 2015-07-23 Nationwide Mutual Insurance Company
-nationwide
-
 // natura : 2015-03-12 NATURA COSMÉTICOS S.A.
 natura
 
@@ -9244,9 +9240,6 @@ onl
 
 // online : 2015-01-15 DotOnline Inc.
 online
-
-// onyourside : 2015-07-23 Nationwide Mutual Insurance Company
-onyourside
 
 // ooo : 2014-01-09 INFIBEAM AVENUES LIMITED
 ooo
