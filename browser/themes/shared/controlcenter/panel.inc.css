@@ -1006,25 +1006,7 @@ description#identity-popup-content-verifier,
   margin: 0;
 }
 
-#protections-popup[hasException] #protections-popup-tp-switch-section {
-  background: repeating-linear-gradient(
-    -56deg,
-    hsla(0,0%,80%,.25),
-    hsla(0,0%,80%,.25) 10px,
-    transparent 10px,
-    transparent 20px
-  );
-}
 
-:root[lwt-popup-brighttext] #protections-popup[hasException] #protections-popup-tp-switch-section {
-  background: repeating-linear-gradient(
-    -56deg,
-    rgba(249,249,250,.05),
-    rgba(249,249,250,.05) 10px,
-    transparent 10px,
-    transparent 20px
-  );
-}
 
 #protections-popup-siteNotWorkingView-header {
   border-bottom: 1px solid var(--panel-separator-color);
@@ -1234,6 +1216,26 @@ description#identity-popup-content-verifier,
   --arrowpanel-dimmed: rgba(12, 12, 13, 0.2);
   --arrowpanel-dimmed-further: rgba(12, 12, 13, 0.3);
   --arrowpanel-dimmed-even-further: rgba(12, 12, 13, 0.4);
+}
+
+#protections-popup[hasException] #protections-popup-tp-switch-section {
+  background: repeating-linear-gradient(
+    -56deg,
+    hsla(0,0%,80%,.25),
+    hsla(0,0%,80%,.25) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+:root[lwt-popup-brighttext] #protections-popup[hasException] #protections-popup-tp-switch-section {
+  background: repeating-linear-gradient(
+    -56deg,
+    rgba(249,249,250,.05),
+    rgba(249,249,250,.05) 10px,
+    transparent 10px,
+    transparent 20px
+  );
 }
 
 #protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
