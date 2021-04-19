@@ -49,7 +49,3 @@ browser.jar:
   skin/classic/browser/window-controls/restore-highcontrast.svg  (window-controls/restore-highcontrast.svg)
   skin/classic/browser/window-controls/restore-themes.svg        (window-controls/restore-themes.svg)
   skin/classic/browser/e10s-64@2x.png                            (../shared/e10s-64@2x.png)
-  skin/classic/browser/menus/back.svg                            (../shared/icons/menus/back.svg)
-  skin/classic/browser/menus/bookmark-hollow.svg                 (../shared/icons/menus/bookmark-hollow.svg)
-  skin/classic/browser/menus/forward.svg                         (../shared/icons/menus/forward.svg)
-  skin/classic/browser/menus/reload.svg                          (../shared/icons/menus/reload.svg)
