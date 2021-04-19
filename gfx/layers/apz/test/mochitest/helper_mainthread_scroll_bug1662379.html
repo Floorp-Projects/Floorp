@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, minimum-scale=1.0">
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<div id="content">
+  <div id="lhs">
+    <ul>
+      <li>Test item 1</li>
+      <li>Test item 2</li>
+      <li>Test item 3</li>
+      <li>Test item 4</li>
+      <li>Test item 5</li>
+      <li>Test item 6</li>
+      <li>Test item 7</li>
+      <li>Test item 8</li>
+      <li>Test item 9</li>
+      <li>Test item 10</li>
+      <li>Test item 11</li>
+      <li>Test item 13</li>
+      <li>Test item 14</li>
+      <li>Test item 15</li>
+      <li>Test item 16</li>
+      <li>Test item 17</li>
+      <li>Test item 18</li>
+      <li>Test item 19</li>
+    </ul>
+  </div>
+  <div id="center">
+    <div>
+     Steps to reproduce:
+     <ol>
+      <li>Scroll the list of "test items" all the way to the bottom
+      <li>Click on the reparent button below
+      <li>Click on one of the test items
+      <li>The `clickTarget` JS variable should match the thing you clicked on
+     </ol>
+    </div>
+    <button onclick="reparent()"> Click here to reparent </button>
+  </div>
+</div>
+<style>
+#content {
+  display: flex;
+  height: 300px;
+  background-color: pink;
+  border: 3px solid green;
+}
+
+#lhs, #rhs {
+  width: 250px;
+  overflow: scroll;
+  flex: 0 0 250px
+}
+
+#center {
+  padding: 20px;
+}
+
+ul {
+  margin: 16px 0px;
+}
+
+/* Each element has a border-height of 20 + (2 * 5) + (2 * 1) = 32px */
+ul li {
+  background-color: aqua;
+  border: 1px solid blue;
+  padding: 5px;
+  cursor: pointer;
+  height: 20px;
+}
+</style>
+<script>
+var clickTarget = null;
+
+for (var el of document.querySelectorAll("ul li")) {
+  el.addEventListener("click", function(e) {
+    clickTarget = e.target;
+  });
+}
+
+function reparent() {
+  var content = document.getElementById("content");
+  var lhs = document.getElementById("lhs");
+  content.appendChild(lhs);
+  lhs.id = "rhs";
+}
+
+function getAsyncScrollOffsetForUniqueRcdChild() {
+  let data = SpecialPowers.getDOMWindowUtils(window).getCompositorAPZTestData();
+  let bucket = data.paints[data.paints.length - 1];
+  info("Got compositor data: " + JSON.stringify(bucket));
+  let apzcTree = buildApzcTree(convertScrollFrameData(bucket.scrollFrames));
+  let rcd = findRcdNode(apzcTree);
+  // We assume a unique child of the RCD. If this is not the case, bail out.
+  if (rcd == null || rcd.children.length != 1) {
+    info("Did not find unique child on the RCD: rcd=" + JSON.stringify(rcd));
+    return {x: -1, y: -1};
+  }
+  let child = rcd.children[0];
+  let scroll = child.asyncScrollOffset;
+  let pieces = scroll.replace(/[()\s]+/g, "").split(",");
+  is(pieces.length, 2, "expected string of form (x,y)");
+  return {x: parseInt(pieces[0]), y: parseInt(pieces[1])};
+}
+
+async function test() {
+  if (getPlatform() == "android") {
+    ok(true, "Mousewheel is not supported on android, skipping test...");
+    return;
+  }
+
+  // Simulate user mouse-wheel scrolling the lhs pane down to the bottom.
+  let lhs = document.getElementById("lhs");
+  while (lhs.scrollTop < lhs.scrollTopMax) {
+    await promiseNativeWheelAndWaitForScrollEvent(
+      lhs,
+      50, 50,
+      0, -50);
+    info("Did scroll, pos is now " + lhs.scrollTop + "/" + lhs.scrollTopMax);
+  }
+  await promiseApzFlushedRepaints();
+
+  // Click at 50,50 from the top-left corner of the lhs pane. If lhs were
+  // not scrolled, this would hit "Test item 2" but since lhs is scrolled
+  // it should hit something else. So let's check that it doesn't hit
+  // "Test item 2".
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "click",
+    target: lhs,
+    offsetX: 50,
+    offsetY: 50,
+  });
+  isnot(clickTarget, null, "Click target got set");
+  info("Hit " + clickTarget.textContent);
+  isnot(clickTarget.textContent, "Test item 2", "Item two didn't get hit");
+  clickTarget = null;
+
+  // Do the reparenting
+  reparent();
+  await promiseApzFlushedRepaints();
+  info("Done reparent + wait, about to fire click...");
+
+  // Now fire the click on the reparented element (which is now called "rhs")
+  // at the same 50,50 offset from the top-left. This time it *should* hit
+  // "Test item 2" because the reparenting should reset the scroll offset
+  // back to zero.
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "click",
+    target: document.getElementById("rhs"),
+    offsetX: 50,
+    offsetY: 50,
+  });
+
+  // Check that the visual scroll position (as determined by the compositor
+  // scroll offset) is consistent with the main-thread scroll position (as
+  // determined by the click target). In both cases the scroll position
+  // should have gotten reset back to zero with the reparenting step. In
+  // bug 1662379 the visual scroll position was *not* getting reset, and
+  // so even though the main-thread click target was "Test item 2", the
+  // compositor scroll offset was non-zero, so to the user the click
+  // appeared to trigger something different from what they clicked on.
+  isnot(clickTarget, null, "Click target got set");
+  is(clickTarget.textContent, "Test item 2", "Item two got hit correctly");
+  let rhsCompositorScrollOffset = getAsyncScrollOffsetForUniqueRcdChild();
+  is(rhsCompositorScrollOffset.x, 0, "rhs compositor x-offset is zero");
+  is(rhsCompositorScrollOffset.y, 0, "rhs compositor y-offset is zero");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+</script>
