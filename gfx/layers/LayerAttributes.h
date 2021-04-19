@@ -186,11 +186,11 @@ class SimpleLayerAttributes final {
     return true;
   }
 
-  bool SetAsyncZoomContainerId(const Maybe<FrameMetrics::ViewID>& aViewId) {
-    if (mAsyncZoomContainerId == aViewId) {
+  bool SetIsAsyncZoomContainer(const Maybe<FrameMetrics::ViewID>& aViewId) {
+    if (mIsAsyncZoomContainerForViewId == aViewId) {
       return false;
     }
-    mAsyncZoomContainerId = aViewId;
+    mIsAsyncZoomContainerForViewId = aViewId;
     return true;
   }
 
@@ -307,8 +307,8 @@ class SimpleLayerAttributes final {
 
   bool IsFixedPosition() const { return mIsFixedPosition; }
 
-  Maybe<FrameMetrics::ViewID> GetAsyncZoomContainerId() const {
-    return mAsyncZoomContainerId;
+  Maybe<FrameMetrics::ViewID> IsAsyncZoomContainer() const {
+    return mIsAsyncZoomContainerForViewId;
   }
 
   const ScrollbarData& GetScrollbarData() const { return mScrollbarData; }
@@ -360,7 +360,8 @@ class SimpleLayerAttributes final {
            mContentFlags == aOther.mContentFlags &&
            mOpacity == aOther.mOpacity &&
            mIsFixedPosition == aOther.mIsFixedPosition &&
-           mAsyncZoomContainerId == aOther.mAsyncZoomContainerId &&
+           mIsAsyncZoomContainerForViewId ==
+               aOther.mIsAsyncZoomContainerForViewId &&
            mScrollbarData == aOther.mScrollbarData &&
            mMixBlendMode == aOther.mMixBlendMode &&
            mForceIsolatedGroup == aOther.mForceIsolatedGroup;
@@ -375,7 +376,7 @@ class SimpleLayerAttributes final {
   uint32_t mContentFlags;
   float mOpacity;
   bool mIsFixedPosition;
-  Maybe<FrameMetrics::ViewID> mAsyncZoomContainerId;
+  Maybe<FrameMetrics::ViewID> mIsAsyncZoomContainerForViewId;
   ScrollbarData mScrollbarData;
   gfx::CompositionOp mMixBlendMode;
   bool mForceIsolatedGroup;

@@ -428,10 +428,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
     ancestorTransforms.push(AncestorTransform());
     state.mParentHasPerspective.push(false);
     state.mOverrideFlags.push(EventRegionsOverride::NoOverride);
-    nsTArray<Maybe<ZoomConstraints>> zoomConstraintsStack;
-
-    // push a nothing to be used for anything outside an async zoom container
-    zoomConstraintsStack.AppendElement(Nothing());
 
     mApzcTreeLog << "[start]\n";
     mTreeLock.AssertCurrentThreadIn();
@@ -441,21 +437,12 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
         [&](ScrollNode aLayerMetrics) {
           mApzcTreeLog << aLayerMetrics.Name() << '\t';
 
-          if (auto asyncZoomContainerId =
-                  aLayerMetrics.GetAsyncZoomContainerId()) {
+          if (aLayerMetrics.IsAsyncZoomContainer()) {
             if (asyncZoomContainerNestingDepth > 0) {
               haveNestedAsyncZoomContainers = true;
             }
             mAsyncZoomContainerSubtree = Some(layersId);
             ++asyncZoomContainerNestingDepth;
-
-            auto it = mZoomConstraints.find(
-                ScrollableLayerGuid(layersId, 0, *asyncZoomContainerId));
-            if (it != mZoomConstraints.end()) {
-              zoomConstraintsStack.AppendElement(Some(it->second));
-            } else {
-              zoomConstraintsStack.AppendElement(Nothing());
-            }
           }
 
           if (aLayerMetrics.Metrics().IsRootContent()) {
@@ -479,8 +466,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
 
           HitTestingTreeNode* node = PrepareNodeForLayer(
               lock, aLayerMetrics, aLayerMetrics.Metrics(), layersId,
-              zoomConstraintsStack.LastElement(), ancestorTransforms.top(),
-              parent, next, state);
+              ancestorTransforms.top(), parent, next, state);
           MOZ_ASSERT(node);
           AsyncPanZoomController* apzc = node->GetApzc();
           aLayerMetrics.SetApzc(apzc);
@@ -565,9 +551,8 @@ APZCTreeManager::UpdateHitTestingTreeImpl(const ScrollNode& aRoot,
               aLayerMetrics.TransformIsPerspective());
         },
         [&](ScrollNode aLayerMetrics) {
-          if (aLayerMetrics.GetAsyncZoomContainerId()) {
+          if (aLayerMetrics.IsAsyncZoomContainer()) {
             --asyncZoomContainerNestingDepth;
-            zoomConstraintsStack.RemoveLastElement();
           }
           if (aLayerMetrics.GetReferentId()) {
             state.mOverrideFlags.pop();
@@ -1145,14 +1130,13 @@ void SetHitTestData(HitTestingTreeNode* aNode, const ScrollNode& aLayer,
                         aLayer.GetRemoteDocumentSize(),
                         aLayer.GetTransformTyped(), aClipRegion, aOverrideFlags,
                         aLayer.IsBackfaceHidden(),
-                        aLayer.GetAsyncZoomContainerId());
+                        !!aLayer.IsAsyncZoomContainer());
 }
 
 template <class ScrollNode>
 HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     const RecursiveMutexAutoLock& aProofOfTreeLock, const ScrollNode& aLayer,
     const FrameMetrics& aMetrics, LayersId aLayersId,
-    const Maybe<ZoomConstraints>& aZoomConstraints,
     const AncestorTransform& aAncestorTransform, HitTestingTreeNode* aParent,
     HitTestingTreeNode* aNextSibling, TreeBuildingState& aState) {
   bool needsApzc = true;
@@ -1356,27 +1340,18 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     }
 
     if (newApzc) {
-      if (aZoomConstraints) {
-        apzc->UpdateZoomConstraints(*aZoomConstraints);
-
-#ifdef DEBUG
-        auto it = mZoomConstraints.find(guid);
-        if (it != mZoomConstraints.end()) {
-          MOZ_ASSERT(it->second == *aZoomConstraints);
-        }
-      } else {
-        // We'd like to assert these things but they are not true because xul
-        // root content gets zoomable zoom constraints, but which is not
-        // zoomable because it doesn't have a root scroll frame.
-        // clang-format off
-        // MOZ_ASSERT(mZoomConstraints.find(guid) == mZoomConstraints.end());
-        // auto it = mZoomConstraints.find(guid);
-        // if (it != mZoomConstraints.end()) {
-        //   MOZ_ASSERT(!it->second.mAllowZoom && !it->second.mAllowDoubleTapZoom);
-        // }
-        // clang-format on
-#endif
+      auto it = mZoomConstraints.find(guid);
+      if (it != mZoomConstraints.end()) {
+        // We have a zoomconstraints for this guid, apply it.
+        apzc->UpdateZoomConstraints(it->second);
+      } else if (!apzc->HasNoParentWithSameLayersId()) {
+        // This is a sub-APZC, so inherit the zoom constraints from its parent.
+        // This ensures that if e.g. user-scalable=no was specified, none of the
+        // APZCs for that subtree allow double-tap to zoom.
+        apzc->UpdateZoomConstraints(apzc->GetParent()->GetZoomConstraints());
       }
+      // Otherwise, this is the root of a layers id, but we didn't have a saved
+      // zoom constraints. Leave it empty for now.
     }
 
     // Add a guid -> APZC mapping for the newly created APZC.
@@ -2405,11 +2380,6 @@ void APZCTreeManager::SetTargetAPZC(
   mInputQueue->SetConfirmedTargetApzc(aInputBlockId, target);
 }
 
-static bool GuidComparatorIgnoringPresShell(const ScrollableLayerGuid& aOne,
-                                            const ScrollableLayerGuid& aTwo) {
-  return aOne.mLayersId == aTwo.mLayersId && aOne.mScrollId == aTwo.mScrollId;
-}
-
 void APZCTreeManager::UpdateZoomConstraints(
     const ScrollableLayerGuid& aGuid,
     const Maybe<ZoomConstraints>& aConstraints) {
@@ -2430,6 +2400,10 @@ void APZCTreeManager::UpdateZoomConstraints(
 
   AssertOnUpdaterThread();
 
+  RecursiveMutexAutoLock lock(mTreeLock);
+  RefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
+  MOZ_ASSERT(!node || node->GetApzc());  // any node returned must have an APZC
+
   // Propagate the zoom constraints down to the subtree, stopping at APZCs
   // which have their own zoom constraints or are in a different layers id.
   if (aConstraints) {
@@ -2440,60 +2414,26 @@ void APZCTreeManager::UpdateZoomConstraints(
     APZCTM_LOG("Removing constraints for guid %s\n", ToString(aGuid).c_str());
     mZoomConstraints.erase(aGuid);
   }
-
-  RecursiveMutexAutoLock lock(mTreeLock);
-  RefPtr<HitTestingTreeNode> node = DepthFirstSearchPostOrder<ReverseIterator>(
-      mRootNode.get(), [&aGuid](HitTestingTreeNode* aNode) {
-        bool matches = false;
-        if (auto zoomId = aNode->GetAsyncZoomContainerId()) {
-          matches = GuidComparatorIgnoringPresShell(
-              aGuid, ScrollableLayerGuid(aNode->GetLayersId(), 0, *zoomId));
-        }
-        return matches;
-      });
-
-  MOZ_ASSERT(!node ||
-             !node->GetApzc());  // any node returned must not have an APZC
-
-  // This does not hold because we can get zoom constraints updates before the
-  // layer tree update with the async zoom container (I assume).
-  // clang-format off
-  // MOZ_ASSERT(node || aConstraints.isNothing() ||
-  //           (!aConstraints->mAllowZoom && !aConstraints->mAllowDoubleTapZoom));
-  // clang-format on
-
-  // If there is no async zoom container then the zoom constraints should not
-  // allow zooming and building the HTT should have handled clearing the zoom
-  // constraints from all nodes so we don't have to handle doing anything in
-  // case there is no async zoom container.
-
   if (node && aConstraints) {
-    ForEachNode<ReverseIterator>(node.get(), [&aConstraints, &node, &aGuid,
-                                              this](HitTestingTreeNode* aNode) {
-      if (aNode != node) {
-        // don't go into other async zoom containers
-        if (auto zoomId = aNode->GetAsyncZoomContainerId()) {
-          MOZ_ASSERT(!GuidComparatorIgnoringPresShell(
-              aGuid, ScrollableLayerGuid(aNode->GetLayersId(), 0, *zoomId)));
-          return TraversalFlag::Skip;
-        }
-        if (AsyncPanZoomController* childApzc = aNode->GetApzc()) {
-          if (!GuidComparatorIgnoringPresShell(aGuid, childApzc->GetGuid())) {
-            // We can have subtrees with their own zoom constraints - leave
-            // these alone.
-            if (this->mZoomConstraints.find(childApzc->GetGuid()) !=
-                this->mZoomConstraints.end()) {
-              return TraversalFlag::Skip;
+    ForEachNode<ReverseIterator>(
+        node.get(), [&aConstraints, &node, this](HitTestingTreeNode* aNode) {
+          if (aNode != node) {
+            if (AsyncPanZoomController* childApzc = aNode->GetApzc()) {
+              // We can have subtrees with their own zoom constraints or
+              // separate layers id - leave these alone.
+              if (childApzc->HasNoParentWithSameLayersId() ||
+                  this->mZoomConstraints.find(childApzc->GetGuid()) !=
+                      this->mZoomConstraints.end()) {
+                return TraversalFlag::Skip;
+              }
             }
           }
-        }
-      }
-      if (aNode->IsPrimaryHolder()) {
-        MOZ_ASSERT(aNode->GetApzc());
-        aNode->GetApzc()->UpdateZoomConstraints(aConstraints.ref());
-      }
-      return TraversalFlag::Continue;
-    });
+          if (aNode->IsPrimaryHolder()) {
+            MOZ_ASSERT(aNode->GetApzc());
+            aNode->GetApzc()->UpdateZoomConstraints(aConstraints.ref());
+          }
+          return TraversalFlag::Continue;
+        });
   }
 }
 
@@ -2780,6 +2720,11 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetTargetAPZC(
   MOZ_ASSERT(!node || node->GetApzc());  // any node returned must have an APZC
   RefPtr<AsyncPanZoomController> apzc = node ? node->GetApzc() : nullptr;
   return apzc.forget();
+}
+
+static bool GuidComparatorIgnoringPresShell(const ScrollableLayerGuid& aOne,
+                                            const ScrollableLayerGuid& aTwo) {
+  return aOne.mLayersId == aTwo.mLayersId && aOne.mScrollId == aTwo.mScrollId;
 }
 
 already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetTargetAPZC(
@@ -3638,7 +3583,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
         /* there is an async zoom container on this subtree */
         mAsyncZoomContainerSubtree == Some(aNode->GetLayersId()) &&
         /* it's not us */
-        !aNode->GetAsyncZoomContainerId();
+        !aNode->IsAsyncZoomContainer();
     AsyncTransformComponents components =
         visualTransformIsInheritedFromAncestor
             ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
@@ -3650,7 +3595,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
     return aNode->GetTransform() *
            CompleteAsyncTransform(apzc->GetCurrentAsyncTransformWithOverscroll(
                AsyncPanZoomController::eForHitTesting, components));
-  } else if (aNode->GetAsyncZoomContainerId()) {
+  } else if (aNode->IsAsyncZoomContainer()) {
     if (AsyncPanZoomController* rootContent =
             FindRootContentApzcForLayersId(aNode->GetLayersId())) {
       if (aOutSourceOfOverscrollTransform) {

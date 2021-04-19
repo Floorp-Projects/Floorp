@@ -1609,7 +1609,7 @@ void Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   if (Is3DContextLeaf()) {
     aStream << " [is3DContextLeaf]";
   }
-  if (Maybe<FrameMetrics::ViewID> viewId = GetAsyncZoomContainerId()) {
+  if (Maybe<FrameMetrics::ViewID> viewId = IsAsyncZoomContainer()) {
     aStream << nsPrintfCString(" [asyncZoomContainer scrollId=%" PRIu64 "]",
                                *viewId)
                    .get();
