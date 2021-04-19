@@ -26,6 +26,7 @@ TEST_DIRS += [
     "gtest",
     "jsmodules",
     "useractivation",
+    "meta_viewport",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.base.test.chrome += [

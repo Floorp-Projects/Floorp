@@ -22,6 +22,7 @@
       is(info.height, 480, "height should be 480");
 
       // Now the content has only 'width=1080'.
+      // eslint-disable-next-line no-undef
       viewport.setAttribute("content", "width=1080");
       info = getViewportInfo(800, 480);
 
