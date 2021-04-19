@@ -719,17 +719,17 @@ class JSRope : public JSString {
 
   enum UsingBarrier : bool { NoBarrier = false, WithIncrementalBarrier = true };
 
-  template <UsingBarrier usingBarrier, typename CharT>
-  JSLinearString* flattenInternal(JSContext* cx);
+  friend class JSString;
+  JSLinearString* flatten(JSContext* maybecx);
 
+  JSLinearString* flattenInternal();
   template <UsingBarrier usingBarrier>
-  JSLinearString* flattenInternal(JSContext* cx);
+  JSLinearString* flattenInternal();
+  template <UsingBarrier usingBarrier, typename CharT>
+  JSLinearString* flattenInternal();
 
   template <UsingBarrier usingBarrier>
   static void ropeBarrierDuringFlattening(JSString* str);
-
-  friend class JSString;
-  JSLinearString* flatten(JSContext* cx);
 
   void init(JSContext* cx, JSString* left, JSString* right, size_t length);
 
