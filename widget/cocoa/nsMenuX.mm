@@ -216,7 +216,7 @@ void nsMenuX::AddMenuItem(RefPtr<nsMenuItemX>&& aMenuItem) {
 
   mMenuChildren.AppendElement(aMenuItem);
 
-  if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(aMenuItem->Content())) {
+  if (!aMenuItem->IsVisible()) {
     return;
   }
 
@@ -246,7 +246,7 @@ void nsMenuX::AddMenu(RefPtr<nsMenuX>&& aMenu) {
   aMenu->SetObserver(this);
   mMenuChildren.AppendElement(aMenu);
 
-  if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(aMenu->Content())) {
+  if (!aMenu->IsVisible()) {
     return;
   }
 
