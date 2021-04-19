@@ -23,12 +23,13 @@
           <html:span id="identity-popup-mainView-panel-header-span" role="heading" aria-level="1"/>
         </label>
       </vbox>
+      <toolbarseparator></toolbarseparator>
 
       <!-- Security Section -->
-      <hbox id="identity-popup-security" class="identity-popup-section">
+      <hbox id="identity-popup-security" class="identity-popup-section" flex="1">
         <vbox class="identity-popup-security-content" flex="1">
 
-          <vbox class="identity-popup-security-connection">
+          <vbox class="identity-popup-security-connection identity-button">
             <hbox flex="1">
               <description class="identity-popup-connection-not-secure"
                           when-connection="not-secure secure-cert-user-overridden secure-custom-root cert-error-page https-only-error-page" data-l10n-id="identity-connection-not-secure"></description>
@@ -104,9 +105,9 @@
                descriptionheightworkaround="true">
       <vbox class="identity-popup-security-content">
         <vbox class="identity-popup-security-connection">
-          <description class="identity-popup-connection-not-secure"
+          <description class="identity-popup-connection-not-secure security-view"
                        when-connection="not-secure secure-cert-user-overridden cert-error-page https-only-error-page" data-l10n-id="identity-connection-not-secure-security-view"></description>
-          <description class="identity-popup-connection-secure"
+          <description class="identity-popup-connection-secure security-view"
                        when-connection="secure secure-ev" data-l10n-id="identity-connection-verified"></description>
         </vbox>
       </vbox>
