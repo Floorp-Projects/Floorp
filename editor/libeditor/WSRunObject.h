@@ -275,10 +275,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
   using WSType = WSScanResult::WSType;
 
   template <typename EditorDOMPointType>
-  WSRunScanner(const HTMLEditor& aHTMLEditor,
+  WSRunScanner(dom::Element* aEditingHost,
                const EditorDOMPointType& aScanStartPoint)
       : mScanStartPoint(aScanStartPoint),
-        mEditingHost(aHTMLEditor.GetActiveEditingHost()),
+        mEditingHost(aEditingHost),
         mTextFragmentDataAtStart(mScanStartPoint, mEditingHost) {}
 
   // ScanNextVisibleNodeOrBlockBoundaryForwardFrom() returns the first visible
@@ -291,7 +291,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   template <typename PT, typename CT>
   static WSScanResult ScanNextVisibleNodeOrBlockBoundary(
       const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
-    return WSRunScanner(aHTMLEditor, aPoint)
+    return WSRunScanner(aHTMLEditor.GetActiveEditingHost(), aPoint)
         .ScanNextVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
 
@@ -305,7 +305,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   template <typename PT, typename CT>
   static WSScanResult ScanPreviousVisibleNodeOrBlockBoundary(
       const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
-    return WSRunScanner(aHTMLEditor, aPoint)
+    return WSRunScanner(aHTMLEditor.GetActiveEditingHost(), aPoint)
         .ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPoint);
   }
 
@@ -321,7 +321,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
         HTMLEditUtils::IsSimplyEditableNode(*aPoint.ContainerAsText())) {
       return EditorDOMPointInText(aPoint.ContainerAsText(), aPoint.Offset());
     }
-    WSRunScanner scanner(aHTMLEditor, aPoint);
+    WSRunScanner scanner(aHTMLEditor.GetActiveEditingHost(), aPoint);
     return scanner.GetInclusiveNextEditableCharPoint(aPoint);
   }
 
@@ -337,7 +337,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
       return EditorDOMPointInText(aPoint.ContainerAsText(),
                                   aPoint.Offset() - 1);
     }
-    WSRunScanner scanner(aHTMLEditor, aPoint);
+    WSRunScanner scanner(aHTMLEditor.GetActiveEditingHost(), aPoint);
     return scanner.GetPreviousEditableCharPoint(aPoint);
   }
 
