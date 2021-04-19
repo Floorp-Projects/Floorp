@@ -924,7 +924,6 @@ function promiseNativeMouseEventWithAPZAndWaitForEvent(aParams) {
     const targetWindow = windowForTarget(aParams.target);
     const eventType = aParams.eventTypeToWait || aParams.type;
     targetWindow.addEventListener(eventType, resolve, {
-      capture: true,
       once: true,
     });
     synthesizeNativeMouseEventWithAPZ(aParams);
