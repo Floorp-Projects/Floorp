@@ -58,9 +58,6 @@ class nsLoadGroup : public nsILoadGroup,
   nsresult Init();
   nsresult InitWithRequestContextId(const uint64_t& aRequestContextId);
 
-  void SetGroupObserver(nsIRequestObserver* aObserver,
-                        bool aIncludeBackgroundRequests);
-
  protected:
   virtual ~nsLoadGroup();
 
@@ -97,7 +94,6 @@ class nsLoadGroup : public nsILoadGroup,
   bool mDefaultLoadIsTimed;
   bool mBrowsingContextDiscarded;
   bool mExternalRequestContext;
-  bool mNotifyObserverAboutBackgroundRequests;
 
   /* Telemetry */
   mozilla::TimeStamp mDefaultRequestCreationTime;
