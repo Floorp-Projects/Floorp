@@ -862,20 +862,6 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
     margin-top: 0;
     margin-inline: 0;
   }
-
-  /* We also have different navigation icons for Win10. */
-  #context-back {
-    list-style-image: url("chrome://browser/skin/menus/back.svg");
-  }
-  #context-forward {
-    list-style-image: url("chrome://browser/skin/menus/forward.svg");
-  }
-  #context-reload {
-    list-style-image: url("chrome://browser/skin/menus/reload.svg");
-  }
-  #context-bookmarkpage {
-    list-style-image: url("chrome://browser/skin/menus/bookmark-hollow.svg");
-  }
 }
 }
 

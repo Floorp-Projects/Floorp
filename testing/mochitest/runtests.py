@@ -144,11 +144,12 @@ class MessageLogger(object):
             "buffering_off",
         ]
     )
+    # Regexes that will be replaced with an empty string if found in a test
+    # name. We do this to normalize test names which may contain URLs and test
+    # package prefixes.
     TEST_PATH_PREFIXES = [
-        "/tests/",
-        "chrome://mochitests/content/a11y/",
-        "chrome://mochitests/content/browser/",
-        "chrome://mochitests/content/chrome/",
+        r"^/tests/",
+        r"^\w+://[\w\.]+(:\d+)?(/\w+)?/(tests?|a11y|chrome|browser)/",
     ]
 
     def __init__(self, logger, buffering=True, structured=True):
@@ -190,9 +191,10 @@ class MessageLogger(object):
         """Normalize a logged test path to match the relative path from the sourcedir."""
         if message.get("test") is not None:
             test = message["test"]
-            for prefix in MessageLogger.TEST_PATH_PREFIXES:
-                if test.startswith(prefix):
-                    message["test"] = test[len(prefix) :]
+            for pattern in MessageLogger.TEST_PATH_PREFIXES:
+                test = re.sub(pattern, "", test)
+                if test != message["test"]:
+                    message["test"] = test
                     break
 
     def _fix_message_format(self, message):

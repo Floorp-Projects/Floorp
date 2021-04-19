@@ -937,7 +937,7 @@ struct ParamTraits<mozilla::layers::SimpleLayerAttributes> {
     WriteParam(aMsg, aParam.mContentFlags);
     WriteParam(aMsg, aParam.mOpacity);
     WriteParam(aMsg, aParam.mIsFixedPosition);
-    WriteParam(aMsg, aParam.mIsAsyncZoomContainerForViewId);
+    WriteParam(aMsg, aParam.mAsyncZoomContainerId);
     WriteParam(aMsg, aParam.mScrollbarData);
     WriteParam(aMsg, aParam.mMixBlendMode);
     WriteParam(aMsg, aParam.mForceIsolatedGroup);
@@ -955,7 +955,7 @@ struct ParamTraits<mozilla::layers::SimpleLayerAttributes> {
            ReadParam(aMsg, aIter, &aResult->mContentFlags) &&
            ReadParam(aMsg, aIter, &aResult->mOpacity) &&
            ReadParam(aMsg, aIter, &aResult->mIsFixedPosition) &&
-           ReadParam(aMsg, aIter, &aResult->mIsAsyncZoomContainerForViewId) &&
+           ReadParam(aMsg, aIter, &aResult->mAsyncZoomContainerId) &&
            ReadParam(aMsg, aIter, &aResult->mScrollbarData) &&
            ReadParam(aMsg, aIter, &aResult->mMixBlendMode) &&
            ReadParam(aMsg, aIter, &aResult->mForceIsolatedGroup) &&

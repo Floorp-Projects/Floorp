@@ -27,13 +27,22 @@ exports.DocumentEventsListener = DocumentEventsListener;
 DocumentEventsListener.prototype = {
   listen() {
     EventEmitter.on(this.targetActor, "window-ready", this.onWindowReady);
-    this.onWindowReady({
-      window: this.targetActor.window,
-      isTopLevel: true,
-      // Flag the very first dom-loading event, which is about the top target and may come
-      // after some other already existing resources.
-      shouldBeIgnoredAsRedundantWithTargetAvailable: true,
-    });
+    // If the target actor isn't attached yet, attach it so that it starts emitting window-ready event
+    if (!this.targetActor.attached) {
+      // The target actor will emit a window-ready in the next event loop
+      // for the top level document (and any existing iframe document)
+      this.targetActor.attach();
+    } else {
+      // If the target is already attached, it already emitted in the past a window-ready for the top document.
+      // So fake one for the top document right away.
+      this.onWindowReady({
+        window: this.targetActor.window,
+        isTopLevel: true,
+        // Flag the very first dom-loading event, which is about the top target and may come
+        // after some other already existing resources.
+        shouldBeIgnoredAsRedundantWithTargetAvailable: true,
+      });
+    }
   },
 
   onWindowReady({
@@ -57,8 +66,8 @@ DocumentEventsListener.prototype = {
       // destroyed when the WindowGlobal is destroyed (i.e. when we navigate or reload),
       // as this will come late and is redundant with onTargetAvailable.
       shouldBeIgnoredAsRedundantWithTargetAvailable ||
-        (this.targetActor.isTopLevel &&
-          this.targetActor.followWindowGlobalLifecycle)
+        (this.targetActor.isTopLevelTarget &&
+          this.targetActor.followWindowGlobalLifeCycle)
     );
 
     const { readyState } = window.document;

@@ -68,10 +68,10 @@ with Files("Client*"):
     BUG_COMPONENT = ("Core", "DOM: Service Workers")
 
 with Files("Clipboard.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+    BUG_COMPONENT = ("Core", "DOM: Copy & Paste and Drag & Drop")
 
 with Files("ClipboardEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+    BUG_COMPONENT = ("Core", "DOM: Copy & Paste and Drag & Drop")
 
 with Files("ConstantSourceNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
@@ -92,10 +92,10 @@ with Files("Directory.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("DataTransfer*"):
-    BUG_COMPONENT = ("Core", "DOM: Drag & Drop")
+    BUG_COMPONENT = ("Core", "DOM: Copy & Paste and Drag & Drop")
 
 with Files("DragEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Drag & Drop")
+    BUG_COMPONENT = ("Core", "DOM: Copy & Paste and Drag & Drop")
 
 with Files("DecoderDoctorNotification.webidl"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")

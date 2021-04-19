@@ -62,6 +62,7 @@ class AudioSink : private AudioStream::DataSource {
   void Shutdown();
 
   void SetVolume(double aVolume);
+  void SetStreamName(const nsAString& aStreamName);
   void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
   void SetPlaying(bool aPlaying);

@@ -12,6 +12,7 @@ import re
 import os
 import platform
 import posixpath
+import shlex
 import shutil
 import subprocess
 import sys
@@ -19,23 +20,32 @@ import sys
 from collections import Counter, namedtuple
 from logging import info
 from os import environ as env
+from pathlib import Path
 from subprocess import Popen
 from threading import Timer
 
-Dirs = namedtuple("Dirs", ["scripts", "js_src", "source", "tooltool", "fetches"])
+Dirs = namedtuple("Dirs", ["scripts", "js_src", "source", "fetches"])
 
 
 def directories(pathmodule, cwd, fixup=lambda s: s):
     scripts = pathmodule.join(fixup(cwd), fixup(pathmodule.dirname(__file__)))
     js_src = pathmodule.abspath(pathmodule.join(scripts, "..", ".."))
     source = pathmodule.abspath(pathmodule.join(js_src, "..", ".."))
-    tooltool = pathmodule.abspath(
-        env.get("TOOLTOOL_CHECKOUT", pathmodule.join(source, "..", ".."))
+    mozbuild = pathmodule.abspath(
+        # os.path.expanduser does not work on Windows.
+        env.get("MOZBUILD_STATE_PATH")
+        or pathmodule.join(Path.home(), ".mozbuild")
     )
-    fetches = pathmodule.abspath(
-        env.get("MOZ_FETCHES_DIR", pathmodule.join(source, "..", ".."))
-    )
-    return Dirs(scripts, js_src, source, tooltool, fetches)
+    fetches = pathmodule.abspath(env.get("MOZ_FETCHES_DIR", mozbuild))
+    return Dirs(scripts, js_src, source, fetches)
+
+
+def quote(s):
+    # shlex quotes for the purpose of passing to the native shell, which is cmd
+    # on Windows, and therefore will not replace backslashed paths with forward
+    # slashes. When such a path is passed to sh, the backslashes will be
+    # interpreted as escape sequences.
+    return shlex.quote(s).replace("\\", "/")
 
 
 # Some scripts will be called with sh, which cannot use backslashed
@@ -45,7 +55,6 @@ DIR = directories(os.path, os.getcwd())
 PDIR = directories(
     posixpath, os.environ["PWD"], fixup=lambda s: re.sub(r"^(\w):", r"/\1", s)
 )
-env["CPP_UNIT_TESTS_DIR_JS_SRC"] = DIR.js_src
 
 AUTOMATION = env.get("AUTOMATION", False)
 
@@ -86,7 +95,9 @@ parser.add_argument(
     "--objdir",
     type=str,
     metavar="DIR",
-    default=env.get("OBJDIR", os.path.join(DIR.source, "obj-spider")),
+    # The real default must be set later so that OBJDIR and POBJDIR can be
+    # platform-dependent strings.
+    default=env.get("OBJDIR"),
     help="object directory",
 )
 group = parser.add_mutually_exclusive_group()
@@ -155,9 +166,6 @@ parser.add_argument(
     help="only do a build, do not run any tests",
 )
 parser.add_argument(
-    "--noconf", action="store_true", help="skip running configure when doing a build"
-)
-parser.add_argument(
     "--nobuild",
     action="store_true",
     help="Do not do a build. Rerun tests on existing build.",
@@ -169,47 +177,21 @@ args = parser.parse_args()
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-OBJDIR = args.objdir
+env["CPP_UNIT_TESTS_DIR_JS_SRC"] = DIR.js_src
+if AUTOMATION and platform.system() == "Windows":
+    # build/win{32,64}/mozconfig.vs-latest uses TOOLTOOL_DIR to set VSPATH.
+    env["TOOLTOOL_DIR"] = DIR.fetches
+
+OBJDIR = args.objdir or os.path.join(DIR.source, "obj-spider")
+OBJDIR = os.path.abspath(OBJDIR)
 OUTDIR = os.path.join(OBJDIR, "out")
-POBJDIR = posixpath.join(PDIR.source, args.objdir)
+POBJDIR = args.objdir or posixpath.join(PDIR.source, "obj-spider")
+POBJDIR = posixpath.abspath(POBJDIR)
 MAKE = env.get("MAKE", "make")
-MAKEFLAGS = env.get("MAKEFLAGS", "-j6" + ("" if AUTOMATION else " -s"))
 PYTHON = sys.executable
 
-for d in ("scripts", "js_src", "source", "tooltool", "fetches"):
+for d in DIR._fields:
     info("DIR.{name} = {dir}".format(name=d, dir=getattr(DIR, d)))
-
-
-def set_vars_from_script(script, vars):
-    """Run a shell script, then dump out chosen environment variables. The build
-    system uses shell scripts to do some configuration that we need to
-    borrow. On Windows, the script itself must output the variable settings
-    (in the form "export FOO=<value>"), since otherwise there will be
-    problems with mismatched Windows/POSIX formats.
-    """
-    script_text = "source %s" % script
-    if platform.system() == "Windows":
-        parse_state = "parsing exports"
-    else:
-        script_text += "; echo VAR SETTINGS:; "
-        script_text += "; ".join("echo $" + var for var in vars)
-        parse_state = "scanning"
-    stdout = subprocess.check_output(["sh", "-x", "-c", script_text]).decode()
-    tograb = vars[:]
-    for line in stdout.splitlines():
-        if parse_state == "scanning":
-            if line == "VAR SETTINGS:":
-                parse_state = "grabbing"
-        elif parse_state == "grabbing":
-            var = tograb.pop(0)
-            env[var] = line
-        elif parse_state == "parsing exports":
-            m = re.match(r"export (\w+)=(.*)", line)
-            if m:
-                var, value = m.groups()
-                if var in tograb:
-                    env[var] = value
-                    info("Setting %s = %s" % (var, value))
 
 
 def ensure_dir_exists(
@@ -259,6 +241,19 @@ if args.variant == "nonunified":
 
 CONFIGURE_ARGS = variant["configure-args"]
 
+compiler = variant.get("compiler")
+if compiler != "gcc" and "clang-plugin" not in CONFIGURE_ARGS:
+    CONFIGURE_ARGS += " --enable-clang-plugin"
+
+if compiler == "gcc":
+    if AUTOMATION:
+        fetches = env["MOZ_FETCHES_DIR"]
+        env["CC"] = os.path.join(fetches, "gcc", "bin", "gcc")
+        env["CXX"] = os.path.join(fetches, "gcc", "bin", "g++")
+    else:
+        env["CC"] = "gcc"
+        env["CXX"] = "g++"
+
 opt = args.optimize
 if opt is None:
     opt = variant.get("optimize")
@@ -291,13 +286,6 @@ if word_bits is None and args.platform:
 if word_bits is None:
     word_bits = 64 if platform.architecture()[0] == "64bit" else 32
 
-if "compiler" in variant:
-    compiler = variant["compiler"]
-elif platform.system() == "Windows":
-    compiler = "clang-cl"
-else:
-    compiler = "clang"
-
 # Need a platform name to use as a key in variant files.
 if args.platform:
     variant_platform = args.platform.split("-")[0]
@@ -310,56 +298,20 @@ elif platform.system() == "Darwin":
 else:
     variant_platform = "other"
 
-
-info("using compiler '{}'".format(compiler))
-
-cxx = {"clang": "clang++", "gcc": "g++", "cl": "cl", "clang-cl": "clang-cl"}.get(
-    compiler
-)
-
-compiler_dir = env.get("GCCDIR", os.path.join(DIR.fetches, compiler))
-info("looking for compiler under {}/".format(compiler_dir))
-compiler_libdir = None
-if os.path.exists(os.path.join(compiler_dir, "bin", compiler)):
-    env.setdefault("CC", os.path.join(compiler_dir, "bin", compiler))
-    env.setdefault("CXX", os.path.join(compiler_dir, "bin", cxx))
-    if compiler == "clang":
-        platlib = "lib"
-    else:
-        platlib = "lib64" if word_bits == 64 else "lib"
-    compiler_libdir = os.path.join(compiler_dir, platlib)
-else:
-    env.setdefault("CC", compiler)
-    env.setdefault("CXX", cxx)
-
-bindir = os.path.join(OBJDIR, "dist", "bin")
 env["LD_LIBRARY_PATH"] = ":".join(
-    p for p in (bindir, compiler_libdir, env.get("LD_LIBRARY_PATH")) if p
+    d
+    for d in [
+        # for libnspr etc.
+        os.path.join(OBJDIR, "dist", "bin"),
+        # existing search path, if any
+        env.get("LD_LIBRARY_PATH"),
+    ]
+    if d is not None
 )
 
-for v in ("CC", "CXX", "LD_LIBRARY_PATH"):
-    info("default {name} = {value}".format(name=v, value=env[v]))
-
-rust_dir = os.path.join(DIR.fetches, "rustc")
-if os.path.exists(os.path.join(rust_dir, "bin", "rustc")):
-    env.setdefault("RUSTC", os.path.join(rust_dir, "bin", "rustc"))
-    env.setdefault("CARGO", os.path.join(rust_dir, "bin", "cargo"))
-else:
-    env.setdefault("RUSTC", "rustc")
-    env.setdefault("CARGO", "cargo")
-
-if platform.system() == "Darwin":
-    os.environ["SOURCE"] = DIR.source
-    set_vars_from_script(os.path.join(DIR.scripts, "macbuildenv.sh"), ["CC", "CXX"])
-elif platform.system() == "Windows":
+os.environ["SOURCE"] = DIR.source
+if platform.system() == "Windows":
     MAKE = env.get("MAKE", "mozmake")
-    os.environ["SOURCE"] = DIR.source
-    if word_bits == 64:
-        os.environ["USE_64BIT"] = "1"
-    set_vars_from_script(
-        posixpath.join(PDIR.scripts, "winbuildenv.sh"),
-        ["PATH", "VC_PATH", "DIA_SDK_PATH", "CC", "CXX", "WINDOWSSDKDIR"],
-    )
 
 # Configure flags, based on word length and cross-compilation
 if word_bits == 32:
@@ -383,12 +335,6 @@ else:
 
 if platform.system() == "Linux" and AUTOMATION:
     CONFIGURE_ARGS = "--enable-stdcxx-compat --disable-gold " + CONFIGURE_ARGS
-
-# Override environment variant settings conditionally.
-CONFIGURE_ARGS = "{} {}".format(
-    variant.get("conditional-configure-args", {}).get(variant_platform, ""),
-    CONFIGURE_ARGS,
-)
 
 # Timeouts.
 ACTIVE_PROCESSES = set()
@@ -417,6 +363,20 @@ info("MOZ_UPLOAD_DIR = {}".format(env["MOZ_UPLOAD_DIR"]))
 def run_command(command, check=False, **kwargs):
     kwargs.setdefault("cwd", OBJDIR)
     info("in directory {}, running {}".format(kwargs["cwd"], command))
+    if platform.system() == "Windows":
+        # Windows will use cmd for the shell, which causes all sorts of
+        # problems. Use sh instead, quoting appropriately. (Use sh in all
+        # cases, not just when shell=True, because we want to be able to use
+        # paths that sh understands and cmd does not.)
+        if not isinstance(command, list):
+            if kwargs.get("shell"):
+                command = shlex.split(command)
+            else:
+                command = [command]
+
+        command = " ".join(quote(c) for c in command)
+        command = ["sh", "-c", command]
+        kwargs["shell"] = False
     proc = Popen(command, **kwargs)
     ACTIVE_PROCESSES.add(proc)
     stdout, stderr = None, None
@@ -433,7 +393,6 @@ def run_command(command, check=False, **kwargs):
 # Replacement strings in environment variables.
 REPLACEMENTS = {
     "DIR": DIR.scripts,
-    "TOOLTOOL_CHECKOUT": DIR.tooltool,
     "MOZ_FETCHES_DIR": DIR.fetches,
     "MOZ_UPLOAD_DIR": env["MOZ_UPLOAD_DIR"],
     "OUTDIR": OUTDIR,
@@ -453,23 +412,33 @@ if AUTOMATION:
 else:
     use_minidump = False
 
+
+def resolve_path(dirs, *components):
+    if None in components:
+        return None
+    for dir in dirs:
+        path = os.path.join(dir, *components)
+        if os.path.exists(path):
+            return path
+
+
 if use_minidump:
     env.setdefault("MINIDUMP_SAVE_PATH", env["MOZ_UPLOAD_DIR"])
-    env.setdefault("DUMP_SYMS", os.path.join(DIR.fetches, "dump_syms", "dump_syms"))
-    injector_lib = None
-    if platform.system() == "Linux":
-        injector_lib = os.path.join(
-            DIR.tooltool, "breakpad-tools", "libbreakpadinjector.so"
-        )
-        env.setdefault(
-            "MINIDUMP_STACKWALK",
-            os.path.join(DIR.tooltool, "breakpad-tools", "minidump_stackwalk"),
-        )
-    elif platform.system() == "Darwin":
-        injector_lib = os.path.join(
-            DIR.tooltool, "breakpad-tools", "breakpadinjector.dylib"
-        )
-    if not injector_lib or not os.path.exists(injector_lib):
+
+    injector_basename = {
+        "Linux": "libbreakpadinjector.so",
+        "Darwin": "breakpadinjector.dylib",
+    }.get(platform.system())
+
+    injector_lib = resolve_path((DIR.fetches,), "injector", injector_basename)
+    stackwalk = resolve_path((DIR.fetches,), "minidump_stackwalk", "minidump_stackwalk")
+    if stackwalk is not None:
+        env.setdefault("MINIDUMP_STACKWALK", stackwalk)
+    dump_syms = resolve_path((DIR.fetches,), "dump_syms", "dump_syms")
+    if dump_syms is not None:
+        env.setdefault("DUMP_SYMS", dump_syms)
+
+    if injector_lib is None:
         use_minidump = False
 
     info("use_minidump is {}".format(use_minidump))
@@ -478,57 +447,41 @@ if use_minidump:
     info("  MINIDUMP_STACKWALK={}".format(env.get("MINIDUMP_STACKWALK")))
 
 
-def need_updating_configure(configure):
-    if not os.path.exists(configure):
-        return True
+mozconfig = os.path.join(DIR.source, "mozconfig.autospider")
+CONFIGURE_ARGS += " --enable-nspr-build"
+CONFIGURE_ARGS += " --prefix={OBJDIR}/dist".format(OBJDIR=quote(OBJDIR))
 
-    dep_files = [
-        os.path.join(DIR.js_src, "configure.in"),
-        os.path.join(DIR.js_src, "old-configure.in"),
-    ]
-    for file in dep_files:
-        if os.path.getmtime(file) > os.path.getmtime(configure):
-            return True
+# Generate a mozconfig.
+with open(mozconfig, "wt") as fh:
+    if AUTOMATION and platform.system() == "Windows":
+        fh.write('. "$topsrcdir/build/%s/mozconfig.vs-latest"\n' % variant_platform)
+    fh.write("ac_add_options --with-project=js\n")
+    fh.write("ac_add_options " + CONFIGURE_ARGS + "\n")
+    fh.write("mk_add_options MOZ_OBJDIR=" + quote(OBJDIR) + "\n")
 
-    return False
+env["MOZCONFIG"] = mozconfig
 
+mach = posixpath.join(PDIR.source, "mach")
 
 if not args.nobuild:
-    CONFIGURE_ARGS += " --enable-nspr-build"
-    CONFIGURE_ARGS += " --prefix={OBJDIR}/dist".format(OBJDIR=POBJDIR)
-
-    # Generate a configure script from configure.in.
-    configure = os.path.join(DIR.js_src, "configure")
-    if need_updating_configure(configure):
-        shutil.copyfile(configure + ".in", configure)
-        os.chmod(configure, 0o755)
-
-    # Run configure
-    if not args.noconf:
-        run_command(
-            [
-                "sh",
-                "-c",
-                posixpath.join(PDIR.js_src, "configure") + " " + CONFIGURE_ARGS,
-            ],
-            check=True,
-        )
-
-    # Run make
-    run_command("%s -w %s" % (MAKE, MAKEFLAGS), shell=True, check=True)
+    # Do the build
+    run_command([mach, "build"], check=True)
 
     if use_minidump:
         # Convert symbols to breakpad format.
+        cmd_env = env.copy()
+        cmd_env["MOZ_SOURCE_REPO"] = "file://" + DIR.source
+        cmd_env["RUSTC_COMMIT"] = "0"
+        cmd_env["MOZ_CRASHREPORTER"] = "1"
+        cmd_env["MOZ_AUTOMATION_BUILD_SYMBOLS"] = "1"
         run_command(
             [
-                "make",
+                mach,
+                "build",
                 "recurse_syms",
-                "MOZ_SOURCE_REPO=file://" + DIR.source,
-                "RUSTC_COMMIT=0",
-                "MOZ_CRASHREPORTER=1",
-                "MOZ_AUTOMATION_BUILD_SYMBOLS=1",
             ],
             check=True,
+            env=cmd_env,
         )
 
 COMMAND_PREFIX = []

@@ -119,7 +119,7 @@ with Files("tests/chrome/*autocomplete*"):
     BUG_COMPONENT = ("Toolkit", "Autocomplete")
 
 with Files("tests/chrome/*drop*"):
-    BUG_COMPONENT = ("Core", "DOM: Drag & Drop")
+    BUG_COMPONENT = ("Core", "DOM: Copy & Paste and Drag & Drop")
 
 with Files("tests/chrome/*1048178*"):
     BUG_COMPONENT = ("Core", "XUL")

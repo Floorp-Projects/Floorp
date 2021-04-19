@@ -12,6 +12,7 @@
 #include "mozilla/dom/PWindowGlobalChild.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/WindowGlobalActor.h"
 
 class nsGlobalWindowInner;
@@ -131,6 +132,9 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   void SetSessionStoreDataCollector(SessionStoreDataCollector* aCollector);
   SessionStoreDataCollector* GetSessionStoreDataCollector() const;
+
+  void UnblockBFCacheFor(BFCacheStatus aStatus);
+  void BlockBFCacheFor(BFCacheStatus aStatus);
 
  protected:
   const nsACString& GetRemoteType() override;

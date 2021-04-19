@@ -694,7 +694,7 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
         // scroll portion of the async transform to those layers (as the zoom
         // portion will go on the async zoom container).
         if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
-                layer->IsAsyncZoomContainer()) {
+                layer->GetAsyncZoomContainerId()) {
           zoomContainer = layer;
           ForEachNode<ForwardIterator>(
               LayerMetricsWrapper(layer),
@@ -800,9 +800,9 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                  sampler->GetGuid(*zoomedMetrics) == sampler->GetGuid(wrapper))
                     ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
                     : LayoutAndVisual;
-            AsyncTransformComponentMatrix asyncTransform =
-                sampler->GetCurrentAsyncTransformWithOverscroll(
-                    wrapper, asyncTransformComponents);
+            AsyncTransform asyncTransformWithoutOverscroll =
+                sampler->GetCurrentAsyncTransform(wrapper,
+                                                  asyncTransformComponents);
             Maybe<CompositionPayload> payload =
                 sampler->NotifyScrollSampling(wrapper);
             // The scroll latency should be measured between composition and the
@@ -811,6 +811,12 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
             if (payload.isSome()) {
               mLayerManager->RegisterPayload(*payload);
             }
+
+            AsyncTransformComponentMatrix overscrollTransform =
+                sampler->GetOverscrollTransform(wrapper);
+            AsyncTransformComponentMatrix asyncTransform =
+                AsyncTransformComponentMatrix(asyncTransformWithoutOverscroll) *
+                overscrollTransform;
 
             if (!layer->IsScrollableWithoutContent()) {
               sampler->MarkAsyncTransformAppliedToContent(wrapper);
@@ -960,13 +966,13 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
           }
 
           if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
-                  layer->IsAsyncZoomContainer()) {
+                  layer->GetAsyncZoomContainerId()) {
             if (zoomedMetrics) {
-              AsyncTransformComponentMatrix zoomTransform =
-                  sampler->GetCurrentAsyncTransformWithOverscroll(
-                      *zoomedMetrics, {AsyncTransformComponent::eVisual});
+              AsyncTransform zoomTransform = sampler->GetCurrentAsyncTransform(
+                  *zoomedMetrics, {AsyncTransformComponent::eVisual});
               hasAsyncTransform = true;
-              combinedAsyncTransform *= zoomTransform;
+              combinedAsyncTransform *=
+                  AsyncTransformComponentMatrix(zoomTransform);
             } else {
               // TODO: Is this normal? It happens on some pages, such as
               // about:config on mobile, for just one frame or so, before the

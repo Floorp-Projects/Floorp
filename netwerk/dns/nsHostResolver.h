@@ -133,7 +133,9 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   static DnsPriority GetPriority(uint16_t aFlags);
 
   virtual void Cancel();
-  virtual bool HasUsableResultInternal() const { return false; }
+  virtual bool HasUsableResultInternal(const mozilla::TimeStamp& now,
+                                       uint16_t queryFlags) const = 0;
+  virtual bool RefreshForNegativeResponse() const { return true; }
 
   mozilla::LinkedList<RefPtr<nsResolveHostCallback>> mCallbacks;
 
@@ -236,7 +238,8 @@ class AddrHostRecord final : public nsHostRecord {
   ~AddrHostRecord();
 
   // Checks if the record is usable (not expired and has a value)
-  bool HasUsableResultInternal() const override;
+  bool HasUsableResultInternal(const mozilla::TimeStamp& now,
+                               uint16_t queryFlags) const override;
 
   bool RemoveOrRefresh(bool aTrrToo);  // Mark records currently being resolved
                                        // as needed to resolve again.
@@ -319,9 +322,9 @@ class TypeHostRecord final : public nsHostRecord,
   ~TypeHostRecord();
 
   // Checks if the record is usable (not expired and has a value)
-  bool HasUsableResultInternal() const override;
-
-  bool HasUsableResult();
+  bool HasUsableResultInternal(const mozilla::TimeStamp& now,
+                               uint16_t queryFlags) const override;
+  bool RefreshForNegativeResponse() const override;
 
   mozilla::net::TypeRecordResultType mResults = AsVariant(mozilla::Nothing());
   mozilla::Mutex mResultsLock{"TypeHostRecord.mResultsLock"};

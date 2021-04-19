@@ -181,6 +181,21 @@ parent:
 
   async ResetSessionStore(uint32_t aEpoch);
 
+  // Add the flags in aOnFlags to the current BFCache status and remove the
+  // flags in aOffFlags from the current BFCache status. See the BFCacheStatus
+  // enum for the valid flags.
+  async UpdateBFCacheStatus(uint16_t aOnFlags, uint16_t aOffFlags);
+
+  /**
+   * Used to notify the parent when there's a change in the number of requests
+   * in the loadgroup. If there are no requests this will be set to Nothing().
+   * If there is one request this will be set to the ID of that request, if it
+   * implements nsIIdentChannel. If there are more than one requests this will
+   * be set to 0.
+   * Note that some requests are ignored (eg. favicon loads).
+   */
+  async SetSingleChannelId(uint64_t? singleChannelId);
+
   async Destroy();
 };
 
