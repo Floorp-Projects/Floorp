@@ -133,6 +133,12 @@ void AudioSink::SetVolume(double aVolume) {
   }
 }
 
+void AudioSink::SetStreamName(const nsAString& aStreamName) {
+  if (mAudioStream) {
+    mAudioStream->SetStreamName(aStreamName);
+  }
+}
+
 void AudioSink::SetPlaybackRate(double aPlaybackRate) {
   MOZ_ASSERT(aPlaybackRate != 0,
              "Don't set the playbackRate to 0 on AudioStream");

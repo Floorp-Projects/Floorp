@@ -834,6 +834,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   class MediaStreamRenderer;
   class MediaStreamTrackListener;
   class ShutdownObserver;
+  class TitleChangeObserver;
   class MediaControlKeyListener;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
@@ -1462,6 +1463,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   const RefPtr<ShutdownObserver> mShutdownObserver;
 
+  const RefPtr<TitleChangeObserver> mTitleChangeObserver;
+
   // Holds a reference to the MediaSource, if any, referenced by the src
   // attribute on the media element.
   RefPtr<MediaSource> mSrcMediaSource;
@@ -1911,6 +1914,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // It's used to listen media control key, by which we would play or pause
   // media element.
   RefPtr<MediaControlKeyListener> mMediaControlKeyListener;
+
+  // Method to update audio stream name
+  void UpdateStreamName();
 
   // Return true if the media element is being used in picture in picture mode.
   bool IsBeingUsedInPictureInPictureMode() const;
