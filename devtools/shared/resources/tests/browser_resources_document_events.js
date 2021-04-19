@@ -144,6 +144,20 @@ async function testCrossOriginNavigation() {
     "There is no duplicated event and only the 3 expected DOCUMENT_EVENT states"
   );
 
+  if (isFissionEnabled()) {
+    is(
+      documentEvents[0].shouldBeIgnoredAsRedundantWithTargetAvailable,
+      true,
+      "shouldBeIgnoredAsRedundantWithTargetAvailable is true for the new target which follows the WindowGlobal lifecycle"
+    );
+  } else {
+    is(
+      documentEvents[0].shouldBeIgnoredAsRedundantWithTargetAvailable,
+      undefined,
+      "shouldBeIgnoredAsRedundantWithTargetAvailable is undefined if fission is disabled and we keep the same target"
+    );
+  }
+
   targetCommand.destroy();
   await client.close();
 }

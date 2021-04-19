@@ -66,8 +66,8 @@ DocumentEventsListener.prototype = {
       // destroyed when the WindowGlobal is destroyed (i.e. when we navigate or reload),
       // as this will come late and is redundant with onTargetAvailable.
       shouldBeIgnoredAsRedundantWithTargetAvailable ||
-        (this.targetActor.isTopLevel &&
-          this.targetActor.followWindowGlobalLifecycle)
+        (this.targetActor.isTopLevelTarget &&
+          this.targetActor.followWindowGlobalLifeCycle)
     );
 
     const { readyState } = window.document;
