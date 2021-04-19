@@ -92,7 +92,7 @@ class ImportEntryObject : public NativeObject {
 
 using RootedImportEntryObject = Rooted<ImportEntryObject*>;
 using HandleImportEntryObject = Handle<ImportEntryObject*>;
-using RootedImportEntryVector = Rooted<GCVector<ImportEntryObject*> >;
+using RootedImportEntryVector = Rooted<GCVector<ImportEntryObject*>>;
 using MutableHandleImportEntryObject = MutableHandle<ImportEntryObject*>;
 
 template <XDRMode mode>
@@ -149,7 +149,7 @@ class RequestedModuleObject : public NativeObject {
 
 using RootedRequestedModuleObject = Rooted<RequestedModuleObject*>;
 using HandleRequestedModuleObject = Handle<RequestedModuleObject*>;
-using RootedRequestedModuleVector = Rooted<GCVector<RequestedModuleObject*> >;
+using RootedRequestedModuleVector = Rooted<GCVector<RequestedModuleObject*>>;
 using MutableHandleRequestedModuleObject =
     MutableHandle<RequestedModuleObject*>;
 
@@ -230,7 +230,7 @@ class ModuleNamespaceObject : public ProxyObject {
 
     bool getOwnPropertyDescriptor(
         JSContext* cx, HandleObject proxy, HandleId id,
-        MutableHandle<PropertyDescriptor> desc) const override;
+        MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const override;
     bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
                         Handle<PropertyDescriptor> desc,
                         ObjectOpResult& result) const override;

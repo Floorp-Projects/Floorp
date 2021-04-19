@@ -26,7 +26,8 @@ class DeadObjectProxy : public BaseProxyHandler {
   /* Standard internal methods. */
   virtual bool getOwnPropertyDescriptor(
       JSContext* cx, JS::HandleObject wrapper, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc)
+      const override;
   virtual bool defineProperty(JSContext* cx, JS::HandleObject wrapper,
                               JS::HandleId id,
                               JS::Handle<JS::PropertyDescriptor> desc,

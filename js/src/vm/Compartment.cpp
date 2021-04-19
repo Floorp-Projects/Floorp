@@ -425,6 +425,20 @@ bool Compartment::wrap(JSContext* cx,
   return wrap(cx, desc.value());
 }
 
+bool Compartment::wrap(JSContext* cx,
+                       MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
+  if (desc.isNothing()) {
+    return true;
+  }
+
+  Rooted<PropertyDescriptor> desc_(cx, *desc);
+  if (!wrap(cx, &desc_)) {
+    return false;
+  }
+  desc.set(mozilla::Some(desc_.get()));
+  return true;
+}
+
 bool Compartment::wrap(JSContext* cx, MutableHandle<GCVector<Value>> vec) {
   for (size_t i = 0; i < vec.length(); ++i) {
     if (!wrap(cx, vec[i])) {

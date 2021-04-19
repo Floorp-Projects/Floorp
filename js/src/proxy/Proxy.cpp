@@ -192,7 +192,17 @@ bool Proxy::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy,
   MOZ_ASSERT_IF(handler->useProxyExpandoObjectForPrivateFields(),
                 !id.isPrivateName());
 
-  return handler->getOwnPropertyDescriptor(cx, proxy, id, desc);
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc_(cx);
+  if (!handler->getOwnPropertyDescriptor(cx, proxy, id, &desc_)) {
+    return false;
+  }
+
+  if (desc_.isNothing()) {
+    desc.object().set(nullptr);
+  } else {
+    desc.set(*desc_);
+  }
+  return true;
 }
 
 bool Proxy::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,

@@ -23,7 +23,7 @@ static void ReportDead(JSContext* cx) {
 
 bool DeadObjectProxy::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const {
   ReportDead(cx);
   return false;
 }
