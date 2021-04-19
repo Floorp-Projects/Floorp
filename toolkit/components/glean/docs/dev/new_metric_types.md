@@ -48,24 +48,6 @@ we split the metric into three pieces:
     * If it does support operations in non-parent processes it stores the
       `MetricId` that identifies this particular metric in a cross-process fashion.
 
-## Mirrors
-
-FOG can mirror Glean metrics to Telemetry probes via the
-[Glean Interface For Firefox Telemetry](../user/gifft.md).
-
-Can this metric type be mirrored?
-Should it be mirrored?
-
-If so, add an appropriate Telemetry probe for it to mirror to,
-documenting the compatibility in
-[the GIFFT docs](../user/gifft.md).
-
-### GIFFT Tests
-
-If you add a GIFFT mirror, don't forget to test that the mirror works.
-You should be able to do this by adding a task to
-[`toolkit/components/glean/xpcshell/test_GIFFT.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/xpcshell/test_GIFFT.js).
-
 ## Rust
 
 FOG uses the Rust Language Binding APIs (the `glean` crate) with a layer of IPC on top.
@@ -87,10 +69,6 @@ including test methods,
 and is at least all the methods exposed via the
 [metric traits](https://github.com/mozilla/glean/tree/main/glean-core/src/traits).
 
-### Rust Tests
-
-You should be able to smoke test the basic functionality in Rust unit tests.
-You can do this within the metric type implementation file directly.
 
 ## C++ and JS
 
@@ -243,9 +221,3 @@ There are four pieces to this:
 
 - The labeled variant will need tests the same as Step #6.
   A tip: be sure to test two labels with different values.
-
-## Python Tests
-
-We have a suite of tests for ensuring code generation generates appropriate code.
-You should add a metric to [that suite](testing.md) for your new metric type.
-You will need to regenerate the expected files.
