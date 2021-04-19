@@ -5289,7 +5289,8 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
       return false;
     }
 
-    MOZ_ASSERT(commandData.IsPasteCommand());
+    MOZ_ASSERT(commandData.IsPasteCommand() ||
+               commandData.mCommand == Command::SelectAll);
     nsresult rv =
         commandManager->DoCommand(commandData.mXULCommandName, nullptr, window);
     return NS_SUCCEEDED(rv) && rv != NS_SUCCESS_DOM_NO_OPERATION;
