@@ -279,7 +279,6 @@ class MOZ_STACK_CLASS WSRunScanner final {
                const EditorDOMPointType& aScanStartPoint)
       : mScanStartPoint(aScanStartPoint),
         mEditingHost(aHTMLEditor.GetActiveEditingHost()),
-        mHTMLEditor(&aHTMLEditor),
         mTextFragmentDataAtStart(mScanStartPoint, mEditingHost) {}
 
   // ScanNextVisibleNodeOrBlockBoundaryForwardFrom() returns the first visible
@@ -1215,9 +1214,6 @@ class MOZ_STACK_CLASS WSRunScanner final {
 
   // The editing host when the instance is created.
   RefPtr<dom::Element> mEditingHost;
-
-  // Non-owning.
-  const HTMLEditor* mHTMLEditor;
 
  private:
   /**
