@@ -32,6 +32,7 @@ namespace js {
 class InterpreterRegs;
 class CallObject;
 class FrameIter;
+class ClassBodyScope;
 class EnvironmentObject;
 class BlockLexicalEnvironmentObject;
 class ExtensibleLexicalEnvironmentObject;
@@ -544,6 +545,8 @@ class InterpreterFrame {
   bool pushLexicalEnvironment(JSContext* cx, Handle<LexicalScope*> scope);
   bool freshenLexicalEnvironment(JSContext* cx);
   bool recreateLexicalEnvironment(JSContext* cx);
+
+  bool pushClassBodyEnvironment(JSContext* cx, Handle<ClassBodyScope*> scope);
 
   /*
    * Script

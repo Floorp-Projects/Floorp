@@ -63,6 +63,18 @@ inline bool BaselineFrame::pushLexicalEnvironment(JSContext* cx,
   return true;
 }
 
+inline bool BaselineFrame::pushClassBodyEnvironment(
+    JSContext* cx, Handle<ClassBodyScope*> scope) {
+  ClassBodyLexicalEnvironmentObject* env =
+      ClassBodyLexicalEnvironmentObject::createForFrame(cx, scope, this);
+  if (!env) {
+    return false;
+  }
+  pushOnEnvironmentChain(*env);
+
+  return true;
+}
+
 inline bool BaselineFrame::freshenLexicalEnvironment(JSContext* cx) {
   Rooted<BlockLexicalEnvironmentObject*> current(
       cx, &envChain_->as<BlockLexicalEnvironmentObject>());

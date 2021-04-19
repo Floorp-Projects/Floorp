@@ -688,6 +688,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::PopLexicalEnv:
       case JSOp::FreshenLexicalEnv:
       case JSOp::RecreateLexicalEnv:
+      case JSOp::PushClassBodyEnv:
       case JSOp::ImplicitThis:
       case JSOp::GImplicitThis:
       case JSOp::CheckClassHeritage:
