@@ -13659,7 +13659,8 @@ class CGResolveOwnProperty(CGAbstractStaticMethod):
         )
 
     def definition_body(self):
-        return dedent("""
+        return dedent(
+            """
         JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> ownDesc(cx);
         if (!js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, &ownDesc)) {
             return false;
@@ -13672,7 +13673,8 @@ class CGResolveOwnProperty(CGAbstractStaticMethod):
         }
 
         return true;
-        """)
+        """
+        )
 
 
 class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
