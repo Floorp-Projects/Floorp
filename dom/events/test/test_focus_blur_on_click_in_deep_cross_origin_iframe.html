@@ -11,12 +11,12 @@
 let state = "start";
 
 const utils = SpecialPowers.DOMWindowUtils;
+const scale = utils.screenPixelsPerCSSPixel;
 
 function getScreenPosition(aElement, aOffsetX, aOffsetY) {
   const rect = aElement.getBoundingClientRect();
   const x = aOffsetX + window.mozInnerScreenX + rect.left;
   const y = aOffsetY + window.mozInnerScreenY + rect.top;
-  const scale = utils.screenPixelsPerCSSPixel;
   return [Math.round(x * scale), Math.round(y * scale)];
 }
 
@@ -27,6 +27,7 @@ add_task(async () => {
     let readyMiddle = false;
     let readyInner = false;
     window.addEventListener("message", function listener(event) {
+      info(`receive ${event.data}`);
       if (event.data == "middleready") {
         readyMiddle = true;
       } else if (event.data == "innerready") {
@@ -49,7 +50,6 @@ add_task(async () => {
 
   // Wait for APZ state stable so that mouse event handling APZ works properly
   // in out-of-process iframes.
-  await promiseApzFlushedRepaints();
   await waitUntilApzStable();
 
   // NOTE: synthesizeMouseAtCenter doesn't work for OOP iframes (bug 1528935),
@@ -91,7 +91,7 @@ add_task(async () => {
     type: "click",
     target: iframe,
     screenX: expectedScreenX,
-    screenY: expectedScreenY + 110,
+    screenY: expectedScreenY + Math.round(110 * scale),
   });
 
   await firstClickPromise;

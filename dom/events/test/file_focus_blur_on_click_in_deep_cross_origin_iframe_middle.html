@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
 <style>
 html, body {
   height: 200px;
@@ -8,7 +10,12 @@ html, body {
 </style>
 <body>
 <script>
-  window.addEventListener("message", event => {
+  window.addEventListener("message", async (event) => {
+    if (event.data == "innerready") {
+      // Wait for APZ state stable so that mouse event handling APZ works properly
+      // in out-of-process iframes.
+      await promiseApzFlushedRepaints();
+    }
     parent.postMessage(event.data, "*");
   });
   window.onload = () => {
