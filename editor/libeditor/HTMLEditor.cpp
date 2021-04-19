@@ -1636,7 +1636,7 @@ EditorRawDOMPoint HTMLEditor::GetBetterInsertionPointFor(
     return pointToInsert;
   }
 
-  WSRunScanner wsScannerForPointToInsert(*this, pointToInsert);
+  WSRunScanner wsScannerForPointToInsert(GetActiveEditingHost(), pointToInsert);
 
   // If the insertion position is after the last visible item in a line,
   // i.e., the insertion position is just before a visible line break <br>,
