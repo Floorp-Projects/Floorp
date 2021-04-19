@@ -5,7 +5,7 @@
 
 // Test for redirection.
 
-const REDIRECT_PAGE = `${URL_ROOT}sjs_redirection.sjs`;
+const TEST_URL = `${URL_ROOT}sjs_redirection.sjs`;
 const CUSTOM_USER_AGENT = "Mozilla/5.0 (Test Device) Firefox/74.0";
 
 addRDMTask(
@@ -17,7 +17,7 @@ addRDMTask(
       reloadOnUAChange(false);
     });
 
-    const tab = await addTab("http://example.com/");
+    const tab = await addTab(TEST_URL);
     const browser = tab.linkedBrowser;
 
     const { ui } = await openRDM(tab);
@@ -27,57 +27,36 @@ addRDMTask(
     await changeUserAgentInput(ui, CUSTOM_USER_AGENT);
     await testUserAgent(ui, CUSTOM_USER_AGENT);
 
-    info("Open network monitor");
-    const monitor = await openNetworkMonitor(tab);
-    const {
-      connector: monitorConnector,
-      store: monitorStore,
-    } = monitor.panelWin;
-
     info("Load a page which redirects");
-    load(browser, REDIRECT_PAGE);
-
-    info("Wait until getting all requests");
-    await waitUntil(
-      () => monitorStore.getState().requests.requests.length === 2
+    const onRedirectedPageLoaded = BrowserTestUtils.browserLoaded(
+      browser,
+      false,
+      // wait specifically for the redirected page
+      url => url.includes(`?redirected`)
     );
+    BrowserTestUtils.loadURI(browser, `${TEST_URL}?redirect`);
+    await onRedirectedPageLoaded;
 
     info("Check the user agent for each requests");
-    for (const { id, url } of monitorStore.getState().requests.requests) {
-      const userAgent = await getUserAgentRequestHeader(
-        monitorStore,
-        monitorConnector,
-        id
-      );
-      is(userAgent, CUSTOM_USER_AGENT, `Sent user agent is correct for ${url}`);
-    }
+    await SpecialPowers.spawn(
+      browser,
+      [CUSTOM_USER_AGENT],
+      expectedUserAgent => {
+        is(
+          content.wrappedJSObject.redirectRequestUserAgent,
+          expectedUserAgent,
+          `Sent user agent is correct for request that caused the redirect`
+        );
+        is(
+          content.wrappedJSObject.requestUserAgent,
+          expectedUserAgent,
+          `Sent user agent is correct for the redirected page`
+        );
+      }
+    );
 
     await closeRDM(tab);
     await removeTab(tab);
   },
   { onlyPrefAndTask: true }
 );
-
-async function openNetworkMonitor(tab) {
-  const toolbox = await gDevTools.showToolboxForTab(tab, {
-    toolId: "netmonitor",
-  });
-  const monitor = toolbox.getCurrentPanel();
-  return monitor;
-}
-
-async function getUserAgentRequestHeader(store, connector, id) {
-  connector.requestData(id, "requestHeaders");
-
-  let headers = null;
-  await waitUntil(() => {
-    const request = store.getState().requests.requests.find(r => r.id === id);
-    if (request.requestHeaders) {
-      headers = request.requestHeaders.headers;
-    }
-    return headers;
-  });
-
-  const userAgentHeader = headers.find(header => header.name === "User-Agent");
-  return userAgentHeader.value;
-}
