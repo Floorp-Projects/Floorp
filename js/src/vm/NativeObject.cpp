@@ -564,23 +564,19 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
   uint32_t numDenseElements = 0;
   uint32_t newInitializedLength = 0;
 
-  RootedShape shape(cx, obj->lastProperty());
-  while (!shape->isEmptyShape()) {
+  for (ShapePropertyIter<NoGC> iter(obj->shape()); !iter.done(); iter++) {
     uint32_t index;
-    if (IdIsIndex(shape->propid(), &index)) {
-      if (shape->attributes() == JSPROP_ENUMERATE) {
-        MOZ_ASSERT(shape->isDataProperty());
-        numDenseElements++;
-        newInitializedLength = std::max(newInitializedLength, index + 1);
-      } else {
-        /*
-         * For simplicity, only densify the object if all indexed
-         * properties can be converted to dense elements.
-         */
-        return DenseElementResult::Incomplete;
-      }
+    if (!IdIsIndex(iter->key(), &index)) {
+      continue;
     }
-    shape = shape->previous();
+    if (iter->attributes() != JSPROP_ENUMERATE) {
+      // For simplicity, only densify the object if all indexed properties can
+      // be converted to dense elements.
+      return DenseElementResult::Incomplete;
+    }
+    MOZ_ASSERT(iter->isDataProperty());
+    numDenseElements++;
+    newInitializedLength = std::max(newInitializedLength, index + 1);
   }
 
   if (numDenseElements * SPARSE_DENSITY_RATIO < newInitializedLength) {
@@ -612,7 +608,7 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
 
   RootedValue value(cx);
 
-  shape = obj->lastProperty();
+  RootedShape shape(cx, obj->shape());
   while (!shape->isEmptyShape()) {
     jsid id = shape->propid();
     uint32_t index;

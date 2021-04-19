@@ -2980,18 +2980,17 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
 
   uint32_t slot = uint32_t(tcx->index());
 
-  Shape* shape;
+  Maybe<JS::PropertyKey> key;
   if (obj->is<NativeObject>()) {
-    shape = obj->as<NativeObject>().lastProperty();
-    while (shape && (shape->isEmptyShape() || !shape->hasSlot() ||
-                     shape->slot() != slot)) {
-      shape = shape->previous();
+    for (ShapePropertyIter<NoGC> iter(obj->shape()); !iter.done(); iter++) {
+      if (iter->hasSlot() && iter->slot() == slot) {
+        key.emplace(iter->key());
+        break;
+      }
     }
-  } else {
-    shape = nullptr;
   }
 
-  if (!shape) {
+  if (key.isNothing()) {
     do {
       const char* slotname = nullptr;
       const char* pattern = nullptr;
@@ -3032,12 +3031,11 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
       }
     } while (false);
   } else {
-    jsid propid = shape->propid();
-    if (JSID_IS_INT(propid)) {
-      snprintf(buf, bufsize, "%" PRId32, JSID_TO_INT(propid));
-    } else if (JSID_IS_ATOM(propid)) {
-      PutEscapedString(buf, bufsize, JSID_TO_ATOM(propid), 0);
-    } else if (JSID_IS_SYMBOL(propid)) {
+    if (key->isInt()) {
+      snprintf(buf, bufsize, "%" PRId32, key->toInt());
+    } else if (key->isAtom()) {
+      PutEscapedString(buf, bufsize, key->toAtom(), 0);
+    } else if (key->isSymbol()) {
       snprintf(buf, bufsize, "**SYMBOL KEY**");
     } else {
       snprintf(buf, bufsize, "**FINALIZED ATOM KEY**");

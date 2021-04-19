@@ -1062,12 +1062,15 @@ PlainObject* Realm::createIterResultTemplateObject(
     return nullptr;
   }
 
+#ifdef DEBUG
   // Make sure that the properties are in the right slots.
-  DebugOnly<Shape*> shape = templateObject->lastProperty();
-  MOZ_ASSERT(shape->previous()->slot() == Realm::IterResultObjectValueSlot &&
-             shape->previous()->propidRef() == NameToId(cx->names().value));
-  MOZ_ASSERT(shape->slot() == Realm::IterResultObjectDoneSlot &&
-             shape->propidRef() == NameToId(cx->names().done));
+  ShapePropertyIter<NoGC> iter(templateObject->shape());
+  MOZ_ASSERT(iter->slot() == Realm::IterResultObjectDoneSlot &&
+             iter->key() == NameToId(cx->names().done));
+  iter++;
+  MOZ_ASSERT(iter->slot() == Realm::IterResultObjectValueSlot &&
+             iter->key() == NameToId(cx->names().value));
+#endif
 
   return templateObject;
 }

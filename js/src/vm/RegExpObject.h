@@ -92,11 +92,11 @@ class RegExpObject : public NativeObject {
   static unsigned lastIndexSlot() { return LAST_INDEX_SLOT; }
 
   static bool isInitialShape(RegExpObject* rx) {
-    Shape* shape = rx->lastProperty();
-    if (shape->isEmptyShape() || !shape->isDataProperty()) {
+    ShapePropertyIter<NoGC> iter(rx->shape());
+    if (iter.done() || !iter->isDataProperty()) {
       return false;
     }
-    if (shape->maybeSlot() != LAST_INDEX_SLOT) {
+    if (iter->slot() != LAST_INDEX_SLOT) {
       return false;
     }
     return true;
