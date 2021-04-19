@@ -1671,8 +1671,16 @@ class LexicalScopeNode
 class ClassBodyScopeNode
     : public BaseScopeNode<ParseNodeKind::ClassBodyScope, ClassBodyScope> {
  public:
-  ClassBodyScopeNode(ClassBodyScope::ParserData* bindings, ParseNode* body)
-      : BaseScopeNode(bindings, body, ScopeKind::ClassBody) {}
+  ClassBodyScopeNode(ClassBodyScope::ParserData* bindings, ListNode* memberList)
+      : BaseScopeNode(bindings, memberList, ScopeKind::ClassBody) {
+    MOZ_ASSERT(memberList->isKind(ParseNodeKind::ClassMemberList));
+  }
+
+  ListNode* memberList() const {
+    ListNode* list = &scopeBody()->as<ListNode>();
+    MOZ_ASSERT(list->isKind(ParseNodeKind::ClassMemberList));
+    return list;
+  }
 };
 
 class LabeledStatement : public NameNode {
@@ -2291,11 +2299,7 @@ class ClassNode : public TernaryNode {
 
   ParseNode* heritage() const { return kid2(); }
 
-  ListNode* memberList() const {
-    ListNode* list = &bodyScope()->scopeBody()->as<ListNode>();
-    MOZ_ASSERT(list->isKind(ParseNodeKind::ClassMemberList));
-    return list;
-  }
+  ListNode* memberList() const { return bodyScope()->memberList(); }
 
   LexicalScopeNode* scopeBindings() const {
     LexicalScopeNode* scope = innerScope();
