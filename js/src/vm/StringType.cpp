@@ -599,7 +599,7 @@ static constexpr uint32_t StringFlagsForCharType(uint32_t baseFlags) {
   return baseFlags | JSString::LATIN1_CHARS_BIT;
 }
 
-template <JSRope::UsingBarrier b, typename CharT>
+template <JSRope::UsingBarrier usingBarrier, typename CharT>
 JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
   /*
    * Consider the DAG of JSRopes rooted at this JSRope, with non-JSRopes as
@@ -711,10 +711,7 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
        */
       MOZ_ASSERT(str->isRope());
       while (str != leftMostRope) {
-        if (b == WithIncrementalBarrier) {
-          gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
-          gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
-        }
+        ropeBarrierDuringFlattening<usingBarrier>(str);
         JSString* child = str->d.s.u2.left;
         // 'child' will be post-barriered during the later traversal.
         MOZ_ASSERT(child->isRope());
@@ -722,10 +719,7 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
         child->setFlattenData(str, Flag_VisitRightChild);
         str = child;
       }
-      if (b == WithIncrementalBarrier) {
-        gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
-        gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
-      }
+      ropeBarrierDuringFlattening<usingBarrier>(str);
       str->setNonInlineChars(wholeChars);
       uint32_t left_len = left.length();
       pos = wholeChars + left_len;
@@ -767,10 +761,7 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
 
   pos = wholeChars;
 first_visit_node : {
-  if (b == WithIncrementalBarrier) {
-    gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
-    gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
-  }
+  ropeBarrierDuringFlattening<usingBarrier>(str);
 
   JSString& left = *str->d.s.u2.left;
   str->setNonInlineChars(pos);
@@ -839,12 +830,23 @@ finish_node : {
 }
 }
 
-template <JSRope::UsingBarrier b>
+template <JSRope::UsingBarrier usingBarrier>
+/* static */
+inline void JSRope::ropeBarrierDuringFlattening(JSString* str) {
+  // |str| is a rope but its flags maybe have been overwritten by temporary data
+  // at this point.
+  if constexpr (usingBarrier) {
+    gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
+    gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
+  }
+}
+
+template <JSRope::UsingBarrier usingBarrier>
 JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
   if (hasTwoByteChars()) {
-    return flattenInternal<b, char16_t>(maybecx);
+    return flattenInternal<usingBarrier, char16_t>(maybecx);
   }
-  return flattenInternal<b, Latin1Char>(maybecx);
+  return flattenInternal<usingBarrier, Latin1Char>(maybecx);
 }
 
 JSLinearString* JSRope::flatten(JSContext* maybecx) {
