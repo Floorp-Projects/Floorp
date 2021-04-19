@@ -361,7 +361,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * text when caret is at aPoint.
    */
   static Result<EditorDOMRangeInTexts, nsresult>
-  GetRangeInTextNodesToForwardDeleteFrom(const HTMLEditor& aHTMLEditor,
+  GetRangeInTextNodesToForwardDeleteFrom(dom::Element* aEditingHost,
                                          const EditorDOMPoint& aPoint);
 
   /**
@@ -369,7 +369,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * when caret is at aPoint.
    */
   static Result<EditorDOMRangeInTexts, nsresult>
-  GetRangeInTextNodesToBackspaceFrom(const HTMLEditor& aHTMLEditor,
+  GetRangeInTextNodesToBackspaceFrom(dom::Element* aEditingHost,
                                      const EditorDOMPoint& aPoint);
 
   /**
