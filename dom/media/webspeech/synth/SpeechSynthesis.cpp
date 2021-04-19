@@ -11,6 +11,7 @@
 #include "mozilla/dom/Element.h"
 
 #include "mozilla/dom/SpeechSynthesisBinding.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "SpeechSynthesis.h"
 #include "nsContentUtils.h"
 #include "nsSynthVoiceRegistry.h"
@@ -118,11 +119,18 @@ void SpeechSynthesis::Speak(SpeechSynthesisUtterance& aUtterance) {
 
   mSpeechQueue.AppendElement(&aUtterance);
 
-  // If we only have one item in the queue, we aren't pre-paused, and
-  // we have voices available, speak it.
-  if (mSpeechQueue.Length() == 1 && !mCurrentTask && !mHoldQueue &&
-      HasVoices()) {
-    AdvanceQueue();
+  if (mSpeechQueue.Length() == 1) {
+    RefPtr<WindowGlobalChild> wgc =
+        WindowGlobalChild::GetByInnerWindowId(mInnerID);
+    if (wgc) {
+      wgc->BlockBFCacheFor(BFCacheStatus::HAS_ACTIVE_SPEECH_SYNTHESIS);
+    }
+
+    // If we only have one item in the queue, we aren't pre-paused, and
+    // we have voices available, speak it.
+    if (!mCurrentTask && !mHoldQueue && HasVoices()) {
+      AdvanceQueue();
+    }
   }
 }
 
@@ -201,6 +209,13 @@ void SpeechSynthesis::OnEnd(const nsSpeechTask* aTask) {
 
   if (!mSpeechQueue.IsEmpty()) {
     mSpeechQueue.RemoveElementAt(0);
+    if (mSpeechQueue.IsEmpty()) {
+      RefPtr<WindowGlobalChild> wgc =
+          WindowGlobalChild::GetByInnerWindowId(mInnerID);
+      if (wgc) {
+        wgc->UnblockBFCacheFor(BFCacheStatus::HAS_ACTIVE_SPEECH_SYNTHESIS);
+      }
+    }
   }
 
   mCurrentTask = nullptr;

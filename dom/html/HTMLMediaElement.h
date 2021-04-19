@@ -192,6 +192,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
+  void NodeInfoChanged(Document* aOldDoc) override;
+
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
