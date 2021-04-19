@@ -182,7 +182,7 @@ bool GlobalHelperThreadState::submitTask(wasm::UniqueTier2GeneratorTask task) {
 
 static void CancelOffThreadWasmTier2GeneratorLocked(
     AutoLockHelperThreadState& lock) {
-  if (HelperThreadState().threads(lock).empty()) {
+  if (!CanUseExtraThreads()) {
     return;
   }
 
@@ -345,7 +345,7 @@ static bool IonCompileTaskMatches(const CompilationSelector& selector,
 
 static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
                                             AutoLockHelperThreadState& lock) {
-  if (HelperThreadState().threads(lock).empty()) {
+  if (!CanUseExtraThreads()) {
     return;
   }
 
@@ -422,11 +422,11 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
 
 #ifdef DEBUG
 bool js::HasOffThreadIonCompile(Realm* realm) {
-  AutoLockHelperThreadState lock;
-
-  if (HelperThreadState().threads(lock).empty()) {
+  if (!CanUseExtraThreads()) {
     return false;
   }
+
+  AutoLockHelperThreadState lock;
 
   GlobalHelperThreadState::IonCompileTaskVector& worklist =
       HelperThreadState().ionWorklist(lock);
@@ -907,7 +907,7 @@ void MultiScriptsDecodeTask::parse(JSContext* cx) {
 
 static void WaitForOffThreadParses(JSRuntime* rt,
                                    AutoLockHelperThreadState& lock) {
-  if (HelperThreadState().threads(lock).empty()) {
+  if (!CanUseExtraThreads()) {
     return;
   }
 
@@ -2466,11 +2466,11 @@ static void ClearCompressionTaskList(T& list, JSRuntime* runtime) {
 }
 
 void js::CancelOffThreadCompressions(JSRuntime* runtime) {
-  AutoLockHelperThreadState lock;
-
-  if (HelperThreadState().threads(lock).empty()) {
+  if (!CanUseExtraThreads()) {
     return;
   }
+
+  AutoLockHelperThreadState lock;
 
   // Cancel all pending compression tasks.
   ClearCompressionTaskList(HelperThreadState().compressionPendingList(lock),
@@ -2526,11 +2526,11 @@ void js::SweepPendingCompressions(AutoLockHelperThreadState& lock) {
 }
 
 void js::RunPendingSourceCompressions(JSRuntime* runtime) {
-  AutoLockHelperThreadState lock;
-
-  if (HelperThreadState().threads(lock).empty()) {
+  if (!CanUseExtraThreads()) {
     return;
   }
+
+  AutoLockHelperThreadState lock;
 
   HelperThreadState().startHandlingCompressionTasks(
       GlobalHelperThreadState::ScheduleCompressionTask::API, nullptr, lock);
