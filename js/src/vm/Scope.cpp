@@ -51,6 +51,8 @@ const char* js::BindingKindString(BindingKind kind) {
       return "named lambda callee";
     case BindingKind::Synthetic:
       return "synthetic";
+    case BindingKind::PrivateMethod:
+      return "private method";
   }
   MOZ_CRASH("Bad BindingKind");
 }
@@ -1800,6 +1802,7 @@ void BaseAbstractBindingIter<NameT>::init(
          /* letStart= */ 0,
          /* constStart= */ 0,
          /* syntheticStart= */ data.length,
+         /* privageMethodStart= */ data.length,
          /* flags= */ CanHaveEnvironmentSlots | flags,
          /* firstFrameSlot= */ firstFrameSlot,
          /* firstEnvironmentSlot= */
@@ -1813,12 +1816,14 @@ void BaseAbstractBindingIter<NameT>::init(
     //               lets - [0, slotInfo.constStart)
     //             consts - [slotInfo.constStart, data.length)
     //          synthetic - [data.length, data.length)
+    //    private methods - [data.length, data.length)
     init(/* positionalFormalStart= */ 0,
          /* nonPositionalFormalStart= */ 0,
          /* varStart= */ 0,
          /* letStart= */ 0,
          /* constStart= */ slotInfo.constStart,
          /* syntheticStart= */ data.length,
+         /* privateMethodStart= */ data.length,
          /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots | flags,
          /* firstFrameSlot= */ firstFrameSlot,
          /* firstEnvironmentSlot= */
@@ -1842,15 +1847,17 @@ void BaseAbstractBindingIter<NameT>::init(
   // positional formals - [0, 0)
   //      other formals - [0, 0)
   //               vars - [0, 0)
-  //               lets - [0, slotInfo.constStart)
-  //             consts - [slotInfo.constStart, data.length)
-  //          synthetic - [data.length, data.length)
+  //               lets - [0, 0)
+  //             consts - [0, 0)
+  //          synthetic - [0, slotInfo.privateMethodStart)
+  //    private methods - [slotInfo.privateMethodStart, data.length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ 0,
        /* varStart= */ 0,
        /* letStart= */ 0,
        /* constStart= */ slotInfo.constStart,
-       /* syntheticStart= */ data.length,
+       /* syntheticStart= */ slotInfo.constStart,
+       /* privateMethodStart= */ slotInfo.privateMethodStart,
        /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
        /* firstFrameSlot= */ firstFrameSlot,
        /* firstEnvironmentSlot= */
@@ -1881,12 +1888,14 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
+  //    private methods - [length, length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ slotInfo.nonPositionalFormalStart,
        /* varStart= */ slotInfo.varStart,
        /* letStart= */ length,
        /* constStart= */ length,
        /* syntheticStart= */ length,
+       /* privateMethodStart= */ length,
        /* flags= */ flags,
        /* firstFrameSlot= */ 0,
        /* firstEnvironmentSlot= */ JSSLOT_FREE(&CallObject::class_),
@@ -1909,12 +1918,14 @@ void BaseAbstractBindingIter<NameT>::init(VarScope::AbstractData<NameT>& data,
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
+  //    private methods - [length, length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ 0,
        /* varStart= */ 0,
        /* letStart= */ length,
        /* constStart= */ length,
        /* syntheticStart= */ length,
+       /* privateMethodStart= */ length,
        /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
        /* firstFrameSlot= */ firstFrameSlot,
        /* firstEnvironmentSlot= */ JSSLOT_FREE(&VarEnvironmentObject::class_),
@@ -1937,12 +1948,14 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [slotInfo.letStart, slotInfo.constStart)
   //             consts - [slotInfo.constStart, data.length)
   //          synthetic - [data.length, data.length)
+  //    private methods - [data.length, data.length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ 0,
        /* varStart= */ 0,
        /* letStart= */ slotInfo.letStart,
        /* constStart= */ slotInfo.constStart,
        /* syntheticStart= */ data.length,
+       /* privateMethoodStart= */ data.length,
        /* flags= */ CannotHaveSlots,
        /* firstFrameSlot= */ UINT32_MAX,
        /* firstEnvironmentSlot= */ UINT32_MAX,
@@ -1978,12 +1991,14 @@ void BaseAbstractBindingIter<NameT>::init(EvalScope::AbstractData<NameT>& data,
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
+  //    private methods - [length, length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ 0,
        /* varStart= */ 0,
        /* letStart= */ length,
        /* constStart= */ length,
        /* syntheticStart= */ length,
+       /* privateMethodStart= */ length,
        /* flags= */ flags,
        /* firstFrameSlot= */ firstFrameSlot,
        /* firstEnvironmentSlot= */ firstEnvironmentSlot,
@@ -2006,6 +2021,7 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [slotInfo.letStart, slotInfo.constStart)
   //             consts - [slotInfo.constStart, data.length)
   //          synthetic - [data.length, data.length)
+  //    private methods - [data.length, data.length)
   init(
       /* positionalFormalStart= */ slotInfo.varStart,
       /* nonPositionalFormalStart= */ slotInfo.varStart,
@@ -2013,6 +2029,7 @@ void BaseAbstractBindingIter<NameT>::init(
       /* letStart= */ slotInfo.letStart,
       /* constStart= */ slotInfo.constStart,
       /* syntheticStart= */ data.length,
+      /* privateMethodStart= */ data.length,
       /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
       /* firstFrameSlot= */ 0,
       /* firstEnvironmentSlot= */ JSSLOT_FREE(&ModuleEnvironmentObject::class_),
@@ -2035,12 +2052,14 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
+  //    private methods - [length, length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ 0,
        /* varStart= */ 0,
        /* letStart= */ length,
        /* constStart= */ length,
        /* syntheticStart= */ length,
+       /* privateMethodStart= */ length,
        /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
        /* firstFrameSlot= */ UINT32_MAX,
        /* firstEnvironmentSlot= */ UINT32_MAX,
@@ -2063,12 +2082,14 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
+  //    private methods - [length, length)
   init(/* positionalFormalStart = */ 0,
        /* nonPositionalFormalStart = */ 0,
        /* varStart= */ 0,
        /* letStart= */ length,
        /* constStart= */ length,
        /* syntheticStart= */ length,
+       /* privateMethodStart= */ length,
        /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
        /* firstFrameSlot= */ UINT32_MAX,
        /* firstEnvironmentSlot= */ UINT32_MAX,
