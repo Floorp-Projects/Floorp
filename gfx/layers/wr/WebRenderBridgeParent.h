@@ -500,7 +500,6 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 #if defined(MOZ_WIDGET_ANDROID)
   UiCompositorControllerParent* mScreenPixelsTarget;
 #endif
-  bool mPaused;
   bool mDestroyed;
   bool mReceivedDisplayList;
   bool mIsFirstPaint;
