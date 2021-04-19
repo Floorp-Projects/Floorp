@@ -2,7 +2,8 @@
 
 set -xe
 
-source $(dirname $0)/sm-tooltool-config.sh
+# Default variables values.
+: ${WORK:=$HOME/workspace}
 
 mkdir -p $UPLOAD_DIR
 
@@ -30,7 +31,11 @@ status=0
     # packaged builds. Unset it.
     unset MOZ_AUTOMATION
     # Unsetting MOZ_AUTOMATION prevents this to be set automatically:
-    export SYSROOT=$MOZ_FETCHES_DIR/sysroot
+    export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
+    export SYSROOT="$MOZ_FETCHES_DIR/sysroot"
+    export RUSTC="$MOZ_FETCHES_DIR/rustc/bin/rustc"
+    export CARGO="$MOZ_FETCHES_DIR/rustc/bin/cargo"
+    export CBINDGEN="$MOZ_FETCHES_DIR/cbindgen/cbindgen"
 
     AUTOMATION=1 $PYTHON3 ./devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
 ) || status=$?

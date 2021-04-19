@@ -24,23 +24,20 @@ from pathlib import Path
 from subprocess import Popen
 from threading import Timer
 
-Dirs = namedtuple("Dirs", ["scripts", "js_src", "source", "tooltool", "fetches"])
+Dirs = namedtuple("Dirs", ["scripts", "js_src", "source", "fetches"])
 
 
 def directories(pathmodule, cwd, fixup=lambda s: s):
     scripts = pathmodule.join(fixup(cwd), fixup(pathmodule.dirname(__file__)))
     js_src = pathmodule.abspath(pathmodule.join(scripts, "..", ".."))
     source = pathmodule.abspath(pathmodule.join(js_src, "..", ".."))
-    tooltool = pathmodule.abspath(
-        env.get("TOOLTOOL_CHECKOUT", pathmodule.join(source, "..", ".."))
-    )
     mozbuild = pathmodule.abspath(
         # os.path.expanduser does not work on Windows.
         env.get("MOZBUILD_STATE_PATH")
         or pathmodule.join(Path.home(), ".mozbuild")
     )
     fetches = pathmodule.abspath(env.get("MOZ_FETCHES_DIR", mozbuild))
-    return Dirs(scripts, js_src, source, tooltool, fetches)
+    return Dirs(scripts, js_src, source, fetches)
 
 
 def quote(s):
@@ -193,7 +190,7 @@ POBJDIR = posixpath.abspath(POBJDIR)
 MAKE = env.get("MAKE", "make")
 PYTHON = sys.executable
 
-for d in ("scripts", "js_src", "source", "tooltool", "fetches"):
+for d in DIR._fields:
     info("DIR.{name} = {dir}".format(name=d, dir=getattr(DIR, d)))
 
 
@@ -249,8 +246,13 @@ if compiler != "gcc" and "clang-plugin" not in CONFIGURE_ARGS:
     CONFIGURE_ARGS += " --enable-clang-plugin"
 
 if compiler == "gcc":
-    env["CC"] = "gcc"
-    env["CXX"] = "g++"
+    if AUTOMATION:
+        fetches = env["MOZ_FETCHES_DIR"]
+        env["CC"] = os.path.join(fetches, "gcc", "bin", "gcc")
+        env["CXX"] = os.path.join(fetches, "gcc", "bin", "g++")
+    else:
+        env["CC"] = "gcc"
+        env["CXX"] = "g++"
 
 opt = args.optimize
 if opt is None:
@@ -296,42 +298,15 @@ elif platform.system() == "Darwin":
 else:
     variant_platform = "other"
 
-
-info("using compiler '{}'".format(compiler))
-
-cxx = {"clang": "clang++", "gcc": "g++", "cl": "cl", "clang-cl": "clang-cl"}.get(
-    compiler
-)
-
-compiler_dir = env.get("GCCDIR", os.path.join(DIR.fetches, compiler))
-info("looking for compiler under {}/".format(compiler_dir))
-compiler_libdir = None
-if os.path.exists(os.path.join(compiler_dir, "bin", compiler)):
-    env.setdefault("CC", os.path.join(compiler_dir, "bin", compiler))
-    env.setdefault("CXX", os.path.join(compiler_dir, "bin", cxx))
-    if compiler == "clang":
-        platlib = "lib"
-    else:
-        platlib = "lib64" if word_bits == 64 else "lib"
-    compiler_libdir = os.path.join(compiler_dir, platlib)
-else:
-    env.setdefault("CC", compiler)
-    env.setdefault("CXX", cxx)
-
-bindir = os.path.join(OBJDIR, "dist", "bin")
 env["LD_LIBRARY_PATH"] = ":".join(
-    filter(
-        None,
-        [
-            # for libnspr etc.
-            bindir,
-            # the precompiled breakpad injector library is incompatible with the
-            # system libstdc++ on our CI machines
-            compiler_libdir if AUTOMATION else None,
-            # existing search path, if any
-            env.get("LD_LIBRARY_PATH"),
-        ],
-    )
+    d
+    for d in [
+        # for libnspr etc.
+        os.path.join(OBJDIR, "dist", "bin"),
+        # existing search path, if any
+        env.get("LD_LIBRARY_PATH"),
+    ]
+    if d is not None
 )
 
 os.environ["SOURCE"] = DIR.source
@@ -418,7 +393,6 @@ def run_command(command, check=False, **kwargs):
 # Replacement strings in environment variables.
 REPLACEMENTS = {
     "DIR": DIR.scripts,
-    "TOOLTOOL_CHECKOUT": DIR.tooltool,
     "MOZ_FETCHES_DIR": DIR.fetches,
     "MOZ_UPLOAD_DIR": env["MOZ_UPLOAD_DIR"],
     "OUTDIR": OUTDIR,
