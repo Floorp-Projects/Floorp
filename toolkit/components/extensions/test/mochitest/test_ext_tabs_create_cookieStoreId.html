@@ -134,17 +134,57 @@ add_task(async function valid_cookieStoreId() {
         cookieStoreId: "firefox-container-1",
       },
       expectedCookieStoreId: "firefox-container-1",
-    },
+    },{
+      description: "pass explicit not-blank url",
+      createProperties: {
+        url: "http://example.com/",
+        cookieStoreId: "firefox-container-1",
+      },
+      expectedCookieStoreId: "firefox-container-1",
+    },{
+      description: "pass extension page url",
+      createProperties: {
+        url: "blank.html",
+        cookieStoreId: "firefox-container-1",
+      },
+      expectedCookieStoreId: "firefox-container-1",
+    }
   ];
 
   async function background(testCases) {
     for (let { createProperties, expectedCookieStoreId } of testCases) {
-      let tab = await browser.tabs.create(createProperties);
+      const { url } = createProperties;
+      const updatedPromise = new Promise(resolve => {
+        const onUpdated = (changedTabId, changed) => {
+          // Loading an extension page causes two `about:blank` messages
+          // because of the process switch
+          if (changed.url && (url == "about:blank" || changed.url != "about:blank")) {
+            browser.tabs.onUpdated.removeListener(onUpdated);
+            resolve({tabId: changedTabId, url: changed.url});
+          }
+        };
+        browser.tabs.onUpdated.addListener(onUpdated);
+      });
+
+      const tab = await browser.tabs.create(createProperties);
       browser.test.assertEq(
         expectedCookieStoreId,
         tab.cookieStoreId,
         "Expected cookieStoreId for container tab"
       );
+
+      if (url && url !== "about:blank") {
+        // Make sure tab can load successfully
+        const updated = await updatedPromise;
+        browser.test.assertEq(tab.id, updated.tabId, `Expected value for tab.id`);
+        if (updated.url.startsWith("moz-extension")) {
+          browser.test.assertEq(browser.runtime.getURL(url), updated.url,
+            `Expected value for extension page url`);
+        } else {
+          browser.test.assertEq(url, updated.url, `Expected value for tab.url`);
+        }
+      }
+
       await browser.tabs.remove(tab.id);
     }
     browser.test.sendMessage("done");
@@ -155,6 +195,9 @@ add_task(async function valid_cookieStoreId() {
     manifest: {
       permissions: ["tabs", "cookies"],
       applications: { gecko: { id: "cookiestoreid@tests.mozilla.org" } },
+    },
+    files: {
+      "blank.html": `<html><head><meta charset="utf-8"></head></html>`,
     },
     background: `(${background})(${JSON.stringify(testCases)})`,
   });
