@@ -56,7 +56,6 @@ class nsMenuX final : public nsMenuParentX,
                       public nsMenuItemIconX::Listener,
                       public nsMenuXObserver {
  public:
-  using MenuChild = mozilla::Variant<RefPtr<nsMenuX>, RefPtr<nsMenuItemX>>;
   using Observer = nsMenuXObserver;
 
   // aParent is optional.
@@ -143,10 +142,10 @@ class nsMenuX final : public nsMenuParentX,
 
   // If aChild is one of our child menus, insert aChild's native menu item in our native menu at the
   // right location.
-  void InsertChildNativeMenuItem(nsMenuX* aChild) override;
+  void InsertChildNativeMenuItem(const MenuChild& aChild) override;
 
   // Remove aChild's native menu item froum our native menu.
-  void RemoveChildNativeMenuItem(nsMenuX* aChild) override;
+  void RemoveChildNativeMenuItem(const MenuChild& aChild) override;
 
   void Dump(uint32_t aIndent) const;
 
@@ -180,7 +179,7 @@ class nsMenuX final : public nsMenuParentX,
   // mMenuChildren; the only difference is that mMenuChildren contains both visible and invisible
   // children, and the NSMenu only contains visible items. So the insertion index is equal to the
   // number of visible previous siblings of aChild in mMenuChildren.
-  NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
+  NSInteger CalculateNativeInsertionPoint(const MenuChild& aChild);
 
   // Fires the popupshown event.
   void MenuOpenedAsync();

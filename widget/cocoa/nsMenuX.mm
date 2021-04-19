@@ -842,10 +842,11 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
     }
 
     if (mParent) {
+      RefPtr<nsMenuX> self = this;
       if (newVisible) {
-        mParent->InsertChildNativeMenuItem(this);
+        mParent->InsertChildNativeMenuItem(MenuChild(self));
       } else {
-        mParent->RemoveChildNativeMenuItem(this);
+        mParent->RemoveChildNativeMenuItem(MenuChild(self));
       }
     }
     mVisible = newVisible;
@@ -887,23 +888,28 @@ void nsMenuX::IconUpdated() {
   }
 }
 
-void nsMenuX::InsertChildNativeMenuItem(nsMenuX* aChild) {
+void nsMenuX::InsertChildNativeMenuItem(const MenuChild& aChild) {
   NSInteger insertionPoint = CalculateNativeInsertionPoint(aChild);
-  [mNativeMenu insertItem:aChild->NativeNSMenuItem() atIndex:insertionPoint];
+  NSMenuItem* nativeItem = aChild.match(
+      [](const RefPtr<nsMenuX>& aMenu) { return aMenu->NativeNSMenuItem(); },
+      [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->NativeNSMenuItem(); });
+  [mNativeMenu insertItem:nativeItem atIndex:insertionPoint];
 }
 
-void nsMenuX::RemoveChildNativeMenuItem(nsMenuX* aChild) {
-  NSMenuItem* item = aChild->NativeNSMenuItem();
-  if ([mNativeMenu indexOfItem:item] != -1) {
-    [mNativeMenu removeItem:item];
+void nsMenuX::RemoveChildNativeMenuItem(const MenuChild& aChild) {
+  NSMenuItem* nativeItem = aChild.match(
+      [](const RefPtr<nsMenuX>& aMenu) { return aMenu->NativeNSMenuItem(); },
+      [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->NativeNSMenuItem(); });
+  if ([mNativeMenu indexOfItem:nativeItem] != -1) {
+    [mNativeMenu removeItem:nativeItem];
   }
 }
 
-NSInteger nsMenuX::CalculateNativeInsertionPoint(nsMenuX* aChild) {
+NSInteger nsMenuX::CalculateNativeInsertionPoint(const MenuChild& aChild) {
   NSInteger insertionPoint = 0;
   for (auto& currItem : mMenuChildren) {
     // Using GetItemAt instead of GetVisibleItemAt to avoid O(N^2)
-    if (currItem.is<RefPtr<nsMenuX>>() && currItem.as<RefPtr<nsMenuX>>() == aChild) {
+    if (currItem == aChild) {
       return insertionPoint;
     }
     NSMenuItem* nativeItem = currItem.match(
