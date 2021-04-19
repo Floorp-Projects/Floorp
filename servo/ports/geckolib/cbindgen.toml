@@ -790,6 +790,17 @@ renaming_overrides_prefixing = true
 
 "GenericImage" = """
  public:
+  // Returns the final image we've selected taken from the image-set, along with
+  // its resolution, or `this` and `1.0` if this image is not an image-set.
+  //
+  // The resolution is in dppx, and should be used to impact the intrinsic size
+  // of the image.
+  std::pair<const StyleGenericImage*, float> FinalImageAndResolution() const;
+
+  // Returns the intrinsic size of the image, if there's one, accounting for
+  // resolution as needed.
+  Maybe<CSSIntSize> GetIntrinsicSize() const;
+
   // If this is an image-set(), the final image we've selected, otherwise it
   // returns *this.
   const StyleGenericImage& FinalImage() const;

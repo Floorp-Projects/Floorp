@@ -50,8 +50,6 @@ nsSize CSSSizeOrRatio::ComputeConcreteSize() const {
 nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame, const StyleImage* aImage,
                                  uint32_t aFlags)
     : mForFrame(aForFrame),
-      mImage(&aImage->FinalImage()),
-      mType(mImage->tag),
       mImageContainer(nullptr),
       mGradientData(nullptr),
       mPaintServerFrame(nullptr),
@@ -59,7 +57,12 @@ nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame, const StyleImage* aImage,
       mSize(0, 0),
       mFlags(aFlags),
       mExtendMode(ExtendMode::CLAMP),
-      mMaskOp(StyleMaskMode::MatchSource) {}
+      mMaskOp(StyleMaskMode::MatchSource) {
+  auto pair = aImage->FinalImageAndResolution();
+  mImage = pair.first;
+  mType = mImage->tag;
+  mImageResolution = pair.second;
+}
 
 bool nsImageRenderer::PrepareImage() {
   if (mImage->IsNone()) {
@@ -198,14 +201,14 @@ CSSSizeOrRatio nsImageRenderer::ComputeIntrinsicSize() {
     case StyleImage::Tag::Url: {
       bool haveWidth, haveHeight;
       CSSIntSize imageIntSize;
-      nsLayoutUtils::ComputeSizeForDrawing(
-          mImageContainer, imageIntSize, result.mRatio, haveWidth, haveHeight);
+      nsLayoutUtils::ComputeSizeForDrawing(mImageContainer, mImageResolution,
+                                           imageIntSize, result.mRatio,
+                                           haveWidth, haveHeight);
       if (haveWidth) {
-        result.SetWidth(nsPresContext::CSSPixelsToAppUnits(imageIntSize.width));
+        result.SetWidth(CSSPixel::ToAppUnits(imageIntSize.width));
       }
       if (haveHeight) {
-        result.SetHeight(
-            nsPresContext::CSSPixelsToAppUnits(imageIntSize.height));
+        result.SetHeight(CSSPixel::ToAppUnits(imageIntSize.height));
       }
 
       // If we know the aspect ratio and one of the dimensions,
@@ -937,8 +940,8 @@ ImgDrawResult nsImageRenderer::DrawBorderImageComponent(
 
     if (!RequiresScaling(aFill, aHFill, aVFill, aUnitSize)) {
       ImgDrawResult result = nsLayoutUtils::DrawSingleImage(
-          aRenderingContext, aPresContext, subImage, samplingFilter, aFill,
-          aDirtyRect,
+          aRenderingContext, aPresContext, subImage, mImageResolution,
+          samplingFilter, aFill, aDirtyRect,
           /* no SVGImageContext */ Nothing(), drawFlags);
 
       if (!mImage->IsComplete()) {
@@ -1007,8 +1010,9 @@ ImgDrawResult nsImageRenderer::DrawShapeImage(nsPresContext* aPresContext,
     // rendered pixel has an alpha that precisely matches the alpha of the
     // closest pixel in the image.
     return nsLayoutUtils::DrawSingleImage(
-        aRenderingContext, aPresContext, mImageContainer, SamplingFilter::POINT,
-        dest, dest, Nothing(), drawFlags, nullptr, nullptr);
+        aRenderingContext, aPresContext, mImageContainer, mImageResolution,
+        SamplingFilter::POINT, dest, dest, Nothing(), drawFlags, nullptr,
+        nullptr);
   }
 
   if (mImage->IsGradient()) {

@@ -18,6 +18,7 @@
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
 #include "nsCOMPtr.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsBoxLayoutState.h"
 
@@ -239,6 +240,7 @@ void nsImageBoxFrame::UpdateImage() {
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
   mUseSrcAttr = !src.IsEmpty();
   if (mUseSrcAttr) {
+    mImageResolution = 1.0f;
     nsContentPolicyType contentPolicyType;
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
     uint64_t requestContextID = 0;
@@ -267,9 +269,13 @@ void nsImageBoxFrame::UpdateImage() {
         doc->ImageTracker()->Add(mImageRequest);
       }
     }
-  } else if (auto* styleRequest = GetRequestFromStyle()) {
-    styleRequest->SyncClone(mListener, mContent->GetComposedDoc(),
-                            getter_AddRefs(mImageRequest));
+  } else if (auto* styleImage = GetImageFromStyle()) {
+    auto [finalImage, resolution] = styleImage->FinalImageAndResolution();
+    mImageResolution = resolution;
+    if (auto* styleRequest = finalImage->GetImageRequest()) {
+      styleRequest->SyncClone(mListener, mContent->GetComposedDoc(),
+                              getter_AddRefs(mImageRequest));
+    }
   }
 
   if (!mImageRequest) {
@@ -388,7 +394,7 @@ ImgDrawResult nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
   Maybe<SVGImageContext> svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, imgCon);
   return nsLayoutUtils::DrawSingleImage(
-      aRenderingContext, PresContext(), imgCon,
+      aRenderingContext, PresContext(), imgCon, mImageResolution,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, dirty, svgContext,
       aFlags, anchorPoint.ptrOr(nullptr), hasSubRect ? &mSubRect : nullptr);
 }
@@ -603,8 +609,9 @@ bool nsImageBoxFrame::CanOptimizeToImageLayer() {
   return true;
 }
 
-imgRequestProxy* nsImageBoxFrame::GetRequestFromStyle() {
-  const nsStyleDisplay* disp = StyleDisplay();
+const mozilla::StyleImage* nsImageBoxFrame::GetImageFromStyle(
+    const ComputedStyle& aStyle) {
+  const nsStyleDisplay* disp = aStyle.StyleDisplay();
   if (disp->HasAppearance()) {
     nsPresContext* pc = PresContext();
     if (pc->Theme()->ThemeSupportsWidget(pc, this,
@@ -612,7 +619,11 @@ imgRequestProxy* nsImageBoxFrame::GetRequestFromStyle() {
       return nullptr;
     }
   }
-  return StyleList()->mListStyleImage.GetImageRequest();
+  auto& image = aStyle.StyleList()->mListStyleImage;
+  if (!image.IsImageRequestType()) {
+    return nullptr;
+  }
+  return &image;
 }
 
 /* virtual */
@@ -623,26 +634,18 @@ void nsImageBoxFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   const nsStyleList* myList = StyleList();
   mSubRect = myList->GetImageRegion();  // before |mSuppressStyleCheck| test!
 
-  if (mUseSrcAttr || mSuppressStyleCheck)
+  if (mUseSrcAttr || mSuppressStyleCheck) {
     return;  // No more work required, since the image isn't specified by style.
+  }
 
-  // If the image to use changes, we have a new image.
-  nsCOMPtr<nsIURI> oldURI, newURI;
-  if (mImageRequest) {
-    mImageRequest->GetURI(getter_AddRefs(oldURI));
-  }
-  if (auto* newImage = GetRequestFromStyle()) {
-    newImage->GetURI(getter_AddRefs(newURI));
-  }
-  bool equal;
-  if (newURI == oldURI ||  // handles null==null
-      (newURI && oldURI && NS_SUCCEEDED(newURI->Equals(oldURI, &equal)) &&
-       equal)) {
+  auto* oldImage = aOldStyle ? GetImageFromStyle(*aOldStyle) : nullptr;
+  auto* newImage = GetImageFromStyle();
+  if (newImage == oldImage ||
+      (newImage && oldImage && *oldImage == *newImage)) {
     return;
   }
-
   UpdateImage();
-}  // DidSetComputedStyle
+}
 
 void nsImageBoxFrame::GetImageSize() {
   if (mIntrinsicSize.width > 0 && mIntrinsicSize.height > 0) {
@@ -796,12 +799,16 @@ void nsImageBoxFrame::OnSizeAvailable(imgIRequest* aRequest,
 
   aImage->SetAnimationMode(PresContext()->ImageAnimationMode());
 
-  nscoord w, h;
+  int32_t w = 0, h = 0;
   aImage->GetWidth(&w);
   aImage->GetHeight(&h);
 
-  mIntrinsicSize.SizeTo(nsPresContext::CSSPixelsToAppUnits(w),
-                        nsPresContext::CSSPixelsToAppUnits(h));
+  if (mImageResolution != 0.0f && mImageResolution != 1.0f) {
+    w = std::round(w / mImageResolution);
+    h = std::round(h / mImageResolution);
+  }
+
+  mIntrinsicSize.SizeTo(CSSPixel::ToAppUnits(w), CSSPixel::ToAppUnits(h));
 
   if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
