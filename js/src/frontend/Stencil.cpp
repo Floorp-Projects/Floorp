@@ -281,6 +281,14 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
           }
           break;
 
+        case BindingKind::Synthetic:
+          if (!addToEnclosingLexicalBindingCache(
+                  cx, input, parserAtoms, bi.name(),
+                  EnclosingLexicalBindingKind::Synthetic)) {
+            return false;
+          }
+          break;
+
         case BindingKind::Import:
         case BindingKind::FormalParameter:
         case BindingKind::Var:
