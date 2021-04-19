@@ -49,6 +49,8 @@ const char* js::BindingKindString(BindingKind kind) {
       return "const";
     case BindingKind::NamedLambdaCallee:
       return "named lambda callee";
+    case BindingKind::Synthetic:
+      return "synthetic";
   }
   MOZ_CRASH("Bad BindingKind");
 }
@@ -1797,6 +1799,7 @@ void BaseAbstractBindingIter<NameT>::init(
          /* varStart= */ 0,
          /* letStart= */ 0,
          /* constStart= */ 0,
+         /* syntheticStart= */ data.length,
          /* flags= */ CanHaveEnvironmentSlots | flags,
          /* firstFrameSlot= */ firstFrameSlot,
          /* firstEnvironmentSlot= */
@@ -1809,11 +1812,13 @@ void BaseAbstractBindingIter<NameT>::init(
     //               vars - [0, 0)
     //               lets - [0, slotInfo.constStart)
     //             consts - [slotInfo.constStart, data.length)
+    //          synthetic - [data.length, data.length)
     init(/* positionalFormalStart= */ 0,
          /* nonPositionalFormalStart= */ 0,
          /* varStart= */ 0,
          /* letStart= */ 0,
          /* constStart= */ slotInfo.constStart,
+         /* syntheticStart= */ data.length,
          /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots | flags,
          /* firstFrameSlot= */ firstFrameSlot,
          /* firstEnvironmentSlot= */
@@ -1838,11 +1843,19 @@ void BaseAbstractBindingIter<NameT>::init(
   //      other formals - [0, 0)
   //               vars - [0, 0)
   //               lets - [0, slotInfo.constStart)
-  //             consts - [slotInfo.constStart, slotInfo.length)
-  init(0, 0, 0, 0, slotInfo.constStart,
-       CanHaveFrameSlots | CanHaveEnvironmentSlots, firstFrameSlot,
+  //             consts - [slotInfo.constStart, data.length)
+  //          synthetic - [data.length, data.length)
+  init(/* positionalFormalStart= */ 0,
+       /* nonPositionalFormalStart= */ 0,
+       /* varStart= */ 0,
+       /* letStart= */ 0,
+       /* constStart= */ slotInfo.constStart,
+       /* syntheticStart= */ data.length,
+       /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
+       /* firstFrameSlot= */ firstFrameSlot,
+       /* firstEnvironmentSlot= */
        JSSLOT_FREE(&LexicalEnvironmentObject::class_),
-       GetScopeDataTrailingNames(&data));
+       /* names= */ GetScopeDataTrailingNames(&data));
 }
 
 template void BaseAbstractBindingIter<JSAtom>::init(
@@ -1867,11 +1880,13 @@ void BaseAbstractBindingIter<NameT>::init(
   //               vars - [slotInfo.varStart, length)
   //               lets - [length, length)
   //             consts - [length, length)
+  //          synthetic - [length, length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ slotInfo.nonPositionalFormalStart,
        /* varStart= */ slotInfo.varStart,
        /* letStart= */ length,
        /* constStart= */ length,
+       /* syntheticStart= */ length,
        /* flags= */ flags,
        /* firstFrameSlot= */ 0,
        /* firstEnvironmentSlot= */ JSSLOT_FREE(&CallObject::class_),
@@ -1893,11 +1908,13 @@ void BaseAbstractBindingIter<NameT>::init(VarScope::AbstractData<NameT>& data,
   //               vars - [0, length)
   //               lets - [length, length)
   //             consts - [length, length)
+  //          synthetic - [length, length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ 0,
        /* varStart= */ 0,
        /* letStart= */ length,
        /* constStart= */ length,
+       /* syntheticStart= */ length,
        /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
        /* firstFrameSlot= */ firstFrameSlot,
        /* firstEnvironmentSlot= */ JSSLOT_FREE(&VarEnvironmentObject::class_),
@@ -1919,11 +1936,13 @@ void BaseAbstractBindingIter<NameT>::init(
   //               vars - [0, slotInfo.letStart)
   //               lets - [slotInfo.letStart, slotInfo.constStart)
   //             consts - [slotInfo.constStart, data.length)
+  //          synthetic - [data.length, data.length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ 0,
        /* varStart= */ 0,
        /* letStart= */ slotInfo.letStart,
        /* constStart= */ slotInfo.constStart,
+       /* syntheticStart= */ data.length,
        /* flags= */ CannotHaveSlots,
        /* firstFrameSlot= */ UINT32_MAX,
        /* firstEnvironmentSlot= */ UINT32_MAX,
@@ -1958,11 +1977,13 @@ void BaseAbstractBindingIter<NameT>::init(EvalScope::AbstractData<NameT>& data,
   //               vars - [0, length)
   //               lets - [length, length)
   //             consts - [length, length)
+  //          synthetic - [length, length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ 0,
        /* varStart= */ 0,
        /* letStart= */ length,
        /* constStart= */ length,
+       /* syntheticStart= */ length,
        /* flags= */ flags,
        /* firstFrameSlot= */ firstFrameSlot,
        /* firstEnvironmentSlot= */ firstEnvironmentSlot,
@@ -1984,12 +2005,14 @@ void BaseAbstractBindingIter<NameT>::init(
   //               vars - [slotInfo.varStart, slotInfo.letStart)
   //               lets - [slotInfo.letStart, slotInfo.constStart)
   //             consts - [slotInfo.constStart, data.length)
+  //          synthetic - [data.length, data.length)
   init(
       /* positionalFormalStart= */ slotInfo.varStart,
       /* nonPositionalFormalStart= */ slotInfo.varStart,
       /* varStart= */ slotInfo.varStart,
       /* letStart= */ slotInfo.letStart,
       /* constStart= */ slotInfo.constStart,
+      /* syntheticStart= */ data.length,
       /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
       /* firstFrameSlot= */ 0,
       /* firstEnvironmentSlot= */ JSSLOT_FREE(&ModuleEnvironmentObject::class_),
@@ -2011,11 +2034,13 @@ void BaseAbstractBindingIter<NameT>::init(
   //               vars - [0, length)
   //               lets - [length, length)
   //             consts - [length, length)
+  //          synthetic - [length, length)
   init(/* positionalFormalStart= */ 0,
        /* nonPositionalFormalStart= */ 0,
        /* varStart= */ 0,
        /* letStart= */ length,
        /* constStart= */ length,
+       /* syntheticStart= */ length,
        /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
        /* firstFrameSlot= */ UINT32_MAX,
        /* firstEnvironmentSlot= */ UINT32_MAX,
@@ -2037,11 +2062,13 @@ void BaseAbstractBindingIter<NameT>::init(
   //               vars - [0, length)
   //               lets - [length, length)
   //             consts - [length, length)
+  //          synthetic - [length, length)
   init(/* positionalFormalStart = */ 0,
        /* nonPositionalFormalStart = */ 0,
        /* varStart= */ 0,
        /* letStart= */ length,
        /* constStart= */ length,
+       /* syntheticStart= */ length,
        /* flags= */ CanHaveFrameSlots | CanHaveEnvironmentSlots,
        /* firstFrameSlot= */ UINT32_MAX,
        /* firstEnvironmentSlot= */ UINT32_MAX,
