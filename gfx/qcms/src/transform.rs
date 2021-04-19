@@ -405,11 +405,7 @@ unsafe extern "C" fn qcms_transform_data_gray_template_lut<I: GrayFormat, F: For
     length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
-    let input_gamma_table_gray = (*transform)
-        .input_gamma_table_gray
-        .as_ref()
-        .unwrap()
-        .as_ptr();
+    let input_gamma_table_gray = transform.input_gamma_table_gray.as_ref().unwrap();
 
     let mut i: u32 = 0;
     while (i as usize) < length {
@@ -422,7 +418,7 @@ unsafe extern "C" fn qcms_transform_data_gray_template_lut<I: GrayFormat, F: For
             src = src.offset(1);
             alpha = *fresh1
         }
-        let linear: f32 = *input_gamma_table_gray.offset(device as isize);
+        let linear: f32 = input_gamma_table_gray[device as usize];
 
         let out_device_r: f32 = lut_interp_linear(
             linear as f64,
