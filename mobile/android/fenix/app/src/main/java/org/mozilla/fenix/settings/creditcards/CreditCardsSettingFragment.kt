@@ -5,11 +5,22 @@
 package org.mozilla.fenix.settings.creditcards
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import mozilla.components.concept.storage.CreditCard
+import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.fxa.SyncEngine
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
@@ -23,8 +34,41 @@ import org.mozilla.fenix.settings.requirePreference
  */
 class CreditCardsSettingFragment : PreferenceFragmentCompat() {
 
+    private lateinit var creditCardsStore: CreditCardsFragmentStore
+    private var isCreditCardsListLoaded: Boolean = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        creditCardsStore = StoreProvider.get(this) {
+            CreditCardsFragmentStore(CreditCardsListState(creditCards = emptyList()))
+        }
+        loadCreditCards()
+    }
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.credit_cards_preferences, rootKey)
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        loadCreditCards()
+        return super.onCreateView(inflater, container, savedInstanceState)
+    }
+
+    @ExperimentalCoroutinesApi
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        consumeFrom(creditCardsStore) { state ->
+            updateCardManagementPreferencesVisibility(state.creditCards)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        isCreditCardsListLoaded = false
     }
 
     override fun onResume() {
@@ -73,5 +117,40 @@ class CreditCardsSettingFragment : PreferenceFragmentCompat() {
         }
 
         return super.onPreferenceTreeClick(preference)
+    }
+
+    /**
+     * Updates preferences visibility depending on credit cards being already saved or not.
+     */
+    @VisibleForTesting
+    internal fun updateCardManagementPreferencesVisibility(creditCardsList: List<CreditCard>) {
+        val hasCreditCards = creditCardsList.isNotEmpty()
+
+        val manageSavedCardsPreference =
+            requirePreference<Preference>(R.string.pref_key_credit_cards_manage_saved_cards)
+        val addCreditCardsPreference =
+            requirePreference<Preference>(R.string.pref_key_credit_cards_add_credit_card)
+
+        manageSavedCardsPreference.isVisible = hasCreditCards
+        addCreditCardsPreference.isVisible = !hasCreditCards
+    }
+
+    /**
+     * Fetches all the credit cards from autofillStorage and updates the [CreditCardsListState]
+     * with the list of credit cards.
+     */
+    private fun loadCreditCards() {
+        if (isCreditCardsListLoaded) {
+            return
+        }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val creditCards = requireComponents.core.autofillStorage.getAllCreditCards()
+            lifecycleScope.launch(Dispatchers.Main) {
+                creditCardsStore.dispatch(CreditCardsAction.UpdateCreditCards(creditCards))
+            }
+        }
+
+        isCreditCardsListLoaded = true
     }
 }
