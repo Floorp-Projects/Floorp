@@ -6,10 +6,9 @@
 
 #include "mozilla/glean/bindings/Uuid.h"
 
-#include "jsapi.h"
+#include "nsString.h"
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
-#include "nsString.h"
 
 namespace mozilla::glean {
 
