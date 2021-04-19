@@ -46,13 +46,6 @@ add_task(async function test_shutdown_handler_submits() {
 
   await TelemetryController.testShutdown();
   Assert.ok(handlerCalled);
-  // and check we recorded telemetry about it.
-  let snapshot = Telemetry.getSnapshotForScalars("main", true).parent || {};
-  Assert.equal(
-    snapshot["telemetry.sync_shutdown_ping_sent"],
-    true,
-    "recorded that we sent a ping."
-  );
   await TelemetryController.testReset();
 });
 
