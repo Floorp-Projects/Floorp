@@ -43,7 +43,6 @@ interface nsIAndroidEventDispatcher : nsISupports
   [implicit_jscontext]
   void unregisterListener(in nsIAndroidEventListener listener,
                           in jsval events);
-  void shutdown();
 };
 
 [scriptable, uuid(60a78a94-6117-432f-9d49-304913a931c5)]

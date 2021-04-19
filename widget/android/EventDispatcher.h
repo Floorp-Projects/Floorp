@@ -65,7 +65,7 @@ class EventDispatcher final
 
   virtual ~EventDispatcher() {}
 
-  void ShutdownFromJava() { Shutdown(); }
+  void Shutdown();
 
   struct ListenersList {
     nsCOMArray<nsIAndroidEventListener> listeners{/* count */ 1};

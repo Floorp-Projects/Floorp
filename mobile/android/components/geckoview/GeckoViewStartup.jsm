@@ -214,7 +214,6 @@ class GeckoViewStartup {
           "GeckoView:SetLocale",
         ]);
 
-        Services.obs.addObserver(this, "xpcom-shutdown");
         Services.obs.notifyObservers(null, "geckoview-startup-complete");
         break;
       }
@@ -225,16 +224,6 @@ class GeckoViewStartup {
         // started up so the startup cache isn't rebuilt on next startup.
         Services.startup.trackStartupCrashEnd();
         break;
-      }
-      case "xpcom-shutdown": {
-        Services.obs.removeObserver(this, "xpcom-shutdown");
-        EventDispatcher.instance.unregisterListener(this, [
-          "GeckoView:ResetUserPrefs",
-          "GeckoView:SetDefaultPrefs",
-          "GeckoView:SetLocale",
-        ]);
-        EventDispatcher.instance.shutdown();
-        delete EventDispatcher.instance;
       }
     }
   }
