@@ -45,7 +45,7 @@ internal class BlockingItemViewHolder(
     }
 
     fun updateTrackers(trackers: Int) {
-        if (fragment.tab.trackingProtection.enabled) {
+        if (!fragment.tab.trackingProtection.ignoredOnTrackingProtection) {
             updateTrackingCount(trackerCounter, trackers)
         } else {
             disableTrackingCount(trackerCounter)
