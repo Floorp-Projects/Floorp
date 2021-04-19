@@ -302,6 +302,12 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
       }
       mMenuParent->SetRebuild(true);
     } else if (aAttribute == nsGkAtoms::hidden || aAttribute == nsGkAtoms::collapsed) {
+      bool isVisible = !nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
+      if (isVisible != mIsVisible) {
+        RefPtr<nsMenuItemX> self = this;
+        mMenuParent->MenuChildChangedVisibility(nsMenuParentX::MenuChild(self), isVisible);
+        mIsVisible = isVisible;
+      }
       mMenuParent->SetRebuild(true);
     } else if (aAttribute == nsGkAtoms::label) {
       if (mType != eSeparatorMenuItemType) {
