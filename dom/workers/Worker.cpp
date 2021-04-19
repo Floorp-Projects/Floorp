@@ -8,6 +8,8 @@
 
 #include "MessageEventRunnable.h"
 #include "mozilla/dom/WorkerBinding.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WorkerTimelineMarker.h"
@@ -92,6 +94,20 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
+
+#ifdef MOZ_GECKO_PROFILER
+  NS_ConvertUTF16toUTF8 nameOrScriptURL(mWorkerPrivate->WorkerName().IsEmpty()
+                                            ? mWorkerPrivate->ScriptURL()
+                                            : mWorkerPrivate->WorkerName());
+  AUTO_PROFILER_MARKER_TEXT("Worker.postMessage", DOM, {}, nameOrScriptURL);
+  uint32_t flags = uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS);
+  if (mWorkerPrivate->IsChromeWorker()) {
+    flags |= uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE);
+  }
+  mozilla::AutoProfilerLabel PROFILER_RAII(
+      "Worker.postMessage", nameOrScriptURL.get(),
+      JS::ProfilingCategoryPair::DOM, flags);
+#endif
 
   RefPtr<MessageEventRunnable> runnable = new MessageEventRunnable(
       mWorkerPrivate, WorkerRunnable::WorkerThreadModifyBusyCount);
