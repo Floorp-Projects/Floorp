@@ -218,7 +218,7 @@ template <XDRMode mode>
   if (mode == XDR_ENCODE) {
     length = baseScopeData->length;
   } else {
-    MOZ_TRY(xdr->peekRawUint32(&length));
+    MOZ_TRY(xdr->peekUint32(&length));
   }
 
   AssertScopeSpecificDataIsEncodable<FunctionScope>();
