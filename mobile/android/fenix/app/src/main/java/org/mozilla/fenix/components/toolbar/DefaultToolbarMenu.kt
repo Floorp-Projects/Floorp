@@ -90,7 +90,9 @@ open class DefaultToolbarMenu(
                 },
             endOfMenuAlwaysVisible = shouldUseBottomToolbar,
             store = store,
-            webExtIconTintColorResource = primaryTextColor(),
+            style = WebExtensionBrowserMenuBuilder.Style(
+                webExtIconTintColorResource = primaryTextColor()
+            ),
             onAddonsManagerTapped = {
                 onItemTapped.invoke(ToolbarMenu.Item.AddonsManager)
             },
