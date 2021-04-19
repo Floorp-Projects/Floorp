@@ -20,6 +20,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab as createStateTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.tabstray.Tab
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -45,6 +46,7 @@ class NavigationInteractorTest {
     private val bookmarksUseCase: BookmarksUseCase = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
     private val collectionStorage: TabCollectionStorage = mockk(relaxed = true)
+    private val accountManager: FxaAccountManager = mockk(relaxed = true)
 
     @get:Rule
     val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
@@ -62,7 +64,8 @@ class NavigationInteractorTest {
             dismissTabTrayAndNavigateHome,
             bookmarksUseCase,
             tabsTrayStore,
-            collectionStorage
+            collectionStorage,
+            accountManager
         )
     }
 
@@ -146,8 +149,20 @@ class NavigationInteractorTest {
 
     @Test
     fun `onAccountSettingsClicked calls navigation on DefaultNavigationInteractor`() {
+        every { accountManager.authenticatedAccount() }.answers { mockk(relaxed = true) }
+
         navigationInteractor.onAccountSettingsClicked()
+
         verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalAccountSettingsFragment()) }
+    }
+
+    @Test
+    fun `onAccountSettingsClicked when not logged in calls navigation to turn on sync`() {
+        every { accountManager.authenticatedAccount() }.answers { null }
+
+        navigationInteractor.onAccountSettingsClicked()
+
+        verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalTurnOnSync()) }
     }
 
     @Test

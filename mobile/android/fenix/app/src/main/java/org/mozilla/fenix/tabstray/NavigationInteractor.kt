@@ -15,6 +15,7 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.tabstray.Tab
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -89,7 +90,8 @@ class DefaultNavigationInteractor(
     private val dismissTabTrayAndNavigateHome: (String) -> Unit,
     private val bookmarksUseCase: BookmarksUseCase,
     private val tabsTrayStore: TabsTrayStore,
-    private val collectionStorage: TabCollectionStorage
+    private val collectionStorage: TabCollectionStorage,
+    private val accountManager: FxaAccountManager
 ) : NavigationInteractor {
 
     override fun onTabTrayDismissed() {
@@ -97,18 +99,26 @@ class DefaultNavigationInteractor(
     }
 
     override fun onAccountSettingsClicked() {
-        navController.navigateBlockingForAsyncNavGraph(
-            TabsTrayFragmentDirections.actionGlobalAccountSettingsFragment())
+        val isSignedIn = accountManager.authenticatedAccount() != null
+
+        val direction = if (isSignedIn) {
+            TabsTrayFragmentDirections.actionGlobalAccountSettingsFragment()
+        } else {
+            TabsTrayFragmentDirections.actionGlobalTurnOnSync()
+        }
+        navController.navigateBlockingForAsyncNavGraph(direction)
     }
 
     override fun onTabSettingsClicked() {
         navController.navigateBlockingForAsyncNavGraph(
-            TabsTrayFragmentDirections.actionGlobalTabSettingsFragment())
+            TabsTrayFragmentDirections.actionGlobalTabSettingsFragment()
+        )
     }
 
     override fun onOpenRecentlyClosedClicked() {
         navController.navigateBlockingForAsyncNavGraph(
-            TabsTrayFragmentDirections.actionGlobalRecentlyClosed())
+            TabsTrayFragmentDirections.actionGlobalRecentlyClosed()
+        )
         metrics.track(Event.RecentlyClosedTabsOpened)
     }
 
