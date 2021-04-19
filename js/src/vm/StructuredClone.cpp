@@ -1442,14 +1442,13 @@ static bool TryAppendNativeProperties(JSContext* cx, HandleObject obj,
   *optimized = true;
 
   size_t count = 0;
-  // We iterate from the last to the first shape, so the property names
+  // We iterate from the last to the first property, so the property names
   // are already in reverse order.
-  RootedShape shape(cx, nobj->lastProperty());
-  for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront()) {
-    jsid id = r.front().propidRaw();
+  for (ShapePropertyIter<NoGC> iter(nobj->shape()); !iter.done(); iter++) {
+    jsid id = iter->key();
 
     // Ignore symbols and non-enumerable properties.
-    if (!r.front().enumerable() || JSID_IS_SYMBOL(id)) {
+    if (!iter->enumerable() || id.isSymbol()) {
       continue;
     }
 
