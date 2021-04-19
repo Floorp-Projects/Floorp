@@ -122,6 +122,10 @@ nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsI
 
   mIcon = MakeUnique<nsMenuItemIconX>(this);
 
+  if (mVisible) {
+    SetupIcon();
+  }
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -208,8 +212,6 @@ void nsMenuX::AddMenuItem(RefPtr<nsMenuItemX>&& aMenuItem) {
   [mNativeMenu addItem:aMenuItem->NativeNSMenuItem()];
   ++mVisibleItemsCount;
 
-  aMenuItem->SetupIcon();
-
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -231,8 +233,6 @@ void nsMenuX::AddMenu(RefPtr<nsMenuX>&& aMenu) {
     [mNativeMenu addItem:newNativeMenuItem];
     newNativeMenuItem.submenu = aMenu->NativeNSMenu();
   }
-
-  aMenu->SetupIcon();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -844,6 +844,9 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
     if (mParent) {
       RefPtr<nsMenuX> self = this;
       mParent->MenuChildChangedVisibility(MenuChild(self), newVisible);
+    }
+    if (mVisible) {
+      SetupIcon();
     }
     mVisible = newVisible;
   } else if (aAttribute == nsGkAtoms::image) {
