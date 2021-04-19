@@ -2050,11 +2050,11 @@ bool js::HasOwnProperty(JSContext* cx, HandleObject obj, HandleId id,
   }
 
   if (GetOwnPropertyOp op = obj->getOpsGetOwnPropertyDescriptor()) {
-    Rooted<PropertyDescriptor> desc(cx);
+    Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
     if (!op(cx, obj, id, &desc)) {
       return false;
     }
-    *result = !!desc.object();
+    *result = desc.isSome();
     return true;
   }
 
@@ -2376,32 +2376,31 @@ bool js::PreventExtensions(JSContext* cx, HandleObject obj) {
 
 bool js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                                   MutableHandle<PropertyDescriptor> desc) {
-  if (GetOwnPropertyOp op = obj->getOpsGetOwnPropertyDescriptor()) {
-    bool ok = op(cx, obj, id, desc);
-    if (ok) {
-      desc.assertCompleteIfFound();
-    }
-    return ok;
+  Rooted<Maybe<PropertyDescriptor>> desc_(cx);
+  if (!GetOwnPropertyDescriptor(cx, obj, id, &desc_)) {
+    return false;
   }
 
-  return NativeGetOwnPropertyDescriptor(cx, obj.as<NativeObject>(), id, desc);
+  if (desc_.isNothing()) {
+    desc.object().set(nullptr);
+  } else {
+    desc.set(*desc_);
+  }
+  return true;
 }
 
 bool js::GetOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, HandleId id,
     MutableHandle<Maybe<PropertyDescriptor>> desc) {
-  Rooted<PropertyDescriptor> descriptor(cx);
-  if (!GetOwnPropertyDescriptor(cx, obj, id, &descriptor)) {
-    return false;
+  if (GetOwnPropertyOp op = obj->getOpsGetOwnPropertyDescriptor()) {
+    bool ok = op(cx, obj, id, desc);
+    if (ok && desc.isSome()) {
+      desc->assertComplete();
+    }
+    return ok;
   }
 
-  if (descriptor.object()) {
-    // descriptor is not *undefined*.
-    desc.set(mozilla::Some(descriptor.get()));
-  } else {
-    desc.reset();
-  }
-  return true;
+  return NativeGetOwnPropertyDescriptor(cx, obj.as<NativeObject>(), id, desc);
 }
 
 bool js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id,

@@ -2067,16 +2067,17 @@ bool js::NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 
 bool js::NativeGetOwnPropertyDescriptor(
     JSContext* cx, HandleNativeObject obj, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc_) {
   PropertyResult prop;
   if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &prop)) {
     return false;
   }
   if (prop.isNotFound()) {
-    desc.object().set(nullptr);
+    desc_.reset();
     return true;
   }
 
+  Rooted<PropertyDescriptor> desc(cx);
   desc.setAttributes(GetPropertyAttributes(obj, prop));
   if (desc.isAccessorDescriptor()) {
     // The result of GetOwnPropertyDescriptor() must be either undefined or
@@ -2126,6 +2127,7 @@ bool js::NativeGetOwnPropertyDescriptor(
 
   desc.object().set(obj);
   desc.assertComplete();
+  desc_.set(mozilla::Some(desc.get()));
   return true;
 }
 
@@ -2588,12 +2590,11 @@ static bool SetNonexistentProperty(JSContext* cx, HandleNativeObject obj,
     // LookupOwnProperty.
 #ifdef DEBUG
     if (GetOwnPropertyOp op = obj->getOpsGetOwnPropertyDescriptor()) {
-      Rooted<PropertyDescriptor> desc(cx);
+      Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
       if (!op(cx, obj, id, &desc)) {
         return false;
       }
-
-      MOZ_ASSERT(!desc.object());
+      MOZ_ASSERT(desc.isNothing());
     }
 #endif
 
