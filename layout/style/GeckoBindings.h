@@ -15,6 +15,7 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/css/DocumentMatchingFunction.h"
 #include "mozilla/css/SheetLoadData.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/PreferenceSheet.h"
