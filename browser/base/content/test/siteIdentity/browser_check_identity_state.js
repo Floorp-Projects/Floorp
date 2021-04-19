@@ -38,12 +38,18 @@ function getSecurityConnectionBG() {
     .getPropertyValue("background-image");
 }
 
-function getReaderModeURL() {
+async function getReaderModeURL() {
   // Gets the reader mode URL from "identity-popup mainView panel header span"
   document.getElementById("identity-icon-box").click();
   gIdentityHandler.refreshIdentityPopup();
-  return document.getElementById("identity-popup-mainView-panel-header-span")
-    .innerHTML;
+
+  let headerSpan = document.getElementById(
+    "identity-popup-mainView-panel-header-span"
+  );
+  await BrowserTestUtils.waitForCondition(() =>
+    headerSpan.innerHTML.includes("example.com")
+  );
+  return headerSpan.innerHTML;
 }
 
 // This test is slow on Linux debug e10s
@@ -581,10 +587,10 @@ async function readerUriTest(secureCheck) {
 
   let newTab = await loadNewTab("about:reader?url=http://example.com");
   gBrowser.selectedTab = newTab;
-  let readerURL = getReaderModeURL();
+  let readerURL = await getReaderModeURL();
   is(
     readerURL,
-    "Site Information for example.com",
+    "Site information for example.com",
     "should be the correct URI in reader mode"
   );
 

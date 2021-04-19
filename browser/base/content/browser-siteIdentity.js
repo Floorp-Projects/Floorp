@@ -192,6 +192,29 @@ var gIdentityHandler = {
       let wrapper = document.getElementById("template-identity-popup");
       wrapper.replaceWith(wrapper.content);
       this._popupInitialized = true;
+
+      if (this._protonEnabled) {
+        // When proton is enabled, we need to place the security section
+        // within a toolbarbutton.
+        let button = document.createXULElement("toolbarbutton");
+        button.id = "identity-popup-security-button";
+        button.classList.add("subviewbutton-nav", "subviewbutton");
+        button.setAttribute("align", "center");
+        this.showSecuritySubView = this.showSecuritySubView.bind(this);
+        button.addEventListener("command", this.showSecuritySubView);
+        button.appendChild(
+          document
+            .getElementById("identity-popup-security")
+            .querySelector(".identity-popup-security-connection")
+        );
+
+        this._identityPopupMainView.insertBefore(
+          button,
+          this._identityPopupMainView.querySelector("toolbarseparator")
+            .nextSibling
+        );
+        this._popupExpander.hidden = true;
+      }
     }
   },
 
@@ -394,6 +417,16 @@ var gIdentityHandler = {
       false
     );
     return this._useGrayLockIcon;
+  },
+  get _protonEnabled() {
+    delete this._protonEnabled;
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_protonEnabled",
+      "browser.proton.doorhangers.enabled",
+      false
+    );
+    return this._protonEnabled;
   },
 
   /**
@@ -982,6 +1015,17 @@ var gIdentityHandler = {
       connection = "file";
     }
 
+    if (this._protonEnabled) {
+      document.getElementById("identity-popup-security-button").disabled = ![
+        "not-secure",
+        "secure",
+        "secure-ev",
+        "secure-cert-user-overridden",
+        "cert-error-page",
+        "https-only-error-page",
+      ].includes(connection);
+    }
+
     // Determine the mixed content state.
     let mixedcontent = [];
     if (this._isMixedPassiveContentLoaded) {
@@ -1097,16 +1141,20 @@ var gIdentityHandler = {
     }
 
     // Push the appropriate strings out to the UI.
-    this._identityPopupMainViewHeaderLabel.textContent = gNavigatorBundle.getFormattedString(
-      "identity.headerMainWithHost",
-      [host]
+    document.l10n.setAttributes(
+      this._identityPopupMainViewHeaderLabel,
+      "identity-site-information",
+      {
+        host,
+      }
     );
 
-    this._identityPopupSecurityView.setAttribute(
-      "title",
-      gNavigatorBundle.getFormattedString("identity.headerSecurityWithHost", [
+    document.l10n.setAttributes(
+      this._identityPopupSecurityView,
+      "identity-header-security-with-host",
+      {
         host,
-      ])
+      }
     );
 
     this._identityPopupSecurityEVContentOwner.textContent = gNavigatorBundle.getFormattedString(

@@ -48,7 +48,11 @@ add_task(async function testIdentityPopupFocusKeyboard() {
     await shown;
     is(
       Services.focus.focusedElement,
-      document.getElementById("identity-popup-security-expander")
+      document.getElementById(
+        gProtonDoorhangers
+          ? "identity-popup-security-button"
+          : "identity-popup-security-expander"
+      )
     );
   });
 });
@@ -70,7 +74,11 @@ add_task(async function testSiteSecurityTabOrder() {
     await shown;
     is(
       Services.focus.focusedElement,
-      document.getElementById("identity-popup-security-expander")
+      document.getElementById(
+        gProtonDoorhangers
+          ? "identity-popup-security-button"
+          : "identity-popup-security-expander"
+      )
     );
 
     // 2. Access the Site Security section.
