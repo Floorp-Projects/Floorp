@@ -16,7 +16,7 @@ AUTOMATION=1 $PYTHON3 $GECKO_PATH/js/src/devtools/automation/autospider.py ${SPI
 BUILD_STATUS=$?
 
 # Copy artifacts for upload by TaskCluster.
-upload=${MOZ_AUTOMATION_UPLOAD-1}
+upload=${MOZ_JS_UPLOAD_BINARIES_DEFAULT-1}
 # User-provided override switch.
 if [ -n "$MOZ_JS_UPLOAD_BINARIES" ]; then
     upload=1
