@@ -15,8 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-
   executeSoon: "chrome://remote/content/shared/Sync.jsm",
 });
 
@@ -26,10 +24,6 @@ XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
 
 XPCOMUtils.defineLazyGetter(this, "threadManager", () => {
   return Cc["@mozilla.org/thread-manager;1"].getService();
-});
-
-XPCOMUtils.defineLazyGetter(this, "WebSocket", () => {
-  return Services.appShell.hiddenDOMWindow.WebSocket;
 });
 
 // TODO(ato): Merge this with httpd.js so that we can respond to both HTTP/1.1
