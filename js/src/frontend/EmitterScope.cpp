@@ -432,7 +432,10 @@ bool EmitterScope::enterClassBody(BytecodeEmitter* bce, ScopeKind kind,
 
   if (ScopeKindIsInBody(kind) && hasEnvironment()) {
     // After interning the VM scope we can get the scope index.
-    if (!bce->emitInternedScopeOp(index(), JSOp::PushLexicalEnv)) {
+    //
+    // ClassBody uses PushClassBodyEnv, however, PopLexicalEnv supports both
+    // cases and doesn't need extra specialization.
+    if (!bce->emitInternedScopeOp(index(), JSOp::PushClassBodyEnv)) {
       return false;
     }
   }
