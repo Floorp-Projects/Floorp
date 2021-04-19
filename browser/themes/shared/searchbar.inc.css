@@ -302,5 +302,5 @@
   list-style-image: url("chrome://global/skin/icons/settings.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  fill-opacity: .6;
+  fill-opacity: var(--urlbar-icon-fill-opacity);
 }
