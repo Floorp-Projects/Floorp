@@ -419,7 +419,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * extended range if range boundaries of aRange are in invisible white-spaces.
    */
   static EditorDOMRange GetRangeContainingInvisibleWhiteSpacesAtRangeBoundaries(
-      const HTMLEditor& aHTMLEditor, const EditorDOMRange& aRange);
+      dom::Element* aEditingHost, const EditorDOMRange& aRange);
 
   /**
    * GetPrecedingBRElementUnlessVisibleContentFound() scans a `<br>` element
