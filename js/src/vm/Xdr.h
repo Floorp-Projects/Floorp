@@ -7,7 +7,6 @@
 #ifndef vm_Xdr_h
 #define vm_Xdr_h
 
-#include "mozilla/EndianUtils.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/Utf8.h"
 
@@ -198,7 +197,8 @@ class XDRCoderBase {
 };
 
 /*
- * XDR serialization state.  All data is encoded in little endian.
+ * XDR serialization state.  All data is encoded in native endian, except
+ * bytecode and object literal code.
  */
 template <XDRMode mode>
 class XDRState : public XDRCoderBase {
@@ -306,56 +306,31 @@ class XDRState : public XDRCoderBase {
     return Ok();
   }
 
-  XDRResult codeUint16(uint16_t* n) {
+ private:
+  template <typename T>
+  XDRResult codeUintImpl(T* n) {
     if (mode == XDR_ENCODE) {
-      uint8_t* ptr = buf->write(sizeof(*n));
+      uint8_t* ptr = buf->write(sizeof(T));
       if (!ptr) {
         return fail(JS::TranscodeResult::Throw);
       }
-      mozilla::LittleEndian::writeUint16(ptr, *n);
+      memcpy(ptr, n, sizeof(T));
     } else {
-      const uint8_t* ptr = buf->read(sizeof(*n));
+      const uint8_t* ptr = buf->read(sizeof(T));
       if (!ptr) {
         return fail(JS::TranscodeResult::Failure_BadDecode);
       }
-      *n = mozilla::LittleEndian::readUint16(ptr);
+      memcpy(n, ptr, sizeof(T));
     }
     return Ok();
   }
 
-  XDRResult codeUint32(uint32_t* n) {
-    if (mode == XDR_ENCODE) {
-      uint8_t* ptr = buf->write(sizeof(*n));
-      if (!ptr) {
-        return fail(JS::TranscodeResult::Throw);
-      }
-      mozilla::LittleEndian::writeUint32(ptr, *n);
-    } else {
-      const uint8_t* ptr = buf->read(sizeof(*n));
-      if (!ptr) {
-        return fail(JS::TranscodeResult::Failure_BadDecode);
-      }
-      *n = mozilla::LittleEndian::readUint32(ptr);
-    }
-    return Ok();
-  }
+ public:
+  XDRResult codeUint16(uint16_t* n) { return codeUintImpl(n); }
 
-  XDRResult codeUint64(uint64_t* n) {
-    if (mode == XDR_ENCODE) {
-      uint8_t* ptr = buf->write(sizeof(*n));
-      if (!ptr) {
-        return fail(JS::TranscodeResult::Throw);
-      }
-      mozilla::LittleEndian::writeUint64(ptr, *n);
-    } else {
-      const uint8_t* ptr = buf->read(sizeof(*n));
-      if (!ptr) {
-        return fail(JS::TranscodeResult::Failure_BadDecode);
-      }
-      *n = mozilla::LittleEndian::readUint64(ptr);
-    }
-    return Ok();
-  }
+  XDRResult codeUint32(uint32_t* n) { return codeUintImpl(n); }
+
+  XDRResult codeUint64(uint64_t* n) { return codeUintImpl(n); }
 
   /*
    * Use SFINAE to refuse any specialization which is not an enum.  Uses of
