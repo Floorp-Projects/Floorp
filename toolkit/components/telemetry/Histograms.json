@@ -10096,17 +10096,6 @@
     "n_buckets": 50,
     "description": "Time spent to display first page in PDF Viewer (ms)"
   },
-  "PDF_VIEWER_FALLBACK_REASON": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "expires_in_version": "92",
-    "alert_emails": ["bdahl@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1630844, 1666979, 1689264],
-    "kind": "categorical",
-    "labels": ["unknown", "forms", "javaScript", "signatures", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
-    "description": "The reason the fallback bar was shown."
-  },
   "PDF_VIEWER_FALLBACK_ERROR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
@@ -10115,7 +10104,7 @@
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1643402, 1666979, 1689264],
     "kind": "categorical",
-    "labels": ["unknown", "forms", "javaScript", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
+    "labels": ["unknown", "forms", "javaScript", "signatures", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
     "description": "All errors that could trigger the fallback bar, even after the bar is shown."
   },
   "PDF_VIEWER_TAGGED": {
