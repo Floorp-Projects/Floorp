@@ -42,23 +42,6 @@ impl Ping {
             ))
         }
     }
-
-    /// **Test-only API**
-    ///
-    /// Attach a callback to be called right before a new ping is submitted.
-    /// The provided function is called exactly once before submitting a ping.
-    ///
-    /// Note: The callback will be called on any call to submit.
-    /// A ping might not be sent afterwards, e.g. if the ping is otherwise empty (and
-    /// `send_if_empty` is `false`).
-    pub fn test_before_next_submit(&self, cb: impl FnOnce(Option<&str>) + Send + 'static) {
-        match self {
-            Ping::Parent(p) => p.test_before_next_submit(cb),
-            Ping::Child => {
-                panic!("Cannot use ping test API from non-parent process!");
-            }
-        };
-    }
 }
 
 #[inherent(pub)]
@@ -89,11 +72,6 @@ mod test {
     use super::*;
     use crate::common_test::*;
 
-    use std::sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    };
-
     // Smoke test for what should be the generated code.
     static PROTOTYPE_PING: Lazy<Ping> = Lazy::new(|| Ping::new("prototype", false, true, vec![]));
 
@@ -101,13 +79,8 @@ mod test {
     fn smoke_test_custom_ping() {
         let _lock = lock_test();
 
-        let called = Arc::new(AtomicBool::new(false));
-        let rcalled = Arc::clone(&called);
-        PROTOTYPE_PING.test_before_next_submit(move |reason| {
-            (*rcalled).store(true, Ordering::Relaxed);
-            assert_eq!(None, reason);
-        });
+        // We can only check that nothing explodes.
+        // More comprehensive tests are blocked on bug 1673660.
         PROTOTYPE_PING.submit(None);
-        assert!((*called).load(Ordering::Relaxed));
     }
 }
