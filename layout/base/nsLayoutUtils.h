@@ -1901,6 +1901,11 @@ class nsLayoutUtils {
    *                            appropriate scale and transform for drawing in
    *                            app units.
    *   @param aImage            The image.
+   *   @param aResolution       The resolution specified by the author for the
+   *                            image, in dppx. This will affect the intrinsic
+   *                            size of the image (so e.g., if resolution is 2,
+   *                            and the image is 100x100, the intrinsic size of
+   *                            the image will be 50x50).
    *   @param aDest             The area that the image should fill.
    *   @param aDirty            Pixels outside this area may be skipped.
    *   @param aSVGContext       Optionally provides an SVGImageContext.
@@ -1922,7 +1927,7 @@ class nsLayoutUtils {
    */
   static ImgDrawResult DrawSingleImage(
       gfxContext& aContext, nsPresContext* aPresContext, imgIContainer* aImage,
-      const SamplingFilter aSamplingFilter, const nsRect& aDest,
+      float aResolution, SamplingFilter aSamplingFilter, const nsRect& aDest,
       const nsRect& aDirty, const mozilla::Maybe<SVGImageContext>& aSVGContext,
       uint32_t aImageFlags, const nsPoint* aAnchorPoint = nullptr,
       const nsRect* aSourceArea = nullptr);
@@ -1943,7 +1948,7 @@ class nsLayoutUtils {
    * difference is that this one is simpler and is suited to places where we
    * have less information about the frame tree.
    */
-  static void ComputeSizeForDrawing(imgIContainer* aImage,
+  static void ComputeSizeForDrawing(imgIContainer* aImage, float aResolution,
                                     CSSIntSize& aImageSize,
                                     AspectRatio& aIntrinsicRatio,
                                     bool& aGotWidth, bool& aGotHeight);
@@ -1957,7 +1962,7 @@ class nsLayoutUtils {
    * dimensions, the corresponding dimension of aFallbackSize is used instead.
    */
   static CSSIntSize ComputeSizeForDrawingWithFallback(
-      imgIContainer* aImage, const nsSize& aFallbackSize);
+      imgIContainer* aImage, float aResolution, const nsSize& aFallbackSize);
 
   /**
    * Given the image container, frame, and dest rect, determine the best fitting
