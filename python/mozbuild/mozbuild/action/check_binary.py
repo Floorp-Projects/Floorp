@@ -261,6 +261,11 @@ def check_networking(target, binary):
         raise RuntimeError("Could not parse llvm-objdump output?")
 
     basename = os.path.basename(binary)
+    # libhttp3server is used for test only, so we can skip it.
+    if basename == "libhttp3server.a":
+        print("TEST-SKIP | check_networking | {}".format(basename))
+        return 0
+
     if bad_occurences_names:
         s = (
             "TEST-UNEXPECTED-FAIL | check_networking | {} | Identified {} "

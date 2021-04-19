@@ -4,5 +4,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ["executable"]
-RustLibrary("http3server")
+if CONFIG["OS_ARCH"] == "WINNT":
+    OS_LIBS += [
+        "kernel32",
+        "userenv",
+        "wininet",
+        "ws2_32",
+    ]
+
+USE_LIBS += [
+    "http3server",
+    "nspr",
+    "nss",
+]
+
+GeckoSimplePrograms(
+    [
+        "http3server",
+    ],
+    linkage=None,
+)
