@@ -621,6 +621,17 @@ static bool UpdateNurseryBuffersOnTransfer(js::Nursery& nursery, JSString* from,
   return true;
 }
 
+static bool CanReuseLeftmostBuffer(JSRope* leftmostRope, size_t wholeLength,
+                                   bool hasTwoByteChars) {
+  if (!leftmostRope->leftChild()->isExtensible()) {
+    return false;
+  }
+
+  JSExtensibleString& leftmostChild = leftmostRope->leftChild()->asExtensible();
+  return leftmostChild.capacity() >= wholeLength &&
+         leftmostChild.hasTwoByteChars() == hasTwoByteChars;
+}
+
 JSLinearString* JSRope::flatten(JSContext* maybecx) {
   mozilla::Maybe<AutoGeckoProfilerEntry> entry;
   if (maybecx && !maybecx->isHelperThreadContext()) {
@@ -711,7 +722,6 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   const size_t wholeLength = root->length();
   size_t wholeCapacity;
   CharT* wholeChars;
-  JSString* str = root;
   CharT* pos;
 
   // JSString::setFlattenData() is used to store a tagged pointer to the parent
@@ -730,64 +740,64 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
     leftmostRope = &leftmostRope->leftChild()->asRope();
   }
 
-  bool reuseLeftmostBuffer = false;
+  bool reuseLeftmostBuffer = CanReuseLeftmostBuffer(
+      leftmostRope, wholeLength, std::is_same_v<CharT, char16_t>);
 
-  if (leftmostRope->leftChild()->isExtensible()) {
+  if (reuseLeftmostBuffer) {
     JSExtensibleString& left = leftmostRope->leftChild()->asExtensible();
     size_t capacity = left.capacity();
-    if (capacity >= wholeLength &&
-        left.hasTwoByteChars() == std::is_same_v<CharT, char16_t>) {
-      wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
-      wholeCapacity = capacity;
+    wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
+    wholeCapacity = capacity;
 
-      // Nursery::registerMallocedBuffer is fallible, so attempt it first before
-      // doing anything irreversible.
-      if (!UpdateNurseryBuffersOnTransfer(nursery, &left, root, wholeChars,
-                                          wholeCapacity * sizeof(CharT))) {
-        return nullptr;
-      }
-
-      ropeBarrierDuringFlattening<usingBarrier>(leftmostRope);
-      leftmostRope->setNonInlineChars(wholeChars);
-      uint32_t left_len = left.length();
-
-      // Remove memory association for left node we're about to make into a
-      // dependent string.
-      if (left.isTenured()) {
-        RemoveCellMemory(&left, left.allocSize(), MemoryUse::StringContents);
-      }
-
-      uint32_t flags = INIT_DEPENDENT_FLAGS;
-      if (left.inStringToAtomCache()) {
-        flags |= IN_STRING_TO_ATOM_CACHE;
-      }
-      left.setLengthAndFlags(left_len, StringFlagsForCharType<CharT>(flags));
-      left.d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
-      if (left.isTenured() && !root->isTenured()) {
-        // leftmost child -> root is a tenured -> nursery edge.
-        bufferIfNursery->putWholeCell(&left);
-      }
-
-      reuseLeftmostBuffer = true;
-      pos = wholeChars + left_len;
-
-      goto first_visit_node;
-    }
-  }
-
-  if (!AllocChars(root, wholeLength, &wholeChars, &wholeCapacity)) {
-    return nullptr;
-  }
-
-  if (!root->isTenured()) {
-    if (!nursery.registerMallocedBuffer(wholeChars,
+    // Nursery::registerMallocedBuffer is fallible, so attempt it first before
+    // doing anything irreversible.
+    if (!UpdateNurseryBuffersOnTransfer(nursery, &left, root, wholeChars,
                                         wholeCapacity * sizeof(CharT))) {
-      js_free(wholeChars);
       return nullptr;
     }
+
+    ropeBarrierDuringFlattening<usingBarrier>(leftmostRope);
+    leftmostRope->setNonInlineChars(wholeChars);
+    uint32_t left_len = left.length();
+
+    // Remove memory association for left node we're about to make into a
+    // dependent string.
+    if (left.isTenured()) {
+      RemoveCellMemory(&left, left.allocSize(), MemoryUse::StringContents);
+    }
+
+    uint32_t flags = INIT_DEPENDENT_FLAGS;
+    if (left.inStringToAtomCache()) {
+      flags |= IN_STRING_TO_ATOM_CACHE;
+    }
+    left.setLengthAndFlags(left_len, StringFlagsForCharType<CharT>(flags));
+    left.d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
+    if (left.isTenured() && !root->isTenured()) {
+      // leftmost child -> root is a tenured -> nursery edge.
+      bufferIfNursery->putWholeCell(&left);
+    }
+
+    pos = wholeChars + left_len;
+  } else {
+    // If we can't reuse the leftmost child's buffer, allocate a new one.
+
+    if (!AllocChars(root, wholeLength, &wholeChars, &wholeCapacity)) {
+      return nullptr;
+    }
+
+    if (!root->isTenured()) {
+      if (!nursery.registerMallocedBuffer(wholeChars,
+                                          wholeCapacity * sizeof(CharT))) {
+        js_free(wholeChars);
+        return nullptr;
+      }
+    }
+
+    pos = wholeChars;
   }
 
-  pos = wholeChars;
+  JSString* str = root;
+
 first_visit_node : {
   if (reuseLeftmostBuffer && str == leftmostRope) {
     // Left child has already been overwritten.
