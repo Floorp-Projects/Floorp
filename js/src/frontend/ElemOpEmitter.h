@@ -138,7 +138,6 @@ class MOZ_STACK_CLASS ElemOpEmitter {
 
   Kind kind_;
   ObjKind objKind_;
-  NameVisibility visibility_ = NameVisibility::Public;
 
 #ifdef DEBUG
   // The state of this emitter.
@@ -211,8 +210,7 @@ class MOZ_STACK_CLASS ElemOpEmitter {
 #endif
 
  public:
-  ElemOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind,
-                NameVisibility visibility);
+  ElemOpEmitter(BytecodeEmitter* bce, Kind kind, ObjKind objKind);
 
  private:
   [[nodiscard]] bool isCall() const { return kind_ == Kind::Call; }
@@ -221,13 +219,7 @@ class MOZ_STACK_CLASS ElemOpEmitter {
     return kind_ == Kind::SimpleAssignment;
   }
 
-  bool isPrivate() { return visibility_ == NameVisibility::Private; }
-
   [[nodiscard]] bool isPropInit() const { return kind_ == Kind::PropInit; }
-
-  [[nodiscard]] bool isPrivateGet() const {
-    return visibility_ == NameVisibility::Private && kind_ == Kind::Get;
-  }
 
   [[nodiscard]] bool isDelete() const { return kind_ == Kind::Delete; }
 
@@ -267,12 +259,6 @@ class MOZ_STACK_CLASS ElemOpEmitter {
   [[nodiscard]] bool emitAssignment();
 
   [[nodiscard]] bool emitIncDec();
-
- private:
-  // When we have private names, we may need to emit a CheckPrivateField
-  // op to potentially throw errors where required.
-  [[nodiscard]] bool emitPrivateGuard();
-  [[nodiscard]] bool emitPrivateGuardForAssignment();
 };
 
 } /* namespace frontend */
