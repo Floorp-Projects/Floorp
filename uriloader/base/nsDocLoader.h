@@ -59,7 +59,7 @@ class nsDocLoader : public nsIDocumentLoader,
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_THIS_DOCLOADER_IMPL_CID)
 
-  nsDocLoader();
+  nsDocLoader() : nsDocLoader(false) {}
 
   [[nodiscard]] virtual nsresult Init();
   [[nodiscard]] nsresult InitWithBrowsingContext(
@@ -159,6 +159,7 @@ class nsDocLoader : public nsIDocumentLoader,
   uint32_t ChildCount() const { return mChildList.Length(); }
 
  protected:
+  explicit nsDocLoader(bool aNotifyAboutBackgroundRequests);
   virtual ~nsDocLoader();
 
   [[nodiscard]] virtual nsresult SetDocLoaderParent(nsDocLoader* aLoader);
@@ -362,6 +363,8 @@ class nsDocLoader : public nsIDocumentLoader,
    * channel.
    */
   bool mDocumentOpenedButNotLoaded;
+
+  bool mNotifyAboutBackgroundRequests;
 
   static const PLDHashTableOps sRequestInfoHashOps;
 

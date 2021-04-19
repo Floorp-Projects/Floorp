@@ -37,6 +37,17 @@ const blockBFCacheTests = [
     },
   },
   {
+    name: "Background request",
+    test: () => {
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "slow.sjs");
+        xhr.addEventListener("readystatechange", () => { if (xhr.readyState == xhr.HEADERS_RECEIVED) resolve(xhr); });
+        xhr.send();
+      });
+    },
+  },
+  {
     name: "getUserMedia",
     prefs: getUserMediaPrefs,
     test: () => {

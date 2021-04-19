@@ -103,7 +103,7 @@ class nsDefaultComparator<nsDocLoader::nsListenerInfo,
     PLDHashTable::MoveEntryStub, nsDocLoader::RequestInfoHashClearEntry,
     nsDocLoader::RequestInfoHashInitEntry};
 
-nsDocLoader::nsDocLoader()
+nsDocLoader::nsDocLoader(bool aNotifyAboutBackgroundRequests)
     : mParent(nullptr),
       mProgressStateFlags(0),
       mCurrentSelfProgress(0),
@@ -119,7 +119,8 @@ nsDocLoader::nsDocLoader()
       mTreatAsBackgroundLoad(false),
       mHasFakeOnLoadDispatched(false),
       mIsReadyToHandlePostMessage(false),
-      mDocumentOpenedButNotLoaded(false) {
+      mDocumentOpenedButNotLoaded(false),
+      mNotifyAboutBackgroundRequests(aNotifyAboutBackgroundRequests) {
   ClearInternalProgress();
 
   MOZ_LOG(gDocLoaderLog, LogLevel::Debug, ("DocLoader:%p: created.\n", this));
@@ -131,8 +132,13 @@ nsresult nsDocLoader::SetDocLoaderParent(nsDocLoader* aParent) {
 }
 
 nsresult nsDocLoader::Init() {
-  nsresult rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), this);
+  RefPtr<net::nsLoadGroup> loadGroup = new net::nsLoadGroup();
+  nsresult rv = loadGroup->Init();
   if (NS_FAILED(rv)) return rv;
+
+  loadGroup->SetGroupObserver(this, mNotifyAboutBackgroundRequests);
+
+  mLoadGroup = loadGroup;
 
   MOZ_LOG(gDocLoaderLog, LogLevel::Debug,
           ("DocLoader:%p: load group %p.\n", this, mLoadGroup.get()));
@@ -150,8 +156,7 @@ nsresult nsDocLoader::InitWithBrowsingContext(
       aBrowsingContext->GetRequestContextId());
   if (NS_FAILED(rv)) return rv;
 
-  rv = loadGroup->SetGroupObserver(this);
-  if (NS_FAILED(rv)) return rv;
+  loadGroup->SetGroupObserver(this, mNotifyAboutBackgroundRequests);
 
   mLoadGroup = loadGroup;
 
@@ -404,6 +409,14 @@ NS_IMETHODIMP
 nsDocLoader::OnStartRequest(nsIRequest* request) {
   // called each time a request is added to the group.
 
+  // Some docloaders deal with background requests in their OnStartRequest
+  // override, but here we don't want to do anything with them, so return early.
+  nsLoadFlags loadFlags = 0;
+  request->GetLoadFlags(&loadFlags);
+  if (loadFlags & nsIRequest::LOAD_BACKGROUND) {
+    return NS_OK;
+  }
+
   if (MOZ_LOG_TEST(gDocLoaderLog, LogLevel::Debug)) {
     nsAutoCString name;
     request->GetName(name);
@@ -419,9 +432,6 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
   }
 
   bool justStartedLoading = false;
-
-  nsLoadFlags loadFlags = 0;
-  request->GetLoadFlags(&loadFlags);
 
   if (!mIsLoadingDocument && (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
     justStartedLoading = true;
@@ -496,6 +506,14 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
 
 NS_IMETHODIMP
 nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
+  // Some docloaders deal with background requests in their OnStopRequest
+  // override, but here we don't want to do anything with them, so return early.
+  nsLoadFlags lf = 0;
+  aRequest->GetLoadFlags(&lf);
+  if (lf & nsIRequest::LOAD_BACKGROUND) {
+    return NS_OK;
+  }
+
   nsresult rv = NS_OK;
 
   if (MOZ_LOG_TEST(gDocLoaderLog, LogLevel::Debug)) {
@@ -575,8 +593,6 @@ nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
           //
           // Only if the load has been targeted (see bug 268483)...
           //
-          uint32_t lf;
-          channel->GetLoadFlags(&lf);
           if (lf & nsIChannel::LOAD_TARGETED) {
             nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
             if (httpChannel) {
