@@ -88,6 +88,9 @@ static char const* cubeb_mock_get_backend_id(cubeb* context);
 
 static int cubeb_mock_stream_set_volume(cubeb_stream* stream, float volume);
 
+static int cubeb_mock_stream_set_name(cubeb_stream* stream,
+                                      char const* stream_name);
+
 static int cubeb_mock_get_min_latency(cubeb* context,
                                       cubeb_stream_params params,
                                       uint32_t* latency_ms);
@@ -113,7 +116,7 @@ cubeb_ops const mock_ops = {
     /*.stream_get_latency =*/NULL,
     /*.stream_get_input_latency =*/NULL,
     /*.stream_set_volume =*/cubeb_mock_stream_set_volume,
-    /*.stream_set_name =*/NULL,
+    /*.stream_set_name =*/cubeb_mock_stream_set_name,
     /*.stream_get_current_device =*/NULL,
     /*.stream_device_destroy =*/NULL,
     /*.stream_register_device_changed_callback =*/NULL,
@@ -440,6 +443,11 @@ static char const* cubeb_mock_get_backend_id(cubeb* context) {
 }
 
 static int cubeb_mock_stream_set_volume(cubeb_stream* stream, float volume) {
+  return CUBEB_OK;
+}
+
+static int cubeb_mock_stream_set_name(cubeb_stream* stream,
+                                      char const* stream_name) {
   return CUBEB_OK;
 }
 
