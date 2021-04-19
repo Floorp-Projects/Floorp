@@ -149,8 +149,16 @@ bool PrivateOpEmitter::emitGet() {
       //            [stack] OBJ? OBJ NAME
       return false;
     }
+
+    if (isCompoundAssignment()) {
+      if (!bce_->emit1(JSOp::Dup2)) {
+        //          [stack] OBJ? OBJ NAME OBJ NAME
+        return false;
+      }
+    }
+
     if (!bce_->emitElemOpBase(JSOp::GetElem, ShouldInstrument::Yes)) {
-      //            [stack] OBJ? VALUE
+      //            [stack] OBJ? OBJ NAME VALUE
       return false;
     }
   }
