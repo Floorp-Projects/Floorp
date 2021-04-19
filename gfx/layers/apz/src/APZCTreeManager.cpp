@@ -2380,6 +2380,11 @@ void APZCTreeManager::SetTargetAPZC(
   mInputQueue->SetConfirmedTargetApzc(aInputBlockId, target);
 }
 
+static bool GuidComparatorIgnoringPresShell(const ScrollableLayerGuid& aOne,
+                                            const ScrollableLayerGuid& aTwo) {
+  return aOne.mLayersId == aTwo.mLayersId && aOne.mScrollId == aTwo.mScrollId;
+}
+
 void APZCTreeManager::UpdateZoomConstraints(
     const ScrollableLayerGuid& aGuid,
     const Maybe<ZoomConstraints>& aConstraints) {
@@ -2400,10 +2405,6 @@ void APZCTreeManager::UpdateZoomConstraints(
 
   AssertOnUpdaterThread();
 
-  RecursiveMutexAutoLock lock(mTreeLock);
-  RefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
-  MOZ_ASSERT(!node || node->GetApzc());  // any node returned must have an APZC
-
   // Propagate the zoom constraints down to the subtree, stopping at APZCs
   // which have their own zoom constraints or are in a different layers id.
   if (aConstraints) {
@@ -2414,26 +2415,60 @@ void APZCTreeManager::UpdateZoomConstraints(
     APZCTM_LOG("Removing constraints for guid %s\n", ToString(aGuid).c_str());
     mZoomConstraints.erase(aGuid);
   }
+
+  RecursiveMutexAutoLock lock(mTreeLock);
+  RefPtr<HitTestingTreeNode> node = DepthFirstSearchPostOrder<ReverseIterator>(
+      mRootNode.get(), [&aGuid](HitTestingTreeNode* aNode) {
+        bool matches = false;
+        if (auto zoomId = aNode->GetAsyncZoomContainerId()) {
+          matches = GuidComparatorIgnoringPresShell(
+              aGuid, ScrollableLayerGuid(aNode->GetLayersId(), 0, *zoomId));
+        }
+        return matches;
+      });
+
+  MOZ_ASSERT(!node ||
+             !node->GetApzc());  // any node returned must not have an APZC
+
+  // This does not hold because we can get zoom constraints updates before the
+  // layer tree update with the async zoom container (I assume).
+  // clang-format off
+  // MOZ_ASSERT(node || aConstraints.isNothing() ||
+  //           (!aConstraints->mAllowZoom && !aConstraints->mAllowDoubleTapZoom));
+  // clang-format on
+
+  // If there is no async zoom container then the zoom constraints should not
+  // allow zooming and building the HTT should have handled clearing the zoom
+  // constraints from all nodes so we don't have to handle doing anything in
+  // case there is no async zoom container.
+
   if (node && aConstraints) {
-    ForEachNode<ReverseIterator>(
-        node.get(), [&aConstraints, &node, this](HitTestingTreeNode* aNode) {
-          if (aNode != node) {
-            if (AsyncPanZoomController* childApzc = aNode->GetApzc()) {
-              // We can have subtrees with their own zoom constraints or
-              // separate layers id - leave these alone.
-              if (childApzc->HasNoParentWithSameLayersId() ||
-                  this->mZoomConstraints.find(childApzc->GetGuid()) !=
-                      this->mZoomConstraints.end()) {
-                return TraversalFlag::Skip;
-              }
+    ForEachNode<ReverseIterator>(node.get(), [&aConstraints, &node, &aGuid,
+                                              this](HitTestingTreeNode* aNode) {
+      if (aNode != node) {
+        // don't go into other async zoom containers
+        if (auto zoomId = aNode->GetAsyncZoomContainerId()) {
+          MOZ_ASSERT(!GuidComparatorIgnoringPresShell(
+              aGuid, ScrollableLayerGuid(aNode->GetLayersId(), 0, *zoomId)));
+          return TraversalFlag::Skip;
+        }
+        if (AsyncPanZoomController* childApzc = aNode->GetApzc()) {
+          if (!GuidComparatorIgnoringPresShell(aGuid, childApzc->GetGuid())) {
+            // We can have subtrees with their own zoom constraints - leave
+            // these alone.
+            if (this->mZoomConstraints.find(childApzc->GetGuid()) !=
+                this->mZoomConstraints.end()) {
+              return TraversalFlag::Skip;
             }
           }
-          if (aNode->IsPrimaryHolder()) {
-            MOZ_ASSERT(aNode->GetApzc());
-            aNode->GetApzc()->UpdateZoomConstraints(aConstraints.ref());
-          }
-          return TraversalFlag::Continue;
-        });
+        }
+      }
+      if (aNode->IsPrimaryHolder()) {
+        MOZ_ASSERT(aNode->GetApzc());
+        aNode->GetApzc()->UpdateZoomConstraints(aConstraints.ref());
+      }
+      return TraversalFlag::Continue;
+    });
   }
 }
 
@@ -2720,11 +2755,6 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetTargetAPZC(
   MOZ_ASSERT(!node || node->GetApzc());  // any node returned must have an APZC
   RefPtr<AsyncPanZoomController> apzc = node ? node->GetApzc() : nullptr;
   return apzc.forget();
-}
-
-static bool GuidComparatorIgnoringPresShell(const ScrollableLayerGuid& aOne,
-                                            const ScrollableLayerGuid& aTwo) {
-  return aOne.mLayersId == aTwo.mLayersId && aOne.mScrollId == aTwo.mScrollId;
 }
 
 already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetTargetAPZC(
