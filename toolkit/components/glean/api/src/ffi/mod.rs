@@ -20,13 +20,13 @@ pub unsafe extern "C" fn fog_counter_add(id: u32, amount: i32) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_counter_test_has_value(id: u32, storage_name: &nsACString) -> bool {
-    with_metric!(COUNTER_MAP, id, metric, test_has!(metric, storage_name))
+pub unsafe extern "C" fn fog_counter_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    with_metric!(COUNTER_MAP, id, metric, test_has!(metric, ping_name))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_counter_test_get_value(id: u32, storage_name: &nsACString) -> i32 {
-    with_metric!(COUNTER_MAP, id, metric, test_get!(metric, storage_name))
+pub unsafe extern "C" fn fog_counter_test_get_value(id: u32, ping_name: &nsACString) -> i32 {
+    with_metric!(COUNTER_MAP, id, metric, test_get!(metric, ping_name))
 }
 
 #[no_mangle]
@@ -55,23 +55,23 @@ pub unsafe extern "C" fn fog_timespan_set_raw(id: u32, duration: u32) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_timespan_test_has_value(id: u32, storage_name: &nsACString) -> bool {
-    with_metric!(TIMESPAN_MAP, id, metric, test_has!(metric, storage_name))
+pub unsafe extern "C" fn fog_timespan_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    with_metric!(TIMESPAN_MAP, id, metric, test_has!(metric, ping_name))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_timespan_test_get_value(id: u32, storage_name: &nsACString) -> u64 {
-    with_metric!(TIMESPAN_MAP, id, metric, test_get!(metric, storage_name))
+pub unsafe extern "C" fn fog_timespan_test_get_value(id: u32, ping_name: &nsACString) -> u64 {
+    with_metric!(TIMESPAN_MAP, id, metric, test_get!(metric, ping_name))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_boolean_test_has_value(id: u32, storage_name: &nsACString) -> bool {
-    with_metric!(BOOLEAN_MAP, id, metric, test_has!(metric, storage_name))
+pub unsafe extern "C" fn fog_boolean_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    with_metric!(BOOLEAN_MAP, id, metric, test_has!(metric, ping_name))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_boolean_test_get_value(id: u32, storage_name: &nsACString) -> bool {
-    with_metric!(BOOLEAN_MAP, id, metric, test_get!(metric, storage_name))
+pub unsafe extern "C" fn fog_boolean_test_get_value(id: u32, ping_name: &nsACString) -> bool {
+    with_metric!(BOOLEAN_MAP, id, metric, test_get!(metric, ping_name))
 }
 
 #[no_mangle]
@@ -84,17 +84,17 @@ pub extern "C" fn fog_boolean_set(id: u32, value: bool) {
 // generate the rest of the functions, or something.
 
 #[no_mangle]
-pub extern "C" fn fog_string_test_has_value(id: u32, storage_name: &nsACString) -> bool {
-    with_metric!(STRING_MAP, id, metric, test_has!(metric, storage_name))
+pub extern "C" fn fog_string_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    with_metric!(STRING_MAP, id, metric, test_has!(metric, ping_name))
 }
 
 #[no_mangle]
 pub extern "C" fn fog_string_test_get_value(
     id: u32,
-    storage_name: &nsACString,
+    ping_name: &nsACString,
     value: &mut nsACString,
 ) {
-    let val = with_metric!(STRING_MAP, id, metric, test_get!(metric, storage_name));
+    let val = with_metric!(STRING_MAP, id, metric, test_get!(metric, ping_name));
     value.assign(&val);
 }
 
@@ -106,17 +106,17 @@ pub extern "C" fn fog_string_set(id: u32, value: &nsACString) {
 // String List Functions:
 
 #[no_mangle]
-pub extern "C" fn fog_string_list_test_has_value(id: u32, storage_name: &nsACString) -> bool {
-    with_metric!(STRING_LIST_MAP, id, metric, test_has!(metric, storage_name))
+pub extern "C" fn fog_string_list_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    with_metric!(STRING_LIST_MAP, id, metric, test_has!(metric, ping_name))
 }
 
 #[no_mangle]
 pub extern "C" fn fog_string_list_test_get_value(
     id: u32,
-    storage_name: &nsACString,
+    ping_name: &nsACString,
     value: &mut ThinVec<nsCString>,
 ) {
-    let val = with_metric!(STRING_LIST_MAP, id, metric, test_get!(metric, storage_name));
+    let val = with_metric!(STRING_LIST_MAP, id, metric, test_get!(metric, ping_name));
     for v in val {
         value.push(v.into());
     }
@@ -134,17 +134,13 @@ pub extern "C" fn fog_string_list_set(id: u32, value: &ThinVec<nsCString>) {
 }
 
 #[no_mangle]
-pub extern "C" fn fog_uuid_test_has_value(id: u32, storage_name: &nsACString) -> bool {
-    with_metric!(UUID_MAP, id, metric, test_has!(metric, storage_name))
+pub extern "C" fn fog_uuid_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    with_metric!(UUID_MAP, id, metric, test_has!(metric, ping_name))
 }
 
 #[no_mangle]
-pub extern "C" fn fog_uuid_test_get_value(
-    id: u32,
-    storage_name: &nsACString,
-    value: &mut nsACString,
-) {
-    let uuid = with_metric!(UUID_MAP, id, metric, test_get!(metric, storage_name)).to_string();
+pub extern "C" fn fog_uuid_test_get_value(id: u32, ping_name: &nsACString, value: &mut nsACString) {
+    let uuid = with_metric!(UUID_MAP, id, metric, test_get!(metric, ping_name)).to_string();
     value.assign(&uuid);
 }
 
@@ -161,17 +157,17 @@ pub extern "C" fn fog_uuid_generate_and_set(id: u32) {
 }
 
 #[no_mangle]
-pub extern "C" fn fog_datetime_test_has_value(id: u32, storage_name: &nsACString) -> bool {
-    with_metric!(DATETIME_MAP, id, metric, test_has!(metric, storage_name))
+pub extern "C" fn fog_datetime_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    with_metric!(DATETIME_MAP, id, metric, test_has!(metric, ping_name))
 }
 
 #[no_mangle]
 pub extern "C" fn fog_datetime_test_get_value(
     id: u32,
-    storage_name: &nsACString,
+    ping_name: &nsACString,
     value: &mut nsACString,
 ) {
-    let val = with_metric!(DATETIME_MAP, id, metric, test_get!(metric, storage_name));
+    let val = with_metric!(DATETIME_MAP, id, metric, test_get!(metric, ping_name));
     value.assign(&val.to_rfc3339());
 }
 
@@ -196,22 +192,19 @@ pub extern "C" fn fog_datetime_set(
 }
 
 #[no_mangle]
-pub extern "C" fn fog_memory_distribution_test_has_value(
-    id: u32,
-    storage_name: &nsACString,
-) -> bool {
+pub extern "C" fn fog_memory_distribution_test_has_value(id: u32, ping_name: &nsACString) -> bool {
     with_metric!(
         MEMORY_DISTRIBUTION_MAP,
         id,
         metric,
-        test_has!(metric, storage_name)
+        test_has!(metric, ping_name)
     )
 }
 
 #[no_mangle]
 pub extern "C" fn fog_memory_distribution_test_get_value(
     id: u32,
-    storage_name: &nsACString,
+    ping_name: &nsACString,
     sum: &mut u64,
     buckets: &mut ThinVec<u64>,
     counts: &mut ThinVec<u64>,
@@ -220,7 +213,7 @@ pub extern "C" fn fog_memory_distribution_test_get_value(
         MEMORY_DISTRIBUTION_MAP,
         id,
         metric,
-        test_get!(metric, storage_name)
+        test_get!(metric, ping_name)
     );
     *sum = val.sum;
     for (&bucket, &count) in val.values.iter() {
@@ -336,4 +329,19 @@ pub extern "C" fn fog_labeled_string_get(id: u32, label: &nsACString) -> u32 {
         STRING_MAP,
         LabeledStringMetric
     )
+}
+
+#[no_mangle]
+pub extern "C" fn fog_quantity_set(id: u32, value: i64) {
+    with_metric!(QUANTITY_MAP, id, metric, metric.set(value));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fog_quantity_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    with_metric!(QUANTITY_MAP, id, metric, test_has!(metric, ping_name))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fog_quantity_test_get_value(id: u32, ping_name: &nsACString) -> i64 {
+    with_metric!(QUANTITY_MAP, id, metric, test_get!(metric, ping_name))
 }
