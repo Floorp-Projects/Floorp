@@ -97,6 +97,10 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType
   mNativeMenuItem.representedObject = mMenuGroupOwner->GetRepresentedObject();
   mNativeMenuItem.tag = mMenuGroupOwner->RegisterForCommand(this);
 
+  if (mIsVisible) {
+    SetupIcon();
+  }
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -307,6 +311,9 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
         RefPtr<nsMenuItemX> self = this;
         mMenuParent->MenuChildChangedVisibility(nsMenuParentX::MenuChild(self), isVisible);
         mIsVisible = isVisible;
+        if (mIsVisible) {
+          SetupIcon();
+        }
       }
       mMenuParent->SetRebuild(true);
     } else if (aAttribute == nsGkAtoms::label) {
