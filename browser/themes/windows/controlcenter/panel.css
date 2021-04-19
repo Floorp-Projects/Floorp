@@ -4,6 +4,42 @@
 
 %include ../../shared/controlcenter/panel.inc.css
 
+@media (-moz-proton) {
+#identity-popup[type="arrow"][side="top"],
+#identity-popup[type="arrow"][side="bottom"],
+#notification-popup[type="arrow"][side="top"],
+#notification-popup[type="arrow"][side="bottom"] {
+  margin-inline: -16px;
+}
+
+#identity-popup[type="arrow"][side="left"],
+#identity-popup[type="arrow"][side="right"],
+#notification-popup[type="arrow"][side="left"],
+#notification-popup[type="arrow"][side="right"] {
+  margin-block: -16px;
+}
+
+#permission-popup[type="arrow"][side="top"],
+#permission-popup[type="arrow"][side="bottom"] {
+  margin-inline: calc(-24px - 2 * var(--urlbar-container-padding));
+}
+
+#permission-popup[type="arrow"][side="left"],
+#permission-popup[type="arrow"][side="right"] {
+  margin-block: calc(-24px - 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[type="arrow"][side="top"],
+#protections-popup[type="arrow"][side="bottom"] {
+  margin-inline: calc(-20px + 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[type="arrow"][side="left"],
+#protections-popup[type="arrow"][side="right"] {
+  margin-block: calc(-20px + 2 * var(--urlbar-container-padding));
+}
+} /** END Proton **/
+
 .protections-popup-tp-switch:-moz-focusring {
   outline: 1px dotted;
   outline-offset: unset;
