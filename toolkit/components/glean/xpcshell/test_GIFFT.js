@@ -293,9 +293,3 @@ add_task(async function test_gifft_labeled_boolean() {
     value
   );
 });
-
-add_task(function test_gifft_boolean() {
-  Glean.testOnly.meaningOfLife.set(42);
-  Assert.equal(42, Glean.testOnly.meaningOfLife.testGetValue());
-  Assert.equal(42, scalarValue("telemetry.test.mirror_for_quantity"));
-});
