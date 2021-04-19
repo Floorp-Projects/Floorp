@@ -556,19 +556,22 @@ bool ModuleNamespaceObject::ProxyHandler::preventExtensions(
 
 bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject proxy, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const {
   Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
   if (JSID_IS_SYMBOL(id)) {
     if (JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().toStringTag) {
       RootedValue value(cx, StringValue(cx->names().Module));
-      desc.object().set(proxy);
-      desc.setWritable(false);
-      desc.setEnumerable(false);
-      desc.setConfigurable(false);
-      desc.setValue(value);
+      Rooted<PropertyDescriptor> desc_(cx);
+      desc_.object().set(proxy);
+      desc_.setWritable(false);
+      desc_.setEnumerable(false);
+      desc_.setConfigurable(false);
+      desc_.setValue(value);
+      desc.set(mozilla::Some(desc_.get()));
       return true;
     }
 
+    desc.reset();
     return true;
   }
 
@@ -576,6 +579,8 @@ bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
   ModuleEnvironmentObject* env;
   mozilla::Maybe<ShapeProperty> prop;
   if (!bindings.lookup(id, &env, &prop)) {
+    // Not found.
+    desc.reset();
     return true;
   }
 
@@ -585,10 +590,12 @@ bool ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(
     return false;
   }
 
-  desc.object().set(env);
-  desc.setConfigurable(false);
-  desc.setEnumerable(true);
-  desc.setValue(value);
+  Rooted<PropertyDescriptor> desc_(cx);
+  desc_.object().set(env);
+  desc_.setConfigurable(false);
+  desc_.setEnumerable(true);
+  desc_.setValue(value);
+  desc.set(mozilla::Some(desc_.get()));
   return true;
 }
 

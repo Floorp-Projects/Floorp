@@ -46,7 +46,7 @@ static bool MarkAtoms(JSContext* cx, HandleIdVector ids) {
 
 bool CrossCompartmentWrapper::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const {
   PIERCE(cx, wrapper, MarkAtoms(cx, id),
          Wrapper::getOwnPropertyDescriptor(cx, wrapper, id, desc),
          cx->compartment()->wrap(cx, desc));

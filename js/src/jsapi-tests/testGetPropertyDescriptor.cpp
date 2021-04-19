@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/PropertyDescriptor.h"  // JS::FromPropertyDescriptor
+#include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(test_GetPropertyDescriptor) {
@@ -18,8 +19,8 @@ BEGIN_TEST(test_GetPropertyDescriptor) {
   CHECK_SAME(desc.value(), JS::Int32Value(123));
 
   JS::RootedValue descValue(cx);
-  JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> descriptor(
-      cx, mozilla::Some(desc.get()));
+  JS::Rooted<mozilla::Maybe<JS::PropertyDescriptor>> descriptor(cx);
+  descriptor.set(mozilla::Some(desc.get()));
   CHECK(JS::FromPropertyDescriptor(cx, descriptor, &descValue));
   CHECK(descValue.isObject());
   JS::RootedObject descObj(cx, &descValue.toObject());

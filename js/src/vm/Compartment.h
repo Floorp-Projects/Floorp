@@ -361,6 +361,9 @@ class JS::Compartment {
   [[nodiscard]] bool wrap(JSContext* cx, JS::MutableHandleObject obj);
   [[nodiscard]] bool wrap(JSContext* cx,
                           JS::MutableHandle<JS::PropertyDescriptor> desc);
+  [[nodiscard]] bool wrap(
+      JSContext* cx,
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
   [[nodiscard]] bool wrap(JSContext* cx,
                           JS::MutableHandle<JS::GCVector<JS::Value>> vec);
   [[nodiscard]] bool rewrap(JSContext* cx, JS::MutableHandleObject obj,
