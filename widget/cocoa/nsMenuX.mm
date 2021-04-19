@@ -200,33 +200,26 @@ void nsMenuX::OnMenuClosed(dom::Element* aPopupElement) {
   }
 }
 
-void nsMenuX::AddMenuItem(RefPtr<nsMenuItemX>&& aMenuItem) {
+void nsMenuX::AddMenuChild(MenuChild&& aChild) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  mMenuChildren.AppendElement(aMenuItem);
-
-  if (!aMenuItem->IsVisible()) {
-    return;
+  if (aChild.is<RefPtr<nsMenuX>>()) {
+    aChild.as<RefPtr<nsMenuX>>()->SetObserver(this);
   }
 
-  [mNativeMenu addItem:aMenuItem->NativeNSMenuItem()];
-  ++mVisibleItemsCount;
+  mMenuChildren.AppendElement(aChild);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
+  bool isVisible =
+      aChild.match([](const RefPtr<nsMenuX>& aMenu) { return aMenu->IsVisible(); },
+                   [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->IsVisible(); });
+  NSMenuItem* nativeItem = aChild.match(
+      [](const RefPtr<nsMenuX>& aMenu) { return aMenu->NativeNSMenuItem(); },
+      [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->NativeNSMenuItem(); });
 
-void nsMenuX::AddMenu(RefPtr<nsMenuX>&& aMenu) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  aMenu->SetObserver(this);
-  mMenuChildren.AppendElement(aMenu);
-
-  if (!aMenu->IsVisible()) {
-    return;
+  if (isVisible) {
+    [mNativeMenu addItem:nativeItem];
+    ++mVisibleItemsCount;
   }
-
-  [mNativeMenu addItem:aMenu->NativeNSMenuItem()];
-  ++mVisibleItemsCount;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -626,11 +619,8 @@ void nsMenuX::RebuildMenu() {
 
   // Iterate over the kids
   for (nsIContent* child = menuPopup->GetFirstChild(); child; child = child->GetNextSibling()) {
-    // depending on the type, create a menu item, separator, or submenu
-    if (child->IsAnyOfXULElements(nsGkAtoms::menuitem, nsGkAtoms::menuseparator)) {
-      LoadMenuItem(child);
-    } else if (child->IsXULElement(nsGkAtoms::menu)) {
-      LoadSubMenu(child);
+    if (Maybe<MenuChild> menuChild = CreateMenuChild(child)) {
+      AddMenuChild(std::move(*menuChild));
     }
   }  // for each menu item
 
@@ -687,10 +677,18 @@ GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& aMenuTitle) {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsMenuX::LoadMenuItem(nsIContent* aMenuItemContent) {
-  if (!aMenuItemContent) {
-    return;
+Maybe<nsMenuX::MenuChild> nsMenuX::CreateMenuChild(nsIContent* aContent) {
+  if (aContent->IsAnyOfXULElements(nsGkAtoms::menuitem, nsGkAtoms::menuseparator)) {
+    return Some(MenuChild(CreateMenuItem(aContent)));
   }
+  if (aContent->IsXULElement(nsGkAtoms::menu)) {
+    return Some(MenuChild(MakeRefPtr<nsMenuX>(this, mMenuGroupOwner, aContent)));
+  }
+  return {};
+}
+
+RefPtr<nsMenuItemX> nsMenuX::CreateMenuItem(nsIContent* aMenuItemContent) {
+  MOZ_RELEASE_ASSERT(aMenuItemContent);
 
   nsAutoString menuitemName;
   if (aMenuItemContent->IsElement()) {
@@ -713,12 +711,7 @@ void nsMenuX::LoadMenuItem(nsIContent* aMenuItemContent) {
     }
   }
 
-  AddMenuItem(
-      MakeRefPtr<nsMenuItemX>(this, menuitemName, itemType, mMenuGroupOwner, aMenuItemContent));
-}
-
-void nsMenuX::LoadSubMenu(nsIContent* aMenuContent) {
-  AddMenu(MakeRefPtr<nsMenuX>(this, mMenuGroupOwner, aMenuContent));
+  return MakeRefPtr<nsMenuItemX>(this, menuitemName, itemType, mMenuGroupOwner, aMenuItemContent);
 }
 
 // This menu is about to open. Returns false if the handler wants to stop the opening of the menu.
