@@ -599,6 +599,28 @@ static constexpr uint32_t StringFlagsForCharType(uint32_t baseFlags) {
   return baseFlags | JSString::LATIN1_CHARS_BIT;
 }
 
+static bool UpdateNurseryBuffersOnTransfer(js::Nursery& nursery, JSString* from,
+                                           JSString* to, void* buffer,
+                                           size_t size) {
+  // Update the list of buffers associated with nursery cells when |buffer| is
+  // moved from string |from| to string |to|, depending on whether those strings
+  // are in the nursery or not.
+
+  if (from->isTenured() && !to->isTenured()) {
+    // Tenured leftmost child is giving its chars buffer to the
+    // nursery-allocated root node.
+    if (!nursery.registerMallocedBuffer(buffer, size)) {
+      return false;
+    }
+  } else if (!from->isTenured() && to->isTenured()) {
+    // Leftmost child is giving its nursery-held chars buffer to a
+    // tenured string.
+    nursery.removeMallocedBuffer(buffer, size);
+  }
+
+  return true;
+}
+
 JSLinearString* JSRope::flatten(JSContext* maybecx) {
   mozilla::Maybe<AutoGeckoProfilerEntry> entry;
   if (maybecx && !maybecx->isHelperThreadContext()) {
@@ -699,6 +721,7 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
 
   AutoCheckCannotGC nogc;
 
+  Nursery& nursery = root->runtimeFromMainThread()->gc.nursery();
   gc::StoreBuffer* bufferIfNursery = root->storeBuffer();
 
   /* Find the left most string, containing the first string. */
@@ -715,23 +738,11 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
       wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
       wholeCapacity = capacity;
 
-      // registerMallocedBuffer is fallible, so attempt it first before doing
-      // anything irreversible.
-      Nursery& nursery = root->runtimeFromMainThread()->gc.nursery();
-      bool inTenured = !bufferIfNursery;
-      if (!inTenured && left.isTenured()) {
-        // tenured leftmost child is giving its chars buffer to the
-        // nursery-allocated root node.
-        if (!nursery.registerMallocedBuffer(wholeChars,
-                                            wholeCapacity * sizeof(CharT))) {
-          return nullptr;
-        }
-        // leftmost child -> root is a tenured -> nursery edge.
-        bufferIfNursery->putWholeCell(&left);
-      } else if (inTenured && !left.isTenured()) {
-        // leftmost child is giving its nursery-held chars buffer to a
-        // tenured string.
-        nursery.removeMallocedBuffer(wholeChars, wholeCapacity * sizeof(CharT));
+      // Nursery::registerMallocedBuffer is fallible, so attempt it first before
+      // doing anything irreversible.
+      if (!UpdateNurseryBuffersOnTransfer(nursery, &left, root, wholeChars,
+                                          wholeCapacity * sizeof(CharT))) {
+        return nullptr;
       }
 
       /*
@@ -765,6 +776,10 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
       }
       left.setLengthAndFlags(left_len, StringFlagsForCharType<CharT>(flags));
       left.d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
+      if (left.isTenured() && !root->isTenured()) {
+        // leftmost child -> root is a tenured -> nursery edge.
+        bufferIfNursery->putWholeCell(&left);
+      }
       goto visit_right_child;
     }
   }
@@ -774,7 +789,6 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   }
 
   if (!root->isTenured()) {
-    Nursery& nursery = root->runtimeFromMainThread()->gc.nursery();
     if (!nursery.registerMallocedBuffer(wholeChars,
                                         wholeCapacity * sizeof(CharT))) {
       js_free(wholeChars);
@@ -839,7 +853,6 @@ finish_node : {
   // the nursery. Note that the root was a rope but will be an extensible
   // string when we return, so it will not point to any strings and need
   // not be barriered.
-  gc::StoreBuffer* bufferIfNursery = root->storeBuffer();
   if (bufferIfNursery && str->isTenured()) {
     bufferIfNursery->putWholeCell(str);
   }
