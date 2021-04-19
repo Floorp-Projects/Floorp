@@ -198,7 +198,7 @@ class XDRCoderBase {
 
 /*
  * XDR serialization state.  All data is encoded in native endian, except
- * bytecode and object literal code.
+ * bytecode.
  */
 template <XDRMode mode>
 class XDRState : public XDRCoderBase {
