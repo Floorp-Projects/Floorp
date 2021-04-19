@@ -21,6 +21,7 @@
       is(info.height, 480, "height should be 480");
 
       // Now there is no <meta name="viewport">.
+      // eslint-disable-next-line no-undef
       viewport.remove();
       info = getViewportInfo(800, 480);
 
