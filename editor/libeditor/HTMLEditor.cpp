@@ -607,7 +607,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
   EditorRawDOMPoint pointToPutCaret(editingHost, 0);
   for (;;) {
     WSScanResult forwardScanFromPointToPutCaretResult =
-        WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(*this,
+        WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(editingHost,
                                                          pointToPutCaret);
     if (forwardScanFromPointToPutCaretResult.Failed()) {
       NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary failed");
@@ -1009,8 +1009,8 @@ bool HTMLEditor::IsVisibleBRElement(const nsINode* aNode) const {
   if (NS_WARN_IF(!afterBRElement.IsSet())) {
     return false;
   }
-  return !WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(*this,
-                                                           afterBRElement)
+  return !WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
+              GetActiveEditingHost(), afterBRElement)
               .ReachedBlockBoundary();
 }
 
@@ -5173,7 +5173,7 @@ bool HTMLEditor::IsVisibleTextNode(Text& aText) const {
 
   WSScanResult nextWSScanResult =
       WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-          *this, EditorRawDOMPoint(&aText, 0));
+          GetActiveEditingHost(), EditorRawDOMPoint(&aText, 0));
   return nextWSScanResult.InNormalWhiteSpacesOrText() &&
          nextWSScanResult.TextPtr() == &aText;
 }
