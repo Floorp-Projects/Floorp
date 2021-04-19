@@ -6323,13 +6323,13 @@ ImgDrawResult nsLayoutUtils::DrawSingleUnscaledImage(
 /* static */
 ImgDrawResult nsLayoutUtils::DrawSingleImage(
     gfxContext& aContext, nsPresContext* aPresContext, imgIContainer* aImage,
-    const SamplingFilter aSamplingFilter, const nsRect& aDest,
+    float aResolution, SamplingFilter aSamplingFilter, const nsRect& aDest,
     const nsRect& aDirty, const Maybe<SVGImageContext>& aSVGContext,
     uint32_t aImageFlags, const nsPoint* aAnchorPoint,
     const nsRect* aSourceArea) {
   nscoord appUnitsPerCSSPixel = AppUnitsPerCSSPixel();
   CSSIntSize pixelImageSize(
-      ComputeSizeForDrawingWithFallback(aImage, aDest.Size()));
+      ComputeSizeForDrawingWithFallback(aImage, aResolution, aDest.Size()));
   if (pixelImageSize.width < 1 || pixelImageSize.height < 1) {
     NS_ASSERTION(pixelImageSize.width >= 0 && pixelImageSize.height >= 0,
                  "Image width or height is negative");
@@ -6370,7 +6370,8 @@ ImgDrawResult nsLayoutUtils::DrawSingleImage(
 
 /* static */
 void nsLayoutUtils::ComputeSizeForDrawing(
-    imgIContainer* aImage, /* outparam */ CSSIntSize& aImageSize,
+    imgIContainer* aImage, float aResolution,
+    /* outparam */ CSSIntSize& aImageSize,
     /* outparam */ AspectRatio& aIntrinsicRatio,
     /* outparam */ bool& aGotWidth,
     /* outparam */ bool& aGotHeight) {
@@ -6378,6 +6379,15 @@ void nsLayoutUtils::ComputeSizeForDrawing(
   aGotHeight = NS_SUCCEEDED(aImage->GetHeight(&aImageSize.height));
   Maybe<AspectRatio> intrinsicRatio = aImage->GetIntrinsicRatio();
   aIntrinsicRatio = intrinsicRatio.valueOr(AspectRatio());
+
+  if (aResolution != 0.0f && aResolution != 1.0f) {
+    if (aGotWidth) {
+      aImageSize.width = std::round(float(aImageSize.width) / aResolution);
+    }
+    if (aGotHeight) {
+      aImageSize.height = std::round(float(aImageSize.height) / aResolution);
+    }
+  }
 
   if (!(aGotWidth && aGotHeight) && intrinsicRatio.isNothing()) {
     // We hit an error (say, because the image failed to load or couldn't be
@@ -6389,11 +6399,12 @@ void nsLayoutUtils::ComputeSizeForDrawing(
 
 /* static */
 CSSIntSize nsLayoutUtils::ComputeSizeForDrawingWithFallback(
-    imgIContainer* aImage, const nsSize& aFallbackSize) {
+    imgIContainer* aImage, float aResolution, const nsSize& aFallbackSize) {
   CSSIntSize imageSize;
   AspectRatio imageRatio;
   bool gotHeight, gotWidth;
-  ComputeSizeForDrawing(aImage, imageSize, imageRatio, gotWidth, gotHeight);
+  ComputeSizeForDrawing(aImage, aResolution, imageSize, imageRatio, gotWidth,
+                        gotHeight);
 
   // If we didn't get both width and height, try to compute them using the
   // intrinsic ratio of the image.
