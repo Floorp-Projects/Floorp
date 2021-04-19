@@ -1411,10 +1411,9 @@ static bool HasEnumerableStringNonDataProperties(NativeObject* obj) {
   // We also check for enumerability and symbol properties, so uninteresting
   // non-data properties like |array.length| don't let us fall into the slow
   // path.
-  for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
-    Shape* shape = &r.front();
-    if (!shape->isDataProperty() && shape->enumerable() &&
-        !JSID_IS_SYMBOL(shape->propid())) {
+  for (ShapePropertyIter<NoGC> iter(obj->shape()); !iter.done(); iter++) {
+    if (!iter->isDataProperty() && iter->enumerable() &&
+        !iter->key().isSymbol()) {
       return true;
     }
   }
@@ -1560,32 +1559,31 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     constexpr AllowGC allowGC =
         kind != EnumerableOwnPropertiesKind::KeysAndValues ? AllowGC::NoGC
                                                            : AllowGC::CanGC;
-    mozilla::MaybeOneOf<Shape::Range<NoGC>, Shape::Range<CanGC>> m;
+    mozilla::MaybeOneOf<ShapePropertyIter<NoGC>, ShapePropertyIter<CanGC>> m;
     if (allowGC == AllowGC::NoGC) {
-      m.construct<Shape::Range<NoGC>>(nobj->lastProperty());
+      m.construct<ShapePropertyIter<NoGC>>(nobj->shape());
     } else {
-      m.construct<Shape::Range<CanGC>>(cx, nobj->lastProperty());
+      m.construct<ShapePropertyIter<CanGC>>(cx, nobj->shape());
     }
-    for (Shape::Range<allowGC>& r = m.ref<Shape::Range<allowGC>>(); !r.empty();
-         r.popFront()) {
-      Shape* shape = &r.front();
-      jsid id = shape->propid();
-      if ((onlyEnumerable && !shape->enumerable()) || JSID_IS_SYMBOL(id)) {
+    for (ShapePropertyIter<allowGC>& iter = m.ref<ShapePropertyIter<allowGC>>();
+         !iter.done(); iter++) {
+      jsid id = iter->key();
+      if ((onlyEnumerable && !iter->enumerable()) || id.isSymbol()) {
         continue;
       }
       MOZ_ASSERT(!JSID_IS_INT(id), "Unexpected indexed property");
       MOZ_ASSERT_IF(kind == EnumerableOwnPropertiesKind::Values ||
                         kind == EnumerableOwnPropertiesKind::KeysAndValues,
-                    shape->isDataProperty());
+                    iter->isDataProperty());
 
       if (kind == EnumerableOwnPropertiesKind::Keys ||
           kind == EnumerableOwnPropertiesKind::Names) {
         value.setString(JSID_TO_STRING(id));
       } else if (kind == EnumerableOwnPropertiesKind::Values) {
-        value.set(nobj->getSlot(shape->slot()));
+        value.set(nobj->getSlot(iter->slot()));
       } else {
         key.setString(JSID_TO_STRING(id));
-        value.set(nobj->getSlot(shape->slot()));
+        value.set(nobj->getSlot(iter->slot()));
         if (!NewValuePair(cx, key, value, &value)) {
           return false;
         }

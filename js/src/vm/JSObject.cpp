@@ -713,13 +713,11 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
     }
 
     // Steps 7-9.
-    for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
-      Shape* shape = &r.front();
-
+    for (ShapePropertyIter<NoGC> iter(nobj->shape()); !iter.done(); iter++) {
       // Steps 9.c.i-ii.
-      if (shape->configurable() ||
-          (level == IntegrityLevel::Frozen && shape->isDataDescriptor() &&
-           shape->writable())) {
+      if (iter->configurable() ||
+          (level == IntegrityLevel::Frozen && iter->isDataDescriptor() &&
+           iter->writable())) {
         *result = false;
         return true;
       }
@@ -1092,11 +1090,10 @@ static bool GetScriptPlainObjectProperties(
     return false;
   }
 
-  for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
-    Shape& shape = r.front();
-    MOZ_ASSERT(shape.isDataDescriptor());
-    uint32_t slot = shape.slot();
-    properties[slot].get().id = shape.propid();
+  for (ShapePropertyIter<NoGC> iter(nobj->shape()); !iter.done(); iter++) {
+    MOZ_ASSERT(iter->isDataDescriptor());
+    uint32_t slot = iter->slot();
+    properties[slot].get().id = iter->key();
     properties[slot].get().value = nobj->getSlot(slot);
   }
 

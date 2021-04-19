@@ -63,17 +63,14 @@ void PlainObject::assertHasNoNonWritableOrAccessorPropExclProto() const {
   size_t count = 0;
   PropertyName* protoName = runtimeFromMainThread()->commonNames->proto;
 
-  for (Shape::Range<NoGC> r(lastProperty()); !r.empty(); r.popFront()) {
-    Shape& propShape = r.front();
-    jsid id = propShape.propidRaw();
-
+  for (ShapePropertyIter<NoGC> iter(shape()); !iter.done(); iter++) {
     // __proto__ is always allowed.
-    if (JSID_IS_ATOM(id, protoName)) {
+    if (iter->key().isAtom(protoName)) {
       continue;
     }
 
-    MOZ_ASSERT(propShape.isDataProperty());
-    MOZ_ASSERT(propShape.writable());
+    MOZ_ASSERT(iter->isDataProperty());
+    MOZ_ASSERT(iter->writable());
 
     count++;
     if (count > MaxCount) {
