@@ -496,7 +496,8 @@ PlanarYCbCrImage::PlanarYCbCrImage()
       mBufferSize(0) {}
 
 nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
-    SurfaceDescriptorBuffer& aSdBuffer) {
+    SurfaceDescriptorBuffer& aSdBuffer,
+    const std::function<MemoryOrShmem(uint32_t)>& aAllocate) {
   const PlanarYCbCrData* pdata = GetData();
   MOZ_ASSERT(pdata, "must have PlanarYCbCrData");
   MOZ_ASSERT(pdata->mYSkip == 0 && pdata->mCbSkip == 0 && pdata->mCrSkip == 0,
@@ -509,11 +510,11 @@ nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
       pdata->mYStride, pdata->mYSize.height, pdata->mCbCrStride,
       pdata->mCbCrSize.height, yOffset, cbOffset, crOffset);
 
-  aSdBuffer.desc() = YCbCrDescriptor(
-      pdata->GetPictureRect(), pdata->mYSize, pdata->mYStride, pdata->mCbCrSize,
-      pdata->mCbCrStride, yOffset, cbOffset, crOffset, pdata->mStereoMode,
-      pdata->mColorDepth, pdata->mYUVColorSpace, pdata->mColorRange,
-      /*hasIntermediateBuffer*/ false);
+  uint32_t bufferSize = ImageDataSerializer::ComputeYCbCrBufferSize(
+      pdata->mYSize, pdata->mYStride, pdata->mCbCrSize, pdata->mCbCrStride,
+      yOffset, cbOffset, crOffset);
+
+  aSdBuffer.data() = aAllocate(bufferSize);
 
   uint8_t* buffer = nullptr;
   const MemoryOrShmem& memOrShmem = aSdBuffer.data();
@@ -525,12 +526,18 @@ nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
       buffer = memOrShmem.get_Shmem().get<uint8_t>();
       break;
     default:
-      MOZ_ASSERT(false, "Unknown MemoryOrShmem type");
+      buffer = nullptr;
+      break;
   }
-  MOZ_ASSERT(buffer, "no valid buffer available to copy image data");
   if (!buffer) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  aSdBuffer.desc() = YCbCrDescriptor(
+      pdata->GetPictureRect(), pdata->mYSize, pdata->mYStride, pdata->mCbCrSize,
+      pdata->mCbCrStride, yOffset, cbOffset, crOffset, pdata->mStereoMode,
+      pdata->mColorDepth, pdata->mYUVColorSpace, pdata->mColorRange,
+      /*hasIntermediateBuffer*/ false);
 
   CopyPlane(buffer + yOffset, pdata->mYChannel, pdata->mYSize, pdata->mYStride,
             pdata->mYSkip);

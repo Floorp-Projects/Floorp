@@ -246,15 +246,15 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
       }
 
       SurfaceDescriptorBuffer sdBuffer;
-      ShmemBuffer buffer = AllocateBuffer(image->GetDataSize());
-      if (!buffer.Valid()) {
-        return MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                           "AllocShmem failed in "
-                           "RemoteVideoDecoderParent::ProcessDecodedData");
-      }
-
-      sdBuffer.data() = std::move(buffer.Get());
-      image->BuildSurfaceDescriptorBuffer(sdBuffer);
+      nsresult rv = image->BuildSurfaceDescriptorBuffer(
+          sdBuffer, [&](uint32_t aBufferSize) {
+            ShmemBuffer buffer = AllocateBuffer(aBufferSize);
+            if (buffer.Valid()) {
+              return MemoryOrShmem(std::move(buffer.Get()));
+            }
+            return MemoryOrShmem();
+          });
+      NS_ENSURE_SUCCESS(rv, rv);
 
       sd = sdBuffer;
       size = image->GetSize();

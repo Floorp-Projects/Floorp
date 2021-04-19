@@ -55,6 +55,7 @@ class TextureClient;
 class TextureClientRecycleAllocator;
 class KnowsCompositor;
 class NVImage;
+class MemoryOrShmem;
 #ifdef XP_WIN
 class D3D11YCbCrRecycleAllocator;
 #endif
@@ -768,12 +769,12 @@ class PlanarYCbCrImage : public Image {
   PlanarYCbCrImage* AsPlanarYCbCrImage() override { return this; }
 
   /**
-   * Build a SurfaceDescriptorBuffer with this image.  The provided
-   * SurfaceDescriptorBuffer must already have a valid MemoryOrShmem set
-   * with a capacity large enough to hold |GetDataSize|.
+   * Build a SurfaceDescriptorBuffer with this image.  A function to allocate
+   * a MemoryOrShmem with the given capacity must be provided.
    */
   virtual nsresult BuildSurfaceDescriptorBuffer(
-      SurfaceDescriptorBuffer& aSdBuffer);
+      SurfaceDescriptorBuffer& aSdBuffer,
+      const std::function<MemoryOrShmem(uint32_t)>& aAllocate);
 
  protected:
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
