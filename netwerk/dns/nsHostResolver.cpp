@@ -254,20 +254,7 @@ bool nsHostRecord::HasUsableResult(const mozilla::TimeStamp& now,
     return false;
   }
 
-  // don't use cached negative results for high priority queries.
-  if (negative && IsHighPriority(queryFlags)) {
-    return false;
-  }
-
-  if (CheckExpiration(now) == EXP_EXPIRED) {
-    return false;
-  }
-
-  if (negative) {
-    return true;
-  }
-
-  return HasUsableResultInternal();
+  return HasUsableResultInternal(now, queryFlags);
 }
 
 static size_t SizeOfResolveHostCallbackListExcludingHead(
@@ -360,7 +347,21 @@ size_t AddrHostRecord::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
   return n;
 }
 
-bool AddrHostRecord::HasUsableResultInternal() const {
+bool AddrHostRecord::HasUsableResultInternal(const mozilla::TimeStamp& now,
+                                             uint16_t queryFlags) const {
+  // don't use cached negative results for high priority queries.
+  if (negative && IsHighPriority(queryFlags)) {
+    return false;
+  }
+
+  if (CheckExpiration(now) == EXP_EXPIRED) {
+    return false;
+  }
+
+  if (negative) {
+    return true;
+  }
+
   return addr_info || addr;
 }
 
@@ -505,9 +506,20 @@ TypeHostRecord::TypeHostRecord(const nsHostKey& key)
 
 TypeHostRecord::~TypeHostRecord() { mCallbacks.clear(); }
 
-bool TypeHostRecord::HasUsableResultInternal() const {
+bool TypeHostRecord::HasUsableResultInternal(const mozilla::TimeStamp& now,
+                                             uint16_t queryFlags) const {
+  if (CheckExpiration(now) == EXP_EXPIRED) {
+    return false;
+  }
+
+  if (negative) {
+    return true;
+  }
+
   return !mResults.is<Nothing>();
 }
+
+bool TypeHostRecord::RefreshForNegativeResponse() const { return false; }
 
 NS_IMETHODIMP TypeHostRecord::GetRecords(CopyableTArray<nsCString>& aRecords) {
   // deep copy
@@ -1671,7 +1683,7 @@ nsresult nsHostResolver::ConditionallyRefreshRecord(nsHostRecord* rec,
                                                     const nsACString& host) {
   if ((rec->CheckExpiration(TimeStamp::NowLoRes()) != nsHostRecord::EXP_VALID ||
        rec->negative) &&
-      !rec->mResolving) {
+      !rec->mResolving && rec->RefreshForNegativeResponse()) {
     LOG(("  Using %s cache entry for host [%s] but starting async renewal.",
          rec->negative ? "negative" : "positive", host.BeginReading()));
     NameLookup(rec);
@@ -2085,7 +2097,9 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByType(
   if (NS_FAILED(status)) {
     LOG(("nsHostResolver::CompleteLookupByType record %p [%s] status %x\n",
          typeRec.get(), typeRec->host.get(), (unsigned int)status));
-    typeRec->SetExpiration(TimeStamp::NowLoRes(), NEGATIVE_RECORD_LIFETIME, 0);
+    typeRec->SetExpiration(
+        TimeStamp::NowLoRes(),
+        StaticPrefs::network_dns_negative_ttl_for_type_record(), 0);
     MOZ_ASSERT(aResult.is<TypeRecordEmpty>());
     status = NS_ERROR_UNKNOWN_HOST;
     typeRec->negative = true;
