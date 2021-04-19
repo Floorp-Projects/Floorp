@@ -37,7 +37,10 @@ class TopSitesPagerAdapter(
                 val adapter = holder.itemView.top_sites_list.adapter as TopSitesAdapter
                 val payload = payloads[0] as AdapterItem.TopSitePagerPayload
                 for (item in payload.changed) {
-                    adapter.notifyItemChanged(item.first % TOP_SITES_PER_PAGE, item.second)
+                    adapter.notifyItemChanged(
+                        item.first % TOP_SITES_PER_PAGE,
+                        TopSitesAdapter.TopSitePayload(item.second.title)
+                    )
                 }
             }
         }

@@ -40,7 +40,7 @@ class TopSitesAdapter(
                     holder.bind((payloads[0] as TopSite))
                 }
                 is TopSitePayload -> {
-                    holder.itemView.top_site_title.text = (payloads[0] as TopSitePayload).newTitle
+                    holder.bind(payloads[0] as TopSitePayload)
                 }
             }
         }

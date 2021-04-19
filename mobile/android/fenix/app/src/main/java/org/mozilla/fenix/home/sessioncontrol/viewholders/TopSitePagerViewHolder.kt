@@ -45,6 +45,10 @@ class TopSitePagerViewHolder(
         view.top_sites_pager.apply {
             adapter = topSitesPagerAdapter
             registerOnPageChangeCallback(topSitesPageChangeCallback)
+            // Retain one more TopSites pages to ensure a new layout request will measure the first page also.
+            // Otherwise the second page with 3 TopSites will have the entire ViewPager only show
+            // the first row of TopSites, hiding half of those shown on the first page.
+            offscreenPageLimit = 1
         }
     }
 
