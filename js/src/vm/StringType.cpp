@@ -732,7 +732,6 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   AutoCheckCannotGC nogc;
 
   Nursery& nursery = root->runtimeFromMainThread()->gc.nursery();
-  gc::StoreBuffer* bufferIfNursery = root->storeBuffer();
 
   /* Find the left most string, containing the first string. */
   JSRope* leftmostRope = root;
@@ -773,7 +772,7 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
     left.d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
     if (left.isTenured() && !root->isTenured()) {
       // leftmost child -> root is a tenured -> nursery edge.
-      bufferIfNursery->putWholeCell(&left);
+      root->storeBuffer()->putWholeCell(&left);
     }
 
     pos = wholeChars + left_len;
@@ -847,8 +846,8 @@ finish_node : {
   // the nursery. Note that the root was a rope but will be an extensible
   // string when we return, so it will not point to any strings and need
   // not be barriered.
-  if (bufferIfNursery && str->isTenured()) {
-    bufferIfNursery->putWholeCell(str);
+  if (str->isTenured() && !root->isTenured()) {
+    root->storeBuffer()->putWholeCell(str);
   }
 
   str = parent;
