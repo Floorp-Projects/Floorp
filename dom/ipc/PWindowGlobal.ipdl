@@ -181,6 +181,11 @@ parent:
 
   async ResetSessionStore(uint32_t aEpoch);
 
+  // Add the flags in aOnFlags to the current BFCache status and remove the
+  // flags in aOffFlags from the current BFCache status. See the BFCacheStatus
+  // enum for the valid flags.
+  async UpdateBFCacheStatus(uint16_t aOnFlags, uint16_t aOffFlags);
+
   async Destroy();
 };
 
