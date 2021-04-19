@@ -52,7 +52,7 @@ jobs:
         run-on-git-branches: ["^((?!releases[_/]).+)$"]
         run:
             commands:
-                - [automation/taskcluster/androidTest/ui-test.sh, x86, app.apk, android-test.apk, '50']
+                - [automation/taskcluster/androidTest/ui-test.sh, x86, app.apk, android-test.apk, '-1']
         treeherder:
             symbol: debug(ui-test-x86)
     screenshots-x86:
