@@ -339,7 +339,7 @@ class MachCommands(MachCommandBase):
         default=argparse.SUPPRESS,
         help="Kinds that should not be re-used from the on-push graph.",
     )
-    def taskgraph_decision(self, command_context, **options):
+    def taskgraph_decision(self, **options):
         """Run the decision task: generate a task graph and submit to
         TaskCluster.  This is only meant to be called within decision tasks,
         and requires a great many arguments.  Commands like `mach taskgraph
@@ -380,7 +380,7 @@ class MachCommands(MachCommandBase):
         "cron",
         description="Provide a pointer to the new `.cron.yml` handler.",
     )
-    def taskgraph_cron(self, command_context, **options):
+    def taskgraph_cron(self, **options):
         print(
             'Handling of ".cron.yml" files has move to '
             "https://hg.mozilla.org/ci/ci-admin/file/default/build-decision."
@@ -398,7 +398,7 @@ class MachCommands(MachCommandBase):
         default="taskcluster/ci",
         help="root of the taskgraph definition relative to topsrcdir",
     )
-    def action_callback(self, command_context, **options):
+    def action_callback(self, **options):
         from taskgraph.actions import trigger_action_callback
         from taskgraph.actions.util import get_parameters
 
@@ -456,7 +456,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument(
         "callback", default=None, help="Action callback name (Python function name)"
     )
-    def test_action_callback(self, command_context, **options):
+    def test_action_callback(self, **options):
         import taskgraph.actions
         import taskgraph.parameters
         from taskgraph.util import yaml
@@ -714,7 +714,7 @@ class TaskClusterImagesProvider(MachCommandBase):
         "contents of the tree (as built for mozilla-central "
         "or mozilla-inbound)",
     )
-    def load_image(self, command_context, image_name, task_id, tag):
+    def load_image(self, image_name, task_id, tag):
         from taskgraph.docker import load_image_by_name, load_image_by_task_id
 
         if not image_name and not task_id:
@@ -744,7 +744,7 @@ class TaskClusterImagesProvider(MachCommandBase):
         "with this option it will only build the context.tar.",
         metavar="context.tar",
     )
-    def build_image(self, command_context, image_name, tag, context_only):
+    def build_image(self, image_name, tag, context_only):
         from taskgraph.docker import build_context, build_image
 
         try:
@@ -773,7 +773,7 @@ class TaskClusterPartialsData(MachCommandBase):
     @CommandArgument(
         "--product", default="Firefox", help="The product identifier, such as 'Firefox'"
     )
-    def generate_partials_builds(self, command_context, product, branch):
+    def generate_partials_builds(self, product, branch):
         from taskgraph.util.partials import populate_release_history
 
         try:

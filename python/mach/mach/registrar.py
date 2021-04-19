@@ -102,9 +102,9 @@ class MachRegistrar(object):
         if debug_command:
             import pdb
 
-            result = pdb.runcall(fn, instance, **kwargs)
+            result = pdb.runcall(fn, **kwargs)
         else:
-            result = fn(instance, **kwargs)
+            result = fn(**kwargs)
 
         end_time = time.time()
 

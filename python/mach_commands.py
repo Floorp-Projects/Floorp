@@ -61,14 +61,7 @@ class MachCommands(MachCommandBase):
     )
     @CommandArgument("args", nargs=argparse.REMAINDER)
     def python(
-        self,
-        command_context,
-        no_virtualenv,
-        no_activate,
-        exec_file,
-        ipython,
-        requirements,
-        args,
+        self, no_virtualenv, no_activate, exec_file, ipython, requirements, args
     ):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
@@ -172,7 +165,7 @@ class MachCommands(MachCommandBase):
             "passed as it is to pytest"
         ),
     )
-    def python_test(self, command_context, *args, **kwargs):
+    def python_test(self, *args, **kwargs):
         try:
             tempdir = str(tempfile.mkdtemp(suffix="-python-test"))
             if six.PY2:

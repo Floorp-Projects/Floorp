@@ -75,7 +75,7 @@ the output file, pass "-" to serialize to stdout and hide the default output.
     @CommandArgument(
         "--return-zero", action="store_true", help="Return 0 regardless of l10n status"
     )
-    def compare(self, command_context, **kwargs):
+    def compare(self, **kwargs):
         from compare_locales.commands import CompareLocales
 
         class ErrorHelper(object):
