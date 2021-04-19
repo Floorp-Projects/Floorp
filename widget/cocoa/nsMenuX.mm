@@ -108,7 +108,7 @@ nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsI
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString
                                                action:nil
                                         keyEquivalent:@""];
-  [mNativeMenuItem setSubmenu:mNativeMenu];
+  mNativeMenuItem.submenu = mNativeMenu;
 
   SetEnabled(!mContent->IsElement() ||
              !mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
@@ -225,14 +225,8 @@ void nsMenuX::AddMenu(RefPtr<nsMenuX>&& aMenu) {
     return;
   }
 
+  [mNativeMenu addItem:aMenu->NativeNSMenuItem()];
   ++mVisibleItemsCount;
-
-  // We have to add a menu item and then associate the menu with it
-  NSMenuItem* newNativeMenuItem = aMenu->NativeNSMenuItem();
-  if (newNativeMenuItem) {
-    [mNativeMenu addItem:newNativeMenuItem];
-    newNativeMenuItem.submenu = aMenu->NativeNSMenu();
-  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
