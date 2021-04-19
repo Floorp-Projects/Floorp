@@ -80,7 +80,9 @@ toolkit.jar:
   skin/classic/global/icons/twisty-collapsed.svg           (../../shared/icons/twisty-collapsed.svg)
   skin/classic/global/icons/twisty-collapsed-rtl.svg       (../../shared/icons/twisty-collapsed-rtl.svg)
   skin/classic/global/icons/twisty-expanded.svg            (../../shared/icons/twisty-expanded.svg)
+#if defined(NIGHTLY_BUILD)
   skin/classic/global/icons/icon-refresh.svg               (../../shared/icons/icon-refresh.svg)
+#endif
   skin/classic/global/icons/update-icon.svg                (../../shared/icons/update-icon.svg)
   skin/classic/global/icons/arrow-dropdown-12.svg          (../../shared/icons/arrow-dropdown-12.svg)
   skin/classic/global/icons/arrow-dropdown-16.svg          (../../shared/icons/arrow-dropdown-16.svg)
