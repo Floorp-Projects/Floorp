@@ -156,7 +156,8 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
      * since RecipeRunner is stateful, and can't be interacted with from
      * content processes safely.
      */
-    getStudiesEnabled() {
+    async getStudiesEnabled() {
+      await RecipeRunner.initializedPromise.promise;
       return RecipeRunner.enabled && gOptOutStudiesEnabled;
     },
 
