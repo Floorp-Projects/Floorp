@@ -38,7 +38,12 @@ class Bootstrap(MachCommandBase):
         action="store_true",
         help="Only execute actions that leave the system " "configuration alone.",
     )
-    def bootstrap(self, application_choice=None, no_system_changes=False):
+    def bootstrap(
+        self,
+        command_context,
+        application_choice=None,
+        no_system_changes=False,
+    ):
         from mozboot.bootstrap import Bootstrapper
 
         bootstrapper = Bootstrapper(
@@ -63,7 +68,7 @@ class VersionControlCommands(MachCommandBase):
         action="store_true",
         help="Only update recommended extensions, don't run the wizard.",
     )
-    def vcs_setup(self, update_only=False):
+    def vcs_setup(self, command_context, update_only=False):
         """Ensure a Version Control System (Mercurial or Git) is optimally
         configured.
 

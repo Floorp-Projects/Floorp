@@ -61,7 +61,7 @@ class RemoteCommands(MachCommandBase):
     @Command(
         "remote", category="misc", description="Remote protocol related operations."
     )
-    def remote(self):
+    def remote(self, command_context):
         """The remote subcommands all relate to the remote protocol."""
         self._sub_mach(["help", "remote"])
         return 1
@@ -88,7 +88,7 @@ class RemoteCommands(MachCommandBase):
         default=True,
         help="Do not install the just-pulled Puppeteer package,",
     )
-    def vendor_puppeteer(self, repository, commitish, install):
+    def vendor_puppeteer(self, command_context, repository, commitish, install):
         puppeteer_dir = os.path.join(self.remotedir, "test", "puppeteer")
 
         # Preserve our custom mocha reporter
@@ -587,6 +587,7 @@ class PuppeteerTest(MachCommandBase):
     )
     def puppeteer_test(
         self,
+        command_context,
         binary=None,
         ci=False,
         enable_fission=False,
