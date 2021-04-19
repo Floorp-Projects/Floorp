@@ -8,6 +8,7 @@
 #define mozilla_dom_RemoteObjectProxy_h
 
 #include "js/Proxy.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/MaybeCrossOriginObject.h"
 #include "mozilla/dom/PrototypeList.h"
 #include "xpcpublic.h"
@@ -35,7 +36,7 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
   // Standard internal methods
   bool getOwnPropertyDescriptor(
       JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
-      JS::MutableHandle<JS::PropertyDescriptor> aDesc) const override;
+      JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) const override;
   bool ownPropertyKeys(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                        JS::MutableHandleVector<jsid> aProps) const override;
   bool defineProperty(JSContext* aCx, JS::Handle<JSObject*> aProxy,

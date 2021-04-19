@@ -82,6 +82,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/DeferredFinalize.h"
 #include "mozilla/ExtensionPolicyService.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_extensions.h"
@@ -520,7 +521,7 @@ class SandboxProxyHandler : public js::Wrapper {
 
   virtual bool getOwnPropertyDescriptor(
       JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+      JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc) const override;
 
   // We just forward the high-level methods to the BaseProxyHandler versions
   // which implement them in terms of lower-level methods.
@@ -547,7 +548,7 @@ class SandboxProxyHandler : public js::Wrapper {
   // argument is true we only look for "own" properties.
   bool getPropertyDescriptorImpl(
       JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-      bool getOwn, JS::MutableHandle<JS::PropertyDescriptor> desc) const;
+      bool getOwn, JS::MutableHandle<Maybe<JS::PropertyDescriptor>> desc) const;
 };
 
 static const SandboxProxyHandler sandboxProxyHandler;
@@ -698,23 +699,26 @@ static bool IsMaybeWrappedDOMConstructor(JSObject* obj) {
 
 bool SandboxProxyHandler::getPropertyDescriptorImpl(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-    bool getOwn, JS::MutableHandle<PropertyDescriptor> desc) const {
+    bool getOwn, MutableHandle<Maybe<PropertyDescriptor>> desc_) const {
   JS::RootedObject obj(cx, wrappedObject(proxy));
 
   MOZ_ASSERT(JS::GetCompartment(obj) == JS::GetCompartment(proxy));
 
+  Rooted<PropertyDescriptor> desc(cx);
   if (getOwn) {
-    if (!JS_GetOwnPropertyDescriptorById(cx, obj, id, desc)) {
+    if (!JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc)) {
       return false;
     }
   } else {
-    if (!JS_GetPropertyDescriptorById(cx, obj, id, desc)) {
+    if (!JS_GetPropertyDescriptorById(cx, obj, id, &desc)) {
       return false;
     }
   }
 
   if (!desc.object()) {
-    return true;  // No property, nothing to do
+    // No property, nothing to do
+    desc_.reset();
+    return true;
   }
 
   // Now fix up the getter/setter/value as needed to be bound to desc->obj.
@@ -741,12 +745,13 @@ bool SandboxProxyHandler::getPropertyDescriptorImpl(
     }
   }
 
+  desc_.set(Some(desc.get()));
   return true;
 }
 
 bool SandboxProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-    JS::MutableHandle<PropertyDescriptor> desc) const {
+    MutableHandle<Maybe<PropertyDescriptor>> desc) const {
   return getPropertyDescriptorImpl(cx, proxy, id, /* getOwn = */ true, desc);
 }
 
@@ -758,12 +763,12 @@ bool SandboxProxyHandler::getOwnPropertyDescriptor(
 bool SandboxProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id, bool* bp) const {
   // This uses JS_GetPropertyDescriptorById for backward compatibility.
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx);
   if (!getPropertyDescriptorImpl(cx, proxy, id, /* getOwn = */ false, &desc)) {
     return false;
   }
 
-  *bp = !!desc.object();
+  *bp = desc.isSome();
   return true;
 }
 bool SandboxProxyHandler::hasOwn(JSContext* cx, JS::Handle<JSObject*> proxy,
@@ -776,25 +781,26 @@ bool SandboxProxyHandler::get(JSContext* cx, JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id,
                               JS::MutableHandle<Value> vp) const {
   // This uses JS_GetPropertyDescriptorById for backward compatibility.
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx);
   if (!getPropertyDescriptorImpl(cx, proxy, id, /* getOwn = */ false, &desc)) {
     return false;
   }
-  desc.assertCompleteIfFound();
 
-  if (!desc.object()) {
+  if (desc.isNothing()) {
     vp.setUndefined();
     return true;
+  } else {
+    desc->assertComplete();
   }
 
   // Everything after here follows [[Get]] for ordinary objects.
-  if (desc.isDataDescriptor()) {
-    vp.set(desc.value());
+  if (desc->isDataDescriptor()) {
+    vp.set(desc->value());
     return true;
   }
 
-  MOZ_ASSERT(desc.isAccessorDescriptor());
-  RootedObject getter(cx, desc.getterObject());
+  MOZ_ASSERT(desc->isAccessorDescriptor());
+  RootedObject getter(cx, desc->getterObject());
 
   if (!getter) {
     vp.setUndefined();
@@ -1466,7 +1472,7 @@ static bool GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
     return false;
   }
 
-  nsTArray<nsCOMPtr<nsIPrincipal> > allowedDomains(length);
+  nsTArray<nsCOMPtr<nsIPrincipal>> allowedDomains(length);
   allowedDomains.SetLength(length);
 
   // If an originAttributes option has been specified, we will use that as the

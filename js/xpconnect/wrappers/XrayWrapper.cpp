@@ -1865,7 +1865,7 @@ bool XrayWrapper<Base, Traits>::isExtensible(JSContext* cx,
 template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
-    JS::MutableHandle<PropertyDescriptor> desc) const {
+    MutableHandle<Maybe<PropertyDescriptor>> desc) const {
   assertEnteredPolicy(cx, wrapper, id,
                       BaseProxyHandler::GET | BaseProxyHandler::SET |
                           BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
@@ -1875,12 +1875,16 @@ bool XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(
     return false;
   }
 
+  Rooted<PropertyDescriptor> ownDesc(cx);
   if (!Traits::singleton.resolveOwnProperty(cx, wrapper, target, holder, id,
-                                            desc)) {
+                                            &ownDesc)) {
     return false;
   }
-  if (desc.object()) {
-    desc.object().set(wrapper);
+  if (ownDesc.object()) {
+    ownDesc.object().set(wrapper);
+    desc.set(Some(ownDesc.get()));
+  } else {
+    desc.reset();
   }
   return true;
 }
@@ -2059,24 +2063,24 @@ bool XrayWrapper<Base, Traits>::get(JSContext* cx, HandleObject wrapper,
   // it's only called for properties that hasOwn() claims we have as own
   // properties.  Since we only need to worry about own properties, we can use
   // getOwnPropertyDescriptor here.
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx);
   if (!getOwnPropertyDescriptor(cx, wrapper, id, &desc)) {
     return false;
   }
-  desc.assertCompleteIfFound();
 
-  MOZ_ASSERT(desc.object(),
+  MOZ_ASSERT(desc.isSome(),
              "hasOwn() claimed we have this property, so why would we not get "
              "a descriptor here?");
+  desc->assertComplete();
 
   // Everything after here follows [[Get]] for ordinary objects.
-  if (desc.isDataDescriptor()) {
-    vp.set(desc.value());
+  if (desc->isDataDescriptor()) {
+    vp.set(desc->value());
     return true;
   }
 
-  MOZ_ASSERT(desc.isAccessorDescriptor());
-  RootedObject getter(cx, desc.getterObject());
+  MOZ_ASSERT(desc->isAccessorDescriptor());
+  RootedObject getter(cx, desc->getterObject());
 
   if (!getter) {
     vp.setUndefined();

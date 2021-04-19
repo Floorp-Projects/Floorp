@@ -195,10 +195,20 @@ bool DOMProxyHandler::isExtensible(JSContext* cx, JS::Handle<JSObject*> proxy,
 }
 
 bool BaseDOMProxyHandler::getOwnPropertyDescriptor(
-    JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-    MutableHandle<PropertyDescriptor> desc) const {
-  return getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ false,
-                              desc);
+    JSContext* cx, Handle<JSObject*> proxy, Handle<jsid> id,
+    MutableHandle<Maybe<PropertyDescriptor>> desc) const {
+  Rooted<PropertyDescriptor> ownDesc(cx);
+  if (!getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ false,
+                            &ownDesc)) {
+    return false;
+  }
+
+  if (ownDesc.object()) {
+    desc.set(Some(ownDesc.get()));
+  } else {
+    desc.reset();
+  }
+  return true;
 }
 
 bool DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy,

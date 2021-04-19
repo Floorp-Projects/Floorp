@@ -180,6 +180,10 @@ extern JS_FRIEND_API bool JS_CopyOwnPropertiesAndPrivateFields(
 extern JS_FRIEND_API bool JS_WrapPropertyDescriptor(
     JSContext* cx, JS::MutableHandle<JS::PropertyDescriptor> desc);
 
+extern JS_FRIEND_API bool JS_WrapPropertyDescriptor(
+    JSContext* cx,
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
+
 struct JSFunctionSpecWithHelp {
   const char* name;
   JSNative call;

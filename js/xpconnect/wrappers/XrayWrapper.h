@@ -8,6 +8,7 @@
 #define XrayWrapper_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 
 #include "WrapperFactory.h"
 
@@ -375,7 +376,8 @@ class XrayWrapper : public Base {
   /* Standard internal methods. */
   virtual bool getOwnPropertyDescriptor(
       JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc)
+      const override;
   virtual bool defineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                               JS::Handle<jsid> id,
                               JS::Handle<JS::PropertyDescriptor> desc,
