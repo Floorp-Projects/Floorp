@@ -51,7 +51,7 @@ var ControlCenter = {
 
     localFile: {
       // This selector is different so we can exclude the changing file: path
-      selectors: ["#identity-popup-security"],
+      selectors: ["#identity-popup-security-button"],
       async applyConfig() {
         let channel = NetUtil.newChannel({
           uri: "resource://mozscreenshots/lib/mozscreenshots.html",
@@ -308,9 +308,15 @@ async function openIdentityPopup(expand) {
   if (expand) {
     // give some time for opening to avoid weird style issues
     await new Promise(c => setTimeout(c, 500));
-    gIdentityHandler._identityPopup
-      .querySelector("#identity-popup-security-expander")
-      .click();
+    if (Services.prefs.getBoolPref("browser.proton.enabled", true)) {
+      gIdentityHandler._identityPopup
+        .querySelector("#identity-popup-security-button")
+        .click();
+    } else {
+      gIdentityHandler._identityPopup
+        .querySelector("#identity-popup-security-expander")
+        .click();
+    }
   }
 }
 

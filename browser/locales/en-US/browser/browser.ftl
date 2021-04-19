@@ -291,6 +291,13 @@ bookmark-panel =
 
 ## Identity Panel
 
+# Variables
+#  $host (String): the hostname of the site that is being displayed.
+identity-site-information = Site information for { $host }
+# Variables
+#  $host (String): the hostname of the site that is being displayed.
+identity-header-security-with-host =
+    .title = Connection security for { $host }
 identity-connection-not-secure = Connection not secure
 identity-connection-secure = Connection secure
 identity-connection-internal = This is a secure { -brand-short-name } page.
@@ -321,7 +328,7 @@ identity-permissions-storage-access-learn-more = Learn more
 
 identity-permissions-reload-hint = You may need to reload the page for changes to apply.
 identity-clear-site-data =
-    .label = Clear Cookies and Site Data…
+    .label = Clear cookies and site data…
 identity-connection-not-secure-security-view = You are not securely connected to this site.
 identity-connection-verified = You are securely connected to this site.
 identity-ev-owner-label = Certificate issued to:
