@@ -16,6 +16,9 @@ var subtests = [
   ]},
   {"file": "helper_smoothscroll_spam.html"},
   {"file": "helper_smoothscroll_spam_interleaved.html"},
+  {"file": "helper_mainthread_scroll_bug1662379.html", prefs: [
+    ["apz.test.logging_enabled", true],
+  ]},
 ];
 
 if (isApzEnabled()) {
