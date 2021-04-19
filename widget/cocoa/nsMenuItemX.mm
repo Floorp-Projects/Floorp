@@ -88,6 +88,8 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType
 
   mIcon = MakeUnique<nsMenuItemIconX>(this);
 
+  mIsVisible = !nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 

@@ -79,6 +79,8 @@ class nsMenuX final : public nsMenuParentX,
   void OnMenuDidOpen(mozilla::dom::Element* aPopupElement) override;
   void OnMenuClosed(mozilla::dom::Element* aPopupElement) override;
 
+  bool IsVisible() const { return mVisible; }
+
   // Unregisters nsMenuX from the nsMenuGroupOwner, and nulls out the group owner pointer, on this
   // nsMenuX and also all nested nsMenuX and nsMenuItemX objects.
   // This is needed because nsMenuX is reference-counted and can outlive its owner, and the menu
