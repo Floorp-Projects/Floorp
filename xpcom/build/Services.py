@@ -76,6 +76,11 @@ service("History", "mozilla::IHistory", "@mozilla.org/browser/history;1")
 service("ThirdPartyUtil", "mozIThirdPartyUtil", "@mozilla.org/thirdpartyutil;1")
 service("URIFixup", "nsIURIFixup", "@mozilla.org/docshell/uri-fixup;1")
 service("Bits", "nsIBits", "@mozilla.org/bits;1")
+service(
+    "MemoryReporterManager",
+    "nsIMemoryReporterManager",
+    "@mozilla.org/memory-reporter-manager;1",
+)
 # If you want nsIXULAppInfo, as returned by Services.jsm, you need to call:
 #
 # nsCOMPtr<nsIXULRuntime> runtime = mozilla::services::GetXULRuntime();

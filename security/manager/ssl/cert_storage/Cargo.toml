@@ -22,3 +22,5 @@ tempfile = "3"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 time = "0.1"
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
+malloc_size_of_derive = "0.1"
+wr_malloc_size_of = { path = "../../../../gfx/wr/wr_malloc_size_of" }

@@ -103,6 +103,7 @@ EXPORTS.ipc += [
 ]
 
 UNIFIED_SOURCES += [
+    "CertStorageMemoryReporting.cpp",
     "CommonSocketControl.cpp",
     "ContentSignatureVerifier.cpp",
     "CryptoTask.cpp",
