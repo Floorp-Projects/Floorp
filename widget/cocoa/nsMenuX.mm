@@ -97,12 +97,7 @@ nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsI
   NS_ASSERTION(mMenuGroupOwner, "No menu owner given, must have one");
   mMenuGroupOwner->RegisterForContentChanges(mContent, this);
 
-  if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent)) {
-    mVisible = false;
-  }
-  if (mContent->GetChildCount() == 0) {
-    mVisible = false;
-  }
+  mVisible = !nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
 
   NSString* newCocoaLabelString = nsMenuUtilsX::GetTruncatedCocoaLabel(mLabel);
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString
@@ -214,6 +209,7 @@ void nsMenuX::AddMenuChild(MenuChild&& aChild) {
       [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->NativeNSMenuItem(); });
 
   if (isVisible) {
+    RemovePlaceholderIfPresent();
     [mNativeMenu addItem:nativeItem];
     ++mVisibleItemsCount;
   }
@@ -690,8 +686,36 @@ void nsMenuX::RebuildMenu() {
     }
   }  // for each menu item
 
+  InsertPlaceholderIfNeeded();
+
   gConstructingMenu = false;
   mNeedsRebuild = false;
+}
+
+void nsMenuX::InsertPlaceholderIfNeeded() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if ([mNativeMenu numberOfItems] == 0) {
+    MOZ_RELEASE_ASSERT(mVisibleItemsCount == 0);
+    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    item.enabled = NO;
+    item.view = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 150, 1)] autorelease];
+    [mNativeMenu addItem:item];
+    [item release];
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void nsMenuX::RemovePlaceholderIfPresent() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mVisibleItemsCount == 0 && [mNativeMenu numberOfItems] == 1) {
+    // Remove the placeholder.
+    [mNativeMenu removeItemAtIndex:0];
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsMenuX::SetRebuild(bool aNeedsRebuild) {
@@ -975,6 +999,7 @@ void nsMenuX::MenuChildChangedVisibility(const MenuChild& aChild, bool aIsVisibl
   if (aIsVisible) {
     MOZ_RELEASE_ASSERT(!nativeItem.menu,
                        "The native item should not be in a menu while it is hidden");
+    RemovePlaceholderIfPresent();
     NSInteger insertionPoint = CalculateNativeInsertionPoint(aChild);
     [mNativeMenu insertItem:nativeItem atIndex:insertionPoint];
     mVisibleItemsCount++;
@@ -983,6 +1008,7 @@ void nsMenuX::MenuChildChangedVisibility(const MenuChild& aChild, bool aIsVisibl
                        "The native item should be in this menu while it is visible");
     [mNativeMenu removeItem:nativeItem];
     mVisibleItemsCount--;
+    InsertPlaceholderIfNeeded();
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

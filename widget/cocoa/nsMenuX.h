@@ -203,6 +203,12 @@ class nsMenuX final : public nsMenuParentX,
   // popuphiding/popuphidden events.
   void FlushMenuClosedRunnable();
 
+  // Make sure the NSMenu contains at least one item, even if mVisibleItemsCount is zero.
+  // Otherwise it won't open.
+  void InsertPlaceholderIfNeeded();
+  // Remove the placeholder before adding an item to mNativeNSMenu.
+  void RemovePlaceholderIfPresent();
+
   nsCOMPtr<nsIContent> mContent;  // XUL <menu> or <menupopup>
 
   // Contains nsMenuX and nsMenuItemX objects
