@@ -68,3 +68,16 @@ win32-minidump-stackwalk:
         toolchain:
             - linux64-clang-mingw-x86
             - mingw32-rust-1.47
+
+linux64-breakpad-injector:
+    description: "breakpad injector toolchain build"
+    run:
+        script: build-breakpad-injector.sh
+        toolchain-artifact: public/build/injector.tar.xz
+    treeherder:
+        symbol: TL(injector)
+    fetches:
+        toolchain:
+            - linux64-clang-11
+            - linux64-binutils
+            - linux64-toolchain-sysroot

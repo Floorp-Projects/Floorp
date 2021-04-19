@@ -12,7 +12,9 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
-
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"
 );
@@ -682,4 +684,18 @@ add_task(async function test_nimbus_about_studies() {
   // Cleanup for multiple test runs
   ExperimentManager.store._deleteForTests(recipe.slug);
   Assert.equal(ExperimentManager.store.getAll().length, 0, "Cleanup done");
+});
+
+add_task(async function test_getStudiesEnabled() {
+  RecipeRunner.initializedPromise = PromiseUtils.defer();
+  let promise = AboutPages.aboutStudies.getStudiesEnabled();
+
+  RecipeRunner.initializedPromise.resolve();
+  let result = await promise;
+
+  Assert.equal(
+    result,
+    Services.prefs.getBoolPref("app.shield.optoutstudies.enabled"),
+    "about:studies is enabled if the pref is enabled"
+  );
 });

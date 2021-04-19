@@ -23,6 +23,7 @@
       is(info.height, 480, "height should be 480");
 
       // Change the content of the first one.
+      // eslint-disable-next-line no-undef
       first.setAttribute("content", "width=640");
 
       // Now the first one is prior to the second one.
@@ -34,6 +35,7 @@
       is(info.height, 480*640/800, "height is proportional to displayHeight");
 
       // Cleat the second content.
+      // eslint-disable-next-line no-undef
       second.setAttribute("content", "");
 
       // The second one is prior to the first one, but the content is empty so

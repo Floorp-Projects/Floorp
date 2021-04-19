@@ -909,6 +909,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
+  dns.clearCache(true);
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
   Services.obs.notifyObservers(null, "net:prune-all-connections");
 

@@ -66,6 +66,7 @@ class AudioSinkWrapper : public MediaSink {
   bool HasUnplayedFrames(TrackType aType) const override;
 
   void SetVolume(double aVolume) override;
+  void SetStreamName(const nsAString& aStreamName) override;
   void SetPlaybackRate(double aPlaybackRate) override;
   void SetPreservesPitch(bool aPreservesPitch) override;
   void SetPlaying(bool aPlaying) override;

@@ -3,6 +3,10 @@
 let h2Port;
 let prefs;
 
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
+
 function setup() {
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
@@ -75,6 +79,11 @@ function run_test() {
       `https://foo.example.com:${port}/dns-query`
     );
     do_send_remote_message("mode3-port-done");
+  });
+
+  do_await_remote_message("clearCache").then(() => {
+    dns.clearCache(true);
+    do_send_remote_message("clearCache-done");
   });
 
   run_test_in_child("../unit/test_trr_httpssvc.js");

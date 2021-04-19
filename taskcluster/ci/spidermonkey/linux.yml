@@ -7,8 +7,7 @@ job-defaults:
         max-run-time: 36000
         docker-image: {in-tree: debian10-amd64-build}
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
-            MOZ_AUTOMATION_UPLOAD: "0"
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "0"
     run:
         tooltool-downloads: public
 
@@ -22,6 +21,17 @@ sm-package-linux64/opt:
     run:
         using: spidermonkey-package
         spidermonkey-variant: plain
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust
+            - linux64-gcc
+            - linux64-sysroot
 
 sm-plain-linux64/debug:
     description: "Spidermonkey Plain"
@@ -32,6 +42,16 @@ sm-plain-linux64/debug:
         symbol: SM(p)
     run:
         spidermonkey-variant: plaindebug
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust
+            - linux64-sysroot
 
 sm-plain-linux64/opt:
     description: "Spidermonkey Plain"
@@ -42,6 +62,17 @@ sm-plain-linux64/opt:
         platform: linux64/opt
     run:
         spidermonkey-variant: plain
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust
+            - linux64-gcc
+            - linux64-sysroot
 
 sm-smoosh-linux64/debug:
     description: "Spidermonkey SmooshMonkey"
@@ -53,15 +84,17 @@ sm-smoosh-linux64/debug:
         tier: 3
     run:
         spidermonkey-variant: smooshdebug
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
             - linux64-sysroot
-    run-on-projects: ['mozilla-central']
 
 sm-smoosh-linux64/opt:
     description: "Spidermonkey SmooshMonkey"
@@ -73,15 +106,17 @@ sm-smoosh-linux64/opt:
         tier: 3
     run:
         spidermonkey-variant: smoosh
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
             - linux64-sysroot
-    run-on-projects: ['mozilla-central']
 
 sm-nojit-linux64/opt:
     description: "Spidermonkey no JIT"
@@ -92,6 +127,16 @@ sm-nojit-linux64/opt:
         platform: linux64/opt
     run:
         spidermonkey-variant: nojit
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-sysroot
 
 sm-plain-linux32/debug:
     description: "Spidermonkey Plain"
@@ -106,10 +151,12 @@ sm-plain-linux32/debug:
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
             - linux32-sysroot
 
 sm-arm-sim-linux32/debug:
@@ -124,10 +171,12 @@ sm-arm-sim-linux32/debug:
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
             - linux32-sysroot
 
 sm-arm64-sim-linux64/debug:
@@ -139,6 +188,16 @@ sm-arm64-sim-linux64/debug:
         symbol: SM(arm64)
     run:
         spidermonkey-variant: arm64-sim
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-sysroot
 
 sm-arm64-sim-cranelift-linux64/debug:
     description: "Spidermonkey ARM64 sim with Cranelift Wasm backend"
@@ -150,17 +209,17 @@ sm-arm64-sim-cranelift-linux64/debug:
         tier: 3
     run:
         spidermonkey-variant: arm64-cranelift-sim
+    run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
-            - linux64-gcc
             - linux64-rust
-            - linux64-rust-size
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
             - linux64-sysroot
-    run-on-projects: ['mozilla-central']
     routes:
         - "notify.email.jseward@mozilla.com.on-failed"
         - "notify.email.lhansen@mozilla.com.on-failed"
@@ -174,15 +233,17 @@ sm-asan-linux64/opt:
         platform: linux64/opt
     worker:
         env:
-            MOZ_AUTOMATION_UPLOAD: "1"
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
     run:
         spidermonkey-variant: asan
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-gcc
             - linux64-rust
+            - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
             - linux64-llvm-symbolizer
             - linux64-sysroot
 
@@ -195,6 +256,16 @@ sm-compacting-linux64/debug:
         symbol: SM(cgc)
     run:
         spidermonkey-variant: compacting
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-sysroot
 
 sm-msan-linux64/opt:
     description: "Spidermonkey Memory Sanitizer"
@@ -206,11 +277,21 @@ sm-msan-linux64/opt:
         tier: 3
     worker:
         env:
-            MOZ_AUTOMATION_UPLOAD: "1"
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
     run:
         spidermonkey-variant: msan
     # Disable by default by allow try pushes to explicitly request.
     run-on-projects: []
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-sysroot
 
 sm-tsan-linux64/opt:
     description: "Spidermonkey Thread Sanitizer"
@@ -221,16 +302,19 @@ sm-tsan-linux64/opt:
         platform: linux64/opt
     worker:
         env:
-            MOZ_AUTOMATION_UPLOAD: "1"
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
     run:
         spidermonkey-variant: tsan
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
-            - linux64-rust-nightly
+            - linux64-gcc
+            - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
             - linux64-llvm-symbolizer
+            - linux64-rust-nightly
             - linux64-sysroot
 
 sm-rootanalysis-linux64/debug:
@@ -242,6 +326,16 @@ sm-rootanalysis-linux64/debug:
         symbol: SM(r)
     run:
         spidermonkey-variant: rootanalysis
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-sysroot
 
 sm-nonunified-linux64/debug:
     description: "Spidermonkey Non-Unified Debug"
@@ -255,10 +349,12 @@ sm-nonunified-linux64/debug:
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-gcc
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
             - linux64-sysroot
 
 sm-fuzzing-linux64/opt:
@@ -270,15 +366,17 @@ sm-fuzzing-linux64/opt:
         symbol: SM(f)
     worker:
         env:
-            MOZ_AUTOMATION_UPLOAD: "1"
+            MOZ_JS_UPLOAD_BINARIES_DEFAULT: "1"
     run:
         spidermonkey-variant: fuzzing
     fetches:
         toolchain:
             - linux64-clang
-            - linux64-gcc
             - linux64-rust
+            - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
             - linux64-llvm-symbolizer
             - linux64-sysroot
 
@@ -294,3 +392,14 @@ sm-gdb-linux64/debug:
         symbol: SM(gdb)
     run:
         spidermonkey-variant: gdb
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-sysroot

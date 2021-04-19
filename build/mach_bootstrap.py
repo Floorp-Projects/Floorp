@@ -8,6 +8,7 @@ import math
 import os
 import platform
 import shutil
+import site
 import sys
 
 if sys.version_info[0] < 3:
@@ -199,6 +200,15 @@ def bootstrap(topsrcdir):
     if os.path.exists(deleted_dir):
         shutil.rmtree(deleted_dir, ignore_errors=True)
 
+    if major == 3 and sys.prefix == sys.base_prefix:
+        # We are not in a virtualenv. Remove global site packages
+        # from sys.path.
+        # Note that we don't ever invoke mach from a Python 2 virtualenv,
+        # and "sys.base_prefix" doesn't exist before Python 3.3, so we
+        # guard with the "major == 3" check.
+        site_paths = set(site.getsitepackages() + [site.getusersitepackages()])
+        sys.path = [path for path in sys.path if path not in site_paths]
+
     # Global build system and mach state is stored in a central directory. By
     # default, this is ~/.mozbuild. However, it can be defined via an
     # environment variable. We detect first run (by lack of this directory
@@ -373,15 +383,18 @@ def bootstrap(topsrcdir):
     for category, meta in CATEGORIES.items():
         driver.define_category(category, meta["short"], meta["long"], meta["priority"])
 
+    # Sparse checkouts may not have all mach_commands.py files. Ignore
+    # errors from missing files. Same for spidermonkey tarballs.
     repo = resolve_repository()
+    missing_ok = (
+        repo is not None and repo.sparse_checkout_present()
+    ) or os.path.exists(os.path.join(topsrcdir, "INSTALL"))
 
     for path in MACH_MODULES:
-        # Sparse checkouts may not have all mach_commands.py files. Ignore
-        # errors from missing files.
         try:
             driver.load_commands_from_file(os.path.join(topsrcdir, path))
         except mach.base.MissingFileError:
-            if not repo or not repo.sparse_checkout_present():
+            if not missing_ok:
                 raise
 
     return driver

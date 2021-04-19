@@ -56,7 +56,9 @@ class Instance {
   DataSegmentVector passiveDataSegments_;
   ElemSegmentVector passiveElemSegments_;
   const UniqueDebugState maybeDebug_;
+#ifdef ENABLE_WASM_GC
   bool hasGcTypes_;
+#endif
 
   // Internal helpers:
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;

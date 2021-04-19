@@ -213,6 +213,10 @@ class WindowGlobalParent final : public WindowContext,
                               const Maybe<nsPoint>& aScrollPosition,
                               uint32_t aEpoch);
 
+  Maybe<uint64_t> GetSingleChannelId() { return mSingleChannelId; }
+
+  uint16_t GetBFCacheStatus() { return mBFCacheStatus; }
+
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
                                         const nsACString& aName,
@@ -279,6 +283,13 @@ class WindowGlobalParent final : public WindowContext,
       uint32_t aEpoch);
 
   mozilla::ipc::IPCResult RecvResetSessionStore(uint32_t aEpoch);
+
+  mozilla::ipc::IPCResult RecvUpdateBFCacheStatus(const uint16_t& aOnFlags,
+                                                  const uint16_t& aOffFlags);
+
+ public:
+  mozilla::ipc::IPCResult RecvSetSingleChannelId(
+      const Maybe<uint64_t>& aSingleChannelId);
 
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
@@ -352,6 +363,19 @@ class WindowGlobalParent final : public WindowContext,
   // Whether we have sent our page use counters, and so should ignore any
   // subsequent ExpectPageUseCounters calls.
   bool mSentPageUseCounters = false;
+
+  uint16_t mBFCacheStatus = 0;
+
+  // mSingleChannelId records whether the loadgroup contains a single request
+  // with an id. If there is one channel in the loadgroup and it has an id then
+  // mSingleChannelId is set to Some(id) (ids are non-zero). If there is one
+  // request in the loadgroup and it's not a channel or it doesn't have an id,
+  // or there are multiple requests in the loadgroup, then mSingleChannelId is
+  // set to Some(0). If there are no requests in the loadgroup then
+  // mSingleChannelId is set to Nothing().
+  // Note: We ignore favicon loads when considering the requests in the
+  // loadgroup.
+  Maybe<uint64_t> mSingleChannelId;
 };
 
 }  // namespace dom

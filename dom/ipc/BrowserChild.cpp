@@ -342,8 +342,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mPendingRenderLayersReceivedMessage(false),
       mPendingLayersObserverEpoch{0},
       mPendingDocShellBlockers(0),
-      mCancelContentJSEpoch(0),
-      mWidgetNativeData(0) {
+      mCancelContentJSEpoch(0) {
   mozilla::HoldJSObjects(this);
 
   nsWeakPtr weakPtrThis(do_GetWeakReference(
@@ -3226,12 +3225,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvAllowScriptsToClose() {
   if (window) {
     nsGlobalWindowOuter::Cast(window)->AllowScriptsToClose();
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvSetWidgetNativeData(
-    const WindowsHandle& aWidgetNativeData) {
-  mWidgetNativeData = aWidgetNativeData;
   return IPC_OK();
 }
 

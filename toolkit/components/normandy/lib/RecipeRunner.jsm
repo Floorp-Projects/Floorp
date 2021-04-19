@@ -35,6 +35,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["RecipeRunner"];
@@ -85,6 +86,8 @@ function cacheProxy(target) {
 }
 
 var RecipeRunner = {
+  initializedPromise: PromiseUtils.defer(),
+
   async init() {
     this.running = false;
     this.enabled = null;
@@ -136,6 +139,8 @@ var RecipeRunner = {
     if (firstRun) {
       Services.prefs.setBoolPref(FIRST_RUN_PREF, false);
     }
+
+    this.initializedPromise.resolve();
   },
 
   enable() {

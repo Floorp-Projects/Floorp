@@ -88,6 +88,13 @@ void AudioSinkWrapper::SetVolume(double aVolume) {
   }
 }
 
+void AudioSinkWrapper::SetStreamName(const nsAString& aStreamName) {
+  AssertOwnerThread();
+  if (mAudioSink) {
+    mAudioSink->SetStreamName(aStreamName);
+  }
+}
+
 void AudioSinkWrapper::SetPlaybackRate(double aPlaybackRate) {
   AssertOwnerThread();
   if (!mAudioEnded) {

@@ -273,7 +273,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
 
     // Pass initialization data to the target actor
     for (const type in initialData) {
-      targetActor.addWatcherDataEntry(type, initialData[type]);
+      // `initialData` will also contain `browserId` and `watcherTraits`,
+      // as well as entries with empty arrays, which shouldn't be processed.
+      const entries = initialData[type];
+      if (!Array.isArray(entries) || entries.length == 0) {
+        continue;
+      }
+      targetActor.addWatcherDataEntry(type, entries);
     }
 
     // Immediately queue a message for the parent process,

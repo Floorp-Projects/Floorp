@@ -138,6 +138,12 @@ void VideoSink::SetVolume(double aVolume) {
   mAudioSink->SetVolume(aVolume);
 }
 
+void VideoSink::SetStreamName(const nsAString& aStreamName) {
+  AssertOwnerThread();
+
+  mAudioSink->SetStreamName(aStreamName);
+}
+
 void VideoSink::SetPreservesPitch(bool aPreservesPitch) {
   AssertOwnerThread();
 

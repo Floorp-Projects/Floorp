@@ -101,13 +101,13 @@ class HitTestingTreeNode {
 
   /* Hit test related methods */
 
-  void SetHitTestData(const EventRegions& aRegions,
-                      const LayerIntRegion& aVisibleRegion,
-                      const LayerIntSize& aRemoteDocumentSize,
-                      const CSSTransformMatrix& aTransform,
-                      const Maybe<ParentLayerIntRegion>& aClipRegion,
-                      const EventRegionsOverride& aOverride,
-                      bool aIsBackfaceHidden, bool aIsAsyncZoomContainer);
+  void SetHitTestData(
+      const EventRegions& aRegions, const LayerIntRegion& aVisibleRegion,
+      const LayerIntSize& aRemoteDocumentSize,
+      const CSSTransformMatrix& aTransform,
+      const Maybe<ParentLayerIntRegion>& aClipRegion,
+      const EventRegionsOverride& aOverride, bool aIsBackfaceHidden,
+      const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId);
   bool IsOutsideClip(const ParentLayerPoint& aPoint) const;
 
   /* Scrollbar info */
@@ -167,7 +167,7 @@ class HitTestingTreeNode {
    * scrolling. */
   ScreenRect GetRemoteDocumentScreenRect() const;
 
-  bool IsAsyncZoomContainer() const;
+  Maybe<ScrollableLayerGuid::ViewID> GetAsyncZoomContainerId() const;
 
   /* Debug helpers */
   void Dump(const char* aPrefix = "") const;
@@ -239,8 +239,9 @@ class HitTestingTreeNode {
    * building time. */
   bool mIsBackfaceHidden;
 
-  /* Whether layer L is the async zoom container layer. */
-  bool mIsAsyncZoomContainer;
+  /* If the layer is the async zoom container layer then this will hold the id.
+   */
+  Maybe<ScrollableLayerGuid::ViewID> mAsyncZoomContainerId;
 
   /* This is clip rect for L that we wish to use for hit-testing purposes. Note
    * that this may not be exactly the same as the clip rect on layer L because

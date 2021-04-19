@@ -96,6 +96,7 @@ nsLoadGroup::nsLoadGroup()
       mDefaultLoadIsTimed(false),
       mBrowsingContextDiscarded(false),
       mExternalRequestContext(false),
+      mNotifyObserverAboutBackgroundRequests(false),
       mTimedRequests(0),
       mCachedRequests(0) {
   LOG(("LOADGROUP [%p]: Created.\n", this));
@@ -465,10 +466,13 @@ nsLoadGroup::AddRequest(nsIRequest* request, nsISupports* ctxt) {
   nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(request);
   if (timedChannel) timedChannel->SetTimingEnabled(true);
 
-  if (!(flags & nsIRequest::LOAD_BACKGROUND)) {
+  bool foreground = !(flags & nsIRequest::LOAD_BACKGROUND);
+  if (foreground) {
     // Update the count of foreground URIs..
     mForegroundCount += 1;
+  }
 
+  if (foreground || mNotifyObserverAboutBackgroundRequests) {
     //
     // Fire the OnStartRequest notification out to the observer...
     //
@@ -495,12 +499,14 @@ nsLoadGroup::AddRequest(nsIRequest* request, nsISupports* ctxt) {
 
         rv = NS_OK;
 
-        mForegroundCount -= 1;
+        if (foreground) {
+          mForegroundCount -= 1;
+        }
       }
     }
 
     // Ensure that we're part of our loadgroup while pending
-    if (mForegroundCount == 1 && mLoadGroup) {
+    if (foreground && mForegroundCount == 1 && mLoadGroup) {
       mLoadGroup->AddRequest(this, nullptr);
     }
   }
@@ -601,10 +607,13 @@ nsresult nsLoadGroup::NotifyRemovalObservers(nsIRequest* request,
   nsresult rv = request->GetLoadFlags(&flags);
   if (NS_FAILED(rv)) return rv;
 
-  if (!(flags & nsIRequest::LOAD_BACKGROUND)) {
+  bool foreground = !(flags & nsIRequest::LOAD_BACKGROUND);
+  if (foreground) {
     NS_ASSERTION(mForegroundCount > 0, "ForegroundCount messed up");
     mForegroundCount -= 1;
+  }
 
+  if (foreground || mNotifyObserverAboutBackgroundRequests) {
     // Fire the OnStopRequest out to the observer...
     nsCOMPtr<nsIRequestObserver> observer = do_QueryReferent(mObserver);
     if (observer) {
@@ -622,7 +631,7 @@ nsresult nsLoadGroup::NotifyRemovalObservers(nsIRequest* request,
     }
 
     // If that was the last request -> remove ourselves from loadgroup
-    if (mForegroundCount == 0 && mLoadGroup) {
+    if (foreground && mForegroundCount == 0 && mLoadGroup) {
       mLoadGroup->RemoveRequest(this, nullptr, aStatus);
     }
   }
@@ -645,8 +654,14 @@ nsLoadGroup::GetRequests(nsISimpleEnumerator** aRequests) {
 
 NS_IMETHODIMP
 nsLoadGroup::SetGroupObserver(nsIRequestObserver* aObserver) {
-  mObserver = do_GetWeakReference(aObserver);
+  SetGroupObserver(aObserver, false);
   return NS_OK;
+}
+
+void nsLoadGroup::SetGroupObserver(nsIRequestObserver* aObserver,
+                                   bool aIncludeBackgroundRequests) {
+  mObserver = do_GetWeakReference(aObserver);
+  mNotifyObserverAboutBackgroundRequests = aIncludeBackgroundRequests;
 }
 
 NS_IMETHODIMP
