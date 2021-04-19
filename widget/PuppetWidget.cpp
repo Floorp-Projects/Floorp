@@ -1018,52 +1018,6 @@ double PuppetWidget::GetDefaultScaleInternal() { return mDefaultScale; }
 
 int32_t PuppetWidget::RoundsWidgetCoordinatesTo() { return mRounding; }
 
-void* PuppetWidget::GetNativeData(uint32_t aDataType) {
-  switch (aDataType) {
-    case NS_NATIVE_SHAREABLE_WINDOW: {
-      // NOTE: We can not have a tab child in some situations, such as when
-      // we're rendering to a fake widget for thumbnails.
-      if (!mBrowserChild) {
-        NS_WARNING("Need BrowserChild to get the nativeWindow from!");
-      }
-      mozilla::WindowsHandle nativeData = 0;
-      if (mBrowserChild) {
-        nativeData = mBrowserChild->WidgetNativeData();
-      }
-      return (void*)nativeData;
-    }
-    case NS_NATIVE_WINDOW:
-    case NS_NATIVE_WIDGET:
-    case NS_NATIVE_DISPLAY:
-      // These types are ignored (see bug 1183828, bug 1240891).
-      break;
-    case NS_RAW_NATIVE_IME_CONTEXT:
-      MOZ_CRASH("You need to call GetNativeIMEContext() instead");
-    case NS_NATIVE_PLUGIN_PORT:
-    case NS_NATIVE_GRAPHIC:
-    case NS_NATIVE_SHELLWIDGET:
-    default:
-      NS_WARNING("nsWindow::GetNativeData called with bad value");
-      break;
-  }
-  return nullptr;
-}
-
-#if defined(XP_WIN)
-void PuppetWidget::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
-  switch (aDataType) {
-    case NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW:
-      MOZ_ASSERT(mBrowserChild, "Need BrowserChild to send the message.");
-      if (mBrowserChild) {
-        mBrowserChild->SendSetNativeChildOfShareableWindow(aVal);
-      }
-      break;
-    default:
-      NS_WARNING("SetNativeData called with unsupported data type.");
-  }
-}
-#endif
-
 LayoutDeviceIntPoint PuppetWidget::GetChromeOffset() {
   if (!GetOwningBrowserChild()) {
     NS_WARNING("PuppetWidget without Tab does not have chrome information.");

@@ -18,6 +18,7 @@
 #include <algorithm>
 #include "mozilla/Telemetry.h"
 #include "CubebUtils.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsPrintfCString.h"
 #include "AudioConverter.h"
 #include "UnderrunHandler.h"
@@ -348,6 +349,22 @@ void AudioStream::SetVolume(double aVolume) {
                               aVolume * CubebUtils::GetVolumeScale()) !=
       CUBEB_OK) {
     LOGE("Could not change volume on cubeb stream.");
+  }
+}
+
+void AudioStream::SetStreamName(const nsAString& aStreamName) {
+  TRACE();
+
+  nsAutoCString aRawStreamName;
+  nsresult rv = NS_CopyUnicodeToNative(aStreamName, aRawStreamName);
+
+  if (NS_FAILED(rv) || aStreamName.IsEmpty()) {
+    return;
+  }
+
+  if (cubeb_stream_set_name(mCubebStream.get(), aRawStreamName.get()) !=
+      CUBEB_OK) {
+    LOGE("Could not set cubeb stream name.");
   }
 }
 

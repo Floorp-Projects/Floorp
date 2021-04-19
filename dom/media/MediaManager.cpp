@@ -38,6 +38,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WindowContext.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/media/MediaTaskUtils.h"
@@ -164,6 +165,7 @@ class GetUserMediaStreamTask;
 class LocalTrackSource;
 class SelectAudioOutputTask;
 
+using dom::BFCacheStatus;
 using dom::CallerType;
 using dom::ConstrainDOMStringParameters;
 using dom::ConstrainDoubleRange;
@@ -191,6 +193,7 @@ using dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters;
 using dom::Promise;
 using dom::Sequence;
 using dom::UserActivation;
+using dom::WindowGlobalChild;
 using media::NewRunnableFrom;
 using media::NewTaskFrom;
 using media::Refcountable;
@@ -3411,9 +3414,21 @@ void MediaManager::AddWindowID(uint64_t aWindowId,
   aListener->MuteOrUnmuteCameras(mCamerasMuted);
   aListener->MuteOrUnmuteMicrophones(mMicrophonesMuted);
   GetActiveWindows()->InsertOrUpdate(aWindowId, std::move(aListener));
+
+  RefPtr<WindowGlobalChild> wgc =
+      WindowGlobalChild::GetByInnerWindowId(aWindowId);
+  if (wgc) {
+    wgc->BlockBFCacheFor(BFCacheStatus::ACTIVE_GET_USER_MEDIA);
+  }
 }
 
 void MediaManager::RemoveWindowID(uint64_t aWindowId) {
+  RefPtr<WindowGlobalChild> wgc =
+      WindowGlobalChild::GetByInnerWindowId(aWindowId);
+  if (wgc) {
+    wgc->UnblockBFCacheFor(BFCacheStatus::ACTIVE_GET_USER_MEDIA);
+  }
+
   mActiveWindows.Remove(aWindowId);
 
   // get outer windowID

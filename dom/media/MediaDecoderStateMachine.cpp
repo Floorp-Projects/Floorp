@@ -2670,6 +2670,7 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
   master->mVolume.DisconnectIfConnected();
   master->mPreservesPitch.DisconnectIfConnected();
   master->mLooping.DisconnectIfConnected();
+  master->mStreamName.DisconnectIfConnected();
   master->mSinkDevice.DisconnectIfConnected();
   master->mSecondaryVideoContainer.DisconnectIfConnected();
   master->mOutputCaptureState.DisconnectIfConnected();
@@ -2723,6 +2724,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       INIT_MIRROR(mVolume, 1.0),
       INIT_MIRROR(mPreservesPitch, true),
       INIT_MIRROR(mLooping, false),
+      INIT_MIRROR(mStreamName, nsAutoString()),
       INIT_MIRROR(mSinkDevice, nullptr),
       INIT_MIRROR(mSecondaryVideoContainer, nullptr),
       INIT_MIRROR(mOutputCaptureState, MediaDecoder::OutputCaptureState::None),
@@ -2763,6 +2765,7 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
   mVolume.Connect(aDecoder->CanonicalVolume());
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
   mLooping.Connect(aDecoder->CanonicalLooping());
+  mStreamName.Connect(aDecoder->CanonicalStreamName());
   mSinkDevice.Connect(aDecoder->CanonicalSinkDevice());
   mSecondaryVideoContainer.Connect(
       aDecoder->CanonicalSecondaryVideoContainer());
@@ -2779,6 +2782,8 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
                       &MediaDecoderStateMachine::PreservesPitchChanged);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLooping, &MediaDecoderStateMachine::LoopingChanged);
+  mWatchManager.Watch(mStreamName,
+                      &MediaDecoderStateMachine::StreamNameChanged);
   mWatchManager.Watch(mSecondaryVideoContainer,
                       &MediaDecoderStateMachine::UpdateSecondaryVideoContainer);
   mWatchManager.Watch(mOutputCaptureState,
@@ -3381,6 +3386,7 @@ nsresult MediaDecoderStateMachine::StartMediaSink() {
 
   mAudioCompleted = false;
   nsresult rv = mMediaSink->Start(GetMediaTime(), Info());
+  StreamNameChanged();
 
   auto videoPromise = mMediaSink->OnEnded(TrackInfo::kVideoTrack);
   auto audioPromise = mMediaSink->OnEnded(TrackInfo::kAudioTrack);
@@ -3705,6 +3711,14 @@ void MediaDecoderStateMachine::LoopingChanged() {
   if (mSeamlessLoopingAllowed) {
     mStateObj->HandleLoopingChanged();
   }
+}
+
+void MediaDecoderStateMachine::StreamNameChanged() {
+  AUTO_PROFILER_LABEL("MediaDecoderStateMachine::StreamNameChanged",
+                      MEDIA_PLAYBACK);
+  MOZ_ASSERT(OnTaskQueue());
+
+  mMediaSink->SetStreamName(mStreamName);
 }
 
 void MediaDecoderStateMachine::UpdateOutputCaptured() {

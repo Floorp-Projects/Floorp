@@ -1,0 +1,208 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Blocking pages from entering BFCache</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="">
+<script>
+
+const getUserMediaPrefs = {
+  set: [
+    ["media.devices.insecure.enabled", true],
+    ["media.getusermedia.insecure.enabled", true],
+    ["media.navigator.permission.disabled", true],
+  ],
+};
+const msePrefs = {
+  set: [
+    ["media.mediasource.enabled", true],
+    ["media.audio-max-decode-error", 0],
+    ["media.video-max-decode-error", 0],
+  ]
+};
+
+const blockBFCacheTests = [
+  {
+    name: "Request",
+    test: () => {
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "slow.sjs");
+        xhr.addEventListener("progress", () => { resolve(xhr); }, { once: true });
+        xhr.send();
+      });
+    },
+  },
+  {
+    name: "Background request",
+    test: () => {
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "slow.sjs");
+        xhr.addEventListener("readystatechange", () => { if (xhr.readyState == xhr.HEADERS_RECEIVED) resolve(xhr); });
+        xhr.send();
+      });
+    },
+  },
+  {
+    name: "getUserMedia",
+    prefs: getUserMediaPrefs,
+    test: () => {
+      return navigator.mediaDevices.getUserMedia({ audio: true, fake: true });
+    },
+  },
+  {
+    name: "RTCPeerConnection",
+    test: () => {
+      let pc = new RTCPeerConnection();
+      return pc.createOffer();
+    },
+  },
+  {
+    name: "MSE",
+    prefs: msePrefs,
+    test: () => {
+      const ms = new MediaSource();
+      const el = document.createElement("video");
+      el.src = URL.createObjectURL(ms);
+      el.preload = "auto";
+      return el;
+    },
+  },
+  {
+    name: "WebSpeech",
+    test: () => {
+      return new Promise((resolve) => {
+        const utterance = new SpeechSynthesisUtterance('bfcache');
+        utterance.lang = 'it-IT-noend';
+        utterance.addEventListener('start', () => { resolve(utterance); })
+        speechSynthesis.speak(utterance);
+      });
+    },
+  },
+  {
+    name: "WebVR",
+    prefs: {
+      set: [
+        ["dom.vr.test.enabled", true],
+        ["dom.vr.puppet.enabled", true],
+        ["dom.vr.require-gesture", false],
+      ],
+    },
+    test: () => {
+      return navigator.requestVRServiceTest();
+    }
+  },
+];
+
+const dontBlockBFCacheTests = [
+  {
+    name: "getUserMedia",
+    prefs: getUserMediaPrefs,
+    test: () => {
+      return navigator.mediaDevices.getUserMedia({ video: true, fake: true }).then(stream => {
+        stream.getTracks().forEach(track => track.stop());
+        return stream;
+      });
+    },
+  },
+/*
+  Disabled because MediaKeys rely on being destroyed by the CC before they
+  notify their window, so the test would intermittently fail depending on
+  when the CC runs.
+
+  {
+    name: "MSE",
+    prefs: msePrefs,
+    test: () => {
+      return new Promise((resolve) => {
+        const ms = new MediaSource();
+        const el = document.createElement("video");
+        ms.addEventListener("sourceopen", () => { resolve(el) }, { once: true });
+        el.src = URL.createObjectURL(ms);
+        el.preload = "auto";
+      }).then(el => {
+        el.src = ""; 
+        return el;
+      });
+    },
+  },
+*/
+];
+
+let bc = new BroadcastChannel("bfcache_blocking");
+
+function promiseMessage(type) {
+  return new Promise((resolve, reject) => {
+    bc.addEventListener("message", (e) => {
+      if (e.data.type == type) {
+        resolve(e.data);
+      }
+    }, { once: true });
+  });
+}
+
+function promisePageShow(shouldBePersisted) {
+  return promiseMessage("pageshow").then(data => data.persisted == shouldBePersisted);
+}
+
+function promisePageShowFromBFCache(e) {
+  return promisePageShow(true);
+}
+
+function promisePageShowNotFromBFCache(e) {
+  return promisePageShow(false);
+}
+
+function runTests(testArray, shouldBlockBFCache) {
+  for (const { name, prefs = {}, test } of testArray) {
+    add_task(async function() {
+      await SpecialPowers.pushPrefEnv(prefs, async function() {
+        // Load a mostly blank page that we can communicate with over
+        // BroadcastChannel (though it will close the BroadcastChannel after
+        // receiving the next "load" message, to avoid blocking BFCache).
+        let loaded = promisePageShowNotFromBFCache();
+        window.open("file_blockBFCache.html", "", "noopener");
+        await loaded;
+
+        // Load the same page with a different URL.
+        loaded = promisePageShowNotFromBFCache();
+        bc.postMessage({ message: "load", url: `file_blockBFCache.html?${name}_${shouldBlockBFCache}` });
+        await loaded;
+
+        // Run test script in the second page.
+        bc.postMessage({ message: "runScript", fun: test.toString() });
+        await promiseMessage("runScriptDone");
+
+        // Go back to the first page (this should just come from the BFCache).
+        let goneBack = promisePageShowFromBFCache();
+        bc.postMessage({ message: "back" });
+        await goneBack;
+
+        // Go forward again to the second page and check that it does/doesn't come
+        // from the BFCache.
+        let goneForward = promisePageShow(!shouldBlockBFCache);
+        bc.postMessage({ message: "forward" });
+        let result = await goneForward;
+        ok(result, `Page ${shouldBlockBFCache ? "should" : "should not"} have been blocked from going into the BFCache (${name})`);
+
+        bc.postMessage({ message: "close" });
+
+        SpecialPowers.popPrefEnv();
+      });
+    });
+  }
+}
+
+// If Fission is disabled, the pref is no-op.
+SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+  runTests(blockBFCacheTests, true);
+  runTests(dontBlockBFCacheTests, false);
+});
+
+</script>
+</body>
+</html>

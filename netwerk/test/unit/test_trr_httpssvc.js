@@ -7,6 +7,7 @@
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 let h2Port;
+let trrServer;
 
 function inChildProcess() {
   return (
@@ -33,8 +34,9 @@ function setup() {
 
 if (!inChildProcess()) {
   setup();
-  registerCleanupFunction(() => {
+  registerCleanupFunction(async () => {
     trr_clear_prefs();
+    await trrServer.stop();
   });
 }
 
@@ -138,10 +140,7 @@ add_task(async function testHTTPSSVC() {
 });
 
 add_task(async function test_aliasform() {
-  let trrServer = new TRRServer();
-  registerCleanupFunction(async () => {
-    await trrServer.stop();
-  });
+  trrServer = new TRRServer();
   await trrServer.start();
   dump(`port = ${trrServer.port}\n`);
 
@@ -560,4 +559,58 @@ add_task(async function test_aliasform() {
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
   Assert.equal(answer[0].priority, 1);
   Assert.equal(answer[0].name, "service.com");
+});
+
+add_task(async function testNegativeResponse() {
+  let [, , inStatus] = await new TRRDNSListener("negative_test.com", {
+    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    expectedSuccess: false,
+  });
+  Assert.ok(
+    !Components.isSuccessCode(inStatus),
+    `${inStatus} should be an error code`
+  );
+
+  await trrServer.registerDoHAnswers("negative_test.com", "HTTPS", {
+    answers: [
+      {
+        name: "negative_test.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "negative_test.com",
+          values: [{ key: "alpn", value: ["h2", "h3"] }],
+        },
+      },
+    ],
+  });
+
+  // Should still be failed because a negative response is from DNS cache.
+  [, , inStatus] = await new TRRDNSListener("negative_test.com", {
+    type: dns.RESOLVE_TYPE_HTTPSSVC,
+    expectedSuccess: false,
+  });
+  Assert.ok(
+    !Components.isSuccessCode(inStatus),
+    `${inStatus} should be an error code`
+  );
+
+  if (inChildProcess()) {
+    do_send_remote_message("clearCache");
+    await do_await_remote_message("clearCache-done");
+  } else {
+    dns.clearCache(true);
+  }
+
+  let inRecord;
+  [, inRecord, inStatus] = await new TRRDNSListener("negative_test.com", {
+    type: dns.RESOLVE_TYPE_HTTPSSVC,
+  });
+  Assert.ok(Components.isSuccessCode(inStatus), `${inStatus} should work`);
+  let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
+  Assert.equal(answer[0].priority, 1);
+  Assert.equal(answer[0].name, "negative_test.com");
+  await trrServer.stop();
 });

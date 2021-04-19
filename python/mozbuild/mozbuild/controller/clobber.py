@@ -65,15 +65,20 @@ class Clobberer(object):
 
         # Try looking for mozilla/CLOBBER, for comm-central
         if not os.path.isfile(self.src_clobber):
-            self.src_clobber = os.path.join(topsrcdir, "mozilla", "CLOBBER")
-
-        assert os.path.isfile(self.src_clobber)
+            comm_clobber = os.path.join(topsrcdir, "mozilla", "CLOBBER")
+            if os.path.isfile(comm_clobber):
+                self.src_clobber = comm_clobber
 
     def clobber_needed(self):
         """Returns a bool indicating whether a tree clobber is required."""
 
         # No object directory clobber file means we're good.
         if not os.path.exists(self.obj_clobber):
+            return False
+
+        # No source directory clobber means we're running from a source package
+        # that doesn't use clobbering.
+        if not os.path.exists(self.src_clobber):
             return False
 
         # Object directory clobber older than current is fine.

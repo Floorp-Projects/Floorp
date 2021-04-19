@@ -70,6 +70,7 @@
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
 
+extern mozilla::LazyLogModule gSHIPBFCacheLog;
 extern mozilla::LazyLogModule gUseCountersLog;
 
 namespace mozilla::dom {
@@ -1312,6 +1313,65 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvRequestRestoreTabContent() {
   if (bc && bc->AncestorsAreCurrent()) {
     bc->Top()->RequestRestoreTabContent(this);
   }
+  return IPC_OK();
+}
+
+nsCString BFCacheStatusToString(uint16_t aFlags) {
+  if (aFlags == 0) {
+    return "0"_ns;
+  }
+
+  nsCString flags;
+#define ADD_BFCACHESTATUS_TO_STRING(_flag) \
+  if (aFlags & BFCacheStatus::_flag) {     \
+    if (!flags.IsEmpty()) {                \
+      flags.Append('|');                   \
+    }                                      \
+    flags.AppendLiteral(#_flag);           \
+    aFlags &= ~BFCacheStatus::_flag;       \
+  }
+
+  ADD_BFCACHESTATUS_TO_STRING(NOT_ALLOWED);
+  ADD_BFCACHESTATUS_TO_STRING(EVENT_HANDLING_SUPPRESSED);
+  ADD_BFCACHESTATUS_TO_STRING(SUSPENDED);
+  ADD_BFCACHESTATUS_TO_STRING(UNLOAD_LISTENER);
+  ADD_BFCACHESTATUS_TO_STRING(REQUEST);
+  ADD_BFCACHESTATUS_TO_STRING(ACTIVE_GET_USER_MEDIA);
+  ADD_BFCACHESTATUS_TO_STRING(ACTIVE_PEER_CONNECTION);
+  ADD_BFCACHESTATUS_TO_STRING(CONTAINS_EME_CONTENT);
+  ADD_BFCACHESTATUS_TO_STRING(CONTAINS_MSE_CONTENT);
+  ADD_BFCACHESTATUS_TO_STRING(HAS_ACTIVE_SPEECH_SYNTHESIS);
+  ADD_BFCACHESTATUS_TO_STRING(HAS_USED_VR);
+  ADD_BFCACHESTATUS_TO_STRING(CONTAINS_REMOTE_SUBFRAMES);
+  ADD_BFCACHESTATUS_TO_STRING(NOT_ONLY_TOPLEVEL_IN_BCG);
+
+#undef ADD_BFCACHESTATUS_TO_STRING
+
+  MOZ_ASSERT(aFlags == 0,
+             "Missing stringification for enum value in BFCacheStatus.");
+  return flags;
+}
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateBFCacheStatus(
+    const uint16_t& aOnFlags, const uint16_t& aOffFlags) {
+  if (MOZ_UNLIKELY(MOZ_LOG_TEST(gSHIPBFCacheLog, LogLevel::Debug))) {
+    nsAutoCString uri("[no uri]");
+    if (mDocumentURI) {
+      uri = mDocumentURI->GetSpecOrDefault();
+    }
+    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
+            ("Setting BFCache flags for %s +(%s) -(%s)", uri.get(),
+             BFCacheStatusToString(aOnFlags).get(),
+             BFCacheStatusToString(aOffFlags).get()));
+  }
+  mBFCacheStatus |= aOnFlags;
+  mBFCacheStatus &= ~aOffFlags;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvSetSingleChannelId(
+    const Maybe<uint64_t>& aSingleChannelId) {
+  mSingleChannelId = aSingleChannelId;
   return IPC_OK();
 }
 

@@ -9445,6 +9445,12 @@
   value: false
   mirror: always
 
+# The TTL for negative responses of TXT and HTTPS records.
+- name: network.dns.negative_ttl_for_type_record
+  type: RelaxedAtomicUint32
+  value: 300   # 5 minutes (in seconds)
+  mirror: always
+
 - name: network.cache.frecency_array_check_enabled
   type: RelaxedAtomicBool
   value: @IS_EARLY_BETA_OR_EARLIER@

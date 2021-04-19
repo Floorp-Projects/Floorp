@@ -3,14 +3,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 template <bool COMPOSITE, typename P>
+static inline void copy_row(P* dst, const P* src, int span) {
+  // No scaling, so just do a fast copy.
+  memcpy(dst, src, span * sizeof(P));
+}
+
+template <>
+void copy_row<true, uint32_t>(uint32_t* dst, const uint32_t* src, int span) {
+  // No scaling, so just do a fast composite.
+  auto* end = dst + span;
+  while (dst + 4 <= end) {
+    WideRGBA8 srcpx = unpack(unaligned_load<PackedRGBA8>(src));
+    WideRGBA8 dstpx = unpack(unaligned_load<PackedRGBA8>(dst));
+    PackedRGBA8 r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
+    unaligned_store(dst, r);
+    src += 4;
+    dst += 4;
+  }
+  if (dst < end) {
+    WideRGBA8 srcpx = unpack(partial_load_span<PackedRGBA8>(src, end - dst));
+    WideRGBA8 dstpx = unpack(partial_load_span<PackedRGBA8>(dst, end - dst));
+    auto r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
+    partial_store_span(dst, r, end - dst);
+  }
+}
+
+template <bool COMPOSITE, typename P>
 static inline void scale_row(P* dst, int dstWidth, const P* src, int srcWidth,
                              int span, int frac) {
-  if (srcWidth == dstWidth) {
-    // No scaling, so just do a fast copy.
-    memcpy(dst, src, span * sizeof(P));
-    return;
-  }
-
   // Do scaling with different source and dest widths.
   for (P* end = dst + span; dst < end; dst++) {
     *dst = *src;
@@ -24,28 +44,9 @@ static inline void scale_row(P* dst, int dstWidth, const P* src, int srcWidth,
 template <>
 void scale_row<true, uint32_t>(uint32_t* dst, int dstWidth, const uint32_t* src,
                                int srcWidth, int span, int frac) {
-  auto* end = dst + span;
-  if (srcWidth == dstWidth) {
-    // No scaling, so just do a fast composite.
-    while (dst + 4 <= end) {
-      WideRGBA8 srcpx = unpack(unaligned_load<PackedRGBA8>(src));
-      WideRGBA8 dstpx = unpack(unaligned_load<PackedRGBA8>(dst));
-      PackedRGBA8 r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
-      unaligned_store(dst, r);
-      src += 4;
-      dst += 4;
-    }
-    if (dst < end) {
-      WideRGBA8 srcpx = unpack(partial_load_span<PackedRGBA8>(src, end - dst));
-      WideRGBA8 dstpx = unpack(partial_load_span<PackedRGBA8>(dst, end - dst));
-      auto r = pack(srcpx + dstpx - muldiv255(dstpx, alphas(srcpx)));
-      partial_store_span(dst, r, end - dst);
-    }
-    return;
-  }
-
   // Do scaling with different source and dest widths.
   // Gather source pixels four at a time for better packing.
+  auto* end = dst + span;
   for (; dst + 4 <= end; dst += 4) {
     U32 srcn;
     srcn.x = *src;
@@ -73,22 +74,16 @@ void scale_row<true, uint32_t>(uint32_t* dst, int dstWidth, const uint32_t* src,
     // Process any remaining pixels. Try to gather as many pixels as possible
     // into a single source chunk for compositing.
     U32 srcn = {*src, 0, 0, 0};
-    if (dst + 1 < end) {
+    if (end - dst > 1) {
       for (frac += srcWidth; frac >= dstWidth; frac -= dstWidth) {
         src++;
       }
       srcn.y = *src;
-      if (dst + 2 < end) {
+      if (end - dst > 2) {
         for (frac += srcWidth; frac >= dstWidth; frac -= dstWidth) {
           src++;
         }
         srcn.z = *src;
-        if (dst + 3 < end) {
-          for (frac += srcWidth; frac >= dstWidth; frac -= dstWidth) {
-            src++;
-          }
-          srcn.w = *src;
-        }
       }
     }
     WideRGBA8 srcpx = unpack(bit_cast<PackedRGBA8>(srcn));
@@ -149,16 +144,25 @@ static NO_INLINE void scale_blit(Texture& srctex, const IntRect& srcReq,
   for (int rows = clippedDest.height(); rows > 0; rows--) {
     switch (bpp) {
       case 1:
-        scale_row<COMPOSITE>((uint8_t*)dest, dstWidth, (uint8_t*)src, srcWidth,
-                             span, fracX);
+        if (srcWidth == dstWidth)
+          copy_row<COMPOSITE>((uint8_t*)dest, (uint8_t*)src, span);
+        else
+          scale_row<COMPOSITE>((uint8_t*)dest, dstWidth, (uint8_t*)src,
+                               srcWidth, span, fracX);
         break;
       case 2:
-        scale_row<COMPOSITE>((uint16_t*)dest, dstWidth, (uint16_t*)src,
-                             srcWidth, span, fracX);
+        if (srcWidth == dstWidth)
+          copy_row<COMPOSITE>((uint16_t*)dest, (uint16_t*)src, span);
+        else
+          scale_row<COMPOSITE>((uint16_t*)dest, dstWidth, (uint16_t*)src,
+                               srcWidth, span, fracX);
         break;
       case 4:
-        scale_row<COMPOSITE>((uint32_t*)dest, dstWidth, (uint32_t*)src,
-                             srcWidth, span, fracX);
+        if (srcWidth == dstWidth)
+          copy_row<COMPOSITE>((uint32_t*)dest, (uint32_t*)src, span);
+        else
+          scale_row<COMPOSITE>((uint32_t*)dest, dstWidth, (uint32_t*)src,
+                               srcWidth, span, fracX);
         break;
       default:
         assert(false);
@@ -401,7 +405,6 @@ void* GetResourceBuffer(LockedTexture* resource, int32_t* width,
   *stride = resource->stride();
   return resource->buf;
 }
-
 
 // Extension for optimized compositing of textures or framebuffers that may be
 // safely used across threads. The source and destination must be locked to

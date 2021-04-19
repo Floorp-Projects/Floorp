@@ -12,6 +12,11 @@ const {
 add_task(async function() {
   await testDocumentEventResources();
   await testDocumentEventResourcesWithIgnoreExistingResources();
+
+  // Enable server side target switching for next test
+  // as the regression it tracks only occurs with server side target switching enabled
+  await pushPref("devtools.target-switching.server.enabled", true);
+  await testCrossOriginNavigation();
 });
 
 async function testDocumentEventResources() {
@@ -96,6 +101,67 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
   await client.close();
 }
 
+async function testCrossOriginNavigation() {
+  info("Test cross origin navigations for DOCUMENT_EVENT");
+
+  const tab = await addTab("http://example.com/document-builder.sjs?html=com");
+
+  const { client, resourceWatcher, targetCommand } = await initResourceWatcher(
+    tab
+  );
+
+  const documentEvents = [];
+  await resourceWatcher.watchResources([ResourceWatcher.TYPES.DOCUMENT_EVENT], {
+    onAvailable: resources => documentEvents.push(...resources),
+    ignoreExistingResources: true,
+  });
+  is(documentEvents.length, 0, "Existing document events are not fired");
+
+  info("Navigate to another process");
+  const onSwitched = targetCommand.once("switched-target");
+  const onLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  BrowserTestUtils.loadURI(
+    gBrowser.selectedBrowser,
+    "http://example.net/document-builder.sjs?html=net"
+  );
+  await onLoaded;
+
+  // We are switching to a new target only when fission is enabled...
+  if (isFissionEnabled()) {
+    await onSwitched;
+  }
+
+  info("Wait for dom-loading, dom-interactive and dom-complete events");
+  await waitUntil(() => documentEvents.length >= 3);
+  assertEvents(...documentEvents);
+
+  // Wait for some time in order to let a chance to have duplicated dom-loading events
+  await wait(1000);
+
+  is(
+    documentEvents.length,
+    3,
+    "There is no duplicated event and only the 3 expected DOCUMENT_EVENT states"
+  );
+
+  if (isFissionEnabled()) {
+    is(
+      documentEvents[0].shouldBeIgnoredAsRedundantWithTargetAvailable,
+      true,
+      "shouldBeIgnoredAsRedundantWithTargetAvailable is true for the new target which follows the WindowGlobal lifecycle"
+    );
+  } else {
+    is(
+      documentEvents[0].shouldBeIgnoredAsRedundantWithTargetAvailable,
+      undefined,
+      "shouldBeIgnoredAsRedundantWithTargetAvailable is undefined if fission is disabled and we keep the same target"
+    );
+  }
+
+  targetCommand.destroy();
+  await client.close();
+}
+
 async function assertPromises(onLoading, onInteractive, onComplete) {
   const loadingEvent = await onLoading;
   const interactiveEvent = await onInteractive;
@@ -104,6 +170,13 @@ async function assertPromises(onLoading, onInteractive, onComplete) {
 }
 
 function assertEvents(loadingEvent, interactiveEvent, completeEvent) {
+  is(loadingEvent.name, "dom-loading", "First event is dom-loading");
+  is(
+    interactiveEvent.name,
+    "dom-interactive",
+    "First event is dom-interactive"
+  );
+  is(completeEvent.name, "dom-complete", "First event is dom-complete");
   is(
     typeof loadingEvent.time,
     "number",
