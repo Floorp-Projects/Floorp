@@ -200,10 +200,13 @@ def bootstrap(topsrcdir):
     if os.path.exists(deleted_dir):
         shutil.rmtree(deleted_dir, ignore_errors=True)
 
-    if sys.prefix == sys.base_prefix:
+    if major == 3 and sys.prefix == sys.base_prefix:
         # We are not in a virtualenv. Remove global site packages
         # from sys.path.
-        site_paths = {*site.getsitepackages(), site.getusersitepackages()}
+        # Note that we don't ever invoke mach from a Python 2 virtualenv,
+        # and "sys.base_prefix" doesn't exist before Python 3.3, so we
+        # guard with the "major == 3" check.
+        site_paths = set(site.getsitepackages() + [site.getusersitepackages()])
         sys.path = [path for path in sys.path if path not in site_paths]
 
     # Global build system and mach state is stored in a central directory. By
