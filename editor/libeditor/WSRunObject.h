@@ -316,13 +316,13 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   template <typename PT, typename CT>
   static EditorDOMPointInText GetInclusiveNextEditableCharPoint(
-      const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
+      dom::Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
     if (aPoint.IsInTextNode() && !aPoint.IsEndOfContainer() &&
         HTMLEditUtils::IsSimplyEditableNode(*aPoint.ContainerAsText())) {
       return EditorDOMPointInText(aPoint.ContainerAsText(), aPoint.Offset());
     }
-    WSRunScanner scanner(aHTMLEditor.GetActiveEditingHost(), aPoint);
-    return scanner.GetInclusiveNextEditableCharPoint(aPoint);
+    return WSRunScanner(aEditingHost, aPoint)
+        .GetInclusiveNextEditableCharPoint(aPoint);
   }
 
   /**
@@ -331,14 +331,14 @@ class MOZ_STACK_CLASS WSRunScanner final {
    */
   template <typename PT, typename CT>
   static EditorDOMPointInText GetPreviousEditableCharPoint(
-      const HTMLEditor& aHTMLEditor, const EditorDOMPointBase<PT, CT>& aPoint) {
+      dom::Element* aEditingHost, const EditorDOMPointBase<PT, CT>& aPoint) {
     if (aPoint.IsInTextNode() && !aPoint.IsStartOfContainer() &&
         HTMLEditUtils::IsSimplyEditableNode(*aPoint.ContainerAsText())) {
       return EditorDOMPointInText(aPoint.ContainerAsText(),
                                   aPoint.Offset() - 1);
     }
-    WSRunScanner scanner(aHTMLEditor.GetActiveEditingHost(), aPoint);
-    return scanner.GetPreviousEditableCharPoint(aPoint);
+    return WSRunScanner(aEditingHost, aPoint)
+        .GetPreviousEditableCharPoint(aPoint);
   }
 
   /**
