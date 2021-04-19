@@ -126,10 +126,13 @@ add_task(async function test_create_login() {
     await storageChangedPromised;
     info("login added to storage");
 
-    storageChangedPromised = TestUtils.topicObserved(
-      "passwordmgr-storage-changed",
-      (_, data) => data == "modifyLogin"
-    );
+    let canTestOSKeyStoreLogin = OSKeyStoreTestUtils.canTestOSKeyStoreLogin();
+    if (canTestOSKeyStoreLogin) {
+      storageChangedPromised = TestUtils.topicObserved(
+        "passwordmgr-storage-changed",
+        (_, data) => data == "modifyLogin"
+      );
+    }
     await SpecialPowers.spawn(browser, [originTuple], async aOriginTuple => {
       await ContentTaskUtils.waitForCondition(() => {
         return !content.document.documentElement.classList.contains(
@@ -202,7 +205,7 @@ add_task(async function test_create_login() {
       );
     });
 
-    if (!OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
+    if (!canTestOSKeyStoreLogin) {
       continue;
     }
 

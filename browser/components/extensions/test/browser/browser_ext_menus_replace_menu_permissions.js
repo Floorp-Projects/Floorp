@@ -209,8 +209,11 @@ add_task(async function overrideContext_permissions() {
 
   do {
     info(`Going to trigger "contextmenu" event.`);
-    // The menu is never shown, so don't await the returned promise.
-    openContextMenuInSidebar("a");
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "a",
+      { type: "contextmenu" },
+      SidebarUI.browser.contentDocument.getElementById("webext-panels-browser")
+    );
   } while (await extension.awaitMessage("continue_test"));
 
   await extension.unload();

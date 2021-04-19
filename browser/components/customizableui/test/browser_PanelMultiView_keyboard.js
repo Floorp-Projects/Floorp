@@ -495,9 +495,7 @@ async function testTabArrowsEmbeddedDoc(aView, aEmbedder) {
   is(textarea.selectionStart, 0, "selectionStart 0 after ArrowLeft");
   is(doc.activeElement, textarea, "textarea still focused");
   let docButton = doc.getElementById("docButton");
-  expectFocusAfterKey("Tab", docButton);
-  // Make sure tab leaves the document and reaches the Back button.
-  expectFocusAfterKey("Tab", backButton);
+  await expectFocusAfterKey("Tab", docButton);
   await hidePopup();
 }
 
