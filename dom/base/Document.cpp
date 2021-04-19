@@ -6783,6 +6783,17 @@ void Document::DeletePresShell() {
   mDesignModeSheetAdded = false;
 }
 
+void Document::DisallowBFCaching() {
+  NS_ASSERTION(!mBFCacheEntry, "We're already in the bfcache!");
+  if (!mBFCacheDisallowed) {
+    WindowGlobalChild* wgc = GetWindowGlobalChild();
+    if (wgc) {
+      wgc->BlockBFCacheFor(BFCacheStatus::NOT_ALLOWED);
+    }
+  }
+  mBFCacheDisallowed = true;
+}
+
 void Document::SetBFCacheEntry(nsIBFCacheEntry* aEntry) {
   MOZ_ASSERT(IsBFCachingAllowed() || !aEntry, "You should have checked!");
 
@@ -11857,6 +11868,12 @@ void Document::GetReadyState(nsAString& aReadyState) const {
 
 void Document::SuppressEventHandling(uint32_t aIncrease) {
   mEventsSuppressed += aIncrease;
+  if (mEventsSuppressed == aIncrease) {
+    WindowGlobalChild* wgc = GetWindowGlobalChild();
+    if (wgc) {
+      wgc->BlockBFCacheFor(BFCacheStatus::EVENT_HANDLING_SUPPRESSED);
+    }
+  }
   UpdateFrameRequestCallbackSchedulingState();
   for (uint32_t i = 0; i < aIncrease; ++i) {
     ScriptLoader()->AddExecuteBlocker();
@@ -12255,6 +12272,11 @@ void Document::UnsuppressEventHandlingAndFireEvents(bool aFireEvents) {
   }
 
   if (!EventHandlingSuppressed()) {
+    WindowGlobalChild* wgc = GetWindowGlobalChild();
+    if (wgc) {
+      wgc->UnblockBFCacheFor(BFCacheStatus::EVENT_HANDLING_SUPPRESSED);
+    }
+
     MOZ_ASSERT(NS_IsMainThread());
     nsTArray<RefPtr<net::ChannelEventQueue>> queues =
         std::move(mSuspendedQueues);
@@ -17229,6 +17251,25 @@ void Document::EnableChildElementInPictureInPictureMode() {
 void Document::DisableChildElementInPictureInPictureMode() {
   mPictureInPictureChildElementCount--;
   MOZ_ASSERT(mPictureInPictureChildElementCount >= 0);
+}
+
+void Document::AddMediaElementWithMSE() {
+  if (mMediaElementWithMSECount++ == 0) {
+    WindowGlobalChild* wgc = GetWindowGlobalChild();
+    if (wgc) {
+      wgc->BlockBFCacheFor(BFCacheStatus::CONTAINS_MSE_CONTENT);
+    }
+  }
+}
+
+void Document::RemoveMediaElementWithMSE() {
+  MOZ_ASSERT(mMediaElementWithMSECount > 0);
+  if (--mMediaElementWithMSECount == 0) {
+    WindowGlobalChild* wgc = GetWindowGlobalChild();
+    if (wgc) {
+      wgc->UnblockBFCacheFor(BFCacheStatus::CONTAINS_MSE_CONTENT);
+    }
+  }
 }
 
 }  // namespace mozilla::dom

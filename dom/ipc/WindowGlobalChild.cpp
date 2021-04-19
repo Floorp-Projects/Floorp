@@ -671,6 +671,14 @@ bool WindowGlobalChild::SameOriginWithTop() {
   return IsSameOriginWith(WindowContext()->TopWindowContext());
 }
 
+void WindowGlobalChild::UnblockBFCacheFor(BFCacheStatus aStatus) {
+  SendUpdateBFCacheStatus(0, aStatus);
+}
+
+void WindowGlobalChild::BlockBFCacheFor(BFCacheStatus aStatus) {
+  SendUpdateBFCacheStatus(aStatus, 0);
+}
+
 WindowGlobalChild::~WindowGlobalChild() = default;
 
 JSObject* WindowGlobalChild::WrapObject(JSContext* aCx,
