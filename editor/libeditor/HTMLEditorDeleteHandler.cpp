@@ -254,7 +254,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
                             const EditorDOMPoint& aCaretPoint,
                             const WSRunScanner& aWSRunScannerAtCaret);
   nsresult ComputeRangesToDeleteAtomicContent(
-      const HTMLEditor& aHTMLEditor, const nsIContent& aAtomicContent,
+      Element* aEditingHost, const nsIContent& aAtomicContent,
       AutoRangeArray& aRangesToDelete) const;
 
   /**
@@ -1690,7 +1690,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
       return NS_ERROR_FAILURE;
     }
     nsresult rv = ComputeRangesToDeleteAtomicContent(
-        aHTMLEditor, *atomicContent, aRangesToDelete);
+        aWSRunScannerAtCaret.GetEditingHost(), *atomicContent, aRangesToDelete);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "AutoDeleteRangesHandler::ComputeRangesToDeleteAtomicContent() failed");
@@ -2226,8 +2226,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteHRElement(
     return canDeleteHRElement.unwrapErr();
   }
   if (canDeleteHRElement.inspect()) {
-    nsresult rv = ComputeRangesToDeleteAtomicContent(aHTMLEditor, aHRElement,
-                                                     aRangesToDelete);
+    nsresult rv = ComputeRangesToDeleteAtomicContent(
+        aWSRunScannerAtCaret.GetEditingHost(), aHRElement, aRangesToDelete);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "AutoDeleteRangesHandler::ComputeRangesToDeleteAtomicContent() failed");
@@ -2250,7 +2250,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteHRElement(
   // If we'll just move caret position, but if it's followed by a `<br>`
   // element, we'll delete it.
   nsresult rv = ComputeRangesToDeleteAtomicContent(
-      aHTMLEditor, *forwardScanFromCaretResult.ElementPtr(), aRangesToDelete);
+      aWSRunScannerAtCaret.GetEditingHost(),
+      *forwardScanFromCaretResult.ElementPtr(), aRangesToDelete);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "AutoDeleteRangesHandler::ComputeRangesToDeleteAtomicContent() failed");
@@ -2364,10 +2365,10 @@ nsIContent* HTMLEditor::AutoDeleteRangesHandler::GetAtomicContentToDelete(
 
 nsresult
 HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAtomicContent(
-    const HTMLEditor& aHTMLEditor, const nsIContent& aAtomicContent,
+    Element* aEditingHost, const nsIContent& aAtomicContent,
     AutoRangeArray& aRangesToDelete) const {
   EditorDOMRange rangeToDelete =
-      WSRunScanner::GetRangesForDeletingAtomicContent(aHTMLEditor,
+      WSRunScanner::GetRangesForDeletingAtomicContent(aEditingHost,
                                                       aAtomicContent);
   if (!rangeToDelete.IsPositioned()) {
     NS_WARNING("WSRunScanner::GetRangeForDeleteAContentNode() failed");
