@@ -2989,27 +2989,25 @@ static bool CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject,
     }
   }
 
-  Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
-  for (Shape::Range<NoGC> range(selfHostedObject->lastProperty());
-       !range.empty(); range.popFront()) {
-    Shape& shape = range.front();
-    if (shape.enumerable() && !shapes.append(&shape)) {
+  Rooted<ShapePropertyVector> props(cx, ShapePropertyVector(cx));
+  for (ShapePropertyIter<NoGC> iter(selfHostedObject->shape()); !iter.done();
+       iter++) {
+    if (iter->enumerable() && !props.append(*iter)) {
       return false;
     }
   }
 
-  // Now our shapes are in last-to-first order, so....
-  std::reverse(shapes.begin(), shapes.end());
-  for (size_t i = 0; i < shapes.length(); ++i) {
-    MOZ_ASSERT(shapes[i]->isDataProperty(),
+  // Now our properties are in last-to-first order, so....
+  std::reverse(props.begin(), props.end());
+  for (size_t i = 0; i < props.length(); ++i) {
+    MOZ_ASSERT(props[i].isDataProperty(),
                "Can't handle cloning accessors here yet.");
-    if (!ids.append(shapes[i]->propid())) {
+    if (!ids.append(props[i].key())) {
       return false;
     }
-    uint8_t shapeAttrs =
-        shapes[i]->attributes() &
-        (JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
-    if (!attrs.append(shapeAttrs)) {
+    uint8_t propAttrs = props[i].attributes() &
+                        (JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+    if (!attrs.append(propAttrs)) {
       return false;
     }
   }
