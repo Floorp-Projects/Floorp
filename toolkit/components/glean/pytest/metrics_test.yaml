@@ -283,3 +283,18 @@ test.nested:
       another_extra_key:
         description: Another extra key description
     telemetry_mirror: EventMetric_EnumName_WithExtra
+
+  quantity_metric:
+    type: quantity
+    unit: someunit
+    expires: never
+    description: |
+      A multi-line
+      description
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1704846/
+    data_reviews:
+      - https://example.com
+    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_QUANTITY

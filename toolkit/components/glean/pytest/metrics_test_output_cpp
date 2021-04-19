@@ -177,6 +177,15 @@ namespace test_nested {
      */
     constexpr impl::EventMetric<EventMetricWithExtraKeys> event_metric_with_extra(17);
 
+    /**
+     * generated from test.nested.quantity_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::QuantityMetric quantity_metric(18);
+
 }
 
 } // namespace mozilla::glean

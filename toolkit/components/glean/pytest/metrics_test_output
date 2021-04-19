@@ -330,6 +330,22 @@ pub mod test_nested {
         })
     });
 
+    #[allow(non_upper_case_globals)]
+    /// generated from test.nested.quantity_metric
+    ///
+    /// A multi-line
+    /// description
+    pub static quantity_metric: Lazy<QuantityMetric> = Lazy::new(|| {
+        QuantityMetric::new(18.into(), CommonMetricData {
+            name: "quantity_metric".into(),
+            category: "test.nested".into(),
+            send_in_pings: vec!["metrics".into()],
+            lifetime: Lifetime::Ping,
+            disabled: false,
+            ..Default::default()
+        })
+    });
+
 }
 
 #[allow(dead_code)]
@@ -412,6 +428,12 @@ pub(crate) mod __glean_metric_maps {
     pub static DATETIME_MAP: Lazy<HashMap<MetricId, &Lazy<DatetimeMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
         map.insert(15.into(), &super::test_nested::datetime_metric);
+        map
+    });
+
+    pub static QUANTITY_MAP: Lazy<HashMap<MetricId, &Lazy<QuantityMetric>>> = Lazy::new(|| {
+        let mut map = HashMap::with_capacity(1);
+        map.insert(18.into(), &super::test_nested::quantity_metric);
         map
     });
 
