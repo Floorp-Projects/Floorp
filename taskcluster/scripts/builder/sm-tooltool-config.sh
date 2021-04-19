@@ -6,7 +6,6 @@ SPIDERMONKEY_VARIANT=${SPIDERMONKEY_VARIANT:-plain}
 UPLOAD_DIR=${UPLOAD_DIR:-$HOME/artifacts/}
 WORK=${WORK:-$HOME/workspace}
 
-export TOOLTOOL_CHECKOUT=${TOOLTOOL_CHECKOUT:-$WORK}
 
 ( # Create scope for set -e
 set -e
