@@ -130,18 +130,22 @@ class nsPrinterCUPS final : public nsPrinterBase {
 // files from the printer and find the relevant known choices that can apply,
 // and that is a lot more complex, similarly sketchy (requires the same amount
 // of driver-specific knowledge), and requires using deprecated CUPS APIs.
-#define CUPS_EACH_MONOCHROME_PRINTER_SETTING(macro_)             \
-  macro_("ColorModel", "Gray")                    /* Generic */  \
-      macro_("BRMonoColor", "Mono")               /* Brother */  \
-      macro_("BRPrintQuality", "Black")           /* Brother */  \
-      macro_("CNIJGrayScale", "1")                /* Canon */    \
-      macro_("INK", "MONO")                       /* Epson */    \
-      macro_("HPColorMode", "GrayscalePrint")     /* HP */       \
-      macro_("ColorMode", "Mono")                 /* Samsung */  \
-      macro_("PrintoutMode", "Normal.Gray")       /* Foomatic */ \
-      macro_("ProcessColorModel", "Mono")         /* Samsung */  \
-      macro_("ARCMode", "CMBW")                   /* Sharp */    \
-      macro_("XRXColor", "BW")                    /* Xerox */    \
-      macro_("XROutputColor", "PrintAsGrayscale") /* Xerox, bug 1676191#c32 */
+#define CUPS_EACH_MONOCHROME_PRINTER_SETTING(macro_)                           \
+  macro_("ColorModel", "Gray")                    /* Generic */                \
+      macro_("BRMonoColor", "Mono")               /* Brother */                \
+      macro_("BRPrintQuality", "Black")           /* Brother */                \
+      macro_("CNIJGrayScale", "1")                /* Canon */                  \
+      macro_("INK", "MONO")                       /* Epson */                  \
+      macro_("HPColorMode", "GrayscalePrint")     /* HP */                     \
+      macro_("ColorMode", "Mono")                 /* Samsung */                \
+      macro_("PrintoutMode", "Normal.Gray")       /* Foomatic */               \
+      macro_("ProcessColorModel", "Mono")         /* Samsung */                \
+      macro_("ARCMode", "CMBW")                   /* Sharp */                  \
+      macro_("XRXColor", "BW")                    /* Xerox */                  \
+      macro_("XROutputColor", "PrintAsGrayscale") /* Xerox, bug 1676191#c32 */ \
+      macro_("SelectColor", "Grayscale")          /* Konica Minolta */         \
+      macro_("OKControl", "Gray")                 /* Oki */                    \
+      macro_("BLW", "TrueM")                      /* Lexmark */                \
+      macro_("EPRendering", "None")               /* Epson */
 
 #endif /* nsPrinterCUPS_h___ */
