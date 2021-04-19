@@ -45,7 +45,7 @@ class MachCommands(MachCommandBase):
         category="post-build",
         description="Rebuild the devtool's static css properties database.",
     )
-    def generate_css_db(self):
+    def generate_css_db(self, command_context):
         """Generate the static css properties database for devtools and write it to file."""
 
         print("Re-generating the css properties database...")

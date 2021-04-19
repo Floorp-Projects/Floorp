@@ -28,15 +28,15 @@ class ConditionsProvider(MachCommandBase):
     bar = False
 
     @Command("cmd_foo", category="testing", conditions=[is_foo])
-    def run_foo(self):
+    def run_foo(self, command_context):
         pass
 
     @Command("cmd_bar", category="testing", conditions=[is_bar])
-    def run_bar(self):
+    def run_bar(self, command_context):
         pass
 
     @Command("cmd_foobar", category="testing", conditions=[is_foo, is_bar])
-    def run_foobar(self):
+    def run_foobar(self, command_context):
         pass
 
 
@@ -48,13 +48,13 @@ class ConditionsContextProvider(MachCommandBase):
         self.bar = self._mach_context.bar
 
     @Command("cmd_foo_ctx", category="testing", conditions=[is_foo])
-    def run_foo(self):
+    def run_foo(self, command_context):
         pass
 
     @Command("cmd_bar_ctx", category="testing", conditions=[is_bar])
-    def run_bar(self):
+    def run_bar(self, command_context):
         pass
 
     @Command("cmd_foobar_ctx", category="testing", conditions=[is_foo, is_bar])
-    def run_foobar(self):
+    def run_foobar(self, command_context):
         pass

@@ -17,7 +17,7 @@ class MachCommands(MachCommandBase):
 
     @Command("tps-build", category="testing", description="Build TPS add-on.")
     @CommandArgument("--dest", default=None, help="Where to write add-on.")
-    def build(self, dest):
+    def build(self, command_context, dest):
         src = os.path.join(
             self.topsrcdir, "services", "sync", "tps", "extensions", "tps"
         )
