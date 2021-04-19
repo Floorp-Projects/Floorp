@@ -599,8 +599,39 @@ static constexpr uint32_t StringFlagsForCharType(uint32_t baseFlags) {
   return baseFlags | JSString::LATIN1_CHARS_BIT;
 }
 
+JSLinearString* JSRope::flatten(JSContext* maybecx) {
+  mozilla::Maybe<AutoGeckoProfilerEntry> entry;
+  if (maybecx && !maybecx->isHelperThreadContext()) {
+    entry.emplace(maybecx, "JSRope::flatten");
+  }
+
+  JSLinearString* str = flattenInternal();
+  if (!str && maybecx) {
+    ReportOutOfMemory(maybecx);
+  }
+
+  return str;
+}
+
+JSLinearString* JSRope::flattenInternal() {
+  if (zone()->needsIncrementalBarrier()) {
+    return flattenInternal<WithIncrementalBarrier>();
+  }
+
+  return flattenInternal<NoBarrier>();
+}
+
+template <JSRope::UsingBarrier usingBarrier>
+JSLinearString* JSRope::flattenInternal() {
+  if (hasTwoByteChars()) {
+    return flattenInternal<usingBarrier, char16_t>();
+  }
+
+  return flattenInternal<usingBarrier, Latin1Char>();
+}
+
 template <JSRope::UsingBarrier usingBarrier, typename CharT>
-JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
+JSLinearString* JSRope::flattenInternal() {
   /*
    * Consider the DAG of JSRopes rooted at this JSRope, with non-JSRopes as
    * its leaves. Mutate the root JSRope into a JSExtensibleString containing
@@ -692,9 +723,6 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
         // nursery-allocated root node.
         if (!nursery.registerMallocedBuffer(wholeChars,
                                             wholeCapacity * sizeof(CharT))) {
-          if (maybecx) {
-            ReportOutOfMemory(maybecx);
-          }
           return nullptr;
         }
         // leftmost child -> root is a tenured -> nursery edge.
@@ -741,9 +769,6 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
   }
 
   if (!AllocChars(this, wholeLength, &wholeChars, &wholeCapacity)) {
-    if (maybecx) {
-      ReportOutOfMemory(maybecx);
-    }
     return nullptr;
   }
 
@@ -752,9 +777,6 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
     if (!nursery.registerMallocedBuffer(wholeChars,
                                         wholeCapacity * sizeof(CharT))) {
       js_free(wholeChars);
-      if (maybecx) {
-        ReportOutOfMemory(maybecx);
-      }
       return nullptr;
     }
   }
@@ -839,26 +861,6 @@ inline void JSRope::ropeBarrierDuringFlattening(JSString* str) {
     gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
     gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
   }
-}
-
-template <JSRope::UsingBarrier usingBarrier>
-JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
-  if (hasTwoByteChars()) {
-    return flattenInternal<usingBarrier, char16_t>(maybecx);
-  }
-  return flattenInternal<usingBarrier, Latin1Char>(maybecx);
-}
-
-JSLinearString* JSRope::flatten(JSContext* maybecx) {
-  mozilla::Maybe<AutoGeckoProfilerEntry> entry;
-  if (maybecx && !maybecx->isHelperThreadContext()) {
-    entry.emplace(maybecx, "JSRope::flatten");
-  }
-
-  if (zone()->needsIncrementalBarrier()) {
-    return flattenInternal<WithIncrementalBarrier>(maybecx);
-  }
-  return flattenInternal<NoBarrier>(maybecx);
 }
 
 template <AllowGC allowGC>
