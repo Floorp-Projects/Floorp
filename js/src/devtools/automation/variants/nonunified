@@ -4,9 +4,6 @@
     "env": {
         "JS_SMOOSH_DISABLE_OPCODE_CHECK": "1"
     },
-    "conditional-configure-args": {
-        "linux64": "--enable-smoosh"
-    },
     "skip-tests": {
         "all": ["jstests", "jittest", "checks"]
     }

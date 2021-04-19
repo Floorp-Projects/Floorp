@@ -3,8 +3,5 @@
     "debug": true,
     "env": {
         "JSTESTS_EXTRA_ARGS": "--jitflags=debug"
-    },
-    "conditional-configure-args": {
-        "linux64": "--enable-clang-plugin"
     }
 }

@@ -1,12 +1,8 @@
 {
     "configure-args": "--enable-rust-simd --enable-smoosh",
     "debug": true,
-    "compiler": "clang",
     "env": {
         "JSTESTS_EXTRA_ARGS": "--args='--smoosh' --jitflags=debug --exclude-file={DIR}/smoosh-jstests-slow.txt",
         "JITTEST_EXTRA_ARGS": "--args='--smoosh'"
-    },
-    "conditional-configure-args": {
-        "linux64": "--enable-clang-plugin"
     }
 }
