@@ -1369,6 +1369,12 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateBFCacheStatus(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WindowGlobalParent::RecvSetSingleChannelId(
+    const Maybe<uint64_t>& aSingleChannelId) {
+  mSingleChannelId = aSingleChannelId;
+  return IPC_OK();
+}
+
 void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (mPageUseCountersWindow) {
     mPageUseCountersWindow->FinishAccumulatingPageUseCounters();
