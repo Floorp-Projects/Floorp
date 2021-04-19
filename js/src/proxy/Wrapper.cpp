@@ -47,7 +47,7 @@ bool Wrapper::finalizeInBackground(const Value& priv) const {
 
 bool ForwardingProxyHandler::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject proxy, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const {
   assertEnteredPolicy(cx, proxy, id, GET | SET | GET_PROPERTY_DESCRIPTOR);
   RootedObject target(cx, proxy->as<ProxyObject>().target());
   return GetOwnPropertyDescriptor(cx, target, id, desc);

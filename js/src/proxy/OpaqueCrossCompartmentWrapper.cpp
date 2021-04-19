@@ -14,8 +14,8 @@ using namespace js;
 
 bool OpaqueCrossCompartmentWrapper::getOwnPropertyDescriptor(
     JSContext* cx, HandleObject wrapper, HandleId id,
-    MutableHandle<PropertyDescriptor> desc) const {
-  desc.object().set(nullptr);
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) const {
+  desc.reset();
   return true;
 }
 

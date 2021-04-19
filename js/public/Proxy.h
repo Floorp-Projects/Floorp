@@ -259,7 +259,7 @@ class JS_FRIEND_API BaseProxyHandler {
   /* Standard internal methods. */
   virtual bool getOwnPropertyDescriptor(
       JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
-      JS::MutableHandle<JS::PropertyDescriptor> desc) const = 0;
+      JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc) const = 0;
   virtual bool defineProperty(JSContext* cx, JS::HandleObject proxy,
                               JS::HandleId id,
                               JS::Handle<JS::PropertyDescriptor> desc,

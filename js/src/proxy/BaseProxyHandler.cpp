@@ -65,11 +65,11 @@ bool BaseProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id,
 bool BaseProxyHandler::hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
                               bool* bp) const {
   assertEnteredPolicy(cx, proxy, id, GET);
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
   if (!getOwnPropertyDescriptor(cx, proxy, id, &desc)) {
     return false;
   }
-  *bp = !!desc.object();
+  *bp = desc.isSome();
   return true;
 }
 
@@ -82,14 +82,16 @@ bool BaseProxyHandler::get(JSContext* cx, HandleObject proxy,
   // (January 21, 2016) 9.1.8 fairly closely.
 
   // Step 2. (Step 1 is a superfluous assertion.)
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
   if (!getOwnPropertyDescriptor(cx, proxy, id, &desc)) {
     return false;
   }
-  desc.assertCompleteIfFound();
+  if (desc.isSome()) {
+    desc->assertComplete();
+  }
 
   // Step 3.
-  if (!desc.object()) {
+  if (desc.isNothing()) {
     // The spec calls this variable "parent", but that word has weird
     // connotations in SpiderMonkey, so let's go with "proto".
     // Step 3.a.
@@ -109,14 +111,14 @@ bool BaseProxyHandler::get(JSContext* cx, HandleObject proxy,
   }
 
   // Step 4.
-  if (desc.isDataDescriptor()) {
-    vp.set(desc.value());
+  if (desc->isDataDescriptor()) {
+    vp.set(desc->value());
     return true;
   }
 
   // Step 5.
-  MOZ_ASSERT(desc.isAccessorDescriptor());
-  RootedObject getter(cx, desc.getterObject());
+  MOZ_ASSERT(desc->isAccessorDescriptor());
+  RootedObject getter(cx, desc->getterObject());
 
   // Step 6.
   if (!getter) {
@@ -139,17 +141,12 @@ bool BaseProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id,
   // SpiderMonkey's particular foibles.
 
   // Steps 2-3.  (Step 1 is a superfluous assertion.)
-  Rooted<PropertyDescriptor> ownDesc_(cx);
-  if (!getOwnPropertyDescriptor(cx, proxy, id, &ownDesc_)) {
+  Rooted<mozilla::Maybe<PropertyDescriptor>> ownDesc(cx);
+  if (!getOwnPropertyDescriptor(cx, proxy, id, &ownDesc)) {
     return false;
   }
-  ownDesc_.assertCompleteIfFound();
-
-  Rooted<mozilla::Maybe<PropertyDescriptor>> ownDesc(cx);
-  if (ownDesc_.object()) {
-    ownDesc.set(mozilla::Some(ownDesc_.get()));
-  } else {
-    ownDesc.reset();
+  if (ownDesc.isSome()) {
+    ownDesc->assertComplete();
   }
 
   // The rest is factored out into a separate function with a weird name.
@@ -257,13 +254,15 @@ bool BaseProxyHandler::getOwnEnumerablePropertyKeys(
     }
 
     AutoWaivePolicy policy(cx, proxy, id, BaseProxyHandler::GET);
-    Rooted<PropertyDescriptor> desc(cx);
+    Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
     if (!getOwnPropertyDescriptor(cx, proxy, id, &desc)) {
       return false;
     }
-    desc.assertCompleteIfFound();
+    if (desc.isSome()) {
+      desc->assertComplete();
+    }
 
-    if (desc.object() && desc.enumerable()) {
+    if (desc.isSome() && desc->enumerable()) {
       props[i++].set(id);
     }
   }
