@@ -2,7 +2,7 @@
 include filters/reftest.list
 
 # WebGL Reftests!
-defaults pref(webgl.force-enabled,true) pref(media.useAudioChannelAPI,true) skip-if(Android&&webrender)
+defaults pref(webgl.force-enabled,true) skip-if(Android&&webrender)
 
 # Check that disabling works:
                           == webgl-disable-test.html?nogl wrapper.html?green.png
