@@ -600,12 +600,16 @@
     <string name="tabs_header_private_title">Privat session</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Private faneblade</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Synkroniserede faneblade</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Tilføj faneblad</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Tilføj privat faneblad</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Privat</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Synkroniser</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Åbne faneblade</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -616,6 +620,8 @@
     <string name="tab_tray_menu_item_share">Del alle faneblade</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Nyligt lukkede faneblade</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Kontoindstillinger</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Fanebladsindstillinger</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -968,6 +974,8 @@
     <string name="share_link_all_apps_subheader">Alle handlinger</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Brugt for nyligt</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Log ind for at synkronisere</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Log ind på Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1186,6 +1194,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Synkronisering er slået til</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Kunne ikke logge ind</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Altid aktiveret privatlivsbeskyttelse</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string name="onboarding_tracking_protection_description_3">Firefox forhindrer automatisk virksomheder i at følge dig i smug på nettet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1198,6 +1208,10 @@
     <string name="onboarding_tracking_protection_strict_option">Striks</string>
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description_3">Blokerer flere sporings-mekanismer. Sider indlæses hurtigere, men noget funktionalitet virker måske ikke.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Vælg placeringen af din værktøjslinje</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Placer værktøjslinjen indenfor rækkevidde. Behold den nederst, eller flyt den til toppen.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Privat browsing</string>
     <!-- text for the private browsing onboarding card description
@@ -1533,14 +1547,22 @@
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkroniser kort på tværs af enheder</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Tilføj betalingskort</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Håndter gemte kort</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Tilføj kort</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Rediger kort</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Kortnummer</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Udløbsdato</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Navn på kort</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Kortets kaldenavn</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Slet kort</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Slet kort</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1549,6 +1571,9 @@
     <string name="credit_cards_save_button">Gem</string>
     <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
     <string name="credit_cards_cancel_button">Annuller</string>
+
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Gemte kort</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tilføj søgetjeneste</string>
@@ -1706,6 +1731,9 @@
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Annuller</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Indstil links fra websteder, mails og beskeder til automatisk at blive åbnet i Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Fjern</string>

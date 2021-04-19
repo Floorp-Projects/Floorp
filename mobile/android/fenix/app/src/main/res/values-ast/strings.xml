@@ -413,18 +413,18 @@
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Proteición escontra\'l rastrexu</string>
+    <string name="preferences_tracking_protection_settings">Proteición antirrastrexu</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Proteición escontra\'l rastrexu</string>
+    <string name="preferences_tracking_protection">Proteición antirrastrexu</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Esceiciones</string>
 
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">La proteición escontra\'l rastrexu ta desactivada pa estos sitios web</string>
+    <string name="preferences_tracking_protection_exceptions_description">La proteición antirrastrexu ta desactivada pa estos sitios web</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Activar en tolos sitios</string>
     <!-- Text displayed when there are no exceptions -->
-    <string name="exceptions_empty_message_description">Les esceiciones déxente desactivar la proteición escontra\'l rastrexu nos sitios esbillaos.</string>
+    <string name="exceptions_empty_message_description">Les esceiciones déxente desactivar la proteición antirrastrexu nos sitios esbillaos.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Deprender más</string>
 
@@ -1256,7 +1256,7 @@ en llinia y con nós.</string>
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">Axustes de la proteición</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="preference_enhanced_tracking_protection">Proteición ameyorada escontra\'l rastrexu</string>
+    <string name="preference_enhanced_tracking_protection">Proteición antirrastrexu ameyorada</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Restola ensin que te sigan</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
@@ -1331,7 +1331,7 @@ en llinia y con nós.</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">DESACTIVÓSE nesti sitiu</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">La proteición ameyorada escontra\'l rastrexu ta desactivada pa estos sitios web</string>
+    <string name="enhanced_tracking_protection_exceptions">La proteición antirrastrexu ameyorada ta desactivada pa estos sitios web</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Dir p\'atrás</string>

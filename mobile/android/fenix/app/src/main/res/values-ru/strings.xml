@@ -617,6 +617,8 @@
     <string name="tabs_header_private_title">Приватная сессия</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Приватные вкладки</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Облачные вкладки</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Открыть вкладку</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -635,6 +637,8 @@
     <string name="tab_tray_menu_item_share">Поделиться всеми вкладками</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Недавно закрытые вкладки</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Настройки Аккаунта</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Параметры вкладок</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1005,8 +1009,6 @@
     <string name="share_link_all_apps_subheader">Все действия</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Недавно использованные</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Вы вошли как %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Войти в синхронизацию</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1593,6 +1595,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Управление сохранёнными картами</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Добавить карту</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Изменить карту</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Номер карты</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1601,6 +1605,8 @@
     <string name="credit_cards_name_on_card">Имя держателя</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Псевдоним карты</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Удалить карту</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Удалить карту</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1769,6 +1775,9 @@
 	<string name="top_sites_rename_dialog_ok">ОК</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Отмена</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Настройте автоматическое открытие ссылок с веб-сайтов, из электронных писем и сообщений в Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Убрать</string>
