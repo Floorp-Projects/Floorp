@@ -82,9 +82,11 @@ class FunctionBox;
   F(PropertyNameExpr, NameNode)                                  \
   F(DotExpr, PropertyAccess)                                     \
   F(ElemExpr, PropertyByValue)                                   \
+  F(PrivateMemberExpr, PrivateMemberAccess)                      \
   F(OptionalDotExpr, OptionalPropertyAccess)                     \
   F(OptionalChain, UnaryNode)                                    \
   F(OptionalElemExpr, OptionalPropertyByValue)                   \
+  F(OptionalPrivateMemberExpr, OptionalPrivateMemberAccess)      \
   F(OptionalCallExpr, BinaryNode)                                \
   F(ArrayExpr, ListNode)                                         \
   F(Elision, NullaryNode)                                        \
@@ -608,11 +610,14 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(ClassNames, ClassNamesType, asClassNames)                            \
   MACRO(ForNode, ForNodeType, asFor)                                         \
   MACRO(PropertyAccess, PropertyAccessType, asPropertyAccess)                \
-  MACRO(PropertyByValue, PropertyByValueType, asPropertyByValue)             \
   MACRO(OptionalPropertyAccess, OptionalPropertyAccessType,                  \
         asOptionalPropertyAccess)                                            \
+  MACRO(PropertyByValue, PropertyByValueType, asPropertyByValue)             \
   MACRO(OptionalPropertyByValue, OptionalPropertyByValueType,                \
-        OptionalasPropertyByValue)                                           \
+        asOptionalPropertyByValue)                                           \
+  MACRO(PrivateMemberAccess, PrivateMemberAccessType, asPrivateMemberAccess) \
+  MACRO(OptionalPrivateMemberAccess, OptionalPrivateMemberAccessType,        \
+        asOptionalPrivateMemberAccess)                                       \
   MACRO(SwitchStatement, SwitchStatementType, asSwitchStatement)             \
                                                                              \
   MACRO(FunctionNode, FunctionNodeType, asFunction)                          \
@@ -2059,6 +2064,56 @@ class OptionalPropertyByValue : public PropertyByValueBase {
     bool match = node.isKind(ParseNodeKind::OptionalElemExpr);
     MOZ_ASSERT_IF(match, node.is<PropertyByValueBase>());
     return match;
+  }
+};
+
+class PrivateMemberAccessBase : public BinaryNode {
+ public:
+  PrivateMemberAccessBase(ParseNodeKind kind, ParseNode* lhs, NameNode* name,
+                          uint32_t begin, uint32_t end)
+      : BinaryNode(kind, TokenPos(begin, end), lhs, name) {
+    MOZ_ASSERT(name->isKind(ParseNodeKind::PrivateName));
+  }
+
+  ParseNode& expression() const { return *left(); }
+
+  NameNode& privateName() const {
+    NameNode& name = right()->as<NameNode>();
+    MOZ_ASSERT(name.isKind(ParseNodeKind::PrivateName));
+    return name;
+  }
+
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::PrivateMemberExpr) ||
+                 node.isKind(ParseNodeKind::OptionalPrivateMemberExpr);
+    MOZ_ASSERT_IF(match, node.is<BinaryNode>());
+    MOZ_ASSERT_IF(match, node.as<BinaryNode>().right()->isKind(
+                             ParseNodeKind::PrivateName));
+    return match;
+  }
+};
+
+class PrivateMemberAccess : public PrivateMemberAccessBase {
+ public:
+  PrivateMemberAccess(ParseNode* lhs, NameNode* name, uint32_t begin,
+                      uint32_t end)
+      : PrivateMemberAccessBase(ParseNodeKind::PrivateMemberExpr, lhs, name,
+                                begin, end) {}
+
+  static bool test(const ParseNode& node) {
+    return node.isKind(ParseNodeKind::PrivateMemberExpr);
+  }
+};
+
+class OptionalPrivateMemberAccess : public PrivateMemberAccessBase {
+ public:
+  OptionalPrivateMemberAccess(ParseNode* lhs, NameNode* name, uint32_t begin,
+                              uint32_t end)
+      : PrivateMemberAccessBase(ParseNodeKind::OptionalPrivateMemberExpr, lhs,
+                                name, begin, end) {}
+
+  static bool test(const ParseNode& node) {
+    return node.isKind(ParseNodeKind::OptionalPrivateMemberExpr);
   }
 };
 

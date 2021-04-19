@@ -2992,8 +2992,8 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
                                           isOptional);
     }
 
-    case ParseNodeKind::OptionalDotExpr:
-    case ParseNodeKind::DotExpr: {
+    case ParseNodeKind::DotExpr:
+    case ParseNodeKind::OptionalDotExpr: {
       PropertyAccessBase* prop = &pn->as<PropertyAccessBase>();
       MOZ_ASSERT(prop->pn_pos.encloses(prop->expression().pn_pos));
 
@@ -3024,8 +3024,8 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
                                       isOptional);
     }
 
-    case ParseNodeKind::OptionalElemExpr:
-    case ParseNodeKind::ElemExpr: {
+    case ParseNodeKind::ElemExpr:
+    case ParseNodeKind::OptionalElemExpr: {
       PropertyByValueBase* elem = &pn->as<PropertyByValueBase>();
       MOZ_ASSERT(elem->pn_pos.encloses(elem->expression().pn_pos));
       MOZ_ASSERT(elem->pn_pos.encloses(elem->key().pn_pos));
@@ -3050,6 +3050,28 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
       return expression(&elem->key(), &key) &&
              builder.memberExpression(true, expr, key, &elem->pn_pos, dst,
                                       isOptional);
+    }
+
+    case ParseNodeKind::PrivateMemberExpr:
+    case ParseNodeKind::OptionalPrivateMemberExpr: {
+      PrivateMemberAccessBase* privateExpr = &pn->as<PrivateMemberAccessBase>();
+      MOZ_ASSERT(
+          privateExpr->pn_pos.encloses(privateExpr->expression().pn_pos));
+      MOZ_ASSERT(
+          privateExpr->pn_pos.encloses(privateExpr->privateName().pn_pos));
+
+      RootedValue expr(cx), key(cx);
+
+      if (!expression(&privateExpr->expression(), &expr)) {
+        return false;
+      }
+
+      bool isOptional =
+          privateExpr->isKind(ParseNodeKind::OptionalPrivateMemberExpr);
+
+      return expression(&privateExpr->privateName(), &key) &&
+             builder.memberExpression(true, expr, key, &privateExpr->pn_pos,
+                                      dst, isOptional);
     }
 
     case ParseNodeKind::CallSiteObj: {
