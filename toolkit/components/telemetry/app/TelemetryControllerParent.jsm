@@ -629,12 +629,6 @@ var Impl = {
       return Promise.reject(new Error("Invalid payload type submitted."));
     }
 
-    // We're trying to track down missing sync pings (bug 1663573), so record
-    // a temporary cross-checking counter.
-    if (aType == "sync" && aPayload.why == "shutdown") {
-      Telemetry.scalarSet("telemetry.sync_shutdown_ping_sent", true);
-    }
-
     let promise = this._submitPingLogic(aType, aPayload, aOptions);
     this._trackPendingPingTask(promise);
     return promise;
