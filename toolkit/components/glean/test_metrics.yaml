@@ -289,6 +289,27 @@ test_only:
     send_in_pings:
       - one-ping-only
 
+  meaning_of_life:
+    type: quantity
+    unit: unfathomable
+    description: |
+      Measures the one true answer to the Ultimate Question of Life,
+      the Universe, and Everything.
+      Approximately.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1704846
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1704846#c1
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_QUANTITY
+
 
 test_only.ipc:
   a_counter:
@@ -535,4 +556,3 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
-    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_QUANTITY
