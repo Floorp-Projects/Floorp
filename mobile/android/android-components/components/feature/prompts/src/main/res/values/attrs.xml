@@ -12,4 +12,8 @@
     <declare-styleable name="LoginSelectBar">
         <attr name="mozacLoginSelectHeaderTextStyle" format="reference"/>
     </declare-styleable>
+
+    <declare-styleable name="CreditCardSelectBar">
+        <attr name="mozacSelectCreditCardHeaderTextStyle" format="reference"/>
+    </declare-styleable>
 </resources>

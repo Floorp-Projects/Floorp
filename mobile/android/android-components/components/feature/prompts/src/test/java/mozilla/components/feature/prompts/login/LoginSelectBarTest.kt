@@ -57,7 +57,7 @@ class LoginSelectBarTest {
         assertNull(bar.listener)
 
         bar.listener = listener
-        bar.tryInflate()
+        bar.showPrompt(listOf(login, login2))
 
         bar.findViewById<AppCompatTextView>(R.id.manage_logins).performClick()
 
@@ -100,13 +100,5 @@ class LoginSelectBarTest {
         // Hidden
         assertFalse(bar.findViewById<RecyclerView>(R.id.logins_list).isVisible)
         assertFalse(bar.findViewById<AppCompatTextView>(R.id.manage_logins).isVisible)
-    }
-
-    @Test
-    fun `tryInflate is only successfully once`() {
-        val bar = LoginSelectBar(appCompatContext)
-
-        assertTrue(bar.tryInflate())
-        assertFalse(bar.tryInflate())
     }
 }

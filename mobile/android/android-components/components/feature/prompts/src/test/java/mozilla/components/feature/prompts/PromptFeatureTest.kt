@@ -31,6 +31,7 @@ import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.Choice
+import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
@@ -51,6 +52,7 @@ import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
 import mozilla.components.feature.prompts.login.LoginPicker
 import mozilla.components.feature.prompts.concept.SelectablePromptView
+import mozilla.components.feature.prompts.creditcard.CreditCardPicker
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -87,6 +89,7 @@ class PromptFeatureTest {
     private lateinit var store: BrowserStore
     private lateinit var fragmentManager: FragmentManager
     private lateinit var loginPicker: LoginPicker
+    private lateinit var creditCardPicker: CreditCardPicker
 
     private val tabId = "test-tab"
     private fun tab(): TabSessionState? {
@@ -109,6 +112,7 @@ class PromptFeatureTest {
             )
         )
         loginPicker = mock()
+        creditCardPicker = mock()
         fragmentManager = mockFragmentManager()
     }
 
@@ -256,7 +260,7 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `Calling onStop will attempt to dismiss the login prompt`() {
+    fun `Calling onStop will attempt to dismiss the select prompts`() {
         val feature = spy(
             PromptFeature(
                 mock<Activity>(),
@@ -267,11 +271,11 @@ class PromptFeatureTest {
 
         feature.stop()
 
-        verify(feature).dismissLoginSelectPrompt()
+        verify(feature).dismissSelectPrompts()
     }
 
     @Test
-    fun `GIVEN loginPickerView is visible WHEN dismissLoginSelectPrompt THEN dismissCurrentLoginSelect called and true returned`() {
+    fun `GIVEN loginPickerView is visible WHEN dismissSelectPrompts THEN dismissCurrentLoginSelect called and true returned`() {
         // given
         val loginPickerView: SelectablePromptView<Login> = mock()
         val feature = spy(
@@ -289,7 +293,7 @@ class PromptFeatureTest {
         feature.activePromptRequest = selectLoginPrompt
 
         // when
-        val result = feature.dismissLoginSelectPrompt()
+        val result = feature.dismissSelectPrompts()
 
         // then
         verify(feature.loginPicker!!).dismissCurrentLoginSelect(selectLoginPrompt)
@@ -297,7 +301,7 @@ class PromptFeatureTest {
     }
 
     @Test
-    fun `GIVEN loginPickerView is not visible WHEN dismissLoginSelectPrompt THEN dismissCurrentLoginSelect called and false returned`() {
+    fun `GIVEN loginPickerView is not visible WHEN dismissSelectPrompts THEN dismissCurrentLoginSelect called and false returned`() {
         // given
         val loginPickerView: SelectablePromptView<Login> = mock()
         val feature = spy(
@@ -315,14 +319,14 @@ class PromptFeatureTest {
         feature.activePromptRequest = selectLoginPrompt
 
         // when
-        val result = feature.dismissLoginSelectPrompt()
+        val result = feature.dismissSelectPrompts()
 
         // then
         assertEquals(false, result)
     }
 
     @Test
-    fun `GIVEN PromptFeature WHEN onBackPressed THEN dismissLoginSelectPrompt is called`() {
+    fun `GIVEN PromptFeature WHEN onBackPressed THEN dismissSelectPrompts is called`() {
         // given
         val loginPickerView: SelectablePromptView<Login> = mock()
         val feature = spy(
@@ -343,12 +347,12 @@ class PromptFeatureTest {
         val result = feature.onBackPressed()
 
         // then
-        verify(feature).dismissLoginSelectPrompt()
+        verify(feature).dismissSelectPrompts()
         assertEquals(true, result)
     }
 
     @Test
-    fun `Calling dismissLoginSelectPrompt should dismiss the login picker if the login prompt is active`() {
+    fun `Calling dismissSelectPrompts should dismiss the login picker if the login prompt is active`() {
         val loginPickerView: SelectablePromptView<Login> = mock()
         val feature = spy(
             PromptFeature(
@@ -364,13 +368,112 @@ class PromptFeatureTest {
 
         feature.loginPicker = loginPicker
         feature.activePromptRequest = mock()
-        feature.dismissLoginSelectPrompt()
+        feature.dismissSelectPrompts()
         verify(feature.loginPicker!!, never()).dismissCurrentLoginSelect(any())
 
         feature.loginPicker = loginPicker
         feature.activePromptRequest = selectLoginPrompt
-        feature.dismissLoginSelectPrompt()
+        feature.dismissSelectPrompts()
         verify(feature.loginPicker!!).dismissCurrentLoginSelect(selectLoginPrompt)
+    }
+
+    @Test
+    fun `GIVEN creditCardPickerView is visible WHEN dismissSelectPrompts is called THEN dismissSelectCreditCardRequest returns true`() {
+        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                fragmentManager = fragmentManager,
+                creditCardPickerView = creditCardPickerView
+            ) { }
+        )
+        val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
+        feature.creditCardPicker = creditCardPicker
+        feature.activePromptRequest = selectCreditCardRequest
+
+        whenever(creditCardPickerView.asView()).thenReturn(mock())
+        whenever(creditCardPickerView.asView().visibility).thenReturn(View.VISIBLE)
+
+        val result = feature.dismissSelectPrompts()
+
+        verify(feature.creditCardPicker!!).dismissSelectCreditCardRequest(selectCreditCardRequest)
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun `GIVEN creditCardPickerView is not visible WHEN dismissSelectPrompts is called THEN dismissSelectPrompt returns false`() {
+        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                fragmentManager = fragmentManager,
+                creditCardPickerView = creditCardPickerView
+            ) { }
+        )
+        val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
+        feature.creditCardPicker = creditCardPicker
+        feature.activePromptRequest = selectCreditCardRequest
+
+        whenever(creditCardPickerView.asView()).thenReturn(mock())
+        whenever(creditCardPickerView.asView().visibility).thenReturn(View.GONE)
+
+        val result = feature.dismissSelectPrompts()
+
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun `GIVEN an active select credit card request WHEN onBackPressed is called THEN dismissSelectPrompts is called`() {
+        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                fragmentManager = fragmentManager,
+                creditCardPickerView = creditCardPickerView
+            ) { }
+        )
+        val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
+        feature.creditCardPicker = creditCardPicker
+        feature.activePromptRequest = selectCreditCardRequest
+
+        whenever(creditCardPickerView.asView()).thenReturn(mock())
+        whenever(creditCardPickerView.asView().visibility).thenReturn(View.VISIBLE)
+
+        val result = feature.onBackPressed()
+
+        verify(feature).dismissSelectPrompts()
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun `WHEN dismissSelectPrompts is called THEN the active credit card picker should be dismissed`() {
+        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val feature = spy(
+            PromptFeature(
+                mock<Activity>(),
+                store,
+                fragmentManager = fragmentManager,
+                creditCardPickerView = creditCardPickerView
+            ) { }
+        )
+        feature.creditCardPicker = creditCardPicker
+        feature.activePromptRequest = mock()
+
+        whenever(creditCardPickerView.asView()).thenReturn(mock())
+        whenever(creditCardPickerView.asView().visibility).thenReturn(View.VISIBLE)
+
+        feature.dismissSelectPrompts()
+        verify(feature.creditCardPicker!!, never()).dismissSelectCreditCardRequest(any())
+
+        val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
+        feature.activePromptRequest = selectCreditCardRequest
+
+        feature.dismissSelectPrompts()
+
+        verify(feature.creditCardPicker!!).dismissSelectCreditCardRequest(selectCreditCardRequest)
     }
 
     @Test
@@ -706,6 +809,50 @@ class PromptFeatureTest {
         store.waitUntilIdle()
 
         assertTrue(onDismissWasCalled)
+    }
+
+    @Test
+    fun `WHEN a credit card is selected THEN confirm the prompt request with the selected credit card`() {
+        val creditCard = CreditCard(
+            guid = "id",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "5",
+            expiryYear = "2030",
+            cardType = "amex"
+        )
+        var onDismissCalled = false
+        var onConfirmCalled = false
+        var confirmedCreditCard: CreditCard? = null
+
+        val selectCreditCardRequest = PromptRequest.SelectCreditCard(
+            creditCards = listOf(creditCard),
+            onDismiss = {
+                onDismissCalled = true
+            },
+            onConfirm = {
+                confirmedCreditCard = it
+                onConfirmCalled = true
+            }
+        )
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, selectCreditCardRequest))
+            .joinBlocking()
+
+        selectCreditCardRequest.onConfirm(creditCard)
+
+        store.waitUntilIdle()
+
+        assertEquals(creditCard, confirmedCreditCard)
+        assertTrue(onConfirmCalled)
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, selectCreditCardRequest))
+            .joinBlocking()
+        selectCreditCardRequest.onDismiss()
+
+        store.waitUntilIdle()
+
+        assertTrue(onDismissCalled)
     }
 
     @Test
@@ -1123,6 +1270,45 @@ class PromptFeatureTest {
         store.dispatch(ContentAction.UpdateLoadingStateAction(tabId, true)).joinBlocking()
 
         verify(loginPicker).dismissCurrentLoginSelect(selectLoginRequest)
+    }
+
+    @Test
+    fun `WHEN page is refreshed THEN credit card prompt is dismissed`() {
+        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val feature =
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+                creditCardPickerView = creditCardPickerView
+            ) { }
+        feature.creditCardPicker = creditCardPicker
+        val onDismiss: () -> Unit = {}
+        val onConfirm: (CreditCard) -> Unit = {}
+        val creditCard = CreditCard(
+            guid = "1",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "5",
+            expiryYear = "2030",
+            cardType = ""
+        )
+        val selectCreditCardRequest =
+            PromptRequest.SelectCreditCard(listOf(creditCard), onDismiss, onConfirm)
+
+        whenever(creditCardPickerView.asView()).thenReturn(mock())
+        whenever(creditCardPickerView.asView().visibility).thenReturn(View.VISIBLE)
+
+        feature.start()
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, selectCreditCardRequest))
+            .joinBlocking()
+
+        verify(creditCardPicker).handleSelectCreditCardRequest(selectCreditCardRequest)
+
+        // Simulate reloading page
+        store.dispatch(ContentAction.UpdateLoadingStateAction(tabId, true)).joinBlocking()
+
+        verify(creditCardPicker).dismissSelectCreditCardRequest(selectCreditCardRequest)
     }
 
     @Test

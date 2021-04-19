@@ -52,10 +52,14 @@ class LoginSelectBar @JvmOverloads constructor(
     override var listener: SelectablePromptView.Listener<Login>? = null
 
     override fun showPrompt(options: List<Login>) {
-        tryInflate().also {
-            listAdapter.submitList(options)
-            loginPickerView?.isVisible = true
+        if (loginPickerView == null) {
+            loginPickerView =
+                View.inflate(context, R.layout.mozac_feature_login_multiselect_view, this)
+            bindViews()
         }
+
+        listAdapter.submitList(options)
+        loginPickerView?.isVisible = true
     }
 
     override fun hidePrompt() {
@@ -78,17 +82,6 @@ class LoginSelectBar @JvmOverloads constructor(
 
     private var listAdapter = BasicLoginAdapter {
         listener?.onOptionSelect(it)
-    }
-
-    override fun tryInflate(): Boolean {
-        return if (loginPickerView == null) {
-            loginPickerView =
-                View.inflate(context, R.layout.mozac_feature_login_multiselect_view, this)
-            bindViews()
-            true
-        } else {
-            false
-        }
     }
 
     private fun bindViews() {

@@ -273,7 +273,7 @@ class PromptRequestTest {
         var onConfirmCalled = false
         var confirmedCreditCard: CreditCard? = null
 
-        val selectCreditCardPrompt = SelectCreditCard(
+        val selectCreditCardRequest = SelectCreditCard(
             creditCards = listOf(creditCard),
             onDismiss = {
                 onDismissCalled = true
@@ -284,9 +284,9 @@ class PromptRequestTest {
             }
         )
 
-        assertEquals(selectCreditCardPrompt.creditCards, listOf(creditCard))
+        assertEquals(selectCreditCardRequest.creditCards, listOf(creditCard))
 
-        selectCreditCardPrompt.onConfirm(creditCard)
+        selectCreditCardRequest.onConfirm(creditCard)
 
         assertTrue(onConfirmCalled)
         assertFalse(onDismissCalled)
@@ -295,7 +295,7 @@ class PromptRequestTest {
         onConfirmCalled = false
         confirmedCreditCard = null
 
-        selectCreditCardPrompt.onDismiss()
+        selectCreditCardRequest.onDismiss()
 
         assertTrue(onDismissCalled)
         assertFalse(onConfirmCalled)

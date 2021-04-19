@@ -22,6 +22,7 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.Choice
+import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
@@ -44,6 +45,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.concept.SelectablePromptView
+import mozilla.components.feature.prompts.creditcard.CreditCardPicker
 import mozilla.components.feature.prompts.dialog.AlertDialogFragment
 import mozilla.components.feature.prompts.dialog.AuthenticationDialogFragment
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
@@ -112,6 +114,10 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * selectable prompt list of login options.
  * @property onManageLogins A callback invoked when a user selects "manage logins" from the
  * select login prompt.
+ * @property creditCardPickerView The [SelectablePromptView] used for [CreditCardPicker] to display
+ * a selectable prompt list of credit card options.
+ * @property onManageCreditCards A callback invoked when a user selects "Manage credit cards" from
+ * the select credit card prompt.
  * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
@@ -128,6 +134,8 @@ class PromptFeature private constructor(
     override val loginExceptionStorage: LoginExceptions? = null,
     private val loginPickerView: SelectablePromptView<Login>? = null,
     private val onManageLogins: () -> Unit = {},
+    private val creditCardPickerView: SelectablePromptView<CreditCard>? = null,
+    private val onManageCreditCards: () -> Unit = {},
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature, Prompter, ActivityResultHandler,
     UserInteractionHandler {
@@ -155,6 +163,8 @@ class PromptFeature private constructor(
         loginExceptionStorage: LoginExceptions? = null,
         loginPickerView: SelectablePromptView<Login>? = null,
         onManageLogins: () -> Unit = {},
+        creditCardPickerView: SelectablePromptView<CreditCard>? = null,
+        onManageCreditCards: () -> Unit = {},
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Activity(activity),
@@ -167,7 +177,9 @@ class PromptFeature private constructor(
         loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginPickerView = loginPickerView,
-        onManageLogins = onManageLogins
+        onManageLogins = onManageLogins,
+        creditCardPickerView = creditCardPickerView,
+        onManageCreditCards = onManageCreditCards
     )
 
     constructor(
@@ -181,6 +193,8 @@ class PromptFeature private constructor(
         loginExceptionStorage: LoginExceptions? = null,
         loginPickerView: SelectablePromptView<Login>? = null,
         onManageLogins: () -> Unit = {},
+        creditCardPickerView: SelectablePromptView<CreditCard>? = null,
+        onManageCreditCards: () -> Unit = {},
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Fragment(fragment),
@@ -193,7 +207,9 @@ class PromptFeature private constructor(
         loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginPickerView = loginPickerView,
-        onManageLogins = onManageLogins
+        onManageLogins = onManageLogins,
+        creditCardPickerView = creditCardPickerView,
+        onManageCreditCards = onManageCreditCards
     )
 
     @Deprecated("Pass only activity or fragment instead")
@@ -205,6 +221,8 @@ class PromptFeature private constructor(
         fragmentManager: FragmentManager,
         loginPickerView: SelectablePromptView<Login>? = null,
         onManageLogins: () -> Unit = {},
+        creditCardPickerView: SelectablePromptView<CreditCard>? = null,
+        onManageCreditCards: () -> Unit = {},
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = activity?.let { PromptContainer.Activity(it) }
@@ -220,7 +238,9 @@ class PromptFeature private constructor(
         loginValidationDelegate = null,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginPickerView = loginPickerView,
-        onManageLogins = onManageLogins
+        onManageLogins = onManageLogins,
+        creditCardPickerView = creditCardPickerView,
+        onManageCreditCards = onManageCreditCards
     )
 
     private val filePicker = FilePicker(container, store, customTabId, onNeedToRequestPermissions)
@@ -228,6 +248,10 @@ class PromptFeature private constructor(
     @VisibleForTesting(otherwise = PRIVATE)
     internal var loginPicker =
         loginPickerView?.let { LoginPicker(store, it, onManageLogins, customTabId) }
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal var creditCardPicker =
+        creditCardPickerView?.let { CreditCardPicker(store, it, onManageCreditCards, customTabId) }
 
     override val onNeedToRequestPermissions
         get() = filePicker.onNeedToRequestPermissions
@@ -248,15 +272,23 @@ class PromptFeature private constructor(
                 .collect { state ->
                     state?.content?.let {
                         if (it.promptRequest != activePromptRequest) {
+                            // Dismiss any active select login or credit card prompt if it does
+                            // not match the current prompt request for the session.
                             if (activePromptRequest is SelectLoginPrompt) {
                                 loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
+                            } else if (activePromptRequest is SelectCreditCard) {
+                                creditCardPicker?.dismissSelectCreditCardRequest(
+                                    activePromptRequest as SelectCreditCard
+                                )
                             }
+
                             onPromptRequested(state)
                         } else if (!it.loading) {
                             promptAbuserDetector.resetJSAlertAbuseState()
                         } else if (it.loading) {
-                            dismissLoginSelectPrompt()
+                            dismissSelectPrompts()
                         }
+
                         activePromptRequest = it.promptRequest
                     }
                 }
@@ -270,7 +302,7 @@ class PromptFeature private constructor(
                     state.findTabOrCustomTabOrSelectedTab(customTabId)?.content?.url
                 )
             }.collect {
-                dismissLoginSelectPrompt()
+                dismissSelectPrompts()
 
                 val prompt = activePrompt?.get()
                 if (prompt?.shouldDismissOnLoad() == true) {
@@ -294,11 +326,11 @@ class PromptFeature private constructor(
         dismissPromptScope?.cancel()
 
         // Dismisses the logins prompt so that it can appear on another tab
-        dismissLoginSelectPrompt()
+        dismissSelectPrompts()
     }
 
     override fun onBackPressed(): Boolean {
-        return dismissLoginSelectPrompt()
+        return dismissSelectPrompts()
     }
 
     /**
@@ -336,11 +368,14 @@ class PromptFeature private constructor(
             when (promptRequest) {
                 is File -> filePicker.handleFileRequest(promptRequest)
                 is Share -> handleShareRequest(promptRequest, session)
+                is SelectCreditCard -> {
+                    if (promptRequest.creditCards.isNotEmpty()) {
+                        creditCardPicker?.handleSelectCreditCardRequest(promptRequest)
+                    }
+                }
                 is SelectLoginPrompt -> {
                     if (promptRequest.logins.isNotEmpty()) {
-                        loginPicker?.handleSelectLoginRequest(
-                            promptRequest
-                        )
+                        loginPicker?.handleSelectLoginRequest(promptRequest)
                     }
                 }
                 else -> handleDialogsRequest(promptRequest, session)
@@ -533,7 +568,6 @@ class PromptFeature private constructor(
             }
 
             is TimeSelection -> {
-
                 val selectionType = when (promptRequest.type) {
                     TimeSelection.Type.DATE -> TimePickerDialogFragment.SELECTION_TYPE_DATE
                     TimeSelection.Type.DATE_AND_TIME -> TimePickerDialogFragment.SELECTION_TYPE_DATE_AND_TIME
@@ -584,7 +618,6 @@ class PromptFeature private constructor(
             )
 
             is Popup -> {
-
                 val title = container.getString(R.string.mozac_feature_prompts_popup_dialog_title)
                 val positiveLabel = container.getString(R.string.mozac_feature_prompts_allow)
                 val negativeLabel = container.getString(R.string.mozac_feature_prompts_deny)
@@ -599,7 +632,6 @@ class PromptFeature private constructor(
                 )
             }
             is BeforeUnload -> {
-
                 val title =
                     container.getString(R.string.mozac_feature_prompt_before_unload_dialog_title)
                 val body =
@@ -689,27 +721,40 @@ class PromptFeature private constructor(
             is BeforeUnload,
             is SaveLoginPrompt,
             is SelectLoginPrompt,
+            is SelectCreditCard,
             is Share -> true
-            is SelectCreditCard -> false
             is Alert, is TextPrompt, is Confirm, is Repost, is Popup -> promptAbuserDetector.shouldShowMoreDialogs
         }
     }
 
     /**
-     * Dismisses the select login prompt if it is active and visible.
-     * @returns true if dismissCurrentLoginSelect is called otherwise false.
+     * Dismisses the select prompts if they are active and visible.
+     *
+     * @returns true if a select prompt was dismissed, otherwise false.
      */
     @VisibleForTesting
-    fun dismissLoginSelectPrompt(): Boolean {
+    fun dismissSelectPrompts(): Boolean {
+        var result = false
+
         (activePromptRequest as? SelectLoginPrompt)?.let { selectLoginPrompt ->
             loginPicker?.let { loginPicker ->
                 if (loginPickerView?.asView()?.isVisible == true) {
                     loginPicker.dismissCurrentLoginSelect(selectLoginPrompt)
-                    return true
+                    result = true
                 }
             }
         }
-        return false
+
+        (activePromptRequest as? SelectCreditCard)?.let { selectCreditCardPrompt ->
+            creditCardPicker?.let { creditCardPicker ->
+                if (creditCardPickerView?.asView()?.isVisible == true) {
+                    creditCardPicker.dismissSelectCreditCardRequest(selectCreditCardPrompt)
+                    result = true
+                }
+            }
+        }
+
+        return result
     }
 }
 
