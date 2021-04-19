@@ -10,6 +10,18 @@
  * platform.
  */
 
+@media (-moz-proton) {
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
+  margin-inline: -13px;
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="left"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
+  margin-block: -13px;
+}
+} /** END Proton **/
+
 #BMB_bookmarksPopup menupopup {
   appearance: none;
   background: var(--arrowpanel-background);

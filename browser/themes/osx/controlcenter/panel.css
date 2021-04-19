@@ -17,3 +17,33 @@
 #identity-popup-securityView-body > button:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
 }
+
+@media (-moz-proton) {
+#identity-popup[type="arrow"][side="top"],
+#identity-popup[type="arrow"][side="bottom"],
+#notification-popup[type="arrow"][side="top"],
+#notification-popup[type="arrow"][side="bottom"],
+#permission-popup[type="arrow"][side="top"],
+#permission-popup[type="arrow"][side="bottom"] {
+  margin-inline: calc(-12px - 2 * var(--urlbar-container-padding));
+}
+
+#identity-popup[type="arrow"][side="left"],
+#identity-popup[type="arrow"][side="right"],
+#notification-popup[type="arrow"][side="left"],
+#notification-popup[type="arrow"][side="right"],
+#permission-popup[type="arrow"][side="left"],
+#permission-popup[type="arrow"][side="right"] {
+  margin-block: calc(-12px - 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[type="arrow"][side="top"],
+#protections-popup[type="arrow"][side="bottom"] {
+  margin-inline: calc(-16px + 2 * var(--urlbar-container-padding));
+}
+
+#protections-popup[type="arrow"][side="left"],
+#protections-popup[type="arrow"][side="right"] {
+  margin-block: calc(-16px + 2 * var(--urlbar-container-padding));
+}
+} /** END Proton **/

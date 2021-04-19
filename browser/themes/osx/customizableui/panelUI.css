@@ -5,6 +5,28 @@
 %include ../../shared/customizableui/panelUI.inc.css
 %include ../../shared/customizableui/panelUI-custom-colors.inc.css
 
+@media (-moz-proton) {
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-inline: -16px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-block: -16px;
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
+  margin-inline: -8px;
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="left"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
+  margin-block: -8px;
+}
+} /** END Proton **/
+
 .restoreallitem > .toolbarbutton-icon {
   display: none;
 }
