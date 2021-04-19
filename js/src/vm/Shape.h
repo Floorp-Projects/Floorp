@@ -152,8 +152,10 @@ class ShapeProperty {
     return isDataProperty() || isCustomDataProperty();
   }
 
+  bool hasSlot() const { return !isCustomDataProperty(); }
+
   uint32_t slot() const {
-    MOZ_ASSERT(!isCustomDataProperty());
+    MOZ_ASSERT(hasSlot());
     MOZ_ASSERT(slot_ < SHAPE_INVALID_SLOT);
     return slot_;
   }
