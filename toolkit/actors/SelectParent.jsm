@@ -726,7 +726,10 @@ var SelectParentHelper = {
 
   onSearchBlur(event) {
     let menupopup = event.target.closest("menupopup");
-    menupopup.setAttribute("ignorekeys", "false");
+    menupopup.setAttribute(
+      "ignorekeys",
+      AppConstants.platform == "win" ? "shortcuts" : "false"
+    );
   },
 };
 
