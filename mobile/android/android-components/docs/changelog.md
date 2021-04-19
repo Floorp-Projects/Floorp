@@ -14,6 +14,13 @@ permalink: /changelog/
 * **concept-storage**, **browser-storage-sync**
   * 🌟️ New API: `HistoryMetadataStorage.deleteHistoryMetadata`, allows removing specific metadata entries.
 
+* **browser-engine-gecko**:
+  * Switch to the `geckoview-omni` releases. `-omni` packages also ship the Glean Core native code.
+
+* **service-glean**
+  * 🆙 Updated Glean to version 40.1.0 ([changelog](https://github.com/mozilla/glean/releases/tag/v40.1.0))
+    * The Glean Core native code is now shipped through GeckoView
+
 # 93.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v92.0.0...v93.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/140?closed=1)

@@ -23,7 +23,7 @@ object Gecko {
 enum class GeckoChannel(
     val artifactName: String
 ) {
-    NIGHTLY("geckoview-nightly"),
-    BETA("geckoview-beta"),
-    RELEASE("geckoview")
+    NIGHTLY("geckoview-nightly-omni"),
+    BETA("geckoview-beta-omni"),
+    RELEASE("geckoview-omni")
 }

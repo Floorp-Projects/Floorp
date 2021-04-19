@@ -40,7 +40,7 @@ configurations {
 
 // Define library names and version constants.
 String GLEAN_LIBRARY = "org.mozilla.telemetry:glean:${Versions.mozilla_glean}"
-String GLEAN_LIBRARY_FORUNITTESTS = "org.mozilla.telemetry:glean-forUnitTests:${Versions.mozilla_glean}"
+String GLEAN_LIBRARY_FORUNITTESTS = "org.mozilla.telemetry:glean-native-forUnitTests:${Versions.mozilla_glean}"
 
 dependencies {
     implementation Dependencies.kotlin_stdlib
