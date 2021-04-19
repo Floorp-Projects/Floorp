@@ -28,7 +28,7 @@ import androidx.recyclerview.widget.RecyclerView
  * - informs about touches in the empty space left by the collapsed view through [blankTouchListener].
  * - when users swipe up it will expand. Once expanded it remains so.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 internal class ExpandableLayout private constructor(context: Context) : FrameLayout(context) {
     /**
      * The wrapped view that needs to be collapsed / expanded.
@@ -311,10 +311,21 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
     @VisibleForTesting
     @Suppress("ReturnCount")
     internal fun calculateCollapsedHeight(): Int {
-        val listView = (wrappedView.getChildAt(0) as ViewGroup)
+        val listView = (wrappedView.getChildAt(0) as RecyclerView)
+        // Reconcile adapter positions with listView children positions.
+        // Avoid IndexOutOfBounds / NullPointer exceptions.
+        val validLastVisibleItemIndexWhenCollapsed = getChildPositionForAdapterIndex(
+            listView,
+            lastVisibleItemIndexWhenCollapsed
+        )
+        val validStickyItemIndex = getChildPositionForAdapterIndex(
+            listView,
+            stickyItemIndex
+        )
+
         // Simple sanity check
-        if (lastVisibleItemIndexWhenCollapsed >= listView.childCount ||
-            lastVisibleItemIndexWhenCollapsed <= 0) {
+        if (validLastVisibleItemIndexWhenCollapsed >= listView.childCount ||
+            validLastVisibleItemIndexWhenCollapsed <= 0) {
 
             return measuredHeight
         }
@@ -331,16 +342,16 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
 
         run loop@{
             listView.children.forEachIndexed { index, view ->
-                if (index < lastVisibleItemIndexWhenCollapsed) {
+                if (index < validLastVisibleItemIndexWhenCollapsed) {
                     result += view.marginTop
                     result += view.marginBottom
                     result += view.measuredHeight
-                } else if (index == lastVisibleItemIndexWhenCollapsed) {
+                } else if (index == validLastVisibleItemIndexWhenCollapsed) {
                     result += view.marginTop
 
                     // Edgecase: if the same item is the sticky footer and the lastVisibleItemIndexWhenCollapsed
                     // the menu will be collapsed to this item but shown with full height.
-                    if (index == stickyItemIndex) {
+                    if (index == validStickyItemIndex) {
                         result += view.measuredHeight
                         return@loop
                     } else {
@@ -349,8 +360,8 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
                 } else {
                     // If there is a sticky item below we need to add it's height as an offset.
                     // Otherwise the sticky item will cover the the view of lastVisibleItemIndexWhenCollapsed.
-                    if (index <= stickyItemIndex) {
-                        result += listView.getChildAt(stickyItemIndex).measuredHeight
+                    if (index <= validStickyItemIndex) {
+                        result += listView.getChildAt(validStickyItemIndex).measuredHeight
                     }
                     return@loop
                 }
@@ -358,6 +369,25 @@ internal class ExpandableLayout private constructor(context: Context) : FrameLay
         }
 
         return result
+    }
+
+    /**
+     * In a dynamic menu - one in which items or their positions may change the adapter position and
+     * the RecyclerView position for the same item may differ.
+     * This method helps reconcile that.
+     *
+     * @return the RecyclerView position for the item at the [adapterIndex] in the adapter or
+     * [RecyclerView.NO_POSITION] if there is no child for the indicated adapter position.
+     */
+    @VisibleForTesting
+    internal fun getChildPositionForAdapterIndex(listView: RecyclerView, adapterIndex: Int): Int {
+        listView.children.forEachIndexed { index, view ->
+            if (listView.getChildAdapterPosition(view) == adapterIndex) {
+                return index
+            }
+        }
+
+        return RecyclerView.NO_POSITION
     }
 
     internal companion object {
