@@ -430,7 +430,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   template <typename EditorDOMPointType>
   MOZ_NEVER_INLINE_DEBUG static dom::HTMLBRElement*
   GetPrecedingBRElementUnlessVisibleContentFound(
-      const HTMLEditor& aHTMLEditor, const EditorDOMPointType& aPoint) {
+      dom::Element* aEditingHost, const EditorDOMPointType& aPoint) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
     // XXX This method behaves differently even in similar point.
     //     If aPoint is in a text node following `<br>` element, reaches the
@@ -444,8 +444,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     }
     // TODO: Scan for end boundary is redundant in this case, we should optimize
     //       it.
-    TextFragmentData textFragmentData(aPoint,
-                                      aHTMLEditor.GetActiveEditingHost());
+    TextFragmentData textFragmentData(aPoint, aEditingHost);
     return textFragmentData.StartsFromBRElement()
                ? textFragmentData.StartReasonBRElementPtr()
                : nullptr;

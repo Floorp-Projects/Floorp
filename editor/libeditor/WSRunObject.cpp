@@ -162,7 +162,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   // Do br adjustment.
   RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
-          aHTMLEditor, EditorDOMPoint::AtEndOf(aLeftBlockElement));
+          aHTMLEditor.GetActiveEditingHost(),
+          EditorDOMPoint::AtEndOf(aLeftBlockElement));
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
       "The preceding invisible BR element computation was different");
@@ -311,7 +312,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   // Do br adjustment.
   RefPtr<HTMLBRElement> invisibleBRElementBeforeLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
-          aHTMLEditor, atLeftBlockChild);
+          aHTMLEditor.GetActiveEditingHost(), atLeftBlockChild);
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementBeforeLeftBlockElement,
       "The preceding invisible BR element computation was different");
@@ -488,7 +489,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
   // Do br adjustment.
   RefPtr<HTMLBRElement> invisibleBRElementAtEndOfLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
-          aHTMLEditor, EditorDOMPoint::AtEndOf(aLeftBlockElement));
+          aHTMLEditor.GetActiveEditingHost(),
+          EditorDOMPoint::AtEndOf(aLeftBlockElement));
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
       "The preceding invisible BR element computation was different");
