@@ -86,7 +86,6 @@
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/dom/WakeLock.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsAttrValueInlines.h"
@@ -2240,10 +2239,6 @@ void HTMLMediaElement::AbortExistingLoads() {
     EndSrcMediaStreamPlayback();
   }
 
-  if (mMediaSource) {
-    OwnerDoc()->RemoveMediaElementWithMSE();
-  }
-
   RemoveMediaElementFromURITable();
   mLoadingSrcTriggeringPrincipal = nullptr;
   DDLOG(DDLogCategory::Property, "loading_src", "");
@@ -2554,10 +2549,6 @@ void HTMLMediaElement::SelectResource() {
           !mIsLoadingFromSourceChildren,
           "Should think we're not loading from source children by default");
 
-      if (!mMediaSource) {
-        OwnerDoc()->AddMediaElementWithMSE();
-      }
-
       RemoveMediaElementFromURITable();
       if (!mSrcMediaSource) {
         mLoadingSrc = uri;
@@ -2819,10 +2810,6 @@ void HTMLMediaElement::LoadFromSourceChildren() {
       ReportLoadError("MediaLoadInvalidURI", params);
       DealWithFailedElement(child);
       return;
-    }
-
-    if (!mMediaSource) {
-      OwnerDoc()->AddMediaElementWithMSE();
     }
 
     RemoveMediaElementFromURITable();
@@ -7663,15 +7650,6 @@ bool HTMLMediaElement::IsBeingUsedInPictureInPictureMode() const {
     return false;
   }
   return static_cast<const HTMLVideoElement*>(this)->IsCloningElementVisually();
-}
-
-void HTMLMediaElement::NodeInfoChanged(Document* aOldDoc) {
-  if (mMediaSource) {
-    OwnerDoc()->AddMediaElementWithMSE();
-    aOldDoc->RemoveMediaElementWithMSE();
-  }
-
-  nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
 }
 
 }  // namespace mozilla::dom
