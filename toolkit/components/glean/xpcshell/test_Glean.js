@@ -186,8 +186,14 @@ add_task(async function test_fog_memory_distribution_works() {
 
 add_task(function test_fog_custom_pings() {
   Assert.ok("onePingOnly" in GleanPings);
-  // Don't bother sending it, we'll test that in the integration suite.
-  // See also bug 1681742.
+  let submitted = false;
+  Glean.testOnly.onePingOneBool.set(false);
+  GleanPings.onePingOnly.testBeforeNextSubmit(reason => {
+    submitted = true;
+    Assert.equal(false, Glean.testOnly.onePingOneBool.testGetValue());
+  });
+  GleanPings.onePingOnly.submit();
+  Assert.ok(submitted, "Ping was submitted, callback was called.");
 });
 
 add_task(async function test_fog_timing_distribution_works() {
