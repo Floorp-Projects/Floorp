@@ -51,23 +51,32 @@ function TargetMixin(parentClass) {
       // [typeName:string => Front instance]
       this.fronts = new Map();
 
-      // `resource-available-form` events can be emitted by target actors before the
-      // ResourceWatcher could add event listeners. The target front will cache those
-      // events until the ResourceWatcher has added the listeners.
-      this._resourceCache = [];
-      this._onResourceAvailable = this._onResourceAvailable.bind(this);
-      // In order to avoid destroying the `_resourceCache`, we need to call `super.on()`
+      // `resource-available-form` and `resource-updated-form` events can be emitted
+      // by target actors before the ResourceWatcher could add event listeners.
+      // The target front will cache those events until the ResourceWatcher has
+      // added the listeners.
+      this._resourceCache = {};
+
+      // In order to avoid destroying the `_resourceCache[event]`, we need to call `super.on()`
       // instead of `this.on()`.
-      super.on("resource-available-form", this._onResourceAvailable);
+      super.on(
+        "resource-available-form",
+        this._onResourceEvent.bind(this, "resource-available-form")
+      );
+      super.on(
+        "resource-updated-form",
+        this._onResourceEvent.bind(this, "resource-updated-form")
+      );
     }
 
     on(eventName, listener) {
-      if (eventName === "resource-available-form" && this._resourceCache) {
-        this.off("resource-available-form", this._onResourceAvailable);
-        for (const cache of this._resourceCache) {
+      const cachedEvents = ["resource-available-form", "resource-updated-form"];
+      if (cachedEvents.includes(eventName) && this._resourceCache[eventName]) {
+        this.off(eventName, this._onResourceEvent.bind(this, eventName));
+        for (const cache of this._resourceCache[eventName]) {
           listener(cache);
         }
-        this._resourceCache = null;
+        delete this._resourceCache[eventName];
       }
 
       super.on(eventName, listener);
@@ -693,10 +702,11 @@ function TargetMixin(parentClass) {
       this._url = null;
     }
 
-    _onResourceAvailable(resources) {
-      if (this._resourceCache) {
-        this._resourceCache.push(resources);
+    _onResourceEvent(eventName, resources) {
+      if (!this._resourceCache[eventName]) {
+        this._resourceCache[eventName] = [];
       }
+      this._resourceCache[eventName].push(resources);
     }
 
     toString() {
