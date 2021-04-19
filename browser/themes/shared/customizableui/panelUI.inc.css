@@ -2279,36 +2279,19 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 .panel-header > .subviewbutton-back {
   -moz-context-properties: fill;
   fill: var(--arrowpanel-color);
-  list-style-image: url(chrome://global/skin/icons/menu-arrow-left.svg);
-  padding: 10px;
+  list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
+  padding: 8px;
 }
 
 @media (-moz-proton) {
 .subviewbutton-back {
-  transform: translateY(1px);
   margin: 0 4px;
-}
-
-.subviewbutton-back:-moz-locale-dir(rtl) {
-  transform: scaleX(-1) translateY(1px);
-}
-
-.panel-header > .subviewbutton-back > .toolbarbutton-icon {
-  width: 12px;
-  height: 12px;
 }
 } /** End Proton **/
 
-@media not (-moz-proton) {
-  .panel-header > .subviewbutton-back {
-    list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
-    padding: 8px;
-  }
-
-  .subviewbutton-back:-moz-locale-dir(rtl) {
-    transform: scaleX(-1);
-  }
-} /** END not Proton **/
+.subviewbutton-back:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
 
 .subviewbutton-back > .toolbarbutton-text {
   /* !important to override .cui-widget-panel .toolbarbutton-text
