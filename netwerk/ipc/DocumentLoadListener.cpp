@@ -1709,7 +1709,6 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
   if (mozilla::BFCacheInParent() && nsSHistory::GetMaxTotalViewers() > 0 &&
       !parentWindow && !browsingContext->HadOriginalOpener() &&
-      browsingContext->Group()->Toplevels().Length() == 1 &&
       !options.mRemoteType.IsEmpty() &&
       browsingContext->GetHasLoadedNonInitialDocument() &&
       (mLoadStateLoadType == LOAD_NORMAL ||
@@ -1719,8 +1718,12 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
       (!browsingContext->GetActiveSessionHistoryEntry() ||
        browsingContext->GetActiveSessionHistoryEntry()
            ->GetSaveLayoutStateFlag())) {
-    options.mReplaceBrowsingContext = true;
-    options.mTryUseBFCache = true;
+    MOZ_ASSERT(mIsDocumentLoad);
+    options.mTryUseBFCache =
+        browsingContext->AllowedInBFCache(mDocumentChannelId);
+    if (options.mTryUseBFCache) {
+      options.mReplaceBrowsingContext = true;
+    }
   }
 
   LOG(("GetRemoteTypeForPrincipal -> current:%s remoteType:%s",
@@ -1744,44 +1747,6 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   // If we're doing a document load, we can immediately perform a process
   // switch.
   if (mIsDocumentLoad) {
-    if (options.mTryUseBFCache && wgp) {
-      if (RefPtr<BrowserParent> browserParent = wgp->GetBrowserParent()) {
-        nsTArray<RefPtr<PContentParent::CanSavePresentationPromise>>
-            canSavePromises;
-        browsingContext->Group()->EachParent([&](ContentParent* aParent) {
-          RefPtr<PContentParent::CanSavePresentationPromise> canSave =
-              aParent->SendCanSavePresentation(browsingContext,
-                                               mDocumentChannelId);
-          canSavePromises.AppendElement(canSave);
-        });
-
-        PContentParent::CanSavePresentationPromise::All(
-            GetCurrentSerialEventTarget(), canSavePromises)
-            ->Then(
-                GetMainThreadSerialEventTarget(), __func__,
-                [self = RefPtr{this}, browsingContext,
-                 options](const nsTArray<bool> aCanSaves) mutable {
-                  bool canSave = !aCanSaves.Contains(false);
-                  MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                          ("DocumentLoadListener::MaybeTriggerProcessSwitch "
-                           "saving presentation=%i",
-                           canSave));
-                  options.mTryUseBFCache = canSave;
-                  self->TriggerProcessSwitch(browsingContext, options);
-                },
-                [self = RefPtr{this}, browsingContext,
-                 options](ipc::ResponseRejectReason) mutable {
-                  MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                          ("DocumentLoadListener::MaybeTriggerProcessSwitch "
-                           "error in trying to save presentation"));
-                  options.mTryUseBFCache = false;
-                  self->TriggerProcessSwitch(browsingContext, options);
-                });
-        return true;
-      }
-    }
-
-    options.mTryUseBFCache = false;
     TriggerProcessSwitch(browsingContext, options);
     return true;
   }
