@@ -34,6 +34,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
       mFixedPosTarget(ScrollableLayerGuid::NULL_SCROLL_ID),
       mStickyPosTarget(ScrollableLayerGuid::NULL_SCROLL_ID),
       mIsBackfaceHidden(false),
+      mIsAsyncZoomContainer(false),
       mOverride(EventRegionsOverride::NoOverride) {
   if (mIsPrimaryApzcHolder) {
     MOZ_ASSERT(mApzc);
@@ -258,7 +259,7 @@ void HitTestingTreeNode::SetHitTestData(
     const CSSTransformMatrix& aTransform,
     const Maybe<ParentLayerIntRegion>& aClipRegion,
     const EventRegionsOverride& aOverride, bool aIsBackfaceHidden,
-    const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId) {
+    bool aIsAsyncZoomContainer) {
   mEventRegions = aRegions;
   mVisibleRegion = aVisibleRegion;
   mRemoteDocumentSize = aRemoteDocumentSize;
@@ -266,7 +267,7 @@ void HitTestingTreeNode::SetHitTestData(
   mClipRegion = aClipRegion;
   mOverride = aOverride;
   mIsBackfaceHidden = aIsBackfaceHidden;
-  mAsyncZoomContainerId = aAsyncZoomContainerId;
+  mIsAsyncZoomContainer = aIsAsyncZoomContainer;
 }
 
 bool HitTestingTreeNode::IsOutsideClip(const ParentLayerPoint& aPoint) const {
@@ -422,9 +423,8 @@ ScreenRect HitTestingTreeNode::GetRemoteDocumentScreenRect() const {
   return result;
 }
 
-Maybe<ScrollableLayerGuid::ViewID> HitTestingTreeNode::GetAsyncZoomContainerId()
-    const {
-  return mAsyncZoomContainerId;
+bool HitTestingTreeNode::IsAsyncZoomContainer() const {
+  return mIsAsyncZoomContainer;
 }
 
 void HitTestingTreeNode::Dump(const char* aPrefix) const {

@@ -380,9 +380,9 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     return false;
   }
 
-  Maybe<ScrollableLayerGuid::ViewID> GetAsyncZoomContainerId() const {
+  bool IsAsyncZoomContainer() const {
     MOZ_ASSERT(IsValid());
-    return mLayer->GetAsyncZoomContainerId();
+    return mLayer->IsAsyncZoomContainer();
   }
 
   const void* GetLayer() const {
