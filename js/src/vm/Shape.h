@@ -1078,7 +1078,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
       static_assert(allowGC == CanGC);
     }
 
-    explicit Range(Shape* shape) : cursor((JSContext*)nullptr, shape) {
+    explicit Range(Shape* shape) : cursor(nullptr, shape) {
       static_assert(allowGC == NoGC);
     }
 

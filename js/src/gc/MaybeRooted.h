@@ -32,11 +32,9 @@ class MOZ_RAII FakeRooted : public RootedBase<T, FakeRooted<T>> {
  public:
   using ElementType = T;
 
-  template <typename CX>
-  explicit FakeRooted(CX* cx) : ptr(JS::SafelyInitialized<T>()) {}
+  explicit FakeRooted(JSContext* cx) : ptr(JS::SafelyInitialized<T>()) {}
 
-  template <typename CX>
-  FakeRooted(CX* cx, T initial) : ptr(initial) {}
+  FakeRooted(JSContext* cx, T initial) : ptr(initial) {}
 
   DECLARE_POINTER_CONSTREF_OPS(T);
   DECLARE_POINTER_ASSIGN_OPS(FakeRooted, T);
