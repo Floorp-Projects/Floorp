@@ -297,6 +297,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void StartUnloadingHost(uint64_t aChildID);
   void ClearUnloadingHost(uint64_t aChildID);
 
+  bool AllowedInBFCache(const Maybe<uint64_t>& aChannelId);
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
