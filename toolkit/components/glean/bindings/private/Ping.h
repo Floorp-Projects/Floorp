@@ -7,12 +7,15 @@
 #ifndef mozilla_glean_Ping_h
 #define mozilla_glean_Ping_h
 
+#include "mozilla/DataMutex.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
+
+typedef std::function<void(const nsACString& aReason)> PingTestCallback;
 
 namespace impl {
 
@@ -40,13 +43,21 @@ class Ping {
    * @param aReason - Optional. The reason the ping is being submitted.
    *                  Must match one of the configured `reason_codes`.
    */
-  void Submit(const nsACString& aReason = nsCString()) const {
-#ifdef MOZ_GLEAN_ANDROID
-    Unused << mId;
-#else
-    fog_submit_ping_by_id(mId, &aReason);
-#endif
-  }
+  void Submit(const nsACString& aReason = nsCString()) const;
+
+  /**
+   * **Test-only API**
+   *
+   * Register a callback to be called right before this ping is next submitted.
+   * The provided function is called exactly once before submitting.
+   *
+   * Note: The callback will be called on any call to submit.
+   * A ping may not be sent afterwards, e.g. if the ping is empty and
+   * `send_if_empty` is `false`
+   *
+   * @param aCallback - The callback to call on the next submit.
+   */
+  void TestBeforeNextSubmit(PingTestCallback&& aCallback) const;
 
  private:
   const uint32_t mId;
