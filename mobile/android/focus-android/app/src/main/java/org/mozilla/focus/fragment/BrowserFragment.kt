@@ -30,6 +30,9 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.CustomTabConfig
@@ -67,6 +70,7 @@ import org.mozilla.focus.browser.binding.UrlBinding
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.downloads.DownloadService
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.isSearch
@@ -76,7 +80,6 @@ import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.telemetry.CrashReporterWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_DOWNLOAD_PERMISSIONS
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSIONS
@@ -486,7 +489,10 @@ class BrowserFragment :
         val crashReporterFragment = CrashReporterFragment.create()
 
         crashReporterFragment.onCloseTabPressed = { sendCrashReport ->
-            if (sendCrashReport) { CrashReporterWrapper.submitCrash(crash) }
+            if (sendCrashReport) {
+                val crashReporter = requireComponents.crashReporter
+                GlobalScope.launch(Dispatchers.IO) { crashReporter.submitReport(crash) }
+            }
             erase()
             hideCrashReporter()
         }

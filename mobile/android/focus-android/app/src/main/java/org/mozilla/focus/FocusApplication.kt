@@ -18,7 +18,6 @@ import org.mozilla.focus.biometrics.LockObserver
 import org.mozilla.focus.locale.LocaleAwareApplication
 import org.mozilla.focus.navigation.StoreLink
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
-import org.mozilla.focus.telemetry.CrashReporterWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
@@ -41,7 +40,7 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         super.onCreate()
 
         Log.addSink(AndroidLogSink("Focus"))
-        CrashReporterWrapper.init(this)
+        components.crashReporter.install(this)
 
         if (isMainProcess()) {
             PreferenceManager.setDefaultValues(this, R.xml.settings, false)
