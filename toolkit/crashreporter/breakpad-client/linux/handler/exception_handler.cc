@@ -96,7 +96,6 @@
 #include "linux/minidump_writer/minidump_writer.h"
 #include "common/linux/eintr_wrapper.h"
 #include "third_party/lss/linux_syscall_support.h"
-#include "prenv.h"
 #if defined(MOZ_OXIDIZED_BREAKPAD)
 #include "nsString.h"
 #include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
@@ -240,7 +239,7 @@ ExceptionHandler::ExceptionHandler(const MinidumpDescriptor& descriptor,
       minidump_descriptor_(descriptor),
       crash_handler_(NULL) {
 
-  g_skip_sigill_ = PR_GetEnv("MOZ_DISABLE_EXCEPTION_HANDLER_SIGILL") ? true : false;
+  g_skip_sigill_ = getenv("MOZ_DISABLE_EXCEPTION_HANDLER_SIGILL") ? true : false;
   if (server_fd >= 0)
     crash_generation_client_.reset(CrashGenerationClient::TryCreate(server_fd));
 
