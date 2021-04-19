@@ -3743,8 +3743,9 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteParentBlocksWithTransactionIfEmpty(
     if (wsScannerForPoint.GetEndReasonContent()->GetNextSibling()) {
       WSScanResult scanResult =
           WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-              aHTMLEditor, EditorRawDOMPoint::After(
-                               *wsScannerForPoint.GetEndReasonContent()));
+              wsScannerForPoint.GetEditingHost(),
+              EditorRawDOMPoint::After(
+                  *wsScannerForPoint.GetEndReasonContent()));
       if (scanResult.Failed()) {
         NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
         return NS_ERROR_FAILURE;
@@ -5278,7 +5279,7 @@ bool HTMLEditor::AutoDeleteRangesHandler::ExtendRangeToIncludeInvisibleNodes(
       atStart.GetContainer() != editingHost) {
     for (;;) {
       WSScanResult backwardScanFromStartResult =
-          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(aHTMLEditor,
+          WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(editingHost,
                                                                atStart);
       if (!backwardScanFromStartResult.ReachedCurrentBlockBoundary()) {
         break;

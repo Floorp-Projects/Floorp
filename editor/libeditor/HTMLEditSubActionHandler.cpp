@@ -1470,6 +1470,8 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
 
   bool brElementIsAfterBlock = false, brElementIsBeforeBlock = false;
 
+  RefPtr<Element> editingHost = GetActiveEditingHost();
+
   // First, insert a <br> element.
   RefPtr<Element> brElement;
   if (IsPlaintextEditor()) {
@@ -1483,7 +1485,7 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
     }
   } else {
     EditorDOMPoint pointToBreak(aPointToBreak);
-    WSRunScanner wsRunScanner(GetActiveEditingHost(), pointToBreak);
+    WSRunScanner wsRunScanner(editingHost, pointToBreak);
     WSScanResult backwardScanResult =
         wsRunScanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToBreak);
     if (backwardScanResult.Failed()) {
@@ -1557,7 +1559,8 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
   NS_WARNING_ASSERTION(advanced,
                        "Failed to advance offset after the new <br> element");
   WSScanResult forwardScanFromAfterBRElementResult =
-      WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(*this, afterBRElement);
+      WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(editingHost,
+                                                       afterBRElement);
   if (forwardScanFromAfterBRElementResult.Failed()) {
     NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
     return NS_ERROR_FAILURE;
@@ -1628,8 +1631,10 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
   // The latter can confuse a user if they click there and start typing,
   // because being in the mailquote may affect wrapping behavior, or font
   // color, etc.
+  RefPtr<Element> editingHost = GetActiveEditingHost();
   WSScanResult forwardScanFromPointToSplitResult =
-      WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(*this, pointToSplit);
+      WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(editingHost,
+                                                       pointToSplit);
   if (forwardScanFromPointToSplitResult.Failed()) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
@@ -1730,7 +1735,7 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
 
     WSScanResult backwardScanFromPointToCreateNewBRElementResult =
         WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
-            *this, pointToCreateNewBRElement);
+            editingHost, pointToCreateNewBRElement);
     if (backwardScanFromPointToCreateNewBRElementResult.Failed()) {
       NS_WARNING(
           "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary() failed");
@@ -1746,7 +1751,7 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
                            "Failed to set to after the <br> node");
       WSScanResult forwardScanFromPointAfterNewBRElementResult =
           WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-              *this, pointAfterNewBRElement);
+              editingHost, pointAfterNewBRElement);
       if (forwardScanFromPointAfterNewBRElementResult.Failed()) {
         NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
         return EditActionResult(NS_ERROR_FAILURE);
@@ -6816,12 +6821,12 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
   MOZ_ASSERT(HTMLEditUtils::IsListItem(&aListItem));
 
   // Get the item parent and the active editing host.
-  RefPtr<Element> host = GetActiveEditingHost();
+  RefPtr<Element> editingHost = GetActiveEditingHost();
 
   // If we are in an empty item, then we want to pop up out of the list, but
   // only if prefs say it's okay and if the parent isn't the active editing
   // host.
-  if (host != aListItem.GetParentElement() &&
+  if (editingHost != aListItem.GetParentElement() &&
       IsEmptyBlockElement(aListItem, IgnoreSingleBR::Yes)) {
     nsCOMPtr<nsIContent> leftListNode = aListItem.GetParent();
     // Are we the last list item in the list?
@@ -7012,7 +7017,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
       } else {
         WSScanResult forwardScanFromStartOfListItemResult =
             WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-                *this, EditorRawDOMPoint(&aListItem, 0));
+                editingHost, EditorRawDOMPoint(&aListItem, 0));
         if (forwardScanFromStartOfListItemResult.Failed()) {
           NS_WARNING(
               "WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
