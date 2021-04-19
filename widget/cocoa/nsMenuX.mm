@@ -203,10 +203,7 @@ void nsMenuX::OnMenuClosed(dom::Element* aPopupElement) {
 void nsMenuX::AddMenuChild(MenuChild&& aChild) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (aChild.is<RefPtr<nsMenuX>>()) {
-    aChild.as<RefPtr<nsMenuX>>()->SetObserver(this);
-  }
-
+  WillInsertChild(aChild);
   mMenuChildren.AppendElement(aChild);
 
   bool isVisible =
@@ -292,16 +289,7 @@ nsresult nsMenuX::RemoveAll() {
   [mNativeMenu removeAllItems];
 
   for (auto& child : mMenuChildren) {
-    child.match(
-        [](const RefPtr<nsMenuX>& aMenu) {
-          aMenu->DetachFromGroupOwnerRecursive();
-          aMenu->DetachFromParent();
-          aMenu->SetObserver(nullptr);
-        },
-        [](const RefPtr<nsMenuItemX>& aMenuItem) {
-          aMenuItem->DetachFromGroupOwner();
-          aMenuItem->DetachFromParent();
-        });
+    WillRemoveChild(child);
   }
 
   mMenuChildren.Clear();
@@ -310,6 +298,25 @@ nsresult nsMenuX::RemoveAll() {
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void nsMenuX::WillInsertChild(const MenuChild& aChild) {
+  if (aChild.is<RefPtr<nsMenuX>>()) {
+    aChild.as<RefPtr<nsMenuX>>()->SetObserver(this);
+  }
+}
+
+void nsMenuX::WillRemoveChild(const MenuChild& aChild) {
+  aChild.match(
+      [](const RefPtr<nsMenuX>& aMenu) {
+        aMenu->DetachFromGroupOwnerRecursive();
+        aMenu->DetachFromParent();
+        aMenu->SetObserver(nullptr);
+      },
+      [](const RefPtr<nsMenuItemX>& aMenuItem) {
+        aMenuItem->DetachFromGroupOwner();
+        aMenuItem->DetachFromParent();
+      });
 }
 
 void nsMenuX::MenuOpened() {
