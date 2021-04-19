@@ -99,7 +99,6 @@ browser/chrome/browser/search-extensions/google/favicon.ico
 # Bug 1698146, bug 1699586 - Deduplicate chevrons/arrows in the tree
 chrome/toolkit/skin/classic/global/icons/arrow-dropdown-12.svg
 chrome/toolkit/skin/classic/global/icons/twisty-expanded.svg
-chrome/toolkit/skin/classic/global/icons/menu-arrow-left.svg
 chrome/toolkit/skin/classic/global/icons/twisty-collapsed-rtl.svg
 chrome/toolkit/skin/classic/global/icons/arrow-dropdown-16.svg
 chrome/toolkit/skin/classic/global/icons/find-next-arrow.svg
