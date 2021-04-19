@@ -630,9 +630,12 @@ class ClassBodyScope : public Scope {
 
     // Bindings are sorted by kind in both frames and environments.
     //
-    //   lets - [0, constStart)
-    // consts - [constStart, length)
+    //     synthetic - [0, privateMethodStart)
+    // privateMethod - [privateMethodStart, length)
+    //
+    // MG:XXX: Const is removed in next patch.
     uint32_t constStart = 0;
+    uint32_t privateMethodStart = 0;
   };
 
   using RuntimeData = RuntimeScopeData<SlotInfo>;
@@ -1318,7 +1321,8 @@ class BaseAbstractBindingIter {
   //               vars - [varStart, letStart)
   //               lets - [letStart, constStart)
   //             consts - [constStart, syntheticStart)
-  //          synthetic - [syntheticStart, length)
+  //          synthetic - [syntheticStart, privateMethodStart)
+  //    private methods = [privateMethodStart, length)
   //
   // Access method when not closed over:
   //
@@ -1329,6 +1333,7 @@ class BaseAbstractBindingIter {
   //               lets - frame slot
   //             consts - frame slot
   //          synthetic - frame slot
+  //    private methods - frame slot
   //
   // Access method when closed over:
   //
@@ -1339,12 +1344,14 @@ class BaseAbstractBindingIter {
   //               lets - environment slot or name
   //             consts - environment slot or name
   //          synthetic - environment slot or name
+  //    private methods - environment slot or name
   MOZ_INIT_OUTSIDE_CTOR uint32_t positionalFormalStart_;
   MOZ_INIT_OUTSIDE_CTOR uint32_t nonPositionalFormalStart_;
   MOZ_INIT_OUTSIDE_CTOR uint32_t varStart_;
   MOZ_INIT_OUTSIDE_CTOR uint32_t letStart_;
   MOZ_INIT_OUTSIDE_CTOR uint32_t constStart_;
   MOZ_INIT_OUTSIDE_CTOR uint32_t syntheticStart_;
+  MOZ_INIT_OUTSIDE_CTOR uint32_t privateMethodStart_;
   MOZ_INIT_OUTSIDE_CTOR uint32_t length_;
 
   MOZ_INIT_OUTSIDE_CTOR uint32_t index_;
@@ -1374,8 +1381,8 @@ class BaseAbstractBindingIter {
 
   void init(uint32_t positionalFormalStart, uint32_t nonPositionalFormalStart,
             uint32_t varStart, uint32_t letStart, uint32_t constStart,
-            uint32_t syntheticStart, uint8_t flags, uint32_t firstFrameSlot,
-            uint32_t firstEnvironmentSlot,
+            uint32_t syntheticStart, uint32_t privateMethodStart, uint8_t flags,
+            uint32_t firstFrameSlot, uint32_t firstEnvironmentSlot,
             mozilla::Span<AbstractBindingName<NameT>> names) {
     positionalFormalStart_ = positionalFormalStart;
     nonPositionalFormalStart_ = nonPositionalFormalStart;
@@ -1383,6 +1390,7 @@ class BaseAbstractBindingIter {
     letStart_ = letStart;
     constStart_ = constStart;
     syntheticStart_ = syntheticStart;
+    privateMethodStart_ = privateMethodStart;
     length_ = names.size();
 
     index_ = 0;
@@ -1575,7 +1583,10 @@ class BaseAbstractBindingIter {
       return isNamedLambda() ? BindingKind::NamedLambdaCallee
                              : BindingKind::Const;
     }
-    return BindingKind::Synthetic;
+    if (index_ < privateMethodStart_) {
+      return BindingKind::Synthetic;
+    }
+    return BindingKind::PrivateMethod;
   }
 
   js::frontend::NameLocation nameLocation() const {
