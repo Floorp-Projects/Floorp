@@ -843,11 +843,7 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
 
     if (mParent) {
       RefPtr<nsMenuX> self = this;
-      if (newVisible) {
-        mParent->InsertChildNativeMenuItem(MenuChild(self));
-      } else {
-        mParent->RemoveChildNativeMenuItem(MenuChild(self));
-      }
+      mParent->MenuChildChangedVisibility(MenuChild(self), newVisible);
     }
     mVisible = newVisible;
   } else if (aAttribute == nsGkAtoms::image) {
@@ -888,21 +884,26 @@ void nsMenuX::IconUpdated() {
   }
 }
 
-void nsMenuX::InsertChildNativeMenuItem(const MenuChild& aChild) {
-  NSInteger insertionPoint = CalculateNativeInsertionPoint(aChild);
-  NSMenuItem* nativeItem = aChild.match(
-      [](const RefPtr<nsMenuX>& aMenu) { return aMenu->NativeNSMenuItem(); },
-      [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->NativeNSMenuItem(); });
-  [mNativeMenu insertItem:nativeItem atIndex:insertionPoint];
-}
+void nsMenuX::MenuChildChangedVisibility(const MenuChild& aChild, bool aIsVisible) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-void nsMenuX::RemoveChildNativeMenuItem(const MenuChild& aChild) {
   NSMenuItem* nativeItem = aChild.match(
       [](const RefPtr<nsMenuX>& aMenu) { return aMenu->NativeNSMenuItem(); },
       [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->NativeNSMenuItem(); });
-  if ([mNativeMenu indexOfItem:nativeItem] != -1) {
+  if (aIsVisible) {
+    MOZ_RELEASE_ASSERT(!nativeItem.menu,
+                       "The native item should not be in a menu while it is hidden");
+    NSInteger insertionPoint = CalculateNativeInsertionPoint(aChild);
+    [mNativeMenu insertItem:nativeItem atIndex:insertionPoint];
+    mVisibleItemsCount++;
+  } else {
+    MOZ_RELEASE_ASSERT([mNativeMenu indexOfItem:nativeItem] != -1,
+                       "The native item should be in this menu while it is visible");
     [mNativeMenu removeItem:nativeItem];
+    mVisibleItemsCount--;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 NSInteger nsMenuX::CalculateNativeInsertionPoint(const MenuChild& aChild) {
@@ -915,9 +916,7 @@ NSInteger nsMenuX::CalculateNativeInsertionPoint(const MenuChild& aChild) {
     NSMenuItem* nativeItem = currItem.match(
         [](const RefPtr<nsMenuX>& aMenu) { return aMenu->NativeNSMenuItem(); },
         [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->NativeNSMenuItem(); });
-    // Only count items that are inside a menu.
-    // XXXmstange Not sure what would cause free-standing items. Maybe for collapsed/hidden menus?
-    // In that case, an nsMenuX::IsVisible() method would be better.
+    // Only count visible items.
     if (nativeItem.menu) {
       insertionPoint++;
     }

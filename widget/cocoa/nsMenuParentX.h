@@ -21,12 +21,11 @@ class nsMenuParentX {
   // XXXmstange double-check that this is still needed
   virtual nsMenuBarX* AsMenuBar() { return nullptr; }
 
-  // If aChild is one of our child menus, insert aChild's native menu item in
-  // our native menu at the right location.
-  virtual void InsertChildNativeMenuItem(const MenuChild& aChild) = 0;
-
-  // Remove aChild's native menu item froum our native menu.
-  virtual void RemoveChildNativeMenuItem(const MenuChild& aChild) = 0;
+  // Called when aChild becomes visible or hidden, so that the parent can insert
+  // or remove the child's native menu item from its NSMenu and update its state
+  // of visible items.
+  virtual void MenuChildChangedVisibility(const MenuChild& aChild,
+                                          bool aIsVisible) = 0;
 };
 
 #endif  // nsMenuParentX_h_

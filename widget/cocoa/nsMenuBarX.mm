@@ -224,7 +224,7 @@ void nsMenuBarX::InsertMenuAtIndex(RefPtr<nsMenuX>&& aMenu, uint32_t aIndex) {
   // hook up submenus
   RefPtr<nsIContent> menuContent = aMenu->Content();
   if (menuContent->GetChildCount() > 0 && !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-    InsertChildNativeMenuItem(MenuChild(aMenu));
+    MenuChildChangedVisibility(MenuChild(aMenu), true);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -448,18 +448,14 @@ bool nsMenuBarX::PerformKeyEquivalent(NSEvent* aEvent) {
   return [mNativeMenu performSuperKeyEquivalent:aEvent];
 }
 
-void nsMenuBarX::InsertChildNativeMenuItem(const MenuChild& aChild) {
-  MOZ_RELEASE_ASSERT(aChild.is<RefPtr<nsMenuX>>(), "nsMenuBarX only has nsMenuX children");
-  const RefPtr<nsMenuX>& child = aChild.as<RefPtr<nsMenuX>>();
-  NSInteger insertionPoint = CalculateNativeInsertionPoint(child);
-  [mNativeMenu insertItem:child->NativeNSMenuItem() atIndex:insertionPoint];
-}
-
-void nsMenuBarX::RemoveChildNativeMenuItem(const MenuChild& aChild) {
+void nsMenuBarX::MenuChildChangedVisibility(const MenuChild& aChild, bool aIsVisible) {
   MOZ_RELEASE_ASSERT(aChild.is<RefPtr<nsMenuX>>(), "nsMenuBarX only has nsMenuX children");
   const RefPtr<nsMenuX>& child = aChild.as<RefPtr<nsMenuX>>();
   NSMenuItem* item = child->NativeNSMenuItem();
-  if ([mNativeMenu indexOfItem:item] != -1) {
+  if (aIsVisible) {
+    NSInteger insertionPoint = CalculateNativeInsertionPoint(child);
+    [mNativeMenu insertItem:child->NativeNSMenuItem() atIndex:insertionPoint];
+  } else if ([mNativeMenu indexOfItem:item] != -1) {
     [mNativeMenu removeItem:item];
   }
 }

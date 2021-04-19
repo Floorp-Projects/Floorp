@@ -140,12 +140,8 @@ class nsMenuX final : public nsMenuParentX,
   void SetIconListener(nsMenuItemIconX::Listener* aListener) { mIconListener = aListener; }
   void ClearIconListener() { mIconListener = nullptr; }
 
-  // If aChild is one of our child menus, insert aChild's native menu item in our native menu at the
-  // right location.
-  void InsertChildNativeMenuItem(const MenuChild& aChild) override;
-
-  // Remove aChild's native menu item froum our native menu.
-  void RemoveChildNativeMenuItem(const MenuChild& aChild) override;
+  // nsMenuParentX
+  void MenuChildChangedVisibility(const MenuChild& aChild, bool aIsVisible) override;
 
   void Dump(uint32_t aIndent) const;
 

@@ -115,12 +115,8 @@ class nsMenuBarX : public nsMenuParentX, public nsChangeObserver, public mozilla
   bool PerformKeyEquivalent(NSEvent* aEvent);
   GeckoNSMenu* NativeNSMenu() { return mNativeMenu; }
 
-  // If aChild is one of our child menus, insert aChild's native menu item in our native menu at the
-  // right location.
-  void InsertChildNativeMenuItem(const MenuChild& aChild) override;
-
-  // Remove aChild's native menu item from our native menu.
-  void RemoveChildNativeMenuItem(const MenuChild& aChild) override;
+  // nsMenuParentX
+  void MenuChildChangedVisibility(const MenuChild& aChild, bool aIsVisible) override;
 
  protected:
   virtual ~nsMenuBarX();
