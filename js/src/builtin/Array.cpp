@@ -925,17 +925,9 @@ bool js::ObjectMayHaveExtraIndexedProperties(JSObject* obj) {
 }
 
 static bool AddLengthProperty(JSContext* cx, HandleArrayObject obj) {
-  // Add the 'length' property for a newly created array. Shapes are shared
-  // across realms within a zone and because we update the initial shape with
-  // a Shape that contains the length-property (in NewArray), it's possible
-  // the length property has already been defined.
+  // Add the 'length' property for a newly created array.
 
-  Shape* shape = obj->lastProperty();
-  if (!shape->isEmptyShape()) {
-    MOZ_ASSERT(shape->propidRaw().isAtom(cx->names().length));
-    MOZ_ASSERT(shape->previous()->isEmptyShape());
-    return true;
-  }
+  MOZ_ASSERT(obj->empty());
 
   RootedId lengthId(cx, NameToId(cx->names().length));
   return NativeObject::addCustomDataProperty(
