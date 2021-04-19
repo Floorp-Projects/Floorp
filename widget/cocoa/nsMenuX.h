@@ -163,10 +163,9 @@ class nsMenuX final : public nsMenuParentX,
   nsresult SetEnabled(bool aIsEnabled);
   nsresult GetEnabled(bool* aIsEnabled);
   already_AddRefed<nsIContent> GetMenuPopupContent();
-  void AddMenuItem(RefPtr<nsMenuItemX>&& aMenuItem);
-  void AddMenu(RefPtr<nsMenuX>&& aMenu);
-  void LoadMenuItem(nsIContent* aMenuItemContent);
-  void LoadSubMenu(nsIContent* aMenuContent);
+  void AddMenuChild(MenuChild&& aChild);
+  mozilla::Maybe<MenuChild> CreateMenuChild(nsIContent* aContent);
+  RefPtr<nsMenuItemX> CreateMenuItem(nsIContent* aMenuItemContent);
   GeckoNSMenu* CreateMenuWithGeckoString(nsString& aMenuTitle);
   void DidFirePopupShowing();
 
