@@ -180,28 +180,16 @@ webrtc::Call::Stats WebrtcAudioConduit::GetCallStats() const {
   return mCall->Call()->GetStats();
 }
 
-bool WebrtcAudioConduit::SetDtmfPayloadType(unsigned char type, int freq) {
-  CSFLogInfo(LOGTAG, "%s : setting dtmf payload %d", __FUNCTION__, (int)type);
+bool WebrtcAudioConduit::InsertDTMFTone(unsigned char payloadType,
+                                        int payloadFrequency, int eventCode,
+                                        int lengthMs) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  mDtmfPayloadType = type;
-  mDtmfPayloadFrequency = freq;
-
-  return false;
-}
-
-bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
-                                        bool outOfBand, int lengthMs,
-                                        int attenuationDb) {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  if (!mSendStream || !mDtmfEnabled || !outOfBand) {
+  if (!mSendStream || !mDtmfEnabled) {
     return false;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(mDtmfPayloadType != -1);
-  MOZ_DIAGNOSTIC_ASSERT(mDtmfPayloadFrequency != -1);
-
-  return mSendStream->SendTelephoneEvent(
-      mDtmfPayloadType, mDtmfPayloadFrequency, eventCode, lengthMs);
+  return mSendStream->SendTelephoneEvent(payloadType, payloadFrequency,
+                                         eventCode, lengthMs);
 }
 
 void WebrtcAudioConduit::OnRtcpBye() {

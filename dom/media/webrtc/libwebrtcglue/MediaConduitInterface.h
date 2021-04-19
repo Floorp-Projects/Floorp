@@ -534,10 +534,8 @@ class AudioSessionConduit : public MediaSessionConduit {
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
       const std::vector<AudioCodecConfig>& recvCodecConfigList) = 0;
 
-  virtual bool SetDtmfPayloadType(unsigned char type, int freq) = 0;
-
-  virtual bool InsertDTMFTone(int channel, int eventCode, bool outOfBand,
-                              int lengthMs, int attenuationDb) = 0;
+  virtual bool InsertDTMFTone(unsigned char payloadType, int payloadFrequency,
+                              int eventCode, int lengthMs) = 0;
 
   virtual Maybe<webrtc::AudioReceiveStream::Stats> GetReceiverStats() const = 0;
   virtual Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const = 0;
