@@ -445,15 +445,6 @@ bool EmitterScope::enterClassBody(BytecodeEmitter* bce, ScopeKind kind,
     return false;
   }
 
-  // Put frame slots in TDZ. Environment slots are poisoned during environment
-  // creation. XXX TODO: Change. This makes no sense for class body slots.
-  //
-  // This must be done after appendScopeNote to be considered in the extent
-  // of the scope.
-  if (!deadZoneFrameSlotRange(bce, firstFrameSlot, frameSlotEnd())) {
-    return false;
-  }
-
   return checkEnvironmentChainLength(bce);
 }
 

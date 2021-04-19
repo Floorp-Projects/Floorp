@@ -94,6 +94,7 @@ enum class DeclarationKind : uint8_t {
   SimpleCatchParameter,
   CatchParameter,
   PrivateName,
+  Synthetic,
 };
 
 static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
@@ -123,6 +124,9 @@ static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
 
     case DeclarationKind::Import:
       return BindingKind::Import;
+
+    case DeclarationKind::Synthetic:
+      return BindingKind::Synthetic;
   }
 
   MOZ_CRASH("Bad DeclarationKind");
@@ -337,6 +341,8 @@ class NameLocation {
   bool isLexical() const { return BindingKindIsLexical(bindingKind()); }
 
   bool isConst() const { return bindingKind() == BindingKind::Const; }
+
+  bool isSynthetic() const { return bindingKind() == BindingKind::Synthetic; }
 
   bool hasKnownSlot() const {
     return kind_ == Kind::ArgumentSlot || kind_ == Kind::FrameSlot ||
