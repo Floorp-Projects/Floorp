@@ -63,11 +63,11 @@ PropertyName* js::EnvironmentCoordinateNameSlow(JSScript* script,
   Shape* shape = EnvironmentCoordinateToEnvironmentShape(script, pc);
   EnvironmentCoordinate ec(pc);
 
-  Shape::Range<NoGC> r(shape);
-  while (r.front().slot() != ec.slot()) {
-    r.popFront();
+  ShapePropertyIter<NoGC> iter(shape);
+  while (iter->slot() != ec.slot()) {
+    iter++;
   }
-  jsid id = r.front().propidRaw();
+  jsid id = iter->key();
 
   /* Beware nameless destructuring formal. */
   if (!id.isAtom()) {
@@ -417,8 +417,8 @@ ModuleEnvironmentObject* ModuleEnvironmentObject::create(
   // It is not be possible to add or remove bindings from a module environment
   // after this point as module code is always strict.
 #ifdef DEBUG
-  for (Shape::Range<NoGC> r(env->lastProperty()); !r.empty(); r.popFront()) {
-    MOZ_ASSERT(!r.front().configurable());
+  for (ShapePropertyIter<NoGC> iter(env->shape()); !iter.done(); iter++) {
+    MOZ_ASSERT(!iter->configurable());
   }
   MOZ_ASSERT(env->lastProperty()->hasObjectFlag(ObjectFlag::NotExtensible));
   MOZ_ASSERT(!env->inDictionaryMode());
@@ -574,8 +574,8 @@ bool ModuleEnvironmentObject::newEnumerate(JSContext* cx, HandleObject obj,
 
   bs.forEachExportedName([&](jsid name) { properties.infallibleAppend(name); });
 
-  for (Shape::Range<NoGC> r(self->lastProperty()); !r.empty(); r.popFront()) {
-    properties.infallibleAppend(r.front().propid());
+  for (ShapePropertyIter<NoGC> iter(self->shape()); !iter.done(); iter++) {
+    properties.infallibleAppend(iter->key());
   }
 
   MOZ_ASSERT(properties.length() == count);

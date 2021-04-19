@@ -3156,10 +3156,9 @@ static bool GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj,
 
     // Append sparse elements.
     if (nativeObj->isIndexed()) {
-      Shape::Range<NoGC> r(nativeObj->lastProperty());
-      for (; !r.empty(); r.popFront()) {
-        Shape& shape = r.front();
-        jsid id = shape.propid();
+      ShapePropertyIter<NoGC> iter(nativeObj->shape());
+      for (; !iter.done(); iter++) {
+        jsid id = iter->key();
         uint32_t i;
         if (!IdIsIndex(id, &i)) {
           continue;
@@ -3170,7 +3169,7 @@ static bool GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj,
         }
 
         // Watch out for getters, they can add new properties.
-        if (!shape.isDataProperty()) {
+        if (!iter->isDataProperty()) {
           return true;
         }
 

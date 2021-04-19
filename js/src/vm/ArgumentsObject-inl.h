@@ -34,9 +34,8 @@ inline void ArgumentsObject::setElement(uint32_t i, const Value& v) {
     uint32_t slot = SlotFromMagicScopeSlotValue(lhs);
     CallObject& callobj =
         getFixedSlot(MAYBE_CALL_SLOT).toObject().as<CallObject>();
-    for (Shape::Range<NoGC> r(callobj.lastProperty()); !r.empty();
-         r.popFront()) {
-      if (r.front().slot() == slot) {
+    for (ShapePropertyIter<NoGC> iter(callobj.shape()); !iter.done(); iter++) {
+      if (iter->slot() == slot) {
         callobj.setAliasedFormalFromArguments(lhs, v);
         return;
       }
