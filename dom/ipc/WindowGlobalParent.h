@@ -215,6 +215,8 @@ class WindowGlobalParent final : public WindowContext,
 
   Maybe<uint64_t> GetSingleChannelId() { return mSingleChannelId; }
 
+  uint16_t GetBFCacheStatus() { return mBFCacheStatus; }
+
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
                                         const nsACString& aName,
