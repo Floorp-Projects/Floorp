@@ -166,10 +166,17 @@ class nsMenuX final : public nsMenuParentX,
   void WillInsertChild(const MenuChild& aChild);
   void WillRemoveChild(const MenuChild& aChild);
   void AddMenuChild(MenuChild&& aChild);
+  void InsertMenuChild(MenuChild&& aChild);
+  void RemoveMenuChild(const MenuChild& aChild);
   mozilla::Maybe<MenuChild> CreateMenuChild(nsIContent* aContent);
   RefPtr<nsMenuItemX> CreateMenuItem(nsIContent* aMenuItemContent);
   GeckoNSMenu* CreateMenuWithGeckoString(nsString& aMenuTitle);
   void DidFirePopupShowing();
+
+  // Find the index at which aChild needs to be inserted into mMenuChildren such that mMenuChildren
+  // remains in correct content order, i.e. the order in mMenuChildren is the same as the order of
+  // the DOM children of our <menupopup>.
+  size_t FindInsertionIndex(const MenuChild& aChild);
 
   // Calculates the index at which aChild's NSMenuItem should be inserted into our NSMenu.
   // The order of NSMenuItems in the NSMenu is the same as the order of menu children in
