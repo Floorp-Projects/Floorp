@@ -119,6 +119,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   EmitterScope* innermostEmitterScope_ = nullptr;
   TDZCheckCache* innermostTDZCheckCache = nullptr;
 
+  // When compiling in self-hosted mode, we have special intrinsics that act as
+  // decorators for exported functions. To keeps things simple, we only allow
+  // these to target the last top-level function emitted. This field tracks that
+  // function.
+  FunctionBox* prevSelfHostedTopLevelFunction = nullptr;
+
 #ifdef DEBUG
   bool unstableEmitterScope = false;
 
@@ -790,7 +796,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitSelfHostedToString(BinaryNode* callNode);
   [[nodiscard]] bool emitSelfHostedGetBuiltinConstructor(BinaryNode* callNode);
   [[nodiscard]] bool emitSelfHostedGetBuiltinPrototype(BinaryNode* callNode);
+  [[nodiscard]] bool emitSelfHostedSetIsInlinableLargeFunction(
+      BinaryNode* callNode);
 #ifdef DEBUG
+  [[nodiscard]] bool checkSelfHostedExpectedTopLevel(BinaryNode* callNode,
+                                                     ParseNode* node);
   [[nodiscard]] bool checkSelfHostedUnsafeGetReservedSlot(BinaryNode* callNode);
   [[nodiscard]] bool checkSelfHostedUnsafeSetReservedSlot(BinaryNode* callNode);
 #endif

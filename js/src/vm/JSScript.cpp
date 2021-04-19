@@ -4395,11 +4395,6 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
     return nullptr;
   }
 
-  // Maintain this flag when cloning self-hosted functions.
-  if (src->isInlinableLargeFunction()) {
-    dst->setIsInlinableLargeFunction();
-  }
-
   // Clone the PrivateScriptData into dst
   if (!PrivateScriptData::Clone(cx, src, dst, scopes)) {
     return nullptr;
