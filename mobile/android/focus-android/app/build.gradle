@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: "de.mannodermaus.android-junit5"
 apply plugin: 'jacoco'
 apply plugin: 'kotlin-android-extensions'
 apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
