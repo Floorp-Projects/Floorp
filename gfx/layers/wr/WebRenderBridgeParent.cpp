@@ -335,7 +335,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(
 #if defined(MOZ_WIDGET_ANDROID)
       mScreenPixelsTarget(nullptr),
 #endif
-      mPaused(false),
       mDestroyed(false),
       mReceivedDisplayList(false),
       mIsFirstPaint(true),
@@ -362,7 +361,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId,
       mWrEpoch{0},
       mIdNamespace{0},
       mInitError(aError),
-      mPaused(false),
       mDestroyed(true),
       mReceivedDisplayList(false),
       mIsFirstPaint(false),
@@ -1620,10 +1618,13 @@ void WebRenderBridgeParent::MaybeCaptureScreenPixels() {
   if (mDestroyed) {
     return;
   }
-  MOZ_ASSERT(!mPaused);
 
   // This function should only get called in the root WRBP.
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
+#  ifdef DEBUG
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  MOZ_ASSERT(cbp && !cbp->IsPaused());
+#  endif
 
   SurfaceFormat format = SurfaceFormat::R8G8B8A8;  // On android we use RGBA8
   auto client_size = mWidget->GetClientSize();
@@ -1653,7 +1654,8 @@ void WebRenderBridgeParent::MaybeCaptureScreenPixels() {
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
     PTextureParent* aTexture, bool* aNeedsYFlip) {
   *aNeedsYFlip = false;
-  if (mDestroyed || mPaused) {
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  if (mDestroyed || !cbp || cbp->IsPaused()) {
     return IPC_OK();
   }
 
@@ -2106,11 +2108,18 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
   MOZ_ASSERT(aRect == nullptr);
 
   AUTO_PROFILER_TRACING_MARKER("Paint", "CompositeToTarget", GRAPHICS);
-  if (mPaused || !mReceivedDisplayList) {
+
+  bool paused = true;
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  if (cbp) {
+    paused = cbp->IsPaused();
+  }
+
+  if (paused || !mReceivedDisplayList) {
     ResetPreviousSampleTime();
     mCompositionOpportunityId = mCompositionOpportunityId.Next();
     PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS, {},
-                         mPaused ? "Paused"_ns : "No display list"_ns);
+                         paused ? "Paused"_ns : "No display list"_ns);
     return;
   }
 
@@ -2424,7 +2433,6 @@ void WebRenderBridgeParent::Pause() {
   }
 
   mApi->Pause();
-  mPaused = true;
 }
 
 bool WebRenderBridgeParent::Resume() {
@@ -2440,8 +2448,6 @@ bool WebRenderBridgeParent::Resume() {
 
   // Ensure we generate and render a frame immediately.
   ScheduleForcedGenerateFrame();
-
-  mPaused = false;
   return true;
 }
 
