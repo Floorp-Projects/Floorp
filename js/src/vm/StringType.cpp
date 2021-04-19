@@ -725,13 +725,15 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   gc::StoreBuffer* bufferIfNursery = root->storeBuffer();
 
   /* Find the left most string, containing the first string. */
-  JSRope* leftMostRope = root;
-  while (leftMostRope->leftChild()->isRope()) {
-    leftMostRope = &leftMostRope->leftChild()->asRope();
+  JSRope* leftmostRope = root;
+  while (leftmostRope->leftChild()->isRope()) {
+    leftmostRope = &leftmostRope->leftChild()->asRope();
   }
 
-  if (leftMostRope->leftChild()->isExtensible()) {
-    JSExtensibleString& left = leftMostRope->leftChild()->asExtensible();
+  bool reuseLeftmostBuffer = false;
+
+  if (leftmostRope->leftChild()->isExtensible()) {
+    JSExtensibleString& left = leftmostRope->leftChild()->asExtensible();
     size_t capacity = left.capacity();
     if (capacity >= wholeLength &&
         left.hasTwoByteChars() == std::is_same_v<CharT, char16_t>) {
@@ -745,24 +747,9 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
         return nullptr;
       }
 
-      /*
-       * Simulate a left-most traversal from the root to leftMost->leftChild()
-       * via first_visit_node
-       */
-      MOZ_ASSERT(str->isRope());
-      while (str != leftMostRope) {
-        ropeBarrierDuringFlattening<usingBarrier>(str);
-        JSString* child = str->d.s.u2.left;
-        // 'child' will be post-barriered during the later traversal.
-        MOZ_ASSERT(child->isRope());
-        str->setNonInlineChars(wholeChars);
-        child->setFlattenData(str, Flag_VisitRightChild);
-        str = child;
-      }
-      ropeBarrierDuringFlattening<usingBarrier>(str);
-      str->setNonInlineChars(wholeChars);
+      ropeBarrierDuringFlattening<usingBarrier>(leftmostRope);
+      leftmostRope->setNonInlineChars(wholeChars);
       uint32_t left_len = left.length();
-      pos = wholeChars + left_len;
 
       // Remove memory association for left node we're about to make into a
       // dependent string.
@@ -780,7 +767,11 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
         // leftmost child -> root is a tenured -> nursery edge.
         bufferIfNursery->putWholeCell(&left);
       }
-      goto visit_right_child;
+
+      reuseLeftmostBuffer = true;
+      pos = wholeChars + left_len;
+
+      goto first_visit_node;
     }
   }
 
@@ -798,9 +789,12 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
 
   pos = wholeChars;
 first_visit_node : {
-  ropeBarrierDuringFlattening<usingBarrier>(str);
-
+  if (reuseLeftmostBuffer && str == leftmostRope) {
+    // Left child has already been overwritten.
+    goto visit_right_child;
+  }
   JSString& left = *str->d.s.u2.left;
+  ropeBarrierDuringFlattening<usingBarrier>(str);
   str->setNonInlineChars(pos);
   if (left.isRope()) {
     /* Return to this node when 'left' done, then goto visit_right_child. */
