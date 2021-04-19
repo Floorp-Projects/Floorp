@@ -149,6 +149,7 @@
 }
 
 .panel-footer.panel-footer-menulike > button > .button-box {
+  padding: 0;
   display: inline;
 }
 
