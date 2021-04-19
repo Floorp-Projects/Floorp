@@ -367,7 +367,7 @@ static bool IsUrgentStart(BrowsingContext* aBrowsingContext,
 
 nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
                        uint64_t aContentWindowID)
-    : nsDocLoader(),
+    : nsDocLoader(true),
       mContentWindowID(aContentWindowID),
       mBrowsingContext(aBrowsingContext),
       mForcedCharset(nullptr),
