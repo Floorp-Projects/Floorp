@@ -563,7 +563,8 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
       for (nsCOMPtr<nsIContent> child = aContent.GetFirstChild(); child;
            child = child->GetNextSibling()) {
         if (EditorUtils::IsEditableContent(*child, EditorType::HTML) &&
-            !IsEmptyTextNode(*child)) {
+            (!child->IsText() ||
+             HTMLEditUtils::IsVisibleTextNode(*child->AsText()))) {
           arrayOfNodes.AppendElement(*child);
         }
       }
@@ -1539,7 +1540,7 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
       // just ignore any non-editable nodes
       if (content->IsText() &&
           (!EditorUtils::IsEditableContent(*content, EditorType::HTML) ||
-           IsEmptyTextNode(*content))) {
+           !HTMLEditUtils::IsVisibleTextNode(*content->AsText()))) {
         continue;
       }
       if (content->GetAsText()) {

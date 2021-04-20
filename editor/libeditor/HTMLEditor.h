@@ -4574,14 +4574,6 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT nsresult RefreshInlineTableEditingUIInternal();
 
   /**
-   * IsEmptyTextNode() returns true if aNode is a text node and does not have
-   * any visible characters.
-   */
-  bool IsEmptyTextNode(nsINode& aNode) const {
-    return aNode.IsText() && IsEmptyNode(aNode);
-  }
-
-  /**
    * ElementIsGoodContainerForTheStyle() returns true if aElement is a
    * good container for applying the style (aProperty/aAttribute/aValue)
    * to a node.  I.e., if this returns true, moving nodes into aElement
