@@ -246,7 +246,6 @@
                          is="places-popup"
 #endif
                          oncommand="this.parentNode._placesView._onCommand(event);"
-                         onclick="checkForMiddleClick(this, event);"
                          onpopupshowing="if (!this.parentNode._placesView)
                                            new HistoryMenu(event);"
                          tooltip="bhTooltip"
@@ -414,7 +413,6 @@
                 <menupopup id="menuWebDeveloperPopup">
                   <menuitem id="menu_taskManager"
                             oncommand="switchToTabHavingURI('about:performance', true)"
-                            onclick="checkForMiddleClick(this, event);"
                             data-l10n-id="menu-tools-task-manager"/>
                   <menuitem id="menu_pageSource"
                             key="key_viewSource"
@@ -470,7 +468,6 @@
      have their strings defined by appmenu-data-l10n-id. -->
                 <menuitem id="menu_openHelp"
                           oncommand="openHelpLink('firefox-help')"
-                          onclick="checkForMiddleClick(this, event);"
                           data-l10n-id="menu-get-help"
                           appmenu-data-l10n-id="appmenu-get-help"
 #ifdef XP_MACOSX
@@ -480,7 +477,6 @@
 #endif
                 <menuitem id="feedbackPage"
                           oncommand="openFeedbackPage()"
-                          onclick="checkForMiddleClick(this, event);"
                           data-l10n-id="menu-help-feedback-page"
                           appmenu-data-l10n-id="appmenu-help-feedback-page"/>
                 <menuitem id="helpSafeMode"
@@ -489,7 +485,6 @@
                           appmenu-data-l10n-id="appmenu-help-enter-troubleshoot-mode2"/>
                 <menuitem id="troubleShooting"
                           oncommand="openTroubleshootingPage()"
-                          onclick="checkForMiddleClick(this, event);"
                           data-l10n-id="menu-help-more-troubleshooting-info"
                           appmenu-data-l10n-id="appmenu-help-more-troubleshooting-info"/>
                 <menuitem id="help_reportSiteIssue"
@@ -500,14 +495,12 @@
                 <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
                           disabled="true"
                           oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
-                          onclick="checkForMiddleClick(this, event);"
                           hidden="true"
                           data-l10n-id="menu-help-report-deceptive-site"
                           appmenu-data-l10n-id="appmenu-help-report-deceptive-site"/>
                 <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
                           disabled="true"
                           oncommand="ReportFalseDeceptiveSite();"
-                          onclick="checkForMiddleClick(this, event);"
                           data-l10n-id="menu-help-not-deceptive"
                           appmenu-data-l10n-id="appmenu-help-not-deceptive"
                           hidden="true"/>
@@ -520,8 +513,7 @@
                           hidden="true"/>
                 <menuitem id="helpPolicySupport"
                           hidden="true"
-                          oncommand="openUILinkIn(Services.policies.getSupportMenu().URL.href, 'tab', {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
-                          onclick="checkForMiddleClick(this, event);"/>
+                          oncommand="openUILinkIn(Services.policies.getSupportMenu().URL.href, 'tab', {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"/>
               </menupopup>
           </menu>
         </menubar>
