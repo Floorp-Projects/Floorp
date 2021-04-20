@@ -49,10 +49,9 @@ class GeckoTelemetryDelegate final
       samples.AppendElement(static_cast<int64_t>(aSamples[i]));
     }
 
-    // LongArray::New *copies* the elements
-    mProxy->DispatchHistogram(
-        aIsCategorical, aName,
-        mozilla::jni::LongArray::New(samples.Elements(), samples.Length()));
+    // LongArray::From *copies* the elements
+    mProxy->DispatchHistogram(aIsCategorical, aName,
+                              mozilla::jni::LongArray::From(samples));
   }
 
   // Implement StreamingTelemetryDelegate.

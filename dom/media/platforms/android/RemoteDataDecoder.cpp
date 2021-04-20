@@ -707,20 +707,11 @@ static java::sdk::CryptoInfo::LocalRef GetCryptoInfoFromSample(
     tempIV.AppendElement(0);
   }
 
-  auto numBytesOfPlainData = mozilla::jni::IntArray::New(
-      reinterpret_cast<const int32_t*>(&plainSizes[0]), plainSizes.Length());
-
-  auto numBytesOfEncryptedData = mozilla::jni::IntArray::New(
-      reinterpret_cast<const int32_t*>(&cryptoObj.mEncryptedSizes[0]),
-      cryptoObj.mEncryptedSizes.Length());
-
-  auto iv = mozilla::jni::ByteArray::New(reinterpret_cast<int8_t*>(&tempIV[0]),
-                                         tempIV.Length());
-  auto keyId = mozilla::jni::ByteArray::New(
-      reinterpret_cast<const int8_t*>(&cryptoObj.mKeyId[0]),
-      cryptoObj.mKeyId.Length());
-  cryptoInfo->Set(numSubSamples, numBytesOfPlainData, numBytesOfEncryptedData,
-                  keyId, iv, java::sdk::MediaCodec::CRYPTO_MODE_AES_CTR);
+  cryptoInfo->Set(numSubSamples, mozilla::jni::IntArray::From(plainSizes),
+                  mozilla::jni::IntArray::From(cryptoObj.mEncryptedSizes),
+                  mozilla::jni::ByteArray::From(cryptoObj.mKeyId),
+                  mozilla::jni::ByteArray::From(tempIV),
+                  java::sdk::MediaCodec::CRYPTO_MODE_AES_CTR);
 
   return cryptoInfo;
 }
