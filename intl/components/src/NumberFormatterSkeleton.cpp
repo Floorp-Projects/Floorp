@@ -42,8 +42,8 @@ NumberFormatterSkeleton::NumberFormatterSkeleton(
   }
 
   if (options.mSignificantDigits.isSome()) {
-    if (!fractionDigits(options.mSignificantDigits->first,
-                        options.mSignificantDigits->second)) {
+    if (!significantDigits(options.mSignificantDigits->first,
+                           options.mSignificantDigits->second)) {
       return;
     }
   }
@@ -135,17 +135,19 @@ bool NumberFormatterSkeleton::unit(std::string_view unit) {
 
   // |unit| can be a compound unit identifier, separated by "-per-".
   static constexpr char separator[] = "-per-";
+  size_t separator_len = strlen(separator);
   size_t offset = unit.find(separator);
   if (offset != std::string_view::npos) {
     const auto& numerator = FindSimpleMeasureUnit(unit.substr(0, offset));
-    const auto& denominator =
-        FindSimpleMeasureUnit(unit.data() + offset + strlen(separator));
+    const auto& denominator = FindSimpleMeasureUnit(
+        std::string_view(unit.data() + offset + separator_len,
+                         unit.length() - offset - separator_len));
     return append(u"measure-unit/") && appendUnit(numerator) && append(' ') &&
            append(u"per-measure-unit/") && appendUnit(denominator) &&
            append(' ');
   }
 
-  const auto& simple = FindSimpleMeasureUnit(unit.data());
+  const auto& simple = FindSimpleMeasureUnit(unit);
   return append(u"measure-unit/") && appendUnit(simple) && append(' ');
 }
 
