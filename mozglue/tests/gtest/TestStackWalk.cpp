@@ -24,11 +24,13 @@ struct CallInfo {
   bool mTailCall;
 
   bool TailCall() {
-#ifdef __i386__
+#if defined(__i386__) || defined(MOZ_CODE_COVERAGE)
     // We can't make tail calls happen on i386 because all arguments to
     // functions are on the stack, so the stack pointer needs to be updated
     // before the call and restored after the call, so tail call optimization
     // never happens.
+    // Similarly, code-coverage flags don't guarantee that tail call
+    // optimization will happen.
     return false;
 #else
     return mTailCall;
