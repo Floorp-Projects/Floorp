@@ -53,7 +53,8 @@ class SearchRobot {
         assertTrue(searchHint.text.equals(searchTerm))
     }
 
-    fun verifySearchEditBarContainsTest(text: String) {
+    fun verifySearchEditBarContainsText(text: String) {
+        mDevice.findObject(UiSelector().textContains(text)).waitForExists(waitingTime)
         assertTrue(searchBar.text.equals(text))
     }
 

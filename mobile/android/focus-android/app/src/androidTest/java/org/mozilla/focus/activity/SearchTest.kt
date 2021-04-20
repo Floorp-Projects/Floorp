@@ -77,7 +77,7 @@ class SearchTest {
             progressBar.waitUntilGone(webPageLoadwaitingTime)
         }.openSearchBar {
             // Tap URL bar, check it displays search term (instead of URL)
-            verifySearchEditBarContainsTest(searchString)
+            verifySearchEditBarContainsText(searchString)
         }
     }
 

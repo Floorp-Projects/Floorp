@@ -101,6 +101,17 @@ object TestHelper {
         }
     }
 
+    // exit to the main view
+    fun exitToTop() {
+        val homeScreen =
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/keyboardLinearLayout"))
+        var homeScreenVisible = false
+        while (!homeScreenVisible) {
+            mDevice.pressBack()
+            homeScreenVisible = homeScreen.waitForExists(2000)
+        }
+    }
+
     // wait for web area to be visible
     @JvmStatic
     fun waitForWebContent() {
