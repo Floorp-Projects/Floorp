@@ -2058,7 +2058,10 @@ class TabManagerBase {
       if (queryInfo) {
         let { active, highlighted, index } = queryInfo;
         if (active === true) {
-          yield windowWrapper.activeTab;
+          let { activeTab } = windowWrapper;
+          if (activeTab) {
+            yield activeTab;
+          }
           return;
         }
         if (index != null) {
@@ -2313,6 +2316,9 @@ function getUserContextIdForCookieStoreId(
       throw new ExtensionError(
         `No cookie store exists with ID ${cookieStoreId}`
       );
+    }
+    if (!extension.canAccessContainer(userContextId)) {
+      throw new ExtensionError(`Cannot access ${cookieStoreId}`);
     }
     return userContextId;
   }
