@@ -99,8 +99,8 @@ const TEST_ARRAY = [
 ];
 
 add_task(async function() {
-  await addTab("data:text/html;charset=utf-8,<div>");
-  const { testActor, inspector, view } = await openRuleView();
+  const tab = await addTab("data:text/html;charset=utf-8,<div>");
+  const { inspector, view } = await openRuleView();
 
   await selectNode("div", inspector);
 
@@ -110,7 +110,12 @@ add_task(async function() {
   for (const { inputClassName, expectedClasses } of TEST_ARRAY) {
     info(`Apply the '${inputClassName}' className to the node`);
     const onMutation = inspector.once("markupmutation");
-    await testActor.setAttribute("div", "class", inputClassName);
+    await setAttributeInBrowser(
+      tab.linkedBrowser,
+      "div",
+      "class",
+      inputClassName
+    );
     await onMutation;
 
     info("Check the content of the class panel");

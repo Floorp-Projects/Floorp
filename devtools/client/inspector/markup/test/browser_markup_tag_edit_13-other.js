@@ -9,10 +9,10 @@ const TEST_URL = `data:text/html;charset=utf8,
                   <div a b id='order' c class></div>`;
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector } = await openInspectorForURL(TEST_URL);
 
   await testOriginalAttributesOrder(inspector);
-  await testOrderAfterAttributeChange(inspector, testActor);
+  await testOrderAfterAttributeChange(inspector);
 });
 
 async function testOriginalAttributesOrder(inspector) {
@@ -22,10 +22,15 @@ async function testOriginalAttributesOrder(inspector) {
   ok(isEqual(attributes, ["id", "class", "a", "b", "c"]), "ordered correctly");
 }
 
-async function testOrderAfterAttributeChange(inspector, testActor) {
+async function testOrderAfterAttributeChange(inspector) {
   info("Testing order of attributes after attribute is change by setAttribute");
 
-  await testActor.setAttribute("#order", "a", "changed");
+  await setAttributeInBrowser(
+    gBrowser.selectedBrowser,
+    "#order",
+    "a",
+    "changed"
+  );
 
   const attributes = await getAttributesFromEditor("#order", inspector);
   ok(

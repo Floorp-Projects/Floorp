@@ -62,7 +62,12 @@ const TEST_DATA = [
     selector: "#hidden-true",
     before: true,
     changeStyle: async function(testActor) {
-      await testActor.setAttribute("#hidden-true", "hidden", "true");
+      await setAttributeInBrowser(
+        gBrowser.selectedBrowser,
+        "#hidden-true",
+        "hidden",
+        "true"
+      );
     },
     after: false,
   },

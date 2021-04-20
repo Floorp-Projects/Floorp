@@ -10,7 +10,7 @@ const TEST_URI = "<div id='testdiv' style='font-size:10px;'>Test div!</div>";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, view, testActor } = await openComputedView();
+  const { inspector, view } = await openComputedView();
   await selectNode("#testdiv", inspector);
 
   let fontSize = getComputedViewPropertyValue(view, "font-size");
@@ -18,7 +18,8 @@ add_task(async function() {
 
   info("Changing the node's style and waiting for the update");
   const onUpdated = inspector.once("computed-view-refreshed");
-  await testActor.setAttribute(
+  await setAttributeInBrowser(
+    gBrowser.selectedBrowser,
     "#testdiv",
     "style",
     "font-size: 15px; color: red;"
