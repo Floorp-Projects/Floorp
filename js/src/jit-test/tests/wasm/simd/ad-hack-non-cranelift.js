@@ -21,7 +21,7 @@
 function makeExtMulTest(wide, narrow, part, signed) {
     let widener = (wide == 'i64x2') ?
         `call $${wide}_widen_${part}_${narrow}_${signed}` :
-        `${wide}.widen_${part}_${narrow}_${signed}`;
+        `${wide}.extend_${part}_${narrow}_${signed}`;
     return `
     (func (export "${wide}_extmul_${part}_${narrow}_${signed}")
       (v128.store (i32.const 0)
@@ -133,13 +133,13 @@ var ins = wasmEvalText(`
   (module
     (memory (export "mem") 1 1)
     (func (export "widen_low_i32x4_s")
-      (v128.store (i32.const 0) (i64x2.widen_low_i32x4_s (v128.load (i32.const 16)))))
+      (v128.store (i32.const 0) (i64x2.extend_low_i32x4_s (v128.load (i32.const 16)))))
     (func (export "widen_high_i32x4_s")
-      (v128.store (i32.const 0) (i64x2.widen_high_i32x4_s (v128.load (i32.const 16)))))
+      (v128.store (i32.const 0) (i64x2.extend_high_i32x4_s (v128.load (i32.const 16)))))
     (func (export "widen_low_i32x4_u")
-      (v128.store (i32.const 0) (i64x2.widen_low_i32x4_u (v128.load (i32.const 16)))))
+      (v128.store (i32.const 0) (i64x2.extend_low_i32x4_u (v128.load (i32.const 16)))))
     (func (export "widen_high_i32x4_u")
-      (v128.store (i32.const 0) (i64x2.widen_high_i32x4_u (v128.load (i32.const 16))))))`);
+      (v128.store (i32.const 0) (i64x2.extend_high_i32x4_u (v128.load (i32.const 16))))))`);
 
 var mem32 = new Int32Array(ins.exports.mem.buffer);
 var mem64 = new BigInt64Array(ins.exports.mem.buffer);
