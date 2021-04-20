@@ -490,6 +490,9 @@ pub struct SceneBuilder<'a> {
     /// caching slices to only the top-level content frame.
     iframe_size: Vec<LayoutSize>,
 
+    /// Clip-chain for root iframes applied to any tile caches created within this iframe
+    root_iframe_clip: Option<ClipChainId>,
+
     /// The current quality / performance settings for this scene.
     quality_settings: QualitySettings,
 
@@ -548,6 +551,7 @@ impl<'a> SceneBuilder<'a> {
             rf_mapper: ReferenceFrameMapper::new(),
             external_scroll_mapper: ScrollOffsetMapper::new(),
             iframe_size: Vec::new(),
+            root_iframe_clip: None,
             quality_settings: view.quality_settings,
             tile_cache_builder: TileCacheBuilder::new(),
             snap_to_device,
@@ -765,10 +769,20 @@ impl<'a> SceneBuilder<'a> {
                             None => continue,
                         };
 
+                        // Get a clip-chain id for the root clip for this pipeline. We will
+                        // add that as an unconditional clip to any tile cache created within
+                        // this iframe. This ensures these clips are handled by the tile cache
+                        // compositing code, which is more efficient and accurate than applying
+                        // these clips individually to each primitive.
+                        let clip_id = ClipId::root(info.pipeline_id);
+                        let clip_chain_id = self.get_clip_chain(clip_id);
+
                         // If this is a root iframe, force a new tile cache both before and after
                         // adding primitives for this iframe.
                         if self.iframe_size.is_empty() {
                             self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
+                            assert!(self.root_iframe_clip.is_none());
+                            self.root_iframe_clip = Some(clip_chain_id);
                         }
 
                         self.rf_mapper.push_scope();
@@ -805,6 +819,8 @@ impl<'a> SceneBuilder<'a> {
 
                     self.clip_store.pop_clip_root();
                     if self.iframe_size.is_empty() {
+                        assert!(self.root_iframe_clip.is_some());
+                        self.root_iframe_clip = None;
                         self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
                     }
 
@@ -1658,6 +1674,7 @@ impl<'a> SceneBuilder<'a> {
                     self.interners,
                     &self.config,
                     &self.quality_settings,
+                    self.root_iframe_clip,
                 );
             }
         }
@@ -2007,6 +2024,7 @@ impl<'a> SceneBuilder<'a> {
                 &self.clip_store,
                 self.interners,
                 &self.config,
+                self.root_iframe_clip,
             );
 
             return;
