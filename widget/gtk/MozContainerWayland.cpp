@@ -55,7 +55,6 @@
 #include <stdio.h>
 #include <wayland-egl.h>
 
-#include "gfxPlatformGtk.h"
 #include "nsGtkUtils.h"
 #include "nsWaylandDisplay.h"
 

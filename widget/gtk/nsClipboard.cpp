@@ -27,7 +27,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/TimeStamp.h"
-#include "gfxPlatformGtk.h"
 #include "WidgetUtilsGtk.h"
 
 #include "imgIContainer.h"
@@ -96,14 +95,16 @@ nsClipboard::~nsClipboard() {
 NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard, nsIObserver)
 
 nsresult nsClipboard::Init(void) {
-  if (gfxPlatformGtk::GetPlatform()->IsX11Display()) {
+  if (widget::GdkIsX11Display()) {
     mContext = MakeUnique<nsRetrievalContextX11>();
 #if defined(MOZ_WAYLAND)
-  } else {
+  } else if (widget::GdkIsWaylandDisplay()) {
     mContext = MakeUnique<nsRetrievalContextWayland>();
 #endif
+  } else {
+    NS_WARNING("Missing nsRetrievalContext for nsClipboard!");
+    return NS_OK;
   }
-  NS_ASSERTION(mContext, "Missing nsRetrievalContext for nsClipboard!");
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
@@ -122,6 +123,7 @@ nsClipboard::Observe(nsISupports* aSubject, const char* aTopic,
   return SchedulerGroup::Dispatch(
       TaskCategory::Other,
       NS_NewRunnableFunction("gtk_clipboard_store()", []() {
+        LOGCLIP(("nsClipboard storing clipboard content\n"));
         gtk_clipboard_store(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));
       }));
 }
@@ -240,10 +242,12 @@ void nsClipboard::SetTransferableData(nsITransferable* aTransferable,
 
 NS_IMETHODIMP
 nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
-  if (!aTransferable) return NS_ERROR_FAILURE;
-
   LOGCLIP(("nsClipboard::GetData (%s)\n",
            aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard"));
+
+  if (!aTransferable || !mContext) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Get a list of flavors this transferable can import
   nsTArray<nsCString> flavors;
@@ -449,6 +453,10 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
 
   *_retval = false;
 
+  if (!mContext) {
+    return NS_ERROR_FAILURE;
+  }
+
   int targetNums;
   GdkAtom* targets = mContext->GetTargets(aWhichClipboard, &targetNums);
   if (!targets) {
@@ -523,7 +531,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
 
 NS_IMETHODIMP
 nsClipboard::SupportsSelectionClipboard(bool* _retval) {
-  *_retval = mContext->HasSelectionSupport();
+  *_retval = mContext ? mContext->HasSelectionSupport() : false;
   return NS_OK;
 }
 

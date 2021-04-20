@@ -1630,8 +1630,7 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
   // GDK_DRAG_CANCEL_ERROR error code
   // (see data_source_cancelled/gdkselection-wayland.c).
   // Bug 1527976
-  if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay() &&
-      aResult == MOZ_GTK_DRAG_RESULT_ERROR) {
+  if (GdkIsWaylandDisplay() && aResult == MOZ_GTK_DRAG_RESULT_ERROR) {
     for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
          tmp = tmp->next) {
       GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);

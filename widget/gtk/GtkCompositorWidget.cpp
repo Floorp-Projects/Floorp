@@ -5,7 +5,6 @@
 
 #include "GtkCompositorWidget.h"
 
-#include "gfxPlatformGtk.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/widget/InProcessCompositorWidget.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
