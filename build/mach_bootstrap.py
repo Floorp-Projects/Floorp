@@ -418,9 +418,7 @@ def _finalize_telemetry_glean(telemetry, is_bootstrap, success):
     mach_metrics.mach.duration.stop()
     mach_metrics.mach.success.set(success)
     system_metrics = mach_metrics.mach.system
-    cpu_brand = get_cpu_brand()
-    if cpu_brand:
-        system_metrics.cpu_brand.set(cpu_brand)
+    system_metrics.cpu_brand.set(get_cpu_brand())
     distro, version = get_distro_and_version()
     system_metrics.distro.set(distro)
     system_metrics.distro_version.set(version)
