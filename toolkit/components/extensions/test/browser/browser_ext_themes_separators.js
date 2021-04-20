@@ -20,6 +20,8 @@ add_task(async function test_support_separator_properties() {
           tab_background_text: TEXT_COLOR,
           toolbar_top_separator: SEPARATOR_TOP_COLOR,
           toolbar_vertical_separator: SEPARATOR_VERTICAL_COLOR,
+          // This property is deprecated, but left in to check it doesn't
+          // unexpectedly break the theme installation.
           toolbar_field_separator: SEPARATOR_FIELD_COLOR,
           toolbar_bottom_separator: SEPARATOR_BOTTOM_COLOR,
         },
@@ -30,7 +32,20 @@ add_task(async function test_support_separator_properties() {
     },
   });
 
+  // Test the deprecated color property.
+  let deprecatedMessagePromise = new Promise(resolve => {
+    Services.console.registerListener(function listener(msg) {
+      if (msg.message.includes("toolbar_field_separator")) {
+        resolve();
+        Services.console.unregisterListener(listener);
+      }
+    });
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+  info("Wait for property deprecation message");
+  await deprecatedMessagePromise;
 
   let navbar = document.querySelector("#nav-bar");
   Assert.ok(
@@ -38,15 +53,6 @@ add_task(async function test_support_separator_properties() {
       .getComputedStyle(navbar)
       .boxShadow.includes(`rgb(${hexToRGB(SEPARATOR_TOP_COLOR).join(", ")})`),
     "Top separator color properly set"
-  );
-
-  let mainWin = document.querySelector("#main-window");
-  Assert.equal(
-    window
-      .getComputedStyle(mainWin)
-      .getPropertyValue("--urlbar-separator-color"),
-    `rgb(${hexToRGB(SEPARATOR_FIELD_COLOR).join(", ")})`,
-    "Toolbar field separator color properly set"
   );
 
   let panelUIButton = document.querySelector("#PanelUI-button");
