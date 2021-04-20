@@ -32,8 +32,8 @@ add_task(async function() {
 
   let pluginInfo = await promiseForPluginInfo("plugin");
   is(
-    pluginInfo.pluginFallbackType,
-    Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED,
+    pluginInfo.displayedType,
+    Ci.nsIObjectLoadingContent.TYPE_NULL,
     "plugin should not have been found."
   );
 

@@ -40,8 +40,8 @@
      obj instanceof objLC;
      obj = SpecialPowers.wrap(obj);
 
-     ok(obj.pluginFallbackType == objLC.PLUGIN_ALTERNATE,
-        "expected alternate fallback mode");
+     ok(obj.displayedType == objLC.TYPE_NULL,
+        "object with no given MIME type should be NULL type");
 
     </script>
   </head>
