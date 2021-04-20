@@ -13,6 +13,7 @@
 
 #include "mozilla/fallible.h"
 #include "mozilla/jni/Utils.h"
+#include "mozilla/jni/TypeAdapter.h"
 #include "nsError.h"  // for nsresult
 #include "nsString.h"
 #include "nsTArray.h"
@@ -804,6 +805,7 @@ struct TypeAdapter;
 // Ref specialization for arrays.
 template <typename JNIType, class ElementType>
 class ArrayRefBase : public ObjectBase<TypedObject<JNIType>, JNIType> {
+ protected:
   using Base = ObjectBase<TypedObject<JNIType>, JNIType>;
 
  public:
@@ -874,24 +876,55 @@ class ArrayRefBase : public ObjectBase<TypedObject<JNIType>, JNIType> {
   operator nsTArray<ElementType>() const { return GetElements(); }
 };
 
-#define DEFINE_PRIMITIVE_ARRAY_REF(JNIType, ElementType)                   \
-  template <>                                                              \
-  class TypedObject<JNIType> : public ArrayRefBase<JNIType, ElementType> { \
-   public:                                                                 \
-    explicit TypedObject(const Context& ctx)                               \
-        : ArrayRefBase<JNIType, ElementType>(ctx) {}                       \
+#define DEFINE_PRIMITIVE_ARRAY_REF_HEADER(JNIType, ElementType)                \
+  template <>                                                                  \
+  class TypedObject<JNIType> : public ArrayRefBase<JNIType, ElementType> {     \
+   public:                                                                     \
+    explicit TypedObject(const Context& ctx)                                   \
+        : ArrayRefBase<JNIType, ElementType>(ctx) {}                           \
+    static typename Base::LocalRef From(const nsTArray<ElementType>& aArray) { \
+      return New(aArray.Elements(), aArray.Length());                          \
+    }
+
+#define DEFINE_PRIMITIVE_ARRAY_REF_FOOTER }
+
+#define DEFINE_PRIMITIVE_ARRAY_REF_FROM_IMPLICIT_CONVERSION(ElementType,     \
+                                                            ConvertFromType) \
+  static typename Base::LocalRef From(                                       \
+      const nsTArray<ConvertFromType>& aArray) {                             \
+    return New(reinterpret_cast<const ElementType*>(aArray.Elements()),      \
+               aArray.Length());                                             \
   }
 
+#define DEFINE_PRIMITIVE_ARRAY_REF(JNIType, ElementType)  \
+  DEFINE_PRIMITIVE_ARRAY_REF_HEADER(JNIType, ElementType) \
+  DEFINE_PRIMITIVE_ARRAY_REF_FOOTER
+
+#define DEFINE_PRIMITIVE_ARRAY_REF_WITH_IMPLICIT_CONVERSION(           \
+    JNIType, ElementType, ConvertFromType)                             \
+  DEFINE_PRIMITIVE_ARRAY_REF_HEADER(JNIType, ElementType)              \
+  DEFINE_PRIMITIVE_ARRAY_REF_FROM_IMPLICIT_CONVERSION(ElementType,     \
+                                                      ConvertFromType) \
+  DEFINE_PRIMITIVE_ARRAY_REF_FOOTER
+
 DEFINE_PRIMITIVE_ARRAY_REF(jbooleanArray, bool);
-DEFINE_PRIMITIVE_ARRAY_REF(jbyteArray, int8_t);
+DEFINE_PRIMITIVE_ARRAY_REF_WITH_IMPLICIT_CONVERSION(jbyteArray, int8_t,
+                                                    uint8_t);
 DEFINE_PRIMITIVE_ARRAY_REF(jcharArray, char16_t);
-DEFINE_PRIMITIVE_ARRAY_REF(jshortArray, int16_t);
-DEFINE_PRIMITIVE_ARRAY_REF(jintArray, int32_t);
-DEFINE_PRIMITIVE_ARRAY_REF(jlongArray, int64_t);
+DEFINE_PRIMITIVE_ARRAY_REF_WITH_IMPLICIT_CONVERSION(jshortArray, int16_t,
+                                                    uint16_t);
+DEFINE_PRIMITIVE_ARRAY_REF_WITH_IMPLICIT_CONVERSION(jintArray, int32_t,
+                                                    uint32_t);
 DEFINE_PRIMITIVE_ARRAY_REF(jfloatArray, float);
+DEFINE_PRIMITIVE_ARRAY_REF_WITH_IMPLICIT_CONVERSION(jlongArray, int64_t,
+                                                    uint64_t);
 DEFINE_PRIMITIVE_ARRAY_REF(jdoubleArray, double);
 
 #undef DEFINE_PRIMITIVE_ARRAY_REF
+#undef DEFINE_PRIMITIVE_ARRAY_REF_WITH_IMPLICIT_CONVERSION
+#undef DEFINE_PRIMITIVE_ARRAY_HEADER
+#undef DEFINE_PRIMITIVE_ARRAY_FROM_IMPLICIT_CONVERSION
+#undef DEFINE_PRIMITIVE_ARRAY_FOOTER
 
 class ByteBuffer : public ObjectBase<ByteBuffer, jobject> {
  public:
