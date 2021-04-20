@@ -10,6 +10,7 @@
 #include <jni.h>
 
 #include "mozilla/jni/Refs.h"
+#include "mozilla/jni/TypeAdapter.h"
 
 namespace mozilla {
 namespace jni {
@@ -27,9 +28,6 @@ namespace detail {
 //  * StaticGet: JNIEnv member pointer for setting a static field of type T.
 //  * ToNative: static function that converts the JNI type to the native type.
 //  * FromNative: static function that converts the native type to the JNI type.
-
-template <typename T>
-struct TypeAdapter;
 
 // TypeAdapter<LocalRef<Cls>> applies when jobject is a return value.
 template <class Cls>
@@ -114,41 +112,6 @@ struct TypeAdapter<StringParam> : public TypeAdapter<String::Ref> {};
 
 template <class Cls>
 struct TypeAdapter<const Cls&> : public TypeAdapter<Cls> {};
-
-#define DEFINE_PRIMITIVE_TYPE_ADAPTER(NativeType, JNIType, JNIName)           \
-                                                                              \
-  template <>                                                                 \
-  struct TypeAdapter<NativeType> {                                            \
-    using JNI##Type = JNIType;                                                \
-                                                                              \
-    static constexpr auto Call = &JNIEnv::Call##JNIName##MethodA;             \
-    static constexpr auto StaticCall = &JNIEnv::CallStatic##JNIName##MethodA; \
-    static constexpr auto Get = &JNIEnv::Get##JNIName##Field;                 \
-    static constexpr auto StaticGet = &JNIEnv::GetStatic##JNIName##Field;     \
-    static constexpr auto Set = &JNIEnv::Set##JNIName##Field;                 \
-    static constexpr auto StaticSet = &JNIEnv::SetStatic##JNIName##Field;     \
-    static constexpr auto GetArray = &JNIEnv::Get##JNIName##ArrayRegion;      \
-    static constexpr auto SetArray = &JNIEnv::Set##JNIName##ArrayRegion;      \
-    static constexpr auto NewArray = &JNIEnv::New##JNIName##Array;            \
-                                                                              \
-    static JNIType FromNative(JNIEnv*, NativeType val) {                      \
-      return static_cast<JNIType>(val);                                       \
-    }                                                                         \
-    static NativeType ToNative(JNIEnv*, JNIType val) {                        \
-      return static_cast<NativeType>(val);                                    \
-    }                                                                         \
-  }
-
-DEFINE_PRIMITIVE_TYPE_ADAPTER(bool, jboolean, Boolean);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(int8_t, jbyte, Byte);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(char16_t, jchar, Char);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(int16_t, jshort, Short);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(int32_t, jint, Int);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(int64_t, jlong, Long);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(float, jfloat, Float);
-DEFINE_PRIMITIVE_TYPE_ADAPTER(double, jdouble, Double);
-
-#undef DEFINE_PRIMITIVE_TYPE_ADAPTER
 
 }  // namespace detail
 
