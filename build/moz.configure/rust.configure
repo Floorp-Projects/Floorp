@@ -592,6 +592,10 @@ def rustc_opt_level(opt_level_option):
     return opt_level_option[0]
 
 
+set_config("CARGO_PROFILE_RELEASE_OPT_LEVEL", rustc_opt_level)
+set_config("CARGO_PROFILE_DEV_OPT_LEVEL", rustc_opt_level)
+
+
 @depends(
     rustc_opt_level,
     debug_rust,
@@ -625,8 +629,6 @@ def rust_compile_flags(opt_level, debug_rust, target, debug_symbols, frame_point
 
     opts = []
 
-    if opt_level is not None:
-        opts.append("opt-level=%s" % opt_level)
     if debug_assertions is not None:
         opts.append("debug-assertions=%s" % ("yes" if debug_assertions else "no"))
     if debug_info is not None:

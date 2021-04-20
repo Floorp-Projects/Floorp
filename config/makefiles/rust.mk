@@ -208,6 +208,8 @@ endif
 export RUST_BACKTRACE=full
 export MOZ_TOPOBJDIR=$(topobjdir)
 export PYTHON3
+export CARGO_PROFILE_RELEASE_OPT_LEVEL
+export CARGO_PROFILE_DEV_OPT_LEVEL
 
 # Set COREAUDIO_SDK_PATH for third_party/rust/coreaudio-sys/build.rs
 ifeq ($(OS_ARCH), Darwin)
