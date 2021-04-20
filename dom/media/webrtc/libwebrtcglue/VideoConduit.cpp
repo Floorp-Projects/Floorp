@@ -1234,6 +1234,16 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
   int adaptedHeight;
   {
     MutexAutoLock lock(mMutex);
+    if (mSendStreamConfig.rtp.ssrcs.empty()) {
+      CSFLogVerbose(LOGTAG, "WebrtcVideoConduit %p %s No SSRC set", this,
+                    __FUNCTION__);
+      return kMediaConduitNoError;
+    }
+    if (!mCurSendCodecConfig) {
+      CSFLogVerbose(LOGTAG, "WebrtcVideoConduit %p %s No send codec set", this,
+                    __FUNCTION__);
+      return kMediaConduitNoError;
+    }
     CSFLogVerbose(LOGTAG, "WebrtcVideoConduit %p %s (send SSRC %u (0x%x))",
                   this, __FUNCTION__, mSendStreamConfig.rtp.ssrcs.front(),
                   mSendStreamConfig.rtp.ssrcs.front());
