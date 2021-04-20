@@ -22,11 +22,12 @@ flat varying vec4 v_uv_bounds;
 flat varying vec4 v_uv_sample_bounds;
 
 #if defined(PLATFORM_ANDROID) && !defined(SWGL)
-// On Adreno 3xx devices we have observed that a varying which is used to
-// calculate the UV coordinates (such as v_perspective) being a flat scalar
-// results in the entire UV coordinate calculation being flat. ie the entire
-// triangle is rendered the solid color of the texture sample for the provoking
-// vertex. Packing the varying in a vec2 works around this. See bug bug 1630356.
+// On Adreno 3xx devices we have observed that a flat scalar varying used to calculate
+// fragment shader output can result in the entire output being "flat". Here, for example,
+// v_perspective being flat results in the UV coordinate calculated for every fragment
+// being equal to the UV coordinate for the provoking vertex, which results in the entire
+// triangle being rendered a solid color.
+// Packing the varying in a vec2 works around this. See bug 1630356.
 flat varying vec2 v_perspective_vec;
 #define v_perspective v_perspective_vec.x
 #else

@@ -9,7 +9,14 @@ varying vec2 vUv;
 flat varying vec4 vUvBounds;
 flat varying vec4 vEdge;
 flat varying vec4 vUvBounds_NoClamp;
+#if defined(PLATFORM_ANDROID) && !defined(SWGL)
+// Work around Adreno 3xx driver bug. See the v_perspective comment in
+// brush_image or bug 1630356 for details.
+flat varying vec2 vClipModeVec;
+#define vClipMode vClipModeVec.x
+#else
 flat varying float vClipMode;
+#endif
 
 #define MODE_STRETCH        0
 #define MODE_SIMPLE         1
