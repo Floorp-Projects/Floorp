@@ -1,10 +1,8 @@
 # [Android Components](../../../README.md) > Browser > Engine-Gecko
 
-[*Engine*](../../concept/engine/README.md) implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Nightly channel).
+[*Engine*](../../concept/engine/README.md) implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView).
 
 ## Usage
-
-See [concept-engine](../../concept/engine/README.md) for a documentation of the abstract engine API this component implements.
 
 ### Setting up the dependency
 
@@ -14,45 +12,27 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:browser-engine-gecko:{latest-version}"
 ```
 
-### Initializing
+### Integration with the Glean SDK
 
-It is recommended to create only one `GeckoEngine` instance per app. To create a `GeckoEngine` a `GeckoRuntime` and optionally `DefaultSettings` are needed.
+#### Before using this component
+Products sending telemetry and using this component *must request* a data-review following [this process](https://wiki.mozilla.org/Firefox/Data_Collection).
 
-```Kotlin
-// Create default settings (optional) and enable tracking protection for all future sessions.
-val defaultSettings = DefaultSettings().apply {
-    trackingProtectionPolicy = EngineSession.TrackingProtectionPolicy.all()
-}
-
-// Create and initialize a Gecko runtime with the default settings.
-val runtime = GeckoRuntime.getDefault(applicationContext)
-
-// Create an engine instance to be used by other components.
-val engine = GeckoEngine(runtime, defaultSettings)
-```
-
-### Integration
-
-Usually it is not needed to interact with the `Engine` component directly. The [browser-session](../session/README.md) component will take care of making the state accessible and link a `Session` to an `EngineSession` internally. The [feature-session](../../feature/session/README.md) component will provide "use cases" to perform actions like loading URLs and takes care of rendering the selected `Session` on an `EngineView`.
-
-### View
-
-`GeckoEngineView` is the Gecko-based implementation of `EngineView` in order to render web content.
-
-```XML
-<mozilla.components.browser.engine.gecko.GeckoEngineView
-    android:id="@+id/engineView"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent" />
-```
-
-`GeckoEngineView` can render any `GeckoEngineSession` using the `render()` method.
+The [Glean SDK](../../../components/service/glean/README.md) can be used to collect [Gecko Telemetry](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html).
+Applications using both this component and the Glean SDK should setup the Gecko Telemetry delegate
+as shown below:
 
 ```Kotlin
-val engineSession = engine.createSession()
-val engineView = view.findViewById<GeckoEngineView>(R.id.engineView)
-engineView.render(engineSession)
+    val builder = GeckoRuntimeSettings.Builder()
+    val runtimeSettings = builder
+        .telemetryDelegate(GeckoGleanAdapter()) // Sets up the delegate!
+        .build()
+    // Create the Gecko runtime.
+    GeckoRuntime.create(context, runtimeSettings)
 ```
+
+#### Adding new metrics
+
+New Gecko metrics can be added as described [in the Firefox Telemetry docs](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/start/adding-a-new-probe.html).
 
 ## License
 

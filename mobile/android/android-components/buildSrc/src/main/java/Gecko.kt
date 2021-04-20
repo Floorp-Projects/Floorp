@@ -2,26 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-internal object GeckoVersions {
+/**
+ * Gecko version and release channel constants used by this version of Android Components.
+ */
+object Gecko {
     /**
-     * GeckoView Nightly Version.
+     * GeckoView Version.
      */
-    const val nightly_version = "90.0.20210420095122"
+    const val version = "90.0.20210420095122"
 
     /**
-     * GeckoView Beta Version.
+     * GeckoView channel
      */
-    const val beta_version = "89.0.20210419195043"
-
-    /**
-     * GeckoView Release Version.
-     */
-    const val release_version = "88.0.20210415204500"
+    val channel = GeckoChannel.NIGHTLY
 }
 
-@Suppress("Unused", "MaxLineLength")
-object Gecko {
-    const val geckoview_nightly = "org.mozilla.geckoview:geckoview-nightly:${GeckoVersions.nightly_version}"
-    const val geckoview_beta = "org.mozilla.geckoview:geckoview-beta:${GeckoVersions.beta_version}"
-    const val geckoview_release = "org.mozilla.geckoview:geckoview:${GeckoVersions.release_version}"
+/**
+ * Enum for GeckoView release channels.
+ */
+enum class GeckoChannel(
+    val artifactName: String
+) {
+    NIGHTLY("geckoview-nightly"),
+    BETA("geckoview-beta"),
+    RELEASE("geckoview")
 }

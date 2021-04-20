@@ -56,7 +56,7 @@ dependencies {
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_coroutines
 
-    androidTestImplementation project(':browser-engine-gecko-nightly')
+    androidTestImplementation project(':browser-engine-gecko')
     androidTestImplementation project(':support-android-test')
     androidTestImplementation project(':browser-session')
     androidTestImplementation project(':feature-tabs')

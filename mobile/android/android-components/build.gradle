@@ -407,7 +407,6 @@ tasks.register("ktlint", JavaExec) {
     args "components/**/*.kt" , "samples/**/*.kt", "!**/build", "buildSrc/**/*.kt"
 }
 
-apply plugin: GVVersionVerifierPlugin
 apply plugin: GitHubPlugin
 
 

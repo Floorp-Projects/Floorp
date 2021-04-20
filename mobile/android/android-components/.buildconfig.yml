@@ -191,14 +191,6 @@ projects:
     path: components/browser/engine-gecko
     description: 'Engine implementation based on GeckoView.'
     publish: true
-  browser-engine-gecko-beta:
-    path: components/browser/engine-gecko-beta
-    description: 'Engine implementation based on GeckoView (Beta channel).'
-    publish: true
-  browser-engine-gecko-nightly:
-    path: components/browser/engine-gecko-nightly
-    description: 'Engine implementation based on GeckoView (Nightly).'
-    publish: true
   browser-engine-system:
     path: components/browser/engine-system
     description: 'Engine implementation based on the system WebView.'

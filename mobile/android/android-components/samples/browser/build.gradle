@@ -31,14 +31,7 @@ android {
     flavorDimensions "engine"
 
     productFlavors {
-        // GeckoView release channels
-        geckoNightly {
-            dimension "engine"
-        }
-        geckoBeta {
-            dimension "engine"
-        }
-        geckoRelease {
+        gecko {
             dimension "engine"
         }
 
@@ -136,9 +129,7 @@ dependencies {
     implementation project(':support-webextensions')
     implementation project(':support-rustlog')
 
-    geckoNightlyImplementation project(':browser-engine-gecko-nightly')
-    geckoBetaImplementation project(':browser-engine-gecko-beta')
-    geckoReleaseImplementation project(':browser-engine-gecko')
+    geckoImplementation project(':browser-engine-gecko')
 
     implementation Dependencies.google_material
 

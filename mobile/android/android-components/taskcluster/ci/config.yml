@@ -9,7 +9,6 @@ treeherder:
         # This list is based on .buildconfig.yml except the exceptions down below
         browser-awesomebar: browser-awesomebar
         browser-domains: browser-domains
-        browser-engine-gecko-beta: browser-engine-gecko-beta
         browser-engine-gecko: browser-engine-gecko
         browser-engine-system: browser-engine-system
         browser-errorpages: browser-errorpages
@@ -124,7 +123,6 @@ treeherder:
         ui-widgets: ui-widgets
 
         # These ones are too long to fit in 25 chars
-        browser-engine-gecko-nigh: browser-engine-gecko-nightly
         lib-fetch-httpurlconnect: lib-fetch-httpurlconnection
         feature-webcompat-report: feature-webcompat-reporter
 
