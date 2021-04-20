@@ -3160,21 +3160,6 @@ telemetry:
     record_in_processes:
       - all
 
-  sync_shutdown_ping_sent:
-    bug_numbers:
-      - 1673795
-    description: >
-      Whether a sync shutdown ping has been sent in this session.
-    expires: "90"
-    kind: boolean
-    notification_emails:
-      - sync-team@mozilla.com
-    products:
-      - 'firefox'
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
-
   state_file_save_errors:
     bug_numbers:
       - 1689438
