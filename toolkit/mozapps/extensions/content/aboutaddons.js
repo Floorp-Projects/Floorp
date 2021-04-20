@@ -3958,6 +3958,24 @@ class AddonList extends HTMLElement {
     return heading;
   }
 
+  createEmptyListMessage() {
+    let messageContainer = document.createElement("p");
+    messageContainer.id = "empty-addons-message";
+    let a = document.createElement("a");
+    a.href = Services.urlFormatter.formatURLPref(
+      "extensions.getAddons.link.url"
+    );
+    a.setAttribute("target", "_blank");
+    a.setAttribute("data-l10n-name", "get-extensions");
+    document.l10n.setAttributes(
+      messageContainer,
+      "list-empty-get-extensions-message",
+      { domain: a.hostname }
+    );
+    messageContainer.appendChild(a);
+    return messageContainer;
+  }
+
   updateSectionIfEmpty(section) {
     // The header is added before any add-on cards, so if there's only one
     // child then it's the header. In that case we should empty out the section.
@@ -4198,6 +4216,13 @@ class AddonList extends HTMLElement {
       this.sections[i].node = this.renderSection(sectionedAddons[i], i);
       frag.appendChild(this.sections[i].node);
     }
+
+    // Render the placeholder that is shown when all sections are empty.
+    // This call is after rendering the sections, because its visibility
+    // is controlled through the general sibling combinator relative to
+    // the sections (section ~).
+    let message = this.createEmptyListMessage();
+    frag.appendChild(message);
 
     // Make sure fluent has set all the strings before we render. This will
     // avoid the height changing as strings go from 0 height to having text.

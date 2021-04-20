@@ -737,6 +737,10 @@ panel-list {
   font: menu;
 }
 
+section:not(:empty) ~ #empty-addons-message {
+  display: none;
+}
+
 @media (max-width: 830px) {
   .category[badge-count]::after {
     content: "";
