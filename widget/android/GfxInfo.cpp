@@ -599,8 +599,9 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       const nsCString& gpu = mGLStrings->Renderer();
       NS_LossyConvertUTF16toASCII model(mModel);
 
-      // Enable Webrender on all Adreno 4xx, 5xx and 6xx GPUs
-      isUnblocked |= gpu.Find("Adreno (TM) 4", /*ignoreCase*/ true) >= 0 ||
+      // Enable Webrender on all Adreno 3xx, 4xx, 5xx and 6xx GPUs
+      isUnblocked |= gpu.Find("Adreno (TM) 3", /*ignoreCase*/ true) >= 0 ||
+                     gpu.Find("Adreno (TM) 4", /*ignoreCase*/ true) >= 0 ||
                      gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0 ||
                      gpu.Find("Adreno (TM) 6", /*ignoreCase*/ true) >= 0;
 
