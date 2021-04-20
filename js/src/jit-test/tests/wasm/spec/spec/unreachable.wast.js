@@ -1,192 +1,426 @@
-
-// unreachable.wast:3
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\xa0\x80\x80\x80\x00\x07\x60\x03\x7f\x7f\x7f\x00\x60\x00\x00\x60\x00\x01\x7f\x60\x00\x01\x7c\x60\x00\x01\x7e\x60\x02\x7f\x7f\x01\x7f\x60\x00\x01\x7d\x03\xbd\x80\x80\x80\x00\x3c\x01\x00\x02\x02\x03\x03\x02\x02\x01\x02\x02\x02\x01\x02\x02\x02\x02\x01\x02\x02\x01\x02\x02\x01\x02\x02\x02\x02\x04\x02\x05\x05\x05\x05\x05\x02\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x04\x01\x01\x01\x01\x06\x02\x04\x02\x02\x02\x02\x02\x04\x85\x80\x80\x80\x00\x01\x70\x01\x01\x01\x05\x83\x80\x80\x80\x00\x01\x00\x01\x06\x89\x80\x80\x80\x00\x01\x7d\x01\x43\x00\x00\x00\x00\x0b\x07\x8c\x88\x80\x80\x00\x3a\x08\x74\x79\x70\x65\x2d\x69\x33\x32\x00\x02\x08\x74\x79\x70\x65\x2d\x69\x36\x34\x00\x03\x08\x74\x79\x70\x65\x2d\x66\x33\x32\x00\x04\x08\x74\x79\x70\x65\x2d\x66\x36\x34\x00\x05\x0d\x61\x73\x2d\x66\x75\x6e\x63\x2d\x66\x69\x72\x73\x74\x00\x06\x0b\x61\x73\x2d\x66\x75\x6e\x63\x2d\x6d\x69\x64\x00\x07\x0c\x61\x73\x2d\x66\x75\x6e\x63\x2d\x6c\x61\x73\x74\x00\x08\x0d\x61\x73\x2d\x66\x75\x6e\x63\x2d\x76\x61\x6c\x75\x65\x00\x09\x0e\x61\x73\x2d\x62\x6c\x6f\x63\x6b\x2d\x66\x69\x72\x73\x74\x00\x0a\x0c\x61\x73\x2d\x62\x6c\x6f\x63\x6b\x2d\x6d\x69\x64\x00\x0b\x0d\x61\x73\x2d\x62\x6c\x6f\x63\x6b\x2d\x6c\x61\x73\x74\x00\x0c\x0e\x61\x73\x2d\x62\x6c\x6f\x63\x6b\x2d\x76\x61\x6c\x75\x65\x00\x0d\x0e\x61\x73\x2d\x62\x6c\x6f\x63\x6b\x2d\x62\x72\x6f\x6b\x65\x00\x0e\x0d\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x66\x69\x72\x73\x74\x00\x0f\x0b\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x6d\x69\x64\x00\x10\x0c\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x6c\x61\x73\x74\x00\x11\x0d\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x62\x72\x6f\x6b\x65\x00\x12\x0b\x61\x73\x2d\x62\x72\x2d\x76\x61\x6c\x75\x65\x00\x13\x0d\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x63\x6f\x6e\x64\x00\x14\x0e\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x76\x61\x6c\x75\x65\x00\x15\x13\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x76\x61\x6c\x75\x65\x2d\x63\x6f\x6e\x64\x00\x16\x11\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x69\x6e\x64\x65\x78\x00\x17\x11\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x00\x18\x13\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x2d\x32\x00\x19\x17\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x2d\x69\x6e\x64\x65\x78\x00\x1a\x1b\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x2d\x61\x6e\x64\x2d\x69\x6e\x64\x65\x78\x00\x1b\x0f\x61\x73\x2d\x72\x65\x74\x75\x72\x6e\x2d\x76\x61\x6c\x75\x65\x00\x1c\x0a\x61\x73\x2d\x69\x66\x2d\x63\x6f\x6e\x64\x00\x1d\x0a\x61\x73\x2d\x69\x66\x2d\x74\x68\x65\x6e\x00\x1e\x0a\x61\x73\x2d\x69\x66\x2d\x65\x6c\x73\x65\x00\x1f\x12\x61\x73\x2d\x69\x66\x2d\x74\x68\x65\x6e\x2d\x6e\x6f\x2d\x65\x6c\x73\x65\x00\x20\x0f\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x66\x69\x72\x73\x74\x00\x21\x10\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x73\x65\x63\x6f\x6e\x64\x00\x22\x0e\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x63\x6f\x6e\x64\x00\x23\x0d\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x66\x69\x72\x73\x74\x00\x24\x0b\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x6d\x69\x64\x00\x25\x0c\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x6c\x61\x73\x74\x00\x26\x15\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x66\x75\x6e\x63\x00\x27\x16\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x66\x69\x72\x73\x74\x00\x28\x14\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x6d\x69\x64\x00\x29\x15\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x6c\x61\x73\x74\x00\x2a\x12\x61\x73\x2d\x6c\x6f\x63\x61\x6c\x2e\x73\x65\x74\x2d\x76\x61\x6c\x75\x65\x00\x2b\x12\x61\x73\x2d\x6c\x6f\x63\x61\x6c\x2e\x74\x65\x65\x2d\x76\x61\x6c\x75\x65\x00\x2c\x13\x61\x73\x2d\x67\x6c\x6f\x62\x61\x6c\x2e\x73\x65\x74\x2d\x76\x61\x6c\x75\x65\x00\x2d\x0f\x61\x73\x2d\x6c\x6f\x61\x64\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x2e\x10\x61\x73\x2d\x6c\x6f\x61\x64\x4e\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x2f\x10\x61\x73\x2d\x73\x74\x6f\x72\x65\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x30\x0e\x61\x73\x2d\x73\x74\x6f\x72\x65\x2d\x76\x61\x6c\x75\x65\x00\x31\x11\x61\x73\x2d\x73\x74\x6f\x72\x65\x4e\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x32\x0f\x61\x73\x2d\x73\x74\x6f\x72\x65\x4e\x2d\x76\x61\x6c\x75\x65\x00\x33\x10\x61\x73\x2d\x75\x6e\x61\x72\x79\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x34\x0e\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x6c\x65\x66\x74\x00\x35\x0f\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x72\x69\x67\x68\x74\x00\x36\x0f\x61\x73\x2d\x74\x65\x73\x74\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x37\x0f\x61\x73\x2d\x63\x6f\x6d\x70\x61\x72\x65\x2d\x6c\x65\x66\x74\x00\x38\x10\x61\x73\x2d\x63\x6f\x6d\x70\x61\x72\x65\x2d\x72\x69\x67\x68\x74\x00\x39\x12\x61\x73\x2d\x63\x6f\x6e\x76\x65\x72\x74\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x3a\x13\x61\x73\x2d\x6d\x65\x6d\x6f\x72\x79\x2e\x67\x72\x6f\x77\x2d\x73\x69\x7a\x65\x00\x3b\x09\x87\x80\x80\x80\x00\x01\x00\x41\x00\x0b\x01\x01\x0a\xa5\x86\x80\x80\x00\x3c\x82\x80\x80\x80\x00\x00\x0b\x82\x80\x80\x80\x00\x00\x0b\x83\x80\x80\x80\x00\x00\x00\x0b\x83\x80\x80\x80\x00\x00\x00\x0b\x83\x80\x80\x80\x00\x00\x00\x0b\x83\x80\x80\x80\x00\x00\x00\x0b\x85\x80\x80\x80\x00\x00\x00\x41\x7f\x0b\x87\x80\x80\x80\x00\x00\x10\x00\x00\x41\x7f\x0b\x85\x80\x80\x80\x00\x00\x10\x00\x00\x0b\x85\x80\x80\x80\x00\x00\x10\x00\x00\x0b\x88\x80\x80\x80\x00\x00\x02\x7f\x00\x41\x02\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x10\x00\x00\x41\x02\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x01\x10\x00\x00\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x7f\x01\x10\x00\x00\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x10\x00\x41\x01\x0c\x00\x00\x0b\x0b\x88\x80\x80\x80\x00\x00\x03\x7f\x00\x41\x02\x0b\x0b\x8a\x80\x80\x80\x00\x00\x03\x7f\x10\x00\x00\x41\x02\x0b\x0b\x89\x80\x80\x80\x00\x00\x03\x40\x01\x10\x00\x00\x0b\x0b\x8f\x80\x80\x80\x00\x00\x02\x7f\x03\x7f\x10\x00\x41\x01\x0c\x01\x00\x0b\x0b\x0b\x88\x80\x80\x80\x00\x00\x02\x7f\x00\x0c\x00\x0b\x0b\x88\x80\x80\x80\x00\x00\x02\x40\x00\x0d\x00\x0b\x0b\x8d\x80\x80\x80\x00\x00\x02\x7f\x00\x41\x01\x0d\x00\x1a\x41\x07\x0b\x0b\x8d\x80\x80\x80\x00\x00\x02\x7f\x41\x06\x00\x0d\x00\x1a\x41\x07\x0b\x0b\x8b\x80\x80\x80\x00\x00\x02\x40\x00\x0e\x02\x00\x00\x00\x0b\x0b\x8f\x80\x80\x80\x00\x00\x02\x7f\x00\x41\x01\x0e\x02\x00\x00\x00\x41\x07\x0b\x0b\x8f\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x00\x41\x01\x0e\x01\x00\x01\x0b\x0b\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x41\x06\x00\x0e\x01\x00\x00\x41\x07\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x00\x0e\x01\x00\x00\x41\x08\x0b\x0b\x84\x80\x80\x80\x00\x00\x00\x0f\x0b\x8b\x80\x80\x80\x00\x00\x00\x04\x7f\x41\x00\x05\x41\x01\x0b\x0b\x8b\x80\x80\x80\x00\x00\x20\x00\x04\x7f\x00\x05\x20\x01\x0b\x0b\x8b\x80\x80\x80\x00\x00\x20\x00\x04\x7f\x20\x01\x05\x00\x0b\x0b\x8a\x80\x80\x80\x00\x00\x20\x00\x04\x40\x00\x0b\x20\x01\x0b\x88\x80\x80\x80\x00\x00\x00\x20\x00\x20\x01\x1b\x0b\x88\x80\x80\x80\x00\x00\x20\x00\x00\x20\x01\x1b\x0b\x88\x80\x80\x80\x00\x00\x41\x00\x41\x01\x00\x1b\x0b\x89\x80\x80\x80\x00\x00\x00\x41\x02\x41\x03\x10\x01\x0b\x89\x80\x80\x80\x00\x00\x41\x01\x00\x41\x03\x10\x01\x0b\x89\x80\x80\x80\x00\x00\x41\x01\x41\x02\x00\x10\x01\x0b\x8c\x80\x80\x80\x00\x00\x00\x41\x01\x41\x02\x41\x03\x11\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x41\x00\x00\x41\x02\x41\x03\x11\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x41\x00\x41\x01\x00\x41\x03\x11\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x41\x00\x41\x01\x41\x02\x00\x11\x00\x00\x0b\x87\x80\x80\x80\x00\x01\x01\x7d\x00\x21\x00\x0b\x87\x80\x80\x80\x00\x01\x01\x7d\x00\x22\x00\x0b\x85\x80\x80\x80\x00\x00\x00\x24\x00\x0b\x86\x80\x80\x80\x00\x00\x00\x2a\x02\x00\x0b\x86\x80\x80\x80\x00\x00\x00\x30\x00\x00\x0b\x8f\x80\x80\x80\x00\x00\x00\x44\x00\x00\x00\x00\x00\x00\x1c\x40\x39\x03\x00\x0b\x88\x80\x80\x80\x00\x00\x41\x02\x00\x37\x03\x00\x0b\x88\x80\x80\x80\x00\x00\x00\x41\x07\x3a\x00\x00\x0b\x88\x80\x80\x80\x00\x00\x41\x02\x00\x3d\x01\x00\x0b\x84\x80\x80\x80\x00\x00\x00\x8c\x0b\x86\x80\x80\x80\x00\x00\x00\x41\x0a\x6a\x0b\x86\x80\x80\x80\x00\x00\x42\x0a\x00\x7d\x0b\x84\x80\x80\x80\x00\x00\x00\x45\x0b\x8d\x80\x80\x80\x00\x00\x00\x44\x00\x00\x00\x00\x00\x00\x24\x40\x65\x0b\x89\x80\x80\x80\x00\x00\x43\x00\x00\x20\x41\x00\x5c\x0b\x84\x80\x80\x80\x00\x00\x00\xa7\x0b\x85\x80\x80\x80\x00\x00\x00\x40\x00\x0b");
-
-// unreachable.wast:221
-assert_trap(() => call($1, "type-i32", []));
-
-// unreachable.wast:222
-assert_trap(() => call($1, "type-i64", []));
-
-// unreachable.wast:223
-assert_trap(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7c\x02\x8f\x80\x80\x80\x00\x01\x02\x24\x31\x08\x74\x79\x70\x65\x2d\x66\x33\x32\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_trap(() => call($1, "type-f32", []))
-
-// unreachable.wast:224
-assert_trap(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7c\x02\x8f\x80\x80\x80\x00\x01\x02\x24\x31\x08\x74\x79\x70\x65\x2d\x66\x36\x34\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_trap(() => call($1, "type-f64", []))
-
-// unreachable.wast:226
-assert_trap(() => call($1, "as-func-first", []));
-
-// unreachable.wast:227
-assert_trap(() => call($1, "as-func-mid", []));
-
-// unreachable.wast:228
-assert_trap(() => call($1, "as-func-last", []));
-
-// unreachable.wast:229
-assert_trap(() => call($1, "as-func-value", []));
-
-// unreachable.wast:231
-assert_trap(() => call($1, "as-block-first", []));
-
-// unreachable.wast:232
-assert_trap(() => call($1, "as-block-mid", []));
-
-// unreachable.wast:233
-assert_trap(() => call($1, "as-block-last", []));
-
-// unreachable.wast:234
-assert_trap(() => call($1, "as-block-value", []));
-
-// unreachable.wast:235
-assert_return(() => call($1, "as-block-broke", []), 1);
-
-// unreachable.wast:237
-assert_trap(() => call($1, "as-loop-first", []));
-
-// unreachable.wast:238
-assert_trap(() => call($1, "as-loop-mid", []));
-
-// unreachable.wast:239
-assert_trap(() => call($1, "as-loop-last", []));
-
-// unreachable.wast:240
-assert_return(() => call($1, "as-loop-broke", []), 1);
-
-// unreachable.wast:242
-assert_trap(() => call($1, "as-br-value", []));
-
-// unreachable.wast:244
-assert_trap(() => call($1, "as-br_if-cond", []));
-
-// unreachable.wast:245
-assert_trap(() => call($1, "as-br_if-value", []));
-
-// unreachable.wast:246
-assert_trap(() => call($1, "as-br_if-value-cond", []));
-
-// unreachable.wast:248
-assert_trap(() => call($1, "as-br_table-index", []));
-
-// unreachable.wast:249
-assert_trap(() => call($1, "as-br_table-value", []));
-
-// unreachable.wast:250
-assert_trap(() => call($1, "as-br_table-value-2", []));
-
-// unreachable.wast:251
-assert_trap(() => call($1, "as-br_table-value-index", []));
-
-// unreachable.wast:252
-assert_trap(() => call($1, "as-br_table-value-and-index", []));
-
-// unreachable.wast:254
-assert_trap(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7e\x02\x96\x80\x80\x80\x00\x01\x02\x24\x31\x0f\x61\x73\x2d\x72\x65\x74\x75\x72\x6e\x2d\x76\x61\x6c\x75\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_trap(() => call($1, "as-return-value", []))
-
-// unreachable.wast:256
-assert_trap(() => call($1, "as-if-cond", []));
-
-// unreachable.wast:257
-assert_trap(() => call($1, "as-if-then", [1, 6]));
-
-// unreachable.wast:258
-assert_return(() => call($1, "as-if-then", [0, 6]), 6);
-
-// unreachable.wast:259
-assert_trap(() => call($1, "as-if-else", [0, 6]));
-
-// unreachable.wast:260
-assert_return(() => call($1, "as-if-else", [1, 6]), 6);
-
-// unreachable.wast:261
-assert_trap(() => call($1, "as-if-then-no-else", [1, 6]));
-
-// unreachable.wast:262
-assert_return(() => call($1, "as-if-then-no-else", [0, 6]), 6);
-
-// unreachable.wast:264
-assert_trap(() => call($1, "as-select-first", [0, 6]));
-
-// unreachable.wast:265
-assert_trap(() => call($1, "as-select-first", [1, 6]));
-
-// unreachable.wast:266
-assert_trap(() => call($1, "as-select-second", [0, 6]));
-
-// unreachable.wast:267
-assert_trap(() => call($1, "as-select-second", [1, 6]));
-
-// unreachable.wast:268
-assert_trap(() => call($1, "as-select-cond", []));
-
-// unreachable.wast:270
-assert_trap(() => call($1, "as-call-first", []));
-
-// unreachable.wast:271
-assert_trap(() => call($1, "as-call-mid", []));
-
-// unreachable.wast:272
-assert_trap(() => call($1, "as-call-last", []));
-
-// unreachable.wast:274
-assert_trap(() => call($1, "as-call_indirect-func", []));
-
-// unreachable.wast:275
-assert_trap(() => call($1, "as-call_indirect-first", []));
-
-// unreachable.wast:276
-assert_trap(() => call($1, "as-call_indirect-mid", []));
-
-// unreachable.wast:277
-assert_trap(() => call($1, "as-call_indirect-last", []));
-
-// unreachable.wast:279
-assert_trap(() => call($1, "as-local.set-value", []));
-
-// unreachable.wast:280
-assert_trap(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7d\x02\x99\x80\x80\x80\x00\x01\x02\x24\x31\x12\x61\x73\x2d\x6c\x6f\x63\x61\x6c\x2e\x74\x65\x65\x2d\x76\x61\x6c\x75\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_trap(() => call($1, "as-local.tee-value", []))
-
-// unreachable.wast:281
-assert_trap(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7d\x02\x9a\x80\x80\x80\x00\x01\x02\x24\x31\x13\x61\x73\x2d\x67\x6c\x6f\x62\x61\x6c\x2e\x73\x65\x74\x2d\x76\x61\x6c\x75\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_trap(() => call($1, "as-global.set-value", []))
-
-// unreachable.wast:283
-assert_trap(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7d\x02\x96\x80\x80\x80\x00\x01\x02\x24\x31\x0f\x61\x73\x2d\x6c\x6f\x61\x64\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_trap(() => call($1, "as-load-address", []))
-
-// unreachable.wast:284
-assert_trap(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7e\x02\x97\x80\x80\x80\x00\x01\x02\x24\x31\x10\x61\x73\x2d\x6c\x6f\x61\x64\x4e\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_trap(() => call($1, "as-loadN-address", []))
-
-// unreachable.wast:286
-assert_trap(() => call($1, "as-store-address", []));
-
-// unreachable.wast:287
-assert_trap(() => call($1, "as-store-value", []));
-
-// unreachable.wast:288
-assert_trap(() => call($1, "as-storeN-address", []));
-
-// unreachable.wast:289
-assert_trap(() => call($1, "as-storeN-value", []));
-
-// unreachable.wast:291
-assert_trap(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7d\x02\x97\x80\x80\x80\x00\x01\x02\x24\x31\x10\x61\x73\x2d\x75\x6e\x61\x72\x79\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_trap(() => call($1, "as-unary-operand", []))
-
-// unreachable.wast:293
-assert_trap(() => call($1, "as-binary-left", []));
-
-// unreachable.wast:294
-assert_trap(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7e\x02\x96\x80\x80\x80\x00\x01\x02\x24\x31\x0f\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x72\x69\x67\x68\x74\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_trap(() => call($1, "as-binary-right", []))
-
-// unreachable.wast:296
-assert_trap(() => call($1, "as-test-operand", []));
-
-// unreachable.wast:298
-assert_trap(() => call($1, "as-compare-left", []));
-
-// unreachable.wast:299
-assert_trap(() => call($1, "as-compare-right", []));
-
-// unreachable.wast:301
-assert_trap(() => call($1, "as-convert-operand", []));
-
-// unreachable.wast:303
-assert_trap(() => call($1, "as-memory.grow-size", []));
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// ./test/core/unreachable.wast
+
+// ./test/core/unreachable.wast:3
+let $0 = instantiate(`(module
+  ;; Auxiliary definitions
+  (func $$dummy)
+  (func $$dummy3 (param i32 i32 i32))
+
+  (func (export "type-i32") (result i32) (unreachable))
+  (func (export "type-i64") (result i32) (unreachable))
+  (func (export "type-f32") (result f64) (unreachable))
+  (func (export "type-f64") (result f64) (unreachable))
+
+  (func (export "as-func-first") (result i32)
+    (unreachable) (i32.const -1)
+  )
+  (func (export "as-func-mid") (result i32)
+    (call $$dummy) (unreachable) (i32.const -1)
+  )
+  (func (export "as-func-last")
+    (call $$dummy) (unreachable)
+  )
+  (func (export "as-func-value") (result i32)
+    (call $$dummy) (unreachable)
+  )
+
+  (func (export "as-block-first") (result i32)
+    (block (result i32) (unreachable) (i32.const 2))
+  )
+  (func (export "as-block-mid") (result i32)
+    (block (result i32) (call $$dummy) (unreachable) (i32.const 2))
+  )
+  (func (export "as-block-last")
+    (block (nop) (call $$dummy) (unreachable))
+  )
+  (func (export "as-block-value") (result i32)
+    (block (result i32) (nop) (call $$dummy) (unreachable))
+  )
+  (func (export "as-block-broke") (result i32)
+    (block (result i32) (call $$dummy) (br 0 (i32.const 1)) (unreachable))
+  )
+
+  (func (export "as-loop-first") (result i32)
+    (loop (result i32) (unreachable) (i32.const 2))
+  )
+  (func (export "as-loop-mid") (result i32)
+    (loop (result i32) (call $$dummy) (unreachable) (i32.const 2))
+  )
+  (func (export "as-loop-last")
+    (loop (nop) (call $$dummy) (unreachable))
+  )
+  (func (export "as-loop-broke") (result i32)
+    (block (result i32)
+      (loop (result i32) (call $$dummy) (br 1 (i32.const 1)) (unreachable))
+    )
+  )
+
+  (func (export "as-br-value") (result i32)
+    (block (result i32) (br 0 (unreachable)))
+  )
+
+  (func (export "as-br_if-cond")
+    (block (br_if 0 (unreachable)))
+  )
+  (func (export "as-br_if-value") (result i32)
+    (block (result i32)
+      (drop (br_if 0 (unreachable) (i32.const 1))) (i32.const 7)
+    )
+  )
+  (func (export "as-br_if-value-cond") (result i32)
+    (block (result i32)
+      (drop (br_if 0 (i32.const 6) (unreachable))) (i32.const 7)
+    )
+  )
+
+  (func (export "as-br_table-index")
+    (block (br_table 0 0 0 (unreachable)))
+  )
+  (func (export "as-br_table-value") (result i32)
+    (block (result i32)
+      (br_table 0 0 0 (unreachable) (i32.const 1)) (i32.const 7)
+    )
+  )
+  (func (export "as-br_table-value-2") (result i32)
+    (block (result i32)
+      (block (result i32) (br_table 0 1 (unreachable) (i32.const 1)))
+    )
+  )
+  (func (export "as-br_table-value-index") (result i32)
+    (block (result i32)
+      (br_table 0 0 (i32.const 6) (unreachable)) (i32.const 7)
+    )
+  )
+  (func (export "as-br_table-value-and-index") (result i32)
+    (block (result i32) (br_table 0 0 (unreachable)) (i32.const 8))
+  )
+
+  (func (export "as-return-value") (result i64)
+    (return (unreachable))
+  )
+
+  (func (export "as-if-cond") (result i32)
+    (if (result i32) (unreachable) (then (i32.const 0)) (else (i32.const 1)))
+  )
+  (func (export "as-if-then") (param i32 i32) (result i32)
+    (if (result i32) (local.get 0) (then (unreachable)) (else (local.get 1)))
+  )
+  (func (export "as-if-else") (param i32 i32) (result i32)
+    (if (result i32) (local.get 0) (then (local.get 1)) (else (unreachable)))
+  )
+  (func (export "as-if-then-no-else") (param i32 i32) (result i32)
+    (if (local.get 0) (then (unreachable))) (local.get 1)
+  )
+
+  (func (export "as-select-first") (param i32 i32) (result i32)
+    (select (unreachable) (local.get 0) (local.get 1))
+  )
+  (func (export "as-select-second") (param i32 i32) (result i32)
+    (select (local.get 0) (unreachable) (local.get 1))
+  )
+  (func (export "as-select-cond") (result i32)
+    (select (i32.const 0) (i32.const 1) (unreachable))
+  )
+
+  (func (export "as-call-first")
+    (call $$dummy3 (unreachable) (i32.const 2) (i32.const 3))
+  )
+  (func (export "as-call-mid")
+    (call $$dummy3 (i32.const 1) (unreachable) (i32.const 3))
+  )
+  (func (export "as-call-last")
+    (call $$dummy3 (i32.const 1) (i32.const 2) (unreachable))
+  )
+
+  (type $$sig (func (param i32 i32 i32)))
+  (table funcref (elem $$dummy3))
+  (func (export "as-call_indirect-func")
+    (call_indirect (type $$sig)
+      (unreachable) (i32.const 1) (i32.const 2) (i32.const 3)
+    )
+  )
+  (func (export "as-call_indirect-first")
+    (call_indirect (type $$sig)
+      (i32.const 0) (unreachable) (i32.const 2) (i32.const 3)
+    )
+  )
+  (func (export "as-call_indirect-mid")
+    (call_indirect (type $$sig)
+      (i32.const 0) (i32.const 1) (unreachable) (i32.const 3)
+    )
+  )
+  (func (export "as-call_indirect-last")
+    (call_indirect (type $$sig)
+      (i32.const 0) (i32.const 1) (i32.const 2) (unreachable)
+    )
+  )
+
+  (func (export "as-local.set-value") (local f32)
+    (local.set 0 (unreachable))
+  )
+  (func (export "as-local.tee-value") (result f32) (local f32)
+    (local.tee 0 (unreachable))
+  )
+  (global $$a (mut f32) (f32.const 0))
+  (func (export "as-global.set-value") (result f32)
+    (global.set $$a (unreachable))
+  )
+
+  (memory 1)
+  (func (export "as-load-address") (result f32)
+    (f32.load (unreachable))
+  )
+  (func (export "as-loadN-address") (result i64)
+    (i64.load8_s (unreachable))
+  )
+
+  (func (export "as-store-address")
+    (f64.store (unreachable) (f64.const 7))
+  )
+  (func (export "as-store-value")
+    (i64.store (i32.const 2) (unreachable))
+  )
+
+  (func (export "as-storeN-address")
+    (i32.store8 (unreachable) (i32.const 7))
+  )
+  (func (export "as-storeN-value")
+    (i64.store16 (i32.const 2) (unreachable))
+  )
+
+  (func (export "as-unary-operand") (result f32)
+    (f32.neg (unreachable))
+  )
+
+  (func (export "as-binary-left") (result i32)
+    (i32.add (unreachable) (i32.const 10))
+  )
+  (func (export "as-binary-right") (result i64)
+    (i64.sub (i64.const 10) (unreachable))
+  )
+
+  (func (export "as-test-operand") (result i32)
+    (i32.eqz (unreachable))
+  )
+
+  (func (export "as-compare-left") (result i32)
+    (f64.le (unreachable) (f64.const 10))
+  )
+  (func (export "as-compare-right") (result i32)
+    (f32.ne (f32.const 10) (unreachable))
+  )
+
+  (func (export "as-convert-operand") (result i32)
+    (i32.wrap_i64 (unreachable))
+  )
+
+  (func (export "as-memory.grow-size") (result i32)
+    (memory.grow (unreachable))
+  )
+)`);
+
+// ./test/core/unreachable.wast:221
+assert_trap(() => invoke($0, `type-i32`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:222
+assert_trap(() => invoke($0, `type-i64`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:223
+assert_trap(() => invoke($0, `type-f32`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:224
+assert_trap(() => invoke($0, `type-f64`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:226
+assert_trap(() => invoke($0, `as-func-first`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:227
+assert_trap(() => invoke($0, `as-func-mid`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:228
+assert_trap(() => invoke($0, `as-func-last`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:229
+assert_trap(() => invoke($0, `as-func-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:231
+assert_trap(() => invoke($0, `as-block-first`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:232
+assert_trap(() => invoke($0, `as-block-mid`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:233
+assert_trap(() => invoke($0, `as-block-last`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:234
+assert_trap(() => invoke($0, `as-block-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:235
+assert_return(() => invoke($0, `as-block-broke`, []), [value("i32", 1)]);
+
+// ./test/core/unreachable.wast:237
+assert_trap(() => invoke($0, `as-loop-first`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:238
+assert_trap(() => invoke($0, `as-loop-mid`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:239
+assert_trap(() => invoke($0, `as-loop-last`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:240
+assert_return(() => invoke($0, `as-loop-broke`, []), [value("i32", 1)]);
+
+// ./test/core/unreachable.wast:242
+assert_trap(() => invoke($0, `as-br-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:244
+assert_trap(() => invoke($0, `as-br_if-cond`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:245
+assert_trap(() => invoke($0, `as-br_if-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:246
+assert_trap(() => invoke($0, `as-br_if-value-cond`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:248
+assert_trap(() => invoke($0, `as-br_table-index`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:249
+assert_trap(() => invoke($0, `as-br_table-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:250
+assert_trap(() => invoke($0, `as-br_table-value-2`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:251
+assert_trap(() => invoke($0, `as-br_table-value-index`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:252
+assert_trap(() => invoke($0, `as-br_table-value-and-index`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:254
+assert_trap(() => invoke($0, `as-return-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:256
+assert_trap(() => invoke($0, `as-if-cond`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:257
+assert_trap(() => invoke($0, `as-if-then`, [1, 6]), `unreachable`);
+
+// ./test/core/unreachable.wast:258
+assert_return(() => invoke($0, `as-if-then`, [0, 6]), [value("i32", 6)]);
+
+// ./test/core/unreachable.wast:259
+assert_trap(() => invoke($0, `as-if-else`, [0, 6]), `unreachable`);
+
+// ./test/core/unreachable.wast:260
+assert_return(() => invoke($0, `as-if-else`, [1, 6]), [value("i32", 6)]);
+
+// ./test/core/unreachable.wast:261
+assert_trap(() => invoke($0, `as-if-then-no-else`, [1, 6]), `unreachable`);
+
+// ./test/core/unreachable.wast:262
+assert_return(() => invoke($0, `as-if-then-no-else`, [0, 6]), [
+  value("i32", 6),
+]);
+
+// ./test/core/unreachable.wast:264
+assert_trap(() => invoke($0, `as-select-first`, [0, 6]), `unreachable`);
+
+// ./test/core/unreachable.wast:265
+assert_trap(() => invoke($0, `as-select-first`, [1, 6]), `unreachable`);
+
+// ./test/core/unreachable.wast:266
+assert_trap(() => invoke($0, `as-select-second`, [0, 6]), `unreachable`);
+
+// ./test/core/unreachable.wast:267
+assert_trap(() => invoke($0, `as-select-second`, [1, 6]), `unreachable`);
+
+// ./test/core/unreachable.wast:268
+assert_trap(() => invoke($0, `as-select-cond`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:270
+assert_trap(() => invoke($0, `as-call-first`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:271
+assert_trap(() => invoke($0, `as-call-mid`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:272
+assert_trap(() => invoke($0, `as-call-last`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:274
+assert_trap(() => invoke($0, `as-call_indirect-func`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:275
+assert_trap(() => invoke($0, `as-call_indirect-first`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:276
+assert_trap(() => invoke($0, `as-call_indirect-mid`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:277
+assert_trap(() => invoke($0, `as-call_indirect-last`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:279
+assert_trap(() => invoke($0, `as-local.set-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:280
+assert_trap(() => invoke($0, `as-local.tee-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:281
+assert_trap(() => invoke($0, `as-global.set-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:283
+assert_trap(() => invoke($0, `as-load-address`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:284
+assert_trap(() => invoke($0, `as-loadN-address`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:286
+assert_trap(() => invoke($0, `as-store-address`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:287
+assert_trap(() => invoke($0, `as-store-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:288
+assert_trap(() => invoke($0, `as-storeN-address`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:289
+assert_trap(() => invoke($0, `as-storeN-value`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:291
+assert_trap(() => invoke($0, `as-unary-operand`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:293
+assert_trap(() => invoke($0, `as-binary-left`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:294
+assert_trap(() => invoke($0, `as-binary-right`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:296
+assert_trap(() => invoke($0, `as-test-operand`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:298
+assert_trap(() => invoke($0, `as-compare-left`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:299
+assert_trap(() => invoke($0, `as-compare-right`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:301
+assert_trap(() => invoke($0, `as-convert-operand`, []), `unreachable`);
+
+// ./test/core/unreachable.wast:303
+assert_trap(() => invoke($0, `as-memory.grow-size`, []), `unreachable`);

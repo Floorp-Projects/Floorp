@@ -1,669 +1,2026 @@
-
-// block.wast:3
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\xbd\x80\x80\x80\x00\x0b\x60\x02\x7f\x7f\x01\x7f\x60\x00\x00\x60\x00\x01\x7f\x60\x01\x7f\x00\x60\x03\x7f\x7c\x7f\x03\x7f\x7c\x7f\x60\x00\x03\x7f\x7e\x7f\x60\x01\x7f\x01\x7f\x60\x00\x02\x7f\x7f\x60\x00\x02\x7d\x7d\x60\x00\x03\x7f\x7f\x7e\x60\x02\x7f\x7f\x02\x7f\x7f\x03\xb8\x80\x80\x80\x00\x37\x01\x01\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x01\x02\x02\x02\x02\x02\x02\x00\x02\x02\x02\x01\x01\x02\x06\x02\x02\x01\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x09\x02\x02\x02\x02\x02\x02\x02\x02\x02\x01\x04\x85\x80\x80\x80\x00\x01\x70\x01\x01\x01\x05\x83\x80\x80\x80\x00\x01\x00\x01\x06\x86\x80\x80\x80\x00\x01\x7f\x01\x41\x0a\x0b\x07\xd0\x86\x80\x80\x00\x34\x05\x65\x6d\x70\x74\x79\x00\x01\x08\x73\x69\x6e\x67\x75\x6c\x61\x72\x00\x02\x05\x6d\x75\x6c\x74\x69\x00\x03\x06\x6e\x65\x73\x74\x65\x64\x00\x04\x04\x64\x65\x65\x70\x00\x05\x0f\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x66\x69\x72\x73\x74\x00\x06\x0d\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x6d\x69\x64\x00\x07\x0e\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x6c\x61\x73\x74\x00\x08\x0d\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x66\x69\x72\x73\x74\x00\x09\x0b\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x6d\x69\x64\x00\x0a\x0c\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x6c\x61\x73\x74\x00\x0b\x0f\x61\x73\x2d\x69\x66\x2d\x63\x6f\x6e\x64\x69\x74\x69\x6f\x6e\x00\x0c\x0a\x61\x73\x2d\x69\x66\x2d\x74\x68\x65\x6e\x00\x0d\x0a\x61\x73\x2d\x69\x66\x2d\x65\x6c\x73\x65\x00\x0e\x0e\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x66\x69\x72\x73\x74\x00\x0f\x0d\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x6c\x61\x73\x74\x00\x10\x11\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x66\x69\x72\x73\x74\x00\x11\x10\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x6c\x61\x73\x74\x00\x12\x16\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x66\x69\x72\x73\x74\x00\x14\x14\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x6d\x69\x64\x00\x15\x15\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x6c\x61\x73\x74\x00\x16\x0e\x61\x73\x2d\x73\x74\x6f\x72\x65\x2d\x66\x69\x72\x73\x74\x00\x17\x0d\x61\x73\x2d\x73\x74\x6f\x72\x65\x2d\x6c\x61\x73\x74\x00\x18\x14\x61\x73\x2d\x6d\x65\x6d\x6f\x72\x79\x2e\x67\x72\x6f\x77\x2d\x76\x61\x6c\x75\x65\x00\x19\x0d\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x76\x61\x6c\x75\x65\x00\x1b\x0f\x61\x73\x2d\x72\x65\x74\x75\x72\x6e\x2d\x76\x61\x6c\x75\x65\x00\x1c\x0f\x61\x73\x2d\x64\x72\x6f\x70\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x1d\x0b\x61\x73\x2d\x62\x72\x2d\x76\x61\x6c\x75\x65\x00\x1e\x12\x61\x73\x2d\x6c\x6f\x63\x61\x6c\x2e\x73\x65\x74\x2d\x76\x61\x6c\x75\x65\x00\x1f\x12\x61\x73\x2d\x6c\x6f\x63\x61\x6c\x2e\x74\x65\x65\x2d\x76\x61\x6c\x75\x65\x00\x20\x13\x61\x73\x2d\x67\x6c\x6f\x62\x61\x6c\x2e\x73\x65\x74\x2d\x76\x61\x6c\x75\x65\x00\x21\x0f\x61\x73\x2d\x6c\x6f\x61\x64\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x22\x10\x61\x73\x2d\x75\x6e\x61\x72\x79\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x23\x11\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x24\x0f\x61\x73\x2d\x74\x65\x73\x74\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x25\x12\x61\x73\x2d\x63\x6f\x6d\x70\x61\x72\x65\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x26\x12\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x6f\x70\x65\x72\x61\x6e\x64\x73\x00\x27\x13\x61\x73\x2d\x63\x6f\x6d\x70\x61\x72\x65\x2d\x6f\x70\x65\x72\x61\x6e\x64\x73\x00\x28\x11\x61\x73\x2d\x6d\x69\x78\x65\x64\x2d\x6f\x70\x65\x72\x61\x6e\x64\x73\x00\x29\x0a\x62\x72\x65\x61\x6b\x2d\x62\x61\x72\x65\x00\x2a\x0b\x62\x72\x65\x61\x6b\x2d\x76\x61\x6c\x75\x65\x00\x2b\x11\x62\x72\x65\x61\x6b\x2d\x6d\x75\x6c\x74\x69\x2d\x76\x61\x6c\x75\x65\x00\x2c\x0e\x62\x72\x65\x61\x6b\x2d\x72\x65\x70\x65\x61\x74\x65\x64\x00\x2d\x0b\x62\x72\x65\x61\x6b\x2d\x69\x6e\x6e\x65\x72\x00\x2e\x05\x70\x61\x72\x61\x6d\x00\x2f\x06\x70\x61\x72\x61\x6d\x73\x00\x30\x09\x70\x61\x72\x61\x6d\x73\x2d\x69\x64\x00\x31\x0b\x70\x61\x72\x61\x6d\x2d\x62\x72\x65\x61\x6b\x00\x32\x0c\x70\x61\x72\x61\x6d\x73\x2d\x62\x72\x65\x61\x6b\x00\x33\x0f\x70\x61\x72\x61\x6d\x73\x2d\x69\x64\x2d\x62\x72\x65\x61\x6b\x00\x34\x07\x65\x66\x66\x65\x63\x74\x73\x00\x35\x08\x74\x79\x70\x65\x2d\x75\x73\x65\x00\x36\x09\x87\x80\x80\x80\x00\x01\x00\x41\x00\x0b\x01\x13\x0a\xae\x8a\x80\x80\x00\x37\x82\x80\x80\x80\x00\x00\x0b\x88\x80\x80\x80\x00\x00\x02\x40\x0b\x02\x40\x0b\x0b\x8b\x80\x80\x80\x00\x00\x02\x40\x01\x0b\x02\x7f\x41\x07\x0b\x0b\xbe\x80\x80\x80\x00\x00\x02\x40\x10\x00\x10\x00\x10\x00\x10\x00\x0b\x02\x7f\x10\x00\x10\x00\x10\x00\x41\x07\x10\x00\x0b\x1a\x02\x05\x10\x00\x10\x00\x10\x00\x41\x08\x10\x00\x10\x00\x10\x00\x10\x00\x42\x07\x10\x00\x10\x00\x10\x00\x10\x00\x41\x09\x10\x00\x0b\x1a\x1a\x0b\x95\x80\x80\x80\x00\x00\x02\x7f\x02\x40\x10\x00\x02\x40\x0b\x01\x0b\x02\x7f\x10\x00\x41\x09\x0b\x0b\x0b\xf9\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x02\x7f\x10\x00\x41\x96\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0b\x41\x02\x41\x03\x1b\x0b\x8c\x80\x80\x80\x00\x00\x41\x02\x02\x7f\x41\x01\x0b\x41\x03\x1b\x0b\x8c\x80\x80\x80\x00\x00\x41\x02\x41\x03\x02\x7f\x41\x01\x0b\x1b\x0b\x8e\x80\x80\x80\x00\x00\x03\x7f\x02\x7f\x41\x01\x0b\x10\x00\x10\x00\x0b\x0b\x8e\x80\x80\x80\x00\x00\x03\x7f\x10\x00\x02\x7f\x41\x01\x0b\x10\x00\x0b\x0b\x8e\x80\x80\x80\x00\x00\x03\x7f\x10\x00\x10\x00\x02\x7f\x41\x01\x0b\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0b\x04\x40\x10\x00\x0b\x0b\x8f\x80\x80\x80\x00\x00\x41\x01\x04\x7f\x02\x7f\x41\x01\x0b\x05\x41\x02\x0b\x0b\x8f\x80\x80\x80\x00\x00\x41\x01\x04\x7f\x41\x02\x05\x02\x7f\x41\x01\x0b\x0b\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x41\x01\x0b\x41\x02\x0d\x00\x0b\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x41\x02\x02\x7f\x41\x01\x0b\x0d\x00\x0b\x0b\x90\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x41\x01\x0b\x41\x02\x0e\x01\x00\x00\x0b\x0b\x90\x80\x80\x80\x00\x00\x02\x7f\x41\x02\x02\x7f\x41\x01\x0b\x0e\x01\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x00\x20\x00\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x41\x01\x0b\x41\x02\x41\x00\x11\x00\x00\x0b\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x41\x02\x02\x7f\x41\x01\x0b\x41\x00\x11\x00\x00\x0b\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x41\x02\x02\x7f\x41\x00\x0b\x11\x00\x00\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0b\x41\x01\x36\x02\x00\x0b\x8c\x80\x80\x80\x00\x00\x41\x0a\x02\x7f\x41\x01\x0b\x36\x02\x00\x0b\x89\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0b\x40\x00\x0b\x84\x80\x80\x80\x00\x00\x20\x00\x0b\x89\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0b\x10\x1a\x0b\x88\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0b\x0f\x0b\x88\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0b\x1a\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x41\x01\x0b\x0c\x00\x0b\x0b\x8d\x80\x80\x80\x00\x01\x01\x7f\x02\x7f\x41\x01\x0b\x21\x00\x20\x00\x0b\x8b\x80\x80\x80\x00\x01\x01\x7f\x02\x7f\x41\x01\x0b\x22\x00\x0b\x8b\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0b\x24\x00\x23\x00\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0b\x28\x02\x00\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x10\x00\x41\x0d\x0b\x68\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x10\x00\x41\x03\x0b\x02\x7f\x10\x00\x41\x04\x0b\x6c\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x10\x00\x41\x0d\x0b\x45\x0b\x97\x80\x80\x80\x00\x00\x02\x7d\x10\x00\x43\x00\x00\x40\x40\x0b\x02\x7d\x10\x00\x43\x00\x00\x40\x40\x0b\x5e\x0b\x8e\x80\x80\x80\x00\x00\x02\x07\x10\x00\x41\x03\x10\x00\x41\x04\x0b\x6c\x0b\x94\x80\x80\x80\x00\x00\x02\x08\x10\x00\x43\x00\x00\x40\x40\x10\x00\x43\x00\x00\x40\x40\x0b\x5e\x0b\x91\x80\x80\x80\x00\x00\x02\x07\x10\x00\x41\x03\x10\x00\x41\x04\x0b\x41\x05\x6a\x6c\x0b\xa6\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x00\x0b\x02\x40\x41\x01\x0d\x00\x00\x0b\x02\x40\x41\x00\x0e\x00\x00\x00\x0b\x02\x40\x41\x01\x0e\x02\x00\x00\x00\x00\x0b\x41\x13\x0b\x8b\x80\x80\x80\x00\x00\x02\x7f\x41\x12\x0c\x00\x41\x13\x0b\x0b\x93\x80\x80\x80\x00\x00\x02\x09\x41\x12\x41\x6e\x42\x12\x0c\x00\x41\x13\x41\x6d\x42\x13\x0b\x0b\xb1\x80\x80\x80\x00\x00\x02\x7f\x41\x12\x0c\x00\x41\x13\x0c\x00\x41\x14\x41\x00\x0d\x00\x1a\x41\x14\x41\x01\x0d\x00\x1a\x41\x15\x0c\x00\x41\x16\x41\x04\x0e\x00\x00\x41\x17\x41\x01\x0e\x02\x00\x00\x00\x41\x15\x0b\x0b\xc5\x80\x80\x80\x00\x01\x01\x7f\x41\x00\x21\x00\x20\x00\x02\x7f\x02\x7f\x41\x01\x0c\x01\x0b\x0b\x6a\x21\x00\x20\x00\x02\x7f\x02\x40\x0c\x00\x0b\x41\x02\x0b\x6a\x21\x00\x20\x00\x02\x7f\x41\x04\x0c\x00\x68\x0b\x6a\x21\x00\x20\x00\x02\x7f\x02\x7f\x41\x08\x0c\x01\x0b\x68\x0b\x6a\x21\x00\x20\x00\x0b\x8a\x80\x80\x80\x00\x00\x41\x01\x02\x06\x41\x02\x6a\x0b\x0b\x8a\x80\x80\x80\x00\x00\x41\x01\x41\x02\x02\x00\x6a\x0b\x0b\x8a\x80\x80\x80\x00\x00\x41\x01\x41\x02\x02\x0a\x0b\x6a\x0b\x8c\x80\x80\x80\x00\x00\x41\x01\x02\x06\x41\x02\x6a\x0c\x00\x0b\x0b\x8c\x80\x80\x80\x00\x00\x41\x01\x41\x02\x02\x00\x6a\x0c\x00\x0b\x0b\x8c\x80\x80\x80\x00\x00\x41\x01\x41\x02\x02\x0a\x0c\x00\x0b\x6a\x0b\xaf\x80\x80\x80\x00\x01\x01\x7f\x02\x40\x41\x01\x21\x00\x20\x00\x41\x03\x6c\x21\x00\x20\x00\x41\x05\x6b\x21\x00\x20\x00\x41\x07\x6c\x21\x00\x0c\x00\x20\x00\x41\xe4\x00\x6c\x21\x00\x0b\x20\x00\x41\x72\x46\x0b\xbd\x80\x80\x80\x00\x00\x02\x01\x0b\x02\x02\x41\x00\x0b\x02\x03\x1a\x0b\x41\x00\x44\x00\x00\x00\x00\x00\x00\x00\x00\x41\x00\x02\x04\x0b\x1a\x1a\x1a\x02\x02\x41\x00\x0b\x02\x03\x1a\x0b\x41\x00\x44\x00\x00\x00\x00\x00\x00\x00\x00\x41\x00\x02\x04\x0b\x1a\x1a\x1a\x0b");
-
-// block.wast:353
-assert_return(() => call($1, "empty", []));
-
-// block.wast:354
-assert_return(() => call($1, "singular", []), 7);
-
-// block.wast:355
-assert_return(() => call($1, "multi", []), 8);
-
-// block.wast:356
-assert_return(() => call($1, "nested", []), 9);
-
-// block.wast:357
-assert_return(() => call($1, "deep", []), 150);
-
-// block.wast:359
-assert_return(() => call($1, "as-select-first", []), 1);
-
-// block.wast:360
-assert_return(() => call($1, "as-select-mid", []), 2);
-
-// block.wast:361
-assert_return(() => call($1, "as-select-last", []), 2);
-
-// block.wast:363
-assert_return(() => call($1, "as-loop-first", []), 1);
-
-// block.wast:364
-assert_return(() => call($1, "as-loop-mid", []), 1);
-
-// block.wast:365
-assert_return(() => call($1, "as-loop-last", []), 1);
-
-// block.wast:367
-assert_return(() => call($1, "as-if-condition", []));
-
-// block.wast:368
-assert_return(() => call($1, "as-if-then", []), 1);
-
-// block.wast:369
-assert_return(() => call($1, "as-if-else", []), 2);
-
-// block.wast:371
-assert_return(() => call($1, "as-br_if-first", []), 1);
-
-// block.wast:372
-assert_return(() => call($1, "as-br_if-last", []), 2);
-
-// block.wast:374
-assert_return(() => call($1, "as-br_table-first", []), 1);
-
-// block.wast:375
-assert_return(() => call($1, "as-br_table-last", []), 2);
-
-// block.wast:377
-assert_return(() => call($1, "as-call_indirect-first", []), 1);
-
-// block.wast:378
-assert_return(() => call($1, "as-call_indirect-mid", []), 2);
-
-// block.wast:379
-assert_return(() => call($1, "as-call_indirect-last", []), 1);
-
-// block.wast:381
-assert_return(() => call($1, "as-store-first", []));
-
-// block.wast:382
-assert_return(() => call($1, "as-store-last", []));
-
-// block.wast:384
-assert_return(() => call($1, "as-memory.grow-value", []), 1);
-
-// block.wast:385
-assert_return(() => call($1, "as-call-value", []), 1);
-
-// block.wast:386
-assert_return(() => call($1, "as-return-value", []), 1);
-
-// block.wast:387
-assert_return(() => call($1, "as-drop-operand", []));
-
-// block.wast:388
-assert_return(() => call($1, "as-br-value", []), 1);
-
-// block.wast:389
-assert_return(() => call($1, "as-local.set-value", []), 1);
-
-// block.wast:390
-assert_return(() => call($1, "as-local.tee-value", []), 1);
-
-// block.wast:391
-assert_return(() => call($1, "as-global.set-value", []), 1);
-
-// block.wast:392
-assert_return(() => call($1, "as-load-operand", []), 1);
-
-// block.wast:394
-assert_return(() => call($1, "as-unary-operand", []), 0);
-
-// block.wast:395
-assert_return(() => call($1, "as-binary-operand", []), 12);
-
-// block.wast:396
-assert_return(() => call($1, "as-test-operand", []), 0);
-
-// block.wast:397
-assert_return(() => call($1, "as-compare-operand", []), 0);
-
-// block.wast:398
-assert_return(() => call($1, "as-binary-operands", []), 12);
-
-// block.wast:399
-assert_return(() => call($1, "as-compare-operands", []), 0);
-
-// block.wast:400
-assert_return(() => call($1, "as-mixed-operands", []), 27);
-
-// block.wast:402
-assert_return(() => call($1, "break-bare", []), 19);
-
-// block.wast:403
-assert_return(() => call($1, "break-value", []), 18);
-
-// block.wast:404
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8a\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x03\x7f\x7f\x7e\x02\x98\x80\x80\x80\x00\x01\x02\x24\x31\x11\x62\x72\x65\x61\x6b\x2d\x6d\x75\x6c\x74\x69\x2d\x76\x61\x6c\x75\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\xa7\x80\x80\x80\x00\x01\xa1\x80\x80\x80\x00\x00\x02\x40\x10\x00\x01\x42\x12\x01\x51\x45\x0d\x00\x01\x41\x6e\x01\x46\x45\x0d\x00\x01\x41\x12\x01\x46\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "break-multi-value", []), 18, -18, int64("18"))
-
-// block.wast:407
-assert_return(() => call($1, "break-repeated", []), 18);
-
-// block.wast:408
-assert_return(() => call($1, "break-inner", []), 15);
-
-// block.wast:410
-assert_return(() => call($1, "param", []), 3);
-
-// block.wast:411
-assert_return(() => call($1, "params", []), 3);
-
-// block.wast:412
-assert_return(() => call($1, "params-id", []), 3);
-
-// block.wast:413
-assert_return(() => call($1, "param-break", []), 3);
-
-// block.wast:414
-assert_return(() => call($1, "params-break", []), 3);
-
-// block.wast:415
-assert_return(() => call($1, "params-id-break", []), 3);
-
-// block.wast:417
-assert_return(() => call($1, "effects", []), 1);
-
-// block.wast:419
-assert_return(() => call($1, "type-use", []));
-
-// block.wast:421
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:428
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:435
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:442
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:449
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:456
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:463
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:467
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:474
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:481
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:488
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:496
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x00\x41\x00\x0b\x0b");
-
-// block.wast:504
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x02\x40\x0b\x0b");
-
-// block.wast:508
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x02\x40\x0b\x0b");
-
-// block.wast:512
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x02\x40\x0b\x0b");
-
-// block.wast:516
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x02\x40\x0b\x0b");
-
-// block.wast:521
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x40\x41\x01\x0b\x0b");
-
-// block.wast:527
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x40\x42\x01\x0b\x0b");
-
-// block.wast:533
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x40\x43\x00\x00\x80\x3f\x0b\x0b");
-
-// block.wast:539
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x40\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0b\x0b");
-
-// block.wast:545
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x41\x01\x41\x02\x0b\x0b");
-
-// block.wast:551
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x02\x7f\x0b\x0b");
-
-// block.wast:557
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x02\x7e\x0b\x0b");
-
-// block.wast:563
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x02\x7d\x0b\x0b");
-
-// block.wast:569
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x02\x7c\x0b\x0b");
-
-// block.wast:575
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x02\x00\x0b\x0b");
-
-// block.wast:582
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x41\x00\x02\x40\x02\x7f\x0b\x1a\x0b\x0b");
-
-// block.wast:591
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x41\x00\x03\x40\x02\x7f\x0b\x1a\x0b\x0b");
-
-// block.wast:600
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\x00\x41\x00\x04\x40\x02\x7f\x0b\x1a\x0b\x0b");
-
-// block.wast:610
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x02\x7f\x01\x0b\x0b");
-
-// block.wast:616
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x02\x7e\x01\x0b\x0b");
-
-// block.wast:622
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x02\x7d\x01\x0b\x0b");
-
-// block.wast:628
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x02\x7c\x01\x0b\x0b");
-
-// block.wast:634
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x02\x00\x01\x0b\x0b");
-
-// block.wast:640
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7f\x42\x00\x0b\x0b");
-
-// block.wast:646
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x7f\x43\x00\x00\x00\x00\x0b\x0b");
-
-// block.wast:652
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7f\x44\x00\x00\x00\x00\x00\x00\x00\x00\x0b\x0b");
-
-// block.wast:658
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7e\x41\x00\x0b\x0b");
-
-// block.wast:664
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x7e\x43\x00\x00\x00\x00\x0b\x0b");
-
-// block.wast:670
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7e\x44\x00\x00\x00\x00\x00\x00\x00\x00\x0b\x0b");
-
-// block.wast:676
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7d\x41\x00\x0b\x0b");
-
-// block.wast:682
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7d\x42\x00\x0b\x0b");
-
-// block.wast:688
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7d\x44\x00\x00\x00\x00\x00\x00\x00\x00\x0b\x0b");
-
-// block.wast:694
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7c\x41\x00\x0b\x0b");
-
-// block.wast:700
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7c\x42\x00\x0b\x0b");
-
-// block.wast:706
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x7c\x43\x00\x00\x00\x00\x0b\x0b");
-
-// block.wast:712
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x00\x41\x00\x0b\x0b");
-
-// block.wast:718
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x41\x01\x02\x00\x41\x02\x0b\x0b");
-
-// block.wast:724
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x41\x02\x0b\x0b");
-
-// block.wast:731
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7e\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:737
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7d\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:743
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7c\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:749
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7f\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:755
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7d\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:761
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7c\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:767
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7f\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:773
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7e\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:779
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7c\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:785
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7f\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:791
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7e\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:797
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7d\x00\x00\x00\x1b\x0b\x0b");
-
-// block.wast:804
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x0b\x0b");
-
-// block.wast:810
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7e\x0c\x00\x0b\x0b");
-
-// block.wast:816
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7d\x0c\x00\x0b\x0b");
-
-// block.wast:822
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x7c\x0c\x00\x0b\x0b");
-
-// block.wast:828
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x00\x0c\x00\x0b\x0b");
-
-// block.wast:835
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x41\x01\x0b\x0b");
-
-// block.wast:841
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7e\x0c\x00\x42\x01\x0b\x0b");
-
-// block.wast:847
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x02\x7d\x0c\x00\x43\x00\x00\x80\x3f\x0b\x0b");
-
-// block.wast:853
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x02\x7c\x0c\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0b\x0b");
-
-// block.wast:859
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x02\x00\x0c\x00\x41\x01\x41\x02\x0b\x0b");
-
-// block.wast:866
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x7f\x01\x0c\x00\x41\x01\x0b\x0b");
-
-// block.wast:872
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x7e\x01\x0c\x00\x42\x01\x0b\x0b");
-
-// block.wast:878
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x02\x7d\x01\x0c\x00\x43\x00\x00\x80\x3f\x0b\x0b");
-
-// block.wast:884
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x7c\x01\x0c\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0b\x0b");
-
-// block.wast:891
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x02\x7f\x42\x01\x0c\x00\x41\x01\x0b\x0b");
-
-// block.wast:897
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7f\x43\x00\x00\x80\x3f\x0c\x00\x41\x01\x0b\x0b");
-
-// block.wast:903
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x02\x7f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x41\x01\x0b\x0b");
-
-// block.wast:909
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x02\x7e\x41\x01\x0c\x00\x42\x01\x0b\x0b");
-
-// block.wast:915
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7e\x43\x00\x00\x80\x3f\x0c\x00\x42\x01\x0b\x0b");
-
-// block.wast:921
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x02\x7e\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x42\x01\x0b\x0b");
-
-// block.wast:927
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7d\x41\x01\x0c\x00\x43\x00\x00\x80\x3f\x0b\x0b");
-
-// block.wast:933
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7d\x42\x01\x0c\x00\x43\x00\x00\x80\x3f\x0b\x0b");
-
-// block.wast:939
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9b\x80\x80\x80\x00\x01\x95\x80\x80\x80\x00\x00\x02\x7d\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x43\x00\x00\x80\x3f\x0b\x0b");
-
-// block.wast:945
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x02\x7e\x41\x01\x0c\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0b\x0b");
-
-// block.wast:951
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x02\x7c\x42\x01\x0c\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0b\x0b");
-
-// block.wast:957
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9b\x80\x80\x80\x00\x01\x95\x80\x80\x80\x00\x00\x02\x7c\x43\x00\x00\x80\x3f\x0c\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0b\x0b");
-
-// block.wast:963
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x02\x00\x41\x00\x0c\x00\x41\x01\x41\x02\x0b\x0b");
-
-// block.wast:969
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\x01\x02\x00\x41\x00\x0c\x00\x41\x02\x0b\x0b");
-
-// block.wast:976
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x02\x7f\x01\x0c\x00\x41\x01\x0c\x00\x0b\x0b");
-
-// block.wast:982
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x02\x7e\x01\x0c\x00\x42\x01\x0c\x00\x0b\x0b");
-
-// block.wast:988
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x02\x7d\x01\x0c\x00\x43\x00\x00\x80\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:994
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x7c\x01\x0c\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1000
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x00\x01\x0c\x00\x41\x01\x41\x02\x0c\x00\x0b\x0b");
-
-// block.wast:1007
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x02\x7f\x42\x01\x0c\x00\x41\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1013
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x02\x7f\x43\x00\x00\x80\x3f\x0c\x00\x41\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1019
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x7f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x41\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1025
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x02\x7e\x41\x01\x0c\x00\x42\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1031
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x02\x7e\x43\x00\x00\x80\x3f\x0c\x00\x42\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1037
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x7e\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x42\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1043
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x02\x7d\x41\x01\x0c\x00\x43\x00\x00\x80\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1049
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x02\x7d\x42\x01\x0c\x00\x43\x00\x00\x80\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1055
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9d\x80\x80\x80\x00\x01\x97\x80\x80\x80\x00\x00\x02\x7d\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x43\x00\x00\x80\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1061
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x7c\x41\x01\x0c\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1067
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x7c\x42\x01\x0c\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1073
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9d\x80\x80\x80\x00\x01\x97\x80\x80\x80\x00\x00\x02\x7c\x43\x00\x00\x80\x3f\x0c\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1079
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x02\x00\x41\x00\x0c\x00\x41\x01\x41\x02\x0c\x00\x0b\x0b");
-
-// block.wast:1086
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x41\x01\x0c\x01\x0b\x0c\x00\x0b\x0b");
-
-// block.wast:1092
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7e\x02\x7e\x42\x01\x0c\x01\x0b\x0c\x00\x0b\x0b");
-
-// block.wast:1098
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x7d\x02\x7d\x43\x00\x00\x80\x3f\x0c\x01\x0b\x0c\x00\x0b\x0b");
-
-// block.wast:1104
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9b\x80\x80\x80\x00\x01\x95\x80\x80\x80\x00\x00\x02\x7c\x02\x7c\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x01\x0b\x0c\x00\x0b\x0b");
-
-// block.wast:1110
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x02\x01\x02\x01\x41\x01\x41\x02\x0c\x01\x0b\x0c\x00\x0b\x0b");
-
-// block.wast:1117
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7f\x02\x40\x0c\x01\x0b\x41\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1123
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7e\x02\x40\x0c\x01\x0b\x42\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1129
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x7d\x02\x40\x0c\x01\x0b\x43\x00\x00\x80\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1135
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9b\x80\x80\x80\x00\x01\x95\x80\x80\x80\x00\x00\x02\x7c\x02\x40\x0c\x01\x0b\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1141
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x02\x00\x02\x40\x0c\x01\x0b\x41\x01\x41\x02\x0c\x00\x0b\x0b");
-
-// block.wast:1148
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x01\x0c\x01\x0b\x41\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1154
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x02\x7e\x02\x7e\x01\x0c\x01\x0b\x42\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1160
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x02\x7d\x02\x7d\x01\x0c\x01\x0b\x43\x00\x00\x80\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1166
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x02\x7c\x02\x7c\x01\x0c\x01\x0b\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1172
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x00\x02\x00\x01\x0c\x01\x0b\x41\x01\x41\x02\x0c\x00\x0b\x0b");
-
-// block.wast:1179
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x42\x01\x0c\x01\x0b\x41\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1187
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x43\x00\x00\x80\x3f\x0c\x01\x0b\x41\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1195
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9d\x80\x80\x80\x00\x01\x97\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x01\x0b\x41\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1203
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x02\x7e\x02\x7e\x41\x01\x0c\x01\x0b\x42\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1211
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x7e\x02\x7e\x43\x00\x00\x80\x3f\x0c\x01\x0b\x42\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1219
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9d\x80\x80\x80\x00\x01\x97\x80\x80\x80\x00\x00\x02\x7e\x02\x7e\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x01\x0b\x42\x01\x0c\x00\x0b\x0b");
-
-// block.wast:1227
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x7d\x02\x7d\x41\x01\x0c\x01\x0b\x43\x00\x00\x80\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1235
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x7d\x02\x7d\x42\x01\x0c\x01\x0b\x43\x00\x00\x80\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1243
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\xa0\x80\x80\x80\x00\x01\x9a\x80\x80\x80\x00\x00\x02\x7d\x02\x7d\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x01\x0b\x43\x00\x00\x80\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1251
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9d\x80\x80\x80\x00\x01\x97\x80\x80\x80\x00\x00\x02\x7c\x02\x7c\x41\x01\x0c\x01\x0b\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1259
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x9d\x80\x80\x80\x00\x01\x97\x80\x80\x80\x00\x00\x02\x7c\x02\x7c\x42\x01\x0c\x01\x0b\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1267
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\xa0\x80\x80\x80\x00\x01\x9a\x80\x80\x80\x00\x00\x02\x7c\x02\x7c\x43\x00\x00\x80\x3f\x0c\x01\x0b\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x0c\x00\x0b\x0b");
-
-// block.wast:1275
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x00\x02\x7f\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x02\x00\x02\x00\x41\x00\x0c\x01\x0b\x41\x01\x41\x02\x0c\x00\x0b\x0b");
-
-// block.wast:1284
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8e\x80\x80\x80\x00\x01\x88\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x0b\x68\x0b");
-
-// block.wast:1290
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8e\x80\x80\x80\x00\x01\x88\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x0b\x7a\x0b");
-
-// block.wast:1296
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8e\x80\x80\x80\x00\x01\x88\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x0b\x8e\x0b");
-
-// block.wast:1302
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8e\x80\x80\x80\x00\x01\x88\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x0b\x9c\x0b");
-
-// block.wast:1308
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8e\x80\x80\x80\x00\x01\x88\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x0b\x6a\x0b");
-
-// block.wast:1315
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x01\x0c\x00\x0b\x68\x0b");
-
-// block.wast:1321
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x01\x0c\x00\x0b\x7a\x0b");
-
-// block.wast:1327
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x01\x0c\x00\x0b\x8e\x0b");
-
-// block.wast:1333
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x01\x0c\x00\x0b\x9c\x0b");
-
-// block.wast:1339
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x01\x0c\x00\x0b\x6a\x0b");
-
-// block.wast:1346
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x40\x42\x09\x0c\x00\x0b\x7a\x0b");
-
-// block.wast:1352
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x02\x40\x43\x00\x00\x10\x41\x0c\x00\x0b\x8e\x0b");
-
-// block.wast:1358
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x40\x44\x00\x00\x00\x00\x00\x00\x22\x40\x0c\x00\x0b\x9c\x0b");
-
-// block.wast:1364
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x40\x41\x09\x0c\x00\x0b\x68\x0b");
-
-// block.wast:1370
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x02\x40\x43\x00\x00\x10\x41\x0c\x00\x0b\x8e\x0b");
-
-// block.wast:1376
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x40\x44\x00\x00\x00\x00\x00\x00\x22\x40\x0c\x00\x0b\x9c\x0b");
-
-// block.wast:1382
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x40\x41\x09\x0c\x00\x0b\x68\x0b");
-
-// block.wast:1388
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x40\x42\x09\x0c\x00\x0b\x7a\x0b");
-
-// block.wast:1394
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x40\x44\x00\x00\x00\x00\x00\x00\x22\x40\x0c\x00\x0b\x9c\x0b");
-
-// block.wast:1400
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x40\x41\x09\x0c\x00\x0b\x68\x0b");
-
-// block.wast:1406
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x40\x42\x09\x0c\x00\x0b\x7a\x0b");
-
-// block.wast:1412
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x02\x40\x43\x00\x00\x10\x41\x0c\x00\x0b\x8e\x0b");
-
-// block.wast:1418
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x02\x40\x42\x09\x41\x0a\x0c\x00\x0b\x6a\x0b");
-
-// block.wast:1425
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x02\x01\x1a\x0b\x0b");
-
-// block.wast:1431
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x02\x7f\x7c\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x02\x01\x1a\x1a\x0b\x0b");
-
-// block.wast:1437
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x02\x01\x1a\x0b\x0b");
-
-// block.wast:1443
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x02\x7d\x7f\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x02\x01\x1a\x1a\x0b\x0b");
-
-// block.wast:1449
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x40\x02\x01\x1a\x0b\x0b\x0b");
-
-// block.wast:1455
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x02\x7f\x7c\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x40\x02\x01\x1a\x1a\x0b\x0b\x0b");
-
-// block.wast:1461
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x40\x43\x00\x00\x00\x00\x02\x01\x1a\x0b\x0b\x0b");
-
-// block.wast:1467
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x02\x7d\x7f\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x02\x40\x43\x00\x00\x00\x00\x02\x01\x1a\x1a\x0b\x0b\x0b");
-
-// block.wast:1474
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:1478
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:1484
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// block.wast:1488
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// ./test/core/block.wast
+
+// ./test/core/block.wast:3
+let $0 = instantiate(`(module
+  ;; Auxiliary definition
+  (memory 1)
+
+  (func $$dummy)
+
+  (func (export "empty")
+    (block)
+    (block $$l)
+  )
+
+  (func (export "singular") (result i32)
+    (block (nop))
+    (block (result i32) (i32.const 7))
+  )
+
+  (func (export "multi") (result i32)
+    (block (call $$dummy) (call $$dummy) (call $$dummy) (call $$dummy))
+    (block (result i32)
+      (call $$dummy) (call $$dummy) (call $$dummy) (i32.const 7) (call $$dummy)
+    )
+    (drop)
+    (block (result i32 i64 i32)
+      (call $$dummy) (call $$dummy) (call $$dummy) (i32.const 8) (call $$dummy)
+      (call $$dummy) (call $$dummy) (call $$dummy) (i64.const 7) (call $$dummy)
+      (call $$dummy) (call $$dummy) (call $$dummy) (i32.const 9) (call $$dummy)
+    )
+    (drop) (drop)
+  )
+
+  (func (export "nested") (result i32)
+    (block (result i32)
+      (block (call $$dummy) (block) (nop))
+      (block (result i32) (call $$dummy) (i32.const 9))
+    )
+  )
+
+  (func (export "deep") (result i32)
+    (block (result i32) (block (result i32)
+      (block (result i32) (block (result i32)
+        (block (result i32) (block (result i32)
+          (block (result i32) (block (result i32)
+            (block (result i32) (block (result i32)
+              (block (result i32) (block (result i32)
+                (block (result i32) (block (result i32)
+                  (block (result i32) (block (result i32)
+                    (block (result i32) (block (result i32)
+                      (block (result i32) (block (result i32)
+                        (block (result i32) (block (result i32)
+                          (block (result i32) (block (result i32)
+                            (block (result i32) (block (result i32)
+                              (block (result i32) (block (result i32)
+                                (block (result i32) (block (result i32)
+                                  (block (result i32) (block (result i32)
+                                    (block (result i32) (block (result i32)
+                                      (block (result i32) (block (result i32)
+                                        (block (result i32) (block (result i32)
+                                          (call $$dummy) (i32.const 150)
+                                        ))
+                                      ))
+                                    ))
+                                  ))
+                                ))
+                              ))
+                            ))
+                          ))
+                        ))
+                      ))
+                    ))
+                  ))
+                ))
+              ))
+            ))
+          ))
+        ))
+      ))
+    ))
+  )
+
+  (func (export "as-select-first") (result i32)
+    (select (block (result i32) (i32.const 1)) (i32.const 2) (i32.const 3))
+  )
+  (func (export "as-select-mid") (result i32)
+    (select (i32.const 2) (block (result i32) (i32.const 1)) (i32.const 3))
+  )
+  (func (export "as-select-last") (result i32)
+    (select (i32.const 2) (i32.const 3) (block (result i32) (i32.const 1)))
+  )
+
+  (func (export "as-loop-first") (result i32)
+    (loop (result i32) (block (result i32) (i32.const 1)) (call $$dummy) (call $$dummy))
+  )
+  (func (export "as-loop-mid") (result i32)
+    (loop (result i32) (call $$dummy) (block (result i32) (i32.const 1)) (call $$dummy))
+  )
+  (func (export "as-loop-last") (result i32)
+    (loop (result i32) (call $$dummy) (call $$dummy) (block (result i32) (i32.const 1)))
+  )
+
+  (func (export "as-if-condition")
+    (block (result i32) (i32.const 1)) (if (then (call $$dummy)))
+  )
+  (func (export "as-if-then") (result i32)
+    (if (result i32) (i32.const 1) (then (block (result i32) (i32.const 1))) (else (i32.const 2)))
+  )
+  (func (export "as-if-else") (result i32)
+    (if (result i32) (i32.const 1) (then (i32.const 2)) (else (block (result i32) (i32.const 1))))
+  )
+
+  (func (export "as-br_if-first") (result i32)
+    (block (result i32) (br_if 0 (block (result i32) (i32.const 1)) (i32.const 2)))
+  )
+  (func (export "as-br_if-last") (result i32)
+    (block (result i32) (br_if 0 (i32.const 2) (block (result i32) (i32.const 1))))
+  )
+
+  (func (export "as-br_table-first") (result i32)
+    (block (result i32) (block (result i32) (i32.const 1)) (i32.const 2) (br_table 0 0))
+  )
+  (func (export "as-br_table-last") (result i32)
+    (block (result i32) (i32.const 2) (block (result i32) (i32.const 1)) (br_table 0 0))
+  )
+
+  (func $$func (param i32 i32) (result i32) (local.get 0))
+  (type $$check (func (param i32 i32) (result i32)))
+  (table funcref (elem $$func))
+  (func (export "as-call_indirect-first") (result i32)
+    (block (result i32)
+      (call_indirect (type $$check)
+        (block (result i32) (i32.const 1)) (i32.const 2) (i32.const 0)
+      )
+    )
+  )
+  (func (export "as-call_indirect-mid") (result i32)
+    (block (result i32)
+      (call_indirect (type $$check)
+        (i32.const 2) (block (result i32) (i32.const 1)) (i32.const 0)
+      )
+    )
+  )
+  (func (export "as-call_indirect-last") (result i32)
+    (block (result i32)
+      (call_indirect (type $$check)
+        (i32.const 1) (i32.const 2) (block (result i32) (i32.const 0))
+      )
+    )
+  )
+
+  (func (export "as-store-first")
+    (block (result i32) (i32.const 1)) (i32.const 1) (i32.store)
+  )
+  (func (export "as-store-last")
+    (i32.const 10) (block (result i32) (i32.const 1)) (i32.store)
+  )
+
+  (func (export "as-memory.grow-value") (result i32)
+    (memory.grow (block (result i32) (i32.const 1)))
+  )
+
+  (func $$f (param i32) (result i32) (local.get 0))
+
+  (func (export "as-call-value") (result i32)
+    (call $$f (block (result i32) (i32.const 1)))
+  )
+  (func (export "as-return-value") (result i32)
+    (block (result i32) (i32.const 1)) (return)
+  )
+  (func (export "as-drop-operand")
+    (drop (block (result i32) (i32.const 1)))
+  )
+  (func (export "as-br-value") (result i32)
+    (block (result i32) (br 0 (block (result i32) (i32.const 1))))
+  )
+  (func (export "as-local.set-value") (result i32)
+    (local i32) (local.set 0 (block (result i32) (i32.const 1))) (local.get 0)
+  )
+  (func (export "as-local.tee-value") (result i32)
+    (local i32) (local.tee 0 (block (result i32) (i32.const 1)))
+  )
+  (global $$a (mut i32) (i32.const 10))
+  (func (export "as-global.set-value") (result i32)
+    (global.set $$a (block (result i32) (i32.const 1)))
+    (global.get $$a)
+  )
+
+  (func (export "as-load-operand") (result i32)
+    (i32.load (block (result i32) (i32.const 1)))
+  )
+
+  (func (export "as-unary-operand") (result i32)
+    (i32.ctz (block (result i32) (call $$dummy) (i32.const 13)))
+  )
+  (func (export "as-binary-operand") (result i32)
+    (i32.mul
+      (block (result i32) (call $$dummy) (i32.const 3))
+      (block (result i32) (call $$dummy) (i32.const 4))
+    )
+  )
+  (func (export "as-test-operand") (result i32)
+    (i32.eqz (block (result i32) (call $$dummy) (i32.const 13)))
+  )
+  (func (export "as-compare-operand") (result i32)
+    (f32.gt
+      (block (result f32) (call $$dummy) (f32.const 3))
+      (block (result f32) (call $$dummy) (f32.const 3))
+    )
+  )
+  (func (export "as-binary-operands") (result i32)
+    (i32.mul
+      (block (result i32 i32)
+        (call $$dummy) (i32.const 3) (call $$dummy) (i32.const 4)
+      )
+    )
+  )
+  (func (export "as-compare-operands") (result i32)
+    (f32.gt
+      (block (result f32 f32)
+        (call $$dummy) (f32.const 3) (call $$dummy) (f32.const 3)
+      )
+    )
+  )
+  (func (export "as-mixed-operands") (result i32)
+    (block (result i32 i32)
+      (call $$dummy) (i32.const 3) (call $$dummy) (i32.const 4)
+    )
+    (i32.const 5)
+    (i32.add)
+    (i32.mul)
+  )
+
+  (func (export "break-bare") (result i32)
+    (block (br 0) (unreachable))
+    (block (br_if 0 (i32.const 1)) (unreachable))
+    (block (br_table 0 (i32.const 0)) (unreachable))
+    (block (br_table 0 0 0 (i32.const 1)) (unreachable))
+    (i32.const 19)
+  )
+  (func (export "break-value") (result i32)
+    (block (result i32) (br 0 (i32.const 18)) (i32.const 19))
+  )
+  (func (export "break-multi-value") (result i32 i32 i64)
+    (block (result i32 i32 i64)
+      (br 0 (i32.const 18) (i32.const -18) (i64.const 18))
+      (i32.const 19) (i32.const -19) (i64.const 19)
+    )
+  )
+  (func (export "break-repeated") (result i32)
+    (block (result i32)
+      (br 0 (i32.const 18))
+      (br 0 (i32.const 19))
+      (drop (br_if 0 (i32.const 20) (i32.const 0)))
+      (drop (br_if 0 (i32.const 20) (i32.const 1)))
+      (br 0 (i32.const 21))
+      (br_table 0 (i32.const 22) (i32.const 4))
+      (br_table 0 0 0 (i32.const 23) (i32.const 1))
+      (i32.const 21)
+    )
+  )
+  (func (export "break-inner") (result i32)
+    (local i32)
+    (local.set 0 (i32.const 0))
+    (local.set 0 (i32.add (local.get 0) (block (result i32) (block (result i32) (br 1 (i32.const 0x1))))))
+    (local.set 0 (i32.add (local.get 0) (block (result i32) (block (br 0)) (i32.const 0x2))))
+    (local.set 0
+      (i32.add (local.get 0) (block (result i32) (i32.ctz (br 0 (i32.const 0x4)))))
+    )
+    (local.set 0
+      (i32.add (local.get 0) (block (result i32) (i32.ctz (block (result i32) (br 1 (i32.const 0x8))))))
+    )
+    (local.get 0)
+  )
+
+  (func (export "param") (result i32)
+    (i32.const 1)
+    (block (param i32) (result i32)
+      (i32.const 2)
+      (i32.add)
+    )
+  )
+  (func (export "params") (result i32)
+    (i32.const 1)
+    (i32.const 2)
+    (block (param i32 i32) (result i32)
+      (i32.add)
+    )
+  )
+  (func (export "params-id") (result i32)
+    (i32.const 1)
+    (i32.const 2)
+    (block (param i32 i32) (result i32 i32))
+    (i32.add)
+  )
+  (func (export "param-break") (result i32)
+    (i32.const 1)
+    (block (param i32) (result i32)
+      (i32.const 2)
+      (i32.add)
+      (br 0)
+    )
+  )
+  (func (export "params-break") (result i32)
+    (i32.const 1)
+    (i32.const 2)
+    (block (param i32 i32) (result i32)
+      (i32.add)
+      (br 0)
+    )
+  )
+  (func (export "params-id-break") (result i32)
+    (i32.const 1)
+    (i32.const 2)
+    (block (param i32 i32) (result i32 i32) (br 0))
+    (i32.add)
+  )
+
+  (func (export "effects") (result i32)
+    (local i32)
+    (block
+      (local.set 0 (i32.const 1))
+      (local.set 0 (i32.mul (local.get 0) (i32.const 3)))
+      (local.set 0 (i32.sub (local.get 0) (i32.const 5)))
+      (local.set 0 (i32.mul (local.get 0) (i32.const 7)))
+      (br 0)
+      (local.set 0 (i32.mul (local.get 0) (i32.const 100)))
+    )
+    (i32.eq (local.get 0) (i32.const -14))
+  )
+
+  (type $$block-sig-1 (func))
+  (type $$block-sig-2 (func (result i32)))
+  (type $$block-sig-3 (func (param $$x i32)))
+  (type $$block-sig-4 (func (param i32 f64 i32) (result i32 f64 i32)))
+
+  (func (export "type-use")
+    (block (type $$block-sig-1))
+    (block (type $$block-sig-2) (i32.const 0))
+    (block (type $$block-sig-3) (drop))
+    (i32.const 0) (f64.const 0) (i32.const 0)
+    (block (type $$block-sig-4))
+    (drop) (drop) (drop)
+    (block (type $$block-sig-2) (result i32) (i32.const 0))
+    (block (type $$block-sig-3) (param i32) (drop))
+    (i32.const 0) (f64.const 0) (i32.const 0)
+    (block (type $$block-sig-4)
+      (param i32) (param f64 i32) (result i32 f64) (result i32)
+    )
+    (drop) (drop) (drop)
+  )
+)`);
+
+// ./test/core/block.wast:353
+assert_return(() => invoke($0, `empty`, []), []);
+
+// ./test/core/block.wast:354
+assert_return(() => invoke($0, `singular`, []), [value("i32", 7)]);
+
+// ./test/core/block.wast:355
+assert_return(() => invoke($0, `multi`, []), [value("i32", 8)]);
+
+// ./test/core/block.wast:356
+assert_return(() => invoke($0, `nested`, []), [value("i32", 9)]);
+
+// ./test/core/block.wast:357
+assert_return(() => invoke($0, `deep`, []), [value("i32", 150)]);
+
+// ./test/core/block.wast:359
+assert_return(() => invoke($0, `as-select-first`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:360
+assert_return(() => invoke($0, `as-select-mid`, []), [value("i32", 2)]);
+
+// ./test/core/block.wast:361
+assert_return(() => invoke($0, `as-select-last`, []), [value("i32", 2)]);
+
+// ./test/core/block.wast:363
+assert_return(() => invoke($0, `as-loop-first`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:364
+assert_return(() => invoke($0, `as-loop-mid`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:365
+assert_return(() => invoke($0, `as-loop-last`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:367
+assert_return(() => invoke($0, `as-if-condition`, []), []);
+
+// ./test/core/block.wast:368
+assert_return(() => invoke($0, `as-if-then`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:369
+assert_return(() => invoke($0, `as-if-else`, []), [value("i32", 2)]);
+
+// ./test/core/block.wast:371
+assert_return(() => invoke($0, `as-br_if-first`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:372
+assert_return(() => invoke($0, `as-br_if-last`, []), [value("i32", 2)]);
+
+// ./test/core/block.wast:374
+assert_return(() => invoke($0, `as-br_table-first`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:375
+assert_return(() => invoke($0, `as-br_table-last`, []), [value("i32", 2)]);
+
+// ./test/core/block.wast:377
+assert_return(() => invoke($0, `as-call_indirect-first`, []), [
+  value("i32", 1),
+]);
+
+// ./test/core/block.wast:378
+assert_return(() => invoke($0, `as-call_indirect-mid`, []), [value("i32", 2)]);
+
+// ./test/core/block.wast:379
+assert_return(() => invoke($0, `as-call_indirect-last`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:381
+assert_return(() => invoke($0, `as-store-first`, []), []);
+
+// ./test/core/block.wast:382
+assert_return(() => invoke($0, `as-store-last`, []), []);
+
+// ./test/core/block.wast:384
+assert_return(() => invoke($0, `as-memory.grow-value`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:385
+assert_return(() => invoke($0, `as-call-value`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:386
+assert_return(() => invoke($0, `as-return-value`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:387
+assert_return(() => invoke($0, `as-drop-operand`, []), []);
+
+// ./test/core/block.wast:388
+assert_return(() => invoke($0, `as-br-value`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:389
+assert_return(() => invoke($0, `as-local.set-value`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:390
+assert_return(() => invoke($0, `as-local.tee-value`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:391
+assert_return(() => invoke($0, `as-global.set-value`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:392
+assert_return(() => invoke($0, `as-load-operand`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:394
+assert_return(() => invoke($0, `as-unary-operand`, []), [value("i32", 0)]);
+
+// ./test/core/block.wast:395
+assert_return(() => invoke($0, `as-binary-operand`, []), [value("i32", 12)]);
+
+// ./test/core/block.wast:396
+assert_return(() => invoke($0, `as-test-operand`, []), [value("i32", 0)]);
+
+// ./test/core/block.wast:397
+assert_return(() => invoke($0, `as-compare-operand`, []), [value("i32", 0)]);
+
+// ./test/core/block.wast:398
+assert_return(() => invoke($0, `as-binary-operands`, []), [value("i32", 12)]);
+
+// ./test/core/block.wast:399
+assert_return(() => invoke($0, `as-compare-operands`, []), [value("i32", 0)]);
+
+// ./test/core/block.wast:400
+assert_return(() => invoke($0, `as-mixed-operands`, []), [value("i32", 27)]);
+
+// ./test/core/block.wast:402
+assert_return(() => invoke($0, `break-bare`, []), [value("i32", 19)]);
+
+// ./test/core/block.wast:403
+assert_return(() => invoke($0, `break-value`, []), [value("i32", 18)]);
+
+// ./test/core/block.wast:404
+assert_return(() => invoke($0, `break-multi-value`, []), [
+  value("i32", 18),
+  value("i32", -18),
+  value("i64", 18n),
+]);
+
+// ./test/core/block.wast:407
+assert_return(() => invoke($0, `break-repeated`, []), [value("i32", 18)]);
+
+// ./test/core/block.wast:408
+assert_return(() => invoke($0, `break-inner`, []), [value("i32", 15)]);
+
+// ./test/core/block.wast:410
+assert_return(() => invoke($0, `param`, []), [value("i32", 3)]);
+
+// ./test/core/block.wast:411
+assert_return(() => invoke($0, `params`, []), [value("i32", 3)]);
+
+// ./test/core/block.wast:412
+assert_return(() => invoke($0, `params-id`, []), [value("i32", 3)]);
+
+// ./test/core/block.wast:413
+assert_return(() => invoke($0, `param-break`, []), [value("i32", 3)]);
+
+// ./test/core/block.wast:414
+assert_return(() => invoke($0, `params-break`, []), [value("i32", 3)]);
+
+// ./test/core/block.wast:415
+assert_return(() => invoke($0, `params-id-break`, []), [value("i32", 3)]);
+
+// ./test/core/block.wast:417
+assert_return(() => invoke($0, `effects`, []), [value("i32", 1)]);
+
+// ./test/core/block.wast:419
+assert_return(() => invoke($0, `type-use`, []), []);
+
+// ./test/core/block.wast:421
+assert_malformed(
+  () =>
+    instantiate(
+      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (block (type $$sig) (result i32) (param i32))) `,
+    ),
+  `unexpected token`,
+);
+
+// ./test/core/block.wast:428
+assert_malformed(
+  () =>
+    instantiate(
+      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (block (param i32) (type $$sig) (result i32))) `,
+    ),
+  `unexpected token`,
+);
+
+// ./test/core/block.wast:435
+assert_malformed(
+  () =>
+    instantiate(
+      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (block (param i32) (result i32) (type $$sig))) `,
+    ),
+  `unexpected token`,
+);
+
+// ./test/core/block.wast:442
+assert_malformed(
+  () =>
+    instantiate(
+      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (block (result i32) (type $$sig) (param i32))) `,
+    ),
+  `unexpected token`,
+);
+
+// ./test/core/block.wast:449
+assert_malformed(
+  () =>
+    instantiate(
+      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (block (result i32) (param i32) (type $$sig))) `,
+    ),
+  `unexpected token`,
+);
+
+// ./test/core/block.wast:456
+assert_malformed(
+  () => instantiate(`(func (i32.const 0) (block (result i32) (param i32))) `),
+  `unexpected token`,
+);
+
+// ./test/core/block.wast:463
+assert_malformed(
+  () => instantiate(`(func (i32.const 0) (block (param $$x i32) (drop))) `),
+  `unexpected token`,
+);
+
+// ./test/core/block.wast:467
+assert_malformed(
+  () =>
+    instantiate(
+      `(type $$sig (func)) (func (block (type $$sig) (result i32) (i32.const 0)) (unreachable)) `,
+    ),
+  `inline function type`,
+);
+
+// ./test/core/block.wast:474
+assert_malformed(
+  () =>
+    instantiate(
+      `(type $$sig (func (param i32) (result i32))) (func (block (type $$sig) (result i32) (i32.const 0)) (unreachable)) `,
+    ),
+  `inline function type`,
+);
+
+// ./test/core/block.wast:481
+assert_malformed(
+  () =>
+    instantiate(
+      `(type $$sig (func (param i32) (result i32))) (func (i32.const 0) (block (type $$sig) (param i32) (drop)) (unreachable)) `,
+    ),
+  `inline function type`,
+);
+
+// ./test/core/block.wast:488
+assert_malformed(
+  () =>
+    instantiate(
+      `(type $$sig (func (param i32 i32) (result i32))) (func (i32.const 0) (block (type $$sig) (param i32) (result i32)) (unreachable)) `,
+    ),
+  `inline function type`,
+);
+
+// ./test/core/block.wast:496
+assert_invalid(() =>
+  instantiate(`(module
+    (type $$sig (func))
+    (func (block (type $$sig) (i32.const 0)))
+  )`), `type mismatch`);
+
+// ./test/core/block.wast:504
+assert_invalid(
+  () => instantiate(`(module (func $$type-empty-i32 (result i32) (block)))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:508
+assert_invalid(
+  () => instantiate(`(module (func $$type-empty-i64 (result i64) (block)))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:512
+assert_invalid(
+  () => instantiate(`(module (func $$type-empty-f32 (result f32) (block)))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:516
+assert_invalid(
+  () => instantiate(`(module (func $$type-empty-f64 (result f64) (block)))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:521
+assert_invalid(() =>
+  instantiate(`(module (func $$type-value-i32-vs-void
+    (block (i32.const 1))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:527
+assert_invalid(() =>
+  instantiate(`(module (func $$type-value-i64-vs-void
+    (block (i64.const 1))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:533
+assert_invalid(() =>
+  instantiate(`(module (func $$type-value-f32-vs-void
+    (block (f32.const 1.0))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:539
+assert_invalid(() =>
+  instantiate(`(module (func $$type-value-f64-vs-void
+    (block (f64.const 1.0))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:545
+assert_invalid(() =>
+  instantiate(`(module (func $$type-value-nums-vs-void
+    (block (i32.const 1) (i32.const 2))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:551
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-empty-vs-i32 (result i32)
+    (block (result i32))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:557
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-empty-vs-i64 (result i64)
+    (block (result i64))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:563
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-empty-vs-f32 (result f32)
+    (block (result f32))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:569
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-empty-vs-f64 (result f64)
+    (block (result f64))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:575
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-empty-vs-nums (result i32 i32)
+    (block (result i32 i32))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:582
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-value-empty-in-block
+      (i32.const 0)
+      (block (block (result i32)) (drop))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/block.wast:591
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-value-empty-in-loop
+      (i32.const 0)
+      (loop (block (result i32)) (drop))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/block.wast:600
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-value-empty-in-then
+      (i32.const 0) (i32.const 0)
+      (if (then (block (result i32)) (drop)))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/block.wast:610
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-void-vs-i32 (result i32)
+    (block (result i32) (nop))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:616
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-void-vs-i64 (result i64)
+    (block (result i64) (nop))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:622
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-void-vs-f32 (result f32)
+    (block (result f32) (nop))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:628
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-void-vs-f64 (result f64)
+    (block (result f64) (nop))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:634
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-void-vs-nums (result i32 i32)
+    (block (result i32 i32) (nop))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:640
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-i32-vs-i64 (result i32)
+    (block (result i32) (i64.const 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:646
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-i32-vs-f32 (result i32)
+    (block (result i32) (f32.const 0.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:652
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-i32-vs-f64 (result i32)
+    (block (result i32) (f64.const 0.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:658
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-i64-vs-i32 (result i64)
+    (block (result i64) (i32.const 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:664
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-i64-vs-f32 (result i64)
+    (block (result i64) (f32.const 0.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:670
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-i64-vs-f64 (result i64)
+    (block (result i64) (f64.const 0.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:676
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-f32-vs-i32 (result f32)
+    (block (result f32) (i32.const 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:682
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-f32-vs-i64 (result f32)
+    (block (result f32) (i64.const 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:688
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-f32-vs-f64 (result f32)
+    (block (result f32) (f64.const 0.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:694
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-f64-vs-i32 (result f64)
+    (block (result f64) (i32.const 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:700
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-f64-vs-i64 (result f64)
+    (block (result f64) (i64.const 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:706
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-f64-vs-f32 (result f32)
+    (block (result f64) (f32.const 0.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:712
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-num-vs-nums (result i32 i32)
+    (block (result i32 i32) (i32.const 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:718
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-partial-vs-nums (result i32 i32)
+    (i32.const 1) (block (result i32 i32) (i32.const 2))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:724
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-value-nums-vs-num (result i32)
+    (block (result i32) (i32.const 1) (i32.const 2))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:731
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-i32-i64 (result i32)
+    (block (result i64) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:737
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-i32-f32 (result i32)
+    (block (result f32) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:743
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-i32-f64 (result i32)
+    (block (result f64) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:749
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-i64-i32 (result i64)
+    (block (result i32) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:755
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-i64-f32 (result i64)
+    (block (result f32) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:761
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-i64-f64 (result i64)
+    (block (result f64) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:767
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-f32-i32 (result f32)
+    (block (result i32) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:773
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-f32-i64 (result f32)
+    (block (result i64) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:779
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-f32-f64 (result f32)
+    (block (result f64) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:785
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-f64-i32 (result f64)
+    (block (result i32) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:791
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-f64-i64 (result f64)
+    (block (result i64) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:797
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-value-unreached-select-f64-f32 (result f64)
+    (block (result f32) (select (unreachable) (unreachable) (unreachable)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:804
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-last-void-vs-i32 (result i32)
+    (block (result i32) (br 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:810
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-last-void-vs-i64 (result i64)
+    (block (result i64) (br 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:816
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-last-void-vs-f32 (result f32)
+    (block (result f32) (br 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:822
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-last-void-vs-f64 (result f64)
+    (block (result f64) (br 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:828
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-last-void-vs-nums (result i32 i32)
+    (block (result i32 i32) (br 0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:835
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-empty-vs-i32 (result i32)
+    (block (result i32) (br 0) (i32.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:841
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-empty-vs-i64 (result i64)
+    (block (result i64) (br 0) (i64.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:847
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-empty-vs-f32 (result f32)
+    (block (result f32) (br 0) (f32.const 1.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:853
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-empty-vs-f64 (result f64)
+    (block (result f64) (br 0) (f64.const 1.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:859
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-empty-vs-nums (result i32 i32)
+    (block (result i32 i32) (br 0) (i32.const 1) (i32.const 2))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:866
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-void-vs-i32 (result i32)
+    (block (result i32) (br 0 (nop)) (i32.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:872
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-void-vs-i64 (result i64)
+    (block (result i64) (br 0 (nop)) (i64.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:878
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-void-vs-f32 (result f32)
+    (block (result f32) (br 0 (nop)) (f32.const 1.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:884
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-void-vs-f64 (result f64)
+    (block (result f64) (br 0 (nop)) (f64.const 1.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:891
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-i32-vs-i64 (result i32)
+    (block (result i32) (br 0 (i64.const 1)) (i32.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:897
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-i32-vs-f32 (result i32)
+    (block (result i32) (br 0 (f32.const 1.0)) (i32.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:903
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-i32-vs-f64 (result i32)
+    (block (result i32) (br 0 (f64.const 1.0)) (i32.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:909
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-i64-vs-i32 (result i64)
+    (block (result i64) (br 0 (i32.const 1)) (i64.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:915
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-i64-vs-f32 (result i64)
+    (block (result i64) (br 0 (f32.const 1.0)) (i64.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:921
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-i64-vs-f64 (result i64)
+    (block (result i64) (br 0 (f64.const 1.0)) (i64.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:927
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-f32-vs-i32 (result f32)
+    (block (result f32) (br 0 (i32.const 1)) (f32.const 1.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:933
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-f32-vs-i64 (result f32)
+    (block (result f32) (br 0 (i64.const 1)) (f32.const 1.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:939
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-f32-vs-f64 (result f32)
+    (block (result f32) (br 0 (f64.const 1.0)) (f32.const 1.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:945
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-f64-vs-i32 (result f64)
+    (block (result i64) (br 0 (i32.const 1)) (f64.const 1.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:951
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-f64-vs-i64 (result f64)
+    (block (result f64) (br 0 (i64.const 1)) (f64.const 1.0))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:957
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-f64-vs-f32 (result f64)
+    (block (result f64) (br 0 (f32.const 1.0)) (f64.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:963
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-num-vs-nums (result i32 i32)
+    (block (result i32 i32) (br 0 (i32.const 0)) (i32.const 1) (i32.const 2))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:969
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-partial-vs-nums (result i32 i32)
+    (i32.const 1) (block (result i32 i32) (br 0 (i32.const 0)) (i32.const 2))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:976
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-void-vs-i32 (result i32)
+    (block (result i32) (br 0 (nop)) (br 0 (i32.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:982
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-void-vs-i64 (result i64)
+    (block (result i64) (br 0 (nop)) (br 0 (i64.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:988
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-void-vs-f32 (result f32)
+    (block (result f32) (br 0 (nop)) (br 0 (f32.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:994
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-void-vs-f64 (result f64)
+    (block (result f64) (br 0 (nop)) (br 0 (f64.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1000
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-void-vs-nums (result i32 i32)
+    (block (result i32 i32) (br 0 (nop)) (br 0 (i32.const 1) (i32.const 2)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1007
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-i32-vs-i64 (result i32)
+    (block (result i32) (br 0 (i64.const 1)) (br 0 (i32.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1013
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-i32-vs-f32 (result i32)
+    (block (result i32) (br 0 (f32.const 1.0)) (br 0 (i32.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1019
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-i32-vs-f64 (result i32)
+    (block (result i32) (br 0 (f64.const 1.0)) (br 0 (i32.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1025
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-i64-vs-i32 (result i64)
+    (block (result i64) (br 0 (i32.const 1)) (br 0 (i64.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1031
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-i64-vs-f32 (result i64)
+    (block (result i64) (br 0 (f32.const 1.0)) (br 0 (i64.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1037
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-i64-vs-f64 (result i64)
+    (block (result i64) (br 0 (f64.const 1.0)) (br 0 (i64.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1043
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-f32-vs-i32 (result f32)
+    (block (result f32) (br 0 (i32.const 1)) (br 0 (f32.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1049
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-f32-vs-i64 (result f32)
+    (block (result f32) (br 0 (i64.const 1)) (br 0 (f32.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1055
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-f32-vs-f64 (result f32)
+    (block (result f32) (br 0 (f64.const 1.0)) (br 0 (f32.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1061
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-f64-vs-i32 (result f64)
+    (block (result f64) (br 0 (i32.const 1)) (br 0 (f64.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1067
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-f64-vs-i64 (result f64)
+    (block (result f64) (br 0 (i64.const 1)) (br 0 (f64.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1073
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-f64-vs-f32 (result f64)
+    (block (result f64) (br 0 (f32.const 1.0)) (br 0 (f64.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1079
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-first-num-vs-nums (result i32 i32)
+    (block (result i32 i32) (br 0 (i32.const 0)) (br 0 (i32.const 1) (i32.const 2)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1086
+assert_invalid(() =>
+  instantiate(`(module (func $$type-break-nested-i32-vs-void
+    (block (result i32) (block (result i32) (br 1 (i32.const 1))) (br 0))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1092
+assert_invalid(() =>
+  instantiate(`(module (func $$type-break-nested-i64-vs-void
+    (block (result i64) (block (result i64) (br 1 (i64.const 1))) (br 0))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1098
+assert_invalid(() =>
+  instantiate(`(module (func $$type-break-nested-f32-vs-void
+    (block (result f32) (block (result f32) (br 1 (f32.const 1.0))) (br 0))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1104
+assert_invalid(() =>
+  instantiate(`(module (func $$type-break-nested-f64-vs-void
+    (block (result f64) (block (result f64) (br 1 (f64.const 1.0))) (br 0))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1110
+assert_invalid(() =>
+  instantiate(`(module (func $$type-break-nested-nums-vs-void
+    (block (result i32 i32) (block (result i32 i32) (br 1 (i32.const 1) (i32.const 2))) (br 0))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1117
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-empty-vs-i32 (result i32)
+    (block (result i32) (block (br 1)) (br 0 (i32.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1123
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-empty-vs-i64 (result i64)
+    (block (result i64) (block (br 1)) (br 0 (i64.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1129
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-empty-vs-f32 (result f32)
+    (block (result f32) (block (br 1)) (br 0 (f32.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1135
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-empty-vs-f64 (result f64)
+    (block (result f64) (block (br 1)) (br 0 (f64.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1141
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-break-nested-empty-vs-nums (result i32 i32)
+    (block (result i32 i32) (block (br 1)) (br 0 (i32.const 1) (i32.const 2)))
+  ))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1148
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-void-vs-i32 (result i32)
+    (block (result i32) (block (result i32) (br 1 (nop))) (br 0 (i32.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1154
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-void-vs-i64 (result i64)
+    (block (result i64) (block (result i64) (br 1 (nop))) (br 0 (i64.const 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1160
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-void-vs-f32 (result f32)
+    (block (result f32) (block (result f32) (br 1 (nop))) (br 0 (f32.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1166
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-void-vs-f64 (result f64)
+    (block (result f64) (block (result f64) (br 1 (nop))) (br 0 (f64.const 1.0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1172
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-void-vs-nums (result i32 i32)
+    (block (result i32 i32) (block (result i32 i32) (br 1 (nop))) (br 0 (i32.const 1) (i32.const 2)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1179
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-i32-vs-i64 (result i32)
+    (block (result i32)
+      (block (result i32) (br 1 (i64.const 1))) (br 0 (i32.const 1))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1187
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-i32-vs-f32 (result i32)
+    (block (result i32)
+      (block (result i32) (br 1 (f32.const 1.0))) (br 0 (i32.const 1))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1195
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-i32-vs-f64 (result i32)
+    (block (result i32)
+      (block (result i32) (br 1 (f64.const 1.0))) (br 0 (i32.const 1))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1203
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-i64-vs-i32 (result i64)
+    (block (result i64)
+      (block (result i64) (br 1 (i32.const 1))) (br 0 (i64.const 1))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1211
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-i64-vs-f32 (result i64)
+    (block (result i64)
+      (block (result i64) (br 1 (f32.const 1.0))) (br 0 (i64.const 1))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1219
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-i64-vs-f64 (result i64)
+    (block (result i64)
+      (block (result i64) (br 1 (f64.const 1.0))) (br 0 (i64.const 1))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1227
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-f32-vs-i32 (result f32)
+    (block (result f32)
+      (block (result f32) (br 1 (i32.const 1))) (br 0 (f32.const 1.0))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1235
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-f32-vs-i64 (result f32)
+    (block (result f32)
+      (block (result f32) (br 1 (i64.const 1))) (br 0 (f32.const 1.0))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1243
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-f32-vs-f64 (result f32)
+    (block (result f32)
+      (block (result f32) (br 1 (f64.const 1.0))) (br 0 (f32.const 1.0))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1251
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-f64-vs-i32 (result f64)
+    (block (result f64)
+      (block (result f64) (br 1 (i32.const 1))) (br 0 (f64.const 1.0))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1259
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-f64-vs-i64 (result f64)
+    (block (result f64)
+      (block (result f64) (br 1 (i64.const 1))) (br 0 (f64.const 1.0))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1267
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-f64-vs-f32 (result f64)
+    (block (result f64)
+      (block (result f64) (br 1 (f32.const 1.0))) (br 0 (f64.const 1.0))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1275
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-nested-num-vs-nums (result i32 i32)
+    (block (result i32 i32)
+      (block (result i32 i32) (br 1 (i32.const 0))) (br 0 (i32.const 1) (i32.const 2))
+    )
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1284
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-empty-vs-i32 (result i32)
+    (i32.ctz (block (br 0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1290
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-empty-vs-i64 (result i64)
+    (i64.ctz (block (br 0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1296
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-empty-vs-f32 (result f32)
+    (f32.floor (block (br 0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1302
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-empty-vs-f64 (result f64)
+    (f64.floor (block (br 0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1308
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-empty-vs-nums (result i32)
+    (i32.add (block (br 0)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1315
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-void-vs-i32 (result i32)
+    (i32.ctz (block (br 0 (nop))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1321
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-void-vs-i64 (result i64)
+    (i64.ctz (block (br 0 (nop))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1327
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-void-vs-f32 (result f32)
+    (f32.floor (block (br 0 (nop))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1333
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-void-vs-f64 (result f64)
+    (f64.floor (block (br 0 (nop))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1339
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-void-vs-nums (result i32)
+    (i32.add (block (br 0 (nop))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1346
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-i32-vs-i64 (result i32)
+    (i64.ctz (block (br 0 (i64.const 9))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1352
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-i32-vs-f32 (result i32)
+    (f32.floor (block (br 0 (f32.const 9.0))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1358
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-i32-vs-f64 (result i32)
+    (f64.floor (block (br 0 (f64.const 9.0))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1364
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-i64-vs-i32 (result i64)
+    (i32.ctz (block (br 0 (i32.const 9))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1370
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-i64-vs-f32 (result i64)
+    (f32.floor (block (br 0 (f32.const 9.0))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1376
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-i64-vs-f64 (result i64)
+    (f64.floor (block (br 0 (f64.const 9.0))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1382
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-f32-vs-i32 (result f32)
+    (i32.ctz (block (br 0 (i32.const 9))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1388
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-f32-vs-i64 (result f32)
+    (i64.ctz (block (br 0 (i64.const 9))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1394
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-f32-vs-f64 (result f32)
+    (f64.floor (block (br 0 (f64.const 9.0))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1400
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-f64-vs-i32 (result f64)
+    (i32.ctz (block (br 0 (i32.const 9))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1406
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-f64-vs-i64 (result f64)
+    (i64.ctz (block (br 0 (i64.const 9))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1412
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-f64-vs-f32 (result f64)
+    (f32.floor (block (br 0 (f32.const 9.0))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1418
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-break-operand-num-vs-nums (result i32)
+    (i32.add (block (br 0 (i64.const 9) (i32.const 10))))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/block.wast:1425
+assert_invalid(() =>
+  instantiate(`(module (func $$type-param-void-vs-num
+    (block (param i32) (drop))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1431
+assert_invalid(() =>
+  instantiate(`(module (func $$type-param-void-vs-nums
+    (block (param i32 f64) (drop) (drop))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1437
+assert_invalid(() =>
+  instantiate(`(module (func $$type-param-num-vs-num
+    (f32.const 0) (block (param i32) (drop))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1443
+assert_invalid(() =>
+  instantiate(`(module (func $$type-param-num-vs-nums
+    (f32.const 0) (block (param f32 i32) (drop) (drop))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1449
+assert_invalid(() =>
+  instantiate(`(module (func $$type-param-nested-void-vs-num
+    (block (block (param i32) (drop)))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1455
+assert_invalid(() =>
+  instantiate(`(module (func $$type-param-void-vs-nums
+    (block (block (param i32 f64) (drop) (drop)))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1461
+assert_invalid(() =>
+  instantiate(`(module (func $$type-param-num-vs-num
+    (block (f32.const 0) (block (param i32) (drop)))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1467
+assert_invalid(() =>
+  instantiate(`(module (func $$type-param-num-vs-nums
+    (block (f32.const 0) (block (param f32 i32) (drop) (drop)))
+  ))`), `type mismatch`);
+
+// ./test/core/block.wast:1474
+assert_malformed(
+  () =>
+    instantiate(`(func (param i32) (result i32) block (param $$x i32) end) `),
+  `unexpected token`,
+);
+
+// ./test/core/block.wast:1478
+assert_malformed(
+  () => instantiate(`(func (param i32) (result i32) (block (param $$x i32))) `),
+  `unexpected token`,
+);
+
+// ./test/core/block.wast:1484
+assert_malformed(
+  () => instantiate(`(func block end $$l) `),
+  `mismatching label`,
+);
+
+// ./test/core/block.wast:1488
+assert_malformed(
+  () => instantiate(`(func block $$a end $$l) `),
+  `mismatching label`,
+);

@@ -1,21 +1,269 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// stack.wast:1
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8d\x80\x80\x80\x00\x03\x60\x01\x7e\x01\x7e\x60\x00\x01\x7f\x60\x00\x00\x03\x89\x80\x80\x80\x00\x08\x00\x00\x00\x00\x00\x01\x02\x01\x06\x86\x80\x80\x80\x00\x01\x7f\x01\x41\x00\x0b\x07\xd7\x80\x80\x80\x00\x06\x08\x66\x61\x63\x2d\x65\x78\x70\x72\x00\x00\x09\x66\x61\x63\x2d\x73\x74\x61\x63\x6b\x00\x01\x0d\x66\x61\x63\x2d\x73\x74\x61\x63\x6b\x2d\x72\x61\x77\x00\x02\x09\x66\x61\x63\x2d\x6d\x69\x78\x65\x64\x00\x03\x0d\x66\x61\x63\x2d\x6d\x69\x78\x65\x64\x2d\x72\x61\x77\x00\x04\x10\x6e\x6f\x74\x2d\x71\x75\x69\x74\x65\x2d\x61\x2d\x74\x72\x65\x65\x00\x07\x0a\xaf\x82\x80\x80\x00\x08\xaf\x80\x80\x80\x00\x01\x02\x7e\x20\x00\x21\x01\x42\x01\x21\x02\x02\x40\x03\x40\x20\x01\x42\x00\x51\x04\x40\x0c\x02\x05\x20\x01\x20\x02\x7e\x21\x02\x20\x01\x42\x01\x7d\x21\x01\x0b\x0c\x00\x0b\x0b\x20\x02\x0b\xaf\x80\x80\x80\x00\x01\x02\x7e\x20\x00\x21\x01\x42\x01\x21\x02\x02\x40\x03\x40\x20\x01\x42\x00\x51\x04\x40\x0c\x02\x05\x20\x01\x20\x02\x7e\x21\x02\x20\x01\x42\x01\x7d\x21\x01\x0b\x0c\x00\x0b\x0b\x20\x02\x0b\xaf\x80\x80\x80\x00\x01\x02\x7e\x20\x00\x21\x01\x42\x01\x21\x02\x02\x40\x03\x40\x20\x01\x42\x00\x51\x04\x40\x0c\x02\x05\x20\x01\x20\x02\x7e\x21\x02\x20\x01\x42\x01\x7d\x21\x01\x0b\x0c\x00\x0b\x0b\x20\x02\x0b\xaf\x80\x80\x80\x00\x01\x02\x7e\x20\x00\x21\x01\x42\x01\x21\x02\x02\x40\x03\x40\x20\x01\x42\x00\x51\x04\x40\x0c\x02\x05\x20\x01\x20\x02\x7e\x21\x02\x20\x01\x42\x01\x7d\x21\x01\x0b\x0c\x00\x0b\x0b\x20\x02\x0b\xaf\x80\x80\x80\x00\x01\x02\x7e\x20\x00\x21\x01\x42\x01\x21\x02\x02\x40\x03\x40\x20\x01\x42\x00\x51\x04\x40\x0c\x02\x05\x20\x01\x20\x02\x7e\x21\x02\x20\x01\x42\x01\x7d\x21\x01\x0b\x0c\x00\x0b\x0b\x20\x02\x0b\x8d\x80\x80\x80\x00\x01\x01\x7f\x41\x01\x23\x00\x6a\x24\x00\x23\x00\x0b\x85\x80\x80\x80\x00\x00\x10\x05\x1a\x0b\x89\x80\x80\x80\x00\x00\x10\x05\x10\x05\x10\x06\x6a\x0b");
+// ./test/core/stack.wast
 
-// stack.wast:146
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x8f\x80\x80\x80\x00\x01\x02\x24\x31\x08\x66\x61\x63\x2d\x65\x78\x70\x72\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\xa2\x80\x80\x80\x00\x01\x9c\x80\x80\x80\x00\x00\x02\x40\x42\x19\x10\x00\x01\x42\x80\x80\x80\xde\x87\x92\xec\xcf\xe1\x00\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "fac-expr", [int64("25")]), int64("7_034_535_277_573_963_776"))
+// ./test/core/stack.wast:1
+let $0 = instantiate(`(module
+  (func (export "fac-expr") (param $$n i64) (result i64)
+    (local $$i i64)
+    (local $$res i64)
+    (local.set $$i (local.get $$n))
+    (local.set $$res (i64.const 1))
+    (block $$done
+      (loop $$loop
+        (if
+          (i64.eq (local.get $$i) (i64.const 0))
+          (then (br $$done))
+          (else
+            (local.set $$res (i64.mul (local.get $$i) (local.get $$res)))
+            (local.set $$i (i64.sub (local.get $$i) (i64.const 1)))
+          )
+        )
+        (br $$loop)
+      )
+    )
+    (local.get $$res)
+  )
 
-// stack.wast:147
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x90\x80\x80\x80\x00\x01\x02\x24\x31\x09\x66\x61\x63\x2d\x73\x74\x61\x63\x6b\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\xa2\x80\x80\x80\x00\x01\x9c\x80\x80\x80\x00\x00\x02\x40\x42\x19\x10\x00\x01\x42\x80\x80\x80\xde\x87\x92\xec\xcf\xe1\x00\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "fac-stack", [int64("25")]), int64("7_034_535_277_573_963_776"))
+  (func (export "fac-stack") (param $$n i64) (result i64)
+    (local $$i i64)
+    (local $$res i64)
+    (local.get $$n)
+    (local.set $$i)
+    (i64.const 1)
+    (local.set $$res)
+    (block $$done
+      (loop $$loop
+        (local.get $$i)
+        (i64.const 0)
+        (i64.eq)
+        (if
+          (then (br $$done))
+          (else
+            (local.get $$i)
+            (local.get $$res)
+            (i64.mul)
+            (local.set $$res)
+            (local.get $$i)
+            (i64.const 1)
+            (i64.sub)
+            (local.set $$i)
+          )
+        )
+        (br $$loop)
+      )
+    )
+    (local.get $$res)
+  )
 
-// stack.wast:148
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x90\x80\x80\x80\x00\x01\x02\x24\x31\x09\x66\x61\x63\x2d\x6d\x69\x78\x65\x64\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\xa2\x80\x80\x80\x00\x01\x9c\x80\x80\x80\x00\x00\x02\x40\x42\x19\x10\x00\x01\x42\x80\x80\x80\xde\x87\x92\xec\xcf\xe1\x00\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "fac-mixed", [int64("25")]), int64("7_034_535_277_573_963_776"))
+  (func (export "fac-stack-raw") (param $$n i64) (result i64)
+    (local $$i i64)
+    (local $$res i64)
+    local.get $$n
+    local.set $$i
+    i64.const 1
+    local.set $$res
+    block $$done
+      loop $$loop
+        local.get $$i
+        i64.const 0
+        i64.eq
+        if $$body
+          br $$done
+        else $$body
+          local.get $$i
+          local.get $$res
+          i64.mul
+          local.set $$res
+          local.get $$i
+          i64.const 1
+          i64.sub
+          local.set $$i
+        end $$body
+        br $$loop
+      end $$loop
+    end $$done
+    local.get $$res
+  )
 
-// stack.wast:150
-assert_return(() => call($1, "not-quite-a-tree", []), 3);
+  (func (export "fac-mixed") (param $$n i64) (result i64)
+    (local $$i i64)
+    (local $$res i64)
+    (local.set $$i (local.get $$n))
+    (local.set $$res (i64.const 1))
+    (block $$done
+      (loop $$loop
+        (i64.eq (local.get $$i) (i64.const 0))
+        (if
+          (then (br $$done))
+          (else
+            (i64.mul (local.get $$i) (local.get $$res))
+            (local.set $$res)
+            (i64.sub (local.get $$i) (i64.const 1))
+            (local.set $$i)
+          )
+        )
+        (br $$loop)
+      )
+    )
+    (local.get $$res)
+  )
 
-// stack.wast:151
-assert_return(() => call($1, "not-quite-a-tree", []), 9);
+  (func (export "fac-mixed-raw") (param $$n i64) (result i64)
+    (local $$i i64)
+    (local $$res i64)
+    (local.set $$i (local.get $$n))
+    (local.set $$res (i64.const 1))
+    block $$done
+      loop $$loop
+        (i64.eq (local.get $$i) (i64.const 0))
+        if
+          br $$done
+        else
+          (i64.mul (local.get $$i) (local.get $$res))
+          local.set $$res
+          (i64.sub (local.get $$i) (i64.const 1))
+          local.set $$i
+        end
+        br $$loop
+      end
+    end
+    local.get $$res
+  )
 
-// stack.wast:156
-let $2 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8c\x80\x80\x80\x00\x03\x60\x00\x00\x60\x00\x01\x7f\x60\x01\x7f\x00\x03\x82\x80\x80\x80\x00\x01\x00\x04\x84\x80\x80\x80\x00\x01\x70\x00\x01\x0a\xb7\x83\x80\x80\x00\x01\xb1\x83\x80\x80\x00\x00\x02\x40\x41\x00\x11\x00\x00\x0b\x03\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x05\x41\x00\x11\x00\x00\x0b\x02\x40\x41\x00\x11\x00\x00\x0b\x03\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x05\x41\x00\x11\x00\x00\x0b\x02\x40\x41\x00\x41\x00\x11\x02\x00\x0b\x03\x40\x41\x00\x41\x00\x11\x02\x00\x0b\x41\x00\x04\x40\x41\x00\x41\x00\x11\x02\x00\x0b\x41\x00\x04\x40\x41\x00\x41\x00\x11\x02\x00\x05\x41\x00\x41\x00\x11\x02\x00\x0b\x02\x7f\x41\x00\x11\x01\x00\x0b\x1a\x03\x7f\x41\x00\x11\x01\x00\x0b\x1a\x41\x00\x04\x7f\x41\x00\x11\x01\x00\x05\x41\x00\x11\x01\x00\x0b\x1a\x02\x40\x41\x00\x11\x00\x00\x0b\x03\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x05\x41\x00\x11\x00\x00\x0b\x02\x40\x41\x00\x11\x00\x00\x0b\x03\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x05\x41\x00\x11\x00\x00\x0b\x02\x40\x41\x00\x11\x00\x00\x0b\x03\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x05\x41\x00\x11\x00\x00\x0b\x02\x40\x41\x00\x41\x00\x11\x02\x00\x0b\x03\x40\x41\x00\x41\x00\x11\x02\x00\x0b\x41\x00\x04\x40\x41\x00\x41\x00\x11\x02\x00\x0b\x41\x00\x04\x40\x41\x00\x41\x00\x11\x02\x00\x05\x41\x00\x41\x00\x11\x02\x00\x0b\x02\x7f\x41\x00\x11\x01\x00\x0b\x1a\x03\x7f\x41\x00\x11\x01\x00\x0b\x1a\x41\x00\x04\x7f\x41\x00\x11\x01\x00\x05\x41\x00\x11\x01\x00\x0b\x1a\x02\x40\x41\x00\x11\x00\x00\x0b\x03\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x0b\x41\x00\x04\x40\x41\x00\x11\x00\x00\x05\x41\x00\x11\x00\x00\x0b\x41\x00\x11\x00\x00\x0b");
+  (global $$temp (mut i32) (i32.const 0))
+  (func $$add_one_to_global (result i32)
+    (local i32)
+    (global.set $$temp (i32.add (i32.const 1) (global.get $$temp)))
+    (global.get $$temp)
+  )
+  (func $$add_one_to_global_and_drop
+    (drop (call $$add_one_to_global))
+  )
+  (func (export "not-quite-a-tree") (result i32)
+    call $$add_one_to_global
+    call $$add_one_to_global
+    call $$add_one_to_global_and_drop
+    i32.add
+  )
+)`);
+
+// ./test/core/stack.wast:146
+assert_return(() => invoke($0, `fac-expr`, [25n]), [
+  value("i64", 7034535277573963776n),
+]);
+
+// ./test/core/stack.wast:147
+assert_return(() => invoke($0, `fac-stack`, [25n]), [
+  value("i64", 7034535277573963776n),
+]);
+
+// ./test/core/stack.wast:148
+assert_return(() => invoke($0, `fac-mixed`, [25n]), [
+  value("i64", 7034535277573963776n),
+]);
+
+// ./test/core/stack.wast:150
+assert_return(() => invoke($0, `not-quite-a-tree`, []), [value("i32", 3)]);
+
+// ./test/core/stack.wast:151
+assert_return(() => invoke($0, `not-quite-a-tree`, []), [value("i32", 9)]);
+
+// ./test/core/stack.wast:156
+let $1 = instantiate(`(module
+  (type $$proc (func))
+  (table 1 funcref)
+
+  (func
+    (block i32.const 0 call_indirect)
+    (loop i32.const 0 call_indirect)
+    (if (i32.const 0) (then i32.const 0 call_indirect))
+    (if (i32.const 0)
+      (then i32.const 0 call_indirect)
+      (else i32.const 0 call_indirect)
+    )
+    (block i32.const 0 call_indirect (type $$proc))
+    (loop i32.const 0 call_indirect (type $$proc))
+    (if (i32.const 0) (then i32.const 0 call_indirect (type $$proc)))
+    (if (i32.const 0)
+      (then i32.const 0 call_indirect (type $$proc))
+      (else i32.const 0 call_indirect (type $$proc))
+    )
+    (block i32.const 0 i32.const 0 call_indirect (param i32))
+    (loop i32.const 0 i32.const 0 call_indirect (param i32))
+    (if (i32.const 0) (then i32.const 0 i32.const 0 call_indirect (param i32)))
+    (if (i32.const 0)
+      (then i32.const 0 i32.const 0 call_indirect (param i32))
+      (else i32.const 0 i32.const 0 call_indirect (param i32))
+    )
+    (block (result i32) i32.const 0 call_indirect (result i32)) (drop)
+    (loop (result i32) i32.const 0 call_indirect (result i32)) (drop)
+    (if (result i32) (i32.const 0)
+      (then i32.const 0 call_indirect (result i32))
+      (else i32.const 0 call_indirect (result i32))
+    ) (drop)
+    (block i32.const 0 call_indirect (type $$proc) (param) (result))
+    (loop i32.const 0 call_indirect (type $$proc) (param) (result))
+    (if (i32.const 0)
+      (then i32.const 0 call_indirect (type $$proc) (param) (result))
+    )
+    (if (i32.const 0)
+      (then i32.const 0 call_indirect (type $$proc) (param) (param) (result))
+      (else i32.const 0 call_indirect (type $$proc) (param) (result) (result))
+    )
+
+    block i32.const 0 call_indirect end
+    loop i32.const 0 call_indirect end
+    i32.const 0 if i32.const 0 call_indirect end
+    i32.const 0 if i32.const 0 call_indirect else i32.const 0 call_indirect end
+    block i32.const 0 call_indirect (type $$proc) end
+    loop i32.const 0 call_indirect (type $$proc) end
+    i32.const 0 if i32.const 0 call_indirect (type $$proc) end
+    i32.const 0
+    if
+      i32.const 0 call_indirect (type $$proc)
+    else
+      i32.const 0 call_indirect (type $$proc)
+    end
+    block i32.const 0 i32.const 0 call_indirect (param i32) end
+    loop i32.const 0 i32.const 0 call_indirect (param i32) end
+    i32.const 0 if i32.const 0 i32.const 0 call_indirect (param i32) end
+    i32.const 0
+    if
+      i32.const 0 i32.const 0 call_indirect (param i32)
+    else
+      i32.const 0 i32.const 0 call_indirect (param i32)
+    end
+    block (result i32) i32.const 0 call_indirect (result i32) end drop
+    loop (result i32) i32.const 0 call_indirect (result i32) end drop
+    i32.const 0
+    if (result i32)
+      i32.const 0 call_indirect (result i32)
+    else
+      i32.const 0 call_indirect (result i32)
+    end drop
+    block i32.const 0 call_indirect (type $$proc) (param) (result) end
+    loop i32.const 0 call_indirect (type $$proc) (param) (result) end
+    i32.const 0 if i32.const 0 call_indirect (type $$proc) (param) (result) end
+    i32.const 0
+    if
+      i32.const 0 call_indirect (type $$proc) (param) (result)
+    else
+      i32.const 0 call_indirect (type $$proc) (param) (param) (result) (result)
+    end
+    i32.const 0 call_indirect
+  )
+)`);

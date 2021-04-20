@@ -1,87 +1,409 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// labels.wast:1
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8a\x80\x80\x80\x00\x02\x60\x00\x01\x7f\x60\x01\x7f\x01\x7f\x03\x93\x80\x80\x80\x00\x12\x00\x00\x00\x00\x01\x00\x00\x00\x00\x01\x01\x00\x00\x00\x00\x00\x00\x00\x07\x9a\x81\x80\x80\x00\x12\x05\x62\x6c\x6f\x63\x6b\x00\x00\x05\x6c\x6f\x6f\x70\x31\x00\x01\x05\x6c\x6f\x6f\x70\x32\x00\x02\x05\x6c\x6f\x6f\x70\x33\x00\x03\x05\x6c\x6f\x6f\x70\x34\x00\x04\x05\x6c\x6f\x6f\x70\x35\x00\x05\x05\x6c\x6f\x6f\x70\x36\x00\x06\x02\x69\x66\x00\x07\x03\x69\x66\x32\x00\x08\x06\x73\x77\x69\x74\x63\x68\x00\x09\x06\x72\x65\x74\x75\x72\x6e\x00\x0a\x06\x62\x72\x5f\x69\x66\x30\x00\x0b\x06\x62\x72\x5f\x69\x66\x31\x00\x0c\x06\x62\x72\x5f\x69\x66\x32\x00\x0d\x06\x62\x72\x5f\x69\x66\x33\x00\x0e\x02\x62\x72\x00\x0f\x09\x73\x68\x61\x64\x6f\x77\x69\x6e\x67\x00\x10\x0c\x72\x65\x64\x65\x66\x69\x6e\x69\x74\x69\x6f\x6e\x00\x11\x0a\xc9\x86\x80\x80\x00\x12\x8b\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0c\x00\x41\x00\x0b\x0b\xa3\x80\x80\x80\x00\x01\x01\x7f\x41\x00\x21\x00\x02\x7f\x03\x7f\x20\x00\x41\x01\x6a\x21\x00\x20\x00\x41\x05\x46\x04\x40\x20\x00\x0c\x02\x0b\x0c\x00\x0b\x0b\x0b\xb4\x80\x80\x80\x00\x01\x01\x7f\x41\x00\x21\x00\x02\x7f\x03\x7f\x20\x00\x41\x01\x6a\x21\x00\x20\x00\x41\x05\x46\x04\x40\x0c\x01\x0b\x20\x00\x41\x08\x46\x04\x40\x20\x00\x0c\x02\x0b\x20\x00\x41\x01\x6a\x21\x00\x0c\x00\x0b\x0b\x0b\xa3\x80\x80\x80\x00\x01\x01\x7f\x41\x00\x21\x00\x02\x7f\x03\x7f\x20\x00\x41\x01\x6a\x21\x00\x20\x00\x41\x05\x46\x04\x40\x20\x00\x0c\x02\x0b\x20\x00\x0b\x0b\x0b\xa3\x80\x80\x80\x00\x01\x01\x7f\x41\x01\x21\x01\x02\x7f\x03\x7f\x20\x01\x20\x01\x6a\x21\x01\x20\x01\x20\x00\x4b\x04\x40\x20\x01\x0c\x02\x0b\x0c\x00\x0b\x0b\x0b\x8a\x80\x80\x80\x00\x00\x03\x7f\x41\x01\x0b\x41\x01\x6a\x0b\x8b\x80\x80\x80\x00\x00\x03\x7f\x41\x00\x0d\x00\x41\x03\x0b\x0b\x84\x81\x80\x80\x00\x01\x01\x7f\x41\x00\x21\x00\x02\x40\x41\x01\x04\x40\x0c\x00\x41\x9a\x05\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x41\x01\x04\x40\x0c\x00\x41\x9a\x05\x21\x00\x05\x41\xf8\x06\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x41\x01\x04\x40\x0c\x00\x41\x9a\x05\x21\x00\x05\x41\xf8\x06\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x41\x00\x04\x40\x41\xf8\x06\x21\x00\x05\x0c\x00\x41\x9a\x05\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x41\x00\x04\x40\x41\xf8\x06\x21\x00\x05\x0c\x00\x41\x9a\x05\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x0b\x20\x00\x0b\x84\x81\x80\x80\x00\x01\x01\x7f\x41\x00\x21\x00\x02\x40\x41\x01\x04\x40\x0c\x00\x41\x9a\x05\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x41\x01\x04\x40\x0c\x00\x41\x9a\x05\x21\x00\x05\x41\xf8\x06\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x41\x01\x04\x40\x0c\x00\x41\x9a\x05\x21\x00\x05\x41\xf8\x06\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x41\x00\x04\x40\x41\xf8\x06\x21\x00\x05\x0c\x00\x41\x9a\x05\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x41\x00\x04\x40\x41\xf8\x06\x21\x00\x05\x0c\x00\x41\x9a\x05\x21\x00\x0b\x20\x00\x41\x01\x6a\x21\x00\x0b\x20\x00\x0b\xad\x80\x80\x80\x00\x00\x02\x7f\x41\x0a\x02\x7f\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x20\x00\x0e\x04\x04\x00\x01\x02\x03\x0b\x0b\x41\x02\x0c\x03\x0b\x41\x03\x0c\x03\x0b\x0b\x41\x05\x0b\x6c\x0b\x0b\x98\x80\x80\x80\x00\x00\x02\x40\x02\x40\x02\x40\x20\x00\x0e\x01\x00\x01\x0c\x02\x0b\x41\x00\x0f\x0b\x0b\x41\x02\x0b\xd6\x80\x80\x80\x00\x01\x01\x7f\x41\x00\x21\x00\x02\x7f\x02\x40\x41\x00\x0d\x00\x20\x00\x41\x01\x72\x21\x00\x41\x01\x0d\x00\x20\x00\x41\x02\x72\x21\x00\x0b\x02\x7f\x20\x00\x41\x04\x72\x21\x00\x20\x00\x0b\x41\x00\x0d\x00\x1a\x20\x00\x41\x08\x72\x21\x00\x02\x7f\x20\x00\x41\x10\x72\x21\x00\x20\x00\x0b\x41\x01\x0d\x00\x1a\x20\x00\x41\x20\x72\x21\x00\x20\x00\x0b\x0b\x93\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x41\x01\x0c\x00\x0b\x41\x01\x0d\x00\x1a\x41\x00\x0b\x0b\x98\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x04\x40\x02\x7f\x41\x01\x0c\x00\x0b\x41\x01\x0d\x01\x1a\x0b\x41\x00\x0b\x0b\xa4\x80\x80\x80\x00\x01\x01\x7f\x02\x7f\x02\x7f\x41\x01\x21\x00\x20\x00\x0b\x02\x7f\x41\x02\x21\x00\x20\x00\x0b\x0d\x00\x1a\x41\x00\x0b\x41\x00\x6a\x1a\x20\x00\x0b\xa1\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x04\x40\x02\x7f\x41\x01\x0c\x00\x0b\x0c\x01\x05\x02\x40\x02\x7f\x41\x01\x0c\x00\x0b\x1a\x0b\x0b\x41\x01\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0c\x00\x41\x02\x73\x0b\x0b\x92\x80\x80\x80\x00\x00\x02\x7f\x02\x7f\x41\x02\x0b\x02\x7f\x41\x03\x0c\x00\x0b\x6a\x0b\x0b");
+// ./test/core/labels.wast
 
-// labels.wast:291
-assert_return(() => call($1, "block", []), 1);
+// ./test/core/labels.wast:1
+let $0 = instantiate(`(module
+  (func (export "block") (result i32)
+    (block $$exit (result i32)
+      (br $$exit (i32.const 1))
+      (i32.const 0)
+    )
+  )
 
-// labels.wast:292
-assert_return(() => call($1, "loop1", []), 5);
+  (func (export "loop1") (result i32)
+    (local $$i i32)
+    (local.set $$i (i32.const 0))
+    (block $$exit (result i32)
+      (loop $$cont (result i32)
+        (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+        (if (i32.eq (local.get $$i) (i32.const 5))
+          (then (br $$exit (local.get $$i)))
+        )
+        (br $$cont)
+      )
+    )
+  )
 
-// labels.wast:293
-assert_return(() => call($1, "loop2", []), 8);
+  (func (export "loop2") (result i32)
+    (local $$i i32)
+    (local.set $$i (i32.const 0))
+    (block $$exit (result i32)
+      (loop $$cont (result i32)
+        (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+        (if (i32.eq (local.get $$i) (i32.const 5))
+          (then (br $$cont))
+        )
+        (if (i32.eq (local.get $$i) (i32.const 8))
+          (then (br $$exit (local.get $$i)))
+        )
+        (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+        (br $$cont)
+      )
+    )
+  )
 
-// labels.wast:294
-assert_return(() => call($1, "loop3", []), 1);
+  (func (export "loop3") (result i32)
+    (local $$i i32)
+    (local.set $$i (i32.const 0))
+    (block $$exit (result i32)
+      (loop $$cont (result i32)
+        (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+        (if (i32.eq (local.get $$i) (i32.const 5))
+          (then (br $$exit (local.get $$i)))
+        )
+        (local.get $$i)
+      )
+    )
+  )
 
-// labels.wast:295
-assert_return(() => call($1, "loop4", [8]), 16);
+  (func (export "loop4") (param $$max i32) (result i32)
+    (local $$i i32)
+    (local.set $$i (i32.const 1))
+    (block $$exit (result i32)
+      (loop $$cont (result i32)
+        (local.set $$i (i32.add (local.get $$i) (local.get $$i)))
+        (if (i32.gt_u (local.get $$i) (local.get $$max))
+          (then (br $$exit (local.get $$i)))
+        )
+        (br $$cont)
+      )
+    )
+  )
 
-// labels.wast:296
-assert_return(() => call($1, "loop5", []), 2);
+  (func (export "loop5") (result i32)
+    (i32.add
+      (loop $$l (result i32) (i32.const 1))
+      (i32.const 1)
+    )
+  )
 
-// labels.wast:297
-assert_return(() => call($1, "loop6", []), 3);
+  (func (export "loop6") (result i32)
+    (loop (result i32)
+      (br_if 0 (i32.const 0))
+      (i32.const 3)
+    )
+  )
 
-// labels.wast:298
-assert_return(() => call($1, "if", []), 5);
+  (func (export "if") (result i32)
+    (local $$i i32)
+    (local.set $$i (i32.const 0))
+    (block
+      (if $$l
+        (i32.const 1)
+        (then (br $$l) (local.set $$i (i32.const 666)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+      (if $$l
+        (i32.const 1)
+        (then (br $$l) (local.set $$i (i32.const 666)))
+        (else (local.set $$i (i32.const 888)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+      (if $$l
+        (i32.const 1)
+        (then (br $$l) (local.set $$i (i32.const 666)))
+        (else (local.set $$i (i32.const 888)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+      (if $$l
+        (i32.const 0)
+        (then (local.set $$i (i32.const 888)))
+        (else (br $$l) (local.set $$i (i32.const 666)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+      (if $$l
+        (i32.const 0)
+        (then (local.set $$i (i32.const 888)))
+        (else (br $$l) (local.set $$i (i32.const 666)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+    )
+    (local.get $$i)
+  )
 
-// labels.wast:299
-assert_return(() => call($1, "if2", []), 5);
+  (func (export "if2") (result i32)
+    (local $$i i32)
+    (local.set $$i (i32.const 0))
+    (block
+      (if
+        (i32.const 1)
+        (then (br 0) (local.set $$i (i32.const 666)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+      (if
+        (i32.const 1)
+        (then (br 0) (local.set $$i (i32.const 666)))
+        (else (local.set $$i (i32.const 888)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+      (if
+        (i32.const 1)
+        (then (br 0) (local.set $$i (i32.const 666)))
+        (else (local.set $$i (i32.const 888)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+      (if
+        (i32.const 0)
+        (then (local.set $$i (i32.const 888)))
+        (else (br 0) (local.set $$i (i32.const 666)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+      (if
+        (i32.const 0)
+        (then (local.set $$i (i32.const 888)))
+        (else (br 0) (local.set $$i (i32.const 666)))
+      )
+      (local.set $$i (i32.add (local.get $$i) (i32.const 1)))
+    )
+    (local.get $$i)
+  )
 
-// labels.wast:300
-assert_return(() => call($1, "switch", [0]), 50);
+  (func (export "switch") (param i32) (result i32)
+    (block $$ret (result i32)
+      (i32.mul (i32.const 10)
+        (block $$exit (result i32)
+          (block $$0
+            (block $$default
+              (block $$3
+                (block $$2
+                  (block $$1
+                    (br_table $$0 $$1 $$2 $$3 $$default (local.get 0))
+                  ) ;; 1
+                ) ;; 2
+                (br $$exit (i32.const 2))
+              ) ;; 3
+              (br $$ret (i32.const 3))
+            ) ;; default
+          ) ;; 0
+          (i32.const 5)
+        )
+      )
+    )
+  )
 
-// labels.wast:301
-assert_return(() => call($1, "switch", [1]), 20);
+  (func (export "return") (param i32) (result i32)
+    (block $$default
+      (block $$1
+        (block $$0
+          (br_table $$0 $$1 (local.get 0))
+          (br $$default)
+        ) ;; 0
+        (return (i32.const 0))
+      ) ;; 1
+    ) ;; default
+    (i32.const 2)
+  )
 
-// labels.wast:302
-assert_return(() => call($1, "switch", [2]), 20);
+  (func (export "br_if0") (result i32)
+    (local $$i i32)
+    (local.set $$i (i32.const 0))
+    (block $$outer (result i32)
+      (block $$inner
+        (br_if $$inner (i32.const 0))
+        (local.set $$i (i32.or (local.get $$i) (i32.const 0x1)))
+        (br_if $$inner (i32.const 1))
+        (local.set $$i (i32.or (local.get $$i) (i32.const 0x2)))
+      )
+      (drop (br_if $$outer
+        (block (result i32)
+          (local.set $$i (i32.or (local.get $$i) (i32.const 0x4)))
+          (local.get $$i)
+        )
+        (i32.const 0)
+      ))
+      (local.set $$i (i32.or (local.get $$i) (i32.const 0x8)))
+      (drop (br_if $$outer
+        (block (result i32)
+          (local.set $$i (i32.or (local.get $$i) (i32.const 0x10)))
+          (local.get $$i)
+        )
+        (i32.const 1)
+      ))
+      (local.set $$i (i32.or (local.get $$i) (i32.const 0x20))) (local.get $$i)
+    )
+  )
 
-// labels.wast:303
-assert_return(() => call($1, "switch", [3]), 3);
+  (func (export "br_if1") (result i32)
+    (block $$l0 (result i32)
+      (drop
+        (br_if $$l0
+          (block $$l1 (result i32) (br $$l1 (i32.const 1)))
+          (i32.const 1)
+        )
+      )
+      (i32.const 0)
+    )
+  )
 
-// labels.wast:304
-assert_return(() => call($1, "switch", [4]), 50);
+  (func (export "br_if2") (result i32)
+    (block $$l0 (result i32)
+      (if (i32.const 1)
+        (then
+          (drop
+            (br_if $$l0
+              (block $$l1 (result i32) (br $$l1 (i32.const 1)))
+              (i32.const 1)
+            )
+          )
+        )
+      )
+      (i32.const 0)
+    )
+  )
 
-// labels.wast:305
-assert_return(() => call($1, "switch", [5]), 50);
+  (func (export "br_if3") (result i32)
+    (local $$i1 i32)
+    (drop
+      (i32.add
+        (block $$l0 (result i32)
+          (drop (br_if $$l0
+            (block (result i32) (local.set $$i1 (i32.const 1)) (local.get $$i1))
+            (block (result i32) (local.set $$i1 (i32.const 2)) (local.get $$i1))
+          ))
+          (i32.const 0)
+        )
+        (i32.const 0)
+      )
+    )
+    (local.get $$i1)
+  )
 
-// labels.wast:306
-assert_return(() => call($1, "return", [0]), 0);
+  (func (export "br") (result i32)
+    (block $$l0 (result i32)
+      (if (i32.const 1)
+        (then (br $$l0 (block $$l1 (result i32) (br $$l1 (i32.const 1)))))
+        (else (block (drop (block $$l1 (result i32) (br $$l1 (i32.const 1))))))
+      )
+      (i32.const 1)
+    )
+  )
 
-// labels.wast:307
-assert_return(() => call($1, "return", [1]), 2);
+  (func (export "shadowing") (result i32)
+    (block $$l1 (result i32) (i32.xor (br $$l1 (i32.const 1)) (i32.const 2)))
+  )
 
-// labels.wast:308
-assert_return(() => call($1, "return", [2]), 2);
+  (func (export "redefinition") (result i32)
+    (block $$l1 (result i32)
+      (i32.add
+        (block $$l1 (result i32) (i32.const 2))
+        (block $$l1 (result i32) (br $$l1 (i32.const 3)))
+      )
+    )
+  )
+)`);
 
-// labels.wast:309
-assert_return(() => call($1, "br_if0", []), 29);
+// ./test/core/labels.wast:291
+assert_return(() => invoke($0, `block`, []), [value("i32", 1)]);
 
-// labels.wast:310
-assert_return(() => call($1, "br_if1", []), 1);
+// ./test/core/labels.wast:292
+assert_return(() => invoke($0, `loop1`, []), [value("i32", 5)]);
 
-// labels.wast:311
-assert_return(() => call($1, "br_if2", []), 1);
+// ./test/core/labels.wast:293
+assert_return(() => invoke($0, `loop2`, []), [value("i32", 8)]);
 
-// labels.wast:312
-assert_return(() => call($1, "br_if3", []), 2);
+// ./test/core/labels.wast:294
+assert_return(() => invoke($0, `loop3`, []), [value("i32", 1)]);
 
-// labels.wast:313
-assert_return(() => call($1, "br", []), 1);
+// ./test/core/labels.wast:295
+assert_return(() => invoke($0, `loop4`, [8]), [value("i32", 16)]);
 
-// labels.wast:314
-assert_return(() => call($1, "shadowing", []), 1);
+// ./test/core/labels.wast:296
+assert_return(() => invoke($0, `loop5`, []), [value("i32", 2)]);
 
-// labels.wast:315
-assert_return(() => call($1, "redefinition", []), 5);
+// ./test/core/labels.wast:297
+assert_return(() => invoke($0, `loop6`, []), [value("i32", 3)]);
 
-// labels.wast:317
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x02\x40\x41\x01\x0d\x00\x8c\x01\x0b\x0b");
+// ./test/core/labels.wast:298
+assert_return(() => invoke($0, `if`, []), [value("i32", 5)]);
 
-// labels.wast:321
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x40\x43\x00\x00\x00\x00\x41\x01\x0d\x00\x0b\x0b");
+// ./test/core/labels.wast:299
+assert_return(() => invoke($0, `if2`, []), [value("i32", 5)]);
 
-// labels.wast:325
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x40\x43\x00\x00\x00\x00\x41\x01\x0d\x00\x0b\x0b");
+// ./test/core/labels.wast:300
+assert_return(() => invoke($0, `switch`, [0]), [value("i32", 50)]);
+
+// ./test/core/labels.wast:301
+assert_return(() => invoke($0, `switch`, [1]), [value("i32", 20)]);
+
+// ./test/core/labels.wast:302
+assert_return(() => invoke($0, `switch`, [2]), [value("i32", 20)]);
+
+// ./test/core/labels.wast:303
+assert_return(() => invoke($0, `switch`, [3]), [value("i32", 3)]);
+
+// ./test/core/labels.wast:304
+assert_return(() => invoke($0, `switch`, [4]), [value("i32", 50)]);
+
+// ./test/core/labels.wast:305
+assert_return(() => invoke($0, `switch`, [5]), [value("i32", 50)]);
+
+// ./test/core/labels.wast:306
+assert_return(() => invoke($0, `return`, [0]), [value("i32", 0)]);
+
+// ./test/core/labels.wast:307
+assert_return(() => invoke($0, `return`, [1]), [value("i32", 2)]);
+
+// ./test/core/labels.wast:308
+assert_return(() => invoke($0, `return`, [2]), [value("i32", 2)]);
+
+// ./test/core/labels.wast:309
+assert_return(() => invoke($0, `br_if0`, []), [value("i32", 29)]);
+
+// ./test/core/labels.wast:310
+assert_return(() => invoke($0, `br_if1`, []), [value("i32", 1)]);
+
+// ./test/core/labels.wast:311
+assert_return(() => invoke($0, `br_if2`, []), [value("i32", 1)]);
+
+// ./test/core/labels.wast:312
+assert_return(() => invoke($0, `br_if3`, []), [value("i32", 2)]);
+
+// ./test/core/labels.wast:313
+assert_return(() => invoke($0, `br`, []), [value("i32", 1)]);
+
+// ./test/core/labels.wast:314
+assert_return(() => invoke($0, `shadowing`, []), [value("i32", 1)]);
+
+// ./test/core/labels.wast:315
+assert_return(() => invoke($0, `redefinition`, []), [value("i32", 5)]);
+
+// ./test/core/labels.wast:317
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func (block $$l (f32.neg (br_if $$l (i32.const 1))) (nop))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/labels.wast:321
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func (block $$l (br_if $$l (f32.const 0) (i32.const 1)))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/labels.wast:325
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func (block $$l (br_if $$l (f32.const 0) (i32.const 1)))))`,
+    ),
+  `type mismatch`,
+);

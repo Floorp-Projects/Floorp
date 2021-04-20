@@ -1,12 +1,32 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// break-drop.wast:1
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x84\x80\x80\x80\x00\x03\x00\x00\x00\x07\x99\x80\x80\x80\x00\x03\x02\x62\x72\x00\x00\x05\x62\x72\x5f\x69\x66\x00\x01\x08\x62\x72\x5f\x74\x61\x62\x6c\x65\x00\x02\x0a\xaa\x80\x80\x80\x00\x03\x87\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x41\x01\x0d\x00\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x40\x41\x00\x0e\x00\x00\x0b\x0b");
+// ./test/core/break-drop.wast
 
-// break-drop.wast:7
-assert_return(() => call($1, "br", []));
+// ./test/core/break-drop.wast:1
+let $0 = instantiate(`(module
+  (func (export "br") (block (br 0)))
+  (func (export "br_if") (block (br_if 0 (i32.const 1))))
+  (func (export "br_table") (block (br_table 0 (i32.const 0))))
+)`);
 
-// break-drop.wast:8
-assert_return(() => call($1, "br_if", []));
+// ./test/core/break-drop.wast:7
+assert_return(() => invoke($0, `br`, []), []);
 
-// break-drop.wast:9
-assert_return(() => call($1, "br_table", []));
+// ./test/core/break-drop.wast:8
+assert_return(() => invoke($0, `br_if`, []), []);
+
+// ./test/core/break-drop.wast:9
+assert_return(() => invoke($0, `br_table`, []), []);
