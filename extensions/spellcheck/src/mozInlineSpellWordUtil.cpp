@@ -357,7 +357,7 @@ bool mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
   MakeNodeOffsetRangeForWord(word, aNodeOffsetRange);
   ++mNextWordIndex;
   *aSkipChecking = !word.mCheckableWord;
-  ::NormalizeWord(mSoftText, word.mSoftTextOffset, word.mLength, aText);
+  ::NormalizeWord(mSoftText.mValue, word.mSoftTextOffset, word.mLength, aText);
 
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
           ("%s: returning: %s (skip=%d)", __FUNCTION__,
@@ -831,7 +831,7 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
   // Now build up the string moving forward through the DOM until we reach
   // the soft end and *then* see a DOM word separator, a non-inline-element
   // boundary, or the hard end node.
-  mSoftText.Truncate();
+  mSoftText.mValue.Truncate();
   mSoftTextDOMMapping.Clear();
   bool seenSoftEnd = false;
   // Leave this outside the loop so large heap string allocations can be reused
@@ -864,11 +864,12 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
 
       if (firstOffsetInNode < lastOffsetInNode) {
         int32_t len = lastOffsetInNode - firstOffsetInNode;
-        mSoftTextDOMMapping.AppendElement(DOMTextMapping(
-            NodeOffset(node, firstOffsetInNode), mSoftText.Length(), len));
+        mSoftTextDOMMapping.AppendElement(
+            DOMTextMapping(NodeOffset(node, firstOffsetInNode),
+                           mSoftText.mValue.Length(), len));
 
-        bool ok = textFragment->AppendTo(mSoftText, firstOffsetInNode, len,
-                                         mozilla::fallible);
+        bool ok = textFragment->AppendTo(mSoftText.mValue, firstOffsetInNode,
+                                         len, mozilla::fallible);
         if (!ok) {
           // probably out of memory, remove from mSoftTextDOMMapping
           mSoftTextDOMMapping.RemoveLastElement();
@@ -888,25 +889,25 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
       // stop now.
       if (seenSoftEnd) break;
       // Record the break
-      mSoftText.Append(' ');
+      mSoftText.mValue.Append(' ');
     }
   }
 
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
           ("%s: got DOM string: %s", __FUNCTION__,
-           NS_ConvertUTF16toUTF8(mSoftText).get()));
+           NS_ConvertUTF16toUTF8(mSoftText.mValue).get()));
 }
 
 auto mozInlineSpellWordUtil::BuildRealWords() const
     -> Result<RealWords, nsresult> {
-  // This is pretty simple. We just have to walk mSoftText, tokenizing it
+  // This is pretty simple. We just have to walk mSoftText.mValue, tokenizing it
   // into "real words".
   // We do an outer traversal of words delimited by IsDOMWordSeparator, calling
   // SplitDOMWordAndAppendTo on each of those DOM words
   int32_t wordStart = -1;
   RealWords realWords;
-  for (int32_t i = 0; i < int32_t(mSoftText.Length()); ++i) {
-    if (IsDOMWordSeparator(mSoftText.CharAt(i))) {
+  for (int32_t i = 0; i < int32_t(mSoftText.mValue.Length()); ++i) {
+    if (IsDOMWordSeparator(mSoftText.mValue.CharAt(i))) {
       if (wordStart >= 0) {
         nsresult rv = SplitDOMWordAndAppendTo(wordStart, i, realWords);
         if (NS_FAILED(rv)) {
@@ -921,8 +922,8 @@ auto mozInlineSpellWordUtil::BuildRealWords() const
     }
   }
   if (wordStart >= 0) {
-    nsresult rv =
-        SplitDOMWordAndAppendTo(wordStart, mSoftText.Length(), realWords);
+    nsresult rv = SplitDOMWordAndAppendTo(wordStart, mSoftText.mValue.Length(),
+                                          realWords);
     if (NS_FAILED(rv)) {
       return Err(rv);
     }
@@ -931,7 +932,7 @@ auto mozInlineSpellWordUtil::BuildRealWords() const
   return realWords;
 }
 
-/*********** DOM/realwords<->mSoftText mapping functions ************/
+/*********** DOM/realwords<->mSoftText.mValue mapping functions ************/
 
 int32_t mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(
     NodeOffset aNodeOffset) const {
@@ -1101,7 +1102,7 @@ int32_t mozInlineSpellWordUtil::FindRealWordContaining(
 
 nsresult mozInlineSpellWordUtil::SplitDOMWordAndAppendTo(
     int32_t aStart, int32_t aEnd, nsTArray<RealWord>& aRealWords) const {
-  nsDependentSubstring targetText(mSoftText, aStart, aEnd - aStart);
+  nsDependentSubstring targetText(mSoftText.mValue, aStart, aEnd - aStart);
   WordSplitState<nsDependentSubstring> state(targetText);
   state.mCurCharClass = state.ClassifyCharacter(0, true);
 
