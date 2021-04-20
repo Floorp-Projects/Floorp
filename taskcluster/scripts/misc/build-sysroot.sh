@@ -32,7 +32,6 @@ packages="
   libgconf2-dev
   libgcc-${gcc_version}-dev
   libgtk-3-dev
-  libgtk2.0-dev
   libpango1.0-dev
   libpulse-dev
   libx11-xcb-dev
