@@ -4,7 +4,7 @@
 "use strict";
 
 // Test device pixel ratio override.
-const TEST_DOCUMENT = "doc_media_queries.sjs";
+const TEST_DOCUMENT = "target_configuration_test_doc.sjs";
 const TEST_URI = URL_ROOT_COM_SSL + TEST_DOCUMENT;
 
 add_task(async function() {
