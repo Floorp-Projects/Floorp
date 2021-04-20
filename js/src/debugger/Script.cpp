@@ -503,6 +503,11 @@ static bool PushFunctionScript(JSContext* cx, Debugger* dbg, HandleFunction fun,
   }
 
   Rooted<BaseScript*> script(cx, fun->baseScript());
+  MOZ_ASSERT(script);
+  if (!script) {
+    // If the function doesn't have script, ignore it.
+    return true;
+  }
   RootedObject wrapped(cx, dbg->wrapScript(cx, script));
   if (!wrapped) {
     return false;
