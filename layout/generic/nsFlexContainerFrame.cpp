@@ -4673,13 +4673,15 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     // go beyond our padding-box edges on the start sides.
     //
     // [1] https://drafts.csswg.org/css-overflow-3/#scrollable.
-    nsRect childrenInflowBounds;
-    for (nsIFrame* childFrame : mFrames) {
-      childrenInflowBounds =
-          childrenInflowBounds.Union(childFrame->GetMarginRect());
+    nsRect flexItemMarginBoxBounds;
+    for (const FlexLine& line : lines) {
+      for (const FlexItem& item : line.Items()) {
+        flexItemMarginBoxBounds =
+            flexItemMarginBoxBounds.Union(item.Frame()->GetMarginRect());
+      }
     }
-    childrenInflowBounds.Inflate(padding.GetPhysicalMargin(wm));
-    aReflowOutput.mOverflowAreas.UnionAllWith(childrenInflowBounds);
+    flexItemMarginBoxBounds.Inflate(padding.GetPhysicalMargin(wm));
+    aReflowOutput.mOverflowAreas.UnionAllWith(flexItemMarginBoxBounds);
   }
 
   // Merge overflow container bounds and status.
