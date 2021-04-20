@@ -55,7 +55,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "libdbus-glib-1-dev",
         "libdrm-dev",
         "libgtk-3-dev",
-        "libgtk2.0-dev",
         "libpulse-dev",
         "libx11-xcb-dev",
         "libxt-dev",
