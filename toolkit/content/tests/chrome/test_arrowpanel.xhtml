@@ -4,7 +4,8 @@
 
 <window title="Arrow Panels"
         style="padding: 10px;"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
@@ -36,6 +37,16 @@
        onpopuphidden="animatedPopupHidden = true; runNextTest.next();">
   <label value="Animate Closed" height="40"/>
 </panel>
+
+<html:style type="text/css">
+  panel {
+    /**
+     * We hardcode a panel padding here to avoid rounding issues caused by
+     * using em unit padding, which is the default as of bug 1701920.
+     */
+    --arrowpanel-padding: 16px;
+  }
+</html:style>
 
 <script type="application/javascript">
 <![CDATA[
