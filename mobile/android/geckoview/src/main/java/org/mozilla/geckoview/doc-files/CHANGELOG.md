@@ -13,6 +13,17 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v90
+- Added [`WebNotification.silent`][90.1] and [`WebNotification.vibrate`][90.2]
+  support. See also [Web/API/Notification/silent][90.3] and
+  [Web/API/Notification/vibrate][90.4].
+  ([bug 1696145]({{bugzilla}}1696145))
+
+[90.1]: {{javadoc_uri}}/WebNotification.html#silent
+[90.2]: {{javadoc_uri}}/WebNotification.html#vibrate
+[90.3]: https://developer.mozilla.org/en-US/docs/Web/API/Notification/silent
+[90.4]: https://developer.mozilla.org/en-US/docs/Web/API/Notification/vibrate
+
 ## v89
 - Added [`ContentPermission`][89.1], which is used to report what permissions content
   is loaded with in `onLocationChange`.
@@ -979,4 +990,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: c05004eab960bfec2c1dbe3dc59724539eb5008d
+[api-version]: d2704dbc8956197877f3a4e3ea3d7fc6f3cb4fc1

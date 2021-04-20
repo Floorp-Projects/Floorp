@@ -3593,6 +3593,24 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+- name: dom.webnotifications.silent.enabled
+  type: RelaxedAtomicBool
+#if defined(MOZ_WIDGET_ANDROID)
+  value: @IS_NIGHTLY_BUILD@
+#else
+  value: false
+#endif
+  mirror: always
+
+- name: dom.webnotifications.vibrate.enabled
+  type: RelaxedAtomicBool
+#if defined(MOZ_WIDGET_ANDROID)
+  value: @IS_NIGHTLY_BUILD@
+#else
+  value: false
+#endif
+  mirror: always
+
 - name: dom.webnotifications.serviceworker.enabled
   type: RelaxedAtomicBool
   value: true

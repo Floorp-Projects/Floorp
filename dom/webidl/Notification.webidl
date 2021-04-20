@@ -55,11 +55,19 @@ interface Notification : EventTarget {
   [Constant, Pref="dom.webnotifications.requireinteraction.enabled"]
   readonly attribute boolean requireInteraction;
 
+  [Constant, Pref="dom.webnotifications.silent.enabled"]
+  readonly attribute boolean silent;
+
+  [Cached, Frozen, Pure, Pref="dom.webnotifications.vibrate.enabled"]
+  readonly attribute sequence<unsigned long> vibrate;
+
   [Constant]
   readonly attribute any data;
 
   void close();
 };
+
+typedef (unsigned long or sequence<unsigned long>) VibratePattern;
 
 dictionary NotificationOptions {
   NotificationDirection dir = "auto";
@@ -68,6 +76,8 @@ dictionary NotificationOptions {
   DOMString tag = "";
   DOMString icon = "";
   boolean requireInteraction = false;
+  boolean silent = false;
+  VibratePattern vibrate;
   any data = null;
   NotificationBehavior mozbehavior = {};
 };
