@@ -269,6 +269,11 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
     return NS_ERROR_FAILURE;
   }
 
+  {
+    NSSize cocoaSize = NSMakeSize(size.width, size.height);
+    [cursorImage setSize:cocoaSize];
+    [[[cursorImage representations] objectAtIndex:0] setSize:cocoaSize];
+  }
 
   // if the hotspot is nonsensical, make it 0,0
   uint32_t hotspotX = aCursor.mHotspotX > (uint32_t(size.width) - 1) ? 0 : aCursor.mHotspotX;

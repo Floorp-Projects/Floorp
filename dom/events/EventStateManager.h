@@ -244,8 +244,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                                     nsPresContext* aPresContext);
 
   nsresult SetCursor(StyleCursorKind aCursor, imgIContainer* aContainer,
-                     const Maybe<gfx::IntPoint>& aHotspot, nsIWidget* aWidget,
-                     bool aLockCursor);
+                     float aResolution, const Maybe<gfx::IntPoint>& aHotspot,
+                     nsIWidget* aWidget, bool aLockCursor);
 
   /**
    * Checks if the current mouse over element matches the given

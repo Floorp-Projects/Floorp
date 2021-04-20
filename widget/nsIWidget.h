@@ -997,13 +997,15 @@ class nsIWidget : public nsISupports {
     nsCOMPtr<imgIContainer> mContainer;
     uint32_t mHotspotX = 0;
     uint32_t mHotspotY = 0;
+    float mResolution = 1.0f;
 
     bool IsCustom() const { return !!mContainer; }
 
     bool operator==(const Cursor& aOther) const {
       return mDefaultCursor == aOther.mDefaultCursor &&
              mContainer.get() == aOther.mContainer.get() &&
-             mHotspotX == aOther.mHotspotX && mHotspotY == aOther.mHotspotY;
+             mHotspotX == aOther.mHotspotX && mHotspotY == aOther.mHotspotY &&
+             mResolution == aOther.mResolution;
     }
 
     bool operator!=(const Cursor& aOther) { return !(*this == aOther); }
