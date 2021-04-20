@@ -192,6 +192,10 @@ class StorageActorMock extends EventEmitter {
     return { document: { effectiveStoragePrincipal: principal } };
   }
 
+  get parentActor() {
+    return { isRootActor: !this.watcherActor.browserId };
+  }
+
   /**
    * Event handler for any docshell update. This lets us figure out whenever
    * any new window is added, or an existing window is removed.
