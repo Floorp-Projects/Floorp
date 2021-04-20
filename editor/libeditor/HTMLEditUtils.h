@@ -23,6 +23,7 @@
 #include "nsTArray.h"
 
 class nsAtom;
+class nsPresContext;
 
 namespace mozilla {
 
@@ -237,6 +238,13 @@ class HTMLEditUtils final {
    */
   static bool IsVisibleTextNode(dom::Text& aText,
                                 Element* aEditingHost = nullptr);
+
+  /**
+   * IsInVisibleTextFrames() returns true if all text in aText is in visible
+   * text frames.  Callers have to guarantee that there is no pending reflow.
+   */
+  static bool IsInVisibleTextFrames(nsPresContext* aPresContext,
+                                    dom::Text& aText);
 
   /**
    * IsPointAtEdgeOfLink() returns true if aPoint is at start or end of a
