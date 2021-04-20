@@ -7421,7 +7421,7 @@ void nsGlobalWindowOuter::SetCursorOuter(const nsACString& aCursor,
 
     // Call esm and set cursor.
     aError = presContext->EventStateManager()->SetCursor(
-        cursor, nullptr, Nothing(), widget, true);
+        cursor, nullptr, 1.0f, Nothing(), widget, true);
   }
 }
 

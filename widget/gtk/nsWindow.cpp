@@ -2389,6 +2389,9 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor) {
   if (!aCursor.IsCustom()) {
     return nullptr;
   }
+  // FIXME: GTK doesn't provide an API for custom cursors that have more than
+  // native resolution, so this will scale the image instead, which is slightly
+  // unfortunate.
   nsIntSize size = nsIWidget::CustomCursorSize(aCursor);
   GdkPixbuf* pixbuf =
       nsImageToPixbuf::ImageToPixbuf(aCursor.mContainer, Some(size));
