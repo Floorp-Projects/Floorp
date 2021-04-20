@@ -254,7 +254,7 @@ inline bool CanStartTypedArrayIndex(CharT ch) {
   }
 
   JS::AutoCheckCannotGC nogc;
-  JSAtom* atom = JSID_TO_ATOM(id);
+  JSAtom* atom = id.toAtom();
 
   if (atom->empty() || !CanStartTypedArrayIndex(atom->latin1OrTwoByteChar(0))) {
     MOZ_ASSERT(indexp->isNothing());

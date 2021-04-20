@@ -144,7 +144,7 @@ inline bool IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp) {
 
 static MOZ_ALWAYS_INLINE JSLinearString* IdToString(JSContext* cx, jsid id) {
   if (JSID_IS_STRING(id)) {
-    return JSID_TO_ATOM(id);
+    return id.toAtom();
   }
 
   if (MOZ_LIKELY(JSID_IS_INT(id))) {

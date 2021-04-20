@@ -465,7 +465,7 @@ static bool fun_mayResolve(const JSAtomState& names, jsid id, JSObject*) {
     return false;
   }
 
-  JSAtom* atom = JSID_TO_ATOM(id);
+  JSAtom* atom = id.toAtom();
   return atom == names.prototype || atom == names.length || atom == names.name;
 }
 
@@ -2299,7 +2299,7 @@ JSAtom* js::IdToFunctionName(
 
   // No prefix fastpath.
   if (id.isAtom() && prefixKind == FunctionPrefixKind::None) {
-    return JSID_TO_ATOM(id);
+    return id.toAtom();
   }
 
   // Step 3 (implicit).
