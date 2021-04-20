@@ -75,7 +75,7 @@
   background-clip: border-box;
 }
 
-#urlbar:not([focused="true"]) > #urlbar-background,
+#urlbar:not([focused="true"], [open]) > #urlbar-background,
 #searchbar:not(:focus-within) {
   background-color: var(--toolbar-field-non-lwt-bgcolor, Field);
 }
@@ -133,7 +133,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.13);
 }
 
-#urlbar[focused="true"][open] > #urlbar-background {
+#urlbar[open] > #urlbar-background {
   border-color: var(--arrowpanel-border-color);
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.13);
 }
@@ -162,12 +162,12 @@
   background-color: var(--lwt-toolbar-field-background-color, hsla(0,0%,100%,.8));
 }
 
-#urlbar:not([focused="true"]):-moz-lwtheme > #urlbar-background,
+#urlbar:not([focused="true"], [open]):-moz-lwtheme > #urlbar-background,
 #navigator-toolbox #searchbar:not(:focus-within):-moz-lwtheme {
   border-color: var(--lwt-toolbar-field-border-color, var(--toolbar-field-border-color));
 }
 
-#urlbar:not([focused="true"]):-moz-lwtheme:hover > #urlbar-background,
+#urlbar:not([focused="true"], [open]):-moz-lwtheme:hover > #urlbar-background,
 #navigator-toolbox #searchbar:not(:focus-within):-moz-lwtheme:hover {
   border-color: var(--lwt-toolbar-field-border-color, @fieldHoverBorderColor@);
 }
@@ -177,12 +177,12 @@
   background-color: var(--lwt-toolbar-field-background-color, white);
 }
 
-#urlbar[focused="true"]:-moz-lwtheme,
+#urlbar:is([focused="true"], [open]):-moz-lwtheme,
 #navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
   color: var(--lwt-toolbar-field-focus-color);
 }
 
-#urlbar[focused="true"]:-moz-lwtheme > #urlbar-background,
+#urlbar:is([focused="true"], [open]):-moz-lwtheme > #urlbar-background,
 #navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
   background-color: var(--lwt-toolbar-field-focus);
 }
