@@ -665,16 +665,17 @@ EditActionResult HTMLEditor::CanHandleHTMLEditSubAction() const {
 
   const nsRange* range = SelectionRef().GetRangeAt(0);
   nsINode* selStartNode = range->GetStartContainer();
-  if (NS_WARN_IF(!selStartNode)) {
+  if (NS_WARN_IF(!selStartNode) || NS_WARN_IF(!selStartNode->IsContent())) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
 
-  if (!HTMLEditUtils::IsSimplyEditableNode(*selStartNode)) {
+  if (!HTMLEditUtils::IsSimplyEditableNode(*selStartNode) ||
+      HTMLEditUtils::IsNonEditableReplacedContent(*selStartNode->AsContent())) {
     return EditActionCanceled();
   }
 
   nsINode* selEndNode = range->GetEndContainer();
-  if (NS_WARN_IF(!selEndNode)) {
+  if (NS_WARN_IF(!selEndNode) || NS_WARN_IF(!selEndNode->IsContent())) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
 
@@ -682,7 +683,8 @@ EditActionResult HTMLEditor::CanHandleHTMLEditSubAction() const {
     return EditActionIgnored();
   }
 
-  if (!HTMLEditUtils::IsSimplyEditableNode(*selEndNode)) {
+  if (!HTMLEditUtils::IsSimplyEditableNode(*selEndNode) ||
+      HTMLEditUtils::IsNonEditableReplacedContent(*selEndNode->AsContent())) {
     return EditActionCanceled();
   }
 

@@ -95,7 +95,9 @@ bool AutoRangeArray::IsEditableRange(const dom::AbstractRange& aRange,
   const bool isStartEditable =
       atStart.IsInContentNode() &&
       EditorUtils::IsEditableContent(*atStart.ContainerAsContent(),
-                                     EditorUtils::EditorType::HTML);
+                                     EditorUtils::EditorType::HTML) &&
+      !HTMLEditUtils::IsNonEditableReplacedContent(
+          *atStart.ContainerAsContent());
   if (!isStartEditable) {
     return false;
   }
@@ -105,7 +107,9 @@ bool AutoRangeArray::IsEditableRange(const dom::AbstractRange& aRange,
     const bool isEndEditable =
         atEnd.IsInContentNode() &&
         EditorUtils::IsEditableContent(*atEnd.ContainerAsContent(),
-                                       EditorUtils::EditorType::HTML);
+                                       EditorUtils::EditorType::HTML) &&
+        !HTMLEditUtils::IsNonEditableReplacedContent(
+            *atEnd.ContainerAsContent());
     if (!isEndEditable) {
       return false;
     }
