@@ -80,7 +80,7 @@ class FieldTrialParameter : public FieldTrialParameterInterface {
   FieldTrialParameter(std::string key, T default_value)
       : FieldTrialParameterInterface(key), value_(default_value) {}
   T Get() const { return value_; }
-  operator T() const { return Get(); }
+  explicit operator T() const { return Get(); }
   const T* operator->() const { return &value_; }
 
   void SetForTest(T value) { value_ = value; }
@@ -219,7 +219,7 @@ class FieldTrialFlag : public FieldTrialParameterInterface {
   explicit FieldTrialFlag(std::string key);
   FieldTrialFlag(std::string key, bool default_value);
   bool Get() const;
-  operator bool() const;
+  explicit operator bool() const;
 
  protected:
   bool Parse(absl::optional<std::string> str_value) override;

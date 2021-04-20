@@ -284,7 +284,7 @@ VideoSendStreamImpl::VideoSendStreamImpl(
           rate_control_settings.UseAlrProbing());
       const double pacing_factor =
           rate_control_settings.GetPacingFactor().value_or(
-              pacing_config_.pacing_factor);
+              static_cast<double>(pacing_config_.pacing_factor));
       transport->SetPacingFactor(pacing_factor);
       configured_pacing_factor_ = pacing_factor;
       transport->SetQueueTimeLimit(pacing_config_.max_pacing_delay.Get().ms());
