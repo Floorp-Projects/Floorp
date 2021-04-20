@@ -17,7 +17,8 @@ const TEST_DATA = [
   {
     desc: "Adding an attribute",
     test: async function(testActor) {
-      await testActor.setAttribute("#node1", "newattr", "newattrval");
+      const browser = gBrowser.selectedBrowser;
+      await setAttributeInBrowser(browser, "#node1", "newattr", "newattrval");
     },
     check: async function(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
@@ -36,7 +37,8 @@ const TEST_DATA = [
   {
     desc: "Removing an attribute",
     test: async function(testActor) {
-      await testActor.removeAttribute("#node1", "newattr");
+      const browser = gBrowser.selectedBrowser;
+      await removeAttributeInBrowser(browser, "#node1", "newattr");
     },
     check: async function(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
@@ -51,7 +53,8 @@ const TEST_DATA = [
   {
     desc: "Re-adding an attribute",
     test: async function(testActor) {
-      await testActor.setAttribute("#node1", "newattr", "newattrval");
+      const browser = gBrowser.selectedBrowser;
+      await setAttributeInBrowser(browser, "#node1", "newattr", "newattrval");
     },
     check: async function(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
@@ -69,8 +72,14 @@ const TEST_DATA = [
   },
   {
     desc: "Changing an attribute",
-    test: async function(testActor) {
-      await testActor.setAttribute("#node1", "newattr", "newattrchanged");
+    test: async function() {
+      const browser = gBrowser.selectedBrowser;
+      await setAttributeInBrowser(
+        browser,
+        "#node1",
+        "newattr",
+        "newattrchanged"
+      );
     },
     check: async function(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);
@@ -105,7 +114,8 @@ const TEST_DATA = [
       info(
         "Add the attribute 'otherattr' on the content node to trigger the mutation"
       );
-      await testActor.setAttribute("#node1", "otherattr", "othervalue");
+      const browser = gBrowser.selectedBrowser;
+      await setAttributeInBrowser(browser, "#node1", "otherattr", "othervalue");
     },
     check: async function(inspector) {
       const { editor } = await getContainerForSelector("#node1", inspector);

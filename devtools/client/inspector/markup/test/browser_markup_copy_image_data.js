@@ -15,7 +15,11 @@ add_task(async function() {
 
   await selectNode("img", inspector);
   await assertCopyImageDataAvailable(inspector);
-  const expectedSrc = await testActor.getAttribute("img", "src");
+  const expectedSrc = await getAttributeInBrowser(
+    gBrowser.selectedBrowser,
+    "img",
+    "src"
+  );
   await triggerCopyImageUrlAndWaitForClipboard(expectedSrc, inspector);
 
   await selectNode("canvas", inspector);

@@ -50,7 +50,7 @@ const TEST_ARRAY = [
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8,");
-  const { testActor, inspector, view } = await openRuleView();
+  const { inspector, view } = await openRuleView();
 
   info("Open the class panel");
   view.showClassPanel();
@@ -85,7 +85,11 @@ add_task(async function() {
     await onEmpty;
 
     info("Check the state of the DOM node");
-    const className = await testActor.getAttribute("body", "class");
+    const className = await getAttributeInBrowser(
+      gBrowser.selectedBrowser,
+      "body",
+      "class"
+    );
     const expectedClassName = expectedClasses.length
       ? expectedClasses.join(" ")
       : null;

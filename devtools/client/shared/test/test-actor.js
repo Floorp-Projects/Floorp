@@ -204,30 +204,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("string"),
       },
     },
-    getAttribute: {
-      request: {
-        selector: Arg(0, "string"),
-        property: Arg(1, "string"),
-      },
-      response: {
-        value: RetVal("string"),
-      },
-    },
-    setAttribute: {
-      request: {
-        selector: Arg(0, "string"),
-        property: Arg(1, "string"),
-        value: Arg(2, "string"),
-      },
-      response: {},
-    },
-    removeAttribute: {
-      request: {
-        selector: Arg(0, "string"),
-        property: Arg(1, "string"),
-      },
-      response: {},
-    },
     reload: {
       request: {},
       response: {},
@@ -676,38 +652,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
   getProperty: function(selector, property) {
     const node = this._querySelector(selector);
     return node[property];
-  },
-
-  /**
-   * Get an attribute on a DOM Node.
-   * @param {String} selector The node selector
-   * @param {String} attribute The attribute name
-   * @return {String} value The attribute value
-   */
-  getAttribute: function(selector, attribute) {
-    const node = this._querySelector(selector);
-    return node.getAttribute(attribute);
-  },
-
-  /**
-   * Set an attribute on a DOM Node.
-   * @param {String} selector The node selector
-   * @param {String} attribute The attribute name
-   * @param {String} value The attribute value
-   */
-  setAttribute: function(selector, attribute, value) {
-    const node = this._querySelector(selector);
-    node.setAttribute(attribute, value);
-  },
-
-  /**
-   * Remove an attribute from a DOM Node.
-   * @param {String} selector The node selector
-   * @param {String} attribute The attribute name
-   */
-  removeAttribute: function(selector, attribute) {
-    const node = this._querySelector(selector);
-    node.removeAttribute(attribute);
   },
 
   /**

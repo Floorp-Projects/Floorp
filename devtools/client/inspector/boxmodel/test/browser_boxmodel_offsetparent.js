@@ -57,10 +57,10 @@ const res2 = [
 
 add_task(async function() {
   await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  const { inspector, boxmodel, testActor } = await openLayoutView();
+  const { inspector, boxmodel } = await openLayoutView();
 
   await testInitialValues(inspector, boxmodel);
-  await testChangingValues(inspector, boxmodel, testActor);
+  await testChangingValues(inspector, boxmodel);
 });
 
 async function testInitialValues(inspector, boxmodel) {
@@ -81,13 +81,14 @@ async function testInitialValues(inspector, boxmodel) {
   }
 }
 
-async function testChangingValues(inspector, boxmodel, testActor) {
+async function testChangingValues(inspector, boxmodel) {
   info("Test that changing the document updates the box model");
   const viewdoc = boxmodel.document;
+  const browser = gBrowser.selectedBrowser;
 
   for (const { selector, update } of updates) {
     const onUpdated = waitForUpdate(inspector);
-    await testActor.setAttribute(selector, "style", update);
+    await setAttributeInBrowser(browser, selector, "style", update);
     await onUpdated;
   }
 
