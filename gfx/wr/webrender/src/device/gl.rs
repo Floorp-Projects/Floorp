@@ -462,9 +462,6 @@ pub struct Texture {
     /// configurations). But that would complicate a lot of logic in this module,
     /// and FBOs are cheap enough to create.
     fbo_with_depth: Option<FBOId>,
-    /// If we are unable to blit directly to a texture array then we need
-    /// an intermediate renderbuffer.
-    blit_workaround_buffer: Option<(RBOId, FBOId)>,
     last_frame_used: GpuFrameId,
 }
 
@@ -1180,8 +1177,6 @@ pub enum DrawTarget {
         dimensions: DeviceIntSize,
         /// Whether to draw with the texture's associated depth target
         with_depth: bool,
-        /// Workaround buffers for devices with broken texture array copy implementation
-        blit_workaround_buffer: Option<(RBOId, FBOId)>,
         /// FBO that corresponds to the selected layer / depth mode
         fbo_id: FBOId,
         /// Native GL texture ID
@@ -1235,7 +1230,6 @@ impl DrawTarget {
             dimensions: texture.get_dimensions(),
             fbo_id,
             with_depth,
-            blit_workaround_buffer: texture.blit_workaround_buffer,
             id: texture.id,
             target: texture.target,
         }
@@ -2435,7 +2429,6 @@ impl Device {
             active_swizzle: Cell::default(),
             fbo: None,
             fbo_with_depth: None,
-            blit_workaround_buffer: None,
             last_frame_used: self.frame_id,
             flags: TextureFlags::default(),
         };
@@ -2824,10 +2817,6 @@ impl Device {
 
         if had_depth {
             self.release_depth_target(texture.get_dimensions());
-        }
-        if let Some((rbo, fbo)) = texture.blit_workaround_buffer {
-            self.gl.delete_framebuffers(&[fbo.0]);
-            self.gl.delete_renderbuffers(&[rbo.0]);
         }
 
         self.gl.delete_textures(&[texture.id]);
