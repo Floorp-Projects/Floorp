@@ -1595,33 +1595,20 @@ void MediaCache::DetermineActionsForStreams(AutoLock& aLock,
   }
 }
 
-class UpdateEvent : public Runnable {
- public:
-  explicit UpdateEvent(MediaCache* aMediaCache)
-      : Runnable("MediaCache::UpdateEvent"), mMediaCache(aMediaCache) {}
-
-  NS_IMETHOD Run() override {
-    mMediaCache->Update();
-    // Ensure MediaCache is deleted on the main thread.
-    NS_ReleaseOnMainThread("UpdateEvent::mMediaCache", mMediaCache.forget());
-    return NS_OK;
-  }
-
- private:
-  RefPtr<MediaCache> mMediaCache;
-};
-
 void MediaCache::QueueUpdate(AutoLock&) {
   // Queuing an update while we're in an update raises a high risk of
   // triggering endless events
   NS_ASSERTION(!mInUpdate, "Queuing an update while we're in an update");
-  if (mUpdateQueued) return;
+  if (mUpdateQueued) {
+    return;
+  }
   mUpdateQueued = true;
-  // XXX MediaCache does updates when decoders are still running at
-  // shutdown and get freed in the final cycle-collector cleanup.  So
-  // don't leak a runnable in that case.
-  nsCOMPtr<nsIRunnable> event = new UpdateEvent(this);
-  sThread->Dispatch(event.forget());
+  sThread->Dispatch(NS_NewRunnableFunction(
+      "MediaCache::QueueUpdate", [self = RefPtr<MediaCache>(this)]() mutable {
+        self->Update();
+        // Ensure MediaCache is deleted on the main thread.
+        NS_ReleaseOnMainThread("UpdateEvent::mMediaCache", self.forget());
+      }));
 }
 
 void MediaCache::QueueSuspendedStatusUpdate(AutoLock&, int64_t aResourceID) {
