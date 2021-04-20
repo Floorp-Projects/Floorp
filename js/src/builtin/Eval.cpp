@@ -12,6 +12,7 @@
 #include "ds/LifoAlloc.h"
 #include "frontend/BytecodeCompilation.h"
 #include "gc/HashUtil.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/friend/ErrorMessages.h"   // js::GetErrorMessage, JSMSG_*
 #include "js/friend/JSMEnvironment.h"  // JS::NewJSMEnvironment, JS::ExecuteInJSMEnvironment, JS::GetJSMEnvironmentOfScriptedCaller, JS::IsJSMEnvironment
 #include "js/friend/WindowProxy.h"     // js::IsWindowProxy
@@ -300,7 +301,9 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     options.setIsRunOnce(true)
         .setNoScriptRval(false)
         .setMutedErrors(mutedErrors)
-        .setScriptOrModule(maybeScript);
+        .setdeferDebugMetadata();
+
+    RootedScript introScript(cx);
 
     if (evalType == DIRECT_EVAL && IsStrictEvalPC(pc)) {
       options.setForceStrictMode();
@@ -308,8 +311,8 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
 
     if (introducerFilename) {
       options.setFileAndLine(filename, 1);
-      options.setIntroductionInfo(introducerFilename, "eval", lineno,
-                                  maybeScript, pcOffset);
+      options.setIntroductionInfo(introducerFilename, "eval", lineno, pcOffset);
+      introScript = maybeScript;
     } else {
       options.setFileAndLine("eval", 1);
       options.setIntroductionType("eval");
@@ -332,9 +335,15 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
       return false;
     }
 
-    JSScript* script =
-        frontend::CompileEvalScript(cx, options, srcBuf, enclosing, env);
+    RootedScript script(
+        cx, frontend::CompileEvalScript(cx, options, srcBuf, enclosing, env));
     if (!script) {
+      return false;
+    }
+
+    RootedValue undefValue(cx);
+    if (!JS::UpdateDebugMetadata(cx, script, options, undefValue, nullptr,
+                                 introScript, maybeScript)) {
       return false;
     }
 

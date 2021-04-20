@@ -3464,6 +3464,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   introductionOffset = rhs.introductionOffset;
   hasIntroductionInfo = rhs.hasIntroductionInfo;
   hideScriptFromDebugger = rhs.hideScriptFromDebugger;
+  deferDebugMetadata = rhs.deferDebugMetadata;
   nonSyntacticScope = rhs.nonSyntacticScope;
   privateClassFields = rhs.privateClassFields;
   privateClassMethods = rhs.privateClassMethods;
@@ -3482,11 +3483,7 @@ void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
 }
 
 JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx)
-    : ReadOnlyCompileOptions(),
-      elementAttributeNameRoot(cx),
-      introductionScriptRoot(cx),
-      scriptOrModuleRoot(cx),
-      privateValueRoot(cx) {}
+    : ReadOnlyCompileOptions() {}
 
 void JS::OwningCompileOptions::release() {
   // OwningCompileOptions always owns these, so these casts are okay.
@@ -3515,11 +3512,6 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   copyPODNonTransitiveOptions(rhs);
   copyPODTransitiveOptions(rhs);
 
-  elementAttributeNameRoot = rhs.elementAttributeName();
-  introductionScriptRoot = rhs.introductionScript();
-  scriptOrModuleRoot = rhs.scriptOrModule();
-  privateValueRoot = rhs.privateValue();
-
   if (rhs.filename()) {
     filename_ = DuplicateString(cx, rhs.filename()).release();
     if (!filename_) {
@@ -3545,12 +3537,7 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   return true;
 }
 
-JS::CompileOptions::CompileOptions(JSContext* cx)
-    : ReadOnlyCompileOptions(),
-      elementAttributeNameRoot(cx),
-      introductionScriptRoot(cx),
-      scriptOrModuleRoot(cx),
-      privateValueRoot(cx) {
+JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   discardSource = cx->realm()->behaviors().discardSource();
   if (!cx->options().asmJS()) {
     asmJSOption = AsmJSOption::Disabled;
@@ -3583,7 +3570,8 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
 }
 
 CompileOptions& CompileOptions::setIntroductionInfoToCaller(
-    JSContext* cx, const char* introductionType) {
+    JSContext* cx, const char* introductionType,
+    MutableHandle<JSScript*> introductionScript) {
   RootedScript maybeScript(cx);
   const char* filename;
   unsigned lineno;
@@ -3592,11 +3580,10 @@ CompileOptions& CompileOptions::setIntroductionInfoToCaller(
   DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno,
                                        &pcOffset, &mutedErrors);
   if (filename) {
-    return setIntroductionInfo(filename, introductionType, lineno, maybeScript,
-                               pcOffset);
-  } else {
-    return setIntroductionType(introductionType);
+    introductionScript.set(maybeScript);
+    return setIntroductionInfo(filename, introductionType, lineno, pcOffset);
   }
+  return setIntroductionType(introductionType);
 }
 
 JS_PUBLIC_API JSObject* JS_GetGlobalFromScript(JSScript* script) {
