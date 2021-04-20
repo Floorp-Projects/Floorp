@@ -99,9 +99,13 @@
         gQueue.push(new toggleTopMenu(editableDoc, new topMenuChecker()));
         gQueue.push(new toggleTopMenu(editableDoc, new focusChecker(editableDoc)));
       }
-      gQueue.push(new synthContextMenu(editableDoc, new contextMenuChecker()));
-      gQueue.push(new synthDownKey(editableDoc, new focusContextMenuItemChecker()));
-      gQueue.push(new synthEscapeKey(editableDoc, new focusChecker(editableDoc)));
+      if (!(MAC && Services.prefs.getBoolPref("widget.macos.native-context-menus", false))) {
+        // Context menu accessibility is handled natively and not testable when
+        // native context menus are used on macOS.
+        gQueue.push(new synthContextMenu(editableDoc, new contextMenuChecker()));
+        gQueue.push(new synthDownKey(editableDoc, new focusContextMenuItemChecker()));
+        gQueue.push(new synthEscapeKey(editableDoc, new focusChecker(editableDoc)));
+      }
       if (SEAMONKEY) {
         todo(false, "shift tab from editable document fails on (Windows) SeaMonkey! (Bug 718235)");
       } else if (LINUX || MAC) {
