@@ -6182,7 +6182,7 @@ nsresult nsContentUtils::DispatchXULCommand(nsIContent* aTarget, bool aTrusted,
       new XULCommandEvent(doc, presContext, nullptr);
   xulCommand->InitCommandEvent(u"command"_ns, true, true,
                                nsGlobalWindowInner::Cast(doc->GetInnerWindow()),
-                               0, aCtrl, aAlt, aShift, aMeta, aSourceEvent,
+                               0, aCtrl, aAlt, aShift, aMeta, 0, aSourceEvent,
                                aInputSource, IgnoreErrors());
 
   if (aPresShell) {
