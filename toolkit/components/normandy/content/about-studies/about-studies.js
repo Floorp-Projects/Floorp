@@ -219,11 +219,14 @@ class StudyList extends React.Component {
               translations,
             });
           }
-          return r(PreferenceStudyListItem, {
-            key: study.slug,
-            study,
-            translations,
-          });
+          if (study.type === "pref") {
+            return r(PreferenceStudyListItem, {
+              key: study.slug,
+              study,
+              translations,
+            });
+          }
+          return null;
         })
       ),
       r("h2", {}, translations.completedStudiesList),
@@ -238,18 +241,24 @@ class StudyList extends React.Component {
               translations,
             });
           }
-          if (study.experimentType === "nimbus") {
+          if (
+            study.type === "nimbus" ||
+            study.type === "messaging_experiment"
+          ) {
             return r(MessagingSystemListItem, {
               key: study.slug,
               study,
               translations,
             });
           }
-          return r(PreferenceStudyListItem, {
-            key: study.slug,
-            study,
-            translations,
-          });
+          if (study.type === "pref") {
+            return r(PreferenceStudyListItem, {
+              key: study.slug,
+              study,
+              translations,
+            });
+          }
+          return null;
         })
       )
     );
