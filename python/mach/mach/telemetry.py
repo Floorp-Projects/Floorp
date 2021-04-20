@@ -4,66 +4,27 @@
 
 from __future__ import print_function, absolute_import
 
+import json
 import os
 import sys
 
-from mock import Mock
+from six.moves import input, configparser
+from textwrap import dedent
 
+import requests
+import six.moves.urllib.parse as urllib_parse
+
+from mach.config import ConfigSettings
+from mach.telemetry_interface import NoopTelemetry, GleanTelemetry
 from mozboot.util import get_state_dir, get_mach_virtualenv_binary
 from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
+from mozbuild.settings import TelemetrySettings
 from mozbuild.telemetry import filter_args
 import mozpack.path
 
+from mozversioncontrol import get_repository_object, InvalidRepoPath
+
 MACH_METRICS_PATH = os.path.abspath(os.path.join(__file__, "..", "..", "metrics.yaml"))
-
-
-class NoopTelemetry(object):
-    def __init__(self, failed_glean_import):
-        self._failed_glean_import = failed_glean_import
-
-    def metrics(self, metrics_path):
-        return Mock()
-
-    def submit(self, is_bootstrap):
-        if self._failed_glean_import and not is_bootstrap:
-            print(
-                "Glean could not be found, so telemetry will not be reported. "
-                "You may need to run |mach bootstrap|.",
-                file=sys.stderr,
-            )
-
-
-class GleanTelemetry(object):
-    """Records and sends Telemetry using Glean.
-
-    Metrics are defined in python/mozbuild/metrics.yaml.
-    Pings are defined in python/mozbuild/pings.yaml.
-
-    The "metrics" and "pings" properties may be replaced with no-op implementations if
-    Glean isn't available. This allows consumers to report telemetry without having
-    to guard against incompatible environments.
-    """
-
-    def __init__(
-        self,
-    ):
-        self._metrics_cache = {}
-
-    def metrics(self, metrics_path):
-        if metrics_path not in self._metrics_cache:
-            from glean import load_metrics
-
-            metrics = load_metrics(metrics_path)
-            self._metrics_cache[metrics_path] = metrics
-
-        return self._metrics_cache[metrics_path]
-
-    def submit(self, _):
-        from pathlib import Path
-        from glean import load_pings
-
-        pings = load_pings(Path(__file__).parent.parent / "pings.yaml")
-        pings.usage.submit()
 
 
 def create_telemetry_from_environment(settings):
@@ -142,7 +103,190 @@ def is_telemetry_enabled(settings):
     if os.environ.get("DISABLE_TELEMETRY") == "1":
         return False
 
+    return settings.mach_telemetry.is_enabled
+
+
+def arcrc_path():
+    if sys.platform.startswith("win32") or sys.platform.startswith("msys"):
+        return os.path.join(os.environ.get("APPDATA", ""), ".arcrc")
+    else:
+        return os.path.expanduser("~/.arcrc")
+
+
+def resolve_setting_from_arcconfig(topsrcdir, setting):
+    for arcconfig_path in [
+        os.path.join(topsrcdir, ".hg", ".arcconfig"),
+        os.path.join(topsrcdir, ".git", ".arcconfig"),
+        os.path.join(topsrcdir, ".arcconfig"),
+    ]:
+        try:
+            with open(arcconfig_path, "r") as arcconfig_file:
+                arcconfig = json.load(arcconfig_file)
+        except (json.JSONDecodeError, FileNotFoundError):
+            continue
+
+        value = arcconfig.get(setting)
+        if value:
+            return value
+
+
+def resolve_is_employee_by_credentials(topsrcdir):
+    phabricator_uri = resolve_setting_from_arcconfig(topsrcdir, "phabricator.uri")
+
+    if not phabricator_uri:
+        return None
+
     try:
-        return settings.build.telemetry
-    except (AttributeError, KeyError):
-        return False
+        with open(arcrc_path(), "r") as arcrc_file:
+            arcrc = json.load(arcrc_file)
+    except (json.JSONDecodeError, FileNotFoundError):
+        return None
+
+    phabricator_token = (
+        arcrc.get("hosts", {})
+        .get(urllib_parse.urljoin(phabricator_uri, "api/"), {})
+        .get("token")
+    )
+
+    if not phabricator_token:
+        return None
+
+    bmo_uri = (
+        resolve_setting_from_arcconfig(topsrcdir, "bmo_url")
+        or "https://bugzilla.mozilla.org"
+    )
+    bmo_api_url = urllib_parse.urljoin(bmo_uri, "rest/whoami")
+    bmo_result = requests.get(
+        bmo_api_url, headers={"X-PHABRICATOR-TOKEN": phabricator_token}
+    )
+    return "mozilla-employee-confidential" in bmo_result.json().get("groups", [])
+
+
+def resolve_is_employee_by_vcs(topsrcdir):
+    try:
+        vcs = get_repository_object(topsrcdir)
+    except InvalidRepoPath:
+        return None
+
+    email = vcs.get_user_email()
+    if not email:
+        return None
+
+    return "@mozilla.com" in email
+
+
+def resolve_is_employee(topsrcdir):
+    """Detect whether or not the current user is a Mozilla employee.
+
+    Checks using Bugzilla authentication, if possible. Otherwise falls back to checking
+    if email configured in VCS is "@mozilla.com".
+
+    Returns True if the user could be identified as an employee, False if the user
+    is confirmed as not being an employee, or None if the user couldn't be
+    identified.
+    """
+    is_employee = resolve_is_employee_by_credentials(topsrcdir)
+    if is_employee is not None:
+        return is_employee
+
+    return resolve_is_employee_by_vcs(topsrcdir) or False
+
+
+def record_telemetry_settings(
+    main_settings,
+    state_dir,
+    is_enabled,
+):
+    # We want to update the user's machrc file. However, the main settings object
+    # contains config from "$topsrcdir/machrc" (if it exists) which we don't want
+    # to accidentally include. So, we have to create a brand new mozbuild-specific
+    # settings, update it, then write to it.
+    settings_path = os.path.join(state_dir, "machrc")
+    file_settings = ConfigSettings()
+    file_settings.register_provider(TelemetrySettings)
+    try:
+        file_settings.load_file(settings_path)
+    except configparser.Error as e:
+        print(
+            "Your mach configuration file at `{path}` cannot be parsed:\n{error}".format(
+                path=settings_path, error=e
+            )
+        )
+        return
+
+    file_settings.mach_telemetry.is_enabled = is_enabled
+    file_settings.mach_telemetry.is_set_up = True
+
+    with open(settings_path, "w") as f:
+        file_settings.write(f)
+
+    # Telemetry will want this elsewhere in the mach process, so we'll slap the
+    # new values on the main settings object.
+    main_settings.mach_telemetry.is_enabled = is_enabled
+    main_settings.mach_telemetry.is_set_up = True
+
+
+TELEMETRY_DESCRIPTION_PREAMBLE = """
+Mozilla collects data to improve the developer experience.
+To learn more about the data we intend to collect, read here:
+  https://firefox-source-docs.mozilla.org/build/buildsystem/telemetry.html
+If you have questions, please ask in #build on Matrix:
+  https://chat.mozilla.org/#/room/#build:mozilla.org
+""".strip()
+
+
+def print_telemetry_message_employee():
+    message_template = dedent(
+        """
+    %s
+
+    As a Mozilla employee, telemetry has been automatically enabled.
+    """
+    ).strip()
+    print(message_template % TELEMETRY_DESCRIPTION_PREAMBLE)
+    return True
+
+
+def prompt_telemetry_message_contributor():
+    while True:
+        prompt = (
+            dedent(
+                """
+        %s
+
+        If you'd like to opt out of data collection, select (N) at the prompt.
+        Would you like to enable build system telemetry? (Yn): """
+            )
+            % TELEMETRY_DESCRIPTION_PREAMBLE
+        ).strip()
+
+        choice = input(prompt)
+        choice = choice.strip().lower()
+        if choice == "":
+            return True
+        if choice not in ("y", "n"):
+            print("ERROR! Please enter y or n!")
+        else:
+            return choice == "y"
+
+
+def initialize_telemetry_setting(settings, topsrcdir, state_dir):
+    """Enables telemetry for employees or prompts the user."""
+    # If the user doesn't care about telemetry for this invocation, then
+    # don't make requests to Bugzilla and/or prompt for whether the
+    # user wants to opt-in.
+    if os.environ.get("DISABLE_TELEMETRY") == "1":
+        return
+
+    try:
+        is_employee = resolve_is_employee(topsrcdir)
+    except requests.exceptions.RequestException:
+        return
+
+    if is_employee:
+        is_enabled = True
+        print_telemetry_message_employee()
+    else:
+        is_enabled = prompt_telemetry_message_contributor()
+
+    record_telemetry_settings(settings, state_dir, is_enabled)

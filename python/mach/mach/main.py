@@ -34,7 +34,10 @@ from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
 from .sentry import register_sentry, NoopErrorReporter
-from .telemetry import report_invocation_metrics, create_telemetry_from_environment
+from .telemetry import (
+    report_invocation_metrics,
+    create_telemetry_from_environment,
+)
 from .util import setenv, UserError
 
 SUGGEST_MACH_BUSTED_TEMPLATE = r"""
@@ -348,12 +351,6 @@ To see more help for a specific command, run:
                 self.settings.register_provider(provider)
             self.load_settings(self.settings_paths)
 
-            if self.populate_context_handler:
-                topsrcdir = self.populate_context_handler("topdir")
-                sentry = register_sentry(argv, self.settings, topsrcdir)
-            else:
-                sentry = NoopErrorReporter()
-
             if sys.version_info < (3, 0):
                 if stdin.encoding is None:
                     sys.stdin = codecs.getreader("utf-8")(stdin)
@@ -371,7 +368,7 @@ To see more help for a specific command, run:
             if os.isatty(orig_stdout.fileno()):
                 setenv("MACH_STDOUT_ISATTY", "1")
 
-            return self._run(argv, sentry)
+            return self._run(argv)
         except KeyboardInterrupt:
             print("mach interrupted by signal or user action. Stopping.")
             return 1
@@ -403,14 +400,19 @@ To see more help for a specific command, run:
             sys.stdout = orig_stdout
             sys.stderr = orig_stderr
 
-    def _run(self, argv, sentry):
-        telemetry = create_telemetry_from_environment(self.settings)
+    def _run(self, argv):
+        topsrcdir = None
+        if self.populate_context_handler:
+            topsrcdir = self.populate_context_handler("topdir")
+            sentry = register_sentry(argv, self.settings, topsrcdir)
+        else:
+            sentry = NoopErrorReporter()
+
         context = CommandContext(
             cwd=self.cwd,
             settings=self.settings,
             log_manager=self.log_manager,
             commands=Registrar,
-            telemetry=telemetry,
         )
 
         if self.populate_context_handler:
@@ -453,6 +455,8 @@ To see more help for a specific command, run:
             and sys.__stderr__.isatty()
             and not os.environ.get("MOZ_AUTOMATION", None)
         )
+        context.telemetry = create_telemetry_from_environment(self.settings)
+
         handler = getattr(args, "mach_handler")
         report_invocation_metrics(context.telemetry, handler.name)
 

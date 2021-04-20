@@ -18,6 +18,7 @@ import sys
 import tempfile
 import time
 
+import mozbuild.settings  # noqa need @SettingsProvider hook to execute
 import mozpack.path as mozpath
 
 from mach.decorators import (
@@ -2099,20 +2100,6 @@ class Repackage(MachCommandBase):
             arch=arch,
             mar_channel_id=mar_channel_id,
         )
-
-
-@SettingsProvider
-class TelemetrySettings:
-    config_settings = [
-        (
-            "build.telemetry",
-            "boolean",
-            """
-Enable submission of build system telemetry.
-        """.strip(),
-            False,
-        ),
-    ]
 
 
 @CommandProvider
