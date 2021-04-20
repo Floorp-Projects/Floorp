@@ -41,7 +41,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent,
     IgnoredErrorResult rv;
     event->InitCommandEvent(u"command"_ns, true, true,
                             nsGlobalWindowInner::Cast(doc->GetInnerWindow()), 0, ctrlKey, altKey,
-                            shiftKey, cmdKey, nullptr, 0, rv);
+                            shiftKey, cmdKey, 0, nullptr, 0, rv);
     if (!rv.Failed()) {
       event->SetTrusted(true);
       aTargetContent->DispatchEvent(*event);
