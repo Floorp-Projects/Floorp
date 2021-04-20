@@ -18,8 +18,6 @@ browser.jar:
 * skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
   skin/classic/browser/monitor-base.png
   skin/classic/browser/monitor-border.png
-  skin/classic/browser/notification-icons/geo-blocked.svg  (notification-icons/geo-blocked.svg)
-  skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
 * skin/classic/browser/places/sidebar.css                   (places/sidebar.css)
   skin/classic/browser/places/organizer.css                 (places/organizer.css)
   skin/classic/browser/places/editBookmark.css              (places/editBookmark.css)
@@ -32,4 +30,3 @@ browser.jar:
   skin/classic/browser/share.svg                            (share.svg)
   skin/classic/browser/e10s-64@2x.png                                  (../shared/e10s-64@2x.png)
   skin/classic/browser/webRTC-menubar-indicator.css         (../shared/webRTC-menubar-indicator.css)
-% override chrome://browser/skin/notification-icons/geo-detailed.svg       chrome://browser/skin/notification-icons/geo.svg
