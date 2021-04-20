@@ -12,7 +12,6 @@ import datetime
 
 from taskgraph.transforms.base import TransformSequence
 from fenix_taskgraph.gradle import get_variant
-from fenix_taskgraph.util import upper_case_first_letter
 
 
 transforms = TransformSequence()
@@ -72,7 +71,7 @@ def build_gradle_command(config, tasks):
 
         task["run"]["gradlew"] = [
             "clean",
-            "assemble{}".format(upper_case_first_letter(variant_config["name"]))
+            "assemble{}".format(variant_config["name"].capitalize()),
         ]
 
         yield task
