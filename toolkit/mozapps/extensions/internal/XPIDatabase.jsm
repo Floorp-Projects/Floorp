@@ -1971,24 +1971,18 @@ this.XPIDatabase = {
     let enableTheme;
 
     let addons = this.getAddonsByType("theme");
-    let updateDisabledStatePromises = [];
-
     for (let theme of addons) {
       if (theme.visible) {
         if (!aId && theme.id == DEFAULT_THEME_ID) {
           enableTheme = theme;
         } else if (theme.id != aId && !theme.pendingUninstall) {
-          updateDisabledStatePromises.push(
-            this.updateAddonDisabledState(theme, {
-              userDisabled: true,
-              becauseSelecting: true,
-            })
-          );
+          this.updateAddonDisabledState(theme, {
+            userDisabled: true,
+            becauseSelecting: true,
+          });
         }
       }
     }
-
-    await Promise.all(updateDisabledStatePromises);
 
     if (enableTheme) {
       await this.updateAddonDisabledState(enableTheme, {
@@ -2643,9 +2637,10 @@ this.XPIDatabase = {
     // Notify any other providers that a new theme has been enabled
     if (aAddon.type === "theme") {
       if (!isDisabled) {
-        await AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
+        AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
+        this.updateXPIStates(aAddon);
       } else if (isDisabled && !becauseSelecting) {
-        await AddonManagerPrivate.notifyAddonChanged(null, "theme");
+        AddonManagerPrivate.notifyAddonChanged(null, "theme");
       }
     }
 
@@ -2676,9 +2671,8 @@ this.XPIDatabase = {
           if (aRepoAddon) {
             logger.debug("updateAddonRepositoryData got info for " + addon.id);
             addon._repositoryAddon = aRepoAddon;
-            return this.updateAddonDisabledState(addon);
+            this.updateAddonDisabledState(addon);
           }
-          return undefined;
         })
       )
     );
