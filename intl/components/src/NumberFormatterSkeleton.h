@@ -4,13 +4,12 @@
 #ifndef intl_components_NumberFormatterSkeleton_h_
 #define intl_components_NumberFormatterSkeleton_h_
 #include <string_view>
+#include "mozilla/intl/NumberFormat.h"
 #include "mozilla/Vector.h"
 #include "unicode/unumberformatter.h"
 
 namespace mozilla {
 namespace intl {
-
-struct NumberFormatOptions;
 
 /**
  * Class to create a number formatter skeleton.
