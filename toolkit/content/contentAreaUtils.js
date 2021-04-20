@@ -1053,8 +1053,7 @@ function getDefaultFileName(
     // This is something like a data: and so forth URI... no filename here.
   }
 
-  // Don't use the title if it's from a data URI
-  if (docTitle && aURI?.scheme != "data") {
+  if (docTitle) {
     // 4) Use the document title
     return docTitle;
   }
