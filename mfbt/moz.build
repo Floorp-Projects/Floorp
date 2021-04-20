@@ -140,6 +140,11 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "WindowsVersion.h",
     ]
 
+if CONFIG["OS_ARCH"] == "WASI":
+    EXPORTS.mozilla += [
+        "WasiAtomic.h",
+    ]
+
 if CONFIG["MOZ_TSAN"]:
     EXPORTS.mozilla += [
         "TsanOptions.h",
