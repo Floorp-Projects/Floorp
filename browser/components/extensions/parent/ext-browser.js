@@ -687,6 +687,7 @@ class TabTracker extends TabTrackerBase {
       previousTabId,
       previousTabIsPrivate,
       windowId: windowTracker.getId(nativeTab.ownerGlobal),
+      nativeTab,
     });
   }
 
@@ -1115,14 +1116,20 @@ class Window extends WindowBase {
     let { tabManager } = this.extension;
 
     for (let nativeTab of this.window.gBrowser.tabs) {
-      yield tabManager.getWrapper(nativeTab);
+      let tab = tabManager.getWrapper(nativeTab);
+      if (tab) {
+        yield tab;
+      }
     }
   }
 
   *getHighlightedTabs() {
     let { tabManager } = this.extension;
-    for (let tab of this.window.gBrowser.selectedTabs) {
-      yield tabManager.getWrapper(tab);
+    for (let nativeTab of this.window.gBrowser.selectedTabs) {
+      let tab = tabManager.getWrapper(nativeTab);
+      if (tab) {
+        yield tab;
+      }
     }
   }
 
@@ -1187,7 +1194,7 @@ class TabManager extends TabManagerBase {
     let nativeTab = tabTracker.getTab(tabId, default_);
 
     if (nativeTab) {
-      if (!this.extension.canAccessWindow(nativeTab.ownerGlobal)) {
+      if (!this.canAccessTab(nativeTab)) {
         throw new ExtensionError(`Invalid tab ID: ${tabId}`);
       }
       return this.getWrapper(nativeTab);
@@ -1204,10 +1211,17 @@ class TabManager extends TabManagerBase {
   }
 
   canAccessTab(nativeTab) {
-    return (
-      this.extension.privateBrowsingAllowed ||
-      !PrivateBrowsingUtils.isBrowserPrivate(nativeTab.linkedBrowser)
-    );
+    // Check private browsing access at browser window level.
+    if (!this.extension.canAccessWindow(nativeTab.ownerGlobal)) {
+      return false;
+    }
+    if (
+      this.extension.userContextIsolation &&
+      !this.extension.canAccessContainer(nativeTab.userContextId)
+    ) {
+      return false;
+    }
+    return true;
   }
 
   wrapTab(nativeTab) {

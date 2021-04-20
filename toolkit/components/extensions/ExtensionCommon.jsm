@@ -493,6 +493,10 @@ class BaseContext {
     return this.extension.canAccessWindow(window);
   }
 
+  canAccessContainer(userContextId) {
+    return this.extension.canAccessContainer(userContextId);
+  }
+
   /**
    * Opens a conduit linked to this context, populating related address fields.
    * Only available in child contexts with an associated contentWindow.
