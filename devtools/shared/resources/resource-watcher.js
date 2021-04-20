@@ -1049,6 +1049,8 @@ const ResourceTransformers = {
   [ResourceWatcher.TYPES
     .COOKIE]: require("devtools/shared/resources/transformers/storage-cookie.js"),
   [ResourceWatcher.TYPES
+    .INDEXED_DB]: require("devtools/shared/resources/transformers/storage-indexed-db.js"),
+  [ResourceWatcher.TYPES
     .LOCAL_STORAGE]: require("devtools/shared/resources/transformers/storage-local-storage.js"),
   [ResourceWatcher.TYPES
     .SESSION_STORAGE]: require("devtools/shared/resources/transformers/storage-session-storage.js"),
