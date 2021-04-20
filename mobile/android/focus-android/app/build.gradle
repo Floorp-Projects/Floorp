@@ -42,9 +42,11 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            matchingFallbacks = ['release']
         }
         debug {
             applicationIdSuffix ".debug"
+            matchingFallbacks = ['debug']
         }
         beta {
             initWith release
@@ -155,12 +157,15 @@ dependencies {
     implementation "org.mozilla.components:feature-tabs:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-crash:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-state:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:service-telemetry:$mozilla_components_version_telemetry"
+    implementation "org.mozilla.components:service-glean:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:service-location:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:support-ktx:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:support-utils:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:ui-autocomplete:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:ui-colors:${AndroidComponents.VERSION}"
+
+    implementation 'com.squareup.okhttp3:okhttp:3.14.1'
+    implementation project(':service-telemetry')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${coroutines_version}"
