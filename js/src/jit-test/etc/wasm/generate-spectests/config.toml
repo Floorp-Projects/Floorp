@@ -48,3 +48,11 @@ excluded_tests = [
 skip_wpt = true
 # Skip in jit-test when it's not enabled
 directive = "; skip-if: !wasmThreadsEnabled()"
+
+[[repos]]
+name = "simd"
+url = "https://github.com/WebAssembly/simd"
+parent = "spec"
+# Skip in jit-test when it's not enabled
+directive = "; skip-if: !wasmSimdEnabled()"
+excluded_tests = []
