@@ -1226,7 +1226,8 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
-    if (!isFunctionScript && !cx->isHelperThreadContext()) {
+    if (!isFunctionScript && !cx->isHelperThreadContext() &&
+        !xdr->options().hideFromNewScriptInitial()) {
       DebugAPI::onNewScript(cx, script);
     }
   }
@@ -1686,40 +1687,20 @@ bool ScriptSourceObject::initFromOptions(
     return false;
   }
 
-  RootedString elementAttributeName(cx, options.elementAttributeName());
+  if (options.deferDebugMetadata) {
+    return true;
+  }
+
+  // Initialize the element attribute slot and introduction script slot
+  // this marks the SSO as initialized for asserts.
+
+  RootedString elementAttributeName(cx);
   if (!initElementProperties(cx, source, elementAttributeName)) {
     return false;
   }
 
-  // There is no equivalent of cross-compartment wrappers for scripts. If the
-  // introduction script and ScriptSourceObject are in different compartments,
-  // we would be creating a cross-compartment script reference, which is
-  // forbidden. We can still store a CCW to the script source object though.
   RootedValue introductionScript(cx);
-  if (JSScript* script = options.introductionScript()) {
-    if (script->compartment() == cx->compartment()) {
-      introductionScript.setPrivateGCThing(options.introductionScript());
-    }
-  }
   source->setReservedSlot(INTRODUCTION_SCRIPT_SLOT, introductionScript);
-
-  RootedValue privateValue(cx, UndefinedValue());
-  if (options.privateValue().isUndefined()) {
-    // Set the private value to that of the script or module that this source is
-    // part of, if any.
-    if (JSScript* script = options.scriptOrModule()) {
-      privateValue = script->sourceObject()->canonicalPrivate();
-    }
-  } else {
-    privateValue = options.privateValue();
-  }
-
-  if (!privateValue.isUndefined()) {
-    if (!JS_WrapValue(cx, &privateValue)) {
-      return false;
-    }
-  }
-  source->setPrivate(cx->runtime(), privateValue);
 
   return true;
 }

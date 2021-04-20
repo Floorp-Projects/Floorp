@@ -36,6 +36,7 @@
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "js/CallNonGenericMethod.h"
+#include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
@@ -1676,8 +1677,8 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
       .setFileAndLine(filename, 1)
       .setNoScriptRval(false)
       .setIntroductionInfo(introducerFilename, introductionType, lineno,
-                           maybeScript, pcOffset)
-      .setScriptOrModule(maybeScript);
+                           pcOffset)
+      .setdeferDebugMetadata();
 
   JSStringBuilder sb(cx);
 
@@ -1809,6 +1810,13 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
     }
   }
   if (!fun) {
+    return false;
+  }
+
+  RootedValue undefValue(cx);
+  RootedScript funScript(cx, JS_GetFunctionScript(cx, fun));
+  if (funScript && !UpdateDebugMetadata(cx, funScript, options, undefValue,
+                                        nullptr, maybeScript, maybeScript)) {
     return false;
   }
 

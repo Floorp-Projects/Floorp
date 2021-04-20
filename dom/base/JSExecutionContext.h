@@ -10,6 +10,7 @@
 #include "GeckoProfiler.h"
 #include "js/GCVector.h"
 #include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "jsapi.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -47,6 +48,14 @@ class MOZ_STACK_CLASS JSExecutionContext final {
   // The compilation options applied throughout
   JS::CompileOptions& mCompileOptions;
 
+  // Debug Metadata: Values managed for the benefit of the debugger when
+  // inspecting code.
+  //
+  // For more details see CompilationAndEvaluation.h, and the comments on
+  // UpdateDebugMetadata
+  JS::Rooted<JS::Value> mDebuggerPrivateValue;
+  JS::Rooted<JSScript*> mDebuggerIntroductionScript;
+
   // returned value forwarded when we have to interupt the execution eagerly
   // with mSkip.
   nsresult mRv;
@@ -68,6 +77,8 @@ class MOZ_STACK_CLASS JSExecutionContext final {
   bool mScriptUsed;
 #endif
 
+  bool UpdateDebugMetadata();
+
  private:
   // Compile a script contained in a SourceText.
   template <typename Unit>
@@ -76,8 +87,14 @@ class MOZ_STACK_CLASS JSExecutionContext final {
  public:
   // Enter compartment in which the code would be executed.  The JSContext
   // must come from an AutoEntryScript.
-  JSExecutionContext(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
-                     JS::CompileOptions& aCompileOptions);
+  //
+  // The JS engine can associate metadata for the debugger with scripts at
+  // compile time. The optional last arguments here cover that metadata.
+  JSExecutionContext(
+      JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+      JS::CompileOptions& aCompileOptions,
+      JS::Handle<JS::Value> aDebuggerPrivateValue = JS::UndefinedHandleValue,
+      JS::Handle<JSScript*> aDebuggerIntroductionScript = nullptr);
 
   JSExecutionContext(const JSExecutionContext&) = delete;
   JSExecutionContext(JSExecutionContext&&) = delete;
