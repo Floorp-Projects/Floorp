@@ -69,6 +69,7 @@ namespace mozilla {
 using namespace dom;
 using namespace widget;
 
+using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
 
@@ -684,7 +685,9 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
 
     // If the given block does not contain any visible/editable items, we want
     // to skip it and continue our search.
-    if (IsEmptyNode(*forwardScanFromPointToPutCaretResult.GetContent())) {
+    if (HTMLEditUtils::IsEmptyNode(
+            *forwardScanFromPointToPutCaretResult.GetContent(),
+            {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
       // Skip the empty block
       pointToPutCaret =
           forwardScanFromPointToPutCaretResult.RawPointAfterContent();
@@ -902,7 +905,8 @@ bool HTMLEditor::IsEmptyInlineNode(nsIContent& aContent) const {
       !HTMLEditUtils::IsContainerNode(aContent)) {
     return false;
   }
-  return IsEmptyNode(aContent);
+  return HTMLEditUtils::IsEmptyNode(
+      aContent, {EmptyCheckOption::TreatSingleBRElementAsVisible});
 }
 
 /**
@@ -3172,7 +3176,9 @@ nsresult HTMLEditor::RemoveEmptyInclusiveAncestorInlineElements(
   // add a <br> later, so it won't be an empty wrapper in the end.
   Element* blockElement =
       HTMLEditUtils::GetAncestorBlockElement(aContent, editingHost);
-  if (!blockElement || IsEmptyNode(*blockElement)) {
+  if (!blockElement ||
+      HTMLEditUtils::IsEmptyNode(
+          *blockElement, {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
     return NS_OK;
   }
 
@@ -5155,98 +5161,6 @@ bool HTMLEditor::IsEmpty() const {
       return false;
     }
   }
-  return true;
-}
-
-/**
- * IsEmptyNodeImpl() is workhorse for IsEmptyNode().
- */
-bool HTMLEditor::IsEmptyNodeImpl(nsINode& aNode, bool aSingleBRDoesntCount,
-                                 bool aListOrCellNotEmpty,
-                                 bool aSafeToAskFrames, bool* aSeenBR) const {
-  MOZ_ASSERT(aSeenBR);
-
-  Element* editingHost = GetActiveEditingHost();
-
-  if (Text* text = aNode.GetAsText()) {
-    return aSafeToAskFrames
-               ? !HTMLEditUtils::IsInVisibleTextFrames(GetPresContext(), *text)
-               : !HTMLEditUtils::IsVisibleTextNode(*text, editingHost);
-  }
-
-  // if it's not a text node (handled above) and it's not a container,
-  // then we don't call it empty (it's an <hr>, or <br>, etc.).
-  // Also, if it's an anchor then don't treat it as empty - even though
-  // anchors are containers, named anchors are "empty" but we don't
-  // want to treat them as such.  Also, don't call ListItems or table
-  // cells empty if caller desires.  Form Widgets not empty.
-  if (!aNode.IsContent() ||
-      !HTMLEditUtils::IsContainerNode(*aNode.AsContent()) ||
-      (HTMLEditUtils::IsNamedAnchor(&aNode) ||
-       HTMLEditUtils::IsFormWidget(&aNode) ||
-       (aListOrCellNotEmpty && (HTMLEditUtils::IsListItem(&aNode) ||
-                                HTMLEditUtils::IsTableCell(&aNode))))) {
-    return false;
-  }
-
-  // need this for later
-  bool isListItemOrCell =
-      HTMLEditUtils::IsListItem(&aNode) || HTMLEditUtils::IsTableCell(&aNode);
-
-  // loop over children of node. if no children, or all children are either
-  // empty text nodes or non-editable, then node qualifies as empty
-  for (nsCOMPtr<nsIContent> child = aNode.GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    // Is the child editable and non-empty?  if so, return false
-    if (EditorUtils::IsEditableContent(*child, EditorType::HTML)) {
-      if (Text* text = child->GetAsText()) {
-        // break out if we find we aren't empty
-        if (!(aSafeToAskFrames
-                  ? !HTMLEditUtils::IsInVisibleTextFrames(GetPresContext(),
-                                                          *text)
-                  : !HTMLEditUtils::IsVisibleTextNode(*text, editingHost))) {
-          return false;
-        }
-      } else {
-        // An editable, non-text node. We need to check its content.
-        // Is it the node we are iterating over?
-        if (child == &aNode) {
-          break;
-        }
-
-        if (aSingleBRDoesntCount && !*aSeenBR &&
-            child->IsHTMLElement(nsGkAtoms::br)) {
-          // the first br in a block doesn't count if the caller so indicated
-          *aSeenBR = true;
-        } else {
-          // is it an empty node of some sort?
-          // note: list items or table cells are not considered empty
-          // if they contain other lists or tables
-          if (child->IsElement()) {
-            if (isListItemOrCell) {
-              if (HTMLEditUtils::IsAnyListElement(child) ||
-                  child->IsHTMLElement(nsGkAtoms::table)) {
-                // break out if we find we aren't empty
-                return false;
-              }
-            } else if (HTMLEditUtils::IsFormWidget(child)) {
-              // is it a form widget?
-              // break out if we find we aren't empty
-              return false;
-            }
-          }
-
-          if (!IsEmptyNodeImpl(*child, aSingleBRDoesntCount,
-                               aListOrCellNotEmpty, aSafeToAskFrames,
-                               aSeenBR)) {
-            // otherwise it ain't empty
-            return false;
-          }
-        }
-      }
-    }
-  }
-
   return true;
 }
 

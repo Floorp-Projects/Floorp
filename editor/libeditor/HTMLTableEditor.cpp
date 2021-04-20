@@ -42,6 +42,7 @@
 namespace mozilla {
 
 using namespace dom;
+using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 
 /**
  * Stack based helper class for restoring selection after table edit.
@@ -4372,7 +4373,8 @@ bool HTMLEditor::IsEmptyCell(dom::Element* aCell) {
   }
 
   // Or check if no real content
-  return IsEmptyNode(*cellChild, false, false);
+  return HTMLEditUtils::IsEmptyNode(
+      *cellChild, {EmptyCheckOption::TreatSingleBRElementAsVisible});
 }
 
 }  // namespace mozilla
