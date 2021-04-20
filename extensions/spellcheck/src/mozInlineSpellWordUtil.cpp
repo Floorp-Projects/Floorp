@@ -264,7 +264,7 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
 
 nsresult mozInlineSpellWordUtil::EnsureWords() {
   if (mSoftText.mIsValid) return NS_OK;
-  AdjustSoftBeginAndBuildSoftText();
+  mSoftText.AdjustBeginAndBuildText(mRootNode);
 
   mRealWords.Clear();
   Result<RealWords, nsresult> realWords = BuildRealWords();
@@ -765,19 +765,20 @@ void mozInlineSpellWordUtil::NormalizeWord(nsAString& aWord) {
   aWord = result;
 }
 
-void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
+void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(
+    const nsINode* aRootNode) {
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
-  // First we have to work backwards from mSoftText.mBegin to find a text node
+  // First we have to work backwards from mBegin to find a text node
   // containing a DOM word separator, a non-inline-element
   // boundary, or the hard start node. That's where we'll start building the
   // soft string from.
-  nsINode* node = mSoftText.mBegin.mNode;
+  nsINode* node = mBegin.mNode;
   int32_t firstOffsetInNode = 0;
-  int32_t checkBeforeOffset = mSoftText.mBegin.mOffset;
+  int32_t checkBeforeOffset = mBegin.mOffset;
   while (node) {
     if (ContainsDOMWordSeparator(node, checkBeforeOffset, &firstOffsetInNode)) {
-      if (node == mSoftText.mBegin.mNode) {
+      if (node == mBegin.mNode) {
         // If we find a word separator on the first node, look at the preceding
         // word on the text node as well.
         if (firstOffsetInNode > 0) {
@@ -795,7 +796,7 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
                                         &newOffset)) {
             nsIContent* prevNode = node->GetPreviousSibling();
             while (prevNode && IsSpellCheckingTextNode(prevNode)) {
-              mSoftText.mBegin.mNode = prevNode;
+              mBegin.mNode = prevNode;
               const Maybe<int32_t> separatorOffset =
                   FindOffsetOfLastDOMWordSeparatorSequence(prevNode, INT32_MAX);
               if (separatorOffset) {
@@ -810,7 +811,7 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
           firstOffsetInNode = 0;
         }
 
-        mSoftText.mBegin.mOffset = firstOffsetInNode;
+        mBegin.mOffset = firstOffsetInNode;
       }
       break;
     }
@@ -821,23 +822,23 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
       // block), don't bother trying to look outside it, just stop now.
       break;
     }
-    // GetPreviousContent below expects mRootNode to be an ancestor of node.
-    if (!node->IsInclusiveDescendantOf(mRootNode)) {
+    // GetPreviousContent below expects aRootNode to be an ancestor of node.
+    if (!node->IsInclusiveDescendantOf(aRootNode)) {
       break;
     }
-    node = node->GetPreviousContent(mRootNode);
+    node = node->GetPreviousContent(aRootNode);
   }
 
   // Now build up the string moving forward through the DOM until we reach
   // the soft end and *then* see a DOM word separator, a non-inline-element
   // boundary, or the hard end node.
-  mSoftText.mValue.Truncate();
-  mSoftText.mDOMMapping.Clear();
+  mValue.Truncate();
+  mDOMMapping.Clear();
   bool seenSoftEnd = false;
   // Leave this outside the loop so large heap string allocations can be reused
   // across iterations
   while (node) {
-    if (node == mSoftText.mEnd.mNode) {
+    if (node == mEnd.mNode) {
       seenSoftEnd = true;
     }
 
@@ -851,8 +852,7 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
 
       if (seenSoftEnd) {
         // check whether we can stop after this
-        for (int32_t i = node == mSoftText.mEnd.mNode ? mSoftText.mEnd.mOffset
-                                                      : 0;
+        for (int32_t i = node == mEnd.mNode ? mEnd.mOffset : 0;
              i < int32_t(textFragment->GetLength()); ++i) {
           if (IsDOMWordSeparator(textFragment->CharAt(i))) {
             exit = true;
@@ -865,15 +865,14 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
 
       if (firstOffsetInNode < lastOffsetInNode) {
         int32_t len = lastOffsetInNode - firstOffsetInNode;
-        mSoftText.mDOMMapping.AppendElement(
-            DOMTextMapping(NodeOffset(node, firstOffsetInNode),
-                           mSoftText.mValue.Length(), len));
+        mDOMMapping.AppendElement(DOMTextMapping(
+            NodeOffset(node, firstOffsetInNode), mValue.Length(), len));
 
-        bool ok = textFragment->AppendTo(mSoftText.mValue, firstOffsetInNode,
-                                         len, mozilla::fallible);
+        bool ok = textFragment->AppendTo(mValue, firstOffsetInNode, len,
+                                         mozilla::fallible);
         if (!ok) {
-          // probably out of memory, remove from mSoftText.mDOMMapping
-          mSoftText.mDOMMapping.RemoveLastElement();
+          // probably out of memory, remove from mDOMMapping
+          mDOMMapping.RemoveLastElement();
           exit = true;
         }
       }
@@ -884,19 +883,19 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
     if (exit) break;
 
     CheckLeavingBreakElementClosure closure = {false};
-    node = FindNextNode(node, mRootNode, CheckLeavingBreakElement, &closure);
+    node = FindNextNode(node, aRootNode, CheckLeavingBreakElement, &closure);
     if (closure.mLeftBreakElement || (node && IsBreakElement(node))) {
       // We left, or are entering, a break element (e.g., block). Maybe we can
       // stop now.
       if (seenSoftEnd) break;
       // Record the break
-      mSoftText.mValue.Append(' ');
+      mValue.Append(' ');
     }
   }
 
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
           ("%s: got DOM string: %s", __FUNCTION__,
-           NS_ConvertUTF16toUTF8(mSoftText.mValue).get()));
+           NS_ConvertUTF16toUTF8(mValue).get()));
 }
 
 auto mozInlineSpellWordUtil::BuildRealWords() const

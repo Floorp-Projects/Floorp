@@ -135,6 +135,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   };
 
   struct SoftText {
+    void AdjustBeginAndBuildText(const nsINode* aRootNode);
+
     void Invalidate() { mIsValid = false; }
 
     // DOM text covering the soft range, with newlines added at block boundaries
@@ -212,10 +214,6 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   // found).
   int32_t FindRealWordContaining(int32_t aSoftTextOffset, DOMMapHint aHint,
                                  bool aSearchForward) const;
-
-  // build mSoftText.mValue and mSoftText.mDOMMapping and adjust
-  // mSoftText.mBegin.
-  void AdjustSoftBeginAndBuildSoftText();
 
   mozilla::Result<RealWords, nsresult> BuildRealWords() const;
 
