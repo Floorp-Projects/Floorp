@@ -29,7 +29,7 @@ function setup() {
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 
-  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
+  Services.prefs.setIntPref("network.trr.mode", 3);
 }
 
 if (!inChildProcess()) {
