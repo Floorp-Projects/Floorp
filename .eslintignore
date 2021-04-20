@@ -40,9 +40,6 @@ browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
 browser/components/enterprisepolicies/schemas/schema.jsm
 # generated & special files in cld2
 browser/components/translation/cld2/
-# Screenshots is imported as a system add-on and has
-# their own lint rules currently.
-browser/extensions/screenshots/
 # generated or library files in pocket
 browser/components/pocket/content/panels/js/tmpl.js
 
