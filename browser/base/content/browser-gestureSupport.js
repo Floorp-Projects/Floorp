@@ -375,6 +375,7 @@ var gGestureSupport = {
           aEvent.altKey,
           aEvent.shiftKey,
           aEvent.metaKey,
+          0,
           aEvent,
           aEvent.mozInputSource
         );
