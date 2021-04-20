@@ -1,4 +1,5 @@
 from setuptools import setup
+
 setup(
     name='example',
     version='21.12',
@@ -6,5 +7,5 @@ setup(
     packages=['example'],
     entry_points={
         'console_scripts': ['example = example:main', 'Example=example:main'],
-        },
-    )
+    },
+)

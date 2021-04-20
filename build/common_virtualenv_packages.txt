@@ -44,6 +44,7 @@ mozilla.pth:third_party/python/attrs/src
 python2:mozilla.pth:third_party/python/backports
 mozilla.pth:third_party/python/blessings
 mozilla.pth:third_party/python/cbor2
+mozilla.pth:third_party/python/chardet
 mozilla.pth:third_party/python/Click
 mozilla.pth:third_party/python/compare-locales
 mozilla.pth:third_party/python/cookies
@@ -59,6 +60,7 @@ mozilla.pth:third_party/python/fluent.syntax
 mozilla.pth:third_party/python/funcsigs
 python2:mozilla.pth:third_party/python/futures
 mozilla.pth:third_party/python/gyp/pylib
+mozilla.pth:third_party/python/idna
 mozilla.pth:third_party/python/importlib_metadata
 mozilla.pth:third_party/python/iso8601
 mozilla.pth:third_party/python/Jinja2/src
@@ -97,6 +99,8 @@ mozilla.pth:third_party/python/six
 mozilla.pth:third_party/python/slugid
 mozilla.pth:third_party/python/taskcluster
 mozilla.pth:third_party/python/taskcluster-urls
+python2:mozilla.pth:third_party/python/typing_extensions/src_py2
+python3:mozilla.pth:third_party/python/typing_extensions/src_py3
 mozilla.pth:third_party/python/urllib3/src
 mozilla.pth:third_party/python/voluptuous
 mozilla.pth:third_party/python/yamllint
