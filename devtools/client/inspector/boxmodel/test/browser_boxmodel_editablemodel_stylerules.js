@@ -16,19 +16,20 @@ const TEST_URI =
   "<div id='div1'></div><div id='div2'></div><div id='div3'></div>";
 
 add_task(async function() {
-  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  const { inspector, boxmodel, testActor } = await openLayoutView();
+  const tab = await addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  const browser = tab.linkedBrowser;
+  const { inspector, boxmodel } = await openLayoutView();
 
-  await testUnits(inspector, boxmodel, testActor);
-  await testValueComesFromStyleRule(inspector, boxmodel, testActor);
-  await testShorthandsAreParsed(inspector, boxmodel, testActor);
+  await testUnits(inspector, boxmodel, browser);
+  await testValueComesFromStyleRule(inspector, boxmodel, browser);
+  await testShorthandsAreParsed(inspector, boxmodel, browser);
 });
 
-async function testUnits(inspector, boxmodel, testActor) {
+async function testUnits(inspector, boxmodel, browser) {
   info("Test that entering units works");
 
   is(
-    await getStyle(testActor, "#div1", "padding-top"),
+    await getStyle(browser, "#div1", "padding-top"),
     "",
     "Should have the right padding"
   );
@@ -52,7 +53,7 @@ async function testUnits(inspector, boxmodel, testActor) {
   await waitForUpdate(inspector);
 
   is(
-    await getStyle(testActor, "#div1", "padding-top"),
+    await getStyle(browser, "#div1", "padding-top"),
     "",
     "An invalid value is handled cleanly"
   );
@@ -62,7 +63,7 @@ async function testUnits(inspector, boxmodel, testActor) {
 
   is(editor.value, "1em", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "padding-top"),
+    await getStyle(browser, "#div1", "padding-top"),
     "1em",
     "Should have updated the padding."
   );
@@ -70,18 +71,18 @@ async function testUnits(inspector, boxmodel, testActor) {
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
   is(
-    await getStyle(testActor, "#div1", "padding-top"),
+    await getStyle(browser, "#div1", "padding-top"),
     "1em",
     "Should be the right padding."
   );
   await waitForElementTextContent(span, "16");
 }
 
-async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
+async function testValueComesFromStyleRule(inspector, boxmodel, browser) {
   info("Test that we pick up the value from a higher style rule");
 
   is(
-    await getStyle(testActor, "#div2", "border-bottom-width"),
+    await getStyle(browser, "#div2", "border-bottom-width"),
     "",
     "Should have the right border-bottom-width"
   );
@@ -104,7 +105,7 @@ async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
 
   is(editor.value, "0", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div2", "border-bottom-width"),
+    await getStyle(browser, "#div2", "border-bottom-width"),
     "0px",
     "Should have updated the border."
   );
@@ -112,18 +113,18 @@ async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
   is(
-    await getStyle(testActor, "#div2", "border-bottom-width"),
+    await getStyle(browser, "#div2", "border-bottom-width"),
     "0px",
     "Should be the right border-bottom-width."
   );
   await waitForElementTextContent(span, "0");
 }
 
-async function testShorthandsAreParsed(inspector, boxmodel, testActor) {
+async function testShorthandsAreParsed(inspector, boxmodel, browser) {
   info("Test that shorthand properties are parsed correctly");
 
   is(
-    await getStyle(testActor, "#div3", "padding-right"),
+    await getStyle(browser, "#div3", "padding-right"),
     "",
     "Should have the right padding"
   );
@@ -144,7 +145,7 @@ async function testShorthandsAreParsed(inspector, boxmodel, testActor) {
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
   is(
-    await getStyle(testActor, "#div3", "padding-right"),
+    await getStyle(browser, "#div3", "padding-right"),
     "",
     "Should be the right padding."
   );
