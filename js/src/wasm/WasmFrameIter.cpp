@@ -641,13 +641,28 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
       break;
   }
 
-  // The checked entries might have generated a small constant pool in case of
-  // immediate comparison.
-  masm.flushBuffer();
+  // The preceding code may have generated a small constant pool to support the
+  // comparison in the signature check.  But if we flush the pool here we will
+  // also force the creation of an unused branch veneer in the pool for the jump
+  // to functionBody from the signature check on some platforms, thus needlessly
+  // inflating the size of the prologue.
+  //
+  // On no supported platform that uses a pool (arm, arm64) is there any risk at
+  // present of that branch or other elements in the pool going out of range
+  // while we're generating the following padding and prologue, therefore no
+  // pool elements will be emitted in the prologue, therefore it is safe not to
+  // flush here.
+  //
+  // We assert that this holds at runtime by comparing the expected entry offset
+  // to the recorded ditto; if they are not the same then
+  // GenerateCallablePrologue flushed a pool before the prologue code, contrary
+  // to assumption.
 
   // Generate unchecked call entry:
   masm.nopAlign(CodeAlignment);
+  DebugOnly<uint32_t> expectedEntry = masm.currentOffset();
   GenerateCallablePrologue(masm, &offsets->uncheckedCallEntry);
+  MOZ_ASSERT(expectedEntry == offsets->uncheckedCallEntry);
   masm.bind(&functionBody);
 #ifdef JS_CODEGEN_ARM64
   // GenerateCallablePrologue creates a prologue which operates on the raw
