@@ -156,7 +156,6 @@ nsBaseWidget::nsBaseWidget()
       mPreviouslyAttachedWidgetListener(nullptr),
       mLayerManager(nullptr),
       mCompositorVsyncDispatcher(nullptr),
-      mCursor(eCursor_standard),
       mBorderStyle(eBorderStyle_none),
       mBounds(0, 0, 0, 0),
       mOriginalBounds(nullptr),
@@ -524,6 +523,15 @@ CSSToLayoutDeviceScale nsIWidget::GetDefaultScale() {
   return CSSToLayoutDeviceScale(devPixelsPerCSSPixel);
 }
 
+nsIntSize nsIWidget::CustomCursorSize(const Cursor& aCursor) {
+  MOZ_ASSERT(aCursor.IsCustom());
+  int32_t width = 0;
+  int32_t height = 0;
+  aCursor.mContainer->GetWidth(&width);
+  aCursor.mContainer->GetHeight(&height);
+  return {width, height};
+}
+
 //-------------------------------------------------------------------------
 //
 // Add a child to the list of children
@@ -655,11 +663,7 @@ void nsBaseWidget::MoveToWorkspace(const nsAString& workspaceID) {
 //
 //-------------------------------------------------------------------------
 
-void nsBaseWidget::SetCursor(nsCursor aCursor, imgIContainer*, uint32_t,
-                             uint32_t) {
-  // We don't support the cursor image.
-  mCursor = aCursor;
-}
+void nsBaseWidget::SetCursor(const Cursor& aCursor) { mCursor = aCursor; }
 
 //-------------------------------------------------------------------------
 //

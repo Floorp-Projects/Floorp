@@ -983,16 +983,33 @@ class nsIWidget : public nsISupports {
 
   virtual void ClearCachedCursor() = 0;
 
+  struct Cursor {
+    // The system cursor chosen by the page. This is used if there's no custom
+    // cursor, or if we fail to use the custom cursor in some way (if the image
+    // fails to load, for example).
+    nsCursor mDefaultCursor = eCursor_standard;
+    // May be null, to represent no custom cursor image.
+    nsCOMPtr<imgIContainer> mContainer;
+    uint32_t mHotspotX = 0;
+    uint32_t mHotspotY = 0;
+
+    bool IsCustom() const { return !!mContainer; }
+
+    bool operator==(const Cursor& aOther) const {
+      return mDefaultCursor == aOther.mDefaultCursor &&
+             mContainer.get() == aOther.mContainer.get() &&
+             mHotspotX == aOther.mHotspotX && mHotspotY == aOther.mHotspotY;
+    }
+
+    bool operator!=(const Cursor& aOther) { return !(*this == aOther); }
+  };
+
   /**
-   * Sets the cursor cursor for this widget.
-   *
-   * @param aDefaultCursor the default cursor to be set
-   * @param aCursorImage a custom cursor, maybe null.
-   * @param aX the X coordinate of the hotspot for aCursorImage (from left).
-   * @param aY the Y coordinate of the hotspot for aCursorImage (from top).
+   * Sets the cursor for this widget.
    */
-  virtual void SetCursor(nsCursor aDefaultCursor, imgIContainer* aCursorImage,
-                         uint32_t aHotspotX, uint32_t aHotspotY) = 0;
+  virtual void SetCursor(const Cursor&) = 0;
+
+  static nsIntSize CustomCursorSize(const Cursor&);
 
   /**
    * Get the window type of this widget.

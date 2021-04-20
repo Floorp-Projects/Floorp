@@ -627,24 +627,21 @@ void nsChildView::SetFocus(Raise, mozilla::dom::CallerType aCallerType) {
 }
 
 // Override to set the cursor on the mac
-void nsChildView::SetCursor(nsCursor aDefaultCursor, imgIContainer* aImageCursor,
-                            uint32_t aHotspotX, uint32_t aHotspotY) {
+void nsChildView::SetCursor(const Cursor& aCursor) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  if ([mView isDragInProgress]) return;  // Don't change the cursor during dragging.
-
-  if (aImageCursor) {
-    nsresult rv = [[nsCursorManager sharedInstance] setCursorWithImage:aImageCursor
-                                                              hotSpotX:aHotspotX
-                                                              hotSpotY:aHotspotY
-                                                           scaleFactor:BackingScaleFactor()];
-    if (NS_SUCCEEDED(rv)) {
-      return;
-    }
+  if ([mView isDragInProgress]) {
+    return;  // Don't change the cursor during dragging.
   }
 
-  nsBaseWidget::SetCursor(aDefaultCursor, nullptr, 0, 0);
-  [[nsCursorManager sharedInstance] setCursor:aDefaultCursor];
+  nsBaseWidget::SetCursor(aCursor);
+
+  if (NS_SUCCEEDED([[nsCursorManager sharedInstance] setCustomCursor:aCursor
+                                                   widgetScaleFactor:BackingScaleFactor()])) {
+    return;
+  }
+
+  [[nsCursorManager sharedInstance] setNonCustomCursor:aCursor];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -5003,7 +5000,7 @@ void ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent, ChildView
     [oldView sendMouseEnterOrExitEvent:aEvent enter:NO exitFrom:exitFrom];
     // After the cursor exits the window set it to a visible regular arrow cursor.
     if (exitFrom == WidgetMouseEvent::ePlatformTopLevel) {
-      [[nsCursorManager sharedInstance] setCursor:eCursor_standard];
+      [[nsCursorManager sharedInstance] setNonCustomCursor:nsIWidget::Cursor{eCursor_standard}];
     }
     [sLastMouseEventView sendMouseEnterOrExitEvent:aEvent enter:YES exitFrom:exitFrom];
   }

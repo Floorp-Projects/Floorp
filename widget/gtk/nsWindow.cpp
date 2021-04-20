@@ -2385,18 +2385,16 @@ gboolean nsWindow::OnPropertyNotifyEvent(GtkWidget* aWidget,
   return FALSE;
 }
 
-static GdkCursor* GetCursorForImage(imgIContainer* aCursorImage,
-                                    uint32_t aHotspotX, uint32_t aHotspotY) {
-  if (!aCursorImage) {
+static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor) {
+  if (!aCursor.IsCustom()) {
     return nullptr;
   }
-  GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(aCursorImage);
+  nsIntSize size = nsIWidget::CustomCursorSize(aCursor);
+  GdkPixbuf* pixbuf =
+      nsImageToPixbuf::ImageToPixbuf(aCursor.mContainer, Some(size));
   if (!pixbuf) {
     return nullptr;
   }
-
-  int width = gdk_pixbuf_get_width(pixbuf);
-  int height = gdk_pixbuf_get_height(pixbuf);
 
   auto CleanupPixBuf =
       mozilla::MakeScopeExit([&]() { g_object_unref(pixbuf); });
@@ -2408,7 +2406,7 @@ static GdkCursor* GetCursorForImage(imgIContainer* aCursorImage,
   //
   // TODO(emilio, bug 1445844): Unify the solution for this with other
   // platforms.
-  if (width > 128 || height > 128) {
+  if (size.width > 128 || size.height > 128) {
     return nullptr;
   }
 
@@ -2425,41 +2423,38 @@ static GdkCursor* GetCursorForImage(imgIContainer* aCursorImage,
   }
 
   return gdk_cursor_new_from_pixbuf(gdk_display_get_default(), pixbuf,
-                                    aHotspotX, aHotspotY);
+                                    aCursor.mHotspotX, aCursor.mHotspotY);
 }
 
-void nsWindow::SetCursor(nsCursor aDefaultCursor, imgIContainer* aCursorImage,
-                         uint32_t aHotspotX, uint32_t aHotspotY) {
+void nsWindow::SetCursor(const Cursor& aCursor) {
   // if we're not the toplevel window pass up the cursor request to
   // the toplevel window to handle it.
   if (!mContainer && mGdkWindow) {
-    nsWindow* window = GetContainerWindow();
-    if (!window) return;
-
-    window->SetCursor(aDefaultCursor, aCursorImage, aHotspotX, aHotspotY);
+    if (nsWindow* window = GetContainerWindow()) {
+      window->SetCursor(aCursor);
+    }
     return;
   }
 
   // Only change cursor if it's actually been changed
-  if (!aCursorImage && aDefaultCursor == mCursor && !mUpdateCursor) {
+  if (!mUpdateCursor && mCursor == aCursor) {
     return;
   }
 
   mUpdateCursor = false;
-  mCursor = eCursorInvalid;
+  mCursor = aCursor;
 
   // Try to set the cursor image first, and fall back to the numeric cursor.
-  GdkCursor* newCursor = GetCursorForImage(aCursorImage, aHotspotX, aHotspotY);
+  bool fromImage = true;
+  GdkCursor* newCursor = GetCursorForImage(aCursor);
   if (!newCursor) {
-    newCursor = get_gtk_cursor(aDefaultCursor);
-    if (newCursor) {
-      mCursor = aDefaultCursor;
-    }
+    fromImage = false;
+    newCursor = get_gtk_cursor(aCursor.mDefaultCursor);
   }
 
   auto CleanupCursor = mozilla::MakeScopeExit([&]() {
     // get_gtk_cursor returns a weak reference, which we shouldn't unref.
-    if (newCursor && mCursor == eCursorInvalid) {
+    if (fromImage) {
       g_object_unref(newCursor);
     }
   });
@@ -3465,7 +3460,7 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
         cursor = eCursor_se_resize;
         break;
     }
-    SetCursor(cursor, nullptr, 0, 0);
+    SetCursor(Cursor{cursor});
     return;
   }
 
@@ -4886,11 +4881,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         // gdk does not automatically set the cursor for "temporary"
         // windows, which are what gtk uses for popups.
 
-        mCursor = eCursor_wait;  // force SetCursor to actually set the
-                                 // cursor, even though our internal state
-                                 // indicates that we already have the
-                                 // standard cursor.
-        SetCursor(eCursor_standard, nullptr, 0, 0);
+        // force SetCursor to actually set the cursor, even though our internal
+        // state indicates that we already have the standard cursor.
+        mUpdateCursor = true;
+        SetCursor(Cursor{eCursor_standard});
 
         if (aInitData->mNoAutoHide) {
           gint wmd = ConvertBorderStyles(mBorderStyle);

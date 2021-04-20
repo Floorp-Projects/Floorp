@@ -218,11 +218,6 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mChromeOffset{},
       mCreatingWindow(false),
       mDelayedFrameScripts{},
-      mCursor(eCursorInvalid),
-      mCustomCursor{},
-      mCustomCursorHotspotX(0),
-      mCustomCursorHotspotY(0),
-      mVerifyDropLinks{},
       mVsyncParent(nullptr),
       mMarkedDestroying(false),
       mIsDestroyed(false),
@@ -1380,15 +1375,11 @@ void BrowserParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
 }
 
 void BrowserParent::MouseEnterIntoWidget() {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (widget) {
+  if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
     // When we mouseenter the remote target, the remote target's cursor should
     // become the current cursor.  When we mouseexit, we stop.
     mRemoteTargetSetsCursor = true;
-    if (mCursor != eCursorInvalid) {
-      widget->SetCursor(mCursor, mCustomCursor, mCustomCursorHotspotX,
-                        mCustomCursorHotspotY);
-    }
+    widget->SetCursor(mCursor);
   }
 
   // Mark that we have missed a mouse enter event, so that
@@ -1427,10 +1418,7 @@ void BrowserParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
     // become the current cursor.  When we mouseexit, we stop.
     if (eMouseEnterIntoWidget == aEvent.mMessage) {
       mRemoteTargetSetsCursor = true;
-      if (mCursor != eCursorInvalid) {
-        widget->SetCursor(mCursor, mCustomCursor, mCustomCursorHotspotX,
-                          mCustomCursorHotspotY);
-      }
+      widget->SetCursor(mCursor);
     } else if (eMouseExitFromWidget == aEvent.mMessage) {
       mRemoteTargetSetsCursor = false;
     }
@@ -2167,16 +2155,13 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
     cursorImage = image::ImageOps::CreateFromDrawable(drawable);
   }
 
-  mCursor = aCursor;
-  mCustomCursor = cursorImage;
-  mCustomCursorHotspotX = aHotspotX;
-  mCustomCursorHotspotY = aHotspotY;
-
+  mCursor = nsIWidget::Cursor{aCursor, std::move(cursorImage), aHotspotX,
+                              aHotspotY};
   if (!mRemoteTargetSetsCursor) {
     return IPC_OK();
   }
 
-  widget->SetCursor(aCursor, cursorImage, aHotspotX, aHotspotY);
+  widget->SetCursor(mCursor);
   return IPC_OK();
 }
 
