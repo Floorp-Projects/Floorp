@@ -780,7 +780,6 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
       if (node == mSoftBegin.mNode) {
         // If we find a word separator on the first node, look at the preceding
         // word on the text node as well.
-        int32_t newOffset = 0;
         if (firstOffsetInNode > 0) {
           // Try to find the previous word boundary in the current node. If
           // we can't find one, start checking previous sibling nodes (if any
@@ -791,6 +790,7 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
           // offset is set to 0, and the soft text beginning node is set to the
           // "most previous" text node before the original starting node, or
           // kept at the original starting node if no previous text nodes exist.
+          int32_t newOffset = 0;
           if (!ContainsDOMWordSeparator(node, firstOffsetInNode - 1,
                                         &newOffset)) {
             nsIContent* prevNode = node->GetPreviousSibling();
@@ -805,9 +805,12 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
               prevNode = prevNode->GetPreviousSibling();
             }
           }
+          firstOffsetInNode = newOffset;
+        } else {
+          firstOffsetInNode = 0;
         }
-        firstOffsetInNode = newOffset;
-        mSoftBegin.mOffset = newOffset;
+
+        mSoftBegin.mOffset = firstOffsetInNode;
       }
       break;
     }
