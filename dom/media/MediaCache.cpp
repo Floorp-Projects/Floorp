@@ -470,6 +470,10 @@ class MediaCache {
   // MediaCache thread only. True if we're on a cellular network connection.
   static inline bool sOnCellular = false;
 
+  // Try to trim the cache back to its desired size, if necessary. Return the
+  // amount of free block counts after trimming.
+  int32_t TrimCacheIfNeeded(AutoLock& aLock, const TimeStamp& aNow);
+
   // Used by MediaCacheStream::GetDebugInfo() only for debugging.
   // Don't add new callers to this function.
   friend void MediaCacheStream::GetDebugInfo(
@@ -1218,106 +1222,8 @@ void MediaCache::Update() {
 #ifdef DEBUG
   mInUpdate = true;
 #endif
-
-  int32_t maxBlocks = mBlockCache->GetMaxBlocks(MediaCache::CacheSize());
-  TimeStamp now = TimeStamp::Now();
-
-  int32_t freeBlockCount = mFreeBlocks.GetCount();
-  TimeDuration latestPredictedUseForOverflow = 0;
-  if (mIndex.Length() > uint32_t(maxBlocks)) {
-    // Try to trim back the cache to its desired maximum size. The cache may
-    // have overflowed simply due to data being received when we have
-    // no blocks in the main part of the cache that are free or lower
-    // priority than the new data. The cache can also be overflowing because
-    // the media.cache_size preference was reduced.
-    // First, figure out what the least valuable block in the cache overflow
-    // is. We don't want to replace any blocks in the main part of the
-    // cache whose expected time of next use is earlier or equal to that.
-    // If we allow that, we can effectively end up discarding overflowing
-    // blocks (by moving an overflowing block to the main part of the cache,
-    // and then overwriting it with another overflowing block), and we try
-    // to avoid that since it requires HTTP seeks.
-    // We also use this loop to eliminate overflowing blocks from
-    // freeBlockCount.
-    for (int32_t blockIndex = mIndex.Length() - 1; blockIndex >= maxBlocks;
-         --blockIndex) {
-      if (IsBlockFree(blockIndex)) {
-        // Don't count overflowing free blocks in our free block count
-        --freeBlockCount;
-        continue;
-      }
-      TimeDuration predictedUse = PredictNextUse(lock, now, blockIndex);
-      latestPredictedUseForOverflow =
-          std::max(latestPredictedUseForOverflow, predictedUse);
-    }
-  } else {
-    freeBlockCount += maxBlocks - mIndex.Length();
-  }
-
-  // Now try to move overflowing blocks to the main part of the cache.
-  for (int32_t blockIndex = mIndex.Length() - 1; blockIndex >= maxBlocks;
-       --blockIndex) {
-    if (IsBlockFree(blockIndex)) continue;
-
-    Block* block = &mIndex[blockIndex];
-    // Try to relocate the block close to other blocks for the first stream.
-    // There is no point in trying to make it close to other blocks in
-    // *all* the streams it might belong to.
-    int32_t destinationBlockIndex =
-        FindReusableBlock(lock, now, block->mOwners[0].mStream,
-                          block->mOwners[0].mStreamBlock, maxBlocks);
-    if (destinationBlockIndex < 0) {
-      // Nowhere to place this overflow block. We won't be able to
-      // place any more overflow blocks.
-      break;
-    }
-
-    // Don't evict |destinationBlockIndex| if it is within [cur, end) otherwise
-    // a new channel will be opened to download this block again which is bad.
-    bool inCurrentCachedRange = false;
-    for (BlockOwner& owner : mIndex[destinationBlockIndex].mOwners) {
-      MediaCacheStream* stream = owner.mStream;
-      int64_t end = OffsetToBlockIndexUnchecked(
-          stream->GetCachedDataEndInternal(lock, stream->mStreamOffset));
-      int64_t cur = OffsetToBlockIndexUnchecked(stream->mStreamOffset);
-      if (cur <= owner.mStreamBlock && owner.mStreamBlock < end) {
-        inCurrentCachedRange = true;
-        break;
-      }
-    }
-    if (inCurrentCachedRange) {
-      continue;
-    }
-
-    if (IsBlockFree(destinationBlockIndex) ||
-        PredictNextUse(lock, now, destinationBlockIndex) >
-            latestPredictedUseForOverflow) {
-      // Reuse blocks in the main part of the cache that are less useful than
-      // the least useful overflow blocks
-
-      nsresult rv = mBlockCache->MoveBlock(blockIndex, destinationBlockIndex);
-
-      if (NS_SUCCEEDED(rv)) {
-        // We successfully copied the file data.
-        LOG("Swapping blocks %d and %d (trimming cache)", blockIndex,
-            destinationBlockIndex);
-        // Swapping the block metadata here lets us maintain the
-        // correct positions in the linked lists
-        SwapBlocks(lock, blockIndex, destinationBlockIndex);
-        // Free the overflowing block even if the copy failed.
-        LOG("Released block %d (trimming cache)", blockIndex);
-        FreeBlock(lock, blockIndex);
-      }
-    } else {
-      LOG("Could not trim cache block %d (destination %d, "
-          "predicted next use %f, latest predicted use for overflow %f",
-          blockIndex, destinationBlockIndex,
-          PredictNextUse(lock, now, destinationBlockIndex).ToSeconds(),
-          latestPredictedUseForOverflow.ToSeconds());
-    }
-  }
-  // Try chopping back the array of cache entries and the cache file.
-  Truncate();
+  const TimeStamp now = TimeStamp::Now();
+  const int32_t freeBlockCount = TrimCacheIfNeeded(lock, now);
 
   // Count the blocks allocated for readahead of non-seekable streams
   // (these blocks can't be freed but we don't want them to monopolize the
@@ -1333,6 +1239,7 @@ void MediaCache::Update() {
   // If freeBlockCount is zero, then compute the latest of
   // the predicted next-uses for all blocks
   TimeDuration latestNextUse;
+  const int32_t maxBlocks = mBlockCache->GetMaxBlocks(MediaCache::CacheSize());
   if (freeBlockCount == 0) {
     int32_t reusableBlock = FindReusableBlock(lock, now, nullptr, 0, maxBlocks);
     if (reusableBlock >= 0) {
@@ -1563,6 +1470,110 @@ void MediaCache::Update() {
     }
   }
   mSuspendedStatusToNotify.Clear();
+}
+
+int32_t MediaCache::TrimCacheIfNeeded(AutoLock& aLock, const TimeStamp& aNow) {
+  MOZ_ASSERT(sThread->IsOnCurrentThread());
+
+  const int32_t maxBlocks = mBlockCache->GetMaxBlocks(MediaCache::CacheSize());
+
+  int32_t freeBlockCount = mFreeBlocks.GetCount();
+  TimeDuration latestPredictedUseForOverflow = 0;
+  if (mIndex.Length() > uint32_t(maxBlocks)) {
+    // Try to trim back the cache to its desired maximum size. The cache may
+    // have overflowed simply due to data being received when we have
+    // no blocks in the main part of the cache that are free or lower
+    // priority than the new data. The cache can also be overflowing because
+    // the media.cache_size preference was reduced.
+    // First, figure out what the least valuable block in the cache overflow
+    // is. We don't want to replace any blocks in the main part of the
+    // cache whose expected time of next use is earlier or equal to that.
+    // If we allow that, we can effectively end up discarding overflowing
+    // blocks (by moving an overflowing block to the main part of the cache,
+    // and then overwriting it with another overflowing block), and we try
+    // to avoid that since it requires HTTP seeks.
+    // We also use this loop to eliminate overflowing blocks from
+    // freeBlockCount.
+    for (int32_t blockIndex = mIndex.Length() - 1; blockIndex >= maxBlocks;
+         --blockIndex) {
+      if (IsBlockFree(blockIndex)) {
+        // Don't count overflowing free blocks in our free block count
+        --freeBlockCount;
+        continue;
+      }
+      TimeDuration predictedUse = PredictNextUse(aLock, aNow, blockIndex);
+      latestPredictedUseForOverflow =
+          std::max(latestPredictedUseForOverflow, predictedUse);
+    }
+  } else {
+    freeBlockCount += maxBlocks - mIndex.Length();
+  }
+
+  // Now try to move overflowing blocks to the main part of the cache.
+  for (int32_t blockIndex = mIndex.Length() - 1; blockIndex >= maxBlocks;
+       --blockIndex) {
+    if (IsBlockFree(blockIndex)) continue;
+
+    Block* block = &mIndex[blockIndex];
+    // Try to relocate the block close to other blocks for the first stream.
+    // There is no point in trying to make it close to other blocks in
+    // *all* the streams it might belong to.
+    int32_t destinationBlockIndex =
+        FindReusableBlock(aLock, aNow, block->mOwners[0].mStream,
+                          block->mOwners[0].mStreamBlock, maxBlocks);
+    if (destinationBlockIndex < 0) {
+      // Nowhere to place this overflow block. We won't be able to
+      // place any more overflow blocks.
+      break;
+    }
+
+    // Don't evict |destinationBlockIndex| if it is within [cur, end) otherwise
+    // a new channel will be opened to download this block again which is bad.
+    bool inCurrentCachedRange = false;
+    for (BlockOwner& owner : mIndex[destinationBlockIndex].mOwners) {
+      MediaCacheStream* stream = owner.mStream;
+      int64_t end = OffsetToBlockIndexUnchecked(
+          stream->GetCachedDataEndInternal(aLock, stream->mStreamOffset));
+      int64_t cur = OffsetToBlockIndexUnchecked(stream->mStreamOffset);
+      if (cur <= owner.mStreamBlock && owner.mStreamBlock < end) {
+        inCurrentCachedRange = true;
+        break;
+      }
+    }
+    if (inCurrentCachedRange) {
+      continue;
+    }
+
+    if (IsBlockFree(destinationBlockIndex) ||
+        PredictNextUse(aLock, aNow, destinationBlockIndex) >
+            latestPredictedUseForOverflow) {
+      // Reuse blocks in the main part of the cache that are less useful than
+      // the least useful overflow blocks
+
+      nsresult rv = mBlockCache->MoveBlock(blockIndex, destinationBlockIndex);
+
+      if (NS_SUCCEEDED(rv)) {
+        // We successfully copied the file data.
+        LOG("Swapping blocks %d and %d (trimming cache)", blockIndex,
+            destinationBlockIndex);
+        // Swapping the block metadata here lets us maintain the
+        // correct positions in the linked lists
+        SwapBlocks(aLock, blockIndex, destinationBlockIndex);
+        // Free the overflowing block even if the copy failed.
+        LOG("Released block %d (trimming cache)", blockIndex);
+        FreeBlock(aLock, blockIndex);
+      }
+    } else {
+      LOG("Could not trim cache block %d (destination %d, "
+          "predicted next use %f, latest predicted use for overflow %f",
+          blockIndex, destinationBlockIndex,
+          PredictNextUse(aLock, aNow, destinationBlockIndex).ToSeconds(),
+          latestPredictedUseForOverflow.ToSeconds());
+    }
+  }
+  // Try chopping back the array of cache entries and the cache file.
+  Truncate();
+  return freeBlockCount;
 }
 
 class UpdateEvent : public Runnable {
