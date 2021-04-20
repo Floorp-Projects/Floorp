@@ -928,9 +928,7 @@ class BrowserParent final : public PBrowserParent,
 
   // Cached cursor setting from BrowserChild.  When the cursor is over the
   // tab, it should take this appearance.
-  nsCursor mCursor;
-  nsCOMPtr<imgIContainer> mCustomCursor;
-  uint32_t mCustomCursorHotspotX, mCustomCursorHotspotY;
+  nsIWidget::Cursor mCursor;
 
   nsTArray<nsString> mVerifyDropLinks;
 

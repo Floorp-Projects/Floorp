@@ -203,10 +203,7 @@ class PuppetWidget : public nsBaseWidget,
     mNativeTextEventDispatcherListener = aListener;
   }
 
-  virtual void SetCursor(nsCursor aDefaultCursor, imgIContainer* aCustomCursor,
-                         uint32_t aHotspotX, uint32_t aHotspotY) override;
-
-  virtual void ClearCachedCursor() override;
+  virtual void SetCursor(const Cursor&) override;
 
   // Gets the DPI of the screen corresponding to this widget.
   // Contacts the parent process which gets the DPI from the
@@ -386,9 +383,6 @@ class PuppetWidget : public nsBaseWidget,
   float mDPI;
   int32_t mRounding;
   double mDefaultScale;
-
-  nsCOMPtr<imgIContainer> mCustomCursor;
-  uint32_t mCursorHotspotX, mCursorHotspotY;
 
   ScreenIntMargin mSafeAreaInsets;
 
