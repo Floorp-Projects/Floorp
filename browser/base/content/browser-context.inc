@@ -6,17 +6,14 @@
 #ifdef XP_MACOSX
       <menuitem id="context-back"
                 data-l10n-id="main-context-menu-back-mac"
-                command="Browser:BackOrBackDuplicate"
-                onclick="checkForMiddleClick(this, event);"/>
+                command="Browser:BackOrBackDuplicate"/>
       <menuitem id="context-forward"
                 data-l10n-id="main-context-menu-forward-mac"
-                command="Browser:ForwardOrForwardDuplicate"
-                onclick="checkForMiddleClick(this, event);"/>
+                command="Browser:ForwardOrForwardDuplicate"/>
       <menuitem id="context-reload"
                 tooltip="dynamic-shortcut-tooltip"
                 data-l10n-id="main-context-menu-reload-mac"
-                command="Browser:ReloadOrDuplicate"
-                onclick="checkForMiddleClick(this, event);"/>
+                command="Browser:ReloadOrDuplicate"/>
       <menuitem id="context-stop"
                 tooltip="dynamic-shortcut-tooltip"
                 data-l10n-id="main-context-menu-stop-mac"
@@ -27,20 +24,17 @@
                   data-l10n-id="main-context-menu-back-2"
                   data-l10n-args='{"shortcut":""}'
                   class="menuitem-iconic"
-                  command="Browser:BackOrBackDuplicate"
-                  onclick="checkForMiddleClick(this, event);"/>
+                  command="Browser:BackOrBackDuplicate"/>
         <menuitem id="context-forward"
                   data-l10n-id="main-context-menu-forward-2"
                   data-l10n-args='{"shortcut":""}'
                   class="menuitem-iconic"
-                  command="Browser:ForwardOrForwardDuplicate"
-                  onclick="checkForMiddleClick(this, event);"/>
+                  command="Browser:ForwardOrForwardDuplicate"/>
         <menuitem id="context-reload"
                   class="menuitem-iconic"
                   tooltip="dynamic-shortcut-tooltip"
                   data-l10n-id="main-context-menu-reload"
-                  command="Browser:ReloadOrDuplicate"
-                  onclick="checkForMiddleClick(this, event);"/>
+                  command="Browser:ReloadOrDuplicate"/>
         <menuitem id="context-stop"
                   class="menuitem-iconic"
                   tooltip="dynamic-shortcut-tooltip"
@@ -187,8 +181,7 @@
       <menuseparator id="context-media-sep-video-commands"/>
       <menuitem id="context-viewvideo"
                 data-l10n-id="main-context-menu-video-view-new-tab"
-                oncommand="gContextMenu.viewMedia(event);"
-                onclick="checkForMiddleClick(this, event);"/>
+                oncommand="gContextMenu.viewMedia(event);"/>
       <menuitem id="context-video-pictureinpicture"
                 data-l10n-id="main-context-menu-media-watch-pip"
                 type="checkbox"
@@ -199,8 +192,7 @@
                 oncommand="gContextMenu.reloadImage();"/>
       <menuitem id="context-viewimage"
                 data-l10n-id="main-context-menu-image-view-new-tab"
-                oncommand="gContextMenu.viewMedia(event);"
-                onclick="checkForMiddleClick(this, event);"/>
+                oncommand="gContextMenu.viewMedia(event);"/>
       <menuitem id="context-saveimage"
                 data-l10n-id="main-context-menu-image-save-as"
                 oncommand="gContextMenu.saveMedia();"/>
@@ -242,8 +234,7 @@
                 oncommand="gContextMenu.viewImageInfo();"/>
       <menuitem id="context-viewimagedesc"
                 data-l10n-id="main-context-menu-image-desc"
-                oncommand="gContextMenu.viewImageDesc(event);"
-                onclick="checkForMiddleClick(this, event);"/>
+                oncommand="gContextMenu.viewImageDesc(event);"/>
       <menuseparator id="context-sep-setbackground"/>
       <menuitem id="context-setDesktopBackground"
                 data-l10n-id="main-context-menu-image-set-image-as-background"
@@ -319,11 +310,9 @@
                 data-l10n-id="main-context-menu-keyword"
                 oncommand="AddKeywordForSearchField();"/>
       <menuitem id="context-searchselect"
-                oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, this.usePrivate, this.principal, this.csp, event);"
-                onclick="checkForMiddleClick(this, event);"/>
+                oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, this.usePrivate, this.principal, this.csp, event);"/>
       <menuitem id="context-searchselect-private"
-                oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, true, this.principal, this.csp, event);"
-                onclick="checkForMiddleClick(this, event);"/>
+                oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, true, this.principal, this.csp, event);"/>
 
       <menuseparator id="frame-sep"/>
       <menu id="frame" data-l10n-id="main-context-menu-frame">
@@ -414,5 +403,4 @@
                 class="menuitem-iconic"
                 hidden="true"
                 data-l10n-id="main-context-menu-eme-learn-more"
-                oncommand="gContextMenu.drmLearnMore(event);"
-                onclick="checkForMiddleClick(this, event);"/>
+                oncommand="gContextMenu.drmLearnMore(event);"/>
