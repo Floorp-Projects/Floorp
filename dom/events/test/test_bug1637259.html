@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Bug 1692277</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+
+<style>
+  #container {
+    width: 100px;
+    height: 100px;
+    overflow: scroll;
+  }
+
+  #child {
+    width: 200px;
+    height: 200px;
+  }
+</style>
+
+<div id="container">
+  <div id="child"></div>
+</div>
+
+<script>
+  /**
+   * @template {keyof HTMLElementEventMap} K
+   * @param {HTMLElemnt} target
+   * @param {K} eventName
+   * @return {HTMLElementEventMap[K]}
+   */
+  function waitForEvent(target, eventName) {
+    return new Promise(resolve => {
+      target.addEventListener(eventName, resolve, { once: true });
+    });
+  }
+
+  add_task(async function testPenDrag() {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.w3c_pointer_events.dispatch_by_pointer_messages", true],
+        ["dom.w3c_pointer_events.scroll_by_pen.enabled", true],
+        // Run the font loader task eagerly for more predictable behavior,
+        // see bug 1672141.
+        ["gfx.font_loader.delay", 0],
+        ["gfx.font_loader.interval", 0],
+      ],
+    });
+
+    await SimpleTest.promiseFocus();
+    const container = document.getElementById("container");
+    const scrollPromise = waitForEvent(container, "scroll");
+    const pointerPromise = waitForEvent(container, "pointerdown");
+    await promiseNativePointerDrag(container, "pen", 50, 50, -50, -50);
+    await scrollPromise;
+
+    const pointerdown = await pointerPromise;
+    // is(pointerdown.pointerType, "pen"); // TODO: bug 1706420
+    is(pointerdown.type, "pointerdown", ".type");
+    is(pointerdown.button, 0, ".button");
+    is(pointerdown.buttons, 1, ".buttons");
+    is(pointerdown.layerX, 50, ".layerX");
+    is(pointerdown.layerY, 50, ".layerY");
+    is(pointerdown.pressure, 1, ".pressure");
+    // TODO: tilt etc. (bug 1706420)
+  });
+</script>

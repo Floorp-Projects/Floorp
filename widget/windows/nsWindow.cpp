@@ -8520,6 +8520,47 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
          !(IsPopup() && DeviceManagerDx::Get()->IsWARP());
 }
 
+bool nsWindow::DispatchTouchEventFromWMPointer(
+    UINT msg, LPARAM aLParam, const WinPointerInfo& aPointerInfo) {
+  MultiTouchInput::MultiTouchType touchType;
+  switch (msg) {
+    case WM_POINTERDOWN:
+      touchType = MultiTouchInput::MULTITOUCH_START;
+      break;
+    case WM_POINTERUPDATE:
+      if (aPointerInfo.mPressure == 0) {
+        return false;  // hover
+      }
+      touchType = MultiTouchInput::MULTITOUCH_MOVE;
+      break;
+    case WM_POINTERUP:
+      touchType = MultiTouchInput::MULTITOUCH_END;
+      break;
+    default:
+      return false;
+  }
+
+  nsPointWin touchPoint;
+  touchPoint.x = GET_X_LPARAM(aLParam);
+  touchPoint.y = GET_Y_LPARAM(aLParam);
+  touchPoint.ScreenToClient(mWnd);
+
+  SingleTouchData touchData(aPointerInfo.pointerId,
+                            ScreenIntPoint::FromUnknownPoint(touchPoint),
+                            ScreenSize(1, 1),  // pixel size radius for pen
+                            0.0f,              // no radius rotation
+                            aPointerInfo.mPressure);
+
+  MultiTouchInput touchInput;
+  touchInput.mType = touchType;
+  touchInput.mTime = ::GetMessageTime();
+  touchInput.mTimeStamp = GetMessageTimeStamp(touchInput.mTime);
+  touchInput.mTouches.AppendElement(touchData);
+
+  DispatchTouchInput(touchInput);
+  return true;
+}
+
 bool nsWindow::OnPointerEvents(UINT msg, WPARAM aWParam, LPARAM aLParam) {
   if (!mPointerEvents.ShouldHandleWinPointerMessages(msg, aWParam)) {
     return false;
@@ -8597,7 +8638,7 @@ bool nsWindow::OnPointerEvents(UINT msg, WPARAM aWParam, LPARAM aLParam) {
       return false;
   }
   uint32_t pointerId = mPointerEvents.GetPointerId(aWParam);
-  POINTER_PEN_INFO penInfo;
+  POINTER_PEN_INFO penInfo{};
   mPointerEvents.GetPointerPenInfo(pointerId, &penInfo);
 
   // Windows defines the pen pressure is normalized to a range between 0 and
@@ -8609,6 +8650,11 @@ bool nsWindow::OnPointerEvents(UINT msg, WPARAM aWParam, LPARAM aLParam) {
                                  : MouseButtonsFlag::eNoButtons;
   WinPointerInfo pointerInfo(pointerId, penInfo.tiltX, penInfo.tiltY, pressure,
                              buttons);
+
+  if (StaticPrefs::dom_w3c_pointer_events_scroll_by_pen_enabled() &&
+      DispatchTouchEventFromWMPointer(msg, aLParam, pointerInfo)) {
+    return true;
+  }
 
   // The aLParam of WM_POINTER* is the screen location. Convert it to client
   // location
