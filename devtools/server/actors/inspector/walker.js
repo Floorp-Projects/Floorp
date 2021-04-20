@@ -1454,21 +1454,18 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       const firstA = a[0].substring(0, 1);
       const firstB = b[0].substring(0, 1);
 
-      if (firstA === "#") {
-        sortA = "2" + sortA;
-      } else if (firstA === ".") {
-        sortA = "1" + sortA;
-      } else {
-        sortA = "0" + sortA;
-      }
+      const getSortKeyPrefix = firstLetter => {
+        if (firstLetter === "#") {
+          return "2";
+        }
+        if (firstLetter === ".") {
+          return "1";
+        }
+        return "0";
+      };
 
-      if (firstB === "#") {
-        sortB = "2" + sortB;
-      } else if (firstB === ".") {
-        sortB = "1" + sortB;
-      } else {
-        sortB = "0" + sortB;
-      }
+      sortA = getSortKeyPrefix(firstA) + sortA;
+      sortB = getSortKeyPrefix(firstB) + sortB;
 
       // String compare
       return sortA.localeCompare(sortB);
