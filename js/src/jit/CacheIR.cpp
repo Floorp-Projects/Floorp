@@ -11093,7 +11093,8 @@ AttachDecision NewObjectIRGenerator::tryAttachPlainObject() {
   gc::AllocKind allocKind = nativeObj->asTenured().getAllocKind();
   Shape* shape = nativeObj->lastProperty();
 
-  writer.guardNoAllocationMetadataBuilder();
+  writer.guardNoAllocationMetadataBuilder(
+      cx_->realm()->addressOfMetadataBuilder());
   writer.newPlainObjectResult(numFixedSlots, numDynamicSlots, allocKind, shape);
 
   writer.returnFromIC();

@@ -611,6 +611,7 @@
   transpile: false
   cost_estimate: 1
   args:
+    builderAddr: RawPointerField
 
 - name: GuardFunctionHasJitEntry
   shared: true
