@@ -287,6 +287,7 @@ windows-qr-tests:
     - mochitest-plain-gpu
     - mochitest-media
     - mochitest-webgl1-core
+    - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - reftest
     - test-verify
