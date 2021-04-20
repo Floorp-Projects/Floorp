@@ -34,7 +34,7 @@ use std::net::SocketAddr;
 const MAX_TABLE_SIZE: u64 = 65536;
 const MAX_BLOCKED_STREAMS: u16 = 10;
 const PROTOCOLS: &[&str] = &["h3-27"];
-const TIMER_TOKEN: Token = Token(0xffff);
+const TIMER_TOKEN: Token = Token(0xffff_ffff);
 
 const HTTP_RESPONSE_WITH_WRONG_FRAME: &[u8] = &[
     0x01, 0x06, 0x00, 0x00, 0xd9, 0x54, 0x01, 0x37, // headers
@@ -315,15 +315,10 @@ impl HttpServer for NonRespondingServer {
 }
 
 fn emit_packet(socket: &UdpSocket, out_dgram: Datagram) {
-    let res = match socket.send_to(&out_dgram, &out_dgram.destination()) {
-        Err(ref err) if err.kind() == io::ErrorKind::WouldBlock => 0,
-        Err(err) => {
-            eprintln!("UDP send error: {:?}", err);
-            exit(1);
-        }
-        Ok(res) => res,
-    };
-    if res != out_dgram.len() {
+    let sent = socket
+        .send_to(&out_dgram, &out_dgram.destination())
+        .expect("Error sending datagram");
+    if sent != out_dgram.len() {
         qinfo!("Unable to send all {} bytes of datagram", out_dgram.len());
     }
 }
@@ -594,7 +589,7 @@ impl ServersRunner {
     }
 }
 
-pub fn start_server() -> Result<(), io::Error> {
+fn main() -> Result<(), io::Error> {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         eprintln!("Wrong arguments.");
@@ -622,9 +617,4 @@ pub fn start_server() -> Result<(), io::Error> {
     let mut servers_runner = ServersRunner::new()?;
     servers_runner.init();
     servers_runner.run()
-}
-
-#[no_mangle]
-pub extern "C" fn C_StartServer() {
-    start_server().expect("Server should be started succeed");
 }
