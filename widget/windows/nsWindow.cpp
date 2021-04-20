@@ -1793,8 +1793,8 @@ void nsWindow::SetThemeRegion() {
             NSToIntRound(size.width * GetDesktopToDeviceScale().scale);
         int32_t height =
             NSToIntRound(size.height * GetDesktopToDeviceScale().scale);
-        HRGN region = CreateRoundRectRgn(0, 0, mBounds.Width(),
-                                         mBounds.Height(), width, height);
+        HRGN region = CreateRoundRectRgn(0, 0, mBounds.Width() + 1,
+                                         mBounds.Height() + 1, width, height);
         if (!SetWindowRgn(mWnd, region, false)) {
           DeleteObject(region);  // region setting failed so delete the region.
         }
