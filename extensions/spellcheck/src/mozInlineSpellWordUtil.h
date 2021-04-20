@@ -139,8 +139,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
     void Invalidate() { mIsValid = false; }
 
-    // DOM text covering the soft range, with newlines added at block boundaries
-    nsString mValue;
+    const nsString& GetValue() const { return mValue; }
 
     NodeOffset mBegin = NodeOffset(nullptr, 0);
     NodeOffset mEnd = NodeOffset(nullptr, 0);
@@ -148,6 +147,10 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
     bool mIsValid = false;
 
     nsTArray<DOMTextMapping> mDOMMapping;
+
+   private:
+    // DOM text covering the soft range, with newlines added at block boundaries
+    nsString mValue;
   };
 
   SoftText mSoftText;
