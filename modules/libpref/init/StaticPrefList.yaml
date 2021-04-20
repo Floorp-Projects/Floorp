@@ -1943,7 +1943,13 @@
   value: true
   mirror: always
 
-# Disable ClipboardItem and clipboard.read/write by default
+# Disable clipboard.read() by default
+- name: dom.events.asyncClipboard.read
+  type: bool
+  value: false
+  mirror: always
+
+# Disable ClipboardItem and clipboard.write by default
 - name: dom.events.asyncClipboard.clipboardItem
   type: bool
   value: false
