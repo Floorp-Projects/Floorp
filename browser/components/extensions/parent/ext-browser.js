@@ -44,10 +44,6 @@ function isPrivateTab(nativeTab) {
   return PrivateBrowsingUtils.isBrowserPrivate(nativeTab.linkedBrowser);
 }
 
-function isPrivateWindow(window) {
-  return PrivateBrowsingUtils.isContentWindowPrivate(window);
-}
-
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
 const getSender = (extension, target, sender) => {
@@ -425,7 +421,6 @@ class TabTracker extends TabTrackerBase {
     this.emit("tab-adopted", adoptingTab, adoptedTab);
     if (this.has("tab-detached")) {
       let nativeTab = adoptedTab;
-      let isPrivate = isPrivateTab(nativeTab);
       let adoptedBy = adoptingTab;
       let oldWindowId = windowTracker.getId(nativeTab.ownerGlobal);
       let oldPosition = nativeTab._tPos;
@@ -435,12 +430,10 @@ class TabTracker extends TabTrackerBase {
         tabId,
         oldWindowId,
         oldPosition,
-        isPrivate,
       });
     }
     if (this.has("tab-attached")) {
       let nativeTab = adoptingTab;
-      let isPrivate = isPrivateTab(nativeTab);
       let newWindowId = windowTracker.getId(nativeTab.ownerGlobal);
       let newPosition = nativeTab._tPos;
       this.emit("tab-attached", {
@@ -448,7 +441,6 @@ class TabTracker extends TabTrackerBase {
         tabId,
         newWindowId,
         newPosition,
-        isPrivate,
       });
     }
   }
@@ -682,7 +674,6 @@ class TabTracker extends TabTrackerBase {
       previousTabIsPrivate = isPrivateTab(previousTab);
     }
     this.emit("tab-activated", {
-      isPrivate: isPrivateTab(nativeTab),
       tabId: this.getId(nativeTab),
       previousTabId,
       previousTabIsPrivate,
@@ -704,7 +695,6 @@ class TabTracker extends TabTrackerBase {
     this.emit("tabs-highlighted", {
       tabIds,
       windowId,
-      isPrivate: isPrivateWindow(window),
     });
   }
 
@@ -721,7 +711,6 @@ class TabTracker extends TabTrackerBase {
     this.emit("tab-created", {
       nativeTab,
       currentTabSize,
-      isPrivate: isPrivateTab(nativeTab),
     });
   }
 
@@ -744,7 +733,6 @@ class TabTracker extends TabTrackerBase {
       tabId,
       windowId,
       isWindowClosing,
-      isPrivate: isPrivateTab(nativeTab),
     });
   }
 
