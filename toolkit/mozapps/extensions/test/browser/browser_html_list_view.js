@@ -988,3 +988,29 @@ add_task(async function testDisabledDimming() {
   await closeView(win);
   await extension.unload();
 });
+
+add_task(async function testEmptyMessage() {
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+  let enabledSection = getSection(doc, "enabled");
+  let disabledSection = getSection(doc, "disabled");
+  const message = doc.querySelector("#empty-addons-message");
+
+  // With 3 enabled addons and 1 disabled, the message is hidden
+  is_element_hidden(message, "Empty addons message hidden");
+
+  // The test runner (Mochitest) relies on add-ons that should not be removed.
+  // Simulate the scenario of zero add-ons by clearing all rendered sections.
+  while (enabledSection.firstChild) {
+    enabledSection.firstChild.remove();
+  }
+
+  while (disabledSection.firstChild) {
+    disabledSection.firstChild.remove();
+  }
+
+  // Message should now be displayed
+  is_element_visible(message, "Empty addons message visible");
+
+  await closeView(win);
+});
