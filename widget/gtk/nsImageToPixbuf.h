@@ -8,6 +8,8 @@
 
 #include "nsIImageToPixbuf.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
+#include "nsSize.h"
 
 namespace mozilla {
 namespace gfx {
@@ -28,7 +30,9 @@ class nsImageToPixbuf final : public nsIImageToPixbuf {
    * The return value of all these, if not null, should be
    * released as needed by the caller using g_object_unref.
    */
-  static GdkPixbuf* ImageToPixbuf(imgIContainer* aImage);
+  static GdkPixbuf* ImageToPixbuf(
+      imgIContainer* aImage,
+      const mozilla::Maybe<nsIntSize>& aOverrideSize = mozilla::Nothing());
   static GdkPixbuf* SourceSurfaceToPixbuf(SourceSurface* aSurface,
                                           int32_t aWidth, int32_t aHeight);
 

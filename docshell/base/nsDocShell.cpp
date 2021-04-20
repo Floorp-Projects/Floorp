@@ -5871,7 +5871,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
         nsCOMPtr<nsIWidget> mainWidget;
         GetMainWidget(getter_AddRefs(mainWidget));
         if (mainWidget) {
-          mainWidget->SetCursor(eCursor_spinning, nullptr, 0, 0);
+          mainWidget->SetCursor(nsIWidget::Cursor{eCursor_spinning});
         }
       }
 
@@ -5893,7 +5893,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
       nsCOMPtr<nsIWidget> mainWidget;
       GetMainWidget(getter_AddRefs(mainWidget));
       if (mainWidget) {
-        mainWidget->SetCursor(eCursor_standard, nullptr, 0, 0);
+        mainWidget->SetCursor(nsIWidget::Cursor{eCursor_standard});
       }
     }
   }
