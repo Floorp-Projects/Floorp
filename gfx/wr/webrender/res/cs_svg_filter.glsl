@@ -15,7 +15,14 @@ flat varying int vFilterKind;
 flat varying ivec4 vData;
 flat varying vec4 vFilterData0;
 flat varying vec4 vFilterData1;
+#if defined(PLATFORM_ANDROID) && !defined(SWGL)
+// Work around Adreno 3xx driver bug. See the v_perspective comment in
+// brush_image or bug 1630356 for details.
+flat varying vec2 vFloat0Vec;
+#define vFloat0 vFloat0Vec.x
+#else
 flat varying float vFloat0;
+#endif
 flat varying mat4 vColorMat;
 flat varying ivec4 vFuncs;
 
