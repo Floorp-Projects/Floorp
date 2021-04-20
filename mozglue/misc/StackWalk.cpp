@@ -207,36 +207,83 @@ static void InitializeDbgHelpCriticalSection() {
   initialized = true;
 }
 
+// Wrapper around a reference to a CONTEXT, to simplify access to main
+// platform-specific execution registers.
+// It also avoids using CONTEXT* nullable pointers.
+class CONTEXTGenericAccessors {
+ public:
+  explicit CONTEXTGenericAccessors(CONTEXT& aCONTEXT) : mCONTEXT(aCONTEXT) {}
+
+  CONTEXT* CONTEXTPtr() { return &mCONTEXT; }
+
+  inline auto& PC() {
+#  if defined(_M_AMD64)
+    return mCONTEXT.Rip;
+#  elif defined(_M_ARM64)
+    return mCONTEXT.Pc;
+#  elif defined(_M_IX86)
+    return mCONTEXT.Eip;
+#  elif defined(_M_IA64)
+    return mCONTEXT.StIIP;
+#  else
+#    error "unknown platform"
+#  endif
+  }
+
+  inline auto& SP() {
+#  if defined(_M_AMD64)
+    return mCONTEXT.Rsp;
+#  elif defined(_M_ARM64)
+    return mCONTEXT.Sp;
+#  elif defined(_M_IX86)
+    return mCONTEXT.Esp;
+#  elif defined(_M_IA64)
+    return mCONTEXT.SP;
+#  else
+#    error "unknown platform"
+#  endif
+  }
+
+  inline auto& BP() {
+#  if defined(_M_AMD64)
+    return mCONTEXT.Rbp;
+#  elif defined(_M_ARM64)
+    return mCONTEXT.Fp;
+#  elif defined(_M_IX86)
+    return mCONTEXT.Ebp;
+#  elif defined(_M_IA64)
+    return mCONTEXT.RsBSP;
+#  else
+#    error "unknown platform"
+#  endif
+  }
+
+ private:
+  CONTEXT& mCONTEXT;
+};
+
 static void WalkStackMain64(struct WalkStackData* aData) {
-  // Get a context for the specified thread.
+  // If not already provided, get a context for the specified thread.
   CONTEXT context_buf;
-  CONTEXT* context;
   if (!aData->context) {
-    context = &context_buf;
-    memset(context, 0, sizeof(CONTEXT));
-    context->ContextFlags = CONTEXT_FULL;
+    memset(&context_buf, 0, sizeof(CONTEXT));
+    context_buf.ContextFlags = CONTEXT_FULL;
     if (aData->walkCallingThread) {
-      ::RtlCaptureContext(context);
-    } else if (!GetThreadContext(aData->thread, context)) {
+      ::RtlCaptureContext(&context_buf);
+    } else if (!GetThreadContext(aData->thread, &context_buf)) {
       return;
     }
-  } else {
-    context = aData->context;
   }
+  CONTEXTGenericAccessors context{aData->context ? *aData->context
+                                                 : context_buf};
 
 #  if defined(_M_IX86) || defined(_M_IA64)
   // Setup initial stack frame to walk from.
   STACKFRAME64 frame64;
   memset(&frame64, 0, sizeof(frame64));
-#    ifdef _M_IX86
-  frame64.AddrPC.Offset = context->Eip;
-  frame64.AddrStack.Offset = context->Esp;
-  frame64.AddrFrame.Offset = context->Ebp;
-#    elif defined _M_IA64
-  frame64.AddrPC.Offset = context->StIIP;
-  frame64.AddrStack.Offset = context->SP;
-  frame64.AddrFrame.Offset = context->RsBSP;
-#    endif
+  frame64.AddrPC.Offset = context.PC();
+  frame64.AddrStack.Offset = context.SP();
+  frame64.AddrFrame.Offset = context.BP();
   frame64.AddrPC.Mode = AddrModeFlat;
   frame64.AddrStack.Mode = AddrModeFlat;
   frame64.AddrFrame.Mode = AddrModeFlat;
@@ -280,7 +327,7 @@ static void WalkStackMain64(struct WalkStackData* aData) {
 #    elif defined _M_IX86
         IMAGE_FILE_MACHINE_I386,
 #    endif
-        aData->process, aData->thread, &frame64, context, nullptr,
+        aData->process, aData->thread, &frame64, context.CONTEXTPtr(), nullptr,
         SymFunctionTableAccess64,  // function table access routine
         SymGetModuleBase64,        // module base routine
         0);
@@ -303,11 +350,7 @@ static void WalkStackMain64(struct WalkStackData* aData) {
 
 #  elif defined(_M_AMD64) || defined(_M_ARM64)
 
-#    if defined(_M_AMD64)
-    auto currentInstr = context->Rip;
-#    elif defined(_M_ARM64)
-    auto currentInstr = context->Pc;
-#    endif
+    auto currentInstr = context.PC();
 
     // If we reach a frame in JIT code, we don't have enough information to
     // unwind, so we have to give up.
@@ -336,29 +379,19 @@ static void WalkStackMain64(struct WalkStackData* aData) {
       PVOID dummyHandlerData;
       ULONG64 dummyEstablisherFrame;
       RtlVirtualUnwind(UNW_FLAG_NHANDLER, imageBase, currentInstr,
-                       runtimeFunction, context, &dummyHandlerData,
+                       runtimeFunction, context.CONTEXTPtr(), &dummyHandlerData,
                        &dummyEstablisherFrame, nullptr);
     } else if (firstFrame) {
       // Leaf functions can be unwound by hand.
-#    if defined(_M_AMD64)
-      context->Rip = *reinterpret_cast<DWORD64*>(context->Rsp);
-      context->Rsp += sizeof(void*);
-#    elif defined(_M_ARM64)
-      context->Pc = *reinterpret_cast<DWORD64*>(context->Sp);
-      context->Sp += sizeof(void*);
-#    endif
+      context.PC() = *reinterpret_cast<DWORD64*>(context.SP());
+      context.SP() += sizeof(void*);
     } else {
       // Something went wrong.
       break;
     }
 
-#    if defined(_M_AMD64)
-    addr = context->Rip;
-    spaddr = context->Rsp;
-#    elif defined(_M_ARM64)
-    addr = context->Pc;
-    spaddr = context->Sp;
-#    endif
+    addr = context.PC();
+    spaddr = context.SP();
     firstFrame = false;
 #  else
 #    error "unknown platform"
