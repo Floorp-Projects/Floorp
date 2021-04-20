@@ -24,7 +24,7 @@
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "MozContainer.h"
-#include "gfxPlatformGtk.h"
+#include "WidgetUtilsGtk.h"
 
 #include "nsFilePicker.h"
 
@@ -162,7 +162,7 @@ nsFilePicker::nsFilePicker()
       mFileChooserDelegate(nullptr) {
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   // Due to Bug 1635718 always use portal for file dialog on Wayland.
-  if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
+  if (widget::GdkIsWaylandDisplay()) {
     mUseNativeFileChooser =
         Preferences::GetBool("widget.use-xdg-desktop-portal", true);
   } else {

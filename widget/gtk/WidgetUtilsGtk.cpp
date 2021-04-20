@@ -71,10 +71,18 @@ bool GdkIsX11Display(GdkDisplay* display) {
 }
 
 bool GdkIsWaylandDisplay() {
-  return GdkIsWaylandDisplay(gdk_display_get_default());
+  static bool isWaylandDisplay =
+      gdk_display_get_default() ? GdkIsWaylandDisplay(gdk_display_get_default())
+                                : false;
+  return isWaylandDisplay;
 }
 
-bool GdkIsX11Display() { return GdkIsX11Display(gdk_display_get_default()); }
+bool GdkIsX11Display() {
+  static bool isX11Display = gdk_display_get_default()
+                                 ? GdkIsX11Display(gdk_display_get_default())
+                                 : false;
+  return isX11Display;
+}
 
 nsTArray<nsCString> ParseTextURIList(const nsACString& aData) {
   UniquePtr<char[]> data(ToNewCString(aData));

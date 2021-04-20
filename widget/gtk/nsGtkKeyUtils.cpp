@@ -28,7 +28,6 @@
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWindow.h"
-#include "gfxPlatformGtk.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MouseEvents.h"
@@ -347,7 +346,7 @@ KeymapWrapper::KeymapWrapper()
 
   g_object_ref(mGdkKeymap);
 
-  if (gfxPlatformGtk::GetPlatform()->IsX11Display()) {
+  if (GdkIsX11Display()) {
     InitXKBExtension();
   }
 
@@ -366,7 +365,7 @@ void KeymapWrapper::Init() {
   mModifierKeys.Clear();
   memset(mModifierMasks, 0, sizeof(mModifierMasks));
 
-  if (gfxPlatformGtk::GetPlatform()->IsX11Display()) {
+  if (GdkIsX11Display()) {
     InitBySystemSettingsX11();
   }
 #ifdef MOZ_WAYLAND

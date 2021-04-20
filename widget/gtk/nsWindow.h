@@ -462,8 +462,6 @@ class nsWindow final : public nsBaseWidget {
   bool mHandleTouchEvent;
   // true if this is a drag and drop feedback popup
   bool mIsDragPopup;
-  // Can we access X?
-  bool mIsX11Display;
 #ifdef MOZ_WAYLAND
   bool mNeedsCompositorResume;
   bool mCompositorInitiallyPaused;
