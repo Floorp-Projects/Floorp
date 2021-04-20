@@ -935,7 +935,9 @@ class ResponsiveUI {
    *        Whether or not touch is enabled for the simulated device.
    */
   async updateMaxTouchPointsEnabled(touchSimulationEnabled) {
-    return this.responsiveFront.setMaxTouchPoints(touchSimulationEnabled);
+    return this.commands.targetConfigurationCommand.updateConfiguration({
+      rdmPaneMaxTouchPoints: touchSimulationEnabled ? 1 : 0,
+    });
   }
 
   /**
