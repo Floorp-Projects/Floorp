@@ -258,7 +258,42 @@ class CONTEXTGenericAccessors {
   CONTEXT& mCONTEXT;
 };
 
-static void WalkStackMain64(struct WalkStackData* aData) {
+/**
+ * Walk the stack, translating PC's found into strings and recording the
+ * chain in aBuffer. For this to work properly, the DLLs must be rebased
+ * so that the address in the file agrees with the address in memory.
+ * Otherwise StackWalk will return FALSE when it hits a frame in a DLL
+ * whose in memory address doesn't match its in-file address.
+ */
+
+static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
+                                 const void* aFirstFramePC, uint32_t aMaxFrames,
+                                 void* aClosure, HANDLE aThread,
+                                 CONTEXT* aContext) {
+  struct WalkStackData data;
+
+  InitializeDbgHelpCriticalSection();
+
+  HANDLE targetThread = aThread;
+  if (!aThread) {
+    targetThread = ::GetCurrentThread();
+    data.walkCallingThread = true;
+  } else {
+    DWORD threadId = ::GetThreadId(aThread);
+    DWORD currentThreadId = ::GetCurrentThreadId();
+    data.walkCallingThread = (threadId == currentThreadId);
+  }
+
+  data.firstFramePC = aFirstFramePC;
+  data.thread = targetThread;
+  data.process = ::GetCurrentProcess();
+  data.maxFrames = aMaxFrames;
+  data.context = aContext;
+  data.callback = aCallback;
+  data.callbackClosure = aClosure;
+
+  WalkStackData* aData = &data;
+
   // If not already provided, get a context for the specified thread.
   CONTEXT context_buf;
   if (!aData->context) {
@@ -416,43 +451,6 @@ static void WalkStackMain64(struct WalkStackData* aData) {
     }
 #  endif
   }
-}
-
-/**
- * Walk the stack, translating PC's found into strings and recording the
- * chain in aBuffer. For this to work properly, the DLLs must be rebased
- * so that the address in the file agrees with the address in memory.
- * Otherwise StackWalk will return FALSE when it hits a frame in a DLL
- * whose in memory address doesn't match its in-file address.
- */
-
-static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
-                                 const void* aFirstFramePC, uint32_t aMaxFrames,
-                                 void* aClosure, HANDLE aThread,
-                                 CONTEXT* aContext) {
-  struct WalkStackData data;
-
-  InitializeDbgHelpCriticalSection();
-
-  HANDLE targetThread = aThread;
-  if (!aThread) {
-    targetThread = ::GetCurrentThread();
-    data.walkCallingThread = true;
-  } else {
-    DWORD threadId = ::GetThreadId(aThread);
-    DWORD currentThreadId = ::GetCurrentThreadId();
-    data.walkCallingThread = (threadId == currentThreadId);
-  }
-
-  data.firstFramePC = aFirstFramePC;
-  data.thread = targetThread;
-  data.process = ::GetCurrentProcess();
-  data.maxFrames = aMaxFrames;
-  data.context = aContext;
-  data.callback = aCallback;
-  data.callbackClosure = aClosure;
-
-  WalkStackMain64(&data);
 }
 
 MFBT_API void MozStackWalkThread(MozWalkStackCallback aCallback,
