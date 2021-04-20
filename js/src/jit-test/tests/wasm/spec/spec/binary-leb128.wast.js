@@ -60,12 +60,13 @@ let $5 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\04\\04\\01"                          ;; Table section with 1 entry
   "\\70\\00\\00"                          ;; no max, minimum 0, funcref
-  "\\09\\07\\01"                          ;; Element section with 1 entry
+  "\\09\\09\\01"                          ;; Element section with 1 entry
+  "\\02"                                ;; Element with explicit table index
   "\\80\\00"                             ;; Table index 0, encoded with 2 bytes
-  "\\41\\00\\0b\\00"                       ;; (i32.const 0) with no elements
+  "\\41\\00\\0b\\00\\00"                    ;; (i32.const 0) with no elements
 )`);
 
-// ./test/core/binary-leb128.wast:40
+// ./test/core/binary-leb128.wast:41
 let $6 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\00"                                ;; custom section
@@ -75,7 +76,7 @@ let $6 = instantiate(`(module binary
   "23456789"                           ;; sequence of bytes
 )`);
 
-// ./test/core/binary-leb128.wast:48
+// ./test/core/binary-leb128.wast:49
 let $7 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\00"                                ;; custom section
@@ -85,7 +86,7 @@ let $7 = instantiate(`(module binary
   "9"                                  ;; sequence of bytes
 )`);
 
-// ./test/core/binary-leb128.wast:56
+// ./test/core/binary-leb128.wast:57
 let $8 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\01\\08\\01"                          ;; type section
@@ -96,7 +97,7 @@ let $8 = instantiate(`(module binary
   "\\7f"                                ;; result type
 )`);
 
-// ./test/core/binary-leb128.wast:65
+// ./test/core/binary-leb128.wast:66
 let $9 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\01\\08\\01"                          ;; type section
@@ -107,7 +108,7 @@ let $9 = instantiate(`(module binary
   "\\7f"                                ;; result type
 )`);
 
-// ./test/core/binary-leb128.wast:74
+// ./test/core/binary-leb128.wast:75
 let $10 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\01\\05\\01"                          ;; type section
@@ -121,7 +122,7 @@ let $10 = instantiate(`(module binary
   "\\00"                                ;; import signature index
 )`);
 
-// ./test/core/binary-leb128.wast:86
+// ./test/core/binary-leb128.wast:87
 let $11 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\01\\05\\01"                          ;; type section
@@ -135,7 +136,7 @@ let $11 = instantiate(`(module binary
   "\\00"                                ;; import signature index
 )`);
 
-// ./test/core/binary-leb128.wast:98
+// ./test/core/binary-leb128.wast:99
 let $12 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\01\\05\\01"                          ;; type section
@@ -149,7 +150,7 @@ let $12 = instantiate(`(module binary
   "\\80\\00"                             ;; import signature index, encoded with 2 bytes
 )`);
 
-// ./test/core/binary-leb128.wast:110
+// ./test/core/binary-leb128.wast:111
 let $13 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\01\\04\\01"                          ;; type section
@@ -160,7 +161,7 @@ let $13 = instantiate(`(module binary
   "\\02\\00\\0b"                          ;; function body
 )`);
 
-// ./test/core/binary-leb128.wast:119
+// ./test/core/binary-leb128.wast:120
 let $14 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\01\\04\\01"                          ;; type section
@@ -175,7 +176,7 @@ let $14 = instantiate(`(module binary
   "\\02\\00\\0b"                          ;; function body
 )`);
 
-// ./test/core/binary-leb128.wast:132
+// ./test/core/binary-leb128.wast:133
 let $15 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\01\\04\\01"                          ;; type section
@@ -190,7 +191,7 @@ let $15 = instantiate(`(module binary
   "\\02\\00\\0b"                          ;; function body
 )`);
 
-// ./test/core/binary-leb128.wast:145
+// ./test/core/binary-leb128.wast:146
 let $16 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\01\\04\\01"                          ;; type section
@@ -202,7 +203,7 @@ let $16 = instantiate(`(module binary
   "\\02\\00\\0b"                          ;; function body
 )`);
 
-// ./test/core/binary-leb128.wast:157
+// ./test/core/binary-leb128.wast:158
 let $17 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\06\\07\\01"                          ;; Global section with 1 entry
@@ -211,7 +212,7 @@ let $17 = instantiate(`(module binary
   "\\0b"                                ;; end
 )`);
 
-// ./test/core/binary-leb128.wast:164
+// ./test/core/binary-leb128.wast:165
 let $18 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\06\\07\\01"                          ;; Global section with 1 entry
@@ -220,7 +221,7 @@ let $18 = instantiate(`(module binary
   "\\0b"                                ;; end
 )`);
 
-// ./test/core/binary-leb128.wast:171
+// ./test/core/binary-leb128.wast:172
 let $19 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\06\\0a\\01"                          ;; Global section with 1 entry
@@ -229,7 +230,7 @@ let $19 = instantiate(`(module binary
   "\\0b"                                ;; end
 )`);
 
-// ./test/core/binary-leb128.wast:178
+// ./test/core/binary-leb128.wast:179
 let $20 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\06\\0a\\01"                          ;; Global section with 1 entry
@@ -238,7 +239,7 @@ let $20 = instantiate(`(module binary
   "\\0b"                                ;; end
 )`);
 
-// ./test/core/binary-leb128.wast:186
+// ./test/core/binary-leb128.wast:187
 let $21 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\06\\07\\01"                          ;; Global section with 1 entry
@@ -247,7 +248,7 @@ let $21 = instantiate(`(module binary
   "\\0b"                                ;; end
 )`);
 
-// ./test/core/binary-leb128.wast:193
+// ./test/core/binary-leb128.wast:194
 let $22 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\06\\07\\01"                          ;; Global section with 1 entry
@@ -256,7 +257,7 @@ let $22 = instantiate(`(module binary
   "\\0b"                                ;; end
 )`);
 
-// ./test/core/binary-leb128.wast:200
+// ./test/core/binary-leb128.wast:201
 let $23 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\06\\0f\\01"                          ;; Global section with 1 entry
@@ -265,7 +266,7 @@ let $23 = instantiate(`(module binary
   "\\0b"                                ;; end
 )`);
 
-// ./test/core/binary-leb128.wast:207
+// ./test/core/binary-leb128.wast:208
 let $24 = instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
   "\\06\\0f\\01"                          ;; Global section with 1 entry
@@ -274,7 +275,7 @@ let $24 = instantiate(`(module binary
   "\\0b"                                ;; end
 )`);
 
-// ./test/core/binary-leb128.wast:216
+// ./test/core/binary-leb128.wast:217
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -282,7 +283,7 @@ assert_malformed(() =>
     "\\00\\82\\80\\80\\80\\80\\00"              ;; no max, minimum 2 with one byte too many
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:224
+// ./test/core/binary-leb128.wast:225
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -291,7 +292,7 @@ assert_malformed(() =>
     "\\82\\80\\80\\80\\80\\00"                 ;; max 2 with one byte too many
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:233
+// ./test/core/binary-leb128.wast:234
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -302,7 +303,7 @@ assert_malformed(() =>
     "\\41\\00\\0b\\00"                       ;; (i32.const 0) with contents ""
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:244
+// ./test/core/binary-leb128.wast:245
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -313,7 +314,7 @@ assert_malformed(() =>
     "\\41\\00\\0b\\00"                       ;; (i32.const 0) with no elements
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:255
+// ./test/core/binary-leb128.wast:256
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -324,7 +325,7 @@ assert_malformed(() =>
     "2"                                  ;; sequence of bytes
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:266
+// ./test/core/binary-leb128.wast:267
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -335,7 +336,7 @@ assert_malformed(() =>
     "4"                                  ;; sequence of bytes
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:277
+// ./test/core/binary-leb128.wast:278
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -347,7 +348,7 @@ assert_malformed(() =>
     "\\7f"                                ;; result type
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:289
+// ./test/core/binary-leb128.wast:290
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -359,7 +360,7 @@ assert_malformed(() =>
     "\\7f"                                ;; result type
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:301
+// ./test/core/binary-leb128.wast:302
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -374,7 +375,7 @@ assert_malformed(() =>
     "\\00"                                ;; import signature index
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:316
+// ./test/core/binary-leb128.wast:317
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -389,7 +390,7 @@ assert_malformed(() =>
     "\\00"                                ;; import signature index
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:331
+// ./test/core/binary-leb128.wast:332
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -404,7 +405,7 @@ assert_malformed(() =>
     "\\80\\80\\80\\80\\80\\00"                 ;; import signature index 0 with one byte too many
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:346
+// ./test/core/binary-leb128.wast:347
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -416,7 +417,7 @@ assert_malformed(() =>
     "\\02\\00\\0b"                          ;; function body
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:358
+// ./test/core/binary-leb128.wast:359
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -432,7 +433,7 @@ assert_malformed(() =>
     "\\02\\00\\0b"                          ;; function body
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:374
+// ./test/core/binary-leb128.wast:375
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -448,7 +449,7 @@ assert_malformed(() =>
     "\\02\\00\\0b"                          ;; function body
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:390
+// ./test/core/binary-leb128.wast:391
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -461,7 +462,7 @@ assert_malformed(() =>
     "\\02\\00\\0b"                          ;; function body
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:403
+// ./test/core/binary-leb128.wast:404
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -480,7 +481,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:422
+// ./test/core/binary-leb128.wast:423
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -499,7 +500,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:441
+// ./test/core/binary-leb128.wast:442
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -518,7 +519,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:460
+// ./test/core/binary-leb128.wast:461
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -537,7 +538,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:481
+// ./test/core/binary-leb128.wast:482
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -547,7 +548,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:491
+// ./test/core/binary-leb128.wast:492
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -557,7 +558,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:502
+// ./test/core/binary-leb128.wast:503
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -567,7 +568,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:512
+// ./test/core/binary-leb128.wast:513
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -577,7 +578,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer representation too long`);
 
-// ./test/core/binary-leb128.wast:524
+// ./test/core/binary-leb128.wast:525
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -585,7 +586,7 @@ assert_malformed(() =>
     "\\00\\82\\80\\80\\80\\70"                 ;; no max, minimum 2 with unused bits set
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:532
+// ./test/core/binary-leb128.wast:533
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -593,7 +594,7 @@ assert_malformed(() =>
     "\\00\\82\\80\\80\\80\\40"                 ;; no max, minimum 2 with some unused bits set
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:540
+// ./test/core/binary-leb128.wast:541
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -602,7 +603,7 @@ assert_malformed(() =>
     "\\82\\80\\80\\80\\10"                    ;; max 2 with unused bits set
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:549
+// ./test/core/binary-leb128.wast:550
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -611,7 +612,7 @@ assert_malformed(() =>
     "\\82\\80\\80\\80\\40"                    ;; max 2 with some unused bits set
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:558
+// ./test/core/binary-leb128.wast:559
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -622,7 +623,7 @@ assert_malformed(() =>
     "\\41\\00\\0b\\00"                       ;; (i32.const 0) with contents ""
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:569
+// ./test/core/binary-leb128.wast:570
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -633,7 +634,7 @@ assert_malformed(() =>
     "\\41\\00\\0b\\00"                       ;; (i32.const 0) with no elements
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:580
+// ./test/core/binary-leb128.wast:581
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -644,7 +645,7 @@ assert_malformed(() =>
     "2"                                  ;; sequence of bytes
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:591
+// ./test/core/binary-leb128.wast:592
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -655,7 +656,7 @@ assert_malformed(() =>
     "4"                                  ;; sequence of bytes
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:602
+// ./test/core/binary-leb128.wast:603
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -667,7 +668,7 @@ assert_malformed(() =>
     "\\7f"                                ;; result type
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:614
+// ./test/core/binary-leb128.wast:615
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -679,7 +680,7 @@ assert_malformed(() =>
     "\\7f"                                ;; result type
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:626
+// ./test/core/binary-leb128.wast:627
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -694,7 +695,7 @@ assert_malformed(() =>
     "\\00"                                ;; import signature index
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:641
+// ./test/core/binary-leb128.wast:642
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -709,7 +710,7 @@ assert_malformed(() =>
     "\\00"                                ;; import signature index
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:656
+// ./test/core/binary-leb128.wast:657
 assert_malformed(() =>
   instantiate(`(module binary
   "\\00asm" "\\01\\00\\00\\00"
@@ -724,7 +725,7 @@ assert_malformed(() =>
   "\\80\\80\\80\\80\\10"                    ;; import signature index 0 with unused bits set
 )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:671
+// ./test/core/binary-leb128.wast:672
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -736,7 +737,7 @@ assert_malformed(() =>
     "\\02\\00\\0b"                          ;; function body
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:684
+// ./test/core/binary-leb128.wast:685
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -752,7 +753,7 @@ assert_malformed(() =>
     "\\02\\00\\0b"                          ;; function body
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:700
+// ./test/core/binary-leb128.wast:701
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -768,7 +769,7 @@ assert_malformed(() =>
     "\\02\\00\\0b"                          ;; function body
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:716
+// ./test/core/binary-leb128.wast:717
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -781,7 +782,7 @@ assert_malformed(() =>
     "\\02\\00\\0b"                          ;; function body
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:729
+// ./test/core/binary-leb128.wast:730
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -800,7 +801,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:748
+// ./test/core/binary-leb128.wast:749
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -819,7 +820,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:767
+// ./test/core/binary-leb128.wast:768
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -837,7 +838,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:785
+// ./test/core/binary-leb128.wast:786
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -856,7 +857,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:804
+// ./test/core/binary-leb128.wast:805
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -875,7 +876,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:823
+// ./test/core/binary-leb128.wast:824
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -894,7 +895,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:842
+// ./test/core/binary-leb128.wast:843
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -908,12 +909,12 @@ assert_malformed(() =>
     "\\41\\00"                   ;; i32.const 0
     "\\41\\03"                   ;; i32.const 3
     "\\36"                      ;; i32.store
-    "\\03"                      ;; alignment 2
+    "\\02"                      ;; alignment 2
     "\\82\\80\\80\\80\\10"          ;; offset 2 with unused bits set
     "\\0b"                      ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:861
+// ./test/core/binary-leb128.wast:862
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -933,7 +934,7 @@ assert_malformed(() =>
     "\\0b"                      ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:883
+// ./test/core/binary-leb128.wast:884
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -943,7 +944,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:893
+// ./test/core/binary-leb128.wast:894
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -953,7 +954,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:903
+// ./test/core/binary-leb128.wast:904
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -963,7 +964,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:913
+// ./test/core/binary-leb128.wast:914
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -973,7 +974,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:924
+// ./test/core/binary-leb128.wast:925
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -983,7 +984,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:934
+// ./test/core/binary-leb128.wast:935
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -993,7 +994,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:944
+// ./test/core/binary-leb128.wast:945
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -1003,7 +1004,7 @@ assert_malformed(() =>
     "\\0b"                                ;; end
   )`), `integer too large`);
 
-// ./test/core/binary-leb128.wast:954
+// ./test/core/binary-leb128.wast:955
 assert_malformed(() =>
   instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -1012,3 +1013,40 @@ assert_malformed(() =>
     "\\42\\ff\\ff\\ff\\ff\\ff\\ff\\ff\\ff\\ff\\41"  ;; i64.const -1 with some unused bits unset
     "\\0b"                                ;; end
   )`), `integer too large`);
+
+// ./test/core/binary-leb128.wast:967
+let $25 = instantiate(`(module binary
+  "\\00asm" "\\01\\00\\00\\00"
+  "\\01\\04\\01"                          ;; type section
+  "\\60\\00\\00"                          ;; empty function type
+  "\\03\\02\\01"                          ;; function section
+  "\\00"                                ;; function 0, type 0
+  "\\0a\\1b\\01\\19"                       ;; code section
+  "\\00"                                ;; no locals
+  "\\00"                                ;; unreachable
+  "\\fc\\80\\00"                          ;; i32_trunc_sat_f32_s with 2 bytes
+  "\\00"                                ;; unreachable
+  "\\fc\\81\\80\\00"                       ;; i32_trunc_sat_f32_u with 3 bytes
+  "\\00"                                ;; unreachable
+  "\\fc\\86\\80\\80\\00"                    ;; i64_trunc_sat_f64_s with 4 bytes
+  "\\00"                                ;; unreachable
+  "\\fc\\87\\80\\80\\80\\00"                 ;; i64_trunc_sat_f64_u with 5 bytes
+  "\\00"                                ;; unreachable
+  "\\0b"                                ;; end
+)`);
+
+// ./test/core/binary-leb128.wast:987
+assert_malformed(() =>
+  instantiate(`(module binary
+    "\\00asm" "\\01\\00\\00\\00"
+    "\\01\\04\\01"                          ;; type section
+    "\\60\\00\\00"                          ;; empty function type
+    "\\03\\02\\01"                          ;; function section
+    "\\00"                                ;; function 0, type 0
+    "\\0a\\0d\\01\\0b"                       ;; code section
+    "\\00"                                ;; no locals
+    "\\00"                                ;; unreachable
+    "\\fc\\87\\80\\80\\80\\80\\00"              ;; i64_trunc_sat_f64_u with 6 bytes
+    "\\00"                                ;; unreachable
+    "\\0b"                                ;; end
+  )`), `integer representation too long`);

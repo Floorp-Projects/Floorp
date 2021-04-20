@@ -281,7 +281,10 @@ invoke($5, `drop_passive`, []);
 assert_return(() => invoke($5, `init_passive`, [0]), []);
 
 // ./test/core/bulk.wast:172
-assert_trap(() => invoke($5, `init_passive`, [1]), `out of bounds`);
+assert_trap(
+  () => invoke($5, `init_passive`, [1]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/bulk.wast:173
 invoke($5, `init_passive`, [0]);
@@ -293,7 +296,10 @@ invoke($5, `drop_active`, []);
 assert_return(() => invoke($5, `init_active`, [0]), []);
 
 // ./test/core/bulk.wast:176
-assert_trap(() => invoke($5, `init_active`, [1]), `out of bounds`);
+assert_trap(
+  () => invoke($5, `init_active`, [1]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/bulk.wast:177
 invoke($5, `init_active`, [0]);
@@ -400,7 +406,10 @@ invoke($9, `drop_passive`, []);
 assert_return(() => invoke($9, `init_passive`, [0]), []);
 
 // ./test/core/bulk.wast:265
-assert_trap(() => invoke($9, `init_passive`, [1]), `out of bounds`);
+assert_trap(
+  () => invoke($9, `init_passive`, [1]),
+  `out of bounds table access`,
+);
 
 // ./test/core/bulk.wast:266
 invoke($9, `init_passive`, [0]);
@@ -412,7 +421,7 @@ invoke($9, `drop_active`, []);
 assert_return(() => invoke($9, `init_active`, [0]), []);
 
 // ./test/core/bulk.wast:269
-assert_trap(() => invoke($9, `init_active`, [1]), `out of bounds`);
+assert_trap(() => invoke($9, `init_active`, [1]), `out of bounds table access`);
 
 // ./test/core/bulk.wast:270
 invoke($9, `init_active`, [0]);
@@ -513,7 +522,13 @@ invoke($12, `copy`, [10, 0, 0]);
 invoke($12, `copy`, [0, 10, 0]);
 
 // ./test/core/bulk.wast:348
-assert_trap(() => invoke($12, `copy`, [11, 0, 0]), `out of bounds`);
+assert_trap(
+  () => invoke($12, `copy`, [11, 0, 0]),
+  `out of bounds table access`,
+);
 
 // ./test/core/bulk.wast:350
-assert_trap(() => invoke($12, `copy`, [0, 11, 0]), `out of bounds`);
+assert_trap(
+  () => invoke($12, `copy`, [0, 11, 0]),
+  `out of bounds table access`,
+);

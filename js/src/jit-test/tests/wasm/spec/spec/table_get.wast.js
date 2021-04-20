@@ -62,16 +62,25 @@ assert_return(() => invoke($0, `is_null-funcref`, [1]), [value("i32", 0)]);
 assert_return(() => invoke($0, `is_null-funcref`, [2]), [value("i32", 0)]);
 
 // ./test/core/table_get.wast:33
-assert_trap(() => invoke($0, `get-externref`, [2]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `get-externref`, [2]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_get.wast:34
-assert_trap(() => invoke($0, `get-funcref`, [3]), `out of bounds`);
+assert_trap(() => invoke($0, `get-funcref`, [3]), `out of bounds table access`);
 
 // ./test/core/table_get.wast:35
-assert_trap(() => invoke($0, `get-externref`, [-1]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `get-externref`, [-1]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_get.wast:36
-assert_trap(() => invoke($0, `get-funcref`, [-1]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `get-funcref`, [-1]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_get.wast:41
 assert_invalid(() =>

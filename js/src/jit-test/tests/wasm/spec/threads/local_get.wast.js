@@ -286,7 +286,7 @@ assert_invalid(
 assert_invalid(
   () =>
     instantiate(
-      `(module (func $$unbound-local (local i32 i64) (local.get 3) drop))`,
+      `(module (func $$unbound-local (local i32 i64) (local.get 3)))`,
     ),
   `unknown local`,
 );
@@ -295,7 +295,7 @@ assert_invalid(
 assert_invalid(
   () =>
     instantiate(
-      `(module (func $$large-local (local i32 i64) (local.get 14324343) drop))`,
+      `(module (func $$large-local (local i32 i64) (local.get 14324343)))`,
     ),
   `unknown local`,
 );
@@ -304,7 +304,7 @@ assert_invalid(
 assert_invalid(
   () =>
     instantiate(
-      `(module (func $$unbound-param (param i32 i64) (local.get 2) drop))`,
+      `(module (func $$unbound-param (param i32 i64) (local.get 2)))`,
     ),
   `unknown local`,
 );
@@ -313,7 +313,7 @@ assert_invalid(
 assert_invalid(
   () =>
     instantiate(
-      `(module (func $$large-param (param i32 i64) (local.get 714324343) drop))`,
+      `(module (func $$large-param (param i32 i64) (local.get 714324343)))`,
     ),
   `unknown local`,
 );
@@ -322,7 +322,7 @@ assert_invalid(
 assert_invalid(
   () =>
     instantiate(
-      `(module (func $$unbound-mixed (param i32) (local i32 i64) (local.get 3) drop))`,
+      `(module (func $$unbound-mixed (param i32) (local i32 i64) (local.get 3)))`,
     ),
   `unknown local`,
 );
@@ -331,7 +331,7 @@ assert_invalid(
 assert_invalid(
   () =>
     instantiate(
-      `(module (func $$large-mixed (param i64) (local i32 i64) (local.get 214324343) drop))`,
+      `(module (func $$large-mixed (param i64) (local i32 i64) (local.get 214324343)))`,
     ),
   `unknown local`,
 );

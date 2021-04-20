@@ -48,21 +48,3 @@ excluded_tests = [
 skip_wpt = true
 # Skip in jit-test when it's not enabled
 directive = "; skip-if: !wasmThreadsEnabled()"
-
-[[repos]]
-name = "bulk-memory-operations"
-url = "https://github.com/WebAssembly/bulk-memory-operations"
-parent = "spec"
-excluded_tests = []
-# Skip in WPT where we can't guard on features being enabled
-skip_wpt = true
-
-[[repos]]
-name = "reference-types"
-url = "https://github.com/WebAssembly/reference-types"
-parent = "spec"
-excluded_tests = []
-# Skip in WPT where we can't guard on features being enabled
-skip_wpt = true
-# Skip in jit-test when it's not enabled
-directive = "; skip-if: !wasmReftypesEnabled()"
