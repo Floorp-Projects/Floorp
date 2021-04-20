@@ -65,6 +65,8 @@ class GeckoWebExtension(
             }
         }
 
+        connectedPorts[PortId(name)]?.nativePort?.setDelegate(portDelegate)
+
         val messageDelegate = object : GeckoNativeWebExtension.MessageDelegate {
 
             override fun onConnect(port: GeckoNativeWebExtension.Port) {
@@ -106,6 +108,8 @@ class GeckoWebExtension(
                 }
             }
         }
+
+        connectedPorts[PortId(name, session)]?.nativePort?.setDelegate(portDelegate)
 
         val messageDelegate = object : GeckoNativeWebExtension.MessageDelegate {
 

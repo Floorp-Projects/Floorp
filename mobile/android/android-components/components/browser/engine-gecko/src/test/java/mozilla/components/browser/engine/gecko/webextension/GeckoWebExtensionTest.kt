@@ -48,6 +48,7 @@ class GeckoWebExtensionTest {
         val runtime: GeckoRuntime = mock()
         val nativeGeckoWebExt: WebExtension = mockNativeExtension()
         val messageHandler: MessageHandler = mock()
+        val updatedMessageHandler: MessageHandler = mock()
         val messageDelegateCaptor = argumentCaptor<WebExtension.MessageDelegate>()
         val portCaptor = argumentCaptor<Port>()
         val portDelegateCaptor = argumentCaptor<WebExtension.PortDelegate>()
@@ -87,6 +88,12 @@ class GeckoWebExtensionTest {
         verify(messageHandler).onPortMessage(eq(portMessage), portCaptor.capture())
         assertSame(port, (portCaptor.value as GeckoPort).nativePort)
 
+        // Verify content message handler can be updated and receive messages
+        extension.registerBackgroundMessageHandler("mozacTest", updatedMessageHandler)
+        verify(port, times(2)).setDelegate(portDelegateCaptor.capture())
+        portDelegateCaptor.value.onPortMessage(portMessage, port)
+        verify(updatedMessageHandler).onPortMessage(eq(portMessage), portCaptor.capture())
+
         // Verify disconnected port is forwarded to message handler if connected
         portDelegate.onDisconnect(mock())
         verify(messageHandler, never()).onPortDisconnected(portCaptor.capture())
@@ -103,6 +110,7 @@ class GeckoWebExtensionTest {
         val webExtensionSessionController: WebExtension.SessionController = mock()
         val nativeGeckoWebExt: WebExtension = mockNativeExtension()
         val messageHandler: MessageHandler = mock()
+        val updatedMessageHandler: MessageHandler = mock()
         val session: GeckoEngineSession = mock()
         val geckoSession: GeckoSession = mock()
         val messageDelegateCaptor = argumentCaptor<WebExtension.MessageDelegate>()
@@ -148,6 +156,12 @@ class GeckoWebExtensionTest {
         verify(messageHandler).onPortMessage(eq(portMessage), portCaptor.capture())
         assertSame(port, (portCaptor.value as GeckoPort).nativePort)
         assertSame(session, (portCaptor.value as GeckoPort).engineSession)
+
+        // Verify content message handler can be updated and receive messages
+        extension.registerContentMessageHandler(session, "mozacTest", updatedMessageHandler)
+        verify(port, times(2)).setDelegate(portDelegateCaptor.capture())
+        portDelegateCaptor.value.onPortMessage(portMessage, port)
+        verify(updatedMessageHandler).onPortMessage(eq(portMessage), portCaptor.capture())
 
         // Verify disconnected port is forwarded to message handler if connected
         portDelegate.onDisconnect(mock())
