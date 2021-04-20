@@ -6,7 +6,13 @@ const FRAME_SCRIPT_URL =
   "chrome://mochitests/content/browser/docshell/test/browser/file_bug1328501_framescript.js";
 add_task(async function testMultiFrameRestore() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.navigation.requireUserInteraction", false]],
+    set: [
+      ["browser.navigation.requireUserInteraction", false],
+      // Disable bfcache so that dummy_page.html doesn't enter there.
+      // The actual test page does already prevent bfcache and the test
+      // is just for http-on-opening-request handling in the child process.
+      ["browser.sessionhistory.max_total_viewers", 0],
+    ],
   });
   await BrowserTestUtils.withNewTab({ gBrowser, url: HTML_URL }, async function(
     browser
