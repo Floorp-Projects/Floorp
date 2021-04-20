@@ -117,14 +117,10 @@ struct WalkStackData {
   HANDLE process;
   HANDLE eventStart;
   HANDLE eventEnd;
-  void** pcs;
-  uint32_t pc_size;
-  uint32_t pc_count;
-  uint32_t pc_max;
-  void** sps;
-  uint32_t sp_size;
-  uint32_t sp_count;
+  uint32_t maxFrames;
   CONTEXT* context;
+  MozWalkStackCallback callback;
+  void* callbackClosure;
 };
 
 CRITICAL_SECTION gDbgHelpCS;
@@ -312,6 +308,8 @@ static void WalkStackMain64(struct WalkStackData* aData) {
 
   FrameSkipper skipper(aData->firstFramePC);
 
+  uint32_t frames = 0;
+
   // Now walk the stack.
   while (true) {
     DWORD64 addr;
@@ -405,17 +403,10 @@ static void WalkStackMain64(struct WalkStackData* aData) {
       continue;
     }
 
-    if (aData->pc_count < aData->pc_size) {
-      aData->pcs[aData->pc_count] = (void*)addr;
-    }
-    ++aData->pc_count;
+    aData->callback(++frames, (void*)addr, (void*)spaddr,
+                    aData->callbackClosure);
 
-    if (aData->sp_count < aData->sp_size) {
-      aData->sps[aData->sp_count] = (void*)spaddr;
-    }
-    ++aData->sp_count;
-
-    if (aData->pc_max != 0 && aData->pc_count == aData->pc_max) {
+    if (aData->maxFrames != 0 && frames == aData->maxFrames) {
       break;
     }
 
@@ -456,32 +447,12 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
   data.firstFramePC = aFirstFramePC;
   data.thread = targetThread;
   data.process = ::GetCurrentProcess();
-  void* local_pcs[1024];
-  data.pcs = local_pcs;
-  data.pc_count = 0;
-  data.pc_size = ArrayLength(local_pcs);
-  data.pc_max = aMaxFrames;
-  void* local_sps[1024];
-  data.sps = local_sps;
-  data.sp_count = 0;
-  data.sp_size = ArrayLength(local_sps);
+  data.maxFrames = aMaxFrames;
   data.context = aContext;
+  data.callback = aCallback;
+  data.callbackClosure = aClosure;
 
   WalkStackMain64(&data);
-
-  if (data.pc_count > data.pc_size) {
-    data.pcs = (void**)_alloca(data.pc_count * sizeof(void*));
-    data.pc_size = data.pc_count;
-    data.pc_count = 0;
-    data.sps = (void**)_alloca(data.sp_count * sizeof(void*));
-    data.sp_size = data.sp_count;
-    data.sp_count = 0;
-    WalkStackMain64(&data);
-  }
-
-  for (uint32_t i = 0; i < data.pc_count; ++i) {
-    (*aCallback)(i + 1, data.pcs[i], data.sps[i], aClosure);
-  }
 }
 
 MFBT_API void MozStackWalkThread(MozWalkStackCallback aCallback,
