@@ -220,14 +220,14 @@ class MediaCache {
                                 MediaCacheStream* aStream,
                                 int32_t aStreamBlockIndex);
 
-  // This queues a call to Update() on the main thread.
+  // This queues a call to Update() on the media cache thread.
   void QueueUpdate(AutoLock&);
 
   // Notify all streams for the resource ID that the suspended status changed
   // at the end of MediaCache::Update.
   void QueueSuspendedStatusUpdate(AutoLock&, int64_t aResourceID);
 
-  // Updates the cache state asynchronously on the main thread:
+  // Updates the cache state asynchronously on the media cache thread:
   // -- try to trim the cache back to its desired size, if necessary
   // -- suspend channels that are going to read data that's lower priority
   // than anything currently cached
