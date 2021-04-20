@@ -251,7 +251,7 @@ uint32_t nsWindow::sInstanceCount = 0;
 bool nsWindow::sSwitchKeyboardLayout = false;
 BOOL nsWindow::sIsOleInitialized = FALSE;
 HCURSOR nsWindow::sHCursor = nullptr;
-imgIContainer* nsWindow::sCursorImgContainer = nullptr;
+nsIWidget::Cursor nsWindow::sCurrentCursor = {};
 nsWindow* nsWindow::sCurrentWindow = nullptr;
 bool nsWindow::sJustGotDeactivate = false;
 bool nsWindow::sJustGotActivate = false;
@@ -694,7 +694,7 @@ nsWindow::~nsWindow() {
       InkCollector::sInkCollector = nullptr;
     }
     IMEHandler::Terminate();
-    NS_IF_RELEASE(sCursorImgContainer);
+    sCurrentCursor = {};
     if (sIsOleInitialized) {
       ::OleFlushClipboard();
       ::OleUninitialize();
@@ -1653,7 +1653,7 @@ void nsWindow::Show(bool bState) {
 
         // Set the cursor before showing the window to avoid the default wait
         // cursor.
-        SetCursor(eCursor_standard, nullptr, 0, 0);
+        SetCursor(Cursor{eCursor_standard});
 
         switch (mSizeMode) {
           case nsSizeMode_Fullscreen:
@@ -3167,34 +3167,29 @@ static HCURSOR CursorFor(nsCursor aCursor) {
   }
 }
 
-static HCURSOR CursorForImage(imgIContainer* aImageContainer,
-                              CSSIntPoint aHotspot,
+static HCURSOR CursorForImage(const nsIWidget::Cursor& aCursor,
                               CSSToLayoutDeviceScale aScale) {
-  if (!aImageContainer) {
+  if (!aCursor.IsCustom()) {
     return nullptr;
   }
 
-  int32_t width = 0;
-  int32_t height = 0;
-
-  if (NS_FAILED(aImageContainer->GetWidth(&width)) ||
-      NS_FAILED(aImageContainer->GetHeight(&height))) {
-    return nullptr;
-  }
+  nsIntSize size = nsIWidget::CustomCursorSize(aCursor);
 
   // Reject cursors greater than 128 pixels in either direction, to prevent
   // spoofing.
   // XXX ideally we should rescale. Also, we could modify the API to
   // allow trusted content to set larger cursors.
-  if (width > 128 || height > 128) {
+  if (size.width > 128 || size.height > 128) {
     return nullptr;
   }
 
-  LayoutDeviceIntSize size = RoundedToInt(CSSIntSize(width, height) * aScale);
-  LayoutDeviceIntPoint hotspot = RoundedToInt(aHotspot * aScale);
+  LayoutDeviceIntSize layoutSize =
+      RoundedToInt(CSSIntSize(size.width, size.height) * aScale);
+  LayoutDeviceIntPoint hotspot =
+      RoundedToInt(CSSIntPoint(aCursor.mHotspotX, aCursor.mHotspotY) * aScale);
   HCURSOR cursor;
-  nsresult rv =
-      nsWindowGfx::CreateIcon(aImageContainer, true, hotspot, size, &cursor);
+  nsresult rv = nsWindowGfx::CreateIcon(aCursor.mContainer, true, hotspot,
+                                        layoutSize, &cursor);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
@@ -3203,23 +3198,18 @@ static HCURSOR CursorForImage(imgIContainer* aImageContainer,
 }
 
 // Setting the actual cursor
-void nsWindow::SetCursor(nsCursor aDefaultCursor, imgIContainer* aImageCursor,
-                         uint32_t aHotspotX, uint32_t aHotspotY) {
-  if (aImageCursor && sCursorImgContainer == aImageCursor && sHCursor) {
+void nsWindow::SetCursor(const Cursor& aCursor) {
+  if (sCurrentCursor == aCursor && sHCursor) {
     ::SetCursor(sHCursor);
     return;
   }
 
-  HCURSOR cursor = CursorForImage(
-      aImageCursor, CSSIntPoint(aHotspotX, aHotspotY), GetDefaultScale());
+  mCursor = aCursor;
+
+  HCURSOR cursor = CursorForImage(aCursor, GetDefaultScale());
   if (cursor) {
-    mCursor = eCursorInvalid;
     ::SetCursor(cursor);
-
-    NS_IF_RELEASE(sCursorImgContainer);
-    sCursorImgContainer = aImageCursor;
-    NS_ADDREF(sCursorImgContainer);
-
+    sCurrentCursor = aCursor;
     if (sHCursor) {
       ::DestroyIcon(sHCursor);
     }
@@ -3227,16 +3217,15 @@ void nsWindow::SetCursor(nsCursor aDefaultCursor, imgIContainer* aImageCursor,
     return;
   }
 
-  cursor = CursorFor(aDefaultCursor);
+  cursor = CursorFor(aCursor.mDefaultCursor);
   if (!cursor) {
     return;
   }
 
-  mCursor = aDefaultCursor;
   HCURSOR oldCursor = ::SetCursor(cursor);
+  sCurrentCursor = aCursor;
 
   if (sHCursor == oldCursor) {
-    NS_IF_RELEASE(sCursorImgContainer);
     if (sHCursor) {
       ::DestroyIcon(sHCursor);
     }
@@ -7446,8 +7435,8 @@ void nsWindow::OnDestroy() {
   }
 
   // Destroy any custom cursor resources.
-  if (mCursor == eCursorInvalid) {
-    SetCursor(eCursor_standard, nullptr, 0, 0);
+  if (mCursor.IsCustom()) {
+    SetCursor(Cursor{eCursor_standard});
   }
 
   if (mCompositorWidgetDelegate) {
