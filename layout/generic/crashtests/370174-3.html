@@ -19,7 +19,6 @@ function tripleclick(){
 var wu = SpecialPowers.DOMWindowUtils;
 wu.sendMouseEvent('mousedown',  500, 500, 0, 3, 0);
 setTimeout(tripleclick,20);
-setTimeout(function(){window.location.reload()}, 200);
 }
 setTimeout(tripleclick,200);
 </SCRIPT>
