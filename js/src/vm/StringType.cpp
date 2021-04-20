@@ -2233,9 +2233,9 @@ UniqueChars js::IdToPrintableUTF8(JSContext* cx, HandleId id,
                                   IdToPrintableBehavior behavior) {
   // ToString(<symbol>) throws a TypeError, therefore require that callers
   // request source representation when |id| is a property key.
-  MOZ_ASSERT_IF(behavior == IdToPrintableBehavior::IdIsIdentifier,
-                JSID_IS_ATOM(id) &&
-                    frontend::IsIdentifierNameOrPrivateName(JSID_TO_ATOM(id)));
+  MOZ_ASSERT_IF(
+      behavior == IdToPrintableBehavior::IdIsIdentifier,
+      JSID_IS_ATOM(id) && frontend::IsIdentifierNameOrPrivateName(id.toAtom()));
 
   RootedValue v(cx, IdToValue(id));
   JSString* str;
