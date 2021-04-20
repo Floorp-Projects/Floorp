@@ -1241,14 +1241,12 @@ void MediaCache::Update() {
   TimeDuration latestNextUse;
   const int32_t maxBlocks = mBlockCache->GetMaxBlocks(MediaCache::CacheSize());
   if (freeBlockCount == 0) {
-    int32_t reusableBlock = FindReusableBlock(lock, now, nullptr, 0, maxBlocks);
+    const int32_t reusableBlock =
+        FindReusableBlock(lock, now, nullptr, 0, maxBlocks);
     if (reusableBlock >= 0) {
       latestNextUse = PredictNextUse(lock, now, reusableBlock);
     }
   }
-
-  int32_t resumeThreshold = MediaCache::ResumeThreshold();
-  int32_t readaheadLimit = MediaCache::ReadaheadLimit();
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     actions.AppendElement(StreamAction{});
@@ -1262,12 +1260,13 @@ void MediaCache::Update() {
     // We make decisions based on mSeekTarget when there is a pending seek.
     // Otherwise we will keep issuing seek requests until mChannelOffset
     // is changed by NotifyDataStarted() which is bad.
-    int64_t channelOffset = stream->mSeekTarget != -1 ? stream->mSeekTarget
-                                                      : stream->mChannelOffset;
+    const int64_t channelOffset = stream->mSeekTarget != -1
+                                      ? stream->mSeekTarget
+                                      : stream->mChannelOffset;
 
     // Figure out where we should be reading from. It's the first
     // uncached byte after the current mStreamOffset.
-    int64_t dataOffset =
+    const int64_t dataOffset =
         stream->GetCachedDataEndInternal(lock, stream->mStreamOffset);
     MOZ_ASSERT(dataOffset >= 0);
 
@@ -1343,12 +1342,13 @@ void MediaCache::Update() {
           PredictNextUseForIncomingData(lock, stream);
 
       if (stream->mThrottleReadahead && stream->mCacheSuspended &&
-          predictedNewDataUse.ToSeconds() > resumeThreshold) {
+          predictedNewDataUse.ToSeconds() > MediaCache::ResumeThreshold()) {
         // Don't need data for a while, so don't bother waking up the stream
         LOG("Stream %p avoiding wakeup since more data is not needed", stream);
         enableReading = false;
       } else if (stream->mThrottleReadahead &&
-                 predictedNewDataUse.ToSeconds() > readaheadLimit) {
+                 predictedNewDataUse.ToSeconds() >
+                     MediaCache::ReadaheadLimit()) {
         // Don't read ahead more than this much
         LOG("Stream %p throttling to avoid reading ahead too far", stream);
         enableReading = false;
