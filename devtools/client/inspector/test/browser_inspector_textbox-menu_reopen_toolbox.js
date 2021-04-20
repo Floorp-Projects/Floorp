@@ -48,6 +48,6 @@ async function checkContextMenuOnSearchbox(inspector, toolbox) {
 
   info("Closing the menu");
   const onContextMenuHidden = toolbox.once("menu-close");
-  EventUtils.sendKey("ESCAPE", toolbox.win);
+  textboxContextMenu.hidePopup();
   await onContextMenuHidden;
 }
