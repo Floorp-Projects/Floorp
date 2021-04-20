@@ -7,14 +7,15 @@
 // change
 
 add_task(async function() {
-  await addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
-  const { inspector, boxmodel, testActor } = await openLayoutView();
+  const tab = await addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
+  const browser = tab.linkedBrowser;
+  const { inspector, boxmodel } = await openLayoutView();
 
-  await testResizingInIframe(inspector, boxmodel, testActor);
-  await testReflowsAfterIframeDeletion(inspector, boxmodel, testActor);
+  await testResizingInIframe(inspector, boxmodel, browser);
+  await testReflowsAfterIframeDeletion(inspector, boxmodel, browser);
 });
 
-async function testResizingInIframe(inspector, boxmodel, testActor) {
+async function testResizingInIframe(inspector, boxmodel, browser) {
   info("Test that resizing an element in an iframe updates its box model");
 
   info("Selecting the nested test node");
@@ -26,7 +27,7 @@ async function testResizingInIframe(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying its size");
   const onUpdated = waitForUpdate(inspector);
-  await setStyleInIframe2(testActor, "div", "width", "200px");
+  await setStyleInNestedIframe(browser, "div", "width", "200px");
   await onUpdated;
   ok(true, "Box model view got updated");
 
@@ -34,7 +35,7 @@ async function testResizingInIframe(inspector, boxmodel, testActor) {
   is(sizeElt.textContent, "200\u00D7200");
 }
 
-async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
+async function testReflowsAfterIframeDeletion(inspector, boxmodel, browser) {
   info(
     "Test reflows are still sent to the box model view after deleting an " +
       "iframe"
@@ -42,7 +43,7 @@ async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
 
   info("Deleting the iframe2");
   const onInspectorUpdated = inspector.once("inspector-updated");
-  await removeIframe2(testActor);
+  await removeNestedIframe(browser);
   await onInspectorUpdated;
 
   info("Selecting the test node in iframe1");
@@ -54,7 +55,7 @@ async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying its size");
   const onUpdated = waitForUpdate(inspector);
-  await setStyleInIframe1(testActor, "p", "width", "200px");
+  await setStyleInIframe(browser, "p", "width", "200px");
   await onUpdated;
   ok(true, "Box model view got updated");
 
@@ -62,29 +63,22 @@ async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
   is(sizeElt.textContent, "200\u00D7100");
 }
 
-async function setStyleInIframe1(testActor, selector, propertyName, value) {
-  await testActor.eval(`
-    content.document.querySelector("iframe")
-           .contentDocument.querySelector("${selector}")
-           .style.${propertyName} = "${value}";
-  `);
+async function setStyleInIframe(browser, selector, propertyName, value) {
+  const context = await getBrowsingContextInFrames(browser, ["iframe"]);
+  return setStyle(context, selector, propertyName, value);
 }
 
-async function setStyleInIframe2(testActor, selector, propertyName, value) {
-  await testActor.eval(`
-    content.document.querySelector("iframe")
-           .contentDocument
-           .querySelector("iframe")
-           .contentDocument.querySelector("${selector}")
-           .style.${propertyName} = "${value}";
-  `);
+async function setStyleInNestedIframe(browser, selector, propertyName, value) {
+  const context = await getBrowsingContextInFrames(browser, [
+    "iframe",
+    "iframe",
+  ]);
+  return setStyle(context, selector, propertyName, value);
 }
 
-async function removeIframe2(testActor) {
-  await testActor.eval(`
-    content.document.querySelector("iframe")
-           .contentDocument
-           .querySelector("iframe")
-           .remove();
-  `);
+async function removeNestedIframe(browser) {
+  const context = await getBrowsingContextInFrames(browser, ["iframe"]);
+  await SpecialPowers.spawn(context, [], () =>
+    content.document.querySelector("iframe").remove()
+  );
 }

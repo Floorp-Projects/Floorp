@@ -1446,3 +1446,38 @@ function waitForDispatch(store, actionType, repeat = 1) {
     });
   });
 }
+
+/**
+ * Retrieve a browsing context in nested frames.
+ *
+ * @param {BrowsingContext|XULBrowser} browsingContext
+ *        The topmost browsing context under which we should search for the
+ *        browsing context.
+ * @param {Array<String>} selectors
+ *        Array of CSS selectors that form a path to a specific nested frame.
+ * @return {BrowsingContext} The nested browsing context.
+ */
+async function getBrowsingContextInFrames(browsingContext, selectors) {
+  let context = browsingContext;
+
+  if (!Array.isArray(selectors)) {
+    throw new Error(
+      "getBrowsingContextInFrames called with an invalid selectors argument"
+    );
+  }
+
+  if (selectors.length === 0) {
+    throw new Error(
+      "getBrowsingContextInFrames called with an empty selectors array"
+    );
+  }
+
+  while (selectors.length) {
+    const selector = selectors.shift();
+    context = await SpecialPowers.spawn(context, [selector], _selector => {
+      return content.document.querySelector(_selector).browsingContext;
+    });
+  }
+
+  return context;
+}
