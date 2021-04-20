@@ -8,6 +8,7 @@ FINAL_LIBRARY = "mozglue"
 
 EXPORTS.mozilla += [
     "AutoProfilerLabel.h",
+    "AwakeTimeStamp.h",
     "decimal/Decimal.h",
     "decimal/DoubleConversion.h",
     "IntegerPrintfMacros.h",
@@ -37,6 +38,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
 SOURCES += [
     "AutoProfilerLabel.cpp",
+    "AwakeTimeStamp.cpp",
     "MmapFaultHandler.cpp",
     "Printf.cpp",
     "StackWalk.cpp",
