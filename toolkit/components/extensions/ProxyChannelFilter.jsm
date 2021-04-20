@@ -349,11 +349,20 @@ class ProxyChannelFilter {
       if (wrapper.browserElement) {
         browserData = tabTracker.getBrowserData(wrapper.browserElement);
       }
-      let { filter } = this;
+
+      let { filter, extension } = this;
       if (filter.tabId != null && browserData.tabId !== filter.tabId) {
         return;
       }
       if (filter.windowId != null && browserData.windowId !== filter.windowId) {
+        return;
+      }
+      if (
+        extension.userContextIsolation &&
+        !extension.canAccessContainer(
+          channel.loadInfo?.originAttributes.userContextId
+        )
+      ) {
         return;
       }
 
