@@ -251,14 +251,6 @@ object TipManager {
             return null
         }
 
-        // Show the survey tip first
-        for (tip in listOfTips) {
-            if (tip.id == R.string.tip_take_survey && tip.shouldDisplay()) {
-                listOfTips.remove(tip)
-                return tip
-            }
-        }
-
         // Always show the disable tip if it's ready to be displayed
         for (tip in listOfTips) {
             if (tip.id == R.string.tip_disable_tips2 && tip.shouldDisplay()) {

@@ -215,9 +215,6 @@ class Settings private constructor(
         getPreferenceKey(R.string.has_requested_desktop),
         false)
 
-    fun hasTakenSurvey() = preferences.getBoolean(getPreferenceKey(R.string.has_taken_survey),
-            false)
-
     fun getAppLaunchCount() = preferences.getInt(
             getPreferenceKey(R.string.app_launch_count),
             0)
