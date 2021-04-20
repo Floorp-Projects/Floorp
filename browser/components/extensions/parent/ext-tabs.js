@@ -426,13 +426,10 @@ class TabsUpdateFilterEventManager extends EventManager {
 function TabEventManager({ context, name, event, listener }) {
   let register = fire => {
     let listener2 = (eventName, eventData, ...args) => {
-      if (!("isPrivate" in eventData)) {
-        throw new Error(
-          `isPrivate property missing in tabTracker event "${eventName}"`
-        );
-      }
+      let { extension } = context;
+      let { tabManager } = extension;
 
-      if (eventData.isPrivate && !context.privateBrowsingAllowed) {
+      if (!tabManager.canAccessTab(eventData.nativeTab)) {
         return;
       }
 
@@ -472,7 +469,7 @@ this.tabs = class extends ExtensionAPI {
     function getTabOrActive(tabId) {
       let tab =
         tabId !== null ? tabTracker.getTab(tabId) : tabTracker.activeTab;
-      if (!context.canAccessWindow(tab.ownerGlobal)) {
+      if (!tabManager.canAccessTab(tab)) {
         throw new ExtensionError(
           tabId === null
             ? "Cannot access activeTab"
@@ -488,7 +485,7 @@ this.tabs = class extends ExtensionAPI {
       }
       return tabIds.map(tabId => {
         let tab = tabTracker.getTab(tabId);
-        if (!context.canAccessWindow(tab.ownerGlobal)) {
+        if (!tabManager.canAccessTab(tab)) {
           throw new ExtensionError(`Invalid tab ID: ${tabId}`);
         }
         return tab;
@@ -544,14 +541,36 @@ this.tabs = class extends ExtensionAPI {
           },
         }),
 
-        onHighlighted: TabEventManager({
+        onHighlighted: new EventManager({
           context,
           name: "tabs.onHighlighted",
-          event: "tabs-highlighted",
-          listener: (fire, event) => {
-            fire.async({ tabIds: event.tabIds, windowId: event.windowId });
+          register: fire => {
+            let highlightListener = (eventName, event) => {
+              let window = windowTracker.getWindow(
+                event.windowId,
+                context,
+                false
+              );
+              if (!window) {
+                return;
+              }
+              let windowWrapper = windowManager.getWrapper(window);
+              if (!windowWrapper) {
+                return;
+              }
+              let tabIds = Array.from(
+                windowWrapper.getHighlightedTabs(),
+                tab => tab.id
+              );
+              fire.async({ tabIds: tabIds, windowId: event.windowId });
+            };
+
+            tabTracker.on("tabs-highlighted", highlightListener);
+            return () => {
+              tabTracker.off("tabs-highlighted", highlightListener);
+            };
           },
-        }),
+        }).api(),
 
         onAttached: TabEventManager({
           context,
@@ -603,7 +622,7 @@ this.tabs = class extends ExtensionAPI {
           register: fire => {
             let moveListener = event => {
               let nativeTab = event.originalTarget;
-              if (context.canAccessWindow(nativeTab.ownerGlobal)) {
+              if (tabManager.canAccessTab(nativeTab)) {
                 fire.async(tabTracker.getId(nativeTab), {
                   windowId: windowTracker.getId(nativeTab.ownerGlobal),
                   fromIndex: event.detail,
@@ -916,6 +935,9 @@ this.tabs = class extends ExtensionAPI {
 
         async warmup(tabId) {
           let nativeTab = tabTracker.getTab(tabId);
+          if (!tabManager.canAccessTab(nativeTab)) {
+            throw new ExtensionError(`Invalid tab ID: ${tabId}`);
+          }
           let tabbrowser = nativeTab.ownerGlobal.gBrowser;
           tabbrowser.warmupTab(nativeTab);
         },
@@ -1471,7 +1493,7 @@ this.tabs = class extends ExtensionAPI {
             if (tab === null) {
               continue;
             }
-            if (!context.canAccessWindow(tab.ownerGlobal)) {
+            if (!tabManager.canAccessTab(tab)) {
               throw new ExtensionError(`Invalid tab ID: ${tabId}`);
             }
             if (referenceWindow === null) {
@@ -1544,7 +1566,7 @@ this.tabs = class extends ExtensionAPI {
           }
           window.gBrowser.selectedTabs = tabs.map(tabIndex => {
             let tab = window.gBrowser.tabs[tabIndex];
-            if (!tab) {
+            if (!tab || !tabManager.canAccessTab(tab)) {
               throw new ExtensionError("No tab at index: " + tabIndex);
             }
             return tab;

@@ -118,6 +118,20 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "userContextIsolation",
+  "extensions.userContextIsolation.enabled",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "userContextIsolationDefaultRestricted",
+  "extensions.userContextIsolation.defaults.restricted",
+  "[]"
+);
+
 var {
   GlobalManager,
   ParentAPIManager,
@@ -1901,6 +1915,7 @@ class Extension extends ExtensionData {
 
     this.startupStates = new Set();
     this.state = "Not started";
+    this.userContextIsolation = userContextIsolation;
 
     this.sharedDataKeys = new Set();
 
@@ -2216,6 +2231,28 @@ class Extension extends ExtensionData {
 
   canAccessWindow(window) {
     return this.policy.canAccessWindow(window);
+  }
+
+  // TODO bug 1699481: move this logic to WebExtensionPolicy
+  canAccessContainer(userContextId) {
+    userContextId = userContextId ?? 0; // firefox-default has userContextId as 0.
+    let defaultRestrictedContainers = JSON.parse(
+      userContextIsolationDefaultRestricted
+    );
+    let extensionRestrictedContainers = JSON.parse(
+      Services.prefs.getStringPref(
+        `extensions.userContextIsolation.${this.id}.restricted`,
+        "[]"
+      )
+    );
+    if (
+      extensionRestrictedContainers.includes(userContextId) ||
+      defaultRestrictedContainers.includes(userContextId)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   // Representation of the extension to send to content
