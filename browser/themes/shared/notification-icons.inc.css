@@ -55,7 +55,7 @@
 /* INDIVIDUAL NOTIFICATIONS */
 
 .focus-tab-by-prompt-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/focus-tab-by-prompt.svg);
+  list-style-image: url(chrome://global/skin/icons/warning.svg);
 }
 
 .popup-notification-icon[popupid="storage-access"],
@@ -90,7 +90,7 @@
 }
 
 .popup-notification-icon[popupid="geolocation"] {
-  list-style-image: url(chrome://browser/skin/notification-icons/geo-detailed.svg);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo.svg);
 }
 
 .open-protocol-handler-icon {
@@ -118,7 +118,7 @@
 }
 
 .popup-notification-icon[popupid="autoplay-media"] {
-  list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media-detailed.svg);
+  list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media.svg);
 }
 
 .autoplay-media-icon.blocked-permission-icon {
