@@ -249,9 +249,9 @@ static BOOL WINAPI NoOp_DllMain(HINSTANCE, DWORD, LPVOID) { return TRUE; }
 static bool IsDependentModule(
     const UNICODE_STRING& aModuleLeafName,
     mozilla::freestanding::Kernel32ExportsSolver& aK32Exports) {
-  // We enable automatic DLL blocking only in Nightly for now because it caused
-  // a compat issue (bug 1682304).
-#if defined(NIGHTLY_BUILD)
+  // We enable automatic DLL blocking only in early Beta or earlier for now
+  // because it caused a compat issue (bug 1682304 and 1704373).
+#if defined(EARLY_BETA_OR_EARLIER)
   aK32Exports.Resolve(mozilla::freestanding::gK32ExportsResolveOnce);
   if (!aK32Exports.IsResolved()) {
     return false;
