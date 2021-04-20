@@ -2440,15 +2440,6 @@ nsDOMWindowUtils::SetDesktopModeViewport(bool aDesktopMode) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetDeprecatedOuterWindowID(uint64_t* aWindowID) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  *aWindowID = window->WindowID();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::SuspendTimeouts() {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);

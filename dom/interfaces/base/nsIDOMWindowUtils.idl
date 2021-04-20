@@ -1414,13 +1414,6 @@ interface nsIDOMWindowUtils : nsISupports {
                                            in AString aPropertyName);
 
   /**
-   * DEPRECATED. Use WindowGlobalChild.outerWindowId instead.
-   *
-   * Get the id of the outer window of this window.
-   */
-  readonly attribute unsigned long long deprecatedOuterWindowID;
-
-  /**
    * Put the window into a state where scripts are frozen and events
    * suppressed, for use when the window has launched a modal prompt.
    */
