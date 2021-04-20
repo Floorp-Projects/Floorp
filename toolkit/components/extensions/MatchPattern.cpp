@@ -250,7 +250,12 @@ already_AddRefed<MatchPattern> MatchPattern::Constructor(
 void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
                         bool aIgnorePath, bool aRestrictSchemes,
                         ErrorResult& aRv) {
-  RefPtr<AtomSet> permittedSchemes = AtomSet::Get<PERMITTED_SCHEMES>();
+  RefPtr<AtomSet> permittedSchemes;
+  nsresult rv = AtomSet::Get<PERMITTED_SCHEMES>(permittedSchemes);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
 
   mPattern = aPattern;
 
@@ -276,11 +281,20 @@ void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
   RefPtr<nsAtom> scheme = NS_AtomizeMainThread(StringHead(aPattern, index));
   bool requireHostLocatorScheme = true;
   if (scheme == nsGkAtoms::_asterisk) {
-    mSchemes = AtomSet::Get<WILDCARD_SCHEMES>();
+    rv = AtomSet::Get<WILDCARD_SCHEMES>(mSchemes);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
   } else if (!aRestrictSchemes || permittedSchemes->Contains(scheme) ||
              scheme == nsGkAtoms::moz_extension) {
+    RefPtr<AtomSet> hostLocatorSchemes;
+    rv = AtomSet::Get<HOST_LOCATOR_SCHEMES>(hostLocatorSchemes);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
     mSchemes = new AtomSet({scheme});
-    RefPtr<AtomSet> hostLocatorSchemes = AtomSet::Get<HOST_LOCATOR_SCHEMES>();
     requireHostLocatorScheme = hostLocatorSchemes->Contains(scheme);
   } else {
     aRv.Throw(NS_ERROR_INVALID_ARG);
@@ -464,7 +478,12 @@ JSObject* MatchPattern::WrapObject(JSContext* aCx,
 
 /* static */
 bool MatchPattern::MatchesAllURLs(const URLInfo& aURL) {
-  RefPtr<AtomSet> permittedSchemes = AtomSet::Get<PERMITTED_SCHEMES>();
+  RefPtr<AtomSet> permittedSchemes;
+  nsresult rv = AtomSet::Get<PERMITTED_SCHEMES>(permittedSchemes);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to retrireve PERMITTED_SCHEMES AtomSet");
+    return false;
+  }
   return permittedSchemes->Contains(aURL.Scheme());
 }
 
