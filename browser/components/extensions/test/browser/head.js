@@ -509,12 +509,7 @@ async function closeExtensionContextMenu(itemToSelect, modifiers = {}) {
     "popuphidden"
   );
   if (itemToSelect) {
-    if ("button" in modifiers) {
-      // Bug 1704879: activateItem does not currently support button
-      EventUtils.synthesizeMouseAtCenter(itemToSelect, modifiers);
-    } else {
-      itemToSelect.closest("menupopup").activateItem(itemToSelect, modifiers);
-    }
+    itemToSelect.closest("menupopup").activateItem(itemToSelect, modifiers);
   } else {
     contentAreaContextMenu.hidePopup();
   }
