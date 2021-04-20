@@ -3491,6 +3491,11 @@
     type: bool
     value: false
     mirror: always
+
+-   name: dom.w3c_pointer_events.scroll_by_pen.enabled
+    type: bool
+    value: false
+    mirror: always
 #endif
 
 # If the value is >= 0, it will be used for max touch points in child processes.
