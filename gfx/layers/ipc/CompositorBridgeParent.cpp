@@ -1811,6 +1811,16 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     return mWrBridge;
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  // On Android, WebRenderAPI::Resume() call is triggered from Java side. But
+  // Java side does not know about fallback to RenderCompositorOGLSWGL. In this
+  // fallback case, RenderCompositor::Resume() needs to be called from gfx code.
+  if (!mPaused && mWidget->GetCompositorOptions().UseSoftwareWebRender() &&
+      mWidget->GetCompositorOptions().AllowSoftwareWebRenderOGL()) {
+    api->Resume();
+  }
+#endif
+
   wr::TransactionBuilder txn(api);
   txn.SetRootPipeline(aPipelineId);
   api->SendTransaction(txn);
