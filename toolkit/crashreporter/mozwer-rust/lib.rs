@@ -22,7 +22,7 @@ use std::slice::from_raw_parts;
 use uuid::Uuid;
 use winapi::shared::basetsd::{SIZE_T, ULONG_PTR};
 use winapi::shared::minwindef::{
-    BOOL, BYTE, DWORD, FALSE, MAX_PATH, PBOOL, PDWORD, PULONG, TRUE, ULONG, WORD,
+    BOOL, BYTE, DWORD, FALSE, FILETIME, MAX_PATH, PBOOL, PDWORD, PULONG, TRUE, ULONG, WORD,
 };
 use winapi::shared::ntdef::{NTSTATUS, STRING, UNICODE_STRING};
 use winapi::shared::ntstatus::STATUS_SUCCESS;
@@ -32,7 +32,8 @@ use winapi::um::handleapi::CloseHandle;
 use winapi::um::knownfolders::FOLDERID_RoamingAppData;
 use winapi::um::memoryapi::ReadProcessMemory;
 use winapi::um::processthreadsapi::{
-    CreateProcessW, GetProcessId, GetThreadId, TerminateProcess, PROCESS_INFORMATION, STARTUPINFOW,
+    CreateProcessW, GetProcessId, GetProcessTimes, GetThreadId, TerminateProcess,
+    PROCESS_INFORMATION, STARTUPINFOW,
 };
 use winapi::um::psapi::K32GetModuleFileNameExW;
 use winapi::um::shlobj::SHGetKnownFolderPath;
@@ -112,11 +113,13 @@ fn out_of_process_exception_event_callback(
     let release_channel = get_release_channel(install_path.as_ref())?;
     let crash_reports_dir = get_crash_reports_dir(&application_data)?;
     let install_time = get_install_time(&crash_reports_dir, &application_data.build_id)?;
+    let startup_time = get_startup_time(process)?;
     let crash_report = CrashReport::new(
         &crash_reports_dir,
         &release_channel,
         &application_data,
         &install_time,
+        startup_time,
     );
     crash_report.write_minidump(exception_information)?;
     crash_report.write_extra_file()?;
@@ -190,6 +193,30 @@ fn get_install_time(crash_reports_path: &Path, build_id: &str) -> Result<String,
     let file_name = "InstallTime".to_owned() + build_id;
     let file_path = crash_reports_path.join(file_name);
     read_to_string(file_path).map_err(|_e| ())
+}
+
+fn get_startup_time(process: HANDLE) -> Result<u64, ()> {
+    let mut create_time: FILETIME = Default::default();
+    let mut exit_time: FILETIME = Default::default();
+    let mut kernel_time: FILETIME = Default::default();
+    let mut user_time: FILETIME = Default::default();
+    unsafe {
+        if GetProcessTimes(
+            process,
+            &mut create_time as *mut _,
+            &mut exit_time as *mut _,
+            &mut kernel_time as *mut _,
+            &mut user_time as *mut _,
+        ) == 0
+        {
+            return Err(());
+        }
+    }
+    let start_time_in_ticks =
+        ((create_time.dwHighDateTime as u64) << 32) + create_time.dwLowDateTime as u64;
+    let windows_tick: u64 = 10000000;
+    let sec_to_unix_epoch = 11644473600;
+    Ok((start_time_in_ticks / windows_tick) - sec_to_unix_epoch)
 }
 
 fn launch_crash_reporter_client(
@@ -285,16 +312,18 @@ impl ApplicationData {
 #[derive(Serialize)]
 #[allow(non_snake_case)]
 struct Annotations<'a> {
+    BuildID: &'a str,
     CrashTime: String,
+    InstallTime: &'a str,
+    ProductID: &'a str,
+    ProductName: &'a str,
+    ReleaseChannel: &'a str,
+    ServerURL: &'a str,
+    StartupTime: String,
+    UptimeTS: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     Vendor: Option<&'a str>,
-    ProductName: &'a str,
     Version: &'a str,
-    BuildID: &'a str,
-    ProductID: &'a str,
-    ServerURL: &'a str,
-    ReleaseChannel: &'a str,
-    InstallTime: &'a str,
 }
 
 impl Annotations<'_> {
@@ -302,18 +331,21 @@ impl Annotations<'_> {
         application_data: &'a ApplicationData,
         release_channel: &'a str,
         install_time: &'a str,
-        crash_time: i64,
+        crash_time: u64,
+        startup_time: u64,
     ) -> Annotations<'a> {
         Annotations {
-            CrashTime: crash_time.to_string(),
-            Vendor: application_data.vendor.as_deref(),
-            ProductName: &application_data.name,
-            Version: &application_data.version,
             BuildID: &application_data.build_id,
-            ProductID: &application_data.product_id,
-            ServerURL: &application_data.server_url,
-            ReleaseChannel: release_channel,
+            CrashTime: crash_time.to_string(),
             InstallTime: install_time,
+            ProductID: &application_data.product_id,
+            ProductName: &application_data.name,
+            ReleaseChannel: release_channel,
+            ServerURL: &application_data.server_url,
+            StartupTime: startup_time.to_string(),
+            UptimeTS: (crash_time - startup_time).to_string() + ".0",
+            Vendor: application_data.vendor.as_deref(),
+            Version: &application_data.version,
         }
     }
 }
@@ -323,7 +355,7 @@ struct CrashReport<'a> {
     crash_reports_path: PathBuf,
     release_channel: &'a str,
     annotations: Annotations<'a>,
-    crash_time: i64,
+    crash_time: u64,
 }
 
 impl CrashReport<'_> {
@@ -332,18 +364,20 @@ impl CrashReport<'_> {
         release_channel: &'a str,
         application_data: &'a ApplicationData,
         install_time: &'a str,
+        startup_time: u64,
     ) -> CrashReport<'a> {
         let uuid = Uuid::new_v4()
             .to_hyphenated()
             .encode_lower(&mut Uuid::encode_buffer())
             .to_owned();
         let crash_reports_path = PathBuf::from(crash_reports_path);
-        let crash_time: i64 = unsafe { time(null_mut()).into() };
+        let crash_time: u64 = unsafe { time(null_mut()) as u64 };
         let annotations = Annotations::from_application_data(
             application_data,
             release_channel,
             install_time,
             crash_time,
+            startup_time,
         );
         CrashReport {
             uuid,
