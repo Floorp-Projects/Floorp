@@ -151,7 +151,7 @@ async function showCol(id) {
     "Column is hidden before showing it"
   );
 
-  click(menuItem);
+  table.menupopup.activateItem(menuItem);
   const toShow = await event;
   await onPopupHidden;
 
@@ -175,7 +175,7 @@ async function hideCol(id) {
     BrowserTestUtils.is_visible(columnWrapper),
     `Column #${id} is not hidden before hiding it`
   );
-  click(menuItem);
+  table.menupopup.activateItem(menuItem);
   const toHide = await event;
   await onPopupHidden;
   is(toHide, id, `#${id} was selected to be hidden`);
