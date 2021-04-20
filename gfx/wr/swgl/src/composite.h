@@ -105,43 +105,43 @@ static NO_INLINE void scale_blit(Texture& srctex, const IntRect& srcReq,
   int dstWidth = dstReq.width();
   int dstHeight = dstReq.height();
   // Compute valid dest bounds
-  IntRect dstBounds = dsttex.sample_bounds(dstReq);
+  IntRect dstBounds = dsttex.sample_bounds(dstReq).intersect(clipRect);
   // Compute valid source bounds
-  // Scale source to dest, rounding inward to avoid sampling outside source
-  IntRect srcBounds =
-      srctex.sample_bounds(srcReq, invertY)
-          .scale(srcWidth, srcHeight, dstWidth, dstHeight, true);
-  // Limit dest sampling bounds to overlap source bounds
-  dstBounds.intersect(srcBounds);
-  // Compute the clipped bounds, relative to dstBounds.
-  IntRect clippedDest = dstBounds.intersection(clipRect) - dstBounds.origin();
+  IntRect srcBounds = srctex.sample_bounds(srcReq, invertY);
+  // If srcReq is outside the source texture, we need to clip the sampling
+  // bounds so that we never sample outside valid source bounds. Get texture
+  // bounds relative to srcReq and scale to dest-space rounding inward, using
+  // this rect to limit the dest bounds further.
+  IntRect srcClip = srctex.bounds() - srcReq.origin();
+  if (invertY) {
+    srcClip.invert_y(srcReq.height());
+  }
+  srcClip.scale(srcWidth, srcHeight, dstWidth, dstHeight, true);
+  dstBounds.intersect(srcClip);
   // Check if clipped sampling bounds are empty
-  if (clippedDest.is_empty()) {
+  if (dstBounds.is_empty()) {
     return;
   }
-  // Compute final source bounds from clamped dest sampling bounds
-  srcBounds =
-      IntRect(dstBounds).scale(dstWidth, dstHeight, srcWidth, srcHeight);
+
   // Calculate source and dest pointers from clamped offsets
   int bpp = srctex.bpp();
   int srcStride = srctex.stride();
   int destStride = dsttex.stride();
   char* dest = dsttex.sample_ptr(dstReq, dstBounds);
+  // Clip the source bounds by the destination offset.
+  int fracX = srcWidth * dstBounds.x0;
+  int fracY = srcHeight * dstBounds.y0;
+  srcBounds.x0 = max(fracX / dstWidth, srcBounds.x0);
+  srcBounds.y0 = max(fracY / dstHeight, srcBounds.y0);
+  fracX %= dstWidth;
+  fracY %= dstHeight;
   char* src = srctex.sample_ptr(srcReq, srcBounds, invertY);
   // Inverted Y must step downward along source rows
   if (invertY) {
     srcStride = -srcStride;
   }
-  int span = clippedDest.width();
-  int fracX = srcWidth * clippedDest.x0;
-  int fracY = srcHeight * clippedDest.y0;
-  dest += destStride * clippedDest.y0;
-  dest += bpp * clippedDest.x0;
-  src += srcStride * (fracY / dstHeight);
-  src += bpp * (fracX / dstWidth);
-  fracY %= dstHeight;
-  fracX %= dstWidth;
-  for (int rows = clippedDest.height(); rows > 0; rows--) {
+  int span = dstBounds.width();
+  for (int rows = dstBounds.height(); rows > 0; rows--) {
     switch (bpp) {
       case 1:
         if (srcWidth == dstWidth)
