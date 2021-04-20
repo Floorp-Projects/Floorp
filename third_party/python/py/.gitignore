@@ -2,6 +2,7 @@
 .cache/
 .tox/
 __pycache__/
+.mypy_cache/
 
 *.pyc
 *.pyo
