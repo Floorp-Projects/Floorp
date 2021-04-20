@@ -3600,16 +3600,20 @@ bool CacheIRCompiler::emitGuardXrayNoExpando(ObjOperandId objId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardNoAllocationMetadataBuilder() {
+bool CacheIRCompiler::emitGuardNoAllocationMetadataBuilder(
+    uint32_t builderAddrOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoScratchRegister scratch(allocator, masm);
+
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  masm.branchPtr(Assembler::NotEqual,
-                 AbsoluteAddress(cx_->realm()->addressOfMetadataBuilder()),
-                 ImmWord(0), failure->label());
+  StubFieldOffset builderField(builderAddrOffset, StubField::Type::RawPointer);
+  emitLoadStubField(builderField, scratch);
+  masm.branchPtr(Assembler::NotEqual, Address(scratch, 0), ImmWord(0),
+                 failure->label());
 
   return true;
 }
