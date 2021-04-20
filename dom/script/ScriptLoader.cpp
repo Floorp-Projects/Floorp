@@ -3248,7 +3248,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       if (NS_SUCCEEDED(rv)) {
         if (aRequest->IsBytecode()) {
           TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_execute");
-          JSExecutionContext exec(cx, global);
+          JSExecutionContext exec(cx, global, options);
           if (aRequest->mOffThreadToken) {
             LOG(("ScriptLoadRequest (%p): Decode Bytecode & Join and Execute",
                  aRequest));
@@ -3260,7 +3260,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
                                       MarkerInnerWindowIdFromDocShell(docShell),
                                       profilerLabelString);
 
-            rv = exec.Decode(options, aRequest->mScriptBytecode,
+            rv = exec.Decode(aRequest->mScriptBytecode,
                              aRequest->mBytecodeOffset);
           }
 
@@ -3280,7 +3280,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
           bool encodeBytecode = ShouldCacheBytecode(aRequest);
 
           {
-            JSExecutionContext exec(cx, global);
+            JSExecutionContext exec(cx, global, options);
             exec.SetEncodeBytecode(encodeBytecode);
             TRACE_FOR_TEST(aRequest->GetScriptElement(),
                            "scriptloader_execute");
@@ -3306,10 +3306,8 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
 
                 rv =
                     maybeSource.constructed<SourceText<char16_t>>()
-                        ? exec.Compile(options,
-                                       maybeSource.ref<SourceText<char16_t>>())
-                        : exec.Compile(options,
-                                       maybeSource.ref<SourceText<Utf8Unit>>());
+                        ? exec.Compile(maybeSource.ref<SourceText<char16_t>>())
+                        : exec.Compile(maybeSource.ref<SourceText<Utf8Unit>>());
               }
             }
 
