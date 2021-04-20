@@ -753,8 +753,6 @@ const CFR_MESSAGES = [
       learn_more: "social-media-tracking-report",
       text: { string_id: "cfr-doorhanger-socialtracking-description" },
       icon: "chrome://browser/skin/notification-icons/block-social.svg",
-      icon_dark_theme:
-        "chrome://browser/skin/notification-icons/block-social-dark.svg",
       buttons: {
         primary: {
           label: { string_id: "cfr-doorhanger-socialtracking-ok-button" },
@@ -811,8 +809,6 @@ const CFR_MESSAGES = [
       learn_more: "fingerprinters-report",
       text: { string_id: "cfr-doorhanger-fingerprinters-description" },
       icon: "chrome://browser/skin/notification-icons/block-fingerprinter.svg",
-      icon_dark_theme:
-        "chrome://browser/skin/notification-icons/block-fingerprinter-dark.svg",
       buttons: {
         primary: {
           label: { string_id: "cfr-doorhanger-socialtracking-ok-button" },
@@ -865,8 +861,6 @@ const CFR_MESSAGES = [
       learn_more: "cryptominers-report",
       text: { string_id: "cfr-doorhanger-cryptominers-description" },
       icon: "chrome://browser/skin/notification-icons/block-cryptominer.svg",
-      icon_dark_theme:
-        "chrome://browser/skin/notification-icons/block-cryptominer-dark.svg",
       buttons: {
         primary: {
           label: { string_id: "cfr-doorhanger-socialtracking-ok-button" },
