@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector test for indexedDB - simple (alt)</title>
+</head>
+
+<body>
+  <h1>IndexedDB storage - with iframe</h1>
+  <iframe src="http://example.net/browser/devtools/client/storage/test/storage-indexeddb-simple.html"></iframe>
+
+<script>
+"use strict";
+
+const DB_NAME = "db";
+
+async function setup() { // eslint-disable-line no-unused-vars
+  await new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onerror = event => reject(Error("Error opening DB"));
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+      const store = db.createObjectStore("store", { keyPath: "key" });
+      store.add({key: "foo", value: "bar"});
+      store.transaction.oncomplete = () => resolve(db);
+    }
+  });
+}
+
+async function clear() { // eslint-disable-line no-unused-vars
+  await new Promise(resolve => {
+    indexedDB.deleteDatabase(DB_NAME).onsuccess = resolve;
+  });
+}
+</script>
+</body>
+</html>
