@@ -216,10 +216,10 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   already_AddRefed<mozilla::CompositorVsyncDispatcher>
   GetCompositorVsyncDispatcher();
-  void CreateCompositorVsyncDispatcher();
-  void CreateCompositor();
-  void CreateCompositor(int aWidth, int aHeight);
-  void SetCompositorWidgetDelegate(CompositorWidgetDelegate*) {}
+  virtual void CreateCompositorVsyncDispatcher();
+  virtual void CreateCompositor();
+  virtual void CreateCompositor(int aWidth, int aHeight);
+  virtual void SetCompositorWidgetDelegate(CompositorWidgetDelegate*) {}
   void PrepareWindowEffects() override {}
   void UpdateThemeGeometries(
       const nsTArray<ThemeGeometry>& aThemeGeometries) override {}
