@@ -3,8 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 flat varying HIGHP_FS_ADDRESS int v_gradient_address;
+
+#if defined(PLATFORM_ANDROID) && !defined(SWGL)
+// Work around Adreno 3xx driver bug. See the v_perspective comment in
+// brush_image or bugs 1630356 and  for details.
+flat varying vec2 v_gradient_repeat_vec;
+#define v_gradient_repeat v_gradient_repeat_vec.x
+#else
 // Repetition along the gradient stops.
 flat varying float v_gradient_repeat;
+#endif
 
 #ifdef WR_FRAGMENT_SHADER
 
