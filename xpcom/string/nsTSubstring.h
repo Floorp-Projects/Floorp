@@ -1057,6 +1057,8 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
 
  protected:
   void AssertValid() {
+    MOZ_DIAGNOSTIC_ASSERT(!(this->mClassFlags & ClassFlags::INVALID_MASK));
+    MOZ_DIAGNOSTIC_ASSERT(!(this->mDataFlags & DataFlags::INVALID_MASK));
     MOZ_ASSERT(!(this->mClassFlags & ClassFlags::NULL_TERMINATED) ||
                    (this->mDataFlags & DataFlags::TERMINATED),
                "String classes whose static type guarantees a null-terminated "
