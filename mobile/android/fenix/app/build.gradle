@@ -161,18 +161,12 @@ android {
         androidTest {
             resources.srcDirs += ['src/androidTest/resources']
         }
-        debug {
-            java.srcDirs = ['src/geckoNightly/java']
-        }
-        nightly {
-            java.srcDirs = ['src/geckoNightly/java']
-        }
         beta {
-            java.srcDirs = ['src/migration/java', 'src/geckoBeta/java']
+            java.srcDirs = ['src/migration/java']
             manifest.srcFile "src/migration/AndroidManifest.xml"
         }
         release {
-            java.srcDirs = ['src/migration/java', 'src/geckoRelease/java']
+            java.srcDirs = ['src/migration/java']
             manifest.srcFile "src/migration/AndroidManifest.xml"
         }
     }
@@ -418,11 +412,7 @@ dependencies {
     jnaForTest Deps.jna
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
 
-    debugImplementation Deps.mozilla_browser_engine_gecko_nightly
-
-    nightlyImplementation Deps.mozilla_browser_engine_gecko_nightly
-    betaImplementation Deps.mozilla_browser_engine_gecko_beta
-    releaseImplementation Deps.mozilla_browser_engine_gecko_release
+    implementation  Deps.mozilla_browser_engine_gecko
 
     implementation Deps.kotlin_stdlib
     implementation Deps.kotlin_coroutines

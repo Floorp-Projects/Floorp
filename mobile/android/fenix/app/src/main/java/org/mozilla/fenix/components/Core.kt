@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.components
 
-import GeckoProvider
+import org.mozilla.fenix.gecko.GeckoProvider
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build

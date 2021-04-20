@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+package org.mozilla.fenix.gecko
+
 import android.content.Context
 import mozilla.components.browser.engine.gecko.autofill.GeckoLoginDelegateWrapper
 import mozilla.components.browser.engine.gecko.ext.toContentBlockingSetting
@@ -12,9 +14,9 @@ import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.components
-import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlocking.SafeBrowsingProvider
 
 object GeckoProvider {
@@ -48,8 +50,8 @@ object GeckoProvider {
             .crashHandler(CrashHandlerService::class.java)
             .telemetryDelegate(GeckoAdapter())
             .contentBlocking(policy.toContentBlockingSetting())
-            .aboutConfigEnabled(Config.channel.isBeta)
             .debugLogging(Config.channel.isDebug)
+            .aboutConfigEnabled(true)
             .build()
 
         val settings = context.components.settings
