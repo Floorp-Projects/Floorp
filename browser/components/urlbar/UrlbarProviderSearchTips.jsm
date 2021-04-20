@@ -224,6 +224,7 @@ class ProviderSearchTips extends UrlbarProvider {
     let window = BrowserWindowTracker.getTopWindow();
     window.gURLBar.value = "";
     window.gURLBar.setPageProxyState("invalid");
+    window.gURLBar.removeAttribute("suppress-focus-border");
     window.gURLBar.focus();
   }
 

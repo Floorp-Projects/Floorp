@@ -192,6 +192,36 @@ add_task(async function newTab_alreadyOpen() {
   );
 });
 
+add_task(async function searchTip() {
+  info("Set a pref to show a search tip button.");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.searchTips.test.ignoreShowLimits", true]],
+  });
+
+  info("Open new tab.");
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:newtab"
+  );
+
+  info("Click the tip button.");
+  const result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  const button = result.element.row._elements.get("tipButton");
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeMouseAtCenter(button, {});
+  });
+
+  Assert.ok(
+    !gURLBar.hasAttribute(
+      "suppress-focus-border",
+      "The Urlbar does not have the suppress-focus-border attribute."
+    )
+  );
+
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
 function getSuppressFocusPromise(win = window) {
   return new Promise(resolve => {
     let observer = new MutationObserver(() => {
