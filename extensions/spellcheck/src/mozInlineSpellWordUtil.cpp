@@ -196,7 +196,7 @@ static nsINode* FindNextTextNode(nsINode* aNode, int32_t aOffset,
 //    by the caller of this class by calling this function. If this function is
 //    not called, the soft boundary is the same as the hard boundary.
 //
-//    When we reach the soft boundary (mSoftEnd), we keep
+//    When we reach the soft boundary (mSoftText.mEnd), we keep
 //    going until we reach the end of a word. This allows the caller to set the
 //    end of the range to anything, and we will always check whole multiples of
 //    words. When we reach the hard boundary we stop no matter what.
@@ -246,7 +246,7 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
     aEndNode = FindNextTextNode(aEndNode, aEndOffset, mRootNode);
     aEndOffset = 0;
   }
-  mSoftEnd = NodeOffset(aEndNode, aEndOffset);
+  mSoftText.mEnd = NodeOffset(aEndNode, aEndOffset);
 
   nsresult rv = EnsureWords();
   if (NS_FAILED(rv)) {
@@ -300,9 +300,9 @@ nsresult mozInlineSpellWordUtil::GetRangeForWord(nsINode* aWordNode,
   // Set our soft end and start
   NodeOffset pt(aWordNode, aWordOffset);
 
-  if (!mSoftTextValid || pt != mSoftText.mBegin || pt != mSoftEnd) {
+  if (!mSoftTextValid || pt != mSoftText.mBegin || pt != mSoftText.mEnd) {
     InvalidateWords();
-    mSoftText.mBegin = mSoftEnd = pt;
+    mSoftText.mBegin = mSoftText.mEnd = pt;
     nsresult rv = EnsureWords();
     if (NS_FAILED(rv)) {
       return rv;
@@ -837,7 +837,7 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
   // Leave this outside the loop so large heap string allocations can be reused
   // across iterations
   while (node) {
-    if (node == mSoftEnd.mNode) {
+    if (node == mSoftText.mEnd.mNode) {
       seenSoftEnd = true;
     }
 
@@ -851,7 +851,8 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
 
       if (seenSoftEnd) {
         // check whether we can stop after this
-        for (int32_t i = node == mSoftEnd.mNode ? mSoftEnd.mOffset : 0;
+        for (int32_t i = node == mSoftText.mEnd.mNode ? mSoftText.mEnd.mOffset
+                                                      : 0;
              i < int32_t(textFragment->GetLength()); ++i) {
           if (IsDOMWordSeparator(textFragment->CharAt(i))) {
             exit = true;
