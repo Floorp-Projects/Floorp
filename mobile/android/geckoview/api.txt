@@ -2050,11 +2050,13 @@ package org.mozilla.geckoview {
     field @Nullable public final String imageUrl;
     field @Nullable public final String lang;
     field @NonNull public final boolean requireInteraction;
+    field public final boolean silent;
     field @Nullable public final String source;
     field @NonNull public final String tag;
     field @Nullable public final String text;
     field @Nullable public final String textDirection;
     field @Nullable public final String title;
+    field @NonNull public final int[] vibrate;
   }
 
   public interface WebNotificationDelegate {
