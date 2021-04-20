@@ -202,5 +202,6 @@ void nsButtonBoxFrame::MouseClicked(WidgetGUIEvent* aEvent) {
       content, aEvent->IsTrusted(), nullptr, presShell, inputEvent->IsControl(),
       inputEvent->IsAlt(), inputEvent->IsShift(), inputEvent->IsMeta(),
       mouseEvent ? mouseEvent->mInputSource
-                 : MouseEvent_Binding::MOZ_SOURCE_UNKNOWN);
+                 : MouseEvent_Binding::MOZ_SOURCE_UNKNOWN,
+      mouseEvent ? mouseEvent->mButton : 0);
 }
