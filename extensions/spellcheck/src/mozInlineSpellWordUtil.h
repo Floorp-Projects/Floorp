@@ -126,6 +126,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
     NodeOffset mBegin = NodeOffset(nullptr, 0);
     NodeOffset mEnd = NodeOffset(nullptr, 0);
+
+    bool mIsValid = false;
   };
 
   SoftText mSoftText;
@@ -137,8 +139,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
       : mDocument(&aDocument),
         mIsContentEditableOrDesignMode(aIsContentEditableOrDesignMode),
         mRootNode(&aRootNode),
-        mNextWordIndex(-1),
-        mSoftTextValid(false) {}
+        mNextWordIndex(-1) {}
 
   // cached stuff for the editor
   const RefPtr<mozilla::dom::Document> mDocument;
@@ -184,9 +185,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   RealWords mRealWords;
   int32_t mNextWordIndex;
 
-  bool mSoftTextValid;
-
-  void InvalidateWords() { mSoftTextValid = false; }
+  void InvalidateWords() { mSoftText.mIsValid = false; }
   nsresult EnsureWords();
 
   int32_t MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset) const;
