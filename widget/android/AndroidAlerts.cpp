@@ -87,14 +87,6 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
     NS_ENSURE_SUCCESS(rv, NS_OK);
   }
 
-  bool silent;
-  rv = aAlert->GetSilent(&silent);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
-  nsTArray<uint32_t> vibrate;
-  rv = aAlert->GetVibrate(vibrate);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-
   if (aPersistentData.IsEmpty() && aAlertListener) {
     if (!sListenerMap) {
       sListenerMap = new ListenerMap();
@@ -104,8 +96,7 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
   }
 
   java::WebNotification::LocalRef notification = notification->New(
-      title, name, cookie, text, imageUrl, dir, lang, requireInteraction, spec,
-      silent, jni::IntArray::From(vibrate));
+      title, name, cookie, text, imageUrl, dir, lang, requireInteraction, spec);
   java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
   if (runtime != NULL) {
     runtime->NotifyOnShow(notification);

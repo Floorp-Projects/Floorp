@@ -192,10 +192,6 @@ class Notification : public DOMEventTargetHelper,
 
   bool RequireInteraction() const;
 
-  bool Silent() const;
-
-  void GetVibrate(nsTArray<uint32_t>& aRetval) const;
-
   void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 
   void InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData,
@@ -245,14 +241,12 @@ class Notification : public DOMEventTargetHelper,
                const nsAString& aTitle, const nsAString& aBody,
                NotificationDirection aDir, const nsAString& aLang,
                const nsAString& aTag, const nsAString& aIconUrl,
-               bool aRequireInteraction, bool aSilent,
-               nsTArray<uint32_t>&& aVibrate,
+               bool aRequireNotification,
                const NotificationBehavior& aBehavior);
 
   static already_AddRefed<Notification> CreateInternal(
       nsIGlobalObject* aGlobal, const nsAString& aID, const nsAString& aTitle,
-      const NotificationOptions& aOptions,
-      ErrorResult& aRv);
+      const NotificationOptions& aOptions);
 
   nsresult Init();
   bool IsInPrivateBrowsing();
@@ -308,8 +302,6 @@ class Notification : public DOMEventTargetHelper,
   const nsString mTag;
   const nsString mIconUrl;
   const bool mRequireInteraction;
-  const bool mSilent;
-  nsTArray<uint32_t> mVibrate;
   nsString mDataAsBase64;
   const NotificationBehavior mBehavior;
 
