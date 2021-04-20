@@ -277,7 +277,7 @@
     <color name="top_site_title_text">@color/top_site_title_text_light_theme</color>
     <color name="top_site_pager_dot">@color/photonLightGrey30</color>
     <color name="top_site_pager_dot_selected">@color/photonLightGrey50</color>
-    <color name="top_site_pin_icon_background_tint">@color/photonInk20</color>
+    <color name="top_site_pin_icon_color">@color/foundation_dark_theme</color>
     <color name="top_sites_border_color">@color/photonLightGrey30</color>
 
     <!-- Synced tabs colors-->

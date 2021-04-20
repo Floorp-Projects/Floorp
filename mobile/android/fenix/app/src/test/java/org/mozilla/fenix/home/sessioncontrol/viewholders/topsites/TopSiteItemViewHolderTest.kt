@@ -6,15 +6,14 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.topsites
 
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.FrameLayout
-import androidx.core.view.isVisible
+import android.widget.TextView
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.android.synthetic.main.top_site_item.view.*
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,7 +58,7 @@ class TopSiteItemViewHolderTest {
     }
 
     @Test
-    fun `pin indicator is visible for default top sites`() {
+    fun `GIVEN a default top site WHEN bind is called THEN the title has a pin indicator`() {
         val defaultTopSite = TopSite(
             id = 1L,
             title = "Pocket",
@@ -69,13 +68,13 @@ class TopSiteItemViewHolderTest {
         )
 
         TopSiteItemViewHolder(view, interactor).bind(defaultTopSite)
-        val pinIndicator = view.findViewById<FrameLayout>(R.id.pin_indicator)
+        val pinIndicator = view.findViewById<TextView>(R.id.top_site_title).compoundDrawables[0]
 
-        assertTrue(pinIndicator.isVisible)
+        assertNotNull(pinIndicator)
     }
 
     @Test
-    fun `pin indicator is visible for pinned top sites`() {
+    fun `GIVEN a pinned top site WHEN bind is called THEN the title has a pin indicator`() {
         val pinnedTopSite = TopSite(
             id = 1L,
             title = "Mozilla",
@@ -85,13 +84,13 @@ class TopSiteItemViewHolderTest {
         )
 
         TopSiteItemViewHolder(view, interactor).bind(pinnedTopSite)
-        val pinIndicator = view.findViewById<FrameLayout>(R.id.pin_indicator)
+        val pinIndicator = view.findViewById<TextView>(R.id.top_site_title).compoundDrawables[0]
 
-        assertTrue(pinIndicator.isVisible)
+        assertNotNull(pinIndicator)
     }
 
     @Test
-    fun `pin indicator is not visible for frecent top sites`() {
+    fun `GIVEN a frecent top site WHEN bind is called THEN the title does not have a pin indicator`() {
         val frecentTopSite = TopSite(
             id = 1L,
             title = "Mozilla",
@@ -101,8 +100,8 @@ class TopSiteItemViewHolderTest {
         )
 
         TopSiteItemViewHolder(view, interactor).bind(frecentTopSite)
-        val pinIndicator = view.findViewById<FrameLayout>(R.id.pin_indicator)
+        val pinIndicator = view.findViewById<TextView>(R.id.top_site_title).compoundDrawables[0]
 
-        assertFalse(pinIndicator.isVisible)
+        assertNull(pinIndicator)
     }
 }

@@ -23,37 +23,20 @@
 
     <TextView
         android:id="@+id/top_site_title"
-        android:layout_width="64dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:maxWidth="84dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="@dimen/top_sites_text_margin_top"
+        android:drawablePadding="2dp"
         android:gravity="center"
+        android:textAlignment="center"
         android:singleLine="true"
         android:textColor="@color/top_site_title_text"
         android:textSize="12sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/favicon_image"
-        tools:ignore="SmallSp" />
-
-    <FrameLayout
-        android:id="@+id/pin_indicator"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
-        android:elevation="7dp"
-        android:translationX="8dp"
-        android:translationY="-8dp"
-        android:visibility="gone"
-        app:layout_constraintRight_toLeftOf="@id/favicon_image"
-        app:layout_constraintTop_toTopOf="@id/favicon_image">
-
-        <View
-            android:id="@+id/pin_icon"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_gravity="center"
-            android:background="@drawable/ic_pin"
-            android:backgroundTint="@color/top_site_pin_icon_background_tint"/>
-    </FrameLayout>
+        tools:ignore="RtlCompat,SmallSp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

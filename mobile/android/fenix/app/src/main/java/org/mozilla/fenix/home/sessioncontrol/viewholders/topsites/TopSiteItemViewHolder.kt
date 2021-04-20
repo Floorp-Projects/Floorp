@@ -64,10 +64,11 @@ class TopSiteItemViewHolder(
     fun bind(topSite: TopSite) {
         top_site_title.text = topSite.title
 
-        pin_indicator.visibility = if (topSite.type == PINNED || topSite.type == DEFAULT) {
-            View.VISIBLE
+        if (topSite.type == PINNED || topSite.type == DEFAULT) {
+            val pinIndicator = getDrawable(itemView.context, R.drawable.ic_new_pin)
+            top_site_title.setCompoundDrawablesWithIntrinsicBounds(pinIndicator, null, null, null)
         } else {
-            View.GONE
+            top_site_title.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
         }
 
         when (topSite.url) {
