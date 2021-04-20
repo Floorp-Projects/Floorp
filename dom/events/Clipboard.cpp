@@ -6,6 +6,8 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/Clipboard.h"
 #include "mozilla/dom/ClipboardItem.h"
@@ -17,17 +19,18 @@
 #include "mozilla/dom/DataTransferItem.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "nsIClipboard.h"
-#include "nsIInputStream.h"
+#include "imgIContainer.h"
+#include "imgITools.h"
+#include "nsArrayUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsIClipboard.h"
+#include "nsIInputStream.h"
+#include "nsIParserUtils.h"
+#include "nsITransferable.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringStream.h"
-#include "nsITransferable.h"
-#include "nsArrayUtils.h"
-#include "nsNetUtil.h"
-#include "imgITools.h"
-#include "imgIContainer.h"
 #include "nsVariant.h"
 
 static mozilla::LazyLogModule gClipboardLog("Clipboard");
@@ -300,6 +303,37 @@ RefPtr<NativeEntryPromise> GetImageNativeEntry(
   return callback->Promise();
 }
 
+Result<NativeEntry, ErrorResult> SanitizeNativeEntry(
+    const NativeEntry& aEntry) {
+  MOZ_ASSERT(aEntry.mType.EqualsLiteral(kHTMLMime));
+
+  nsAutoString string;
+  aEntry.mData->GetAsAString(string);
+
+  nsCOMPtr<nsIParserUtils> parserUtils =
+      do_GetService(NS_PARSERUTILS_CONTRACTID);
+  if (!parserUtils) {
+    ErrorResult rv;
+    rv.ThrowUnknownError("Error while processing '"_ns +
+                         NS_ConvertUTF16toUTF8(aEntry.mType) + "'."_ns);
+    return Err(std::move(rv));
+  }
+
+  uint32_t flags = nsIParserUtils::SanitizerAllowStyle |
+                   nsIParserUtils::SanitizerAllowComments;
+  nsAutoString sanitized;
+  if (NS_FAILED(parserUtils->Sanitize(string, flags, sanitized))) {
+    ErrorResult rv;
+    rv.ThrowUnknownError("Error while processing '"_ns +
+                         NS_ConvertUTF16toUTF8(aEntry.mType) + "'."_ns);
+    return Err(std::move(rv));
+  }
+
+  RefPtr<nsVariantCC> variant = new nsVariantCC();
+  variant->SetAsAString(sanitized);
+  return NativeEntry(aEntry.mType, variant);
+}
+
 // Restrict to types allowed by Chrome
 // SVG is still disabled by default in Chrome.
 static bool IsValidType(const nsAString& aType) {
@@ -322,7 +356,27 @@ RefPtr<NativeItemPromise> GetClipboardNativeItem(const ClipboardItem& aItem) {
     if (entry.mType.EqualsLiteral(kPNGImageMime)) {
       promises.AppendElement(GetImageNativeEntry(entry));
     } else {
-      promises.AppendElement(GetStringNativeEntry(entry));
+      RefPtr<NativeEntryPromise> promise = GetStringNativeEntry(entry);
+      if (entry.mType.EqualsLiteral(kHTMLMime)) {
+        promise = promise->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            [](const NativeEntryPromise::ResolveOrRejectValue& aValue)
+                -> RefPtr<NativeEntryPromise> {
+              if (aValue.IsReject()) {
+                return NativeEntryPromise::CreateAndReject(aValue.RejectValue(),
+                                                           __func__);
+              }
+
+              auto sanitized = SanitizeNativeEntry(aValue.ResolveValue());
+              if (sanitized.isErr()) {
+                return NativeEntryPromise::CreateAndReject(
+                    CopyableErrorResult(sanitized.unwrapErr()), __func__);
+              }
+              return NativeEntryPromise::CreateAndResolve(sanitized.unwrap(),
+                                                          __func__);
+            });
+      }
+      promises.AppendElement(promise);
     }
   }
   return NativeEntryPromise::All(GetCurrentSerialEventTarget(), promises);
