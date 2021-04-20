@@ -77,6 +77,22 @@ TEST(IntlNumberFormat, Numbers)
   ASSERT_EQ(std::u16string_view(res), u"123.456,789");
 }
 
+TEST(IntlNumberFormat, SignificantDigits)
+{
+  NumberFormatOptions options;
+  options.mSignificantDigits = Some(std::make_pair(3, 5));
+  NumberFormat nf("es-ES", options);
+  Buffer<uint8_t> buf8;
+  ASSERT_TRUE(nf.format(123456.789, buf8));
+  ASSERT_EQ(
+      std::string_view(static_cast<const char*>(buf8.data()), buf8.mWritten),
+      "123.460");
+  ASSERT_TRUE(nf.format(0.7, buf8));
+  ASSERT_EQ(
+      std::string_view(static_cast<const char*>(buf8.data()), buf8.mWritten),
+      "0,700");
+}
+
 TEST(IntlNumberFormat, Currency)
 {
   NumberFormatOptions options;
@@ -115,6 +131,23 @@ TEST(IntlNumberFormat, Unit)
                                 buf16.mWritten),
             u"12.34 metros por segundo");
   const char16_t* res = nf.format(12.34);
+  ASSERT_TRUE(res != nullptr);
+  ASSERT_EQ(std::u16string_view(res), u"12.34 metros por segundo");
+
+  // Create a string view into a longer string and make sure everything works
+  // correctly.
+  const char* unit = "meter-per-second-with-some-trailing-garbage";
+  options.mUnit = Some(std::make_pair(std::string_view(unit, 5),
+                                      NumberFormatOptions::UnitDisplay::Long));
+  NumberFormat nf2("es-MX", options);
+  res = nf2.format(12.34);
+  ASSERT_TRUE(res != nullptr);
+  ASSERT_EQ(std::u16string_view(res), u"12.34 metros");
+
+  options.mUnit = Some(std::make_pair(std::string_view(unit, 16),
+                                      NumberFormatOptions::UnitDisplay::Long));
+  NumberFormat nf3("es-MX", options);
+  res = nf3.format(12.34);
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"12.34 metros por segundo");
 }
