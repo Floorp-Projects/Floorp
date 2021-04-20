@@ -200,9 +200,12 @@ class gfxFontconfigFontFamily final : public gfxFontFamily {
 
   nsTArray<RefPtr<FcPattern>> mFontPatterns;
 
-  bool mContainsAppFonts;
-  bool mHasNonScalableFaces;
-  bool mForceScalable;
+  // Number of faces that have a single name. Faces that have multiple names are
+  // sorted last.
+  uint32_t mUniqueNameFaceCount = 0;
+  bool mContainsAppFonts : 1;
+  bool mHasNonScalableFaces : 1;
+  bool mForceScalable : 1;
 };
 
 class gfxFontconfigFont final : public gfxFT2FontBase {
