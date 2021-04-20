@@ -34,6 +34,8 @@ this.browser = {};
  * Choosing a context through the <tt>Marionette:SetContext</tt>
  * command directs all subsequent browsing context scoped commands
  * to that context.
+ *
+ * @class Marionette.Context
  */
 class Context {
   /**

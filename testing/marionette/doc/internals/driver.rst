@@ -1,4 +1,4 @@
 driver module
 =============
-.. js:autoclass:: driver
+.. js:autoclass:: GeckoDriver
   :members:
