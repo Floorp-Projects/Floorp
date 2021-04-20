@@ -60,6 +60,7 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["dom.events.asyncClipboard", true],
     ["dom.events.asyncClipboard.clipboardItem", true],
+    ["dom.events.asyncClipboard.read", true],
   ]});
 });
 
