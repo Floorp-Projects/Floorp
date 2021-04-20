@@ -13,26 +13,9 @@ import sys
 import subprocess
 import time
 from distutils.version import LooseVersion
-from mozboot.util import get_mach_virtualenv_binary
 from mozfile import which
-
-# NOTE: This script is intended to be run with a vanilla Python install.  We
-# have to rely on the standard library instead of Python 2+3 helpers like
-# the six module.
-if sys.version_info < (3,):
-    from ConfigParser import (
-        Error as ConfigParserError,
-        RawConfigParser,
-    )
-
-    input = raw_input  # noqa
-else:
-    from configparser import (
-        Error as ConfigParserError,
-        RawConfigParser,
-    )
-
 from mach.util import UserError
+from mach.telemetry import initialize_telemetry_setting
 
 from mozboot.base import MODERN_RUST_VERSION
 from mozboot.centosfedora import CentOSFedoraBootstrapper
@@ -136,23 +119,6 @@ lines:
 Then restart your shell.
 """
 
-TELEMETRY_OPT_IN_PROMPT = """
-Build system telemetry
-
-Mozilla collects data about local builds in order to make builds faster and
-improve developer tooling. To learn more about the data we intend to collect
-read here:
-
-  https://firefox-source-docs.mozilla.org/build/buildsystem/telemetry.html
-
-If you have questions, please ask in #build on Matrix:
-
-  https://chat.mozilla.org/#/room/#build:mozilla.org
-
-If you would like to opt out of data collection, select (N) at the prompt.
-
-Would you like to enable build system telemetry?"""
-
 
 OLD_REVISION_WARNING = """
 WARNING! You appear to be running `mach bootstrap` from an old revision.
@@ -170,32 +136,6 @@ You are running an older version of git ("{old_version}").
 We recommend upgrading to at least version "{minimum_recommended_version}" to improve
 performance.
 """.strip()
-
-
-def update_or_create_build_telemetry_config(path):
-    """Write a mach config file enabling build telemetry to `path`. If the file does not exist,
-    create it. If it exists, add the new setting to the existing data.
-
-    This is standalone from mach's `ConfigSettings` so we can use it during bootstrap
-    without a source checkout.
-    """
-    config = RawConfigParser()
-    if os.path.exists(path):
-        try:
-            config.read([path])
-        except ConfigParserError as e:
-            print(
-                "Your mach configuration file at `{path}` is not parseable:\n{error}".format(
-                    path=path, error=e
-                )
-            )
-            return False
-    if not config.has_section("build"):
-        config.add_section("build")
-    config.set("build", "telemetry", "true")
-    with open(path, "w") as f:
-        config.write(f)
-    return True
 
 
 class Bootstrapper(object):
@@ -330,36 +270,6 @@ class Bootstrapper(object):
             self.instance.ensure_wasi_sysroot_packages(state_dir, checkout_root)
             self.instance.ensure_dump_syms_packages(state_dir, checkout_root)
 
-    def check_telemetry_opt_in(self, state_dir):
-        # Don't prompt if the user already has a setting for this value.
-        if (
-            self.mach_context is not None
-            and "telemetry" in self.mach_context.settings.build
-        ):
-            return self.mach_context.settings.build.telemetry
-        # We can't prompt the user.
-        if self.instance.no_interactive:
-            return False
-        mach_python = get_mach_virtualenv_binary()
-        proc = subprocess.run(
-            [mach_python, "-c", "import glean"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        # If we couldn't install glean in the mach environment, we can't
-        # enable telemetry.
-        if proc.returncode != 0:
-            return False
-        choice = self.instance.prompt_yesno(prompt=TELEMETRY_OPT_IN_PROMPT)
-        if choice:
-            cfg_file = os.environ.get("MACHRC", os.path.join(state_dir, "machrc"))
-            if update_or_create_build_telemetry_config(cfg_file):
-                print(
-                    "\nThanks for enabling build telemetry! You can change this setting at "
-                    + "any time by editing the config file `{}`\n".format(cfg_file)
-                )
-        return choice
-
     def check_code_submission(self, checkout_root):
         if self.instance.no_interactive or which("moz-phab"):
             return
@@ -375,7 +285,7 @@ class Bootstrapper(object):
         mach_binary = os.path.join(checkout_root, "mach")
         subprocess.check_call((sys.executable, mach_binary, "install-moz-phab"))
 
-    def bootstrap(self):
+    def bootstrap(self, settings):
         if sys.version_info[0] < 3:
             print(
                 "This script must be run with Python 3. \n"
@@ -432,7 +342,6 @@ class Bootstrapper(object):
 
         if self.instance.no_system_changes:
             self.instance.ensure_mach_environment(checkout_root)
-            self.check_telemetry_opt_in(state_dir)
             self.maybe_install_private_packages_or_exit(state_dir, checkout_root)
             self._output_mozconfig(application, mozconfig_builder)
             sys.exit(0)
@@ -475,9 +384,12 @@ class Bootstrapper(object):
                     which("git"), which("git-cinnabar"), state_dir, checkout_root
                 )
 
-        self.check_telemetry_opt_in(state_dir)
         self.maybe_install_private_packages_or_exit(state_dir, checkout_root)
         self.check_code_submission(checkout_root)
+        # Wait until after moz-phab setup to check telemetry so that employees
+        # will be automatically opted-in.
+        if not self.instance.no_interactive and not settings.mach_telemetry.is_set_up:
+            initialize_telemetry_setting(settings, checkout_root, state_dir)
 
         print(FINISHED % name)
         if not (

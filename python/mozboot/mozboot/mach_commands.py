@@ -47,7 +47,7 @@ class Bootstrap(MachCommandBase):
             no_system_changes=no_system_changes,
             mach_context=self._mach_context,
         )
-        bootstrapper.bootstrap()
+        bootstrapper.bootstrap(self.settings)
 
 
 @CommandProvider

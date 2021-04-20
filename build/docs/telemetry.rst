@@ -9,9 +9,8 @@ up to ``./mach``) has been configured to collect metrics data
 points and errors for various build system actions. This data
 helps drive team planning for the build team and ensure that
 resources are applied to build processes that need them most.
-You can opt-in to send telemetry to Mozilla during
-``./mach bootstrap`` or by editing your ``.mozbuild/machrc``
-file.
+You can adjust your telemetry settings by editing your
+``~/.mozbuild/machrc`` file.
 
 Glean Telemetry
 ===============
