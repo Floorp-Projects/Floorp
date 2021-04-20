@@ -17,8 +17,7 @@ this.ui = (function() {
     while (el) {
       if (
         el.classList &&
-        (el.classList.contains("myshots-button") ||
-          el.classList.contains("visible") ||
+        (el.classList.contains("visible") ||
           el.classList.contains("full-page") ||
           el.classList.contains("cancel-shot"))
       ) {
@@ -71,10 +70,6 @@ this.ui = (function() {
     // image URLs with the string "none".
     return computed && computed.backgroundImage === "none";
   }
-
-  const showMyShots = (exports.showMyShots = function() {
-    return window.hasAnyShots;
-  });
 
   function initializeIframe() {
     const el = document.createElement("iframe");
@@ -292,15 +287,7 @@ this.ui = (function() {
                      </div>
                      <div class="preview-instructions" data-l10n-id="screenshots-instructions"></div>
                      <button class="cancel-shot" data-l10n-id="screenshots-cancel-button"></button>
-                     <div class="myshots-all-buttons-container">
-                       ${
-                         showMyShots()
-                           ? `
-                         <button class="myshots-button" tabindex="3" data-l10n-id="screenshots-my-shots-button"></button>
-                         <div class="spacer"></div>
-                       `
-                           : ""
-                       }
+                     <div class="all-buttons-container">
                        <button class="visible" tabindex="2" data-l10n-id="screenshots-save-visible-button"></button>
                        <button class="full-page" tabindex="1" data-l10n-id="screenshots-save-page-button"></button>
                      </div>
@@ -318,16 +305,6 @@ this.ui = (function() {
                 "@@ui_locale"
               );
               const overlay = this.document.querySelector(".preview-overlay");
-              if (showMyShots()) {
-                overlay
-                  .querySelector(".myshots-button")
-                  .addEventListener(
-                    "click",
-                    watchFunction(
-                      assertIsTrusted(standardOverlayCallbacks.onOpenMyShots)
-                    )
-                  );
-              }
               overlay
                 .querySelector(".visible")
                 .addEventListener(

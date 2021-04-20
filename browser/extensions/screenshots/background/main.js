@@ -14,10 +14,6 @@ this.main = (function() {
   const manifest = browser.runtime.getManifest();
   let backend;
 
-  exports.hasAnyShots = function() {
-    return false;
-  };
-
   exports.setBackend = function(newBackend) {
     backend = newBackend;
     backend = backend.replace(/\/*$/, "");
@@ -157,14 +153,6 @@ this.main = (function() {
     catcher.watchPromise(sendEvent(...args));
     // We don't wait for it to complete:
     return null;
-  });
-
-  communication.register("openMyShots", sender => {
-    return catcher.watchPromise(
-      auth
-        .maybeLogin()
-        .then(() => browser.tabs.create({ url: backend + "/shots" }))
-    );
   });
 
   communication.register("openShot", async (sender, { url, copied }) => {
