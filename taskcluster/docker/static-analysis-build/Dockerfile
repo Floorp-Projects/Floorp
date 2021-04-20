@@ -62,7 +62,6 @@ RUN apt-get update && \
       libgconf2-dev \
       libgmp-dev \
       libgtk-3-dev \
-      libgtk2.0-dev \
       libpango1.0-dev \
       libpulse-dev \
       libx11-xcb-dev \
