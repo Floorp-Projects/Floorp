@@ -970,6 +970,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   // Require private fields disabled outside of nightly.
   bool privateFieldsEnabled = false;
   bool privateMethodsEnabled = false;
+  bool ergnomicBrandChecksEnabled = false;
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
@@ -977,6 +978,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_fields");
   privateMethodsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.private_methods");
+  ergnomicBrandChecksEnabled = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "experimental.ergonomic_brand_checks");
 #endif
 
 #ifdef JS_GC_ZEAL
@@ -1022,6 +1025,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setDumpStackOnDebuggeeWouldRun(dumpStackOnDebuggeeWouldRun)
       .setPrivateClassFields(privateFieldsEnabled)
       .setPrivateClassMethods(privateMethodsEnabled)
+      .setErgnomicBrandChecks(ergnomicBrandChecksEnabled)
       .setTopLevelAwait(topLevelAwaitEnabled);
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");

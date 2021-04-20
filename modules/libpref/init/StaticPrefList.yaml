@@ -5629,6 +5629,12 @@
     mirror: always
 #endif  // NIGHTLY_BUILD
 
+  # Experimental support for the egonomic brand check proposal. 
+- name: javascript.options.experimental.ergonomic_brand_checks
+  type: bool
+  value: false
+  mirror: always
+
   # Experimental support for Top-level Await in JavaScript.
 -   name: javascript.options.experimental.top_level_await
     type: bool

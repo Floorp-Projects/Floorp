@@ -622,6 +622,7 @@ bool shell::enableIteratorHelpers = false;
 bool shell::enablePrivateClassFields = false;
 bool shell::enablePrivateClassMethods = false;
 bool shell::enableTopLevelAwait = true;
+bool shell::enableErgonomicBrandChecks = false;
 bool shell::useOffThreadParseGlobal = true;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
@@ -10950,6 +10951,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enablePrivateClassFields = op.getBoolOption("enable-private-fields") ||
                              op.getBoolOption("enable-private-methods");
   enablePrivateClassMethods = op.getBoolOption("enable-private-methods");
+  enableErgonomicBrandChecks =
+      op.getBoolOption("enable-ergonomic-brand-checks");
   enableTopLevelAwait = op.getBoolOption("enable-top-level-await");
   useOffThreadParseGlobal = op.getBoolOption("off-thread-parse-global");
 
@@ -10980,6 +10983,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
       .setPrivateClassFields(enablePrivateClassFields)
       .setPrivateClassMethods(enablePrivateClassMethods)
+      .setErgnomicBrandChecks(enableErgonomicBrandChecks)
       .setTopLevelAwait(enableTopLevelAwait);
 
   JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);
@@ -11922,6 +11926,9 @@ int main(int argc, char** argv, char** envp) {
                         "Enable private class fields") ||
       !op.addBoolOption('\0', "enable-private-methods",
                         "Enable private class methods") ||
+      !op.addBoolOption(
+          '\0', "enable-ergonomic-brand-checks",
+          "Enable ergonomic brand checks for private class fields") ||
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||
       !op.addBoolOption('\0', "off-thread-parse-global",
