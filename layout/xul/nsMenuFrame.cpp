@@ -890,9 +890,9 @@ void nsMenuFrame::Execute(WidgetGUIEvent* aEvent) {
   StartBlinking();
 }
 
-void nsMenuFrame::ActivateItem(Modifiers aModifiers) {
+void nsMenuFrame::ActivateItem(Modifiers aModifiers, int16_t aButton) {
   StopBlinking();
-  CreateMenuCommandEvent(nsContentUtils::IsCallerChrome(), aModifiers, 0);
+  CreateMenuCommandEvent(nsContentUtils::IsCallerChrome(), aModifiers, aButton);
   StartBlinking();
 }
 

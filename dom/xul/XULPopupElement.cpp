@@ -98,7 +98,7 @@ void XULPopupElement::HidePopup(bool aCancel) {
   }
 }
 
-static Modifiers ConvertModifiers(const ActivateMenuItemModifiers& aModifiers) {
+static Modifiers ConvertModifiers(const ActivateMenuItemOptions& aModifiers) {
   Modifiers modifiers = 0;
   if (aModifiers.mCtrlKey) {
     modifiers |= MODIFIER_CONTROL;
@@ -116,17 +116,18 @@ static Modifiers ConvertModifiers(const ActivateMenuItemModifiers& aModifiers) {
 }
 
 void XULPopupElement::ActivateItem(Element& aItemElement,
-                                   const ActivateMenuItemModifiers& aModifiers,
+                                   const ActivateMenuItemOptions& aOptions,
                                    ErrorResult& aRv) {
   if (!Contains(&aItemElement)) {
     return aRv.ThrowInvalidStateError("Menu item is not inside this menu.");
   }
 
-  Modifiers modifiers = ConvertModifiers(aModifiers);
+  Modifiers modifiers = ConvertModifiers(aOptions);
 
   // First, check if a native menu is open, and activate the item in it.
   if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
-    if (pm->ActivateNativeMenuItem(&aItemElement, modifiers, aRv)) {
+    if (pm->ActivateNativeMenuItem(&aItemElement, modifiers, aOptions.mButton,
+                                   aRv)) {
       return;
     }
   }
@@ -148,7 +149,7 @@ void XULPopupElement::ActivateItem(Element& aItemElement,
         "Menu item is not directly inside this menu");
   }
 
-  itemFrame->ActivateItem(modifiers);
+  itemFrame->ActivateItem(modifiers, aOptions.mButton);
 }
 
 void XULPopupElement::MoveTo(int32_t aLeft, int32_t aTop) {

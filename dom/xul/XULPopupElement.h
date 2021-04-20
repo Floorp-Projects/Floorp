@@ -24,7 +24,7 @@ class DOMRect;
 class Element;
 class Event;
 class StringOrOpenPopupOptions;
-struct ActivateMenuItemModifiers;
+struct ActivateMenuItemOptions;
 
 nsXULElement* NS_NewXULPopupElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -71,8 +71,7 @@ class XULPopupElement : public nsXULElement {
   void HidePopup(bool aCancel);
 
   void ActivateItem(Element& aItemElement,
-                    const ActivateMenuItemModifiers& aModifiers,
-                    ErrorResult& aRv);
+                    const ActivateMenuItemOptions& aOptions, ErrorResult& aRv);
 
   void GetState(nsString& aState);
 
