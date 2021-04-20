@@ -792,6 +792,13 @@ class HomeFragment : Fragment() {
                             HomeFragmentDirections.actionGlobalSyncedTabsFragment()
                         )
                     }
+                    HomeMenu.Item.SyncAccount -> {
+                        hideOnboardingIfNeeded()
+                        nav(
+                            R.id.homeFragment,
+                            HomeFragmentDirections.actionGlobalAccountSettingsFragment()
+                        )
+                    }
                     HomeMenu.Item.Bookmarks -> {
                         hideOnboardingIfNeeded()
                         nav(

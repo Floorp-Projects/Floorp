@@ -17,6 +17,7 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -227,11 +228,19 @@ class SmokeTest {
 
     @Test
     // Verifies the Synced tabs menu opens from a tab's 3 dot menu
-    fun openMainMenuSyncedTabsItemTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSyncedTabs {
-            verifySyncedTabsMenuHeader()
+    fun openMainMenuSyncItemTest() {
+        if (FeatureFlags.tabsTrayRewrite) {
+            homeScreen {
+            }.openThreeDotMenu {
+            }.openSyncSignIn {
+                verifyAccountSettingsMenuHeader()
+            }
+        } else {
+            homeScreen {
+            }.openThreeDotMenu {
+            }.openSyncedTabs {
+                verifySyncedTabsMenuHeader()
+            }
         }
     }
 

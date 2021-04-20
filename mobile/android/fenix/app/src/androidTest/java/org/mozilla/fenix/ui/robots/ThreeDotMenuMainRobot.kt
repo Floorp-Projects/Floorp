@@ -51,6 +51,7 @@ class ThreeDotMenuMainRobot {
     fun verifyHistoryButton() = assertHistoryButton()
     fun verifyBookmarksButton() = assertBookmarksButton()
     fun verifySyncedTabsButton() = assertSyncedTabsButton()
+    fun verifySyncSignInButton() = assertSignInToSyncButton()
     fun verifyHelpButton() = assertHelpButton()
     fun verifyThreeDotMenuExists() = threeDotMenuRecyclerViewExists()
     fun verifyForwardButton() = assertForwardButton()
@@ -162,6 +163,15 @@ class ThreeDotMenuMainRobot {
 
             SyncedTabsRobot().interact()
             return SyncedTabsRobot.Transition()
+        }
+
+        fun openSyncSignIn(interact: SyncSignInRobot.() -> Unit): SyncSignInRobot.Transition {
+            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(swipeDown())
+            mDevice.waitNotNull(Until.findObject(By.text("Sign in to sync")), waitingTime)
+            signInToSyncButton().click()
+
+            SyncSignInRobot().interact()
+            return SyncSignInRobot.Transition()
         }
 
         fun openBookmarks(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {

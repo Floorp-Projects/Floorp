@@ -24,6 +24,7 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.FeatureFlags.tabsTrayRewrite
 import org.mozilla.fenix.R
 import org.mozilla.fenix.experiments.ExperimentBranch
 import org.mozilla.fenix.experiments.Experiments
@@ -47,6 +48,7 @@ class HomeMenu(
         object Downloads : Item()
         object Extensions : Item()
         object SyncTabs : Item()
+        object SyncAccount : Item()
         object WhatsNew : Item()
         object Help : Item()
         object Settings : Item()
@@ -55,8 +57,7 @@ class HomeMenu(
         data class DesktopMode(val checked: Boolean) : Item()
     }
 
-    private val primaryTextColor =
-        ThemeManager.resolveAttribute(R.attr.primaryText, context)
+    private val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, context)
     private val syncDisconnectedColor =
         ThemeManager.resolveAttribute(R.attr.syncDisconnected, context)
     private val syncDisconnectedBackgroundColor =
@@ -89,17 +90,6 @@ class HomeMenu(
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Quit)
-        }
-    }
-
-    private fun getSyncItemTitle(): String {
-        val authenticatedAccount = accountManager.authenticatedAccount() != null
-        val email = accountManager.accountProfile()?.email
-
-        return if (authenticatedAccount && email != null) {
-            email
-        } else {
-            context.getString(R.string.sync_menu_sign_in)
         }
     }
 
@@ -236,6 +226,17 @@ class HomeMenu(
         onItemTapped.invoke(Item.DesktopMode(checked))
     }
 
+    private fun getSyncItemTitle(): String {
+        val authenticatedAccount = accountManager.authenticatedAccount() != null
+        val email = accountManager.accountProfile()?.email
+
+        return if (authenticatedAccount && email != null) {
+            email
+        } else {
+            context.getString(R.string.sync_menu_sign_in)
+        }
+    }
+
     @Suppress("ComplexMethod")
     private fun newCoreMenuItems(): List<BrowserMenuItem> {
         val experiments = context.components.analytics.experiments
@@ -293,12 +294,20 @@ class HomeMenu(
             onItemTapped.invoke(Item.Extensions)
         }
 
-        val syncSignInItem = BrowserMenuImageText(
-            context.getString(R.string.library_synced_tabs),
+        val syncedTabsItem = BrowserMenuImageText(
+            context.getString(R.string.synced_tabs),
             R.drawable.ic_synced_tabs,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.SyncTabs)
+        }
+
+        val syncSignInMenuItem = BrowserMenuImageText(
+            getSyncItemTitle(),
+            R.drawable.ic_synced_tabs,
+            primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.SyncAccount)
         }
 
         val whatsNewItem = BrowserMenuHighlightableItem(
@@ -344,7 +353,7 @@ class HomeMenu(
             historyItem,
             downloadsItem,
             extensionsItem,
-            syncSignInItem,
+            if (tabsTrayRewrite) syncSignInMenuItem else syncedTabsItem,
             accountAuthItem,
             BrowserMenuDivider(),
             desktopItem,
