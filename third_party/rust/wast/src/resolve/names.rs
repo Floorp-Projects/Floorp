@@ -759,7 +759,7 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 ));
             }
 
-            Br(i) | BrIf(i) | BrOnNull(i) => {
+            Br(i) | BrIf(i) | BrOnNull(i) | Delegate(i) => {
                 self.resolve_label(i)?;
             }
 

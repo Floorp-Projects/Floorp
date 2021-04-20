@@ -69,7 +69,7 @@
 
 use std::borrow::Cow;
 use std::fmt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str;
 use wast::parser::{self, ParseBuffer};
 
@@ -103,15 +103,13 @@ fn _parse_file(file: &Path) -> Result<Vec<u8>> {
     let contents = std::fs::read(file).map_err(|err| Error {
         kind: Box::new(ErrorKind::Io {
             err,
-            msg: format!("failed to read `{}` to a string", file.display()),
+            file: Some(file.to_owned()),
         }),
     })?;
     match parse_bytes(&contents) {
         Ok(bytes) => Ok(bytes.into_owned()),
         Err(mut e) => {
-            if let ErrorKind::Wast(e) = &mut *e.kind {
-                e.set_path(file);
-            }
+            e.set_path(file);
             Err(e)
         }
     }
@@ -163,7 +161,10 @@ pub fn parse_bytes(bytes: &[u8]) -> Result<Cow<'_, [u8]>> {
     match str::from_utf8(bytes) {
         Ok(s) => _parse_str(s).map(|s| s.into()),
         Err(_) => Err(Error {
-            kind: Box::new(ErrorKind::Custom(format!("input bytes aren't valid utf-8"))),
+            kind: Box::new(ErrorKind::Custom {
+                msg: "input bytes aren't valid utf-8".to_string(),
+                file: None,
+            }),
         }),
     }
 }
@@ -240,8 +241,14 @@ pub struct Error {
 #[derive(Debug)]
 enum ErrorKind {
     Wast(wast::Error),
-    Io { err: std::io::Error, msg: String },
-    Custom(String),
+    Io {
+        err: std::io::Error,
+        file: Option<PathBuf>,
+    },
+    Custom {
+        msg: String,
+        file: Option<PathBuf>,
+    },
 }
 
 impl Error {
@@ -252,14 +259,38 @@ impl Error {
             kind: Box::new(ErrorKind::Wast(err)),
         }
     }
+
+    /// To provide a more useful error this function can be used to set
+    /// the file name that this error is associated with.
+    ///
+    /// The `file` here will be stored in this error and later rendered in the
+    /// `Display` implementation.
+    pub fn set_path<P: AsRef<Path>>(&mut self, file: P) {
+        let file = file.as_ref();
+        match &mut *self.kind {
+            ErrorKind::Wast(e) => e.set_path(file),
+            ErrorKind::Custom { file: f, .. } => *f = Some(file.to_owned()),
+            ErrorKind::Io { file: f, .. } => *f = Some(file.to_owned()),
+        }
+    }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &*self.kind {
             ErrorKind::Wast(err) => err.fmt(f),
-            ErrorKind::Custom(err) => err.fmt(f),
-            ErrorKind::Io { msg, .. } => msg.fmt(f),
+            ErrorKind::Custom { msg, file, .. } => match file {
+                Some(file) => {
+                    write!(f, "failed to parse `{}`: {}", file.display(), msg)
+                }
+                None => msg.fmt(f),
+            },
+            ErrorKind::Io { err, file, .. } => match file {
+                Some(file) => {
+                    write!(f, "failed to read from `{}`: {}", file.display(), err)
+                }
+                None => err.fmt(f),
+            },
         }
     }
 }
@@ -268,8 +299,35 @@ impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match &*self.kind {
             ErrorKind::Wast(_) => None,
-            ErrorKind::Custom(_) => None,
+            ErrorKind::Custom { .. } => None,
             ErrorKind::Io { err, .. } => Some(err),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_set_path() {
+        let mut e = parse_bytes(&[0xFF]).unwrap_err();
+        e.set_path("foo");
+        assert_eq!(
+            e.to_string(),
+            "failed to parse `foo`: input bytes aren't valid utf-8"
+        );
+
+        let e = parse_file("_does_not_exist_").unwrap_err();
+        assert!(e
+            .to_string()
+            .starts_with("failed to read from `_does_not_exist_`: "));
+
+        let mut e = parse_bytes("()".as_bytes()).unwrap_err();
+        e.set_path("foo");
+        assert_eq!(
+            e.to_string(),
+            "expected valid module field\n     --> foo:1:2\n      |\n    1 | ()\n      |  ^"
+        );
     }
 }

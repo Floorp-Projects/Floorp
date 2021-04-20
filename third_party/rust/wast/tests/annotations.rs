@@ -99,6 +99,7 @@ fn get_name_section(wasm: &[u8]) -> anyhow::Result<NameSectionReader<'_>> {
             name: "name",
             data,
             data_offset,
+            range: _,
         } = payload?
         {
             return Ok(NameSectionReader::new(data, data_offset)?);

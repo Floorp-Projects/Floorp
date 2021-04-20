@@ -89,8 +89,9 @@ impl<'a> Expander<'a> {
             }
 
             ModuleField::Elem(e) => {
-                if let ElemKind::Active { table, .. } = &mut e.kind {
+                if let ElemKind::Active { table, offset, .. } = &mut e.kind {
                     self.expand(table);
+                    self.expand_expr(offset);
                 }
                 match &mut e.payload {
                     ElemPayload::Indices(funcs) => {
@@ -202,6 +203,10 @@ impl<'a> Expander<'a> {
             }
 
             MemorySize(m) | MemoryGrow(m) | MemoryFill(m) => self.expand(&mut m.mem),
+
+            Let(t) => self.expand_type_use(&mut t.block.ty),
+
+            Block(bt) | If(bt) | Loop(bt) | Try(bt) => self.expand_type_use(&mut bt.ty),
 
             _ => {}
         }
