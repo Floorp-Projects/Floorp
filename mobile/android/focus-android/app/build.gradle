@@ -262,39 +262,6 @@ android.applicationVariants.all { variant ->
 }
 
 // -------------------------------------------------------------------------------------------------
-// Generate blocklists
-// -------------------------------------------------------------------------------------------------
-
-def blockListOutputDir = 'src/main/res/raw'
-
-task buildBlocklists(type:Copy) {
-    from('../shavar-prod-lists') {
-        include '*.json'
-    }
-    into blockListOutputDir
-
-    // Android can't handle dashes in the filename, so we need to rename:
-    rename 'disconnect-blacklist.json', 'blocklist.json'
-    rename 'disconnect-entitylist.json', 'entitylist.json'
-    rename { String filename ->
-        return filename.replaceAll("-", "_").toLowerCase()
-    }
-}
-
-clean.doLast {
-    delete fileTree(blockListOutputDir) {
-        include '**/*.json'
-    }
-}
-
-tasks.whenTaskAdded { task ->
-    def name = task.name
-    if (name.contains("generate") && name.contains("Config")) {
-        task.dependsOn buildBlocklists
-    }
-}
-
-// -------------------------------------------------------------------------------------------------
 // Adjust: Read token from locale file if it exists (Only release builds)
 // -------------------------------------------------------------------------------------------------
 
