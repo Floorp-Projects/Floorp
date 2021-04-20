@@ -112,6 +112,7 @@ const fillTransitionProperties = (eventName, src, dst) => {
 // Similar to WebRequestEventManager but for WebNavigation.
 class WebNavigationEventManager extends EventManager {
   constructor(context, eventName) {
+    let { tabManager } = context.extension;
     let name = `webNavigation.${eventName}`;
     let register = (fire, urlFilters) => {
       // Don't create a MatchURLFilters instance if the listener does not include any filter.
@@ -157,6 +158,10 @@ class WebNavigationEventManager extends EventManager {
         // Fills in tabId typically.
         Object.assign(data2, tabTracker.getBrowserData(data.browser));
         if (data2.tabId < 0) {
+          return;
+        }
+        let tab = tabTracker.getTab(data2.tabId);
+        if (!tabManager.canAccessTab(tab)) {
           return;
         }
 
