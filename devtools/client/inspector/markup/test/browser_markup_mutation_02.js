@@ -60,7 +60,12 @@ const TEST_DATA = [
     desc: "Adding an attribute should flash the attribute",
     attribute: "test-name",
     mutate: async function(testActor) {
-      await testActor.setAttribute(".list", "test-name", "value-" + Date.now());
+      await setAttributeInBrowser(
+        gBrowser.selectedBrowser,
+        ".list",
+        "test-name",
+        "value-" + Date.now()
+      );
     },
   },
   {
@@ -69,14 +74,20 @@ const TEST_DATA = [
       "attribute",
     attribute: "one:two",
     mutate: async function(testActor) {
-      await testActor.setAttribute(".list", "one:two", "value-" + Date.now());
+      await setAttributeInBrowser(
+        gBrowser.selectedBrowser,
+        ".list",
+        "one:two",
+        "value-" + Date.now()
+      );
     },
   },
   {
     desc: "Editing an attribute should flash the attribute",
     attribute: "class",
     mutate: async function(testActor) {
-      await testActor.setAttribute(
+      await setAttributeInBrowser(
+        gBrowser.selectedBrowser,
         ".list",
         "class",
         "list value-" + Date.now()

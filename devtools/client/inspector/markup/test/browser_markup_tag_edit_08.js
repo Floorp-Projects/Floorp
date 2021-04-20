@@ -8,8 +8,10 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 /*eslint-disable */
-const LONG_ATTRIBUTE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const LONG_ATTRIBUTE_COLLAPSED = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEF\u2026UVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const LONG_ATTRIBUTE =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const LONG_ATTRIBUTE_COLLAPSED =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEF\u2026UVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 /* eslint-enable */
 
 add_task(async function() {
@@ -26,11 +28,16 @@ async function testCollapsedLongAttribute(inspector, testActor) {
 
   info("Adding test attributes to the node");
   let onMutation = inspector.once("markupmutation");
-  await testActor.setAttribute("#node24", "class", "");
+  await setAttributeInBrowser(gBrowser.selectedBrowser, "#node24", "class", "");
   await onMutation;
 
   onMutation = inspector.once("markupmutation");
-  await testActor.setAttribute("#node24", "data-long", LONG_ATTRIBUTE);
+  await setAttributeInBrowser(
+    gBrowser.selectedBrowser,
+    "#node24",
+    "data-long",
+    LONG_ATTRIBUTE
+  );
   await onMutation;
 
   await assertAttributes(

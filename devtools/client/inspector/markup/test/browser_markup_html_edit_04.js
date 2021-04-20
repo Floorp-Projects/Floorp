@@ -45,12 +45,12 @@ async function testDocumentElement(inspector, testActor) {
   await onReselected;
 
   is(
-    await testActor.getAttribute("svg", "width"),
+    await getAttributeInBrowser(gBrowser.selectedBrowser, "svg", "width"),
     "200",
     "<svg> width has been updated"
   );
   is(
-    await testActor.getAttribute("svg", "height"),
+    await getAttributeInBrowser(gBrowser.selectedBrowser, "svg", "height"),
     "200",
     "<svg> height has been updated"
   );
@@ -80,12 +80,12 @@ async function testDocumentElement2(inspector, testActor) {
   await onReselected;
 
   is(
-    await testActor.getAttribute("svg", "width"),
+    await getAttributeInBrowser(gBrowser.selectedBrowser, "svg", "width"),
     "300",
     "<svg> width has been updated"
   );
   is(
-    await testActor.getAttribute("svg", "height"),
+    await getAttributeInBrowser(gBrowser.selectedBrowser, "svg", "height"),
     "300",
     "<svg> height has been updated"
   );

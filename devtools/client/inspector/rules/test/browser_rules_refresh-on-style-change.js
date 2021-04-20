@@ -12,7 +12,7 @@ add_task(async function() {
   Services.prefs.setCharPref("devtools.defaultColorUnit", "name");
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  const { inspector, view, testActor } = await openRuleView();
+  const { inspector, view } = await openRuleView();
   await selectNode("#testdiv", inspector);
 
   let fontSize = getRuleViewPropertyValue(view, "element", "font-size");
@@ -20,7 +20,8 @@ add_task(async function() {
 
   info("Changing the node's style and waiting for the update");
   const onUpdated = inspector.once("rule-view-refreshed");
-  await testActor.setAttribute(
+  await setAttributeInBrowser(
+    gBrowser.selectedBrowser,
     "#testdiv",
     "style",
     "font-size: 3em; color: lightgoldenrodyellow; " +
