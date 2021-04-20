@@ -149,62 +149,58 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   NS_DECL_ISUPPORTS
 
   // nsIWidget interface
-  virtual void CaptureMouse(bool aCapture) override {}
-  virtual void CaptureRollupEvents(nsIRollupListener* aListener,
-                                   bool aDoCapture) override {}
-  virtual nsIWidgetListener* GetWidgetListener() override;
-  virtual void SetWidgetListener(nsIWidgetListener* alistener) override;
-  virtual void Destroy() override;
-  virtual void SetParent(nsIWidget* aNewParent) override{};
-  virtual nsIWidget* GetParent(void) override;
-  virtual nsIWidget* GetTopLevelWidget() override;
-  virtual nsIWidget* GetSheetWindowParent(void) override;
-  virtual float GetDPI() override;
-  virtual void AddChild(nsIWidget* aChild) override;
-  virtual void RemoveChild(nsIWidget* aChild) override;
+  void CaptureMouse(bool aCapture) override {}
+  void CaptureRollupEvents(nsIRollupListener* aListener,
+                           bool aDoCapture) override {}
+  nsIWidgetListener* GetWidgetListener() override;
+  void SetWidgetListener(nsIWidgetListener* alistener) override;
+  void Destroy() override;
+  void SetParent(nsIWidget* aNewParent) override{};
+  nsIWidget* GetParent() override;
+  nsIWidget* GetTopLevelWidget() override;
+  nsIWidget* GetSheetWindowParent(void) override;
+  float GetDPI() override;
+  void AddChild(nsIWidget* aChild) override;
+  void RemoveChild(nsIWidget* aChild) override;
 
   void SetZIndex(int32_t aZIndex) override;
-  virtual void PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                           nsIWidget* aWidget, bool aActivate) override {}
+  void PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget* aWidget,
+                   bool aActivate) override {}
 
-  virtual void SetSizeMode(nsSizeMode aMode) override;
-  virtual nsSizeMode SizeMode() override { return mSizeMode; }
-  virtual void GetWorkspaceID(nsAString& workspaceID) override;
-  virtual void MoveToWorkspace(const nsAString& workspaceID) override;
-  virtual bool IsTiled() const override { return mIsTiled; }
+  void SetSizeMode(nsSizeMode aMode) override;
+  nsSizeMode SizeMode() override { return mSizeMode; }
+  void GetWorkspaceID(nsAString& workspaceID) override;
+  void MoveToWorkspace(const nsAString& workspaceID) override;
+  bool IsTiled() const override { return mIsTiled; }
 
-  virtual bool IsFullyOccluded() const override { return mIsFullyOccluded; }
+  bool IsFullyOccluded() const override { return mIsFullyOccluded; }
 
-  virtual void SetCursor(const Cursor&) override;
-  virtual void ClearCachedCursor() final {
+  void SetCursor(const Cursor&) override;
+  void ClearCachedCursor() final {
     mCursor = {};
     mUpdateCursor = true;
   }
-  virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
-  virtual nsTransparencyMode GetTransparencyMode() override;
-  virtual void GetWindowClipRegion(
-      nsTArray<LayoutDeviceIntRect>* aRects) override;
-  virtual void SetWindowShadowStyle(
-      mozilla::StyleWindowShadow aStyle) override {}
-  virtual void SetShowsToolbarButton(bool aShow) override {}
-  virtual void SetSupportsNativeFullscreen(
-      bool aSupportsNativeFullscreen) override {}
-  virtual void SetWindowAnimationType(WindowAnimationType aType) override {}
-  virtual void HideWindowChrome(bool aShouldHide) override {}
-  virtual bool PrepareForFullscreenTransition(nsISupports** aData) override {
+  void SetTransparencyMode(nsTransparencyMode aMode) override;
+  nsTransparencyMode GetTransparencyMode() override;
+  void GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects) override;
+  void SetWindowShadowStyle(mozilla::StyleWindowShadow aStyle) override {}
+  void SetShowsToolbarButton(bool aShow) override {}
+  void SetSupportsNativeFullscreen(bool aSupportsNativeFullscreen) override {}
+  void SetWindowAnimationType(WindowAnimationType aType) override {}
+  void HideWindowChrome(bool aShouldHide) override {}
+  bool PrepareForFullscreenTransition(nsISupports** aData) override {
     return false;
   }
-  virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,
-                                           uint16_t aDuration,
-                                           nsISupports* aData,
-                                           nsIRunnable* aCallback) override;
-  virtual void CleanupFullscreenTransition() override{};
-  virtual already_AddRefed<nsIScreen> GetWidgetScreen() override;
-  virtual nsresult MakeFullScreen(bool aFullScreen,
-                                  nsIScreen* aScreen = nullptr) override;
+  void PerformFullscreenTransition(FullscreenTransitionStage aStage,
+                                   uint16_t aDuration, nsISupports* aData,
+                                   nsIRunnable* aCallback) override;
+  void CleanupFullscreenTransition() override {}
+  already_AddRefed<nsIScreen> GetWidgetScreen() override;
+  nsresult MakeFullScreen(bool aFullScreen,
+                          nsIScreen* aScreen = nullptr) override;
   void InfallibleMakeFullScreen(bool aFullScreen, nsIScreen* aScreen = nullptr);
 
-  virtual LayerManager* GetLayerManager(
+  LayerManager* GetLayerManager(
       PLayerTransactionChild* aShadowManager = nullptr,
       LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
       LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
@@ -220,20 +216,18 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   already_AddRefed<mozilla::CompositorVsyncDispatcher>
   GetCompositorVsyncDispatcher();
-  virtual void CreateCompositorVsyncDispatcher();
-  virtual void CreateCompositor();
-  virtual void CreateCompositor(int aWidth, int aHeight);
-  virtual void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
-  }
-  virtual void PrepareWindowEffects() override {}
-  virtual void UpdateThemeGeometries(
+  void CreateCompositorVsyncDispatcher();
+  void CreateCompositor();
+  void CreateCompositor(int aWidth, int aHeight);
+  void SetCompositorWidgetDelegate(CompositorWidgetDelegate*) {}
+  void PrepareWindowEffects() override {}
+  void UpdateThemeGeometries(
       const nsTArray<ThemeGeometry>& aThemeGeometries) override {}
-  virtual void SetModal(bool aModal) override {}
-  virtual uint32_t GetMaxTouchPoints() const override;
-  virtual void SetWindowClass(const nsAString& xulWinType) override {}
-  virtual nsresult SetWindowClipRegion(
-      const nsTArray<LayoutDeviceIntRect>& aRects,
-      bool aIntersectWithExisting) override;
+  void SetModal(bool aModal) override {}
+  uint32_t GetMaxTouchPoints() const override;
+  void SetWindowClass(const nsAString& xulWinType) override {}
+  nsresult SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
+                               bool aIntersectWithExisting) override;
   // Return whether this widget interprets parameters to Move and Resize APIs
   // as "desktop pixels" rather than "device pixels", and therefore
   // applies its GetDefaultScale() value to them before using them as mBounds
@@ -252,70 +246,62 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScaleByScreen()
       override;
 
-  virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX,
-                                 int32_t* aY) override {}
-  virtual void MoveClient(const DesktopPoint& aOffset) override;
-  virtual void ResizeClient(const DesktopSize& aSize, bool aRepaint) override;
-  virtual void ResizeClient(const DesktopRect& aRect, bool aRepaint) override;
-  virtual LayoutDeviceIntRect GetBounds() override;
-  virtual LayoutDeviceIntRect GetClientBounds() override;
-  virtual LayoutDeviceIntRect GetScreenBounds() override;
-  [[nodiscard]] virtual nsresult GetRestoredBounds(
-      LayoutDeviceIntRect& aRect) override;
-  virtual nsresult SetNonClientMargins(
-      LayoutDeviceIntMargin& aMargins) override;
-  virtual LayoutDeviceIntPoint GetClientOffset() override;
-  virtual void EnableDragDrop(bool aEnable) override{};
-  virtual nsresult AsyncEnableDragDrop(bool aEnable) override;
-  [[nodiscard]] virtual nsresult GetAttention(int32_t aCycleCount) override {
+  void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) override {}
+  void MoveClient(const DesktopPoint& aOffset) override;
+  void ResizeClient(const DesktopSize& aSize, bool aRepaint) override;
+  void ResizeClient(const DesktopRect& aRect, bool aRepaint) override;
+  LayoutDeviceIntRect GetBounds() override;
+  LayoutDeviceIntRect GetClientBounds() override;
+  LayoutDeviceIntRect GetScreenBounds() override;
+  [[nodiscard]] nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
+  nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+  LayoutDeviceIntPoint GetClientOffset() override;
+  void EnableDragDrop(bool aEnable) override{};
+  nsresult AsyncEnableDragDrop(bool aEnable) override;
+  [[nodiscard]] nsresult GetAttention(int32_t aCycleCount) override {
     return NS_OK;
   }
-  virtual bool HasPendingInputEvent() override;
-  virtual void SetIcon(const nsAString& aIconSpec) override {}
-  virtual void SetDrawsInTitlebar(bool aState) override {}
-  virtual bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override;
-  virtual void FreeNativeData(void* data, uint32_t aDataType) override {}
-  [[nodiscard]] virtual nsresult BeginResizeDrag(
-      mozilla::WidgetGUIEvent* aEvent, int32_t aHorizontal,
-      int32_t aVertical) override {
+  bool HasPendingInputEvent() override;
+  void SetIcon(const nsAString& aIconSpec) override {}
+  void SetDrawsInTitlebar(bool aState) override {}
+  bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override;
+  void FreeNativeData(void* data, uint32_t aDataType) override {}
+  [[nodiscard]] nsresult BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+                                         int32_t aHorizontal,
+                                         int32_t aVertical) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual nsresult ActivateNativeMenuItemAt(
-      const nsAString& indexString) override {
+  nsresult ActivateNativeMenuItemAt(const nsAString& indexString) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual nsresult ForceUpdateNativeMenuAt(
-      const nsAString& indexString) override {
+  nsresult ForceUpdateNativeMenuAt(const nsAString& indexString) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   nsresult NotifyIME(const IMENotification& aIMENotification) final;
-  [[nodiscard]] virtual nsresult AttachNativeKeyEvent(
+  [[nodiscard]] nsresult AttachNativeKeyEvent(
       mozilla::WidgetKeyboardEvent& aEvent) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   bool ComputeShouldAccelerate();
   virtual bool WidgetTypeSupportsAcceleration() { return true; }
-  [[nodiscard]] virtual nsresult OnDefaultButtonLoaded(
+  [[nodiscard]] nsresult OnDefaultButtonLoaded(
       const LayoutDeviceIntRect& aButtonRect) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual already_AddRefed<nsIWidget> CreateChild(
+  already_AddRefed<nsIWidget> CreateChild(
       const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData = nullptr,
       bool aForceUseIWidgetParent = false) override;
-  virtual void AttachViewToTopLevel(bool aUseAttachedEvents) override;
-  virtual nsIWidgetListener* GetAttachedWidgetListener() override;
-  virtual void SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
-  virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
-  virtual void SetPreviouslyAttachedWidgetListener(
-      nsIWidgetListener* aListener) override;
-  virtual NativeIMEContext GetNativeIMEContext() override;
+  void AttachViewToTopLevel(bool aUseAttachedEvents) override;
+  nsIWidgetListener* GetAttachedWidgetListener() override;
+  void SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
+  nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
+  void SetPreviouslyAttachedWidgetListener(nsIWidgetListener*) override;
+  NativeIMEContext GetNativeIMEContext() override;
   TextEventDispatcher* GetTextEventDispatcher() final;
-  virtual TextEventDispatcherListener* GetNativeTextEventDispatcherListener()
-      override;
-  virtual void ZoomToRect(const uint32_t& aPresShellId,
-                          const ScrollableLayerGuid::ViewID& aViewId,
-                          const CSSRect& aRect,
-                          const uint32_t& aFlags) override;
+  TextEventDispatcherListener* GetNativeTextEventDispatcherListener() override;
+  void ZoomToRect(const uint32_t& aPresShellId,
+                  const ScrollableLayerGuid::ViewID& aViewId,
+                  const CSSRect& aRect, const uint32_t& aFlags) override;
 
   // Dispatch an event that must be first be routed through APZ.
   ContentAndAPZEventStatus DispatchInputEvent(
@@ -337,10 +323,10 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void NotifyWindowMoved(int32_t aX, int32_t aY);
 
   // Register plugin windows for remote updates from the compositor
-  virtual void RegisterPluginWindowForRemoteUpdates() override;
-  virtual void UnregisterPluginWindowForRemoteUpdates() override;
+  void RegisterPluginWindowForRemoteUpdates() override;
+  void UnregisterPluginWindowForRemoteUpdates() override;
 
-  virtual void SetNativeData(uint32_t aDataType, uintptr_t aVal) override{};
+  void SetNativeData(uint32_t aDataType, uintptr_t aVal) override {}
 
   // Should be called by derived implementations to notify on system color and
   // theme changes.
@@ -358,7 +344,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   nsPopupLevel PopupLevel() { return mPopupLevel; }
 
-  virtual LayoutDeviceIntSize ClientToWindowSize(
+  LayoutDeviceIntSize ClientToWindowSize(
       const LayoutDeviceIntSize& aClientSize) override {
     return aClientSize;
   }
@@ -370,18 +356,17 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
             mBorderStyle & eBorderStyle_title);
   }
 
-  virtual void ReparentNativeWidget(nsIWidget* aNewParent) override {}
+  void ReparentNativeWidget(nsIWidget* aNewParent) override {}
 
-  virtual const SizeConstraints GetSizeConstraints() override;
-  virtual void SetSizeConstraints(const SizeConstraints& aConstraints) override;
+  const SizeConstraints GetSizeConstraints() override;
+  void SetSizeConstraints(const SizeConstraints& aConstraints) override;
 
-  virtual void StartAsyncScrollbarDrag(
-      const AsyncDragMetrics& aDragMetrics) override;
+  void StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics) override;
 
-  virtual bool StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
-                                    const ScrollableLayerGuid& aGuid) override;
+  bool StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
+                            const ScrollableLayerGuid& aGuid) override;
 
-  virtual void StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) override;
+  void StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) override;
 
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
@@ -483,29 +468,32 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void ArrayFromRegion(const LayoutDeviceIntRegion& aRegion,
                        nsTArray<LayoutDeviceIntRect>& aRects);
 
-  virtual nsresult SynthesizeNativeKeyEvent(
-      int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
-      uint32_t aModifierFlags, const nsAString& aCharacters,
-      const nsAString& aUnmodifiedCharacters, nsIObserver* aObserver) override {
+  nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
+                                    int32_t aNativeKeyCode,
+                                    uint32_t aModifierFlags,
+                                    const nsAString& aCharacters,
+                                    const nsAString& aUnmodifiedCharacters,
+                                    nsIObserver* aObserver) override {
     mozilla::widget::AutoObserverNotifier notifier(aObserver, "keyevent");
     return NS_ERROR_UNEXPECTED;
   }
 
-  virtual nsresult SynthesizeNativeMouseEvent(
-      LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
-      mozilla::MouseButton aButton, nsIWidget::Modifiers aModifierFlags,
-      nsIObserver* aObserver) override {
+  nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
+                                      NativeMouseMessage aNativeMessage,
+                                      mozilla::MouseButton aButton,
+                                      nsIWidget::Modifiers aModifierFlags,
+                                      nsIObserver* aObserver) override {
     mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
     return NS_ERROR_UNEXPECTED;
   }
 
-  virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
-                                             nsIObserver* aObserver) override {
+  nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
+                                     nsIObserver* aObserver) override {
     mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
     return NS_ERROR_UNEXPECTED;
   }
 
-  virtual nsresult SynthesizeNativeMouseScrollEvent(
+  nsresult SynthesizeNativeMouseScrollEvent(
       LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage, double aDeltaX,
       double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
       uint32_t aAdditionalFlags, nsIObserver* aObserver) override {
@@ -514,35 +502,38 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
     return NS_ERROR_UNEXPECTED;
   }
 
-  virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
-                                              TouchPointerState aPointerState,
-                                              LayoutDeviceIntPoint aPoint,
-                                              double aPointerPressure,
-                                              uint32_t aPointerOrientation,
-                                              nsIObserver* aObserver) override {
+  nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                      TouchPointerState aPointerState,
+                                      LayoutDeviceIntPoint aPoint,
+                                      double aPointerPressure,
+                                      uint32_t aPointerOrientation,
+                                      nsIObserver* aObserver) override {
     mozilla::widget::AutoObserverNotifier notifier(aObserver, "touchpoint");
     return NS_ERROR_UNEXPECTED;
   }
 
-  virtual nsresult SynthesizeNativeTouchPadPinch(
-      TouchpadPinchPhase aEventPhase, float aScale, LayoutDeviceIntPoint aPoint,
-      int32_t aModifierFlags) override {
+  nsresult SynthesizeNativeTouchPadPinch(TouchpadPinchPhase aEventPhase,
+                                         float aScale,
+                                         LayoutDeviceIntPoint aPoint,
+                                         int32_t aModifierFlags) override {
     MOZ_RELEASE_ASSERT(
         false, "This method is not implemented on the current platform");
     return NS_ERROR_UNEXPECTED;
   }
 
-  virtual nsresult SynthesizeNativePenInput(
-      uint32_t aPointerId, TouchPointerState aPointerState,
-      LayoutDeviceIntPoint aPoint, double aPressure, uint32_t aRotation,
-      int32_t aTiltX, int32_t aTiltY, nsIObserver* aObserver) override {
+  nsresult SynthesizeNativePenInput(uint32_t aPointerId,
+                                    TouchPointerState aPointerState,
+                                    LayoutDeviceIntPoint aPoint,
+                                    double aPressure, uint32_t aRotation,
+                                    int32_t aTiltX, int32_t aTiltY,
+                                    nsIObserver* aObserver) override {
     MOZ_RELEASE_ASSERT(
         false, "This method is not implemented on the current platform");
     return NS_ERROR_UNEXPECTED;
   }
 
-  virtual nsresult SynthesizeNativeTouchpadDoubleTap(
-      LayoutDeviceIntPoint aPoint, uint32_t aModifierFlags) override {
+  nsresult SynthesizeNativeTouchpadDoubleTap(LayoutDeviceIntPoint aPoint,
+                                             uint32_t aModifierFlags) override {
     MOZ_RELEASE_ASSERT(
         false, "This method is not implemented on the current platform");
     return NS_ERROR_UNEXPECTED;
@@ -593,9 +584,9 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
         std::max(c.mMinSize.height, std::min(c.mMaxSize.height, *aHeight));
   }
 
-  virtual CompositorBridgeChild* GetRemoteRenderer() override;
+  CompositorBridgeChild* GetRemoteRenderer() override;
 
-  virtual void ClearCachedWebrenderResources() override;
+  void ClearCachedWebrenderResources() override;
 
   /**
    * Notify the widget that this window is being used with OMTC.
