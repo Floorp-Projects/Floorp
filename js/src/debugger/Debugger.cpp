@@ -5197,10 +5197,16 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
         if (!thing.is<JSObject>() || !thing.as<JSObject>().is<JSFunction>()) {
           continue;
         }
-        if (!thing.as<JSObject>().as<JSFunction>().hasBaseScript()) {
+        JSFunction* fun = &thing.as<JSObject>().as<JSFunction>();
+        if (!fun->hasBaseScript()) {
           continue;
         }
-        BaseScript* inner = thing.as<JSObject>().as<JSFunction>().baseScript();
+        BaseScript* inner = fun->baseScript();
+        MOZ_ASSERT(inner);
+        if (!inner) {
+          // If the function doesn't have script, ignore it.
+          continue;
+        }
 
         if (!scriptIsPartialLineMatch(inner)) {
           continue;
