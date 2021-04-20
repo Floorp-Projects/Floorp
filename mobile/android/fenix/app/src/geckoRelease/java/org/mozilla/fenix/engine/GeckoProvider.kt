@@ -93,6 +93,7 @@ object GeckoProvider {
 
         val geckoRuntime = GeckoRuntime.create(context, runtimeSettings)
         val loginStorageDelegate = GeckoLoginStorageDelegate(storage)
+        @Suppress("Deprecation")
         geckoRuntime.loginStorageDelegate = GeckoLoginDelegateWrapper(loginStorageDelegate)
 
         return geckoRuntime
