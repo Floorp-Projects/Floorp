@@ -272,6 +272,23 @@ test_only:
       - test-ping
     telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_LABELED_BOOL
 
+  one_ping_one_bool:
+    type: boolean
+    description: |
+      One bool for one ping only.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685402
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685402#c1
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - one-ping-only
+
 
 test_only.ipc:
   a_counter:
