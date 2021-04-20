@@ -239,7 +239,7 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
     aPositionNode = FindNextTextNode(aPositionNode, aPositionOffset, mRootNode);
     aPositionOffset = 0;
   }
-  mSoftBegin = NodeOffset(aPositionNode, aPositionOffset);
+  mSoftText.mBegin = NodeOffset(aPositionNode, aPositionOffset);
 
   if (!IsSpellCheckingTextNode(aEndNode)) {
     // End at the start of the first text node after aEndNode/aEndOffset.
@@ -253,7 +253,7 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
     return rv;
   }
 
-  int32_t textOffset = MapDOMPositionToSoftTextOffset(mSoftBegin);
+  int32_t textOffset = MapDOMPositionToSoftTextOffset(mSoftText.mBegin);
   if (textOffset < 0) {
     return NS_OK;
   }
@@ -300,9 +300,9 @@ nsresult mozInlineSpellWordUtil::GetRangeForWord(nsINode* aWordNode,
   // Set our soft end and start
   NodeOffset pt(aWordNode, aWordOffset);
 
-  if (!mSoftTextValid || pt != mSoftBegin || pt != mSoftEnd) {
+  if (!mSoftTextValid || pt != mSoftText.mBegin || pt != mSoftEnd) {
     InvalidateWords();
-    mSoftBegin = mSoftEnd = pt;
+    mSoftText.mBegin = mSoftEnd = pt;
     nsresult rv = EnsureWords();
     if (NS_FAILED(rv)) {
       return rv;
@@ -768,16 +768,16 @@ void mozInlineSpellWordUtil::NormalizeWord(nsAString& aWord) {
 void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
-  // First we have to work backwards from mSoftBegin to find a text node
+  // First we have to work backwards from mSoftText.mBegin to find a text node
   // containing a DOM word separator, a non-inline-element
   // boundary, or the hard start node. That's where we'll start building the
   // soft string from.
-  nsINode* node = mSoftBegin.mNode;
+  nsINode* node = mSoftText.mBegin.mNode;
   int32_t firstOffsetInNode = 0;
-  int32_t checkBeforeOffset = mSoftBegin.mOffset;
+  int32_t checkBeforeOffset = mSoftText.mBegin.mOffset;
   while (node) {
     if (ContainsDOMWordSeparator(node, checkBeforeOffset, &firstOffsetInNode)) {
-      if (node == mSoftBegin.mNode) {
+      if (node == mSoftText.mBegin.mNode) {
         // If we find a word separator on the first node, look at the preceding
         // word on the text node as well.
         if (firstOffsetInNode > 0) {
@@ -795,7 +795,7 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
                                         &newOffset)) {
             nsIContent* prevNode = node->GetPreviousSibling();
             while (prevNode && IsSpellCheckingTextNode(prevNode)) {
-              mSoftBegin.mNode = prevNode;
+              mSoftText.mBegin.mNode = prevNode;
               const Maybe<int32_t> separatorOffset =
                   FindOffsetOfLastDOMWordSeparatorSequence(prevNode, INT32_MAX);
               if (separatorOffset) {
@@ -810,7 +810,7 @@ void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
           firstOffsetInNode = 0;
         }
 
-        mSoftBegin.mOffset = firstOffsetInNode;
+        mSoftText.mBegin.mOffset = firstOffsetInNode;
       }
       break;
     }
