@@ -592,7 +592,7 @@ window.inlineSelectionCss = `
   padding: 10px 25px;
   pointer-events: all; }
 
-.myshots-all-buttons-container {
+.all-buttons-container {
   display: flex;
   flex-direction: row-reverse;
   background: #f5f5f5;
@@ -604,14 +604,14 @@ window.inlineSelectionCss = `
   inset-inline-end: 8px;
   top: 8px;
   box-shadow: 0 0 0 1px rgba(12, 12, 13, 0.1), 0 2px 8px rgba(12, 12, 13, 0.1); }
-  .myshots-all-buttons-container .spacer {
+  .all-buttons-container .spacer {
     background-color: #c9c9c9;
     flex: 0 0 1px;
     height: 80px;
     margin: 0 10px;
     position: relative;
     top: -8px; }
-  .myshots-all-buttons-container button {
+  .all-buttons-container button {
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -629,23 +629,16 @@ window.inlineSelectionCss = `
     pointer-events: all;
     transition: border 150ms cubic-bezier(0.07, 0.95, 0, 1), background-color 150ms cubic-bezier(0.07, 0.95, 0, 1);
     white-space: nowrap; }
-    .myshots-all-buttons-container button:hover {
+    .all-buttons-container button:hover {
       background-color: #ebebeb;
       border: 1px solid #c7c7c7; }
-    .myshots-all-buttons-container button:active {
+    .all-buttons-container button:active {
       background-color: #dedede;
       border: 1px solid #989898; }
-  .myshots-all-buttons-container .myshots-button {
-    background-image: url("MOZ_EXTENSION/icons/menu-myshot.svg"); }
-  .myshots-all-buttons-container .full-page {
+  .all-buttons-container .full-page {
     background-image: url("MOZ_EXTENSION/icons/menu-fullpage.svg"); }
-  .myshots-all-buttons-container .visible {
+  .all-buttons-container .visible {
     background-image: url("MOZ_EXTENSION/icons/menu-visible.svg"); }
-
-.myshots-button-container {
-  display: flex;
-  align-items: center;
-  justify-content: center; }
 
 @keyframes pulse {
   0% {

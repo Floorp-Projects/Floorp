@@ -35,12 +35,6 @@ this.senderror = (function() {
       titleKey: "screenshots-unshootable-page-error-title",
       infoKey: "screenshots-unshootable-page-error-details",
     },
-    SHOT_PAGE: {
-      titleKey: "screenshots-self-screenshot-error-title",
-    },
-    MY_SHOTS: {
-      titleKey: "screenshots-self-screenshot-error-title",
-    },
     EMPTY_SELECTION: {
       titleKey: "screenshots-empty-selection-error-title",
     },
