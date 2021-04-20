@@ -5714,18 +5714,18 @@ source = "git+https://github.com/mozilla-spidermonkey/wasm-tools?rev=1b7763faa48
 
 [[package]]
 name = "wast"
-version = "34.0.0"
+version = "35.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3de71ea922e46a60d0bde4b27ebf24ab7c4991006fd5de23ce9c58e129b3ab3c"
+checksum = "1a5800e9f86a1eae935e38bea11e60fd253f6d514d153fb39b3e5535a7b37b56"
 dependencies = [
  "leb128",
 ]
 
 [[package]]
 name = "wat"
-version = "1.0.35"
+version = "1.0.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "474403335b9a90b21120ab8131dd888f0a8d041c2d365ab960feddfe5a73c4b6"
+checksum = "8ec280a739b69173e0ffd12c1658507996836ba4e992ed9bc1e5385a0bd72a02"
 dependencies = [
  "wast",
 ]
