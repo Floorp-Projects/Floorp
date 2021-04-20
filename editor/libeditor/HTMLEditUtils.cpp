@@ -399,6 +399,117 @@ bool HTMLEditUtils::IsInVisibleTextFrames(nsPresContext* aPresContext,
   return NS_SUCCEEDED(rv) && isVisible;
 }
 
+bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext, nsINode& aNode,
+                                const EmptyCheckOptions& aOptions /* = {} */,
+                                bool* aSeenBR /* = nullptr */) {
+  MOZ_ASSERT_IF(aOptions.contains(EmptyCheckOption::SafeToAskLayout),
+                aPresContext);
+
+  if (aSeenBR) {
+    *aSeenBR = false;
+  }
+
+  Element* maybeParentBlockElement =
+      aNode.IsContent() && EditorUtils::IsEditableContent(*aNode.AsContent(),
+                                                          EditorType::HTML)
+          ? GetInclusiveAncestorEditableBlockElementOrInlineEditingHost(
+                *aNode.AsContent())
+          : nullptr;
+
+  if (Text* text = Text::FromNode(&aNode)) {
+    return aOptions.contains(EmptyCheckOption::SafeToAskLayout)
+               ? !IsInVisibleTextFrames(aPresContext, *text)
+               : !IsVisibleTextNode(*text, maybeParentBlockElement);
+  }
+
+  // if it's not a text node (handled above) and it's not a container,
+  // then we don't call it empty (it's an <hr>, or <br>, etc.).
+  // Also, if it's an anchor then don't treat it as empty - even though
+  // anchors are containers, named anchors are "empty" but we don't
+  // want to treat them as such.  Also, don't call ListItems or table
+  // cells empty if caller desires.  Form Widgets not empty.
+  // XXX Why do we treat non-content node is not empty?
+  // XXX Why do we treat non-text data node may be not empty?
+  if (!aNode.IsContent() || !IsContainerNode(*aNode.AsContent()) ||
+      IsNamedAnchor(&aNode) || IsFormWidget(&aNode) ||
+      (aOptions.contains(EmptyCheckOption::TreatListItemAsVisible) &&
+       IsListItem(&aNode)) ||
+      (aOptions.contains(EmptyCheckOption::TreatTableCellAsVisible) &&
+       IsTableCell(&aNode))) {
+    return false;
+  }
+
+  const bool isListItem = IsListItem(&aNode);
+  const bool isTableCell = IsTableCell(&aNode);
+
+  // loop over children of node. if no children, or all children are either
+  // empty text nodes or non-editable, then node qualifies as empty
+  bool seenBR = aSeenBR && *aSeenBR;
+  for (nsIContent* childContent = aNode.GetFirstChild(); childContent;
+       childContent = childContent->GetNextSibling()) {
+    // Is the child editable and non-empty?  if so, return false
+    if (!EditorUtils::IsEditableContent(*childContent, EditorType::HTML)) {
+      continue;
+    }
+
+    if (Text* text = Text::FromNode(childContent)) {
+      // break out if we find we aren't empty
+      if (aOptions.contains(EmptyCheckOption::SafeToAskLayout)
+              ? IsInVisibleTextFrames(aPresContext, *text)
+              : IsVisibleTextNode(*text, maybeParentBlockElement)) {
+        return false;
+      }
+      continue;
+    }
+
+    // An editable, non-text node. We need to check its content.
+    // Is it the node we are iterating over?
+    if (childContent == &aNode) {
+      break;
+    }
+
+    if (!aOptions.contains(EmptyCheckOption::TreatSingleBRElementAsVisible) &&
+        !seenBR && childContent->IsHTMLElement(nsGkAtoms::br)) {
+      // Ignore first <br> element in it if caller wants so because it's
+      // typically a padding <br> element of for a parent block.
+      seenBR = true;
+      if (aSeenBR) {
+        *aSeenBR = true;
+      }
+      continue;
+    }
+
+    // is it an empty node of some sort?
+    // note: list items or table cells are not considered empty
+    // if they contain other lists or tables
+    if (childContent->IsElement()) {
+      if (isListItem || isTableCell) {
+        if (IsAnyListElement(childContent) ||
+            childContent->IsHTMLElement(nsGkAtoms::table)) {
+          // break out if we find we aren't empty
+          return false;
+        }
+      } else if (IsFormWidget(childContent)) {
+        // is it a form widget?
+        // break out if we find we aren't empty
+        return false;
+      }
+    }
+
+    if (!IsEmptyNode(aPresContext, *childContent, aOptions, &seenBR)) {
+      if (aSeenBR) {
+        *aSeenBR = seenBR;
+      }
+      return false;
+    }
+  }
+
+  if (aSeenBR) {
+    *aSeenBR = seenBR;
+  }
+  return true;
+}
+
 // We use bitmasks to test containment of elements. Elements are marked to be
 // in certain groups by setting the mGroup member of the `ElementInfo` struct
 // to the corresponding GROUP_ values (OR'ed together). Similarly, elements are

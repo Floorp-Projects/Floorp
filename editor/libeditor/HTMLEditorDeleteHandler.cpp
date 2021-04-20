@@ -46,6 +46,7 @@
 namespace mozilla {
 
 using namespace dom;
+using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using InvisibleWhiteSpaces = HTMLEditUtils::InvisibleWhiteSpaces;
 using StyleDifference = HTMLEditUtils::StyleDifference;
 using TableBoundary = HTMLEditUtils::TableBoundary;
@@ -3358,7 +3359,9 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     // XXX If it's an element node, we should check whether it has visible
     //     frames or not.
     if (!content->IsElement() ||
-        aHTMLEditor.IsEmptyNode(*content->AsElement())) {
+        HTMLEditUtils::IsEmptyNode(
+            *content->AsElement(),
+            {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
       continue;
     }
     if (!content->IsHTMLElement(nsGkAtoms::br) ||
@@ -4535,7 +4538,7 @@ Result<bool, nsresult> HTMLEditor::CanMoveOrDeleteSomethingInHardLine(
       if (Element* blockElement =
               HTMLEditUtils::GetInclusiveAncestorBlockElement(
                   *childContent->GetParent())) {
-        if (IsEmptyNode(*blockElement, true, false)) {
+        if (HTMLEditUtils::IsEmptyNode(*blockElement)) {
           return false;
         }
       }
@@ -4940,7 +4943,10 @@ nsresult HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty(
     return NS_OK;
   }
   bool seenBR = false;
-  if (!IsEmptyNodeImpl(*mailCiteElement, true, true, false, &seenBR)) {
+  if (!HTMLEditUtils::IsEmptyNode(*mailCiteElement,
+                                  {EmptyCheckOption::TreatListItemAsVisible,
+                                   EmptyCheckOption::TreatTableCellAsVisible},
+                                  &seenBR)) {
     return NS_OK;
   }
   EditorDOMPoint atEmptyMailCiteElement(mailCiteElement);
@@ -5003,7 +5009,7 @@ Element* HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
   }
   while (blockElement && blockElement != &aEditingHostElement &&
          !HTMLEditUtils::IsAnyTableElement(blockElement) &&
-         aHTMLEditor.IsEmptyNode(*blockElement, true, false)) {
+         HTMLEditUtils::IsEmptyNode(*blockElement)) {
     mEmptyInclusiveAncestorBlockElement = blockElement;
     blockElement = HTMLEditUtils::GetAncestorBlockElement(
         *mEmptyInclusiveAncestorBlockElement);
