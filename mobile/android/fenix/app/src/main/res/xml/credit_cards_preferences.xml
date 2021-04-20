@@ -14,10 +14,12 @@
         android:title="@string/preferences_credit_cards_sync_cards_across_devices"
         app:allowDividerBelow="true" />
     <Preference
+        android:icon="@drawable/ic_new"
         android:key="@string/pref_key_credit_cards_add_credit_card"
         android:title="@string/preferences_credit_cards_add_credit_card"
-        android:layout="@layout/preference_credit_cards_add_credit_card" />
+        app:allowDividerAbove="true" />
     <Preference
         android:key="@string/pref_key_credit_cards_manage_saved_cards"
-        android:title="@string/preferences_credit_cards_manage_saved_cards" />
+        android:title="@string/preferences_credit_cards_manage_saved_cards"
+        app:allowDividerAbove="true" />
 </PreferenceScreen>
