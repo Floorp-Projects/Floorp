@@ -895,14 +895,6 @@ class MOZ_RAII CacheIRCompiler {
     uint64_t raw = readStubInt64(offset, StubField::Type::Value);
     return Value::fromRawBits(raw);
   }
-  // This accessor is for cases where the stubField policy is
-  // being respected through other means, so we don't check the
-  // policy here. (see LoadNewObjectFromTemplateResult)
-  JSObject* objectStubFieldUnchecked(uint32_t offset) {
-    return (JSObject*)writer_
-        .readStubFieldForIon(offset, StubField::Type::JSObject)
-        .asWord();
-  }
   JSString* stringStubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     return (JSString*)readStubWord(offset, StubField::Type::String);
