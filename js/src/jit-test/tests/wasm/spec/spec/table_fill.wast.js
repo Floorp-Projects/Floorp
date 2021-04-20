@@ -116,7 +116,10 @@ assert_return(() => invoke($0, `fill`, [10, externref(5), 0]), []);
 assert_return(() => invoke($0, `get`, [9]), [value("externref", null)]);
 
 // ./test/core/table_fill.wast:49
-assert_trap(() => invoke($0, `fill`, [8, externref(6), 3]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `fill`, [8, externref(6), 3]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_fill.wast:53
 assert_return(() => invoke($0, `get`, [7]), [value("externref", null)]);
@@ -128,10 +131,16 @@ assert_return(() => invoke($0, `get`, [8]), [value("externref", externref(4))]);
 assert_return(() => invoke($0, `get`, [9]), [value("externref", null)]);
 
 // ./test/core/table_fill.wast:57
-assert_trap(() => invoke($0, `fill`, [11, null, 0]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `fill`, [11, null, 0]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_fill.wast:62
-assert_trap(() => invoke($0, `fill`, [11, null, 10]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `fill`, [11, null, 10]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_fill.wast:70
 assert_invalid(() =>

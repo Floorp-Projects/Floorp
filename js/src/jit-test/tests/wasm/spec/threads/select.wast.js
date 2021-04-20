@@ -17,59 +17,38 @@
 
 // ./test/core/select.wast:1
 let $0 = instantiate(`(module
-  ;; Auxiliary
-  (func $$dummy)
-  (table $$tab funcref (elem $$dummy))
+
   (memory 1)
 
-  (func (export "select-i32") (param i32 i32 i32) (result i32)
-    (select (local.get 0) (local.get 1) (local.get 2))
-  )
-  (func (export "select-i64") (param i64 i64 i32) (result i64)
-    (select (local.get 0) (local.get 1) (local.get 2))
-  )
-  (func (export "select-f32") (param f32 f32 i32) (result f32)
-    (select (local.get 0) (local.get 1) (local.get 2))
-  )
-  (func (export "select-f64") (param f64 f64 i32) (result f64)
-    (select (local.get 0) (local.get 1) (local.get 2))
-  )
+  (func $$dummy)
 
-  (func (export "select-i32-t") (param i32 i32 i32) (result i32)
-    (select (result i32) (local.get 0) (local.get 1) (local.get 2))
-  )
-  (func (export "select-i64-t") (param i64 i64 i32) (result i64)
-    (select (result i64) (local.get 0) (local.get 1) (local.get 2))
-  )
-  (func (export "select-f32-t") (param f32 f32 i32) (result f32)
-    (select (result f32) (local.get 0) (local.get 1) (local.get 2))
-  )
-  (func (export "select-f64-t") (param f64 f64 i32) (result f64)
-    (select (result f64) (local.get 0) (local.get 1) (local.get 2))
-  )
-  (func (export "select-funcref") (param funcref funcref i32) (result funcref)
-    (select (result funcref) (local.get 0) (local.get 1) (local.get 2))
-  )
-  (func (export "select-externref") (param externref externref i32) (result externref)
-    (select (result externref) (local.get 0) (local.get 1) (local.get 2))
-  )
+  (func (export "select_i32") (param $$lhs i32) (param $$rhs i32) (param $$cond i32) (result i32)
+   (select (local.get $$lhs) (local.get $$rhs) (local.get $$cond)))
+
+  (func (export "select_i64") (param $$lhs i64) (param $$rhs i64) (param $$cond i32) (result i64)
+   (select (local.get $$lhs) (local.get $$rhs) (local.get $$cond)))
+
+  (func (export "select_f32") (param $$lhs f32) (param $$rhs f32) (param $$cond i32) (result f32)
+   (select (local.get $$lhs) (local.get $$rhs) (local.get $$cond)))
+
+  (func (export "select_f64") (param $$lhs f64) (param $$rhs f64) (param $$cond i32) (result f64)
+   (select (local.get $$lhs) (local.get $$rhs) (local.get $$cond)))
 
   ;; Check that both sides of the select are evaluated
-  (func (export "select-trap-left") (param $$cond i32) (result i32)
+  (func (export "select_trap_l") (param $$cond i32) (result i32)
     (select (unreachable) (i32.const 0) (local.get $$cond))
   )
-  (func (export "select-trap-right") (param $$cond i32) (result i32)
+  (func (export "select_trap_r") (param $$cond i32) (result i32)
     (select (i32.const 0) (unreachable) (local.get $$cond))
   )
 
-  (func (export "select-unreached")
+  (func (export "select_unreached")
     (unreachable) (select)
     (unreachable) (i32.const 0) (select)
     (unreachable) (i32.const 0) (i32.const 0) (select)
     (unreachable) (f32.const 0) (i32.const 0) (select)
     (unreachable)
   )
-
 
   ;; As the argument of control constructs and instructions
 
@@ -119,24 +98,24 @@ let $0 = instantiate(`(module
 
   (func $$func (param i32 i32) (result i32) (local.get 0))
   (type $$check (func (param i32 i32) (result i32)))
-  (table $$t funcref (elem $$func))
+  (table funcref (elem $$func))
   (func (export "as-call_indirect-first") (param i32) (result i32)
     (block (result i32)
-      (call_indirect $$t (type $$check)
+      (call_indirect (type $$check)
         (select (i32.const 2) (i32.const 3) (local.get 0)) (i32.const 1) (i32.const 0)
       )
     )
   )
   (func (export "as-call_indirect-mid") (param i32) (result i32)
     (block (result i32)
-      (call_indirect $$t (type $$check)
+      (call_indirect (type $$check)
         (i32.const 1) (select (i32.const 2) (i32.const 3) (local.get 0)) (i32.const 0)
       )
     )
   )
   (func (export "as-call_indirect-last") (param i32) (result i32)
     (block (result i32)
-      (call_indirect $$t (type $$check)
+      (call_indirect (type $$check)
         (i32.const 1) (i32.const 4) (select (i32.const 2) (i32.const 3) (local.get 0))
       )
     )
@@ -213,722 +192,472 @@ let $0 = instantiate(`(module
       (i32.wrap_i64 (select (i64.const 1) (i64.const 0) (local.get 0)))
     )
   )
+
 )`);
 
+// ./test/core/select.wast:180
+assert_return(() => invoke($0, `select_i32`, [1, 2, 1]), [value("i32", 1)]);
+
+// ./test/core/select.wast:181
+assert_return(() => invoke($0, `select_i64`, [2n, 1n, 1]), [value("i64", 2n)]);
+
+// ./test/core/select.wast:182
+assert_return(
+  () => invoke($0, `select_f32`, [value("f32", 1), value("f32", 2), 1]),
+  [value("f32", 1)],
+);
+
+// ./test/core/select.wast:183
+assert_return(
+  () => invoke($0, `select_f64`, [value("f64", 1), value("f64", 2), 1]),
+  [value("f64", 1)],
+);
+
+// ./test/core/select.wast:185
+assert_return(() => invoke($0, `select_i32`, [1, 2, 0]), [value("i32", 2)]);
+
+// ./test/core/select.wast:186
+assert_return(() => invoke($0, `select_i32`, [2, 1, 0]), [value("i32", 1)]);
+
+// ./test/core/select.wast:187
+assert_return(() => invoke($0, `select_i64`, [2n, 1n, -1]), [value("i64", 2n)]);
+
+// ./test/core/select.wast:188
+assert_return(() => invoke($0, `select_i64`, [2n, 1n, -252645136]), [
+  value("i64", 2n),
+]);
+
+// ./test/core/select.wast:190
+assert_return(
+  () =>
+    invoke($0, `select_f32`, [
+      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
+      value("f32", 1),
+      1,
+    ]),
+  [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])],
+);
+
+// ./test/core/select.wast:191
+assert_return(
+  () =>
+    invoke($0, `select_f32`, [
+      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
+      value("f32", 1),
+      1,
+    ]),
+  [bytes("f32", [0x4, 0x3, 0x82, 0x7f])],
+);
+
+// ./test/core/select.wast:192
+assert_return(
+  () =>
+    invoke($0, `select_f32`, [
+      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
+      value("f32", 1),
+      0,
+    ]),
+  [value("f32", 1)],
+);
+
+// ./test/core/select.wast:193
+assert_return(
+  () =>
+    invoke($0, `select_f32`, [
+      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
+      value("f32", 1),
+      0,
+    ]),
+  [value("f32", 1)],
+);
+
+// ./test/core/select.wast:194
+assert_return(
+  () =>
+    invoke($0, `select_f32`, [
+      value("f32", 2),
+      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
+      1,
+    ]),
+  [value("f32", 2)],
+);
+
+// ./test/core/select.wast:195
+assert_return(
+  () =>
+    invoke($0, `select_f32`, [
+      value("f32", 2),
+      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
+      1,
+    ]),
+  [value("f32", 2)],
+);
+
+// ./test/core/select.wast:196
+assert_return(
+  () =>
+    invoke($0, `select_f32`, [
+      value("f32", 2),
+      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
+      0,
+    ]),
+  [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])],
+);
+
+// ./test/core/select.wast:197
+assert_return(
+  () =>
+    invoke($0, `select_f32`, [
+      value("f32", 2),
+      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
+      0,
+    ]),
+  [bytes("f32", [0x4, 0x3, 0x82, 0x7f])],
+);
+
+// ./test/core/select.wast:199
+assert_return(
+  () =>
+    invoke($0, `select_f64`, [
+      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
+      value("f64", 1),
+      1,
+    ]),
+  [bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])],
+);
+
 // ./test/core/select.wast:200
-assert_return(() => invoke($0, `select-i32`, [1, 2, 1]), [value("i32", 1)]);
+assert_return(
+  () =>
+    invoke($0, `select_f64`, [
+      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
+      value("f64", 1),
+      1,
+    ]),
+  [bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f])],
+);
 
 // ./test/core/select.wast:201
-assert_return(() => invoke($0, `select-i64`, [2n, 1n, 1]), [value("i64", 2n)]);
+assert_return(
+  () =>
+    invoke($0, `select_f64`, [
+      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
+      value("f64", 1),
+      0,
+    ]),
+  [value("f64", 1)],
+);
 
 // ./test/core/select.wast:202
 assert_return(
-  () => invoke($0, `select-f32`, [value("f32", 1), value("f32", 2), 1]),
-  [value("f32", 1)],
+  () =>
+    invoke($0, `select_f64`, [
+      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
+      value("f64", 1),
+      0,
+    ]),
+  [value("f64", 1)],
 );
 
 // ./test/core/select.wast:203
 assert_return(
-  () => invoke($0, `select-f64`, [value("f64", 1), value("f64", 2), 1]),
-  [value("f64", 1)],
+  () =>
+    invoke($0, `select_f64`, [
+      value("f64", 2),
+      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
+      1,
+    ]),
+  [value("f64", 2)],
+);
+
+// ./test/core/select.wast:204
+assert_return(
+  () =>
+    invoke($0, `select_f64`, [
+      value("f64", 2),
+      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
+      1,
+    ]),
+  [value("f64", 2)],
 );
 
 // ./test/core/select.wast:205
-assert_return(() => invoke($0, `select-i32`, [1, 2, 0]), [value("i32", 2)]);
+assert_return(
+  () =>
+    invoke($0, `select_f64`, [
+      value("f64", 2),
+      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
+      0,
+    ]),
+  [bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])],
+);
 
 // ./test/core/select.wast:206
-assert_return(() => invoke($0, `select-i32`, [2, 1, 0]), [value("i32", 1)]);
-
-// ./test/core/select.wast:207
-assert_return(() => invoke($0, `select-i64`, [2n, 1n, -1]), [value("i64", 2n)]);
+assert_return(
+  () =>
+    invoke($0, `select_f64`, [
+      value("f64", 2),
+      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
+      0,
+    ]),
+  [bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f])],
+);
 
 // ./test/core/select.wast:208
-assert_return(() => invoke($0, `select-i64`, [2n, 1n, -252645136]), [
-  value("i64", 2n),
-]);
+assert_trap(() => invoke($0, `select_trap_l`, [1]), `unreachable`);
+
+// ./test/core/select.wast:209
+assert_trap(() => invoke($0, `select_trap_l`, [0]), `unreachable`);
 
 // ./test/core/select.wast:210
-assert_return(
-  () =>
-    invoke($0, `select-f32`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      value("f32", 1),
-      1,
-    ]),
-  [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])],
-);
+assert_trap(() => invoke($0, `select_trap_r`, [1]), `unreachable`);
 
 // ./test/core/select.wast:211
-assert_return(
-  () =>
-    invoke($0, `select-f32`, [
-      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
-      value("f32", 1),
-      1,
-    ]),
-  [bytes("f32", [0x4, 0x3, 0x82, 0x7f])],
-);
-
-// ./test/core/select.wast:212
-assert_return(
-  () =>
-    invoke($0, `select-f32`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      value("f32", 1),
-      0,
-    ]),
-  [value("f32", 1)],
-);
+assert_trap(() => invoke($0, `select_trap_r`, [0]), `unreachable`);
 
 // ./test/core/select.wast:213
-assert_return(
-  () =>
-    invoke($0, `select-f32`, [
-      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
-      value("f32", 1),
-      0,
-    ]),
-  [value("f32", 1)],
-);
-
-// ./test/core/select.wast:214
-assert_return(
-  () =>
-    invoke($0, `select-f32`, [
-      value("f32", 2),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      1,
-    ]),
-  [value("f32", 2)],
-);
-
-// ./test/core/select.wast:215
-assert_return(
-  () =>
-    invoke($0, `select-f32`, [
-      value("f32", 2),
-      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
-      1,
-    ]),
-  [value("f32", 2)],
-);
-
-// ./test/core/select.wast:216
-assert_return(
-  () =>
-    invoke($0, `select-f32`, [
-      value("f32", 2),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      0,
-    ]),
-  [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])],
-);
-
-// ./test/core/select.wast:217
-assert_return(
-  () =>
-    invoke($0, `select-f32`, [
-      value("f32", 2),
-      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
-      0,
-    ]),
-  [bytes("f32", [0x4, 0x3, 0x82, 0x7f])],
-);
-
-// ./test/core/select.wast:219
-assert_return(
-  () =>
-    invoke($0, `select-f64`, [
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-      value("f64", 1),
-      1,
-    ]),
-  [bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])],
-);
-
-// ./test/core/select.wast:220
-assert_return(
-  () =>
-    invoke($0, `select-f64`, [
-      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
-      value("f64", 1),
-      1,
-    ]),
-  [bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f])],
-);
-
-// ./test/core/select.wast:221
-assert_return(
-  () =>
-    invoke($0, `select-f64`, [
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-      value("f64", 1),
-      0,
-    ]),
-  [value("f64", 1)],
-);
-
-// ./test/core/select.wast:222
-assert_return(
-  () =>
-    invoke($0, `select-f64`, [
-      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
-      value("f64", 1),
-      0,
-    ]),
-  [value("f64", 1)],
-);
-
-// ./test/core/select.wast:223
-assert_return(
-  () =>
-    invoke($0, `select-f64`, [
-      value("f64", 2),
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-      1,
-    ]),
-  [value("f64", 2)],
-);
-
-// ./test/core/select.wast:224
-assert_return(
-  () =>
-    invoke($0, `select-f64`, [
-      value("f64", 2),
-      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
-      1,
-    ]),
-  [value("f64", 2)],
-);
-
-// ./test/core/select.wast:225
-assert_return(
-  () =>
-    invoke($0, `select-f64`, [
-      value("f64", 2),
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-      0,
-    ]),
-  [bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])],
-);
-
-// ./test/core/select.wast:226
-assert_return(
-  () =>
-    invoke($0, `select-f64`, [
-      value("f64", 2),
-      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
-      0,
-    ]),
-  [bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f])],
-);
-
-// ./test/core/select.wast:228
-assert_return(() => invoke($0, `select-i32-t`, [1, 2, 1]), [value("i32", 1)]);
-
-// ./test/core/select.wast:229
-assert_return(() => invoke($0, `select-i64-t`, [2n, 1n, 1]), [
-  value("i64", 2n),
-]);
-
-// ./test/core/select.wast:230
-assert_return(
-  () => invoke($0, `select-f32-t`, [value("f32", 1), value("f32", 2), 1]),
-  [value("f32", 1)],
-);
-
-// ./test/core/select.wast:231
-assert_return(
-  () => invoke($0, `select-f64-t`, [value("f64", 1), value("f64", 2), 1]),
-  [value("f64", 1)],
-);
-
-// ./test/core/select.wast:232
-assert_return(() => invoke($0, `select-funcref`, [null, null, 1]), [
-  value("funcref", null),
-]);
-
-// ./test/core/select.wast:233
-assert_return(
-  () => invoke($0, `select-externref`, [externref(1), externref(2), 1]),
-  [value("externref", externref(1))],
-);
-
-// ./test/core/select.wast:235
-assert_return(() => invoke($0, `select-i32-t`, [1, 2, 0]), [value("i32", 2)]);
-
-// ./test/core/select.wast:236
-assert_return(() => invoke($0, `select-i32-t`, [2, 1, 0]), [value("i32", 1)]);
-
-// ./test/core/select.wast:237
-assert_return(() => invoke($0, `select-i64-t`, [2n, 1n, -1]), [
-  value("i64", 2n),
-]);
-
-// ./test/core/select.wast:238
-assert_return(() => invoke($0, `select-i64-t`, [2n, 1n, -252645136]), [
-  value("i64", 2n),
-]);
-
-// ./test/core/select.wast:239
-assert_return(
-  () => invoke($0, `select-externref`, [externref(1), externref(2), 0]),
-  [value("externref", externref(2))],
-);
-
-// ./test/core/select.wast:240
-assert_return(
-  () => invoke($0, `select-externref`, [externref(2), externref(1), 0]),
-  [value("externref", externref(1))],
-);
-
-// ./test/core/select.wast:242
-assert_return(
-  () =>
-    invoke($0, `select-f32-t`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      value("f32", 1),
-      1,
-    ]),
-  [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])],
-);
-
-// ./test/core/select.wast:243
-assert_return(
-  () =>
-    invoke($0, `select-f32-t`, [
-      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
-      value("f32", 1),
-      1,
-    ]),
-  [bytes("f32", [0x4, 0x3, 0x82, 0x7f])],
-);
-
-// ./test/core/select.wast:244
-assert_return(
-  () =>
-    invoke($0, `select-f32-t`, [
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      value("f32", 1),
-      0,
-    ]),
-  [value("f32", 1)],
-);
-
-// ./test/core/select.wast:245
-assert_return(
-  () =>
-    invoke($0, `select-f32-t`, [
-      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
-      value("f32", 1),
-      0,
-    ]),
-  [value("f32", 1)],
-);
-
-// ./test/core/select.wast:246
-assert_return(
-  () =>
-    invoke($0, `select-f32-t`, [
-      value("f32", 2),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      1,
-    ]),
-  [value("f32", 2)],
-);
-
-// ./test/core/select.wast:247
-assert_return(
-  () =>
-    invoke($0, `select-f32-t`, [
-      value("f32", 2),
-      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
-      1,
-    ]),
-  [value("f32", 2)],
-);
-
-// ./test/core/select.wast:248
-assert_return(
-  () =>
-    invoke($0, `select-f32-t`, [
-      value("f32", 2),
-      bytes("f32", [0x0, 0x0, 0xc0, 0x7f]),
-      0,
-    ]),
-  [bytes("f32", [0x0, 0x0, 0xc0, 0x7f])],
-);
-
-// ./test/core/select.wast:249
-assert_return(
-  () =>
-    invoke($0, `select-f32-t`, [
-      value("f32", 2),
-      bytes("f32", [0x4, 0x3, 0x82, 0x7f]),
-      0,
-    ]),
-  [bytes("f32", [0x4, 0x3, 0x82, 0x7f])],
-);
-
-// ./test/core/select.wast:251
-assert_return(
-  () =>
-    invoke($0, `select-f64-t`, [
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-      value("f64", 1),
-      1,
-    ]),
-  [bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])],
-);
-
-// ./test/core/select.wast:252
-assert_return(
-  () =>
-    invoke($0, `select-f64-t`, [
-      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
-      value("f64", 1),
-      1,
-    ]),
-  [bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f])],
-);
-
-// ./test/core/select.wast:253
-assert_return(
-  () =>
-    invoke($0, `select-f64-t`, [
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-      value("f64", 1),
-      0,
-    ]),
-  [value("f64", 1)],
-);
-
-// ./test/core/select.wast:254
-assert_return(
-  () =>
-    invoke($0, `select-f64-t`, [
-      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
-      value("f64", 1),
-      0,
-    ]),
-  [value("f64", 1)],
-);
-
-// ./test/core/select.wast:255
-assert_return(
-  () =>
-    invoke($0, `select-f64-t`, [
-      value("f64", 2),
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-      1,
-    ]),
-  [value("f64", 2)],
-);
-
-// ./test/core/select.wast:256
-assert_return(
-  () =>
-    invoke($0, `select-f64-t`, [
-      value("f64", 2),
-      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
-      1,
-    ]),
-  [value("f64", 2)],
-);
-
-// ./test/core/select.wast:257
-assert_return(
-  () =>
-    invoke($0, `select-f64-t`, [
-      value("f64", 2),
-      bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f]),
-      0,
-    ]),
-  [bytes("f64", [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])],
-);
-
-// ./test/core/select.wast:258
-assert_return(
-  () =>
-    invoke($0, `select-f64-t`, [
-      value("f64", 2),
-      bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f]),
-      0,
-    ]),
-  [bytes("f64", [0x4, 0x3, 0x2, 0x0, 0x0, 0x0, 0xf0, 0x7f])],
-);
-
-// ./test/core/select.wast:260
-assert_trap(() => invoke($0, `select-trap-left`, [1]), `unreachable`);
-
-// ./test/core/select.wast:261
-assert_trap(() => invoke($0, `select-trap-left`, [0]), `unreachable`);
-
-// ./test/core/select.wast:262
-assert_trap(() => invoke($0, `select-trap-right`, [1]), `unreachable`);
-
-// ./test/core/select.wast:263
-assert_trap(() => invoke($0, `select-trap-right`, [0]), `unreachable`);
-
-// ./test/core/select.wast:265
 assert_return(() => invoke($0, `as-select-first`, [0]), [value("i32", 1)]);
 
-// ./test/core/select.wast:266
+// ./test/core/select.wast:214
 assert_return(() => invoke($0, `as-select-first`, [1]), [value("i32", 0)]);
 
-// ./test/core/select.wast:267
+// ./test/core/select.wast:215
 assert_return(() => invoke($0, `as-select-mid`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:268
+// ./test/core/select.wast:216
 assert_return(() => invoke($0, `as-select-mid`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:269
+// ./test/core/select.wast:217
 assert_return(() => invoke($0, `as-select-last`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:270
+// ./test/core/select.wast:218
 assert_return(() => invoke($0, `as-select-last`, [1]), [value("i32", 3)]);
 
-// ./test/core/select.wast:272
+// ./test/core/select.wast:220
 assert_return(() => invoke($0, `as-loop-first`, [0]), [value("i32", 3)]);
 
-// ./test/core/select.wast:273
+// ./test/core/select.wast:221
 assert_return(() => invoke($0, `as-loop-first`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:274
+// ./test/core/select.wast:222
 assert_return(() => invoke($0, `as-loop-mid`, [0]), [value("i32", 3)]);
 
-// ./test/core/select.wast:275
+// ./test/core/select.wast:223
 assert_return(() => invoke($0, `as-loop-mid`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:276
+// ./test/core/select.wast:224
 assert_return(() => invoke($0, `as-loop-last`, [0]), [value("i32", 3)]);
 
-// ./test/core/select.wast:277
+// ./test/core/select.wast:225
 assert_return(() => invoke($0, `as-loop-last`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:279
+// ./test/core/select.wast:227
 assert_return(() => invoke($0, `as-if-condition`, [0]), []);
 
-// ./test/core/select.wast:280
+// ./test/core/select.wast:228
 assert_return(() => invoke($0, `as-if-condition`, [1]), []);
 
-// ./test/core/select.wast:281
+// ./test/core/select.wast:229
 assert_return(() => invoke($0, `as-if-then`, [0]), [value("i32", 3)]);
 
-// ./test/core/select.wast:282
+// ./test/core/select.wast:230
 assert_return(() => invoke($0, `as-if-then`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:283
+// ./test/core/select.wast:231
 assert_return(() => invoke($0, `as-if-else`, [0]), [value("i32", 3)]);
 
-// ./test/core/select.wast:284
+// ./test/core/select.wast:232
 assert_return(() => invoke($0, `as-if-else`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:286
+// ./test/core/select.wast:234
 assert_return(() => invoke($0, `as-br_if-first`, [0]), [value("i32", 3)]);
 
-// ./test/core/select.wast:287
+// ./test/core/select.wast:235
 assert_return(() => invoke($0, `as-br_if-first`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:288
+// ./test/core/select.wast:236
 assert_return(() => invoke($0, `as-br_if-last`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:289
+// ./test/core/select.wast:237
 assert_return(() => invoke($0, `as-br_if-last`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:291
+// ./test/core/select.wast:239
 assert_return(() => invoke($0, `as-br_table-first`, [0]), [value("i32", 3)]);
 
-// ./test/core/select.wast:292
+// ./test/core/select.wast:240
 assert_return(() => invoke($0, `as-br_table-first`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:293
+// ./test/core/select.wast:241
 assert_return(() => invoke($0, `as-br_table-last`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:294
+// ./test/core/select.wast:242
 assert_return(() => invoke($0, `as-br_table-last`, [1]), [value("i32", 2)]);
 
-// ./test/core/select.wast:296
+// ./test/core/select.wast:244
 assert_return(() => invoke($0, `as-call_indirect-first`, [0]), [
   value("i32", 3),
 ]);
 
-// ./test/core/select.wast:298
+// ./test/core/select.wast:245
+assert_return(() => invoke($0, `as-call_indirect-first`, [1]), [
+  value("i32", 2),
+]);
+
+// ./test/core/select.wast:246
 assert_return(() => invoke($0, `as-call_indirect-mid`, [0]), [value("i32", 1)]);
 
-// ./test/core/select.wast:299
+// ./test/core/select.wast:247
 assert_return(() => invoke($0, `as-call_indirect-mid`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:300
+// ./test/core/select.wast:248
 assert_trap(
   () => invoke($0, `as-call_indirect-last`, [0]),
   `undefined element`,
 );
 
-// ./test/core/select.wast:301
+// ./test/core/select.wast:249
 assert_trap(
   () => invoke($0, `as-call_indirect-last`, [1]),
   `undefined element`,
 );
 
-// ./test/core/select.wast:303
+// ./test/core/select.wast:251
 assert_return(() => invoke($0, `as-store-first`, [0]), []);
 
-// ./test/core/select.wast:304
+// ./test/core/select.wast:252
 assert_return(() => invoke($0, `as-store-first`, [1]), []);
 
-// ./test/core/select.wast:305
+// ./test/core/select.wast:253
 assert_return(() => invoke($0, `as-store-last`, [0]), []);
 
-// ./test/core/select.wast:306
+// ./test/core/select.wast:254
 assert_return(() => invoke($0, `as-store-last`, [1]), []);
 
-// ./test/core/select.wast:308
+// ./test/core/select.wast:256
 assert_return(() => invoke($0, `as-memory.grow-value`, [0]), [value("i32", 1)]);
 
-// ./test/core/select.wast:309
+// ./test/core/select.wast:257
 assert_return(() => invoke($0, `as-memory.grow-value`, [1]), [value("i32", 3)]);
 
-// ./test/core/select.wast:311
+// ./test/core/select.wast:259
 assert_return(() => invoke($0, `as-call-value`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:312
+// ./test/core/select.wast:260
 assert_return(() => invoke($0, `as-call-value`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:313
+// ./test/core/select.wast:261
 assert_return(() => invoke($0, `as-return-value`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:314
+// ./test/core/select.wast:262
 assert_return(() => invoke($0, `as-return-value`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:315
+// ./test/core/select.wast:263
 assert_return(() => invoke($0, `as-drop-operand`, [0]), []);
 
-// ./test/core/select.wast:316
+// ./test/core/select.wast:264
 assert_return(() => invoke($0, `as-drop-operand`, [1]), []);
 
-// ./test/core/select.wast:317
+// ./test/core/select.wast:265
 assert_return(() => invoke($0, `as-br-value`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:318
+// ./test/core/select.wast:266
 assert_return(() => invoke($0, `as-br-value`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:319
+// ./test/core/select.wast:267
 assert_return(() => invoke($0, `as-local.set-value`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:320
+// ./test/core/select.wast:268
 assert_return(() => invoke($0, `as-local.set-value`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:321
+// ./test/core/select.wast:269
 assert_return(() => invoke($0, `as-local.tee-value`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:322
+// ./test/core/select.wast:270
 assert_return(() => invoke($0, `as-local.tee-value`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:323
+// ./test/core/select.wast:271
 assert_return(() => invoke($0, `as-global.set-value`, [0]), [value("i32", 2)]);
 
-// ./test/core/select.wast:324
+// ./test/core/select.wast:272
 assert_return(() => invoke($0, `as-global.set-value`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:325
+// ./test/core/select.wast:273
 assert_return(() => invoke($0, `as-load-operand`, [0]), [value("i32", 1)]);
 
-// ./test/core/select.wast:326
+// ./test/core/select.wast:274
 assert_return(() => invoke($0, `as-load-operand`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:328
+// ./test/core/select.wast:276
 assert_return(() => invoke($0, `as-unary-operand`, [0]), [value("i32", 0)]);
 
-// ./test/core/select.wast:329
+// ./test/core/select.wast:277
 assert_return(() => invoke($0, `as-unary-operand`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:330
+// ./test/core/select.wast:278
 assert_return(() => invoke($0, `as-binary-operand`, [0]), [value("i32", 4)]);
 
-// ./test/core/select.wast:331
+// ./test/core/select.wast:279
 assert_return(() => invoke($0, `as-binary-operand`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:332
+// ./test/core/select.wast:280
 assert_return(() => invoke($0, `as-test-operand`, [0]), [value("i32", 0)]);
 
-// ./test/core/select.wast:333
+// ./test/core/select.wast:281
 assert_return(() => invoke($0, `as-test-operand`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:334
+// ./test/core/select.wast:282
 assert_return(() => invoke($0, `as-compare-left`, [0]), [value("i32", 0)]);
 
-// ./test/core/select.wast:335
+// ./test/core/select.wast:283
 assert_return(() => invoke($0, `as-compare-left`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:336
+// ./test/core/select.wast:284
 assert_return(() => invoke($0, `as-compare-right`, [0]), [value("i32", 0)]);
 
-// ./test/core/select.wast:337
+// ./test/core/select.wast:285
 assert_return(() => invoke($0, `as-compare-right`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:338
+// ./test/core/select.wast:286
 assert_return(() => invoke($0, `as-convert-operand`, [0]), [value("i32", 0)]);
 
-// ./test/core/select.wast:339
+// ./test/core/select.wast:287
 assert_return(() => invoke($0, `as-convert-operand`, [1]), [value("i32", 1)]);
 
-// ./test/core/select.wast:341
+// ./test/core/select.wast:289
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$arity-0 (select (nop) (nop) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/select.wast:296
 assert_invalid(
   () =>
     instantiate(
-      `(module (func $$arity-0-implicit (select (nop) (nop) (i32.const 1))))`,
+      `(module (func $$type-num-vs-num (select (i32.const 1) (i64.const 1) (i32.const 1))))`,
     ),
   `type mismatch`,
 );
 
-// ./test/core/select.wast:345
+// ./test/core/select.wast:300
 assert_invalid(
   () =>
     instantiate(
-      `(module (func $$arity-0 (select (result) (nop) (nop) (i32.const 1))))`,
+      `(module (func $$type-num-vs-num (select (i32.const 1) (f32.const 1.0) (i32.const 1))))`,
     ),
-  `invalid result arity`,
-);
-
-// ./test/core/select.wast:349
-assert_invalid(() =>
-  instantiate(`(module (func $$arity-2 (result i32 i32)
-    (select (result i32 i32)
-      (i32.const 0) (i32.const 0)
-      (i32.const 0) (i32.const 0)
-      (i32.const 1)
-    )
-  ))`), `invalid result arity`);
-
-// ./test/core/select.wast:361
-assert_invalid(
-  () =>
-    instantiate(`(module (func $$type-externref-implicit (param $$r externref)
-    (drop (select (local.get $$r) (local.get $$r) (i32.const 1)))
-  ))`),
   `type mismatch`,
 );
 
-// ./test/core/select.wast:368
-assert_invalid(() =>
-  instantiate(`(module (func $$type-num-vs-num
-    (drop (select (i32.const 1) (i64.const 1) (i32.const 1)))
-  ))`), `type mismatch`);
+// ./test/core/select.wast:304
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$type-num-vs-num (select (i32.const 1) (f64.const 1.0) (i32.const 1))))`,
+    ),
+  `type mismatch`,
+);
 
-// ./test/core/select.wast:374
-assert_invalid(() =>
-  instantiate(`(module (func $$type-num-vs-num
-    (drop (select (i32.const 1) (f32.const 1.0) (i32.const 1)))
-  ))`), `type mismatch`);
-
-// ./test/core/select.wast:380
-assert_invalid(() =>
-  instantiate(`(module (func $$type-num-vs-num
-    (drop (select (i32.const 1) (f64.const 1.0) (i32.const 1)))
-  ))`), `type mismatch`);
-
-// ./test/core/select.wast:388
+// ./test/core/select.wast:310
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-1st-operand-empty
@@ -936,7 +665,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:396
+// ./test/core/select.wast:318
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-2nd-operand-empty
@@ -944,7 +673,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:404
+// ./test/core/select.wast:326
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-3rd-operand-empty
@@ -952,7 +681,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:412
+// ./test/core/select.wast:334
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-1st-operand-empty-in-block
@@ -961,7 +690,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:421
+// ./test/core/select.wast:343
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-2nd-operand-empty-in-block
@@ -970,7 +699,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:430
+// ./test/core/select.wast:352
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-3rd-operand-empty-in-block
@@ -979,7 +708,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:439
+// ./test/core/select.wast:361
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-1st-operand-empty-in-loop
@@ -988,7 +717,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:448
+// ./test/core/select.wast:370
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-2nd-operand-empty-in-loop
@@ -997,7 +726,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:457
+// ./test/core/select.wast:379
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-3rd-operand-empty-in-loop
@@ -1006,7 +735,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:466
+// ./test/core/select.wast:388
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-1st-operand-empty-in-then
@@ -1015,7 +744,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:475
+// ./test/core/select.wast:397
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-2nd-operand-empty-in-then
@@ -1024,7 +753,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/select.wast:484
+// ./test/core/select.wast:406
 assert_invalid(() =>
   instantiate(`(module
     (func $$type-3rd-operand-empty-in-then

@@ -130,3 +130,12 @@ assert_malformed(() =>
     "\\00asm\\01\\00\\00\\00"
     "\\00asm\\01\\00\\00\\00"
   )`), `length out of bounds`);
+
+// ./test/core/custom.wast:122
+assert_malformed(() =>
+  instantiate(`(module binary
+    "\\00asm" "\\01\\00\\00\\00"
+    "\\05\\03\\01\\00\\01"                         ;; memory section
+    "\\0c\\01\\02"                               ;; data count section (2 segments)
+    "\\0b\\06\\01\\00\\41\\00\\0b\\00"                ;; data section (1 segment)
+  )`), `data count and data section have inconsistent lengths`);

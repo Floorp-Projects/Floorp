@@ -849,7 +849,10 @@ let $8 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:350
-assert_trap(() => invoke($8, `run`, [65516, 0, 40]), `out of bounds`);
+assert_trap(
+  () => invoke($8, `run`, [65516, 0, 40]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:353
 assert_return(() => invoke($8, `load8_u`, [0]), [value("i32", 0)]);
@@ -1908,7 +1911,10 @@ let $9 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:711
-assert_trap(() => invoke($9, `run`, [65515, 0, 39]), `out of bounds`);
+assert_trap(
+  () => invoke($9, `run`, [65515, 0, 39]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:714
 assert_return(() => invoke($9, `load8_u`, [0]), [value("i32", 0)]);
@@ -2970,7 +2976,10 @@ let $10 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:1073
-assert_trap(() => invoke($10, `run`, [0, 65516, 40]), `out of bounds`);
+assert_trap(
+  () => invoke($10, `run`, [0, 65516, 40]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:1076
 assert_return(() => invoke($10, `load8_u`, [198]), [value("i32", 0)]);
@@ -4029,7 +4038,10 @@ let $11 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:1434
-assert_trap(() => invoke($11, `run`, [0, 65515, 39]), `out of bounds`);
+assert_trap(
+  () => invoke($11, `run`, [0, 65515, 39]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:1437
 assert_return(() => invoke($11, `load8_u`, [198]), [value("i32", 0)]);
@@ -5091,7 +5103,10 @@ let $12 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:1796
-assert_trap(() => invoke($12, `run`, [65516, 65486, 40]), `out of bounds`);
+assert_trap(
+  () => invoke($12, `run`, [65516, 65486, 40]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:1799
 assert_return(() => invoke($12, `load8_u`, [198]), [value("i32", 0)]);
@@ -6150,7 +6165,10 @@ let $13 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:2157
-assert_trap(() => invoke($13, `run`, [65486, 65516, 40]), `out of bounds`);
+assert_trap(
+  () => invoke($13, `run`, [65486, 65516, 40]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:2160
 assert_return(() => invoke($13, `load8_u`, [198]), [value("i32", 0)]);
@@ -7209,7 +7227,10 @@ let $14 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:2518
-assert_trap(() => invoke($14, `run`, [65516, 65506, 40]), `out of bounds`);
+assert_trap(
+  () => invoke($14, `run`, [65516, 65506, 40]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:2521
 assert_return(() => invoke($14, `load8_u`, [198]), [value("i32", 0)]);
@@ -8268,7 +8289,10 @@ let $15 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:2879
-assert_trap(() => invoke($15, `run`, [65506, 65516, 40]), `out of bounds`);
+assert_trap(
+  () => invoke($15, `run`, [65506, 65516, 40]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:2882
 assert_return(() => invoke($15, `load8_u`, [198]), [value("i32", 0)]);
@@ -9327,7 +9351,10 @@ let $16 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:3240
-assert_trap(() => invoke($16, `run`, [65516, 65516, 40]), `out of bounds`);
+assert_trap(
+  () => invoke($16, `run`, [65516, 65516, 40]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:3243
 assert_return(() => invoke($16, `load8_u`, [198]), [value("i32", 0)]);
@@ -10386,7 +10413,10 @@ let $17 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:3601
-assert_trap(() => invoke($17, `run`, [0, 65516, -4096]), `out of bounds`);
+assert_trap(
+  () => invoke($17, `run`, [0, 65516, -4096]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:3604
 assert_return(() => invoke($17, `load8_u`, [198]), [value("i32", 0)]);
@@ -11445,7 +11475,10 @@ let $18 = instantiate(`(module
     (i32.load8_u (local.get 0))))`);
 
 // ./test/core/memory_copy.wast:3962
-assert_trap(() => invoke($18, `run`, [65516, 61440, -256]), `out of bounds`);
+assert_trap(
+  () => invoke($18, `run`, [65516, 61440, -256]),
+  `out of bounds memory access`,
+);
 
 // ./test/core/memory_copy.wast:3965
 assert_return(() => invoke($18, `load8_u`, [198]), [value("i32", 0)]);
@@ -13208,7 +13241,7 @@ let $21 = instantiate(`(module
     (memory.copy (i32.const 0xFF00) (i32.const 0x8000) (i32.const 257))))`);
 
 // ./test/core/memory_copy.wast:4819
-assert_trap(() => invoke($21, `test`, []), `out of bounds`);
+assert_trap(() => invoke($21, `test`, []), `out of bounds memory access`);
 
 // ./test/core/memory_copy.wast:4821
 let $22 = instantiate(`(module
@@ -13217,7 +13250,7 @@ let $22 = instantiate(`(module
     (memory.copy (i32.const 0xFFFFFF00) (i32.const 0x4000) (i32.const 257))))`);
 
 // ./test/core/memory_copy.wast:4825
-assert_trap(() => invoke($22, `test`, []), `out of bounds`);
+assert_trap(() => invoke($22, `test`, []), `out of bounds memory access`);
 
 // ./test/core/memory_copy.wast:4827
 let $23 = instantiate(`(module
@@ -13226,7 +13259,7 @@ let $23 = instantiate(`(module
     (memory.copy (i32.const 0x8000) (i32.const 0xFF00) (i32.const 257))))`);
 
 // ./test/core/memory_copy.wast:4831
-assert_trap(() => invoke($23, `test`, []), `out of bounds`);
+assert_trap(() => invoke($23, `test`, []), `out of bounds memory access`);
 
 // ./test/core/memory_copy.wast:4833
 let $24 = instantiate(`(module
@@ -13235,7 +13268,7 @@ let $24 = instantiate(`(module
    (memory.copy (i32.const 0x4000) (i32.const 0xFFFFFF00) (i32.const 257))))`);
 
 // ./test/core/memory_copy.wast:4837
-assert_trap(() => invoke($24, `test`, []), `out of bounds`);
+assert_trap(() => invoke($24, `test`, []), `out of bounds memory access`);
 
 // ./test/core/memory_copy.wast:4839
 let $25 = instantiate(`(module
@@ -13286,7 +13319,7 @@ let $27 = instantiate(`(module
     (memory.copy (i32.const 0x20000) (i32.const 0x7000) (i32.const 0))))`);
 
 // ./test/core/memory_copy.wast:4873
-assert_trap(() => invoke($27, `test`, []), `out of bounds`);
+assert_trap(() => invoke($27, `test`, []), `out of bounds memory access`);
 
 // ./test/core/memory_copy.wast:4875
 let $28 = instantiate(`(module
@@ -13304,7 +13337,7 @@ let $29 = instantiate(`(module
     (memory.copy (i32.const 0x9000) (i32.const 0x20000) (i32.const 0))))`);
 
 // ./test/core/memory_copy.wast:4885
-assert_trap(() => invoke($29, `test`, []), `out of bounds`);
+assert_trap(() => invoke($29, `test`, []), `out of bounds memory access`);
 
 // ./test/core/memory_copy.wast:4887
 let $30 = instantiate(`(module
@@ -13322,7 +13355,7 @@ let $31 = instantiate(`(module
     (memory.copy (i32.const 0x20000) (i32.const 0x20000) (i32.const 0))))`);
 
 // ./test/core/memory_copy.wast:4897
-assert_trap(() => invoke($31, `test`, []), `out of bounds`);
+assert_trap(() => invoke($31, `test`, []), `out of bounds memory access`);
 
 // ./test/core/memory_copy.wast:4899
 let $32 = instantiate(`(module
