@@ -357,7 +357,8 @@ bool mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
   MakeNodeOffsetRangeForWord(word, aNodeOffsetRange);
   ++mNextWordIndex;
   *aSkipChecking = !word.mCheckableWord;
-  ::NormalizeWord(mSoftText.mValue, word.mSoftTextOffset, word.mLength, aText);
+  ::NormalizeWord(mSoftText.GetValue(), word.mSoftTextOffset, word.mLength,
+                  aText);
 
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
           ("%s: returning: %s (skip=%d)", __FUNCTION__,
@@ -900,14 +901,14 @@ void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(
 
 auto mozInlineSpellWordUtil::BuildRealWords() const
     -> Result<RealWords, nsresult> {
-  // This is pretty simple. We just have to walk mSoftText.mValue, tokenizing it
-  // into "real words".
-  // We do an outer traversal of words delimited by IsDOMWordSeparator, calling
-  // SplitDOMWordAndAppendTo on each of those DOM words
+  // This is pretty simple. We just have to walk mSoftText.GetValue(),
+  // tokenizing it into "real words". We do an outer traversal of words
+  // delimited by IsDOMWordSeparator, calling SplitDOMWordAndAppendTo on each of
+  // those DOM words
   int32_t wordStart = -1;
   RealWords realWords;
-  for (int32_t i = 0; i < int32_t(mSoftText.mValue.Length()); ++i) {
-    if (IsDOMWordSeparator(mSoftText.mValue.CharAt(i))) {
+  for (int32_t i = 0; i < int32_t(mSoftText.GetValue().Length()); ++i) {
+    if (IsDOMWordSeparator(mSoftText.GetValue().CharAt(i))) {
       if (wordStart >= 0) {
         nsresult rv = SplitDOMWordAndAppendTo(wordStart, i, realWords);
         if (NS_FAILED(rv)) {
@@ -922,8 +923,8 @@ auto mozInlineSpellWordUtil::BuildRealWords() const
     }
   }
   if (wordStart >= 0) {
-    nsresult rv = SplitDOMWordAndAppendTo(wordStart, mSoftText.mValue.Length(),
-                                          realWords);
+    nsresult rv = SplitDOMWordAndAppendTo(
+        wordStart, mSoftText.GetValue().Length(), realWords);
     if (NS_FAILED(rv)) {
       return Err(rv);
     }
@@ -932,7 +933,8 @@ auto mozInlineSpellWordUtil::BuildRealWords() const
   return realWords;
 }
 
-/*********** DOM/realwords<->mSoftText.mValue mapping functions ************/
+/*********** DOM/realwords<->mSoftText.GetValue() mapping functions
+ * ************/
 
 int32_t mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(
     NodeOffset aNodeOffset) const {
@@ -1102,7 +1104,7 @@ int32_t mozInlineSpellWordUtil::FindRealWordContaining(
 
 nsresult mozInlineSpellWordUtil::SplitDOMWordAndAppendTo(
     int32_t aStart, int32_t aEnd, nsTArray<RealWord>& aRealWords) const {
-  nsDependentSubstring targetText(mSoftText.mValue, aStart, aEnd - aStart);
+  nsDependentSubstring targetText(mSoftText.GetValue(), aStart, aEnd - aStart);
   WordSplitState<nsDependentSubstring> state(targetText);
   state.mCurCharClass = state.ClassifyCharacter(0, true);
 
