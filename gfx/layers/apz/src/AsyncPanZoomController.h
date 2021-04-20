@@ -228,12 +228,6 @@ class AsyncPanZoomController {
   void UpdateZoomConstraints(const ZoomConstraints& aConstraints);
 
   /**
-   * Return the zoom constraints last set for this APZC (in the constructor
-   * or in UpdateZoomConstraints()).
-   */
-  ZoomConstraints GetZoomConstraints() const;
-
-  /**
    * Schedules a runnable to run on the controller/UI thread at some time
    * in the future.
    */
@@ -975,6 +969,13 @@ class AsyncPanZoomController {
 
   PlatformSpecificStateBase* GetPlatformSpecificState();
 
+  /**
+   * Convenience functions to get the corresponding fields of mZoomContraints
+   * while holding mRecursiveMutex.
+   */
+  bool ZoomConstraintsAllowZoom() const;
+  bool ZoomConstraintsAllowDoubleTapZoom() const;
+
  protected:
   // Both |mScrollMetadata| and |mLastContentPaintMetrics| are protected by the
   // monitor. Do not read from or modify them without locking.
@@ -1050,7 +1051,7 @@ class AsyncPanZoomController {
 
   // Most up-to-date constraints on zooming. These should always be reasonable
   // values; for example, allowing a min zoom of 0.0 can cause very bad things
-  // to happen.
+  // to happen. Hold mRecursiveMutex when accessing this.
   ZoomConstraints mZoomConstraints;
 
   // The last time the compositor has sampled the content transform for this
