@@ -1116,12 +1116,14 @@ class ScriptSourceObject : public NativeObject {
   JSObject* unwrappedElement(JSContext* cx) const;
 
   const Value& unwrappedElementAttributeName() const {
+    MOZ_ASSERT(isInitialized());
     const Value& v =
         unwrappedCanonical()->getReservedSlot(ELEMENT_PROPERTY_SLOT);
     MOZ_ASSERT(!v.isMagic());
     return v;
   }
   BaseScript* unwrappedIntroductionScript() const {
+    MOZ_ASSERT(isInitialized());
     Value value =
         unwrappedCanonical()->getReservedSlot(INTRODUCTION_SCRIPT_SLOT);
     if (value.isUndefined()) {
@@ -1133,12 +1135,30 @@ class ScriptSourceObject : public NativeObject {
   void setPrivate(JSRuntime* rt, const Value& value);
 
   Value canonicalPrivate() const {
+    MOZ_ASSERT(isInitialized());
     Value value = getReservedSlot(PRIVATE_SLOT);
     MOZ_ASSERT_IF(!isCanonical(), value.isUndefined());
     return value;
   }
 
  private:
+#ifdef DEBUG
+  bool isInitialized() const {
+    if (!isCanonical()) {
+      // While it might be nice to check the unwrapped canonical value,
+      // unwrapping at arbitrary points isn't supported, so we simply
+      // return true and only validate canonical results.
+      return true;
+    }
+
+    Value element = getReservedSlot(ELEMENT_PROPERTY_SLOT);
+    if (element.isMagic(JS_GENERIC_MAGIC)) {
+      return false;
+    }
+    return !getReservedSlot(INTRODUCTION_SCRIPT_SLOT).isMagic(JS_GENERIC_MAGIC);
+  }
+#endif
+
   enum {
     SOURCE_SLOT = 0,
     CANONICAL_SLOT,
