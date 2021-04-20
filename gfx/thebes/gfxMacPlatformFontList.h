@@ -105,8 +105,6 @@ class MacOSFontEntry final : public gfxFontEntry {
   // These fields are used by gfxMacFont, but stored in the font entry so
   // that only a single font instance needs to inspect the available
   // variations.
-  bool mCheckedForOpszAxis;
-  bool mHasOpszAxis;
   gfxFontVariationAxis mOpszAxis;
   float mAdjustedDefaultOpsz;
 

@@ -1271,6 +1271,10 @@ void gfxFontEntry::SetupVariationRanges() {
 }
 
 void gfxFontEntry::CheckForVariationAxes() {
+  if (mCheckedForVariationAxes) {
+    return;
+  }
+  mCheckedForVariationAxes = true;
   if (HasVariations()) {
     AutoTArray<gfxFontVariationAxis, 4> axes;
     GetVariationAxes(axes);
@@ -1280,40 +1284,32 @@ void gfxFontEntry::CheckForVariationAxes() {
       } else if (axis.mTag == HB_TAG('i', 't', 'a', 'l') &&
                  axis.mMaxValue >= 1.0f) {
         mRangeFlags |= RangeFlags::eItalicVariation;
+      } else if (axis.mTag == HB_TAG('o', 'p', 's', 'z')) {
+        mRangeFlags |= RangeFlags::eOpticalSize;
       }
     }
   }
-  mCheckedForVariationAxes = true;
 }
 
 bool gfxFontEntry::HasBoldVariableWeight() {
   MOZ_ASSERT(!mIsUserFontContainer,
              "should not be called for user-font containers!");
-
-  if (!gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
-    return false;
-  }
-
-  if (!mCheckedForVariationAxes) {
-    CheckForVariationAxes();
-  }
-
+  CheckForVariationAxes();
   return bool(mRangeFlags & RangeFlags::eBoldVariableWeight);
 }
 
 bool gfxFontEntry::HasItalicVariation() {
   MOZ_ASSERT(!mIsUserFontContainer,
              "should not be called for user-font containers!");
-
-  if (!gfxPlatform::GetPlatform()->HasVariationFontSupport()) {
-    return false;
-  }
-
-  if (!mCheckedForVariationAxes) {
-    CheckForVariationAxes();
-  }
-
+  CheckForVariationAxes();
   return bool(mRangeFlags & RangeFlags::eItalicVariation);
+}
+
+bool gfxFontEntry::HasOpticalSize() {
+  MOZ_ASSERT(!mIsUserFontContainer,
+             "should not be called for user-font containers!");
+  CheckForVariationAxes();
+  return bool(mRangeFlags & RangeFlags::eOpticalSize);
 }
 
 void gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
@@ -1374,12 +1370,13 @@ void gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
     aResult.AppendElement(gfxFontVariation{HB_TAG('s', 'l', 'n', 't'), -angle});
   }
 
+  struct TagEquals {
+    bool Equals(const gfxFontVariation& aIter, uint32_t aTag) const {
+      return aIter.mTag == aTag;
+    }
+  };
+
   auto replaceOrAppend = [&aResult](const gfxFontVariation& aSetting) {
-    struct TagEquals {
-      bool Equals(const gfxFontVariation& aIter, uint32_t aTag) const {
-        return aIter.mTag == aTag;
-      }
-    };
     auto index = aResult.IndexOf(aSetting.mTag, 0, TagEquals());
     if (index == aResult.NoIndex) {
       aResult.AppendElement(aSetting);
@@ -1399,6 +1396,16 @@ void gfxFontEntry::GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
   // over the descriptor.
   for (const auto& v : aStyle.variationSettings) {
     replaceOrAppend(v);
+  }
+
+  // If there's no explicit opsz in the settings, apply 'auto' value.
+  if (HasOpticalSize() && aStyle.autoOpticalSize >= 0.0f) {
+    const uint32_t kOpszTag = HB_TAG('o', 'p', 's', 'z');
+    auto index = aResult.IndexOf(kOpszTag, 0, TagEquals());
+    if (index == aResult.NoIndex) {
+      float value = aStyle.autoOpticalSize * mSizeAdjust;
+      aResult.AppendElement(gfxFontVariation{kOpszTag, value});
+    }
   }
 }
 

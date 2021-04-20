@@ -280,8 +280,7 @@ void nsFont::AddFontVariationsToStyle(gfxFontStyle* aStyle) const {
   const uint32_t kTagOpsz = TRUETYPE_TAG('o', 'p', 's', 'z');
   if (opticalSizing == NS_FONT_OPTICAL_SIZING_AUTO &&
       !fontVariationSettings.Contains(kTagOpsz, VariationTagComparator())) {
-    gfxFontVariation opsz = {kTagOpsz, size.ToCSSPixels()};
-    aStyle->variationSettings.AppendElement(opsz);
+    aStyle->autoOpticalSize = size.ToCSSPixels();
   }
 
   // Add in arbitrary values from font-variation-settings

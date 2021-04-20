@@ -53,45 +53,46 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
     AutoTArray<gfxFontVariation, 4> vars;
     aFontEntry->GetVariationsForStyle(vars, *aFontStyle);
 
-    // Because of a Core Text bug, we need to ensure that if the font has
-    // an 'opsz' axis, it is always explicitly set, and NOT to the font's
-    // default value. (See bug 1457417, bug 1478720.)
-    // We record the result of searching the font's axes in the font entry,
-    // so that this only has to be done by the first instance created for
-    // a given font resource.
-    const uint32_t kOpszTag = HB_TAG('o', 'p', 's', 'z');
-    const float kOpszFudgeAmount = 0.01f;
+    if (aFontEntry->HasOpticalSize()) {
+      // Because of a Core Text bug, we need to ensure that if the font has
+      // an 'opsz' axis, it is always explicitly set, and NOT to the font's
+      // default value. (See bug 1457417, bug 1478720.)
+      // We record the result of searching the font's axes in the font entry,
+      // so that this only has to be done by the first instance created for
+      // a given font resource.
+      const uint32_t kOpszTag = HB_TAG('o', 'p', 's', 'z');
+      const float kOpszFudgeAmount = 0.01f;
 
-    if (!aFontEntry->mCheckedForOpszAxis) {
-      aFontEntry->mCheckedForOpszAxis = true;
-      AutoTArray<gfxFontVariationAxis, 4> axes;
-      aFontEntry->GetVariationAxes(axes);
-      auto index = axes.IndexOf(kOpszTag, 0, TagEquals<gfxFontVariationAxis>());
-      if (index == axes.NoIndex) {
-        aFontEntry->mHasOpszAxis = false;
-      } else {
-        const auto& axis = axes[index];
-        aFontEntry->mHasOpszAxis = true;
-        aFontEntry->mOpszAxis = axis;
-        // Pick a slightly-adjusted version of the default that we'll
-        // use to work around Core Text's habit of ignoring any attempt
-        // to explicitly set the default value.
-        aFontEntry->mAdjustedDefaultOpsz =
-            axis.mDefaultValue == axis.mMinValue
-                ? axis.mDefaultValue + kOpszFudgeAmount
-                : axis.mDefaultValue - kOpszFudgeAmount;
+      // Record the opsz axis details in the font entry, if not already done.
+      if (!aFontEntry->mOpszAxis.mTag) {
+        AutoTArray<gfxFontVariationAxis, 4> axes;
+        aFontEntry->GetVariationAxes(axes);
+        auto index =
+            axes.IndexOf(kOpszTag, 0, TagEquals<gfxFontVariationAxis>());
+        MOZ_ASSERT(index != axes.NoIndex);
+        if (index != axes.NoIndex) {
+          const auto& axis = axes[index];
+          aFontEntry->mOpszAxis = axis;
+          // Pick a slightly-adjusted version of the default that we'll
+          // use to work around Core Text's habit of ignoring any attempt
+          // to explicitly set the default value.
+          aFontEntry->mAdjustedDefaultOpsz =
+              axis.mDefaultValue == axis.mMinValue
+                  ? axis.mDefaultValue + kOpszFudgeAmount
+                  : axis.mDefaultValue - kOpszFudgeAmount;
+        }
       }
-    }
 
-    // Add 'opsz' if not present, or tweak its value if it looks too close
-    // to the default (after clamping to the font's available range).
-    if (aFontEntry->mHasOpszAxis) {
+      // Add 'opsz' if not present, or tweak its value if it looks too close
+      // to the default (after clamping to the font's available range).
       auto index = vars.IndexOf(kOpszTag, 0, TagEquals<gfxFontVariation>());
       if (index == vars.NoIndex) {
-        gfxFontVariation opsz{kOpszTag, aFontEntry->mAdjustedDefaultOpsz};
-        vars.AppendElement(opsz);
+        // No explicit opsz; set to the font's default.
+        vars.AppendElement(
+            gfxFontVariation{kOpszTag, aFontEntry->mAdjustedDefaultOpsz});
       } else {
-        // Figure out a "safe" value that Core Text won't ignore.
+        // An 'opsz' value was already present; use it, but adjust if necessary
+        // to a "safe" value that Core Text won't ignore.
         auto& value = vars[index].mValue;
         auto& axis = aFontEntry->mOpszAxis;
         value = fmin(fmax(value, axis.mMinValue), axis.mMaxValue);
