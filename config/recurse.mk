@@ -210,10 +210,6 @@ endif
 
 # Interdependencies that moz.build world don't know about yet for compilation.
 # Note some others are hardcoded or "guessed" in recursivemake.py and emitter.py
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
-toolkit/library/build/target: widget/gtk/mozgtk/gtk3/target
-endif
-
 ifndef MOZ_FOLD_LIBS
 ifndef MOZ_SYSTEM_NSS
 netwerk/test/http3server/target: security/nss/lib/nss/nss_nss3/target security/nss/lib/ssl/ssl_ssl3/target

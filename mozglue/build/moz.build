@@ -35,6 +35,11 @@ if CONFIG["MOZ_TSAN"]:
         "TsanOptions.cpp",
     ]
 
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    SOURCES += [
+        "gtk.c",
+    ]
+
 if CONFIG["OS_TARGET"] == "WINNT":
     if CONFIG["MOZ_MEMORY"]:
         DEFFILE = "mozglue.def"
