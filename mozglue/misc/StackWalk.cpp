@@ -204,8 +204,6 @@ class CONTEXTGenericAccessors {
     return mCONTEXT.Pc;
 #  elif defined(_M_IX86)
     return mCONTEXT.Eip;
-#  elif defined(_M_IA64)
-    return mCONTEXT.StIIP;
 #  else
 #    error "unknown platform"
 #  endif
@@ -218,8 +216,6 @@ class CONTEXTGenericAccessors {
     return mCONTEXT.Sp;
 #  elif defined(_M_IX86)
     return mCONTEXT.Esp;
-#  elif defined(_M_IA64)
-    return mCONTEXT.SP;
 #  else
 #    error "unknown platform"
 #  endif
@@ -232,8 +228,6 @@ class CONTEXTGenericAccessors {
     return mCONTEXT.Fp;
 #  elif defined(_M_IX86)
     return mCONTEXT.Ebp;
-#  elif defined(_M_IA64)
-    return mCONTEXT.RsBSP;
 #  else
 #    error "unknown platform"
 #  endif
@@ -281,7 +275,7 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
   }
   CONTEXTGenericAccessors context{aContext ? *aContext : context_buf};
 
-#  if defined(_M_IX86) || defined(_M_IA64)
+#  if defined(_M_IX86)
   // Setup initial stack frame to walk from.
   STACKFRAME64 frame64;
   memset(&frame64, 0, sizeof(frame64));
@@ -323,14 +317,12 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
     DWORD64 addr;
     DWORD64 spaddr;
 
-#  if defined(_M_IX86) || defined(_M_IA64)
+#  if defined(_M_IX86)
     // 32-bit frame unwinding.
     // Debug routines are not threadsafe, so grab the lock.
     EnterCriticalSection(&gDbgHelpCS);
     BOOL ok = StackWalk64(
-#    if defined _M_IA64
-        IMAGE_FILE_MACHINE_IA64,
-#    elif defined _M_IX86
+#    if defined _M_IX86
         IMAGE_FILE_MACHINE_I386,
 #    endif
         ::GetCurrentProcess(), targetThread, &frame64, context.CONTEXTPtr(),
@@ -418,7 +410,7 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
       break;
     }
 
-#  if defined(_M_IX86) || defined(_M_IA64)
+#  if defined(_M_IX86)
     if (frame64.AddrReturn.Offset == 0) {
       break;
     }
