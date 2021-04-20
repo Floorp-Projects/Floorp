@@ -825,8 +825,8 @@ var BookmarksEventHandler = {
    */
 
   onMouseUp(aEvent) {
-    // Handles left-click with modifier if not browser.bookmarks.openInTabClosesMenu.
-    if (aEvent.button != 0 || PlacesUIUtils.openInTabClosesMenu) {
+    // Handles middle-click or left-click with modifier if not browser.bookmarks.openInTabClosesMenu.
+    if (aEvent.button == 2 || PlacesUIUtils.openInTabClosesMenu) {
       return;
     }
     let target = aEvent.originalTarget;
@@ -835,7 +835,7 @@ var BookmarksEventHandler = {
     }
     let modifKey =
       AppConstants.platform === "macosx" ? aEvent.metaKey : aEvent.ctrlKey;
-    if (modifKey) {
+    if (modifKey || aEvent.button == 1) {
       target.setAttribute("closemenu", "none");
       var menupopup = target.parentNode;
       menupopup.addEventListener(
@@ -887,8 +887,9 @@ var BookmarksEventHandler = {
           aView
         );
       }
-    } else if (aEvent.button == 1) {
-      // left-clicks with modifier are already served by onCommand
+    } else if (aEvent.button == 1 && !(tag == "menuitem" || tag == "menu")) {
+      // Call onCommand in the cases where it's not called automatically:
+      // Middle-clicks outside of menus.
       this.onCommand(aEvent);
     }
   },
