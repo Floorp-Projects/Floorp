@@ -121,12 +121,20 @@ struct JSContext;
                                   JS::ProfilingCategoryPair::categoryPair);  \
     }
 
+// Match the conditions for MOZ_ENABLE_BACKGROUND_HANG_MONITOR
+#  if defined(NIGHTLY_BUILD) && !defined(MOZ_DEBUG) && !defined(MOZ_TSAN) && \
+      !defined(MOZ_ASAN)
+#    define SHOULD_CREATE_ALL_NONSENSITIVE_LABEL_FRAMES true
+#  else
+#    define SHOULD_CREATE_ALL_NONSENSITIVE_LABEL_FRAMES profiler_is_active()
+#  endif
+
 // See note above AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE
 #  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(              \
       label, categoryPair, nsCStr)                                         \
     mozilla::Maybe<nsAutoCString> autoCStr;                                \
     mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectNsCString;        \
-    if (profiler_is_active()) {                                            \
+    if (SHOULD_CREATE_ALL_NONSENSITIVE_LABEL_FRAMES) {                     \
       autoCStr.emplace(nsCStr);                                            \
       raiiObjectNsCString.emplace(                                         \
           label, autoCStr->get(), JS::ProfilingCategoryPair::categoryPair, \
