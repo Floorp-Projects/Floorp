@@ -171,7 +171,7 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   void ToggleMenuState();
 
   // Activate this menu item.
-  void ActivateItem(mozilla::Modifiers aModifiers);
+  void ActivateItem(mozilla::Modifiers aModifiers, int16_t aButton);
 
   // indiciate that the menu's popup has just been opened, so that the menu
   // can update its open state. This method modifies the open attribute on
