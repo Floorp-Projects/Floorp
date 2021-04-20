@@ -165,13 +165,20 @@ class _MockBaseOpen(object):
         self.open = open
         self.files = files
 
-    def __call__(self, name, mode="r", buffering=None, encoding=None, newline=None):
+    def __call__(
+        self, name, mode="r", buffering=None, encoding=None, newline=None, errors=None
+    ):
         # open() can be called with an integer "name" (i.e. a file descriptor).
         # We don't generally do this in our codebase, but internal Python
         # libraries sometimes do and we want to handle that cleanly.
         if isinstance(name, int):
             return self.open(
-                name, mode=mode, buffering=buffering, encoding=encoding, newline=newline
+                name,
+                mode=mode,
+                buffering=buffering,
+                encoding=encoding,
+                newline=newline,
+                errors=errors,
             )
         # buffering is ignored.
         absname = normcase(os.path.abspath(name))
