@@ -64,29 +64,6 @@ const responsiveSpec = generateActorSpec({
       },
     },
 
-    setUserAgentOverride: {
-      request: {
-        flag: Arg(0, "string"),
-      },
-      response: {
-        valueChanged: RetVal("boolean"),
-      },
-    },
-
-    getUserAgentOverride: {
-      request: {},
-      response: {
-        userAgent: RetVal("string"),
-      },
-    },
-
-    clearUserAgentOverride: {
-      request: {},
-      response: {
-        valueChanged: RetVal("boolean"),
-      },
-    },
-
     setElementPickerState: {
       request: {
         state: Arg(0, "boolean"),

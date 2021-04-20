@@ -22,6 +22,8 @@ const SUPPORTED_OPTIONS = {
   cacheDisabled: true,
   // Enable color scheme simulation.
   colorSchemeSimulation: true,
+  // Set a custom user agent
+  customUserAgent: true,
   // Enable JavaScript
   javascriptEnabled: true,
   // Force a custom device pixel ratio (used in RDM). Set to null to restore origin ratio.
@@ -49,7 +51,7 @@ const SUPPORTED_OPTIONS = {
  * flags when they are created. The flags will be forwarded to the WatcherActor
  * and stored as TARGET_CONFIGURATION data entries.
  * Some flags will be set directly set from this actor, in the parent process
- * (see _updateParentProcessConfiguration), nad others will be set from the target actor,
+ * (see _updateParentProcessConfiguration), and others will be set from the target actor,
  * in the content process.
  *
  * @constructor
@@ -168,6 +170,9 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
         case "colorSchemeSimulation":
           this._setColorSchemeSimulation(value);
           break;
+        case "customUserAgent":
+          this._setCustomUserAgent(value);
+          break;
         case "overrideDPPX":
           this._setDPPXOverride(value);
           break;
@@ -202,6 +207,11 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     // the same pattern (Bug 1701553).
     if (this._resetColorSchemeSimulationOnDestroy) {
       this._setColorSchemeSimulation(null);
+    }
+
+    // Restore the user agent only if it was explicitly updated by this specific actor.
+    if (this._initialUserAgent !== undefined) {
+      this._setCustomUserAgent(this._initialUserAgent);
     }
 
     // Restore the origin device pixel ratio only if it was explicitly updated by this
@@ -243,6 +253,25 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
       this._browsingContext.prefersColorSchemeOverride = value;
       this._resetColorSchemeSimulationOnDestroy = true;
     }
+  },
+
+  /**
+   * Set a custom user agent on the page
+   *
+   * @param {String} userAgent: The user agent to set on the page. If null, will reset the
+   *                 user agent to its original value.
+   * @returns {Boolean} Whether the user agent was changed or not.
+   */
+  _setCustomUserAgent(userAgent = "") {
+    if (this._browsingContext.customUserAgent === userAgent) {
+      return;
+    }
+
+    if (this._initialUserAgent === undefined) {
+      this._initialUserAgent = this._browsingContext.customUserAgent;
+    }
+
+    this._browsingContext.customUserAgent = userAgent;
   },
 
   /* DPPX override */
