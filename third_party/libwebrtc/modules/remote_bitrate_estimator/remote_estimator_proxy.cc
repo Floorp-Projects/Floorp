@@ -171,9 +171,11 @@ void RemoteEstimatorProxy::OnBitrateChanged(int bitrate_bps) {
   // Let TWCC reports occupy 5% of total bandwidth.
   MutexLock lock(&lock_);
   send_interval_ms_ = static_cast<int>(
-      0.5 + kTwccReportSize * 8.0 * 1000.0 /
-                rtc::SafeClamp(send_config_.bandwidth_fraction * bitrate_bps,
-                               kMinTwccRate, kMaxTwccRate));
+      0.5 +
+      kTwccReportSize * 8.0 * 1000.0 /
+          rtc::SafeClamp(static_cast<double>(send_config_.bandwidth_fraction) *
+                             bitrate_bps,
+                         kMinTwccRate, kMaxTwccRate));
 }
 
 void RemoteEstimatorProxy::SetSendPeriodicFeedback(

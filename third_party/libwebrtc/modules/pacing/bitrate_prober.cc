@@ -104,7 +104,8 @@ void BitrateProber::CreateProbeCluster(DataRate bitrate,
 
   ProbeCluster cluster;
   cluster.created_at = now;
-  cluster.pace_info.probe_cluster_min_probes = config_.min_probe_packets_sent;
+  cluster.pace_info.probe_cluster_min_probes =
+      static_cast<int>(config_.min_probe_packets_sent);
   cluster.pace_info.probe_cluster_min_bytes =
       (bitrate * config_.min_probe_duration.Get()).bytes();
   RTC_DCHECK_GE(cluster.pace_info.probe_cluster_min_bytes, 0);
@@ -173,7 +174,7 @@ DataSize BitrateProber::RecommendedMinProbeSize() const {
   }
   DataRate send_rate =
       DataRate::BitsPerSec(clusters_.front().pace_info.send_bitrate_bps);
-  return 2 * send_rate * config_.min_probe_delta;
+  return 2 * send_rate * static_cast<TimeDelta>(config_.min_probe_delta);
 }
 
 void BitrateProber::ProbeSent(Timestamp now, DataSize size) {

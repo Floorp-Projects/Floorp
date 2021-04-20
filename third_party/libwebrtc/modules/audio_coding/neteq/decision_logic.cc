@@ -54,8 +54,8 @@ DecisionLogic::DecisionLogic(NetEqController::Config config)
       field_trial_name);
   RTC_LOG(LS_INFO) << "NetEq decision logic settings:"
                       " estimate_dtx_delay="
-                   << estimate_dtx_delay_
-                   << " time_stretch_cn=" << time_stretch_cn_
+                   << static_cast<bool>(estimate_dtx_delay_)
+                   << " time_stretch_cn=" << static_cast<bool>(time_stretch_cn_)
                    << " target_level_window_ms=" << target_level_window_ms_;
 }
 
