@@ -30,8 +30,6 @@ function test(tag, type) {
   // We expect this tag to simply go to alternate content, not get a
   // pluginProblem binding or fire any events.
   ok(obj.displayedType == OBJLC.TYPE_NULL, "expected null type");
-  ok(obj.pluginFallbackType == OBJLC.PLUGIN_ALTERNATE,
-     "expected alternate fallback mode");
 }
 
 // Test all non-plugin types these tags can load to make sure none of them
