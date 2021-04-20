@@ -4072,7 +4072,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
       mLastFrameConsumedSetCursor = false;
     }
 
-    CursorImage customCursor =
+    const CursorImage customCursor =
         ComputeCustomCursor(aPresContext, aEvent, *aTargetFrame, *framecursor);
 
     // If the current cursor is from the same frame, and it is now
@@ -4259,9 +4259,9 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
       break;
   }
 
-  int32_t x = aHotspot ? aHotspot->x : 0;
-  int32_t y = aHotspot ? aHotspot->y : 0;
-  aWidget->SetCursor(c, aContainer, x, y);
+  uint32_t x = aHotspot ? aHotspot->x : 0;
+  uint32_t y = aHotspot ? aHotspot->y : 0;
+  aWidget->SetCursor(nsIWidget::Cursor{c, aContainer, x, y});
   return NS_OK;
 }
 

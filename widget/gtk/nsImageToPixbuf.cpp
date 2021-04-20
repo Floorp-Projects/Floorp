@@ -27,19 +27,34 @@ nsImageToPixbuf::ConvertImageToPixbuf(imgIContainer* aImage) {
   return ImageToPixbuf(aImage);
 }
 
-GdkPixbuf* nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage) {
-  RefPtr<SourceSurface> surface = aImage->GetFrame(
-      imgIContainer::FRAME_CURRENT,
-      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
+GdkPixbuf* nsImageToPixbuf::ImageToPixbuf(
+    imgIContainer* aImage, const mozilla::Maybe<nsIntSize>& aOverrideSize) {
+  RefPtr<SourceSurface> surface;
+
+  const uint32_t flags =
+      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY;
+  if (aOverrideSize) {
+    surface = aImage->GetFrameAtSize(*aOverrideSize,
+                                     imgIContainer::FRAME_CURRENT, flags);
+  } else {
+    surface = aImage->GetFrame(imgIContainer::FRAME_CURRENT, flags);
+  }
 
   // If the last call failed, it was probably because our call stack originates
   // in an imgINotificationObserver event, meaning that we're not allowed
   // request a sync decode. Presumably the originating event is something
   // sensible like OnStopFrame(), so we can just retry the call without a sync
   // decode.
-  if (!surface)
-    surface = aImage->GetFrame(imgIContainer::FRAME_CURRENT,
-                               imgIContainer::FLAG_NONE);
+  if (!surface) {
+    if (aOverrideSize) {
+      surface =
+          aImage->GetFrameAtSize(*aOverrideSize, imgIContainer::FRAME_CURRENT,
+                                 imgIContainer::FLAG_NONE);
+    } else {
+      surface = aImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                                 imgIContainer::FLAG_NONE);
+    }
+  }
 
   NS_ENSURE_TRUE(surface, nullptr);
 
@@ -56,14 +71,18 @@ GdkPixbuf* nsImageToPixbuf::SourceSurfaceToPixbuf(SourceSurface* aSurface,
 
   GdkPixbuf* pixbuf =
       gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, aWidth, aHeight);
-  if (!pixbuf) return nullptr;
+  if (!pixbuf) {
+    return nullptr;
+  }
 
   uint32_t destStride = gdk_pixbuf_get_rowstride(pixbuf);
   guchar* destPixels = gdk_pixbuf_get_pixels(pixbuf);
 
   RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
   DataSourceSurface::MappedSurface map;
-  if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map)) return nullptr;
+  if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
+    return nullptr;
+  }
 
   uint8_t* srcData = map.mData;
   int32_t srcStride = map.mStride;

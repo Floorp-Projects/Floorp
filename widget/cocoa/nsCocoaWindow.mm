@@ -1875,10 +1875,10 @@ int32_t nsCocoaWindow::RoundsWidgetCoordinatesTo() {
   return 1;
 }
 
-void nsCocoaWindow::SetCursor(nsCursor aDefaultCursor, imgIContainer* aCursorImage,
-                              uint32_t aHotspotX, uint32_t aHotspotY) {
-  if (mPopupContentView)
-    mPopupContentView->SetCursor(aDefaultCursor, aCursorImage, aHotspotX, aHotspotY);
+void nsCocoaWindow::SetCursor(const Cursor& aCursor) {
+  if (mPopupContentView) {
+    mPopupContentView->SetCursor(aCursor);
+  }
 }
 
 nsresult nsCocoaWindow::SetTitle(const nsAString& aTitle) {

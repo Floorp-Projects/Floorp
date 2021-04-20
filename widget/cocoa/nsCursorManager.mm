@@ -9,9 +9,9 @@
 #include <math.h>
 
 static nsCursorManager* gInstance;
-static CGFloat sCursorScaleFactor = 0.0f;
-static imgIContainer* sCursorImgContainer = nullptr;
-static const nsCursor sCustomCursor = eCursorCount;
+static CGFloat sCurrentCursorScaleFactor = 0.0f;
+static nsIWidget::Cursor sCurrentCursor;
+static constexpr nsCursor kCustomCursor = eCursorCount;
 
 /*! @category nsCursorManager(PrivateMethods)
     Private methods for the cursor manager class.
@@ -197,16 +197,12 @@ static const nsCursor sCustomCursor = eCursorCount;
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
-- (nsresult)setCursor:(enum nsCursor)aCursor {
+- (nsresult)setNonCustomCursor:(const nsIWidget::Cursor&)aCursor {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  nsCursor oldType = [mCurrentMacCursor type];
-  [self setMacCursor:[self getCursor:aCursor]];
+  [self setMacCursor:[self getCursor:aCursor.mDefaultCursor]];
 
-  // if a custom cursor was previously set, release sCursorImgContainer
-  if (oldType == sCustomCursor) {
-    NS_IF_RELEASE(sCursorImgContainer);
-  }
+  sCurrentCursor = aCursor;
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -243,48 +239,45 @@ static const nsCursor sCustomCursor = eCursorCount;
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-- (nsresult)setCursorWithImage:(imgIContainer*)aCursorImage
-                      hotSpotX:(uint32_t)aHotspotX
-                      hotSpotY:(uint32_t)aHotspotY
-                   scaleFactor:(CGFloat)scaleFactor {
+- (nsresult)setCustomCursor:(const nsIWidget::Cursor&)aCursor
+          widgetScaleFactor:(CGFloat)scaleFactor {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
   // As the user moves the mouse, this gets called repeatedly with the same aCursorImage
-  if (sCursorImgContainer == aCursorImage && sCursorScaleFactor == scaleFactor &&
-      mCurrentMacCursor) {
+  if (sCurrentCursor == aCursor && sCurrentCursorScaleFactor == scaleFactor && mCurrentMacCursor) {
     [self setMacCursor:mCurrentMacCursor];
     return NS_OK;
   }
 
-  int32_t width = 0, height = 0;
-  aCursorImage->GetWidth(&width);
-  aCursorImage->GetHeight(&height);
+  sCurrentCursor = aCursor;
+  sCurrentCursorScaleFactor = scaleFactor;
+
+  if (!aCursor.IsCustom()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIntSize size = nsIWidget::CustomCursorSize(aCursor);
   // prevent DoS attacks
-  if (width > 128 || height > 128) {
-    return NS_OK;
+  if (size.width > 128 || size.height > 128) {
+    return NS_ERROR_FAILURE;
   }
 
   NSImage* cursorImage;
   nsresult rv = nsCocoaUtils::CreateNSImageFromImageContainer(
-      aCursorImage, imgIContainer::FRAME_FIRST, nullptr, &cursorImage, scaleFactor);
+      aCursor.mContainer, imgIContainer::FRAME_FIRST, nullptr, &cursorImage, scaleFactor);
   if (NS_FAILED(rv) || !cursorImage) {
     return NS_ERROR_FAILURE;
   }
 
-  // if the hotspot is nonsensical, make it 0,0
-  aHotspotX = (aHotspotX > (uint32_t)width - 1) ? 0 : aHotspotX;
-  aHotspotY = (aHotspotY > (uint32_t)height - 1) ? 0 : aHotspotY;
 
-  NSPoint hotSpot = ::NSMakePoint(aHotspotX, aHotspotY);
+  // if the hotspot is nonsensical, make it 0,0
+  uint32_t hotspotX = aCursor.mHotspotX > (uint32_t(size.width) - 1) ? 0 : aCursor.mHotspotX;
+  uint32_t hotspotY = aCursor.mHotspotY > (uint32_t(size.height) - 1) ? 0 : aCursor.mHotspotY;
+  NSPoint hotSpot = ::NSMakePoint(hotspotX, hotspotY);
   [self setMacCursor:[nsMacCursor cursorWithCursor:[[NSCursor alloc] initWithImage:cursorImage
                                                                            hotSpot:hotSpot]
-                                              type:sCustomCursor]];
+                                              type:kCustomCursor]];
   [cursorImage release];
-
-  NS_IF_RELEASE(sCursorImgContainer);
-  sCursorImgContainer = aCursorImage;
-  sCursorScaleFactor = scaleFactor;
-  NS_ADDREF(sCursorImgContainer);
-
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -309,7 +302,7 @@ static const nsCursor sCustomCursor = eCursorCount;
   [mCurrentMacCursor unset];
   [mCurrentMacCursor release];
   [mCursors release];
-  NS_IF_RELEASE(sCursorImgContainer);
+  sCurrentCursor = {};
   [super dealloc];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;

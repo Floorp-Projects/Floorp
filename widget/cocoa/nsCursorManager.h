@@ -25,25 +25,17 @@
 
 /*! @method     setCursor:
     @abstract   Sets the current cursor.
-    @discussion Sets the current cursor to the cursor indicated by the XP cursor constant given as
-   an argument. Resources associated with the previous cursor are cleaned up.
+    @discussion Sets the current cursor to the cursor indicated by the XP
+                cursor given in the argument. Resources associated with the
+                previous cursor are cleaned up.
     @param aCursor the cursor to use
 */
-- (nsresult)setCursor:(nsCursor)aCursor;
+- (nsresult)setNonCustomCursor:(const nsIWidget::Cursor&)aCursor;
 
-/*! @method  setCursorWithImage:hotSpotX:hotSpotY:
- @abstract   Sets the current cursor to a custom image
- @discussion Sets the current cursor to the cursor given by the aCursorImage argument.
- Resources associated with the previous cursor are cleaned up.
- @param aCursorImage the cursor image to use
- @param aHotSpotX the x coordinate of the cursor's hotspot
- @param aHotSpotY the y coordinate of the cursor's hotspot
- @param scaleFactor the scale factor of the target display (2 for a retina display)
- */
-- (nsresult)setCursorWithImage:(imgIContainer*)aCursorImage
-                      hotSpotX:(uint32_t)aHotspotX
-                      hotSpotY:(uint32_t)aHotspotY
-                   scaleFactor:(CGFloat)scaleFactor;
+// As above, but returns an error if the cursor isn't custom or we couldn't set
+// it for some reason.
+- (nsresult)setCustomCursor:(const nsIWidget::Cursor&)aCursor
+          widgetScaleFactor:(CGFloat)aWidgetScaleFactor;
 
 /*! @method     sharedInstance
     @abstract   Get the Singleton instance of the cursor manager.

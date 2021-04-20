@@ -175,9 +175,11 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   virtual bool IsFullyOccluded() const override { return mIsFullyOccluded; }
 
-  virtual void SetCursor(nsCursor aDefaultCursor, imgIContainer* aCursor,
-                         uint32_t aHotspotX, uint32_t aHotspotY) override;
-  virtual void ClearCachedCursor() override { mUpdateCursor = true; }
+  virtual void SetCursor(const Cursor&) override;
+  virtual void ClearCachedCursor() final {
+    mCursor = {};
+    mUpdateCursor = true;
+  }
   virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
   virtual nsTransparencyMode GetTransparencyMode() override;
   virtual void GetWindowClipRegion(
@@ -699,7 +701,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
   RefPtr<WidgetShutdownObserver> mShutdownObserver;
   RefPtr<TextEventDispatcher> mTextEventDispatcher;
-  nsCursor mCursor;
+  Cursor mCursor;
   nsBorderStyle mBorderStyle;
   LayoutDeviceIntRect mBounds;
   LayoutDeviceIntRect* mOriginalBounds;

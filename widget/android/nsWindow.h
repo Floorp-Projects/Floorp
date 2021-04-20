@@ -165,8 +165,7 @@ class nsWindow final : public nsBaseWidget {
   virtual already_AddRefed<nsIScreen> GetWidgetScreen() override;
   virtual nsresult MakeFullScreen(bool aFullScreen,
                                   nsIScreen* aTargetScreen = nullptr) override;
-  void SetCursor(nsCursor aDefaultCursor, imgIContainer* aImageCursor,
-                 uint32_t aHotspotX, uint32_t aHotspotY) override {}
+  void SetCursor(const Cursor&) override {}
   void* GetNativeData(uint32_t aDataType) override;
   void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual nsresult SetTitle(const nsAString& aTitle) override { return NS_OK; }
