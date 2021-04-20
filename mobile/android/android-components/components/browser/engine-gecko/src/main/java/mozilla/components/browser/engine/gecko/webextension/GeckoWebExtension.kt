@@ -302,9 +302,9 @@ class GeckoWebExtension(
                     tabDetails.active == true,
                     tabDetails.url)
                 ) {
-                    GeckoResult.ALLOW
+                    GeckoResult.allow()
                 } else {
-                    GeckoResult.DENY
+                    GeckoResult.deny()
                 }
             }
 
@@ -315,12 +315,12 @@ class GeckoWebExtension(
 
                 return if (ext != null) {
                     if (tabHandler.onCloseTab(this@GeckoWebExtension, session)) {
-                        GeckoResult.ALLOW
+                        GeckoResult.allow()
                     } else {
-                        GeckoResult.DENY
+                        GeckoResult.deny()
                     }
                 } else {
-                    GeckoResult.DENY
+                    GeckoResult.deny()
                 }
             }
         }

@@ -1127,7 +1127,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WHEN updating tracking protection with a recommended policy THEN etpEnabled should be enabled`() {
+    fun `WHEN updateing tracking protection with a recommended policy THEN etpEnabled should be enabled`() {
         whenever(runtime.settings).thenReturn(mock())
         whenever(runtime.settings.contentBlocking).thenReturn(mock())
 
@@ -1149,7 +1149,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WHEN updating tracking protection with a none policy THEN etpEnabled should be enabled`() {
+    fun `WHEN calling updateTrackingProtection with a none policy THEN etpEnabled should be disabled`() {
         whenever(runtime.settings).thenReturn(mock())
         whenever(runtime.settings.contentBlocking).thenReturn(mock())
 
@@ -1171,7 +1171,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WHEN update content blocking with a policy SCRIPTS_AND_SUB_RESOURCES useForPrivateSessions being in privateMode THEN useTrackingProtection should be true`() {
+    fun `WHEN updating the contentBlocking with a policy SCRIPTS_AND_SUB_RESOURCES useForPrivateSessions being in privateMode THEN useTrackingProtection should be true`() {
         val geckoSetting = mock<GeckoSessionSettings>()
         val geckoSession = mock<GeckoSession>()
 
@@ -1249,7 +1249,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `changes to enableTrackingProtection will be notified to all new observers`() {
+    fun `changes to updateTrackingProtection will be notified to all new observers`() {
         whenever(runtime.settings).thenReturn(mock())
         whenever(runtime.settings.contentBlocking).thenReturn(mock())
         val session = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)

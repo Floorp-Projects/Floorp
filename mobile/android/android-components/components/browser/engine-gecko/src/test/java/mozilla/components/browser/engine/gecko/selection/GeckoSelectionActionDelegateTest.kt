@@ -7,9 +7,11 @@ package mozilla.components.browser.engine.gecko.selection
 import android.app.Activity
 import android.app.Application
 import android.app.Service
+import android.view.MenuItem
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.mock
 import org.junit.Assert
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -55,6 +57,25 @@ class GeckoSelectionActionDelegateTest {
             Assert.assertTrue(actualActions.contains(it))
         }
     }
+
+    @Test
+    fun `WHEN perform action triggers a security exception THEN false is returned`() {
+        val customActions = arrayOf("1", "2", "3")
+        val customDelegate = object : SelectionActionDelegate {
+            override fun getAllActions(): Array<String> = customActions
+            override fun isActionAvailable(id: String, selectedText: String): Boolean = false
+            override fun getActionTitle(id: String): CharSequence? = ""
+            override fun performAction(id: String, selectedText: String): Boolean {
+                throw SecurityException("test")
+            }
+            override fun sortedActions(actions: Array<String>): Array<String> {
+                return actions
+            }
+        }
+
+        val geckoDelegate = TestGeckoSelectionActionDelegate(mock(), customDelegate)
+        assertFalse(geckoDelegate.performAction("test", mock()))
+    }
 }
 
 /**
@@ -65,4 +86,7 @@ class TestGeckoSelectionActionDelegate(
     customDelegate: SelectionActionDelegate
 ) : GeckoSelectionActionDelegate(activity, customDelegate) {
     public override fun getAllActions() = super.getAllActions()
+    public override fun performAction(id: String, item: MenuItem): Boolean {
+        return super.performAction(id, item)
+    }
 }
