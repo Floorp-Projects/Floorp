@@ -279,20 +279,6 @@ menupopup::part(drop-indicator) {
   pointer-events: none;
 }
 
-/* Required for Library animation */
-
-#navigator-toolbox {
-  position: relative;
-}
-
-#library-animatable-box {
-  display: none;
-}
-
-#library-animatable-box[animate] {
-  display: block;
-}
-
 /* Back / Forward context menu */
 
 .unified-nav-back,
