@@ -1,84 +1,220 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// switch.wast:1
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03\x60\x01\x7f\x01\x7f\x60\x01\x7e\x01\x7e\x60\x00\x01\x7f\x03\x85\x80\x80\x80\x00\x04\x00\x01\x00\x02\x07\x9e\x80\x80\x80\x00\x04\x04\x73\x74\x6d\x74\x00\x00\x04\x65\x78\x70\x72\x00\x01\x03\x61\x72\x67\x00\x02\x06\x63\x6f\x72\x6e\x65\x72\x00\x03\x0a\xee\x81\x80\x80\x00\x04\xd7\x80\x80\x80\x00\x01\x01\x7f\x41\xe4\x00\x21\x01\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x20\x00\x0e\x08\x00\x01\x02\x03\x04\x05\x06\x08\x07\x0b\x20\x00\x0f\x0b\x01\x0b\x0b\x41\x00\x20\x00\x6b\x21\x01\x0c\x05\x0b\x0c\x04\x0b\x41\xe5\x00\x21\x01\x0c\x03\x0b\x41\xe5\x00\x21\x01\x0b\x41\xe6\x00\x21\x01\x0b\x0b\x20\x01\x0f\x0b\xcc\x80\x80\x80\x00\x01\x01\x7e\x42\xe4\x00\x21\x01\x02\x7e\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x02\x40\x20\x00\xa7\x0e\x08\x00\x01\x02\x03\x06\x05\x04\x08\x07\x0b\x20\x00\x0f\x0b\x01\x0b\x0b\x42\x00\x20\x00\x7d\x0c\x05\x0b\x42\xe5\x00\x21\x01\x0b\x0b\x0b\x20\x01\x0c\x01\x0b\x42\x7b\x0b\x0f\x0b\xaa\x80\x80\x80\x00\x00\x02\x7f\x41\x0a\x02\x7f\x41\xe4\x00\x02\x7f\x41\xe8\x07\x02\x7f\x41\x02\x20\x00\x6c\x41\x03\x20\x00\x71\x0e\x03\x01\x02\x03\x00\x0b\x6a\x0b\x6a\x0b\x6a\x0b\x0f\x0b\x8c\x80\x80\x80\x00\x00\x02\x40\x41\x00\x0e\x00\x00\x0b\x41\x01\x0b");
+// ./test/core/switch.wast
 
-// switch.wast:120
-assert_return(() => call($1, "stmt", [0]), 0);
+// ./test/core/switch.wast:1
+let $0 = instantiate(`(module
+  ;; Statement switch
+  (func (export "stmt") (param $$i i32) (result i32)
+    (local $$j i32)
+    (local.set $$j (i32.const 100))
+    (block $$switch
+      (block $$7
+        (block $$default
+          (block $$6
+            (block $$5
+              (block $$4
+                (block $$3
+                  (block $$2
+                    (block $$1
+                      (block $$0
+                        (br_table $$0 $$1 $$2 $$3 $$4 $$5 $$6 $$7 $$default
+                          (local.get $$i)
+                        )
+                      ) ;; 0
+                      (return (local.get $$i))
+                    ) ;; 1
+                    (nop)
+                    ;; fallthrough
+                  ) ;; 2
+                  ;; fallthrough
+                ) ;; 3
+                (local.set $$j (i32.sub (i32.const 0) (local.get $$i)))
+                (br $$switch)
+              ) ;; 4
+              (br $$switch)
+            ) ;; 5
+            (local.set $$j (i32.const 101))
+            (br $$switch)
+          ) ;; 6
+          (local.set $$j (i32.const 101))
+          ;; fallthrough
+        ) ;; default
+        (local.set $$j (i32.const 102))
+      ) ;; 7
+      ;; fallthrough
+    )
+    (return (local.get $$j))
+  )
 
-// switch.wast:121
-assert_return(() => call($1, "stmt", [1]), -1);
+  ;; Expression switch
+  (func (export "expr") (param $$i i64) (result i64)
+    (local $$j i64)
+    (local.set $$j (i64.const 100))
+    (return
+      (block $$switch (result i64)
+        (block $$7
+          (block $$default
+            (block $$4
+              (block $$5
+                (block $$6
+                  (block $$3
+                    (block $$2
+                      (block $$1
+                        (block $$0
+                          (br_table $$0 $$1 $$2 $$3 $$4 $$5 $$6 $$7 $$default
+                            (i32.wrap_i64 (local.get $$i))
+                          )
+                        ) ;; 0
+                        (return (local.get $$i))
+                      ) ;; 1
+                      (nop)
+                      ;; fallthrough
+                    ) ;; 2
+                    ;; fallthrough
+                  ) ;; 3
+                  (br $$switch (i64.sub (i64.const 0) (local.get $$i)))
+                ) ;; 6
+                (local.set $$j (i64.const 101))
+                ;; fallthrough
+              ) ;; 4
+              ;; fallthrough
+            ) ;; 5
+            ;; fallthrough
+          ) ;; default
+          (br $$switch (local.get $$j))
+        ) ;; 7
+        (i64.const -5)
+      )
+    )
+  )
 
-// switch.wast:122
-assert_return(() => call($1, "stmt", [2]), -2);
+  ;; Argument switch
+  (func (export "arg") (param $$i i32) (result i32)
+    (return
+      (block $$2 (result i32)
+        (i32.add (i32.const 10)
+          (block $$1 (result i32)
+            (i32.add (i32.const 100)
+              (block $$0 (result i32)
+                (i32.add (i32.const 1000)
+                  (block $$default (result i32)
+                    (br_table $$0 $$1 $$2 $$default
+                      (i32.mul (i32.const 2) (local.get $$i))
+                      (i32.and (i32.const 3) (local.get $$i))
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
 
-// switch.wast:123
-assert_return(() => call($1, "stmt", [3]), -3);
+  ;; Corner cases
+  (func (export "corner") (result i32)
+    (block
+      (br_table 0 (i32.const 0))
+    )
+    (i32.const 1)
+  )
+)`);
 
-// switch.wast:124
-assert_return(() => call($1, "stmt", [4]), 100);
+// ./test/core/switch.wast:120
+assert_return(() => invoke($0, `stmt`, [0]), [value("i32", 0)]);
 
-// switch.wast:125
-assert_return(() => call($1, "stmt", [5]), 101);
+// ./test/core/switch.wast:121
+assert_return(() => invoke($0, `stmt`, [1]), [value("i32", -1)]);
 
-// switch.wast:126
-assert_return(() => call($1, "stmt", [6]), 102);
+// ./test/core/switch.wast:122
+assert_return(() => invoke($0, `stmt`, [2]), [value("i32", -2)]);
 
-// switch.wast:127
-assert_return(() => call($1, "stmt", [7]), 100);
+// ./test/core/switch.wast:123
+assert_return(() => invoke($0, `stmt`, [3]), [value("i32", -3)]);
 
-// switch.wast:128
-assert_return(() => call($1, "stmt", [-10]), 102);
+// ./test/core/switch.wast:124
+assert_return(() => invoke($0, `stmt`, [4]), [value("i32", 100)]);
 
-// switch.wast:130
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x8b\x80\x80\x80\x00\x01\x02\x24\x31\x04\x65\x78\x70\x72\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x40\x42\x00\x10\x00\x01\x42\x00\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "expr", [int64("0")]), int64("0"))
+// ./test/core/switch.wast:125
+assert_return(() => invoke($0, `stmt`, [5]), [value("i32", 101)]);
 
-// switch.wast:131
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x8b\x80\x80\x80\x00\x01\x02\x24\x31\x04\x65\x78\x70\x72\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x40\x42\x01\x10\x00\x01\x42\x7f\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "expr", [int64("1")]), int64("-1"))
+// ./test/core/switch.wast:126
+assert_return(() => invoke($0, `stmt`, [6]), [value("i32", 102)]);
 
-// switch.wast:132
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x8b\x80\x80\x80\x00\x01\x02\x24\x31\x04\x65\x78\x70\x72\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x40\x42\x02\x10\x00\x01\x42\x7e\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "expr", [int64("2")]), int64("-2"))
+// ./test/core/switch.wast:127
+assert_return(() => invoke($0, `stmt`, [7]), [value("i32", 100)]);
 
-// switch.wast:133
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x8b\x80\x80\x80\x00\x01\x02\x24\x31\x04\x65\x78\x70\x72\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x40\x42\x03\x10\x00\x01\x42\x7d\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "expr", [int64("3")]), int64("-3"))
+// ./test/core/switch.wast:128
+assert_return(() => invoke($0, `stmt`, [-10]), [value("i32", 102)]);
 
-// switch.wast:134
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x8b\x80\x80\x80\x00\x01\x02\x24\x31\x04\x65\x78\x70\x72\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x40\x42\x06\x10\x00\x01\x42\xe5\x00\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "expr", [int64("6")]), int64("101"))
+// ./test/core/switch.wast:130
+assert_return(() => invoke($0, `expr`, [0n]), [value("i64", 0n)]);
 
-// switch.wast:135
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x8b\x80\x80\x80\x00\x01\x02\x24\x31\x04\x65\x78\x70\x72\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x02\x40\x42\x07\x10\x00\x01\x42\x7b\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "expr", [int64("7")]), int64("-5"))
+// ./test/core/switch.wast:131
+assert_return(() => invoke($0, `expr`, [1n]), [value("i64", -1n)]);
 
-// switch.wast:136
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7e\x01\x7e\x02\x8b\x80\x80\x80\x00\x01\x02\x24\x31\x04\x65\x78\x70\x72\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x40\x42\x76\x10\x00\x01\x42\xe4\x00\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "expr", [int64("-10")]), int64("100"))
+// ./test/core/switch.wast:132
+assert_return(() => invoke($0, `expr`, [2n]), [value("i64", -2n)]);
 
-// switch.wast:138
-assert_return(() => call($1, "arg", [0]), 110);
+// ./test/core/switch.wast:133
+assert_return(() => invoke($0, `expr`, [3n]), [value("i64", -3n)]);
 
-// switch.wast:139
-assert_return(() => call($1, "arg", [1]), 12);
+// ./test/core/switch.wast:134
+assert_return(() => invoke($0, `expr`, [6n]), [value("i64", 101n)]);
 
-// switch.wast:140
-assert_return(() => call($1, "arg", [2]), 4);
+// ./test/core/switch.wast:135
+assert_return(() => invoke($0, `expr`, [7n]), [value("i64", -5n)]);
 
-// switch.wast:141
-assert_return(() => call($1, "arg", [3]), 1_116);
+// ./test/core/switch.wast:136
+assert_return(() => invoke($0, `expr`, [-10n]), [value("i64", 100n)]);
 
-// switch.wast:142
-assert_return(() => call($1, "arg", [4]), 118);
+// ./test/core/switch.wast:138
+assert_return(() => invoke($0, `arg`, [0]), [value("i32", 110)]);
 
-// switch.wast:143
-assert_return(() => call($1, "arg", [5]), 20);
+// ./test/core/switch.wast:139
+assert_return(() => invoke($0, `arg`, [1]), [value("i32", 12)]);
 
-// switch.wast:144
-assert_return(() => call($1, "arg", [6]), 12);
+// ./test/core/switch.wast:140
+assert_return(() => invoke($0, `arg`, [2]), [value("i32", 4)]);
 
-// switch.wast:145
-assert_return(() => call($1, "arg", [7]), 1_124);
+// ./test/core/switch.wast:141
+assert_return(() => invoke($0, `arg`, [3]), [value("i32", 1116)]);
 
-// switch.wast:146
-assert_return(() => call($1, "arg", [8]), 126);
+// ./test/core/switch.wast:142
+assert_return(() => invoke($0, `arg`, [4]), [value("i32", 118)]);
 
-// switch.wast:148
-assert_return(() => call($1, "corner", []), 1);
+// ./test/core/switch.wast:143
+assert_return(() => invoke($0, `arg`, [5]), [value("i32", 20)]);
 
-// switch.wast:150
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x0e\x00\x03\x0b");
+// ./test/core/switch.wast:144
+assert_return(() => invoke($0, `arg`, [6]), [value("i32", 12)]);
+
+// ./test/core/switch.wast:145
+assert_return(() => invoke($0, `arg`, [7]), [value("i32", 1124)]);
+
+// ./test/core/switch.wast:146
+assert_return(() => invoke($0, `arg`, [8]), [value("i32", 126)]);
+
+// ./test/core/switch.wast:148
+assert_return(() => invoke($0, `corner`, []), [value("i32", 1)]);
+
+// ./test/core/switch.wast:150
+assert_invalid(
+  () => instantiate(`(module (func (br_table 3 (i32.const 0))))`),
+  `unknown label`,
+);

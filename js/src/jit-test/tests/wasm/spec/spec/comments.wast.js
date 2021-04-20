@@ -1,12 +1,34 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// comments.wast:9
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00");
+// ./test/core/comments.wast
 
-// comments.wast:51
-let $2 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00");
+// ./test/core/comments.wast:10:0
+let $0 = instantiate(`(module;;comment
+)`);
 
-// comments.wast:62
-let $3 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00");
+// ./test/core/comments.wast:52:11
+let $1 = instantiate(`(module(;comment;)
+(;comment;))`);
 
-// comments.wast:71
-let $4 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00");
+// ./test/core/comments.wast:62
+let $2 = instantiate(`(module
+  (;comment(;nested(;further;)nested;)comment;)
+)`);
+
+// ./test/core/comments.wast:71
+let $3 = instantiate(`(module
+  (;comment;;comment(;nested;)comment;)
+)`);

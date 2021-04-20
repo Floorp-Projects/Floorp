@@ -1,48 +1,120 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// table_get.wast:1
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x97\x80\x80\x80\x00\x05\x60\x00\x00\x60\x01\x6f\x00\x60\x01\x7f\x01\x6f\x60\x01\x7f\x01\x70\x60\x01\x7f\x01\x7f\x03\x86\x80\x80\x80\x00\x05\x00\x01\x02\x03\x04\x04\x87\x80\x80\x80\x00\x02\x6f\x00\x02\x70\x00\x03\x07\xb8\x80\x80\x80\x00\x04\x04\x69\x6e\x69\x74\x00\x01\x0d\x67\x65\x74\x2d\x65\x78\x74\x65\x72\x6e\x72\x65\x66\x00\x02\x0b\x67\x65\x74\x2d\x66\x75\x6e\x63\x72\x65\x66\x00\x03\x0f\x69\x73\x5f\x6e\x75\x6c\x6c\x2d\x66\x75\x6e\x63\x72\x65\x66\x00\x04\x09\x89\x80\x80\x80\x00\x01\x02\x01\x41\x01\x0b\x00\x01\x00\x0a\xbf\x80\x80\x80\x00\x05\x82\x80\x80\x80\x00\x00\x0b\x90\x80\x80\x80\x00\x00\x41\x01\x20\x00\x26\x00\x41\x02\x41\x01\x25\x01\x26\x01\x0b\x86\x80\x80\x80\x00\x00\x20\x00\x25\x00\x0b\x86\x80\x80\x80\x00\x00\x20\x00\x25\x01\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x10\x03\xd1\x0b");
+// ./test/core/table_get.wast
 
-// table_get.wast:24
-run(() => call($1, "init", [externref(1)]));
+// ./test/core/table_get.wast:1
+let $0 = instantiate(`(module
+  (table $$t2 2 externref)
+  (table $$t3 3 funcref)
+  (elem (table $$t3) (i32.const 1) func $$dummy)
+  (func $$dummy)
 
-// table_get.wast:26
-assert_return(() => call($1, "get-externref", [0]), null);
+  (func (export "init") (param $$r externref)
+    (table.set $$t2 (i32.const 1) (local.get $$r))
+    (table.set $$t3 (i32.const 2) (table.get $$t3 (i32.const 1)))
+  )
 
-// table_get.wast:27
-assert_return(() => call($1, "get-externref", [1]), externref(1));
+  (func (export "get-externref") (param $$i i32) (result externref)
+    (table.get $$t2 (local.get $$i))
+  )
+  (func $$f3 (export "get-funcref") (param $$i i32) (result funcref)
+    (table.get $$t3 (local.get $$i))
+  )
 
-// table_get.wast:29
-assert_return(() => call($1, "get-funcref", [0]), null);
+  (func (export "is_null-funcref") (param $$i i32) (result i32)
+    (ref.is_null (call $$f3 (local.get $$i)))
+  )
+)`);
 
-// table_get.wast:30
-assert_return(() => call($1, "is_null-funcref", [1]), 0);
+// ./test/core/table_get.wast:24
+invoke($0, `init`, [externref(1)]);
 
-// table_get.wast:31
-assert_return(() => call($1, "is_null-funcref", [2]), 0);
+// ./test/core/table_get.wast:26
+assert_return(() => invoke($0, `get-externref`, [0]), [
+  value("externref", null),
+]);
 
-// table_get.wast:33
-assert_trap(() => call($1, "get-externref", [2]));
+// ./test/core/table_get.wast:27
+assert_return(() => invoke($0, `get-externref`, [1]), [
+  value("externref", externref(1)),
+]);
 
-// table_get.wast:34
-assert_trap(() => call($1, "get-funcref", [3]));
+// ./test/core/table_get.wast:29
+assert_return(() => invoke($0, `get-funcref`, [0]), [value("funcref", null)]);
 
-// table_get.wast:35
-assert_trap(() => call($1, "get-externref", [-1]));
+// ./test/core/table_get.wast:30
+assert_return(() => invoke($0, `is_null-funcref`, [1]), [value("i32", 0)]);
 
-// table_get.wast:36
-assert_trap(() => call($1, "get-funcref", [-1]));
+// ./test/core/table_get.wast:31
+assert_return(() => invoke($0, `is_null-funcref`, [2]), [value("i32", 0)]);
 
-// table_get.wast:41
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x6f\x03\x82\x80\x80\x80\x00\x01\x00\x04\x84\x80\x80\x80\x00\x01\x6f\x00\x0a\x0a\x8a\x80\x80\x80\x00\x01\x84\x80\x80\x80\x00\x00\x25\x00\x0b");
+// ./test/core/table_get.wast:33
+assert_trap(() => invoke($0, `get-externref`, [2]), `out of bounds`);
 
-// table_get.wast:50
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x6f\x03\x82\x80\x80\x80\x00\x01\x00\x04\x84\x80\x80\x80\x00\x01\x6f\x00\x0a\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x25\x00\x0b");
+// ./test/core/table_get.wast:34
+assert_trap(() => invoke($0, `get-funcref`, [3]), `out of bounds`);
 
-// table_get.wast:60
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x04\x84\x80\x80\x80\x00\x01\x6f\x00\x0a\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x41\x00\x25\x00\x0b");
+// ./test/core/table_get.wast:35
+assert_trap(() => invoke($0, `get-externref`, [-1]), `out of bounds`);
 
-// table_get.wast:69
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x70\x03\x82\x80\x80\x80\x00\x01\x00\x04\x84\x80\x80\x80\x00\x01\x6f\x00\x0a\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x41\x01\x25\x00\x0b");
+// ./test/core/table_get.wast:36
+assert_trap(() => invoke($0, `get-funcref`, [-1]), `out of bounds`);
 
-// table_get.wast:79
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x70\x03\x82\x80\x80\x80\x00\x01\x00\x04\x87\x80\x80\x80\x00\x02\x70\x00\x01\x6f\x00\x01\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x41\x00\x25\x01\x0b");
+// ./test/core/table_get.wast:41
+assert_invalid(() =>
+  instantiate(`(module
+    (table $$t 10 externref)
+    (func $$type-index-empty-vs-i32 (result externref)
+      (table.get $$t)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/table_get.wast:50
+assert_invalid(() =>
+  instantiate(`(module
+    (table $$t 10 externref)
+    (func $$type-index-f32-vs-i32 (result externref)
+      (table.get $$t (f32.const 1))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/table_get.wast:60
+assert_invalid(() =>
+  instantiate(`(module
+    (table $$t 10 externref)
+    (func $$type-result-externref-vs-empty
+      (table.get $$t (i32.const 0))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/table_get.wast:69
+assert_invalid(() =>
+  instantiate(`(module
+    (table $$t 10 externref)
+    (func $$type-result-externref-vs-funcref (result funcref)
+      (table.get $$t (i32.const 1))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/table_get.wast:79
+assert_invalid(() =>
+  instantiate(`(module
+    (table $$t1 1 funcref)
+    (table $$t2 1 externref)
+    (func $$type-result-externref-vs-funcref-multi (result funcref)
+      (table.get $$t2 (i32.const 0))
+    )
+  )`), `type mismatch`);

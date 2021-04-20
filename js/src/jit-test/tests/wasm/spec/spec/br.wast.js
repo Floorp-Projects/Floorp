@@ -1,291 +1,838 @@
-
-// br.wast:3
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\xab\x80\x80\x80\x00\x09\x60\x03\x7f\x7f\x7f\x01\x7f\x60\x00\x00\x60\x00\x01\x7f\x60\x00\x01\x7e\x60\x00\x01\x7d\x60\x00\x01\x7c\x60\x00\x02\x7c\x7c\x60\x00\x02\x7f\x7e\x60\x02\x7f\x7f\x01\x7f\x03\xcb\x80\x80\x80\x00\x4a\x01\x01\x01\x01\x01\x01\x01\x01\x01\x02\x03\x04\x05\x06\x01\x01\x01\x02\x02\x02\x02\x02\x01\x02\x02\x01\x02\x02\x03\x07\x02\x08\x08\x08\x08\x02\x02\x00\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x04\x03\x02\x02\x02\x02\x02\x02\x04\x02\x03\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x02\x04\x85\x80\x80\x80\x00\x01\x70\x01\x01\x01\x05\x83\x80\x80\x80\x00\x01\x00\x01\x06\x86\x80\x80\x80\x00\x01\x7f\x01\x41\x0a\x0b\x07\x92\x8a\x80\x80\x00\x48\x08\x74\x79\x70\x65\x2d\x69\x33\x32\x00\x01\x08\x74\x79\x70\x65\x2d\x69\x36\x34\x00\x02\x08\x74\x79\x70\x65\x2d\x66\x33\x32\x00\x03\x08\x74\x79\x70\x65\x2d\x66\x36\x34\x00\x04\x0c\x74\x79\x70\x65\x2d\x69\x33\x32\x2d\x69\x33\x32\x00\x05\x0c\x74\x79\x70\x65\x2d\x69\x36\x34\x2d\x69\x36\x34\x00\x06\x0c\x74\x79\x70\x65\x2d\x66\x33\x32\x2d\x66\x33\x32\x00\x07\x0c\x74\x79\x70\x65\x2d\x66\x36\x34\x2d\x66\x36\x34\x00\x08\x0e\x74\x79\x70\x65\x2d\x69\x33\x32\x2d\x76\x61\x6c\x75\x65\x00\x09\x0e\x74\x79\x70\x65\x2d\x69\x36\x34\x2d\x76\x61\x6c\x75\x65\x00\x0a\x0e\x74\x79\x70\x65\x2d\x66\x33\x32\x2d\x76\x61\x6c\x75\x65\x00\x0b\x0e\x74\x79\x70\x65\x2d\x66\x36\x34\x2d\x76\x61\x6c\x75\x65\x00\x0c\x12\x74\x79\x70\x65\x2d\x66\x36\x34\x2d\x66\x36\x34\x2d\x76\x61\x6c\x75\x65\x00\x0d\x0e\x61\x73\x2d\x62\x6c\x6f\x63\x6b\x2d\x66\x69\x72\x73\x74\x00\x0e\x0c\x61\x73\x2d\x62\x6c\x6f\x63\x6b\x2d\x6d\x69\x64\x00\x0f\x0d\x61\x73\x2d\x62\x6c\x6f\x63\x6b\x2d\x6c\x61\x73\x74\x00\x10\x0e\x61\x73\x2d\x62\x6c\x6f\x63\x6b\x2d\x76\x61\x6c\x75\x65\x00\x11\x0d\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x66\x69\x72\x73\x74\x00\x12\x0b\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x6d\x69\x64\x00\x13\x0c\x61\x73\x2d\x6c\x6f\x6f\x70\x2d\x6c\x61\x73\x74\x00\x14\x0b\x61\x73\x2d\x62\x72\x2d\x76\x61\x6c\x75\x65\x00\x15\x0d\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x63\x6f\x6e\x64\x00\x16\x0e\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x76\x61\x6c\x75\x65\x00\x17\x13\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x76\x61\x6c\x75\x65\x2d\x63\x6f\x6e\x64\x00\x18\x11\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x69\x6e\x64\x65\x78\x00\x19\x11\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x00\x1a\x17\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x2d\x69\x6e\x64\x65\x78\x00\x1b\x0f\x61\x73\x2d\x72\x65\x74\x75\x72\x6e\x2d\x76\x61\x6c\x75\x65\x00\x1c\x10\x61\x73\x2d\x72\x65\x74\x75\x72\x6e\x2d\x76\x61\x6c\x75\x65\x73\x00\x1d\x0a\x61\x73\x2d\x69\x66\x2d\x63\x6f\x6e\x64\x00\x1e\x0a\x61\x73\x2d\x69\x66\x2d\x74\x68\x65\x6e\x00\x1f\x0a\x61\x73\x2d\x69\x66\x2d\x65\x6c\x73\x65\x00\x20\x0f\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x66\x69\x72\x73\x74\x00\x21\x10\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x73\x65\x63\x6f\x6e\x64\x00\x22\x0e\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x63\x6f\x6e\x64\x00\x23\x0d\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x61\x6c\x6c\x00\x24\x0d\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x66\x69\x72\x73\x74\x00\x26\x0b\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x6d\x69\x64\x00\x27\x0c\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x6c\x61\x73\x74\x00\x28\x0b\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x61\x6c\x6c\x00\x29\x15\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x66\x75\x6e\x63\x00\x2a\x16\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x66\x69\x72\x73\x74\x00\x2b\x14\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x6d\x69\x64\x00\x2c\x15\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x6c\x61\x73\x74\x00\x2d\x14\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x61\x6c\x6c\x00\x2e\x12\x61\x73\x2d\x6c\x6f\x63\x61\x6c\x2e\x73\x65\x74\x2d\x76\x61\x6c\x75\x65\x00\x2f\x12\x61\x73\x2d\x6c\x6f\x63\x61\x6c\x2e\x74\x65\x65\x2d\x76\x61\x6c\x75\x65\x00\x30\x13\x61\x73\x2d\x67\x6c\x6f\x62\x61\x6c\x2e\x73\x65\x74\x2d\x76\x61\x6c\x75\x65\x00\x31\x0f\x61\x73\x2d\x6c\x6f\x61\x64\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x32\x10\x61\x73\x2d\x6c\x6f\x61\x64\x4e\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x33\x10\x61\x73\x2d\x73\x74\x6f\x72\x65\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x34\x0e\x61\x73\x2d\x73\x74\x6f\x72\x65\x2d\x76\x61\x6c\x75\x65\x00\x35\x0d\x61\x73\x2d\x73\x74\x6f\x72\x65\x2d\x62\x6f\x74\x68\x00\x36\x11\x61\x73\x2d\x73\x74\x6f\x72\x65\x4e\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x37\x0f\x61\x73\x2d\x73\x74\x6f\x72\x65\x4e\x2d\x76\x61\x6c\x75\x65\x00\x38\x0e\x61\x73\x2d\x73\x74\x6f\x72\x65\x4e\x2d\x62\x6f\x74\x68\x00\x39\x10\x61\x73\x2d\x75\x6e\x61\x72\x79\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x3a\x0e\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x6c\x65\x66\x74\x00\x3b\x0f\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x72\x69\x67\x68\x74\x00\x3c\x0e\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x62\x6f\x74\x68\x00\x3d\x0f\x61\x73\x2d\x74\x65\x73\x74\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x3e\x0f\x61\x73\x2d\x63\x6f\x6d\x70\x61\x72\x65\x2d\x6c\x65\x66\x74\x00\x3f\x10\x61\x73\x2d\x63\x6f\x6d\x70\x61\x72\x65\x2d\x72\x69\x67\x68\x74\x00\x40\x0f\x61\x73\x2d\x63\x6f\x6d\x70\x61\x72\x65\x2d\x62\x6f\x74\x68\x00\x41\x12\x61\x73\x2d\x63\x6f\x6e\x76\x65\x72\x74\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x42\x13\x61\x73\x2d\x6d\x65\x6d\x6f\x72\x79\x2e\x67\x72\x6f\x77\x2d\x73\x69\x7a\x65\x00\x43\x12\x6e\x65\x73\x74\x65\x64\x2d\x62\x6c\x6f\x63\x6b\x2d\x76\x61\x6c\x75\x65\x00\x44\x0f\x6e\x65\x73\x74\x65\x64\x2d\x62\x72\x2d\x76\x61\x6c\x75\x65\x00\x45\x12\x6e\x65\x73\x74\x65\x64\x2d\x62\x72\x5f\x69\x66\x2d\x76\x61\x6c\x75\x65\x00\x46\x17\x6e\x65\x73\x74\x65\x64\x2d\x62\x72\x5f\x69\x66\x2d\x76\x61\x6c\x75\x65\x2d\x63\x6f\x6e\x64\x00\x47\x15\x6e\x65\x73\x74\x65\x64\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x00\x48\x1b\x6e\x65\x73\x74\x65\x64\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x2d\x69\x6e\x64\x65\x78\x00\x49\x09\x87\x80\x80\x80\x00\x01\x00\x41\x00\x0b\x01\x25\x0a\x8d\x8b\x80\x80\x00\x4a\x82\x80\x80\x80\x00\x00\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x68\x1a\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x7a\x1a\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x8c\x1a\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x9a\x1a\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x6a\x1a\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x7c\x1a\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x92\x1a\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\xa0\x1a\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0c\x00\x68\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x7e\x42\x02\x0c\x00\x7a\x0b\x0b\x8d\x80\x80\x80\x00\x00\x02\x7d\x43\x00\x00\x40\x40\x0c\x00\x8c\x0b\x0b\x91\x80\x80\x80\x00\x00\x02\x7c\x44\x00\x00\x00\x00\x00\x00\x10\x40\x0c\x00\x9a\x0b\x0b\xa3\x80\x80\x80\x00\x00\x02\x06\x44\x00\x00\x00\x00\x00\x00\x10\x40\x44\x00\x00\x00\x00\x00\x00\x14\x40\x0c\x00\xa0\x44\x00\x00\x00\x00\x00\x00\x18\x40\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x10\x00\x0b\x0b\x8b\x80\x80\x80\x00\x00\x02\x40\x10\x00\x0c\x00\x10\x00\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x40\x01\x10\x00\x0c\x00\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x01\x10\x00\x41\x02\x0c\x00\x0b\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x03\x7f\x41\x03\x0c\x01\x41\x02\x0b\x0b\x0b\x90\x80\x80\x80\x00\x00\x02\x7f\x03\x7f\x10\x00\x41\x04\x0c\x01\x41\x02\x0b\x0b\x0b\x8f\x80\x80\x80\x00\x00\x02\x7f\x03\x7f\x01\x10\x00\x41\x05\x0c\x01\x0b\x0b\x0b\x8b\x80\x80\x80\x00\x00\x02\x7f\x41\x09\x0c\x00\x0c\x00\x0b\x0b\x89\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x0d\x00\x0b\x0b\x90\x80\x80\x80\x00\x00\x02\x7f\x41\x08\x0c\x00\x41\x01\x0d\x00\x1a\x41\x07\x0b\x0b\x90\x80\x80\x80\x00\x00\x02\x7f\x41\x06\x41\x09\x0c\x00\x0d\x00\x1a\x41\x07\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x40\x0c\x00\x0e\x02\x00\x00\x00\x0b\x0b\x92\x80\x80\x80\x00\x00\x02\x7f\x41\x0a\x0c\x00\x41\x01\x0e\x02\x00\x00\x00\x41\x07\x0b\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x41\x06\x41\x0b\x0c\x00\x0e\x01\x00\x00\x41\x07\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x7e\x42\x07\x0c\x00\x0f\x0b\x0b\x8e\x80\x80\x80\x00\x00\x41\x02\x02\x7e\x41\x01\x42\x07\x0c\x00\x0f\x0b\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x41\x02\x0c\x00\x04\x7f\x41\x00\x05\x41\x01\x0b\x0b\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x20\x00\x04\x7f\x41\x03\x0c\x01\x05\x20\x01\x0b\x0b\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x20\x00\x04\x7f\x20\x01\x05\x41\x04\x0c\x01\x0b\x0b\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x41\x05\x0c\x00\x20\x00\x20\x01\x1b\x0b\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x20\x00\x41\x06\x0c\x00\x20\x01\x1b\x0b\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x41\x00\x41\x01\x41\x07\x0c\x00\x1b\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x41\x08\x0c\x00\x1b\x0b\x0b\x84\x80\x80\x80\x00\x00\x41\x7f\x0b\x8f\x80\x80\x80\x00\x00\x02\x7f\x41\x0c\x0c\x00\x41\x02\x41\x03\x10\x25\x0b\x0b\x8f\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x41\x0d\x0c\x00\x41\x03\x10\x25\x0b\x0b\x8f\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x41\x02\x41\x0e\x0c\x00\x10\x25\x0b\x0b\x8b\x80\x80\x80\x00\x00\x02\x7f\x41\x0f\x0c\x00\x10\x25\x0b\x0b\x92\x80\x80\x80\x00\x00\x02\x7f\x41\x14\x0c\x00\x41\x01\x41\x02\x41\x03\x11\x00\x00\x0b\x0b\x92\x80\x80\x80\x00\x00\x02\x7f\x41\x00\x41\x15\x0c\x00\x41\x02\x41\x03\x11\x00\x00\x0b\x0b\x92\x80\x80\x80\x00\x00\x02\x7f\x41\x00\x41\x01\x41\x16\x0c\x00\x41\x03\x11\x00\x00\x0b\x0b\x92\x80\x80\x80\x00\x00\x02\x7f\x41\x00\x41\x01\x41\x02\x41\x17\x0c\x00\x11\x00\x00\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x41\x18\x0c\x00\x11\x00\x00\x0b\x0b\x8f\x80\x80\x80\x00\x01\x01\x7d\x02\x7f\x41\x11\x0c\x00\x21\x00\x41\x7f\x0b\x0b\x8d\x80\x80\x80\x00\x01\x01\x7f\x02\x7f\x41\x01\x0c\x00\x22\x00\x0b\x0b\x8b\x80\x80\x80\x00\x00\x02\x7f\x41\x01\x0c\x00\x24\x00\x0b\x0b\x8f\x80\x80\x80\x00\x00\x02\x7d\x43\x9a\x99\xd9\x3f\x0c\x00\x2a\x02\x00\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7e\x42\x1e\x0c\x00\x30\x00\x00\x0b\x0b\x97\x80\x80\x80\x00\x00\x02\x7f\x41\x1e\x0c\x00\x44\x00\x00\x00\x00\x00\x00\x1c\x40\x39\x03\x00\x41\x7f\x0b\x0b\x90\x80\x80\x80\x00\x00\x02\x7f\x41\x02\x41\x1f\x0c\x00\x37\x03\x00\x41\x7f\x0b\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x41\x20\x0c\x00\x37\x03\x00\x41\x7f\x0b\x0b\x90\x80\x80\x80\x00\x00\x02\x7f\x41\x20\x0c\x00\x41\x07\x3a\x00\x00\x41\x7f\x0b\x0b\x90\x80\x80\x80\x00\x00\x02\x7f\x41\x02\x41\x21\x0c\x00\x3d\x01\x00\x41\x7f\x0b\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x41\x22\x0c\x00\x3d\x01\x00\x41\x7f\x0b\x0b\x8d\x80\x80\x80\x00\x00\x02\x7d\x43\x9a\x99\x59\x40\x0c\x00\x8c\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7f\x41\x03\x0c\x00\x41\x0a\x6a\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x7e\x42\x0a\x42\x2d\x0c\x00\x7d\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x41\x2e\x0c\x00\x6a\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x41\x2c\x0c\x00\x45\x0b\x0b\x93\x80\x80\x80\x00\x00\x02\x7f\x41\x2b\x0c\x00\x44\x00\x00\x00\x00\x00\x00\x24\x40\x65\x0b\x0b\x8f\x80\x80\x80\x00\x00\x02\x7f\x43\x00\x00\x20\x41\x41\x2a\x0c\x00\x5c\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x41\x2c\x0c\x00\x65\x0b\x0b\x8a\x80\x80\x80\x00\x00\x02\x7f\x41\x29\x0c\x00\xa7\x0b\x0b\x8b\x80\x80\x80\x00\x00\x02\x7f\x41\x28\x0c\x00\x40\x00\x0b\x0b\x91\x80\x80\x80\x00\x00\x41\x01\x02\x7f\x10\x00\x41\x04\x41\x08\x0c\x00\x6a\x0b\x6a\x0b\x9a\x80\x80\x80\x00\x00\x41\x01\x02\x7f\x41\x02\x1a\x02\x7f\x41\x04\x1a\x41\x08\x0c\x01\x0c\x00\x0b\x1a\x41\x10\x0b\x6a\x0b\x9f\x80\x80\x80\x00\x00\x41\x01\x02\x7f\x41\x02\x1a\x02\x7f\x41\x04\x1a\x41\x08\x0c\x01\x41\x01\x0d\x00\x1a\x41\x20\x0b\x1a\x41\x10\x0b\x6a\x0b\x96\x80\x80\x80\x00\x00\x41\x01\x02\x7f\x41\x02\x1a\x41\x04\x41\x08\x0c\x00\x0d\x00\x1a\x41\x10\x0b\x6a\x0b\x9d\x80\x80\x80\x00\x00\x41\x01\x02\x7f\x41\x02\x1a\x02\x7f\x41\x04\x1a\x41\x08\x0c\x01\x41\x01\x0e\x00\x00\x0b\x1a\x41\x10\x0b\x6a\x0b\x96\x80\x80\x80\x00\x00\x41\x01\x02\x7f\x41\x02\x1a\x41\x04\x41\x08\x0c\x00\x0e\x00\x00\x41\x10\x0b\x6a\x0b");
-
-// br.wast:372
-assert_return(() => call($1, "type-i32", []));
-
-// br.wast:373
-assert_return(() => call($1, "type-i64", []));
-
-// br.wast:374
-assert_return(() => call($1, "type-f32", []));
-
-// br.wast:375
-assert_return(() => call($1, "type-f64", []));
-
-// br.wast:376
-assert_return(() => call($1, "type-i32-i32", []));
-
-// br.wast:377
-assert_return(() => call($1, "type-i64-i64", []));
-
-// br.wast:378
-assert_return(() => call($1, "type-f32-f32", []));
-
-// br.wast:379
-assert_return(() => call($1, "type-f64-f64", []));
-
-// br.wast:381
-assert_return(() => call($1, "type-i32-value", []), 1);
-
-// br.wast:382
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7e\x02\x95\x80\x80\x80\x00\x01\x02\x24\x31\x0e\x74\x79\x70\x65\x2d\x69\x36\x34\x2d\x76\x61\x6c\x75\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x40\x10\x00\x01\x42\x02\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "type-i64-value", []), int64("2"))
-
-// br.wast:383
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7d\x02\x95\x80\x80\x80\x00\x01\x02\x24\x31\x0e\x74\x79\x70\x65\x2d\x66\x33\x32\x2d\x76\x61\x6c\x75\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x40\x10\x00\xbc\x43\x00\x00\x40\x40\xbc\x46\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "type-f32-value", []), 3.)
-
-// br.wast:384
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7c\x02\x95\x80\x80\x80\x00\x01\x02\x24\x31\x0e\x74\x79\x70\x65\x2d\x66\x36\x34\x2d\x76\x61\x6c\x75\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x9e\x80\x80\x80\x00\x01\x98\x80\x80\x80\x00\x00\x02\x40\x10\x00\xbd\x44\x00\x00\x00\x00\x00\x00\x10\x40\xbd\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "type-f64-value", []), 4.)
-
-// br.wast:385
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x02\x7c\x7c\x02\x99\x80\x80\x80\x00\x01\x02\x24\x31\x12\x74\x79\x70\x65\x2d\x66\x36\x34\x2d\x66\x36\x34\x2d\x76\x61\x6c\x75\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\xad\x80\x80\x80\x00\x01\xa7\x80\x80\x80\x00\x00\x02\x40\x10\x00\xbd\x44\x00\x00\x00\x00\x00\x00\x14\x40\xbd\x51\x45\x0d\x00\xbd\x44\x00\x00\x00\x00\x00\x00\x10\x40\xbd\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "type-f64-f64-value", []), 4., 5.)
-
-// br.wast:387
-assert_return(() => call($1, "as-block-first", []));
-
-// br.wast:388
-assert_return(() => call($1, "as-block-mid", []));
-
-// br.wast:389
-assert_return(() => call($1, "as-block-last", []));
-
-// br.wast:390
-assert_return(() => call($1, "as-block-value", []), 2);
-
-// br.wast:392
-assert_return(() => call($1, "as-loop-first", []), 3);
-
-// br.wast:393
-assert_return(() => call($1, "as-loop-mid", []), 4);
-
-// br.wast:394
-assert_return(() => call($1, "as-loop-last", []), 5);
-
-// br.wast:396
-assert_return(() => call($1, "as-br-value", []), 9);
-
-// br.wast:398
-assert_return(() => call($1, "as-br_if-cond", []));
-
-// br.wast:399
-assert_return(() => call($1, "as-br_if-value", []), 8);
-
-// br.wast:400
-assert_return(() => call($1, "as-br_if-value-cond", []), 9);
-
-// br.wast:402
-assert_return(() => call($1, "as-br_table-index", []));
-
-// br.wast:403
-assert_return(() => call($1, "as-br_table-value", []), 10);
-
-// br.wast:404
-assert_return(() => call($1, "as-br_table-value-index", []), 11);
-
-// br.wast:406
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7e\x02\x96\x80\x80\x80\x00\x01\x02\x24\x31\x0f\x61\x73\x2d\x72\x65\x74\x75\x72\x6e\x2d\x76\x61\x6c\x75\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x40\x10\x00\x01\x42\x07\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "as-return-value", []), int64("7"))
-
-// br.wast:407
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x02\x7f\x7e\x02\x97\x80\x80\x80\x00\x01\x02\x24\x31\x10\x61\x73\x2d\x72\x65\x74\x75\x72\x6e\x2d\x76\x61\x6c\x75\x65\x73\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x9f\x80\x80\x80\x00\x01\x99\x80\x80\x80\x00\x00\x02\x40\x10\x00\x01\x42\x07\x01\x51\x45\x0d\x00\x01\x41\x02\x01\x46\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "as-return-values", []), 2, int64("7"))
-
-// br.wast:409
-assert_return(() => call($1, "as-if-cond", []), 2);
-
-// br.wast:410
-assert_return(() => call($1, "as-if-then", [1, 6]), 3);
-
-// br.wast:411
-assert_return(() => call($1, "as-if-then", [0, 6]), 6);
-
-// br.wast:412
-assert_return(() => call($1, "as-if-else", [0, 6]), 4);
-
-// br.wast:413
-assert_return(() => call($1, "as-if-else", [1, 6]), 6);
-
-// br.wast:415
-assert_return(() => call($1, "as-select-first", [0, 6]), 5);
-
-// br.wast:416
-assert_return(() => call($1, "as-select-first", [1, 6]), 5);
-
-// br.wast:417
-assert_return(() => call($1, "as-select-second", [0, 6]), 6);
-
-// br.wast:418
-assert_return(() => call($1, "as-select-second", [1, 6]), 6);
-
-// br.wast:419
-assert_return(() => call($1, "as-select-cond", []), 7);
-
-// br.wast:420
-assert_return(() => call($1, "as-select-all", []), 8);
-
-// br.wast:422
-assert_return(() => call($1, "as-call-first", []), 12);
-
-// br.wast:423
-assert_return(() => call($1, "as-call-mid", []), 13);
-
-// br.wast:424
-assert_return(() => call($1, "as-call-last", []), 14);
-
-// br.wast:425
-assert_return(() => call($1, "as-call-all", []), 15);
-
-// br.wast:427
-assert_return(() => call($1, "as-call_indirect-func", []), 20);
-
-// br.wast:428
-assert_return(() => call($1, "as-call_indirect-first", []), 21);
-
-// br.wast:429
-assert_return(() => call($1, "as-call_indirect-mid", []), 22);
-
-// br.wast:430
-assert_return(() => call($1, "as-call_indirect-last", []), 23);
-
-// br.wast:431
-assert_return(() => call($1, "as-call_indirect-all", []), 24);
-
-// br.wast:433
-assert_return(() => call($1, "as-local.set-value", []), 17);
-
-// br.wast:434
-assert_return(() => call($1, "as-local.tee-value", []), 1);
-
-// br.wast:435
-assert_return(() => call($1, "as-global.set-value", []), 1);
-
-// br.wast:437
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7d\x02\x96\x80\x80\x80\x00\x01\x02\x24\x31\x0f\x61\x73\x2d\x6c\x6f\x61\x64\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x40\x10\x00\xbc\x43\x9a\x99\xd9\x3f\xbc\x46\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "as-load-address", []), 1.70000004768)
-
-// br.wast:438
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7e\x02\x97\x80\x80\x80\x00\x01\x02\x24\x31\x10\x61\x73\x2d\x6c\x6f\x61\x64\x4e\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x40\x10\x00\x01\x42\x1e\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "as-loadN-address", []), int64("30"))
-
-// br.wast:440
-assert_return(() => call($1, "as-store-address", []), 30);
-
-// br.wast:441
-assert_return(() => call($1, "as-store-value", []), 31);
-
-// br.wast:442
-assert_return(() => call($1, "as-store-both", []), 32);
-
-// br.wast:443
-assert_return(() => call($1, "as-storeN-address", []), 32);
-
-// br.wast:444
-assert_return(() => call($1, "as-storeN-value", []), 33);
-
-// br.wast:445
-assert_return(() => call($1, "as-storeN-both", []), 34);
-
-// br.wast:447
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7d\x02\x97\x80\x80\x80\x00\x01\x02\x24\x31\x10\x61\x73\x2d\x75\x6e\x61\x72\x79\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x40\x10\x00\xbc\x43\x9a\x99\x59\x40\xbc\x46\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "as-unary-operand", []), 3.40000009537)
-
-// br.wast:449
-assert_return(() => call($1, "as-binary-left", []), 3);
-
-// br.wast:450
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7e\x02\x96\x80\x80\x80\x00\x01\x02\x24\x31\x0f\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x72\x69\x67\x68\x74\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x97\x80\x80\x80\x00\x01\x91\x80\x80\x80\x00\x00\x02\x40\x10\x00\x01\x42\x2d\x01\x51\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "as-binary-right", []), int64("45"))
-
-// br.wast:451
-assert_return(() => call($1, "as-binary-both", []), 46);
-
-// br.wast:453
-assert_return(() => call($1, "as-test-operand", []), 44);
-
-// br.wast:455
-assert_return(() => call($1, "as-compare-left", []), 43);
-
-// br.wast:456
-assert_return(() => call($1, "as-compare-right", []), 42);
-
-// br.wast:457
-assert_return(() => call($1, "as-compare-both", []), 44);
-
-// br.wast:459
-assert_return(() => call($1, "as-convert-operand", []), 41);
-
-// br.wast:461
-assert_return(() => call($1, "as-memory.grow-size", []), 40);
-
-// br.wast:463
-assert_return(() => call($1, "nested-block-value", []), 9);
-
-// br.wast:464
-assert_return(() => call($1, "nested-br-value", []), 9);
-
-// br.wast:465
-assert_return(() => call($1, "nested-br_if-value", []), 9);
-
-// br.wast:466
-assert_return(() => call($1, "nested-br_if-value-cond", []), 9);
-
-// br.wast:467
-assert_return(() => call($1, "nested-br_table-value", []), 9);
-
-// br.wast:468
-assert_return(() => call($1, "nested-br_table-value-index", []), 9);
-
-// br.wast:470
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x41\x01\x0b\x0b");
-
-// br.wast:477
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x7f\x01\x0c\x00\x41\x01\x0b\x0b");
-
-// br.wast:483
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x02\x7f\x41\x00\x02\x40\x0c\x01\x0b\x0b\x0b");
-
-// br.wast:489
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x02\x7f\x42\x01\x0c\x00\x41\x01\x0b\x0b");
-
-// br.wast:496
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\x00\x02\x7f\x0c\x00\x0c\x00\x0b\x45\x1a\x0b");
-
-// br.wast:505
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x41\x00\x02\x7f\x0c\x00\x41\x01\x0d\x00\x0b\x45\x1a\x0b");
-
-// br.wast:514
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x41\x00\x02\x7f\x0c\x00\x0e\x00\x00\x0b\x45\x1a\x0b");
-
-// br.wast:523
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x0f\x0b\x45\x1a\x0b");
-
-// br.wast:534
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x41\x01\x41\x02\x1b\x0b\x45\x1a\x0b");
-
-// br.wast:545
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x01\x7f\x03\x83\x80\x80\x80\x00\x02\x00\x01\x0a\x9a\x80\x80\x80\x00\x02\x8b\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x10\x01\x0b\x45\x1a\x0b\x84\x80\x80\x80\x00\x00\x20\x00\x0b");
-
-// br.wast:557
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x01\x7f\x01\x7f\x60\x00\x00\x03\x83\x80\x80\x80\x00\x02\x00\x01\x04\x85\x80\x80\x80\x00\x01\x70\x01\x01\x01\x09\x87\x80\x80\x80\x00\x01\x00\x41\x00\x0b\x01\x00\x0a\x9d\x80\x80\x80\x00\x02\x84\x80\x80\x80\x00\x00\x20\x00\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x41\x00\x11\x00\x00\x0b\x45\x1a\x0b");
-
-// br.wast:573
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x01\x01\x7f\x02\x7f\x0c\x00\x21\x00\x20\x00\x0b\x45\x1a\x0b");
-
-// br.wast:585
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x01\x01\x7f\x02\x7f\x0c\x00\x22\x00\x0b\x45\x1a\x0b");
-
-// br.wast:597
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x06\x86\x80\x80\x80\x00\x01\x7f\x01\x41\x00\x0b\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x24\x00\x23\x00\x0b\x45\x1a\x0b");
-
-// br.wast:609
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x40\x00\x0b\x45\x1a\x0b");
-
-// br.wast:621
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x28\x02\x00\x0b\x45\x1a\x0b");
-
-// br.wast:633
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x02\x7f\x0c\x00\x41\x00\x36\x02\x00\x0b\x45\x1a\x0b");
-
-// br.wast:646
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8a\x80\x80\x80\x00\x01\x84\x80\x80\x80\x00\x00\x0c\x01\x0b");
-
-// br.wast:650
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x02\x40\x02\x40\x0c\x05\x0b\x0b\x0b");
-
-// br.wast:654
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8e\x80\x80\x80\x00\x01\x88\x80\x80\x80\x00\x00\x0c\x81\x80\x80\x80\x01\x0b");
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// ./test/core/br.wast
+
+// ./test/core/br.wast:3
+let $0 = instantiate(`(module
+  ;; Auxiliary definition
+  (func $$dummy)
+
+  (func (export "type-i32") (block (drop (i32.ctz (br 0)))))
+  (func (export "type-i64") (block (drop (i64.ctz (br 0)))))
+  (func (export "type-f32") (block (drop (f32.neg (br 0)))))
+  (func (export "type-f64") (block (drop (f64.neg (br 0)))))
+  (func (export "type-i32-i32") (block (drop (i32.add (br 0)))))
+  (func (export "type-i64-i64") (block (drop (i64.add (br 0)))))
+  (func (export "type-f32-f32") (block (drop (f32.add (br 0)))))
+  (func (export "type-f64-f64") (block (drop (f64.add (br 0)))))
+
+  (func (export "type-i32-value") (result i32)
+    (block (result i32) (i32.ctz (br 0 (i32.const 1))))
+  )
+  (func (export "type-i64-value") (result i64)
+    (block (result i64) (i64.ctz (br 0 (i64.const 2))))
+  )
+  (func (export "type-f32-value") (result f32)
+    (block (result f32) (f32.neg (br 0 (f32.const 3))))
+  )
+  (func (export "type-f64-value") (result f64)
+    (block (result f64) (f64.neg (br 0 (f64.const 4))))
+  )
+  (func (export "type-f64-f64-value") (result f64 f64)
+    (block (result f64 f64)
+      (f64.add (br 0 (f64.const 4) (f64.const 5))) (f64.const 6)
+    )
+  )
+
+  (func (export "as-block-first")
+    (block (br 0) (call $$dummy))
+  )
+  (func (export "as-block-mid")
+    (block (call $$dummy) (br 0) (call $$dummy))
+  )
+  (func (export "as-block-last")
+    (block (nop) (call $$dummy) (br 0))
+  )
+  (func (export "as-block-value") (result i32)
+    (block (result i32) (nop) (call $$dummy) (br 0 (i32.const 2)))
+  )
+
+  (func (export "as-loop-first") (result i32)
+    (block (result i32) (loop (result i32) (br 1 (i32.const 3)) (i32.const 2)))
+  )
+  (func (export "as-loop-mid") (result i32)
+    (block (result i32)
+      (loop (result i32) (call $$dummy) (br 1 (i32.const 4)) (i32.const 2))
+    )
+  )
+  (func (export "as-loop-last") (result i32)
+    (block (result i32)
+      (loop (result i32) (nop) (call $$dummy) (br 1 (i32.const 5)))
+    )
+  )
+
+  (func (export "as-br-value") (result i32)
+    (block (result i32) (br 0 (br 0 (i32.const 9))))
+  )
+
+  (func (export "as-br_if-cond")
+    (block (br_if 0 (br 0)))
+  )
+  (func (export "as-br_if-value") (result i32)
+    (block (result i32)
+      (drop (br_if 0 (br 0 (i32.const 8)) (i32.const 1))) (i32.const 7)
+    )
+  )
+  (func (export "as-br_if-value-cond") (result i32)
+    (block (result i32)
+      (drop (br_if 0 (i32.const 6) (br 0 (i32.const 9)))) (i32.const 7)
+    )
+  )
+
+  (func (export "as-br_table-index")
+    (block (br_table 0 0 0 (br 0)))
+  )
+  (func (export "as-br_table-value") (result i32)
+    (block (result i32)
+      (br_table 0 0 0 (br 0 (i32.const 10)) (i32.const 1)) (i32.const 7)
+    )
+  )
+  (func (export "as-br_table-value-index") (result i32)
+    (block (result i32)
+      (br_table 0 0 (i32.const 6) (br 0 (i32.const 11))) (i32.const 7)
+    )
+  )
+
+  (func (export "as-return-value") (result i64)
+    (block (result i64) (return (br 0 (i64.const 7))))
+  )
+  (func (export "as-return-values") (result i32 i64)
+    (i32.const 2)
+    (block (result i64) (return (br 0 (i32.const 1) (i64.const 7))))
+  )
+
+  (func (export "as-if-cond") (result i32)
+    (block (result i32)
+      (if (result i32) (br 0 (i32.const 2))
+        (then (i32.const 0))
+        (else (i32.const 1))
+      )
+    )
+  )
+  (func (export "as-if-then") (param i32 i32) (result i32)
+    (block (result i32)
+      (if (result i32) (local.get 0)
+        (then (br 1 (i32.const 3)))
+        (else (local.get 1))
+      )
+    )
+  )
+  (func (export "as-if-else") (param i32 i32) (result i32)
+    (block (result i32)
+      (if (result i32) (local.get 0)
+        (then (local.get 1))
+        (else (br 1 (i32.const 4)))
+      )
+    )
+  )
+
+  (func (export "as-select-first") (param i32 i32) (result i32)
+    (block (result i32)
+      (select (br 0 (i32.const 5)) (local.get 0) (local.get 1))
+    )
+  )
+  (func (export "as-select-second") (param i32 i32) (result i32)
+    (block (result i32)
+      (select (local.get 0) (br 0 (i32.const 6)) (local.get 1))
+    )
+  )
+  (func (export "as-select-cond") (result i32)
+    (block (result i32)
+      (select (i32.const 0) (i32.const 1) (br 0 (i32.const 7)))
+    )
+  )
+  (func (export "as-select-all") (result i32)
+    (block (result i32) (select (br 0 (i32.const 8))))
+  )
+
+  (func $$f (param i32 i32 i32) (result i32) (i32.const -1))
+  (func (export "as-call-first") (result i32)
+    (block (result i32)
+      (call $$f (br 0 (i32.const 12)) (i32.const 2) (i32.const 3))
+    )
+  )
+  (func (export "as-call-mid") (result i32)
+    (block (result i32)
+      (call $$f (i32.const 1) (br 0 (i32.const 13)) (i32.const 3))
+    )
+  )
+  (func (export "as-call-last") (result i32)
+    (block (result i32)
+      (call $$f (i32.const 1) (i32.const 2) (br 0 (i32.const 14)))
+    )
+  )
+  (func (export "as-call-all") (result i32)
+    (block (result i32) (call $$f (br 0 (i32.const 15))))
+  )
+
+  (type $$sig (func (param i32 i32 i32) (result i32)))
+  (table funcref (elem $$f))
+  (func (export "as-call_indirect-func") (result i32)
+    (block (result i32)
+      (call_indirect (type $$sig)
+        (br 0 (i32.const 20))
+        (i32.const 1) (i32.const 2) (i32.const 3)
+      )
+    )
+  )
+  (func (export "as-call_indirect-first") (result i32)
+    (block (result i32)
+      (call_indirect (type $$sig)
+        (i32.const 0)
+        (br 0 (i32.const 21)) (i32.const 2) (i32.const 3)
+      )
+    )
+  )
+  (func (export "as-call_indirect-mid") (result i32)
+    (block (result i32)
+      (call_indirect (type $$sig)
+        (i32.const 0)
+        (i32.const 1) (br 0 (i32.const 22)) (i32.const 3)
+      )
+    )
+  )
+  (func (export "as-call_indirect-last") (result i32)
+    (block (result i32)
+      (call_indirect (type $$sig)
+        (i32.const 0)
+        (i32.const 1) (i32.const 2) (br 0 (i32.const 23))
+      )
+    )
+  )
+  (func (export "as-call_indirect-all") (result i32)
+    (block (result i32) (call_indirect (type $$sig) (br 0 (i32.const 24))))
+  )
+
+  (func (export "as-local.set-value") (result i32) (local f32)
+    (block (result i32) (local.set 0 (br 0 (i32.const 17))) (i32.const -1))
+  )
+  (func (export "as-local.tee-value") (result i32) (local i32)
+    (block (result i32) (local.tee 0 (br 0 (i32.const 1))))
+  )
+  (global $$a (mut i32) (i32.const 10))
+  (func (export "as-global.set-value") (result i32)
+    (block (result i32) (global.set $$a (br 0 (i32.const 1))))
+  )
+
+  (memory 1)
+  (func (export "as-load-address") (result f32)
+    (block (result f32) (f32.load (br 0 (f32.const 1.7))))
+  )
+  (func (export "as-loadN-address") (result i64)
+    (block (result i64) (i64.load8_s (br 0 (i64.const 30))))
+  )
+
+  (func (export "as-store-address") (result i32)
+    (block (result i32)
+      (f64.store (br 0 (i32.const 30)) (f64.const 7)) (i32.const -1)
+    )
+  )
+  (func (export "as-store-value") (result i32)
+    (block (result i32)
+      (i64.store (i32.const 2) (br 0 (i32.const 31))) (i32.const -1)
+    )
+  )
+  (func (export "as-store-both") (result i32)
+    (block (result i32)
+      (i64.store (br 0 (i32.const 32))) (i32.const -1)
+    )
+  )
+
+  (func (export "as-storeN-address") (result i32)
+    (block (result i32)
+      (i32.store8 (br 0 (i32.const 32)) (i32.const 7)) (i32.const -1)
+    )
+  )
+  (func (export "as-storeN-value") (result i32)
+    (block (result i32)
+      (i64.store16 (i32.const 2) (br 0 (i32.const 33))) (i32.const -1)
+    )
+  )
+  (func (export "as-storeN-both") (result i32)
+    (block (result i32)
+      (i64.store16 (br 0 (i32.const 34))) (i32.const -1)
+    )
+  )
+
+  (func (export "as-unary-operand") (result f32)
+    (block (result f32) (f32.neg (br 0 (f32.const 3.4))))
+  )
+
+  (func (export "as-binary-left") (result i32)
+    (block (result i32) (i32.add (br 0 (i32.const 3)) (i32.const 10)))
+  )
+  (func (export "as-binary-right") (result i64)
+    (block (result i64) (i64.sub (i64.const 10) (br 0 (i64.const 45))))
+  )
+  (func (export "as-binary-both") (result i32)
+    (block (result i32) (i32.add (br 0 (i32.const 46))))
+  )
+
+  (func (export "as-test-operand") (result i32)
+    (block (result i32) (i32.eqz (br 0 (i32.const 44))))
+  )
+
+  (func (export "as-compare-left") (result i32)
+    (block (result i32) (f64.le (br 0 (i32.const 43)) (f64.const 10)))
+  )
+  (func (export "as-compare-right") (result i32)
+    (block (result i32) (f32.ne (f32.const 10) (br 0 (i32.const 42))))
+  )
+  (func (export "as-compare-both") (result i32)
+    (block (result i32) (f64.le (br 0 (i32.const 44))))
+  )
+
+  (func (export "as-convert-operand") (result i32)
+    (block (result i32) (i32.wrap_i64 (br 0 (i32.const 41))))
+  )
+
+  (func (export "as-memory.grow-size") (result i32)
+    (block (result i32) (memory.grow (br 0 (i32.const 40))))
+  )
+
+  (func (export "nested-block-value") (result i32)
+    (i32.add
+      (i32.const 1)
+      (block (result i32)
+        (call $$dummy)
+        (i32.add (i32.const 4) (br 0 (i32.const 8)))
+      )
+    )
+  )
+
+  (func (export "nested-br-value") (result i32)
+    (i32.add
+      (i32.const 1)
+      (block (result i32)
+        (drop (i32.const 2))
+        (drop
+          (block (result i32)
+            (drop (i32.const 4))
+            (br 0 (br 1 (i32.const 8)))
+          )
+        )
+        (i32.const 16)
+      )
+    )
+  )
+
+  (func (export "nested-br_if-value") (result i32)
+    (i32.add
+      (i32.const 1)
+      (block (result i32)
+        (drop (i32.const 2))
+        (drop
+          (block (result i32)
+            (drop (i32.const 4))
+            (drop (br_if 0 (br 1 (i32.const 8)) (i32.const 1)))
+            (i32.const 32)
+          )
+        )
+        (i32.const 16)
+      )
+    )
+  )
+
+  (func (export "nested-br_if-value-cond") (result i32)
+    (i32.add
+      (i32.const 1)
+      (block (result i32)
+        (drop (i32.const 2))
+        (drop (br_if 0 (i32.const 4) (br 0 (i32.const 8))))
+        (i32.const 16)
+      )
+    )
+  )
+
+  (func (export "nested-br_table-value") (result i32)
+    (i32.add
+      (i32.const 1)
+      (block (result i32)
+        (drop (i32.const 2))
+        (drop
+          (block (result i32)
+            (drop (i32.const 4))
+            (br_table 0 (br 1 (i32.const 8)) (i32.const 1))
+          )
+        )
+        (i32.const 16)
+      )
+    )
+  )
+
+  (func (export "nested-br_table-value-index") (result i32)
+    (i32.add
+      (i32.const 1)
+      (block (result i32)
+        (drop (i32.const 2))
+        (br_table 0 (i32.const 4) (br 0 (i32.const 8)))
+        (i32.const 16)
+      )
+    )
+  )
+)`);
+
+// ./test/core/br.wast:372
+assert_return(() => invoke($0, `type-i32`, []), []);
+
+// ./test/core/br.wast:373
+assert_return(() => invoke($0, `type-i64`, []), []);
+
+// ./test/core/br.wast:374
+assert_return(() => invoke($0, `type-f32`, []), []);
+
+// ./test/core/br.wast:375
+assert_return(() => invoke($0, `type-f64`, []), []);
+
+// ./test/core/br.wast:376
+assert_return(() => invoke($0, `type-i32-i32`, []), []);
+
+// ./test/core/br.wast:377
+assert_return(() => invoke($0, `type-i64-i64`, []), []);
+
+// ./test/core/br.wast:378
+assert_return(() => invoke($0, `type-f32-f32`, []), []);
+
+// ./test/core/br.wast:379
+assert_return(() => invoke($0, `type-f64-f64`, []), []);
+
+// ./test/core/br.wast:381
+assert_return(() => invoke($0, `type-i32-value`, []), [value("i32", 1)]);
+
+// ./test/core/br.wast:382
+assert_return(() => invoke($0, `type-i64-value`, []), [value("i64", 2n)]);
+
+// ./test/core/br.wast:383
+assert_return(() => invoke($0, `type-f32-value`, []), [value("f32", 3)]);
+
+// ./test/core/br.wast:384
+assert_return(() => invoke($0, `type-f64-value`, []), [value("f64", 4)]);
+
+// ./test/core/br.wast:385
+assert_return(() => invoke($0, `type-f64-f64-value`, []), [
+  value("f64", 4),
+  value("f64", 5),
+]);
+
+// ./test/core/br.wast:387
+assert_return(() => invoke($0, `as-block-first`, []), []);
+
+// ./test/core/br.wast:388
+assert_return(() => invoke($0, `as-block-mid`, []), []);
+
+// ./test/core/br.wast:389
+assert_return(() => invoke($0, `as-block-last`, []), []);
+
+// ./test/core/br.wast:390
+assert_return(() => invoke($0, `as-block-value`, []), [value("i32", 2)]);
+
+// ./test/core/br.wast:392
+assert_return(() => invoke($0, `as-loop-first`, []), [value("i32", 3)]);
+
+// ./test/core/br.wast:393
+assert_return(() => invoke($0, `as-loop-mid`, []), [value("i32", 4)]);
+
+// ./test/core/br.wast:394
+assert_return(() => invoke($0, `as-loop-last`, []), [value("i32", 5)]);
+
+// ./test/core/br.wast:396
+assert_return(() => invoke($0, `as-br-value`, []), [value("i32", 9)]);
+
+// ./test/core/br.wast:398
+assert_return(() => invoke($0, `as-br_if-cond`, []), []);
+
+// ./test/core/br.wast:399
+assert_return(() => invoke($0, `as-br_if-value`, []), [value("i32", 8)]);
+
+// ./test/core/br.wast:400
+assert_return(() => invoke($0, `as-br_if-value-cond`, []), [value("i32", 9)]);
+
+// ./test/core/br.wast:402
+assert_return(() => invoke($0, `as-br_table-index`, []), []);
+
+// ./test/core/br.wast:403
+assert_return(() => invoke($0, `as-br_table-value`, []), [value("i32", 10)]);
+
+// ./test/core/br.wast:404
+assert_return(() => invoke($0, `as-br_table-value-index`, []), [
+  value("i32", 11),
+]);
+
+// ./test/core/br.wast:406
+assert_return(() => invoke($0, `as-return-value`, []), [value("i64", 7n)]);
+
+// ./test/core/br.wast:407
+assert_return(() => invoke($0, `as-return-values`, []), [
+  value("i32", 2),
+  value("i64", 7n),
+]);
+
+// ./test/core/br.wast:409
+assert_return(() => invoke($0, `as-if-cond`, []), [value("i32", 2)]);
+
+// ./test/core/br.wast:410
+assert_return(() => invoke($0, `as-if-then`, [1, 6]), [value("i32", 3)]);
+
+// ./test/core/br.wast:411
+assert_return(() => invoke($0, `as-if-then`, [0, 6]), [value("i32", 6)]);
+
+// ./test/core/br.wast:412
+assert_return(() => invoke($0, `as-if-else`, [0, 6]), [value("i32", 4)]);
+
+// ./test/core/br.wast:413
+assert_return(() => invoke($0, `as-if-else`, [1, 6]), [value("i32", 6)]);
+
+// ./test/core/br.wast:415
+assert_return(() => invoke($0, `as-select-first`, [0, 6]), [value("i32", 5)]);
+
+// ./test/core/br.wast:416
+assert_return(() => invoke($0, `as-select-first`, [1, 6]), [value("i32", 5)]);
+
+// ./test/core/br.wast:417
+assert_return(() => invoke($0, `as-select-second`, [0, 6]), [value("i32", 6)]);
+
+// ./test/core/br.wast:418
+assert_return(() => invoke($0, `as-select-second`, [1, 6]), [value("i32", 6)]);
+
+// ./test/core/br.wast:419
+assert_return(() => invoke($0, `as-select-cond`, []), [value("i32", 7)]);
+
+// ./test/core/br.wast:420
+assert_return(() => invoke($0, `as-select-all`, []), [value("i32", 8)]);
+
+// ./test/core/br.wast:422
+assert_return(() => invoke($0, `as-call-first`, []), [value("i32", 12)]);
+
+// ./test/core/br.wast:423
+assert_return(() => invoke($0, `as-call-mid`, []), [value("i32", 13)]);
+
+// ./test/core/br.wast:424
+assert_return(() => invoke($0, `as-call-last`, []), [value("i32", 14)]);
+
+// ./test/core/br.wast:425
+assert_return(() => invoke($0, `as-call-all`, []), [value("i32", 15)]);
+
+// ./test/core/br.wast:427
+assert_return(() => invoke($0, `as-call_indirect-func`, []), [
+  value("i32", 20),
+]);
+
+// ./test/core/br.wast:428
+assert_return(() => invoke($0, `as-call_indirect-first`, []), [
+  value("i32", 21),
+]);
+
+// ./test/core/br.wast:429
+assert_return(() => invoke($0, `as-call_indirect-mid`, []), [value("i32", 22)]);
+
+// ./test/core/br.wast:430
+assert_return(() => invoke($0, `as-call_indirect-last`, []), [
+  value("i32", 23),
+]);
+
+// ./test/core/br.wast:431
+assert_return(() => invoke($0, `as-call_indirect-all`, []), [value("i32", 24)]);
+
+// ./test/core/br.wast:433
+assert_return(() => invoke($0, `as-local.set-value`, []), [value("i32", 17)]);
+
+// ./test/core/br.wast:434
+assert_return(() => invoke($0, `as-local.tee-value`, []), [value("i32", 1)]);
+
+// ./test/core/br.wast:435
+assert_return(() => invoke($0, `as-global.set-value`, []), [value("i32", 1)]);
+
+// ./test/core/br.wast:437
+assert_return(() => invoke($0, `as-load-address`, []), [value("f32", 1.7)]);
+
+// ./test/core/br.wast:438
+assert_return(() => invoke($0, `as-loadN-address`, []), [value("i64", 30n)]);
+
+// ./test/core/br.wast:440
+assert_return(() => invoke($0, `as-store-address`, []), [value("i32", 30)]);
+
+// ./test/core/br.wast:441
+assert_return(() => invoke($0, `as-store-value`, []), [value("i32", 31)]);
+
+// ./test/core/br.wast:442
+assert_return(() => invoke($0, `as-store-both`, []), [value("i32", 32)]);
+
+// ./test/core/br.wast:443
+assert_return(() => invoke($0, `as-storeN-address`, []), [value("i32", 32)]);
+
+// ./test/core/br.wast:444
+assert_return(() => invoke($0, `as-storeN-value`, []), [value("i32", 33)]);
+
+// ./test/core/br.wast:445
+assert_return(() => invoke($0, `as-storeN-both`, []), [value("i32", 34)]);
+
+// ./test/core/br.wast:447
+assert_return(() => invoke($0, `as-unary-operand`, []), [value("f32", 3.4)]);
+
+// ./test/core/br.wast:449
+assert_return(() => invoke($0, `as-binary-left`, []), [value("i32", 3)]);
+
+// ./test/core/br.wast:450
+assert_return(() => invoke($0, `as-binary-right`, []), [value("i64", 45n)]);
+
+// ./test/core/br.wast:451
+assert_return(() => invoke($0, `as-binary-both`, []), [value("i32", 46)]);
+
+// ./test/core/br.wast:453
+assert_return(() => invoke($0, `as-test-operand`, []), [value("i32", 44)]);
+
+// ./test/core/br.wast:455
+assert_return(() => invoke($0, `as-compare-left`, []), [value("i32", 43)]);
+
+// ./test/core/br.wast:456
+assert_return(() => invoke($0, `as-compare-right`, []), [value("i32", 42)]);
+
+// ./test/core/br.wast:457
+assert_return(() => invoke($0, `as-compare-both`, []), [value("i32", 44)]);
+
+// ./test/core/br.wast:459
+assert_return(() => invoke($0, `as-convert-operand`, []), [value("i32", 41)]);
+
+// ./test/core/br.wast:461
+assert_return(() => invoke($0, `as-memory.grow-size`, []), [value("i32", 40)]);
+
+// ./test/core/br.wast:463
+assert_return(() => invoke($0, `nested-block-value`, []), [value("i32", 9)]);
+
+// ./test/core/br.wast:464
+assert_return(() => invoke($0, `nested-br-value`, []), [value("i32", 9)]);
+
+// ./test/core/br.wast:465
+assert_return(() => invoke($0, `nested-br_if-value`, []), [value("i32", 9)]);
+
+// ./test/core/br.wast:466
+assert_return(() => invoke($0, `nested-br_if-value-cond`, []), [
+  value("i32", 9),
+]);
+
+// ./test/core/br.wast:467
+assert_return(() => invoke($0, `nested-br_table-value`, []), [value("i32", 9)]);
+
+// ./test/core/br.wast:468
+assert_return(() => invoke($0, `nested-br_table-value-index`, []), [
+  value("i32", 9),
+]);
+
+// ./test/core/br.wast:470
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-arg-empty-vs-num (result i32)
+    (block (result i32) (br 0) (i32.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/br.wast:477
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-arg-void-vs-num (result i32)
+    (block (result i32) (br 0 (nop)) (i32.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/br.wast:483
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-arg-void-vs-num-nested (result i32)
+    (block (result i32) (i32.const 0) (block (br 1)))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/br.wast:489
+assert_invalid(
+  () =>
+    instantiate(`(module (func $$type-arg-num-vs-num (result i32)
+    (block (result i32) (br 0 (i64.const 1)) (i32.const 1))
+  ))`),
+  `type mismatch`,
+);
+
+// ./test/core/br.wast:496
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-arg-empty-in-br
+      (i32.const 0)
+      (block (result i32) (br 0 (br 0))) (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:505
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-arg-empty-in-br_if
+      (i32.const 0)
+      (block (result i32) (br_if 0 (br 0) (i32.const 1))) (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:514
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-arg-empty-in-br_table
+      (i32.const 0)
+      (block (result i32) (br_table 0 (br 0))) (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:523
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-arg-empty-in-return
+      (block (result i32)
+        (return (br 0))
+      )
+      (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:534
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-arg-empty-in-select
+      (block (result i32)
+        (select (br 0) (i32.const 1) (i32.const 2))
+      )
+      (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:545
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-arg-empty-in-call
+      (block (result i32)
+        (call 1 (br 0))
+      )
+      (i32.eqz) (drop)
+    )
+    (func (param i32) (result i32) (local.get 0))
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:557
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$f (param i32) (result i32) (local.get 0))
+    (type $$sig (func (param i32) (result i32)))
+    (table funcref (elem $$f))
+    (func $$type-arg-empty-in-call_indirect
+      (block (result i32)
+        (call_indirect (type $$sig)
+          (br 0) (i32.const 0)
+        )
+      )
+      (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:573
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-arg-empty-in-local.set
+      (local i32)
+      (block (result i32)
+        (local.set 0 (br 0)) (local.get 0)
+      )
+      (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:585
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$type-arg-empty-in-local.tee
+      (local i32)
+      (block (result i32)
+        (local.tee 0 (br 0))
+      )
+      (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:597
+assert_invalid(() =>
+  instantiate(`(module
+    (global $$x (mut i32) (i32.const 0))
+    (func $$type-arg-empty-in-global.set
+      (block (result i32)
+        (global.set $$x (br 0)) (global.get $$x)
+      )
+      (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:609
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-arg-empty-in-memory.grow
+      (block (result i32)
+        (memory.grow (br 0))
+      )
+      (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:621
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 1)
+    (func $$type-arg-empty-in-load
+      (block (result i32)
+        (i32.load (br 0))
+      )
+      (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:633
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 1)
+    (func $$type-arg-empty-in-store
+      (block (result i32)
+        (i32.store (br 0) (i32.const 0))
+      )
+      (i32.eqz) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/br.wast:646
+assert_invalid(
+  () => instantiate(`(module (func $$unbound-label (br 1)))`),
+  `unknown label`,
+);
+
+// ./test/core/br.wast:650
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$unbound-nested-label (block (block (br 5)))))`,
+    ),
+  `unknown label`,
+);
+
+// ./test/core/br.wast:654
+assert_invalid(
+  () => instantiate(`(module (func $$large-label (br 0x10000001)))`),
+  `unknown label`,
+);

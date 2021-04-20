@@ -1,24 +1,94 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// memory_redundancy.wast:5
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x91\x80\x80\x80\x00\x04\x60\x00\x00\x60\x00\x01\x7f\x60\x00\x01\x7d\x60\x01\x7f\x01\x7f\x03\x87\x80\x80\x80\x00\x06\x00\x01\x01\x02\x03\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\xeb\x80\x80\x80\x00\x06\x0f\x7a\x65\x72\x6f\x5f\x65\x76\x65\x72\x79\x74\x68\x69\x6e\x67\x00\x00\x12\x74\x65\x73\x74\x5f\x73\x74\x6f\x72\x65\x5f\x74\x6f\x5f\x6c\x6f\x61\x64\x00\x01\x13\x74\x65\x73\x74\x5f\x72\x65\x64\x75\x6e\x64\x61\x6e\x74\x5f\x6c\x6f\x61\x64\x00\x02\x0f\x74\x65\x73\x74\x5f\x64\x65\x61\x64\x5f\x73\x74\x6f\x72\x65\x00\x03\x06\x6d\x61\x6c\x6c\x6f\x63\x00\x04\x0f\x6d\x61\x6c\x6c\x6f\x63\x5f\x61\x6c\x69\x61\x73\x69\x6e\x67\x00\x05\x0a\xbd\x81\x80\x80\x00\x06\x9e\x80\x80\x80\x00\x00\x41\x00\x41\x00\x36\x02\x00\x41\x04\x41\x00\x36\x02\x00\x41\x08\x41\x00\x36\x02\x00\x41\x0c\x41\x00\x36\x02\x00\x0b\x98\x80\x80\x80\x00\x00\x41\x08\x41\x00\x36\x02\x00\x41\x05\x43\x00\x00\x00\x80\x38\x02\x00\x41\x08\x28\x02\x00\x0b\xa2\x80\x80\x80\x00\x01\x02\x7f\x41\x08\x28\x02\x00\x21\x00\x41\x05\x41\x80\x80\x80\x80\x78\x36\x02\x00\x41\x08\x28\x02\x00\x21\x01\x20\x00\x20\x01\x6a\x0b\x9f\x80\x80\x80\x00\x01\x01\x7d\x41\x08\x41\xa3\xc6\x8c\x99\x02\x36\x02\x00\x41\x0b\x2a\x02\x00\x21\x00\x41\x08\x41\x00\x36\x02\x00\x20\x00\x0b\x84\x80\x80\x80\x00\x00\x41\x10\x0b\xa3\x80\x80\x80\x00\x01\x02\x7f\x41\x04\x10\x04\x21\x00\x41\x04\x10\x04\x21\x01\x20\x00\x41\x2a\x36\x02\x00\x20\x01\x41\x2b\x36\x02\x00\x20\x00\x28\x02\x00\x0b");
+// ./test/core/memory_redundancy.wast
 
-// memory_redundancy.wast:59
-assert_return(() => call($1, "test_store_to_load", []), 128);
+// ./test/core/memory_redundancy.wast:5
+let $0 = instantiate(`(module
+  (memory 1 1)
 
-// memory_redundancy.wast:60
-run(() => call($1, "zero_everything", []));
+  (func (export "zero_everything")
+    (i32.store (i32.const 0) (i32.const 0))
+    (i32.store (i32.const 4) (i32.const 0))
+    (i32.store (i32.const 8) (i32.const 0))
+    (i32.store (i32.const 12) (i32.const 0))
+  )
 
-// memory_redundancy.wast:61
-assert_return(() => call($1, "test_redundant_load", []), 128);
+  (func (export "test_store_to_load") (result i32)
+    (i32.store (i32.const 8) (i32.const 0))
+    (f32.store (i32.const 5) (f32.const -0.0))
+    (i32.load (i32.const 8))
+  )
 
-// memory_redundancy.wast:62
-run(() => call($1, "zero_everything", []));
+  (func (export "test_redundant_load") (result i32)
+    (local $$t i32)
+    (local $$s i32)
+    (local.set $$t (i32.load (i32.const 8)))
+    (i32.store (i32.const 5) (i32.const 0x80000000))
+    (local.set $$s (i32.load (i32.const 8)))
+    (i32.add (local.get $$t) (local.get $$s))
+  )
 
-// memory_redundancy.wast:63
-run(() => call(instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x88\x80\x80\x80\x00\x02\x60\x00\x00\x60\x00\x01\x7d\x02\x96\x80\x80\x80\x00\x01\x02\x24\x31\x0f\x74\x65\x73\x74\x5f\x64\x65\x61\x64\x5f\x73\x74\x6f\x72\x65\x00\x01\x03\x82\x80\x80\x80\x00\x01\x00\x07\x87\x80\x80\x80\x00\x01\x03\x72\x75\x6e\x00\x01\x0a\x9a\x80\x80\x80\x00\x01\x94\x80\x80\x80\x00\x00\x02\x40\x10\x00\xbc\x43\x23\x00\x00\x00\xbc\x46\x45\x0d\x00\x0f\x0b\x00\x0b", exports("$1", $1)),  "run", []));  // assert_return(() => call($1, "test_dead_store", []), 4.90454462514e-44)
+  (func (export "test_dead_store") (result f32)
+    (local $$t f32)
+    (i32.store (i32.const 8) (i32.const 0x23232323))
+    (local.set $$t (f32.load (i32.const 11)))
+    (i32.store (i32.const 8) (i32.const 0))
+    (local.get $$t)
+  )
 
-// memory_redundancy.wast:64
-run(() => call($1, "zero_everything", []));
+  ;; A function named "malloc" which implementations nonetheless shouldn't
+  ;; assume behaves like C malloc.
+  (func $$malloc (export "malloc")
+     (param $$size i32)
+     (result i32)
+     (i32.const 16)
+  )
 
-// memory_redundancy.wast:65
-assert_return(() => call($1, "malloc_aliasing", []), 43);
+  ;; Call malloc twice, but unlike C malloc, we don't get non-aliasing pointers.
+  (func (export "malloc_aliasing")
+     (result i32)
+     (local $$x i32)
+     (local $$y i32)
+     (local.set $$x (call $$malloc (i32.const 4)))
+     (local.set $$y (call $$malloc (i32.const 4)))
+     (i32.store (local.get $$x) (i32.const 42))
+     (i32.store (local.get $$y) (i32.const 43))
+     (i32.load (local.get $$x))
+  )
+)`);
+
+// ./test/core/memory_redundancy.wast:59
+assert_return(() => invoke($0, `test_store_to_load`, []), [value("i32", 128)]);
+
+// ./test/core/memory_redundancy.wast:60
+invoke($0, `zero_everything`, []);
+
+// ./test/core/memory_redundancy.wast:61
+assert_return(() => invoke($0, `test_redundant_load`, []), [value("i32", 128)]);
+
+// ./test/core/memory_redundancy.wast:62
+invoke($0, `zero_everything`, []);
+
+// ./test/core/memory_redundancy.wast:63
+assert_return(() => invoke($0, `test_dead_store`, []), [
+  value("f32", 0.000000000000000000000000000000000000000000049),
+]);
+
+// ./test/core/memory_redundancy.wast:64
+invoke($0, `zero_everything`, []);
+
+// ./test/core/memory_redundancy.wast:65
+assert_return(() => invoke($0, `malloc_aliasing`, []), [value("i32", 43)]);
