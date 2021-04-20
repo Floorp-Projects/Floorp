@@ -1,51 +1,154 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// ref_func.wast:1
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x01\x7f\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x07\x85\x80\x80\x80\x00\x01\x01\x66\x00\x00\x0a\x8a\x80\x80\x80\x00\x01\x84\x80\x80\x80\x00\x00\x20\x00\x0b");
+// ./test/core/ref_func.wast
 
-// ref_func.wast:4
-register("M", $1)
+// ./test/core/ref_func.wast:1
+let $0 = instantiate(`(module
+  (func (export "f") (param $$x i32) (result i32) (local.get $$x))
+)`);
 
-// ref_func.wast:6
-let $2 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8d\x80\x80\x80\x00\x03\x60\x01\x7f\x01\x7f\x60\x00\x00\x60\x00\x01\x7f\x02\x87\x80\x80\x80\x00\x01\x01\x4d\x01\x66\x00\x00\x03\x8f\x80\x80\x80\x00\x0e\x00\x01\x01\x01\x01\x01\x02\x02\x02\x01\x01\x00\x00\x00\x04\x84\x80\x80\x80\x00\x01\x70\x00\x01\x06\x9a\x80\x80\x80\x00\x05\x70\x00\xd2\x00\x0b\x70\x00\xd2\x01\x0b\x70\x01\xd2\x00\x0b\x70\x00\xd2\x03\x0b\x70\x00\xd2\x04\x0b\x07\xd0\x80\x80\x80\x00\x08\x09\x69\x73\x5f\x6e\x75\x6c\x6c\x2d\x66\x00\x07\x09\x69\x73\x5f\x6e\x75\x6c\x6c\x2d\x67\x00\x08\x09\x69\x73\x5f\x6e\x75\x6c\x6c\x2d\x76\x00\x09\x05\x73\x65\x74\x2d\x66\x00\x0a\x05\x73\x65\x74\x2d\x67\x00\x0b\x06\x63\x61\x6c\x6c\x2d\x66\x00\x0c\x06\x63\x61\x6c\x6c\x2d\x67\x00\x0d\x06\x63\x61\x6c\x6c\x2d\x76\x00\x0e\x09\x90\x80\x80\x80\x00\x03\x03\x00\x02\x03\x05\x03\x00\x02\x04\x06\x03\x00\x02\x00\x01\x0a\xa6\x81\x80\x80\x00\x0e\x87\x80\x80\x80\x00\x00\x20\x00\x41\x01\x6a\x0b\x88\x80\x80\x80\x00\x00\xd2\x05\x1a\xd2\x06\x1a\x0b\x82\x80\x80\x80\x00\x00\x0b\x82\x80\x80\x80\x00\x00\x0b\x82\x80\x80\x80\x00\x00\x0b\x82\x80\x80\x80\x00\x00\x0b\x85\x80\x80\x80\x00\x00\xd2\x00\xd1\x0b\x85\x80\x80\x80\x00\x00\xd2\x01\xd1\x0b\x85\x80\x80\x80\x00\x00\x23\x02\xd1\x0b\x86\x80\x80\x80\x00\x00\xd2\x00\x24\x02\x0b\x86\x80\x80\x80\x00\x00\xd2\x01\x24\x02\x0b\x8f\x80\x80\x80\x00\x00\x41\x00\xd2\x00\x26\x00\x20\x00\x41\x00\x11\x00\x00\x0b\x8f\x80\x80\x80\x00\x00\x41\x00\xd2\x01\x26\x00\x20\x00\x41\x00\x11\x00\x00\x0b\x8f\x80\x80\x80\x00\x00\x41\x00\x23\x02\x26\x00\x20\x00\x41\x00\x11\x00\x00\x0b");
+// ./test/core/ref_func.wast:4
+register($0, `M`);
 
-// ref_func.wast:56
-assert_return(() => call($2, "is_null-f", []), 0);
+// ./test/core/ref_func.wast:6
+let $1 = instantiate(`(module
+  (func $$f (import "M" "f") (param i32) (result i32))
+  (func $$g (param $$x i32) (result i32)
+    (i32.add (local.get $$x) (i32.const 1))
+  )
 
-// ref_func.wast:57
-assert_return(() => call($2, "is_null-g", []), 0);
+  (global funcref (ref.func $$f))
+  (global funcref (ref.func $$g))
+  (global $$v (mut funcref) (ref.func $$f))
 
-// ref_func.wast:58
-assert_return(() => call($2, "is_null-v", []), 0);
+  (global funcref (ref.func $$gf1))
+  (global funcref (ref.func $$gf2))
+  (func (drop (ref.func $$ff1)) (drop (ref.func $$ff2)))
+  (elem declare func $$gf1 $$ff1)
+  (elem declare funcref (ref.func $$gf2) (ref.func $$ff2))
+  (func $$gf1)
+  (func $$gf2)
+  (func $$ff1)
+  (func $$ff2)
 
-// ref_func.wast:60
-assert_return(() => call($2, "call-f", [4]), 4);
+  (func (export "is_null-f") (result i32)
+    (ref.is_null (ref.func $$f))
+  )
+  (func (export "is_null-g") (result i32)
+    (ref.is_null (ref.func $$g))
+  )
+  (func (export "is_null-v") (result i32)
+    (ref.is_null (global.get $$v))
+  )
 
-// ref_func.wast:61
-assert_return(() => call($2, "call-g", [4]), 5);
+  (func (export "set-f") (global.set $$v (ref.func $$f)))
+  (func (export "set-g") (global.set $$v (ref.func $$g)))
 
-// ref_func.wast:62
-assert_return(() => call($2, "call-v", [4]), 4);
+  (table $$t 1 funcref)
+  (elem declare func $$f $$g)
 
-// ref_func.wast:63
-run(() => call($2, "set-g", []));
+  (func (export "call-f") (param $$x i32) (result i32)
+    (table.set $$t (i32.const 0) (ref.func $$f))
+    (call_indirect $$t (param i32) (result i32) (local.get $$x) (i32.const 0))
+  )
+  (func (export "call-g") (param $$x i32) (result i32)
+    (table.set $$t (i32.const 0) (ref.func $$g))
+    (call_indirect $$t (param i32) (result i32) (local.get $$x) (i32.const 0))
+  )
+  (func (export "call-v") (param $$x i32) (result i32)
+    (table.set $$t (i32.const 0) (global.get $$v))
+    (call_indirect $$t (param i32) (result i32) (local.get $$x) (i32.const 0))
+  )
+)`);
 
-// ref_func.wast:64
-assert_return(() => call($2, "call-v", [4]), 5);
+// ./test/core/ref_func.wast:56
+assert_return(() => invoke($1, `is_null-f`, []), [value("i32", 0)]);
 
-// ref_func.wast:65
-run(() => call($2, "set-f", []));
+// ./test/core/ref_func.wast:57
+assert_return(() => invoke($1, `is_null-g`, []), [value("i32", 0)]);
 
-// ref_func.wast:66
-assert_return(() => call($2, "call-v", [4]), 4);
+// ./test/core/ref_func.wast:58
+assert_return(() => invoke($1, `is_null-v`, []), [value("i32", 0)]);
 
-// ref_func.wast:68
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x01\x7f\x01\x7f\x02\x8d\x80\x80\x80\x00\x02\x01\x4d\x01\x66\x00\x00\x01\x4d\x01\x67\x00\x00\x06\x86\x80\x80\x80\x00\x01\x70\x00\xd2\x07\x0b");
+// ./test/core/ref_func.wast:60
+assert_return(() => invoke($1, `call-f`, [4]), [value("i32", 4)]);
 
-// ref_func.wast:80
-let $3 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x88\x80\x80\x80\x00\x07\x00\x00\x00\x00\x00\x00\x00\x04\x84\x80\x80\x80\x00\x01\x70\x00\x01\x06\x86\x80\x80\x80\x00\x01\x70\x00\xd2\x00\x0b\x07\x85\x80\x80\x80\x00\x01\x01\x66\x00\x01\x09\x95\x80\x80\x80\x00\x04\x00\x41\x00\x0b\x01\x02\x00\x41\x00\x0b\x01\x03\x01\x00\x01\x04\x01\x00\x01\x05\x0a\xbf\x80\x80\x80\x00\x07\x82\x80\x80\x80\x00\x00\x0b\x82\x80\x80\x80\x00\x00\x0b\x82\x80\x80\x80\x00\x00\x0b\x82\x80\x80\x80\x00\x00\x0b\x82\x80\x80\x80\x00\x00\x0b\x82\x80\x80\x80\x00\x00\x0b\x8f\x80\x80\x80\x00\x00\xd2\x00\xd2\x01\xd2\x02\xd2\x03\xd2\x04\xd2\x05\x0f\x0b");
+// ./test/core/ref_func.wast:61
+assert_return(() => invoke($1, `call-g`, [4]), [value("i32", 5)]);
 
-// ref_func.wast:108
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\xd2\x00\x1a\x0b");
+// ./test/core/ref_func.wast:62
+assert_return(() => invoke($1, `call-v`, [4]), [value("i32", 4)]);
 
-// ref_func.wast:112
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x08\x81\x80\x80\x80\x00\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\xd2\x00\x1a\x0b");
+// ./test/core/ref_func.wast:63
+invoke($1, `set-g`, []);
+
+// ./test/core/ref_func.wast:64
+assert_return(() => invoke($1, `call-v`, [4]), [value("i32", 5)]);
+
+// ./test/core/ref_func.wast:65
+invoke($1, `set-f`, []);
+
+// ./test/core/ref_func.wast:66
+assert_return(() => invoke($1, `call-v`, [4]), [value("i32", 4)]);
+
+// ./test/core/ref_func.wast:68
+assert_invalid(() =>
+  instantiate(`(module
+    (func $$f (import "M" "f") (param i32) (result i32))
+    (func $$g (import "M" "g") (param i32) (result i32))
+    (global funcref (ref.func 7))
+  )`), `unknown function 7`);
+
+// ./test/core/ref_func.wast:80
+let $2 = instantiate(`(module
+  (func $$f1)
+  (func $$f2)
+  (func $$f3)
+  (func $$f4)
+  (func $$f5)
+  (func $$f6)
+
+  (table $$t 1 funcref)
+
+  (global funcref (ref.func $$f1))
+  (export "f" (func $$f2))
+  (elem (table $$t) (i32.const 0) func $$f3)
+  (elem (table $$t) (i32.const 0) funcref (ref.func $$f4))
+  (elem func $$f5)
+  (elem funcref (ref.func $$f6))
+
+  (func
+    (ref.func $$f1)
+    (ref.func $$f2)
+    (ref.func $$f3)
+    (ref.func $$f4)
+    (ref.func $$f5)
+    (ref.func $$f6)
+    (return)
+  )
+)`);
+
+// ./test/core/ref_func.wast:108
+assert_invalid(
+  () => instantiate(`(module (func $$f (drop (ref.func $$f))))`),
+  `undeclared function reference`,
+);
+
+// ./test/core/ref_func.wast:112
+assert_invalid(
+  () => instantiate(`(module (start $$f) (func $$f (drop (ref.func $$f))))`),
+  `undeclared function reference`,
+);

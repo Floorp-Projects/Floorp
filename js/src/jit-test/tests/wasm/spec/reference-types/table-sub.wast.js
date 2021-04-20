@@ -1,6 +1,36 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// table-sub.wast:1
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x04\x87\x80\x80\x80\x00\x02\x70\x00\x0a\x6f\x00\x0a\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x41\x00\x41\x01\x41\x02\xfc\x0e\x00\x01\x0b");
+// ./test/core/table-sub.wast
 
-// table-sub.wast:12
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x04\x84\x80\x80\x80\x00\x01\x70\x00\x0a\x09\x84\x80\x80\x80\x00\x01\x05\x6f\x00\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x41\x00\x41\x01\x41\x02\xfc\x0c\x00\x00\x0b");
+// ./test/core/table-sub.wast:1
+assert_invalid(() =>
+  instantiate(`(module
+    (table $$t1 10 funcref)
+    (table $$t2 10 externref)
+    (func $$f
+      (table.copy $$t1 $$t2 (i32.const 0) (i32.const 1) (i32.const 2))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/table-sub.wast:12
+assert_invalid(() =>
+  instantiate(`(module
+    (table $$t 10 funcref)
+    (elem $$el externref)
+    (func $$f
+      (table.init $$t $$el (i32.const 0) (i32.const 1) (i32.const 2))
+    )
+  )`), `type mismatch`);

@@ -1,720 +1,1470 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// memory_init.wast:5
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x01\x7f\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x9c\x80\x80\x80\x00\x03\x07\x6d\x65\x6d\x6f\x72\x79\x30\x02\x00\x04\x74\x65\x73\x74\x00\x00\x07\x6c\x6f\x61\x64\x38\x5f\x75\x00\x01\x0a\x95\x80\x80\x80\x00\x02\x83\x80\x80\x80\x00\x00\x01\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x2d\x00\x00\x0b\x0b\xa1\x80\x80\x80\x00\x04\x00\x41\x02\x0b\x04\x03\x01\x04\x01\x01\x04\x02\x07\x01\x08\x00\x41\x0c\x0b\x05\x07\x05\x02\x03\x06\x01\x05\x05\x09\x02\x07\x06");
+// ./test/core/memory_init.wast
 
-// memory_init.wast:16
-run(() => call($1, "test", []));
+// ./test/core/memory_init.wast:5
+let $0 = instantiate(`(module
+  (memory (export "memory0") 1 1)
+  (data (i32.const 2) "\\03\\01\\04\\01")
+  (data "\\02\\07\\01\\08")
+  (data (i32.const 12) "\\07\\05\\02\\03\\06")
+  (data "\\05\\09\\02\\07\\06")
+  (func (export "test")
+    (nop))
+  (func (export "load8_u") (param i32) (result i32)
+    (i32.load8_u (local.get 0))))`);
 
-// memory_init.wast:18
-assert_return(() => call($1, "load8_u", [0]), 0);
+// ./test/core/memory_init.wast:16
+invoke($0, `test`, []);
 
-// memory_init.wast:19
-assert_return(() => call($1, "load8_u", [1]), 0);
+// ./test/core/memory_init.wast:18
+assert_return(() => invoke($0, `load8_u`, [0]), [value("i32", 0)]);
 
-// memory_init.wast:20
-assert_return(() => call($1, "load8_u", [2]), 3);
+// ./test/core/memory_init.wast:19
+assert_return(() => invoke($0, `load8_u`, [1]), [value("i32", 0)]);
 
-// memory_init.wast:21
-assert_return(() => call($1, "load8_u", [3]), 1);
+// ./test/core/memory_init.wast:20
+assert_return(() => invoke($0, `load8_u`, [2]), [value("i32", 3)]);
 
-// memory_init.wast:22
-assert_return(() => call($1, "load8_u", [4]), 4);
+// ./test/core/memory_init.wast:21
+assert_return(() => invoke($0, `load8_u`, [3]), [value("i32", 1)]);
 
-// memory_init.wast:23
-assert_return(() => call($1, "load8_u", [5]), 1);
+// ./test/core/memory_init.wast:22
+assert_return(() => invoke($0, `load8_u`, [4]), [value("i32", 4)]);
 
-// memory_init.wast:24
-assert_return(() => call($1, "load8_u", [6]), 0);
+// ./test/core/memory_init.wast:23
+assert_return(() => invoke($0, `load8_u`, [5]), [value("i32", 1)]);
 
-// memory_init.wast:25
-assert_return(() => call($1, "load8_u", [7]), 0);
+// ./test/core/memory_init.wast:24
+assert_return(() => invoke($0, `load8_u`, [6]), [value("i32", 0)]);
 
-// memory_init.wast:26
-assert_return(() => call($1, "load8_u", [8]), 0);
+// ./test/core/memory_init.wast:25
+assert_return(() => invoke($0, `load8_u`, [7]), [value("i32", 0)]);
 
-// memory_init.wast:27
-assert_return(() => call($1, "load8_u", [9]), 0);
+// ./test/core/memory_init.wast:26
+assert_return(() => invoke($0, `load8_u`, [8]), [value("i32", 0)]);
 
-// memory_init.wast:28
-assert_return(() => call($1, "load8_u", [10]), 0);
+// ./test/core/memory_init.wast:27
+assert_return(() => invoke($0, `load8_u`, [9]), [value("i32", 0)]);
 
-// memory_init.wast:29
-assert_return(() => call($1, "load8_u", [11]), 0);
+// ./test/core/memory_init.wast:28
+assert_return(() => invoke($0, `load8_u`, [10]), [value("i32", 0)]);
 
-// memory_init.wast:30
-assert_return(() => call($1, "load8_u", [12]), 7);
+// ./test/core/memory_init.wast:29
+assert_return(() => invoke($0, `load8_u`, [11]), [value("i32", 0)]);
 
-// memory_init.wast:31
-assert_return(() => call($1, "load8_u", [13]), 5);
+// ./test/core/memory_init.wast:30
+assert_return(() => invoke($0, `load8_u`, [12]), [value("i32", 7)]);
 
-// memory_init.wast:32
-assert_return(() => call($1, "load8_u", [14]), 2);
+// ./test/core/memory_init.wast:31
+assert_return(() => invoke($0, `load8_u`, [13]), [value("i32", 5)]);
 
-// memory_init.wast:33
-assert_return(() => call($1, "load8_u", [15]), 3);
+// ./test/core/memory_init.wast:32
+assert_return(() => invoke($0, `load8_u`, [14]), [value("i32", 2)]);
 
-// memory_init.wast:34
-assert_return(() => call($1, "load8_u", [16]), 6);
+// ./test/core/memory_init.wast:33
+assert_return(() => invoke($0, `load8_u`, [15]), [value("i32", 3)]);
 
-// memory_init.wast:35
-assert_return(() => call($1, "load8_u", [17]), 0);
+// ./test/core/memory_init.wast:34
+assert_return(() => invoke($0, `load8_u`, [16]), [value("i32", 6)]);
 
-// memory_init.wast:36
-assert_return(() => call($1, "load8_u", [18]), 0);
+// ./test/core/memory_init.wast:35
+assert_return(() => invoke($0, `load8_u`, [17]), [value("i32", 0)]);
 
-// memory_init.wast:37
-assert_return(() => call($1, "load8_u", [19]), 0);
+// ./test/core/memory_init.wast:36
+assert_return(() => invoke($0, `load8_u`, [18]), [value("i32", 0)]);
 
-// memory_init.wast:38
-assert_return(() => call($1, "load8_u", [20]), 0);
+// ./test/core/memory_init.wast:37
+assert_return(() => invoke($0, `load8_u`, [19]), [value("i32", 0)]);
 
-// memory_init.wast:39
-assert_return(() => call($1, "load8_u", [21]), 0);
+// ./test/core/memory_init.wast:38
+assert_return(() => invoke($0, `load8_u`, [20]), [value("i32", 0)]);
 
-// memory_init.wast:40
-assert_return(() => call($1, "load8_u", [22]), 0);
+// ./test/core/memory_init.wast:39
+assert_return(() => invoke($0, `load8_u`, [21]), [value("i32", 0)]);
 
-// memory_init.wast:41
-assert_return(() => call($1, "load8_u", [23]), 0);
+// ./test/core/memory_init.wast:40
+assert_return(() => invoke($0, `load8_u`, [22]), [value("i32", 0)]);
 
-// memory_init.wast:42
-assert_return(() => call($1, "load8_u", [24]), 0);
+// ./test/core/memory_init.wast:41
+assert_return(() => invoke($0, `load8_u`, [23]), [value("i32", 0)]);
 
-// memory_init.wast:43
-assert_return(() => call($1, "load8_u", [25]), 0);
+// ./test/core/memory_init.wast:42
+assert_return(() => invoke($0, `load8_u`, [24]), [value("i32", 0)]);
 
-// memory_init.wast:44
-assert_return(() => call($1, "load8_u", [26]), 0);
+// ./test/core/memory_init.wast:43
+assert_return(() => invoke($0, `load8_u`, [25]), [value("i32", 0)]);
 
-// memory_init.wast:45
-assert_return(() => call($1, "load8_u", [27]), 0);
+// ./test/core/memory_init.wast:44
+assert_return(() => invoke($0, `load8_u`, [26]), [value("i32", 0)]);
 
-// memory_init.wast:46
-assert_return(() => call($1, "load8_u", [28]), 0);
+// ./test/core/memory_init.wast:45
+assert_return(() => invoke($0, `load8_u`, [27]), [value("i32", 0)]);
 
-// memory_init.wast:47
-assert_return(() => call($1, "load8_u", [29]), 0);
+// ./test/core/memory_init.wast:46
+assert_return(() => invoke($0, `load8_u`, [28]), [value("i32", 0)]);
 
-// memory_init.wast:49
-let $2 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x01\x7f\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x9c\x80\x80\x80\x00\x03\x07\x6d\x65\x6d\x6f\x72\x79\x30\x02\x00\x04\x74\x65\x73\x74\x00\x00\x07\x6c\x6f\x61\x64\x38\x5f\x75\x00\x01\x0c\x81\x80\x80\x80\x00\x04\x0a\x9e\x80\x80\x80\x00\x02\x8c\x80\x80\x80\x00\x00\x41\x07\x41\x00\x41\x04\xfc\x08\x01\x00\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x2d\x00\x00\x0b\x0b\xa1\x80\x80\x80\x00\x04\x00\x41\x02\x0b\x04\x03\x01\x04\x01\x01\x04\x02\x07\x01\x08\x00\x41\x0c\x0b\x05\x07\x05\x02\x03\x06\x01\x05\x05\x09\x02\x07\x06");
+// ./test/core/memory_init.wast:47
+assert_return(() => invoke($0, `load8_u`, [29]), [value("i32", 0)]);
 
-// memory_init.wast:60
-run(() => call($2, "test", []));
+// ./test/core/memory_init.wast:49
+let $1 = instantiate(`(module
+  (memory (export "memory0") 1 1)
+  (data (i32.const 2) "\\03\\01\\04\\01")
+  (data "\\02\\07\\01\\08")
+  (data (i32.const 12) "\\07\\05\\02\\03\\06")
+  (data "\\05\\09\\02\\07\\06")
+  (func (export "test")
+    (memory.init 1 (i32.const 7) (i32.const 0) (i32.const 4)))
+  (func (export "load8_u") (param i32) (result i32)
+    (i32.load8_u (local.get 0))))`);
 
-// memory_init.wast:62
-assert_return(() => call($2, "load8_u", [0]), 0);
+// ./test/core/memory_init.wast:60
+invoke($1, `test`, []);
 
-// memory_init.wast:63
-assert_return(() => call($2, "load8_u", [1]), 0);
+// ./test/core/memory_init.wast:62
+assert_return(() => invoke($1, `load8_u`, [0]), [value("i32", 0)]);
 
-// memory_init.wast:64
-assert_return(() => call($2, "load8_u", [2]), 3);
+// ./test/core/memory_init.wast:63
+assert_return(() => invoke($1, `load8_u`, [1]), [value("i32", 0)]);
 
-// memory_init.wast:65
-assert_return(() => call($2, "load8_u", [3]), 1);
+// ./test/core/memory_init.wast:64
+assert_return(() => invoke($1, `load8_u`, [2]), [value("i32", 3)]);
 
-// memory_init.wast:66
-assert_return(() => call($2, "load8_u", [4]), 4);
+// ./test/core/memory_init.wast:65
+assert_return(() => invoke($1, `load8_u`, [3]), [value("i32", 1)]);
 
-// memory_init.wast:67
-assert_return(() => call($2, "load8_u", [5]), 1);
+// ./test/core/memory_init.wast:66
+assert_return(() => invoke($1, `load8_u`, [4]), [value("i32", 4)]);
 
-// memory_init.wast:68
-assert_return(() => call($2, "load8_u", [6]), 0);
+// ./test/core/memory_init.wast:67
+assert_return(() => invoke($1, `load8_u`, [5]), [value("i32", 1)]);
 
-// memory_init.wast:69
-assert_return(() => call($2, "load8_u", [7]), 2);
+// ./test/core/memory_init.wast:68
+assert_return(() => invoke($1, `load8_u`, [6]), [value("i32", 0)]);
 
-// memory_init.wast:70
-assert_return(() => call($2, "load8_u", [8]), 7);
+// ./test/core/memory_init.wast:69
+assert_return(() => invoke($1, `load8_u`, [7]), [value("i32", 2)]);
 
-// memory_init.wast:71
-assert_return(() => call($2, "load8_u", [9]), 1);
+// ./test/core/memory_init.wast:70
+assert_return(() => invoke($1, `load8_u`, [8]), [value("i32", 7)]);
 
-// memory_init.wast:72
-assert_return(() => call($2, "load8_u", [10]), 8);
+// ./test/core/memory_init.wast:71
+assert_return(() => invoke($1, `load8_u`, [9]), [value("i32", 1)]);
 
-// memory_init.wast:73
-assert_return(() => call($2, "load8_u", [11]), 0);
+// ./test/core/memory_init.wast:72
+assert_return(() => invoke($1, `load8_u`, [10]), [value("i32", 8)]);
 
-// memory_init.wast:74
-assert_return(() => call($2, "load8_u", [12]), 7);
+// ./test/core/memory_init.wast:73
+assert_return(() => invoke($1, `load8_u`, [11]), [value("i32", 0)]);
 
-// memory_init.wast:75
-assert_return(() => call($2, "load8_u", [13]), 5);
+// ./test/core/memory_init.wast:74
+assert_return(() => invoke($1, `load8_u`, [12]), [value("i32", 7)]);
 
-// memory_init.wast:76
-assert_return(() => call($2, "load8_u", [14]), 2);
+// ./test/core/memory_init.wast:75
+assert_return(() => invoke($1, `load8_u`, [13]), [value("i32", 5)]);
 
-// memory_init.wast:77
-assert_return(() => call($2, "load8_u", [15]), 3);
+// ./test/core/memory_init.wast:76
+assert_return(() => invoke($1, `load8_u`, [14]), [value("i32", 2)]);
 
-// memory_init.wast:78
-assert_return(() => call($2, "load8_u", [16]), 6);
+// ./test/core/memory_init.wast:77
+assert_return(() => invoke($1, `load8_u`, [15]), [value("i32", 3)]);
 
-// memory_init.wast:79
-assert_return(() => call($2, "load8_u", [17]), 0);
+// ./test/core/memory_init.wast:78
+assert_return(() => invoke($1, `load8_u`, [16]), [value("i32", 6)]);
 
-// memory_init.wast:80
-assert_return(() => call($2, "load8_u", [18]), 0);
+// ./test/core/memory_init.wast:79
+assert_return(() => invoke($1, `load8_u`, [17]), [value("i32", 0)]);
 
-// memory_init.wast:81
-assert_return(() => call($2, "load8_u", [19]), 0);
+// ./test/core/memory_init.wast:80
+assert_return(() => invoke($1, `load8_u`, [18]), [value("i32", 0)]);
 
-// memory_init.wast:82
-assert_return(() => call($2, "load8_u", [20]), 0);
+// ./test/core/memory_init.wast:81
+assert_return(() => invoke($1, `load8_u`, [19]), [value("i32", 0)]);
 
-// memory_init.wast:83
-assert_return(() => call($2, "load8_u", [21]), 0);
+// ./test/core/memory_init.wast:82
+assert_return(() => invoke($1, `load8_u`, [20]), [value("i32", 0)]);
 
-// memory_init.wast:84
-assert_return(() => call($2, "load8_u", [22]), 0);
+// ./test/core/memory_init.wast:83
+assert_return(() => invoke($1, `load8_u`, [21]), [value("i32", 0)]);
 
-// memory_init.wast:85
-assert_return(() => call($2, "load8_u", [23]), 0);
+// ./test/core/memory_init.wast:84
+assert_return(() => invoke($1, `load8_u`, [22]), [value("i32", 0)]);
 
-// memory_init.wast:86
-assert_return(() => call($2, "load8_u", [24]), 0);
+// ./test/core/memory_init.wast:85
+assert_return(() => invoke($1, `load8_u`, [23]), [value("i32", 0)]);
 
-// memory_init.wast:87
-assert_return(() => call($2, "load8_u", [25]), 0);
+// ./test/core/memory_init.wast:86
+assert_return(() => invoke($1, `load8_u`, [24]), [value("i32", 0)]);
 
-// memory_init.wast:88
-assert_return(() => call($2, "load8_u", [26]), 0);
+// ./test/core/memory_init.wast:87
+assert_return(() => invoke($1, `load8_u`, [25]), [value("i32", 0)]);
 
-// memory_init.wast:89
-assert_return(() => call($2, "load8_u", [27]), 0);
+// ./test/core/memory_init.wast:88
+assert_return(() => invoke($1, `load8_u`, [26]), [value("i32", 0)]);
 
-// memory_init.wast:90
-assert_return(() => call($2, "load8_u", [28]), 0);
+// ./test/core/memory_init.wast:89
+assert_return(() => invoke($1, `load8_u`, [27]), [value("i32", 0)]);
 
-// memory_init.wast:91
-assert_return(() => call($2, "load8_u", [29]), 0);
+// ./test/core/memory_init.wast:90
+assert_return(() => invoke($1, `load8_u`, [28]), [value("i32", 0)]);
 
-// memory_init.wast:93
-let $3 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x01\x7f\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x9c\x80\x80\x80\x00\x03\x07\x6d\x65\x6d\x6f\x72\x79\x30\x02\x00\x04\x74\x65\x73\x74\x00\x00\x07\x6c\x6f\x61\x64\x38\x5f\x75\x00\x01\x0c\x81\x80\x80\x80\x00\x04\x0a\x9e\x80\x80\x80\x00\x02\x8c\x80\x80\x80\x00\x00\x41\x0f\x41\x01\x41\x03\xfc\x08\x03\x00\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x2d\x00\x00\x0b\x0b\xa1\x80\x80\x80\x00\x04\x00\x41\x02\x0b\x04\x03\x01\x04\x01\x01\x04\x02\x07\x01\x08\x00\x41\x0c\x0b\x05\x07\x05\x02\x03\x06\x01\x05\x05\x09\x02\x07\x06");
+// ./test/core/memory_init.wast:91
+assert_return(() => invoke($1, `load8_u`, [29]), [value("i32", 0)]);
 
-// memory_init.wast:104
-run(() => call($3, "test", []));
+// ./test/core/memory_init.wast:93
+let $2 = instantiate(`(module
+  (memory (export "memory0") 1 1)
+  (data (i32.const 2) "\\03\\01\\04\\01")
+  (data "\\02\\07\\01\\08")
+  (data (i32.const 12) "\\07\\05\\02\\03\\06")
+  (data "\\05\\09\\02\\07\\06")
+  (func (export "test")
+    (memory.init 3 (i32.const 15) (i32.const 1) (i32.const 3)))
+  (func (export "load8_u") (param i32) (result i32)
+    (i32.load8_u (local.get 0))))`);
 
-// memory_init.wast:106
-assert_return(() => call($3, "load8_u", [0]), 0);
+// ./test/core/memory_init.wast:104
+invoke($2, `test`, []);
 
-// memory_init.wast:107
-assert_return(() => call($3, "load8_u", [1]), 0);
+// ./test/core/memory_init.wast:106
+assert_return(() => invoke($2, `load8_u`, [0]), [value("i32", 0)]);
 
-// memory_init.wast:108
-assert_return(() => call($3, "load8_u", [2]), 3);
+// ./test/core/memory_init.wast:107
+assert_return(() => invoke($2, `load8_u`, [1]), [value("i32", 0)]);
 
-// memory_init.wast:109
-assert_return(() => call($3, "load8_u", [3]), 1);
+// ./test/core/memory_init.wast:108
+assert_return(() => invoke($2, `load8_u`, [2]), [value("i32", 3)]);
 
-// memory_init.wast:110
-assert_return(() => call($3, "load8_u", [4]), 4);
+// ./test/core/memory_init.wast:109
+assert_return(() => invoke($2, `load8_u`, [3]), [value("i32", 1)]);
 
-// memory_init.wast:111
-assert_return(() => call($3, "load8_u", [5]), 1);
+// ./test/core/memory_init.wast:110
+assert_return(() => invoke($2, `load8_u`, [4]), [value("i32", 4)]);
 
-// memory_init.wast:112
-assert_return(() => call($3, "load8_u", [6]), 0);
+// ./test/core/memory_init.wast:111
+assert_return(() => invoke($2, `load8_u`, [5]), [value("i32", 1)]);
 
-// memory_init.wast:113
-assert_return(() => call($3, "load8_u", [7]), 0);
+// ./test/core/memory_init.wast:112
+assert_return(() => invoke($2, `load8_u`, [6]), [value("i32", 0)]);
 
-// memory_init.wast:114
-assert_return(() => call($3, "load8_u", [8]), 0);
+// ./test/core/memory_init.wast:113
+assert_return(() => invoke($2, `load8_u`, [7]), [value("i32", 0)]);
 
-// memory_init.wast:115
-assert_return(() => call($3, "load8_u", [9]), 0);
+// ./test/core/memory_init.wast:114
+assert_return(() => invoke($2, `load8_u`, [8]), [value("i32", 0)]);
 
-// memory_init.wast:116
-assert_return(() => call($3, "load8_u", [10]), 0);
+// ./test/core/memory_init.wast:115
+assert_return(() => invoke($2, `load8_u`, [9]), [value("i32", 0)]);
 
-// memory_init.wast:117
-assert_return(() => call($3, "load8_u", [11]), 0);
+// ./test/core/memory_init.wast:116
+assert_return(() => invoke($2, `load8_u`, [10]), [value("i32", 0)]);
 
-// memory_init.wast:118
-assert_return(() => call($3, "load8_u", [12]), 7);
+// ./test/core/memory_init.wast:117
+assert_return(() => invoke($2, `load8_u`, [11]), [value("i32", 0)]);
 
-// memory_init.wast:119
-assert_return(() => call($3, "load8_u", [13]), 5);
+// ./test/core/memory_init.wast:118
+assert_return(() => invoke($2, `load8_u`, [12]), [value("i32", 7)]);
 
-// memory_init.wast:120
-assert_return(() => call($3, "load8_u", [14]), 2);
+// ./test/core/memory_init.wast:119
+assert_return(() => invoke($2, `load8_u`, [13]), [value("i32", 5)]);
 
-// memory_init.wast:121
-assert_return(() => call($3, "load8_u", [15]), 9);
+// ./test/core/memory_init.wast:120
+assert_return(() => invoke($2, `load8_u`, [14]), [value("i32", 2)]);
 
-// memory_init.wast:122
-assert_return(() => call($3, "load8_u", [16]), 2);
+// ./test/core/memory_init.wast:121
+assert_return(() => invoke($2, `load8_u`, [15]), [value("i32", 9)]);
 
-// memory_init.wast:123
-assert_return(() => call($3, "load8_u", [17]), 7);
+// ./test/core/memory_init.wast:122
+assert_return(() => invoke($2, `load8_u`, [16]), [value("i32", 2)]);
 
-// memory_init.wast:124
-assert_return(() => call($3, "load8_u", [18]), 0);
+// ./test/core/memory_init.wast:123
+assert_return(() => invoke($2, `load8_u`, [17]), [value("i32", 7)]);
 
-// memory_init.wast:125
-assert_return(() => call($3, "load8_u", [19]), 0);
+// ./test/core/memory_init.wast:124
+assert_return(() => invoke($2, `load8_u`, [18]), [value("i32", 0)]);
 
-// memory_init.wast:126
-assert_return(() => call($3, "load8_u", [20]), 0);
+// ./test/core/memory_init.wast:125
+assert_return(() => invoke($2, `load8_u`, [19]), [value("i32", 0)]);
 
-// memory_init.wast:127
-assert_return(() => call($3, "load8_u", [21]), 0);
+// ./test/core/memory_init.wast:126
+assert_return(() => invoke($2, `load8_u`, [20]), [value("i32", 0)]);
 
-// memory_init.wast:128
-assert_return(() => call($3, "load8_u", [22]), 0);
+// ./test/core/memory_init.wast:127
+assert_return(() => invoke($2, `load8_u`, [21]), [value("i32", 0)]);
 
-// memory_init.wast:129
-assert_return(() => call($3, "load8_u", [23]), 0);
+// ./test/core/memory_init.wast:128
+assert_return(() => invoke($2, `load8_u`, [22]), [value("i32", 0)]);
 
-// memory_init.wast:130
-assert_return(() => call($3, "load8_u", [24]), 0);
+// ./test/core/memory_init.wast:129
+assert_return(() => invoke($2, `load8_u`, [23]), [value("i32", 0)]);
 
-// memory_init.wast:131
-assert_return(() => call($3, "load8_u", [25]), 0);
+// ./test/core/memory_init.wast:130
+assert_return(() => invoke($2, `load8_u`, [24]), [value("i32", 0)]);
 
-// memory_init.wast:132
-assert_return(() => call($3, "load8_u", [26]), 0);
+// ./test/core/memory_init.wast:131
+assert_return(() => invoke($2, `load8_u`, [25]), [value("i32", 0)]);
 
-// memory_init.wast:133
-assert_return(() => call($3, "load8_u", [27]), 0);
+// ./test/core/memory_init.wast:132
+assert_return(() => invoke($2, `load8_u`, [26]), [value("i32", 0)]);
 
-// memory_init.wast:134
-assert_return(() => call($3, "load8_u", [28]), 0);
+// ./test/core/memory_init.wast:133
+assert_return(() => invoke($2, `load8_u`, [27]), [value("i32", 0)]);
 
-// memory_init.wast:135
-assert_return(() => call($3, "load8_u", [29]), 0);
+// ./test/core/memory_init.wast:134
+assert_return(() => invoke($2, `load8_u`, [28]), [value("i32", 0)]);
 
-// memory_init.wast:137
-let $4 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x01\x7f\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x9c\x80\x80\x80\x00\x03\x07\x6d\x65\x6d\x6f\x72\x79\x30\x02\x00\x04\x74\x65\x73\x74\x00\x00\x07\x6c\x6f\x61\x64\x38\x5f\x75\x00\x01\x0c\x81\x80\x80\x80\x00\x04\x0a\xe0\x80\x80\x80\x00\x02\xce\x80\x80\x80\x00\x00\x41\x07\x41\x00\x41\x04\xfc\x08\x01\x00\xfc\x09\x01\x41\x0f\x41\x01\x41\x03\xfc\x08\x03\x00\xfc\x09\x03\x41\x14\x41\x0f\x41\x05\xfc\x0a\x00\x00\x41\x15\x41\x1d\x41\x01\xfc\x0a\x00\x00\x41\x18\x41\x0a\x41\x01\xfc\x0a\x00\x00\x41\x0d\x41\x0b\x41\x04\xfc\x0a\x00\x00\x41\x13\x41\x14\x41\x05\xfc\x0a\x00\x00\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x2d\x00\x00\x0b\x0b\xa1\x80\x80\x80\x00\x04\x00\x41\x02\x0b\x04\x03\x01\x04\x01\x01\x04\x02\x07\x01\x08\x00\x41\x0c\x0b\x05\x07\x05\x02\x03\x06\x01\x05\x05\x09\x02\x07\x06");
+// ./test/core/memory_init.wast:135
+assert_return(() => invoke($2, `load8_u`, [29]), [value("i32", 0)]);
 
-// memory_init.wast:156
-run(() => call($4, "test", []));
+// ./test/core/memory_init.wast:137
+let $3 = instantiate(`(module
+  (memory (export "memory0") 1 1)
+  (data (i32.const 2) "\\03\\01\\04\\01")
+  (data "\\02\\07\\01\\08")
+  (data (i32.const 12) "\\07\\05\\02\\03\\06")
+  (data "\\05\\09\\02\\07\\06")
+  (func (export "test")
+    (memory.init 1 (i32.const 7) (i32.const 0) (i32.const 4))
+    (data.drop 1)
+    (memory.init 3 (i32.const 15) (i32.const 1) (i32.const 3))
+    (data.drop 3)
+    (memory.copy (i32.const 20) (i32.const 15) (i32.const 5))
+    (memory.copy (i32.const 21) (i32.const 29) (i32.const 1))
+    (memory.copy (i32.const 24) (i32.const 10) (i32.const 1))
+    (memory.copy (i32.const 13) (i32.const 11) (i32.const 4))
+    (memory.copy (i32.const 19) (i32.const 20) (i32.const 5)))
+  (func (export "load8_u") (param i32) (result i32)
+    (i32.load8_u (local.get 0))))`);
 
-// memory_init.wast:158
-assert_return(() => call($4, "load8_u", [0]), 0);
+// ./test/core/memory_init.wast:156
+invoke($3, `test`, []);
 
-// memory_init.wast:159
-assert_return(() => call($4, "load8_u", [1]), 0);
+// ./test/core/memory_init.wast:158
+assert_return(() => invoke($3, `load8_u`, [0]), [value("i32", 0)]);
 
-// memory_init.wast:160
-assert_return(() => call($4, "load8_u", [2]), 3);
+// ./test/core/memory_init.wast:159
+assert_return(() => invoke($3, `load8_u`, [1]), [value("i32", 0)]);
 
-// memory_init.wast:161
-assert_return(() => call($4, "load8_u", [3]), 1);
+// ./test/core/memory_init.wast:160
+assert_return(() => invoke($3, `load8_u`, [2]), [value("i32", 3)]);
 
-// memory_init.wast:162
-assert_return(() => call($4, "load8_u", [4]), 4);
+// ./test/core/memory_init.wast:161
+assert_return(() => invoke($3, `load8_u`, [3]), [value("i32", 1)]);
 
-// memory_init.wast:163
-assert_return(() => call($4, "load8_u", [5]), 1);
+// ./test/core/memory_init.wast:162
+assert_return(() => invoke($3, `load8_u`, [4]), [value("i32", 4)]);
 
-// memory_init.wast:164
-assert_return(() => call($4, "load8_u", [6]), 0);
+// ./test/core/memory_init.wast:163
+assert_return(() => invoke($3, `load8_u`, [5]), [value("i32", 1)]);
 
-// memory_init.wast:165
-assert_return(() => call($4, "load8_u", [7]), 2);
+// ./test/core/memory_init.wast:164
+assert_return(() => invoke($3, `load8_u`, [6]), [value("i32", 0)]);
 
-// memory_init.wast:166
-assert_return(() => call($4, "load8_u", [8]), 7);
+// ./test/core/memory_init.wast:165
+assert_return(() => invoke($3, `load8_u`, [7]), [value("i32", 2)]);
 
-// memory_init.wast:167
-assert_return(() => call($4, "load8_u", [9]), 1);
+// ./test/core/memory_init.wast:166
+assert_return(() => invoke($3, `load8_u`, [8]), [value("i32", 7)]);
 
-// memory_init.wast:168
-assert_return(() => call($4, "load8_u", [10]), 8);
+// ./test/core/memory_init.wast:167
+assert_return(() => invoke($3, `load8_u`, [9]), [value("i32", 1)]);
 
-// memory_init.wast:169
-assert_return(() => call($4, "load8_u", [11]), 0);
+// ./test/core/memory_init.wast:168
+assert_return(() => invoke($3, `load8_u`, [10]), [value("i32", 8)]);
 
-// memory_init.wast:170
-assert_return(() => call($4, "load8_u", [12]), 7);
+// ./test/core/memory_init.wast:169
+assert_return(() => invoke($3, `load8_u`, [11]), [value("i32", 0)]);
 
-// memory_init.wast:171
-assert_return(() => call($4, "load8_u", [13]), 0);
+// ./test/core/memory_init.wast:170
+assert_return(() => invoke($3, `load8_u`, [12]), [value("i32", 7)]);
 
-// memory_init.wast:172
-assert_return(() => call($4, "load8_u", [14]), 7);
+// ./test/core/memory_init.wast:171
+assert_return(() => invoke($3, `load8_u`, [13]), [value("i32", 0)]);
 
-// memory_init.wast:173
-assert_return(() => call($4, "load8_u", [15]), 5);
+// ./test/core/memory_init.wast:172
+assert_return(() => invoke($3, `load8_u`, [14]), [value("i32", 7)]);
 
-// memory_init.wast:174
-assert_return(() => call($4, "load8_u", [16]), 2);
+// ./test/core/memory_init.wast:173
+assert_return(() => invoke($3, `load8_u`, [15]), [value("i32", 5)]);
 
-// memory_init.wast:175
-assert_return(() => call($4, "load8_u", [17]), 7);
+// ./test/core/memory_init.wast:174
+assert_return(() => invoke($3, `load8_u`, [16]), [value("i32", 2)]);
 
-// memory_init.wast:176
-assert_return(() => call($4, "load8_u", [18]), 0);
+// ./test/core/memory_init.wast:175
+assert_return(() => invoke($3, `load8_u`, [17]), [value("i32", 7)]);
 
-// memory_init.wast:177
-assert_return(() => call($4, "load8_u", [19]), 9);
+// ./test/core/memory_init.wast:176
+assert_return(() => invoke($3, `load8_u`, [18]), [value("i32", 0)]);
 
-// memory_init.wast:178
-assert_return(() => call($4, "load8_u", [20]), 0);
+// ./test/core/memory_init.wast:177
+assert_return(() => invoke($3, `load8_u`, [19]), [value("i32", 9)]);
 
-// memory_init.wast:179
-assert_return(() => call($4, "load8_u", [21]), 7);
+// ./test/core/memory_init.wast:178
+assert_return(() => invoke($3, `load8_u`, [20]), [value("i32", 0)]);
 
-// memory_init.wast:180
-assert_return(() => call($4, "load8_u", [22]), 0);
+// ./test/core/memory_init.wast:179
+assert_return(() => invoke($3, `load8_u`, [21]), [value("i32", 7)]);
 
-// memory_init.wast:181
-assert_return(() => call($4, "load8_u", [23]), 8);
+// ./test/core/memory_init.wast:180
+assert_return(() => invoke($3, `load8_u`, [22]), [value("i32", 0)]);
 
-// memory_init.wast:182
-assert_return(() => call($4, "load8_u", [24]), 8);
+// ./test/core/memory_init.wast:181
+assert_return(() => invoke($3, `load8_u`, [23]), [value("i32", 8)]);
 
-// memory_init.wast:183
-assert_return(() => call($4, "load8_u", [25]), 0);
+// ./test/core/memory_init.wast:182
+assert_return(() => invoke($3, `load8_u`, [24]), [value("i32", 8)]);
 
-// memory_init.wast:184
-assert_return(() => call($4, "load8_u", [26]), 0);
+// ./test/core/memory_init.wast:183
+assert_return(() => invoke($3, `load8_u`, [25]), [value("i32", 0)]);
 
-// memory_init.wast:185
-assert_return(() => call($4, "load8_u", [27]), 0);
+// ./test/core/memory_init.wast:184
+assert_return(() => invoke($3, `load8_u`, [26]), [value("i32", 0)]);
 
-// memory_init.wast:186
-assert_return(() => call($4, "load8_u", [28]), 0);
+// ./test/core/memory_init.wast:185
+assert_return(() => invoke($3, `load8_u`, [27]), [value("i32", 0)]);
 
-// memory_init.wast:187
-assert_return(() => call($4, "load8_u", [29]), 0);
+// ./test/core/memory_init.wast:186
+assert_return(() => invoke($3, `load8_u`, [28]), [value("i32", 0)]);
 
-// memory_init.wast:188
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\xfc\x09\x00\x0b");
+// ./test/core/memory_init.wast:187
+assert_return(() => invoke($3, `load8_u`, [29]), [value("i32", 0)]);
 
-// memory_init.wast:194
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\xfc\x09\x04\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
+// ./test/core/memory_init.wast:188
+assert_invalid(() =>
+  instantiate(`(module
+     (func (export "test")
+       (data.drop 0)))`), `unknown data segment`);
 
-// memory_init.wast:202
-let $5 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x8e\x80\x80\x80\x00\x01\x88\x80\x80\x80\x00\x00\xfc\x09\x00\xfc\x09\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
+// ./test/core/memory_init.wast:194
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (data.drop 4)))`), `unknown data segment`);
 
-// memory_init.wast:208
-run(() => call($5, "test", []));
+// ./test/core/memory_init.wast:202
+let $4 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (data.drop 0)
+    (data.drop 0)))`);
 
-// memory_init.wast:210
-let $6 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\xfc\x09\x00\x41\xd2\x09\x41\x01\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
+// ./test/core/memory_init.wast:208
+invoke($4, `test`, []);
 
-// memory_init.wast:216
-assert_trap(() => call($6, "test", []));
+// ./test/core/memory_init.wast:210
+let $5 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (data.drop 0)
+    (memory.init 0 (i32.const 1234) (i32.const 1) (i32.const 1))))`);
 
-// memory_init.wast:218
-let $7 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\xd2\x09\x41\x01\x41\x01\xfc\x08\x00\x00\x0b\x0b\x87\x80\x80\x80\x00\x01\x00\x41\x00\x0b\x01\x37");
+// ./test/core/memory_init.wast:216
+assert_trap(() => invoke($5, `test`, []), `out of bounds`);
 
-// memory_init.wast:223
-assert_trap(() => call($7, "test", []));
+// ./test/core/memory_init.wast:218
+let $6 = instantiate(`(module
+   (memory 1)
+   (data (i32.const 0) "\\37")
+   (func (export "test")
+     (memory.init 0 (i32.const 1234) (i32.const 1) (i32.const 1))))`);
 
-// memory_init.wast:225
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\xd2\x09\x41\x01\x41\x01\xfc\x08\x01\x00\x0b");
+// ./test/core/memory_init.wast:223
+assert_trap(() => invoke($6, `test`, []), `out of bounds`);
 
-// memory_init.wast:231
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\xd2\x09\x41\x01\x41\x01\xfc\x08\x01\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
+// ./test/core/memory_init.wast:225
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (func (export "test")
+      (memory.init 1 (i32.const 1234) (i32.const 1) (i32.const 1))))`),
+  `unknown memory 0`,
+);
 
-// memory_init.wast:239
-let $8 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x41\x01\x41\x00\x41\x01\xfc\x08\x00\x00\x41\x01\x41\x00\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
+// ./test/core/memory_init.wast:231
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 1 (i32.const 1234) (i32.const 1) (i32.const 1))))`),
+  `unknown data segment 1`,
+);
 
-// memory_init.wast:245
-run(() => call($8, "test", []));
+// ./test/core/memory_init.wast:239
+let $7 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 1) (i32.const 0) (i32.const 1))
+    (memory.init 0 (i32.const 1) (i32.const 0) (i32.const 1))))`);
 
-// memory_init.wast:247
-let $9 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\xd2\x09\x41\x00\x41\x05\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
+// ./test/core/memory_init.wast:245
+invoke($7, `test`, []);
 
-// memory_init.wast:252
-assert_trap(() => call($9, "test", []));
+// ./test/core/memory_init.wast:247
+let $8 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 1234) (i32.const 0) (i32.const 5))))`);
 
-// memory_init.wast:254
-let $10 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\xd2\x09\x41\x02\x41\x03\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
+// ./test/core/memory_init.wast:252
+assert_trap(() => invoke($8, `test`, []), `out of bounds`);
 
-// memory_init.wast:259
-assert_trap(() => call($10, "test", []));
+// ./test/core/memory_init.wast:254
+let $9 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 1234) (i32.const 2) (i32.const 3))))`);
 
-// memory_init.wast:261
-let $11 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x41\xfe\xff\x03\x41\x01\x41\x03\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
+// ./test/core/memory_init.wast:259
+assert_trap(() => invoke($9, `test`, []), `out of bounds`);
 
-// memory_init.wast:266
-assert_trap(() => call($11, "test", []));
+// ./test/core/memory_init.wast:261
+let $10 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 0xFFFE) (i32.const 1) (i32.const 3))))`);
 
-// memory_init.wast:268
-let $12 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\xd2\x09\x41\x04\x41\x00\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:273
-assert_trap(() => call($12, "test", []));
-
-// memory_init.wast:275
-let $13 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\xd2\x09\x41\x01\x41\x00\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:280
-run(() => call($13, "test", []));
-
-// memory_init.wast:282
-let $14 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x41\x81\x80\x04\x41\x00\x41\x00\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:287
-assert_trap(() => call($14, "test", []));
-
-// memory_init.wast:289
-let $15 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x41\x80\x80\x04\x41\x00\x41\x00\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:294
-run(() => call($15, "test", []));
-
-// memory_init.wast:296
-let $16 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x41\x80\x80\x04\x41\x01\x41\x00\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:301
-run(() => call($16, "test", []));
-
-// memory_init.wast:303
-let $17 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x41\x81\x80\x04\x41\x04\x41\x00\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:308
-assert_trap(() => call($17, "test", []));
-
-// memory_init.wast:310
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x41\x01\x41\x01\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:318
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x41\x01\x41\x01\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:326
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x41\x01\x41\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:334
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x41\x01\x43\x00\x00\x80\x3f\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:342
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x41\x01\x43\x00\x00\x80\x3f\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:350
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x41\x01\x43\x00\x00\x80\x3f\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:358
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x41\x01\x43\x00\x00\x80\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:366
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x41\x01\x42\x01\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:374
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x41\x01\x42\x01\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:382
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x41\x01\x42\x01\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:390
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x41\x01\x42\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:398
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x41\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:406
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x41\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:414
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x41\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:422
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa0\x80\x80\x80\x00\x01\x9a\x80\x80\x80\x00\x00\x41\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:430
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x41\x01\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:438
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x41\x01\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:446
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x41\x01\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:454
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x41\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:462
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x43\x00\x00\x80\x3f\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:470
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9b\x80\x80\x80\x00\x01\x95\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x43\x00\x00\x80\x3f\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:478
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x43\x00\x00\x80\x3f\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:486
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9f\x80\x80\x80\x00\x01\x99\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x43\x00\x00\x80\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:494
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x42\x01\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:502
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x42\x01\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:510
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x42\x01\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:518
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x42\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:526
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:534
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9f\x80\x80\x80\x00\x01\x99\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:542
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:550
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa3\x80\x80\x80\x00\x01\x9d\x80\x80\x80\x00\x00\x43\x00\x00\x80\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:558
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x42\x01\x41\x01\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:566
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x42\x01\x41\x01\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:574
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x42\x01\x41\x01\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:582
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x42\x01\x41\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:590
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x42\x01\x43\x00\x00\x80\x3f\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:598
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x98\x80\x80\x80\x00\x01\x92\x80\x80\x80\x00\x00\x42\x01\x43\x00\x00\x80\x3f\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:606
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x42\x01\x43\x00\x00\x80\x3f\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:614
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x42\x01\x43\x00\x00\x80\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:622
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x42\x01\x42\x01\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:630
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x42\x01\x42\x01\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:638
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x42\x01\x42\x01\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:646
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x42\x01\x42\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:654
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x42\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:662
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x42\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:670
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x42\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:678
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa0\x80\x80\x80\x00\x01\x9a\x80\x80\x80\x00\x00\x42\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:686
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x41\x01\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:694
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x41\x01\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:702
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x41\x01\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:710
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa0\x80\x80\x80\x00\x01\x9a\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x41\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:718
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x43\x00\x00\x80\x3f\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:726
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9f\x80\x80\x80\x00\x01\x99\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x43\x00\x00\x80\x3f\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:734
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x43\x00\x00\x80\x3f\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:742
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa3\x80\x80\x80\x00\x01\x9d\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x43\x00\x00\x80\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:750
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x42\x01\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:758
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x9c\x80\x80\x80\x00\x01\x96\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x42\x01\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:766
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\x99\x80\x80\x80\x00\x01\x93\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x42\x01\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:774
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa0\x80\x80\x80\x00\x01\x9a\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x42\x01\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:782
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa0\x80\x80\x80\x00\x01\x9a\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x41\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:790
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa3\x80\x80\x80\x00\x01\x9d\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x43\x00\x00\x80\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:798
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa0\x80\x80\x80\x00\x01\x9a\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x42\x01\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:806
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x88\x80\x80\x80\x00\x01\x04\x74\x65\x73\x74\x00\x00\x0c\x81\x80\x80\x80\x00\x01\x0a\xa7\x80\x80\x80\x00\x01\xa1\x80\x80\x80\x00\x00\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\x44\x00\x00\x00\x00\x00\x00\xf0\x3f\xfc\x08\x00\x00\x0b\x0b\x84\x80\x80\x80\x00\x01\x01\x01\x37");
-
-// memory_init.wast:814
-let $18 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8d\x80\x80\x80\x00\x02\x60\x03\x7f\x7f\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x94\x80\x80\x80\x00\x02\x0a\x63\x68\x65\x63\x6b\x52\x61\x6e\x67\x65\x00\x00\x03\x72\x75\x6e\x00\x01\x0c\x81\x80\x80\x80\x00\x01\x0a\xbe\x80\x80\x80\x00\x02\xa7\x80\x80\x80\x00\x00\x03\x40\x20\x00\x20\x01\x46\x04\x40\x41\x7f\x0f\x0b\x20\x00\x2d\x00\x00\x20\x02\x46\x04\x40\x20\x00\x41\x01\x6a\x21\x00\x0c\x01\x0b\x0b\x20\x00\x0f\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x08\x00\x00\x0b\x0b\x93\x80\x80\x80\x00\x01\x01\x10\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42");
-
-// memory_init.wast:832
-assert_trap(() => call($18, "run", [65_528, 16]));
-
-// memory_init.wast:835
-assert_return(() => call($18, "checkRange", [0, 1, 0]), -1);
-
-// memory_init.wast:837
-let $19 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8d\x80\x80\x80\x00\x02\x60\x03\x7f\x7f\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x94\x80\x80\x80\x00\x02\x0a\x63\x68\x65\x63\x6b\x52\x61\x6e\x67\x65\x00\x00\x03\x72\x75\x6e\x00\x01\x0c\x81\x80\x80\x80\x00\x01\x0a\xbe\x80\x80\x80\x00\x02\xa7\x80\x80\x80\x00\x00\x03\x40\x20\x00\x20\x01\x46\x04\x40\x41\x7f\x0f\x0b\x20\x00\x2d\x00\x00\x20\x02\x46\x04\x40\x20\x00\x41\x01\x6a\x21\x00\x0c\x01\x0b\x0b\x20\x00\x0f\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x08\x00\x00\x0b\x0b\x93\x80\x80\x80\x00\x01\x01\x10\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42");
-
-// memory_init.wast:855
-assert_trap(() => call($19, "run", [65_527, 16]));
-
-// memory_init.wast:858
-assert_return(() => call($19, "checkRange", [0, 1, 0]), -1);
-
-// memory_init.wast:860
-let $20 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8d\x80\x80\x80\x00\x02\x60\x03\x7f\x7f\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x94\x80\x80\x80\x00\x02\x0a\x63\x68\x65\x63\x6b\x52\x61\x6e\x67\x65\x00\x00\x03\x72\x75\x6e\x00\x01\x0c\x81\x80\x80\x80\x00\x01\x0a\xbe\x80\x80\x80\x00\x02\xa7\x80\x80\x80\x00\x00\x03\x40\x20\x00\x20\x01\x46\x04\x40\x41\x7f\x0f\x0b\x20\x00\x2d\x00\x00\x20\x02\x46\x04\x40\x20\x00\x41\x01\x6a\x21\x00\x0c\x01\x0b\x0b\x20\x00\x0f\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x08\x00\x00\x0b\x0b\x93\x80\x80\x80\x00\x01\x01\x10\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42");
-
-// memory_init.wast:878
-assert_trap(() => call($20, "run", [65_472, 30]));
-
-// memory_init.wast:881
-assert_return(() => call($20, "checkRange", [0, 1, 0]), -1);
-
-// memory_init.wast:883
-let $21 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8d\x80\x80\x80\x00\x02\x60\x03\x7f\x7f\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x84\x80\x80\x80\x00\x01\x01\x01\x01\x07\x94\x80\x80\x80\x00\x02\x0a\x63\x68\x65\x63\x6b\x52\x61\x6e\x67\x65\x00\x00\x03\x72\x75\x6e\x00\x01\x0c\x81\x80\x80\x80\x00\x01\x0a\xbe\x80\x80\x80\x00\x02\xa7\x80\x80\x80\x00\x00\x03\x40\x20\x00\x20\x01\x46\x04\x40\x41\x7f\x0f\x0b\x20\x00\x2d\x00\x00\x20\x02\x46\x04\x40\x20\x00\x41\x01\x6a\x21\x00\x0c\x01\x0b\x0b\x20\x00\x0f\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x08\x00\x00\x0b\x0b\x93\x80\x80\x80\x00\x01\x01\x10\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42");
-
-// memory_init.wast:901
-assert_trap(() => call($21, "run", [65_473, 31]));
-
-// memory_init.wast:904
-assert_return(() => call($21, "checkRange", [0, 1, 0]), -1);
-
-// memory_init.wast:906
-let $22 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8d\x80\x80\x80\x00\x02\x60\x03\x7f\x7f\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x94\x80\x80\x80\x00\x02\x0a\x63\x68\x65\x63\x6b\x52\x61\x6e\x67\x65\x00\x00\x03\x72\x75\x6e\x00\x01\x0c\x81\x80\x80\x80\x00\x01\x0a\xbe\x80\x80\x80\x00\x02\xa7\x80\x80\x80\x00\x00\x03\x40\x20\x00\x20\x01\x46\x04\x40\x41\x7f\x0f\x0b\x20\x00\x2d\x00\x00\x20\x02\x46\x04\x40\x20\x00\x41\x01\x6a\x21\x00\x0c\x01\x0b\x0b\x20\x00\x0f\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x08\x00\x00\x0b\x0b\x93\x80\x80\x80\x00\x01\x01\x10\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42");
-
-// memory_init.wast:924
-assert_trap(() => call($22, "run", [65_528, -256]));
-
-// memory_init.wast:927
-assert_return(() => call($22, "checkRange", [0, 1, 0]), -1);
-
-// memory_init.wast:929
-let $23 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8d\x80\x80\x80\x00\x02\x60\x03\x7f\x7f\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x83\x80\x80\x80\x00\x01\x00\x01\x07\x94\x80\x80\x80\x00\x02\x0a\x63\x68\x65\x63\x6b\x52\x61\x6e\x67\x65\x00\x00\x03\x72\x75\x6e\x00\x01\x0c\x81\x80\x80\x80\x00\x01\x0a\xbe\x80\x80\x80\x00\x02\xa7\x80\x80\x80\x00\x00\x03\x40\x20\x00\x20\x01\x46\x04\x40\x41\x7f\x0f\x0b\x20\x00\x2d\x00\x00\x20\x02\x46\x04\x40\x20\x00\x41\x01\x6a\x21\x00\x0c\x01\x0b\x0b\x20\x00\x0f\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x08\x00\x00\x0b\x0b\x93\x80\x80\x80\x00\x01\x01\x10\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42");
-
-// memory_init.wast:947
-assert_trap(() => call($23, "run", [0, -4]));
-
-// memory_init.wast:950
-assert_return(() => call($23, "checkRange", [0, 1, 0]), -1);
-
-// memory_init.wast:953
-let $24 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0c\x81\x80\x80\x80\x00\x41\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x00\x41\x00\x41\x00\x41\x00\xfc\x08\x40\x00\x0b\x0b\x83\x81\x80\x80\x00\x41\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00");
+// ./test/core/memory_init.wast:266
+assert_trap(() => invoke($10, `test`, []), `out of bounds`);
+
+// ./test/core/memory_init.wast:268
+let $11 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 1234) (i32.const 4) (i32.const 0))))`);
+
+// ./test/core/memory_init.wast:273
+assert_trap(() => invoke($11, `test`, []), `out of bounds`);
+
+// ./test/core/memory_init.wast:275
+let $12 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 1234) (i32.const 1) (i32.const 0))))`);
+
+// ./test/core/memory_init.wast:280
+invoke($12, `test`, []);
+
+// ./test/core/memory_init.wast:282
+let $13 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 0x10001) (i32.const 0) (i32.const 0))))`);
+
+// ./test/core/memory_init.wast:287
+assert_trap(() => invoke($13, `test`, []), `out of bounds`);
+
+// ./test/core/memory_init.wast:289
+let $14 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 0x10000) (i32.const 0) (i32.const 0))))`);
+
+// ./test/core/memory_init.wast:294
+invoke($14, `test`, []);
+
+// ./test/core/memory_init.wast:296
+let $15 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 0x10000) (i32.const 1) (i32.const 0))))`);
+
+// ./test/core/memory_init.wast:301
+invoke($15, `test`, []);
+
+// ./test/core/memory_init.wast:303
+let $16 = instantiate(`(module
+  (memory 1)
+    (data "\\37")
+  (func (export "test")
+    (memory.init 0 (i32.const 0x10001) (i32.const 4) (i32.const 0))))`);
+
+// ./test/core/memory_init.wast:308
+assert_trap(() => invoke($16, `test`, []), `out of bounds`);
+
+// ./test/core/memory_init.wast:310
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (i32.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:318
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (i32.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:326
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (i32.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:334
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (f32.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:342
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (f32.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:350
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (f32.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:358
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (f32.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:366
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (i64.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:374
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (i64.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:382
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (i64.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:390
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (i64.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:398
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (f64.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:406
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (f64.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:414
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (f64.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:422
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i32.const 1) (f64.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:430
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (i32.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:438
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (i32.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:446
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (i32.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:454
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (i32.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:462
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (f32.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:470
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (f32.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:478
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (f32.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:486
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (f32.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:494
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (i64.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:502
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (i64.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:510
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (i64.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:518
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (i64.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:526
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (f64.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:534
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (f64.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:542
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (f64.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:550
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f32.const 1) (f64.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:558
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (i32.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:566
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (i32.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:574
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (i32.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:582
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (i32.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:590
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (f32.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:598
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (f32.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:606
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (f32.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:614
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (f32.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:622
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (i64.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:630
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (i64.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:638
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (i64.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:646
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (i64.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:654
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (f64.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:662
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (f64.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:670
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (f64.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:678
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (i64.const 1) (f64.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:686
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (i32.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:694
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (i32.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:702
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (i32.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:710
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (i32.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:718
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (f32.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:726
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (f32.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:734
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (f32.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:742
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (f32.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:750
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (i64.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:758
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (i64.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:766
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (i64.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:774
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (i64.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:782
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (f64.const 1) (i32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:790
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (f64.const 1) (f32.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:798
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (f64.const 1) (i64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:806
+assert_invalid(
+  () =>
+    instantiate(`(module
+    (memory 1)
+    (data "\\37")
+    (func (export "test")
+      (memory.init 0 (f64.const 1) (f64.const 1) (f64.const 1))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory_init.wast:814
+let $17 = instantiate(`(module
+  (memory 1 1 )
+  (data "\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42")
+   
+  (func (export "checkRange") (param $$from i32) (param $$to i32) (param $$expected i32) (result i32)
+    (loop $$cont
+      (if (i32.eq (local.get $$from) (local.get $$to))
+        (then
+          (return (i32.const -1))))
+      (if (i32.eq (i32.load8_u (local.get $$from)) (local.get $$expected))
+        (then
+          (local.set $$from (i32.add (local.get $$from) (i32.const 1)))
+          (br $$cont))))
+    (return (local.get $$from)))
+
+  (func (export "run") (param $$offs i32) (param $$len i32)
+    (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
+
+// ./test/core/memory_init.wast:832
+assert_trap(() => invoke($17, `run`, [65528, 16]), `out of bounds`);
+
+// ./test/core/memory_init.wast:835
+assert_return(() => invoke($17, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+
+// ./test/core/memory_init.wast:837
+let $18 = instantiate(`(module
+  (memory 1 1 )
+  (data "\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42")
+   
+  (func (export "checkRange") (param $$from i32) (param $$to i32) (param $$expected i32) (result i32)
+    (loop $$cont
+      (if (i32.eq (local.get $$from) (local.get $$to))
+        (then
+          (return (i32.const -1))))
+      (if (i32.eq (i32.load8_u (local.get $$from)) (local.get $$expected))
+        (then
+          (local.set $$from (i32.add (local.get $$from) (i32.const 1)))
+          (br $$cont))))
+    (return (local.get $$from)))
+
+  (func (export "run") (param $$offs i32) (param $$len i32)
+    (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
+
+// ./test/core/memory_init.wast:855
+assert_trap(() => invoke($18, `run`, [65527, 16]), `out of bounds`);
+
+// ./test/core/memory_init.wast:858
+assert_return(() => invoke($18, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+
+// ./test/core/memory_init.wast:860
+let $19 = instantiate(`(module
+  (memory 1 1 )
+  (data "\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42")
+   
+  (func (export "checkRange") (param $$from i32) (param $$to i32) (param $$expected i32) (result i32)
+    (loop $$cont
+      (if (i32.eq (local.get $$from) (local.get $$to))
+        (then
+          (return (i32.const -1))))
+      (if (i32.eq (i32.load8_u (local.get $$from)) (local.get $$expected))
+        (then
+          (local.set $$from (i32.add (local.get $$from) (i32.const 1)))
+          (br $$cont))))
+    (return (local.get $$from)))
+
+  (func (export "run") (param $$offs i32) (param $$len i32)
+    (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
+
+// ./test/core/memory_init.wast:878
+assert_trap(() => invoke($19, `run`, [65472, 30]), `out of bounds`);
+
+// ./test/core/memory_init.wast:881
+assert_return(() => invoke($19, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+
+// ./test/core/memory_init.wast:883
+let $20 = instantiate(`(module
+  (memory 1 1 )
+  (data "\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42")
+   
+  (func (export "checkRange") (param $$from i32) (param $$to i32) (param $$expected i32) (result i32)
+    (loop $$cont
+      (if (i32.eq (local.get $$from) (local.get $$to))
+        (then
+          (return (i32.const -1))))
+      (if (i32.eq (i32.load8_u (local.get $$from)) (local.get $$expected))
+        (then
+          (local.set $$from (i32.add (local.get $$from) (i32.const 1)))
+          (br $$cont))))
+    (return (local.get $$from)))
+
+  (func (export "run") (param $$offs i32) (param $$len i32)
+    (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
+
+// ./test/core/memory_init.wast:901
+assert_trap(() => invoke($20, `run`, [65473, 31]), `out of bounds`);
+
+// ./test/core/memory_init.wast:904
+assert_return(() => invoke($20, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+
+// ./test/core/memory_init.wast:906
+let $21 = instantiate(`(module
+  (memory 1  )
+  (data "\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42")
+   
+  (func (export "checkRange") (param $$from i32) (param $$to i32) (param $$expected i32) (result i32)
+    (loop $$cont
+      (if (i32.eq (local.get $$from) (local.get $$to))
+        (then
+          (return (i32.const -1))))
+      (if (i32.eq (i32.load8_u (local.get $$from)) (local.get $$expected))
+        (then
+          (local.set $$from (i32.add (local.get $$from) (i32.const 1)))
+          (br $$cont))))
+    (return (local.get $$from)))
+
+  (func (export "run") (param $$offs i32) (param $$len i32)
+    (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
+
+// ./test/core/memory_init.wast:924
+assert_trap(() => invoke($21, `run`, [65528, -256]), `out of bounds`);
+
+// ./test/core/memory_init.wast:927
+assert_return(() => invoke($21, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+
+// ./test/core/memory_init.wast:929
+let $22 = instantiate(`(module
+  (memory 1  )
+  (data "\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42")
+   
+  (func (export "checkRange") (param $$from i32) (param $$to i32) (param $$expected i32) (result i32)
+    (loop $$cont
+      (if (i32.eq (local.get $$from) (local.get $$to))
+        (then
+          (return (i32.const -1))))
+      (if (i32.eq (i32.load8_u (local.get $$from)) (local.get $$expected))
+        (then
+          (local.set $$from (i32.add (local.get $$from) (i32.const 1)))
+          (br $$cont))))
+    (return (local.get $$from)))
+
+  (func (export "run") (param $$offs i32) (param $$len i32)
+    (memory.init 0 (local.get $$offs) (i32.const 0) (local.get $$len))))`);
+
+// ./test/core/memory_init.wast:947
+assert_trap(() => invoke($22, `run`, [0, -4]), `out of bounds`);
+
+// ./test/core/memory_init.wast:950
+assert_return(() => invoke($22, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+
+// ./test/core/memory_init.wast:953
+let $23 = instantiate(`(module
+  (memory 1)
+  ;; 65 data segments. 64 is the smallest positive number that is encoded
+  ;; differently as a signed LEB.
+  (data "") (data "") (data "") (data "") (data "") (data "") (data "") (data "")
+  (data "") (data "") (data "") (data "") (data "") (data "") (data "") (data "")
+  (data "") (data "") (data "") (data "") (data "") (data "") (data "") (data "")
+  (data "") (data "") (data "") (data "") (data "") (data "") (data "") (data "")
+  (data "") (data "") (data "") (data "") (data "") (data "") (data "") (data "")
+  (data "") (data "") (data "") (data "") (data "") (data "") (data "") (data "")
+  (data "") (data "") (data "") (data "") (data "") (data "") (data "") (data "")
+  (data "") (data "") (data "") (data "") (data "") (data "") (data "") (data "")
+  (data "")
+  (func (memory.init 64 (i32.const 0) (i32.const 0) (i32.const 0))))`);

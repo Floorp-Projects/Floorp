@@ -1,15 +1,45 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// forward.wast:1
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x86\x80\x80\x80\x00\x01\x60\x01\x7f\x01\x7f\x03\x83\x80\x80\x80\x00\x02\x00\x00\x07\x8e\x80\x80\x80\x00\x02\x04\x65\x76\x65\x6e\x00\x00\x03\x6f\x64\x64\x00\x01\x0a\xb3\x80\x80\x80\x00\x02\x94\x80\x80\x80\x00\x00\x20\x00\x41\x00\x46\x04\x7f\x41\x01\x05\x20\x00\x41\x01\x6b\x10\x01\x0b\x0b\x94\x80\x80\x80\x00\x00\x20\x00\x41\x00\x46\x04\x7f\x41\x00\x05\x20\x00\x41\x01\x6b\x10\x00\x0b\x0b");
+// ./test/core/forward.wast
 
-// forward.wast:17
-assert_return(() => call($1, "even", [13]), 0);
+// ./test/core/forward.wast:1
+let $0 = instantiate(`(module
+  (func $$even (export "even") (param $$n i32) (result i32)
+    (if (result i32) (i32.eq (local.get $$n) (i32.const 0))
+      (then (i32.const 1))
+      (else (call $$odd (i32.sub (local.get $$n) (i32.const 1))))
+    )
+  )
 
-// forward.wast:18
-assert_return(() => call($1, "even", [20]), 1);
+  (func $$odd (export "odd") (param $$n i32) (result i32)
+    (if (result i32) (i32.eq (local.get $$n) (i32.const 0))
+      (then (i32.const 0))
+      (else (call $$even (i32.sub (local.get $$n) (i32.const 1))))
+    )
+  )
+)`);
 
-// forward.wast:19
-assert_return(() => call($1, "odd", [13]), 1);
+// ./test/core/forward.wast:17
+assert_return(() => invoke($0, `even`, [13]), [value("i32", 0)]);
 
-// forward.wast:20
-assert_return(() => call($1, "odd", [20]), 0);
+// ./test/core/forward.wast:18
+assert_return(() => invoke($0, `even`, [20]), [value("i32", 1)]);
+
+// ./test/core/forward.wast:19
+assert_return(() => invoke($0, `odd`, [13]), [value("i32", 1)]);
+
+// ./test/core/forward.wast:20
+assert_return(() => invoke($0, `odd`, [20]), [value("i32", 0)]);

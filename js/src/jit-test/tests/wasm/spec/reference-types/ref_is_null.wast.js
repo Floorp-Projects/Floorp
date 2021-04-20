@@ -1,48 +1,100 @@
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-// ref_is_null.wast:1
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x97\x80\x80\x80\x00\x05\x60\x01\x70\x01\x7f\x60\x01\x6f\x01\x7f\x60\x00\x00\x60\x01\x6f\x00\x60\x01\x7f\x01\x7f\x03\x88\x80\x80\x80\x00\x07\x00\x01\x02\x03\x02\x04\x04\x04\x87\x80\x80\x80\x00\x02\x70\x00\x02\x6f\x00\x02\x07\xc7\x80\x80\x80\x00\x06\x07\x66\x75\x6e\x63\x72\x65\x66\x00\x00\x09\x65\x78\x74\x65\x72\x6e\x72\x65\x66\x00\x01\x04\x69\x6e\x69\x74\x00\x03\x06\x64\x65\x69\x6e\x69\x74\x00\x04\x0c\x66\x75\x6e\x63\x72\x65\x66\x2d\x65\x6c\x65\x6d\x00\x05\x0e\x65\x78\x74\x65\x72\x6e\x72\x65\x66\x2d\x65\x6c\x65\x6d\x00\x06\x09\x87\x80\x80\x80\x00\x01\x00\x41\x01\x0b\x01\x02\x0a\xd6\x80\x80\x80\x00\x07\x85\x80\x80\x80\x00\x00\x20\x00\xd1\x0b\x85\x80\x80\x80\x00\x00\x20\x00\xd1\x0b\x82\x80\x80\x80\x00\x00\x0b\x88\x80\x80\x80\x00\x00\x41\x01\x20\x00\x26\x01\x0b\x8e\x80\x80\x80\x00\x00\x41\x01\xd0\x70\x26\x00\x41\x01\xd0\x6f\x26\x01\x0b\x88\x80\x80\x80\x00\x00\x20\x00\x25\x00\x10\x00\x0b\x88\x80\x80\x80\x00\x00\x20\x00\x25\x01\x10\x01\x0b");
+// ./test/core/ref_is_null.wast
 
-// ref_is_null.wast:30
-assert_return(() => call($1, "funcref", [null]), 1);
+// ./test/core/ref_is_null.wast:1
+let $0 = instantiate(`(module
+  (func $$f1 (export "funcref") (param $$x funcref) (result i32)
+    (ref.is_null (local.get $$x))
+  )
+  (func $$f2 (export "externref") (param $$x externref) (result i32)
+    (ref.is_null (local.get $$x))
+  )
 
-// ref_is_null.wast:31
-assert_return(() => call($1, "externref", [null]), 1);
+  (table $$t1 2 funcref)
+  (table $$t2 2 externref)
+  (elem (table $$t1) (i32.const 1) func $$dummy)
+  (func $$dummy)
 
-// ref_is_null.wast:33
-assert_return(() => call($1, "externref", [externref(1)]), 0);
+  (func (export "init") (param $$r externref)
+    (table.set $$t2 (i32.const 1) (local.get $$r))
+  )
+  (func (export "deinit")
+    (table.set $$t1 (i32.const 1) (ref.null func))
+    (table.set $$t2 (i32.const 1) (ref.null extern))
+  )
 
-// ref_is_null.wast:35
-run(() => call($1, "init", [externref(0)]));
+  (func (export "funcref-elem") (param $$x i32) (result i32)
+    (call $$f1 (table.get $$t1 (local.get $$x)))
+  )
+  (func (export "externref-elem") (param $$x i32) (result i32)
+    (call $$f2 (table.get $$t2 (local.get $$x)))
+  )
+)`);
 
-// ref_is_null.wast:37
-assert_return(() => call($1, "funcref-elem", [0]), 1);
+// ./test/core/ref_is_null.wast:30
+assert_return(() => invoke($0, `funcref`, [null]), [value("i32", 1)]);
 
-// ref_is_null.wast:38
-assert_return(() => call($1, "externref-elem", [0]), 1);
+// ./test/core/ref_is_null.wast:31
+assert_return(() => invoke($0, `externref`, [null]), [value("i32", 1)]);
 
-// ref_is_null.wast:40
-assert_return(() => call($1, "funcref-elem", [1]), 0);
+// ./test/core/ref_is_null.wast:33
+assert_return(() => invoke($0, `externref`, [externref(1)]), [value("i32", 0)]);
 
-// ref_is_null.wast:41
-assert_return(() => call($1, "externref-elem", [1]), 0);
+// ./test/core/ref_is_null.wast:35
+invoke($0, `init`, [externref(0)]);
 
-// ref_is_null.wast:43
-run(() => call($1, "deinit", []));
+// ./test/core/ref_is_null.wast:37
+assert_return(() => invoke($0, `funcref-elem`, [0]), [value("i32", 1)]);
 
-// ref_is_null.wast:45
-assert_return(() => call($1, "funcref-elem", [0]), 1);
+// ./test/core/ref_is_null.wast:38
+assert_return(() => invoke($0, `externref-elem`, [0]), [value("i32", 1)]);
 
-// ref_is_null.wast:46
-assert_return(() => call($1, "externref-elem", [0]), 1);
+// ./test/core/ref_is_null.wast:40
+assert_return(() => invoke($0, `funcref-elem`, [1]), [value("i32", 0)]);
 
-// ref_is_null.wast:48
-assert_return(() => call($1, "funcref-elem", [1]), 1);
+// ./test/core/ref_is_null.wast:41
+assert_return(() => invoke($0, `externref-elem`, [1]), [value("i32", 0)]);
 
-// ref_is_null.wast:49
-assert_return(() => call($1, "externref-elem", [1]), 1);
+// ./test/core/ref_is_null.wast:43
+invoke($0, `deinit`, []);
 
-// ref_is_null.wast:51
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x01\x7f\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x8b\x80\x80\x80\x00\x01\x85\x80\x80\x80\x00\x00\x20\x00\xd1\x0b");
+// ./test/core/ref_is_null.wast:45
+assert_return(() => invoke($0, `funcref-elem`, [0]), [value("i32", 1)]);
 
-// ref_is_null.wast:55
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x0a\x89\x80\x80\x80\x00\x01\x83\x80\x80\x80\x00\x00\xd1\x0b");
+// ./test/core/ref_is_null.wast:46
+assert_return(() => invoke($0, `externref-elem`, [0]), [value("i32", 1)]);
+
+// ./test/core/ref_is_null.wast:48
+assert_return(() => invoke($0, `funcref-elem`, [1]), [value("i32", 1)]);
+
+// ./test/core/ref_is_null.wast:49
+assert_return(() => invoke($0, `externref-elem`, [1]), [value("i32", 1)]);
+
+// ./test/core/ref_is_null.wast:51
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (func $$ref-vs-num (param i32) (ref.is_null (local.get 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/ref_is_null.wast:55
+assert_invalid(
+  () => instantiate(`(module (func $$ref-vs-empty (ref.is_null)))`),
+  `type mismatch`,
+);

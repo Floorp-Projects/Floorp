@@ -1,291 +1,844 @@
-
-// load.wast:3
-let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x95\x80\x80\x80\x00\x04\x60\x03\x7f\x7f\x7f\x01\x7f\x60\x00\x01\x7f\x60\x00\x00\x60\x02\x7f\x7f\x01\x7f\x03\xa7\x80\x80\x80\x00\x26\x01\x02\x01\x01\x02\x01\x01\x01\x01\x01\x01\x03\x03\x01\x00\x01\x01\x01\x01\x01\x01\x01\x02\x01\x02\x01\x01\x02\x02\x02\x02\x01\x01\x01\x01\x01\x01\x01\x04\x85\x80\x80\x80\x00\x01\x70\x01\x01\x01\x05\x83\x80\x80\x80\x00\x01\x00\x01\x06\x86\x80\x80\x80\x00\x01\x7f\x01\x41\x00\x0b\x07\xb7\x85\x80\x80\x00\x25\x0b\x61\x73\x2d\x62\x72\x2d\x76\x61\x6c\x75\x65\x00\x00\x0d\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x63\x6f\x6e\x64\x00\x01\x0e\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x76\x61\x6c\x75\x65\x00\x02\x13\x61\x73\x2d\x62\x72\x5f\x69\x66\x2d\x76\x61\x6c\x75\x65\x2d\x63\x6f\x6e\x64\x00\x03\x11\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x69\x6e\x64\x65\x78\x00\x04\x11\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x00\x05\x17\x61\x73\x2d\x62\x72\x5f\x74\x61\x62\x6c\x65\x2d\x76\x61\x6c\x75\x65\x2d\x69\x6e\x64\x65\x78\x00\x06\x0f\x61\x73\x2d\x72\x65\x74\x75\x72\x6e\x2d\x76\x61\x6c\x75\x65\x00\x07\x0a\x61\x73\x2d\x69\x66\x2d\x63\x6f\x6e\x64\x00\x08\x0a\x61\x73\x2d\x69\x66\x2d\x74\x68\x65\x6e\x00\x09\x0a\x61\x73\x2d\x69\x66\x2d\x65\x6c\x73\x65\x00\x0a\x0f\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x66\x69\x72\x73\x74\x00\x0b\x10\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x73\x65\x63\x6f\x6e\x64\x00\x0c\x0e\x61\x73\x2d\x73\x65\x6c\x65\x63\x74\x2d\x63\x6f\x6e\x64\x00\x0d\x0d\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x66\x69\x72\x73\x74\x00\x0f\x0b\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x6d\x69\x64\x00\x10\x0c\x61\x73\x2d\x63\x61\x6c\x6c\x2d\x6c\x61\x73\x74\x00\x11\x16\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x66\x69\x72\x73\x74\x00\x12\x14\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x6d\x69\x64\x00\x13\x15\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x6c\x61\x73\x74\x00\x14\x16\x61\x73\x2d\x63\x61\x6c\x6c\x5f\x69\x6e\x64\x69\x72\x65\x63\x74\x2d\x69\x6e\x64\x65\x78\x00\x15\x12\x61\x73\x2d\x6c\x6f\x63\x61\x6c\x2e\x73\x65\x74\x2d\x76\x61\x6c\x75\x65\x00\x16\x12\x61\x73\x2d\x6c\x6f\x63\x61\x6c\x2e\x74\x65\x65\x2d\x76\x61\x6c\x75\x65\x00\x17\x13\x61\x73\x2d\x67\x6c\x6f\x62\x61\x6c\x2e\x73\x65\x74\x2d\x76\x61\x6c\x75\x65\x00\x18\x0f\x61\x73\x2d\x6c\x6f\x61\x64\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x19\x10\x61\x73\x2d\x6c\x6f\x61\x64\x4e\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x1a\x10\x61\x73\x2d\x73\x74\x6f\x72\x65\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x1b\x0e\x61\x73\x2d\x73\x74\x6f\x72\x65\x2d\x76\x61\x6c\x75\x65\x00\x1c\x11\x61\x73\x2d\x73\x74\x6f\x72\x65\x4e\x2d\x61\x64\x64\x72\x65\x73\x73\x00\x1d\x0f\x61\x73\x2d\x73\x74\x6f\x72\x65\x4e\x2d\x76\x61\x6c\x75\x65\x00\x1e\x10\x61\x73\x2d\x75\x6e\x61\x72\x79\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x1f\x0e\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x6c\x65\x66\x74\x00\x20\x0f\x61\x73\x2d\x62\x69\x6e\x61\x72\x79\x2d\x72\x69\x67\x68\x74\x00\x21\x0f\x61\x73\x2d\x74\x65\x73\x74\x2d\x6f\x70\x65\x72\x61\x6e\x64\x00\x22\x0f\x61\x73\x2d\x63\x6f\x6d\x70\x61\x72\x65\x2d\x6c\x65\x66\x74\x00\x23\x10\x61\x73\x2d\x63\x6f\x6d\x70\x61\x72\x65\x2d\x72\x69\x67\x68\x74\x00\x24\x13\x61\x73\x2d\x6d\x65\x6d\x6f\x72\x79\x2e\x67\x72\x6f\x77\x2d\x73\x69\x7a\x65\x00\x25\x09\x87\x80\x80\x80\x00\x01\x00\x41\x00\x0b\x01\x0e\x0a\x9e\x85\x80\x80\x00\x26\x8c\x80\x80\x80\x00\x00\x02\x7f\x41\x00\x28\x02\x00\x0c\x00\x0b\x0b\x8c\x80\x80\x80\x00\x00\x02\x40\x41\x00\x28\x02\x00\x0d\x00\x0b\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x41\x00\x28\x02\x00\x41\x01\x0d\x00\x1a\x41\x07\x0b\x0b\x91\x80\x80\x80\x00\x00\x02\x7f\x41\x06\x41\x00\x28\x02\x00\x0d\x00\x1a\x41\x07\x0b\x0b\x8f\x80\x80\x80\x00\x00\x02\x40\x41\x00\x28\x02\x00\x0e\x02\x00\x00\x00\x0b\x0b\x93\x80\x80\x80\x00\x00\x02\x7f\x41\x00\x28\x02\x00\x41\x01\x0e\x02\x00\x00\x00\x41\x07\x0b\x0b\x92\x80\x80\x80\x00\x00\x02\x7f\x41\x06\x41\x00\x28\x02\x00\x0e\x01\x00\x00\x41\x07\x0b\x0b\x88\x80\x80\x80\x00\x00\x41\x00\x28\x02\x00\x0f\x0b\x8f\x80\x80\x80\x00\x00\x41\x00\x28\x02\x00\x04\x7f\x41\x00\x05\x41\x01\x0b\x0b\x8f\x80\x80\x80\x00\x00\x41\x01\x04\x7f\x41\x00\x28\x02\x00\x05\x41\x00\x0b\x0b\x8f\x80\x80\x80\x00\x00\x41\x00\x04\x7f\x41\x00\x05\x41\x00\x28\x02\x00\x0b\x0b\x8c\x80\x80\x80\x00\x00\x41\x00\x28\x02\x00\x20\x00\x20\x01\x1b\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x28\x02\x00\x20\x01\x1b\x0b\x8c\x80\x80\x80\x00\x00\x41\x00\x41\x01\x41\x00\x28\x02\x00\x1b\x0b\x84\x80\x80\x80\x00\x00\x41\x7f\x0b\x8d\x80\x80\x80\x00\x00\x41\x00\x28\x02\x00\x41\x02\x41\x03\x10\x0e\x0b\x8d\x80\x80\x80\x00\x00\x41\x01\x41\x00\x28\x02\x00\x41\x03\x10\x0e\x0b\x8d\x80\x80\x80\x00\x00\x41\x01\x41\x02\x41\x00\x28\x02\x00\x10\x0e\x0b\x90\x80\x80\x80\x00\x00\x41\x00\x28\x02\x00\x41\x02\x41\x03\x41\x00\x11\x00\x00\x0b\x90\x80\x80\x80\x00\x00\x41\x01\x41\x00\x28\x02\x00\x41\x03\x41\x00\x11\x00\x00\x0b\x90\x80\x80\x80\x00\x00\x41\x01\x41\x02\x41\x00\x28\x02\x00\x41\x00\x11\x00\x00\x0b\x90\x80\x80\x80\x00\x00\x41\x01\x41\x02\x41\x03\x41\x00\x28\x02\x00\x11\x00\x00\x0b\x8b\x80\x80\x80\x00\x01\x01\x7f\x41\x00\x28\x02\x00\x21\x00\x0b\x8b\x80\x80\x80\x00\x01\x01\x7f\x41\x00\x28\x02\x00\x22\x00\x0b\x8b\x80\x80\x80\x00\x01\x01\x7f\x41\x00\x28\x02\x00\x24\x00\x0b\x8a\x80\x80\x80\x00\x00\x41\x00\x28\x02\x00\x28\x02\x00\x0b\x8a\x80\x80\x80\x00\x00\x41\x00\x28\x02\x00\x2c\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x41\x00\x28\x02\x00\x41\x07\x36\x02\x00\x0b\x8c\x80\x80\x80\x00\x00\x41\x02\x41\x00\x28\x02\x00\x36\x02\x00\x0b\x8c\x80\x80\x80\x00\x00\x41\x00\x2c\x00\x00\x41\x07\x3a\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x41\x02\x41\x00\x28\x02\x00\x3b\x01\x00\x0b\x89\x80\x80\x80\x00\x00\x41\xe4\x00\x28\x02\x00\x67\x0b\x8b\x80\x80\x80\x00\x00\x41\xe4\x00\x28\x02\x00\x41\x0a\x6a\x0b\x8b\x80\x80\x80\x00\x00\x41\x0a\x41\xe4\x00\x28\x02\x00\x6b\x0b\x89\x80\x80\x80\x00\x00\x41\xe4\x00\x28\x02\x00\x45\x0b\x8b\x80\x80\x80\x00\x00\x41\xe4\x00\x28\x02\x00\x41\x0a\x4c\x0b\x8b\x80\x80\x80\x00\x00\x41\x0a\x41\xe4\x00\x28\x02\x00\x47\x0b\x8a\x80\x80\x80\x00\x00\x41\xe4\x00\x28\x02\x00\x40\x00\x0b");
-
-// load.wast:161
-assert_return(() => call($1, "as-br-value", []), 0);
-
-// load.wast:163
-assert_return(() => call($1, "as-br_if-cond", []));
-
-// load.wast:164
-assert_return(() => call($1, "as-br_if-value", []), 0);
-
-// load.wast:165
-assert_return(() => call($1, "as-br_if-value-cond", []), 7);
-
-// load.wast:167
-assert_return(() => call($1, "as-br_table-index", []));
-
-// load.wast:168
-assert_return(() => call($1, "as-br_table-value", []), 0);
-
-// load.wast:169
-assert_return(() => call($1, "as-br_table-value-index", []), 6);
-
-// load.wast:171
-assert_return(() => call($1, "as-return-value", []), 0);
-
-// load.wast:173
-assert_return(() => call($1, "as-if-cond", []), 1);
-
-// load.wast:174
-assert_return(() => call($1, "as-if-then", []), 0);
-
-// load.wast:175
-assert_return(() => call($1, "as-if-else", []), 0);
-
-// load.wast:177
-assert_return(() => call($1, "as-select-first", [0, 1]), 0);
-
-// load.wast:178
-assert_return(() => call($1, "as-select-second", [0, 0]), 0);
-
-// load.wast:179
-assert_return(() => call($1, "as-select-cond", []), 1);
-
-// load.wast:181
-assert_return(() => call($1, "as-call-first", []), -1);
-
-// load.wast:182
-assert_return(() => call($1, "as-call-mid", []), -1);
-
-// load.wast:183
-assert_return(() => call($1, "as-call-last", []), -1);
-
-// load.wast:185
-assert_return(() => call($1, "as-call_indirect-first", []), -1);
-
-// load.wast:186
-assert_return(() => call($1, "as-call_indirect-mid", []), -1);
-
-// load.wast:187
-assert_return(() => call($1, "as-call_indirect-last", []), -1);
-
-// load.wast:188
-assert_return(() => call($1, "as-call_indirect-index", []), -1);
-
-// load.wast:190
-assert_return(() => call($1, "as-local.set-value", []));
-
-// load.wast:191
-assert_return(() => call($1, "as-local.tee-value", []), 0);
-
-// load.wast:192
-assert_return(() => call($1, "as-global.set-value", []));
-
-// load.wast:194
-assert_return(() => call($1, "as-load-address", []), 0);
-
-// load.wast:195
-assert_return(() => call($1, "as-loadN-address", []), 0);
-
-// load.wast:196
-assert_return(() => call($1, "as-store-address", []));
-
-// load.wast:197
-assert_return(() => call($1, "as-store-value", []));
-
-// load.wast:198
-assert_return(() => call($1, "as-storeN-address", []));
-
-// load.wast:199
-assert_return(() => call($1, "as-storeN-value", []));
-
-// load.wast:201
-assert_return(() => call($1, "as-unary-operand", []), 32);
-
-// load.wast:203
-assert_return(() => call($1, "as-binary-left", []), 10);
-
-// load.wast:204
-assert_return(() => call($1, "as-binary-right", []), 10);
-
-// load.wast:206
-assert_return(() => call($1, "as-test-operand", []), 1);
-
-// load.wast:208
-assert_return(() => call($1, "as-compare-left", []), 1);
-
-// load.wast:209
-assert_return(() => call($1, "as-compare-right", []), 1);
-
-// load.wast:211
-assert_return(() => call($1, "as-memory.grow-size", []), 1);
-
-// load.wast:213
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:220
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:227
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:234
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:241
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:248
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:256
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:263
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:270
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:278
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:285
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:293
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:300
-assert_malformed("\x3c\x6d\x61\x6c\x66\x6f\x72\x6d\x65\x64\x20\x71\x75\x6f\x74\x65\x3e");
-
-// load.wast:311
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x28\x02\x00\x0b");
-
-// load.wast:315
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x2c\x00\x00\x0b");
-
-// load.wast:319
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x2d\x00\x00\x0b");
-
-// load.wast:323
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x2e\x01\x00\x0b");
-
-// load.wast:327
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x2f\x01\x00\x0b");
-
-// load.wast:331
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x29\x03\x00\x0b");
-
-// load.wast:335
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x30\x00\x00\x0b");
-
-// load.wast:339
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x31\x00\x00\x0b");
-
-// load.wast:343
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x32\x01\x00\x0b");
-
-// load.wast:347
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x33\x01\x00\x0b");
-
-// load.wast:351
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x34\x02\x00\x0b");
-
-// load.wast:355
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x35\x02\x00\x0b");
-
-// load.wast:359
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x2a\x02\x00\x0b");
-
-// load.wast:363
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x41\x00\x2b\x03\x00\x0b");
-
-// load.wast:371
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x28\x02\x00\x0b");
-
-// load.wast:372
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x2c\x00\x00\x0b");
-
-// load.wast:373
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x2d\x00\x00\x0b");
-
-// load.wast:374
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x2e\x01\x00\x0b");
-
-// load.wast:375
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7f\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x2f\x01\x00\x0b");
-
-// load.wast:376
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x29\x03\x00\x0b");
-
-// load.wast:377
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x30\x00\x00\x0b");
-
-// load.wast:378
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x31\x00\x00\x0b");
-
-// load.wast:379
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x32\x01\x00\x0b");
-
-// load.wast:380
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x33\x01\x00\x0b");
-
-// load.wast:381
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x34\x02\x00\x0b");
-
-// load.wast:382
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7e\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x35\x02\x00\x0b");
-
-// load.wast:383
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7d\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x2a\x02\x00\x0b");
-
-// load.wast:384
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x85\x80\x80\x80\x00\x01\x60\x00\x01\x7c\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x43\x00\x00\x00\x00\x2b\x03\x00\x0b");
-
-// load.wast:387
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x8c\x80\x80\x80\x00\x01\x86\x80\x80\x80\x00\x00\x28\x02\x00\x1a\x0b");
-
-// load.wast:396
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x41\x00\x02\x40\x28\x02\x00\x1a\x0b\x0b");
-
-// load.wast:406
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x41\x00\x03\x40\x28\x02\x00\x1a\x0b\x0b");
-
-// load.wast:416
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\x00\x41\x00\x04\x40\x28\x02\x00\x1a\x0b\x0b");
-
-// load.wast:426
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x96\x80\x80\x80\x00\x01\x90\x80\x80\x80\x00\x00\x41\x00\x41\x00\x04\x7f\x41\x00\x05\x28\x02\x00\x0b\x1a\x0b");
-
-// load.wast:436
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x93\x80\x80\x80\x00\x01\x8d\x80\x80\x80\x00\x00\x41\x00\x02\x40\x28\x02\x00\x0c\x00\x1a\x0b\x0b");
-
-// load.wast:446
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x95\x80\x80\x80\x00\x01\x8f\x80\x80\x80\x00\x00\x41\x00\x02\x40\x28\x02\x00\x41\x01\x0d\x00\x1a\x0b\x0b");
-
-// load.wast:456
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x94\x80\x80\x80\x00\x01\x8e\x80\x80\x80\x00\x00\x41\x00\x02\x40\x28\x02\x00\x0e\x00\x00\x1a\x0b\x0b");
-
-// load.wast:466
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x8d\x80\x80\x80\x00\x01\x87\x80\x80\x80\x00\x00\x28\x02\x00\x0f\x1a\x0b");
-
-// load.wast:475
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x91\x80\x80\x80\x00\x01\x8b\x80\x80\x80\x00\x00\x28\x02\x00\x41\x01\x41\x02\x1b\x1a\x0b");
-
-// load.wast:484
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x00\x00\x60\x01\x7f\x01\x7f\x03\x83\x80\x80\x80\x00\x02\x00\x01\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x97\x80\x80\x80\x00\x02\x88\x80\x80\x80\x00\x00\x28\x02\x00\x10\x01\x1a\x0b\x84\x80\x80\x80\x00\x00\x20\x00\x0b");
-
-// load.wast:494
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x89\x80\x80\x80\x00\x02\x60\x01\x7f\x01\x7f\x60\x00\x00\x03\x83\x80\x80\x80\x00\x02\x00\x01\x04\x85\x80\x80\x80\x00\x01\x70\x01\x01\x01\x05\x83\x80\x80\x80\x00\x01\x00\x00\x09\x87\x80\x80\x80\x00\x01\x00\x41\x00\x0b\x01\x00\x0a\x9d\x80\x80\x80\x00\x02\x84\x80\x80\x80\x00\x00\x20\x00\x0b\x8e\x80\x80\x80\x00\x00\x02\x7f\x28\x02\x00\x41\x00\x11\x00\x00\x1a\x0b\x0b");
-
-// load.wast:511
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x92\x80\x80\x80\x00\x01\x8c\x80\x80\x80\x00\x01\x01\x7f\x28\x02\x00\x21\x00\x20\x00\x1a\x0b");
-
-// load.wast:521
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x01\x01\x7f\x28\x02\x00\x22\x00\x1a\x0b");
-
-// load.wast:531
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x06\x86\x80\x80\x80\x00\x01\x7f\x01\x41\x00\x0b\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x28\x02\x00\x24\x00\x23\x00\x1a\x0b");
-
-// load.wast:541
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x8e\x80\x80\x80\x00\x01\x88\x80\x80\x80\x00\x00\x28\x02\x00\x40\x00\x1a\x0b");
-
-// load.wast:550
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x00\x0a\x8f\x80\x80\x80\x00\x01\x89\x80\x80\x80\x00\x00\x28\x02\x00\x28\x02\x00\x1a\x0b");
-
-// load.wast:559
-assert_invalid("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x82\x80\x80\x80\x00\x01\x00\x05\x83\x80\x80\x80\x00\x01\x00\x01\x0a\x90\x80\x80\x80\x00\x01\x8a\x80\x80\x80\x00\x00\x28\x02\x00\x41\x01\x36\x02\x00\x0b");
+/* Copyright 2021 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// ./test/core/load.wast
+
+// ./test/core/load.wast:3
+let $0 = instantiate(`(module
+  (memory 1)
+
+  (func (export "as-br-value") (result i32)
+    (block (result i32) (br 0 (i32.load (i32.const 0))))
+  )
+
+  (func (export "as-br_if-cond")
+    (block (br_if 0 (i32.load (i32.const 0))))
+  )
+  (func (export "as-br_if-value") (result i32)
+    (block (result i32)
+      (drop (br_if 0 (i32.load (i32.const 0)) (i32.const 1))) (i32.const 7)
+    )
+  )
+  (func (export "as-br_if-value-cond") (result i32)
+    (block (result i32)
+      (drop (br_if 0 (i32.const 6) (i32.load (i32.const 0)))) (i32.const 7)
+    )
+  )
+
+  (func (export "as-br_table-index")
+    (block (br_table 0 0 0 (i32.load (i32.const 0))))
+  )
+  (func (export "as-br_table-value") (result i32)
+    (block (result i32)
+      (br_table 0 0 0 (i32.load (i32.const 0)) (i32.const 1)) (i32.const 7)
+    )
+  )
+  (func (export "as-br_table-value-index") (result i32)
+    (block (result i32)
+      (br_table 0 0 (i32.const 6) (i32.load (i32.const 0))) (i32.const 7)
+    )
+  )
+
+  (func (export "as-return-value") (result i32)
+    (return (i32.load (i32.const 0)))
+  )
+
+  (func (export "as-if-cond") (result i32)
+    (if (result i32) (i32.load (i32.const 0))
+      (then (i32.const 0)) (else (i32.const 1))
+    )
+  )
+  (func (export "as-if-then") (result i32)
+    (if (result i32) (i32.const 1)
+      (then (i32.load (i32.const 0))) (else (i32.const 0))
+    )
+  )
+  (func (export "as-if-else") (result i32)
+    (if (result i32) (i32.const 0)
+      (then (i32.const 0)) (else (i32.load (i32.const 0)))
+    )
+  )
+
+  (func (export "as-select-first") (param i32 i32) (result i32)
+    (select (i32.load (i32.const 0)) (local.get 0) (local.get 1))
+  )
+  (func (export "as-select-second") (param i32 i32) (result i32)
+    (select (local.get 0) (i32.load (i32.const 0)) (local.get 1))
+  )
+  (func (export "as-select-cond") (result i32)
+    (select (i32.const 0) (i32.const 1) (i32.load (i32.const 0)))
+  )
+
+  (func $$f (param i32 i32 i32) (result i32) (i32.const -1))
+  (func (export "as-call-first") (result i32)
+    (call $$f (i32.load (i32.const 0)) (i32.const 2) (i32.const 3))
+  )
+  (func (export "as-call-mid") (result i32)
+    (call $$f (i32.const 1) (i32.load (i32.const 0)) (i32.const 3))
+  )
+  (func (export "as-call-last") (result i32)
+    (call $$f (i32.const 1) (i32.const 2) (i32.load (i32.const 0)))
+  )
+
+  (type $$sig (func (param i32 i32 i32) (result i32)))
+  (table funcref (elem $$f))
+  (func (export "as-call_indirect-first") (result i32)
+    (call_indirect (type $$sig)
+      (i32.load (i32.const 0)) (i32.const 2) (i32.const 3) (i32.const 0)
+    )
+  )
+  (func (export "as-call_indirect-mid") (result i32)
+    (call_indirect (type $$sig)
+      (i32.const 1) (i32.load (i32.const 0)) (i32.const 3) (i32.const 0)
+    )
+  )
+  (func (export "as-call_indirect-last") (result i32)
+    (call_indirect (type $$sig)
+      (i32.const 1) (i32.const 2) (i32.load (i32.const 0)) (i32.const 0)
+    )
+  )
+  (func (export "as-call_indirect-index") (result i32)
+    (call_indirect (type $$sig)
+      (i32.const 1) (i32.const 2) (i32.const 3) (i32.load (i32.const 0))
+    )
+  )
+
+  (func (export "as-local.set-value") (local i32)
+    (local.set 0 (i32.load (i32.const 0)))
+  )
+  (func (export "as-local.tee-value") (result i32) (local i32)
+    (local.tee 0 (i32.load (i32.const 0)))
+  )
+  (global $$g (mut i32) (i32.const 0))
+  (func (export "as-global.set-value") (local i32)
+    (global.set $$g (i32.load (i32.const 0)))
+  )
+
+  (func (export "as-load-address") (result i32)
+    (i32.load (i32.load (i32.const 0)))
+  )
+  (func (export "as-loadN-address") (result i32)
+    (i32.load8_s (i32.load (i32.const 0)))
+  )
+
+  (func (export "as-store-address")
+    (i32.store (i32.load (i32.const 0)) (i32.const 7))
+  )
+  (func (export "as-store-value")
+    (i32.store (i32.const 2) (i32.load (i32.const 0)))
+  )
+
+  (func (export "as-storeN-address")
+    (i32.store8 (i32.load8_s (i32.const 0)) (i32.const 7))
+  )
+  (func (export "as-storeN-value")
+    (i32.store16 (i32.const 2) (i32.load (i32.const 0)))
+  )
+
+  (func (export "as-unary-operand") (result i32)
+    (i32.clz (i32.load (i32.const 100)))
+  )
+
+  (func (export "as-binary-left") (result i32)
+    (i32.add (i32.load (i32.const 100)) (i32.const 10))
+  )
+  (func (export "as-binary-right") (result i32)
+    (i32.sub (i32.const 10) (i32.load (i32.const 100)))
+  )
+
+  (func (export "as-test-operand") (result i32)
+    (i32.eqz (i32.load (i32.const 100)))
+  )
+
+  (func (export "as-compare-left") (result i32)
+    (i32.le_s (i32.load (i32.const 100)) (i32.const 10))
+  )
+  (func (export "as-compare-right") (result i32)
+    (i32.ne (i32.const 10) (i32.load (i32.const 100)))
+  )
+
+  (func (export "as-memory.grow-size") (result i32)
+    (memory.grow (i32.load (i32.const 100)))
+  )
+)`);
+
+// ./test/core/load.wast:161
+assert_return(() => invoke($0, `as-br-value`, []), [value("i32", 0)]);
+
+// ./test/core/load.wast:163
+assert_return(() => invoke($0, `as-br_if-cond`, []), []);
+
+// ./test/core/load.wast:164
+assert_return(() => invoke($0, `as-br_if-value`, []), [value("i32", 0)]);
+
+// ./test/core/load.wast:165
+assert_return(() => invoke($0, `as-br_if-value-cond`, []), [value("i32", 7)]);
+
+// ./test/core/load.wast:167
+assert_return(() => invoke($0, `as-br_table-index`, []), []);
+
+// ./test/core/load.wast:168
+assert_return(() => invoke($0, `as-br_table-value`, []), [value("i32", 0)]);
+
+// ./test/core/load.wast:169
+assert_return(() => invoke($0, `as-br_table-value-index`, []), [
+  value("i32", 6),
+]);
+
+// ./test/core/load.wast:171
+assert_return(() => invoke($0, `as-return-value`, []), [value("i32", 0)]);
+
+// ./test/core/load.wast:173
+assert_return(() => invoke($0, `as-if-cond`, []), [value("i32", 1)]);
+
+// ./test/core/load.wast:174
+assert_return(() => invoke($0, `as-if-then`, []), [value("i32", 0)]);
+
+// ./test/core/load.wast:175
+assert_return(() => invoke($0, `as-if-else`, []), [value("i32", 0)]);
+
+// ./test/core/load.wast:177
+assert_return(() => invoke($0, `as-select-first`, [0, 1]), [value("i32", 0)]);
+
+// ./test/core/load.wast:178
+assert_return(() => invoke($0, `as-select-second`, [0, 0]), [value("i32", 0)]);
+
+// ./test/core/load.wast:179
+assert_return(() => invoke($0, `as-select-cond`, []), [value("i32", 1)]);
+
+// ./test/core/load.wast:181
+assert_return(() => invoke($0, `as-call-first`, []), [value("i32", -1)]);
+
+// ./test/core/load.wast:182
+assert_return(() => invoke($0, `as-call-mid`, []), [value("i32", -1)]);
+
+// ./test/core/load.wast:183
+assert_return(() => invoke($0, `as-call-last`, []), [value("i32", -1)]);
+
+// ./test/core/load.wast:185
+assert_return(() => invoke($0, `as-call_indirect-first`, []), [
+  value("i32", -1),
+]);
+
+// ./test/core/load.wast:186
+assert_return(() => invoke($0, `as-call_indirect-mid`, []), [value("i32", -1)]);
+
+// ./test/core/load.wast:187
+assert_return(() => invoke($0, `as-call_indirect-last`, []), [
+  value("i32", -1),
+]);
+
+// ./test/core/load.wast:188
+assert_return(() => invoke($0, `as-call_indirect-index`, []), [
+  value("i32", -1),
+]);
+
+// ./test/core/load.wast:190
+assert_return(() => invoke($0, `as-local.set-value`, []), []);
+
+// ./test/core/load.wast:191
+assert_return(() => invoke($0, `as-local.tee-value`, []), [value("i32", 0)]);
+
+// ./test/core/load.wast:192
+assert_return(() => invoke($0, `as-global.set-value`, []), []);
+
+// ./test/core/load.wast:194
+assert_return(() => invoke($0, `as-load-address`, []), [value("i32", 0)]);
+
+// ./test/core/load.wast:195
+assert_return(() => invoke($0, `as-loadN-address`, []), [value("i32", 0)]);
+
+// ./test/core/load.wast:196
+assert_return(() => invoke($0, `as-store-address`, []), []);
+
+// ./test/core/load.wast:197
+assert_return(() => invoke($0, `as-store-value`, []), []);
+
+// ./test/core/load.wast:198
+assert_return(() => invoke($0, `as-storeN-address`, []), []);
+
+// ./test/core/load.wast:199
+assert_return(() => invoke($0, `as-storeN-value`, []), []);
+
+// ./test/core/load.wast:201
+assert_return(() => invoke($0, `as-unary-operand`, []), [value("i32", 32)]);
+
+// ./test/core/load.wast:203
+assert_return(() => invoke($0, `as-binary-left`, []), [value("i32", 10)]);
+
+// ./test/core/load.wast:204
+assert_return(() => invoke($0, `as-binary-right`, []), [value("i32", 10)]);
+
+// ./test/core/load.wast:206
+assert_return(() => invoke($0, `as-test-operand`, []), [value("i32", 1)]);
+
+// ./test/core/load.wast:208
+assert_return(() => invoke($0, `as-compare-left`, []), [value("i32", 1)]);
+
+// ./test/core/load.wast:209
+assert_return(() => invoke($0, `as-compare-right`, []), [value("i32", 1)]);
+
+// ./test/core/load.wast:211
+assert_return(() => invoke($0, `as-memory.grow-size`, []), [value("i32", 1)]);
+
+// ./test/core/load.wast:213
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result i32) (i32.load32 (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:220
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result i32) (i32.load32_u (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:227
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result i32) (i32.load32_s (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:234
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result i32) (i32.load64 (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:241
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result i32) (i32.load64_u (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:248
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result i32) (i32.load64_s (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:256
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result i64) (i64.load64 (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:263
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result i64) (i64.load64_u (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:270
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result i64) (i64.load64_s (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:278
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result f32) (f32.load32 (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:285
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result f32) (f32.load64 (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:293
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result f64) (f64.load32 (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:300
+assert_malformed(
+  () =>
+    instantiate(
+      `(memory 1) (func (param i32) (result f64) (f64.load64 (local.get 0))) `,
+    ),
+  `unknown operator`,
+);
+
+// ./test/core/load.wast:311
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load_i32 (i32.load (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:315
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load8_s_i32 (i32.load8_s (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:319
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load8_u_i32 (i32.load8_u (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:323
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load16_s_i32 (i32.load16_s (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:327
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load16_u_i32 (i32.load16_u (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:331
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load_i64 (i64.load (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:335
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load8_s_i64 (i64.load8_s (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:339
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load8_u_i64 (i64.load8_u (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:343
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load16_s_i64 (i64.load16_s (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:347
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load16_u_i64 (i64.load16_u (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:351
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load32_s_i64 (i64.load32_s (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:355
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load32_u_i64 (i64.load32_u (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:359
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load_f32 (f32.load (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:363
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func $$load_f64 (f64.load (i32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:371
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i32) (i32.load (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:372
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i32) (i32.load8_s (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:373
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i32) (i32.load8_u (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:374
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i32) (i32.load16_s (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:375
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i32) (i32.load16_u (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:376
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i64) (i64.load (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:377
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i64) (i64.load8_s (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:378
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i64) (i64.load8_u (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:379
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i64) (i64.load16_s (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:380
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i64) (i64.load16_u (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:381
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i64) (i64.load32_s (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:382
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result i64) (i64.load32_u (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:383
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result f32) (f32.load (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:384
+assert_invalid(
+  () =>
+    instantiate(
+      `(module (memory 1) (func (result f64) (f64.load (f32.const 0))))`,
+    ),
+  `type mismatch`,
+);
+
+// ./test/core/load.wast:387
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty
+      (i32.load) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:396
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-block
+      (i32.const 0)
+      (block (i32.load) (drop))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:406
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-loop
+      (i32.const 0)
+      (loop (i32.load) (drop))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:416
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-then
+      (i32.const 0) (i32.const 0)
+      (if (then (i32.load) (drop)))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:426
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-else
+      (i32.const 0) (i32.const 0)
+      (if (result i32) (then (i32.const 0)) (else (i32.load))) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:436
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-br
+      (i32.const 0)
+      (block (br 0 (i32.load)) (drop))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:446
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-br_if
+      (i32.const 0)
+      (block (br_if 0 (i32.load) (i32.const 1)) (drop))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:456
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-br_table
+      (i32.const 0)
+      (block (br_table 0 (i32.load)) (drop))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:466
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-return
+      (return (i32.load)) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:475
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-select
+      (select (i32.load) (i32.const 1) (i32.const 2)) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:484
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-call
+      (call 1 (i32.load)) (drop)
+    )
+    (func (param i32) (result i32) (local.get 0))
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:494
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$f (param i32) (result i32) (local.get 0))
+    (type $$sig (func (param i32) (result i32)))
+    (table funcref (elem $$f))
+    (func $$type-address-empty-in-call_indirect
+      (block (result i32)
+        (call_indirect (type $$sig)
+          (i32.load) (i32.const 0)
+        )
+        (drop)
+      )
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:511
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-local.set
+      (local i32)
+      (local.set 0 (i32.load)) (local.get 0) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:521
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-local.tee
+      (local i32)
+      (local.tee 0 (i32.load)) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:531
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (global $$x (mut i32) (i32.const 0))
+    (func $$type-address-empty-in-global.set
+      (global.set $$x (i32.load)) (global.get $$x) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:541
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-memory.grow
+      (memory.grow (i32.load)) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:550
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 0)
+    (func $$type-address-empty-in-load
+      (i32.load (i32.load)) (drop)
+    )
+  )`), `type mismatch`);
+
+// ./test/core/load.wast:559
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 1)
+    (func $$type-address-empty-in-store
+      (i32.store (i32.load) (i32.const 1))
+    )
+  )`), `type mismatch`);
