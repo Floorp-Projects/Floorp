@@ -382,7 +382,7 @@ constexpr inline bool AtomicOperations::isLockfreeJS(int32_t size) {
     defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || \
     defined(__PPC64LE__) || defined(__alpha__) || defined(__hppa__) ||  \
     defined(__sh__) || defined(__s390__) || defined(__s390x__) ||       \
-    defined(__m68k__) || defined(__riscv)
+    defined(__m68k__) || defined(__riscv) || defined(__wasi__)
 #  include "jit/shared/AtomicOperations-feeling-lucky.h"
 #else
 #  error "No AtomicOperations support provided for this platform"

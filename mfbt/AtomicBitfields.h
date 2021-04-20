@@ -11,10 +11,15 @@
 #include "mozilla/MacroArgs.h"
 #include "mozilla/MacroForEach.h"
 
-#include <atomic>
 #include <limits>
 #include <stdint.h>
 #include <type_traits>
+
+#ifdef __wasi__
+#  include "mozilla/WasiAtomic.h"
+#else
+#  include <atomic>
+#endif  // __wasi__
 
 namespace mozilla {
 

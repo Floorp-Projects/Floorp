@@ -20,7 +20,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 
-#include <atomic>
+#ifdef __wasi__
+#  include "mozilla/WasiAtomic.h"
+#else
+#  include <atomic>
+#endif  // __wasi__
 
 #include <stdint.h>
 #include <type_traits>
