@@ -513,33 +513,10 @@ SelectorAutocompleter.prototype = {
       query += "*";
     }
 
-    this._lastQuery = this.inspector
-      // Get all inspectors where we want suggestions from.
-      .getAllInspectorFronts()
-      .then(inspectors => {
-        // Get all of the suggestions.
-        return Promise.all(
-          inspectors.map(async ({ walker }) => {
-            return walker.getSuggestionsForQuery(query, firstPart, state);
-          })
-        );
-      })
+    this._lastQuery = this.inspector.commands.inspectorCommand
+      .getSuggestionsForQuery(query, firstPart, state)
       .then(suggestions => {
-        // Merge all the results
-        const result = { query: "", suggestions: [] };
-        for (const r of suggestions) {
-          result.query = r.query;
-          result.suggestions = result.suggestions.concat(r.suggestions);
-        }
-        return result;
-      })
-      .then(result => {
         this.emit("processing-done");
-        if (result.query !== query) {
-          // This means that this response is for a previous request and the user
-          // as since typed something extra leading to a new request.
-          return promise.resolve(null);
-        }
 
         if (state === this.States.CLASS) {
           firstPart = "." + firstPart;
@@ -549,16 +526,13 @@ SelectorAutocompleter.prototype = {
 
         // If there is a single tag match and it's what the user typed, then
         // don't need to show a popup.
-        if (
-          result.suggestions.length === 1 &&
-          result.suggestions[0][0] === firstPart
-        ) {
-          result.suggestions = [];
+        if (suggestions.length === 1 && suggestions[0][0] === firstPart) {
+          suggestions = [];
         }
 
         // Wait for the autocomplete-popup to fire its popup-opened event, to make sure
         // the autoSelect item has been selected.
-        return this._showPopup(result.suggestions, state);
+        return this._showPopup(suggestions, state);
       });
   },
 };
