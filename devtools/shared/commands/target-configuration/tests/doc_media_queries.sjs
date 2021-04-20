@@ -26,6 +26,7 @@ function handleRequest(request, response) {
         globalThis.initialMatchesCoarsePointer =
           window.matchMedia("(pointer: coarse)").matches;
         globalThis.initialDevicePixelRatio = window.devicePixelRatio;
+        globalThis.initialUserAgent = navigator.userAgent;
       </script>
       <style>
         html { background: cyan;}
@@ -65,6 +66,9 @@ function handleRequest(request, response) {
         globalThis.initialMatchesCoarsePointer =
           window.matchMedia("(pointer: coarse)").matches;
         globalThis.initialDevicePixelRatio = window.devicePixelRatio
+        globalThis.initialUserAgent = navigator.userAgent;
+
+
       </script>
       <style>
         iframe {
