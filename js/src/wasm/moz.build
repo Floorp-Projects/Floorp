@@ -36,12 +36,15 @@ UNIFIED_SOURCES += [
     "WasmOpIter.cpp",
     "WasmProcess.cpp",
     "WasmRealm.cpp",
-    "WasmSignalHandlers.cpp",
     "WasmStubs.cpp",
     "WasmTable.cpp",
     "WasmTypes.cpp",
     "WasmValidate.cpp",
 ]
+
+# We don't support signals for wasi yet.
+if CONFIG["OS_ARCH"] != "WASI":
+    UNIFIED_SOURCES += ["WasmSignalHandlers.cpp"]
 
 # Make sure all WebAssembly code is built with libfuzzer
 # coverage instrumentation in FUZZING mode.
