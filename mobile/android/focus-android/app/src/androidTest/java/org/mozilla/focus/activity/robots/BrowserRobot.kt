@@ -102,6 +102,8 @@ class BrowserRobot {
 
     fun selectTab(tabTitle: String): ViewInteraction = onView(withText(tabTitle)).perform(click())
 
+    fun verifyShareAppsListOpened() = assertTrue(shareAppsList.waitForExists(webPageLoadwaitingTime))
+
     class Transition {
         fun openSearchBar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             browserURLbar.waitForExists(webPageLoadwaitingTime)
@@ -124,6 +126,16 @@ class BrowserRobot {
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
+        }
+
+        fun openMainMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
+            browserURLbar.waitForExists(webPageLoadwaitingTime)
+            mainMenu
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            ThreeDotMainMenuRobot().interact()
+            return ThreeDotMainMenuRobot.Transition()
         }
     }
 }
@@ -149,3 +161,8 @@ private val floatingEraseButton = onView(allOf(withId(R.id.erase), isDisplayed()
 private val tabsCounter = onView(withId(R.id.tabs))
 
 private val tabsTrayEraseHistoryButton = onView(withText(R.string.tabs_tray_action_erase))
+
+private val mainMenu = onView(withId(R.id.menuView))
+
+private val shareAppsList =
+    mDevice.findObject(UiSelector().resourceId("android:id/resolver_list"))

@@ -12,6 +12,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.uiautomator.UiSelector
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 
 class ThreeDotMainMenuRobot {
@@ -26,7 +27,20 @@ class ThreeDotMainMenuRobot {
             SettingsRobot().interact()
             return SettingsRobot.Transition()
         }
+
+        fun openShareScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            shareBtn.waitForExists(waitingTime)
+            shareBtn.click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
 private val settingsMenuButton = onView(ViewMatchers.withId(R.id.settings))
+
+private val shareBtn = mDevice.findObject(
+    UiSelector()
+        .resourceId("$packageName:id/share")
+)
