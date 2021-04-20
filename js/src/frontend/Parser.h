@@ -666,6 +666,9 @@ enum DefaultHandling { NameRequired, AllowDefaultName };
 enum TripledotHandling { TripledotAllowed, TripledotProhibited };
 enum class FieldPlacement { Instance, Static };
 
+// For Ergonomic brand checks.
+enum PrivateNameHandling { PrivateNameProhibited, PrivateNameAllowed };
+
 template <class ParseHandler, typename Unit>
 class Parser;
 
@@ -1181,7 +1184,9 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   Node unaryExpr(YieldHandling yieldHandling,
                  TripledotHandling tripledotHandling,
                  PossibleError* possibleError = nullptr,
-                 InvokedPrediction invoked = PredictUninvoked);
+                 InvokedPrediction invoked = PredictUninvoked,
+                 PrivateNameHandling privateNameHandling =
+                     PrivateNameHandling::PrivateNameProhibited);
   Node optionalExpr(YieldHandling yieldHandling,
                     TripledotHandling tripledotHandling, TokenKind tt,
                     PossibleError* possibleError = nullptr,
