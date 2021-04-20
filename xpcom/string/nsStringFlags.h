@@ -69,7 +69,10 @@ enum class StringDataFlags : uint16_t {
   INLINE = 1 << 4,
 
   // mData points to a string literal; DataFlags::TERMINATED will also be set
-  LITERAL = 1 << 5
+  LITERAL = 1 << 5,
+
+  // used to check for invalid flags -- all bits above the last item
+  INVALID_MASK = (uint16_t) ~((LITERAL << 1) - 1)
 };
 
 // bits for mClassFlags
@@ -78,7 +81,9 @@ enum class StringClassFlags : uint16_t {
   // with nsTAutoStringN
   INLINE = 1 << 0,
   // |this| requires its buffer is null-terminated
-  NULL_TERMINATED = 1 << 1
+  NULL_TERMINATED = 1 << 1,
+  // used to check for invalid flags -- all bits above the last item
+  INVALID_MASK = (uint16_t) ~((NULL_TERMINATED << 1) - 1)
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StringDataFlags)
