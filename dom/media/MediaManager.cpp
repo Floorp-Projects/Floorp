@@ -4077,8 +4077,7 @@ void DeviceListener::Activate(RefPtr<MediaDevice> aDevice,
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
   LOG("DeviceListener %p activating %s device %p", this,
-      nsCString(dom::MediaDeviceKindValues::GetString(GetDevice()->mKind))
-          .get(),
+      nsCString(dom::MediaDeviceKindValues::GetString(aDevice->mKind)).get(),
       aDevice.get());
 
   MOZ_ASSERT(!mStopped, "Cannot activate stopped device listener");
