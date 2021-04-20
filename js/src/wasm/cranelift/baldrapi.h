@@ -255,6 +255,7 @@ const js::wasm::GlobalDesc* env_global(const CraneliftModuleEnvironment* env,
                                        size_t globalIndex);
 
 bool global_isConstant(const js::wasm::GlobalDesc*);
+bool global_isMutable(const js::wasm::GlobalDesc*);
 bool global_isIndirect(const js::wasm::GlobalDesc*);
 BD_ConstantValue global_constantValue(const js::wasm::GlobalDesc*);
 js::wasm::TypeCode global_type(const js::wasm::GlobalDesc*);
