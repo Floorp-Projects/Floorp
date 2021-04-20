@@ -818,9 +818,14 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
     return true;
   }
 
+  nsPresContext* presContext = popupFrame->PresContext();
+  auto scale = presContext->CSSToDevPixelScale() /
+               presContext->DeviceContext()->GetDesktopToDeviceScale();
+  DesktopPoint position = CSSPoint(aXPos, aYPos) * scale;
+
   mNativeMenu = menu;
   mNativeMenu->AddObserver(this);
-  mNativeMenu->ShowAsContextMenu(DesktopPoint(aXPos, aYPos));
+  mNativeMenu->ShowAsContextMenu(position);
 
   // While the native menu is open, it consumes mouseup events.
   // Clear any :active state and mouse capture now so that we don't get stuck in
