@@ -115,6 +115,7 @@ linux64-plain-clang-trunk/opt:
         extra-config:
             disable_package_metrics: true
         mozconfig-variant: plain-opt-trunk
+    run-on-projects: []
     fetches:
         toolchain:
             - linux64-binutils
