@@ -968,7 +968,74 @@ assert_return(() => invoke($0, `as-compare-right`, []), [value("i32", 1)]);
 // ./test/core/call_indirect.wast:618
 assert_return(() => invoke($0, `as-convert-operand`, []), [value("i64", 1n)]);
 
-// ./test/core/call_indirect.wast:622
+// ./test/core/call_indirect.wast:623
+let $1 = instantiate(`(module
+  (type $$ii-i (func (param i32 i32) (result i32)))
+
+  (table $$t1 funcref (elem $$f $$g))
+  (table $$t2 funcref (elem $$h $$i $$j))
+  (table $$t3 4 funcref)
+  (elem (table $$t3) (i32.const 0) func $$g $$h)
+  (elem (table $$t3) (i32.const 3) func $$z)
+
+  (func $$f (type $$ii-i) (i32.add (local.get 0) (local.get 1)))
+  (func $$g (type $$ii-i) (i32.sub (local.get 0) (local.get 1)))
+  (func $$h (type $$ii-i) (i32.mul (local.get 0) (local.get 1)))
+  (func $$i (type $$ii-i) (i32.div_u (local.get 0) (local.get 1)))
+  (func $$j (type $$ii-i) (i32.rem_u (local.get 0) (local.get 1)))
+  (func $$z)
+
+  (func (export "call-1") (param i32 i32 i32) (result i32)
+    (call_indirect $$t1 (type $$ii-i) (local.get 0) (local.get 1) (local.get 2))
+  )
+  (func (export "call-2") (param i32 i32 i32) (result i32)
+    (call_indirect $$t2 (type $$ii-i) (local.get 0) (local.get 1) (local.get 2))
+  )
+  (func (export "call-3") (param i32 i32 i32) (result i32)
+    (call_indirect $$t3 (type $$ii-i) (local.get 0) (local.get 1) (local.get 2))
+  )
+)`);
+
+// ./test/core/call_indirect.wast:650
+assert_return(() => invoke($1, `call-1`, [2, 3, 0]), [value("i32", 5)]);
+
+// ./test/core/call_indirect.wast:651
+assert_return(() => invoke($1, `call-1`, [2, 3, 1]), [value("i32", -1)]);
+
+// ./test/core/call_indirect.wast:652
+assert_trap(() => invoke($1, `call-1`, [2, 3, 2]), `undefined element`);
+
+// ./test/core/call_indirect.wast:654
+assert_return(() => invoke($1, `call-2`, [2, 3, 0]), [value("i32", 6)]);
+
+// ./test/core/call_indirect.wast:655
+assert_return(() => invoke($1, `call-2`, [2, 3, 1]), [value("i32", 0)]);
+
+// ./test/core/call_indirect.wast:656
+assert_return(() => invoke($1, `call-2`, [2, 3, 2]), [value("i32", 2)]);
+
+// ./test/core/call_indirect.wast:657
+assert_trap(() => invoke($1, `call-2`, [2, 3, 3]), `undefined element`);
+
+// ./test/core/call_indirect.wast:659
+assert_return(() => invoke($1, `call-3`, [2, 3, 0]), [value("i32", -1)]);
+
+// ./test/core/call_indirect.wast:660
+assert_return(() => invoke($1, `call-3`, [2, 3, 1]), [value("i32", 6)]);
+
+// ./test/core/call_indirect.wast:661
+assert_trap(() => invoke($1, `call-3`, [2, 3, 2]), `uninitialized element`);
+
+// ./test/core/call_indirect.wast:662
+assert_trap(
+  () => invoke($1, `call-3`, [2, 3, 3]),
+  `indirect call type mismatch`,
+);
+
+// ./test/core/call_indirect.wast:663
+assert_trap(() => invoke($1, `call-3`, [2, 3, 4]), `undefined element`);
+
+// ./test/core/call_indirect.wast:668
 assert_malformed(
   () =>
     instantiate(
@@ -977,7 +1044,7 @@ assert_malformed(
   `unexpected token`,
 );
 
-// ./test/core/call_indirect.wast:634
+// ./test/core/call_indirect.wast:680
 assert_malformed(
   () =>
     instantiate(
@@ -986,7 +1053,7 @@ assert_malformed(
   `unexpected token`,
 );
 
-// ./test/core/call_indirect.wast:646
+// ./test/core/call_indirect.wast:692
 assert_malformed(
   () =>
     instantiate(
@@ -995,7 +1062,7 @@ assert_malformed(
   `unexpected token`,
 );
 
-// ./test/core/call_indirect.wast:658
+// ./test/core/call_indirect.wast:704
 assert_malformed(
   () =>
     instantiate(
@@ -1004,7 +1071,7 @@ assert_malformed(
   `unexpected token`,
 );
 
-// ./test/core/call_indirect.wast:670
+// ./test/core/call_indirect.wast:716
 assert_malformed(
   () =>
     instantiate(
@@ -1013,7 +1080,7 @@ assert_malformed(
   `unexpected token`,
 );
 
-// ./test/core/call_indirect.wast:682
+// ./test/core/call_indirect.wast:728
 assert_malformed(
   () =>
     instantiate(
@@ -1022,7 +1089,7 @@ assert_malformed(
   `unexpected token`,
 );
 
-// ./test/core/call_indirect.wast:692
+// ./test/core/call_indirect.wast:738
 assert_malformed(
   () =>
     instantiate(
@@ -1031,7 +1098,7 @@ assert_malformed(
   `unexpected token`,
 );
 
-// ./test/core/call_indirect.wast:699
+// ./test/core/call_indirect.wast:745
 assert_malformed(
   () =>
     instantiate(
@@ -1040,7 +1107,7 @@ assert_malformed(
   `inline function type`,
 );
 
-// ./test/core/call_indirect.wast:709
+// ./test/core/call_indirect.wast:755
 assert_malformed(
   () =>
     instantiate(
@@ -1049,7 +1116,7 @@ assert_malformed(
   `inline function type`,
 );
 
-// ./test/core/call_indirect.wast:719
+// ./test/core/call_indirect.wast:765
 assert_malformed(
   () =>
     instantiate(
@@ -1058,7 +1125,7 @@ assert_malformed(
   `inline function type`,
 );
 
-// ./test/core/call_indirect.wast:729
+// ./test/core/call_indirect.wast:775
 assert_malformed(
   () =>
     instantiate(
@@ -1067,14 +1134,14 @@ assert_malformed(
   `inline function type`,
 );
 
-// ./test/core/call_indirect.wast:744
+// ./test/core/call_indirect.wast:790
 assert_invalid(() =>
   instantiate(`(module
     (type (func))
     (func $$no-table (call_indirect (type 0) (i32.const 0)))
   )`), `unknown table`);
 
-// ./test/core/call_indirect.wast:752
+// ./test/core/call_indirect.wast:798
 assert_invalid(() =>
   instantiate(`(module
     (type (func))
@@ -1082,7 +1149,7 @@ assert_invalid(() =>
     (func $$type-void-vs-num (i32.eqz (call_indirect (type 0) (i32.const 0))))
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:760
+// ./test/core/call_indirect.wast:806
 assert_invalid(() =>
   instantiate(`(module
     (type (func (result i64)))
@@ -1090,7 +1157,7 @@ assert_invalid(() =>
     (func $$type-num-vs-num (i32.eqz (call_indirect (type 0) (i32.const 0))))
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:769
+// ./test/core/call_indirect.wast:815
 assert_invalid(() =>
   instantiate(`(module
     (type (func (param i32)))
@@ -1098,7 +1165,7 @@ assert_invalid(() =>
     (func $$arity-0-vs-1 (call_indirect (type 0) (i32.const 0)))
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:777
+// ./test/core/call_indirect.wast:823
 assert_invalid(() =>
   instantiate(`(module
     (type (func (param f64 i32)))
@@ -1106,7 +1173,7 @@ assert_invalid(() =>
     (func $$arity-0-vs-2 (call_indirect (type 0) (i32.const 0)))
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:785
+// ./test/core/call_indirect.wast:831
 assert_invalid(() =>
   instantiate(`(module
     (type (func))
@@ -1114,7 +1181,7 @@ assert_invalid(() =>
     (func $$arity-1-vs-0 (call_indirect (type 0) (i32.const 1) (i32.const 0)))
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:793
+// ./test/core/call_indirect.wast:839
 assert_invalid(() =>
   instantiate(`(module
     (type (func))
@@ -1124,7 +1191,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:804
+// ./test/core/call_indirect.wast:850
 assert_invalid(() =>
   instantiate(`(module
     (type (func (param i32)))
@@ -1132,7 +1199,7 @@ assert_invalid(() =>
     (func $$type-func-void-vs-i32 (call_indirect (type 0) (i32.const 1) (nop)))
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:812
+// ./test/core/call_indirect.wast:858
 assert_invalid(() =>
   instantiate(`(module
     (type (func (param i32)))
@@ -1140,7 +1207,7 @@ assert_invalid(() =>
     (func $$type-func-num-vs-i32 (call_indirect (type 0) (i32.const 0) (i64.const 1)))
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:821
+// ./test/core/call_indirect.wast:867
 assert_invalid(() =>
   instantiate(`(module
     (type (func (param i32 i32)))
@@ -1150,7 +1217,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:831
+// ./test/core/call_indirect.wast:877
 assert_invalid(() =>
   instantiate(`(module
     (type (func (param i32 i32)))
@@ -1160,7 +1227,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:841
+// ./test/core/call_indirect.wast:887
 assert_invalid(() =>
   instantiate(`(module
     (type (func (param i32 f64)))
@@ -1170,7 +1237,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:851
+// ./test/core/call_indirect.wast:897
 assert_invalid(() =>
   instantiate(`(module
     (type (func (param f64 i32)))
@@ -1180,7 +1247,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:862
+// ./test/core/call_indirect.wast:908
 assert_invalid(() =>
   instantiate(`(module
     (func $$f (param i32))
@@ -1193,7 +1260,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:875
+// ./test/core/call_indirect.wast:921
 assert_invalid(() =>
   instantiate(`(module
     (func $$f (param i32 i32))
@@ -1206,7 +1273,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:888
+// ./test/core/call_indirect.wast:934
 assert_invalid(() =>
   instantiate(`(module
     (func $$f (param i32))
@@ -1219,7 +1286,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:901
+// ./test/core/call_indirect.wast:947
 assert_invalid(() =>
   instantiate(`(module
     (func $$f (param i32 i32))
@@ -1232,7 +1299,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:914
+// ./test/core/call_indirect.wast:960
 assert_invalid(() =>
   instantiate(`(module
     (func $$f (param i32))
@@ -1248,7 +1315,7 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:930
+// ./test/core/call_indirect.wast:976
 assert_invalid(() =>
   instantiate(`(module
     (func $$f (param i32 i32))
@@ -1264,21 +1331,21 @@ assert_invalid(() =>
     )
   )`), `type mismatch`);
 
-// ./test/core/call_indirect.wast:950
+// ./test/core/call_indirect.wast:996
 assert_invalid(() =>
   instantiate(`(module
     (table 0 funcref)
     (func $$unbound-type (call_indirect (type 1) (i32.const 0)))
   )`), `unknown type`);
 
-// ./test/core/call_indirect.wast:957
+// ./test/core/call_indirect.wast:1003
 assert_invalid(() =>
   instantiate(`(module
     (table 0 funcref)
     (func $$large-type (call_indirect (type 1012321300) (i32.const 0)))
   )`), `unknown type`);
 
-// ./test/core/call_indirect.wast:968
+// ./test/core/call_indirect.wast:1014
 assert_invalid(
   () => instantiate(`(module (table funcref (elem 0 0)))`),
   `unknown function`,

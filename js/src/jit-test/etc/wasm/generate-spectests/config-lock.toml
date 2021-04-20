@@ -3,13 +3,5 @@ name = 'threads'
 commit = 'dfdcb81a'
 
 [[repos]]
-name = 'bulk-memory-operations'
-commit = '66d90a7d'
-
-[[repos]]
-name = 'reference-types'
-commit = '9df8a3e3'
-
-[[repos]]
 name = 'spec'
-commit = '7c4cbf32'
+commit = 'c9ed6580'

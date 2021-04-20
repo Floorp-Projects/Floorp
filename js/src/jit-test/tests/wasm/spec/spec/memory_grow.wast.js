@@ -517,8 +517,8 @@ assert_return(() => invoke($4, `as-memory.grow-size`, []), [value("i32", 1)]);
 assert_invalid(() =>
   instantiate(`(module
     (memory 0)
-    (func $$type-size-empty
-      (memory.grow) (drop)
+    (func $$type-size-empty-vs-i32 (result i32)
+      (memory.grow)
     )
   )`), `type mismatch`);
 
@@ -526,9 +526,9 @@ assert_invalid(() =>
 assert_invalid(() =>
   instantiate(`(module
     (memory 0)
-    (func $$type-size-empty-in-block
+    (func $$type-size-empty-vs-i32-in-block (result i32)
       (i32.const 0)
-      (block (memory.grow) (drop))
+      (block (result i32) (memory.grow))
     )
   )`), `type mismatch`);
 
@@ -536,9 +536,9 @@ assert_invalid(() =>
 assert_invalid(() =>
   instantiate(`(module
     (memory 0)
-    (func $$type-size-empty-in-loop
+    (func $$type-size-empty-vs-i32-in-loop (result i32)
       (i32.const 0)
-      (loop (memory.grow) (drop))
+      (loop (result i32) (memory.grow))
     )
   )`), `type mismatch`);
 
@@ -546,17 +546,35 @@ assert_invalid(() =>
 assert_invalid(() =>
   instantiate(`(module
     (memory 0)
-    (func $$type-size-empty-in-then
+    (func $$type-size-empty-vs-i32-in-then (result i32)
       (i32.const 0) (i32.const 0)
-      (if (then (memory.grow) (drop)))
+      (if (result i32) (then (memory.grow)))
     )
   )`), `type mismatch`);
 
-// ./test/core/memory_grow.wast:355
-assert_invalid(
-  () =>
-    instantiate(
-      `(module (memory 1) (func (result i32) (memory.grow (f32.const 0))))`,
-    ),
-  `type mismatch`,
-);
+// ./test/core/memory_grow.wast:352
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 1)
+    (func $$type-size-f32-vs-i32 (result i32)
+      (memory.grow (f32.const 0))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/memory_grow.wast:362
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 1)
+    (func $$type-result-i32-vs-empty
+      (memory.grow (i32.const 0))
+    )
+  )`), `type mismatch`);
+
+// ./test/core/memory_grow.wast:371
+assert_invalid(() =>
+  instantiate(`(module
+    (memory 1)
+    (func $$type-result-i32-vs-f32 (result f32)
+      (memory.grow (i32.const 0))
+    )
+  )`), `type mismatch`);

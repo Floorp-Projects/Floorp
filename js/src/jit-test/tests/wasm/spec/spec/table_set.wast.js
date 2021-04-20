@@ -81,34 +81,52 @@ assert_return(() => invoke($0, `set-funcref`, [0, null]), []);
 assert_return(() => invoke($0, `get-funcref`, [0]), [value("funcref", null)]);
 
 // ./test/core/table_set.wast:41
-assert_trap(() => invoke($0, `set-externref`, [2, null]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `set-externref`, [2, null]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_set.wast:42
-assert_trap(() => invoke($0, `set-funcref`, [3, null]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `set-funcref`, [3, null]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_set.wast:43
-assert_trap(() => invoke($0, `set-externref`, [-1, null]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `set-externref`, [-1, null]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_set.wast:44
-assert_trap(() => invoke($0, `set-funcref`, [-1, null]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `set-funcref`, [-1, null]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_set.wast:46
 assert_trap(
   () => invoke($0, `set-externref`, [2, externref(0)]),
-  `out of bounds`,
+  `out of bounds table access`,
 );
 
 // ./test/core/table_set.wast:47
-assert_trap(() => invoke($0, `set-funcref-from`, [3, 1]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `set-funcref-from`, [3, 1]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_set.wast:48
 assert_trap(
   () => invoke($0, `set-externref`, [-1, externref(0)]),
-  `out of bounds`,
+  `out of bounds table access`,
 );
 
 // ./test/core/table_set.wast:49
-assert_trap(() => invoke($0, `set-funcref-from`, [-1, 1]), `out of bounds`);
+assert_trap(
+  () => invoke($0, `set-funcref-from`, [-1, 1]),
+  `out of bounds table access`,
+);
 
 // ./test/core/table_set.wast:54
 assert_invalid(() =>
