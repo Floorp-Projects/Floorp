@@ -39,7 +39,9 @@
 #endif
 #include <ctime>
 #include <math.h>
-#include <signal.h>
+#ifndef __wasi__
+#  include <signal.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6572,6 +6574,7 @@ static bool WriteAll(int fd, const uint8_t* bytes, size_t length) {
   return true;
 }
 
+#ifndef __wasi__
 class AutoPipe {
   int fds_[2];
 
@@ -6591,11 +6594,11 @@ class AutoPipe {
   }
 
   bool init() {
-#ifdef XP_WIN
+#  ifdef XP_WIN
     return !_pipe(fds_, 4096, O_BINARY);
-#else
+#  else
     return !pipe(fds_);
-#endif
+#  endif
   }
 
   int reader() const {
@@ -6620,6 +6623,7 @@ class AutoPipe {
     fds_[1] = -1;
   }
 };
+#endif  // __wasi__
 
 int shell::sArgc;
 char** shell::sArgv;

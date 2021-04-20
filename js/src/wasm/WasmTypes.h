@@ -4269,7 +4269,7 @@ class DebugFrame {
   // Avoid -Wunused-private-field warnings.
  protected:
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_ARM) || \
-    defined(JS_CODEGEN_X86)
+    defined(JS_CODEGEN_X86) || defined(__wasi__)
   // See alignmentStaticAsserts().  For MIPS32, ARM32 and X86 DebugFrame is only
   // 4-byte aligned, so we add another word to get up to 8-byte
   // alignment.

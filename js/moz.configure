@@ -837,9 +837,15 @@ set_config("SIXGILL_PATH", sixgill)
 
 # Support for readline
 # =====================================================
-@depends("--enable-js-shell", target_is_windows, compile_environment)
-def editline(js_shell, is_windows, compile_environment):
-    return js_shell and not is_windows and compile_environment
+
+option("--enable-editline", default=True, help="Link js shell with editline library")
+
+
+@depends(
+    "--enable-js-shell", "--enable-editline", target_is_windows, compile_environment
+)
+def editline(js_shell, editline_cmd, is_windows, compile_environment):
+    return editline_cmd and js_shell and not is_windows and compile_environment
 
 
 option(

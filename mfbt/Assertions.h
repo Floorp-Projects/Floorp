@@ -9,7 +9,8 @@
 #ifndef mozilla_Assertions_h
 #define mozilla_Assertions_h
 
-#if defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API)
+#if (defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API)) && \
+    !defined(__wasi__)
 #  define MOZ_DUMP_ASSERTION_STACK
 #endif
 
@@ -59,6 +60,10 @@ __declspec(dllimport) int __stdcall TerminateProcess(void* hProcess,
                                                      unsigned int uExitCode);
 __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 MOZ_END_EXTERN_C
+#elif defined(__wasi__)
+/*
+ * On Wasm/WASI platforms, we just call __builtin_trap().
+ */
 #else
 #  include <signal.h>
 #endif
@@ -156,6 +161,11 @@ MOZ_NoReturn(int aLine) {
       __debugbreak();            \
       MOZ_NoReturn(line);        \
     } while (false)
+
+#elif __wasi__
+
+#  define MOZ_REALLY_CRASH(line) __builtin_trap()
+
 #else
 
 /*

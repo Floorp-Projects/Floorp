@@ -21,7 +21,6 @@
 #include "mozilla/XorShift128PlusRNG.h"
 
 #include <algorithm>
-#include <setjmp.h>
 
 #include "jsapi.h"
 
