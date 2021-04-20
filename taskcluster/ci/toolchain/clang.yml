@@ -161,6 +161,7 @@ linux64-clang-trunk:
         resources:
             - 'build/build-clang/clang-trunk-linux64.json'
         toolchain-artifact: public/build/clang.tar.zst
+    run-on-projects: []
     fetches:
         fetch:
             - clang-trunk
