@@ -120,6 +120,20 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   const nsINode* GetRootNode() const { return mRootNode; }
 
  private:
+  // A list of where we extracted text from, ordered by mSoftTextOffset. A given
+  // DOM node appears at most once in this list.
+  struct DOMTextMapping {
+    NodeOffset mNodeOffset;
+    int32_t mSoftTextOffset;
+    int32_t mLength;
+
+    DOMTextMapping(NodeOffset aNodeOffset, int32_t aSoftTextOffset,
+                   int32_t aLength)
+        : mNodeOffset(aNodeOffset),
+          mSoftTextOffset(aSoftTextOffset),
+          mLength(aLength) {}
+  };
+
   struct SoftText {
     // DOM text covering the soft range, with newlines added at block boundaries
     nsString mValue;
@@ -128,6 +142,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
     NodeOffset mEnd = NodeOffset(nullptr, 0);
 
     bool mIsValid = false;
+
+    nsTArray<DOMTextMapping> mDOMMapping;
   };
 
   SoftText mSoftText;
@@ -147,21 +163,6 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
   // range to check, see SetPosition and SetEnd
   const nsINode* mRootNode;
-
-  // A list of where we extracted text from, ordered by mSoftTextOffset. A given
-  // DOM node appears at most once in this list.
-  struct DOMTextMapping {
-    NodeOffset mNodeOffset;
-    int32_t mSoftTextOffset;
-    int32_t mLength;
-
-    DOMTextMapping(NodeOffset aNodeOffset, int32_t aSoftTextOffset,
-                   int32_t aLength)
-        : mNodeOffset(aNodeOffset),
-          mSoftTextOffset(aSoftTextOffset),
-          mLength(aLength) {}
-  };
-  nsTArray<DOMTextMapping> mSoftTextDOMMapping;
 
   // A list of the "real words" in mSoftText.mValue, ordered by mSoftTextOffset
   struct RealWord {
@@ -211,7 +212,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   int32_t FindRealWordContaining(int32_t aSoftTextOffset, DOMMapHint aHint,
                                  bool aSearchForward) const;
 
-  // build mSoftText.mValue and mSoftTextDOMMapping and adjust mSoftText.mBegin.
+  // build mSoftText.mValue and mSoftText.mDOMMapping and adjust
+  // mSoftText.mBegin.
   void AdjustSoftBeginAndBuildSoftText();
 
   mozilla::Result<RealWords, nsresult> BuildRealWords() const;
