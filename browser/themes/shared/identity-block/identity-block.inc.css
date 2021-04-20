@@ -89,6 +89,10 @@
   padding-inline: calc(var(--urlbar-icon-padding) / 2);
   border-radius: 0;
 }
+
+#identity-box:not(.chromeUI, .extensionPage, .notSecureText) {
+  --autocomplete-popup-separator-color: transparent;
+}
 } /*** END !proton ***/
 
 #identity-box[pageproxystate="valid"].notSecureText #identity-icon-label,
@@ -100,9 +104,6 @@
 
 #identity-icon-label {
   padding-inline-start: 4px;
-}
-#identity-box:not(.chromeUI, .extensionPage, .notSecureText) {
-  --urlbar-separator-color: transparent;
 }
 
 #identity-box[pageproxystate="valid"].notSecureText,
@@ -153,8 +154,8 @@
 #identity-box[pageproxystate="valid"].chromeUI,
 #identity-box[pageproxystate="valid"].extensionPage,
 #urlbar-label-box {
-  border-inline-end: 1px solid var(--urlbar-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
+  border-inline-end: 1px solid var(--autocomplete-popup-separator-color);
+  border-image: linear-gradient(transparent 15%, var(--autocomplete-popup-separator-color) 15%, var(--autocomplete-popup-separator-color) 85%, transparent 85%);
   border-image-slice: 1;
 }
 
@@ -167,7 +168,7 @@
 
 #urlbar-label-box {
   padding-inline: 4px;
-  border-inline-start: 1px solid var(--urlbar-separator-color);
+  border-inline-start: 1px solid var(--autocomplete-popup-separator-color);
   border-radius: 0;
 }
 
@@ -332,8 +333,8 @@
 #tracking-protection-icon-container {
   border-radius: 0;
   /* Separator */
-  border-inline-end: 1px solid var(--urlbar-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
+  border-inline-end: 1px solid var(--autocomplete-popup-separator-color);
+  border-image: linear-gradient(transparent 15%, var(--autocomplete-popup-separator-color) 15%, var(--autocomplete-popup-separator-color) 85%, transparent 85%);
   border-image-slice: 1;
 }
 } /*** END !proton ***/
