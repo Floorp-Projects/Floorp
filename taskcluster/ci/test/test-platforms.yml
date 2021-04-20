@@ -411,6 +411,8 @@ macosx1014-64-shippable-qr/opt:
     test-sets:
         - macosx1014-64-qr-tests
         - desktop-screenshot-capture
+        - browsertime
+        - talos
 
 macosx1014-64-devedition-qr/opt:
     build-platform: macosx64-devedition/opt
