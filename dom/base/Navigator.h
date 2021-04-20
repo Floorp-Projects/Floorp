@@ -71,8 +71,6 @@ class MozGetUserMediaDevicesSuccessCallback;
 
 struct MIDIOptions;
 
-nsTArray<uint32_t> SanitizeVibratePattern(const nsTArray<uint32_t>& aPattern);
-
 namespace network {
 class Connection;
 }  // namespace network
