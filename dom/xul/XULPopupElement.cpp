@@ -270,15 +270,27 @@ already_AddRefed<DOMRect> XULPopupElement::GetOuterScreenRect() {
     return rect.forget();
   }
 
-  nsView* view = menuPopupFrame->GetView();
-  if (view) {
-    nsIWidget* widget = view->GetWidget();
-    if (widget) {
-      LayoutDeviceIntRect screenRect = widget->GetScreenBounds();
+  Maybe<CSSRect> screenRect;
 
-      int32_t pp = menuPopupFrame->PresContext()->AppUnitsPerDevPixel();
-      rect->SetLayoutRect(LayoutDeviceIntRect::ToAppUnits(screenRect, pp));
+  if (menuPopupFrame->IsNativeMenu()) {
+    // For native menus we can't query the true size. Use the anchor rect
+    // instead, which at least has the position at which we were intending to
+    // open the menu.
+    screenRect = Some(CSSRect(
+        CSSIntRect::FromUnknownRect(menuPopupFrame->GetScreenAnchorRect())));
+  } else {
+    // For non-native menus, query the bounds from the widget.
+    if (nsView* view = menuPopupFrame->GetView()) {
+      if (nsIWidget* widget = view->GetWidget()) {
+        screenRect = Some(widget->GetScreenBounds() /
+                          menuPopupFrame->PresContext()->CSSToDevPixelScale());
+      }
     }
+  }
+
+  if (screenRect) {
+    rect->SetRect(screenRect->X(), screenRect->Y(), screenRect->Width(),
+                  screenRect->Height());
   }
   return rect.forget();
 }
