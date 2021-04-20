@@ -248,7 +248,7 @@
   margin: var(--panel-separator-margin);
   padding: 0;
   border: 0;
-  border-top: 1px solid var(--panel-separator-color);
+  border-top: 1px solid var(--autocomplete-popup-separator-color);
   color: inherit;
 }
 

@@ -82,12 +82,6 @@ const ThemeVariableMap = [
     },
   ],
   [
-    "--urlbar-separator-color",
-    {
-      lwtProperty: "toolbar_field_separator",
-    },
-  ],
-  [
     "--tabs-border-color",
     {
       lwtProperty: "toolbar_top_separator",

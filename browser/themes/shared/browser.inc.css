@@ -32,23 +32,28 @@
   --buttons-destructive-color: #fbfbfe;
 
   --autocomplete-popup-hover-background: var(--arrowpanel-dimmed);
+  --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 14%, transparent);
 
   --identity-box-margin-inline: 4px;
   --identity-box-label-opacity: .8;
   --urlbar-box-bgcolor: var(--button-bgcolor);
   --urlbar-box-hover-bgcolor: var(--button-hover-bgcolor);
   --urlbar-box-active-bgcolor: var(--button-active-bgcolor);
-
   --urlbar-min-height: 32px;
   --urlbar-icon-fill-opacity: 1;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
-  --urlbar-separator-color: var(--panel-separator-color);
   --urlbar-popup-url-color: -moz-nativehyperlinktext;
 
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
   --lwt-popup-brighttext-url-color: #74c0ff;
+}
+
+@media (prefers-contrast) {
+  :root {
+    --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 86%, transparent);
+  }
 }
 
 @media not (-moz-proton) {

@@ -171,7 +171,8 @@
               },
               "toolbar_field_separator": {
                 "$ref": "ThemeColor",
-                "optional": true
+                "optional": true,
+                "deprecated": "This color property is ignored in Firefox >= 89."
               },
               "toolbar_top_separator": {
                 "$ref": "ThemeColor",
