@@ -155,6 +155,12 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
+  bool ergonomicBrandChecks() const { return ergonomicBrandChecks_; }
+  ContextOptions& setErgnomicBrandChecks(bool enabled) {
+    ergonomicBrandChecks_ = enabled;
+    return *this;
+  }
+
   bool topLevelAwait() const { return topLevelAwait_; }
   ContextOptions& setTopLevelAwait(bool enabled) {
     topLevelAwait_ = enabled;
@@ -270,6 +276,7 @@ class JS_PUBLIC_API ContextOptions {
   bool fuzzing_ : 1;
   bool privateClassFields_ : 1;
   bool privateClassMethods_ : 1;
+  bool ergonomicBrandChecks_ : 1;
   bool topLevelAwait_ : 1;
 };
 
