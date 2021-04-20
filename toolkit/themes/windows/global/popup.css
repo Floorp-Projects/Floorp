@@ -32,7 +32,7 @@ menupopup {
 
     /* Prevent any background or border around the outside of the shadow. */
     background-color: transparent;
-    border-color: transparent;
+    border: none;
     border-radius: 4px;
 
     /* Set this here rather than on the scrollbox so it is more easily
