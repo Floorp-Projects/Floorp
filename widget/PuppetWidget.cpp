@@ -930,8 +930,8 @@ void PuppetWidget::SetCursor(const Cursor& aCursor) {
                                 length);
   if (!mBrowserChild->SendSetCursor(
           aCursor.mDefaultCursor, hasCustomCursor, cursorData,
-          customCursorSize.width, customCursorSize.height, stride, format,
-          aCursor.mHotspotX, aCursor.mHotspotY, force)) {
+          customCursorSize.width, customCursorSize.height, aCursor.mResolution,
+          stride, format, aCursor.mHotspotX, aCursor.mHotspotY, force)) {
     return;
   }
   mCursor = aCursor;
