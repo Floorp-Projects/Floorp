@@ -657,6 +657,8 @@ bool global_isConstant(const GlobalDesc* global) {
   return global->isConstant();
 }
 
+bool global_isMutable(const GlobalDesc* global) { return global->isMutable(); }
+
 bool global_isIndirect(const GlobalDesc* global) {
   return global->isIndirect();
 }

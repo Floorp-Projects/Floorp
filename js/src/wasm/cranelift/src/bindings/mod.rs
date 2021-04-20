@@ -90,6 +90,10 @@ impl GlobalDesc {
         unsafe { low_level::global_isConstant(self.0) }
     }
 
+    pub fn is_mutable(self) -> bool {
+        unsafe { low_level::global_isMutable(self.0) }
+    }
+
     pub fn is_indirect(self) -> bool {
         unsafe { low_level::global_isIndirect(self.0) }
     }
@@ -380,7 +384,7 @@ impl<'module> wasmparser::WasmModuleResources for ModuleEnvironment<'module> {
         let num_globals = unsafe { low_level::env_num_globals(self.env) };
         if (at as usize) < num_globals {
             let desc = self.global(GlobalIndex::new(at as usize));
-            let mutable = !desc.is_constant();
+            let mutable = desc.is_mutable();
             let content_type = desc.content_type();
             Some(wasmparser::GlobalType {
                 mutable,
