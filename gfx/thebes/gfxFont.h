@@ -126,6 +126,9 @@ struct gfxFontStyle {
   // The logical size of the font, in pixels
   gfxFloat size;
 
+  // The optical size value to apply (if supported); negative means none.
+  float autoOpticalSize = -1.0f;
+
   // The aspect-value (ie., the ratio actualsize:actualxheight) that any
   // actual physical font created from this font structure must have when
   // rendering or measuring a string. A value of -1.0 means no adjustment
@@ -235,6 +238,8 @@ struct gfxFontStyle {
            (featureValueLookup == other.featureValueLookup) &&
            (variationSettings == other.variationSettings) &&
            (languageOverride == other.languageOverride) &&
+           mozilla::NumbersAreBitwiseIdentical(autoOpticalSize,
+                                               other.autoOpticalSize) &&
            (fontSmoothingBackgroundColor == other.fontSmoothingBackgroundColor);
   }
 };

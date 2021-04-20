@@ -431,6 +431,8 @@ class gfxFontEntry {
 
   bool HasBoldVariableWeight();
   bool HasItalicVariation();
+  bool HasOpticalSize();
+
   void CheckForVariationAxes();
 
   // Set up the entry's weight/stretch/style ranges according to axes found
@@ -527,7 +529,10 @@ class gfxFontEntry {
     // properties to the variation axes (though they can still be
     // explicitly set using font-variation-settings).
     eNonCSSWeight = (1 << 5),
-    eNonCSSStretch = (1 << 6)
+    eNonCSSStretch = (1 << 6),
+
+    // Whether the font has an 'opsz' axis.
+    eOpticalSize = (1 << 7)
   };
   RangeFlags mRangeFlags = RangeFlags::eNoFlags;
 
