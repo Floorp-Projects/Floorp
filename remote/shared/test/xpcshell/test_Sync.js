@@ -4,7 +4,7 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { PollPromise } = ChromeUtils.import(
+const { AnimationFramePromise, PollPromise } = ChromeUtils.import(
   "chrome://remote/content/shared/Sync.jsm"
 );
 
@@ -102,6 +102,26 @@ class MockTimer {
     this.cancelled = true;
   }
 }
+
+add_task(async function test_AnimationFramePromise() {
+  let called = false;
+  let win = {
+    requestAnimationFrame(callback) {
+      called = true;
+      callback();
+    },
+  };
+  await AnimationFramePromise(win);
+  ok(called);
+});
+
+add_task(async function test_AnimationFramePromiseAbortWhenWindowClosed() {
+  let win = {
+    closed: true,
+    requestAnimationFrame() {},
+  };
+  await AnimationFramePromise(win);
+});
 
 add_test(function test_executeSoon_callback() {
   // executeSoon() is already defined for xpcshell in head.js. As such import
