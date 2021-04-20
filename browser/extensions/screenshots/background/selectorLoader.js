@@ -70,17 +70,11 @@ this.selectorLoader = (function() {
   exports.loadModules = function(tabId) {
     loadingTabs.add(tabId);
     catcher.watchPromise(
-      browser.tabs
-        .executeScript(tabId, {
-          code: `window.hasAnyShots = ${!!main.hasAnyShots()};`,
-          runAt: "document_start",
-        })
-        .then(() => {
-          return executeModules(tabId, standardScripts.concat(selectorScripts));
-        })
-        .finally(() => {
+      executeModules(tabId, standardScripts.concat(selectorScripts)).then(
+        () => {
           loadingTabs.delete(tabId);
-        })
+        }
+      )
     );
   };
 

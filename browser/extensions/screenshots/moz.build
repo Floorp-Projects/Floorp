@@ -60,8 +60,6 @@ FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["icons"] += [
     "icons/help-16.svg",
     "icons/icon-welcome-face-without-eyes.svg",
     "icons/menu-fullpage.svg",
-    "icons/menu-myshot-white.svg",
-    "icons/menu-myshot.svg",
     "icons/menu-visible.svg",
 ]
 

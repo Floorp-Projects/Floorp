@@ -6,7 +6,6 @@ screenshot-toolbarbutton =
   .label = Screenshot
   .tooltiptext = Take a screenshot
 
-screenshots-my-shots-button = My Shots
 screenshots-instructions = Drag or click on the page to select a region. Press ESC to cancel.
 screenshots-cancel-button = Cancel
 screenshots-save-visible-button = Save visible
@@ -37,8 +36,6 @@ screenshots-login-error-details = We couldn’t save your shot because there is 
 
 screenshots-unshootable-page-error-title = We can’t screenshot this page.
 screenshots-unshootable-page-error-details = This isn’t a standard Web page, so you can’t take a screenshot of it.
-
-screenshots-self-screenshot-error-title = You can’t take a shot of a { -screenshots-brand-name } page!
 
 screenshots-empty-selection-error-title = Your selection is too small
 
