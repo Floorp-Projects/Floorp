@@ -65,6 +65,16 @@ add_task(async function() {
 });
 
 async function testRevealInInspector(hud, element, tag, accesskey) {
+  if (
+    !accesskey &&
+    AppConstants.platform == "macosx" &&
+    Services.prefs.getBoolPref("widget.macos.native-context-menus", false)
+  ) {
+    info(
+      "Not testing accesskey behaviour since we can't use synthesized keypresses in macOS native menus."
+    );
+    return;
+  }
   const toolbox = hud.toolbox;
 
   // Loading the inspector panel at first, to make it possible to listen for
@@ -87,7 +97,7 @@ async function testRevealInInspector(hud, element, tag, accesskey) {
 
   if (accesskey) {
     info("Clicking on `Reveal in Inspector` menu item");
-    await revealInInspectorMenuItem.click();
+    menuPopup.activateItem(revealInInspectorMenuItem);
   } else {
     info("Using access-key Q to `Reveal in Inspector`");
     await synthesizeKeyShortcut("Q");
