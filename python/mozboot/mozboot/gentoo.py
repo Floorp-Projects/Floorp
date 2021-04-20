@@ -51,7 +51,6 @@ class GentooBootstrapper(LinuxBootstrapper, BaseBootstrapper):
                 "--newuse",
                 "dev-libs/dbus-glib",
                 "media-sound/pulseaudio",
-                "x11-libs/gtk+:2",
                 "x11-libs/gtk+:3",
                 "x11-libs/libXt",
             ]

@@ -32,7 +32,6 @@ class SolusBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     BROWSER_PACKAGES = [
         "alsa-lib",
         "dbus",
-        "libgtk-2",
         "libgtk-3",
         "libevent",
         "libvpx",

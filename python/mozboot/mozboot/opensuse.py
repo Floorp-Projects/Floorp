@@ -31,7 +31,6 @@ class OpenSUSEBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "libXt-devel",
         "libproxy-devel",
         "libuuid-devel",
-        "gtk2-devel",
         "clang-devel",
         "patterns-gnome-devel_gnome",
     ]
