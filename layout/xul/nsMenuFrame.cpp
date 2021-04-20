@@ -878,14 +878,21 @@ void nsMenuFrame::Execute(WidgetGUIEvent* aEvent) {
     modifiers = inputEvent->mModifiers;
   }
 
+  int16_t button = 0;
+  WidgetMouseEventBase* mouseEvent =
+      aEvent ? aEvent->AsMouseEventBase() : nullptr;
+  if (mouseEvent) {
+    button = mouseEvent->mButton;
+  }
+
   StopBlinking();
-  CreateMenuCommandEvent(isTrusted, modifiers);
+  CreateMenuCommandEvent(isTrusted, modifiers, button);
   StartBlinking();
 }
 
 void nsMenuFrame::ActivateItem(Modifiers aModifiers) {
   StopBlinking();
-  CreateMenuCommandEvent(nsContentUtils::IsCallerChrome(), aModifiers);
+  CreateMenuCommandEvent(nsContentUtils::IsCallerChrome(), aModifiers, 0);
   StartBlinking();
 }
 
@@ -933,7 +940,8 @@ void nsMenuFrame::StopBlinking() {
 }
 
 void nsMenuFrame::CreateMenuCommandEvent(bool aIsTrusted,
-                                         mozilla::Modifiers aModifiers) {
+                                         mozilla::Modifiers aModifiers,
+                                         int16_t aButton) {
   // Because the command event is firing asynchronously, a flag is needed to
   // indicate whether user input is being handled. This ensures that a popup
   // window won't get blocked.
@@ -949,7 +957,7 @@ void nsMenuFrame::CreateMenuCommandEvent(bool aIsTrusted,
 
   mDelayedMenuCommandEvent =
       new nsXULMenuCommandEvent(mContent->AsElement(), aIsTrusted, aModifiers,
-                                userinput, needToFlipChecked);
+                                userinput, needToFlipChecked, aButton);
 }
 
 void nsMenuFrame::PassMenuCommandEventToPopupManager() {

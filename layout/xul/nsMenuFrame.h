@@ -245,7 +245,8 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   bool ShouldBlink();
   void StartBlinking();
   void StopBlinking();
-  void CreateMenuCommandEvent(bool aIsTrusted, mozilla::Modifiers aModifiers);
+  void CreateMenuCommandEvent(bool aIsTrusted, mozilla::Modifiers aModifiers,
+                              int16_t aButton);
   void PassMenuCommandEventToPopupManager();
 
  protected:

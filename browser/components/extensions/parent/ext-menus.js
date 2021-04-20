@@ -400,8 +400,6 @@ var gMenuBuilder = {
       element.setAttribute("disabled", "true");
     }
 
-    let button;
-
     element.addEventListener(
       "command",
       event => {
@@ -436,7 +434,7 @@ var gMenuBuilder = {
         let info = item.getClickInfo(contextData, wasChecked);
         info.modifiers = clickModifiersFromEvent(event);
 
-        info.button = button;
+        info.button = event.button;
 
         // Allow menus to open various actions supported in webext prior
         // to notifying onclicked.
@@ -458,25 +456,6 @@ var gMenuBuilder = {
       },
       { once: true }
     );
-
-    // eslint-disable-next-line mozilla/balanced-listeners
-    element.addEventListener("click", event => {
-      if (
-        event.target !== event.currentTarget ||
-        // Ignore menu items that are usually not clickeable,
-        // such as separators and parents of submenus and disabled items.
-        element.localName !== "menuitem" ||
-        element.disabled
-      ) {
-        return;
-      }
-
-      button = event.button;
-      if (event.button) {
-        element.doCommand();
-        contextData.menu.hidePopup();
-      }
-    });
 
     // Don't publish the ID of the root because the root element is
     // auto-generated.
