@@ -153,21 +153,6 @@ def debug_defines(debug, labels):
 
 set_config("MOZ_DEBUG_DEFINES", debug_defines)
 
-option(
-    "--enable-rust-debug",
-    default=depends(when="--enable-debug")(lambda: True),
-    help="{Build|Do not build} Rust code with debug assertions turned " "on.",
-)
-
-
-@depends(when="--enable-rust-debug")
-def debug_rust():
-    return True
-
-
-set_config("MOZ_DEBUG_RUST", debug_rust)
-set_define("MOZ_DEBUG_RUST", debug_rust)
-
 option(env="MOZ_PGO", help="Build with profile guided optimizations")
 
 set_config("MOZ_PGO", depends("MOZ_PGO")(lambda x: bool(x)))
