@@ -149,48 +149,10 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Card Nickname -->
-    <TextView
-        android:id="@+id/card_nickname_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:paddingStart="3dp"
-        android:paddingEnd="0dp"
-        android:text="@string/credit_cards_card_nickname"
-        android:textColor="?primaryText"
-        android:textSize="12sp"
-        android:layout_marginTop="10dp"
-        android:letterSpacing="0.05"
-        app:fontFamily="@font/metropolis_semibold" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/card_nickname_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="11dp"
-        android:textColor="?primaryText"
-        app:errorEnabled="true"
-        app:hintEnabled="false">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/card_nickname_input"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:fontFamily="sans-serif"
-            android:letterSpacing="0.01"
-            android:lineSpacingExtra="8sp"
-            android:maxLines="1"
-            android:singleLine="true"
-            android:textColor="?primaryText"
-            android:textSize="16sp" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:paddingTop="16dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/delete_button"
