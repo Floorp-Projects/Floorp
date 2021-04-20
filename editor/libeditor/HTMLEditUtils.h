@@ -228,6 +228,17 @@ class HTMLEditUtils final {
   static bool IsSingleLineContainer(nsINode& aNode);
 
   /**
+   * IsVisibleTextNode() returns true if aText has visible text.  If it has
+   * only white-spaces and they are collapsed, returns false.
+   *
+   * If aEditingHost is omitted, this computes parent editable block for you.
+   * But if you call this a lot, please specify proper editing host (or parent
+   * block) for the performance.
+   */
+  static bool IsVisibleTextNode(dom::Text& aText,
+                                Element* aEditingHost = nullptr);
+
+  /**
    * IsPointAtEdgeOfLink() returns true if aPoint is at start or end of a
    * link.
    */

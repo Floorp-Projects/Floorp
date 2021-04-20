@@ -5162,22 +5162,6 @@ bool HTMLEditor::IsInVisibleTextFrames(Text& aText) const {
   return NS_SUCCEEDED(rv) && isVisible;
 }
 
-bool HTMLEditor::IsVisibleTextNode(Text& aText) const {
-  if (!aText.TextDataLength()) {
-    return false;
-  }
-
-  if (!aText.TextIsOnlyWhitespace()) {
-    return true;
-  }
-
-  WSScanResult nextWSScanResult =
-      WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
-          GetActiveEditingHost(), EditorRawDOMPoint(&aText, 0));
-  return nextWSScanResult.InNormalWhiteSpacesOrText() &&
-         nextWSScanResult.TextPtr() == &aText;
-}
-
 bool HTMLEditor::IsEmpty() const {
   if (mPaddingBRElementForEmptyEditor) {
     return true;
@@ -5207,9 +5191,12 @@ bool HTMLEditor::IsEmptyNodeImpl(nsINode& aNode, bool aSingleBRDoesntCount,
                                  bool aSafeToAskFrames, bool* aSeenBR) const {
   MOZ_ASSERT(aSeenBR);
 
+  Element* editingHost = GetActiveEditingHost();
+
   if (Text* text = aNode.GetAsText()) {
-    return aSafeToAskFrames ? !IsInVisibleTextFrames(*text)
-                            : !IsVisibleTextNode(*text);
+    return aSafeToAskFrames
+               ? !IsInVisibleTextFrames(*text)
+               : !HTMLEditUtils::IsVisibleTextNode(*text, editingHost);
   }
 
   // if it's not a text node (handled above) and it's not a container,
@@ -5239,8 +5226,9 @@ bool HTMLEditor::IsEmptyNodeImpl(nsINode& aNode, bool aSingleBRDoesntCount,
     if (EditorUtils::IsEditableContent(*child, EditorType::HTML)) {
       if (Text* text = child->GetAsText()) {
         // break out if we find we aren't empty
-        if (!(aSafeToAskFrames ? !IsInVisibleTextFrames(*text)
-                               : !IsVisibleTextNode(*text))) {
+        if (!(aSafeToAskFrames
+                  ? !IsInVisibleTextFrames(*text)
+                  : !HTMLEditUtils::IsVisibleTextNode(*text, editingHost))) {
           return false;
         }
       } else {
