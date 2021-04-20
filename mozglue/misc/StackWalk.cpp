@@ -108,21 +108,6 @@ class FrameSkipper {
 #    error Too old imagehlp.h
 #  endif
 
-struct WalkStackData {
-  // Are we walking the stack of the calling thread? Note that we need to avoid
-  // calling fprintf and friends if this is false, in order to avoid deadlocks.
-  bool walkCallingThread;
-  const void* firstFramePC;
-  HANDLE thread;
-  HANDLE process;
-  HANDLE eventStart;
-  HANDLE eventEnd;
-  uint32_t maxFrames;
-  CONTEXT* context;
-  MozWalkStackCallback callback;
-  void* callbackClosure;
-};
-
 CRITICAL_SECTION gDbgHelpCS;
 
 #  if defined(_M_AMD64) || defined(_M_ARM64)
@@ -270,43 +255,31 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
                                  const void* aFirstFramePC, uint32_t aMaxFrames,
                                  void* aClosure, HANDLE aThread,
                                  CONTEXT* aContext) {
-  struct WalkStackData data;
-
   InitializeDbgHelpCriticalSection();
 
   HANDLE targetThread = aThread;
-  if (!aThread) {
+  bool walkCallingThread;
+  if (!targetThread) {
     targetThread = ::GetCurrentThread();
-    data.walkCallingThread = true;
+    walkCallingThread = true;
   } else {
-    DWORD threadId = ::GetThreadId(aThread);
+    DWORD targetThreadId = ::GetThreadId(targetThread);
     DWORD currentThreadId = ::GetCurrentThreadId();
-    data.walkCallingThread = (threadId == currentThreadId);
+    walkCallingThread = (targetThreadId == currentThreadId);
   }
-
-  data.firstFramePC = aFirstFramePC;
-  data.thread = targetThread;
-  data.process = ::GetCurrentProcess();
-  data.maxFrames = aMaxFrames;
-  data.context = aContext;
-  data.callback = aCallback;
-  data.callbackClosure = aClosure;
-
-  WalkStackData* aData = &data;
 
   // If not already provided, get a context for the specified thread.
   CONTEXT context_buf;
-  if (!aData->context) {
+  if (!aContext) {
     memset(&context_buf, 0, sizeof(CONTEXT));
     context_buf.ContextFlags = CONTEXT_FULL;
-    if (aData->walkCallingThread) {
+    if (walkCallingThread) {
       ::RtlCaptureContext(&context_buf);
-    } else if (!GetThreadContext(aData->thread, &context_buf)) {
+    } else if (!GetThreadContext(targetThread, &context_buf)) {
       return;
     }
   }
-  CONTEXTGenericAccessors context{aData->context ? *aData->context
-                                                 : context_buf};
+  CONTEXTGenericAccessors context{aContext ? *aContext : context_buf};
 
 #  if defined(_M_IX86) || defined(_M_IA64)
   // Setup initial stack frame to walk from.
@@ -341,7 +314,7 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
   bool firstFrame = true;
 #  endif
 
-  FrameSkipper skipper(aData->firstFramePC);
+  FrameSkipper skipper(aFirstFramePC);
 
   uint32_t frames = 0;
 
@@ -360,7 +333,8 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
 #    elif defined _M_IX86
         IMAGE_FILE_MACHINE_I386,
 #    endif
-        aData->process, aData->thread, &frame64, context.CONTEXTPtr(), nullptr,
+        ::GetCurrentProcess(), targetThread, &frame64, context.CONTEXTPtr(),
+        nullptr,
         SymFunctionTableAccess64,  // function table access routine
         SymGetModuleBase64,        // module base routine
         0);
@@ -372,7 +346,7 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
     } else {
       addr = 0;
       spaddr = 0;
-      if (aData->walkCallingThread) {
+      if (walkCallingThread) {
         PrintError("WalkStack64");
       }
     }
@@ -438,10 +412,9 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
       continue;
     }
 
-    aData->callback(++frames, (void*)addr, (void*)spaddr,
-                    aData->callbackClosure);
+    aCallback(++frames, (void*)addr, (void*)spaddr, aClosure);
 
-    if (aData->maxFrames != 0 && frames == aData->maxFrames) {
+    if (aMaxFrames != 0 && frames == aMaxFrames) {
       break;
     }
 
