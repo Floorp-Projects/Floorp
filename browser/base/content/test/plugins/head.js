@@ -123,7 +123,6 @@ function promiseForPluginInfo(aId, aBrowser) {
       throw new Error("no plugin found");
     }
     return {
-      pluginFallbackType: plugin.pluginFallbackType,
       activated: plugin.activated,
       hasRunningPlugin: plugin.hasRunningPlugin,
       displayedType: plugin.displayedType,

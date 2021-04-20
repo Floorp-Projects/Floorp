@@ -46,8 +46,7 @@ add_task(async function() {
       "object should be an nsIObjectLoadingContent"
     );
     Assert.ok(
-      objectElt.pluginFallbackType ==
-        Ci.nsIObjectLoadingContent.PLUGIN_BLOCK_ALL,
+      objectElt.displayedType == Ci.nsIObjectLoadingContent.TYPE_FALLBACK,
       "object should be blocked"
     );
 
@@ -58,8 +57,7 @@ add_task(async function() {
       "embed should be an nsIObjectLoadingContent"
     );
     Assert.ok(
-      embedElt.pluginFallbackType ==
-        Ci.nsIObjectLoadingContent.PLUGIN_BLOCK_ALL,
+      embedElt.displayedType == Ci.nsIObjectLoadingContent.TYPE_FALLBACK,
       "embed should be blocked"
     );
   });
