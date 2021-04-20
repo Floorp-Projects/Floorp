@@ -556,7 +556,6 @@ void PointerEventHandler::InitPointerEventFromTouch(
   aPointerEvent->mButtons = buttons;
   aPointerEvent->mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
   aPointerEvent->mFromTouchEvent = true;
-  aPointerEvent->mPressure = aTouch->mForce;
 }
 
 /* static */
