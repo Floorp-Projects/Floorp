@@ -753,6 +753,21 @@ bool Navigator::Vibrate(uint32_t aDuration) {
   return Vibrate(pattern);
 }
 
+nsTArray<uint32_t> SanitizeVibratePattern(const nsTArray<uint32_t>& aPattern) {
+  nsTArray<uint32_t> pattern(aPattern.Clone());
+
+  if (pattern.Length() > StaticPrefs::dom_vibrator_max_vibrate_list_len()) {
+    pattern.SetLength(StaticPrefs::dom_vibrator_max_vibrate_list_len());
+  }
+
+  for (size_t i = 0; i < pattern.Length(); ++i) {
+    pattern[i] =
+        std::min(StaticPrefs::dom_vibrator_max_vibrate_ms(), pattern[i]);
+  }
+
+  return pattern;
+}
+
 bool Navigator::Vibrate(const nsTArray<uint32_t>& aPattern) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -766,16 +781,7 @@ bool Navigator::Vibrate(const nsTArray<uint32_t>& aPattern) {
     return false;
   }
 
-  nsTArray<uint32_t> pattern(aPattern.Clone());
-
-  if (pattern.Length() > StaticPrefs::dom_vibrator_max_vibrate_list_len()) {
-    pattern.SetLength(StaticPrefs::dom_vibrator_max_vibrate_list_len());
-  }
-
-  for (size_t i = 0; i < pattern.Length(); ++i) {
-    pattern[i] =
-        std::min(StaticPrefs::dom_vibrator_max_vibrate_ms(), pattern[i]);
-  }
+  nsTArray<uint32_t> pattern = SanitizeVibratePattern(aPattern);
 
   // The spec says we check dom.vibrator.enabled after we've done the sanity
   // checking on the pattern.

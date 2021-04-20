@@ -36,7 +36,34 @@ class WebNotificationTest : BaseSessionTest() {
                 result as String, equalTo("granted"))
     }
 
+    @Test fun onSilentNotification() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.silent.enabled" to true))
+        val runtime = sessionRule.runtime
+        val notificationResult = GeckoResult<Void>()
+        val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
+        val unregister = { _: WebNotificationDelegate -> runtime.webNotificationDelegate = null }
+
+        sessionRule.addExternalDelegateDuringNextWait(WebNotificationDelegate::class, register,
+                unregister, object : WebNotificationDelegate {
+            @GeckoSessionTestRule.AssertCalled
+            override fun onShowNotification(notification: WebNotification) {
+                assertThat("Title should match", notification.title, equalTo("The Title"))
+                assertThat("Silent should match", notification.silent, equalTo(true))
+                assertThat("Vibrate should match", notification.vibrate, equalTo(intArrayOf()))
+                assertThat("Source should match", notification.source, equalTo(createTestUrl(HELLO_HTML_PATH)))
+                notificationResult.complete(null)
+            }
+        })
+
+        mainSession.evaluateJS("""
+            new Notification('The Title', { body: 'The Text', silent: true });
+            """.trimIndent())
+
+        sessionRule.waitForResult(notificationResult)
+    }
+
     @Test fun onShowNotification() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.vibrate.enabled" to true))
         val runtime = sessionRule.runtime
         val notificationResult = GeckoResult<Void>()
         val register = {  delegate: WebNotificationDelegate -> runtime.webNotificationDelegate = delegate}
@@ -56,6 +83,8 @@ class WebNotificationTest : BaseSessionTest() {
                     assertThat("Direction should match", notification.textDirection, equalTo("ltr"))
                     assertThat("Require Interaction should match", notification.requireInteraction,
                             equalTo(requireInteraction))
+                    assertThat("Vibrate should match", notification.vibrate, equalTo(intArrayOf(1, 2, 3, 4)))
+                    assertThat("Silent should match", notification.silent, equalTo(false))
                     assertThat("Source should match", notification.source, equalTo(createTestUrl(HELLO_HTML_PATH)))
                     notificationResult.complete(null)
                 }
@@ -64,7 +93,7 @@ class WebNotificationTest : BaseSessionTest() {
         mainSession.evaluateJS("""
             new Notification('The Title', { body: 'The Text', cookie: 'Cookie',
                 icon: 'icon.png', tag: 'Tag', dir: 'ltr', lang: 'en-US',
-                requireInteraction: true });
+                requireInteraction: true, vibrate: [1,2,3,4] });
             """.trimIndent())
 
         sessionRule.waitForResult(notificationResult)

@@ -82,12 +82,30 @@ public class WebNotification {
      */
     public final @Nullable String source;
 
+    /**
+     * When set, indicates that no sounds or vibrations should be made.
+     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/silent">Web Notification - silent</a>
+     */
+    public final boolean silent;
+
+    /**
+     * A vibration pattern to run with the display of the notification. A
+     * vibration pattern can be an array with as few as one member. The values
+     * are times in milliseconds where the even indices (0, 2, 4, etc.) indicate
+     * how long to vibrate and the odd indices indicate how long to pause. For
+     * example, [300, 100, 400] would vibrate 300ms, pause 100ms, then vibrate
+     * 400ms.
+     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/vibrate">Web Notification - vibrate</a>
+     */
+    public final @NonNull int[] vibrate;
+
     @WrapForJNI
     /* package */ WebNotification(@Nullable final String title, @NonNull final String tag,
                         @Nullable final String cookie, @Nullable final String text,
                         @Nullable final String imageUrl, @Nullable final String textDirection,
                         @Nullable final String lang, @NonNull final boolean requireInteraction,
-                        @NonNull final String source) {
+                        @NonNull final String source, final boolean silent,
+                        @NonNull final int[] vibrate) {
         this.tag = tag;
         this.mCookie = cookie;
         this.title = title;
@@ -97,6 +115,8 @@ public class WebNotification {
         this.lang = lang;
         this.requireInteraction = requireInteraction;
         this.source = "".equals(source) ? null : source;
+        this.silent = silent;
+        this.vibrate = vibrate;
     }
 
     /**

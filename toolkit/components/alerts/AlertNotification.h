@@ -75,6 +75,8 @@ class AlertNotification final : public nsIAlertNotification {
   nsString mData;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   bool mInPrivateBrowsing;
+  bool mSilent;
+  nsTArray<uint32_t> mVibrate;
 };
 
 }  // namespace mozilla
