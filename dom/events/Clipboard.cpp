@@ -300,10 +300,11 @@ RefPtr<NativeEntryPromise> GetImageNativeEntry(
   return callback->Promise();
 }
 
-// Restrict to types allowed by Chrome.
+// Restrict to types allowed by Chrome
+// SVG is still disabled by default in Chrome.
 static bool IsValidType(const nsAString& aType) {
   return aType.EqualsLiteral(kPNGImageMime) || aType.EqualsLiteral(kTextMime) ||
-         aType.EqualsLiteral(kHTMLMime) || aType.EqualsLiteral("image/svg+xml");
+         aType.EqualsLiteral(kHTMLMime);
 }
 
 using NativeItemPromise = NativeEntryPromise::AllPromiseType;
