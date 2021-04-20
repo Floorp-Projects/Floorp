@@ -434,7 +434,7 @@ class MediaCache {
   // It is owned by all MediaCacheStreams that use it.
   // This is a raw pointer set by GetMediaCache(), and reset by ~MediaCache(),
   // both on the main thread; and is not accessed anywhere else.
-  static MediaCache* gMediaCache;
+  static inline MediaCache* gMediaCache = nullptr;
 
   // This member is main-thread only. It's used to allocate unique
   // resource IDs to streams.
@@ -461,14 +461,14 @@ class MediaCache {
   nsTArray<int64_t> mSuspendedStatusToNotify;
   // The thread on which we will run data callbacks from the channels.
   // Note this thread is shared among all MediaCache instances.
-  static StaticRefPtr<nsIThread> sThread;
+  static inline StaticRefPtr<nsIThread> sThread;
   // True if we've tried to init sThread. Note we try once only so it is safe
   // to access sThread on all threads.
-  static bool sThreadInit;
+  static inline bool sThreadInit = false;
 
  private:
   // MediaCache thread only. True if we're on a cellular network connection.
-  static bool sOnCellular;
+  static inline bool sOnCellular = false;
 
   // Used by MediaCacheStream::GetDebugInfo() only for debugging.
   // Don't add new callers to this function.
@@ -479,18 +479,6 @@ class MediaCache {
     return mMonitor;
   }
 };
-
-// Initialized to nullptr by non-local static initialization.
-/* static */
-MediaCache* MediaCache::gMediaCache;
-
-/* static */
-StaticRefPtr<nsIThread> MediaCache::sThread;
-/* static */
-bool MediaCache::sThreadInit = false;
-
-/* static */
-bool MediaCache::sOnCellular = false;
 
 void MediaCache::UpdateOnCellular() {
   NS_ASSERTION(NS_IsMainThread(),
