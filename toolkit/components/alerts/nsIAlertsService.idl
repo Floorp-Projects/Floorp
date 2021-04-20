@@ -50,7 +50,9 @@ interface nsIAlertNotification : nsISupports
             [optional] in AString aData,
             [optional] in nsIPrincipal aPrincipal,
             [optional] in boolean aInPrivateBrowsing,
-            [optional] in boolean aRequireInteraction);
+            [optional] in boolean aRequireInteraction,
+            [optional] in boolean aSilent,
+            [optional] in Array<uint32_t> aVibrate);
 
   /**
    * The name of the notification. On Android, the name is hashed and used as
@@ -126,6 +128,21 @@ interface nsIAlertNotification : nsISupports
    * the user activates or dismisses the notification.
    */
   readonly attribute boolean requireInteraction;
+
+  /**
+   * When set, indicates that no sounds or vibrations should be made.
+   */
+  readonly attribute boolean silent;
+
+  /**
+   * A vibration pattern to run with the display of the notification. A
+   * vibration pattern can be an array with as few as one member. The values
+   * are times in milliseconds where the even indices (0, 2, 4, etc.) indicate
+   * how long to vibrate and the odd indices indicate how long to pause. For
+   * example, [300, 100, 400] would vibrate 300ms, pause 100ms, then vibrate
+   * 400ms.
+   */
+  readonly attribute Array<uint32_t> vibrate;
 
   /**
    * Indicates whether this alert should show the source string and action

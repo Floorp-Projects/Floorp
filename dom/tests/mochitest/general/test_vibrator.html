@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Test for Vibrator</title>
-  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -12,82 +11,138 @@
      navigator.vibrate throws an exception where appropriate. -->
 
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
-var result;
-function expectFailure(param) {
-  result = navigator.vibrate(param);
-  is(result, false, 'vibrate(' + param + ') should have failed.');
+function testNavigatorVibrate(testCase) {
+  result = navigator.vibrate(testCase.value);
+  is(result, true, `vibrate(${testCase.value}) must succeed.`);
 }
 
-function expectSuccess(param) {
-  result = navigator.vibrate(param);
-  is(result, true, 'vibrate(' + param + ') must succeed.');
+function testNotificationVibrate(testCase) {
+  var notification = new Notification('Test notification', {
+    body: 'test vibrate',
+    vibrate: testCase.value,
+  });
+
+  isDeeply(notification.vibrate, testCase.expected, `vibrate = ${testCase.value} should be accepted.`);
 }
 
-function tests(aEnabled) {
-  // Some edge cases that the bindings should handle for us.
-  expectSuccess(null);
-  expectSuccess(undefined);
-  // -1 will be converted to the highest unsigned long then clamped.
-  expectSuccess(-1);
-  expectSuccess('a');
-  // -1 will be converted to the highest unsigned long then clamped.
-  expectSuccess([100, -1]);
-  expectSuccess([100, 'a']);
+const MAX_VIBRATE_MS = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_ms');
+const MAX_VIBRATE_LIST_LEN = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_list_len');
+const TESTCASES = [
+  {
+    value: null,
+    expected: [0],
+  },{
+    value: undefined,
+    expected: [],
+  },{
+    // -1 will be converted to the highest unsigned long then clamped.
+    value: -1,
+    expected: [MAX_VIBRATE_MS],
+  },{
+    value: 'a',
+    expected: [0],
+  },{
+    // -1 will be converted to the highest unsigned long then clamped.
+    value: [100, -1],
+    expected: [100, MAX_VIBRATE_MS],
+  },{
+    value: [100, 'a'],
+    expected: [100, 0],
+  },{
+    // If we pass a vibration pattern with a value higher than max_vibrate_ms or a
+    // pattern longer than max_vibrate_list_len, the call should succeed but the
+    // pattern should be modified to match the restrictions.
 
-  var maxVibrateMs = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_ms');
-  var maxVibrateListLen = SpecialPowers.getIntPref('dom.vibrator.max_vibrate_list_len');
-
-  // If we pass a vibration pattern with a value higher than max_vibrate_ms or a
-  // pattern longer than max_vibrate_list_len, the call should succeed but the
-  // pattern should be modified to match the restrictions.
-
-  // Values will be clamped to dom.vibrator.max_vibrate_ms.
-  expectSuccess(maxVibrateMs + 1);
-  expectSuccess([maxVibrateMs + 1]);
-
-  var arr = [];
-  for (var i = 0; i < maxVibrateListLen + 1; i++) {
-    arr[i] = 0;
+    // Values will be clamped to dom.vibrator.max_vibrate_ms.
+    value: MAX_VIBRATE_MS + 1,
+    expected: [MAX_VIBRATE_MS],
+  },{
+    value: [MAX_VIBRATE_MS + 1],
+    expected: [MAX_VIBRATE_MS],
+  },{
+    // The array will be truncated to have a length equal to dom.vibrator.max_vibrate_list_len.
+    value: new Array(MAX_VIBRATE_LIST_LEN + 1).fill(0),
+    expected: new Array(MAX_VIBRATE_LIST_LEN).fill(0),
+  },{
+    value: 0,
+    expected: [0],
+  },{
+    value: [],
+    expected: [],
+  },{
+    value: '1000',
+    expected: [1000],
+  },{
+    value: 1000,
+    expected: [1000],
+  },{
+    value: 1000.1,
+    expected: [1000],
+  },{
+    value: [0, 0, 0],
+    expected: [0, 0, 0],
+  },{
+    value: ['1000', 1000],
+    expected: [1000, 1000],
+  },{
+    value: [1000, 1000],
+    expected: [1000, 1000],
+  },{
+    value: [1000, 1000.1],
+    expected: [1000, 1000],
   }
-  // The array will be truncated to have a length equal to dom.vibrator.max_vibrate_list_len.
-  expectSuccess(arr);
+];
 
-
-  expectSuccess(0);
-  expectSuccess([]);
-  expectSuccess('1000');
-  expectSuccess(1000);
-  expectSuccess(1000.1);
-  expectSuccess([0, 0, 0]);
-  expectSuccess(['1000', 1000]);
-  expectSuccess([1000, 1000]);
-  expectSuccess([1000, 1000.1]);
-
-  // The following loop shouldn't cause us to crash.  See bug 701716.
-  for (var i = 0; i < 10000; i++) {
-    navigator.vibrate([100, 100]);
+function testWith(tester) {
+  for (let testCase of TESTCASES) {
+    tester(testCase);
   }
-  ok(true, "Didn't crash after issuing a lot of vibrate() calls.");
-  if(!aEnabled)
-    SimpleTest.finish();
 }
 
-SpecialPowers.pushPermissions([
-    {type: 'vibration', allow: true, context: document}
-  ], function() {
-    // Test with the vibrator pref enabled.
-    SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', true]]}, function() {
-      tests(true);
-      SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', false]]}, tests(false));
+add_task(async function test_notification_vibrate_enabled() {
+  await SpecialPowers.pushPrefEnv({"set": [['dom.webnotifications.vibrate.enabled', true]]});
+
+  testWith(testNotificationVibrate);
+});
+
+add_task(async function test_vibrator_vibrate() {
+  await SpecialPowers.pushPermissions([{type: 'vibration', allow: true, context: document}]);
+  await SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', true]]});
+
+  testWith(testNavigatorVibrate);
+
+  await SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', false]]});
+
+  testWith(testNavigatorVibrate);
+});
+
+add_task(async function test_vibrate_many_times() {
+  await SpecialPowers.pushPermissions([{type: 'vibration', allow: true, context: document}]);
+  await SpecialPowers.pushPrefEnv({"set": [['dom.vibrator.enabled', true]]});
+
+ // The following loop shouldn't cause us to crash.  See bug 701716.
+ for (var i = 0; i < 10000; i++) {
+   navigator.vibrate([100, 100]);
+ }
+ ok(true, "Didn't crash after issuing a lot of vibrate() calls.");
+});
+
+add_task(async function test_notification_vibrate_silent() {
+  await SpecialPowers.pushPrefEnv({"set": [['dom.webnotifications.vibrate.enabled', true],
+      ['dom.webnotifications.silent.enabled', true]]});
+
+  try {
+    var notification = new Notification('Test notification', {
+      body: 'test vibrate',
+      vibrate: [100, 100],
+      silent: true,
     });
-    // Everything should be the same when the vibrator is disabled -- in
-    // particular, a disabled vibrator shouldn't eat failures we'd otherwise
-    // observe.
+    ok(false, "The above should throw if vibrate is enabled");
+  } catch (error) {
+    is(error.name, "TypeError", "A silent notification with a vibrate param should throw a TypeError");
   }
-);
+});
 
 </script>
 </body>
-
 </html>
