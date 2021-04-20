@@ -1814,7 +1814,7 @@ void Shape::dump(js::GenericPrinter& out) const {
   if (JSID_IS_INT(propid)) {
     out.printf("[%ld]", (long)JSID_TO_INT(propid));
   } else if (JSID_IS_ATOM(propid)) {
-    if (JSLinearString* str = JSID_TO_ATOM(propid)) {
+    if (JSLinearString* str = propid.toAtom()) {
       EscapedStringPrinter(out, str, '"');
     } else {
       out.put("<error>");

@@ -3161,7 +3161,7 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
                          js::GenericPrinter& out) {
   jsid id = shape.propid();
   if (JSID_IS_ATOM(id)) {
-    JSID_TO_ATOM(id)->dumpCharsNoNewline(out);
+    id.toAtom()->dumpCharsNoNewline(out);
   } else if (JSID_IS_INT(id)) {
     out.printf("%d", JSID_TO_INT(id));
   } else if (JSID_IS_SYMBOL(id)) {

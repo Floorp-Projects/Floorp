@@ -163,7 +163,7 @@ class ContextChecks {
 
   void check(jsid id, int argIndex) {
     if (JSID_IS_ATOM(id)) {
-      checkAtom(JSID_TO_ATOM(id), argIndex);
+      checkAtom(id.toAtom(), argIndex);
     } else if (JSID_IS_SYMBOL(id)) {
       checkAtom(JSID_TO_SYMBOL(id), argIndex);
     } else {
