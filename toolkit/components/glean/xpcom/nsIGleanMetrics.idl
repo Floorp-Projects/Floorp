@@ -184,6 +184,12 @@ interface nsIGleanMemoryDistribution : nsISupports
 	jsval testGetValue([optional] in ACString aPingName);
 };
 
+[scriptable, function, uuid(e5447f62-4b03-497c-81e9-6ab683d20380)]
+interface nsIGleanPingTestCallback : nsISupports
+{
+  void call(in ACString aReason);
+};
+
 [scriptable, uuid(5223a48b-687d-47ff-a629-fd4a72d1ecfa)]
 interface nsIGleanPing : nsISupports
 {
@@ -207,6 +213,20 @@ interface nsIGleanPing : nsISupports
    *                  Must match one of the configured `reason_codes`.
    */
 	void submit([optional] in ACString aReason);
+
+  /**
+   * **Test-only API**
+   *
+   * Register a callback to be called right before this ping is next submitted.
+   * The provided function is called exactly once before submitting.
+   *
+   * Note: The callback will be called on any call to submit.
+   * A ping might not be sent afterwards, e.g. if the ping is empty and
+   * `send_if_empty` is `false`.
+   *
+   * @param aCallback - The callback to call on the next submit.
+   */
+  void testBeforeNextSubmit(in nsIGleanPingTestCallback aCallback);
 };
 
 [scriptable, uuid(d84a3555-46f1-48c1-9122-e8e88b069d2b)]
