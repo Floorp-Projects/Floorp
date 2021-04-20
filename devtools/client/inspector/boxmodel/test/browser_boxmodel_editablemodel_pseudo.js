@@ -19,15 +19,16 @@ const TEST_URI = `<style>
   </div>`;
 
 add_task(async function() {
-  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  const { inspector, boxmodel, testActor } = await openLayoutView();
+  const tab = await addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  const { inspector, boxmodel } = await openLayoutView();
+  const browser = tab.linkedBrowser;
 
   await selectNode(".test", inspector);
 
   // No margin-top defined.
   info("Test that margins are not impacted by a pseudo element");
   is(
-    await getStyle(testActor, ".test", "margin-top"),
+    await getStyle(browser, ".test", "margin-top"),
     "",
     "margin-top is correct"
   );
@@ -40,7 +41,7 @@ add_task(async function() {
   // No padding-top defined.
   info("Test that paddings are not impacted by a pseudo element");
   is(
-    await getStyle(testActor, ".test", "padding-top"),
+    await getStyle(browser, ".test", "padding-top"),
     "",
     "padding-top is correct"
   );
@@ -52,7 +53,7 @@ add_task(async function() {
 
   // Width should be driven by the parent div.
   info("Test that dimensions are not impacted by a pseudo element");
-  is(await getStyle(testActor, ".test", "width"), "", "width is correct");
+  is(await getStyle(browser, ".test", "width"), "", "width is correct");
   await checkValueInBoxModel(
     ".boxmodel-content.boxmodel-width",
     "200",

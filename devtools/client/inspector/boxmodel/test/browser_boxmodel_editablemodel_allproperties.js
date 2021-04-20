@@ -15,19 +15,20 @@ const TEST_URI =
   "<div id='div1'></div><div id='div2'></div><div id='div3'></div>";
 
 add_task(async function() {
-  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  const { inspector, boxmodel, testActor } = await openLayoutView();
+  const tab = await addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  const { inspector, boxmodel } = await openLayoutView();
 
-  await testEditing(inspector, boxmodel, testActor);
-  await testEditingAndCanceling(inspector, boxmodel, testActor);
-  await testDeleting(inspector, boxmodel, testActor);
-  await testDeletingAndCanceling(inspector, boxmodel, testActor);
+  const browser = tab.linkedBrowser;
+  await testEditing(inspector, boxmodel, browser);
+  await testEditingAndCanceling(inspector, boxmodel, browser);
+  await testDeleting(inspector, boxmodel, browser);
+  await testDeletingAndCanceling(inspector, boxmodel, browser);
 });
 
-async function testEditing(inspector, boxmodel, testActor) {
+async function testEditing(inspector, boxmodel, browser) {
   info("When all properties are set on the node editing one should work");
 
-  await setStyle(testActor, "#div1", "padding", "5px");
+  await setStyle(browser, "#div1", "padding", "5px");
   await waitForUpdate(inspector);
 
   await selectNode("#div1", inspector);
@@ -49,7 +50,7 @@ async function testEditing(inspector, boxmodel, testActor) {
 
   is(editor.value, "7", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "padding-bottom"),
+    await getStyle(browser, "#div1", "padding-bottom"),
     "7px",
     "Should have updated the padding"
   );
@@ -57,20 +58,20 @@ async function testEditing(inspector, boxmodel, testActor) {
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
   is(
-    await getStyle(testActor, "#div1", "padding-bottom"),
+    await getStyle(browser, "#div1", "padding-bottom"),
     "7px",
     "Should be the right padding."
   );
   await waitForElementTextContent(span, "7");
 }
 
-async function testEditingAndCanceling(inspector, boxmodel, testActor) {
+async function testEditingAndCanceling(inspector, boxmodel, browser) {
   info(
     "When all properties are set on the node editing one and then " +
       "cancelling with ESCAPE should work"
   );
 
-  await setStyle(testActor, "#div1", "padding", "5px");
+  await setStyle(browser, "#div1", "padding", "5px");
   await waitForUpdate(inspector);
 
   await selectNode("#div1", inspector);
@@ -92,7 +93,7 @@ async function testEditingAndCanceling(inspector, boxmodel, testActor) {
 
   is(editor.value, "8", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "padding-left"),
+    await getStyle(browser, "#div1", "padding-left"),
     "8px",
     "Should have updated the padding"
   );
@@ -101,14 +102,14 @@ async function testEditingAndCanceling(inspector, boxmodel, testActor) {
   await waitForUpdate(inspector);
 
   is(
-    await getStyle(testActor, "#div1", "padding-left"),
+    await getStyle(browser, "#div1", "padding-left"),
     "5px",
     "Should be the right padding."
   );
   await waitForElementTextContent(span, "5");
 }
 
-async function testDeleting(inspector, boxmodel, testActor) {
+async function testDeleting(inspector, boxmodel, browser) {
   info("When all properties are set on the node deleting one should work");
 
   await selectNode("#div1", inspector);
@@ -130,7 +131,7 @@ async function testDeleting(inspector, boxmodel, testActor) {
 
   is(editor.value, "", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "padding-left"),
+    await getStyle(browser, "#div1", "padding-left"),
     "",
     "Should have updated the padding"
   );
@@ -138,20 +139,20 @@ async function testDeleting(inspector, boxmodel, testActor) {
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
   is(
-    await getStyle(testActor, "#div1", "padding-left"),
+    await getStyle(browser, "#div1", "padding-left"),
     "",
     "Should be the right padding."
   );
   await waitForElementTextContent(span, "3");
 }
 
-async function testDeletingAndCanceling(inspector, boxmodel, testActor) {
+async function testDeletingAndCanceling(inspector, boxmodel, browser) {
   info(
     "When all properties are set on the node deleting one then cancelling " +
       "should work"
   );
 
-  await setStyle(testActor, "#div1", "padding", "5px");
+  await setStyle(browser, "#div1", "padding", "5px");
   await waitForUpdate(inspector);
 
   await selectNode("#div1", inspector);
@@ -173,7 +174,7 @@ async function testDeletingAndCanceling(inspector, boxmodel, testActor) {
 
   is(editor.value, "", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "padding-left"),
+    await getStyle(browser, "#div1", "padding-left"),
     "",
     "Should have updated the padding"
   );
@@ -182,7 +183,7 @@ async function testDeletingAndCanceling(inspector, boxmodel, testActor) {
   await waitForUpdate(inspector);
 
   is(
-    await getStyle(testActor, "#div1", "padding-left"),
+    await getStyle(browser, "#div1", "padding-left"),
     "5px",
     "Should be the right padding."
   );
