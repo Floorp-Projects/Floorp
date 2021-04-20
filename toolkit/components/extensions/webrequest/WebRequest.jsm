@@ -837,6 +837,17 @@ HttpObserverManager = {
           return;
         }
 
+        let extension = opts.policy?.extension;
+        // TODO: Move this logic to ChannelWrapper::matches, see bug 1699481
+        if (
+          extension?.userContextIsolation &&
+          !extension.canAccessContainer(
+            channel.loadInfo?.originAttributes.userContextId
+          )
+        ) {
+          return;
+        }
+
         if (!commonData) {
           commonData = this.getRequestData(channel, extraData);
           if (this.STATUS_TYPES.has(kind)) {
