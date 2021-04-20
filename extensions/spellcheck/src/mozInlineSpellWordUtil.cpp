@@ -263,7 +263,7 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
 }
 
 nsresult mozInlineSpellWordUtil::EnsureWords() {
-  if (mSoftTextValid) return NS_OK;
+  if (mSoftText.mIsValid) return NS_OK;
   AdjustSoftBeginAndBuildSoftText();
 
   mRealWords.Clear();
@@ -273,7 +273,7 @@ nsresult mozInlineSpellWordUtil::EnsureWords() {
   }
 
   mRealWords = realWords.unwrap();
-  mSoftTextValid = true;
+  mSoftText.mIsValid = true;
   return NS_OK;
 }
 
@@ -300,7 +300,7 @@ nsresult mozInlineSpellWordUtil::GetRangeForWord(nsINode* aWordNode,
   // Set our soft end and start
   NodeOffset pt(aWordNode, aWordOffset);
 
-  if (!mSoftTextValid || pt != mSoftText.mBegin || pt != mSoftText.mEnd) {
+  if (!mSoftText.mIsValid || pt != mSoftText.mBegin || pt != mSoftText.mEnd) {
     InvalidateWords();
     mSoftText.mBegin = mSoftText.mEnd = pt;
     nsresult rv = EnsureWords();
@@ -937,7 +937,7 @@ auto mozInlineSpellWordUtil::BuildRealWords() const
 
 int32_t mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(
     NodeOffset aNodeOffset) const {
-  if (!mSoftTextValid) {
+  if (!mSoftText.mIsValid) {
     NS_ERROR("Soft text must be valid if we're to map into it");
     return -1;
   }
@@ -998,9 +998,9 @@ bool FindLastNongreaterOffset(const nsTArray<T>& aContainer,
 
 NodeOffset mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(
     int32_t aSoftTextOffset, DOMMapHint aHint) const {
-  NS_ASSERTION(mSoftTextValid,
+  NS_ASSERTION(mSoftText.mIsValid,
                "Soft text must be valid if we're to map out of it");
-  if (!mSoftTextValid) return NodeOffset(nullptr, -1);
+  if (!mSoftText.mIsValid) return NodeOffset(nullptr, -1);
 
   // Find the last mapping, if any, such that mSoftTextOffset <= aSoftTextOffset
   size_t index;
@@ -1057,9 +1057,9 @@ int32_t mozInlineSpellWordUtil::FindRealWordContaining(
          aSoftTextOffset, hint.get(), static_cast<int32_t>(aSearchForward)));
   }
 
-  NS_ASSERTION(mSoftTextValid,
+  NS_ASSERTION(mSoftText.mIsValid,
                "Soft text must be valid if we're to map out of it");
-  if (!mSoftTextValid) return -1;
+  if (!mSoftText.mIsValid) return -1;
 
   // Find the last word, if any, such that mSoftTextOffset <= aSoftTextOffset
   size_t index;
