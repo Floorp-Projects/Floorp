@@ -83,13 +83,6 @@ const responsiveSpec = generateActorSpec({
       },
       response: {},
     },
-
-    setMaxTouchPoints: {
-      request: {
-        flag: Arg(0, "boolean"),
-      },
-      response: {},
-    },
   },
 });
 

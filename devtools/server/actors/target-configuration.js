@@ -32,6 +32,8 @@ const SUPPORTED_OPTIONS = {
   paintFlashing: true,
   // Enable print simulation mode.
   printSimulationEnabled: true,
+  // Override navigator.maxTouchPoints (used in RDM and doesn't apply if RDM isn't enabled)
+  rdmPaneMaxTouchPoints: true,
   // Page orientation (used in RDM and doesn't apply if RDM isn't enabled)
   rdmPaneOrientation: true,
   // Restore focus in the page after closing DevTools.
@@ -179,6 +181,9 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
         case "printSimulationEnabled":
           this._setPrintSimulationEnabled(value);
           break;
+        case "rdmPaneMaxTouchPoints":
+          this._setRDMPaneMaxTouchPoints(value);
+          break;
         case "rdmPaneOrientation":
           this._setRDMPaneOrientation(value);
           break;
@@ -313,6 +318,17 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     if (flag !== undefined) {
       this._browsingContext.touchEventsOverride = flag;
     }
+  },
+
+  /**
+   * Overrides navigator.maxTouchPoints.
+   * Note that we don't need to reset the original value when the actor is destroyed,
+   * as it's directly handled by the platform when RDM is closed.
+   *
+   * @param {Integer} maxTouchPoints
+   */
+  _setRDMPaneMaxTouchPoints(maxTouchPoints) {
+    this._browsingContext.setRDMPaneMaxTouchPoints(maxTouchPoints);
   },
 
   /**
