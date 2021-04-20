@@ -174,27 +174,29 @@ gfxFont* FT2FontEntry::CreateFontInstance(const gfxFontStyle* aStyle) {
     return nullptr;
   }
 
-  // If variations are present, we will not use our cached mFTFace
-  // but always create a new one as it will have custom variation
-  // coordinates applied.
-  if ((!mVariationSettings.IsEmpty() ||
-       (aStyle && !aStyle->variationSettings.IsEmpty())) &&
-      (face->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
-    // Create a separate FT_Face because we need to apply custom
-    // variation settings to it.
-    RefPtr<SharedFTFace> varFace;
-    if (!mFilename.IsEmpty() && mFilename[0] == '/') {
-      varFace =
-          Factory::NewSharedFTFace(nullptr, mFilename.get(), mFTFontIndex);
-    } else {
-      varFace = face->GetData()->CloneFace(mFTFontIndex);
-    }
-    if (varFace) {
-      // Resolve variations from entry (descriptor) and style (property)
-      AutoTArray<gfxFontVariation, 8> settings;
-      GetVariationsForStyle(settings, aStyle ? *aStyle : gfxFontStyle());
-      gfxFT2FontBase::SetupVarCoords(GetMMVar(), settings, varFace->GetFace());
-      face = std::move(varFace);
+  if (face->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+    // Resolve variations from entry (descriptor) and style (property)
+    AutoTArray<gfxFontVariation, 8> settings;
+    GetVariationsForStyle(settings, aStyle ? *aStyle : gfxFontStyle());
+
+    // If variations are present, we will not use our cached mFTFace
+    // but always create a new one as it will have custom variation
+    // coordinates applied.
+    if (!settings.IsEmpty()) {
+      // Create a separate FT_Face because we need to apply custom
+      // variation settings to it.
+      RefPtr<SharedFTFace> varFace;
+      if (!mFilename.IsEmpty() && mFilename[0] == '/') {
+        varFace =
+            Factory::NewSharedFTFace(nullptr, mFilename.get(), mFTFontIndex);
+      } else {
+        varFace = face->GetData()->CloneFace(mFTFontIndex);
+      }
+      if (varFace) {
+        gfxFT2FontBase::SetupVarCoords(GetMMVar(), settings,
+                                       varFace->GetFace());
+        face = std::move(varFace);
+      }
     }
   }
 

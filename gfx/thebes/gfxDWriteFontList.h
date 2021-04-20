@@ -223,7 +223,8 @@ class gfxDWriteFontEntry final : public gfxFontEntry {
 
   nsresult CreateFontFace(
       IDWriteFontFace** aFontFace, const gfxFontStyle* aFontStyle = nullptr,
-      DWRITE_FONT_SIMULATIONS aSimulations = DWRITE_FONT_SIMULATIONS_NONE);
+      DWRITE_FONT_SIMULATIONS aSimulations = DWRITE_FONT_SIMULATIONS_NONE,
+      const nsTArray<gfxFontVariation>* aVariations = nullptr);
 
   static bool InitLogFont(IDWriteFont* aFont, LOGFONTW* aLogFont);
 
