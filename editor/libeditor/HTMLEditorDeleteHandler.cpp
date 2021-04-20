@@ -3349,7 +3349,8 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   }
   for (const OwningNonNull<nsIContent>& content : aArrayOfContents) {
     if (content->IsText()) {
-      if (aHTMLEditor.IsInVisibleTextFrames(*content->AsText())) {
+      if (HTMLEditUtils::IsInVisibleTextFrames(aHTMLEditor.GetPresContext(),
+                                               *content->AsText())) {
         return false;
       }
       continue;
