@@ -14,7 +14,6 @@ EXPORTS.mozilla.jni += [
     "GeckoResultUtils.h",
     "Natives.h",
     "Refs.h",
-    "TypeAdapter.h",
     "Types.h",
     "Utils.h",
 ]

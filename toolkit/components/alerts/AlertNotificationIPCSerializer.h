@@ -29,9 +29,8 @@ struct IPDLParamTraits<nsIAlertNotification*> {
     }
 
     nsString name, imageURL, title, text, cookie, dir, lang, data;
-    bool textClickable, inPrivateBrowsing, requireInteraction, silent;
+    bool textClickable, inPrivateBrowsing, requireInteraction;
     nsCOMPtr<nsIPrincipal> principal;
-    nsTArray<uint32_t> vibrate;
 
     if (NS_WARN_IF(NS_FAILED(aParam->GetName(name))) ||
         NS_WARN_IF(NS_FAILED(aParam->GetImageURL(imageURL))) ||
@@ -47,11 +46,7 @@ struct IPDLParamTraits<nsIAlertNotification*> {
         NS_WARN_IF(
             NS_FAILED(aParam->GetInPrivateBrowsing(&inPrivateBrowsing))) ||
         NS_WARN_IF(
-            NS_FAILED(aParam->GetRequireInteraction(&requireInteraction))) ||
-        NS_WARN_IF(
-            NS_FAILED(aParam->GetSilent(&silent))) ||
-        NS_WARN_IF(
-            NS_FAILED(aParam->GetVibrate(vibrate)))) {
+            NS_FAILED(aParam->GetRequireInteraction(&requireInteraction)))) {
       // Write a `null` object if any getter returns an error. Otherwise, the
       // receiver will try to deserialize an incomplete object and crash.
       WriteIPDLParam(aMsg, aActor, /* isNull */ true);
@@ -71,8 +66,6 @@ struct IPDLParamTraits<nsIAlertNotification*> {
     WriteIPDLParam(aMsg, aActor, IPC::Principal(principal));
     WriteIPDLParam(aMsg, aActor, inPrivateBrowsing);
     WriteIPDLParam(aMsg, aActor, requireInteraction);
-    WriteIPDLParam(aMsg, aActor, silent);
-    WriteIPDLParam(aMsg, aActor, vibrate);
   }
 
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
@@ -85,9 +78,8 @@ struct IPDLParamTraits<nsIAlertNotification*> {
     }
 
     nsString name, imageURL, title, text, cookie, dir, lang, data;
-    bool textClickable, inPrivateBrowsing, requireInteraction, silent;
+    bool textClickable, inPrivateBrowsing, requireInteraction;
     IPC::Principal principal;
-    nsTArray<uint32_t> vibrate;
 
     if (!ReadIPDLParam(aMsg, aIter, aActor, &name) ||
         !ReadIPDLParam(aMsg, aIter, aActor, &imageURL) ||
@@ -100,9 +92,7 @@ struct IPDLParamTraits<nsIAlertNotification*> {
         !ReadIPDLParam(aMsg, aIter, aActor, &data) ||
         !ReadIPDLParam(aMsg, aIter, aActor, &principal) ||
         !ReadIPDLParam(aMsg, aIter, aActor, &inPrivateBrowsing) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &requireInteraction) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &silent) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &vibrate)) {
+        !ReadIPDLParam(aMsg, aIter, aActor, &requireInteraction)) {
       return false;
     }
 
@@ -114,8 +104,7 @@ struct IPDLParamTraits<nsIAlertNotification*> {
     }
     nsresult rv = alert->Init(name, imageURL, title, text, textClickable,
                               cookie, dir, lang, data, principal,
-                              inPrivateBrowsing, requireInteraction,
-                              silent, vibrate);
+                              inPrivateBrowsing, requireInteraction);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       *aResult = nullptr;
       return true;
