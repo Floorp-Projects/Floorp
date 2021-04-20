@@ -22,24 +22,25 @@ add_task(async function() {
   // boxmodel-container.
   await pushPref("devtools.toolbox.footer.height", 500);
 
-  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  const { inspector, boxmodel, testActor } = await openLayoutView();
+  const tab = await addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  const { inspector, boxmodel } = await openLayoutView();
 
-  await testEditingMargins(inspector, boxmodel, testActor);
-  await testKeyBindings(inspector, boxmodel, testActor);
-  await testEscapeToUndo(inspector, boxmodel, testActor);
-  await testDeletingValue(inspector, boxmodel, testActor);
-  await testRefocusingOnClick(inspector, boxmodel, testActor);
+  const browser = tab.linkedBrowser;
+  await testEditingMargins(inspector, boxmodel, browser);
+  await testKeyBindings(inspector, boxmodel, browser);
+  await testEscapeToUndo(inspector, boxmodel, browser);
+  await testDeletingValue(inspector, boxmodel, browser);
+  await testRefocusingOnClick(inspector, boxmodel, browser);
 });
 
-async function testEditingMargins(inspector, boxmodel, testActor) {
+async function testEditingMargins(inspector, boxmodel, browser) {
   info(
     "Test that editing margin dynamically updates the document, pressing " +
       "escape cancels the changes"
   );
 
   is(
-    await getStyle(testActor, "#div1", "margin-top"),
+    await getStyle(browser, "#div1", "margin-top"),
     "",
     "Should be no margin-top on the element."
   );
@@ -61,7 +62,7 @@ async function testEditingMargins(inspector, boxmodel, testActor) {
   await waitForUpdate(inspector);
 
   is(
-    await getStyle(testActor, "#div1", "margin-top"),
+    await getStyle(browser, "#div1", "margin-top"),
     "3px",
     "Should have updated the margin."
   );
@@ -70,7 +71,7 @@ async function testEditingMargins(inspector, boxmodel, testActor) {
   await waitForUpdate(inspector);
 
   is(
-    await getStyle(testActor, "#div1", "margin-top"),
+    await getStyle(browser, "#div1", "margin-top"),
     "",
     "Should be no margin-top on the element."
   );
@@ -78,14 +79,14 @@ async function testEditingMargins(inspector, boxmodel, testActor) {
   await waitForElementTextContent(span, "5");
 }
 
-async function testKeyBindings(inspector, boxmodel, testActor) {
+async function testKeyBindings(inspector, boxmodel, browser) {
   info(
     "Test that arrow keys work correctly and pressing enter commits the " +
       "changes"
   );
 
   is(
-    await getStyle(testActor, "#div1", "margin-left"),
+    await getStyle(browser, "#div1", "margin-left"),
     "",
     "Should be no margin-top on the element."
   );
@@ -108,7 +109,7 @@ async function testKeyBindings(inspector, boxmodel, testActor) {
 
   is(editor.value, "11px", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "margin-left"),
+    await getStyle(browser, "#div1", "margin-left"),
     "11px",
     "Should have updated the margin."
   );
@@ -118,7 +119,7 @@ async function testKeyBindings(inspector, boxmodel, testActor) {
 
   is(editor.value, "10px", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "margin-left"),
+    await getStyle(browser, "#div1", "margin-left"),
     "10px",
     "Should have updated the margin."
   );
@@ -132,14 +133,14 @@ async function testKeyBindings(inspector, boxmodel, testActor) {
 
   is(editor.value, "20px", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "margin-left"),
+    await getStyle(browser, "#div1", "margin-left"),
     "20px",
     "Should have updated the margin."
   );
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
   is(
-    await getStyle(testActor, "#div1", "margin-left"),
+    await getStyle(browser, "#div1", "margin-left"),
     "20px",
     "Should be the right margin-top on the element."
   );
@@ -147,14 +148,14 @@ async function testKeyBindings(inspector, boxmodel, testActor) {
   await waitForElementTextContent(span, "20");
 }
 
-async function testEscapeToUndo(inspector, boxmodel, testActor) {
+async function testEscapeToUndo(inspector, boxmodel, browser) {
   info(
     "Test that deleting the value removes the property but escape undoes " +
       "that"
   );
 
   is(
-    await getStyle(testActor, "#div1", "margin-left"),
+    await getStyle(browser, "#div1", "margin-left"),
     "20px",
     "Should be the right margin-top on the element."
   );
@@ -177,7 +178,7 @@ async function testEscapeToUndo(inspector, boxmodel, testActor) {
 
   is(editor.value, "", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "margin-left"),
+    await getStyle(browser, "#div1", "margin-left"),
     "",
     "Should have updated the margin."
   );
@@ -186,17 +187,17 @@ async function testEscapeToUndo(inspector, boxmodel, testActor) {
   await waitForUpdate(inspector);
 
   is(
-    await getStyle(testActor, "#div1", "margin-left"),
+    await getStyle(browser, "#div1", "margin-left"),
     "20px",
     "Should be the right margin-top on the element."
   );
   is(span.textContent, "20", "Should have the right value in the box model.");
 }
 
-async function testDeletingValue(inspector, boxmodel, testActor) {
+async function testDeletingValue(inspector, boxmodel, browser) {
   info("Test that deleting the value removes the property");
 
-  await setStyle(testActor, "#div1", "marginRight", "15px");
+  await setStyle(browser, "#div1", "marginRight", "15px");
   await waitForUpdate(inspector);
 
   await selectNode("#div1", inspector);
@@ -218,7 +219,7 @@ async function testDeletingValue(inspector, boxmodel, testActor) {
 
   is(editor.value, "", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div1", "margin-right"),
+    await getStyle(browser, "#div1", "margin-right"),
     "",
     "Should have updated the margin."
   );
@@ -226,14 +227,14 @@ async function testDeletingValue(inspector, boxmodel, testActor) {
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
   is(
-    await getStyle(testActor, "#div1", "margin-right"),
+    await getStyle(browser, "#div1", "margin-right"),
     "",
     "Should be the right margin-top on the element."
   );
   await waitForElementTextContent(span, "10");
 }
 
-async function testRefocusingOnClick(inspector, boxmodel, testActor) {
+async function testRefocusingOnClick(inspector, boxmodel, browser) {
   info("Test that clicking in the editor input does not remove focus");
 
   await selectNode("#div4", inspector);
@@ -263,14 +264,14 @@ async function testRefocusingOnClick(inspector, boxmodel, testActor) {
 
   is(editor.value, "2px", "Should have the right value in the editor.");
   is(
-    await getStyle(testActor, "#div4", "margin-top"),
+    await getStyle(browser, "#div4", "margin-top"),
     "2px",
     "Should have updated the margin."
   );
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
   is(
-    await getStyle(testActor, "#div4", "margin-top"),
+    await getStyle(browser, "#div4", "margin-top"),
     "2px",
     "Should be the right margin-top on the element."
   );

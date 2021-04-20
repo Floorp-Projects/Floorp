@@ -70,18 +70,25 @@ function waitForMarkupLoaded(inspector) {
   ]);
 }
 
-function getStyle(testActor, selector, propertyName) {
-  return testActor.eval(`
-    document.querySelector("${selector}")
-            .style.getPropertyValue("${propertyName}");
-  `);
+function getStyle(browser, selector, propertyName) {
+  return SpecialPowers.spawn(browser, [selector, propertyName], async function(
+    _selector,
+    _propertyName
+  ) {
+    return content.document
+      .querySelector(_selector)
+      .style.getPropertyValue(_propertyName);
+  });
 }
 
-function setStyle(testActor, selector, propertyName, value) {
-  return testActor.eval(`
-    document.querySelector("${selector}")
-            .style.${propertyName} = "${value}";
-  `);
+function setStyle(browser, selector, propertyName, value) {
+  return SpecialPowers.spawn(
+    browser,
+    [selector, propertyName, value],
+    async function(_selector, _propertyName, _value) {
+      content.document.querySelector(_selector).style[_propertyName] = _value;
+    }
+  );
 }
 
 /**

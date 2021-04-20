@@ -10,27 +10,28 @@ const IFRAME1 = URL_ROOT + "doc_boxmodel_iframe1.html";
 const IFRAME2 = URL_ROOT + "doc_boxmodel_iframe2.html";
 
 add_task(async function() {
-  await addTab(IFRAME1);
+  const tab = await addTab(IFRAME1);
+  const browser = tab.linkedBrowser;
   const { inspector, boxmodel, testActor } = await openLayoutView();
 
-  await testFirstPage(inspector, boxmodel, testActor);
+  await testFirstPage(inspector, boxmodel, browser);
 
   info("Navigate to the second page");
   let onMarkupLoaded = waitForMarkupLoaded(inspector);
   await testActor.eval(`location.href="${IFRAME2}"`);
   await onMarkupLoaded;
 
-  await testSecondPage(inspector, boxmodel, testActor);
+  await testSecondPage(inspector, boxmodel, browser);
 
   info("Go back to the first page");
   onMarkupLoaded = waitForMarkupLoaded(inspector);
   await testActor.eval("history.back();");
   await onMarkupLoaded;
 
-  await testBackToFirstPage(inspector, boxmodel, testActor);
+  await testBackToFirstPage(inspector, boxmodel, browser);
 });
 
-async function testFirstPage(inspector, boxmodel, testActor) {
+async function testFirstPage(inspector, boxmodel, browser) {
   info("Test that the box model view works on the first page");
 
   await selectNode("p", inspector);
@@ -43,7 +44,7 @@ async function testFirstPage(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying the padding");
   const onUpdated = waitForUpdate(inspector);
-  await setStyle(testActor, "p", "padding", "20px");
+  await setStyle(browser, "p", "padding", "20px");
   await onUpdated;
   ok(true, "Box model view got updated");
 
@@ -51,7 +52,7 @@ async function testFirstPage(inspector, boxmodel, testActor) {
   is(paddingElt.textContent, "20");
 }
 
-async function testSecondPage(inspector, boxmodel, testActor) {
+async function testSecondPage(inspector, boxmodel, browser) {
   info("Test that the box model view works on the second page");
 
   await selectNode("p", inspector);
@@ -62,7 +63,7 @@ async function testSecondPage(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying the size");
   const onUpdated = waitForUpdate(inspector);
-  await setStyle(testActor, "p", "width", "200px");
+  await setStyle(browser, "p", "width", "200px");
   await onUpdated;
   ok(true, "Box model view got updated");
 
@@ -70,7 +71,7 @@ async function testSecondPage(inspector, boxmodel, testActor) {
   is(sizeElt.textContent, "200" + "\u00D7" + "100");
 }
 
-async function testBackToFirstPage(inspector, boxmodel, testActor) {
+async function testBackToFirstPage(inspector, boxmodel, browser) {
   info("Test that the box model view works on the first page after going back");
 
   await selectNode("p", inspector);
@@ -86,7 +87,7 @@ async function testBackToFirstPage(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying the padding");
   const onUpdated = waitForUpdate(inspector);
-  await setStyle(testActor, "p", "padding", "100px");
+  await setStyle(browser, "p", "padding", "100px");
   await onUpdated;
   ok(true, "Box model view got updated");
 
