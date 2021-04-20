@@ -397,7 +397,7 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
     }
 
     Rooted<JSScript*> script(cx, gcOutput.script);
-    if (!input.options.hideScriptFromDebugger) {
+    if (!input.options.hideFromNewScriptInitial()) {
       DebugAPI::onNewScript(cx, script);
     }
   }
@@ -1219,7 +1219,7 @@ static JSFunction* CompileStandaloneFunction(
     MOZ_ASSERT(!cx->isHelperThreadContext());
 
     Rooted<JSScript*> script(cx, gcOutput.get().script);
-    if (!options.hideScriptFromDebugger) {
+    if (!options.hideFromNewScriptInitial()) {
       DebugAPI::onNewScript(cx, script);
     }
   }

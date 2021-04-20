@@ -242,6 +242,30 @@ extern JS_PUBLIC_API JSFunction* CompileFunctionUtf8(
 extern JS_PUBLIC_API void ExposeScriptToDebugger(JSContext* cx,
                                                  Handle<JSScript*> script);
 
+/*
+ * JSScripts have associated with them (via their ScriptSourceObjects) some
+ * metadata used by the debugger. The following API functions are used to set
+ * that metadata on scripts, functions and modules.
+ *
+ * The metadata consists of:
+ * - A privateValue, which is used to keep some object value associated
+ *   with the script.
+ * - The elementAttributeName is used by Gecko
+ * - The introductionScript is used by the debugger to identify which
+ *   script created which. Only set for dynamicaly generated scripts.
+ * - scriptOrModule is used to transfer private value metadata from
+ *   script to script
+ *
+ * Callers using UpdateDebugMetaData need to have set deferDebugMetadata
+ * in the compile options; this hides the script from the debugger until
+ * the debug metadata is provided by the UpdateDebugMetadata call.
+ */
+extern JS_PUBLIC_API bool UpdateDebugMetadata(
+    JSContext* cx, Handle<JSScript*> script,
+    const ReadOnlyCompileOptions& options, HandleValue privateValue,
+    HandleString elementAttributeName, HandleScript introScript,
+    HandleScript scriptOrModule);
+
 extern JS_PUBLIC_API void SetGetElementCallback(JSContext* cx,
                                                 JSGetElementCallback callback);
 

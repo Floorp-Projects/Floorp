@@ -1044,8 +1044,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   // Use line 0 to make the function body starts from line 1.
   options.setIntroductionType("eventHandler")
       .setFileAndLine(url.get(), 0)
-      .setElementAttributeName(jsStr)
-      .setPrivateValue(JS::PrivateValue(eventScript));
+      .setdeferDebugMetadata(true);
 
   JS::Rooted<JSObject*> handler(cx);
   result = nsJSUtils::CompileFunction(jsapi, scopeChain, options,
@@ -1053,6 +1052,11 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
                                       argNames, *body, handler.address());
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
+
+  JS::Rooted<JS::Value> privateValue(cx, JS::PrivateValue(eventScript));
+  result = nsJSUtils::UpdateFunctionDebugMetadata(jsapi, handler, options,
+                                                  jsStr, privateValue);
+  NS_ENSURE_SUCCESS(result, result);
 
   MOZ_ASSERT(js::IsObjectInContextCompartment(handler, cx));
   JS::Rooted<JSObject*> handlerGlobal(cx, JS::CurrentGlobalOrNull(cx));

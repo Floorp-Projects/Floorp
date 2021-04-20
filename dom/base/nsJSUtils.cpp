@@ -74,6 +74,29 @@ uint64_t nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(JSContext* aContext) {
   return win ? win->WindowID() : 0;
 }
 
+nsresult nsJSUtils::UpdateFunctionDebugMetadata(
+    AutoJSAPI& jsapi, JS::Handle<JSObject*> aFun, JS::CompileOptions& aOptions,
+    JS::Handle<JSString*> aElementAttributeName,
+    JS::Handle<JS::Value> aPrivateValue) {
+  JSContext* cx = jsapi.cx();
+
+  JS::Rooted<JSFunction*> fun(cx, JS_GetObjectFunction(aFun));
+  if (!fun) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JS::RootedScript script(cx, JS_GetFunctionScript(cx, fun));
+  if (!script) {
+    return NS_OK;
+  }
+
+  if (!JS::UpdateDebugMetadata(cx, script, aOptions, aPrivateValue,
+                               aElementAttributeName, nullptr, nullptr)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 nsresult nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
                                     JS::HandleVector<JSObject*> aScopeChain,
                                     JS::CompileOptions& aOptions,

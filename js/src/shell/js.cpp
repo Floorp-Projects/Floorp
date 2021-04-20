@@ -1989,13 +1989,57 @@ static bool LoadScriptRelativeToScript(JSContext* cx, unsigned argc,
   return LoadScript(cx, argc, vp, true);
 }
 
+static bool ParseDebugMetadata(JSContext* cx, HandleObject opts,
+                               MutableHandleValue privateValue,
+                               MutableHandleString elementAttributeName) {
+  RootedValue v(cx);
+  RootedString s(cx);
+
+  if (!JS_GetProperty(cx, opts, "element", &v)) {
+    return false;
+  }
+  if (v.isObject()) {
+    RootedObject infoObject(cx, CreateScriptPrivate(cx));
+    if (!infoObject) {
+      return false;
+    }
+    RootedValue elementValue(cx, v);
+    if (!JS_WrapValue(cx, &elementValue)) {
+      return false;
+    }
+    if (!JS_DefineProperty(cx, infoObject, "element", elementValue, 0)) {
+      return false;
+    }
+    privateValue.set(ObjectValue(*infoObject));
+  }
+
+  if (!JS_GetProperty(cx, opts, "elementAttributeName", &v)) {
+    return false;
+  }
+  if (!v.isUndefined()) {
+    s = ToString(cx, v);
+    if (!s) {
+      return false;
+    }
+    elementAttributeName.set(s);
+  }
+
+  return true;
+}
+
 // Populate |options| with the options given by |opts|'s properties. If we
 // need to convert a filename to a C string, let fileNameBytes own the
 // bytes.
 static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
-                                HandleObject opts, UniqueChars* fileNameBytes) {
+                                HandleObject opts, UniqueChars* fileNameBytes,
+                                MutableHandleValue privateValue,
+                                MutableHandleString elementAttributeName) {
   RootedValue v(cx);
   RootedString s(cx);
+
+  if (!ParseDebugMetadata(cx, opts, privateValue, elementAttributeName)) {
+    return false;
+  }
 
   if (!JS_GetProperty(cx, opts, "isRunOnce", &v)) {
     return false;
@@ -2035,35 +2079,6 @@ static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
   }
   if (!v.isUndefined()) {
     options.setSkipFilenameValidation(ToBoolean(v));
-  }
-
-  if (!JS_GetProperty(cx, opts, "element", &v)) {
-    return false;
-  }
-  if (v.isObject()) {
-    RootedObject infoObject(cx, CreateScriptPrivate(cx));
-    if (!infoObject) {
-      return false;
-    }
-    RootedValue elementValue(cx, v);
-    if (!JS_WrapValue(cx, &elementValue)) {
-      return false;
-    }
-    if (!JS_DefineProperty(cx, infoObject, "element", elementValue, 0)) {
-      return false;
-    }
-    options.setPrivateValue(ObjectValue(*infoObject));
-  }
-
-  if (!JS_GetProperty(cx, opts, "elementAttributeName", &v)) {
-    return false;
-  }
-  if (!v.isUndefined()) {
-    s = ToString(cx, v);
-    if (!s) {
-      return false;
-    }
-    options.setElementAttributeName(s);
   }
 
   if (!JS_GetProperty(cx, opts, "lineNumber", &v)) {
@@ -2374,16 +2389,21 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   CacheOptionSet optionSet;
 
   options.setIntroductionType("js shell evaluate")
-      .setFileAndLine("@evaluate", 1);
+      .setFileAndLine("@evaluate", 1)
+      .setdeferDebugMetadata();
 
   global = JS::CurrentGlobalOrNull(cx);
   MOZ_ASSERT(global);
+
+  RootedValue privateValue(cx);
+  RootedString elementAttributeName(cx);
 
   if (args.length() == 2) {
     RootedObject opts(cx, &args[1].toObject());
     RootedValue v(cx);
 
-    if (!ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+    if (!ParseCompileOptions(cx, options, opts, &fileNameBytes, &privateValue,
+                             &elementAttributeName)) {
       return false;
     }
 
@@ -2673,6 +2693,11 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       if (!script->scriptSource()->setSourceMapURL(cx, std::move(chars))) {
         return false;
       }
+    }
+
+    if (!JS::UpdateDebugMetadata(cx, script, options, privateValue,
+                                 elementAttributeName, nullptr, nullptr)) {
+      return false;
     }
 
     if (!transcodeOnly) {
@@ -5438,7 +5463,10 @@ static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
   options.setIntroductionType("js shell compile")
       .setFileAndLine("<string>", 1)
       .setIsRunOnce(true)
-      .setNoScriptRval(true);
+      .setNoScriptRval(true)
+      .setdeferDebugMetadata();
+  RootedValue privateValue(cx);
+  RootedString elementAttributeName(cx);
 
   if (args.length() >= 2) {
     if (args[1].isPrimitive()) {
@@ -5448,7 +5476,8 @@ static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     RootedObject opts(cx, &args[1].toObject());
-    if (!ParseCompileOptions(cx, options, opts, nullptr)) {
+    if (!ParseCompileOptions(cx, options, opts, nullptr, &privateValue,
+                             &elementAttributeName)) {
       return false;
     }
   }
@@ -5461,6 +5490,11 @@ static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   if (!script) {
+    return false;
+  }
+
+  if (!JS::UpdateDebugMetadata(cx, script, options, privateValue,
+                               elementAttributeName, nullptr, nullptr)) {
     return false;
   }
 
@@ -5853,8 +5887,10 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
                           typeName);
       return false;
     }
-
-    if (!ParseCompileOptions(cx, options, objOptions, nullptr)) {
+    RootedValue dummyValue(cx);
+    RootedString dummyAttributeName(cx);
+    if (!ParseCompileOptions(cx, options, objOptions, nullptr, &dummyValue,
+                             &dummyAttributeName)) {
       return false;
     }
 
@@ -6148,7 +6184,8 @@ static bool OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp) {
   UniqueChars fileNameBytes;
   CompileOptions options(cx);
   options.setIntroductionType("js shell offThreadCompileScript")
-      .setFileAndLine("<string>", 1);
+      .setFileAndLine("<string>", 1)
+      .setdeferDebugMetadata();
 
   if (args.length() >= 2) {
     if (args[1].isPrimitive()) {
@@ -6157,8 +6194,13 @@ static bool OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
+    // Offthread compilation requires that the debug metadata be set when the
+    // script is collected from offthread, rather than when compiled.
+    RootedValue dummyPrivateValue(cx);
+    RootedString dummyElementAttributeName(cx);
     RootedObject opts(cx, &args[1].toObject());
-    if (!ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+    if (!ParseCompileOptions(cx, options, opts, &fileNameBytes,
+                             &dummyPrivateValue, &dummyElementAttributeName)) {
       return false;
     }
   }
@@ -6239,6 +6281,28 @@ static bool runOffThreadScript(JSContext* cx, unsigned argc, Value* vp) {
   RootedScript script(cx, JS::FinishOffThreadScript(cx, token));
   DeleteOffThreadJob(cx, job);
   if (!script) {
+    return false;
+  }
+
+  RootedValue privateValue(cx);
+  RootedString elementAttributeName(cx);
+
+  if (args.length() >= 2) {
+    if (args[1].isPrimitive()) {
+      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
+                                JSSMSG_INVALID_ARGS, "compile");
+      return false;
+    }
+
+    RootedObject opts(cx, &args[1].toObject());
+    if (!ParseDebugMetadata(cx, opts, &privateValue, &elementAttributeName)) {
+      return false;
+    }
+  }
+
+  CompileOptions dummyOptions(cx);
+  if (!JS::UpdateDebugMetadata(cx, script, dummyOptions, privateValue,
+                               elementAttributeName, nullptr, nullptr)) {
     return false;
   }
 
@@ -6383,7 +6447,10 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     RootedObject opts(cx, &args[1].toObject());
-    if (!ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+    RootedValue dummyValue(cx);
+    RootedString dummyAttributeName(cx);
+    if (!ParseCompileOptions(cx, options, opts, &fileNameBytes, &dummyValue,
+                             &dummyAttributeName)) {
       return false;
     }
   }

@@ -14,6 +14,7 @@
 #include "mozilla/dom/JSExecutionContext.h"
 
 #include <utility>
+#include "ErrorList.h"
 #include "MainThreadUtils.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
@@ -47,9 +48,11 @@ static nsresult EvaluationExceptionToNSResult(JSContext* aCx) {
   return NS_SUCCESS_DOM_SCRIPT_EVALUATION_THREW_UNCATCHABLE;
 }
 
-JSExecutionContext::JSExecutionContext(JSContext* aCx,
-                                       JS::Handle<JSObject*> aGlobal,
-                                       JS::CompileOptions& aCompileOptions)
+JSExecutionContext::JSExecutionContext(
+    JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+    JS::CompileOptions& aCompileOptions,
+    JS::Handle<JS::Value> aDebuggerPrivateValue,
+    JS::Handle<JSScript*> aDebuggerIntroductionScript)
     :
 #ifdef MOZ_GECKO_PROFILER
       mAutoProfilerLabel("JSExecutionContext",
@@ -61,6 +64,8 @@ JSExecutionContext::JSExecutionContext(JSContext* aCx,
       mRetValue(aCx),
       mScript(aCx),
       mCompileOptions(aCompileOptions),
+      mDebuggerPrivateValue(aCx, aDebuggerPrivateValue),
+      mDebuggerIntroductionScript(aCx, aDebuggerIntroductionScript),
       mRv(NS_OK),
       mSkip(false),
       mCoerceToString(false),
@@ -105,6 +110,9 @@ nsresult JSExecutionContext::JoinCompile(JS::OffThreadToken** aOffThreadToken) {
     return mRv;
   }
 
+  if (!UpdateDebugMetadata()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   return NS_OK;
 }
 
@@ -133,6 +141,10 @@ nsresult JSExecutionContext::InternalCompile(JS::SourceText<Unit>& aSrcBuf) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;
+  }
+
+  if (!UpdateDebugMetadata()) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return NS_OK;
@@ -183,7 +195,20 @@ nsresult JSExecutionContext::Decode(mozilla::Vector<uint8_t>& aBytecodeBuf,
     return mRv;
   }
 
+  if (!UpdateDebugMetadata()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   return mRv;
+}
+
+bool JSExecutionContext::UpdateDebugMetadata() {
+  if (!mCompileOptions.deferDebugMetadata) {
+    return true;
+  }
+  return JS::UpdateDebugMetadata(mCx, mScript, mCompileOptions,
+                                 mDebuggerPrivateValue, nullptr,
+                                 mDebuggerIntroductionScript, nullptr);
 }
 
 nsresult JSExecutionContext::JoinDecode(JS::OffThreadToken** aOffThreadToken) {
@@ -198,6 +223,10 @@ nsresult JSExecutionContext::JoinDecode(JS::OffThreadToken** aOffThreadToken) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;
+  }
+
+  if (!UpdateDebugMetadata()) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return NS_OK;

@@ -637,10 +637,12 @@ class ScriptLoader final : public nsISupports {
   already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalObject(
       WebExtGlobal aWebExtGlobal);
 
-  nsresult FillCompileOptionsForRequest(const mozilla::dom::AutoJSAPI& jsapi,
-                                        ScriptLoadRequest* aRequest,
-                                        JS::Handle<JSObject*> aScopeChain,
-                                        JS::CompileOptions* aOptions);
+  // Fill in CompileOptions, as well as produce the introducer script for
+  // subsequent calls to UpdateDebuggerMetadata
+  nsresult FillCompileOptionsForRequest(
+      const mozilla::dom::AutoJSAPI& jsapi, ScriptLoadRequest* aRequest,
+      JS::Handle<JSObject*> aScopeChain, JS::CompileOptions* aOptions,
+      JS::MutableHandle<JSScript*> aIntroductionScript);
 
   uint32_t NumberOfProcessors();
   nsresult PrepareLoadedRequest(ScriptLoadRequest* aRequest,

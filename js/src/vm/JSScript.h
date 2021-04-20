@@ -1134,6 +1134,10 @@ class ScriptSourceObject : public NativeObject {
 
   void setPrivate(JSRuntime* rt, const Value& value);
 
+  void setIntroductionScript(const Value& introductionScript) {
+    setReservedSlot(INTRODUCTION_SCRIPT_SLOT, introductionScript);
+  }
+
   Value canonicalPrivate() const {
     MOZ_ASSERT(isInitialized());
     Value value = getReservedSlot(PRIVATE_SLOT);
