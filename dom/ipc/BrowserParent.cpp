@@ -2126,7 +2126,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvAsyncMessage(
 mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
     const nsCursor& aCursor, const bool& aHasCustomCursor,
     const nsCString& aCursorData, const uint32_t& aWidth,
-    const uint32_t& aHeight, const uint32_t& aStride,
+    const uint32_t& aHeight, const float& aResolution, const uint32_t& aStride,
     const gfx::SurfaceFormat& aFormat, const uint32_t& aHotspotX,
     const uint32_t& aHotspotY, const bool& aForce) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -2156,7 +2156,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
   }
 
   mCursor = nsIWidget::Cursor{aCursor, std::move(cursorImage), aHotspotX,
-                              aHotspotY};
+                              aHotspotY, aResolution};
   if (!mRemoteTargetSetsCursor) {
     return IPC_OK();
   }
