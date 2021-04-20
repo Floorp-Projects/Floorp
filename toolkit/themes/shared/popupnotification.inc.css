@@ -220,6 +220,10 @@
   flex: unset;
 }
 
+.popup-notification-secondary-button[hidden="true"] ~ .popup-notification-primary-button {
+  flex: none;
+}
+
 .panel-footer > .popup-notification-secondary-button:not([dropmarkerhidden="true"]) {
   border-start-end-radius: 0;
   border-end-end-radius: 0;
