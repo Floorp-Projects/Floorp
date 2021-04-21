@@ -163,6 +163,7 @@ add_task(async function theme_change() {
 });
 
 add_task(async function skip_screens() {
+  Services.telemetry.clearEvents();
   const mock = mockShell();
 
   await showAndWaitForDialog(async win => {
@@ -176,6 +177,15 @@ add_task(async function skip_screens() {
     mock.setAsDefault.callCount,
     0,
     "Skipped both screens without setting default"
+  );
+  AssertEvents(
+    "Displayed default button and skipped",
+    ["content", "show", "0"],
+    ["content", "show", "upgrade-dialog-new-primary-default-button"],
+    ["content", "button", "upgrade-dialog-new-secondary-button"],
+    ["content", "show", "1"],
+    ["content", "button", "upgrade-dialog-theme-secondary-button"],
+    ["content", "close", "complete"]
   );
 });
 
@@ -192,10 +202,16 @@ add_task(async function exit_early() {
     0,
     "Only 1 screen to skip when default"
   );
+  AssertEvents(
+    "Displayed theme button and skipped",
+    ["content", "show", "0"],
+    ["content", "show", "upgrade-dialog-new-primary-theme-button"],
+    ["content", "button", "upgrade-dialog-new-secondary-button"],
+    ["content", "close", "early"]
+  );
 });
 
 add_task(async function quit_app() {
-  Services.telemetry.clearEvents();
   mockShell();
 
   await showAndWaitForDialog(() => {
