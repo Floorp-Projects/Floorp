@@ -24,9 +24,6 @@ static constexpr Register ReturnReg{Registers::invalid_reg2};
 static constexpr FloatRegister ReturnFloat32Reg = {FloatRegisters::invalid_reg};
 static constexpr FloatRegister ReturnDoubleReg = {FloatRegisters::invalid_reg};
 static constexpr FloatRegister ReturnSimd128Reg = {FloatRegisters::invalid_reg};
-static constexpr FloatRegister ScratchFloat32Reg = {
-    FloatRegisters::invalid_reg};
-static constexpr FloatRegister ScratchDoubleReg = {FloatRegisters::invalid_reg};
 static constexpr FloatRegister ScratchSimd128Reg = {
     FloatRegisters::invalid_reg};
 static constexpr FloatRegister InvalidFloatReg = {FloatRegisters::invalid_reg};
