@@ -2046,6 +2046,15 @@ ScopedLayerTreeRegistration::ScopedLayerTreeRegistration(
   sIndirectLayerTrees[aLayersId].mController = aController;
 }
 
+ScopedLayerTreeRegistration::ScopedLayerTreeRegistration(
+    LayersId aLayersId, GeckoContentController* aController)
+    : mLayersId(aLayersId) {
+  EnsureLayerTreeMapReady();
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  sIndirectLayerTrees[aLayersId].mRoot = nullptr;
+  sIndirectLayerTrees[aLayersId].mController = aController;
+}
+
 ScopedLayerTreeRegistration::~ScopedLayerTreeRegistration() {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees.erase(mLayersId);
