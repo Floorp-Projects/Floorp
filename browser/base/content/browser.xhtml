@@ -305,13 +305,14 @@
             <image/>
           </toolbarbutton>
         </box>
-        <html:div id="editBookmarkPanelInfoArea">
-          <html:div id="editBookmarkPanelRecommendation"></html:div>
-          <html:div id="editBookmarkPanelFaviconContainer">
-            <html:img id="editBookmarkPanelFavicon"/>
+        <vbox class="panel-subview-body">
+          <html:div id="editBookmarkPanelInfoArea">
+            <html:div id="editBookmarkPanelRecommendation"></html:div>
+            <html:div id="editBookmarkPanelFaviconContainer">
+              <html:img id="editBookmarkPanelFavicon"/>
+            </html:div>
+            <html:div id="editBookmarkPanelImage"></html:div>
           </html:div>
-          <html:div id="editBookmarkPanelImage"></html:div>
-        </html:div>
 #include ../../components/places/content/editBookmarkPanel.inc.xhtml
           <vbox id="editBookmarkPanelBottomContent"
                 flex="1">
@@ -343,6 +344,7 @@
                     oncommand="StarUI.panel.hidePopup();"/>
 #endif
           </hbox>
+        </vbox>
       </panel>
     </html:template>
 
