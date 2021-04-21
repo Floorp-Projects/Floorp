@@ -1344,6 +1344,12 @@ var PlacesUIUtils = {
       return true;
     }
     let document = menupopup.ownerDocument;
+    // TODO: Ideally, we want to simply use menupopup.triggerNode instead of
+    // document.popupNode here, but document.popupNode will be refferred while
+    // building the context menu, set menupopup.triggerNode to document.popupNode
+    // for now. So, if we make not refer to document.popupNode in Places in
+    // bug 1706004, need to modify here as well.
+    document.popupNode = menupopup.triggerNode;
     menupopup._view = this.getViewForNode(document.popupNode);
     if (!menupopup._view) {
       // This can happen if we try to invoke the context menu on
