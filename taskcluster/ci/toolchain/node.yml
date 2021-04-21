@@ -29,11 +29,19 @@ macosx64-node-10:
     run:
         toolchain-alias:
             - macosx64-node
-            # There isn't an arm64-native node yet, so use the x86_64 one.
-            - macosx64-aarch64-node
     fetches:
         fetch:
             - nodejs-10-macosx64
+
+macosx64-aarch64-node-16:
+    treeherder:
+        symbol: TM(node-16-arm64)
+    run:
+        toolchain-alias:
+            - macosx64-aarch64-node
+    fetches:
+        fetch:
+            - nodejs-16-macosx64-arm64
 
 win64-node-10:
     treeherder:
