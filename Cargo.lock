@@ -3089,7 +3089,7 @@ dependencies = [
 [[package]]
 name = "minidump_writer_linux"
 version = "0.1.0"
-source = "git+https://github.com/msirringhaus/minidump_writer_linux.git?rev=667c38bf1d9a8ea0c2c0a219d13006a39847b3f2#667c38bf1d9a8ea0c2c0a219d13006a39847b3f2"
+source = "git+https://github.com/msirringhaus/minidump_writer_linux.git?rev=47cba046aabef76233942a09f31e6ef7a8a4eda9#47cba046aabef76233942a09f31e6ef7a8a4eda9"
 dependencies = [
  "byteorder",
  "goblin",
