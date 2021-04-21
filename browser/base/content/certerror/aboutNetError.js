@@ -4,8 +4,22 @@
 
 /* eslint-env mozilla/frame-script */
 
-import { parse } from "chrome://global/content/certviewer/certDecoder.js";
-import { pemToDER } from "chrome://global/content/certviewer/utils.js";
+import "chrome://global/content/certviewer/pvutils_bundle.js";
+import "chrome://global/content/certviewer/asn1js_bundle.js";
+import "chrome://global/content/certviewer/pkijs_bundle.js";
+import "chrome://global/content/certviewer/certDecoder.js";
+
+const { Integer, fromBER } = globalThis.asn1js.asn1js;
+const { Certificate } = globalThis.pkijs.pkijs;
+const { fromBase64, stringToArrayBuffer } = globalThis.pvutils.pvutils;
+const { parse, pemToDER } = globalThis.certDecoderInitializer(
+  Integer,
+  fromBER,
+  Certificate,
+  fromBase64,
+  stringToArrayBuffer,
+  crypto
+);
 
 const formatter = new Intl.DateTimeFormat("default");
 

@@ -27,6 +27,9 @@ var gExceptionPaths = [
   // These resources are referenced using relative paths from html files.
   "resource://payments/",
 
+  // These chrome resources are referenced using relative paths from JS files.
+  "chrome://global/content/certviewer/components/",
+
   // https://github.com/mozilla/activity-stream/issues/3053
   "chrome://activity-stream/content/data/content/tippytop/images/",
   "chrome://activity-stream/content/data/content/tippytop/favicons/",

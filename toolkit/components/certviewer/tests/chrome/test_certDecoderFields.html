@@ -4,17 +4,29 @@
     <title>certviewer parse test</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-    <script src="chrome://global/content/certviewer/pvutils_bundle.js"></script>
-    <script src="chrome://global/content/certviewer/asn1js_bundle.js"></script>
-    <script src="chrome://global/content/certviewer/pkijs_bundle.js"></script>
     <script type="module" src="CSoutput.js"></script>
-
     <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   </head>
 <body>
   <script type="module">
-    import { parse } from "chrome://global/content/certviewer/certDecoder.js";
-    import { pemToDER } from "chrome://global/content/certviewer/utils.js";
+    import "chrome://global/content/certviewer/pvutils_bundle.js";
+    import "chrome://global/content/certviewer/asn1js_bundle.js";
+    import "chrome://global/content/certviewer/pkijs_bundle.js";
+    import "chrome://global/content/certviewer/certDecoder.js";
+
+    const { Integer, fromBER } = globalThis.asn1js.asn1js;
+    const { Certificate } = globalThis.pkijs.pkijs;
+    const { fromBase64, stringToArrayBuffer } = globalThis.pvutils.pvutils;
+
+    const { parse, pemToDER } = globalThis.certDecoderInitializer(
+      Integer,
+      fromBER,
+      Certificate,
+      fromBase64,
+      stringToArrayBuffer,
+      crypto
+    );
+
     import { certOutputCS } from "./CSoutput.js";
 
     // inputPEM is the same input to CS extension (https://github.com/april/certainly-something)
