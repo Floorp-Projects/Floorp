@@ -2929,7 +2929,7 @@ static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
                        MutableHandleValue vp);
 
 static void GetUnclonedValue(NativeObject* selfHostedObject,
-                             const JS::PropertyKey& id, Value* vp) {
+                             const PropertyKey& id, Value* vp) {
   if (JSID_IS_INT(id)) {
     size_t index = JSID_TO_INT(id);
     if (index < selfHostedObject->getDenseInitializedLength() &&
@@ -3298,7 +3298,7 @@ bool JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx,
 }
 
 void JSRuntime::getUnclonedSelfHostedValue(PropertyName* name, Value* vp) {
-  JS::PropertyKey id = NameToId(name);
+  PropertyKey id = NameToId(name);
   GetUnclonedValue(selfHostingGlobal_, id, vp);
 }
 
