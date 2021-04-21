@@ -265,8 +265,14 @@ Shape* RegExpObject::assignInitialShape(JSContext* cx,
   static_assert(LAST_INDEX_SLOT == 0);
 
   /* The lastIndex property alone is writable but non-configurable. */
-  return NativeObject::addProperty(cx, self, cx->names().lastIndex,
-                                   LAST_INDEX_SLOT, JSPROP_PERMANENT);
+  uint32_t slot;
+  if (!NativeObject::addProperty(cx, self, cx->names().lastIndex,
+                                 LAST_INDEX_SLOT, JSPROP_PERMANENT, &slot)) {
+    return nullptr;
+  }
+  MOZ_ASSERT(slot == LAST_INDEX_SLOT);
+
+  return self->shape();
 }
 
 void RegExpObject::initIgnoringLastIndex(JSAtom* source, RegExpFlags flags) {
