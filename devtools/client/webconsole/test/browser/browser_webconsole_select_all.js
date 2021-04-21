@@ -61,7 +61,10 @@ async function testContextMenuSelectAll(hud) {
   );
 
   outputContainer.focus();
-  selectAllItem.click();
+
+  const menuHidden = once(contextMenu, "popuphidden");
+  contextMenu.activateItem(selectAllItem);
+  await menuHidden;
 
   checkMessagesSelected(outputContainer);
   hud.iframeWindow.getSelection().removeAllRanges();
