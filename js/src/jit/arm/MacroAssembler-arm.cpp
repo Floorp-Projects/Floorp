@@ -4062,7 +4062,13 @@ void MacroAssembler::comment(const char* msg) { Assembler::comment(msg); }
 // ===============================================================
 // Stack manipulation functions.
 
+size_t MacroAssembler::PushRegsInMaskSizeInBytes(LiveRegisterSet set) {
+  return set.gprs().size() * sizeof(intptr_t) + set.fpus().getPushSizeInBytes();
+}
+
 void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
+  mozilla::DebugOnly<size_t> framePushedInitial = framePushed();
+
   int32_t diffF = set.fpus().getPushSizeInBytes();
   int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
@@ -4095,10 +4101,15 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
   adjustFrame(diffF);
   diffF += transferMultipleByRuns(set.fpus(), IsStore, StackPointer, DB);
   MOZ_ASSERT(diffF == 0);
+
+  MOZ_ASSERT(framePushed() - framePushedInitial ==
+             PushRegsInMaskSizeInBytes(set));
 }
 
 void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
                                      Register scratch) {
+  mozilla::DebugOnly<size_t> offsetInitial = dest.offset;
+
   int32_t diffF = set.fpus().getPushSizeInBytes();
   int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
@@ -4130,16 +4141,23 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
 #  error "Needs more careful logic if SIMD is enabled"
 #endif
 
+  MOZ_ASSERT(diffF >= 0);
   if (diffF > 0) {
     computeEffectiveAddress(dest, scratch);
     diffF += transferMultipleByRuns(set.fpus(), IsStore, scratch, DB);
   }
 
   MOZ_ASSERT(diffF == 0);
+
+  // "The amount of space actually used does not exceed what
+  // `PushRegsInMaskSizeInBytes` claims will be used."
+  MOZ_ASSERT(offsetInitial - dest.offset <= PushRegsInMaskSizeInBytes(set));
 }
 
 void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
                                          LiveRegisterSet ignore) {
+  mozilla::DebugOnly<size_t> framePushedInitial = framePushed();
+
   int32_t diffG = set.gprs().size() * sizeof(intptr_t);
   int32_t diffF = set.fpus().getPushSizeInBytes();
   const int32_t reservedG = diffG;
@@ -4188,6 +4206,9 @@ void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
     freeStack(reservedG);
   }
   MOZ_ASSERT(diffG == 0);
+
+  MOZ_ASSERT(framePushedInitial - framePushed() ==
+             PushRegsInMaskSizeInBytes(set));
 }
 
 void MacroAssembler::Push(Register reg) {

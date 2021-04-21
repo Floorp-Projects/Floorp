@@ -1932,6 +1932,10 @@ void MacroAssembler::subFromStackPtr(Imm32 imm32) {
 // ===============================================================
 // Stack manipulation functions.
 
+size_t MacroAssembler::PushRegsInMaskSizeInBytes(LiveRegisterSet set) {
+  return set.gprs().size() * sizeof(intptr_t) + set.fpus().getPushSizeInBytes();
+}
+
 void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
   int32_t diff =
       set.gprs().size() * sizeof(intptr_t) + set.fpus().getPushSizeInBytes();
