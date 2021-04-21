@@ -686,6 +686,54 @@ add_task(async function test_nimbus_about_studies() {
   Assert.equal(ExperimentManager.store.getAll().length, 0, "Cleanup done");
 });
 
+add_task(async function test_nimbus_backwards_compatibility() {
+  const recipe = ExperimentFakes.recipe("about-studies-foo");
+  await ExperimentManager.enroll({
+    experimentType: "messaging_experiment",
+    ...recipe,
+  });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:studies" },
+    async browser => {
+      const name = await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector(".nimbus .remove-button"),
+          "waiting for page/experiment to load"
+        );
+        return content.document.querySelector(".study-name").innerText;
+      });
+      // Make sure strings are properly shown
+      Assert.equal(
+        name,
+        recipe.userFacingName,
+        "Correct active experiment name"
+      );
+    }
+  );
+  ExperimentManager.unenroll(recipe.slug);
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:studies" },
+    async browser => {
+      const name = await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector(".nimbus.disabled"),
+          "waiting for experiment to become disabled"
+        );
+        return content.document.querySelector(".study-name").innerText;
+      });
+      // Make sure strings are properly shown
+      Assert.equal(
+        name,
+        recipe.userFacingName,
+        "Correct disabled experiment name"
+      );
+    }
+  );
+  // Cleanup for multiple test runs
+  ExperimentManager.store._deleteForTests(recipe.slug);
+  Assert.equal(ExperimentManager.store.getAll().length, 0, "Cleanup done");
+});
+
 add_task(async function test_getStudiesEnabled() {
   RecipeRunner.initializedPromise = PromiseUtils.defer();
   let promise = AboutPages.aboutStudies.getStudiesEnabled();
