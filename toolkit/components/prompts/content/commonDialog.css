@@ -126,6 +126,12 @@ dialog[subdialog] {
   margin: 0 4px;
 }
 
+#commonDialog[subdialog] checkbox {
+  /* Align the checkbox to the first line of text using "baseline" to be less
+   * sensitive than "start" to the label's font-size and line-height. */
+  -moz-box-align: baseline;
+}
+
 #commonDialog[subdialog] label {
   margin: 4px; /* Labels for input boxes should get block as well as the regular inline margin. */
 }
@@ -138,6 +144,10 @@ dialog[subdialog] {
 
 #commonDialog[subdialog] .checkbox-check {
   margin-block: 0;
+  /* With "baseline" alignment, if the checkbox is larger than the label, it
+   * behaves like "start" positioned to the top; otherwise, it is positioned to
+   * the bottom edge of the label, so shift back up to center it with text.  */
+  translate: 0 calc(-0.35 * max(1em - 100%, 0px) + 1px);
 }
 
 #commonDialog[subdialog] input {
