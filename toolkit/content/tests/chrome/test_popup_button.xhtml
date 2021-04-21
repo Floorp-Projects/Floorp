@@ -10,8 +10,13 @@
 
 <script>
 SimpleTest.waitForExplicitFinish();
-function runTest()
+async function runTest()
 {
+  // This test exercises non-native menu code. So disable native context menus for this test.
+  // If we ever get to a point where we don't use any non-native menus on macOS any more, we can
+  // disable this test on macOS.
+  await SpecialPowers.pushPrefEnv({ set: [["widget.macos.native-context-menus", false]] });
+
   window.open("window_popup_button.xhtml", "_blank", "width=700,height=800");
 }
 </script>
