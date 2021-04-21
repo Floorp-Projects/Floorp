@@ -165,15 +165,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include QuickSuggest suggestions.
   ["suggest.quicksuggest", true],
 
-  // Whether the QuickSuggest experiment is enabled.
-  ["quicksuggest.enabled", false],
-
-  // Whether the user has seen the onboarding dialog.
-  ["quicksuggest.showedOnboardingDialog", false],
-
-  // Count the restarts before showing the onboarding dialog.
-  ["quicksuggest.seenRestarts", 0],
-
   // The index where we show QuickSuggest results, -1 means they
   // will be shown as the last result.
   ["quicksuggest.suggestedIndex", -1],
