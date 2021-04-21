@@ -13,6 +13,9 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "WidgetUtilsGtk.h"
 
+struct _GdkSeat;
+typedef struct _GdkSeat GdkSeat;
+
 namespace mozilla {
 namespace widget {
 
@@ -98,7 +101,27 @@ void nsWaylandDisplay::SetDataDeviceManager(
   mDataDeviceManager = aDataDeviceManager;
 }
 
-void nsWaylandDisplay::SetSeat(wl_seat* aSeat) { mSeat = aSeat; }
+wl_seat* nsWaylandDisplay::GetSeat() {
+  GdkDisplay* gdkDisplay = gdk_display_get_default();
+  if (!gdkDisplay) {
+    return nullptr;
+  }
+
+  static auto sGdkDisplayGetDefaultSeat = (GdkSeat * (*)(GdkDisplay*))
+      dlsym(RTLD_DEFAULT, "gdk_display_get_default_seat");
+  if (!sGdkDisplayGetDefaultSeat) {
+    return nullptr;
+  }
+
+  static auto sGdkWaylandSeatGetWlSeat = (struct wl_seat * (*)(GdkSeat*))
+      dlsym(RTLD_DEFAULT, "gdk_wayland_seat_get_wl_seat");
+  if (!sGdkWaylandSeatGetWlSeat) {
+    return nullptr;
+  }
+
+  GdkSeat* gdkSeat = sGdkDisplayGetDefaultSeat(gdkDisplay);
+  return sGdkWaylandSeatGetWlSeat(gdkSeat);
+}
 
 void nsWaylandDisplay::SetPrimarySelectionDeviceManager(
     gtk_primary_selection_device_manager* aPrimarySelectionDeviceManager) {
@@ -139,11 +162,6 @@ static void global_registry_handler(void* data, wl_registry* registry,
     wl_proxy_set_queue((struct wl_proxy*)data_device_manager,
                        display->GetEventQueue());
     display->SetDataDeviceManager(data_device_manager);
-  } else if (strcmp(interface, "wl_seat") == 0) {
-    auto* seat =
-        WaylandRegistryBind<wl_seat>(registry, id, &wl_seat_interface, 1);
-    wl_proxy_set_queue((struct wl_proxy*)seat, display->GetEventQueue());
-    display->SetSeat(seat);
   } else if (strcmp(interface, "gtk_primary_selection_device_manager") == 0) {
     auto* primary_selection_device_manager =
         WaylandRegistryBind<gtk_primary_selection_device_manager>(
@@ -279,7 +297,6 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper)
       mDataDeviceManager(nullptr),
       mCompositor(nullptr),
       mSubcompositor(nullptr),
-      mSeat(nullptr),
       mShm(nullptr),
       mSyncCallback(nullptr),
       mPrimarySelectionDeviceManagerGtk(nullptr),
