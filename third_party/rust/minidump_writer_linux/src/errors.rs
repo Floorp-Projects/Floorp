@@ -68,6 +68,8 @@ pub enum ThreadInfoError {
     UnparsableInteger(#[from] std::num::ParseIntError),
     #[error("nix::ptrace() error")]
     PtraceError(#[from] nix::Error),
+    #[error("Invalid line in /proc/{0}/status: {1}")]
+    InvalidProcStatusFile(Pid, String),
 }
 
 #[derive(Debug, Error)]
