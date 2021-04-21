@@ -8,6 +8,7 @@
 #include "nsStyleConsts.h"
 #include "gtkdrawing.h"
 #include "ScreenHelperGTK.h"
+#include "WidgetUtilsGtk.h"
 
 #include "gfx2DGlue.h"
 #include "nsIObserverService.h"
