@@ -632,7 +632,7 @@ function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window) {
     var rx = aEvent.rx || 1;
     var ry = aEvent.ry || 1;
     var angle = aEvent.angle || 0;
-    var force = aEvent.force || 1;
+    var force = aEvent.force || (aEvent.type === "touchend" ? 0 : 1);
     var modifiers = _parseModifiers(aEvent, aWindow);
 
     if ("type" in aEvent && aEvent.type) {

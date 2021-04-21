@@ -515,6 +515,9 @@ class nsWindow final : public nsWindowBase {
   void UpdateGlass();
   bool WithinDraggableRegion(int32_t clientX, int32_t clientY);
 
+  bool DispatchTouchEventFromWMPointer(UINT msg, LPARAM aLParam,
+                                       const WinPointerInfo& aPointerInfo);
+
  protected:
 #endif  // MOZ_XUL
 
