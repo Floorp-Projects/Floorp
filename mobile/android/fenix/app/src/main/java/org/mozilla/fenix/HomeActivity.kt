@@ -52,7 +52,6 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.feature.contextmenu.DefaultSelectionActionDelegate
 import mozilla.components.feature.privatemode.notification.PrivateNotificationFeature
 import mozilla.components.feature.search.BrowserStoreSearchAdapter
-import mozilla.components.feature.search.ext.legacy
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -855,10 +854,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                         SessionState.Source.USER_ENTERED,
                         true,
                         mode.isPrivate,
-                        searchEngine = engine.legacy()
+                        searchEngine = engine
                     )
             } else {
-                components.useCases.searchUseCases.defaultSearch.invoke(searchTermOrURL, engine.legacy())
+                components.useCases.searchUseCases.defaultSearch.invoke(searchTermOrURL, engine)
             }
         }
 

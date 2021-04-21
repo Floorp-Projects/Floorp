@@ -15,7 +15,6 @@ import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
@@ -66,7 +65,6 @@ class UseCases(
     val searchUseCases by lazyMonitored {
         SearchUseCases(
             store,
-            store.toDefaultSearchEngineProvider(),
             tabsUseCases
         )
     }

@@ -9,7 +9,6 @@ import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFil
 import androidx.core.graphics.BlendModeCompat.SRC_IN
 import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
-import mozilla.components.browser.search.DefaultSearchEngineProvider
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -21,8 +20,6 @@ import mozilla.components.feature.awesomebar.provider.SearchEngineSuggestionProv
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.feature.search.ext.legacy
-import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.syncedtabs.DeviceIndicators
 import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
@@ -34,7 +31,6 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
-import mozilla.components.browser.search.SearchEngine as LegacySearchEngine
 
 /**
  * View that contains and configures the BrowserAwesomeBar
@@ -70,7 +66,7 @@ class AwesomeBarView(
     private val searchUseCase = object : SearchUseCases.SearchUseCase {
         override fun invoke(
             searchTerms: String,
-            searchEngine: mozilla.components.browser.search.SearchEngine?,
+            searchEngine: SearchEngine?,
             parentSessionId: String?
         ) {
             interactor.onSearchTermsTapped(searchTerms)
@@ -80,7 +76,7 @@ class AwesomeBarView(
     private val shortcutSearchUseCase = object : SearchUseCases.SearchUseCase {
         override fun invoke(
             searchTerms: String,
-            searchEngine: mozilla.components.browser.search.SearchEngine?,
+            searchEngine: SearchEngine?,
             parentSessionId: String?
         ) {
             interactor.onSearchTermsTapped(searchTerms)
@@ -151,7 +147,7 @@ class AwesomeBarView(
         defaultSearchSuggestionProvider =
             SearchSuggestionProvider(
                 context = activity,
-                defaultSearchEngineProvider = components.core.store.toDefaultSearchEngineProvider(),
+                store = components.core.store,
                 searchUseCase = searchUseCase,
                 fetchClient = components.core.client,
                 mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
@@ -164,7 +160,7 @@ class AwesomeBarView(
 
         defaultSearchActionProvider =
             SearchActionProvider(
-                defaultSearchEngineProvider = components.core.store.toDefaultSearchEngineProvider(),
+                store = components.core.store,
                 searchUseCase = searchUseCase,
                 icon = searchBitmap,
                 showDescription = false
@@ -326,17 +322,13 @@ class AwesomeBarView(
 
             listOf(
                 SearchActionProvider(
-                    defaultSearchEngineProvider = object : DefaultSearchEngineProvider {
-                        override fun getDefaultSearchEngine(): LegacySearchEngine? =
-                            engine.legacy()
-                        override suspend fun retrieveDefaultSearchEngine(): LegacySearchEngine? =
-                            engine.legacy()
-                    },
+                    searchEngine = engine,
+                    store = components.core.store,
                     searchUseCase = shortcutSearchUseCase,
                     icon = searchBitmap
                 ),
                 SearchSuggestionProvider(
-                    engine.legacy(),
+                    engine,
                     shortcutSearchUseCase,
                     components.core.client,
                     limit = 3,

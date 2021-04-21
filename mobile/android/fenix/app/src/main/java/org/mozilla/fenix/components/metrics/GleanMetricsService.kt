@@ -6,7 +6,7 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.feature.search.ext.legacy
+import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
@@ -971,7 +971,7 @@ class GleanMetricsService(
                 SearchDefaultEngine.apply {
                     code.set(searchEngine.id)
                     name.set(searchEngine.name)
-                    submissionUrl.set(searchEngine.legacy().buildSearchUrl(""))
+                    submissionUrl.set(searchEngine.buildSearchUrl(""))
                 }
             }
 

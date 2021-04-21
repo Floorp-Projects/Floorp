@@ -6,9 +6,8 @@ package org.mozilla.fenix.components.search
 
 import android.content.Context
 import android.content.SharedPreferences
-import mozilla.components.browser.search.SearchEngineParser
 import mozilla.components.browser.state.search.SearchEngine
-import mozilla.components.feature.search.ext.migrate
+import mozilla.components.feature.search.ext.parseLegacySearchEngine
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import org.mozilla.fenix.ext.components
 import org.xmlpull.v1.XmlPullParserException
@@ -50,18 +49,17 @@ internal class SearchMigration(
     ): List<SearchEngine> {
         val ids = preferences.getStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, emptySet()) ?: emptySet()
 
-        val parser = SearchEngineParser()
-
         return ids.mapNotNull { id ->
             val xml = preferences.getString(id, null)
-            parser.loadSafely(id, xml?.byteInputStream()?.buffered())
+            loadSafely(id, xml?.byteInputStream()?.buffered())
         }
     }
 }
 
-private fun SearchEngineParser.loadSafely(id: String, stream: BufferedInputStream?): SearchEngine? {
+@Suppress("DEPRECATION")
+private fun loadSafely(id: String, stream: BufferedInputStream?): SearchEngine? {
     return try {
-        stream?.let { load(id, it).migrate() }
+        stream?.let { parseLegacySearchEngine(id, it) }
     } catch (e: IOException) {
         null
     } catch (e: XmlPullParserException) {
