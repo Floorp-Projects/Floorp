@@ -51,4 +51,5 @@ RUN apt-get update && \
       zlib1g-dev
 
 # mmdebstrap is not available in jessie, but we only need it in the buster-based image.
-RUN apt-get install fakechroot fakeroot mmdebstrap || true
+# We also want zstd when available.
+RUN apt-get install fakechroot fakeroot mmdebstrap zstd || true
