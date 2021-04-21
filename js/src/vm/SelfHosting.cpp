@@ -490,29 +490,6 @@ static bool intrinsic_DumpMessage(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool intrinsic_MakeConstructible(JSContext* cx, unsigned argc,
-                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args[0].isObject());
-  MOZ_ASSERT(args[0].toObject().is<JSFunction>());
-  MOZ_ASSERT(args[0].toObject().as<JSFunction>().isSelfHostedBuiltin());
-  MOZ_ASSERT(args[1].isObjectOrNull());
-
-  // Normal .prototype properties aren't enumerable.  But for this to clone
-  // correctly, it must be enumerable.
-  RootedObject ctor(cx, &args[0].toObject());
-  if (!DefineDataProperty(
-          cx, ctor, cx->names().prototype, args[1],
-          JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
-    return false;
-  }
-
-  ctor->as<JSFunction>().setIsConstructor();
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool intrinsic_FinishBoundFunctionInit(JSContext* cx, unsigned argc,
                                               Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2260,7 +2237,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicIsCallable),
     JS_INLINABLE_FN("IsConstructor", intrinsic_IsConstructor, 1, 0,
                     IntrinsicIsConstructor),
-    JS_FN("MakeConstructible", intrinsic_MakeConstructible, 2, 0),
     JS_FN("_ConstructFunction", intrinsic_ConstructFunction, 2, 0),
     JS_FN("ThrowRangeError", intrinsic_ThrowRangeError, 4, 0),
     JS_FN("ThrowTypeError", intrinsic_ThrowTypeError, 4, 0),
