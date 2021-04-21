@@ -135,9 +135,11 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   };
 
   struct SoftText {
-    void AdjustBeginAndBuildText(const nsINode* aRootNode);
+    void AdjustBeginAndBuildText(NodeOffset aBegin, const nsINode* aRootNode);
 
     void Invalidate() { mIsValid = false; }
+
+    const NodeOffset& GetBegin() const { return mBegin; }
 
     const nsTArray<DOMTextMapping>& GetDOMMapping() const {
       return mDOMMapping;
@@ -145,12 +147,13 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
     const nsString& GetValue() const { return mValue; }
 
-    NodeOffset mBegin = NodeOffset(nullptr, 0);
     NodeOffset mEnd = NodeOffset(nullptr, 0);
 
     bool mIsValid = false;
 
    private:
+    NodeOffset mBegin = NodeOffset(nullptr, 0);
+
     nsTArray<DOMTextMapping> mDOMMapping;
 
     // DOM text covering the soft range, with newlines added at block boundaries
@@ -197,7 +200,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   RealWords mRealWords;
   int32_t mNextWordIndex;
 
-  nsresult EnsureWords();
+  nsresult EnsureWords(NodeOffset aSoftBegin);
 
   int32_t MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset) const;
   // Map an offset into mSoftText.mValue to a DOM position. Note that two DOM
