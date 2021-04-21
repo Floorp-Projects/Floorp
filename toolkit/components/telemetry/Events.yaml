@@ -557,7 +557,12 @@ upgrade_dialog:
     objects: ["show", "close", "button", "theme"]
     bug_numbers: [1697222]
     description: >
-      Content page behaviors of the upgrade dialog. Value indicates the interaction.
+      Content page behaviors of the upgrade dialog. Value for each object
+      indicates a custom interaction.
+        show: displayed screen index or button string id
+        close: dismissed reason string
+        button: clicked string id (upgradeDialog.ftl -button)
+        theme: clicked theme index
     expiry_version: never
     notification_emails: ["edilee@mozilla.com"]
     products: ["firefox"]
