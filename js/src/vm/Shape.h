@@ -1261,21 +1261,11 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
   uint8_t attributes() const { return attrs; }
   bool configurable() const { return (attrs & JSPROP_PERMANENT) == 0; }
-  bool enumerable() const { return (attrs & JSPROP_ENUMERATE) != 0; }
   bool writable() const { return (attrs & JSPROP_READONLY) == 0; }
-  bool hasGetterValue() const { return attrs & JSPROP_GETTER; }
-  bool hasSetterValue() const { return attrs & JSPROP_SETTER; }
 
-  // Note: unlike isDataProperty, this returns true also for custom data
-  // properties. See JSPROP_CUSTOM_DATA_PROP.
-  bool isDataDescriptor() const {
-    return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) == 0;
-  }
   bool isAccessorDescriptor() const {
     return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) != 0;
   }
-
-  bool isAccessorProperty() const { return isAccessorDescriptor(); }
 
   uint32_t entryCount() {
     JS::AutoCheckCannotGC nogc;
