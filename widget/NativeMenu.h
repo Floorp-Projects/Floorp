@@ -38,7 +38,7 @@ class NativeMenu {
   // menu. Only works while this menu (and any submenus on the path to the
   // item) is open, otherwise aRv reports an error.
   virtual void ActivateItem(dom::Element* aItemElement, Modifiers aModifiers,
-                            ErrorResult& aRv) = 0;
+                            int16_t aButton, ErrorResult& aRv) = 0;
 
   // Open, or simulate the opening of, a submenu.
   // aMenuElement can be nested arbitrarily deeply within submenus inside this

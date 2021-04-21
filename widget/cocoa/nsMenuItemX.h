@@ -72,7 +72,7 @@ class nsMenuItemX final : public nsChangeObserver,
   // nsMenuItemX
   nsresult SetChecked(bool aIsChecked);
   EMenuItemType GetMenuItemType();
-  void DoCommand(NSEventModifierFlags aModifierFlags);
+  void DoCommand(NSEventModifierFlags aModifierFlags, int16_t aButton);
   nsresult DispatchDOMEvent(const nsString& eventName,
                             bool* preventDefaultCalled);
   void SetupIcon();
