@@ -52,12 +52,10 @@ FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["experiments"][
 
 FINAL_TARGET_FILES.features["screenshots@mozilla.org"]["icons"] += [
     "icons/cancel.svg",
-    "icons/cloud.svg",
     "icons/copied-notification.svg",
     "icons/copy.svg",
     "icons/download-white.svg",
     "icons/download.svg",
-    "icons/help-16.svg",
     "icons/icon-welcome-face-without-eyes.svg",
     "icons/menu-fullpage.svg",
     "icons/menu-visible.svg",
