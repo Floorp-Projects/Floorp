@@ -2930,6 +2930,15 @@ nsresult Http2Session::ReadyToProcessDataFrame(
          "Ignoring 0-length non-terminal data frame.",
          this, mInputFrameID));
     ChangeDownstreamState(DISCARDING_DATA_FRAME);
+  } else if (newState == PROCESSING_DATA_FRAME &&
+             !mInputFrameDataStream->AllHeadersReceived()) {
+    LOG3(
+        ("Http2Session::ReadyToProcessDataFrame %p streamID 0x%X "
+         "Receiving data frame without having headers.",
+         this, mInputFrameID));
+    CleanupStream(mInputFrameDataStream, NS_ERROR_NET_HTTP2_SENT_GOAWAY,
+                  PROTOCOL_ERROR);
+    return NS_OK;
   }
 
   LOG3(
