@@ -251,6 +251,7 @@ menuitem[_moz-menuactive="true"] {
 
 menulist > menupopup {
   font: inherit;
+  color: FieldText;
 }
 
 menulist > menupopup > menuitem,
@@ -260,7 +261,6 @@ menulist > menupopup > menu {
   border: 1px solid transparent;
   padding-inline: 5px;
   max-width: none;
-  color: FieldText;
 }
 
 menulist > menupopup > menuitem[_moz-menuactive="true"],
