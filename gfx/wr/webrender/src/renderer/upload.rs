@@ -466,8 +466,7 @@ fn copy_from_staging_to_cache_using_draw_calls(
         wr_display_list_time: 0.0,
         scene_build_time: 0.0,
         frame_build_time: 0.0,
-        full_display_list: false,
-        full_paint: false,
+        full_frame: false,
     };
 
     let mut copy_instances = Vec::new();
