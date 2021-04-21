@@ -2470,6 +2470,14 @@
     allocKind: AllocKindImm
     shape: ShapeField
 
+- name: NewArrayObjectResult
+  shared: false
+  transpile: false
+  cost_estimate: 4
+  args:
+    arrayLength: UInt32Imm
+    shape: ShapeField
+
 - name: CallStringConcatResult
   shared: true
   transpile: true
