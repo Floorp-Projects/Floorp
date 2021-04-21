@@ -11,7 +11,7 @@
   --in-content-page-color: rgb(21, 20, 26);
   --in-content-page-background: #fff;
   --in-content-text-color: var(--in-content-page-color);
-  --in-content-deemphasized-text: var(--grey-60);
+  --in-content-deemphasized-text: rgb(91, 91, 102);
   --in-content-box-background: #fff;
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-border-color: rgb(143, 143, 157);
