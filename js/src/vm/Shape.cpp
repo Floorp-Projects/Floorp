@@ -607,9 +607,8 @@ static void AssertValidCustomDataProp(NativeObject* obj, unsigned attrs) {
 }
 
 /* static */
-Shape* NativeObject::addCustomDataProperty(JSContext* cx,
-                                           HandleNativeObject obj, HandleId id,
-                                           unsigned attrs) {
+bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
+                                         HandleId id, unsigned attrs) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
   MOZ_ASSERT(!id.isPrivateName());
   MOZ_ASSERT(!obj->containsPure(id));
@@ -623,14 +622,14 @@ Shape* NativeObject::addCustomDataProperty(JSContext* cx,
   if (obj->inDictionaryMode()) {
     table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
     if (!table) {
-      return nullptr;
+      return false;
     }
     entry = &table->search<MaybeAdding::Adding>(id, keep);
   }
 
   if (!maybeConvertToOrGrowDictionaryForAdd(cx, obj, id, &table, &entry,
                                             keep)) {
-    return nullptr;
+    return false;
   }
 
   // Find or create a property tree node labeled by our arguments.
@@ -643,7 +642,7 @@ Shape* NativeObject::addCustomDataProperty(JSContext* cx,
                                             SHAPE_INVALID_SLOT, attrs));
     shape = getChildCustomDataProperty(cx, obj, last, &child);
     if (!shape) {
-      return nullptr;
+      return false;
     }
   }
 
@@ -653,15 +652,16 @@ Shape* NativeObject::addCustomDataProperty(JSContext* cx,
     shape->updateDictionaryTable(table, entry, keep);
   }
 
-  return shape;
+  return true;
 }
 
 /* static */
-Shape* NativeObject::addPropertyInternal(JSContext* cx, HandleNativeObject obj,
-                                         HandleId id, uint32_t slot,
-                                         unsigned attrs, ShapeTable* table,
-                                         ShapeTable::Entry* entry,
-                                         const AutoKeepShapeCaches& keep) {
+bool NativeObject::addPropertyInternal(JSContext* cx, HandleNativeObject obj,
+                                       HandleId id, uint32_t slot,
+                                       unsigned attrs, ShapeTable* table,
+                                       ShapeTable::Entry* entry,
+                                       const AutoKeepShapeCaches& keep,
+                                       uint32_t* slotOut) {
   AutoCheckShapeConsistency check(obj);
   MOZ_ASSERT(!(attrs & JSPROP_CUSTOM_DATA_PROP),
              "Use addCustomDataProperty for custom data properties");
@@ -672,7 +672,7 @@ Shape* NativeObject::addPropertyInternal(JSContext* cx, HandleNativeObject obj,
 
   if (!maybeConvertToOrGrowDictionaryForAdd(cx, obj, id, &table, &entry,
                                             keep)) {
-    return nullptr;
+    return false;
   }
 
   // Find or create a property tree node labeled by our arguments.
@@ -685,7 +685,7 @@ Shape* NativeObject::addPropertyInternal(JSContext* cx, HandleNativeObject obj,
         cx, StackShape(last->base(), objectFlags, id, slot, attrs));
     shape = getChildProperty(cx, obj, last, &child);
     if (!shape) {
-      return nullptr;
+      return false;
     }
   }
 
@@ -695,7 +695,8 @@ Shape* NativeObject::addPropertyInternal(JSContext* cx, HandleNativeObject obj,
     shape->updateDictionaryTable(table, entry, keep);
   }
 
-  return shape;
+  *slotOut = shape->slot();
+  return true;
 }
 
 static MOZ_ALWAYS_INLINE Shape* PropertyTreeReadBarrier(JSContext* cx,
@@ -726,9 +727,9 @@ static MOZ_ALWAYS_INLINE Shape* PropertyTreeReadBarrier(JSContext* cx,
 }
 
 /* static */
-Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
-                                               HandleNativeObject obj,
-                                               HandleId id) {
+bool NativeObject::addEnumerableDataProperty(JSContext* cx,
+                                             HandleNativeObject obj,
+                                             HandleId id, uint32_t* slotOut) {
   // Like addProperty(Internal), but optimized for the common case of adding a
   // new enumerable data property.
 
@@ -767,10 +768,8 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
       break;
     }
 
-    if (!obj->setLastPropertyForNewDataProperty(cx, child)) {
-      return nullptr;
-    }
-    return child;
+    *slotOut = child->slot();
+    return obj->setLastPropertyForNewDataProperty(cx, child);
   } while (0);
 
   AutoKeepShapeCaches keep(cx);
@@ -780,7 +779,7 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
   if (!obj->inDictionaryMode()) {
     if (MOZ_UNLIKELY(ShouldConvertToDictionary(obj))) {
       if (!toDictionaryMode(cx, obj)) {
-        return nullptr;
+        return false;
       }
       table = obj->lastProperty()->maybeTable(keep);
       entry = &table->search<MaybeAdding::Adding>(id, keep);
@@ -788,11 +787,11 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
   } else {
     table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
     if (!table) {
-      return nullptr;
+      return false;
     }
     if (table->needsToGrow()) {
       if (!table->grow(cx)) {
-        return nullptr;
+        return false;
       }
     }
     entry = &table->search<MaybeAdding::Adding>(id, keep);
@@ -807,7 +806,7 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
   if (obj->inDictionaryMode()) {
     uint32_t slot;
     if (!allocDictionarySlot(cx, obj, &slot)) {
-      return nullptr;
+      return false;
     }
 
     Rooted<StackShape> child(
@@ -816,12 +815,12 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
 
     shape = Allocate<Shape>(cx);
     if (!shape) {
-      return nullptr;
+      return false;
     }
     if (slot >= obj->slotSpan()) {
       if (MOZ_UNLIKELY(!obj->ensureSlotsForDictionaryObject(cx, slot + 1))) {
         new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
-        return nullptr;
+        return false;
       }
     }
     shape->initDictionaryShape(child, obj->numFixedSlots(),
@@ -839,10 +838,10 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
         cx, StackShape(last->base(), objectFlags, id, slot, JSPROP_ENUMERATE));
     shape = cx->zone()->propertyTree().inlinedGetChild(cx, last, child);
     if (!shape) {
-      return nullptr;
+      return false;
     }
     if (!obj->setLastPropertyForNewDataProperty(cx, shape)) {
-      return nullptr;
+      return false;
     }
   }
 
@@ -852,7 +851,8 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
     shape->updateDictionaryTable(table, entry, keep);
   }
 
-  return shape;
+  *slotOut = shape->slot();
+  return true;
 }
 
 /*
@@ -918,8 +918,8 @@ bool NativeObject::maybeToDictionaryModeForPut(JSContext* cx,
 }
 
 /* static */
-Shape* NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
-                                 HandleId id, unsigned attrs) {
+bool NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
+                               HandleId id, unsigned attrs, uint32_t* slotOut) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
 
   AutoCheckShapeConsistency check(obj);
@@ -935,7 +935,7 @@ Shape* NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
     ShapeTable::Entry* entry;
     if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
                                             shape.address(), &table, &entry)) {
-      return nullptr;
+      return false;
     }
 
     if (!shape) {
@@ -944,7 +944,7 @@ Shape* NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
               (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))),
           "Can't add new property to non-extensible object");
       return addPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT, attrs, table,
-                                 entry, keep);
+                                 entry, keep, slotOut);
     }
 
     // Property exists: search must have returned a valid entry.
@@ -970,11 +970,13 @@ Shape* NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
   // without more work.
   if (shape->matchesPropertyParamsAfterId(slot, attrs) &&
       obj->lastProperty()->objectFlags() == objectFlags) {
-    return shape;
+    MOZ_ASSERT(slot != SHAPE_INVALID_SLOT);
+    *slotOut = slot;
+    return true;
   }
 
   if (!maybeToDictionaryModeForPut(cx, obj, &shape)) {
-    return nullptr;
+    return false;
   }
 
   MOZ_ASSERT_IF(shape->hasSlot(), shape->slot() == slot);
@@ -988,15 +990,15 @@ Shape* NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
     shape =
         NativeObject::replaceWithNewEquivalentShape(cx, obj, shape, nullptr);
     if (!shape) {
-      return nullptr;
+      return false;
     }
     if (!updateLast && !NativeObject::generateOwnShape(cx, obj)) {
-      return nullptr;
+      return false;
     }
 
     if (slot == SHAPE_INVALID_SLOT) {
       if (!allocDictionarySlot(cx, obj, &slot)) {
-        return nullptr;
+        return false;
       }
     }
 
@@ -1021,19 +1023,19 @@ Shape* NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
     RootedShape parent(cx, shape->parent);
     shape = getChildProperty(cx, obj, parent, &child);
     if (!shape) {
-      return nullptr;
+      return false;
     }
   }
 
   MOZ_ASSERT(obj->lastProperty()->objectFlags() == objectFlags);
-  return shape;
+  *slotOut = shape->slot();
+  return true;
 }
 
 /* static */
-Shape* NativeObject::changeCustomDataPropAttributes(JSContext* cx,
-                                                    HandleNativeObject obj,
-                                                    HandleId id,
-                                                    unsigned attrs) {
+bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
+                                                  HandleNativeObject obj,
+                                                  HandleId id, unsigned attrs) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
 
   AutoCheckShapeConsistency check(obj);
@@ -1048,7 +1050,7 @@ Shape* NativeObject::changeCustomDataPropAttributes(JSContext* cx,
     ShapeTable::Entry* entry;
     if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
                                             shape.address(), &table, &entry)) {
-      return nullptr;
+      return false;
     }
 
     MOZ_ASSERT(shape);
@@ -1068,11 +1070,11 @@ Shape* NativeObject::changeCustomDataPropAttributes(JSContext* cx,
   // redundant "put" and we can return without more work.
   if (shape->matchesPropertyParamsAfterId(SHAPE_INVALID_SLOT, attrs) &&
       obj->lastProperty()->objectFlags() == objectFlags) {
-    return shape;
+    return true;
   }
 
   if (!maybeToDictionaryModeForPut(cx, obj, &shape)) {
-    return nullptr;
+    return false;
   }
 
   if (obj->inDictionaryMode()) {
@@ -1084,10 +1086,10 @@ Shape* NativeObject::changeCustomDataPropAttributes(JSContext* cx,
     shape =
         NativeObject::replaceWithNewEquivalentShape(cx, obj, shape, nullptr);
     if (!shape) {
-      return nullptr;
+      return false;
     }
     if (!updateLast && !NativeObject::generateOwnShape(cx, obj)) {
-      return nullptr;
+      return false;
     }
 
     // Update the last property's object flags. This is fine because we just
@@ -1112,14 +1114,14 @@ Shape* NativeObject::changeCustomDataPropAttributes(JSContext* cx,
     RootedShape parent(cx, shape->parent);
     shape = getChildCustomDataProperty(cx, obj, parent, &child);
     if (!shape) {
-      return nullptr;
+      return false;
     }
   }
 
   MOZ_ASSERT(obj->lastProperty()->objectFlags() == objectFlags);
 
   MOZ_ASSERT(shape->isCustomDataProperty());
-  return shape;
+  return true;
 }
 
 /* static */
