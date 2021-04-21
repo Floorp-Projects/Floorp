@@ -105,6 +105,14 @@
         gQueue.push(new synthContextMenu(editableDoc, new contextMenuChecker()));
         gQueue.push(new synthDownKey(editableDoc, new focusContextMenuItemChecker()));
         gQueue.push(new synthEscapeKey(editableDoc, new focusChecker(editableDoc)));
+      } else {
+        // If this test is run as part of multiple tests, it is displayed in the test harness iframe.
+        // In the non-native context menu case, right-clicking the editableDoc causes the editableDoc
+        // to scroll fully into view, and as a side-effect, the img below it ends up on the screen.
+        // When we're skipping the context menu check, scroll img onto the screen manually, because
+        // otherwise it may remain out-of-view and clipped by the test harness iframe.
+        var img = document.querySelector("img");
+        gQueue.push(new scrollIntoView(img, new nofocusChecker(img)));
       }
       if (SEAMONKEY) {
         todo(false, "shift tab from editable document fails on (Windows) SeaMonkey! (Bug 718235)");
