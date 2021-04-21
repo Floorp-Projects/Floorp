@@ -91,7 +91,7 @@ async function checkToolboxState(toolbox) {
   const rootNode = await waitFor(() =>
     dbgPanel.panelWin.document.querySelector(selectors.sourceTreeRootNode)
   );
-  expandAllSourceNodes(dbg, rootNode);
+  await expandAllSourceNodes(dbg, rootNode);
   const sourcesTreeScriptNode = await waitFor(() =>
     findSourceNodeWithText(dbg, FILENAME)
   );
