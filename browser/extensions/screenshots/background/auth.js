@@ -28,13 +28,8 @@ this.auth = (function() {
     })
   );
 
-  exports.getDeviceId = function() {
-    return registrationInfo && registrationInfo.deviceId;
-  };
-
   function generateRegistrationInfo() {
     const info = {
-      deviceId: `anon${makeUuid()}`,
       secret: makeUuid(),
       registered: false,
     };
@@ -71,7 +66,6 @@ this.auth = (function() {
       });
       req.send(
         JSON.stringify({
-          deviceId: registrationInfo.deviceId,
           secret: registrationInfo.secret,
           deviceInfo: JSON.stringify(deviceInfo()),
         })
@@ -133,7 +127,6 @@ this.auth = (function() {
         req.setRequestHeader("content-type", "application/json");
         req.send(
           JSON.stringify({
-            deviceId: registrationInfo.deviceId,
             secret: registrationInfo.secret,
             deviceInfo: JSON.stringify(deviceInfo()),
             ownershipCheck,
@@ -208,7 +201,6 @@ this.auth = (function() {
           return login({ ownershipCheck }).then(result => {
             return {
               isOwner: result && result.isOwner,
-              deviceId: registrationInfo.deviceId,
               accountId,
               authHeaders,
             };
