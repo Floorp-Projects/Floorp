@@ -14,17 +14,10 @@
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SurfaceFormat;
 
-NS_IMPL_ISUPPORTS(nsImageToPixbuf, nsIImageToPixbuf)
-
 inline unsigned char unpremultiply(unsigned char color, unsigned char alpha) {
   if (alpha == 0) return 0;
   // plus alpha/2 to round instead of truncate
   return (color * 255 + alpha / 2) / alpha;
-}
-
-NS_IMETHODIMP_(GdkPixbuf*)
-nsImageToPixbuf::ConvertImageToPixbuf(imgIContainer* aImage) {
-  return ImageToPixbuf(aImage);
 }
 
 GdkPixbuf* nsImageToPixbuf::ImageToPixbuf(
