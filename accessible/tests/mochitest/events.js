@@ -1282,6 +1282,27 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs) {
 }
 
 /**
+ * Scrolls the node into view.
+ */
+function scrollIntoView(aNodeOrID, aCheckerOrEventSeq) {
+  this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq);
+
+  this.invoke = function scrollIntoView_invoke() {
+    var targetNode = this.DOMNode;
+    if (isHTMLElement(targetNode)) {
+      targetNode.scrollIntoView(true);
+    } else if (isXULElement(targetNode)) {
+      var targetAcc = getAccessible(targetNode);
+      targetAcc.scrollTo(SCROLL_TYPE_ANYWHERE);
+    }
+  };
+
+  this.getID = function scrollIntoView_getID() {
+    return prettyName(aNodeOrID) + " scrollIntoView";
+  };
+}
+
+/**
  * Mouse move invoker.
  */
 function synthMouseMove(aID, aCheckerOrEventSeq) {
