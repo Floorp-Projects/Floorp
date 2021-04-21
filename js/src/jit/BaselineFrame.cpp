@@ -74,26 +74,24 @@ void BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator) {
   // NB: It is possible that numValueSlots could be zero, even if nfixed is
   // nonzero.  This is the case when we're initializing the environment chain or
   // failed the prologue stack check.
-  if (numValueSlots == 0) {
-    return;
-  }
+  if (numValueSlots > 0) {
+    MOZ_ASSERT(nfixed <= numValueSlots);
 
-  MOZ_ASSERT(nfixed <= numValueSlots);
+    if (nfixed == nlivefixed) {
+      // All locals are live.
+      TraceLocals(this, trc, 0, numValueSlots);
+    } else {
+      // Trace operand stack.
+      TraceLocals(this, trc, nfixed, numValueSlots);
 
-  if (nfixed == nlivefixed) {
-    // All locals are live.
-    TraceLocals(this, trc, 0, numValueSlots);
-  } else {
-    // Trace operand stack.
-    TraceLocals(this, trc, nfixed, numValueSlots);
+      // Clear dead block-scoped locals.
+      while (nfixed > nlivefixed) {
+        unaliasedLocal(--nfixed).setUndefined();
+      }
 
-    // Clear dead block-scoped locals.
-    while (nfixed > nlivefixed) {
-      unaliasedLocal(--nfixed).setUndefined();
+      // Trace live locals.
+      TraceLocals(this, trc, 0, nlivefixed);
     }
-
-    // Trace live locals.
-    TraceLocals(this, trc, 0, nlivefixed);
   }
 
   if (auto* debugEnvs = script->realm()->debugEnvs()) {
