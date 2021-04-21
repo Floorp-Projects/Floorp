@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624329
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml"
-        onload="openTestWindow()">
+        onload="beginTest()">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=624329"
      target="_blank">Mozilla Bug 624329</a>
   </body>
@@ -26,6 +26,19 @@ SimpleTest.waitForExplicitFinish();
 var win;
 var timeoutID;
 var menu;
+
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
+function beginTest() {
+    if (AppConstants.platform == "macosx" && SpecialPowers.getBoolPref("widget.macos.native-context-menus", false)) {
+        // This test does not apply with native context menus.
+        ok(true, "macOS positions native menus, so we don't need to test this behaviour.");
+        SimpleTest.finish();
+        return;
+    }
+
+    openTestWindow();
+}
 
 function openTestWindow() {
     win = window.browsingContext.topChromeWindow.openDialog("bug624329_window.xhtml", "_blank", "width=300,resizable=yes,chrome", window);
