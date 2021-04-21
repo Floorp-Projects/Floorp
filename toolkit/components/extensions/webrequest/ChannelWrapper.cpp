@@ -96,13 +96,13 @@ ChannelListHolder::~ChannelListHolder() {
   }
 }
 
-static LinkedList<ChannelWrapper>& ChannelList() {
+static LinkedList<ChannelWrapper>* GetChannelList() {
   static UniquePtr<ChannelListHolder> sChannelList;
-  if (!sChannelList) {
+  if (!sChannelList && !PastShutdownPhase(ShutdownPhase::XPCOMShutdown)) {
     sChannelList.reset(new ChannelListHolder());
     ClearOnShutdown(&sChannelList, ShutdownPhase::XPCOMShutdown);
   }
-  return *sChannelList;
+  return sChannelList.get();
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ChannelWrapper::ChannelWrapperStub)
@@ -123,7 +123,9 @@ ChannelWrapper::ChannelWrapper(nsISupports* aParent, nsIChannel* aChannel)
     : ChannelHolder(aChannel), mParent(aParent) {
   mStub = new ChannelWrapperStub(this);
 
-  ChannelList().insertBack(this);
+  if (auto* list = GetChannelList()) {
+    list->insertBack(this);
+  }
 }
 
 ChannelWrapper::~ChannelWrapper() {
