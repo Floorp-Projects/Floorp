@@ -135,7 +135,7 @@ class ShapeProperty {
   uint8_t attrs_;
 
  public:
-  inline explicit ShapeProperty(Shape* shape);
+  ShapeProperty(uint8_t attrs, uint32_t slot) : slot_(slot), attrs_(attrs) {}
 
   bool isDataProperty() const {
     return !(attrs_ &
@@ -177,7 +177,8 @@ class ShapePropertyWithKey : public ShapeProperty {
   JS::PropertyKey key_;
 
  public:
-  explicit ShapePropertyWithKey(Shape* shape);
+  ShapePropertyWithKey(uint8_t attrs, uint32_t slot, JS::PropertyKey key)
+      : ShapeProperty(attrs, slot), key_(key) {}
 
   JS::PropertyKey key() const { return key_; }
 
@@ -1259,8 +1260,19 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return propid();
   }
 
+  ShapeProperty property() const {
+    MOZ_ASSERT(!isEmptyShape());
+    return ShapeProperty(attrs, maybeSlot());
+  }
+
+  ShapePropertyWithKey propertyWithKey() const {
+    return ShapePropertyWithKey(attrs, maybeSlot(), propid());
+  }
+
+ private:
   uint8_t attributes() const { return attrs; }
 
+ public:
   uint32_t entryCount() {
     JS::AutoCheckCannotGC nogc;
     if (ShapeTable* table = maybeTable(nogc)) {
@@ -1645,12 +1657,6 @@ MOZ_ALWAYS_INLINE bool ShapeIC::search(jsid id, Shape** foundShape) {
   return false;
 }
 
-inline ShapeProperty::ShapeProperty(Shape* shape)
-    : slot_(shape->maybeSlot()), attrs_(shape->attributes()) {}
-
-inline ShapePropertyWithKey::ShapePropertyWithKey(Shape* shape)
-    : ShapeProperty(shape), key_(shape->propid()) {}
-
 using ShapePropertyVector = GCVector<ShapePropertyWithKey, 8>;
 
 // Iterator for iterating over a shape's properties. It can be used like this:
@@ -1686,7 +1692,7 @@ class MOZ_RAII ShapePropertyIter {
 
   ShapePropertyWithKey get() const {
     MOZ_ASSERT(!done());
-    return ShapePropertyWithKey(cursor_);
+    return cursor_->propertyWithKey();
   }
 
   ShapePropertyWithKey operator*() const { return get(); }
