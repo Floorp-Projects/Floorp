@@ -4,10 +4,10 @@
     a.appendChild(document.createTextNode("*:first-letter { }"))
     document.documentElement.appendChild(a)
     a.style.display = "contents"
-    requestIdleCallback(() => {
+    setTimeout(() => {
       a.appendChild(document.createElement("x"));
       a.lastChild.offsetWidth;
       document.documentElement.className = "";
-    })
+    }, 0)
   </script>
 </html>
