@@ -40,31 +40,7 @@ The `--allow-unrelated-histories` is necessary because the history from the skel
 
 Whenever a change is needed or desired for the general technique for packaging, it can be made in the skeleton project and then merged into each of the derived projects as needed, recommended before each release. As a result, features and best practices for packaging are centrally maintained and readily trickle into a whole suite of packages. This technique lowers the amount of tedious work necessary to create or maintain a project, and coupled with other techniques like continuous integration and deployment, lowers the cost of creating and maintaining refined Python projects to just a few, familiar Git operations.
 
-For example, here's a session of the [path project](https://pypi.org/project/path) pulling non-conflicting changes from the skeleton:
-
-<img src="https://raw.githubusercontent.com/jaraco/skeleton/gh-pages/docs/refresh.svg">
-
 Thereafter, the target project can make whatever customizations it deems relevant to the scaffolding. The project may even at some point decide that the divergence is too great to merit renewed merging with the original skeleton. This approach applies maximal guidance while creating minimal constraints.
-
-## Periodic Collapse
-
-In late 2020, this project [introduced](https://github.com/jaraco/skeleton/issues/27) the idea of a periodic but infrequent (O(years)) collapse of commits to limit the number of commits a new consumer will need to accept to adopt the skeleton.
-
-The full history of commits is collapsed into a single commit and that commit becomes the new mainline head.
-
-When one of these collapse operations happens, any project that previously pulled from the skeleton will no longer have a related history with that new main branch. For those projects, the skeleton provides a "handoff" branch that reconciles the two branches. Any project that has previously merged with the skeleton but now gets an error "fatal: refusing to merge unrelated histories" should instead use the handoff branch once to incorporate the new main branch.
-
-```
-$ git pull https://github.com/jaraco/skeleton 2020-handoff
-```
-
-This handoff needs to be pulled just once and thereafter the project can pull from the main head.
-
-The archive and handoff branches from prior collapses are indicate here:
-
-| refresh | archive         | handoff      |
-|---------|-----------------|--------------|
-| 2020-12 | archive/2020-12 | 2020-handoff |
 
 # Features
 
@@ -76,7 +52,6 @@ The features/techniques employed by the skeleton include:
 - A README.rst as reStructuredText with some popular badges, but with Read the Docs and AppVeyor badges commented out
 - A CHANGES.rst file intended for publishing release notes about the project
 - Use of [Black](https://black.readthedocs.io/en/stable/) for code formatting (disabled on unsupported Python 3.5 and earlier)
-- Integrated type checking through [mypy](https://github.com/python/mypy/).
 
 ## Packaging Conventions
 
@@ -128,26 +103,46 @@ Relies on a .flake8 file to correct some default behaviors:
 
 ## Continuous Integration
 
-The project is pre-configured to run Continuous Integration tests.
+The project is pre-configured to run tests through multiple CI providers.
 
-### Github Actions
+### Azure Pipelines
 
-[Github Actions](https://docs.github.com/en/free-pro-team@latest/actions) are the preferred provider as they provide free, fast, multi-platform services with straightforward configuration. Configured in `.github/workflows`.
+[Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/) are the preferred provider as they provide free, fast, multi-platform services. See azure-pipelines.yml for more details.
 
 Features include:
-- test against multiple Python versions
-- run on late (and updated) platform versions
-- automated releases of tagged commits
-- [automatic merging of PRs](https://github.com/marketplace/actions/merge-pull-requests) (requires [protecting branches with required status checks](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/enabling-required-status-checks), [not possible through API](https://github.community/t/set-all-status-checks-to-be-required-as-branch-protection-using-the-github-api/119493))
 
+- test against multiple Python versions
+- run on Ubuntu Bionic
+
+### Travis CI
+
+[Travis CI](https://travis-ci.org) is configured through .travis.yml. Any new project must be enabled either through their web site or with the `travis enable` command.
+
+Features include:
+- test against Python 3
+- run on Ubuntu Xenial
+- correct for broken IPv6
+
+### AppVeyor
+
+A minimal template for running under AppVeyor (Windows) is provided.
 
 ### Continuous Deployments
 
-In addition to running tests, an additional publish stage is configured to automatically release tagged commits to PyPI using [API tokens](https://pypi.org/help/#apitoken). The release process expects an authorized token to be configured with each Github project (or org) `PYPI_TOKEN` [secret](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets). Example:
+In addition to running tests, an additional deploy stage is configured to automatically release tagged commits to PyPI using [API tokens](https://pypi.org/help/#apitoken). The release process expects an authorized token to be configured with Azure as the `Azure secrets` variable group. This variable group needs to be created only once per organization. For example:
 
 ```
-pip-run -q jaraco.develop -- -m jaraco.develop.add-github-secrets
+# create a resource group if none exists
+az group create --name main --location eastus2
+# create the vault (try different names until something works)
+az keyvault create --name secrets007 --resource-group main
+# create the secret
+az keyvault secret set --vault-name secrets007 --name PyPI-token --value $token
 ```
+
+Then, in the web UI for the project's Pipelines Library, create the `Azure secrets` variable group referencing the key vault name.
+
+For more details, see [this blog entry](https://blog.jaraco.com/configuring-azure-pipelines-with-secets/).
 
 ## Building Documentation
 
