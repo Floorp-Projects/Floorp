@@ -116,7 +116,7 @@ async function testBackForwardMenu(useContextMenu) {
         url => url == "http://example.com/"
       );
 
-      EventUtils.synthesizeMouseAtCenter(popupEvent.target.children[2], {
+      popupEvent.target.activateItem(popupEvent.target.children[2], {
         button: 1,
       });
 
