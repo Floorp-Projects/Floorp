@@ -70,9 +70,22 @@ trait CommonThreadInfo {
         let status_file = std::fs::File::open(status_path)?;
         for line in io::BufReader::new(status_file).lines() {
             let l = line?;
-            match &l[0..6] {
-                "Tgid:\t" => tgid = l[6..].parse::<Pid>()?,
-                "PPid:\t" => ppid = l[6..].parse::<Pid>()?,
+            let start = l
+                .get(0..6)
+                .ok_or(ThreadInfoError::InvalidProcStatusFile(tid, l.clone()))?;
+            match start {
+                "Tgid:\t" => {
+                    tgid = l
+                        .get(6..)
+                        .ok_or(ThreadInfoError::InvalidProcStatusFile(tid, l.clone()))?
+                        .parse::<Pid>()?
+                }
+                "PPid:\t" => {
+                    ppid = l
+                        .get(6..)
+                        .ok_or(ThreadInfoError::InvalidProcStatusFile(tid, l.clone()))?
+                        .parse::<Pid>()?
+                }
                 _ => continue,
             }
         }
