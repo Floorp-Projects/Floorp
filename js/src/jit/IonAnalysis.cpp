@@ -1357,7 +1357,6 @@ class TypeAnalyzer {
   bool respecialize(MPhi* phi, MIRType type);
   bool propagateSpecialization(MPhi* phi);
   bool specializePhis();
-  bool specializeOsrOnlyPhis();
   void replaceRedundantPhi(MPhi* phi);
   bool adjustPhiInputs(MPhi* phi);
   bool adjustInputs(MDefinition* def);
@@ -1432,7 +1431,20 @@ bool TypeAnalyzer::shouldSpecializeOsrPhis() const {
   //
   //     * TypeAnalyzer::replaceRedundantPhi: adds a type guard for values that
   //       can't be unboxed (null/undefined/magic Values).
-  return !mir->outerInfo().hadSpeculativePhiBailout();
+
+  // If phi specialization has failed, don't do it when recompiling.
+  if (mir->outerInfo().hadSpeculativePhiBailout()) {
+    return false;
+  }
+
+  // If branch pruning has removed the path from the entry block to
+  // the preheader, there are no phis in the preheader to specialize.
+  if (mir->graph().osrBlock() &&
+      graph.osrPreHeaderBlock()->numPredecessors() == 1) {
+    return false;
+  }
+
+  return true;
 }
 
 // Try to specialize this phi based on its non-cyclic inputs.
@@ -1476,8 +1488,6 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi) const {
     // See shouldSpecializeOsrPhis comment. This is the first step mentioned
     // there.
     if (shouldSpecializeOsrPhis() && in->isOsrValue()) {
-      hasSpecializableInput = true;
-
       // TODO(post-Warp): simplify float32 handling in this function or (better)
       // make the float32 analysis a stand-alone optimization pass instead of
       // complicating type analysis. See bug 1655773.
@@ -1595,34 +1605,6 @@ bool TypeAnalyzer::propagateAllPhiSpecializations() {
   return true;
 }
 
-// If branch pruning removes the path from the entry block to the OSR
-// preheader, we may have phis (or chains of phis) with no operands
-// other than OsrValues. These phis will still have MIRType::None.
-// Since we don't have any information about them, we specialize them
-// as MIRType::Value.
-bool TypeAnalyzer::specializeOsrOnlyPhis() {
-  MOZ_ASSERT(graph.osrBlock());
-  MOZ_ASSERT(graph.osrPreHeaderBlock()->numPredecessors() == 1);
-
-  for (PostorderIterator block(graph.poBegin()); block != graph.poEnd();
-       block++) {
-    if (mir->shouldCancel("Specialize osr-only phis (main loop)")) {
-      return false;
-    }
-
-    for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
-      if (mir->shouldCancel("Specialize osr-only phis (inner loop)")) {
-        return false;
-      }
-
-      if (phi->type() == MIRType::None) {
-        phi->specialize(MIRType::Value);
-      }
-    }
-  }
-  return true;
-}
-
 bool TypeAnalyzer::specializePhis() {
   for (PostorderIterator block(graph.poBegin()); block != graph.poEnd();
        block++) {
@@ -1660,14 +1642,7 @@ bool TypeAnalyzer::specializePhis() {
     MBasicBlock* preHeader = graph.osrPreHeaderBlock();
     MBasicBlock* header = preHeader->getSingleSuccessor();
 
-    if (preHeader->numPredecessors() == 1) {
-      MOZ_ASSERT(preHeader->getPredecessor(0) == graph.osrBlock());
-      // Branch pruning has removed the path from the entry block
-      // to the preheader. Specialize any phis with no non-osr inputs.
-      if (!specializeOsrOnlyPhis()) {
-        return false;
-      }
-    } else if (header->isLoopHeader()) {
+    if (header->isLoopHeader()) {
       for (MPhiIterator phi(header->phisBegin()); phi != header->phisEnd();
            phi++) {
         MPhi* preHeaderPhi = phi->getOperand(0)->toPhi();
@@ -1846,20 +1821,19 @@ void TypeAnalyzer::replaceRedundantPhi(MPhi* phi) {
   block->insertBefore(*(block->begin()), c);
   phi->justReplaceAllUsesWith(c);
 
-  if (shouldSpecializeOsrPhis()) {
+  if (shouldSpecializeOsrPhis() && block == graph.osrPreHeaderBlock()) {
     // See shouldSpecializeOsrPhis comment. This is part of the third step,
     // guard the incoming MOsrValue is of this type.
     MBasicBlock* osrBlock = graph.osrBlock();
-    for (uint32_t i = 0; i < phi->numOperands(); i++) {
-      MDefinition* def = phi->getOperand(i);
-      if (def->isOsrValue()) {
-        MOZ_ASSERT(def->block() == osrBlock);
-        MGuardValue* guard = MGuardValue::New(alloc(), def, v);
-        guard->setBailoutKind(BailoutKind::SpeculativePhi);
-        osrBlock->insertBefore(osrBlock->lastIns(), guard);
-      } else {
-        MOZ_ASSERT(def->type() == phi->type());
-      }
+    MOZ_ASSERT(block->getPredecessor(1) == osrBlock);
+    MDefinition* def = phi->getOperand(1);
+    if (def->isOsrValue()) {
+      MGuardValue* guard = MGuardValue::New(alloc(), def, v);
+      guard->setBailoutKind(BailoutKind::SpeculativePhi);
+      osrBlock->insertBefore(osrBlock->lastIns(), guard);
+    } else {
+      MOZ_ASSERT(def->isConstant());
+      MOZ_ASSERT(def->type() == phi->type());
     }
   }
 }
