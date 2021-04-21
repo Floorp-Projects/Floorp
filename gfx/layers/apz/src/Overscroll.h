@@ -138,6 +138,10 @@ class GenericOverscrollEffect : public OverscrollEffectBase {
 
   void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
                          ScrollDirections aOverscrolableDirections) override {
+    if (mApzc.mScrollMetadata.PrefersReducedMotion()) {
+      return;
+    }
+
     if (aOverscrolableDirections.contains(ScrollDirection::eHorizontal)) {
       mApzc.mX.OverscrollBy(aOverscroll.x);
       aOverscroll.x = 0;
@@ -155,6 +159,10 @@ class GenericOverscrollEffect : public OverscrollEffectBase {
 
   void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
                              SideBits aOverscrollSideBits) override {
+    if (mApzc.mScrollMetadata.PrefersReducedMotion()) {
+      return;
+    }
+
     mApzc.StartOverscrollAnimation(aVelocity, aOverscrollSideBits);
   }
 
