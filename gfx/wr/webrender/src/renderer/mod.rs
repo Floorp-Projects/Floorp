@@ -5670,6 +5670,7 @@ fn new_debug_server(_enable: bool, api_tx: Sender<ApiMsg>) -> Box<dyn DebugServe
 /// The cumulative times spent in each painting phase to generate this frame.
 #[derive(Debug, Default)]
 pub struct FullFrameStats {
+    pub full_display_list: bool,
     pub gecko_display_list_time: f64,
     pub wr_display_list_time: f64,
     pub scene_build_time: f64,
@@ -5679,6 +5680,7 @@ pub struct FullFrameStats {
 impl FullFrameStats {
     pub fn merge(&self, other: &FullFrameStats) -> Self {
         Self {
+            full_display_list: self.full_display_list || other.full_display_list,
             gecko_display_list_time: self.gecko_display_list_time + other.gecko_display_list_time,
             wr_display_list_time: self.wr_display_list_time + other.wr_display_list_time,
             scene_build_time: self.scene_build_time + other.scene_build_time,
@@ -5707,7 +5709,8 @@ pub struct RendererStats {
     pub wr_display_list_time: f64,
     pub scene_build_time: f64,
     pub frame_build_time: f64,
-    pub full_frame: bool,
+    pub full_display_list: bool,
+    pub full_paint: bool,
 }
 
 impl RendererStats {
@@ -5716,7 +5719,8 @@ impl RendererStats {
         self.wr_display_list_time = stats.wr_display_list_time;
         self.scene_build_time = stats.scene_build_time;
         self.frame_build_time = stats.frame_build_time;
-        self.full_frame = true;
+        self.full_display_list = stats.full_display_list;
+        self.full_paint = true;
     }
 }
 
