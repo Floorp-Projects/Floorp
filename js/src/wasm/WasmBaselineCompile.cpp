@@ -235,8 +235,8 @@ static constexpr FloatRegister RabaldrScratchV128{FloatRegisters::d30,
                                                   FloatRegisters::Simd128};
 #  endif
 
-static_assert(RabaldrScratchF32 != ScratchFloat32Reg, "Too busy");
-static_assert(RabaldrScratchF64 != ScratchDoubleReg, "Too busy");
+static_assert(RabaldrScratchF32 != ScratchFloat32Reg_, "Too busy");
+static_assert(RabaldrScratchF64 != ScratchDoubleReg_, "Too busy");
 #  ifdef ENABLE_WASM_SIMD
 static_assert(RabaldrScratchV128 != ScratchSimd128Reg, "Too busy");
 #  endif
