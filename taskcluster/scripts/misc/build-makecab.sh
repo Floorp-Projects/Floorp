@@ -12,6 +12,6 @@ cargo build --verbose --release
 
 mkdir makecab
 cp target/release/makecab makecab/
-tar -c makecab | $GECKO_PATH/taskcluster/scripts/misc/zstdpy > makecab.tar.zst
+tar caf makecab.tar.zst makecab
 mkdir -p $UPLOAD_DIR
 cp makecab.tar.zst $UPLOAD_DIR

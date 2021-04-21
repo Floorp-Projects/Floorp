@@ -12,7 +12,7 @@ find compiler-rt/lib/linux -type f | while read f; do
   cp $f $clang_lib/linux
 done
 
-tar -cf - clang | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > clang.tar.zst
+tar -caf clang.tar.zst clang
 
 mkdir -p $UPLOAD_DIR
 mv clang.tar.zst $UPLOAD_DIR

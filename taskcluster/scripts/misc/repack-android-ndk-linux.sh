@@ -14,6 +14,6 @@ cd $GECKO_PATH
 
 # Don't generate a tarball with a versioned NDK directory.
 mv $HOME/.mozbuild/android-ndk-* $HOME/.mozbuild/android-ndk
-tar cv -C /builds/worker/.mozbuild android-ndk | $GECKO_PATH/taskcluster/scripts/misc/zstdpy > $UPLOAD_DIR/android-ndk.tar.zst
+tar cavf $UPLOAD_DIR/android-ndk.tar.zst -C /builds/worker/.mozbuild android-ndk
 
 ls -al $UPLOAD_DIR

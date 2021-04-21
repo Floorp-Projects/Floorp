@@ -37,7 +37,8 @@ RUN apt-get update && \
       valgrind \
       vim \
       wget \
-      zip
+      zip \
+      zstd
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb.
 # %include taskcluster/docker/recipes/xvfb.sh
