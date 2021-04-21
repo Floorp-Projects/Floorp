@@ -363,6 +363,10 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
 
   if (aDisplayList) {
     MOZ_ASSERT(aDisplayListBuilder && !aBackground);
+    // Record the time spent "layerizing". WR doesn't actually layerize but
+    // generating the WR display list is the closest equivalent
+    PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
+
     mDisplayItemCache.SetDisplayList(aDisplayListBuilder, aDisplayList);
 
     mWebRenderCommandBuilder.BuildWebRenderCommands(
@@ -456,10 +460,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     dlData.mRect =
         LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
     dlData.mScrollData.emplace(std::move(mScrollData));
-    dlData.mDLDesc.gecko_display_list_type =
-        aDisplayListBuilder && aDisplayListBuilder->PartialBuildFailed()
-            ? wr::GeckoDisplayListType::Full(aGeckoDLBuildTime)
-            : wr::GeckoDisplayListType::Partial(aGeckoDLBuildTime);
+    dlData.mDLDesc.gecko_display_list_time = aGeckoDLBuildTime;
 
     bool ret = WrBridge()->EndTransaction(
         std::move(dlData), mLatestTransactionId, containsSVGGroup,

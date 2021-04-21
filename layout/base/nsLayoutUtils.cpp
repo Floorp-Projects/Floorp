@@ -3306,6 +3306,8 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     AUTO_PROFILER_TRACING_MARKER("Paint", "DisplayList", GRAPHICS);
     PerfStats::AutoMetricRecording<PerfStats::Metric::DisplayListBuilding>
         autoRecording;
+
+    PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::DisplayList);
     {
       // If a scrollable container layer is created in
       // nsDisplayList::PaintForFrame, it will be the scroll parent for display
