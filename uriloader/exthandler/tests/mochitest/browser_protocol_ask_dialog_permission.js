@@ -319,14 +319,8 @@ async function testCheckbox(
 ) {
   let checkbox = dialogEl.ownerDocument.getElementById("remember");
   if (typeof hasCheckbox == "boolean") {
-    let hiddenEl;
-    if (dialogType == "permission") {
-      hiddenEl = checkbox.parentElement;
-    } else {
-      hiddenEl = checkbox;
-    }
     is(
-      checkbox && !hiddenEl.hidden,
+      checkbox && BrowserTestUtils.is_visible(checkbox),
       hasCheckbox,
       "Dialog checkbox has correct visibility."
     );
