@@ -532,7 +532,7 @@ add_task(async function test_ui_state_loginFailed() {
   }
 
   const expectedLabel = gSync.fluentStrings.formatValueSync(
-    "account-disconnected"
+    "account-disconnected2"
   );
 
   checkMenuBarItem("sync-reauthitem");

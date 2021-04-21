@@ -910,7 +910,7 @@ var gSync = {
       }
     } else if (state.status === UIState.STATUS_LOGIN_FAILED) {
       stateValue = "login-failed";
-      headerTitle = this.fluentStrings.formatValueSync("account-disconnected");
+      headerTitle = this.fluentStrings.formatValueSync("account-disconnected2");
       headerDescription = state.email;
       mainWindowEl.style.removeProperty("--avatar-image-url");
     } else if (state.status === UIState.STATUS_NOT_VERIFIED) {
@@ -1074,7 +1074,7 @@ var gSync = {
       );
       appMenuStatus.setAttribute("fxastatus", "login-failed");
       let errorLabel = this.fluentStrings.formatValueSync(
-        "account-disconnected"
+        "account-disconnected2"
       );
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       appMenuLabel.setAttribute("label", errorLabel);
