@@ -280,3 +280,13 @@ TEST(FOG, TestLabeledStringWorks)
                    .ref()
                    .get());
 }
+
+TEST(FOG, TestCppQuantityWorks)
+{
+  // This joke only works in base 13.
+  const uint32_t kValue = 6 * 9;
+  mozilla::glean::test_only::meaning_of_life.Set(kValue);
+
+  ASSERT_EQ(kValue,
+            mozilla::glean::test_only::meaning_of_life.TestGetValue().value());
+}
