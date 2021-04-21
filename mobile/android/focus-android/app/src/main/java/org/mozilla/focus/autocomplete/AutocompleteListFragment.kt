@@ -57,8 +57,8 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
                     viewHolder: RecyclerView.ViewHolder,
                     target: RecyclerView.ViewHolder
                 ): Boolean {
-                    val from = viewHolder.adapterPosition
-                    val to = target.adapterPosition
+                    val from = viewHolder.bindingAdapterPosition
+                    val to = target.bindingAdapterPosition
 
                     (recyclerView.adapter as DomainListAdapter).move(from, to)
 
