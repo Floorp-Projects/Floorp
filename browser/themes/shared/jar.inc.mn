@@ -247,6 +247,7 @@
   skin/classic/browser/translation-16.png                      (../shared/translation/translation-16.png)
   skin/classic/browser/translation-16@2x.png                   (../shared/translation/translation-16@2x.png)
   skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
+  skin/classic/browser/update-circle-fill-12.svg               (../shared/update-circle-fill-12.svg)
   skin/classic/browser/badge-blue.svg                          (../shared/badge-blue.svg)
   skin/classic/browser/warning.svg                             (../shared/warning.svg)
   skin/classic/browser/profiler-popup-backdrop.png             (../shared/profiler-popup-backdrop.png)
