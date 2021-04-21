@@ -135,13 +135,13 @@ menuitem[customoptionstyling="true"] {
 
 menulist > menupopup {
   font: inherit;
+  color: FieldText;
 }
 
 menulist > menupopup > menuitem,
 menulist > menupopup > menucaption,
 menulist > menupopup > menu {
   max-width: none;
-  color: FieldText;
 }
 
 /* checked menuitems */
