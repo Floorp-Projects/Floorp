@@ -364,7 +364,7 @@ nsresult mozInlineSpellStatus::FinishNavigationEvent(
     return NS_ERROR_FAILURE;  // editor is gone
   }
 
-  NS_ASSERTION(mAnchorRange, "No anchor for navigation!");
+  MOZ_ASSERT(mAnchorRange, "No anchor for navigation!");
 
   if (!mOldNavigationAnchorRange->IsPositioned()) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -764,7 +764,7 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled) {
 
 // Called when nsIEditorSpellCheck::InitSpellChecker completes.
 nsresult mozInlineSpellChecker::EditorSpellCheckInited() {
-  NS_ASSERTION(mPendingSpellCheck, "Spell check should be pending!");
+  MOZ_ASSERT(mPendingSpellCheck, "Spell check should be pending!");
 
   // spell checking is enabled, register our event listeners to track navigation
   RegisterEventListeners();
@@ -788,8 +788,8 @@ void mozInlineSpellChecker::ChangeNumPendingSpellChecks(
     int32_t aDelta, TextEditor* aTextEditor) {
   int8_t oldNumPending = mNumPendingSpellChecks;
   mNumPendingSpellChecks += aDelta;
-  NS_ASSERTION(mNumPendingSpellChecks >= 0,
-               "Unbalanced ChangeNumPendingSpellChecks calls!");
+  MOZ_ASSERT(mNumPendingSpellChecks >= 0,
+             "Unbalanced ChangeNumPendingSpellChecks calls!");
   if (oldNumPending == 0 && mNumPendingSpellChecks > 0) {
     NotifyObservers(INLINESPELL_STARTED_TOPIC, aTextEditor);
   } else if (oldNumPending > 0 && mNumPendingSpellChecks == 0) {
@@ -1543,9 +1543,9 @@ nsresult mozInlineSpellChecker::ResumeCheck(
   if (aStatus->IsFullSpellCheck()) {
     // Allow posting new spellcheck resume events from inside
     // ResumeCheck, now that we're actually firing.
-    NS_ASSERTION(mFullSpellCheckScheduled,
-                 "How could this be false?  The full spell check is "
-                 "calling us!!");
+    MOZ_ASSERT(mFullSpellCheckScheduled,
+               "How could this be false?  The full spell check is "
+               "calling us!!");
     mFullSpellCheckScheduled = false;
   }
 
@@ -1892,9 +1892,9 @@ NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary() {
 // Called when nsIEditorSpellCheck::UpdateCurrentDictionary completes.
 nsresult mozInlineSpellChecker::CurrentDictionaryUpdated() {
   mNumPendingUpdateCurrentDictionary--;
-  NS_ASSERTION(mNumPendingUpdateCurrentDictionary >= 0,
-               "CurrentDictionaryUpdated called without corresponding "
-               "UpdateCurrentDictionary call!");
+  MOZ_ASSERT(mNumPendingUpdateCurrentDictionary >= 0,
+             "CurrentDictionaryUpdated called without corresponding "
+             "UpdateCurrentDictionary call!");
   ChangeNumPendingSpellChecks(-1);
 
   nsresult rv = SpellCheckRange(nullptr);
