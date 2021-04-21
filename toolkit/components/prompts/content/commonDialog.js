@@ -56,7 +56,7 @@ function commonDialogOnLoad() {
         }
         // hostPort can be empty for file URIs.
         if (!title.raw) {
-          title.raw = promptPrincipal.prePath;
+          title.raw = promptPrincipal.prepath;
         }
       } else {
         title = { l10nId: "common-dialog-title-unknown" };
