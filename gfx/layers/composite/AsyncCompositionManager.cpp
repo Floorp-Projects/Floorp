@@ -800,9 +800,9 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                  sampler->GetGuid(*zoomedMetrics) == sampler->GetGuid(wrapper))
                     ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
                     : LayoutAndVisual;
-            AsyncTransform asyncTransformWithoutOverscroll =
-                sampler->GetCurrentAsyncTransform(wrapper,
-                                                  asyncTransformComponents);
+            AsyncTransformComponentMatrix asyncTransform =
+                sampler->GetCurrentAsyncTransformWithOverscroll(
+                    wrapper, asyncTransformComponents);
             Maybe<CompositionPayload> payload =
                 sampler->NotifyScrollSampling(wrapper);
             // The scroll latency should be measured between composition and the
@@ -811,12 +811,6 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
             if (payload.isSome()) {
               mLayerManager->RegisterPayload(*payload);
             }
-
-            AsyncTransformComponentMatrix overscrollTransform =
-                sampler->GetOverscrollTransform(wrapper);
-            AsyncTransformComponentMatrix asyncTransform =
-                AsyncTransformComponentMatrix(asyncTransformWithoutOverscroll) *
-                overscrollTransform;
 
             if (!layer->IsScrollableWithoutContent()) {
               sampler->MarkAsyncTransformAppliedToContent(wrapper);
@@ -968,11 +962,11 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
           if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
                   layer->GetAsyncZoomContainerId()) {
             if (zoomedMetrics) {
-              AsyncTransform zoomTransform = sampler->GetCurrentAsyncTransform(
-                  *zoomedMetrics, {AsyncTransformComponent::eVisual});
+              AsyncTransformComponentMatrix zoomTransform =
+                  sampler->GetCurrentAsyncTransformWithOverscroll(
+                      *zoomedMetrics, {AsyncTransformComponent::eVisual});
               hasAsyncTransform = true;
-              combinedAsyncTransform *=
-                  AsyncTransformComponentMatrix(zoomTransform);
+              combinedAsyncTransform *= zoomTransform;
             } else {
               // TODO: Is this normal? It happens on some pages, such as
               // about:config on mobile, for just one frame or so, before the

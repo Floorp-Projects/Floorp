@@ -193,13 +193,13 @@ AsyncTransformComponentMatrix APZSampler::GetOverscrollTransform(
 
 AsyncTransformComponentMatrix
 APZSampler::GetCurrentAsyncTransformWithOverscroll(
-    const LayerMetricsWrapper& aLayer) {
+    const LayerMetricsWrapper& aLayer, AsyncTransformComponents aComponents) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   AssertOnSamplerThread();
 
   MOZ_ASSERT(aLayer.GetApzc());
   return aLayer.GetApzc()->GetCurrentAsyncTransformWithOverscroll(
-      AsyncPanZoomController::eForCompositing);
+      AsyncPanZoomController::eForCompositing, aComponents);
 }
 
 void APZSampler::MarkAsyncTransformAppliedToContent(
