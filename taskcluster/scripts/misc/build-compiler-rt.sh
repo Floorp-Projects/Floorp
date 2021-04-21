@@ -90,7 +90,7 @@ ninja -v
 
 cd ..
 
-tar -cf - compiler-rt/$libdir | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > "compiler-rt.tar.zst"
+tar caf compiler-rt.tar.zst compiler-rt/$libdir
 
 mkdir -p "$UPLOAD_DIR"
 mv "compiler-rt.tar.zst" "$UPLOAD_DIR"

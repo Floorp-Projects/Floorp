@@ -24,7 +24,7 @@ find {aarch64,x86_64}/compiler-rt/lib/darwin -type f -printf '%f\n' | sort -u | 
   fi
 done
 
-tar -cf - clang | python3 $GECKO_PATH/taskcluster/scripts/misc/zstdpy > clang.tar.zst
+tar caf clang.tar.zst clang
 
 mkdir -p $UPLOAD_DIR
 mv clang.tar.zst $UPLOAD_DIR

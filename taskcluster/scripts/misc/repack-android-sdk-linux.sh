@@ -16,6 +16,6 @@ cd $GECKO_PATH
 # completion.
 /builds/worker/.mozbuild/android-sdk-linux/tools/bin/sdkmanager --list
 
-tar cv -C /builds/worker/.mozbuild android-sdk-linux | $GECKO_PATH/taskcluster/scripts/misc/zstdpy > $UPLOAD_DIR/android-sdk-linux.tar.zst
+tar cavf $UPLOAD_DIR/android-sdk-linux.tar.zst -C /builds/worker/.mozbuild android-sdk-linux
 
 ls -al $UPLOAD_DIR

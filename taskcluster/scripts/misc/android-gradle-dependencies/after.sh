@@ -26,6 +26,6 @@ cp ${GRADLE_USER_HOME}/wrapper/dists/gradle-*-*/*/gradle-*-*.zip gradle.zip
 unzip -q gradle.zip
 mv gradle-* android-gradle-dependencies/gradle-dist
 
-tar cv android-gradle-dependencies | $GECKO_PATH/taskcluster/scripts/misc/zstdpy > /builds/worker/artifacts/android-gradle-dependencies.tar.zst
+tar cavf /builds/worker/artifacts/android-gradle-dependencies.tar.zst android-gradle-dependencies
 
 popd

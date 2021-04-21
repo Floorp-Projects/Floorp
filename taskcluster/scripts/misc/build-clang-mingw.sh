@@ -306,6 +306,6 @@ popd
 mkdir -p $UPLOAD_DIR
 
 pushd $(dirname $INSTALL_DIR)
-tar c clang | $GECKO_PATH/taskcluster/scripts/misc/zstdpy > clangmingw.tar.zst
+tar caf clangmingw.tar.zst clang
 mv clangmingw.tar.zst $UPLOAD_DIR
 popd
