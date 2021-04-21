@@ -47,22 +47,15 @@
 #  include "Units.h"
 
 extern mozilla::LazyLogModule gWidgetLog;
-extern mozilla::LazyLogModule gWidgetFocusLog;
 extern mozilla::LazyLogModule gWidgetDragLog;
-extern mozilla::LazyLogModule gWidgetDrawLog;
 
 #  define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
-#  define LOGFOCUS(args) \
-    MOZ_LOG(gWidgetFocusLog, mozilla::LogLevel::Debug, args)
 #  define LOGDRAG(args) MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, args)
-#  define LOGDRAW(args) MOZ_LOG(gWidgetDrawLog, mozilla::LogLevel::Debug, args)
 
 #else
 
 #  define LOG(args)
-#  define LOGFOCUS(args)
 #  define LOGDRAG(args)
-#  define LOGDRAW(args)
 
 #endif /* MOZ_LOGGING */
 
