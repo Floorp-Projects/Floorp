@@ -22,7 +22,7 @@ add_task(async function() {
   );
 
   info("Expands the main root node");
-  expandAllSourceNodes(dbg, rootNodes[0]);
+  await expandAllSourceNodes(dbg, rootNodes[0]);
 
   // We need to assert the actual DOM nodes in the source tree, because the
   // state can contain simple1.js and simple2.js, but only show one of them.
@@ -34,7 +34,7 @@ add_task(async function() {
     is(rootNodes.length, 2, "Found 2 sourceview root nodes when fission is on");
 
     info("Expands the remote frame root node");
-    expandAllSourceNodes(dbg, rootNodes[1]);
+    await expandAllSourceNodes(dbg, rootNodes[1]);
   }
 
   info("Waiting for simple2.js from example.org (frame)");
