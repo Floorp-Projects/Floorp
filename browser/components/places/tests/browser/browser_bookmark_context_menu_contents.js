@@ -138,6 +138,51 @@ add_task(async function test_bookmark_contextmenu_contents() {
     await popupShownPromise;
     return contextMenu;
   }, optionItems);
+
+  await checkContextMenu(async function() {
+    info("Check context menu after opening context menu on content");
+    const toolbarBookmark = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      title: "Bookmark Title",
+      url: TEST_URL,
+    });
+
+    info("Open context menu on about:config");
+    const tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:config"
+    );
+    const contextMenuOnContent = document.getElementById(
+      "contentAreaContextMenu"
+    );
+    const popupShownPromiseOnContent = BrowserTestUtils.waitForEvent(
+      contextMenuOnContent,
+      "popupshown"
+    );
+    EventUtils.synthesizeMouseAtCenter(tab.linkedBrowser, {
+      button: 2,
+      type: "contextmenu",
+    });
+    await popupShownPromiseOnContent;
+
+    info("Check context menu on bookmark");
+    const toolbarNode = getToolbarNodeForItemGuid(toolbarBookmark.guid);
+    const contextMenu = document.getElementById("placesContext");
+    const popupShownPromise = BrowserTestUtils.waitForEvent(
+      contextMenu,
+      "popupshown"
+    );
+
+    EventUtils.synthesizeMouseAtCenter(toolbarNode, {
+      button: 2,
+      type: "contextmenu",
+    });
+    await popupShownPromise;
+
+    BrowserTestUtils.removeTab(tab);
+
+    return contextMenu;
+  }, optionItems);
 });
 
 add_task(async function test_empty_contextmenu_contents() {
