@@ -125,14 +125,25 @@ template <class InputReceiver>
 APZEventResult PanGesture(PanGestureInput::PanGestureType aType,
                           const RefPtr<InputReceiver>& aTarget,
                           const ScreenIntPoint& aPoint,
-                          const ScreenPoint& aDelta, TimeStamp aTime) {
+                          const ScreenPoint& aDelta, TimeStamp aTime,
+                          Modifiers aModifiers = MODIFIER_NONE) {
   PanGestureInput input(aType, MillisecondsSinceStartup(aTime), aTime, aPoint,
-                        aDelta, 0 /* Modifiers */);
+                        aDelta, aModifiers);
   if (aType == PanGestureInput::PANGESTURE_END) {
     input.mFollowedByMomentum = true;
   }
 
   return aTarget->ReceiveInputEvent(input);
+}
+
+template <class InputReceiver>
+APZEventResult PanGestureWithModifiers(PanGestureInput::PanGestureType aType,
+                                       Modifiers aModifiers,
+                                       const RefPtr<InputReceiver>& aTarget,
+                                       const ScreenIntPoint& aPoint,
+                                       const ScreenPoint& aDelta,
+                                       TimeStamp aTime) {
+  return PanGesture(aType, aTarget, aPoint, aDelta, aTime, aModifiers);
 }
 
 #endif  // mozilla_layers_InputUtils_h
