@@ -296,8 +296,13 @@ bool ClientLayerManager::EndTransactionInternal(
   // Wait for any previous async paints to complete before starting to paint
   // again. Do this outside the profiler and telemetry block so this doesn't
   // count as time spent rasterizing.
-  FlushAsyncPaints();
+  {
+    PaintTelemetry::AutoRecord record(
+        PaintTelemetry::Metric::FlushRasterization);
+    FlushAsyncPaints();
+  }
 
+  PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Rasterization);
   AUTO_PROFILER_TRACING_MARKER("Paint", "Rasterize", GRAPHICS);
   PerfStats::AutoMetricRecording<PerfStats::Metric::Rasterizing> autoRecording;
 

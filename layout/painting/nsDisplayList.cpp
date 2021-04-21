@@ -2335,7 +2335,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
     ContainerLayerParameters containerParameters(resolutionX, resolutionY);
 
     {
-      const auto start = TimeStamp::Now();
+      PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
 
       root = layerBuilder->BuildContainerLayerFor(aBuilder, aLayerManager,
                                                   frame, nullptr, this,
@@ -2343,10 +2343,11 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
 
       aBuilder->NotifyAndClearScrollFrames();
 
-      if (StaticPrefs::layers_acceleration_draw_fps()) {
+      if (!record.GetStart().IsNull() &&
+          StaticPrefs::layers_acceleration_draw_fps()) {
         if (PaintTiming* pt =
                 ClientLayerManager::MaybeGetPaintTiming(aLayerManager)) {
-          pt->flbMs() = (TimeStamp::Now() - start).ToMilliseconds();
+          pt->flbMs() = (TimeStamp::Now() - record.GetStart()).ToMilliseconds();
         }
       }
     }
@@ -2534,12 +2535,8 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
   }
 
   if (!sent) {
-    const auto start = TimeStamp::Now();
-
     FrameLayerBuilder* layerBuilder =
         BuildLayers(aBuilder, layerManager, aFlags, widgetTransaction);
-
-    Telemetry::AccumulateTimeDelta(Telemetry::PAINT_BUILD_LAYERS_TIME, start);
 
     if (!layerBuilder) {
       layerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
@@ -10099,6 +10096,9 @@ void nsDisplayListCollection::SerializeWithCorrectZOrder(
 namespace mozilla {
 
 uint32_t PaintTelemetry::sPaintLevel = 0;
+uint32_t PaintTelemetry::sMetricLevel = 0;
+EnumeratedArray<PaintTelemetry::Metric, PaintTelemetry::Metric::COUNT, double>
+    PaintTelemetry::sMetrics;
 
 PaintTelemetry::AutoRecordPaint::AutoRecordPaint() {
   // Don't record nested paints.
@@ -10106,6 +10106,10 @@ PaintTelemetry::AutoRecordPaint::AutoRecordPaint() {
     return;
   }
 
+  // Reset metrics for a new paint.
+  for (auto& metric : sMetrics) {
+    metric = 0.0;
+  }
   mStart = TimeStamp::Now();
 }
 
@@ -10126,6 +10130,66 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint() {
   // Record the total time.
   Telemetry::Accumulate(Telemetry::CONTENT_PAINT_TIME,
                         static_cast<uint32_t>(totalMs));
+
+  // Helpers for recording large/small paints.
+  auto recordLarge = [=](const nsCString& aKey, double aDurationMs) -> void {
+    MOZ_ASSERT(aDurationMs <= totalMs);
+    uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
+    Telemetry::Accumulate(Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT, aKey,
+                          amount);
+  };
+  auto recordSmall = [=](const nsCString& aKey, double aDurationMs) -> void {
+    MOZ_ASSERT(aDurationMs <= totalMs);
+    uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
+    Telemetry::Accumulate(Telemetry::CONTENT_SMALL_PAINT_PHASE_WEIGHT, aKey,
+                          amount);
+  };
+
+  double dlMs = sMetrics[Metric::DisplayList];
+  double flbMs = sMetrics[Metric::Layerization];
+  double frMs = sMetrics[Metric::FlushRasterization];
+  double rMs = sMetrics[Metric::Rasterization];
+
+  // If the total time was >= 16ms, then it's likely we missed a frame due to
+  // painting. We bucket these metrics separately.
+  if (totalMs >= 16.0) {
+    recordLarge("dl"_ns, dlMs);
+    recordLarge("flb"_ns, flbMs);
+    recordLarge("fr"_ns, frMs);
+    recordLarge("r"_ns, rMs);
+  } else {
+    recordSmall("dl"_ns, dlMs);
+    recordSmall("flb"_ns, flbMs);
+    recordSmall("fr"_ns, frMs);
+    recordSmall("r"_ns, rMs);
+  }
+
+  Telemetry::Accumulate(Telemetry::PAINT_BUILD_LAYERS_TIME, flbMs);
+}
+
+PaintTelemetry::AutoRecord::AutoRecord(Metric aMetric) : mMetric(aMetric) {
+  // Don't double-record anything nested.
+  if (sMetricLevel++ > 0) {
+    return;
+  }
+
+  // Don't record inside nested paints, or outside of paints.
+  if (sPaintLevel != 1) {
+    return;
+  }
+
+  mStart = TimeStamp::Now();
+}
+
+PaintTelemetry::AutoRecord::~AutoRecord() {
+  MOZ_ASSERT(sMetricLevel != 0);
+
+  sMetricLevel--;
+  if (mStart.IsNull()) {
+    return;
+  }
+
+  sMetrics[mMetric] += (TimeStamp::Now() - mStart).ToMilliseconds();
 }
 
 }  // namespace mozilla
