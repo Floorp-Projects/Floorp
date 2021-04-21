@@ -135,11 +135,13 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   };
 
   struct SoftText {
-    void AdjustBeginAndBuildText(NodeOffset aBegin, const nsINode* aRootNode);
+    void AdjustBeginAndBuildText(NodeOffset aBegin, NodeOffset aEnd,
+                                 const nsINode* aRootNode);
 
     void Invalidate() { mIsValid = false; }
 
     const NodeOffset& GetBegin() const { return mBegin; }
+    const NodeOffset& GetEnd() const { return mEnd; }
 
     const nsTArray<DOMTextMapping>& GetDOMMapping() const {
       return mDOMMapping;
@@ -147,12 +149,11 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
     const nsString& GetValue() const { return mValue; }
 
-    NodeOffset mEnd = NodeOffset(nullptr, 0);
-
     bool mIsValid = false;
 
    private:
     NodeOffset mBegin = NodeOffset(nullptr, 0);
+    NodeOffset mEnd = NodeOffset(nullptr, 0);
 
     nsTArray<DOMTextMapping> mDOMMapping;
 
@@ -200,7 +201,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   RealWords mRealWords;
   int32_t mNextWordIndex;
 
-  nsresult EnsureWords(NodeOffset aSoftBegin);
+  nsresult EnsureWords(NodeOffset aSoftBegin, NodeOffset aSoftEnd);
 
   int32_t MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset) const;
   // Map an offset into mSoftText.mValue to a DOM position. Note that two DOM
