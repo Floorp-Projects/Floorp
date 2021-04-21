@@ -2913,7 +2913,9 @@ toolbar#nav-bar {
 
         # Until we have all green, this does not run on a11y (for perf reasons)
         if not options.runByManifest:
-            return self.runMochitests(options, [t["path"] for t in tests])
+            result = self.runMochitests(options, [t["path"] for t in tests])
+            self.handleShutdownProfile(options)
+            return result
 
         # code for --run-by-manifest
         manifests = set(t["manifest"] for t in tests)
@@ -2987,8 +2989,19 @@ toolbar#nav-bar {
             print("4 INFO Mode:    %s" % e10s_mode)
             print("5 INFO SimpleTest FINISHED")
 
+        self.handleShutdownProfile(options)
+
+        if not result:
+            if self.countfail or not (self.countpass or self.counttodo):
+                # at least one test failed, or
+                # no tests passed, and no tests failed (possibly a crash)
+                result = 1
+
+        return result
+
+    def handleShutdownProfile(self, options):
         # If shutdown profiling was enabled, then the user will want to access the
-        # performance profile. The following code with display helpful log messages
+        # performance profile. The following code will display helpful log messages
         # and automatically open the profile if it is requested.
         if self.browserEnv and "MOZ_PROFILER_SHUTDOWN" in self.browserEnv:
             profile_path = self.browserEnv["MOZ_PROFILER_SHUTDOWN"]
@@ -3015,14 +3028,6 @@ toolbar#nav-bar {
             # Clean up the temporary file if it exists.
             if self.profiler_tempdir:
                 shutil.rmtree(self.profiler_tempdir)
-
-        if not result:
-            if self.countfail or not (self.countpass or self.counttodo):
-                # at least one test failed, or
-                # no tests passed, and no tests failed (possibly a crash)
-                result = 1
-
-        return result
 
     def doTests(self, options, testsToFilter=None):
         # A call to initializeLooping method is required in case of --run-by-dir or --bisect-chunk
