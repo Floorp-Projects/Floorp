@@ -575,7 +575,8 @@ mochitest-webgl1-ext:
             .*-ccov.*/.*: []
             android.*: []
             linux.*64-qr/debug: ['fission', 'webrender-sw', 'webgl-ipc']
-            linux.*64-qr/opt: ['fission', 'webgl-ipc']
+            linux.*64(-shippable)?-qr/opt: ['fission', 'webgl-ipc']
+            windows10-64-shippable-qr/(opt|debug): ['fission', 'webgl-ipc']
             windows10-64-qr/(opt|debug): ['fission']
             default: ['webgl-ipc']
     chunks:
