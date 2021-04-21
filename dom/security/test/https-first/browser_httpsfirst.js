@@ -34,7 +34,7 @@ add_task(async function() {
   );
 
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.https_only_mode_https_first", true]],
+    set: [["dom.security.https_first", true]],
   });
 
   await runPrefTest(
