@@ -47,14 +47,14 @@ bool nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(bool aFromPrivateWindow) {
 /* static */
 bool nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(bool aFromPrivateWindow) {
   // if the general pref is set to true, then we always return
-  if (mozilla::StaticPrefs::dom_security_https_only_mode_https_first()) {
+  if (mozilla::StaticPrefs::dom_security_https_first()) {
     return true;
   }
 
   // otherwise we check if executing in private browsing mode and return true
   // if the PBM pref for HTTPS-First is set.
   if (aFromPrivateWindow &&
-      mozilla::StaticPrefs::dom_security_https_only_mode_https_first_pbm()) {
+      mozilla::StaticPrefs::dom_security_https_first_pbm()) {
     return true;
   }
   return false;
