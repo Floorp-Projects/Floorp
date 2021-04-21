@@ -37,6 +37,12 @@ class AwaitPromiseProvider extends UrlbarTestUtils.TestProvider {
   }
 }
 
+add_task(async function setup() {
+  registerCleanupFunction(function() {
+    SpecialPowers.clipboardCopyString("");
+  });
+});
+
 add_task(async function afterMousedown_topSites() {
   await withAwaitProvider(
     { results: [TEST_RESULT], priority: Infinity },
@@ -221,6 +227,79 @@ add_task(async function searchTip() {
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function interactionOnNewTab() {
+  await testInteractionsOnNewTab(window);
+});
+
+add_task(async function interactionOnNewTabInPrivateWindow() {
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+  await testInteractionsOnNewTab(win);
+  await BrowserTestUtils.closeWindow(win);
+  await SimpleTest.promiseFocus(window);
+});
+
+async function testInteractionsOnNewTab(win) {
+  info("Open about:newtab in new tab");
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    "about:newtab"
+  );
+
+  info("Test for clicking on URLBar while showing about:newtab");
+  await testInteractionFeature(() => {
+    info("Click on URLBar");
+    EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
+  }, win);
+
+  info("Test for typing on .fake-editable while showing about:newtab");
+  await testInteractionFeature(() => {
+    info("Type a character on .fake-editable");
+    EventUtils.synthesizeKey("v", {}, win);
+  }, win);
+  Assert.equal(win.gURLBar.value, "v", "URLBar value is correct");
+
+  info("Test for typing on .fake-editable while showing about:newtab");
+  await testInteractionFeature(() => {
+    info("Paste some words on .fake-editable");
+    SpecialPowers.clipboardCopyString("paste test");
+    win.document.commandDispatcher
+      .getControllerForCommand("cmd_paste")
+      .doCommand("cmd_paste");
+    SpecialPowers.clipboardCopyString("");
+  }, win);
+  Assert.equal(win.gURLBar.value, "paste test", "URLBar value is correct");
+
+  BrowserTestUtils.removeTab(tab);
+}
+
+async function testInteractionFeature(interaction, win) {
+  info("Click on input field in newtab page");
+  ContentTask.spawn(win.gBrowser.selectedBrowser, null, () => {
+    content.document.querySelector(".fake-editable").click();
+  });
+
+  await BrowserTestUtils.waitForCondition(
+    () => win.gURLBar._hideFocus,
+    "Wait until _hideFocus will be true"
+  );
+
+  const onHiddenFocusRemoved = BrowserTestUtils.waitForCondition(
+    () => !win.gURLBar._hideFocus
+  );
+
+  await interaction();
+
+  await onHiddenFocusRemoved;
+  Assert.ok(
+    win.gURLBar.hasAttribute("suppress-focus-border"),
+    "suppress-focus-border is set from the beginning"
+  );
+
+  const result = await UrlbarTestUtils.waitForAutocompleteResultAt(win, 0);
+  Assert.ok(result, "The provider returned a result");
+  await UrlbarTestUtils.promisePopupClose(win);
+}
 
 function getSuppressFocusPromise(win = window) {
   return new Promise(resolve => {
