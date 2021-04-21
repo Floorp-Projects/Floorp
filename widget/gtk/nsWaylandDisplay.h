@@ -49,7 +49,7 @@ class nsWaylandDisplay {
   wl_data_device_manager* GetDataDeviceManager(void) {
     return mDataDeviceManager;
   };
-  wl_seat* GetSeat(void) { return mSeat; };
+  wl_seat* GetSeat(void);
   wl_shm* GetShm(void) { return mShm; };
   gtk_primary_selection_device_manager* GetPrimarySelectionDeviceManagerGtk(
       void) {
@@ -70,7 +70,6 @@ class nsWaylandDisplay {
   void SetCompositor(wl_compositor* aCompositor);
   void SetSubcompositor(wl_subcompositor* aSubcompositor);
   void SetDataDeviceManager(wl_data_device_manager* aDataDeviceManager);
-  void SetSeat(wl_seat* aSeat);
   void SetPrimarySelectionDeviceManager(
       gtk_primary_selection_device_manager* aPrimarySelectionDeviceManager);
   void SetPrimarySelectionDeviceManager(
@@ -89,7 +88,6 @@ class nsWaylandDisplay {
   wl_data_device_manager* mDataDeviceManager;
   wl_compositor* mCompositor;
   wl_subcompositor* mSubcompositor;
-  wl_seat* mSeat;
   wl_shm* mShm;
   wl_callback* mSyncCallback;
   gtk_primary_selection_device_manager* mPrimarySelectionDeviceManagerGtk;
