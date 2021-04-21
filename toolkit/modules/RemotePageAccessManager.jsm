@@ -101,10 +101,6 @@ let RemotePageAccessManager = {
       RPMGetInnerMostURI: ["*"],
       RPMGetHttpResponseHeader: ["*"],
     },
-    "about:newinstall": {
-      RPMGetUpdateChannel: ["*"],
-      RPMGetFxAccountsEndpoint: ["*"],
-    },
     "about:plugins": {
       RPMSendQuery: ["RequestPlugins"],
     },

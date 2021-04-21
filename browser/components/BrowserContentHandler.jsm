@@ -44,8 +44,6 @@ XPCOMUtils.defineLazyGetter(this, "gSystemPrincipal", () =>
 );
 XPCOMUtils.defineLazyGlobalGetters(this, [URL]);
 
-const NEWINSTALL_PAGE = "about:newinstall";
-
 // One-time startup homepage override configurations
 const ONCE_DOMAINS = ["mozilla.org", "firefox.com"];
 const ONCE_PREF = "browser.startup.homepage_override.once";
@@ -99,7 +97,6 @@ const OVERRIDE_NONE = 0;
 const OVERRIDE_NEW_PROFILE = 1;
 const OVERRIDE_NEW_MSTONE = 2;
 const OVERRIDE_NEW_BUILD_ID = 3;
-const OVERRIDE_ALTERNATE_PROFILE = 4;
 /**
  * Determines whether a home page override is needed.
  * Returns:
@@ -111,12 +108,6 @@ const OVERRIDE_ALTERNATE_PROFILE = 4;
  *  OVERRIDE_NONE otherwise.
  */
 function needHomepageOverride(prefb) {
-  let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
-    Ci.nsIToolkitProfileService
-  );
-  if (pService.createdAlternateProfile) {
-    return OVERRIDE_ALTERNATE_PROFILE;
-  }
   var savedmstone = prefb.getCharPref(
     "browser.startup.homepage_override.mstone",
     ""
@@ -236,59 +227,42 @@ function openBrowserWindow(
   if (!urlOrUrlList) {
     // Just pass in the defaultArgs directly. We'll use system principal on the other end.
     args = [gBrowserContentHandler.getArgs(isStartup)];
-  } else {
-    let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
-      Ci.nsIToolkitProfileService
-    );
-    if (isStartup && pService.createdAlternateProfile) {
-      let url = NEWINSTALL_PAGE;
-      if (Array.isArray(urlOrUrlList)) {
-        urlOrUrlList.unshift(url);
-      } else {
-        urlOrUrlList = [url, urlOrUrlList];
-      }
-    }
-
-    if (Array.isArray(urlOrUrlList)) {
-      // There isn't an explicit way to pass a principal here, so we load multiple URLs
-      // with system principal when we get to actually loading them.
-      if (
-        !triggeringPrincipal ||
-        !triggeringPrincipal.equals(gSystemPrincipal)
-      ) {
-        throw new Error(
-          "Can't open multiple URLs with something other than system principal."
-        );
-      }
-      // Passing an nsIArray for the url disables the "|"-splitting behavior.
-      let uriArray = Cc["@mozilla.org/array;1"].createInstance(
-        Ci.nsIMutableArray
+  } else if (Array.isArray(urlOrUrlList)) {
+    // There isn't an explicit way to pass a principal here, so we load multiple URLs
+    // with system principal when we get to actually loading them.
+    if (!triggeringPrincipal || !triggeringPrincipal.equals(gSystemPrincipal)) {
+      throw new Error(
+        "Can't open multiple URLs with something other than system principal."
       );
-      urlOrUrlList.forEach(function(uri) {
-        var sstring = Cc["@mozilla.org/supports-string;1"].createInstance(
-          Ci.nsISupportsString
-        );
-        sstring.data = uri;
-        uriArray.appendElement(sstring);
-      });
-      args = [uriArray];
-    } else {
-      // Always pass at least 3 arguments to avoid the "|"-splitting behavior,
-      // ie. avoid the loadOneOrMoreURIs function.
-      // Also, we need to pass the triggering principal.
-      args = [
-        urlOrUrlList,
-        null, // charset
-        null, // refererInfo
-        postData,
-        undefined, // allowThirdPartyFixup; this would be `false` but that
-        // needs a conversion. Hopefully bug 1485961 will fix.
-        undefined, // user context id
-        null, // origin principal
-        null, // origin storage principal
-        triggeringPrincipal,
-      ];
     }
+    // Passing an nsIArray for the url disables the "|"-splitting behavior.
+    let uriArray = Cc["@mozilla.org/array;1"].createInstance(
+      Ci.nsIMutableArray
+    );
+    urlOrUrlList.forEach(function(uri) {
+      var sstring = Cc["@mozilla.org/supports-string;1"].createInstance(
+        Ci.nsISupportsString
+      );
+      sstring.data = uri;
+      uriArray.appendElement(sstring);
+    });
+    args = [uriArray];
+  } else {
+    // Always pass at least 3 arguments to avoid the "|"-splitting behavior,
+    // ie. avoid the loadOneOrMoreURIs function.
+    // Also, we need to pass the triggering principal.
+    args = [
+      urlOrUrlList,
+      null, // charset
+      null, // refererInfo
+      postData,
+      undefined, // allowThirdPartyFixup; this would be `false` but that
+      // needs a conversion. Hopefully bug 1485961 will fix.
+      undefined, // user context id
+      null, // origin principal
+      null, // origin storage principal
+      triggeringPrincipal,
+    ];
   }
 
   if (isStartup) {
@@ -653,12 +627,6 @@ nsBrowserContentHandler.prototype = {
       override = needHomepageOverride(prefb);
       if (override != OVERRIDE_NONE) {
         switch (override) {
-          case OVERRIDE_ALTERNATE_PROFILE:
-            // Override the welcome page to explain why the user has a new
-            // profile. nsBrowserGlue.css will be responsible for showing the
-            // modal dialog.
-            overridePage = NEWINSTALL_PAGE;
-            break;
           case OVERRIDE_NEW_PROFILE:
             // New profile.
             overridePage = Services.urlFormatter.formatURLPref(
@@ -779,8 +747,7 @@ nsBrowserContentHandler.prototype = {
     }
 
     let skipStartPage =
-      (override == OVERRIDE_NEW_PROFILE ||
-        override == OVERRIDE_ALTERNATE_PROFILE) &&
+      override == OVERRIDE_NEW_PROFILE &&
       prefb.getBoolPref("browser.startup.firstrunSkipsHomepage");
     // Only show the startPage if we're not restoring an update session and are
     // not set to skip the start page on this profile

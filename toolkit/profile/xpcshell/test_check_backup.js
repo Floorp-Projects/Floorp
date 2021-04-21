@@ -36,7 +36,6 @@ add_task(async () => {
   let { profile, didCreate } = selectStartupProfile();
   checkStartupReason("default");
 
-  let service = getProfileService();
   // Should have added the backup data to the service, check that is true.
   profileData.installs = installs;
   checkProfileService(profileData);
@@ -46,9 +45,5 @@ add_task(async () => {
     profile.name,
     "Profile2",
     "Should have selected the right profile"
-  );
-  Assert.ok(
-    !service.createdAlternateProfile,
-    "Should not have created an alternate profile."
   );
 });

@@ -63,12 +63,6 @@ interface nsIToolkitProfileService : nsISupports
     attribute nsIToolkitProfile defaultProfile;
 
     /**
-     * True if during startup a new profile was created for this install instead
-     * of using the profile that was the default for older versions.
-     */
-    readonly attribute boolean createdAlternateProfile;
-
-    /**
      * Selects or creates a profile to use based on the profiles database, any
      * environment variables and any command line arguments. Will not create
      * a profile if aIsResetting is true. The profile is selected based on this
