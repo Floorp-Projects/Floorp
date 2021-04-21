@@ -37,13 +37,36 @@ add_task(async function shortcuts_none() {
     await rebuildPromise;
 
     Assert.ok(
-      !Array.from(shortcutButtons.buttons.children).some(b => !!b.webEngine),
+      !Array.from(shortcutButtons.buttons.children).some(b =>
+        b.classList.contains("searchbar-engine-one-off-add-engine")
+      ),
       "Check there's no buttons to add engines"
     );
   });
 });
 
-add_task(async function shortcuts_two() {
+add_task(async function test_shortcuts() {
+  await do_test_shortcuts(button => {
+    info("Click on button");
+    EventUtils.synthesizeMouseAtCenter(button, {});
+  });
+  await do_test_shortcuts(button => {
+    info("Enter on button");
+    let shortcuts = UrlbarTestUtils.getOneOffSearchButtons(window);
+    while (shortcuts.selectedButton != button) {
+      EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+    }
+    EventUtils.synthesizeKey("KEY_Enter");
+  });
+});
+
+/**
+ * Test add engine shortcuts.
+ * @param {Function} activateTask a function receiveing the shortcut button to
+ *        activate as argument. The scope of this function is to activate the
+ *        shortcut button.
+ */
+async function do_test_shortcuts(activateTask) {
   info("Checks the shortcuts with a page that offers two engines.");
   let url = getRootDirectory(gTestPath) + "add_search_engine_two.html";
   await BrowserTestUtils.withNewTab(url, async () => {
@@ -58,9 +81,9 @@ add_task(async function shortcuts_two() {
     });
     await rebuildPromise;
 
-    let addEngineButtons = Array.from(shortcutButtons.buttons.children).filter(
-      b => !!b.webEngine
-    );
+    let addEngineButtons = Array.from(
+      shortcutButtons.buttons.children
+    ).filter(b => b.classList.contains("searchbar-engine-one-off-add-engine"));
     Assert.equal(
       addEngineButtons.length,
       2,
@@ -73,16 +96,16 @@ add_task(async function shortcuts_two() {
       Assert.ok(
         button.getAttribute("tooltiptext").includes("add_search_engine_")
       );
-      Assert.ok(button.webEngine.name.startsWith("add_search_engine_"));
+      Assert.ok(button.getAttribute("title").startsWith("add_search_engine_"));
       Assert.ok(
         button.classList.contains("searchbar-engine-one-off-add-engine")
       );
     }
 
-    info("Click on the first button");
+    info("Activate the first button");
     rebuildPromise = BrowserTestUtils.waitForEvent(shortcutButtons, "rebuild");
     let enginePromise = promiseEngine("engine-added", "add_search_engine_0");
-    EventUtils.synthesizeMouseAtCenter(addEngineButtons[0], {});
+    await activateTask(addEngineButtons[0]);
     info("await engine install");
     let engine = await enginePromise;
     info("await rebuild");
@@ -93,15 +116,18 @@ add_task(async function shortcuts_two() {
       "Urlbar view is still open."
     );
 
-    addEngineButtons = Array.from(shortcutButtons.buttons.children).filter(
-      b => !!b.webEngine
+    addEngineButtons = Array.from(shortcutButtons.buttons.children).filter(b =>
+      b.classList.contains("searchbar-engine-one-off-add-engine")
     );
     Assert.equal(
       addEngineButtons.length,
       1,
       "Check there's one button to add engines"
     );
-    Assert.equal(addEngineButtons[0].webEngine.name, "add_search_engine_1");
+    Assert.equal(
+      addEngineButtons[0].getAttribute("title"),
+      "add_search_engine_1"
+    );
     let installedEngineButton = addEngineButtons[0].previousElementSibling;
     Assert.equal(installedEngineButton.engine.name, "add_search_engine_0");
 
@@ -110,8 +136,9 @@ add_task(async function shortcuts_two() {
     await Services.search.removeEngine(engine);
     await rebuildPromise;
     Assert.equal(
-      Array.from(shortcutButtons.buttons.children).filter(b => !!b.webEngine)
-        .length,
+      Array.from(shortcutButtons.buttons.children).filter(b =>
+        b.classList.contains("searchbar-engine-one-off-add-engine")
+      ).length,
       2,
       "Check there's two buttons to add engines"
     );
@@ -129,12 +156,14 @@ add_task(async function shortcuts_two() {
       });
       await rebuildPromise;
       Assert.ok(
-        !Array.from(shortcutButtons.buttons.children).some(b => !!b.webEngine),
+        !Array.from(shortcutButtons.buttons.children).some(b =>
+          b.classList.contains("searchbar-engine-one-off-add-engine")
+        ),
         "Check there's no option to add engines"
       );
     });
   });
-});
+}
 
 add_task(async function shortcuts_many() {
   info("Checks the shortcuts with a page that offers many engines.");
@@ -151,9 +180,9 @@ add_task(async function shortcuts_many() {
     });
     await rebuildPromise;
 
-    let addEngineButtons = Array.from(shortcutButtons.buttons.children).filter(
-      b => !!b.webEngine
-    );
+    let addEngineButtons = Array.from(
+      shortcutButtons.buttons.children
+    ).filter(b => b.classList.contains("searchbar-engine-one-off-add-engine"));
     Assert.equal(
       addEngineButtons.length,
       gURLBar.addSearchEngineHelper.maxInlineEngines,
