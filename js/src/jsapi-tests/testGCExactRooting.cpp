@@ -275,8 +275,9 @@ BEGIN_TEST(testGCRootedVector) {
     // Check the shape to ensure it did not get collected.
     char letter = 'a' + i;
     bool match;
-    CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), &letter,
-                               1, &match));
+    ShapePropertyIter<NoGC> iter(shapes[i]);
+    CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(iter->key()), &letter, 1,
+                               &match));
     CHECK(match);
   }
 
@@ -346,8 +347,9 @@ BEGIN_TEST(testTraceableFifo) {
     // Check the shape to ensure it did not get collected.
     char letter = 'a' + i;
     bool match;
-    CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes.front()->propid()),
-                               &letter, 1, &match));
+    ShapePropertyIter<NoGC> iter(shapes.front());
+    CHECK(JS_StringEqualsAscii(cx, JSID_TO_STRING(iter->key()), &letter, 1,
+                               &match));
     CHECK(match);
     shapes.popFront();
   }
@@ -391,8 +393,9 @@ static bool CheckVector(JSContext* cx, Handle<ShapeVec> shapes) {
     // Check the shape to ensure it did not get collected.
     char letter = 'a' + i;
     bool match;
-    if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(shapes[i]->propid()), &letter,
-                              1, &match)) {
+    ShapePropertyIter<NoGC> iter(shapes[i]);
+    if (!JS_StringEqualsAscii(cx, JSID_TO_STRING(iter->key()), &letter, 1,
+                              &match)) {
       return false;
     }
     if (!match) {

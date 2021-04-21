@@ -390,10 +390,8 @@ static bool GeneratorFunctionClassFinish(JSContext* cx,
   // Change the "constructor" property to non-writable before adding any other
   // properties, so it's still the last property and can be modified without a
   // dictionary-mode transition.
-  MOZ_ASSERT(StringEqualsAscii(
-      JSID_TO_LINEAR_STRING(
-          genFunctionProto->as<NativeObject>().lastProperty()->propid()),
-      "constructor"));
+  MOZ_ASSERT(genFunctionProto->as<NativeObject>().getLastProperty().key() ==
+             NameToId(cx->names().constructor));
   MOZ_ASSERT(!genFunctionProto->as<NativeObject>().inDictionaryMode());
 
   RootedValue genFunctionVal(cx, ObjectValue(*genFunction));

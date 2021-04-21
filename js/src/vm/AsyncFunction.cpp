@@ -47,10 +47,8 @@ static bool AsyncFunctionClassFinish(JSContext* cx, HandleObject asyncFunction,
   // Change the "constructor" property to non-writable before adding any other
   // properties, so it's still the last property and can be modified without a
   // dictionary-mode transition.
-  MOZ_ASSERT(StringEqualsAscii(
-      JSID_TO_LINEAR_STRING(
-          asyncFunctionProto->as<NativeObject>().lastProperty()->propid()),
-      "constructor"));
+  MOZ_ASSERT(asyncFunctionProto->as<NativeObject>().getLastProperty().key() ==
+             NameToId(cx->names().constructor));
   MOZ_ASSERT(!asyncFunctionProto->as<NativeObject>().inDictionaryMode());
 
   RootedValue asyncFunctionVal(cx, ObjectValue(*asyncFunction));
