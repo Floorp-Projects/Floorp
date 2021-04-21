@@ -17,11 +17,11 @@ a.start {
 <script>
 let a0 = document.querySelectorAll("a")[0];
 a0.classList.add("start");
-requestIdleCallback(() => {
+setTimeout(() => {
   a0.classList.remove("start");
-  requestIdleCallback(() => {
+  setTimeout(() => {
     a0.classList.add("start");
     document.documentElement.removeAttribute("class");
-  });
-});
+  }, 0);
+}, 0);
 </script>
