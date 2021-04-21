@@ -1875,6 +1875,7 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
     case CacheKind::OptimizeSpreadCall:
     case CacheKind::ToBool:
     case CacheKind::UnaryArith:
+    case CacheKind::NewArray:
       MOZ_ASSERT(numInputs == 1);
       allocator.initInputLocation(0, R0);
       break;
@@ -2932,5 +2933,60 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
     masm.switchToBaselineFrameRealm(codeReg);
   }
 
+  return true;
+}
+
+bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
+                                                       uint32_t shapeOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  gc::AllocKind allocKind = GuessArrayGCKind(arrayLength);
+  MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
+  allocKind = ForegroundToBackgroundAllocKind(allocKind);
+
+  uint32_t slotCount = GetGCKindSlots(allocKind);
+  MOZ_ASSERT(slotCount >= ObjectElements::VALUES_PER_HEADER);
+  uint32_t arrayCapacity = slotCount - ObjectElements::VALUES_PER_HEADER;
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegister result(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegisterMaybeOutput shape(allocator, masm, output);
+
+  Address shapeAddr(stubAddress(shapeOffset));
+  masm.loadPtr(shapeAddr, shape);
+
+  allocator.discardStack(masm);
+
+  Label done;
+  Label fail;
+
+  masm.createArrayWithFixedElements(result, shape, scratch, arrayLength,
+                                    arrayCapacity, allocKind, gc::DefaultHeap,
+                                    &fail);
+  masm.jump(&done);
+
+  {
+    masm.bind(&fail);
+
+    // We get here if the nursery is full (unlikely) but also for tenured
+    // allocations if the current arena is full and we need to allocate a new
+    // one (fairly common).
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(Imm32(GenericObject));
+    masm.Push(Imm32(arrayLength));
+
+    using Fn = ArrayObject* (*)(JSContext*, uint32_t, NewObjectKind);
+    callVM<Fn, NewArrayOperation>(masm);
+
+    stubFrame.leave(masm);
+    masm.mov(ReturnReg, result);
+  }
+
+  masm.bind(&done);
+  masm.tagValue(JSVAL_TYPE_OBJECT, result, output.valueReg());
   return true;
 }
