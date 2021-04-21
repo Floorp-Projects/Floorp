@@ -588,13 +588,13 @@ xul|menulist > xul|menupopup {
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   background-color: var(--in-content-box-background);
+  color: var(--in-content-text-color);
 }
 
 xul|menulist > xul|menupopup xul|menu,
 xul|menulist > xul|menupopup xul|menuitem {
   appearance: none;
   font-size: 1em;
-  color: var(--in-content-text-color);
   padding-block: 0.2em;
   padding-inline: 10px 30px;
 }
