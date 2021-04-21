@@ -12,37 +12,43 @@ job-defaults:
     run-on-projects: [trunk]
     run:
         script: repack-node.sh
-        toolchain-artifact: public/build/node.tar.xz
+        toolchain-artifact: public/build/node.tar.zst
 
 linux64-node-10:
     treeherder:
         symbol: TL(node-10)
     run:
-        arguments: ['linux64', '10']
         toolchain-alias: linux64-node
+    fetches:
+        fetch:
+            - nodejs-10-linux64
 
 macosx64-node-10:
     treeherder:
         symbol: TM(node-10)
     run:
-        arguments: ['macosx64', '10']
         toolchain-alias:
             - macosx64-node
             # There isn't an arm64-native node yet, so use the x86_64 one.
             - macosx64-aarch64-node
+    fetches:
+        fetch:
+            - nodejs-10-macosx64
 
 win64-node-10:
     treeherder:
         symbol: TW64(node-10)
     run:
-        arguments: ['win64', '10']
-        toolchain-artifact: public/build/node.tar.bz2
         toolchain-alias: win64-node
+    fetches:
+        fetch:
+            - nodejs-10-win64
 
 win32-node-10:
     treeherder:
         symbol: TW32(node-10)
     run:
-        arguments: ['win32', '10']
-        toolchain-artifact: public/build/node.tar.bz2
         toolchain-alias: win32-node
+    fetches:
+        fetch:
+            - nodejs-10-win32
