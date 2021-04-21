@@ -462,7 +462,10 @@ def repack_archive(orig: pathlib.Path, dest: pathlib.Path,
                         if tarinfo.isdir():
                             continue
                         tarinfo.name = filter(tarinfo.name)
-                        tar.addfile(tarinfo, origtar.extractfile(tarinfo))
+                        if tarinfo.isfile():
+                            tar.addfile(tarinfo, origtar.extractfile(tarinfo))
+                        else:
+                            tar.addfile(tarinfo)
             else:
                 # We only change compression here. The tar stream is unchanged.
                 ctx.copy_stream(ifh, fh)
