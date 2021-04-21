@@ -630,3 +630,71 @@ add_task(async function testFastfallbackWithoutEchConfig() {
 
   await trrServer.stop();
 });
+
+add_task(async function testH3FallbackWithMultipleTransactions() {
+  trrServer = new TRRServer();
+  await trrServer.start();
+  Services.prefs.setBoolPref("network.dns.upgrade_with_https_rr", true);
+  Services.prefs.setBoolPref("network.dns.use_https_rr_as_altsvc", true);
+  Services.prefs.setBoolPref("network.dns.echconfig.enabled", false);
+
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+
+  // Disable fast fallback.
+  Services.prefs.setIntPref(
+    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    0
+  );
+
+  await trrServer.registerDoHAnswers("test.multiple_trans.org", "HTTPS", {
+    answers: [
+      {
+        name: "test.multiple_trans.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.multiple_trans.org",
+          values: [
+            { key: "alpn", value: "h3-27" },
+            { key: "port", value: h3Port },
+          ],
+        },
+      },
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.multiple_trans.org", "A", {
+    answers: [
+      {
+        name: "test.multiple_trans.org",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
+
+  let promises = [];
+  for (let i = 0; i < 2; ++i) {
+    let chan = makeChan(`https://test.multiple_trans.org:${h2Port}/server-timing`);
+    promises.push(channelOpenPromise(chan))
+  }
+
+  let res = await Promise.all(promises);
+  res.forEach(function(e) {
+    let [req] = e;
+    Assert.equal(req.protocolVersion, "h2");
+    let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
+    Assert.equal(internal.remotePort, h2Port);
+  });
+
+  await trrServer.stop();
+});
