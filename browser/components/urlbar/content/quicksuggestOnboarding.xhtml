@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://global/content/commonDialog.css"?>
+<?xml-stylesheet href="chrome://global/skin/commonDialog.css"?>
+<?xml-stylesheet href="chrome://browser/content/urlbar/quicksuggestOnboarding.css"?>
+
+<window id="quicksuggestOnboardingDialogWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        aria-describedby="infoBody">
+<dialog id="quicksuggestOnboardingDialog"
+        buttons="accept, extra1"
+        defaultButton="accept">
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+  </linkset>
+
+  <!-- The <div> was added in bug 1606617 to workaround bug 1614447 -->
+  <div xmlns="http://www.w3.org/1999/xhtml">
+    <div id="infoContainer">
+      <xul:image id="infoIcon"/>
+      <h2 id="infoTitle">Firefox is getting <span class="zap short">smarter.</span></h2>
+      <xul:description id="infoBody">
+        We're rolling out experiences to help you find the right things faster.
+        You'll start to see richer recommendations in the address bar.
+      </xul:description>
+      <div id="infoButtons">
+        <xul:button id="onboardingAccept"
+                dlgtype="accept"
+                label="Okay, got it!"></xul:button>
+        <xul:button id="onboardingLearnMore"
+                    dlgtype="extra1"
+                    label="Learn more"></xul:button>
+      </div>
+    </div>
+  </div>
+
+  <script src="chrome://browser/content/urlbar/quicksuggestOnboarding.js"/>
+</dialog>
+</window>
