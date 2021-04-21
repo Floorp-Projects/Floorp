@@ -66,7 +66,7 @@ void WindowSurfaceProvider::CleanupResources() { mWindowSurface = nullptr; }
 UniquePtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
 #ifdef MOZ_WAYLAND
   if (!mIsX11Display) {
-    LOGDRAW(("Drawing to nsWindow %p will use wl_surface\n", mWidget));
+    LOG(("Drawing to nsWindow %p will use wl_surface\n", mWidget));
     return MakeUnique<WindowSurfaceWayland>(mWidget);
   }
 #endif
@@ -79,20 +79,20 @@ UniquePtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
   // 2. MIT-SHM
   // 3. XPutImage
   if (!mIsShaped && gfx::gfxVars::UseXRender()) {
-    LOGDRAW(("Drawing to Window 0x%lx will use XRender\n", mXWindow));
+    LOG(("Drawing to Window 0x%lx will use XRender\n", mXWindow));
     return MakeUnique<WindowSurfaceXRender>(mXDisplay, mXWindow, mXVisual,
                                             mXDepth);
   }
 
 #ifdef MOZ_HAVE_SHMIMAGE
   if (!mIsShaped && nsShmImage::UseShm()) {
-    LOGDRAW(("Drawing to Window 0x%lx will use MIT-SHM\n", mXWindow));
+    LOG(("Drawing to Window 0x%lx will use MIT-SHM\n", mXWindow));
     return MakeUnique<WindowSurfaceX11SHM>(mXDisplay, mXWindow, mXVisual,
                                            mXDepth);
   }
 #endif  // MOZ_HAVE_SHMIMAGE
 
-  LOGDRAW(("Drawing to Window 0x%lx will use XPutImage\n", mXWindow));
+  LOG(("Drawing to Window 0x%lx will use XPutImage\n", mXWindow));
   return MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual,
                                            mXDepth, mIsShaped);
 }

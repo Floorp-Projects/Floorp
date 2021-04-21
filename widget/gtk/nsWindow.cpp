@@ -792,7 +792,7 @@ void nsWindow::Destroy() {
 
   // make sure that we remove ourself as the focus window
   if (gFocusWindow == this) {
-    LOGFOCUS(("automatically losing focus...\n"));
+    LOG(("automatically losing focus...\n"));
     gFocusWindow = nullptr;
   }
 
@@ -2186,7 +2186,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   // Make sure that our owning widget has focus.  If it doesn't try to
   // grab it.  Note that we don't set our focus flag in this case.
 
-  LOGFOCUS(("  SetFocus %d [%p]\n", aRaise == Raise::Yes, (void*)this));
+  LOG(("  SetFocus %d [%p]\n", aRaise == Raise::Yes, (void*)this));
 
   GtkWidget* owningWidget = GetMozContainerWidget();
   if (!owningWidget) return;
@@ -2235,7 +2235,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
       nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
       if (GTKToolkit) timestamp = GTKToolkit->GetFocusTimestamp();
 
-      LOGFOCUS(("  requesting toplevel activation [%p]\n", (void*)this));
+      LOG(("  requesting toplevel activation [%p]\n", (void*)this));
       NS_ASSERTION(owningWindow->mWindowType != eWindowType_popup || mParent,
                    "Presenting an override-redirect window");
       gtk_window_present_with_time(GTK_WINDOW(owningWindow->mShell), timestamp);
@@ -2264,7 +2264,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
 
   // If this is the widget that already has focus, return.
   if (gFocusWindow == this) {
-    LOGFOCUS(("  already have focus [%p]\n", (void*)this));
+    LOG(("  already have focus [%p]\n", (void*)this));
     return;
   }
 
@@ -2275,7 +2275,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
     mIMContext->OnFocusWindow(this);
   }
 
-  LOGFOCUS(("  widget now has focus in SetFocus() [%p]\n", (void*)this));
+  LOG(("  widget now has focus in SetFocus() [%p]\n", (void*)this));
 }
 
 LayoutDeviceIntRect nsWindow::GetScreenBounds() {
@@ -2487,8 +2487,8 @@ void nsWindow::Invalidate(const LayoutDeviceIntRect& aRect) {
   GdkRectangle rect = DevicePixelsToGdkRectRoundOut(aRect);
   gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
 
-  LOGDRAW(("Invalidate (rect) [%p]: %d %d %d %d\n", (void*)this, rect.x, rect.y,
-           rect.width, rect.height));
+  LOG(("Invalidate (rect) [%p]: %d %d %d %d\n", (void*)this, rect.x, rect.y,
+       rect.width, rect.height));
 }
 
 void* nsWindow::GetNativeData(uint32_t aDataType) {
@@ -2808,7 +2808,7 @@ static bool ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr) {
     const cairo_rectangle_t& r = rects->rectangles[i];
     aRegion.Or(aRegion,
                LayoutDeviceIntRect::Truncate(r.x, r.y, r.width, r.height));
-    LOGDRAW(("\t%f %f %f %f\n", r.x, r.y, r.width, r.height));
+    LOG(("\t%f %f %f %f\n", r.x, r.y, r.width, r.height));
   }
 
   cairo_rectangle_list_destroy(rects);
@@ -2876,9 +2876,8 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   nsIWidgetListener* listener = GetListener();
   if (!listener) return FALSE;
 
-  LOGDRAW(("received expose event [%p] %p 0x%lx (rects follow):\n", this,
-           mGdkWindow,
-           GdkIsX11Display() ? gdk_x11_window_get_xid(mGdkWindow) : 0));
+  LOG(("received expose event [%p] %p 0x%lx (rects follow):\n", this,
+       mGdkWindow, GdkIsX11Display() ? gdk_x11_window_get_xid(mGdkWindow) : 0));
   LayoutDeviceIntRegion exposeRegion;
   if (!ExtractExposeRegion(exposeRegion, cr)) {
     return FALSE;
@@ -3788,7 +3787,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
 }
 
 void nsWindow::OnContainerFocusInEvent(GdkEventFocus* aEvent) {
-  LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void*)this));
+  LOG(("OnContainerFocusInEvent [%p]\n", (void*)this));
 
   // Unset the urgency hint, if possible
   GtkWidget* top_window = GetToplevelWidget();
@@ -3798,7 +3797,7 @@ void nsWindow::OnContainerFocusInEvent(GdkEventFocus* aEvent) {
   // Return if being called within SetFocus because the focus manager
   // already knows that the window is active.
   if (gBlockActivateEvent) {
-    LOGFOCUS(("activated notification is blocked [%p]\n", (void*)this));
+    LOG(("activated notification is blocked [%p]\n", (void*)this));
     return;
   }
 
@@ -3816,11 +3815,11 @@ void nsWindow::OnContainerFocusInEvent(GdkEventFocus* aEvent) {
     gFocusWindow = this;
   }
 
-  LOGFOCUS(("Events sent from focus in event [%p]\n", (void*)this));
+  LOG(("Events sent from focus in event [%p]\n", (void*)this));
 }
 
 void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
-  LOGFOCUS(("OnContainerFocusOutEvent [%p]\n", (void*)this));
+  LOG(("OnContainerFocusOutEvent [%p]\n", (void*)this));
 
   if (mWindowType == eWindowType_toplevel ||
       mWindowType == eWindowType_dialog) {
@@ -3862,7 +3861,7 @@ void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
     UpdateMozWindowActive();
   }
 
-  LOGFOCUS(("Done with container focus out [%p]\n", (void*)this));
+  LOG(("Done with container focus out [%p]\n", (void*)this));
 }
 
 bool nsWindow::DispatchCommandEvent(nsAtom* aCommand) {
@@ -3925,7 +3924,7 @@ mozilla::CurrentX11TimeGetter* nsWindow::GetCurrentTimeGetter() {
 }
 
 gboolean nsWindow::OnKeyPressEvent(GdkEventKey* aEvent) {
-  LOGFOCUS(("OnKeyPressEvent [%p]\n", (void*)this));
+  LOG(("OnKeyPressEvent [%p]\n", (void*)this));
 
   RefPtr<nsWindow> self(this);
   KeymapWrapper::HandleKeyPressEvent(self, aEvent);
@@ -3933,7 +3932,7 @@ gboolean nsWindow::OnKeyPressEvent(GdkEventKey* aEvent) {
 }
 
 gboolean nsWindow::OnKeyReleaseEvent(GdkEventKey* aEvent) {
-  LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void*)this));
+  LOG(("OnKeyReleaseEvent [%p]\n", (void*)this));
 
   RefPtr<nsWindow> self(this);
   if (NS_WARN_IF(!KeymapWrapper::HandleKeyReleaseEvent(self, aEvent))) {
