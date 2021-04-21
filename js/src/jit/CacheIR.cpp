@@ -7610,8 +7610,10 @@ AttachDecision CallIRGenerator::tryAttachObjectIs(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  // TODO(Warp): attach this stub just once to prevent slowdowns for polymorphic
-  // calls.
+  if (!isFirstStub_) {
+    // Attach only once to prevent slowdowns for polymorphic calls.
+    return AttachDecision::NoAction;
+  }
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -8228,8 +8230,10 @@ AttachDecision CallIRGenerator::tryAttachArrayIteratorPrototypeOptimizable(
   // Self-hosted code calls this without any arguments
   MOZ_ASSERT(argc_ == 0);
 
-  // TODO(Warp): attach this stub just once to prevent slowdowns for polymorphic
-  // calls.
+  if (!isFirstStub_) {
+    // Attach only once to prevent slowdowns for polymorphic calls.
+    return AttachDecision::NoAction;
+  }
 
   NativeObject* arrayIteratorProto;
   uint32_t slot;
@@ -8264,8 +8268,10 @@ AttachDecision CallIRGenerator::tryAttachObjectCreate(HandleFunction callee) {
     return AttachDecision::NoAction;
   }
 
-  // TODO(Warp): attach this stub just once to prevent slowdowns for
-  // polymorphic calls.
+  if (!isFirstStub_) {
+    // Attach only once to prevent slowdowns for polymorphic calls.
+    return AttachDecision::NoAction;
+  }
 
   RootedObject proto(cx_, args_[0].toObjectOrNull());
   JSObject* templateObj = ObjectCreateImpl(cx_, proto, TenuredObject);
@@ -8359,8 +8365,10 @@ AttachDecision CallIRGenerator::tryAttachTypedArrayConstructor(
     return AttachDecision::NoAction;
   }
 
-  // TODO(Warp); attach this stub just once to prevent slowdowns for
-  // polymorphic calls.
+  if (!isFirstStub_) {
+    // Attach only once to prevent slowdowns for polymorphic calls.
+    return AttachDecision::NoAction;
+  }
 
   // The first argument must be int32 or a non-proxy object.
   if (!args_[0].isInt32() && !args_[0].isObject()) {
