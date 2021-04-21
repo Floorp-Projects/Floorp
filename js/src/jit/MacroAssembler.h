@@ -440,7 +440,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void Push(FloatRegister reg) PER_SHARED_ARCH;
   void PushBoxed(FloatRegister reg) PER_ARCH;
   void PushFlags() DEFINED_ON(x86_shared);
-  void Push(JS::PropertyKey key, Register scratchReg);
+  void Push(PropertyKey key, Register scratchReg);
   void Push(const Address& addr);
   void Push(TypedOrValueRegister v);
   void Push(const ConstantOrRegister& v);
@@ -860,7 +860,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void moveValue(const ValueOperand& src, const ValueOperand& dest) PER_ARCH;
   void moveValue(const Value& src, const ValueOperand& dest) PER_ARCH;
 
-  void movePropertyKey(JS::PropertyKey key, Register dest);
+  void movePropertyKey(PropertyKey key, Register dest);
 
   // ===============================================================
   // Load instructions

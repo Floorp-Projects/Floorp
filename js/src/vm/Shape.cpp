@@ -1269,7 +1269,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 
 #ifdef DEBUG
 static bool ContainsShape(NativeObject* obj, Shape* shape, JSContext* cx) {
-  JS::PropertyKey key = shape->propertyWithKey().key();
+  PropertyKey key = shape->propertyWithKey().key();
   return obj->lastProperty()->search(cx, key) == shape;
 }
 #endif

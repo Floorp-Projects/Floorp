@@ -2979,7 +2979,7 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
 
   uint32_t slot = uint32_t(tcx->index());
 
-  Maybe<JS::PropertyKey> key;
+  Maybe<PropertyKey> key;
   if (obj->is<NativeObject>()) {
     for (ShapePropertyIter<NoGC> iter(obj->shape()); !iter.done(); iter++) {
       if (iter->hasSlot() && iter->slot() == slot) {
