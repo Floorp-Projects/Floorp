@@ -137,6 +137,8 @@ class ShapeProperty {
  public:
   ShapeProperty(uint8_t attrs, uint32_t slot) : slot_(slot), attrs_(attrs) {}
 
+  // Note: this returns true only for plain data properties with a slot. Returns
+  // false for custom data properties. See JSPROP_CUSTOM_DATA_PROP.
   bool isDataProperty() const {
     return !(attrs_ &
              (JSPROP_GETTER | JSPROP_SETTER | JSPROP_CUSTOM_DATA_PROP));
@@ -1182,16 +1184,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return maybeSlot() == aslot && attrs == aattrs;
   }
 
-  // Note: this returns true only for plain data properties with a slot. Returns
-  // false for custom data properties. See JSPROP_CUSTOM_DATA_PROP.
-  static bool isDataProperty(unsigned attrs) {
-    return !(attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_CUSTOM_DATA_PROP));
-  }
-
-  bool isDataProperty() const {
-    MOZ_ASSERT(!isEmptyShape());
-    return isDataProperty(attrs);
-  }
   uint32_t slot() const {
     MOZ_ASSERT(hasSlot());
     return maybeSlot();
@@ -1522,10 +1514,6 @@ struct StackShape {
         attrs(shape->attrs),
         mutableFlags(shape->mutableFlags) {}
 
-  bool isDataProperty() const {
-    MOZ_ASSERT(!JSID_IS_EMPTY(propid));
-    return Shape::isDataProperty(attrs);
-  }
   bool hasMissingSlot() const { return maybeSlot() == SHAPE_INVALID_SLOT; }
 
   bool isCustomDataProperty() const { return attrs & JSPROP_CUSTOM_DATA_PROP; }
@@ -1559,7 +1547,6 @@ class WrappedPtrOperations<StackShape, Wrapper> {
   }
 
  public:
-  bool isDataProperty() const { return ss().isDataProperty(); }
   bool isCustomDataProperty() const { return ss().isCustomDataProperty(); }
   bool hasMissingSlot() const { return ss().hasMissingSlot(); }
   uint32_t slot() const { return ss().slot(); }
