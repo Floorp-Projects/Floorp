@@ -434,8 +434,7 @@ bool JSFunction::hasNonConfigurablePrototypeDataProperty() {
 
   if (isSelfHostedBuiltin()) {
     // Self-hosted constructors other than bound functions have a
-    // non-configurable .prototype data property. See the MakeConstructible
-    // intrinsic.
+    // non-configurable .prototype data property.
     if (!isConstructor() || isBoundFunction()) {
       return false;
     }
