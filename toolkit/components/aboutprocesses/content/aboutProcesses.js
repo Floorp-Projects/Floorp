@@ -422,6 +422,16 @@ var View = {
       this._removeRow(insertPoint);
     }
   },
+  // If we are not going to display the updated list of rows, drop references
+  // to rows that haven't been inserted in the DOM tree.
+  discardUpdate() {
+    for (let row of this._orderedRows) {
+      if (!row.parentNode) {
+        this._rowsById.delete(row.rowId);
+      }
+    }
+    this._orderedRows = [];
+  },
   insertAfterRow(row) {
     let tbody = row.parentNode;
     let nextRow;
@@ -1152,13 +1162,6 @@ var Control = {
   // The force parameter can force a full update even when the mouse has been
   // moved recently.
   async _updateDisplay(force = false) {
-    if (
-      !force &&
-      Date.now() - this._lastMouseEvent < TIME_BEFORE_SORTING_AGAIN
-    ) {
-      return;
-    }
-
     let counters = State.getCounters();
     let units = await gPromisePrefetchedUnits;
 
@@ -1201,6 +1204,20 @@ var Control = {
         processRow.classList.add("separate-from-previous-process-group");
       }
       previousProcess = process;
+    }
+
+    if (
+      !force &&
+      Date.now() - this._lastMouseEvent < TIME_BEFORE_SORTING_AGAIN
+    ) {
+      // If there has been a recent mouse event, we don't want to reorder,
+      // add or remove rows so that the table content under the mouse pointer
+      // doesn't change when the user might be about to click to close a tab
+      // or kill a process.
+      // We didn't return earlier because updating CPU and memory values is
+      // still valuable.
+      View.discardUpdate();
+      return;
     }
 
     View.commit();
