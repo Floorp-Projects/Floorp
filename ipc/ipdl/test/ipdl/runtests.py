@@ -113,4 +113,7 @@ if __name__ == "__main__":
                 continue
             ipdlargv.append(arg)
 
-    (unittest.TextTestRunner()).run(unittest.TestSuite([oksuite, errorsuite]))
+    test_result = (unittest.TextTestRunner()).run(
+        unittest.TestSuite([oksuite, errorsuite])
+    )
+    sys.exit(not test_result.wasSuccessful())
