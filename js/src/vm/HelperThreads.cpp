@@ -1366,9 +1366,15 @@ GlobalHelperThreadState::GlobalHelperThreadState()
   MOZ_ASSERT(cpuCount > 0, "GetCPUCount() seems broken");
 }
 
+static inline bool dispatchToExternalThreadPool() {
+  static const bool kDispatchToExt =
+      !!getenv("MOZ_JS_DISPATCH_TO_EXTERNAL_THREAD_POOL");
+  return kDispatchToExt;
+}
+
 bool GlobalHelperThreadState::useInternalThreadPool(
     const AutoLockHelperThreadState& locked) {
-  return useInternalThreadPool_;
+  return dispatchToExternalThreadPool() ? useInternalThreadPool_ : true;
 }
 
 void GlobalHelperThreadState::finish() {
