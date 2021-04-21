@@ -6,8 +6,24 @@
 
 "use strict";
 
-import { parse } from "./certDecoder.js";
-import { pemToDER, normalizeToKebabCase } from "./utils.js";
+import { normalizeToKebabCase } from "./components/utils.js";
+
+import "chrome://global/content/certviewer/pvutils_bundle.js";
+import "chrome://global/content/certviewer/asn1js_bundle.js";
+import "chrome://global/content/certviewer/pkijs_bundle.js";
+import "chrome://global/content/certviewer/certDecoder.js";
+
+const { Integer, fromBER } = globalThis.asn1js.asn1js;
+const { Certificate } = globalThis.pkijs.pkijs;
+const { fromBase64, stringToArrayBuffer } = globalThis.pvutils.pvutils;
+const { parse, pemToDER } = globalThis.certDecoderInitializer(
+  Integer,
+  fromBER,
+  Certificate,
+  fromBase64,
+  stringToArrayBuffer,
+  crypto
+);
 
 document.addEventListener("DOMContentLoaded", async e => {
   let url = new URL(document.URL);

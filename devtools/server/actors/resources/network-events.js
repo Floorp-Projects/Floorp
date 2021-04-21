@@ -208,7 +208,8 @@ class NetworkEventWatcher {
       !types.includes("requestHeaders") ||
       !types.includes("requestCookies") ||
       !types.includes("eventTimings") ||
-      !types.includes("responseContent")
+      !types.includes("responseContent") ||
+      !types.includes("securityInfo")
     ) {
       return;
     }
