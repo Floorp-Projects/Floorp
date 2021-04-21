@@ -1204,8 +1204,10 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return !isCustomDataProperty();
   }
 
+ private:
   bool isCustomDataProperty() const { return attrs & JSPROP_CUSTOM_DATA_PROP; }
 
+ public:
   bool isEmptyShape() const {
     MOZ_ASSERT_IF(JSID_IS_EMPTY(propid_), hasMissingSlot());
     return JSID_IS_EMPTY(propid_);
