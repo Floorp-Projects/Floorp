@@ -610,7 +610,7 @@ class LogModuleManager {
         }
         static MarkerSchema MarkerTypeDisplay() {
           using MS = MarkerSchema;
-          MS schema{MS::Location::markerTable};
+          MS schema{MS::Location::markerChart, MS::Location::markerTable};
           schema.SetTableLabel("({marker.data.module}) {marker.data.name}");
           schema.AddKeyLabelFormat("module", "Module", MS::Format::string);
           schema.AddKeyLabelFormat("name", "Name", MS::Format::string);
