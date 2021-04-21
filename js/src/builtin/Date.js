@@ -32,7 +32,7 @@
 //    consistent with cached values, then
 // 2) seeing if the desired formatter is cached and returning it if so, or else
 // 3) create the desired formatter and store and return it.
-var dateTimeFormatCache = new Record();
+var dateTimeFormatCache = new_Record();
 
 
 /**
@@ -54,7 +54,7 @@ function GetCachedFormat(format, required, defaults) {
     if (!IsRuntimeDefaultLocale(dateTimeFormatCache.runtimeDefaultLocale) ||
         !intl_isDefaultTimeZone(dateTimeFormatCache.icuDefaultTimeZone))
     {
-        formatters = dateTimeFormatCache.formatters = new Record();
+        formatters = dateTimeFormatCache.formatters = new_Record();
         dateTimeFormatCache.runtimeDefaultLocale = RuntimeDefaultLocale();
         dateTimeFormatCache.icuDefaultTimeZone = intl_defaultTimeZone();
     } else {

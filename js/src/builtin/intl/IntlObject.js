@@ -47,7 +47,7 @@ function Intl_getCalendarInfo(locales) {
     const localeData = DateTimeFormat.localeData;
 
     // 3. Let localeOpt be a new Record.
-    const localeOpt = new Record();
+    const localeOpt = new_Record();
 
     // 4. Set localeOpt.[[localeMatcher]] to "best fit".
     localeOpt.localeMatcher = "best fit";
@@ -119,7 +119,7 @@ function Intl_getDisplayNames(locales, options) {
     const localeData = DateTimeFormat.localeData;
 
     // 5. Let localeOpt be a new Record.
-    const localeOpt = new Record();
+    const localeOpt = new_Record();
 
     // 6. Set localeOpt.[[localeMatcher]] to "best fit".
     localeOpt.localeMatcher = "best fit";
@@ -203,7 +203,7 @@ function Intl_getLocaleInfo(locales) {
   const DateTimeFormat = dateTimeFormatInternalProperties;
   const localeData = DateTimeFormat.localeData;
 
-  const localeOpt = new Record();
+  const localeOpt = new_Record();
   localeOpt.localeMatcher = "best fit";
 
   const r = ResolveLocale("DateTimeFormat",

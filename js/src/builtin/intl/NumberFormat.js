@@ -413,7 +413,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
 
     // Compute options that impact interpretation of locale.
     // Step 4.
-    var opt = new Record();
+    var opt = new_Record();
     lazyNumberFormatData.opt = opt;
 
     // Steps 5-6.

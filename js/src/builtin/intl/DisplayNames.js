@@ -149,7 +149,7 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
         ThrowTypeError(JSMSG_OBJECT_REQUIRED, options === null ? "null" : typeof options);
 
     // Step 5.
-    var opt = new Record();
+    var opt = new_Record();
     lazyDisplayNamesData.opt = opt;
     lazyDisplayNamesData.mozExtensions = mozExtensions;
 
