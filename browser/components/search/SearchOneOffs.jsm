@@ -1217,7 +1217,10 @@ class SearchOneOffs {
       return;
     }
 
-    if (target.classList.contains("addengine-item")) {
+    if (
+      target.classList.contains("addengine-item") ||
+      target.classList.contains("searchbar-engine-one-off-add-engine")
+    ) {
       // On success, hide the panel and tell event listeners to reshow it to
       // show the new engine.
       SearchUIUtils.addOpenSearchEngine(
@@ -1231,6 +1234,7 @@ class SearchOneOffs {
           }
         })
         .catch(console.error);
+      return;
     }
 
     if (target.classList.contains("search-one-offs-context-open-in-new-tab")) {

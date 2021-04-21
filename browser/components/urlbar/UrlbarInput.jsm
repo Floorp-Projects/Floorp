@@ -3612,25 +3612,6 @@ class AddSearchEngineHelper {
     }
   }
 
-  /**
-   * Adds an OpenSearch engine.
-   * @param {string} uri The engine url.
-   * @param {string} icon The engine icon url.
-   * @returns {Promise} resolved once the addition is complete.
-   * @resolves {boolean} whether the engine was added.
-   * @rejects never
-   */
-  addSearchEngine({ uri, icon }) {
-    return SearchUIUtils.addOpenSearchEngine(
-      uri,
-      icon,
-      this.browsingContext
-    ).catch(ex => {
-      console.error(ex);
-      return false;
-    });
-  }
-
   _sameEngines(engines1, engines2) {
     if (engines1?.length != engines2?.length) {
       return false;
@@ -3725,16 +3706,16 @@ class AddSearchEngineHelper {
     }
   }
 
-  _onCommand(event) {
-    this.addSearchEngine({
-      uri: event.target.getAttribute("uri"),
-      icon: event.target.getAttribute("image"),
-    }).then(added => {
-      if (added) {
-        // Remove the offered engine from the list. The browser updated the
-        // engines list at this point, so we just have to refresh the menu.)
-        this.refreshContextMenu();
-      }
-    });
+  async _onCommand(event) {
+    let added = await SearchUIUtils.addOpenSearchEngine(
+      event.target.getAttribute("uri"),
+      event.target.getAttribute("image"),
+      this.browsingContext
+    ).catch(console.error);
+    if (added) {
+      // Remove the offered engine from the list. The browser updated the
+      // engines list at this point, so we just have to refresh the menu.)
+      this.refreshContextMenu();
+    }
   }
 }
