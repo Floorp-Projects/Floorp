@@ -2038,8 +2038,7 @@ static void UpdateControllerForLayersId(LayersId aLayersId,
 }
 
 ScopedLayerTreeRegistration::ScopedLayerTreeRegistration(
-    APZCTreeManager* aApzctm, LayersId aLayersId, Layer* aRoot,
-    GeckoContentController* aController)
+    LayersId aLayersId, Layer* aRoot, GeckoContentController* aController)
     : mLayersId(aLayersId) {
   EnsureLayerTreeMapReady();
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
