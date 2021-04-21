@@ -16,6 +16,7 @@ add_task(async function() {
   getCM(dbg).setSelection({ line: 0, ch: 0 }, { line: 8, ch: 0 });
 
   rightClickElement(dbg, "CodeMirrorLines");
+  await waitForContextMenu(dbg);
   selectContextMenuItem(dbg, "#node-menu-evaluate-in-console");
 
   await waitForConsolePanelChange(dbg);
