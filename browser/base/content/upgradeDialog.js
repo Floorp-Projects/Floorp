@@ -198,6 +198,9 @@ function onLoad(ready) {
       if (current === 0) {
         document.body.style.minHeight = getComputedStyle(document.body).height;
 
+        // Record which of four primary button was shown for the first screen.
+        recordEvent("show", primary.dataset.l10nId);
+
         // Indicate to SubDialog that we're done sizing the first screen.
         ready();
       }
