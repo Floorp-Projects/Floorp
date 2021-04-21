@@ -39,6 +39,7 @@ import org.mozilla.fenix.FeatureFlags.tabsTrayRewrite
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.experiments.ExperimentBranch
 import org.mozilla.fenix.experiments.Experiments
 import org.mozilla.fenix.ext.asActivity
@@ -74,11 +75,10 @@ open class DefaultToolbarMenu(
 
     private val shouldDeleteDataOnQuit = context.settings().shouldDeleteBrowsingDataOnQuit
     private val shouldUseBottomToolbar = context.settings().shouldUseBottomToolbar
+    private val accountManager = FenixAccountManager(context)
 
     private val selectedSession: TabSessionState?
         get() = store.state.selectedTab
-
-    private val accountManager = context.components.backgroundServices.accountManager
 
     override val menuBuilder by lazy {
         WebExtensionBrowserMenuBuilder(
@@ -534,10 +534,10 @@ open class DefaultToolbarMenu(
     }
 
     private fun getSyncItemTitle(): String {
-        val authenticatedAccount = accountManager.authenticatedAccount() != null
-        val email = accountManager.accountProfile()?.email
+        val authenticatedAccount = accountManager.authenticatedAccount
+        val email = accountManager.accountProfileEmail
 
-        return if (authenticatedAccount && email != null) {
+        return if (authenticatedAccount && !email.isNullOrEmpty()) {
             email
         } else {
             context.getString(R.string.sync_menu_sign_in)
@@ -549,7 +549,7 @@ open class DefaultToolbarMenu(
         R.drawable.ic_synced_tabs,
         primaryTextColor()
     ) {
-        onItemTapped.invoke(ToolbarMenu.Item.SyncAccount)
+        onItemTapped.invoke(ToolbarMenu.Item.SyncAccount(accountManager.signedInToFxa()))
     }
 
     @VisibleForTesting(otherwise = PRIVATE)

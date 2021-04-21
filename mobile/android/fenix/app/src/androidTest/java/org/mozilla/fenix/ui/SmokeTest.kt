@@ -227,13 +227,14 @@ class SmokeTest {
     }
 
     @Test
-    // Verifies the Synced tabs menu opens from a tab's 3 dot menu
+    // Verifies the Synced tabs menu or Sync Sign In menu opens from a tab's 3 dot menu.
+    // The test is assuming we are NOT signed in.
     fun openMainMenuSyncItemTest() {
         if (FeatureFlags.tabsTrayRewrite) {
             homeScreen {
             }.openThreeDotMenu {
             }.openSyncSignIn {
-                verifyAccountSettingsMenuHeader()
+                verifySyncSignInMenuHeader()
             }
         } else {
             homeScreen {

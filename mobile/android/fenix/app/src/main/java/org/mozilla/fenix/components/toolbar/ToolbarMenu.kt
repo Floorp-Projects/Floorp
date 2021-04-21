@@ -23,7 +23,7 @@ interface ToolbarMenu {
         object InstallPwaToHomeScreen : Item()
         object AddToHomeScreen : Item()
         object SyncedTabs : Item()
-        object SyncAccount : Item()
+        data class SyncAccount(val signedIn: Boolean) : Item()
         object AddonsManager : Item()
         object Quit : Item()
         object OpenInApp : Item()

@@ -22,6 +22,7 @@ import org.mozilla.fenix.helpers.click
 class SyncSignInRobot {
 
     fun verifyAccountSettingsMenuHeader() = assertAccountSettingsMenuHeader()
+    fun verifySyncSignInMenuHeader() = assertSyncSignInMenuHeader()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
@@ -42,5 +43,10 @@ private fun assertAccountSettingsMenuHeader() {
     // Replaced with the new string here, the test is assuming we are NOT signed in
     // Sync tests in SettingsSyncTest are still TO-DO, so I'm not sure that we have a test for signing into Sync
     onView(withText(R.string.preferences_account_settings))
+        .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
+}
+
+private fun assertSyncSignInMenuHeader() {
+    onView(withText(R.string.sign_in_with_camera))
         .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 }

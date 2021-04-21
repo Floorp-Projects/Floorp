@@ -572,6 +572,28 @@ class DefaultBrowserToolbarMenuControllerTest {
         }
     }
 
+    @Test
+    fun `WHEN sync sign in menu item is pressed AND account is signed out THEN navigate to sync sign in`() = runBlockingTest {
+        val item = ToolbarMenu.Item.SyncAccount(false)
+        val directions = BrowserFragmentDirections.actionGlobalTurnOnSync()
+
+        val controller = createController(scope = this, store = browserStore)
+        controller.handleToolbarItemInteraction(item)
+
+        verify { navController.navigate(directions, null) }
+    }
+
+    @Test
+    fun `WHEN sync sign in menu item is pressed AND account is signed in THEN navigate to sync sign in`() = runBlockingTest {
+        val item = ToolbarMenu.Item.SyncAccount(true)
+        val directions = BrowserFragmentDirections.actionGlobalAccountSettingsFragment()
+
+        val controller = createController(scope = this, store = browserStore)
+        controller.handleToolbarItemInteraction(item)
+
+        verify { navController.navigate(directions, null) }
+    }
+
     private fun createController(
         scope: CoroutineScope,
         store: BrowserStore,
