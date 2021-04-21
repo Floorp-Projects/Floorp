@@ -674,12 +674,20 @@ var View = {
     return row;
   },
 
-  displayThreadSummaryRow(data, isOpen) {
+  /**
+   * Display a thread summary row with the thread count and a twisty to
+   * open/close the list.
+   *
+   * @param {ProcessDelta} data The data to display.
+   * @return {boolean} Whether the full thread list should be displayed.
+   */
+  displayThreadSummaryRow(data) {
     const cellCount = 2;
     let rowId = "ts:" + data.pid;
     let row = this._getOrCreateRow(rowId, cellCount);
     row.process = data;
     row.className = "thread-summary";
+    let isOpen = false;
 
     // Column: Name
     let nameCell = row.firstChild;
@@ -692,23 +700,22 @@ var View = {
         fluentArgs,
         classes: ["name", "indent"],
       });
-      if (data.threads.length) {
-        let img = document.createElement("span");
-        img.classList.add("twisty");
-        if (data.isOpen) {
-          img.classList.add("open");
-        }
-        nameCell.insertBefore(img, nameCell.firstChild);
-      }
+      let img = document.createElement("span");
+      img.classList.add("twisty");
+      nameCell.insertBefore(img, nameCell.firstChild);
     } else {
       // The only thing that can change is the thread count.
-      let span = nameCell.firstChild.nextSibling;
+      let img = nameCell.firstChild;
+      isOpen = img.classList.contains("open");
+      let span = img.nextSibling;
       document.l10n.setAttributes(span, fluentName, fluentArgs);
     }
 
     // Column: action
     let actionCell = nameCell.nextSibling;
     actionCell.className = "action-icon";
+
+    return isOpen;
   },
 
   displayDOMWindowRow(data, parent) {
@@ -932,7 +939,6 @@ var View = {
 };
 
 var Control = {
-  _openItems: new Set(),
   // The set of all processes reported as "hung" by the process hang monitor.
   //
   // type: Set<ChildID>
@@ -1156,12 +1162,7 @@ var Control = {
     let counters = State.getCounters();
     let units = await gPromisePrefetchedUnits;
 
-    // Reset the _openItems set each time we redraw to avoid keeping forever
-    // references to dead processes.
-    let openItems = this._openItems;
-    this._openItems = new Set();
-
-    // Similarly, we reset `_hungItems`, based on the assumption that the process hang
+    // We reset `_hungItems`, based on the assumption that the process hang
     // monitor will inform us again before the next update. Since the process hang monitor
     // pings its clients about once per second and we update about once per 2 seconds
     // (or more if the mouse moves), we should be ok.
@@ -1173,11 +1174,7 @@ var Control = {
     for (let process of counters) {
       this._sortDOMWindows(process.windows);
 
-      let isOpen = openItems.has(process.pid);
-      process.isOpen = isOpen;
-
-      let isHung = process.childID && hungItems.has(process.childID);
-      process.isHung = isHung;
+      process.isHung = process.childID && hungItems.has(process.childID);
 
       let processRow = View.displayProcessRow(process, units);
 
@@ -1191,9 +1188,7 @@ var Control = {
       }
 
       if (SHOW_THREADS) {
-        View.displayThreadSummaryRow(process, isOpen);
-        if (isOpen) {
-          this._openItems.add(process.pid);
+        if (View.displayThreadSummaryRow(process)) {
           this._showThreads(processRow, units);
         }
       }
@@ -1354,13 +1349,10 @@ var Control = {
     // Otherwise, it's both wasteful and harder to test.
     let units = await gPromisePrefetchedUnits;
     let row = target.parentNode.parentNode;
-    let id = row.process.pid;
     if (target.classList.toggle("open")) {
-      this._openItems.add(id);
       this._showThreads(row, units);
       View.insertAfterRow(row);
     } else {
-      this._openItems.delete(id);
       this._removeSubtree(row);
     }
   },
