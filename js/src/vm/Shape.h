@@ -898,6 +898,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   friend struct StackShape;
   friend class JS::ubi::Concrete<Shape>;
   friend class js::gc::RelocationOverlay;
+  friend class js::ShapeTable;
 
  public:
   // Base shape, stored in the cell header.
@@ -1240,6 +1241,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     mutableFlags = (mutableFlags & ~LINEAR_SEARCHES_MASK) | (count + 1);
   }
 
+ private:
   const GCPtrId& propid() const {
     MOZ_ASSERT(!isEmptyShape());
     MOZ_ASSERT(!JSID_IS_VOID(propid_));
@@ -1254,6 +1256,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return propid();
   }
 
+ public:
   ShapeProperty property() const {
     MOZ_ASSERT(!isEmptyShape());
     return ShapeProperty(attrs, maybeSlot());
@@ -1654,6 +1657,9 @@ using ShapePropertyVector = GCVector<ShapePropertyWithKey, 8>;
 //     PropertyKey key = iter->key();
 //     if (iter->isDataProperty() && iter->enumerable()) { .. }
 //   }
+//
+// Properties are iterated in reverse order (i.e., iteration starts at the most
+// recently added property).
 template <AllowGC allowGC>
 class MOZ_RAII ShapePropertyIter {
  protected:

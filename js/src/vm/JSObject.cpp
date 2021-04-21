@@ -3159,7 +3159,8 @@ JS_FRIEND_API void js::DumpId(jsid id, js::GenericPrinter& out) {
 
 static void DumpProperty(const NativeObject* obj, Shape& shape,
                          js::GenericPrinter& out) {
-  jsid id = shape.propid();
+  ShapePropertyWithKey prop = shape.propertyWithKey();
+  jsid id = prop.key();
   if (JSID_IS_ATOM(id)) {
     id.toAtom()->dumpCharsNoNewline(out);
   } else if (JSID_IS_INT(id)) {
@@ -3169,8 +3170,6 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
   } else {
     out.printf("id %p", reinterpret_cast<void*>(JSID_BITS(id)));
   }
-
-  ShapeProperty prop = shape.property();
 
   if (prop.isDataProperty()) {
     out.printf(": ");

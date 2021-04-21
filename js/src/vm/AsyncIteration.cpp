@@ -523,10 +523,8 @@ static bool AsyncGeneratorFunctionClassFinish(JSContext* cx,
   // Change the "constructor" property to non-writable before adding any other
   // properties, so it's still the last property and can be modified without a
   // dictionary-mode transition.
-  MOZ_ASSERT(StringEqualsAscii(
-      JSID_TO_LINEAR_STRING(
-          asyncGenerator->as<NativeObject>().lastProperty()->propid()),
-      "constructor"));
+  MOZ_ASSERT(asyncGenerator->as<NativeObject>().getLastProperty().key() ==
+             NameToId(cx->names().constructor));
   MOZ_ASSERT(!asyncGenerator->as<NativeObject>().inDictionaryMode());
 
   RootedValue asyncGenFunctionVal(cx, ObjectValue(*asyncGenFunction));
