@@ -1020,3 +1020,13 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/ta
 # Private methods currently need private fields to be enabled as well.
 shell-option(--enable-private-fields) script non262/reflect-parse/classes.js
 shell-option(--enable-private-methods) script non262/reflect-parse/classes.js
+
+# New Private Method tests: Missing early error https://bugzilla.mozilla.org/show_bug.cgi?id=1706755
+skip script test262/language/statements/class/private-static-getter-non-static-setter-early-error.js
+skip script test262/language/statements/class/private-non-static-getter-static-setter-early-error.js
+skip script test262/language/statements/class/private-static-setter-non-static-getter-early-error.js
+skip script test262/language/statements/class/private-non-static-setter-static-getter-early-error.js
+
+# New Ergonomic Brand Check Tests: Failure to find private method https://bugzilla.mozilla.org/show_bug.cgi?id=1706763
+skip script test262/language/expressions/in/private-field-presence-method.js
+skip script test262/language/expressions/in/private-field-presence-method-shadowed.js

@@ -1,12 +1,5 @@
-commit 31126581e7290f9233c29cefd93f66c6ac78f1c9
-Author: Frank Yung-Fong Tang <ftang@google.com>
-Date:   Mon Mar 8 19:31:26 2021 -0800
+commit eca69e2c95972a4c5780ef58fe1f1e53e871b9b1
+Author: Alexey Shvayka <shvaikalesh@gmail.com>
+Date:   Sun Apr 18 04:34:00 2021 +0300
 
-    Change Intl.(ListFormat|DisplayNames|Segmenter) (#2952)
-    
-    * Change Intl.(ListFormat|DisplayNames|Segmenter)
-    
-    Sync from ToObject to GetOptionsObject which throw TypeError
-    while the option is not object
-    
-    * Add null and false to test
+    Test internal methods of module namespace objects with indices

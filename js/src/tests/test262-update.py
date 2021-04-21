@@ -48,6 +48,7 @@ SHELL_OPTIONS = {
     "class-static-fields-private": "--enable-private-fields",
     "class-methods-private": "--enable-private-methods",
     "class-static-methods-private": "--enable-private-methods",
+    "class-fields-private-in": "--enable-ergonomic-brand-checks",
     "top-level-await": "--enable-top-level-await",
 }
 
