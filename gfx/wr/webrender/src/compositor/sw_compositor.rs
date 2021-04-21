@@ -7,7 +7,7 @@ use std::cell::{Cell, UnsafeCell};
 use std::collections::{hash_map::HashMap, VecDeque};
 use std::ops::{Deref, DerefMut, Range};
 use std::ptr;
-use std::sync::atomic::{AtomicIsize, AtomicPtr, AtomicU32, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI8, AtomicIsize, AtomicPtr, AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
 use crate::{
@@ -206,11 +206,12 @@ struct SwCompositeJob {
 
 impl SwCompositeJob {
     /// Process a composite job
-    fn process(&self, band_index: u8) {
+    fn process(&self, band_index: i32) {
+        // Bands are allocated in reverse order, but we want to process them in increasing order.
+        let num_bands = self.num_bands as i32;
+        let band_index = num_bands - 1 - band_index;
         // Calculate the Y extents for the job's band, starting at the current index and spanning to
         // the following index.
-        let band_index = band_index as i32;
-        let num_bands = self.num_bands as i32;
         let band_offset = (self.clipped_dst.size.height * band_index) / num_bands;
         let band_height = (self.clipped_dst.size.height * (band_index + 1)) / num_bands - band_offset;
         // Create a rect that is the intersection of the band with the clipped dest
@@ -321,16 +322,14 @@ impl DerefMut for SwCompositeGraphNodeRef {
 struct SwCompositeGraphNode {
     /// Job to be queued for this graph node once ready.
     job: Option<SwCompositeJob>,
-    /// The maximum number of available bands associated with this job.
-    max_bands: AtomicU8,
     /// The number of remaining bands associated with this job. When this is
     /// non-zero and the node has no more parents left, then the node is being
     /// actively used by the composite thread to process jobs. Once it hits
     /// zero, the owning thread (which brought it to zero) can safely retire
     /// the node as no other thread is using it.
     remaining_bands: AtomicU8,
-    /// The number of bands that have been taken for processing.
-    band_index: AtomicU8,
+    /// The number of bands that are available for processing.
+    available_bands: AtomicI8,
     /// Count of parents this graph node depends on. While this is non-zero the
     /// node must ensure that it is only being actively mutated by the render
     /// thread and otherwise never being accessed by the render thread.
@@ -345,9 +344,8 @@ impl SwCompositeGraphNode {
     fn new() -> SwCompositeGraphNodeRef {
         SwCompositeGraphNodeRef::new(SwCompositeGraphNode {
             job: None,
-            max_bands: AtomicU8::new(0),
             remaining_bands: AtomicU8::new(0),
-            band_index: AtomicU8::new(0),
+            available_bands: AtomicI8::new(0),
             parents: AtomicU32::new(0),
             children: Vec::new(),
         })
@@ -356,9 +354,8 @@ impl SwCompositeGraphNode {
     /// Reset the node's state for a new frame
     fn reset(&mut self) {
         self.job = None;
-        self.max_bands.store(0, Ordering::SeqCst);
         self.remaining_bands.store(0, Ordering::SeqCst);
-        self.band_index.store(0, Ordering::SeqCst);
+        self.available_bands.store(0, Ordering::SeqCst);
         // Initialize parents to 1 as sentinel dependency for uninitialized job
         // to avoid queuing unitialized job as unblocked child dependency.
         self.parents.store(1, Ordering::SeqCst);
@@ -375,24 +372,26 @@ impl SwCompositeGraphNode {
     /// that would block immediate composition.
     fn set_job(&mut self, job: SwCompositeJob, num_bands: u8) -> bool {
         self.job = Some(job);
-        self.max_bands.store(num_bands, Ordering::SeqCst);
         self.remaining_bands.store(num_bands, Ordering::SeqCst);
+        self.available_bands.store(num_bands as _, Ordering::SeqCst);
         // Subtract off the sentinel parent dependency now that job is initialized and check
         // whether there are any remaining parent dependencies to see if this job is ready.
         self.parents.fetch_sub(1, Ordering::SeqCst) <= 1
     }
 
-    fn take_band(&self) -> Option<u8> {
-        let band_index = self.band_index.fetch_add(1, Ordering::SeqCst);
-        if band_index < self.max_bands.load(Ordering::SeqCst) {
-            Some(band_index)
+    /// Take an available band if possible. Also return whether there are no more bands left
+    /// so the caller may properly clean up after.
+    fn take_band(&self) -> (Option<i32>, bool) {
+        let available = self.available_bands.fetch_sub(1, Ordering::SeqCst);
+        if available > 0 {
+            (Some(available as i32 - 1), available == 1)
         } else {
-            None
+            (None, true)
         }
     }
 
     /// Try to take the job from this node for processing and then process it within the current band.
-    fn process_job(&self, band_index: u8) {
+    fn process_job(&self, band_index: i32) {
         if let Some(ref job) = self.job {
             job.process(band_index);
         }
@@ -438,6 +437,8 @@ struct SwCompositeThread {
     /// when the job queue transitions from an empty to non-empty state or from
     /// a non-empty to empty state.
     jobs_available: Condvar,
+    /// Whether all available jobs have been processed.
+    jobs_completed: AtomicBool,
 }
 
 /// The SwCompositeThread struct is shared between the SwComposite thread
@@ -459,6 +460,7 @@ impl SwCompositeThread {
             current_job: AtomicPtr::new(ptr::null_mut()),
             job_count: AtomicIsize::new(0),
             jobs_available: Condvar::new(),
+            jobs_completed: AtomicBool::new(false),
         });
         let result = info.clone();
         let thread_name = "SwComposite";
@@ -494,7 +496,7 @@ impl SwCompositeThread {
     /// Process a job contained in a dependency graph node received from the job queue.
     /// Any child dependencies will be unblocked as appropriate after processing. The
     /// job count will be updated to reflect this.
-    fn process_job(&self, graph_node: &mut SwCompositeGraphNode, band: u8) {
+    fn process_job(&self, graph_node: &mut SwCompositeGraphNode, band: i32) {
         // Do the actual processing of the job contained in this node.
         graph_node.process_job(band);
         // Unblock any child dependencies now that this job has been processed.
@@ -551,7 +553,6 @@ impl SwCompositeThread {
         // in the middle of queuing compositing jobs until we're actually waiting for
         // composition.
         self.job_count.store(1, Ordering::SeqCst);
-        self.current_job.store(ptr::null_mut(), Ordering::SeqCst);
     }
 
     /// Lock the thread for access to the job queue.
@@ -564,6 +565,7 @@ impl SwCompositeThread {
     /// SwComposite thread is waiting for jobs.
     fn send_job(&self, queue: &mut SwCompositeJobQueue, job: SwCompositeGraphNodeRef) {
         if queue.is_empty() {
+            self.jobs_completed.store(false, Ordering::SeqCst);
             self.jobs_available.notify_all();
         }
         queue.push_back(job);
@@ -572,25 +574,28 @@ impl SwCompositeThread {
     /// Try to get a band of work from the currently cached job when available.
     /// If there is a job, but it has no available bands left, null out the job
     /// so that other threads do not bother checking the job.
-    fn try_take_job(&self) -> Option<(&mut SwCompositeGraphNode, u8)> {
+    fn try_take_job(&self) -> Option<(&mut SwCompositeGraphNode, i32)> {
         let current_job_ptr = self.current_job.load(Ordering::SeqCst);
         if let Some(current_job) = unsafe { current_job_ptr.as_mut() } {
-            if let Some(band) = current_job.take_band() {
+            let (band, done) = current_job.take_band();
+            if done {
+                let _ = self.current_job.compare_exchange(
+                    current_job_ptr,
+                    ptr::null_mut(),
+                    Ordering::SeqCst,
+                    Ordering::SeqCst,
+                );
+            }
+            if let Some(band) = band {
                 return Some((current_job, band));
             }
-            let _ = self.current_job.compare_exchange(
-                current_job_ptr,
-                ptr::null_mut(),
-                Ordering::Relaxed,
-                Ordering::Relaxed,
-            );
         }
         return None;
     }
 
     /// Take a job from the queue. Optionally block waiting for jobs to become
     /// available if this is called from the SwComposite thread.
-    fn take_job(&self, wait: bool) -> Option<(&mut SwCompositeGraphNode, u8)> {
+    fn take_job(&self, wait: bool) -> Option<(&mut SwCompositeGraphNode, i32)> {
         // First try checking the cached job outside the scope of the mutex.
         // For jobs that have multiple bands, this allows us to avoid having
         // to lock the mutex multiple times to check the job for each band.
@@ -616,13 +621,15 @@ impl SwCompositeThread {
             // Otherwise, the job queue is currently empty. Depending on the
             // value of the job count we may either wait for jobs to become
             // available or exit.
+            if wait {
+                self.jobs_completed.store(true, Ordering::SeqCst);
+            }
             match self.job_count.load(Ordering::SeqCst) {
                 // If we completed all available jobs, signal completion. If
                 // waiting inside the SwCompositeThread, then block waiting for
                 // more jobs to become available in a new frame. Otherwise,
                 // return immediately.
                 0 => {
-                    self.current_job.store(ptr::null_mut(), Ordering::SeqCst);
                     self.jobs_available.notify_all();
                     if !wait {
                         return None;
@@ -666,7 +673,7 @@ impl SwCompositeThread {
         // to complete processing any in-flight jobs, then bail.
         let mut jobs = self.lock();
         // If the job count is non-zero here, then there are in-flight jobs.
-        while self.job_count.load(Ordering::SeqCst) > 0 {
+        while !self.jobs_completed.load(Ordering::SeqCst) {
             jobs = self.jobs_available.wait(jobs).unwrap();
         }
     }
