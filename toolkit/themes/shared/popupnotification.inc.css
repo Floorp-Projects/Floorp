@@ -48,10 +48,6 @@
   display: none;
 }
 
-.popup-notification-learnmore-link {
-  margin-top: .5em !important;
-}
-
 .popup-notification-button-container {
   display: flex;
 }
@@ -84,6 +80,10 @@
 .popup-notification-dropmarker {
   flex: none;
   padding: 0 15px !important;
+}
+
+.popup-notification-learnmore-link {
+  margin-top: .5em !important;
 }
 } /** END not Proton **/
 
@@ -250,5 +250,6 @@
 
 .popup-notification-learnmore-link {
   text-decoration: underline;
+  margin-block: 0 8px;
 }
 } /*** END proton ***/
