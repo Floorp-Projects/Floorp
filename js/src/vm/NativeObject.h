@@ -648,11 +648,6 @@ class NativeObject : public JSObject {
   void checkShapeConsistency() {}
 #endif
 
-  static Shape* replaceWithNewEquivalentShape(JSContext* cx,
-                                              HandleNativeObject obj,
-                                              Shape* existingShape,
-                                              Shape* newShape = nullptr);
-
   /*
    * Remove the last property of an object, provided that it is safe to do so
    * (the shape and previous shape do not carry conflicting information about
@@ -780,10 +775,7 @@ class NativeObject : public JSObject {
 
   [[nodiscard]] static bool generateOwnShape(JSContext* cx,
                                              HandleNativeObject obj,
-                                             Shape* newShape = nullptr) {
-    return replaceWithNewEquivalentShape(cx, obj, obj->lastProperty(),
-                                         newShape);
-  }
+                                             Shape* newShape = nullptr);
 
   [[nodiscard]] static bool reshapeForShadowedProp(JSContext* cx,
                                                    HandleNativeObject obj);
