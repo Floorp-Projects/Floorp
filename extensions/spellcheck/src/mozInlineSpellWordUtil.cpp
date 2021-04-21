@@ -167,8 +167,8 @@ static nsINode* FindNextNode(nsINode* aNode, const nsINode* aRoot,
 static nsINode* FindNextTextNode(nsINode* aNode, int32_t aOffset,
                                  const nsINode* aRoot) {
   MOZ_ASSERT(aNode, "Null starting node?");
-  NS_ASSERTION(!IsSpellCheckingTextNode(aNode),
-               "FindNextTextNode should start with a non-text node");
+  MOZ_ASSERT(!IsSpellCheckingTextNode(aNode),
+             "FindNextTextNode should start with a non-text node");
 
   nsINode* checkNode;
   // Need to start at the aOffset'th child
@@ -217,7 +217,7 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
   MOZ_ASSERT(aPositionNode, "Null begin node?");
   MOZ_ASSERT(aEndNode, "Null end node?");
 
-  NS_ASSERTION(mRootNode, "Not initialized");
+  MOZ_ASSERT(mRootNode, "Not initialized");
 
   // Find a appropriate root if we are dealing with contenteditable nodes which
   // are in the shadow DOM.
@@ -453,8 +453,8 @@ struct MOZ_STACK_CLASS WordSplitState {
 template <class T>
 CharClass WordSplitState<T>::ClassifyCharacter(int32_t aIndex,
                                                bool aRecurse) const {
-  NS_ASSERTION(aIndex >= 0 && aIndex <= int32_t(mDOMWordText.Length()),
-               "Index out of range");
+  MOZ_ASSERT(aIndex >= 0 && aIndex <= int32_t(mDOMWordText.Length()),
+             "Index out of range");
   if (aIndex == int32_t(mDOMWordText.Length())) return CHAR_CLASS_SEPARATOR;
 
   // this will classify the character, we want to treat "ignorable" characters
@@ -534,9 +534,9 @@ CharClass WordSplitState<T>::ClassifyCharacter(int32_t aIndex,
 // WordSplitState::Advance
 template <class T>
 void WordSplitState<T>::Advance() {
-  NS_ASSERTION(mDOMWordOffset >= 0, "Negative word index");
-  NS_ASSERTION(mDOMWordOffset < (int32_t)mDOMWordText.Length(),
-               "Length beyond end");
+  MOZ_ASSERT(mDOMWordOffset >= 0, "Negative word index");
+  MOZ_ASSERT(mDOMWordOffset < (int32_t)mDOMWordText.Length(),
+             "Length beyond end");
 
   mDOMWordOffset++;
   if (mDOMWordOffset >= (int32_t)mDOMWordText.Length())
@@ -682,7 +682,7 @@ static inline bool IsBRElement(nsINode* aNode) {
 static Maybe<int32_t> FindOffsetOfLastDOMWordSeparatorSequence(
     nsIContent* aContent, int32_t aBeforeOffset) {
   const nsTextFragment* textFragment = aContent->GetText();
-  NS_ASSERTION(textFragment, "Where is our text?");
+  MOZ_ASSERT(textFragment, "Where is our text?");
   int32_t end = std::min(aBeforeOffset, int32_t(textFragment->GetLength()));
 
   if (textFragment->Is2b()) {
@@ -853,9 +853,9 @@ void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(
     bool exit = false;
     if (IsSpellCheckingTextNode(node)) {
       nsIContent* content = static_cast<nsIContent*>(node);
-      NS_ASSERTION(content, "Where is our content?");
+      MOZ_ASSERT(content, "Where is our content?");
       const nsTextFragment* textFragment = content->GetText();
-      NS_ASSERTION(textFragment, "Where is our text?");
+      MOZ_ASSERT(textFragment, "Where is our text?");
       int32_t lastOffsetInNode = textFragment->GetLength();
 
       if (seenSoftEnd) {
@@ -1006,8 +1006,8 @@ bool FindLastNongreaterOffset(const nsTArray<T>& aContainer,
 
 NodeOffset mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(
     int32_t aSoftTextOffset, DOMMapHint aHint) const {
-  NS_ASSERTION(mSoftText.mIsValid,
-               "Soft text must be valid if we're to map out of it");
+  MOZ_ASSERT(mSoftText.mIsValid,
+             "Soft text must be valid if we're to map out of it");
   if (!mSoftText.mIsValid) return NodeOffset(nullptr, -1);
 
   // Find the last mapping, if any, such that mSoftTextOffset <= aSoftTextOffset
@@ -1065,8 +1065,8 @@ int32_t mozInlineSpellWordUtil::FindRealWordContaining(
          aSoftTextOffset, hint.get(), static_cast<int32_t>(aSearchForward)));
   }
 
-  NS_ASSERTION(mSoftText.mIsValid,
-               "Soft text must be valid if we're to map out of it");
+  MOZ_ASSERT(mSoftText.mIsValid,
+             "Soft text must be valid if we're to map out of it");
   if (!mSoftText.mIsValid) return -1;
 
   // Find the last word, if any, such that mSoftTextOffset <= aSoftTextOffset
