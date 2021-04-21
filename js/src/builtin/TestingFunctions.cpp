@@ -4487,21 +4487,17 @@ class ShapeSnapshot {
   struct PropertyInfo {
     HeapPtr<Shape*> propShape;
     HeapPtr<JS::PropertyKey> key;
-    uint32_t slot;
-    uint8_t attrs;
+    ShapeProperty prop;
 
     explicit PropertyInfo(Shape* shape)
-        : propShape(shape),
-          key(shape->propid()),
-          slot(shape->maybeSlot()),
-          attrs(propShape->attributes()) {}
+        : propShape(shape), key(shape->propid()), prop(propShape) {}
     void trace(JSTracer* trc) {
       TraceEdge(trc, &propShape, "propShape");
       TraceEdge(trc, &key, "key");
     }
     bool operator==(const PropertyInfo& other) const {
       return propShape == other.propShape && key == other.key &&
-             slot == other.slot && attrs == other.attrs;
+             prop == other.prop;
     }
     bool operator!=(const PropertyInfo& other) const {
       return !operator==(other);
@@ -4621,32 +4617,33 @@ void ShapeSnapshot::checkSelf(JSContext* cx) const {
     MOZ_RELEASE_ASSERT(shape_->objectFlags() == objectFlags_);
   }
 
-  for (const PropertyInfo& prop : properties_) {
-    Shape* propShape = prop.propShape;
+  for (const PropertyInfo& propInfo : properties_) {
+    Shape* propShape = propInfo.propShape;
+    ShapeProperty prop = propInfo.prop;
 
     // Skip if the Shape no longer matches the snapshotted data. This can
     // only happen for non-configurable dictionary properties.
-    if (PropertyInfo(propShape) != prop) {
+    if (PropertyInfo(propShape) != propInfo) {
       MOZ_RELEASE_ASSERT(propShape->inDictionary());
-      MOZ_RELEASE_ASSERT(!(prop.attrs & JSPROP_PERMANENT));
+      MOZ_RELEASE_ASSERT(!(prop.attributes() & JSPROP_PERMANENT));
       continue;
     }
 
     // Ensure ObjectFlags depending on property information are set if needed.
-    ObjectFlags expectedFlags =
-        GetObjectFlagsForNewProperty(shape_, prop.key, prop.attrs, cx);
+    ObjectFlags expectedFlags = GetObjectFlagsForNewProperty(
+        shape_, propInfo.key, prop.attributes(), cx);
     MOZ_RELEASE_ASSERT(expectedFlags == objectFlags_);
 
     // Accessors must have a PrivateGCThingValue(GetterSetter*) slot value.
-    if (propShape->isAccessorDescriptor()) {
-      Value slotVal = slots_[prop.slot];
+    if (prop.isAccessorProperty()) {
+      Value slotVal = slots_[prop.slot()];
       MOZ_RELEASE_ASSERT(slotVal.isPrivateGCThing());
       MOZ_RELEASE_ASSERT(slotVal.toGCThing()->is<GetterSetter>());
     }
 
     // Data properties must not have a PrivateGCThingValue slot value.
-    if (propShape->isDataProperty()) {
-      Value slotVal = slots_[prop.slot];
+    if (prop.isDataProperty()) {
+      Value slotVal = slots_[prop.slot()];
       MOZ_RELEASE_ASSERT(!slotVal.isPrivateGCThing());
     }
   }
@@ -4683,11 +4680,11 @@ void ShapeSnapshot::check(JSContext* cx, const ShapeSnapshot& later) const {
       MOZ_RELEASE_ASSERT(properties_[i] == later.properties_[i]);
       // Non-configurable accessor properties and non-configurable, non-writable
       // data properties shouldn't have had their slot mutated.
-      Shape* propShape = properties_[i].propShape;
-      if (!propShape->configurable()) {
-        if (propShape->isAccessorDescriptor() ||
-            (propShape->isDataProperty() && !propShape->writable())) {
-          size_t slot = propShape->slot();
+      ShapeProperty prop = properties_[i].prop;
+      if (!prop.configurable()) {
+        if (prop.isAccessorProperty() ||
+            (prop.isDataProperty() && !prop.writable())) {
+          size_t slot = prop.slot();
           MOZ_RELEASE_ASSERT(slots_[slot] == later.slots_[slot]);
         }
       }
