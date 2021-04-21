@@ -1145,7 +1145,6 @@ void NativeObject::freeSlot(JSContext* cx, uint32_t slot) {
 bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
                                HandlePropertyName name, uint32_t slot,
                                unsigned attrs, uint32_t* slotOut) {
-  MOZ_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
   RootedId id(cx, NameToId(name));
   return addProperty(cx, obj, id, slot, attrs, slotOut);
 }
