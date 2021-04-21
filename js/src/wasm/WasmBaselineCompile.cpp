@@ -35,6 +35,7 @@
  *   and surrounding functions; most functions fall into this class) where the
  *   meaning is obvious:
  *
+ *   Old school:
  *   - if there is a single source + destination register, it is called 'r'
  *   - if there is one source and a different destination, they are called 'rs'
  *     and 'rd'
@@ -42,6 +43,10 @@
  *     they are called 'r' and 'rs'
  *   - if there are two source registers and a destination register they are
  *     called 'rs0', 'rs1', and 'rd'.
+ *
+ *   The new thing:
+ *   - what is called 'r' in the old-school naming scheme is increasingly called
+ *     'rsd' in source+dest cases.
  *
  * - Generic temp registers are named /temp[0-9]?/ not /tmp[0-9]?/.
  *
@@ -3135,9 +3140,27 @@ struct StackMapGenerator {
   }
 };
 
+class BaseCompiler;
+
+static void ClzI64(BaseCompiler& bc, RegI64 rsd);
+static void CtzI64(BaseCompiler& bc, RegI64 rsd);
+static void MinF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
+static void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
+static void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
+static void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
+static void ExtendI32_8(BaseCompiler& bc, RegI32 rsd);
+
 // The baseline compiler proper.
 
 class BaseCompiler final : public BaseCompilerInterface {
+  friend void ClzI64(BaseCompiler& bc, RegI64 rsd);
+  friend void CtzI64(BaseCompiler& bc, RegI64 rsd);
+  friend void MinF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
+  friend void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
+  friend void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
+  friend void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
+  friend void ExtendI32_8(BaseCompiler& bc, RegI32 rsd);
+
   using Local = BaseStackFrame::Local;
   using LabelVector = Vector<NonAssertingLabel, 8, SystemAllocPolicy>;
 
@@ -6316,10 +6339,6 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void moveImmRef(intptr_t v, RegRef dest) { masm.movePtr(ImmWord(v), dest); }
 
-  void moveImmF32(float f, RegF32 dest) { masm.loadConstantFloat32(f, dest); }
-
-  void moveImmF64(double d, RegF64 dest) { masm.loadConstantDouble(d, dest); }
-
   [[nodiscard]] bool addInterruptCheck() {
     ScratchI32 tmp(*this);
     fr.loadTlsPtr(tmp);
@@ -8569,6 +8588,18 @@ class BaseCompiler final : public BaseCompilerInterface {
                       ValType compareType);
   void emitCompareRef(Assembler::Condition compareOp, ValType compareType);
 
+  template <typename CompilerType>
+  CompilerType& selectCompiler();
+
+  template <>
+  BaseCompiler& selectCompiler<BaseCompiler>() {
+    return *this;
+  }
+  template <>
+  MacroAssembler& selectCompiler<MacroAssembler>() {
+    return masm;
+  }
+
   template <typename SourceType, typename DestType>
   void emitUnop(void (*op)(MacroAssembler& masm, SourceType rs, DestType rd));
 
@@ -8580,8 +8611,11 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitUnop(ImmType immediate,
                 void (*op)(MacroAssembler&, ImmType, SourceType, DestType));
 
-  template <typename RhsType, typename LhsDestType>
-  void emitBinop(void (*op)(MacroAssembler& masm, RhsType src,
+  template <typename CompilerType, typename RegType>
+  void emitUnop(void (*op)(CompilerType& compiler, RegType rsd));
+
+  template <typename CompilerType, typename RhsType, typename LhsDestType>
+  void emitBinop(void (*op)(CompilerType& masm, RhsType src,
                             LhsDestType srcDest));
 
   template <typename RhsDestType, typename LhsType>
@@ -8607,18 +8641,12 @@ class BaseCompiler final : public BaseCompilerInterface {
                  void (*op)(MacroAssembler&, ImmType, RhsType, LhsDestType,
                             TempType1 temp1, TempType2 temp2));
 
-  void emitAddI32();
-  void emitAddI64();
-  void emitAddF64();
-  void emitAddF32();
-  void emitSubtractI32();
-  void emitSubtractI64();
-  void emitSubtractF32();
-  void emitSubtractF64();
+  template <typename RegType, typename ImmType>
+  void emitBinop(void (*op)(MacroAssembler& masm, RegType rs, RegType rd),
+                 void (*opConst)(MacroAssembler& masm, ImmType c, RegType rd));
+
   void emitMultiplyI32();
   void emitMultiplyI64();
-  void emitMultiplyF32();
-  void emitMultiplyF64();
   void emitQuotientI32();
   void emitQuotientU32();
   void emitRemainderI32();
@@ -8632,20 +8660,6 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitRemainderI64();
   void emitRemainderU64();
 #endif
-  void emitDivideF32();
-  void emitDivideF64();
-  void emitMinF32();
-  void emitMaxF32();
-  void emitMinF64();
-  void emitMaxF64();
-  void emitCopysignF32();
-  void emitCopysignF64();
-  void emitOrI32();
-  void emitOrI64();
-  void emitAndI32();
-  void emitAndI64();
-  void emitXorI32();
-  void emitXorI64();
   void emitShlI32();
   void emitShlI64();
   void emitShrI32();
@@ -8658,18 +8672,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitRotlI64();
   void emitEqzI32();
   void emitEqzI64();
-  void emitClzI32();
-  void emitClzI64();
-  void emitCtzI32();
-  void emitCtzI64();
   void emitPopcntI32();
   void emitPopcntI64();
-  void emitAbsF32();
-  void emitAbsF64();
-  void emitNegateF32();
-  void emitNegateF64();
-  void emitSqrtF32();
-  void emitSqrtF64();
   template <TruncFlags flags>
   [[nodiscard]] bool emitTruncateF32ToI32();
   template <TruncFlags flags>
@@ -8685,33 +8689,19 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitTruncateF64ToI64();
 #endif
   void emitWrapI64ToI32();
-  void emitExtendI32_8();
-  void emitExtendI32_16();
   void emitExtendI64_8();
   void emitExtendI64_16();
   void emitExtendI64_32();
   void emitExtendI32ToI64();
   void emitExtendU32ToI64();
-  void emitReinterpretF32AsI32();
-  void emitReinterpretF64AsI64();
-  void emitConvertF64ToF32();
-  void emitConvertI32ToF32();
-  void emitConvertU32ToF32();
-  void emitConvertF32ToF64();
-  void emitConvertI32ToF64();
-  void emitConvertU32ToF64();
 #ifdef RABALDR_I64_TO_FLOAT_CALLOUT
   [[nodiscard]] bool emitConvertInt64ToFloatingCallout(SymbolicAddress callee,
                                                        ValType operandType,
                                                        ValType resultType);
 #else
-  void emitConvertI64ToF32();
   void emitConvertU64ToF32();
-  void emitConvertI64ToF64();
   void emitConvertU64ToF64();
 #endif
-  void emitReinterpretI32AsF32();
-  void emitReinterpretI64AsF64();
   void emitRound(RoundingMode roundingMode, ValType operandType);
   [[nodiscard]] bool emitInstanceCall(uint32_t lineOrBytecode,
                                       const SymbolicAddressSignature& builtin,
@@ -8851,6 +8841,13 @@ void BaseCompiler::emitUnop(void (*op)(MacroAssembler& masm, SourceType rs,
   push(rd);
 }
 
+template <typename CompilerType, typename RegType>
+void BaseCompiler::emitUnop(void (*op)(CompilerType& compiler, RegType rsd)) {
+  RegType rsd = pop<RegType>();
+  op(selectCompiler<CompilerType>(), rsd);
+  push(rsd);
+}
+
 template <typename SourceType, typename DestType, typename TempType>
 void BaseCompiler::emitUnop(void (*op)(MacroAssembler& masm, SourceType rs,
                                        DestType rd, TempType temp)) {
@@ -8874,12 +8871,12 @@ void BaseCompiler::emitUnop(ImmType immediate,
   push(rd);
 }
 
-template <typename RhsType, typename LhsDestType>
-void BaseCompiler::emitBinop(void (*op)(MacroAssembler& masm, RhsType src,
+template <typename CompilerType, typename RhsType, typename LhsDestType>
+void BaseCompiler::emitBinop(void (*op)(CompilerType& masm, RhsType src,
                                         LhsDestType srcDest)) {
   RhsType rs = pop<RhsType>();
   LhsDestType rsd = pop<LhsDestType>();
-  op(masm, rs, rsd);
+  op(selectCompiler<CompilerType>(), rs, rsd);
   free(rs);
   push(rsd);
 }
@@ -8950,96 +8947,324 @@ void BaseCompiler::emitBinop(ImmType immediate,
   push(rsd);
 }
 
-void BaseCompiler::emitAddI32() {
-  int32_t c;
+template <typename RegType, typename ImmType>
+void BaseCompiler::emitBinop(void (*op)(MacroAssembler& masm, RegType rs,
+                                        RegType rsd),
+                             void (*opConst)(MacroAssembler& masm, ImmType c,
+                                             RegType rsd)) {
+  ImmType c;
   if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.add32(Imm32(c), r);
-    pushI32(r);
+    RegType rsd = pop<RegType>();
+    opConst(masm, c, rsd);
+    push(rsd);
   } else {
-    RegI32 r, rs;
-    pop2xI32(&r, &rs);
-    masm.add32(rs, r);
-    freeI32(rs);
-    pushI32(r);
+    RegType rs = pop<RegType>();
+    RegType rsd = pop<RegType>();
+    op(masm, rs, rsd);
+    free(rs);
+    push(rsd);
   }
 }
 
-void BaseCompiler::emitAddI64() {
-  int64_t c;
-  if (popConst(&c)) {
-    RegI64 r = popI64();
-    masm.add64(Imm64(c), r);
-    pushI64(r);
-  } else {
-    RegI64 r, rs;
-    pop2xI64(&r, &rs);
-    masm.add64(rs, r);
-    freeI64(rs);
-    pushI64(r);
+static void AddI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.add32(rs, rsd);
+}
+
+static void AddImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.add32(Imm32(c), rsd);
+}
+
+static void SubI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.sub32(rs, rsd);
+}
+
+static void SubImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.sub32(Imm32(c), rsd);
+}
+
+static void OrI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.or32(rs, rsd);
+}
+
+static void OrImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.or32(Imm32(c), rsd);
+}
+
+static void AndI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.and32(rs, rsd);
+}
+
+static void AndImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.and32(Imm32(c), rsd);
+}
+
+static void XorI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.xor32(rs, rsd);
+}
+
+static void XorImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.xor32(Imm32(c), rsd);
+}
+
+static void ClzI32(MacroAssembler& masm, RegI32 rsd) {
+  masm.clz32(rsd, rsd, IsKnownNotZero(false));
+}
+
+static void CtzI32(MacroAssembler& masm, RegI32 rsd) {
+  masm.ctz32(rsd, rsd, IsKnownNotZero(false));
+}
+
+static void AddI64(MacroAssembler& masm, RegI64 rs, RegI64 rsd) {
+  masm.add64(rs, rsd);
+}
+
+static void AddImmI64(MacroAssembler& masm, int64_t c, RegI64 rsd) {
+  masm.add64(Imm64(c), rsd);
+}
+
+static void SubI64(MacroAssembler& masm, RegI64 rs, RegI64 rsd) {
+  masm.sub64(rs, rsd);
+}
+
+static void SubImmI64(MacroAssembler& masm, int64_t c, RegI64 rsd) {
+  masm.sub64(Imm64(c), rsd);
+}
+
+static void OrI64(MacroAssembler& masm, RegI64 rs, RegI64 rsd) {
+  masm.or64(rs, rsd);
+}
+
+static void OrImmI64(MacroAssembler& masm, int64_t c, RegI64 rsd) {
+  masm.or64(Imm64(c), rsd);
+}
+
+static void AndI64(MacroAssembler& masm, RegI64 rs, RegI64 rsd) {
+  masm.and64(rs, rsd);
+}
+
+static void AndImmI64(MacroAssembler& masm, int64_t c, RegI64 rsd) {
+  masm.and64(Imm64(c), rsd);
+}
+
+static void XorI64(MacroAssembler& masm, RegI64 rs, RegI64 rsd) {
+  masm.xor64(rs, rsd);
+}
+
+static void XorImmI64(MacroAssembler& masm, int64_t c, RegI64 rsd) {
+  masm.xor64(Imm64(c), rsd);
+}
+
+static void ClzI64(BaseCompiler& bc, RegI64 rsd) {
+  bc.masm.clz64(rsd, bc.lowPart(rsd));
+  bc.maybeClearHighPart(rsd);
+}
+
+static void CtzI64(BaseCompiler& bc, RegI64 rsd) {
+  bc.masm.ctz64(rsd, bc.lowPart(rsd));
+  bc.maybeClearHighPart(rsd);
+}
+
+static void AddF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd) {
+  masm.addDouble(rs, rsd);
+}
+
+static void SubF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd) {
+  masm.subDouble(rs, rsd);
+}
+
+static void MulF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd) {
+  masm.mulDouble(rs, rsd);
+}
+
+static void DivF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd) {
+  masm.divDouble(rs, rsd);
+}
+
+static void MinF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd) {
+  // Convert signaling NaN to quiet NaNs.
+  //
+  // TODO / OPTIMIZE (bug 1316824): see comment in MinF32.
+#ifdef RABALDR_SCRATCH_F64
+  ScratchF64 zero(bc.ra);
+#else
+  ScratchF64 zero(bc.masm);
+#endif
+  bc.masm.loadConstantDouble(0, zero);
+  bc.masm.subDouble(zero, rsd);
+  bc.masm.subDouble(zero, rs);
+  bc.masm.minDouble(rs, rsd, HandleNaNSpecially(true));
+}
+
+static void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd) {
+  // Convert signaling NaN to quiet NaNs.
+  //
+  // TODO / OPTIMIZE (bug 1316824): see comment in MinF32.
+#ifdef RABALDR_SCRATCH_F64
+  ScratchF64 zero(bc.ra);
+#else
+  ScratchF64 zero(bc.masm);
+#endif
+  bc.masm.loadConstantDouble(0, zero);
+  bc.masm.subDouble(zero, rsd);
+  bc.masm.subDouble(zero, rs);
+  bc.masm.maxDouble(rs, rsd, HandleNaNSpecially(true));
+}
+
+static void CopysignF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd,
+                        RegI64 temp0, RegI64 temp1) {
+  masm.moveDoubleToGPR64(rsd, temp0);
+  masm.moveDoubleToGPR64(rs, temp1);
+  masm.and64(Imm64(INT64_MAX), temp0);
+  masm.and64(Imm64(INT64_MIN), temp1);
+  masm.or64(temp1, temp0);
+  masm.moveGPR64ToDouble(temp0, rsd);
+}
+
+static void AbsF64(MacroAssembler& masm, RegF64 rsd) {
+  masm.absDouble(rsd, rsd);
+}
+
+static void NegateF64(MacroAssembler& masm, RegF64 rsd) {
+  masm.negateDouble(rsd);
+}
+
+static void SqrtF64(MacroAssembler& masm, RegF64 rsd) {
+  masm.sqrtDouble(rsd, rsd);
+}
+
+static void AddF32(MacroAssembler& masm, RegF32 rs, RegF32 rsd) {
+  masm.addFloat32(rs, rsd);
+}
+
+static void SubF32(MacroAssembler& masm, RegF32 rs, RegF32 rsd) {
+  masm.subFloat32(rs, rsd);
+}
+
+static void MulF32(MacroAssembler& masm, RegF32 rs, RegF32 rsd) {
+  masm.mulFloat32(rs, rsd);
+}
+
+static void DivF32(MacroAssembler& masm, RegF32 rs, RegF32 rsd) {
+  masm.divFloat32(rs, rsd);
+}
+
+static void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd) {
+  // Convert signaling NaN to quiet NaNs.
+  //
+  // TODO / OPTIMIZE (bug 1316824): Don't do this if one of the operands
+  // is known to be a constant.
+#ifdef RABALDR_SCRATCH_F32
+  ScratchF32 zero(bc.ra);
+#else
+  ScratchF32 zero(bc.masm);
+#endif
+  bc.masm.loadConstantFloat32(0.f, zero);
+  bc.masm.subFloat32(zero, rsd);
+  bc.masm.subFloat32(zero, rs);
+  bc.masm.minFloat32(rs, rsd, HandleNaNSpecially(true));
+}
+
+static void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd) {
+  // Convert signaling NaN to quiet NaNs.
+  //
+  // TODO / OPTIMIZE (bug 1316824): see comment in MinF32.
+#ifdef RABALDR_SCRATCH_F32
+  ScratchF32 zero(bc.ra);
+#else
+  ScratchF32 zero(bc.masm);
+#endif
+  bc.masm.loadConstantFloat32(0.f, zero);
+  bc.masm.subFloat32(zero, rsd);
+  bc.masm.subFloat32(zero, rs);
+  bc.masm.maxFloat32(rs, rsd, HandleNaNSpecially(true));
+}
+
+static void CopysignF32(MacroAssembler& masm, RegF32 rs, RegF32 rsd,
+                        RegI32 temp0, RegI32 temp1) {
+  masm.moveFloat32ToGPR(rsd, temp0);
+  masm.moveFloat32ToGPR(rs, temp1);
+  masm.and32(Imm32(INT32_MAX), temp0);
+  masm.and32(Imm32(INT32_MIN), temp1);
+  masm.or32(temp1, temp0);
+  masm.moveGPRToFloat32(temp0, rsd);
+}
+
+static void AbsF32(MacroAssembler& masm, RegF32 rsd) {
+  masm.absFloat32(rsd, rsd);
+}
+
+static void NegateF32(MacroAssembler& masm, RegF32 rsd) {
+  masm.negateFloat(rsd);
+}
+
+static void SqrtF32(MacroAssembler& masm, RegF32 rsd) {
+  masm.sqrtFloat32(rsd, rsd);
+}
+
+#ifndef RABALDR_I64_TO_FLOAT_CALLOUT
+static void ConvertI64ToF32(MacroAssembler& masm, RegI64 rs, RegF32 rd) {
+  masm.convertInt64ToFloat32(rs, rd);
+}
+
+static void ConvertI64ToF64(MacroAssembler& masm, RegI64 rs, RegF64 rd) {
+  masm.convertInt64ToDouble(rs, rd);
+}
+#endif
+
+static void ReinterpretF32AsI32(MacroAssembler& masm, RegF32 rs, RegI32 rd) {
+  masm.moveFloat32ToGPR(rs, rd);
+}
+
+static void ReinterpretF64AsI64(MacroAssembler& masm, RegF64 rs, RegI64 rd) {
+  masm.moveDoubleToGPR64(rs, rd);
+}
+
+static void ConvertF64ToF32(MacroAssembler& masm, RegF64 rs, RegF32 rd) {
+  masm.convertDoubleToFloat32(rs, rd);
+}
+
+static void ConvertI32ToF32(MacroAssembler& masm, RegI32 rs, RegF32 rd) {
+  masm.convertInt32ToFloat32(rs, rd);
+}
+
+static void ConvertU32ToF32(MacroAssembler& masm, RegI32 rs, RegF32 rd) {
+  masm.convertUInt32ToFloat32(rs, rd);
+}
+
+static void ConvertF32ToF64(MacroAssembler& masm, RegF32 rs, RegF64 rd) {
+  masm.convertFloat32ToDouble(rs, rd);
+}
+
+static void ConvertI32ToF64(MacroAssembler& masm, RegI32 rs, RegF64 rd) {
+  masm.convertInt32ToDouble(rs, rd);
+}
+
+static void ConvertU32ToF64(MacroAssembler& masm, RegI32 rs, RegF64 rd) {
+  masm.convertUInt32ToDouble(rs, rd);
+}
+
+static void ReinterpretI32AsF32(MacroAssembler& masm, RegI32 rs, RegF32 rd) {
+  masm.moveGPRToFloat32(rs, rd);
+}
+
+static void ReinterpretI64AsF64(MacroAssembler& masm, RegI64 rs, RegF64 rd) {
+  masm.moveGPR64ToDouble(rs, rd);
+}
+
+static void ExtendI32_8(BaseCompiler& bc, RegI32 rsd) {
+#ifdef JS_CODEGEN_X86
+  if (!bc.ra.isSingleByteI32(rsd)) {
+    ScratchI8 scratch(bc.ra);
+    bc.masm.move32(rsd, scratch);
+    bc.masm.move8SignExtend(scratch, rsd);
+    return;
   }
+#endif
+  bc.masm.move8SignExtend(rsd, rsd);
 }
 
-void BaseCompiler::emitAddF64() {
-  RegF64 r, rs;
-  pop2xF64(&r, &rs);
-  masm.addDouble(rs, r);
-  freeF64(rs);
-  pushF64(r);
-}
-
-void BaseCompiler::emitAddF32() {
-  RegF32 r, rs;
-  pop2xF32(&r, &rs);
-  masm.addFloat32(rs, r);
-  freeF32(rs);
-  pushF32(r);
-}
-
-void BaseCompiler::emitSubtractI32() {
-  int32_t c;
-  if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.sub32(Imm32(c), r);
-    pushI32(r);
-  } else {
-    RegI32 r, rs;
-    pop2xI32(&r, &rs);
-    masm.sub32(rs, r);
-    freeI32(rs);
-    pushI32(r);
-  }
-}
-
-void BaseCompiler::emitSubtractI64() {
-  int64_t c;
-  if (popConst(&c)) {
-    RegI64 r = popI64();
-    masm.sub64(Imm64(c), r);
-    pushI64(r);
-  } else {
-    RegI64 r, rs;
-    pop2xI64(&r, &rs);
-    masm.sub64(rs, r);
-    freeI64(rs);
-    pushI64(r);
-  }
-}
-
-void BaseCompiler::emitSubtractF32() {
-  RegF32 r, rs;
-  pop2xF32(&r, &rs);
-  masm.subFloat32(rs, r);
-  freeF32(rs);
-  pushF32(r);
-}
-
-void BaseCompiler::emitSubtractF64() {
-  RegF64 r, rs;
-  pop2xF64(&r, &rs);
-  masm.subDouble(rs, r);
-  freeF64(rs);
-  pushF64(r);
+static void ExtendI32_16(MacroAssembler& masm, RegI32 rsd) {
+  masm.move16SignExtend(rsd, rsd);
 }
 
 void BaseCompiler::emitMultiplyI32() {
@@ -9060,22 +9285,6 @@ void BaseCompiler::emitMultiplyI64() {
   maybeFree(temp);
   freeI64(rs);
   pushI64(r);
-}
-
-void BaseCompiler::emitMultiplyF32() {
-  RegF32 r, rs;
-  pop2xF32(&r, &rs);
-  masm.mulFloat32(rs, r);
-  freeF32(rs);
-  pushF32(r);
-}
-
-void BaseCompiler::emitMultiplyF64() {
-  RegF64 r, rs;
-  pop2xF64(&r, &rs);
-  masm.mulDouble(rs, r);
-  freeF64(rs);
-  pushF64(r);
 }
 
 void BaseCompiler::emitQuotientI32() {
@@ -9316,207 +9525,6 @@ void BaseCompiler::emitRemainderU64() {
 }
 #endif  // RABALDR_INT_DIV_I64_CALLOUT
 
-void BaseCompiler::emitDivideF32() {
-  RegF32 r, rs;
-  pop2xF32(&r, &rs);
-  masm.divFloat32(rs, r);
-  freeF32(rs);
-  pushF32(r);
-}
-
-void BaseCompiler::emitDivideF64() {
-  RegF64 r, rs;
-  pop2xF64(&r, &rs);
-  masm.divDouble(rs, r);
-  freeF64(rs);
-  pushF64(r);
-}
-
-void BaseCompiler::emitMinF32() {
-  RegF32 r, rs;
-  pop2xF32(&r, &rs);
-  // Convert signaling NaN to quiet NaNs.
-  //
-  // TODO / OPTIMIZE (bug 1316824): Don't do this if one of the operands
-  // is known to be a constant.
-  ScratchF32 zero(*this);
-  moveImmF32(0.f, zero);
-  masm.subFloat32(zero, r);
-  masm.subFloat32(zero, rs);
-  masm.minFloat32(rs, r, HandleNaNSpecially(true));
-  freeF32(rs);
-  pushF32(r);
-}
-
-void BaseCompiler::emitMaxF32() {
-  RegF32 r, rs;
-  pop2xF32(&r, &rs);
-  // Convert signaling NaN to quiet NaNs.
-  //
-  // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
-  ScratchF32 zero(*this);
-  moveImmF32(0.f, zero);
-  masm.subFloat32(zero, r);
-  masm.subFloat32(zero, rs);
-  masm.maxFloat32(rs, r, HandleNaNSpecially(true));
-  freeF32(rs);
-  pushF32(r);
-}
-
-void BaseCompiler::emitMinF64() {
-  RegF64 r, rs;
-  pop2xF64(&r, &rs);
-  // Convert signaling NaN to quiet NaNs.
-  //
-  // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
-  ScratchF64 zero(*this);
-  moveImmF64(0, zero);
-  masm.subDouble(zero, r);
-  masm.subDouble(zero, rs);
-  masm.minDouble(rs, r, HandleNaNSpecially(true));
-  freeF64(rs);
-  pushF64(r);
-}
-
-void BaseCompiler::emitMaxF64() {
-  RegF64 r, rs;
-  pop2xF64(&r, &rs);
-  // Convert signaling NaN to quiet NaNs.
-  //
-  // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
-  ScratchF64 zero(*this);
-  moveImmF64(0, zero);
-  masm.subDouble(zero, r);
-  masm.subDouble(zero, rs);
-  masm.maxDouble(rs, r, HandleNaNSpecially(true));
-  freeF64(rs);
-  pushF64(r);
-}
-
-void BaseCompiler::emitCopysignF32() {
-  RegF32 r, rs;
-  pop2xF32(&r, &rs);
-  RegI32 temp0 = needI32();
-  RegI32 temp1 = needI32();
-  masm.moveFloat32ToGPR(r, temp0);
-  masm.moveFloat32ToGPR(rs, temp1);
-  masm.and32(Imm32(INT32_MAX), temp0);
-  masm.and32(Imm32(INT32_MIN), temp1);
-  masm.or32(temp1, temp0);
-  masm.moveGPRToFloat32(temp0, r);
-  freeI32(temp0);
-  freeI32(temp1);
-  freeF32(rs);
-  pushF32(r);
-}
-
-void BaseCompiler::emitCopysignF64() {
-  RegF64 r, rs;
-  pop2xF64(&r, &rs);
-  RegI64 temp0 = needI64();
-  RegI64 temp1 = needI64();
-  masm.moveDoubleToGPR64(r, temp0);
-  masm.moveDoubleToGPR64(rs, temp1);
-  masm.and64(Imm64(INT64_MAX), temp0);
-  masm.and64(Imm64(INT64_MIN), temp1);
-  masm.or64(temp1, temp0);
-  masm.moveGPR64ToDouble(temp0, r);
-  freeI64(temp0);
-  freeI64(temp1);
-  freeF64(rs);
-  pushF64(r);
-}
-
-void BaseCompiler::emitOrI32() {
-  int32_t c;
-  if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.or32(Imm32(c), r);
-    pushI32(r);
-  } else {
-    RegI32 r, rs;
-    pop2xI32(&r, &rs);
-    masm.or32(rs, r);
-    freeI32(rs);
-    pushI32(r);
-  }
-}
-
-void BaseCompiler::emitOrI64() {
-  int64_t c;
-  if (popConst(&c)) {
-    RegI64 r = popI64();
-    masm.or64(Imm64(c), r);
-    pushI64(r);
-  } else {
-    RegI64 r, rs;
-    pop2xI64(&r, &rs);
-    masm.or64(rs, r);
-    freeI64(rs);
-    pushI64(r);
-  }
-}
-
-void BaseCompiler::emitAndI32() {
-  int32_t c;
-  if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.and32(Imm32(c), r);
-    pushI32(r);
-  } else {
-    RegI32 r, rs;
-    pop2xI32(&r, &rs);
-    masm.and32(rs, r);
-    freeI32(rs);
-    pushI32(r);
-  }
-}
-
-void BaseCompiler::emitAndI64() {
-  int64_t c;
-  if (popConst(&c)) {
-    RegI64 r = popI64();
-    masm.and64(Imm64(c), r);
-    pushI64(r);
-  } else {
-    RegI64 r, rs;
-    pop2xI64(&r, &rs);
-    masm.and64(rs, r);
-    freeI64(rs);
-    pushI64(r);
-  }
-}
-
-void BaseCompiler::emitXorI32() {
-  int32_t c;
-  if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.xor32(Imm32(c), r);
-    pushI32(r);
-  } else {
-    RegI32 r, rs;
-    pop2xI32(&r, &rs);
-    masm.xor32(rs, r);
-    freeI32(rs);
-    pushI32(r);
-  }
-}
-
-void BaseCompiler::emitXorI64() {
-  int64_t c;
-  if (popConst(&c)) {
-    RegI64 r = popI64();
-    masm.xor64(Imm64(c), r);
-    pushI64(r);
-  } else {
-    RegI64 r, rs;
-    pop2xI64(&r, &rs);
-    masm.xor64(rs, r);
-    freeI64(rs);
-    pushI64(r);
-  }
-}
-
 void BaseCompiler::emitShlI32() {
   int32_t c;
   if (popConst(&c)) {
@@ -9696,32 +9704,6 @@ void BaseCompiler::emitEqzI64() {
   pushI32(rd);
 }
 
-void BaseCompiler::emitClzI32() {
-  RegI32 r = popI32();
-  masm.clz32(r, r, IsKnownNotZero(false));
-  pushI32(r);
-}
-
-void BaseCompiler::emitClzI64() {
-  RegI64 r = popI64();
-  masm.clz64(r, lowPart(r));
-  maybeClearHighPart(r);
-  pushI64(r);
-}
-
-void BaseCompiler::emitCtzI32() {
-  RegI32 r = popI32();
-  masm.ctz32(r, r, IsKnownNotZero(false));
-  pushI32(r);
-}
-
-void BaseCompiler::emitCtzI64() {
-  RegI64 r = popI64();
-  masm.ctz64(r, lowPart(r));
-  maybeClearHighPart(r);
-  pushI64(r);
-}
-
 void BaseCompiler::emitPopcntI32() {
   RegI32 r = popI32();
   RegI32 temp = needPopcnt32Temp();
@@ -9736,42 +9718,6 @@ void BaseCompiler::emitPopcntI64() {
   masm.popcnt64(r, r, temp);
   maybeFree(temp);
   pushI64(r);
-}
-
-void BaseCompiler::emitAbsF32() {
-  RegF32 r = popF32();
-  masm.absFloat32(r, r);
-  pushF32(r);
-}
-
-void BaseCompiler::emitAbsF64() {
-  RegF64 r = popF64();
-  masm.absDouble(r, r);
-  pushF64(r);
-}
-
-void BaseCompiler::emitNegateF32() {
-  RegF32 r = popF32();
-  masm.negateFloat(r);
-  pushF32(r);
-}
-
-void BaseCompiler::emitNegateF64() {
-  RegF64 r = popF64();
-  masm.negateDouble(r);
-  pushF64(r);
-}
-
-void BaseCompiler::emitSqrtF32() {
-  RegF32 r = popF32();
-  masm.sqrtFloat32(r, r);
-  pushF32(r);
-}
-
-void BaseCompiler::emitSqrtF64() {
-  RegF64 r = popF64();
-  masm.sqrtDouble(r, r);
-  pushF64(r);
 }
 
 template <TruncFlags flags>
@@ -9836,27 +9782,6 @@ void BaseCompiler::emitWrapI64ToI32() {
   pushI32(rd);
 }
 
-void BaseCompiler::emitExtendI32_8() {
-  RegI32 r = popI32();
-#ifdef JS_CODEGEN_X86
-  if (!ra.isSingleByteI32(r)) {
-    ScratchI8 scratch(*this);
-    moveI32(r, scratch);
-    masm.move8SignExtend(scratch, r);
-    pushI32(r);
-    return;
-  }
-#endif
-  masm.move8SignExtend(r, r);
-  pushI32(r);
-}
-
-void BaseCompiler::emitExtendI32_16() {
-  RegI32 r = popI32();
-  masm.move16SignExtend(r, r);
-  pushI32(r);
-}
-
 void BaseCompiler::emitExtendI64_8() {
   RegI64 r;
   popI64ForSignExtendI64(&r);
@@ -9892,55 +9817,7 @@ void BaseCompiler::emitExtendU32ToI64() {
   pushI64(rd);
 }
 
-void BaseCompiler::emitReinterpretF32AsI32() {
-  RegF32 rs = popF32();
-  RegI32 rd = needI32();
-  masm.moveFloat32ToGPR(rs, rd);
-  freeF32(rs);
-  pushI32(rd);
-}
-
-void BaseCompiler::emitReinterpretF64AsI64() {
-  RegF64 rs = popF64();
-  RegI64 rd = needI64();
-  masm.moveDoubleToGPR64(rs, rd);
-  freeF64(rs);
-  pushI64(rd);
-}
-
-void BaseCompiler::emitConvertF64ToF32() {
-  RegF64 rs = popF64();
-  RegF32 rd = needF32();
-  masm.convertDoubleToFloat32(rs, rd);
-  freeF64(rs);
-  pushF32(rd);
-}
-
-void BaseCompiler::emitConvertI32ToF32() {
-  RegI32 rs = popI32();
-  RegF32 rd = needF32();
-  masm.convertInt32ToFloat32(rs, rd);
-  freeI32(rs);
-  pushF32(rd);
-}
-
-void BaseCompiler::emitConvertU32ToF32() {
-  RegI32 rs = popI32();
-  RegF32 rd = needF32();
-  masm.convertUInt32ToFloat32(rs, rd);
-  freeI32(rs);
-  pushF32(rd);
-}
-
 #ifndef RABALDR_I64_TO_FLOAT_CALLOUT
-void BaseCompiler::emitConvertI64ToF32() {
-  RegI64 rs = popI64();
-  RegF32 rd = needF32();
-  convertI64ToF32(rs, IsUnsigned(false), rd, RegI32());
-  freeI64(rs);
-  pushF32(rd);
-}
-
 void BaseCompiler::emitConvertU64ToF32() {
   RegI64 rs = popI64();
   RegF32 rd = needF32();
@@ -9949,40 +9826,6 @@ void BaseCompiler::emitConvertU64ToF32() {
   maybeFree(temp);
   freeI64(rs);
   pushF32(rd);
-}
-#endif
-
-void BaseCompiler::emitConvertF32ToF64() {
-  RegF32 rs = popF32();
-  RegF64 rd = needF64();
-  masm.convertFloat32ToDouble(rs, rd);
-  freeF32(rs);
-  pushF64(rd);
-}
-
-void BaseCompiler::emitConvertI32ToF64() {
-  RegI32 rs = popI32();
-  RegF64 rd = needF64();
-  masm.convertInt32ToDouble(rs, rd);
-  freeI32(rs);
-  pushF64(rd);
-}
-
-void BaseCompiler::emitConvertU32ToF64() {
-  RegI32 rs = popI32();
-  RegF64 rd = needF64();
-  masm.convertUInt32ToDouble(rs, rd);
-  freeI32(rs);
-  pushF64(rd);
-}
-
-#ifndef RABALDR_I64_TO_FLOAT_CALLOUT
-void BaseCompiler::emitConvertI64ToF64() {
-  RegI64 rs = popI64();
-  RegF64 rd = needF64();
-  convertI64ToF64(rs, IsUnsigned(false), rd, RegI32());
-  freeI64(rs);
-  pushF64(rd);
 }
 
 void BaseCompiler::emitConvertU64ToF64() {
@@ -9995,22 +9838,6 @@ void BaseCompiler::emitConvertU64ToF64() {
   pushF64(rd);
 }
 #endif  // RABALDR_I64_TO_FLOAT_CALLOUT
-
-void BaseCompiler::emitReinterpretI32AsF32() {
-  RegI32 rs = popI32();
-  RegF32 rd = needF32();
-  masm.moveGPRToFloat32(rs, rd);
-  freeI32(rs);
-  pushF32(rd);
-}
-
-void BaseCompiler::emitReinterpretI64AsF64() {
-  RegI64 rs = popI64();
-  RegF64 rd = needF64();
-  masm.moveGPR64ToDouble(rs, rd);
-  freeI64(rs);
-  pushF64(rd);
-}
 
 template <typename Cond>
 bool BaseCompiler::sniffConditionalControlCmp(Cond compareOp,
@@ -16001,8 +15828,19 @@ bool BaseCompiler::emitBody() {
   iter_.readBinary(type, &unused_a, &unused_b) && \
       (deadCode_ || (doEmit(), true))
 
+#define dispatchBinary1(arg1, type)               \
+  iter_.readBinary(type, &unused_a, &unused_b) && \
+      (deadCode_ || (emitBinop(arg1), true))
+
+#define dispatchBinary2(arg1, arg2, type)         \
+  iter_.readBinary(type, &unused_a, &unused_b) && \
+      (deadCode_ || (emitBinop(arg1, arg2), true))
+
 #define dispatchUnary0(doEmit, type) \
   iter_.readUnary(type, &unused_a) && (deadCode_ || (doEmit(), true))
+
+#define dispatchUnary1(arg1, type) \
+  iter_.readUnary(type, &unused_a) && (deadCode_ || (emitUnop(arg1), true))
 
 #define dispatchComparison0(doEmit, operandType, compareOp)  \
   iter_.readComparison(operandType, &unused_a, &unused_b) && \
@@ -16011,6 +15849,10 @@ bool BaseCompiler::emitBody() {
 #define dispatchConversion0(doEmit, inType, outType)  \
   iter_.readConversion(inType, outType, &unused_a) && \
       (deadCode_ || (doEmit(), true))
+
+#define dispatchConversion1(arg1, inType, outType)    \
+  iter_.readConversion(inType, outType, &unused_a) && \
+      (deadCode_ || (emitUnop(arg1), true))
 
 #define dispatchConversionOOM(doEmit, inType, outType) \
   iter_.readConversion(inType, outType, &unused_a) && (deadCode_ || doEmit())
@@ -16230,9 +16072,9 @@ bool BaseCompiler::emitBody() {
         NEXT();
       }
       case uint16_t(Op::I32Add):
-        CHECK_NEXT(dispatchBinary0(emitAddI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary2(AddI32, AddImmI32, ValType::I32));
       case uint16_t(Op::I32Sub):
-        CHECK_NEXT(dispatchBinary0(emitSubtractI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary2(SubI32, SubImmI32, ValType::I32));
       case uint16_t(Op::I32Mul):
         CHECK_NEXT(dispatchBinary0(emitMultiplyI32, ValType::I32));
       case uint16_t(Op::I32DivS):
@@ -16261,20 +16103,20 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(
             dispatchConversion0(emitWrapI64ToI32, ValType::I64, ValType::I32));
       case uint16_t(Op::I32ReinterpretF32):
-        CHECK_NEXT(dispatchConversion0(emitReinterpretF32AsI32, ValType::F32,
+        CHECK_NEXT(dispatchConversion1(ReinterpretF32AsI32, ValType::F32,
                                        ValType::I32));
       case uint16_t(Op::I32Clz):
-        CHECK_NEXT(dispatchUnary0(emitClzI32, ValType::I32));
+        CHECK_NEXT(dispatchUnary1(ClzI32, ValType::I32));
       case uint16_t(Op::I32Ctz):
-        CHECK_NEXT(dispatchUnary0(emitCtzI32, ValType::I32));
+        CHECK_NEXT(dispatchUnary1(CtzI32, ValType::I32));
       case uint16_t(Op::I32Popcnt):
         CHECK_NEXT(dispatchUnary0(emitPopcntI32, ValType::I32));
       case uint16_t(Op::I32Or):
-        CHECK_NEXT(dispatchBinary0(emitOrI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary2(OrI32, OrImmI32, ValType::I32));
       case uint16_t(Op::I32And):
-        CHECK_NEXT(dispatchBinary0(emitAndI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary2(AndI32, AndImmI32, ValType::I32));
       case uint16_t(Op::I32Xor):
-        CHECK_NEXT(dispatchBinary0(emitXorI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary2(XorI32, XorImmI32, ValType::I32));
       case uint16_t(Op::I32Shl):
         CHECK_NEXT(dispatchBinary0(emitShlI32, ValType::I32));
       case uint16_t(Op::I32ShrS):
@@ -16312,9 +16154,9 @@ bool BaseCompiler::emitBody() {
         NEXT();
       }
       case uint16_t(Op::I64Add):
-        CHECK_NEXT(dispatchBinary0(emitAddI64, ValType::I64));
+        CHECK_NEXT(dispatchBinary2(AddI64, AddImmI64, ValType::I64));
       case uint16_t(Op::I64Sub):
-        CHECK_NEXT(dispatchBinary0(emitSubtractI64, ValType::I64));
+        CHECK_NEXT(dispatchBinary2(SubI64, SubImmI64, ValType::I64));
       case uint16_t(Op::I64Mul):
         CHECK_NEXT(dispatchBinary0(emitMultiplyI64, ValType::I64));
       case uint16_t(Op::I64DivS):
@@ -16394,14 +16236,14 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(dispatchConversion0(emitExtendU32ToI64, ValType::I32,
                                        ValType::I64));
       case uint16_t(Op::I64ReinterpretF64):
-        CHECK_NEXT(dispatchConversion0(emitReinterpretF64AsI64, ValType::F64,
+        CHECK_NEXT(dispatchConversion1(ReinterpretF64AsI64, ValType::F64,
                                        ValType::I64));
       case uint16_t(Op::I64Or):
-        CHECK_NEXT(dispatchBinary0(emitOrI64, ValType::I64));
+        CHECK_NEXT(dispatchBinary2(OrI64, OrImmI64, ValType::I64));
       case uint16_t(Op::I64And):
-        CHECK_NEXT(dispatchBinary0(emitAndI64, ValType::I64));
+        CHECK_NEXT(dispatchBinary2(AndI64, AndImmI64, ValType::I64));
       case uint16_t(Op::I64Xor):
-        CHECK_NEXT(dispatchBinary0(emitXorI64, ValType::I64));
+        CHECK_NEXT(dispatchBinary2(XorI64, XorImmI64, ValType::I64));
       case uint16_t(Op::I64Shl):
         CHECK_NEXT(dispatchBinary0(emitShlI64, ValType::I64));
       case uint16_t(Op::I64ShrS):
@@ -16413,9 +16255,9 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::I64Rotl):
         CHECK_NEXT(dispatchBinary0(emitRotlI64, ValType::I64));
       case uint16_t(Op::I64Clz):
-        CHECK_NEXT(dispatchUnary0(emitClzI64, ValType::I64));
+        CHECK_NEXT(dispatchUnary1(ClzI64, ValType::I64));
       case uint16_t(Op::I64Ctz):
-        CHECK_NEXT(dispatchUnary0(emitCtzI64, ValType::I64));
+        CHECK_NEXT(dispatchUnary1(CtzI64, ValType::I64));
       case uint16_t(Op::I64Popcnt):
         CHECK_NEXT(dispatchUnary0(emitPopcntI64, ValType::I64));
       case uint16_t(Op::I64Eqz):
@@ -16453,23 +16295,23 @@ bool BaseCompiler::emitBody() {
         NEXT();
       }
       case uint16_t(Op::F32Add):
-        CHECK_NEXT(dispatchBinary0(emitAddF32, ValType::F32));
+        CHECK_NEXT(dispatchBinary1(AddF32, ValType::F32))
       case uint16_t(Op::F32Sub):
-        CHECK_NEXT(dispatchBinary0(emitSubtractF32, ValType::F32));
+        CHECK_NEXT(dispatchBinary1(SubF32, ValType::F32));
       case uint16_t(Op::F32Mul):
-        CHECK_NEXT(dispatchBinary0(emitMultiplyF32, ValType::F32));
+        CHECK_NEXT(dispatchBinary1(MulF32, ValType::F32));
       case uint16_t(Op::F32Div):
-        CHECK_NEXT(dispatchBinary0(emitDivideF32, ValType::F32));
+        CHECK_NEXT(dispatchBinary1(DivF32, ValType::F32));
       case uint16_t(Op::F32Min):
-        CHECK_NEXT(dispatchBinary0(emitMinF32, ValType::F32));
+        CHECK_NEXT(dispatchBinary1(MinF32, ValType::F32));
       case uint16_t(Op::F32Max):
-        CHECK_NEXT(dispatchBinary0(emitMaxF32, ValType::F32));
+        CHECK_NEXT(dispatchBinary1(MaxF32, ValType::F32));
       case uint16_t(Op::F32Neg):
-        CHECK_NEXT(dispatchUnary0(emitNegateF32, ValType::F32));
+        CHECK_NEXT(dispatchUnary1(NegateF32, ValType::F32));
       case uint16_t(Op::F32Abs):
-        CHECK_NEXT(dispatchUnary0(emitAbsF32, ValType::F32));
+        CHECK_NEXT(dispatchUnary1(AbsF32, ValType::F32));
       case uint16_t(Op::F32Sqrt):
-        CHECK_NEXT(dispatchUnary0(emitSqrtF32, ValType::F32));
+        CHECK_NEXT(dispatchUnary1(SqrtF32, ValType::F32));
       case uint16_t(Op::F32Ceil):
         CHECK_NEXT(
             emitUnaryMathBuiltinCall(SymbolicAddress::CeilF, ValType::F32));
@@ -16477,22 +16319,22 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(
             emitUnaryMathBuiltinCall(SymbolicAddress::FloorF, ValType::F32));
       case uint16_t(Op::F32DemoteF64):
-        CHECK_NEXT(dispatchConversion0(emitConvertF64ToF32, ValType::F64,
-                                       ValType::F32));
+        CHECK_NEXT(
+            dispatchConversion1(ConvertF64ToF32, ValType::F64, ValType::F32));
       case uint16_t(Op::F32ConvertSI32):
-        CHECK_NEXT(dispatchConversion0(emitConvertI32ToF32, ValType::I32,
-                                       ValType::F32));
+        CHECK_NEXT(
+            dispatchConversion1(ConvertI32ToF32, ValType::I32, ValType::F32));
       case uint16_t(Op::F32ConvertUI32):
-        CHECK_NEXT(dispatchConversion0(emitConvertU32ToF32, ValType::I32,
-                                       ValType::F32));
+        CHECK_NEXT(
+            dispatchConversion1(ConvertU32ToF32, ValType::I32, ValType::F32));
       case uint16_t(Op::F32ConvertSI64):
 #ifdef RABALDR_I64_TO_FLOAT_CALLOUT
         CHECK_NEXT(dispatchCalloutConversionOOM(
             emitConvertInt64ToFloatingCallout, SymbolicAddress::Int64ToFloat32,
             ValType::I64, ValType::F32));
 #else
-        CHECK_NEXT(dispatchConversion0(emitConvertI64ToF32, ValType::I64,
-                                       ValType::F32));
+        CHECK_NEXT(
+            dispatchConversion1(ConvertI64ToF32, ValType::I64, ValType::F32));
 #endif
       case uint16_t(Op::F32ConvertUI64):
 #ifdef RABALDR_I64_TO_FLOAT_CALLOUT
@@ -16504,14 +16346,14 @@ bool BaseCompiler::emitBody() {
                                        ValType::F32));
 #endif
       case uint16_t(Op::F32ReinterpretI32):
-        CHECK_NEXT(dispatchConversion0(emitReinterpretI32AsF32, ValType::I32,
+        CHECK_NEXT(dispatchConversion1(ReinterpretI32AsF32, ValType::I32,
                                        ValType::F32));
       case uint16_t(Op::F32Load):
         CHECK_NEXT(emitLoad(ValType::F32, Scalar::Float32));
       case uint16_t(Op::F32Store):
         CHECK_NEXT(emitStore(ValType::F32, Scalar::Float32));
       case uint16_t(Op::F32CopySign):
-        CHECK_NEXT(dispatchBinary0(emitCopysignF32, ValType::F32));
+        CHECK_NEXT(dispatchBinary1(CopysignF32, ValType::F32));
       case uint16_t(Op::F32Nearest):
         CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::NearbyIntF,
                                             ValType::F32));
@@ -16529,23 +16371,23 @@ bool BaseCompiler::emitBody() {
         NEXT();
       }
       case uint16_t(Op::F64Add):
-        CHECK_NEXT(dispatchBinary0(emitAddF64, ValType::F64));
+        CHECK_NEXT(dispatchBinary1(AddF64, ValType::F64))
       case uint16_t(Op::F64Sub):
-        CHECK_NEXT(dispatchBinary0(emitSubtractF64, ValType::F64));
+        CHECK_NEXT(dispatchBinary1(SubF64, ValType::F64));
       case uint16_t(Op::F64Mul):
-        CHECK_NEXT(dispatchBinary0(emitMultiplyF64, ValType::F64));
+        CHECK_NEXT(dispatchBinary1(MulF64, ValType::F64));
       case uint16_t(Op::F64Div):
-        CHECK_NEXT(dispatchBinary0(emitDivideF64, ValType::F64));
+        CHECK_NEXT(dispatchBinary1(DivF64, ValType::F64));
       case uint16_t(Op::F64Min):
-        CHECK_NEXT(dispatchBinary0(emitMinF64, ValType::F64));
+        CHECK_NEXT(dispatchBinary1(MinF64, ValType::F64));
       case uint16_t(Op::F64Max):
-        CHECK_NEXT(dispatchBinary0(emitMaxF64, ValType::F64));
+        CHECK_NEXT(dispatchBinary1(MaxF64, ValType::F64));
       case uint16_t(Op::F64Neg):
-        CHECK_NEXT(dispatchUnary0(emitNegateF64, ValType::F64));
+        CHECK_NEXT(dispatchUnary1(NegateF64, ValType::F64));
       case uint16_t(Op::F64Abs):
-        CHECK_NEXT(dispatchUnary0(emitAbsF64, ValType::F64));
+        CHECK_NEXT(dispatchUnary1(AbsF64, ValType::F64));
       case uint16_t(Op::F64Sqrt):
-        CHECK_NEXT(dispatchUnary0(emitSqrtF64, ValType::F64));
+        CHECK_NEXT(dispatchUnary1(SqrtF64, ValType::F64));
       case uint16_t(Op::F64Ceil):
         CHECK_NEXT(
             emitUnaryMathBuiltinCall(SymbolicAddress::CeilD, ValType::F64));
@@ -16553,22 +16395,22 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(
             emitUnaryMathBuiltinCall(SymbolicAddress::FloorD, ValType::F64));
       case uint16_t(Op::F64PromoteF32):
-        CHECK_NEXT(dispatchConversion0(emitConvertF32ToF64, ValType::F32,
-                                       ValType::F64));
+        CHECK_NEXT(
+            dispatchConversion1(ConvertF32ToF64, ValType::F32, ValType::F64));
       case uint16_t(Op::F64ConvertSI32):
-        CHECK_NEXT(dispatchConversion0(emitConvertI32ToF64, ValType::I32,
-                                       ValType::F64));
+        CHECK_NEXT(
+            dispatchConversion1(ConvertI32ToF64, ValType::I32, ValType::F64));
       case uint16_t(Op::F64ConvertUI32):
-        CHECK_NEXT(dispatchConversion0(emitConvertU32ToF64, ValType::I32,
-                                       ValType::F64));
+        CHECK_NEXT(
+            dispatchConversion1(ConvertU32ToF64, ValType::I32, ValType::F64));
       case uint16_t(Op::F64ConvertSI64):
 #ifdef RABALDR_I64_TO_FLOAT_CALLOUT
         CHECK_NEXT(dispatchCalloutConversionOOM(
             emitConvertInt64ToFloatingCallout, SymbolicAddress::Int64ToDouble,
             ValType::I64, ValType::F64));
 #else
-        CHECK_NEXT(dispatchConversion0(emitConvertI64ToF64, ValType::I64,
-                                       ValType::F64));
+        CHECK_NEXT(
+            dispatchConversion1(ConvertI64ToF64, ValType::I64, ValType::F64));
 #endif
       case uint16_t(Op::F64ConvertUI64):
 #ifdef RABALDR_I64_TO_FLOAT_CALLOUT
@@ -16584,10 +16426,10 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::F64Store):
         CHECK_NEXT(emitStore(ValType::F64, Scalar::Float64));
       case uint16_t(Op::F64ReinterpretI64):
-        CHECK_NEXT(dispatchConversion0(emitReinterpretI64AsF64, ValType::I64,
+        CHECK_NEXT(dispatchConversion1(ReinterpretI64AsF64, ValType::I64,
                                        ValType::F64));
       case uint16_t(Op::F64CopySign):
-        CHECK_NEXT(dispatchBinary0(emitCopysignF64, ValType::F64));
+        CHECK_NEXT(dispatchBinary1(CopysignF64, ValType::F64));
       case uint16_t(Op::F64Nearest):
         CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::NearbyIntD,
                                             ValType::F64));
@@ -16696,10 +16538,10 @@ bool BaseCompiler::emitBody() {
       // Sign extensions
       case uint16_t(Op::I32Extend8S):
         CHECK_NEXT(
-            dispatchConversion0(emitExtendI32_8, ValType::I32, ValType::I32));
+            dispatchConversion1(ExtendI32_8, ValType::I32, ValType::I32));
       case uint16_t(Op::I32Extend16S):
         CHECK_NEXT(
-            dispatchConversion0(emitExtendI32_16, ValType::I32, ValType::I32));
+            dispatchConversion1(ExtendI32_16, ValType::I32, ValType::I32));
       case uint16_t(Op::I64Extend8S):
         CHECK_NEXT(
             dispatchConversion0(emitExtendI64_8, ValType::I64, ValType::I64));
@@ -17632,9 +17474,13 @@ bool BaseCompiler::emitBody() {
 #undef CHECK_NEXT
 #undef CHECK_POINTER_COUNT
 #undef dispatchBinary0
+#undef dispatchBinary1
+#undef dispatchBinary2
 #undef dispatchUnary0
+#undef dispatchUnary1
 #undef dispatchComparison0
 #undef dispatchConversion0
+#undef dispatchConversion1
 #undef dispatchConversionOOM
 #undef dispatchCalloutConversionOOM
 #undef dispatchIntDivCallout
