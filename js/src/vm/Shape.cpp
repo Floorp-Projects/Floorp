@@ -761,7 +761,7 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
       break;
     }
 
-    MOZ_ASSERT(child->isDataProperty());
+    MOZ_ASSERT(child->property().isDataProperty());
 
     child = PropertyTreeReadBarrier(cx, lastProperty, child);
     if (!child) {
