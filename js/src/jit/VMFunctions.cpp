@@ -1944,7 +1944,7 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
     return false;
   }
 
-  ShapeProperty prop = ShapeProperty(shape);
+  ShapeProperty prop = shape->property();
   if (!prop.isDataProperty() || !prop.writable()) {
     return false;
   }
@@ -1967,7 +1967,7 @@ bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
 
   while (true) {
     if (Shape* shape = nobj->lastProperty()->search(cx, id)) {
-      ShapeProperty prop = ShapeProperty(shape);
+      ShapeProperty prop = shape->property();
       if (!prop.isAccessorProperty()) {
         return false;
       }

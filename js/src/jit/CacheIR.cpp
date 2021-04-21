@@ -4601,7 +4601,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
 
   // The property must be the last added property of the object.
   Shape* newShape = holder->lastProperty();
-  MOZ_RELEASE_ASSERT(ShapeProperty(newShape) == shapeProp);
+  MOZ_RELEASE_ASSERT(newShape->property() == shapeProp);
 
   // Old shape should be parent of new shape. Object flag updates may make this
   // false even for simple data properties. It may be possible to support these

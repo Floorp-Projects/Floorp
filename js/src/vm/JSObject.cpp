@@ -3170,7 +3170,7 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
     out.printf("id %p", reinterpret_cast<void*>(JSID_BITS(id)));
   }
 
-  ShapeProperty prop = ShapeProperty(&shape);
+  ShapeProperty prop = shape.property();
 
   if (prop.isDataProperty()) {
     out.printf(": ");
@@ -3197,8 +3197,8 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
     out.printf(" <custom-data-prop>");
   }
 
-  if (shape.hasSlot()) {
-    out.printf(" slot %u", shape.slot());
+  if (prop.hasSlot()) {
+    out.printf(" slot %u", prop.slot());
   }
 
   out.printf(")\n");

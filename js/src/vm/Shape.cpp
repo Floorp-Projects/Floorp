@@ -861,7 +861,7 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
  */
 static void AssertCanChangeAttrs(Shape* shape, unsigned attrs) {
 #ifdef DEBUG
-  ShapeProperty prop = ShapeProperty(shape);
+  ShapeProperty prop = shape->property();
   if (prop.configurable()) {
     return;
   }
@@ -962,8 +962,7 @@ bool NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
   ObjectFlags objectFlags =
       GetObjectFlagsForNewProperty(obj->lastProperty(), id, attrs, cx);
 
-  ShapeProperty prop = ShapeProperty(shape);
-  if (prop.isAccessorProperty()) {
+  if (shape->property().isAccessorProperty()) {
     objectFlags.setFlag(ObjectFlag::HadGetterSetterChange);
   }
 
@@ -1148,8 +1147,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
   // object flag is set. This is necessary because the slot holding the
   // GetterSetter can be changed indirectly by removing the property and then
   // adding it back with a different GetterSetter value but the same shape.
-  ShapeProperty prop = ShapeProperty(shape);
-  if (prop.isAccessorProperty() && !obj->hadGetterSetterChange()) {
+  if (shape->property().isAccessorProperty() && !obj->hadGetterSetterChange()) {
     if (!NativeObject::setHadGetterSetterChange(cx, obj)) {
       return false;
     }
@@ -1223,7 +1221,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
       Shape* aprop = obj->lastProperty();
       for (int n = 50; --n >= 0 && aprop->parent; aprop = aprop->parent) {
         MOZ_ASSERT_IF(aprop != shape,
-                      obj->contains(cx, aprop->propid(), ShapeProperty(aprop)));
+                      obj->containsPure(aprop->propid(), aprop->property()));
       }
 #endif
     }

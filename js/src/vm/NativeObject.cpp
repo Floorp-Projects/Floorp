@@ -302,13 +302,13 @@ bool js::NativeObject::isNumFixedSlots(uint32_t nfixed) const {
 mozilla::Maybe<ShapeProperty> js::NativeObject::lookup(JSContext* cx, jsid id) {
   MOZ_ASSERT(is<NativeObject>());
   Shape* shape = Shape::search(cx, lastProperty(), id);
-  return shape ? mozilla::Some(ShapeProperty(shape)) : mozilla::Nothing();
+  return shape ? mozilla::Some(shape->property()) : mozilla::Nothing();
 }
 
 mozilla::Maybe<ShapeProperty> js::NativeObject::lookupPure(jsid id) {
   MOZ_ASSERT(is<NativeObject>());
   Shape* shape = Shape::searchNoHashify(lastProperty(), id);
-  return shape ? mozilla::Some(ShapeProperty(shape)) : mozilla::Nothing();
+  return shape ? mozilla::Some(shape->property()) : mozilla::Nothing();
 }
 
 bool NativeObject::ensureSlotsForDictionaryObject(JSContext* cx,
@@ -1999,7 +1999,7 @@ bool js::AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj,
   }
 
   // At this point we're updating a property: See SetExistingProperty
-  ShapeProperty prop = ShapeProperty(shape);
+  ShapeProperty prop = shape->property();
   if (prop.writable() && prop.isDataProperty()) {
     obj->setSlot(prop.slot(), v);
     return true;
@@ -2300,16 +2300,15 @@ bool js::GetSparseElementHelper(JSContext* cx, HandleArrayObject obj,
   MOZ_ASSERT(INT_FITS_IN_JSID(int_id));
   RootedId id(cx, INT_TO_JSID(int_id));
 
-  Shape* rawShape = obj->lastProperty()->search(cx, id);
-  if (!rawShape) {
+  Shape* shape = obj->lastProperty()->search(cx, id);
+  if (!shape) {
     // Property not found, return directly.
     result.setUndefined();
     return true;
   }
 
   RootedValue receiver(cx, ObjectValue(*obj));
-  RootedShape shape(cx, rawShape);
-  return GetExistingProperty<CanGC>(cx, receiver, obj, id, ShapeProperty(shape),
+  return GetExistingProperty<CanGC>(cx, receiver, obj, id, shape->property(),
                                     result);
 }
 
