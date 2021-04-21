@@ -56,6 +56,7 @@ function returnToEventLoop() {
 }
 
 function enableTesting() {
+  Services.prefs.setBoolPref("dom.simpleDB.enabled", true);
   Services.prefs.setBoolPref("dom.storage.testing", true);
 
   // xpcshell globals don't have associated clients in the Clients API sense, so
@@ -70,6 +71,7 @@ function resetTesting() {
   Services.prefs.clearUserPref("dom.quotaManager.testing");
   Services.prefs.clearUserPref("dom.storage.client_validation");
   Services.prefs.clearUserPref("dom.storage.testing");
+  Services.prefs.clearUserPref("dom.simpleDB.enabled");
 }
 
 function setGlobalLimit(globalLimit) {
@@ -278,6 +280,20 @@ function getCurrentPrincipal() {
 
 function getDefaultPrincipal() {
   return getPrincipal("http://example.com");
+}
+
+function getSimpleDatabase(principal, persistence) {
+  let connection = Cc["@mozilla.org/dom/sdb-connection;1"].createInstance(
+    Ci.nsISDBConnection
+  );
+
+  if (!principal) {
+    principal = getDefaultPrincipal();
+  }
+
+  connection.init(principal, persistence);
+
+  return connection;
 }
 
 function getLocalStorage(principal) {

@@ -8182,7 +8182,7 @@ nsresult QuotaClient::InitOriginWithoutTracking(
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  // This is called when a storage/permanent/chrome/ls directory exists. Even
+  // This is called when a storage/permanent/${origin}/ls directory exists. Even
   // though this shouldn't happen with a "good" profile, we shouldn't return an
   // error here, since that would cause origin initialization to fail. We just
   // warn and otherwise ignore that.
