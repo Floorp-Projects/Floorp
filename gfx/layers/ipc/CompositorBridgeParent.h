@@ -100,8 +100,7 @@ class WebRenderBridgeParent;
 struct CollectedFrames;
 
 struct ScopedLayerTreeRegistration {
-  ScopedLayerTreeRegistration(APZCTreeManager* aApzctm, LayersId aLayersId,
-                              Layer* aRoot,
+  ScopedLayerTreeRegistration(LayersId aLayersId, Layer* aRoot,
                               GeckoContentController* aController);
   ~ScopedLayerTreeRegistration();
 

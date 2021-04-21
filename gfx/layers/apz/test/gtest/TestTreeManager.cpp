@@ -84,7 +84,7 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
 
 TEST_F(APZCTreeManagerGenericTester, ScrollablePaintedLayers) {
   CreateSimpleMultiLayerTree();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
 
   // both layers have the same scrollId
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID);
@@ -114,7 +114,7 @@ TEST_F(APZCTreeManagerGenericTester, ScrollablePaintedLayers) {
 
 TEST_F(APZCTreeManagerGenericTester, Bug1068268) {
   CreatePotentiallyLeakingTree();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
 
   UpdateHitTestingTree();
   RefPtr<HitTestingTreeNode> root = manager->GetRootNode();
@@ -138,7 +138,7 @@ TEST_F(APZCTreeManagerGenericTester, Bug1194876) {
   // Create a layer tree with parent and child scrollable layers, with the
   // child being the root content.
   CreateTwoLayerDTCTree(1);
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
   uint64_t blockId;
@@ -178,7 +178,7 @@ TEST_F(APZCTreeManagerGenericTester, TargetChangesMidGesture_Bug1570559) {
   // Create a layer tree with parent and child scrollable layers, with the
   // parent being the root content.
   CreateTwoLayerDTCTree(0);
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
   uint64_t blockId;
@@ -217,7 +217,7 @@ TEST_F(APZCTreeManagerGenericTester, Bug1198900) {
   // This is just a test that cancels a wheel event to make sure it doesn't
   // crash.
   CreateSimpleDTCScrollingLayer();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
   ScreenPoint origin(100, 50);
@@ -238,7 +238,7 @@ TEST_F(APZCTreeManagerTester, Bug1551582) {
   // The simple layer tree has a scrollable rect of 500x500 and a composition
   // bounds of 200x200, leading to a scroll range of (0,0,300,300).
   CreateSimpleScrollingLayer();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
   // Simulate the main thread scrolling to the end of the scroll range.
@@ -273,7 +273,7 @@ TEST_F(APZCTreeManagerTester, Bug1557424) {
   // The simple layer tree has a scrollable rect of 500x500 and a composition
   // bounds of 200x200, leading to a scroll range of (0,0,300,300).
   CreateSimpleScrollingLayer();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
   // Simulate the main thread scrolling to the end of the scroll range.
