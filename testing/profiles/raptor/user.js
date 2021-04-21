@@ -36,3 +36,10 @@ user_pref('javascript.options.asyncstack', false);
 // disable Firefox Telemetry (and some other things too)
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1533879
 user_pref('datareporting.healthreport.uploadEnabled', false);
+
+// Telemetry initialization happens on a delay, that may elapse exactly in the
+// middle of some raptor tests. While it doesn't do a lot of expensive work, it
+// causes some I/O and thread creation, that can add noise to performance
+// profiles we use to analyze performance regressions.
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1706180
+user_pref('toolkit.telemetry.initDelay', 99999999);
