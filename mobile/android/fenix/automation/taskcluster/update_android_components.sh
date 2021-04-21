@@ -13,7 +13,7 @@ export REPO="fenix"
 git config --global user.email "$EMAIL"
 git config --global user.name "$GITHUB_USER"
 
-COMPONENT_TO_WATCH='browser-engine-gecko-nightly'
+COMPONENT_TO_WATCH='browser-engine-gecko'
 MAVEN_URL="https://nightly.maven.mozilla.org/maven2/org/mozilla/components/$COMPONENT_TO_WATCH"
 
 # Fetch latest version
