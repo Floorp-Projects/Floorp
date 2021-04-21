@@ -189,11 +189,13 @@ class BaseRunner(object):
         """
         return self.returncode is None
 
-    def stop(self, sig=None):
+    def stop(self, sig=None, timeout=None):
         """
         Kill the process.
 
         :param sig: Signal used to kill the process, defaults to SIGKILL
+                    (has no effect on Windows).
+        :param timeout: Maximum time to wait for the processs to exit
                     (has no effect on Windows).
         :returns: the process return code if process was already stopped,
                   -<signal> if process was killed (Unix only)
@@ -210,7 +212,7 @@ class BaseRunner(object):
         if isinstance(self.process_handler, subprocess.Popen):
             self.process_handler.kill()
         else:
-            self.process_handler.kill(sig=sig)
+            self.process_handler.kill(sig=sig, timeout=timeout)
 
         return self.returncode
 
