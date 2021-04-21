@@ -37,6 +37,6 @@
   margin-inline-end: 14px;
 }
 
-#infoTitle {
+#commonDialog:not([subdialog]) #infoTitle {
   font-weight: bold;
 }
