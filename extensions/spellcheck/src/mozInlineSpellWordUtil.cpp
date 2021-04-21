@@ -196,7 +196,7 @@ static nsINode* FindNextTextNode(nsINode* aNode, int32_t aOffset,
 //    by the caller of this class by calling this function. If this function is
 //    not called, the soft boundary is the same as the hard boundary.
 //
-//    When we reach the soft boundary (mSoftText.mEnd), we keep
+//    When we reach the soft boundary (mSoftText.GetEnd()), we keep
 //    going until we reach the end of a word. This allows the caller to set the
 //    end of the range to anything, and we will always check whole multiples of
 //    words. When we reach the hard boundary we stop no matter what.
@@ -246,9 +246,9 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
     aEndNode = FindNextTextNode(aEndNode, aEndOffset, mRootNode);
     aEndOffset = 0;
   }
-  mSoftText.mEnd = NodeOffset(aEndNode, aEndOffset);
+  NodeOffset softEnd = NodeOffset(aEndNode, aEndOffset);
 
-  nsresult rv = EnsureWords(std::move(softBegin));
+  nsresult rv = EnsureWords(std::move(softBegin), std::move(softEnd));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -262,9 +262,11 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
   return NS_OK;
 }
 
-nsresult mozInlineSpellWordUtil::EnsureWords(NodeOffset aSoftBegin) {
+nsresult mozInlineSpellWordUtil::EnsureWords(NodeOffset aSoftBegin,
+                                             NodeOffset aSoftEnd) {
   if (mSoftText.mIsValid) return NS_OK;
-  mSoftText.AdjustBeginAndBuildText(std::move(aSoftBegin), mRootNode);
+  mSoftText.AdjustBeginAndBuildText(std::move(aSoftBegin), std::move(aSoftEnd),
+                                    mRootNode);
 
   mRealWords.Clear();
   Result<RealWords, nsresult> realWords = BuildRealWords();
@@ -301,11 +303,11 @@ nsresult mozInlineSpellWordUtil::GetRangeForWord(nsINode* aWordNode,
   NodeOffset pt(aWordNode, aWordOffset);
 
   if (!mSoftText.mIsValid || pt != mSoftText.GetBegin() ||
-      pt != mSoftText.mEnd) {
+      pt != mSoftText.GetEnd()) {
     mSoftText.Invalidate();
-    mSoftText.mEnd = pt;
     NodeOffset softBegin = pt;
-    nsresult rv = EnsureWords(std::move(softBegin));
+    NodeOffset softEnd = pt;
+    nsresult rv = EnsureWords(std::move(softBegin), std::move(softEnd));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -769,10 +771,11 @@ void mozInlineSpellWordUtil::NormalizeWord(nsAString& aWord) {
 }
 
 void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(
-    NodeOffset aBegin, const nsINode* aRootNode) {
+    NodeOffset aBegin, NodeOffset aEnd, const nsINode* aRootNode) {
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
   mBegin = std::move(aBegin);
+  mEnd = std::move(aEnd);
 
   // First we have to work backwards from mBegin to find a text node
   // containing a DOM word separator, a non-inline-element
