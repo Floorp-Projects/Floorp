@@ -562,6 +562,17 @@ nodejs-10-macosx64:
         strip-components: 1
         add-prefix: node/
 
+nodejs-16-macosx64-arm64:
+    description: nodejs 16 for arm64 macOS
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v16.0.0/node-v16.0.0-darwin-arm64.tar.xz
+        sha256: f8710a83738b4408da82fe81b7934373e4d2f84d40c8c1217676119fd3c77c7e
+        size: 19028900
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
+
 nodejs-10-win32:
     description: nodejs 10 for x86 Windows
     fetch:
