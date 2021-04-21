@@ -90,8 +90,8 @@ async function testMenuPopup(toolbox) {
   );
 
   menu.popup(0, 0, toolbox.doc);
-  const popup = toolbox.topDoc.querySelector("#menu-popup");
-  ok(popup, "A popup is in the DOM");
+
+  ok(toolbox.topDoc.querySelector("#menu-popup"), "A popup is in the DOM");
 
   const menuSeparators = toolbox.topDoc.querySelectorAll(
     "#menu-popup > menuseparator"
@@ -123,7 +123,7 @@ async function testMenuPopup(toolbox) {
 
   await once(menu, "open");
   const closed = once(menu, "close");
-  popup.activateItem(menuItems[0]);
+  EventUtils.synthesizeMouseAtCenter(menuItems[0], {}, toolbox.topWindow);
   await closed;
   ok(clickFired, "Click has fired");
 
@@ -167,8 +167,7 @@ async function testSubmenu(toolbox) {
   );
 
   menu.popup(0, 0, toolbox.doc);
-  const popup = toolbox.topDoc.querySelector("#menu-popup");
-  ok(popup, "A popup is in the DOM");
+  ok(toolbox.topDoc.querySelector("#menu-popup"), "A popup is in the DOM");
   is(
     toolbox.topDoc.querySelectorAll("#menu-popup > menuitem").length,
     0,
@@ -199,40 +198,22 @@ async function testSubmenu(toolbox) {
   await once(menu, "open");
   const closed = once(menu, "close");
 
-  // The following section tests keyboard navigation of the context menus.
-  // This doesn't work on macOS when native context menus are enabled.
-  if (Services.prefs.getBoolPref("widget.macos.native-context-menus", false)) {
-    info("Using openMenu semantics because of macOS native context menus.");
-    let shown = once(menus[0], "popupshown");
-    menus[0].openMenu(true);
-    await shown;
+  info("Using keyboard navigation to open, close, and reopen the submenu");
+  let shown = once(menus[0], "popupshown");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_ArrowRight");
+  await shown;
 
-    const hidden = once(menus[0], "popuphidden");
-    menus[0].openMenu(false);
-    await hidden;
+  const hidden = once(menus[0], "popuphidden");
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
+  await hidden;
 
-    shown = once(menus[0], "popupshown");
-    menus[0].openMenu(true);
-    await shown;
-  } else {
-    info("Using keyboard navigation to open, close, and reopen the submenu");
-    let shown = once(menus[0], "popupshown");
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    EventUtils.synthesizeKey("KEY_ArrowRight");
-    await shown;
-
-    const hidden = once(menus[0], "popuphidden");
-    EventUtils.synthesizeKey("KEY_ArrowLeft");
-    await hidden;
-
-    shown = once(menus[0], "popupshown");
-    EventUtils.synthesizeKey("KEY_ArrowRight");
-    await shown;
-  }
+  shown = once(menus[0], "popupshown");
+  EventUtils.synthesizeKey("KEY_ArrowRight");
+  await shown;
 
   info("Clicking the submenu item");
-  const subMenu = subMenuItems[0].closest("menupopup");
-  subMenu.activateItem(subMenuItems[0]);
+  EventUtils.synthesizeMouseAtCenter(subMenuItems[0], {}, toolbox.topWindow);
 
   await closed;
   ok(clickFired, "Click has fired");
