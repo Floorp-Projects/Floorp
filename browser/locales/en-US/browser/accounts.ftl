@@ -8,4 +8,4 @@ account-finish-account-setup = Finish Account Setup
 
 # Used as the FxA toolbar menu item title when the user
 # needs to reconnect their account.
-account-disconnected = You’ve been disconnected
+account-disconnected2 = Account disconnected
