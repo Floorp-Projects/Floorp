@@ -4486,7 +4486,7 @@ class ShapeSnapshot {
 
   struct PropertyInfo {
     HeapPtr<Shape*> propShape;
-    HeapPtr<JS::PropertyKey> key;
+    HeapPtr<PropertyKey> key;
     ShapeProperty prop;
 
     explicit PropertyInfo(Shape* shape)

@@ -176,13 +176,13 @@ class ShapeProperty {
 };
 
 class ShapePropertyWithKey : public ShapeProperty {
-  JS::PropertyKey key_;
+  PropertyKey key_;
 
  public:
-  ShapePropertyWithKey(uint8_t attrs, uint32_t slot, JS::PropertyKey key)
+  ShapePropertyWithKey(uint8_t attrs, uint32_t slot, PropertyKey key)
       : ShapeProperty(attrs, slot), key_(key) {}
 
-  JS::PropertyKey key() const { return key_; }
+  PropertyKey key() const { return key_; }
 
   void trace(JSTracer* trc) {
     TraceRoot(trc, &key_, "ShapePropertyWithKey-key");
@@ -198,7 +198,7 @@ class WrappedPtrOperations<ShapePropertyWithKey, Wrapper> {
  public:
   bool isDataProperty() const { return value().isDataProperty(); }
   uint32_t slot() const { return value().slot(); }
-  JS::PropertyKey key() const { return value().key(); }
+  PropertyKey key() const { return value().key(); }
   uint8_t attributes() const { return value().attributes(); }
 };
 
@@ -905,7 +905,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   BaseShape* base() const { return headerPtr(); }
 
  protected:
-  const GCPtr<JS::PropertyKey> propid_;
+  const GCPtr<PropertyKey> propid_;
 
   // Flags that are not modified after the Shape is created. Off-thread Ion
   // compilation can access the immutableFlags word, so we don't want any

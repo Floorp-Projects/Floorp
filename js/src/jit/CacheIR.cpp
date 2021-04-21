@@ -560,7 +560,7 @@ static bool IsCacheableNoProperty(JSContext* cx, NativeObject* obj,
 }
 
 static NativeGetPropCacheability CanAttachNativeGetProp(
-    JSContext* cx, JSObject* obj, JS::PropertyKey id, NativeObject** holder,
+    JSContext* cx, JSObject* obj, PropertyKey id, NativeObject** holder,
     Maybe<ShapeProperty>* shapeProp, jsbytecode* pc) {
   MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
   MOZ_ASSERT(!*holder);
@@ -2736,7 +2736,7 @@ AttachDecision GetNameIRGenerator::tryAttachStub() {
 
 static bool CanAttachGlobalName(JSContext* cx,
                                 GlobalLexicalEnvironmentObject* globalLexical,
-                                JS::PropertyKey id, NativeObject** holder,
+                                PropertyKey id, NativeObject** holder,
                                 Maybe<ShapeProperty>* prop) {
   // The property must be found, and it must be found as a normal data property.
   NativeObject* current = globalLexical;
@@ -3459,7 +3459,7 @@ AttachDecision CheckPrivateFieldIRGenerator::tryAttachStub() {
   }
   JSObject* obj = &val_.toObject();
   ObjOperandId objId = writer.guardToObject(valId);
-  JS::PropertyKey key = SYMBOL_TO_JSID(idVal_.toSymbol());
+  PropertyKey key = SYMBOL_TO_JSID(idVal_.toSymbol());
 
   ThrowCondition condition;
   ThrowMsgKind msgKind;
@@ -3654,7 +3654,7 @@ static Maybe<ShapeProperty> LookupShapeForSetSlot(JSOp op, NativeObject* obj,
   return prop;
 }
 
-static bool CanAttachNativeSetSlot(JSOp op, JSObject* obj, JS::PropertyKey id,
+static bool CanAttachNativeSetSlot(JSOp op, JSObject* obj, PropertyKey id,
                                    Maybe<ShapeProperty>* prop) {
   if (!obj->is<NativeObject>()) {
     return false;
@@ -3820,7 +3820,7 @@ static bool IsCacheableSetPropCallScripted(NativeObject* obj,
 }
 
 static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, JSObject* obj,
-                            JS::PropertyKey id, NativeObject** holder,
+                            PropertyKey id, NativeObject** holder,
                             Maybe<ShapeProperty>* shapeProp) {
   // Don't attach a setter stub for ops like JSOp::InitElem.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc)));
@@ -4924,7 +4924,7 @@ static bool IsArrayPrototypeOptimizable(JSContext* cx, ArrayObject* arr,
   *arrProto = proto;
 
   // The object must not have an own @@iterator property.
-  JS::PropertyKey iteratorKey = SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator);
+  PropertyKey iteratorKey = SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator);
   if (arr->lookupPure(iteratorKey)) {
     return false;
   }

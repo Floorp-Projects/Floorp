@@ -4168,7 +4168,7 @@ bool js::ArraySpeciesLookup::tryOptimizeArray(JSContext* cx,
   // shadow Array.prototype.constructor.
   ShapePropertyIter<NoGC> iter(array->shape());
   MOZ_ASSERT(!iter.done(), "Array must have at least one property");
-  DebugOnly<JS::PropertyKey> key = iter->key();
+  DebugOnly<PropertyKey> key = iter->key();
   iter++;
   if (!iter.done()) {
     return false;
