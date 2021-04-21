@@ -32,10 +32,10 @@ checkbox[disabled="true"] {
   appearance: none;
   height: 16px;
   width: 16px;
-  border: 1px solid var(--checkbox-border-color, ThreeDDarkShadow);
+  color: var(--checkbox-border-color, ThreeDDarkShadow);
   background-color: var(--checkbox-unchecked-bgcolor, Field);
+  border: 1px solid currentColor;
   border-radius: 2px;
-  color: FieldText;
   margin-inline-end: 6px;
 }
 
