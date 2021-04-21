@@ -46,6 +46,7 @@
 #include "vm/Uint8Clamped.h"
 
 #include "builtin/Boolean-inl.h"
+#include "gc/ObjectKind-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
 #include "jit/VMFunctionList-inl.h"
