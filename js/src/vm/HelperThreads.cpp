@@ -1299,6 +1299,11 @@ bool GlobalHelperThreadState::ensureInitialized() {
   MOZ_ASSERT(CanUseExtraThreads());
   MOZ_ASSERT(this == &HelperThreadState());
 
+  {
+    AutoLockHelperThreadState lock;
+    useInternalThreadPool_ = HelperThreadTaskCallback == nullptr;
+  }
+
   return ensureThreadCount(threadCount);
 }
 
@@ -1309,12 +1314,8 @@ bool GlobalHelperThreadState::ensureThreadCount(size_t count) {
 
   AutoLockHelperThreadState lock;
 
-  if (threads(lock).length() >= count) {
+  if (helperTasks_.capacity() >= count) {
     return true;
-  }
-
-  if (!threads(lock).reserve(count)) {
-    return false;
   }
 
   if (!helperTasks_.reserve(count)) {
@@ -1323,6 +1324,14 @@ bool GlobalHelperThreadState::ensureThreadCount(size_t count) {
 
   for (size_t& i : runningTaskCount) {
     i = 0;
+  }
+
+  if (!useInternalThreadPool(lock)) {
+    return true;
+  }
+
+  if (!threads(lock).reserve(count)) {
+    return false;
   }
 
   // Update threadCount on exit so this stays consistent with how many threads
@@ -1348,12 +1357,18 @@ GlobalHelperThreadState::GlobalHelperThreadState()
       totalCountRunningTasks(0),
       registerThread(nullptr),
       unregisterThread(nullptr),
-      wasmTier2GeneratorsFinished_(0) {
+      wasmTier2GeneratorsFinished_(0),
+      useInternalThreadPool_(true) {
   cpuCount = ClampDefaultCPUCount(GetCPUCount());
   threadCount = ThreadCountForCPUCount(cpuCount);
   gcParallelThreadCount = threadCount;
 
   MOZ_ASSERT(cpuCount > 0, "GetCPUCount() seems broken");
+}
+
+bool GlobalHelperThreadState::useInternalThreadPool(
+    const AutoLockHelperThreadState& locked) {
+  return useInternalThreadPool_;
 }
 
 void GlobalHelperThreadState::finish() {
@@ -1378,13 +1393,17 @@ void GlobalHelperThreadState::finishThreads() {
   {
     AutoLockHelperThreadState lock;
 
-    if (threads(lock).empty()) {
+    if (useInternalThreadPool(lock) && threads(lock).empty()) {
       return;
     }
 
     MOZ_ASSERT(CanUseExtraThreads());
 
     waitForAllThreadsLocked(lock);
+
+    if (!useInternalThreadPool(lock)) {
+      return;
+    }
 
     for (auto& thread : threads(lock)) {
       thread->setTerminate(lock);
