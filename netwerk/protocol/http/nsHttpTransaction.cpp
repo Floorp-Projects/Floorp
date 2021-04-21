@@ -481,7 +481,8 @@ static inline void CreateAndStartTimer(nsCOMPtr<nsITimer>& aTimer,
 void nsHttpTransaction::OnPendingQueueInserted() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  if (mConnInfo->IsHttp3() && !mResolver) {
+  // Don't create mHttp3BackupTimer if HTTPS RR is in play.
+  if (mConnInfo->IsHttp3() && !mOrigConnInfo) {
     // Backup timer should only be created once.
     if (!mHttp3BackupTimerCreated) {
       CreateAndStartTimer(mHttp3BackupTimer, this,
@@ -3132,7 +3133,7 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
 
   RefPtr<nsHttpConnectionInfo> newInfo =
       mConnInfo->CloneAndAdoptHTTPSSVCRecord(svcbRecord);
-  bool needFastFallback = !mConnInfo->IsHttp3() && newInfo->IsHttp3();
+  bool needFastFallback = newInfo->IsHttp3();
   if (!gHttpHandler->ConnMgr()->MoveTransToNewConnEntry(this, newInfo)) {
     // MoveTransToNewConnEntry() returning fail means this transaction is
     // not in the connection entry's pending queue. This could happen if
@@ -3141,6 +3142,9 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
     // can be added to the right connection entry.
     UpdateConnectionInfo(newInfo);
   }
+
+  // In case we already have mHttp3BackupTimer, cancel it.
+  MaybeCancelFallbackTimer();
 
   if (needFastFallback) {
     CreateAndStartTimer(
