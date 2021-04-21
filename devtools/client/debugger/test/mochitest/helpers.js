@@ -1595,6 +1595,7 @@ async function openContextMenuSubmenu(dbg, selector) {
   });
   item.openMenu(true);
   await popupshown;
+  return popup;
 }
 
 async function assertContextMenuLabel(dbg, selector, label) {
