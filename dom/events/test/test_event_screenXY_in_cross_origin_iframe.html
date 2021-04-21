@@ -19,33 +19,26 @@ function getScreenPosition(aElement, aOffsetX, aOffsetY) {
   return [Math.round(x * scale), Math.round(y * scale)];
 }
 
-add_task(async () => {
-  await SimpleTest.promiseFocus();
-
-  const loadsPromise = new Promise(resolve => {
-    let readyInSameOriginIFrame = false;
-    let readyInCrossOriginIFrame = false;
+function waitForMessage(aMsg, aOrigin) {
+  return new Promise(resolve => {
     window.addEventListener("message", function listener(event) {
-      if (event.data == "ready") {
-        if (event.origin == location.origin) {
-          readyInSameOriginIFrame = true;
-        }
-        if (event.origin == "https://example.com") {
-          readyInCrossOriginIFrame = true;
-        }
-      }
-      if (readyInSameOriginIFrame && readyInCrossOriginIFrame) {
+      if (event.data == "ready" && event.origin == aOrigin) {
         window.removeEventListener("message", listener);
         resolve();
       }
     });
   });
+}
+
+add_task(async () => {
+  await SimpleTest.promiseFocus();
 
   const iframes = document.querySelectorAll("iframe");
   iframes[0].src = "file_event_screenXY.html";
-  iframes[1].src = "https://example.com/tests/dom/events/test/file_event_screenXY.html";
+  await waitForMessage("ready", location.origin);
 
-  await loadsPromise;
+  iframes[1].src = "https://example.com/tests/dom/events/test/file_event_screenXY.html";
+  await waitForMessage("ready", "https://example.com");
 
   // Wait for APZ state stable so that mouse event handling APZ works properly
   // in out-of-process iframes.
