@@ -6840,15 +6840,6 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
   }
 
-  void eqz64(RegI64 src, RegI32 dest) {
-#ifdef JS_PUNBOX64
-    masm.cmpPtrSet(Assembler::Equal, src.reg, ImmWord(0), dest);
-#else
-    masm.or32(src.high, src.low);
-    masm.cmp32Set(Assembler::Equal, src.low, Imm32(0), dest);
-#endif
-  }
-
   [[nodiscard]] bool supportsRoundInstruction(RoundingMode mode) {
     return Assembler::HasRoundInstruction(mode);
   }
@@ -8659,7 +8650,6 @@ class BaseCompiler final : public BaseCompilerInterface {
   template <TruncFlags flags>
   [[nodiscard]] bool emitTruncateF64ToI64();
 #endif
-  void emitWrapI64ToI32();
   void emitExtendI64_8();
   void emitExtendI64_16();
   void emitExtendI64_32();
@@ -8819,6 +8809,18 @@ void BaseCompiler::emitUnop(void (*op)(MacroAssembler& masm, SourceType rs,
   DestType rd = need<DestType>();
   op(masm, rs, rd);
   free(rs);
+  push(rd);
+}
+
+// Specialize narrowing reuse.  Consumers may assume that rs.reg==rd on 64-bit
+// platforms, or rs.low==rd on 32-bit platforms.
+template <>
+void BaseCompiler::emitUnop(void (*op)(MacroAssembler& masm, RegI64 rs,
+                                       RegI32 rd)) {
+  RegI64 rs = pop<RegI64>();
+  RegI32 rd = fromI64(rs);
+  op(masm, rs, rd);
+  freeI64Except(rs, rd);
   push(rd);
 }
 
@@ -9064,6 +9066,14 @@ static void RotrImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
   masm.rotateRight(Imm32(c & 31), rsd, rsd);
 }
 
+static void EqzI32(MacroAssembler& masm, RegI32 rsd) {
+  masm.cmp32Set(Assembler::Equal, rsd, Imm32(0), rsd);
+}
+
+static void WrapI64ToI32(MacroAssembler& masm, RegI64 rs, RegI32 rd) {
+  masm.move64To32(rs, rd);
+}
+
 static void AddI64(MacroAssembler& masm, RegI64 rs, RegI64 rsd) {
   masm.add64(rs, rsd);
 }
@@ -9140,6 +9150,16 @@ static void ShrUI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd) {
 
 static void ShrUImmI64(MacroAssembler& masm, int64_t c, RegI64 rsd) {
   masm.rshift64(Imm32(c & 63), rsd);
+}
+
+static void EqzI64(MacroAssembler& masm, RegI64 rs, RegI32 rd) {
+#ifdef JS_PUNBOX64
+  masm.cmpPtrSet(Assembler::Equal, rs.reg, ImmWord(0), rd);
+#else
+  MOZ_ASSERT(rs.low == rd);
+  masm.or32(rs.high, rs.low);
+  masm.cmp32Set(Assembler::Equal, rs.low, Imm32(0), rd);
+#endif
 }
 
 static void AddF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd) {
@@ -9641,22 +9661,14 @@ void BaseCompiler::emitEqzI32() {
   if (sniffConditionalControlEqz(ValType::I32)) {
     return;
   }
-
-  RegI32 r = popI32();
-  masm.cmp32Set(Assembler::Equal, r, Imm32(0), r);
-  pushI32(r);
+  emitUnop(EqzI32);
 }
 
 void BaseCompiler::emitEqzI64() {
   if (sniffConditionalControlEqz(ValType::I64)) {
     return;
   }
-
-  RegI64 rs = popI64();
-  RegI32 rd = fromI64(rs);
-  eqz64(rs, rd);
-  freeI64Except(rs, rd);
-  pushI32(rd);
+  emitUnop(EqzI64);
 }
 
 template <TruncFlags flags>
@@ -9712,14 +9724,6 @@ bool BaseCompiler::emitTruncateF64ToI64() {
   return true;
 }
 #endif  // RABALDR_FLOAT_TO_I64_CALLOUT
-
-void BaseCompiler::emitWrapI64ToI32() {
-  RegI64 rs = popI64();
-  RegI32 rd = fromI64(rs);
-  masm.move64To32(rs, rd);
-  freeI64Except(rs, rd);
-  pushI32(rd);
-}
 
 void BaseCompiler::emitExtendI64_8() {
   RegI64 r;
@@ -15775,8 +15779,8 @@ bool BaseCompiler::emitBody() {
   iter_.readBinary(type, &unused_a, &unused_b) && \
       (deadCode_ || (emitBinop(arg1, arg2), true))
 
-#define dispatchBinary3(arg1, arg2, arg3, type) \
-  iter_.readBinary(type, &unused_a, &unused_b) &&           \
+#define dispatchBinary3(arg1, arg2, arg3, type)   \
+  iter_.readBinary(type, &unused_a, &unused_b) && \
       (deadCode_ || (emitBinop(arg1, arg2, arg3), true))
 
 #define dispatchUnary0(doEmit, type) \
@@ -15786,7 +15790,7 @@ bool BaseCompiler::emitBody() {
   iter_.readUnary(type, &unused_a) && (deadCode_ || (emitUnop(arg1), true))
 
 #define dispatchUnary2(arg1, arg2, type) \
-  iter_.readUnary(type, &unused_a) &&            \
+  iter_.readUnary(type, &unused_a) &&    \
       (deadCode_ || (emitUnop(arg1, arg2), true))
 
 #define dispatchComparison0(doEmit, operandType, compareOp)  \
@@ -16048,7 +16052,7 @@ bool BaseCompiler::emitBody() {
                                          ValType::F64, ValType::I32));
       case uint16_t(Op::I32WrapI64):
         CHECK_NEXT(
-            dispatchConversion0(emitWrapI64ToI32, ValType::I64, ValType::I32));
+            dispatchConversion1(WrapI64ToI32, ValType::I64, ValType::I32));
       case uint16_t(Op::I32ReinterpretF32):
         CHECK_NEXT(dispatchConversion1(ReinterpretF32AsI32, ValType::F32,
                                        ValType::I32));
