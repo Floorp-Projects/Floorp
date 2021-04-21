@@ -3144,6 +3144,9 @@ class BaseCompiler;
 
 static void ClzI64(BaseCompiler& bc, RegI64 rsd);
 static void CtzI64(BaseCompiler& bc, RegI64 rsd);
+static RegI32 PopcntTemp(BaseCompiler& bc);
+static void PopcntI32(BaseCompiler& bc, RegI32 rsd, RegI32 temp);
+static void PopcntI64(BaseCompiler& bc, RegI64 rsd, RegI32 temp);
 static void MinF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
 static void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
 static void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
@@ -3155,6 +3158,9 @@ static void ExtendI32_8(BaseCompiler& bc, RegI32 rsd);
 class BaseCompiler final : public BaseCompilerInterface {
   friend void ClzI64(BaseCompiler& bc, RegI64 rsd);
   friend void CtzI64(BaseCompiler& bc, RegI64 rsd);
+  friend RegI32 PopcntTemp(BaseCompiler& bc);
+  friend void PopcntI32(BaseCompiler& bc, RegI32 rsd, RegI32 temp);
+  friend void PopcntI64(BaseCompiler& bc, RegI64 rsd, RegI32 temp);
   friend void MinF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
   friend void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
   friend void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
@@ -6650,28 +6656,6 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
   }
 
-  RegI32 needPopcnt32Temp() {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    return AssemblerX86Shared::HasPOPCNT() ? RegI32::Invalid() : needI32();
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    return needI32();
-#else
-    MOZ_CRASH("BaseCompiler platform hook: needPopcnt32Temp");
-#endif
-  }
-
-  RegI32 needPopcnt64Temp() {
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    return AssemblerX86Shared::HasPOPCNT() ? RegI32::Invalid() : needI32();
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    return needI32();
-#else
-    MOZ_CRASH("BaseCompiler platform hook: needPopcnt64Temp");
-#endif
-  }
-
   class OutOfLineTruncateCheckF32OrF64ToI32 : public OutOfLineCode {
     AnyReg src;
     RegI32 dest;
@@ -8605,6 +8589,10 @@ class BaseCompiler final : public BaseCompilerInterface {
   template <typename CompilerType, typename RegType>
   void emitUnop(void (*op)(CompilerType& compiler, RegType rsd));
 
+  template <typename RegType, typename TempType>
+  void emitUnop(void (*op)(BaseCompiler& bc, RegType rsd, TempType rt),
+                TempType (*getSpecializedTemp)(BaseCompiler& bc));
+
   template <typename CompilerType, typename RhsType, typename LhsDestType>
   void emitBinop(void (*op)(CompilerType& masm, RhsType src,
                             LhsDestType srcDest));
@@ -8663,8 +8651,6 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitRotlI64();
   void emitEqzI32();
   void emitEqzI64();
-  void emitPopcntI32();
-  void emitPopcntI64();
   template <TruncFlags flags>
   [[nodiscard]] bool emitTruncateF32ToI32();
   template <TruncFlags flags>
@@ -8849,6 +8835,17 @@ void BaseCompiler::emitUnop(void (*op)(CompilerType& compiler, RegType rsd)) {
   push(rsd);
 }
 
+template <typename RegType, typename TempType>
+void BaseCompiler::emitUnop(void (*op)(BaseCompiler& bc, RegType rsd,
+                                       TempType rt),
+                            TempType (*getSpecializedTemp)(BaseCompiler& bc)) {
+  RegType rsd = pop<RegType>();
+  TempType temp = getSpecializedTemp(*this);
+  op(*this, rsd, temp);
+  maybeFree(temp);
+  push(rsd);
+}
+
 template <typename SourceType, typename DestType, typename TempType>
 void BaseCompiler::emitUnop(void (*op)(MacroAssembler& masm, SourceType rs,
                                        DestType rd, TempType temp)) {
@@ -9015,6 +9012,22 @@ static void CtzI32(MacroAssembler& masm, RegI32 rsd) {
   masm.ctz32(rsd, rsd, IsKnownNotZero(false));
 }
 
+// Currently common to PopcntI32 and PopcntI64
+static RegI32 PopcntTemp(BaseCompiler& bc) {
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  return AssemblerX86Shared::HasPOPCNT() ? RegI32::Invalid() : bc.needI32();
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  return bc.needI32();
+#else
+  MOZ_CRASH("BaseCompiler platform hook: PopcntTemp");
+#endif
+}
+
+static void PopcntI32(BaseCompiler& bc, RegI32 rsd, RegI32 temp) {
+  bc.masm.popcnt32(rsd, rsd, temp);
+}
+
 static void AddI64(MacroAssembler& masm, RegI64 rs, RegI64 rsd) {
   masm.add64(rs, rsd);
 }
@@ -9063,6 +9076,10 @@ static void ClzI64(BaseCompiler& bc, RegI64 rsd) {
 static void CtzI64(BaseCompiler& bc, RegI64 rsd) {
   bc.masm.ctz64(rsd, bc.lowPart(rsd));
   bc.maybeClearHighPart(rsd);
+}
+
+static void PopcntI64(BaseCompiler& bc, RegI64 rsd, RegI32 temp) {
+  bc.masm.popcnt64(rsd, rsd, temp);
 }
 
 static void AddF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd) {
@@ -9703,22 +9720,6 @@ void BaseCompiler::emitEqzI64() {
   eqz64(rs, rd);
   freeI64Except(rs, rd);
   pushI32(rd);
-}
-
-void BaseCompiler::emitPopcntI32() {
-  RegI32 r = popI32();
-  RegI32 temp = needPopcnt32Temp();
-  masm.popcnt32(r, r, temp);
-  maybeFree(temp);
-  pushI32(r);
-}
-
-void BaseCompiler::emitPopcntI64() {
-  RegI64 r = popI64();
-  RegI32 temp = needPopcnt64Temp();
-  masm.popcnt64(r, r, temp);
-  maybeFree(temp);
-  pushI64(r);
 }
 
 template <TruncFlags flags>
@@ -15843,6 +15844,10 @@ bool BaseCompiler::emitBody() {
 #define dispatchUnary1(arg1, type) \
   iter_.readUnary(type, &unused_a) && (deadCode_ || (emitUnop(arg1), true))
 
+#define dispatchUnary2(arg1, arg2, type) \
+  iter_.readUnary(type, &unused_a) &&            \
+      (deadCode_ || (emitUnop(arg1, arg2), true))
+
 #define dispatchComparison0(doEmit, operandType, compareOp)  \
   iter_.readComparison(operandType, &unused_a, &unused_b) && \
       (deadCode_ || (doEmit(compareOp, operandType), true))
@@ -16111,7 +16116,7 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::I32Ctz):
         CHECK_NEXT(dispatchUnary1(CtzI32, ValType::I32));
       case uint16_t(Op::I32Popcnt):
-        CHECK_NEXT(dispatchUnary0(emitPopcntI32, ValType::I32));
+        CHECK_NEXT(dispatchUnary2(PopcntI32, PopcntTemp, ValType::I32));
       case uint16_t(Op::I32Or):
         CHECK_NEXT(dispatchBinary2(OrI32, OrImmI32, ValType::I32));
       case uint16_t(Op::I32And):
@@ -16260,7 +16265,7 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::I64Ctz):
         CHECK_NEXT(dispatchUnary1(CtzI64, ValType::I64));
       case uint16_t(Op::I64Popcnt):
-        CHECK_NEXT(dispatchUnary0(emitPopcntI64, ValType::I64));
+        CHECK_NEXT(dispatchUnary2(PopcntI64, PopcntTemp, ValType::I64));
       case uint16_t(Op::I64Eqz):
         CHECK_NEXT(dispatchConversion0(emitEqzI64, ValType::I64, ValType::I32));
       case uint16_t(Op::I64Load8S):
@@ -17479,6 +17484,7 @@ bool BaseCompiler::emitBody() {
 #undef dispatchBinary2
 #undef dispatchUnary0
 #undef dispatchUnary1
+#undef dispatchUnary2
 #undef dispatchComparison0
 #undef dispatchConversion0
 #undef dispatchConversion1
