@@ -379,6 +379,12 @@ class nsCocoaUtils {
       nsIWidget::Modifiers aNativeModifiers);
 
   /**
+   * Get the mouse button, which depends on the event's type and buttonNumber.
+   * Returns MouseButton::ePrimary for non-mouse events.
+   */
+  static mozilla::MouseButton ButtonForEvent(NSEvent* aEvent);
+
+  /**
    * Convert string with font attribute to NSMutableAttributedString
    */
   static NSMutableAttributedString* GetNSMutableAttributedString(

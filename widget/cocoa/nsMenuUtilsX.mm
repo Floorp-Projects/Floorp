@@ -6,6 +6,7 @@
 #include "nsMenuUtilsX.h"
 #include <unordered_set>
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
@@ -25,7 +26,7 @@
 using namespace mozilla;
 
 void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent,
-                                     NSEventModifierFlags aModifierFlags) {
+                                     NSEventModifierFlags aModifierFlags, int16_t aButton) {
   MOZ_ASSERT(aTargetContent, "null ptr");
 
   dom::Document* doc = aTargetContent->OwnerDoc();
@@ -41,7 +42,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent,
     IgnoredErrorResult rv;
     event->InitCommandEvent(u"command"_ns, true, true,
                             nsGlobalWindowInner::Cast(doc->GetInnerWindow()), 0, ctrlKey, altKey,
-                            shiftKey, cmdKey, 0, nullptr, 0, rv);
+                            shiftKey, cmdKey, aButton, nullptr, 0, rv);
     if (!rv.Failed()) {
       event->SetTrusted(true);
       aTargetContent->DispatchEvent(*event);

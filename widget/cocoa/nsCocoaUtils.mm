@@ -985,6 +985,36 @@ NSEventModifierFlags nsCocoaUtils::ConvertWidgetModifiersToMacModifierFlags(
   return modifierFlags;
 }
 
+mozilla::MouseButton nsCocoaUtils::ButtonForEvent(NSEvent* aEvent) {
+  switch (aEvent.type) {
+    case NSEventTypeLeftMouseDown:
+    case NSEventTypeLeftMouseDragged:
+    case NSEventTypeLeftMouseUp:
+      return MouseButton::ePrimary;
+    case NSEventTypeRightMouseDown:
+    case NSEventTypeRightMouseDragged:
+    case NSEventTypeRightMouseUp:
+      return MouseButton::eSecondary;
+    case NSEventTypeOtherMouseDown:
+    case NSEventTypeOtherMouseDragged:
+    case NSEventTypeOtherMouseUp:
+      switch (aEvent.buttonNumber) {
+        case 3:
+          return MouseButton::eX1;
+        case 4:
+          return MouseButton::eX2;
+        default:
+          // The middle button usually has button 2, but if this is a synthesized event (for which
+          // you cannot specify a buttonNumber), then the button will be 0. Treat all remaining
+          // OtherMouse events as the middle button.
+          return MouseButton::eMiddle;
+      }
+    default:
+      // Treat non-mouse events as the primary mouse button.
+      return MouseButton::ePrimary;
+  }
+}
+
 NSMutableAttributedString* nsCocoaUtils::GetNSMutableAttributedString(
     const nsAString& aText, const nsTArray<mozilla::FontRange>& aFontRanges, const bool aIsVertical,
     const CGFloat aBackingScaleFactor) {
