@@ -352,7 +352,7 @@ function TypedArrayFilter(callbackfn/*, thisArg*/) {
     var T = arguments.length > 1 ? arguments[1] : void 0;
 
     // Step 6.
-    var kept = new List();
+    var kept = new_List();
 
     // Step 8.
     var captured = 0;
