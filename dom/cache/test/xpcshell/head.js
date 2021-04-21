@@ -16,6 +16,7 @@ const osWindowsName = "WINNT";
 const pathDelimiter = "/";
 
 const persistentPersistence = "persistent";
+const defaultPersistence = "default";
 
 const storageDirName = "storage";
 const persistentPersistenceDirName = "permanent";
@@ -74,11 +75,13 @@ function runTest() {
 }
 
 function enableTesting() {
+  Services.prefs.setBoolPref("dom.simpleDB.enabled", true);
   Services.prefs.setBoolPref("dom.quotaManager.testing", true);
 }
 
 function resetTesting() {
   Services.prefs.clearUserPref("dom.quotaManager.testing");
+  Services.prefs.clearUserPref("dom.simpleDB.enabled");
 }
 
 function initStorage() {
@@ -97,8 +100,8 @@ function initTemporaryOrigin(principal) {
   return Services.qms.initializeTemporaryOrigin("default", principal);
 }
 
-function clearOrigin(principal) {
-  let request = Services.qms.clearStoragesForPrincipal(principal, "default");
+function clearOrigin(principal, persistence) {
+  let request = Services.qms.clearStoragesForPrincipal(principal, persistence);
 
   return request;
 }
@@ -186,6 +189,10 @@ function getPrincipal(url, attrs) {
   return Services.scriptSecurityManager.createContentPrincipal(uri, attrs);
 }
 
+function getDefaultPrincipal() {
+  return getPrincipal("http://example.com");
+}
+
 function getRelativeFile(relativePath) {
   let file = Services.dirsvc
     .get(NS_APP_USER_PROFILE_50_DIR, Ci.nsIFile)
@@ -205,4 +212,18 @@ function getRelativeFile(relativePath) {
   });
 
   return file;
+}
+
+function getSimpleDatabase(principal, persistence) {
+  let connection = Cc["@mozilla.org/dom/sdb-connection;1"].createInstance(
+    Ci.nsISDBConnection
+  );
+
+  if (!principal) {
+    principal = getDefaultPrincipal();
+  }
+
+  connection.init(principal, persistence);
+
+  return connection;
 }

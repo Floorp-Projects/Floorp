@@ -50,6 +50,16 @@ async function testSteps() {
     await requestFinished(request);
   }
 
+  async function createPersistentTestOrigin() {
+    let database = getSimpleDatabase(principal, "persistent");
+
+    let request = database.open("data");
+    await requestFinished(request);
+
+    request = reset();
+    await requestFinished(request);
+  }
+
   function removeFile(file) {
     file.remove(false);
   }
@@ -87,6 +97,14 @@ async function testSteps() {
     await requestFinished(request);
   }
 
+  async function initPersistentTestOrigin() {
+    let request = initStorage();
+    await requestFinished(request);
+
+    request = initPersistentOrigin(principal);
+    await requestFinished(request);
+  }
+
   async function checkFiles(wantData, wantUsage) {
     let exists = dataFile.exists();
     if (wantData) {
@@ -115,22 +133,8 @@ async function testSteps() {
     await requestFinished(request);
   }
 
-  async function initPersistentTestOrigin() {
-    let request = initStorage();
-    await requestFinished(request);
-
-    request = initTemporaryStorage();
-    await requestFinished(request);
-
-    request = initPersistentOrigin(principal);
-    await requestFinished(request);
-  }
-
   async function clearPersistentTestOrigin() {
-    let request = Services.qms.clearStoragesForPrincipal(
-      principal,
-      "persistent"
-    );
+    let request = clearOrigin(principal, "persistent");
     await requestFinished(request);
   }
 
@@ -339,13 +343,27 @@ async function testSteps() {
 
   await clearTestOrigin();
 
-  info("Stage 12 - any ls directory in permanent repository exists");
+  // Verify that InitializeOrigin doesn't fail when a
+  // storage/permanent/${origin}/ls exists.
+  info(
+    "Stage 12 - Testing initialization of ls directory placed in permanent " +
+      "origin directory"
+  );
 
-  await createEmptyDirectory(persistentLSDir);
+  await createPersistentTestOrigin();
 
-  await initPersistentTestOrigin();
+  createEmptyDirectory(persistentLSDir);
+
+  try {
+    await initPersistentTestOrigin();
+
+    ok(true, "Should not have thrown");
+  } catch (ex) {
+    ok(false, "Should not have thrown");
+  }
+
+  let exists = persistentLSDir.exists();
+  ok(exists, "ls directory in permanent origin directory does exist");
 
   await clearPersistentTestOrigin();
-
-  ok(true, "A persistent ls directory didn't cause InitializeOrigin to fail");
 }

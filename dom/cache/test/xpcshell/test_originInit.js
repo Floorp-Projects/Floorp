@@ -63,6 +63,16 @@ async function testSteps() {
     await requestFinished(request);
   }
 
+  async function createPersistentTestOrigin() {
+    let database = getSimpleDatabase(principal, "persistent");
+
+    let request = database.open("data");
+    await requestFinished(request);
+
+    request = reset();
+    await requestFinished(request);
+  }
+
   function removeFile(file) {
     file.remove(false);
   }
@@ -77,6 +87,25 @@ async function testSteps() {
 
   function createEmptyDirectory(dir) {
     dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o0755);
+  }
+
+  async function initTestOrigin() {
+    let request = initStorage();
+    await requestFinished(request);
+
+    request = initTemporaryStorage();
+    await requestFinished(request);
+
+    request = initTemporaryOrigin(principal);
+    await requestFinished(request);
+  }
+
+  async function initPersistentTestOrigin() {
+    let request = initStorage();
+    await requestFinished(request);
+
+    request = initPersistentOrigin(principal);
+    await requestFinished(request);
   }
 
   function checkFiles(
@@ -114,6 +143,16 @@ async function testSteps() {
     }
   }
 
+  async function clearTestOrigin() {
+    let request = clearOrigin(principal, defaultPersistence);
+    await requestFinished(request);
+  }
+
+  async function clearPersistentTestOrigin() {
+    let request = clearOrigin(principal, persistentPersistence);
+    await requestFinished(request);
+  }
+
   async function testOriginInit(
     createCachesDatabase,
     createPaddingFile,
@@ -121,7 +160,7 @@ async function testSteps() {
     createMorgueDir
   ) {
     info(
-      `Testing init cache directory when caches.sqlite ` +
+      `Testing initialization of cache directory when caches.sqlite ` +
         `${createCachesDatabase ? "exists" : "doesn't exist"}, .padding ` +
         `${createPaddingFile ? "exists" : "doesn't exist"}, .padding-tmp ` +
         `${createTempPaddingFile ? "exists" : "doesn't exist"}, morgue ` +
@@ -148,14 +187,7 @@ async function testSteps() {
       removeDir(morgueDir);
     }
 
-    let request = initStorage();
-    await requestFinished(request);
-
-    request = initTemporaryStorage();
-    await requestFinished(request);
-
-    request = initTemporaryOrigin(principal);
-    await requestFinished(request);
+    await initTestOrigin();
 
     checkFiles(
       createCachesDatabase,
@@ -168,27 +200,7 @@ async function testSteps() {
       createCachesDatabase && createMorgueDir
     );
 
-    request = clearOrigin(principal);
-    await requestFinished(request);
-  }
-
-  async function initPersistentTestOrigin() {
-    let request = initStorage();
-    await requestFinished(request);
-
-    request = initTemporaryStorage();
-    await requestFinished(request);
-
-    request = initPersistentOrigin(principal);
-    await requestFinished(request);
-  }
-
-  async function clearPersistentTestOrigin() {
-    let request = Services.qms.clearStoragesForPrincipal(
-      principal,
-      persistentPersistence
-    );
-    await requestFinished(request);
+    await clearTestOrigin();
   }
 
   // Test all possible combinations.
@@ -207,20 +219,28 @@ async function testSteps() {
     }
   }
 
+  // Verify that InitializeOrigin doesn't fail when a
+  // storage/permanent/${origin}/cache exists.
   async function testPermanentCacheDir() {
     info(
-      `Testing InitializeOrigin doesn't fail when there is a cache ` +
-        `directory in the ${persistentPersistenceDirName} repository`
+      "Testing initialization of cache directory placed in permanent origin " +
+        "directory"
     );
+
+    await createPersistentTestOrigin();
 
     createEmptyDirectory(persistentCacheDir);
 
-    await initPersistentTestOrigin();
+    try {
+      await initPersistentTestOrigin();
 
-    ok(
-      true,
-      "A persistent cache directory didn't cause InitializeOrigin to fail"
-    );
+      ok(true, "Should not have thrown");
+    } catch (ex) {
+      ok(false, "Should not have thrown");
+    }
+
+    let exists = persistentCacheDir.exists();
+    ok(exists, "cache directory in permanent origin directory does exist");
 
     await clearPersistentTestOrigin();
   }
