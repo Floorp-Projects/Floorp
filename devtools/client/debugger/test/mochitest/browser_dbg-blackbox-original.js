@@ -21,6 +21,7 @@ add_task(async function() {
 
   // Show the source in source tree in primiany panel for blackBox icon check
   rightClickElement(dbg, "CodeMirrorLines");
+  await waitForContextMenu(dbg);
   selectContextMenuItem(dbg, "#node-menu-show-source");
   await waitForDispatch(dbg.store, "SHOW_SOURCE");
 
