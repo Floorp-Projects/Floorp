@@ -7,11 +7,11 @@ function boom() {
   a = document.createElement("x")
   a.style.overflow = "o"
   document.styleSheets[0].insertRule("i {}", 0)
-  requestIdleCallback(function() {
+  setTimeout(function() {
     document.documentElement.className = "";
-  });
+  }, 0);
 }
-requestIdleCallback(boom)
+setTimeout(boom, 0)
 </script>
 </head>
 <i id=id0 style="margin: 15ch">

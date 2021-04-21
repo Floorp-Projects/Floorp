@@ -18,15 +18,15 @@
 window.addEventListener('load', () => {
   var target = document.getElementById('target');
   target.classList.add('red');
-  requestIdleCallback(() => {
+  setTimeout(() => {
     target.classList.remove('red');
     SpecialPowers.getDOMWindowUtils(window)
                  .sendMouseEvent("mousemove", 100, 100, 1,
                                  0, 1, 0);
-    requestIdleCallback(() => {
+    setTimeout(() => {
       document.documentElement.classList.remove("reftest-wait");
-    });
-  });
+    }, 0);
+  }, 0);
   SpecialPowers.getDOMWindowUtils(window)
                .sendMouseEvent("mousemove", 100, 100, 1,
                                0, 1, 0);

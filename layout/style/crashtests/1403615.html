@@ -9,16 +9,16 @@ window.onload = () => {
   c.appendChild(d)
   a.appendChild(c)
   document.documentElement.appendChild(a)
-  requestIdleCallback(() => {
+  setTimeout(() => {
     a.style.display = "table-column-group"
     d.appendChild(document.createTextNode("\u05D2"))
-    requestIdleCallback(() => {
+    setTimeout(() => {
       d.appendChild(document.createElement("span"))
       b.style.zIndex = "1073741824"
       document.documentElement.offsetTop;
       document.documentElement.className = "";
-    })
-  })
+    }, 0)
+  }, 0)
 }
 </script>
 </html>

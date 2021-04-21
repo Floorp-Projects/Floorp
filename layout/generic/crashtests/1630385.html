@@ -1,6 +1,6 @@
 <html class="reftest-wait">
 <script>
-window.requestIdleCallback(() => {
+window.setTimeout(() => {
   try{ c.style.cssText="margin-top:78%" }catch(e){}
   try{ b.style.cssText="padding-right:100em" }catch(e){}
   try{ b.scrollIntoView() }catch(e){}
@@ -9,10 +9,10 @@ window.requestIdleCallback(() => {
   try{ a.setAttribute('style', "") }catch(e){}
   try{ a.offsetHeight }catch(e){}
   try{ a.textContent="" }catch(e){}
-  requestIdleCallback(() => {
+  setTimeout(() => {
     document.documentElement.className = "";
-  })
-})
+  }, 0)
+}, 0)
 </script>
 <style>
 :last-of-type {

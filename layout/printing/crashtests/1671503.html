@@ -1,11 +1,11 @@
 <html class="reftest-wait">
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  window.requestIdleCallback(() => {
+  window.setTimeout(() => {
     SpecialPowers.wrap(window).printPreview()?.close()
     SpecialPowers.wrap(window).printPreview()?.close()
     document.documentElement.className = "";
-  })
+  }, 0)
 })
 </script>
 <iframe src='data:text/html,foo'></iframe>

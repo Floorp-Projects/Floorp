@@ -1,10 +1,10 @@
 <html class="reftest-wait">
 <script>
-requestIdleCallback(function(){
+setTimeout(function(){
   document.designMode='on';
   window.frames[0].document.body.appendChild(document.getElementById('a'));
   document.documentElement.className = "";
-});
+}, 0);
 </script>
 <iframe></iframe>
 <base href=''/>
