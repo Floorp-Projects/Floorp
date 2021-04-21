@@ -77,6 +77,7 @@ async function shiftClickEnable(dbg) {
 async function setConditionalBreakpoint(dbg, index, condition) {
   let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
   rightClickEl(dbg, bpMarkers[index]);
+  await waitForContextMenu(dbg);
   selectContextMenuItem(dbg, selectors.addConditionItem);
   await typeInPanel(dbg, condition);
   await waitForCondition(dbg, condition);
@@ -88,6 +89,7 @@ async function setConditionalBreakpoint(dbg, index, condition) {
 async function setLogPoint(dbg, index, expression) {
   let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
   rightClickEl(dbg, bpMarkers[index]);
+  await waitForContextMenu(dbg);
 
   selectContextMenuItem(dbg, selectors.addLogItem);
   await typeInPanel(dbg, expression);
@@ -99,6 +101,7 @@ async function setLogPoint(dbg, index, expression) {
 
 async function disableBreakpoint(dbg, index) {
   rightClickElement(dbg, "columnBreakpoints");
+  await waitForContextMenu(dbg);
   selectContextMenuItem(dbg, selectors.disableItem);
 
   await waitForState(dbg, state => {

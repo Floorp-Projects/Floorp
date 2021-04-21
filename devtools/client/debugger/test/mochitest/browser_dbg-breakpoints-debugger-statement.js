@@ -10,6 +10,7 @@ add_task(async function() {
 
   info("Disable the first debugger statement on line 12 by gutter menu");
   rightClickElement(dbg, "gutter", 12);
+  await waitForContextMenu(dbg);
   selectContextMenuItem(
     dbg,
     selectors.breakpointContextMenu.disableDbgStatement
@@ -25,6 +26,7 @@ add_task(async function() {
 
   info("Enable the previously disabled debugger statement by gutter menu");
   rightClickElement(dbg, "gutter", 12);
+  await waitForContextMenu(dbg);
   selectContextMenuItem(
     dbg,
     selectors.breakpointContextMenu.enableDbgStatement
@@ -47,6 +49,7 @@ add_task(async function() {
 
   info("Disable the second debugger statement by breakpoint menu");
   rightClickEl(dbg, bpElements[1]);
+  await waitForContextMenu(dbg);
   selectContextMenuItem(
     dbg,
     selectors.breakpointContextMenu.disableDbgStatement
@@ -64,6 +67,7 @@ add_task(async function() {
   bpElements = findAllElements(dbg, "columnBreakpoints");
   assertClass(bpElements[1], "has-condition");
   rightClickEl(dbg, bpElements[1]);
+  await waitForContextMenu(dbg);
   selectContextMenuItem(
     dbg,
     selectors.breakpointContextMenu.enableDbgStatement
