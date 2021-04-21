@@ -15,6 +15,7 @@ add_task(async function() {
   info("Right clicks frame 'nestedB' and selects 'Restart frame'.");
   const frameEls = findAllElementsWithSelector(dbg, ".pane.frames .frame");
   rightClickEl(dbg, frameEls[1]);
+  await waitForContextMenu(dbg);
 
   selectContextMenuItem(dbg, "#node-menu-restart-frame");
   await waitForDispatch(dbg.store, "COMMAND");
