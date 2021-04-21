@@ -27,6 +27,7 @@ add_task(async function() {
 
   info("Hit 'Enter' when the cursor is in the conditional statement");
   rightClickElement(dbg, "gutter", 5);
+  await waitForContextMenu(dbg);
   selectContextMenuItem(dbg, `${selectors.editConditionItem}`);
   await waitForConditionalPanelFocus(dbg);
   pressKey(dbg, "Left");
@@ -38,6 +39,7 @@ add_task(async function() {
 
   info("Hit 'Alt+Enter' when the cursor is in the conditional statement");
   rightClickElement(dbg, "gutter", 5);
+  await waitForContextMenu(dbg);
   selectContextMenuItem(dbg, `${selectors.editConditionItem}`);
   await waitForConditionalPanelFocus(dbg);
   pressKey(dbg, "Left");
@@ -78,6 +80,7 @@ add_task(async function() {
   is(conditonalPanel, null, "The conditional breakpoint panel is closed");
 
   rightClickElement(dbg, "breakpointItem", 2);
+  await waitForContextMenu(dbg);
   info('select "remove condition"');
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeCondition);
   await waitForBreakpointWithoutCondition(dbg, "simple2", 5);
@@ -122,6 +125,7 @@ async function setConditionalBreakpoint(dbg, index, condition) {
   const { addConditionItem, editConditionItem } = selectors;
   const selector = `${addConditionItem},${editConditionItem}`;
   rightClickElement(dbg, "gutter", index);
+  await waitForContextMenu(dbg);
   selectContextMenuItem(dbg, selector);
   typeInPanel(dbg, condition);
 }

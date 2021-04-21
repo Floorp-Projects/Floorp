@@ -10,7 +10,7 @@ add_task(async function() {
 
   await addBreakpoint(dbg, "simple2", 3);
 
-  openFirstBreakpointContextMenu(dbg);
+  await openFirstBreakpointContextMenu(dbg);
   // select "Remove breakpoint"
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.remove);
 
@@ -28,7 +28,7 @@ add_task(async function() {
   await addBreakpoint(dbg, "simple1", 5);
   await addBreakpoint(dbg, "simple1", 6);
 
-  openFirstBreakpointContextMenu(dbg);
+  await openFirstBreakpointContextMenu(dbg);
   // select "Disable Others"
   let dispatched = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableOthers);
@@ -40,7 +40,7 @@ add_task(async function() {
   await dispatched;
   ok(true, "breakpoint at 4 is the only enabled breakpoint");
 
-  openFirstBreakpointContextMenu(dbg);
+  await openFirstBreakpointContextMenu(dbg);
   // select "Disable All"
   dispatched = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableAll);
@@ -50,7 +50,7 @@ add_task(async function() {
   await dispatched;
   ok(true, "all breakpoints are disabled");
 
-  openFirstBreakpointContextMenu(dbg);
+  await openFirstBreakpointContextMenu(dbg);
   // select "Enable Others"
   dispatched = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.enableOthers);
@@ -62,7 +62,7 @@ add_task(async function() {
   await dispatched;
   ok(true, "all breakpoints except line 1 are enabled");
 
-  openFirstBreakpointContextMenu(dbg);
+  await openFirstBreakpointContextMenu(dbg);
   // select "Remove Others"
   dispatched = waitForDispatch(dbg.store, "REMOVE_BREAKPOINT", 2);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeOthers);
@@ -76,6 +76,7 @@ add_task(async function() {
   ok(true, "remaining breakpoint should be on line 4");
 });
 
-function openFirstBreakpointContextMenu(dbg) {
+async function openFirstBreakpointContextMenu(dbg) {
   rightClickElement(dbg, "breakpointItem", 2);
+  await waitForContextMenu(dbg);
 }
