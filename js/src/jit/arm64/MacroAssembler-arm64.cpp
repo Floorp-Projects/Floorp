@@ -800,7 +800,23 @@ void MacroAssembler::flush() { Assembler::flush(); }
 // other routines when that is necessary.  See lengthy comment in
 // Architecture-arm64.h.
 
+// Routines for saving/restoring registers on the stack.  The format is:
+//
+//   (highest address)
+//
+//   integer (X) regs in any order      size: 8 * # regs
+//
+//   double (D) regs in any order       size: 8 * # regs
+//
+//   (lowest address)
+
+size_t MacroAssembler::PushRegsInMaskSizeInBytes(LiveRegisterSet set) {
+  return set.gprs().size() * sizeof(intptr_t) + set.fpus().getPushSizeInBytes();
+}
+
 void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
+  mozilla::DebugOnly<size_t> framePushedInitial = framePushed();
+
   for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more();) {
     vixl::CPURegister src[4] = {vixl::NoCPUReg, vixl::NoCPUReg, vixl::NoCPUReg,
                                 vixl::NoCPUReg};
@@ -818,9 +834,7 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
     vixl::CPURegister src[4] = {vixl::NoCPUReg, vixl::NoCPUReg, vixl::NoCPUReg,
                                 vixl::NoCPUReg};
 
-#ifdef JS_CODEGEN_ARM64
     MOZ_ASSERT(sizeof(FloatRegisters::RegisterContent) == 8);
-#endif
     for (size_t i = 0; i < 4 && iter.more(); i++) {
       FloatRegister reg = *iter;
 #ifdef ENABLE_WASM_SIMD
@@ -832,10 +846,15 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
     }
     vixl::MacroAssembler::Push(src[0], src[1], src[2], src[3]);
   }
+
+  MOZ_ASSERT(framePushed() - framePushedInitial ==
+             PushRegsInMaskSizeInBytes(set));
 }
 
 void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
                                      Register scratch) {
+  mozilla::DebugOnly<size_t> offsetInitial = dest.offset;
+
   FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
   unsigned numFpu = fpuSet.size();
   int32_t diffF = fpuSet.getPushSizeInBytes();
@@ -865,6 +884,8 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
   // implementations.
   diffF -= diffF % sizeof(uintptr_t);
   MOZ_ASSERT(diffF == 0);
+
+  MOZ_ASSERT(offsetInitial - dest.offset == PushRegsInMaskSizeInBytes(set));
 }
 
 void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
@@ -925,8 +946,7 @@ void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
     offset = nextOffset;
   }
 
-  size_t bytesPushed =
-      set.gprs().size() * sizeof(uint64_t) + set.fpus().getPushSizeInBytes();
+  size_t bytesPushed = PushRegsInMaskSizeInBytes(set);
   MOZ_ASSERT(offset == bytesPushed);
   freeStack(bytesPushed);
 }
