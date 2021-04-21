@@ -1685,10 +1685,12 @@ class MOZ_RAII ShapePropertyIter {
  public:
   ShapePropertyIter(JSContext* cx, Shape* shape) : cursor_(cx, shape) {
     static_assert(allowGC == CanGC);
+    MOZ_ASSERT(shape->getObjectClass()->isNativeObject());
   }
 
   explicit ShapePropertyIter(Shape* shape) : cursor_(nullptr, shape) {
     static_assert(allowGC == NoGC);
+    MOZ_ASSERT(shape->getObjectClass()->isNativeObject());
   }
 
   bool done() const { return cursor_->isEmptyShape(); }
