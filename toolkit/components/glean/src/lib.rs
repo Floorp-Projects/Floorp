@@ -35,7 +35,6 @@ extern crate cstr;
 #[macro_use]
 extern crate xpcom;
 
-use std::env;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 use std::path::PathBuf;
@@ -148,13 +147,6 @@ pub unsafe extern "C" fn fog_init(
     }
 
     glean::initialize(configuration, client_info);
-
-    // If we're operating in automation without any specific source tags to set,
-    // set the tag "automation" so any pings that escape don't clutter the tables.
-    // See https://mozilla.github.io/glean/book/user/debugging/index.html#enabling-debugging-features-through-environment-variables
-    if env::var("MOZ_AUTOMATION").is_ok() && env::var("GLEAN_SOURCE_TAGS").is_err() {
-        glean::set_source_tags(vec!["automation".to_string()]);
-    }
 
     // Register all custom pings before we initialize.
     fog::pings::register_pings();
