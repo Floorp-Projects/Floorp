@@ -32,6 +32,7 @@ add_task(async function() {
 
   info("Expands the whole source tree.");
   rightClickElement(dbg, "sourceTreeRootNode");
+  await waitForContextMenu(dbg);
   selectContextMenuItem(dbg, "#node-menu-expand-all");
   await waitForAllElements(dbg, "sourceTreeFolderNode", 3);
   const sourceTreeFolderNodeEls = findAllElements(dbg, "sourceTreeFolderNode");
@@ -39,6 +40,7 @@ add_task(async function() {
 
   info("Blackbox files in this directory.");
   rightClickEl(dbg, sourceTreeFolderNodeEls[1]);
+  await waitForContextMenu(dbg);
   await openContextMenuSubmenu(dbg, NODE_SELECTORS.nodeBlackBoxAll);
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Ignore files in this directory");
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllOutside, "Ignore files outside this directory");
@@ -55,6 +57,7 @@ add_task(async function() {
 
   info("Unblackbox files outside this directory.");
   rightClickEl(dbg, sourceTreeFolderNodeEls[2]);
+  await waitForContextMenu(dbg);
   await openContextMenuSubmenu(dbg, NODE_SELECTORS.nodeBlackBoxAll);
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Ignore files in this directory");
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeUnBlackBoxAllOutside, "Unignore files outside this directory");
@@ -72,6 +75,7 @@ add_task(async function() {
 
   info("Blackbox files in this group.");
   rightClickEl(dbg, sourceTreeRootNodeEl);
+  await waitForContextMenu(dbg);
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeBlackBoxAllInside, "Ignore files in this group");
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeBlackBoxAllInside);
   await waitForBlackboxCount(dbg, 2);
@@ -82,6 +86,7 @@ add_task(async function() {
  
   info("Unblackbox files in this group.");
   rightClickEl(dbg, sourceTreeRootNodeEl);
+  await waitForContextMenu(dbg);
   await assertContextMenuLabel(dbg, NODE_SELECTORS.nodeUnBlackBoxAllInside, "Unignore files in this group");
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeUnBlackBoxAllInside);
   await waitForBlackboxCount(dbg, 0);

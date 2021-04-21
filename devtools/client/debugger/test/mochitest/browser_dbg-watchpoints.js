@@ -19,6 +19,7 @@ add_task(async function() {
   await toggleScopeNode(dbg, 3);
   const addedWatchpoint = waitForDispatch(dbg.store, "SET_WATCHPOINT");
   await rightClickScopeNode(dbg, 5);
+  await waitForContextMenu(dbg);
   let submenu = await openContextMenuSubmenu(dbg, selectors.watchpointsSubmenu);
   const getWatchpointItem = document.querySelector(selectors.addGetWatchpoint);
   submenu.activateItem(getWatchpointItem);
@@ -58,6 +59,7 @@ add_task(async function() {
   await toggleScopeNode(dbg, 4);
   const addedWatchpoint2 = waitForDispatch(dbg.store, "SET_WATCHPOINT");
   await rightClickScopeNode(dbg, 6);
+  await waitForContextMenu(dbg);
   submenu = await openContextMenuSubmenu(dbg, selectors.watchpointsSubmenu);
   const getWatchpointItem2 = document.querySelector(selectors.addGetWatchpoint);
   submenu.activateItem(getWatchpointItem2);
@@ -86,6 +88,7 @@ add_task(async function() {
   info("Add back the get watchpoint on b");
   const addedWatchpoint3 = waitForDispatch(dbg.store, "SET_WATCHPOINT");
   await rightClickScopeNode(dbg, 5);
+  await waitForContextMenu(dbg);
   submenu = await openContextMenuSubmenu(dbg, selectors.watchpointsSubmenu);
   const getWatchpointItem3 = document.querySelector(selectors.addGetWatchpoint);
   submenu.activateItem(getWatchpointItem3);
