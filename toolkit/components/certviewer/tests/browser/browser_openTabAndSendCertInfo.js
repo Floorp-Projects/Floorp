@@ -31,13 +31,19 @@ function checksCertTab(tabsCount) {
   checkSpec(spec);
 }
 
-async function checkCertChain() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+async function checkCertChain(browser) {
+  await SpecialPowers.spawn(browser, [], async function() {
     let certificateTabs;
     await ContentTaskUtils.waitForCondition(() => {
-      certificateTabs = content.document
-        .querySelector("certificate-section")
-        .shadowRoot.querySelectorAll(".certificate-tab");
+      let certificateSection = content.document.querySelector(
+        "certificate-section"
+      );
+      if (!certificateSection) {
+        return false;
+      }
+      certificateTabs = certificateSection.shadowRoot.querySelectorAll(
+        ".certificate-tab"
+      );
       return certificateTabs.length;
     }, "Found certificate tabs.");
 
@@ -105,6 +111,8 @@ add_task(async function openFromPopUp() {
   let spec = browser.currentURI.spec;
   checkSpec(spec);
 
+  await checkCertChain(browser);
+
   await BrowserTestUtils.closeWindow(topWin); // closes about:certificate
   win.document.getElementById("download_cert").cancelDialog();
   await BrowserTestUtils.windowClosed(win);
@@ -139,6 +147,7 @@ add_task(async function testBadCert() {
   });
   await loaded;
   checksCertTab(tabsCount);
+  await checkCertChain(gBrowser.selectedBrowser);
 
   gBrowser.removeCurrentTab(); // closes about:certificate
   gBrowser.removeCurrentTab(); // closes https://expired.example.com/
@@ -174,6 +183,7 @@ add_task(async function testBadCertIframe() {
   });
   await loaded;
   checksCertTab(tabsCount);
+  await checkCertChain(gBrowser.selectedBrowser);
 
   gBrowser.removeCurrentTab(); // closes about:certificate
   gBrowser.removeCurrentTab(); // closes https://expired.example.com/
@@ -207,6 +217,7 @@ add_task(async function testGoodCert() {
     checkAndClickButton(pageInfo.document, "security-view-cert");
     await loaded;
 
+    await checkCertChain(gBrowser.selectedBrowser);
     pageInfo.close();
   });
   checksCertTab(tabsCount);
@@ -256,7 +267,7 @@ add_task(async function testPreferencesCert() {
     await loaded;
 
     checksCertTab(tabsCount);
-    await checkCertChain();
+    await checkCertChain(gBrowser.selectedBrowser);
   });
   gBrowser.removeCurrentTab(); // closes about:certificate
 });
