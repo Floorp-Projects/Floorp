@@ -2388,18 +2388,11 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor) {
   if (!aCursor.IsCustom()) {
     return nullptr;
   }
-  // FIXME: GTK doesn't provide an API for custom cursors that have more than
-  // native resolution, so this will scale the image instead, which is slightly
-  // unfortunate.
   nsIntSize size = nsIWidget::CustomCursorSize(aCursor);
-  GdkPixbuf* pixbuf =
-      nsImageToPixbuf::ImageToPixbuf(aCursor.mContainer, Some(size));
-  if (!pixbuf) {
-    return nullptr;
-  }
 
-  auto CleanupPixBuf =
-      mozilla::MakeScopeExit([&]() { g_object_unref(pixbuf); });
+  // NOTE: GTK only allows integer scale factors, so we ceil to the closest
+  // scale factor and then tell gtk to scale it down.
+  int32_t gtkScale = std::ceil(aCursor.mResolution);
 
   // Reject cursors greater than 128 pixels in some direction, to prevent
   // spoofing.
@@ -2409,6 +2402,13 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor) {
   // TODO(emilio, bug 1445844): Unify the solution for this with other
   // platforms.
   if (size.width > 128 || size.height > 128) {
+    return nullptr;
+  }
+
+  nsIntSize rasterSize = size * gtkScale;
+  GdkPixbuf* pixbuf =
+      nsImageToPixbuf::ImageToPixbuf(aCursor.mContainer, Some(rasterSize));
+  if (!pixbuf) {
     return nullptr;
   }
 
@@ -2424,8 +2424,20 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor) {
     }
   }
 
-  return gdk_cursor_new_from_pixbuf(gdk_display_get_default(), pixbuf,
-                                    aCursor.mHotspotX, aCursor.mHotspotY);
+  auto CleanupPixBuf =
+      mozilla::MakeScopeExit([&]() { g_object_unref(pixbuf); });
+
+  cairo_surface_t* surface =
+      gdk_cairo_surface_create_from_pixbuf(pixbuf, gtkScale, nullptr);
+  if (!surface) {
+    return nullptr;
+  }
+
+  auto CleanupSurface =
+      mozilla::MakeScopeExit([&]() { cairo_surface_destroy(surface); });
+
+  return gdk_cursor_new_from_surface(gdk_display_get_default(), surface,
+                                     aCursor.mHotspotX, aCursor.mHotspotY);
 }
 
 void nsWindow::SetCursor(const Cursor& aCursor) {
