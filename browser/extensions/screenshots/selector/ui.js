@@ -639,20 +639,6 @@ this.ui = (function() {
       } else {
         this.cancel.style.display = "none";
       }
-      if (callbacks !== undefined && callbacks.save && this.save) {
-        // We use onclick here because we don't want addEventListener
-        // to add multiple event handlers to the same button
-        this.save.removeAttribute("disabled");
-        this.save.onclick = watchFunction(
-          assertIsTrusted(e => {
-            this.save.setAttribute("disabled", "true");
-            callbacks.save(e);
-          })
-        );
-        this.save.style.display = "";
-      } else if (this.save) {
-        this.save.style.display = "none";
-      }
       if (callbacks !== undefined && callbacks.download) {
         this.download.removeAttribute("disabled");
         this.download.onclick = watchFunction(
@@ -856,15 +842,6 @@ this.ui = (function() {
         target = target.parentNode;
       }
       return false;
-    },
-
-    clearSaveDisabled() {
-      if (!this.save) {
-        // Happens if we try to remove the disabled status after the worker
-        // has been shut down
-        return;
-      }
-      this.save.removeAttribute("disabled");
     },
 
     el: null,
