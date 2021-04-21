@@ -1587,9 +1587,14 @@ function selectContextMenuItem(dbg, selector) {
   item.closest("menupopup").activateItem(item);
 }
 
-function openContextMenuSubmenu(dbg, selector) {
+async function openContextMenuSubmenu(dbg, selector) {
   const item = findContextMenu(dbg, selector);
+  const popup = item.menupopup;
+  const popupshown = new Promise(resolve => {
+    popup.addEventListener("popupshown", () => resolve(), {once: true});
+  });
   item.openMenu(true);
+  await popupshown;
 }
 
 async function assertContextMenuLabel(dbg, selector, label) {
