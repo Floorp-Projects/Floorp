@@ -3147,6 +3147,9 @@ static void CtzI64(BaseCompiler& bc, RegI64 rsd);
 static RegI32 PopcntTemp(BaseCompiler& bc);
 static void PopcntI32(BaseCompiler& bc, RegI32 rsd, RegI32 temp);
 static void PopcntI64(BaseCompiler& bc, RegI64 rsd, RegI32 temp);
+static void ShlI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd);
+static void ShrI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd);
+static void ShrUI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd);
 static void MinF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
 static void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
 static void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
@@ -3161,6 +3164,9 @@ class BaseCompiler final : public BaseCompilerInterface {
   friend RegI32 PopcntTemp(BaseCompiler& bc);
   friend void PopcntI32(BaseCompiler& bc, RegI32 rsd, RegI32 temp);
   friend void PopcntI64(BaseCompiler& bc, RegI64 rsd, RegI32 temp);
+  friend void ShlI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd);
+  friend void ShrI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd);
+  friend void ShrUI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd);
   friend void MinF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
   friend void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
   friend void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
@@ -6650,12 +6656,6 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
   }
 
-  void maskShiftCount32(RegI32 r) {
-#if defined(JS_CODEGEN_ARM)
-    masm.and32(Imm32(31), r);
-#endif
-  }
-
   class OutOfLineTruncateCheckF32OrF64ToI32 : public OutOfLineCode {
     AnyReg src;
     RegI32 dest;
@@ -7484,56 +7484,55 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
   }
 
-  void pop2xI32ForShift(RegI32* r0, RegI32* r1) {
+  RegI32 popI32RhsForShift() {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     // r1 must be ecx for a variable shift, unless BMI2 is available.
     if (!Assembler::HasBMI2()) {
-      *r1 = popI32(specific_.ecx);
-      *r0 = popI32();
-      return;
+      return popI32(specific_.ecx);
     }
 #endif
-    pop2xI32(r0, r1);
+    RegI32 r = popI32();
+#if defined(JS_CODEGEN_ARM)
+    masm.and32(Imm32(31), r);
+#endif
+    return r;
   }
 
-  void pop2xI64ForShift(RegI64* r0, RegI64* r1) {
+  RegI64 popI64RhsForShift() {
 #if defined(JS_CODEGEN_X86)
     // r1 must be ecx for a variable shift.
     needI32(specific_.ecx);
-    *r1 = popI64ToSpecific(widenI32(specific_.ecx));
-    *r0 = popI64();
+    return popI64ToSpecific(widenI32(specific_.ecx));
 #else
 #  if defined(JS_CODEGEN_X64)
     // r1 must be rcx for a variable shift, unless BMI2 is available.
     if (!Assembler::HasBMI2()) {
       needI64(specific_.rcx);
-      *r1 = popI64ToSpecific(specific_.rcx);
-      *r0 = popI64();
-      return;
+      return popI64ToSpecific(specific_.rcx);
     }
 #  endif
-    pop2xI64(r0, r1);
+    // No masking is necessary on 64-bit platforms, and on arm32 the masm
+    // implementation masks.
+    return popI64();
 #endif
   }
 
-  void pop2xI32ForRotate(RegI32* r0, RegI32* r1) {
+  RegI32 popI32RhsForRotate() {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     // r1 must be ecx for a variable rotate.
-    *r1 = popI32(specific_.ecx);
-    *r0 = popI32();
+    return popI32(specific_.ecx);
 #else
-    pop2xI32(r0, r1);
+    return popI32();
 #endif
   }
 
-  void pop2xI64ForRotate(RegI64* r0, RegI64* r1) {
+  RegI64 popI64RhsForRotate() {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     // r1 must be ecx for a variable rotate.
     needI32(specific_.ecx);
-    *r1 = popI64ToSpecific(widenI32(specific_.ecx));
-    *r0 = popI64();
+    return popI64ToSpecific(widenI32(specific_.ecx));
 #else
-    pop2xI64(r0, r1);
+    return popI64();
 #endif
   }
 
@@ -8620,9 +8619,12 @@ class BaseCompiler final : public BaseCompilerInterface {
                  void (*op)(MacroAssembler&, ImmType, RhsType, LhsDestType,
                             TempType1 temp1, TempType2 temp2));
 
-  template <typename RegType, typename ImmType>
-  void emitBinop(void (*op)(MacroAssembler& masm, RegType rs, RegType rd),
-                 void (*opConst)(MacroAssembler& masm, ImmType c, RegType rd));
+  template <typename CompilerType1, typename CompilerType2, typename RegType,
+            typename ImmType>
+  void emitBinop(void (*op)(CompilerType1& compiler1, RegType rs, RegType rd),
+                 void (*opConst)(CompilerType2& compiler2, ImmType c,
+                                 RegType rd),
+                 RegType (BaseCompiler::*rhsPopper)() = nullptr);
 
   void emitMultiplyI32();
   void emitMultiplyI64();
@@ -8639,15 +8641,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   void emitRemainderI64();
   void emitRemainderU64();
 #endif
-  void emitShlI32();
-  void emitShlI64();
-  void emitShrI32();
-  void emitShrI64();
-  void emitShrU32();
-  void emitShrU64();
-  void emitRotrI32();
   void emitRotrI64();
-  void emitRotlI32();
   void emitRotlI64();
   void emitEqzI32();
   void emitEqzI64();
@@ -8945,20 +8939,22 @@ void BaseCompiler::emitBinop(ImmType immediate,
   push(rsd);
 }
 
-template <typename RegType, typename ImmType>
-void BaseCompiler::emitBinop(void (*op)(MacroAssembler& masm, RegType rs,
+template <typename CompilerType1, typename CompilerType2, typename RegType,
+          typename ImmType>
+void BaseCompiler::emitBinop(void (*op)(CompilerType1& compiler, RegType rs,
                                         RegType rsd),
-                             void (*opConst)(MacroAssembler& masm, ImmType c,
-                                             RegType rsd)) {
+                             void (*opConst)(CompilerType2& compiler, ImmType c,
+                                             RegType rsd),
+                             RegType (BaseCompiler::*rhsPopper)()) {
   ImmType c;
   if (popConst(&c)) {
     RegType rsd = pop<RegType>();
-    opConst(masm, c, rsd);
+    opConst(selectCompiler<CompilerType2>(), c, rsd);
     push(rsd);
   } else {
-    RegType rs = pop<RegType>();
+    RegType rs = rhsPopper ? (this->*rhsPopper)() : pop<RegType>();
     RegType rsd = pop<RegType>();
-    op(masm, rs, rsd);
+    op(selectCompiler<CompilerType1>(), rs, rsd);
     free(rs);
     push(rsd);
   }
@@ -9028,6 +9024,46 @@ static void PopcntI32(BaseCompiler& bc, RegI32 rsd, RegI32 temp) {
   bc.masm.popcnt32(rsd, rsd, temp);
 }
 
+static void ShlI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.lshift32(rs, rsd);
+}
+
+static void ShlImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.lshift32(Imm32(c & 31), rsd);
+}
+
+static void ShrI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.rshift32Arithmetic(rs, rsd);
+}
+
+static void ShrImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.rshift32Arithmetic(Imm32(c & 31), rsd);
+}
+
+static void ShrUI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.rshift32(rs, rsd);
+}
+
+static void ShrUImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.rshift32(Imm32(c & 31), rsd);
+}
+
+static void RotlI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.rotateLeft(rs, rsd, rsd);
+}
+
+static void RotlImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.rotateLeft(Imm32(c & 31), rsd, rsd);
+}
+
+static void RotrI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
+  masm.rotateRight(rs, rsd, rsd);
+}
+
+static void RotrImmI32(MacroAssembler& masm, int32_t c, RegI32 rsd) {
+  masm.rotateRight(Imm32(c & 31), rsd, rsd);
+}
+
 static void AddI64(MacroAssembler& masm, RegI64 rs, RegI64 rsd) {
   masm.add64(rs, rsd);
 }
@@ -9080,6 +9116,30 @@ static void CtzI64(BaseCompiler& bc, RegI64 rsd) {
 
 static void PopcntI64(BaseCompiler& bc, RegI64 rsd, RegI32 temp) {
   bc.masm.popcnt64(rsd, rsd, temp);
+}
+
+static void ShlI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd) {
+  bc.masm.lshift64(bc.lowPart(rs), rsd);
+}
+
+static void ShlImmI64(MacroAssembler& masm, int64_t c, RegI64 rsd) {
+  masm.lshift64(Imm32(c & 63), rsd);
+}
+
+static void ShrI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd) {
+  bc.masm.rshift64Arithmetic(bc.lowPart(rs), rsd);
+}
+
+static void ShrImmI64(MacroAssembler& masm, int64_t c, RegI64 rsd) {
+  masm.rshift64Arithmetic(Imm32(c & 63), rsd);
+}
+
+static void ShrUI64(BaseCompiler& bc, RegI64 rs, RegI64 rsd) {
+  bc.masm.rshift64(bc.lowPart(rs), rsd);
+}
+
+static void ShrUImmI64(MacroAssembler& masm, int64_t c, RegI64 rsd) {
+  masm.rshift64(Imm32(c & 63), rsd);
 }
 
 static void AddF64(MacroAssembler& masm, RegF64 rs, RegF64 rsd) {
@@ -9543,114 +9603,6 @@ void BaseCompiler::emitRemainderU64() {
 }
 #endif  // RABALDR_INT_DIV_I64_CALLOUT
 
-void BaseCompiler::emitShlI32() {
-  int32_t c;
-  if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.lshift32(Imm32(c & 31), r);
-    pushI32(r);
-  } else {
-    RegI32 r, rs;
-    pop2xI32ForShift(&r, &rs);
-    maskShiftCount32(rs);
-    masm.lshift32(rs, r);
-    freeI32(rs);
-    pushI32(r);
-  }
-}
-
-void BaseCompiler::emitShlI64() {
-  int64_t c;
-  if (popConst(&c)) {
-    RegI64 r = popI64();
-    masm.lshift64(Imm32(c & 63), r);
-    pushI64(r);
-  } else {
-    RegI64 r, rs;
-    pop2xI64ForShift(&r, &rs);
-    masm.lshift64(lowPart(rs), r);
-    freeI64(rs);
-    pushI64(r);
-  }
-}
-
-void BaseCompiler::emitShrI32() {
-  int32_t c;
-  if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.rshift32Arithmetic(Imm32(c & 31), r);
-    pushI32(r);
-  } else {
-    RegI32 r, rs;
-    pop2xI32ForShift(&r, &rs);
-    maskShiftCount32(rs);
-    masm.rshift32Arithmetic(rs, r);
-    freeI32(rs);
-    pushI32(r);
-  }
-}
-
-void BaseCompiler::emitShrI64() {
-  int64_t c;
-  if (popConst(&c)) {
-    RegI64 r = popI64();
-    masm.rshift64Arithmetic(Imm32(c & 63), r);
-    pushI64(r);
-  } else {
-    RegI64 r, rs;
-    pop2xI64ForShift(&r, &rs);
-    masm.rshift64Arithmetic(lowPart(rs), r);
-    freeI64(rs);
-    pushI64(r);
-  }
-}
-
-void BaseCompiler::emitShrU32() {
-  int32_t c;
-  if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.rshift32(Imm32(c & 31), r);
-    pushI32(r);
-  } else {
-    RegI32 r, rs;
-    pop2xI32ForShift(&r, &rs);
-    maskShiftCount32(rs);
-    masm.rshift32(rs, r);
-    freeI32(rs);
-    pushI32(r);
-  }
-}
-
-void BaseCompiler::emitShrU64() {
-  int64_t c;
-  if (popConst(&c)) {
-    RegI64 r = popI64();
-    masm.rshift64(Imm32(c & 63), r);
-    pushI64(r);
-  } else {
-    RegI64 r, rs;
-    pop2xI64ForShift(&r, &rs);
-    masm.rshift64(lowPart(rs), r);
-    freeI64(rs);
-    pushI64(r);
-  }
-}
-
-void BaseCompiler::emitRotrI32() {
-  int32_t c;
-  if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.rotateRight(Imm32(c & 31), r, r);
-    pushI32(r);
-  } else {
-    RegI32 r, rs;
-    pop2xI32ForRotate(&r, &rs);
-    masm.rotateRight(rs, r, r);
-    freeI32(rs);
-    pushI32(r);
-  }
-}
-
 void BaseCompiler::emitRotrI64() {
   int64_t c;
   if (popConst(&c)) {
@@ -9660,26 +9612,11 @@ void BaseCompiler::emitRotrI64() {
     maybeFree(temp);
     pushI64(r);
   } else {
-    RegI64 r, rs;
-    pop2xI64ForRotate(&r, &rs);
+    RegI64 rs = popI64RhsForRotate();
+    RegI64 r = popI64();
     masm.rotateRight64(lowPart(rs), r, r, maybeHighPart(rs));
     freeI64(rs);
     pushI64(r);
-  }
-}
-
-void BaseCompiler::emitRotlI32() {
-  int32_t c;
-  if (popConst(&c)) {
-    RegI32 r = popI32();
-    masm.rotateLeft(Imm32(c & 31), r, r);
-    pushI32(r);
-  } else {
-    RegI32 r, rs;
-    pop2xI32ForRotate(&r, &rs);
-    masm.rotateLeft(rs, r, r);
-    freeI32(rs);
-    pushI32(r);
   }
 }
 
@@ -9692,8 +9629,8 @@ void BaseCompiler::emitRotlI64() {
     maybeFree(temp);
     pushI64(r);
   } else {
-    RegI64 r, rs;
-    pop2xI64ForRotate(&r, &rs);
+    RegI64 rs = popI64RhsForRotate();
+    RegI64 r = popI64();
     masm.rotateLeft64(lowPart(rs), r, r, maybeHighPart(rs));
     freeI64(rs);
     pushI64(r);
@@ -15838,6 +15775,10 @@ bool BaseCompiler::emitBody() {
   iter_.readBinary(type, &unused_a, &unused_b) && \
       (deadCode_ || (emitBinop(arg1, arg2), true))
 
+#define dispatchBinary3(arg1, arg2, arg3, type) \
+  iter_.readBinary(type, &unused_a, &unused_b) &&           \
+      (deadCode_ || (emitBinop(arg1, arg2, arg3), true))
+
 #define dispatchUnary0(doEmit, type) \
   iter_.readUnary(type, &unused_a) && (deadCode_ || (doEmit(), true))
 
@@ -16124,11 +16065,15 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::I32Xor):
         CHECK_NEXT(dispatchBinary2(XorI32, XorImmI32, ValType::I32));
       case uint16_t(Op::I32Shl):
-        CHECK_NEXT(dispatchBinary0(emitShlI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary3(
+            ShlI32, ShlImmI32, &BaseCompiler::popI32RhsForShift, ValType::I32));
       case uint16_t(Op::I32ShrS):
-        CHECK_NEXT(dispatchBinary0(emitShrI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary3(
+            ShrI32, ShrImmI32, &BaseCompiler::popI32RhsForShift, ValType::I32));
       case uint16_t(Op::I32ShrU):
-        CHECK_NEXT(dispatchBinary0(emitShrU32, ValType::I32));
+        CHECK_NEXT(dispatchBinary3(ShrUI32, ShrUImmI32,
+                                   &BaseCompiler::popI32RhsForShift,
+                                   ValType::I32));
       case uint16_t(Op::I32Load8S):
         CHECK_NEXT(emitLoad(ValType::I32, Scalar::Int8));
       case uint16_t(Op::I32Load8U):
@@ -16146,9 +16091,13 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::I32Store):
         CHECK_NEXT(emitStore(ValType::I32, Scalar::Int32));
       case uint16_t(Op::I32Rotr):
-        CHECK_NEXT(dispatchBinary0(emitRotrI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary3(RotrI32, RotrImmI32,
+                                   &BaseCompiler::popI32RhsForRotate,
+                                   ValType::I32));
       case uint16_t(Op::I32Rotl):
-        CHECK_NEXT(dispatchBinary0(emitRotlI32, ValType::I32));
+        CHECK_NEXT(dispatchBinary3(RotlI32, RotlImmI32,
+                                   &BaseCompiler::popI32RhsForRotate,
+                                   ValType::I32));
 
       // I64
       case uint16_t(Op::I64Const): {
@@ -16251,11 +16200,15 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::I64Xor):
         CHECK_NEXT(dispatchBinary2(XorI64, XorImmI64, ValType::I64));
       case uint16_t(Op::I64Shl):
-        CHECK_NEXT(dispatchBinary0(emitShlI64, ValType::I64));
+        CHECK_NEXT(dispatchBinary3(
+            ShlI64, ShlImmI64, &BaseCompiler::popI64RhsForShift, ValType::I64));
       case uint16_t(Op::I64ShrS):
-        CHECK_NEXT(dispatchBinary0(emitShrI64, ValType::I64));
+        CHECK_NEXT(dispatchBinary3(
+            ShrI64, ShrImmI64, &BaseCompiler::popI64RhsForShift, ValType::I64));
       case uint16_t(Op::I64ShrU):
-        CHECK_NEXT(dispatchBinary0(emitShrU64, ValType::I64));
+        CHECK_NEXT(dispatchBinary3(ShrUI64, ShrUImmI64,
+                                   &BaseCompiler::popI64RhsForShift,
+                                   ValType::I64));
       case uint16_t(Op::I64Rotr):
         CHECK_NEXT(dispatchBinary0(emitRotrI64, ValType::I64));
       case uint16_t(Op::I64Rotl):
@@ -17482,6 +17435,7 @@ bool BaseCompiler::emitBody() {
 #undef dispatchBinary0
 #undef dispatchBinary1
 #undef dispatchBinary2
+#undef dispatchBinary3
 #undef dispatchUnary0
 #undef dispatchUnary1
 #undef dispatchUnary2
