@@ -280,12 +280,6 @@ this.analytics = (function() {
       ],
     },
     {
-      name: "save-shot",
-      start: { action: "save-shot" },
-      end: { action: "internal", label: "open-shot-tab" },
-      cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
-    },
-    {
       name: "save-visible",
       start: { action: "save-visible" },
       end: { action: "internal", label: "open-shot-tab" },
