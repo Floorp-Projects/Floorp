@@ -29,8 +29,8 @@ class APZCFlingAccelerationTester : public APZCTreeManagerTester {
       aMetrics.SetVisualDestination(CSSPoint(0, 25000));
     });
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
-                                                           root, mcc);
+    registration =
+        MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
     UpdateHitTestingTree();
 
     apzc = ApzcOf(root);

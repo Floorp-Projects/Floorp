@@ -137,7 +137,7 @@ class APZHitTestingTesterLayersOnly : public APZHitTestingTester {
 // A simple hit testing test that doesn't involve any transforms on layers.
 TEST_F(APZHitTestingTesterLayersOnly, HitTesting1) {
   CreateHitTesting1LayerTree();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
 
   // No APZC attached so hit testing will return no APZC at (20,20)
   RefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(20, 20));
@@ -216,7 +216,7 @@ TEST_F(APZHitTestingTesterLayersOnly, HitTesting2) {
   SCOPED_GFX_PREF_FLOAT("apz.velocity_bias", 0.0);
 
   CreateHitTesting2LayerTree();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
 
   UpdateHitTestingTree();
 
@@ -359,7 +359,7 @@ TEST_F(APZHitTestingTesterLayersOnly, HitTesting3) {
   SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
                             CSSRect(0, 0, 50, 50));
 
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
 
   UpdateHitTestingTree();
 
@@ -369,7 +369,7 @@ TEST_F(APZHitTestingTesterLayersOnly, HitTesting3) {
 
 TEST_F(APZHitTestingTesterLayersOnly, ComplexMultiLayerTree) {
   CreateComplexMultiLayerTree();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
   /* The layer tree looks like this:
@@ -459,7 +459,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   // a new input block and the transform to gecko space should be empty.
 
   CreateSimpleScrollingLayer();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
   RefPtr<TestAsyncPanZoomController> apzcroot = ApzcOf(root);
 
@@ -532,7 +532,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
   // flush as per bug 1166871, and that the wheel event untransform is a no-op.
 
   CreateSimpleScrollingLayer();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
   TestAsyncPanZoomController* apzcroot = ApzcOf(root);
 
@@ -562,7 +562,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
 TEST_F(APZHitTestingTester, TestForceDisableApz) {
   CreateSimpleScrollingLayer();
   DisableApzOn(root);
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
   TestAsyncPanZoomController* apzcroot = ApzcOf(root);
 
@@ -609,7 +609,7 @@ TEST_F(APZHitTestingTester, TestForceDisableApz) {
 
 TEST_F(APZHitTestingTester, Bug1148350) {
   CreateBug1148350LayerTree();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
   MockFunction<void(std::string checkPointName)> check;
@@ -679,7 +679,7 @@ TEST_F(APZHitTestingTester, HitTestingRespectsScrollClip_Bug1257288) {
   SetEventRegionsBasedOnBottommostMetrics(layers[2]);
 
   // Build the hit testing tree.
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
   // Pan on a region that's inside layers[2]'s layer clip, but outside

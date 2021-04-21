@@ -46,8 +46,8 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     regions.mHitRegion = nsIntRegion(IntRect(0, 100, 200, 100));
     layers[2]->SetEventRegions(regions);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
-                                                           root, mcc);
+    registration =
+        MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
     UpdateHitTestingTree();
     rootApzc = ApzcOf(root);
   }
@@ -69,8 +69,8 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     regions.mHitRegion = nsIntRegion(IntRect(0, 150, 100, 100));
     layers[1]->SetEventRegions(regions);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
-                                                           root, mcc);
+    registration =
+        MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
     UpdateHitTestingTree();
     rootApzc = ApzcOf(root);
   }
@@ -110,8 +110,8 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     regions.mHitRegion = nsIntRegion(IntRect(0, 100, 200, 100));
     layers[2]->SetEventRegions(regions);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
-                                                           root, mcc);
+    registration =
+        MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
     UpdateHitTestingTree();
     rootApzc = ApzcOf(root);
   }
@@ -135,8 +135,8 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     SetScrollableFrameMetrics(layers[1],
                               ScrollableLayerGuid::START_SCROLL_ID + 1);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
-                                                           root, mcc);
+    registration =
+        MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
     UpdateHitTestingTree();
   }
 
@@ -177,8 +177,8 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
     layers[3]->SetEventRegions(regions);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
-                                                           root, mcc);
+    registration =
+        MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
     UpdateHitTestingTree();
   }
 };
@@ -265,7 +265,7 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
 
 TEST_F(APZEventRegionsTesterLayersOnly, Obscuration) {
   CreateObscuringLayerTree();
-  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
+  ScopedLayerTreeRegistration registration(LayersId{0}, root, mcc);
 
   UpdateHitTestingTree();
 

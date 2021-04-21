@@ -51,8 +51,8 @@ class APZEventResultTester : public APZCTreeManagerTester {
     ModifyFrameMetrics(root, [](ScrollMetadata& sm, FrameMetrics& metrics) {
       metrics.SetIsRootContent(true);
     });
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0},
-                                                           root, mcc);
+    registration =
+        MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
     UpdateHitTestingTree();
   }
 
@@ -349,7 +349,7 @@ TEST_F(APZEventResultTesterLayersOnly, HandledByRootApzcFlag) {
   regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 50, 100, 50));
   root->SetEventRegions(regions);
   registration =
-      MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
   UpdateHitTestingTree();
 
   // Tap the top half and check that we report that the event was
