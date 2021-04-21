@@ -752,9 +752,10 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
             ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
             : LayoutAndVisual;
     ParentLayerPoint layerTranslation =
-        apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
-                                       asyncTransformComponents)
-            .mTranslation;
+        apzc->GetCurrentAsyncTransformWithOverscroll(
+                AsyncPanZoomController::eForCompositing,
+                asyncTransformComponents)
+            .TransformPoint(ParentLayerPoint(0, 0));
 
     if (Maybe<CompositionPayload> payload = apzc->NotifyScrollSampling()) {
       if (wrBridgeParent && aVsyncId) {
@@ -777,15 +778,13 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
           *zoomAnimationId, LayoutDeviceToParentLayerMatrix4x4::Scaling(
                                 zoom.scale, zoom.scale, 1.0f) *
                                 AsyncTransformComponentMatrix::Translation(
-                                    asyncVisualTransform.mTranslation)));
+                                    asyncVisualTransform.mTranslation) *
+                                apzc->GetOverscrollTransform(
+                                    AsyncPanZoomController::eForCompositing)));
 
       aTxn.UpdateIsTransformAsyncZooming(*zoomAnimationId,
                                          apzc->IsAsyncZooming());
     }
-
-    layerTranslation =
-        apzc->GetOverscrollTransform(AsyncPanZoomController::eForCompositing)
-            .TransformPoint(layerTranslation);
 
     // If layerTranslation includes only the layout component of the async
     // transform then it has not been scaled by the async zoom, so we want to
