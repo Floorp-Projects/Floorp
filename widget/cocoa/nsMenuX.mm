@@ -568,19 +568,24 @@ void nsMenuX::MenuClosedAsync() {
   }
 }
 
-void nsMenuX::ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers) {
+void nsMenuX::ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
+                                   int16_t aButton) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Run the command asynchronously so that the menu can hide before the command runs.
   class DoCommandRunnable final : public mozilla::CancelableRunnable {
    public:
-    explicit DoCommandRunnable(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers)
-        : CancelableRunnable("DoCommandRunnable"), mMenuItem(aItem), mModifiers(aModifiers) {}
+    explicit DoCommandRunnable(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
+                               int16_t aButton)
+        : CancelableRunnable("DoCommandRunnable"),
+          mMenuItem(aItem),
+          mModifiers(aModifiers),
+          mButton(aButton) {}
 
     nsresult Run() override {
       if (mMenuItem) {
         RefPtr<nsMenuItemX> menuItem = std::move(mMenuItem);
-        menuItem->DoCommand(mModifiers);
+        menuItem->DoCommand(mModifiers, mButton);
       }
       return NS_OK;
     }
@@ -592,8 +597,10 @@ void nsMenuX::ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierF
    private:
     RefPtr<nsMenuItemX> mMenuItem;  // cleared by Cancel() and Run()
     NSEventModifierFlags mModifiers;
+    int16_t mButton;
   };
-  RefPtr<CancelableRunnable> doCommandAsync = new DoCommandRunnable(std::move(aItem), aModifiers);
+  RefPtr<CancelableRunnable> doCommandAsync =
+      new DoCommandRunnable(std::move(aItem), aModifiers, aButton);
   mPendingCommandRunnables.AppendElement(doCommandAsync);
   NS_DispatchToCurrentThread(doCommandAsync);
 

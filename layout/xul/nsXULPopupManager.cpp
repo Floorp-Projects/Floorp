@@ -1485,7 +1485,7 @@ bool nsXULPopupManager::ActivateNativeMenuItem(nsIContent* aItem,
                                                mozilla::ErrorResult& aRv) {
   if (mNativeMenu && aItem->IsElement() &&
       mNativeMenu->Element()->Contains(aItem)) {
-    mNativeMenu->ActivateItem(aItem->AsElement(), aModifiers, aRv);
+    mNativeMenu->ActivateItem(aItem->AsElement(), aModifiers, aButton, aRv);
     return true;
   }
   return false;

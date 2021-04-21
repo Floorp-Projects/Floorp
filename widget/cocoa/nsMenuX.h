@@ -99,7 +99,8 @@ class nsMenuX final : public nsMenuParentX,
   mozilla::Maybe<MenuChild> GetItemForElement(mozilla::dom::Element* aMenuChildElement);
 
   // Asynchronously runs the command event on aItem, and closes the menu.
-  void ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers);
+  void ActivateItemAndClose(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
+                            int16_t aButton);
 
   bool IsOpenForGecko() const { return mIsOpenForGecko; }
 
