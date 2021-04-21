@@ -51,40 +51,14 @@ add_task(async function task() {
     "Status code has the expected tooltip"
   );
 
-  const {
-    rightClickMouseEvent,
-    rightClickCtrlOrCmdKeyMouseEvent,
-  } = getMouseEvents();
+  info("Left click status code node and observe the link opens.");
+  const { link, where } = await simulateLinkClick(statusCodeNode);
+  is(link, LEARN_MORE_URI, `Clicking the provided link opens ${link}`);
+  is(where, "tab", "Link opened in correct tab.");
 
-  const testCases = [
-    { clickEvent: null, link: LEARN_MORE_URI, where: "tab" },
-    { clickEvent: rightClickMouseEvent, link: null, where: null },
-    { clickEvent: rightClickCtrlOrCmdKeyMouseEvent, link: null, where: null },
-  ];
-
-  for (const testCase of testCases) {
-    info("Test case");
-    const { clickEvent } = testCase;
-    const onConsoleMenuOpened = [
-      rightClickMouseEvent,
-      rightClickCtrlOrCmdKeyMouseEvent,
-    ].includes(clickEvent)
-      ? hud.ui.wrapper.once("menu-open")
-      : null;
-
-    const { link, where } = await simulateLinkClick(
-      statusCodeNode,
-      testCase.clickEvent
-    );
-    is(link, testCase.link, `Clicking the provided link opens ${link}`);
-    is(where, testCase.where, `Link opened in correct tab`);
-
-    if (onConsoleMenuOpened) {
-      info("Check if context menu is opened on right clicking the status-code");
-      await onConsoleMenuOpened;
-      ok(true, "Console menu is opened");
-    }
-  }
+  info("Right click status code node and observe the context menu opening.");
+  await openContextMenu(hud, statusCodeNode);
+  await hideContextMenu(hud);
 
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
@@ -92,24 +66,3 @@ add_task(async function task() {
     );
   });
 });
-
-function getMouseEvents() {
-  const isOSX = Services.appinfo.OS == "Darwin";
-
-  const rightClickMouseEvent = new MouseEvent("contextmenu", {
-    bubbles: true,
-    button: 2,
-    view: window,
-  });
-  const rightClickCtrlOrCmdKeyMouseEvent = new MouseEvent("contextmenu", {
-    bubbles: true,
-    button: 2,
-    [isOSX ? "metaKey" : "ctrlKey"]: true,
-    view: window,
-  });
-
-  return {
-    rightClickMouseEvent,
-    rightClickCtrlOrCmdKeyMouseEvent,
-  };
-}
