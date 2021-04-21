@@ -1184,6 +1184,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return maybeSlot() == aslot && attrs == aattrs;
   }
 
+ private:
   uint32_t slot() const {
     MOZ_ASSERT(hasSlot());
     return maybeSlot();
@@ -1196,7 +1197,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return !isCustomDataProperty();
   }
 
- private:
   bool isCustomDataProperty() const { return attrs & JSPROP_CUSTOM_DATA_PROP; }
 
  public:

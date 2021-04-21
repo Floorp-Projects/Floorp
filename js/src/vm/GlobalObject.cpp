@@ -1109,7 +1109,7 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
     return false;
   }
 
-  holder->setSlot(shape->slot(), value);
+  holder->setSlot(slot, value);
   return true;
 }
 

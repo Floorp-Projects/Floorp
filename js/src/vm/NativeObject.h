@@ -570,6 +570,10 @@ class NativeObject : public JSObject {
     return shape();
   }
 
+  ShapePropertyWithKey getLastProperty() const {
+    return shape()->propertyWithKey();
+  }
+
   uint32_t propertyCount() const { return lastProperty()->entryCount(); }
 
   bool hasShapeTable() const { return lastProperty()->hasTable(); }
