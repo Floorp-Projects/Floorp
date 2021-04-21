@@ -109,11 +109,16 @@ add_task(async function() {
 
 async function testCopyObject(hud, element, expectedMessage, objectInput) {
   info("Check `Copy object` is enabled");
-  let menuPopup = await openContextMenu(hud, element);
+  const menuPopup = await openContextMenu(hud, element);
   const copyObjectMenuItem = menuPopup.querySelector(copyObjectMenuItemId);
   ok(
     !copyObjectMenuItem.disabled,
     "`Copy object` is enabled for object in complex message"
+  );
+  is(
+    copyObjectMenuItem.getAttribute("accesskey"),
+    "o",
+    "`Copy object` has the right accesskey"
   );
 
   const validatorFn = data => {
@@ -121,12 +126,11 @@ async function testCopyObject(hud, element, expectedMessage, objectInput) {
     return data === prettifiedMessage;
   };
 
-  info("Click on `Copy object`");
-  await waitForClipboardPromise(() => copyObjectMenuItem.click(), validatorFn);
-
-  info("`Copy object` by using the access-key O");
-  menuPopup = await openContextMenu(hud, element);
-  await waitForClipboardPromise(() => synthesizeKeyShortcut("O"), validatorFn);
+  info("Activate item `Copy object`");
+  await waitForClipboardPromise(
+    () => menuPopup.activateItem(copyObjectMenuItem),
+    validatorFn
+  );
 }
 
 async function testCopyObjectMenuItemDisabled(hud, element) {
