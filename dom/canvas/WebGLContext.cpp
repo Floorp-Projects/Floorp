@@ -991,19 +991,26 @@ bool WebGLContext::FrontBufferSnapshotInto(Range<uint8_t> dest) {
   if (!IsWebGL2()) {
     fbTarget = LOCAL_GL_FRAMEBUFFER;
   }
-
-  gl->fBindFramebuffer(fbTarget,
-                       front->mFb ? front->mFb->mFB : mDefaultFB->mFB);
-  if (pboWas) {
-    BindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, nullptr);
-  }
-
   auto reset2 = MakeScopeExit([&] {
     DoBindFB(readFbWas, fbTarget);
     if (pboWas) {
       BindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, pboWas);
     }
   });
+
+  if (front->mFb) {
+    gl->fBindFramebuffer(fbTarget, front->mFb->mFB);
+  } else {
+    if (!BindDefaultFBForRead()) {
+      gfxCriticalError() << "BindDefaultFBForRead failed";
+      return false;
+    }
+  }
+  if (pboWas) {
+    BindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, nullptr);
+  }
+
+  // -
 
   const auto& size = front->mDesc.size;
   const size_t stride = size.width * 4;
