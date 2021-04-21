@@ -1659,6 +1659,26 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       panInput.mHandledByAPZ = WillHandleInput(panInput);
       if (!panInput.mHandledByAPZ) {
+        if (InputBlockState* block = mInputQueue->GetCurrentPanGestureBlock()) {
+          if (block &&
+              (panInput.mType == PanGestureInput::PANGESTURE_END ||
+               panInput.mType == PanGestureInput::PANGESTURE_CANCELLED)) {
+            // If we've already been processing a pan gesture in an APZC but
+            // fall into this _if_ branch, which means this pan-end or
+            // pan-cancelled event will not be proccessed in the APZC, send a
+            // pan-interrupted event to stop any on-going work for the pan
+            // gesture, otherwise we will get stuck at an intermidiate state
+            // becasue we might no longer receive any events which will be
+            // handled by the APZC.
+            PanGestureInput panInterrupted(
+                PanGestureInput::PANGESTURE_INTERRUPTED, panInput.mTime,
+                panInput.mTimeStamp, panInput.mPanStartPoint,
+                panInput.mPanDisplacement, panInput.modifiers);
+            Unused << mInputQueue->ReceiveInputEvent(
+                state.mHit.mTargetApzc,
+                TargetConfirmationFlags{state.mHit.mHitResult}, panInterrupted);
+          }
+        }
         return state.Finish();
       }
 
