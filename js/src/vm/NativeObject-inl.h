@@ -583,7 +583,7 @@ MOZ_ALWAYS_INLINE bool NativeObject::setLastPropertyForNewDataProperty(
 
   MOZ_ASSERT(shape->previous() == lastProperty());
   MOZ_ASSERT(shape->base() == lastProperty()->base());
-  MOZ_ASSERT(shape->isDataProperty());
+  MOZ_ASSERT(shape->property().isDataProperty());
   MOZ_ASSERT(shape->slotSpan() == lastProperty()->slotSpan() + 1);
 
   size_t slot = shape->slot();

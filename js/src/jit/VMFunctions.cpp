@@ -1837,11 +1837,12 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
 
   while (true) {
     if (Shape* shape = obj->lastProperty()->search(cx, id)) {
-      if (!shape->isDataProperty()) {
+      ShapeProperty prop = shape->property();
+      if (!prop.isDataProperty()) {
         return false;
       }
 
-      *vp = obj->getSlot(shape->slot());
+      *vp = obj->getSlot(prop.slot());
       return true;
     }
 
