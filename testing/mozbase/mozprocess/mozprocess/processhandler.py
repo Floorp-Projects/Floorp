@@ -193,7 +193,7 @@ class ProcessHandlerMixin(object):
             else:
                 subprocess.Popen.__del__(self)
 
-        def kill(self, sig=None):
+        def kill(self, sig=None, timeout=None):
             if isWin:
                 try:
                     if not self._ignore_children and self._handle and self._job:
@@ -260,7 +260,7 @@ class ProcessHandlerMixin(object):
                     # a signal was explicitly set or not posix
                     send_sig(sig or signal.SIGKILL)
 
-            self.returncode = self.wait()
+            self.returncode = self.wait(timeout)
             self._cleanup()
             return self.returncode
 
@@ -952,7 +952,7 @@ falling back to not using job objects for managing child processes""",
 
         self.processOutput(timeout=timeout, outputTimeout=outputTimeout)
 
-    def kill(self, sig=None):
+    def kill(self, sig=None, timeout=None):
         """
         Kills the managed process.
 
@@ -970,12 +970,12 @@ falling back to not using job objects for managing child processes""",
         if not hasattr(self, "proc"):
             raise RuntimeError("Process hasn't been started yet")
 
-        self.proc.kill(sig=sig)
+        self.proc.kill(sig=sig, timeout=timeout)
 
         # When we kill the the managed process we also have to wait for the
         # reader thread to be finished. Otherwise consumers would have to assume
         # that it still has not completely shutdown.
-        rc = self.wait()
+        rc = self.wait(timeout)
         if rc is None:
             self.debug("kill: wait failed -- process is still alive")
         return rc
@@ -1049,7 +1049,7 @@ falling back to not using job objects for managing child processes""",
                     self.debug("wait timeout for reader thread")
                     return None
 
-        self.returncode = self.proc.wait()
+        self.returncode = self.proc.wait(timeout)
         return self.returncode
 
     @property

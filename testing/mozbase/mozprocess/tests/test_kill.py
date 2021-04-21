@@ -127,6 +127,21 @@ class ProcTestKill(proctest.ProcTest):
 
         self.assertEquals(p.proc.returncode, -signal.SIGKILL)
 
+    @unittest.skipUnless(processhandler.isPosix, "posix only")
+    def test_process_kill_with_timeout(self):
+        script = os.path.join(here, "scripts", "ignore_sigterm.py")
+        p = processhandler.ProcessHandler([self.python, script])
+
+        p.run()
+        time.sleep(1)
+        t0 = time.time()
+        p.kill(sig=signal.SIGTERM, timeout=2)
+        self.assertEquals(p.proc.returncode, None)
+        self.assertGreaterEqual(time.time(), t0 + 2)
+
+        p.kill(sig=signal.SIGKILL)
+        self.assertEquals(p.proc.returncode, -signal.SIGKILL)
+
 
 if __name__ == "__main__":
     mozunit.main()
