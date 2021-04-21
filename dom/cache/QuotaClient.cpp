@@ -328,10 +328,10 @@ nsresult CacheQuotaClient::InitOriginWithoutTracking(
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
 
-  // This is called when a storage/permanent/chrome/cache directory exists. Even
-  // though this shouldn't happen with a "good" profile, we shouldn't return an
-  // error here, since that would cause origin initialization to fail. We just
-  // warn and otherwise ignore that.
+  // This is called when a storage/permanent/${origin}/cache directory exists.
+  // Even though this shouldn't happen with a "good" profile, we shouldn't
+  // return an error here, since that would cause origin initialization to fail.
+  // We just warn and otherwise ignore that.
   UNKNOWN_FILE_WARNING(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME));
   return NS_OK;
 }
