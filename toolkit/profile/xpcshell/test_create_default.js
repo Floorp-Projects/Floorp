@@ -25,10 +25,6 @@ add_task(async () => {
     DEDICATED_NAME,
     "Should have created a new profile with the right name."
   );
-  Assert.ok(
-    !service.createdAlternateProfile,
-    "Should not have created an alternate profile."
-  );
 
   Assert.ok(
     profileData.options.startWithLastProfile,

@@ -32,7 +32,6 @@ add_task(async () => {
     ],
   });
 
-  let service = getProfileService();
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
   checkStartupReason("firstrun-claimed-default");
 
@@ -120,8 +119,4 @@ add_task(async () => {
     );
     Assert.equal(selectedProfile.name, "mydefault");
   }
-  Assert.ok(
-    !service.createdAlternateProfile,
-    "Should not have created an alternate profile."
-  );
 });

@@ -65,11 +65,6 @@ add_task(async () => {
   checkProfileService(profileData);
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
-  let service = getProfileService();
-  Assert.ok(
-    !service.createdAlternateProfile,
-    "Should not have created an alternate profile."
-  );
   Assert.ok(
     selectedProfile.rootDir.equals(defaultProfile),
     "Should be using the right directory."

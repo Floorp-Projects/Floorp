@@ -29,8 +29,6 @@ with Files("WebRTCChild.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 FINAL_TARGET_FILES.actors += [
-    "AboutNewInstallChild.jsm",
-    "AboutNewInstallParent.jsm",
     "AboutNewTabChild.jsm",
     "AboutNewTabParent.jsm",
     "AboutPluginsChild.jsm",

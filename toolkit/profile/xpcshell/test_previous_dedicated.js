@@ -28,7 +28,6 @@ add_task(async () => {
     },
   });
 
-  let service = getProfileService();
   testStartsProfileManager();
 
   let profileData = readProfilesIni();
@@ -41,10 +40,6 @@ add_task(async () => {
     profileData.profiles.length,
     1,
     "Should have the right number of profiles."
-  );
-  Assert.ok(
-    !service.createdAlternateProfile,
-    "Should not have created an alternate profile."
   );
 
   let profile = profileData.profiles[0];
