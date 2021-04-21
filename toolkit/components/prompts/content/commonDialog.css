@@ -165,7 +165,7 @@ dialog[subdialog] .dialogRow {
 }
 
 /* Fix spacing in the `prompt()` case: */
-#loginLabel[value=""] {
+dialog[subdialog] #loginLabel[value=""] {
   display: none;
 }
 
