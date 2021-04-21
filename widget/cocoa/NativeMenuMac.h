@@ -32,7 +32,7 @@ class NativeMenuMac : public NativeMenu,
   void ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) override;
   bool Close() override;
   void ActivateItem(dom::Element* aItemElement, Modifiers aModifiers,
-                    ErrorResult& aRv) override;
+                    int16_t aButton, ErrorResult& aRv) override;
   void OpenSubmenu(dom::Element* aMenuElement) override;
   void CloseSubmenu(dom::Element* aMenuElement) override;
   RefPtr<dom::Element> Element() override;
