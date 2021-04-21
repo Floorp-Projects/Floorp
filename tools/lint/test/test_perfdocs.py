@@ -352,7 +352,7 @@ def test_perfdocs_verifier_not_existing_suite_in_test_list(
 
     expected = (
         "Could not find an existing suite for suite - bad suite name?",
-        os.path.realpath(perfdocs_sample["config"]),
+        perfdocs_sample["config"],
     )
     args, _ = logger.warning.call_args
 

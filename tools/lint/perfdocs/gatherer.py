@@ -5,7 +5,6 @@ from __future__ import absolute_import
 
 import os
 import pathlib
-import re
 
 from perfdocs.logger import PerfDocLogger
 from perfdocs.utils import read_yaml
@@ -79,11 +78,8 @@ class Gatherer(object):
             os.path.join("testing", "perfdocs"),
         ]
 
-        for path in pathlib.Path(self.workspace_dir).resolve().rglob("perfdocs"):
-            if any(
-                re.search(d.replace("\\", "\\\\"), str(path).replace("\\", "\\\\"))
-                for d in exclude_dir
-            ):
+        for path in pathlib.Path(self.workspace_dir).rglob("perfdocs"):
+            if any(d in str(path.resolve()) for d in exclude_dir):
                 continue
             files = [f for f in os.listdir(path)]
             matched = {"path": str(path), "yml": "", "rst": "", "static": []}
@@ -102,10 +98,9 @@ class Gatherer(object):
                 self._perfdocs_tree.append(matched)
 
         logger.log(
-            "Found {} perfdocs directories in {} based on {}".format(
+            "Found {} perfdocs directories in {}".format(
                 len(self._perfdocs_tree),
                 [d["path"] for d in self._perfdocs_tree],
-                self.workspace_dir,
             )
         )
 
