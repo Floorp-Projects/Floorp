@@ -412,6 +412,15 @@ APZEventResult InputQueue::ReceivePanGestureInput(
     return result;
   }
 
+  if (aEvent.mType == PanGestureInput::PANGESTURE_INTERRUPTED) {
+    if (RefPtr<PanGestureBlockState> block = mActivePanGestureBlock.get()) {
+      mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent, *block));
+      ProcessQueue();
+    }
+    result.SetStatusAsIgnore();
+    return result;
+  }
+
   RefPtr<PanGestureBlockState> block;
   if (aEvent.mType != PanGestureInput::PANGESTURE_START) {
     block = mActivePanGestureBlock.get();
