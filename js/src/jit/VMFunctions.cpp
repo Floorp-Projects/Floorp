@@ -1967,11 +1967,11 @@ bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
 
   while (true) {
     if (Shape* shape = nobj->lastProperty()->search(cx, id)) {
-      if (!shape->isAccessorDescriptor()) {
+      ShapeProperty prop = ShapeProperty(shape);
+      if (!prop.isAccessorProperty()) {
         return false;
       }
-      GetterSetter* actualGetterSetter =
-          nobj->getGetterSetter(ShapeProperty(shape));
+      GetterSetter* actualGetterSetter = nobj->getGetterSetter(prop);
       if (actualGetterSetter == getterSetter) {
         return true;
       }
