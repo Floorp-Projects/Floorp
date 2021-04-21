@@ -51,6 +51,8 @@
   --panel-banner-item-background-color: hsla(96,65%,75%,.5);
   --panel-banner-item-hover-bgcolor: hsla(96,65%,75%,.8);
   --panel-banner-item-active-bgcolor: hsl(96,65%,75%);
+  --panel-banner-item-update-supported-bgcolor: #74BF43;
+  --panel-banner-item-warning-icon-bgcolor: #FFBF00;
 }
 
 :root[lwt-popup-brighttext] {
@@ -117,7 +119,6 @@
 #PanelUI-menu-button[badge-status="update-other-instance"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="update-unsupported"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  border-radius: 50%;
   box-shadow: none;
   /* "!important" is necessary to override the rule in toolbarbutton.css */
   margin: -7px 0 0 !important;
@@ -125,7 +126,8 @@
   min-width: 12px;
   min-height: 12px;
   -moz-context-properties: fill;
-  fill: var(--toolbar-bgcolor);
+  background: url(chrome://browser/skin/update-circle-fill-12.svg) no-repeat center;
+  background-size: 12px;
 }
 
 #PanelUI-menu-button[badge-status="update-available"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
@@ -133,13 +135,12 @@
 #PanelUI-menu-button[badge-status="update-manual"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="update-other-instance"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: var(--panel-banner-item-update-supported-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
-  background-size: 10px;
+  fill: var(--panel-banner-item-update-supported-bgcolor);
 }
 
 #PanelUI-menu-button[badge-status="update-unsupported"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: var(--panel-banner-item-warning-icon-bgcolor) url(chrome://browser/skin/update-badge.svg) no-repeat center;
-  background-size: 10px;
+  background: url(chrome://global/skin/icons/warning-fill-12.svg) no-repeat center;
+  fill: var(--panel-banner-item-warning-icon-bgcolor);
 }
 
 @media (-moz-proton) {
@@ -148,14 +149,11 @@
 .panel-banner-item[notificationid="update-manual"] > .toolbarbutton-icon,
 .panel-banner-item[notificationid="update-other-instance"] > .toolbarbutton-icon,
 .panel-banner-item[notificationid="update-restart"] > .toolbarbutton-icon {
-  background-color: var(--panel-banner-item-update-supported-bgcolor);
   background-image: url(chrome://browser/skin/update-badge.svg);
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 10px;
-  border-radius: 50%;
   -moz-context-properties: fill;
-  fill: var(--arrowpanel-background);
+  fill: var(--panel-banner-item-update-supported-bgcolor);
 }
 
 .panel-banner-item[notificationid="update-unsupported"] > .toolbarbutton-icon {
@@ -167,28 +165,24 @@
 }
 
 @media not (-moz-proton) {
+#PanelUI-menu-button[badge-status="update-unsupported"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  background-image: url(chrome://browser/skin/update-circle-fill-12.svg);
+}
+
 .panel-banner-item[notificationid="update-available"]::after,
 .panel-banner-item[notificationid="update-downloading"]::after,
 .panel-banner-item[notificationid="update-manual"]::after,
 .panel-banner-item[notificationid="update-other-instance"]::after,
-.panel-banner-item[notificationid="update-restart"]::after {
-  background-color: var(--panel-banner-item-update-supported-bgcolor);
-  background-image: url(chrome://browser/skin/update-badge.svg);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 10px;
-  border-radius: 50%;
-  -moz-context-properties: fill;
-  fill: #fff;
-}
-
+.panel-banner-item[notificationid="update-restart"]::after,
 .panel-banner-item[notificationid="update-unsupported"]::after {
-  background-color: var(--panel-banner-item-warning-icon-bgcolor);
   background-image: url(chrome://browser/skin/update-badge.svg);
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 10px;
-  border-radius: 50%;
+  -moz-context-properties: fill;
+  fill: var(--panel-banner-item-update-supported-bgcolor);
+}
+.panel-banner-item[notificationid="update-unsupported"]::after {
+  fill: var(--panel-banner-item-warning-icon-bgcolor);
 }
 .panel-banner-item[notificationid^=update] {
   list-style-image: url(chrome://branding/content/icon16.png);
@@ -199,11 +193,10 @@
 #PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #fxa-toolbar-menu-button[badge-status="login_failed"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   height: 13px;
-  background: url(chrome://browser/skin/warning.svg) center / contain no-repeat transparent;
+  background: url(chrome://global/skin/icons/warning-fill-12.svg) center / contain no-repeat transparent;
   box-shadow: none;
   border-radius: 0;
-  /* Use the included fallbacks defined in the SVG file instead of inheriting from .toolbarbutton-1. */
-  -moz-context-properties: none;
+  -moz-context-properties: fill;
 }
 
 #fxa-toolbar-menu-button[badge-status="login_failed"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
@@ -214,8 +207,6 @@
 #PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #fxa-toolbar-menu-button[badge-status="login_failed"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  -moz-context-properties: stroke, fill;
-  stroke: var(--toolbar-bgcolor);
   fill: var(--panel-banner-item-warning-icon-bgcolor);
 }
 }

@@ -89,6 +89,7 @@ toolkit.jar:
   skin/classic/global/icons/arrow-up-16.svg                (../../shared/icons/arrow-up-16.svg)
   skin/classic/global/pictureinpicture/unpip.svg           (../../shared/pictureinpicture/unpip.svg)
   skin/classic/global/icons/warning.svg                    (../../shared/icons/warning.svg)
+  skin/classic/global/icons/warning-fill-12.svg            (../../shared/icons/warning-fill-12.svg)
   skin/classic/global/illustrations/about-rights.svg       (../../shared/illustrations/about-rights.svg)
   skin/classic/global/illustrations/about-license.svg      (../../shared/illustrations/about-license.svg)
   skin/classic/global/narrate.css                          (../../shared/narrate.css)
