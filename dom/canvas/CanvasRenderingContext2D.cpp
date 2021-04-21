@@ -1720,7 +1720,8 @@ CanvasRenderingContext2D::GetSurfaceSnapshot(gfxAlphaType* aOutAlphaType) {
     MOZ_ASSERT(
         mTarget == sErrorTarget,
         "On EnsureTarget failure mTarget should be set to sErrorTarget.");
-    return mTarget->Snapshot();
+    // In rare circumstances we may have failed to create an error target.
+    return mTarget ? mTarget->Snapshot() : nullptr;
   }
 
   // The concept of BorrowSnapshot seems a bit broken here, but the original
@@ -5154,7 +5155,7 @@ void CanvasRenderingContext2D::EnsureErrorTarget() {
   MOZ_ASSERT(errorTarget, "Failed to allocate the error target!");
 
   sErrorTarget = errorTarget;
-  NS_ADDREF(sErrorTarget);
+  NS_IF_ADDREF(sErrorTarget);
 }
 
 void CanvasRenderingContext2D::FillRuleChanged() {
