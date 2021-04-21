@@ -1096,6 +1096,9 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(
         case PanGestureInput::PANGESTURE_MOMENTUMEND:
           rv = OnPanMomentumEnd(panGestureInput);
           break;
+        case PanGestureInput::PANGESTURE_INTERRUPTED:
+          rv = OnPanInterrupted(panGestureInput);
+          break;
       }
       break;
     }
@@ -2851,6 +2854,15 @@ nsEventStatus AsyncPanZoomController::OnPanMomentumEnd(
   RequestContentRepaint();
 
   return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPanInterrupted(
+    const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-interrupted in state %d\n", this, mState);
+
+  CancelAnimation();
+
+  return nsEventStatus_eIgnore;
 }
 
 nsEventStatus AsyncPanZoomController::OnLongPress(

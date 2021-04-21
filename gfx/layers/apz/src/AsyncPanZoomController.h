@@ -637,6 +637,7 @@ class AsyncPanZoomController {
   nsEventStatus OnPanMomentumStart(const PanGestureInput& aEvent);
   nsEventStatus OnPanMomentumEnd(const PanGestureInput& aEvent);
   nsEventStatus HandleEndOfPan();
+  nsEventStatus OnPanInterrupted(const PanGestureInput& aEvent);
 
   /**
    * Helper methods for handling scroll wheel events.
