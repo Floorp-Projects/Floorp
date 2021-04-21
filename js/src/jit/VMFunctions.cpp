@@ -1940,11 +1940,16 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
 
   NativeObject* nobj = &obj->as<NativeObject>();
   Shape* shape = nobj->lastProperty()->search(cx, NameToId(name));
-  if (!shape || !shape->isDataProperty() || !shape->writable()) {
+  if (!shape) {
     return false;
   }
 
-  nobj->setSlot(shape->slot(), *val);
+  ShapeProperty prop = ShapeProperty(shape);
+  if (!prop.isDataProperty() || !prop.writable()) {
+    return false;
+  }
+
+  nobj->setSlot(prop.slot(), *val);
   return true;
 }
 
