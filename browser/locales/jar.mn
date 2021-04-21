@@ -40,14 +40,12 @@
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
     locale/browser/safebrowsing/safebrowsing.properties   (%chrome/browser/safebrowsing/safebrowsing.properties)
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
-    locale/browser/syncBrand.dtd                (%chrome/browser/syncBrand.dtd)
     locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
 # the following files are browser-specific overrides
     locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
     locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
-    locale/browser/newInstall.dtd                  (%chrome/browser/newInstall.dtd)
     locale/browser/fxmonitor.properties            (%chrome/browser/fxmonitor.properties)
 
 #ifdef XPI_NAME

@@ -388,7 +388,6 @@ nsToolkitProfileService::nsToolkitProfileService()
 #else
       mUseDedicatedProfile(false),
 #endif
-      mCreatedAlternateProfile(false),
       mStartupReason(u"unknown"_ns),
       mMaybeLockProfile(false),
       mUpdateChannel(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL)),
@@ -1065,12 +1064,6 @@ nsToolkitProfileService::SetDefaultProfile(nsIToolkitProfile* aProfile) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsToolkitProfileService::GetCreatedAlternateProfile(bool* aResult) {
-  *aResult = mCreatedAlternateProfile;
-  return NS_OK;
-}
-
 // Gets the profile root directory descriptor for storing in profiles.ini or
 // installs.ini.
 nsresult nsToolkitProfileService::GetProfileDescriptor(
@@ -1249,7 +1242,6 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
           mStartupReason = u"restart-skipped-default"_ns;
           *aDidCreate = true;
-          mCreatedAlternateProfile = true;
         }
 
         NS_IF_ADDREF(*aProfile = mCurrent);
@@ -1451,6 +1443,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       return NS_ERROR_SHOW_PROFILE_MANAGER;
     }
 
+    bool skippedDefaultProfile = false;
+
     if (mUseDedicatedProfile) {
       // This is the first run of a dedicated profile install. We have to decide
       // whether to use the default profile used by non-dedicated-profile
@@ -1491,11 +1485,9 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
             return NS_OK;
           }
 
-          // We're going to create a new profile for this install. If there was
-          // a potential previous default to use then the user may be confused
-          // over why we're not using that anymore so set a flag for the front
-          // end to use to notify the user about what has happened.
-          mCreatedAlternateProfile = true;
+          // We're going to create a new profile for this install even though
+          // another default exists.
+          skippedDefaultProfile = true;
         }
       }
     }
@@ -1517,7 +1509,7 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       rv = Flush();
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (mCreatedAlternateProfile) {
+      if (skippedDefaultProfile) {
         mStartupReason = u"firstrun-skipped-default"_ns;
       } else {
         mStartupReason = u"firstrun-created-default"_ns;

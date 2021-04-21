@@ -115,10 +115,6 @@ browser.jar:
 % override chrome://global/content/license.html chrome://browser/content/license.html
         content/browser/blockedSite.xhtml               (content/blockedSite.xhtml)
         content/browser/blockedSite.js                  (content/blockedSite.js)
-        content/browser/newInstall.xhtml                (content/newInstall.xhtml)
-        content/browser/newInstall.js                 (content/newInstall.js)
-        content/browser/newInstallPage.html           (content/newInstallPage.html)
-        content/browser/newInstallPage.js             (content/newInstallPage.js)
         content/browser/upgradeDialog.html            (content/upgradeDialog.html)
         content/browser/upgradeDialog.js              (content/upgradeDialog.js)
 

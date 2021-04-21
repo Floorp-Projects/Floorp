@@ -43,10 +43,6 @@ add_task(async () => {
     "Profile1",
     "Should have selected the expected profile"
   );
-  Assert.ok(
-    !service.createdAlternateProfile,
-    "Should not have created an alternate profile."
-  );
 
   Assert.equal(
     profile.name,

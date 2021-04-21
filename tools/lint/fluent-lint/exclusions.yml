@@ -91,10 +91,6 @@ ID02:
         - helpus
         # browser/locales/en-US/browser/aboutLogins.ftl
         - menu
-        # browser/locales/en-US/browser/newInstallPage.ftl
-        - title
-        - heading
-        - lost
         # browser/locales/en-US/browser/pageInfo.ftl
         - copy
         - perm-tab

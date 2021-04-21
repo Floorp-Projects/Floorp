@@ -68,8 +68,4 @@ add_task(async () => {
     "default",
     "Should have selected the right profile"
   );
-  Assert.ok(
-    !service.createdAlternateProfile,
-    "Should not have created an alternate profile."
-  );
 });

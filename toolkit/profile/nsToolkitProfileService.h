@@ -151,9 +151,6 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   bool mUseDevEditionProfile;
   // True if this install should use a dedicated default profile.
   const bool mUseDedicatedProfile;
-  // True if during startup no dedicated profile was already selected, an old
-  // default profile existed but was rejected so a new profile was created.
-  bool mCreatedAlternateProfile;
   nsString mStartupReason;
   bool mMaybeLockProfile;
   // Holds the current application update channel. This is only really held

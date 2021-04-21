@@ -7,8 +7,6 @@
  */
 
 add_task(async () => {
-  let service = getProfileService();
-
   let { profile: selectedProfile, didCreate } = selectStartupProfile([], true);
   // With no profile we're just create a new profile and skip resetting it.
   checkStartupReason("firstrun-created-default");
@@ -53,10 +51,6 @@ add_task(async () => {
   checkProfileService(profileData);
 
   Assert.ok(didCreate, "Should have created a new profile.");
-  Assert.ok(
-    !service.createdAlternateProfile,
-    "Should not have created an alternate profile."
-  );
   Assert.equal(
     selectedProfile.name,
     profile.name,
