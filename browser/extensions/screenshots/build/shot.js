@@ -650,7 +650,7 @@ thumbnail abTests firefoxChannel
   // Attributes that will be accepted in the constructor, but ignored/dropped
   AbstractShot.prototype.DEPRECATED_ATTRS = `
 microdata history ogTitle createdDevice head body htmlAttrs bodyAttrs headAttrs
-readable hashtags comments showPage isPublic resources deviceId url
+readable hashtags comments showPage isPublic resources url
 fullScreenThumbnail favicon
 `.split(/\s+/g);
 

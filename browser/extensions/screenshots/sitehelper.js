@@ -82,7 +82,6 @@ this.sitehelper = (function() {
           if (info) {
             sendBackupCookieRequest(info.authHeaders);
             sendCustomEvent("login-successful", {
-              deviceId: info.deviceId,
               accountId: info.accountId,
               isOwner: info.isOwner,
               backupCookieRequest: true,
