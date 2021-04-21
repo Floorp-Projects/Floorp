@@ -861,7 +861,8 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
  */
 static void AssertCanChangeAttrs(Shape* shape, unsigned attrs) {
 #ifdef DEBUG
-  if (shape->configurable()) {
+  ShapeProperty prop = ShapeProperty(shape);
+  if (prop.configurable()) {
     return;
   }
 
@@ -871,12 +872,12 @@ static void AssertCanChangeAttrs(Shape* shape, unsigned attrs) {
   // Reject attempts to turn a non-configurable data property into an accessor
   // or custom data property.
   MOZ_ASSERT_IF(
-      shape->isDataProperty(),
+      prop.isDataProperty(),
       !(attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_CUSTOM_DATA_PROP)));
 
   // Reject attempts to turn a non-configurable accessor property into a data
   // property or custom data property.
-  MOZ_ASSERT_IF(shape->isAccessorDescriptor(),
+  MOZ_ASSERT_IF(prop.isAccessorProperty(),
                 attrs & (JSPROP_GETTER | JSPROP_SETTER));
 #endif
 }

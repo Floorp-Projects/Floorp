@@ -1999,8 +1999,9 @@ bool js::AddOrUpdateSparseElementHelper(JSContext* cx, HandleArrayObject obj,
   }
 
   // At this point we're updating a property: See SetExistingProperty
-  if (shape->writable() && shape->isDataProperty()) {
-    obj->setSlot(shape->slot(), v);
+  ShapeProperty prop = ShapeProperty(shape);
+  if (prop.writable() && prop.isDataProperty()) {
+    obj->setSlot(prop.slot(), v);
     return true;
   }
 
