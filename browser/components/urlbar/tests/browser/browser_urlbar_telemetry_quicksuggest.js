@@ -55,15 +55,12 @@ add_task(async function init() {
     "sendStructuredIngestionPing"
   );
 
-  let onEnabledUpdate = UrlbarQuickSuggest.onEnabledUpdate;
-  UrlbarQuickSuggest.onEnabledUpdate = () => {};
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
     set: [
       [EXPERIMENT_PREF, true],
       ["browser.urlbar.suggest.searches", true],
-      ["browser.urlbar.quicksuggest.showedOnboardingDialog", true],
     ],
   });
 
@@ -75,6 +72,7 @@ add_task(async function init() {
   // Set up Quick Suggest.
   await UrlbarQuickSuggest.init();
   await UrlbarQuickSuggest._processSuggestionsJSON(TEST_DATA);
+
   UrlbarProviderQuickSuggest._helpUrl = TEST_HELP_URL;
 
   // Enable local telemetry recording for the duration of the test.
@@ -87,7 +85,6 @@ add_task(async function init() {
     sandbox.restore();
     Services.search.setDefault(oldDefaultEngine);
     Services.telemetry.canRecordExtended = oldCanRecord;
-    UrlbarQuickSuggest.onEnabledUpdate = onEnabledUpdate;
     delete UrlbarProviderQuickSuggest._helpUrl;
   });
 });
