@@ -33,7 +33,7 @@ add_task(async function() {
 
   // Enable HTTPS-First Mode and register console-listener
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.https_only_mode_https_first", true]],
+    set: [["dom.security.https_first", true]],
   });
   Services.console.registerListener(on_new_message);
   // 1. Upgrade page to https://

@@ -2968,15 +2968,15 @@
 
 # If true, top-level request will get upgraded to HTTPS and
 # downgraded again if the request failed.
-- name: dom.security.https_only_mode_https_first
+- name: dom.security.https_first
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
 # If true, top-level requests in Private Browsing Mode will get
-# upgraded to HTTPS. (If dom.security.https_only_mode_https_first
+# upgraded to HTTPS. (If dom.security.https_first
 # is set to true then this pref has no effect)
-- name: dom.security.https_only_mode_https_first_pbm
+- name: dom.security.https_first_pbm
   type: RelaxedAtomicBool
   value: false
   mirror: always

@@ -296,12 +296,9 @@ function setUpPrefs() {
     "dom.security.https_only_mode_pbm",
     curTest.https_only_pbm
   );
+  Services.prefs.setBoolPref("dom.security.https_first", curTest.https_first);
   Services.prefs.setBoolPref(
-    "dom.security.https_only_mode_https_first",
-    curTest.https_first
-  );
-  Services.prefs.setBoolPref(
-    "dom.security.https_only_mode_https_first_pbm",
+    "dom.security.https_first_pbm",
     curTest.https_first_pbm
   );
 }
