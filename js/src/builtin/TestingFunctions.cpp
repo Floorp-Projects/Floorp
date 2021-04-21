@@ -4490,7 +4490,7 @@ class ShapeSnapshot {
     ShapeProperty prop;
 
     explicit PropertyInfo(Shape* shape)
-        : propShape(shape), key(shape->propid()), prop(propShape) {}
+        : propShape(shape), key(shape->propid()), prop(propShape->property()) {}
     void trace(JSTracer* trc) {
       TraceEdge(trc, &propShape, "propShape");
       TraceEdge(trc, &key, "key");
