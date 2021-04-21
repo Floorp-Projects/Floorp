@@ -152,7 +152,7 @@ function InitializeCollator(collator, locales, options) {
     lazyCollatorData.usage = u;
 
     // Step 8.
-    var opt = new Record();
+    var opt = new_Record();
     lazyCollatorData.opt = opt;
 
     // Steps 9-10.
