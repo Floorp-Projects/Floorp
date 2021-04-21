@@ -11,12 +11,12 @@ window.onload = () => {
   a.style.overflow = "scroll"
   a.style.columnWidth = "calc(-15px)"
   b.style.display = "table-caption"
-  requestIdleCallback(() => {
+  setTimeout(() => {
     a.style.stopColor = "#000"
     b.style.gridColumn = "crispEdges"
     window.saved = b.offsetWidth;
     document.documentElement.className = "";
-  })
+  }, 0)
 }
 </script>
 </head>
