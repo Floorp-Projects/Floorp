@@ -14,7 +14,7 @@ negative:
 $DONOTEVALUATE();
 
 class C {
-  get #f();
+  get #f() {}
   static set #f(v) {}
 }
 
