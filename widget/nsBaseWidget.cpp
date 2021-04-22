@@ -1161,6 +1161,15 @@ nsIWidget::ContentAndAPZEventStatus nsBaseWidget::DispatchInputEvent(
       status.mContentStatus = nsEventStatus_eConsumeDoDefault;
       return status;
     }
+    if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
+      RefPtr<Runnable> r =
+          new DispatchInputOnControllerThread<MultiTouchInput,
+                                              WidgetTouchEvent>(*touchEvent,
+                                                                mAPZC, this);
+      APZThreadUtils::RunOnControllerThread(std::move(r));
+      status.mContentStatus = nsEventStatus_eConsumeDoDefault;
+      return status;
+    }
     // Allow dispatching keyboard events on Gecko thread.
     MOZ_ASSERT(aEvent->AsKeyboardEvent());
   }

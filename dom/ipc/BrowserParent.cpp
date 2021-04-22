@@ -1674,6 +1674,25 @@ mozilla::ipc::IPCResult BrowserParent::RecvDispatchKeyboardEvent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvDispatchTouchEvent(
+    const mozilla::WidgetTouchEvent& aEvent) {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return IPC_OK();
+  }
+
+  WidgetTouchEvent localEvent(aEvent);
+  localEvent.mWidget = widget;
+
+  for (uint32_t i = 0; i < localEvent.mTouches.Length(); i++) {
+    localEvent.mTouches[i]->mRefPoint =
+        TransformChildToParent(localEvent.mTouches[i]->mRefPoint);
+  }
+
+  widget->DispatchInputEvent(&localEvent);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserParent::RecvRequestNativeKeyBindings(
     const uint32_t& aType, const WidgetKeyboardEvent& aEvent,
     nsTArray<CommandInt>* aCommands) {
