@@ -492,6 +492,25 @@
 %endif
 
 /* UPDATE */
+@media (-moz-proton-doorhangers) {
+.popup-notification-icon[popupid="update-available"],
+.popup-notification-icon[popupid="update-downloading"],
+.popup-notification-icon[popupid="update-manual"],
+.popup-notification-icon[popupid="update-other-instance"],
+.popup-notification-icon[popupid="update-restart"] {
+  background: url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  -moz-context-properties: fill;
+  fill: var(--panel-banner-item-update-supported-bgcolor);
+}
+
+.popup-notification-icon[popupid="update-unsupported"] {
+  background: url(chrome://global/skin/icons/warning.svg) no-repeat center;
+  -moz-context-properties: fill;
+  fill: var(--panel-banner-item-warning-icon-bgcolor);
+}
+} /** END Proton **/
+
+@media not (-moz-proton-doorhangers) {
 .popup-notification-icon[popupid="update-available"],
 .popup-notification-icon[popupid="update-downloading"],
 .popup-notification-icon[popupid="update-manual"],
@@ -505,3 +524,4 @@
   background: #FFE900 url(chrome://browser/skin/notification-icons/update.svg) no-repeat center;
   border-radius: 50%;
 }
+} /** END not Proton **/
