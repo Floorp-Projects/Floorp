@@ -395,7 +395,10 @@ class ICFallbackStub : public ICStub {
 
   inline size_t numOptimizedStubs() const { return state_.numOptimizedStubs(); }
 
-  bool newStubIsFirstStub() const { return state_.newStubIsFirstStub(); }
+  bool newStubIsFirstStub() const {
+    return (state_.mode() == ICState::Mode::Specialized &&
+            numOptimizedStubs() == 0);
+  }
 
   ICState& state() { return state_; }
 
