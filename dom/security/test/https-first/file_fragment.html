@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<script>
+
+function beforeunload(){
+  window.opener.postMessage({
+    info: "before-unload",
+    result: window.location.hash,
+    button: false,
+  }, "*");
+}
+
+window.onload = function (){
+  let button = window.document.getElementById("clickMeButton");
+  let buttonExist = button !== null;
+  window.opener.postMessage({
+    info: "onload",
+    result: window.location.href,
+    button: buttonExist,
+  }, "*");
+  button.click();
+
+}
+
+// after button clicked and paged scrolled sends URL of current window
+window.onscroll = function(){
+  window.opener.postMessage({
+    info: "scrolled-to-foo",
+    result: window.location.hash,
+    button: true,
+  }, "*");
+ }
+
+
+</script>
+<body onbeforeunload="/*just to notify if we load a new page*/ beforeunload()";>
+  <a id="clickMeButton" href="http://example.com/tests/dom/security/test/https-first/file_fragment.html#foo">Click me</a>
+  <div style="height: 1000px; border: 1px solid black;"> space</div>
+  <a name="foo" href="http://example.com/tests/dom/security/test/https-first/file_fragment.html">foo</a>
+  <div style="height: 1000px; border: 1px solid black;">space</div>
+</body>
+</html>

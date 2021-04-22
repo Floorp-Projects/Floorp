@@ -19,6 +19,7 @@ MOCHITEST_MANIFESTS += [
     "cors/mochitest.ini",
     "csp/mochitest.ini",
     "general/mochitest.ini",
+    "https-first/mochitest.ini",
     "https-only/mochitest.ini",
     "mixedcontentblocker/mochitest.ini",
     "referrer-policy/mochitest.ini",
