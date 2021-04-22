@@ -64,7 +64,7 @@ use crate::prim_store::backdrop::Backdrop;
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
 use crate::prim_store::gradient::{
     GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams, ConicGradient,
-    ConicGradientParams, optimize_radial_gradient,
+    ConicGradientParams, optimize_radial_gradient, apply_gradient_local_clip,
 };
 use crate::prim_store::image::{Image, YuvImage};
 use crate::prim_store::line_dec::{LineDecoration, LineDecorationCacheKey, get_line_decoration_size};
@@ -1252,6 +1252,8 @@ impl<'a> SceneBuilder<'a> {
                     &info.bounds,
                 );
 
+                let mut center = info.gradient.center;
+
                 let stops = read_gradient_stops(item.gradient_stops());
 
                 let mut tile_size = process_repeat_size(
@@ -1262,12 +1264,12 @@ impl<'a> SceneBuilder<'a> {
 
                 let mut prim_rect = layout.rect;
                 let mut tile_spacing = info.tile_spacing;
-                let mut center = info.gradient.center;
                 optimize_radial_gradient(
                     &mut prim_rect,
                     &mut tile_size,
                     &mut center,
                     &mut tile_spacing,
+                    &layout.clip_rect,
                     info.gradient.radius,
                     info.gradient.extend_mode,
                     &stops,
@@ -1318,7 +1320,7 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::ConicGradient(ref info) => {
                 profile_scope!("conic");
 
-                let (layout, unsnapped_rect, spatial_node_index, clip_chain_id) = self.process_common_properties_with_bounds(
+                let (mut layout, unsnapped_rect, spatial_node_index, clip_chain_id) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                 );
@@ -1329,10 +1331,18 @@ impl<'a> SceneBuilder<'a> {
                     info.tile_size,
                 );
 
+                let offset = apply_gradient_local_clip(
+                    &mut layout.rect,
+                    &tile_size,
+                    &info.tile_spacing,
+                    &layout.clip_rect,
+                );
+                let center = info.gradient.center + offset;
+
                 if !tile_size.to_i32().is_empty() {
                     let prim_key_kind = self.create_conic_gradient_prim(
                         &layout,
-                        info.gradient.center,
+                        center,
                         info.gradient.angle,
                         info.gradient.start_offset,
                         info.gradient.end_offset,

@@ -26,7 +26,10 @@ use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, Rende
 use crate::picture::{SurfaceIndex};
 
 use std::{hash, ops::{Deref, DerefMut}};
-use super::{stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder};
+use super::{
+    stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder,
+    apply_gradient_local_clip,
+};
 
 /// Hashable radial gradient parameters, for use during prim interning.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -379,11 +382,21 @@ pub fn optimize_radial_gradient(
     stretch_size: &mut LayoutSize,
     center: &mut LayoutPoint,
     tile_spacing: &mut LayoutSize,
+    clip_rect: &LayoutRect,
     radius: LayoutSize,
     extend_mode: ExtendMode,
     stops: &[GradientStopKey],
     solid_parts: &mut dyn FnMut(&LayoutRect, ColorU),
 ) {
+    let offset = apply_gradient_local_clip(
+        prim_rect,
+        stretch_size,
+        tile_spacing,
+        clip_rect
+    );
+
+    *center += offset;
+
     if extend_mode != ExtendMode::Clamp || stops.is_empty() {
         return;
     }
