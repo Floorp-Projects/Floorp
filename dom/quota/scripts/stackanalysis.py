@@ -3,6 +3,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+# There seem to be sometimes identical events recorded twice by telemetry
+def sanitize(rows):
+    newrows = []
+    pcid = "unset"
+    psid = "unset"
+    pseq = "unset"
+    for row in rows:
+        cid = row["client_id"]
+        sid = row["session_id"]
+        seq = row["seq"]
+        if cid != pcid or sid != psid or seq != pseq:
+            newrows.append(row)
+        pcid = cid
+        psid = sid
+        pseq = seq
+
+    return newrows
+
+
 # Given a set of rows, find all distinct build ids
 def extractBuildIDs(rows):
     buildids = {}
@@ -99,7 +118,7 @@ def collectTopmostFrames(rows):
     # topmost frame unrecognized, assuming that fixing the issues one by
     # one they will uncover succesively. This is achieved by a rather
     # high delta value.
-    delta = 500
+    delta = 800
     prev_event_time = -99999
     for row in rows:
         et = int(row["event_timestamp"])
