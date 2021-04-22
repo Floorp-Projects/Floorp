@@ -1331,6 +1331,12 @@ void nsLookAndFeel::EnsureInit() {
          !AnyColorChannelIsDifferent(mAccentColor))) {
       std::swap(mAccentColor, mAccentColorForeground);
     }
+
+    // Blend with white, ensuring the color is opaque, so that the UI doesn't
+    // have to care about alpha.
+    mAccentColorForeground =
+        NS_ComposeColors(NS_RGB(0xff, 0xff, 0xff), mAccentColorForeground);
+    mAccentColor = NS_ComposeColors(NS_RGB(0xff, 0xff, 0xff), mAccentColor);
   }
 
   // Button text color
