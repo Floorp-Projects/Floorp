@@ -608,6 +608,7 @@ class MachBrowsertime(MachCommandBase):
     @CommandArgument("args", nargs=argparse.REMAINDER)
     def browsertime(
         self,
+        command_context,
         args,
         verbose=False,
         update_upstream_url="",

@@ -307,7 +307,12 @@ class MachCommands(MachCommandBase):
         parser=setup_argument_parser,
     )
     def run_mochitest_general(
-        self, flavor=None, test_objects=None, resolve_tests=True, **kwargs
+        self,
+        command_context,
+        flavor=None,
+        test_objects=None,
+        resolve_tests=True,
+        **kwargs
     ):
         from mochitest_options import ALL_FLAVORS
         from mozlog.commandline import setup_logging
@@ -531,7 +536,7 @@ class GeckoviewJunitCommands(MachCommandBase):
         action="store_true",
         default=False,
     )
-    def run_junit(self, no_install, **kwargs):
+    def run_junit(self, command_context, no_install, **kwargs):
         self._ensure_state_subdir_exists(".")
 
         from mozrunner.devices.android_device import (

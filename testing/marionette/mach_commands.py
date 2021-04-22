@@ -72,7 +72,7 @@ class MarionetteTest(MachCommandBase):
         conditions=[functools.partial(conditions.is_buildapp_in, apps=SUPPORTED_APPS)],
         parser=create_parser_tests,
     )
-    def marionette_test(self, tests, **kwargs):
+    def marionette_test(self, command_context, tests, **kwargs):
         if "test_objects" in kwargs:
             tests = []
             for obj in kwargs["test_objects"]:
