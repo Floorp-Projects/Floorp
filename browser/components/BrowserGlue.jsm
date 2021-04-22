@@ -45,7 +45,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource:///modules/DownloadsViewableInternally.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
-  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   FeatureGate: "resource://featuregates/FeatureGate.jsm",
   FirefoxMonitor: "resource:///modules/FirefoxMonitor.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
@@ -3786,38 +3785,20 @@ BrowserGlue.prototype = {
       return;
     }
 
-    // Determine if the modal prompt or infobar message should be shown.
-    const [willPrompt] = await Promise.all([
-      DefaultBrowserCheck.willCheckDefaultBrowser(/* isStartupCheck */ true),
-      ExperimentAPI.ready(),
-    ]);
-    let { DefaultBrowserNotification } = ChromeUtils.import(
-      "resource:///actors/AboutNewTabParent.jsm",
-      {}
+    const willPrompt = await DefaultBrowserCheck.willCheckDefaultBrowser(
+      /* isStartupCheck */ true
     );
-    let isFeatureEnabled = ExperimentAPI.getExperiment({
-      featureId: "infobar",
-    })?.branch.feature.enabled;
     if (willPrompt) {
-      // Prevent the related notification from appearing and
-      // show the modal prompt.
-      DefaultBrowserNotification.notifyModalDisplayed();
-    }
-    // If no experiment go ahead with default experience
-    if (willPrompt && !isFeatureEnabled) {
       let win = BrowserWindowTracker.getTopWindow();
       DefaultBrowserCheck.prompt(win);
     }
-    // If in experiment notify ASRouter to dispatch message
-    if (isFeatureEnabled) {
-      await ASRouter.waitForInitialized;
-      ASRouter.sendTriggerMessage({
-        browser: BrowserWindowTracker.getTopWindow()?.gBrowser.selectedBrowser,
-        // triggerId and triggerContext
-        id: "defaultBrowserCheck",
-        context: { willShowDefaultPrompt: willPrompt },
-      });
-    }
+    await ASRouter.waitForInitialized;
+    ASRouter.sendTriggerMessage({
+      browser: BrowserWindowTracker.getTopWindow()?.gBrowser.selectedBrowser,
+      // triggerId and triggerContext
+      id: "defaultBrowserCheck",
+      context: { willShowDefaultPrompt: willPrompt, source: "startup" },
+    });
   },
 
   /**
@@ -4646,14 +4627,7 @@ var DefaultBrowserCheck = {
     }
 
     let shouldCheck =
-      !AppConstants.DEBUG &&
-      shellService.shouldCheckDefaultBrowser &&
-      // Ignore notificationbar pref if proton to show the prompt.
-      (Services.prefs.getBoolPref("browser.proton.enabled", true) ||
-        !Services.prefs.getBoolPref(
-          "browser.defaultbrowser.notificationbar",
-          false
-        ));
+      !AppConstants.DEBUG && shellService.shouldCheckDefaultBrowser;
 
     // Even if we shouldn't check the default browser, we still continue when
     // isStartupCheck = true to set prefs and telemetry.
