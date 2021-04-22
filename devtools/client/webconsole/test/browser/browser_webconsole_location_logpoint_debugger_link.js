@@ -161,6 +161,7 @@ add_task(async function() {
 
 async function setLogPoint(dbg, index, expression) {
   rightClickElement(dbg, "gutter", index);
+  await waitForContextMenu(dbg);
   selectContextMenuItem(
     dbg,
     `${selectors.addLogItem},${selectors.editLogItem}`
