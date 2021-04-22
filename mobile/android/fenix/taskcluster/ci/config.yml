@@ -51,6 +51,11 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: b-linux-xlarge
+        beetmover:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-beetmover
+            os: scriptworker
+            worker-type: 'mobile-1-beetmover-dev'
         dep-signing:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing

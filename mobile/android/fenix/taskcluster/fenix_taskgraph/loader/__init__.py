@@ -71,3 +71,36 @@ def attributes_grouping(config, tasks):
         groups.setdefault(task.label, []).append(task)
 
     return groups
+
+
+@group_by("single-locale")
+def single_locale_grouping(config, tasks):
+    """Split by a single locale (but also by platform, build-type, product)
+
+    The locale can be `None` (en-US build/signing/repackage), a single locale,
+    or multiple locales per task, e.g. for l10n chunking. In the case of a task
+    with, say, five locales, the task will show up in all five locale groupings.
+
+    This grouping is written for non-partner-repack beetmover, but might also
+    be useful elsewhere.
+
+    """
+    groups = {}
+
+    for task in tasks:
+        if task.kind not in config.get("kind-dependencies", []):
+            continue
+
+        platform = task.attributes.get("build_platform")
+        build_type = task.attributes.get("build_type")
+        task_locale = task.attributes.get("locale")
+        chunk_locales = task.attributes.get("chunk_locales")
+        locales = chunk_locales or [task_locale]
+
+        for locale in locales:
+            locale_key = (platform, build_type, locale)
+            groups.setdefault(locale_key, [])
+            if task not in groups[locale_key]:
+                groups[locale_key].append(task)
+
+    return groups

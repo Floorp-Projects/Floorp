@@ -1,0 +1,28 @@
+# This source code form is subject to the terms of the mozilla public
+# license, v. 2.0. if a copy of the mpl was not distributed with this
+# file, you can obtain one at http://mozilla.org/mpl/2.0/.
+---
+loader: fenix_taskgraph.loader.multi_dep:loader
+
+group-by: build-type
+
+transforms:
+    - fenix_taskgraph.transforms.multi_dep:transforms
+    - fenix_taskgraph.transforms.beetmover:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - signing
+
+primary-dependency: signing
+
+only-for-build-types:
+    - release
+    - beta
+    - nightly
+
+job-template:
+    attributes:
+        artifact_map: taskcluster/fenix_taskgraph/manifests/fenix_candidates.yml
+    treeherder:
+        job-symbol: BM
