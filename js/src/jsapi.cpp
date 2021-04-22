@@ -1998,7 +1998,17 @@ JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
   CHECK_THREAD(cx);
   cx->check(obj, id);
 
-  return GetOwnPropertyDescriptor(cx, obj, id, desc);
+  Rooted<Maybe<PropertyDescriptor>> desc_(cx);
+  if (!GetOwnPropertyDescriptor(cx, obj, id, &desc_)) {
+    return false;
+  }
+
+  if (desc_.isNothing()) {
+    desc.object().set(nullptr);
+  } else {
+    desc.set(*desc_);
+  }
+  return true;
 }
 
 JS_PUBLIC_API bool JS_GetOwnPropertyDescriptor(
