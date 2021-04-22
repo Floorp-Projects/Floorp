@@ -440,11 +440,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
       MOZ_ASSERT(aPipeline->mCurrentTexture->AsWebRenderTextureHost());
       Range<wr::ImageKey> range_keys(&keys[0], keys.Length());
       TextureHost::PushDisplayItemFlagSet flags;
-      if (IsOpaque(aPipeline->mCurrentTexture->GetFormat()) ||
-          bool(aPipeline->mCurrentTexture->GetFlags() &
-               TextureFlags::IS_OPAQUE)) {
-        flags += TextureHost::PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE;
-      }
+      flags += TextureHost::PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE;
       if (mApi->SupportsExternalBufferTextures()) {
         flags +=
             TextureHost::PushDisplayItemFlag::SUPPORTS_EXTERNAL_BUFFER_TEXTURES;
