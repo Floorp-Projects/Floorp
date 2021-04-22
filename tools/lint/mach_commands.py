@@ -69,7 +69,7 @@ class MachCommands(MachCommandBase):
         description="Run linters.",
         parser=setup_argument_parser,
     )
-    def lint(self, command_context, *runargs, **lintargs):
+    def lint(self, *runargs, **lintargs):
         """Run linters."""
         self.activate_virtualenv()
         from mozlint import cli, parser
@@ -124,7 +124,7 @@ class MachCommands(MachCommandBase):
         nargs=argparse.REMAINDER,
         help="Extra args that will be forwarded to eslint.",
     )
-    def eslint(self, command_context, paths, extra_args=[], **kwargs):
+    def eslint(self, paths, extra_args=[], **kwargs):
         self._mach_context.commands.dispatch(
             "lint",
             self._mach_context,
