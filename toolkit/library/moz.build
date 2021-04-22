@@ -157,6 +157,21 @@ USE_LIBS += [
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    # The mozgtk library is a workaround that makes Gtk+ use libwayland-client
+    # instead of mozwayland. The reason it works is that by being a dependency
+    # of libxul, mozgtk appears in dependentlibs.list, preceding mozwayland
+    # (which is important and guaranteed by the USE_LIBS order in this file).
+    # That, in turn, makes firefox dlopen() mozgtk before mozwayland, which
+    # will trigger the loading of the Gtk+ libraries (mozgtk depending on them).
+    # Those libraries, if they depend on libwayland-client, will use the symbols
+    # from libwayland-client because mozwayland is not loaded yet.
+    # When eventually libxul is loaded after both mozgtk and mozwayland, it will
+    # get symbols from libwayland-client too.
+    # In the case where Gtk+ doesn't have wayland support, libwayland-client is
+    # not loaded, and libxul ends up using the mozwayland symbols.
+    USE_LIBS += [
+        "mozgtk",
+    ]
     OS_LIBS += CONFIG["MOZ_GTK3_LIBS"]
 
 if CONFIG["MOZ_WAYLAND"]:

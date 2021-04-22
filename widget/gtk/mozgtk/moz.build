@@ -1,0 +1,30 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SharedLibrary("mozgtk")
+
+# If LDFLAGS contains -Wl,--as-needed or if it's the default for the toolchain,
+# we need to add -Wl,--no-as-needed before the gtk libraries, otherwise the
+# linker will drop those dependencies because no symbols are used from them.
+# But those dependencies need to be kept for things to work properly.
+# Ideally, we'd only add -Wl,--no-as-needed if necessary, but it's just simpler
+# to add it unconditionally. This library is also simple enough that forcing
+# -Wl,--as-needed after the gtk libraries is not going to make a significant
+# difference.
+if CONFIG["GCC_USE_GNU_LD"]:
+    no_as_needed = ["-Wl,--no-as-needed"]
+    as_needed = ["-Wl,--as-needed"]
+else:
+    no_as_needed = []
+    as_needed = []
+
+OS_LIBS += [f for f in CONFIG["MOZ_GTK3_LIBS"] if f.startswith("-L")]
+OS_LIBS += no_as_needed
+OS_LIBS += [
+    "gtk-3",
+    "gdk-3",
+]
+OS_LIBS += as_needed
