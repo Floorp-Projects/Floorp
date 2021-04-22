@@ -377,9 +377,6 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
   nsCString mHTTPProxyHost;
   int32_t mHTTPProxyPort;
 
-  nsCString mFTPProxyHost;
-  int32_t mFTPProxyPort;
-
   nsCString mHTTPSProxyHost;
   int32_t mHTTPSProxyPort;
 
