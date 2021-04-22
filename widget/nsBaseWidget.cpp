@@ -1083,10 +1083,10 @@ void nsBaseWidget::DispatchTouchInput(MultiTouchInput& aInput) {
       return;
     }
 
-    WidgetTouchEvent event = aInput.ToWidgetTouchEvent(this);
+    WidgetTouchEvent event = aInput.ToWidgetEvent(this);
     ProcessUntransformedAPZEvent(&event, result);
   } else {
-    WidgetTouchEvent event = aInput.ToWidgetTouchEvent(this);
+    WidgetTouchEvent event = aInput.ToWidgetEvent(this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
