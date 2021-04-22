@@ -1631,8 +1631,8 @@ CustomizeMode.prototype = {
     for (let theme of themes) {
       let button = buildToolbarButton(theme);
       button.addEventListener("command", async () => {
-        await button.theme.enable();
         onThemeSelected(panel);
+        await button.theme.enable();
         AMTelemetry.recordActionEvent({
           object: "customize",
           action: "enable",

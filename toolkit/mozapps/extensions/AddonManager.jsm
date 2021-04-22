@@ -3563,7 +3563,7 @@ var AddonManagerPrivate = {
   },
 
   notifyAddonChanged(aID, aType, aPendingRestart) {
-    AddonManagerInternal.notifyAddonChanged(aID, aType, aPendingRestart);
+    return AddonManagerInternal.notifyAddonChanged(aID, aType, aPendingRestart);
   },
 
   updateAddonAppDisabledStates() {
