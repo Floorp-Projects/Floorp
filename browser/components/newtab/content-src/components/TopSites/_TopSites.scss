@@ -695,15 +695,11 @@ $letter-fallback-color: $white;
       .title {
         color: var(--newtab-background-primary-text-color);
         padding-top: 8px;
-        font-size: 12px;
+        font: caption;
 
         .icon {
           margin-inline-end: 2px;
           fill: var(--newtab-background-primary-text-color);
-        }
-
-        .sponsored-label {
-          font-size: 12px;
         }
       }
 
