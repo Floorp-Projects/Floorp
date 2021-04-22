@@ -403,6 +403,13 @@ class nsWindow final : public nsBaseWidget {
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
   static bool TitlebarUseShapeMask();
 #ifdef MOZ_WAYLAND
+  LayoutDeviceIntPoint GetNativePointerLockCenter() {
+    return mNativePointerLockCenter;
+  }
+  virtual void SetNativePointerLockCenter(
+      const LayoutDeviceIntPoint& aLockCenter) override;
+  virtual void LockNativePointer() override;
+  virtual void UnlockNativePointer() override;
   virtual nsresult GetScreenRect(LayoutDeviceIntRect* aRect) override;
   virtual nsRect GetPreferredPopupRect() override {
     return mPreferredPopupRect;
@@ -458,6 +465,7 @@ class nsWindow final : public nsBaseWidget {
 #ifdef MOZ_WAYLAND
   bool mNeedsCompositorResume;
   bool mCompositorInitiallyPaused;
+  LayoutDeviceIntPoint mNativePointerLockCenter;
 #endif
   bool mWindowScaleFactorChanged;
   int mWindowScaleFactor;
@@ -539,6 +547,8 @@ class nsWindow final : public nsBaseWidget {
 #endif
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::gfx::VsyncSource> mWaylandVsyncSource;
+  zwp_locked_pointer_v1* mLockedPointer;
+  zwp_relative_pointer_v1* mRelativePointer;
 #endif
 
   // Upper bound on pending ConfigureNotify events to be dispatched to the

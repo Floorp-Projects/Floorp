@@ -532,6 +532,9 @@ parent:
     async SynthesizeNativeTouchpadDoubleTap(LayoutDeviceIntPoint aPoint,
                                             uint32_t aModifierFlags);
 
+    async LockNativePointer();
+    async UnlockNativePointer();
+
     async AccessKeyNotHandled(WidgetKeyboardEvent event);
 
     async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,

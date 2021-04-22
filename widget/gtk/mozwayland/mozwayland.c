@@ -23,6 +23,7 @@ const struct wl_interface wl_callback_interface;
 const struct wl_interface wl_data_device_interface;
 const struct wl_interface wl_data_device_manager_interface;
 const struct wl_interface wl_keyboard_interface;
+const struct wl_interface wl_pointer_interface;
 const struct wl_interface wl_region_interface;
 const struct wl_interface wl_registry_interface;
 const struct wl_interface wl_shm_interface;

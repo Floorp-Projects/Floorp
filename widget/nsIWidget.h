@@ -1829,6 +1829,16 @@ class nsIWidget : public nsISupports {
 
 #endif
 
+  /**
+   * If this widget uses native pointer lock instead of warp-to-center
+   * (currently only GTK on Wayland), these methods provide access to that
+   * functionality.
+   */
+  virtual void SetNativePointerLockCenter(
+      const LayoutDeviceIntPoint& aLockCenter) {}
+  virtual void LockNativePointer() {}
+  virtual void UnlockNativePointer() {}
+
   /*
    * Get safe area insets except to cutout.
    * See https://drafts.csswg.org/css-env-1/#safe-area-insets.
