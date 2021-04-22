@@ -443,7 +443,8 @@ function matchVariablesViewProperty(prop, rule) {
     return resolve(false);
   }
 
-  if (rule.name) {
+  // Any kind of string is accepted as name, including empty ones
+  if (typeof rule.name == "string") {
     const match =
       rule.name instanceof RegExp
         ? rule.name.test(prop.name)
