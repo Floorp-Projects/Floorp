@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
       if (aPort != -1) {
         return "SOCKS5 http://localhost:9050";
       }
-      if (aScheme == "http" || aScheme == "ftp") {
+      if (aScheme == "http") {
         return "PROXY http://localhost:8080";
       }
       if (aScheme == "https") {
@@ -84,15 +84,6 @@ add_task(async function testHttpsProxy() {
   equal(pi.port, 8080, "Expected proxy port to be 8080");
   equal(pi.type, "https", "Expected proxy type to be https");
 });
-
-if (Services.prefs.getBoolPref("network.ftp.enabled")) {
-  add_task(async function testFtpProxy() {
-    let pi = await TestProxyTypeByURI("ftp://ftp.mozilla.org/");
-    equal(pi.host, "localhost", "Expected proxy host to be localhost");
-    equal(pi.port, 8080, "Expected proxy port to be 8080");
-    equal(pi.type, "http", "Expected proxy type to be http");
-  });
-}
 
 add_task(async function testSocksProxy() {
   let pi = await TestProxyTypeByURI("http://www.mozilla.org:1234/");
