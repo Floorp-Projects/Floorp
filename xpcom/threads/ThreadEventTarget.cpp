@@ -151,7 +151,7 @@ void ThreadEventTarget::OnDelayedRunnableScheduled(DelayedRunnable* aRunnable) {
 
 void ThreadEventTarget::OnDelayedRunnableRan(DelayedRunnable* aRunnable) {
   MOZ_ASSERT(IsOnCurrentThread());
-  MOZ_ALWAYS_TRUE(mScheduledDelayedRunnables.RemoveElement(aRunnable));
+  mScheduledDelayedRunnables.RemoveElement(aRunnable);
 }
 
 void ThreadEventTarget::NotifyShutdown() {
