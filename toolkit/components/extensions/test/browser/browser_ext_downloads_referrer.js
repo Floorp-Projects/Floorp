@@ -12,13 +12,16 @@ const TEST_URL = `http://example.com/${URL_PATH}/test_downloads_referrer.html`;
 const DOWNLOAD_URL = `http://example.com/${URL_PATH}/test-download.txt`;
 
 async function triggerSaveAs({ selector }) {
+  const contextMenu = window.document.getElementById("contentAreaContextMenu");
+  const popupshown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   await BrowserTestUtils.synthesizeMouseAtCenter(
     selector,
     { type: "contextmenu", button: 2 },
     gBrowser.selectedBrowser
   );
+  await popupshown;
   let saveLinkCommand = window.document.getElementById("context-savelink");
-  saveLinkCommand.doCommand();
+  contextMenu.activateItem(saveLinkCommand);
 }
 
 add_task(function test_setup() {
