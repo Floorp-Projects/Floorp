@@ -6,6 +6,8 @@
 #ifndef mozInlineSpellWordUtil_h
 #define mozInlineSpellWordUtil_h
 
+#include <utility>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
@@ -129,7 +131,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
     DOMTextMapping(NodeOffset aNodeOffset, int32_t aSoftTextOffset,
                    int32_t aLength)
-        : mNodeOffset(aNodeOffset),
+        : mNodeOffset(std::move(aNodeOffset)),
           mSoftTextOffset(aSoftTextOffset),
           mLength(aLength) {}
   };
