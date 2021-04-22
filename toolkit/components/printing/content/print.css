@@ -51,13 +51,23 @@ body[loading] #print {
   margin-block: 0;
 }
 
+hr {
+  margin-inline: 8px;
+  margin-block: 0;
+}
+
+@media not (-moz-proton) {
+hr {
+  margin-inline: 0;
+}
+} /*** END !proton ***/
+
 .header-container {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   flex: 0 1 auto;
-  border-bottom: 1px solid var(--in-content-border-color);
   padding: 8px 18px;
 }
 .header-container > h2 {
@@ -114,8 +124,15 @@ select:not([size], [multiple])[iconic] {
 input[type="number"],
 input[type="text"] {
   padding: 2px;
+  padding-inline-start: 8px;
+}
+
+@media not (-moz-proton) {
+input[type="number"],
+input[type="text"] {
   padding-inline-start: 4px;
 }
+} /*** END !proton ***/
 
 .toggle-group-label {
   padding: 4px 8px;
@@ -124,10 +141,6 @@ input[type="text"] {
 .body-container {
   flex: 1 1 auto;
   overflow: auto;
-}
-
-#more-settings {
-  border-top: 1px solid var(--in-content-border-color);
 }
 
 .twisty > summary {
@@ -179,7 +192,6 @@ input[type="text"] {
 }
 
 .footer-container {
-  border-top: 1px solid var(--in-content-border-color);
   flex: 0 1 auto;
 }
 
@@ -243,7 +255,7 @@ input[type="text"] {
 
 .error-message {
   font-size: 12px;
-  color: #D70022;
+  color: var(--in-content-error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
   margin-top: 4px;
 }
 
@@ -258,7 +270,7 @@ input[type="text"] {
 
 input[type="number"].photon-number {
   padding: 0;
-  padding-inline-start: 4px;
+  padding-inline-start: 8px;
   margin: 0;
   height: 20px;
   width: 4em;
@@ -269,7 +281,23 @@ input[type="number"].photon-number::-moz-number-spin-box {
   max-height: 100%;
   border-inline-start: 1px solid var(--in-content-box-border-color);
   width: 1em;
+  border-start-end-radius: 4px;
+  border-end-end-radius: 4px;
 }
+
+@media not (-moz-proton) {
+.error-message {
+  color: #D70022;
+}
+
+input[type="number"].photon-number {
+  padding-inline-start: 4px;
+}
+
+input[type="number"].photon-number::-moz-number-spin-box {
+  border-radius: 0;
+}
+} /*** END !proton ***/
 
 input[type="number"].photon-number:hover::-moz-number-spin-box {
   border-color: var(--in-content-border-hover);
