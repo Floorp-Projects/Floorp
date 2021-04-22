@@ -88,11 +88,27 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
   },
 
   /**
+   * Returns whether or not this actor should handle the flag that should be set on the
+   * BrowsingContext in the parent process.
+   *
+   * @returns {Boolean}
+   */
+  _shouldHandleConfigurationInParentProcess() {
+    // Only handle parent process configuration if the watcherActor is tied to a
+    // browser element (i.e. we're *not* in the Browser Toolbox)
+    return this.watcherActor.browserElement;
+  },
+
+  /**
    * Event handler for attached browsing context. This will be called when
    * a new browsing context is created that we might want to handle
    * (e.g. when navigating to a page with Cross-Origin-Opener-Policy header)
    */
   _onBrowsingContextAttached(browsingContext) {
+    if (!this._shouldHandleConfigurationInParentProcess()) {
+      return;
+    }
+
     // We only want to set flags on top-level browsing context. The platform
     // will take care of propagating it to the entire browsing contexts tree.
     if (browsingContext.parent) {
@@ -163,7 +179,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
    * @param {Object} configuration: See `updateConfiguration`
    */
   _updateParentProcessConfiguration(configuration) {
-    if (!this._browsingContext) {
+    if (!this._shouldHandleConfigurationInParentProcess()) {
       return;
     }
 
@@ -198,7 +214,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
   },
 
   _restoreParentProcessConfiguration() {
-    if (!this._browsingContext) {
+    if (!this._shouldHandleConfigurationInParentProcess()) {
       return;
     }
 
