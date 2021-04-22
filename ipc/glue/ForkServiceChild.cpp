@@ -10,6 +10,9 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/Services.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
+#include "nsIObserverService.h"
 
 #include <unistd.h>
 #include <fcntl.h>

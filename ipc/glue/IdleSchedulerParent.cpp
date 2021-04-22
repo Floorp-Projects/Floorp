@@ -10,6 +10,7 @@
 #include "nsSystemInfo.h"
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
+#include "nsIThread.h"
 
 namespace mozilla {
 namespace ipc {

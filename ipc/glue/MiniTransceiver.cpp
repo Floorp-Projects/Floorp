@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/ipc/MiniTransceiver.h"
 #include "chrome/common/ipc_message.h"
+#include "chrome/common/ipc_message_utils.h"
 #include "base/eintr_wrapper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/DebugOnly.h"
@@ -16,6 +17,8 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <errno.h>
+
+namespace mozilla::ipc {
 
 static const size_t kMaxIOVecSize = 64;
 static const size_t kMaxDataSize = 8 * 1024;
@@ -239,3 +242,5 @@ bool MiniTransceiver::Recv(IPC::Message& aMsg) {
   aMsg = std::move(*msg);
   return true;
 }
+
+}  // namespace mozilla::ipc

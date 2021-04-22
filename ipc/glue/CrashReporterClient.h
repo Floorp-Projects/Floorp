@@ -11,6 +11,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
+#include "nsExceptionHandler.h"
 
 namespace mozilla {
 namespace ipc {

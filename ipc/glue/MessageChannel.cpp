@@ -1779,8 +1779,6 @@ bool MessageChannel::Call(UniquePtr<Message> aMsg, Message* aReply) {
       return false;
     }
   }
-
-  return true;
 }
 
 bool MessageChannel::WaitForIncomingMessage() {
