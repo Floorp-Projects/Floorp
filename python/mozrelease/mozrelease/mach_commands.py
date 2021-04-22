@@ -28,7 +28,7 @@ class MachCommands(MachCommandBase):
         category="release",
         description="Task that are part of the release process.",
     )
-    def release(self):
+    def release(self, command_context):
         """
         The release subcommands all relate to the release process.
         """
@@ -47,7 +47,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument("--product", required=True, help="The product being built.")
     @CommandArgument("--repo", help="The repo being built.")
     @CommandArgument("--revision", required=True, help="The revision being built.")
-    def buglist(self, version, product, revision, repo):
+    def buglist(self, command_context, version, product, revision, repo):
         self.setup_logging()
         from mozrelease.buglist_creator import create_bugs_url
 
@@ -84,7 +84,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument("--revision", required=True, help="The revision being built.")
     @CommandArgument("--build-number", required=True, help="The build number")
     @CommandArgument("--task-group-id", help="The task group of the build.")
-    def buglist_email(self, **options):
+    def buglist_email(self, command_context, **options):
         self.setup_logging()
         from mozrelease.buglist_creator import email_release_drivers
 
@@ -115,7 +115,9 @@ class MachCommands(MachCommandBase):
         required=False,
         help="Taskcluster secret with ssh-key to use for hg.mozilla.org",
     )
-    def push_scriptworker_canary(self, scriptworkers, addresses, ssh_key_secret):
+    def push_scriptworker_canary(
+        self, command_context, scriptworkers, addresses, ssh_key_secret
+    ):
         self.setup_logging()
         from mozrelease.scriptworker_canary import push_canary
 

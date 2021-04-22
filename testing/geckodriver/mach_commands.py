@@ -55,7 +55,7 @@ class GeckoDriver(MachCommandBase):
         help="Flags to pass to the debugger itself; "
         "split as the Bourne shell would.",
     )
-    def run(self, binary, params, debug, debugger, debugger_args):
+    def run(self, command_context, binary, params, debug, debugger, debugger_args):
         try:
             binpath = self.get_binary_path("geckodriver")
         except BinaryNotFoundException as e:

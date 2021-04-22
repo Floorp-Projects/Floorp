@@ -127,7 +127,7 @@ class GtestCommands(MachCommandBase):
         description="Run the gtest harness.",
         parser=setup_argument_parser,
     )
-    def gtest(self, **kwargs):
+    def gtest(self, command_context, **kwargs):
         self._mach_context.activate_mozharness_venv()
         result = run_gtest(self._mach_context, **kwargs)
         return 0 if result else 1
