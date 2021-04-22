@@ -18,7 +18,7 @@ const AdjustableTitle = {
       flex-shrink: 0;
 
       flex-direction: row;
-      align-items: center;
+      align-items: baseline;
 
       margin-inline: 4px;
       /* Ensure we don't exceed the bounds of the dialog: */
@@ -34,6 +34,7 @@ const AdjustableTitle = {
       height: 16px;
       padding-inline-end: 4px;
       flex-shrink: 0;
+      translate: 0 calc(-0.35 * max(1em - 100%, 0px) + 1px);
 
       background-image: var(--icon-url, url("chrome://global/skin/icons/defaultFavicon.svg"));
       background-size: 16px 16px;
@@ -44,8 +45,11 @@ const AdjustableTitle = {
       fill: currentColor;
     }
 
-    #titleCropper {
+    #titleCropper:not([nomaskfade]) {
       display: inline-flex;
+    }
+
+    #titleCropper {
       overflow: hidden;
 
       justify-content: right;
@@ -61,18 +65,16 @@ const AdjustableTitle = {
     }
 
 
-    #titleText {
+    #titleCropper:not([nomaskfade]) #titleText {
       display: inline-flex;
-      font-weight: 600;
-      flex: 1 0 auto; /* Grow but do not shrink. */
       white-space: nowrap;
-      unicode-bidi: plaintext; /* Ensure we align RTL text correctly. */
-      text-align: match-parent;
     }
 
-    #titleText[nomaskfade] {
-      overflow: hidden;
-      text-overflow: ellipsis;
+    #titleText {
+      font-weight: 600;
+      flex: 1 0 auto; /* Grow but do not shrink. */
+      unicode-bidi: plaintext; /* Ensure we align RTL text correctly. */
+      text-align: match-parent;
     }
 
     #titleCropper[overflown] {
@@ -153,7 +155,7 @@ const AdjustableTitle = {
     } else if (title.shouldUseMaskFade) {
       this._overflowHandler();
     } else {
-      this._titleEl.toggleAttribute("nomaskfade", true);
+      this._titleCropEl.toggleAttribute("nomaskfade", true);
     }
   },
 

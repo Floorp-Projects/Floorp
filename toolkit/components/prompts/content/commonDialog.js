@@ -34,8 +34,8 @@ function commonDialogOnLoad() {
     root.setAttribute("neediconheader", "true");
   }
   let title = { raw: args.title };
+  let { promptPrincipal } = args;
   if (PromptUtils.protonModals) {
-    let { promptPrincipal } = args;
     if (promptPrincipal) {
       if (promptPrincipal.isNullPrincipal) {
         title = { l10nId: "common-dialog-title-null" };
@@ -69,7 +69,8 @@ function commonDialogOnLoad() {
     }
     dialog.setAttribute("buttonpack", "end");
   }
-  title.shouldUseMaskFade = true;
+  // Fade and crop potentially long raw titles, e.g., origins and hostnames.
+  title.shouldUseMaskFade = title.raw && (args.authOrigin || promptPrincipal);
   root.setAttribute("headertitle", JSON.stringify(title));
   if (args.isInsecureAuth) {
     dialog.setAttribute("insecureauth", "true");
