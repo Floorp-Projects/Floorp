@@ -5,15 +5,14 @@
 
 package org.mozilla.focus.utils;
 
-import android.content.Context;
 import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.webkit.URLUtil;
-import mozilla.components.browser.search.SearchEngine;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import org.mozilla.focus.browser.LocalizedContent;
-import org.mozilla.focus.ext.ContextKt;
 
 import java.net.URI;
 import java.net.URISyntaxException;
