@@ -396,7 +396,7 @@ class PlacesFeed {
       // in-content search.
       if (isFirstChange) {
         isFirstChange = false;
-        urlBar.removeHiddenFocus();
+        urlBar.removeHiddenFocus(true);
         urlBar.search("");
         this.store.dispatch(
           ac.OnlyToOneContent({ type: at.DISABLE_SEARCH }, meta.fromTarget)
@@ -417,12 +417,14 @@ class PlacesFeed {
       }
     };
 
-    const onDone = () => {
+    const onDone = ev => {
       // We are done. Show in-content search again and cleanup.
       this.store.dispatch(
         ac.OnlyToOneContent({ type: at.SHOW_SEARCH }, meta.fromTarget)
       );
-      urlBar.removeHiddenFocus();
+
+      const forceSuppressFocusBorder = ev?.type === "mousedown";
+      urlBar.removeHiddenFocus(forceSuppressFocusBorder);
 
       urlBar.removeEventListener("keydown", onKeydown);
       urlBar.removeEventListener("mousedown", onDone);
