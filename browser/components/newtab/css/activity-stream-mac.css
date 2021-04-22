@@ -1072,12 +1072,10 @@ main {
   .outer-wrapper.newtab-experience .top-site-outer .title {
     color: var(--newtab-background-primary-text-color);
     padding-top: 8px;
-    font-size: 12px; }
+    font: caption; }
     .outer-wrapper.newtab-experience .top-site-outer .title .icon {
       margin-inline-end: 2px;
       fill: var(--newtab-background-primary-text-color); }
-    .outer-wrapper.newtab-experience .top-site-outer .title .sponsored-label {
-      font-size: 12px; }
   .outer-wrapper.newtab-experience .top-site-outer .default-icon,
   .outer-wrapper.newtab-experience .top-site-outer .search-topsite {
     height: 32px;
