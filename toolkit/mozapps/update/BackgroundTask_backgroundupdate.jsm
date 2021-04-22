@@ -311,7 +311,7 @@ async function runBackgroundTask() {
     "__dummy__",
   ]).parent.path;
   let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-  FOG.initializeFOG(gleanRoot);
+  FOG.initializeFOG(gleanRoot, "firefox.desktop.background.update");
 
   // For convenience, mirror our loglevel.
   Services.prefs.setCharPref(
