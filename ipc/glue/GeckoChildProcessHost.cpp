@@ -87,6 +87,7 @@
 #include "nsTArray.h"
 #include "nscore.h"  // for NS_FREE_PERMANENT_DATA
 #include "private/pprio.h"
+#include "nsIThread.h"
 
 using mozilla::MonitorAutoLock;
 using mozilla::Preferences;

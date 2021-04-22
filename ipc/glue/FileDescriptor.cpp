@@ -7,6 +7,7 @@
 #include "FileDescriptor.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "nsDebug.h"
 

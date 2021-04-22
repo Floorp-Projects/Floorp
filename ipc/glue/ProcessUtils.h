@@ -7,6 +7,8 @@
 #ifndef mozilla_ipc_ProcessUtils_h
 #define mozilla_ipc_ProcessUtils_h
 
+#include <vector>
+
 #include "FileDescriptor.h"
 #include "base/shared_memory.h"
 #include "mozilla/Maybe.h"

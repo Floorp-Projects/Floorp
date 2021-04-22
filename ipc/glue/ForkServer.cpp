@@ -8,6 +8,9 @@
 #include "chrome/common/chrome_switches.h"
 #include "mozilla/BlockingResourceBase.h"
 #include "mozilla/ipc/ProtocolMessageUtils.h"
+#include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "nsTraceRefcnt.h"
 
 #include <string.h>

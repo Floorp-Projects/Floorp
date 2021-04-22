@@ -6,6 +6,7 @@
 #ifndef __FORKSERVICE_CHILD_H_
 #define __FORKSERVICE_CHILD_H_
 
+#include "base/process_util.h"
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "mozilla/ipc/MiniTransceiver.h"

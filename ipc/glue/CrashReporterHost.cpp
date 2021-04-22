@@ -9,8 +9,10 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
+#include "nsServiceManagerUtils.h"
 #include "nsICrashService.h"
 #include "nsXULAppAPI.h"
+#include "nsIFile.h"
 
 // Consistency checking for nsICrashService constants.  We depend on the
 // equivalence between nsICrashService values and GeckoProcessType values
@@ -187,7 +189,7 @@ void CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
       break;
   }
 
-  RefPtr<Promise> promise;
+  RefPtr<dom::Promise> promise;
   crashService->AddCrash(processType, aCrashType, aChildDumpID,
                          getter_AddRefs(promise));
 }

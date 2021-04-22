@@ -31,14 +31,12 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/LoadInfo.h"
+
+using namespace mozilla::dom;
+using namespace mozilla::net;
 
 namespace mozilla {
-
-using mozilla::BasePrincipal;
-using mozilla::Maybe;
-using mozilla::dom::BrowsingContext;
-using mozilla::dom::ServiceWorkerDescriptor;
-using namespace mozilla::net;
 
 namespace ipc {
 
@@ -162,7 +160,6 @@ Result<nsCOMPtr<nsIPrincipal>, nsresult> PrincipalInfoToPrincipal(
     default:
       return Err(NS_ERROR_FAILURE);
   }
-  return Err(NS_ERROR_FAILURE);
 }
 
 already_AddRefed<nsIContentSecurityPolicy> CSPInfoToCSP(
@@ -760,7 +757,7 @@ nsresult LoadInfoArgsToLoadInfo(
     loadingContext = frameBrowsingContext->GetEmbedderElement();
   }
 
-  RefPtr<mozilla::LoadInfo> loadInfo = new mozilla::LoadInfo(
+  RefPtr<mozilla::net::LoadInfo> loadInfo = new mozilla::net::LoadInfo(
       loadingPrincipal, triggeringPrincipal, principalToInherit,
       sandboxedLoadingPrincipal, topLevelPrincipal,
       topLevelStorageAreaPrincipal, resultPrincipalURI, cookieJarSettings,
