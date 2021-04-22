@@ -11,8 +11,24 @@ import org.junit.Assert.assertNotSame
 import org.junit.Test
 
 class DownloadFragmentStoreTest {
-    private val downloadItem = DownloadItem("0", "title", "url", "77", "jpg", DownloadState.Status.COMPLETED)
-    private val newDownloadItem = DownloadItem("1", "title", "url", "77", "jpg", DownloadState.Status.COMPLETED)
+    private val downloadItem = DownloadItem(
+        id = "0",
+        url = "url",
+        fileName = "title",
+        filePath = "url",
+        size = "77",
+        contentType = "jpg",
+        status = DownloadState.Status.COMPLETED
+    )
+    private val newDownloadItem = DownloadItem(
+        id = "1",
+        url = "url",
+        fileName = "title",
+        filePath = "url",
+        size = "77",
+        contentType = "jpg",
+        status = DownloadState.Status.COMPLETED
+    )
 
     @Test
     fun exitEditMode() = runBlocking {

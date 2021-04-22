@@ -106,9 +106,8 @@ class DynamicDownloadDialog(
                     metrics.track(Event.DownloadsItemOpened)
 
                     val fileWasOpened = AbstractFetchDownloadService.openFile(
-                        context = context,
-                        contentType = downloadState.contentType,
-                        filePath = downloadState.filePath
+                        applicationContext = context.applicationContext,
+                        download = downloadState
                     )
 
                     if (!fileWasOpened) {

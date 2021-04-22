@@ -21,7 +21,15 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 @ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class DownloadControllerTest {
-    private val downloadItem = DownloadItem("0", "title", "url", "77", "jpg", DownloadState.Status.COMPLETED)
+    private val downloadItem = DownloadItem(
+        id = "0",
+        url = "url",
+        fileName = "title",
+        filePath = "url",
+        size = "77",
+        contentType = "jpg",
+        status = DownloadState.Status.COMPLETED
+    )
     private val scope = TestCoroutineScope()
     private val store: DownloadFragmentStore = mockk(relaxed = true)
     private val state: DownloadFragmentState = mockk(relaxed = true)

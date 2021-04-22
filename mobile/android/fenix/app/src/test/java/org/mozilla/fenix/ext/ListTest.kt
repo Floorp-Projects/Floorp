@@ -27,9 +27,33 @@ class ListTest {
         file1.createNewFile()
         file3.createNewFile()
 
-        val item1 = DownloadItem("71", "filepath.txt", filePath1, "71 Mb", "Image/png", DownloadState.Status.COMPLETED)
-        val item2 = DownloadItem("71", "filepath2.txt", "filepath2.txt", "71 Mb", "Image/png", DownloadState.Status.COMPLETED)
-        val item3 = DownloadItem("71", "filepath3.txt", filePath3, "71 Mb", "Image/png", DownloadState.Status.COMPLETED)
+        val item1 = DownloadItem(
+            id = "71",
+            url = "url",
+            fileName = "filepath.txt",
+            filePath = filePath1,
+            size = "71 Mb",
+            contentType = "Image/png",
+            status = DownloadState.Status.COMPLETED
+        )
+        val item2 = DownloadItem(
+            id = "71",
+            url = "url",
+            fileName = "filepath2.txt",
+            filePath = "filepath2.txt",
+            size = "71 Mb",
+            contentType = "Image/png",
+            status = DownloadState.Status.COMPLETED
+        )
+        val item3 = DownloadItem(
+            id = "71",
+            url = "url",
+            fileName = "filepath3.txt",
+            filePath = filePath3,
+            size = "71 Mb",
+            contentType = "Image/png",
+            status = DownloadState.Status.COMPLETED
+        )
 
         val testList = mutableListOf(item1, item2, item3)
         val comparisonList: MutableList<DownloadItem> = mutableListOf(item1, item3)
@@ -58,9 +82,33 @@ class ListTest {
         file2.createNewFile()
         file3.createNewFile()
 
-        val item1 = DownloadItem("71", "filepath.txt", filePath1, "71 Mb", "text/plain", DownloadState.Status.COMPLETED)
-        val item2 = DownloadItem("72", "filepath2.txt", filePath2, "71 Mb", "text/plain", DownloadState.Status.COMPLETED)
-        val item3 = DownloadItem("73", "filepath3.txt", filePath3, "71 Mb", "text/plain", DownloadState.Status.COMPLETED)
+        val item1 = DownloadItem(
+            id = "71",
+            url = "url",
+            fileName = "filepath.txt",
+            filePath = filePath1,
+            size = "71 Mb",
+            contentType = "text/plain",
+            status = DownloadState.Status.COMPLETED
+        )
+        val item2 = DownloadItem(
+            id = "72",
+            url = "url",
+            fileName = "filepath2.txt",
+            filePath = filePath2,
+            size = "71 Mb",
+            contentType = "text/plain",
+            status = DownloadState.Status.COMPLETED
+        )
+        val item3 = DownloadItem(
+            id = "73",
+            url = "url",
+            fileName = "filepath3.txt",
+            filePath = filePath3,
+            size = "71 Mb",
+            contentType = "text/plain",
+            status = DownloadState.Status.COMPLETED
+        )
 
         val testList = mutableListOf(item1, item2, item3)
         val comparisonList: MutableList<DownloadItem> = mutableListOf(item1, item2, item3)

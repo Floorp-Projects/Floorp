@@ -98,12 +98,13 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
             .sortedByDescending { it.createdTime } // sort from newest to oldest
             .map {
                 DownloadItem(
-                    it.id,
-                    it.fileName,
-                    it.filePath,
-                    it.contentLength?.toString() ?: "0",
-                    it.contentType,
-                    it.status
+                    id = it.id,
+                    url = it.url,
+                    fileName = it.fileName,
+                    filePath = it.filePath,
+                    size = it.contentLength?.toString() ?: "0",
+                    contentType = it.contentType,
+                    status = it.status
                 )
             }.filter {
                 it.status == DownloadState.Status.COMPLETED
@@ -249,10 +250,21 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
 
         mode?.let { (activity as HomeActivity).browsingModeManager.mode = it }
         context?.let {
+            val contentLength = if (item.size.isNotEmpty()) {
+                item.size.toLong()
+            } else {
+                0L
+            }
             AbstractFetchDownloadService.openFile(
-                context = it,
-                contentType = item.contentType,
-                filePath = item.filePath
+                applicationContext = it.applicationContext,
+                download = DownloadState(
+                    id = item.id,
+                    url = item.url,
+                    fileName = item.fileName,
+                    contentType = item.contentType,
+                    status = item.status,
+                    contentLength = contentLength
+                )
             )
         }
 

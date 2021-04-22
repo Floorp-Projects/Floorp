@@ -12,7 +12,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DownloadInteractorTest {
-    private val downloadItem = DownloadItem("0", "title", "url", "5.6 mb", "png", DownloadState.Status.COMPLETED)
+    private val downloadItem = DownloadItem(
+        id = "0",
+        url = "url",
+        fileName = "title",
+        filePath = "filePath",
+        size = "5.6 mb",
+        contentType = "png",
+        status = DownloadState.Status.COMPLETED
+    )
     val controller: DownloadController = mockk(relaxed = true)
     val interactor = DownloadInteractor(controller)
 
