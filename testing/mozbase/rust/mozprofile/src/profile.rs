@@ -66,7 +66,7 @@ impl Profile {
 
 #[derive(Debug)]
 pub struct PrefFile {
-    path: PathBuf,
+    pub path: PathBuf,
     pub prefs: Preferences,
 }
 
