@@ -4,14 +4,9 @@
   <meta charset="utf-8">
   <title>Test autofilling documents restored from the back/forward cache (bfcache)</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
-<script>
-runChecksAfterCommonInit();
-</script>
+<body onload="test_crossOriginBfcacheRestore();">
 <p id="display"></p>
 
 <div id="content">
@@ -20,41 +15,43 @@ runChecksAfterCommonInit();
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-let win;
 
-add_task(async function setup() {
-  let loginAddedPromise = promiseStorageChanged(["addLogin"]);
+SimpleTest.waitForExplicitFinish();
 
-  let origin = window.location.origin;
-  addLoginsInParent([origin, "", null, "autofilled", "pass1", "", ""]);
+/*
+ * The test opens a new window and updates login information. Then
+ * a new page is loaded and it goes immediately back. The initial page
+ * should be coming out from the bfcache and the form control values should be
+ * the ones filled during the initial load.
+ */
+async function test_crossOriginBfcacheRestore() {
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]});
 
-  await loginAddedPromise;
-});
+  var bc = new BroadcastChannel("form_basic_bfcache");
+  window.open("form_basic_bfcache.html", "", "noopener");
+  var pageshowCount = 0;
+  bc.onmessage = function(event) {
+    if (event.data.type == "pageshow") {
+      ++pageshowCount;
+      if (pageshowCount == 1) {
+        is(event.data.persisted, false, "Initial load");
+        bc.postMessage("nextpage");
+      } else if (pageshowCount == 2) {
+        is(event.data.persisted, true, "Should have persisted the page.");
+        bc.postMessage("close");
+      }
+    } else if (event.data.type == "is") {
+      is(event.data.value1, event.data.value2, event.data.message);
+    } else if (event.data.type == "ok") {
+      is(event.data.value, event.data.message);
+    } else if (event.data == "closed") {
+      bc.close();
+      SimpleTest.finish();
+    }
+  }
 
-add_task(async function test_crossOriginBfcacheRestore() {
-  let processedPromise = promiseFormsProcessedInSameProcess();
-  win = window.open("form_basic.html", "loginWin");
-  await processedPromise;
-  let doc = win.document;
-  let uname = doc.getElementById("form-basic-username");
-  let pword = doc.getElementById("form-basic-password");
-  checkLoginForm(uname, "autofilled", pword, "pass1");
-
-  let pageHidePromise = new Promise(resolve => {
-    win.addEventListener("pagehide", resolve, {once: true});
-  });
-  info("Navigate to another page on a different origin");
-  document.getElementById("next").click();
-  let pageHideEvent = await pageHidePromise;
-  await SimpleTest.promiseFocus(win);
-  ok(pageHideEvent.persisted, "First document should have been persisted in bfcache");
-
-  info("loaded page will go back to the first page (login form)");
-  processedPromise = promiseFormsProcessedInSameProcess();
-  await processedPromise;
-  checkLoginForm(uname, "autofilled", pword, "pass1");
-  win.close();
-});
+}
 </script>
 </pre>
 </body>
