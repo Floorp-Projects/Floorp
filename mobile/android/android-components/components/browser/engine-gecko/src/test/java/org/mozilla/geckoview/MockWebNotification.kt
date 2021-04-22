@@ -13,5 +13,9 @@ class MockWebNotification(
     textDirection: String,
     lang: String,
     requireInteraction: Boolean,
-    source: String
-) : WebNotification(title, tag, cookie, text, imageUrl, textDirection, lang, requireInteraction, source)
+    source: String,
+    silent: Boolean = false,
+    vibrate: IntArray = IntArray(0)
+) : WebNotification(
+    title, tag, cookie, text, imageUrl, textDirection, lang, requireInteraction, source, silent, vibrate
+)
