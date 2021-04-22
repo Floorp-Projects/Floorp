@@ -1215,6 +1215,10 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::Gradient(ref info) => {
                 profile_scope!("gradient");
 
+                if !info.gradient.is_valid() {
+                    return;
+                }
+
                 let (mut layout, unsnapped_rect, spatial_node_index, clip_chain_id) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
@@ -1286,6 +1290,10 @@ impl<'a> SceneBuilder<'a> {
             }
             DisplayItem::RadialGradient(ref info) => {
                 profile_scope!("radial");
+
+                if !info.gradient.is_valid() {
+                    return;
+                }
 
                 let (mut layout, unsnapped_rect, spatial_node_index, clip_chain_id) = self.process_common_properties_with_bounds(
                     &info.common,
@@ -1359,6 +1367,10 @@ impl<'a> SceneBuilder<'a> {
             }
             DisplayItem::ConicGradient(ref info) => {
                 profile_scope!("conic");
+
+                if !info.gradient.is_valid() {
+                    return;
+                }
 
                 let (mut layout, unsnapped_rect, spatial_node_index, clip_chain_id) = self.process_common_properties_with_bounds(
                     &info.common,

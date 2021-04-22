@@ -627,6 +627,15 @@ pub struct Gradient {
     pub extend_mode: ExtendMode,
 } // IMPLICIT: stops: Vec<GradientStop>
 
+impl Gradient {
+    pub fn is_valid(&self) -> bool {
+        self.start_point.x.is_finite() &&
+            self.start_point.y.is_finite() &&
+            self.end_point.x.is_finite() &&
+            self.end_point.y.is_finite()
+    }
+}
+
 /// The area
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct GradientDisplayItem {
@@ -659,6 +668,15 @@ pub struct RadialGradient {
     pub extend_mode: ExtendMode,
 } // IMPLICIT stops: Vec<GradientStop>
 
+impl RadialGradient {
+    pub fn is_valid(&self) -> bool {
+        self.center.x.is_finite() &&
+            self.center.y.is_finite() &&
+            self.start_offset.is_finite() &&
+            self.end_offset.is_finite()
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct ConicGradient {
     pub center: LayoutPoint,
@@ -667,6 +685,16 @@ pub struct ConicGradient {
     pub end_offset: f32,
     pub extend_mode: ExtendMode,
 } // IMPLICIT stops: Vec<GradientStop>
+
+impl ConicGradient {
+    pub fn is_valid(&self) -> bool {
+        self.center.x.is_finite() &&
+            self.center.y.is_finite() &&
+            self.angle.is_finite() &&
+            self.start_offset.is_finite() &&
+            self.end_offset.is_finite()
+    }
+}
 
 /// Just an abstraction for bundling up a bunch of clips into a "super clip".
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
