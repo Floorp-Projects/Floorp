@@ -533,6 +533,20 @@ nsresult PuppetWidget::SynthesizeNativeTouchpadDoubleTap(
   return NS_OK;
 }
 
+void PuppetWidget::LockNativePointer() {
+  if (!mBrowserChild) {
+    return;
+  }
+  mBrowserChild->SendLockNativePointer();
+}
+
+void PuppetWidget::UnlockNativePointer() {
+  if (!mBrowserChild) {
+    return;
+  }
+  mBrowserChild->SendUnlockNativePointer();
+}
+
 void PuppetWidget::SetConfirmedTargetAPZC(
     uint64_t aInputBlockId,
     const nsTArray<ScrollableLayerGuid>& aTargets) const {
