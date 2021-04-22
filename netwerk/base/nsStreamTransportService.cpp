@@ -283,7 +283,7 @@ void nsStreamTransportService::OnDelayedRunnableRan(
     DelayedRunnable* aRunnable) {
   MOZ_ASSERT(IsOnCurrentThread());
   auto delayedRunnables = mScheduledDelayedRunnables.Lock();
-  MOZ_ALWAYS_TRUE(delayedRunnables->RemoveElement(aRunnable));
+  delayedRunnables->RemoveElement(aRunnable);
 }
 
 NS_IMPL_ISUPPORTS(nsStreamTransportService, nsIStreamTransportService,
