@@ -157,7 +157,7 @@ TableWidget.prototype = {
    */
   set selectedRow(id) {
     for (const column of this.columns.values()) {
-      if (id) {
+      if (id || id === "") {
         column.selectRow(id[this.uniqueId] || id);
       } else {
         column.selectedRow = null;
