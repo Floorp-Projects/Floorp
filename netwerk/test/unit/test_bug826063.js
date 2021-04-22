@@ -9,9 +9,6 @@
 "use strict";
 
 var URIs = ["http://example.org", "https://example.org"];
-if (Services.prefs.getBoolPref("network.ftp.enabled")) {
-  URIs.push("ftp://example.org");
-}
 
 function* getChannels() {
   for (let u of URIs) {
