@@ -25,18 +25,24 @@
 #include "mozilla/jni/Utils.h"
 #include "nsThreadUtils.h"
 
+#if defined(_MSC_VER)  // MSVC
+#  define FUNCTION_SIGNATURE __FUNCSIG__
+#elif defined(__GNUC__)  // GCC, Clang
+#  define FUNCTION_SIGNATURE __PRETTY_FUNCTION__
+#endif
+
 struct NativeException {
   const char* str;
 };
 
 template <class T>
 static NativeException NullHandle() {
-  return {__func__};
+  return {FUNCTION_SIGNATURE};
 }
 
 template <class T>
 static NativeException NullWeakPtr() {
-  return {__func__};
+  return {FUNCTION_SIGNATURE};
 }
 
 namespace mozilla {
