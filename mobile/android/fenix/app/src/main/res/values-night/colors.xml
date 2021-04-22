@@ -81,7 +81,7 @@
     <color name="top_site_pager_dot">#3A3944</color>
     <color name="top_site_pager_dot_selected">#5B5B66</color>
     <color name="top_site_pin_icon_background_tint">@color/photonViolet50</color>
-    <color name="top_sites_border_color">@color/dark_grey_90</color>
+    <color name="top_sites_border_color">@color/photonDarkGrey90</color>
 
     <!-- Synced tabs colors-->
     <color name="synced_tabs_separator">@color/synced_tabs_separator_dark_theme</color>

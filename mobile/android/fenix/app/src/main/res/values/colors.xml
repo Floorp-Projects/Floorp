@@ -3,14 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Photon colors -->
-    <color name="ink_20_48a">#7A312A65</color>
-    <color name="violet_50_32a">#529059FF</color>
-    <color name="violet_50_48a">#7A9059FF</color>
-    <color name="violet_70_12a">#1F592ACB</color>
-    <color name="dark_grey_90">#15141A</color>
-    <color name="violet_05">#E7DFFF</color>
-
     <!-- Light theme color palette -->
     <color name="primary_text_light_theme">#20123A</color>
     <color name="secondary_text_light_theme">@color/photonGrey50</color>
@@ -34,7 +26,7 @@
     <color name="dark_grey_90_gradient_start">#FF15141A</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="synced_tabs_separator_light_theme">@color/photonLightGrey30</color>
-    <color name="top_site_title_text_light_theme">@color/dark_grey_90</color>
+    <color name="top_site_title_text_light_theme">@color/photonDarkGrey90</color>
     <color name="collection_icon_color_violet_light_theme">#7542E5</color>
     <color name="collection_icon_color_blue_light_theme">#0250BB</color>
     <color name="collection_icon_color_pink_light_theme">#E31587</color>
@@ -75,11 +67,11 @@
     <color name="tab_tray_item_media_stroke">#ffffff</color>
     <color name="tab_tray_item_media_background_light_theme">#312A65</color>
     <color name="tab_tray_heading_icon_light_theme">@color/photonInk20</color>
-    <color name="tab_tray_heading_icon_inactive_light_theme">@color/ink_20_48a</color>
+    <color name="tab_tray_heading_icon_inactive_light_theme">@color/photonInk20A48</color>
     <color name="tab_tray_heading_icon_menu_light_theme">@color/accent_normal_theme</color>
     <color name="tab_tray_item_thumbnail_background_light_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_thumbnail_icon_light_theme">@color/photonLightGrey60</color>
-    <color name="tab_tray_selected_mask_light_theme">@color/violet_70_12a</color>
+    <color name="tab_tray_selected_mask_light_theme">@color/photonViolet70A12</color>
 
     <!-- Tab History -->
     <color name="tab_history_item_selected_background_light_theme">@color/tab_tray_item_selected_background_light_theme</color>
@@ -148,7 +140,7 @@
     <color name="tab_tray_heading_icon_menu_dark_theme">@color/photonLightGrey05</color>
     <color name="tab_tray_item_thumbnail_background_dark_theme">@color/photonDarkGrey50</color>
     <color name="tab_tray_item_thumbnail_icon_dark_theme">@color/photonDarkGrey05</color>
-    <color name="tab_tray_selected_mask_dark_theme">@color/violet_50_32a</color>
+    <color name="tab_tray_selected_mask_dark_theme">@color/photonViolet50A32</color>
 
     <!-- Tab History -->
     <color name="tab_history_item_selected_background_dark_theme">@color/tab_tray_item_selected_background_dark_theme</color>
@@ -207,7 +199,7 @@
     <color name="tab_tray_item_divider_private_theme">@color/photonDarkGrey10</color>
     <color name="tab_tray_item_media_background_private_theme">#9059FF</color>
     <color name="tab_tray_heading_icon_private_theme">@color/photonViolet50</color>
-    <color name="tab_tray_heading_icon_inactive_private_theme">@color/violet_50_48a</color>
+    <color name="tab_tray_heading_icon_inactive_private_theme">@color/photonViolet50A48</color>
 
     <!-- Tab History -->
     <color name="tab_history_item_selected_background_private_theme">@color/tab_tray_item_selected_background_dark_theme</color>
@@ -350,7 +342,7 @@
 
     <!-- Toggle Colors -->
     <color name="toggle_off_knob_light_theme">@color/photonGrey10</color>
-    <color name="toggle_off_track_light_theme">@color/dark_grey_90</color>
+    <color name="toggle_off_track_light_theme">@color/photonDarkGrey90</color>
     <color name="toggle_off_knob_dark_theme">@color/photonLightGrey05</color>
     <color name="toggle_off_track_dark_theme">@color/photonLightGrey05</color>
     <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_light_theme</color>
