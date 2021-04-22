@@ -265,9 +265,15 @@ extern bool GetPrototypeIfOrdinary(JSContext* cx, JS::Handle<JSObject*> obj,
 extern bool SetImmutablePrototype(JSContext* cx, JS::Handle<JSObject*> obj,
                                   bool* succeeded);
 
-extern bool GetPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> obj,
-                                  JS::Handle<jsid> id,
-                                  MutableHandle<JS::PropertyDescriptor> desc);
+/*
+ * Deprecated. Finds a PropertyDescriptor somewhere along the prototype chain,
+ * similar to GetOwnPropertyDescriptor. |holder| indicates on which object the
+ * property was found.
+ */
+extern bool GetPropertyDescriptor(
+    JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+    MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc,
+    JS::MutableHandle<JSObject*> holder);
 
 /*
  * Deprecated. A version of HasProperty that also returns the object on which

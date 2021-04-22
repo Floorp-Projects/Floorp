@@ -2505,18 +2505,18 @@ bool js::SetImmutablePrototype(JSContext* cx, HandleObject obj,
   return true;
 }
 
-bool js::GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
-                               MutableHandle<PropertyDescriptor> desc) {
+bool js::GetPropertyDescriptor(
+    JSContext* cx, HandleObject obj, HandleId id,
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc,
+    MutableHandleObject holder) {
   RootedObject pobj(cx);
-
-  Rooted<Maybe<PropertyDescriptor>> desc_(cx);
   for (pobj = obj; pobj;) {
-    if (!GetOwnPropertyDescriptor(cx, pobj, id, &desc_)) {
+    if (!GetOwnPropertyDescriptor(cx, pobj, id, desc)) {
       return false;
     }
 
-    if (desc_.isSome()) {
-      desc.set(*desc_);
+    if (desc.isSome()) {
+      holder.set(desc->objectDoNotUse());
       return true;
     }
 
@@ -2525,7 +2525,8 @@ bool js::GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
     }
   }
 
-  MOZ_ASSERT(!desc.object());
+  MOZ_ASSERT(desc.isNothing());
+  MOZ_ASSERT(!holder);
   return true;
 }
 

@@ -2037,7 +2037,19 @@ JS_PUBLIC_API bool JS_GetPropertyDescriptorById(
     JSContext* cx, HandleObject obj, HandleId id,
     MutableHandle<PropertyDescriptor> desc) {
   cx->check(obj, id);
-  return GetPropertyDescriptor(cx, obj, id, desc);
+
+  Rooted<Maybe<PropertyDescriptor>> desc_(cx);
+  RootedObject holder(cx);
+  if (!GetPropertyDescriptor(cx, obj, id, &desc_, &holder)) {
+    return false;
+  }
+
+  if (desc_.isNothing()) {
+    desc.object().set(nullptr);
+  } else {
+    desc.set(*desc_);
+  }
+  return true;
 }
 
 JS_PUBLIC_API bool JS_GetPropertyDescriptor(
