@@ -1194,7 +1194,6 @@ pref("javascript.options.dump_stack_on_debuggee_would_run", false);
 pref("javascript.options.dynamicImport", true);
 
 // advanced prefs
-pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
 
 // If this pref is true, prefs in the logging.config branch will be cleared on
@@ -1491,14 +1490,6 @@ pref("network.http.send_window_size", 1024);
 // There is also image.http.accept which works in scope of image.
 pref("network.http.accept", "");
 
-// default values for FTP
-// in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
-// Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)
-// per Section 4.7 "Low-Latency Data Service Class".
-pref("network.ftp.data.qos", 0);
-pref("network.ftp.control.qos", 0);
-pref("network.ftp.enabled", false);
-
 // The max time to spend on xpcom events between two polls in ms.
 pref("network.sts.max_time_for_events_between_two_polls", 100);
 
@@ -1762,9 +1753,6 @@ pref("network.dns.offline-localhost", true);
 // A negative value will keep the thread alive forever.
 pref("network.dns.resolver-thread-extra-idle-time-seconds", 60);
 
-// Idle timeout for ftp control connections - 5 minute default
-pref("network.ftp.idleConnectionTimeout", 300);
-
 // enables the prefetch service (i.e., prefetching of <link rel="next"> and
 // <link rel="prefetch"> URLs).
 pref("network.prefetch-next", true);
@@ -1887,8 +1875,6 @@ pref("network.http.tailing.total-max", 45000);
 // Enable or disable the whole fix from bug 1563538
 pref("network.http.spdy.bug1563538", true);
 
-pref("network.proxy.ftp",                   "");
-pref("network.proxy.ftp_port",              0);
 pref("network.proxy.http",                  "");
 pref("network.proxy.http_port",             0);
 pref("network.proxy.ssl",                   "");
