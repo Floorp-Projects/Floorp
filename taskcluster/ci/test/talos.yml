@@ -9,7 +9,10 @@ job-defaults:
     tier:
         by-variant:
             fission: 2
-            default: default
+            default:
+                by-test-platform:
+                    macosx1100.*: 2
+                    default: default
     virtualization: hardware
     mozharness:
         script: talos_script.py
