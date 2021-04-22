@@ -54,6 +54,7 @@ class TopSitesTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
+            expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
@@ -73,6 +74,7 @@ class TopSitesTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
+            expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
@@ -104,6 +106,7 @@ class TopSitesTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
+            expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
@@ -128,6 +131,7 @@ class TopSitesTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
+            expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
@@ -152,6 +156,7 @@ class TopSitesTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
+            expandMenu()
             verifyAddToTopSitesButton()
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")

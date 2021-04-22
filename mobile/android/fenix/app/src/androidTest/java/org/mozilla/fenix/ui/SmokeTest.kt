@@ -321,7 +321,6 @@ class SmokeTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
-            expandMenu()
         }.openSaveToCollection {
             verifyCollectionNameTextField()
         }
