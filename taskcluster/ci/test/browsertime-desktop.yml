@@ -143,6 +143,7 @@ browsertime-tp6-essential:
                             macosx1014-64-shippable-qr.*: ["trunk"]
                             macosx1015.*shippable.*: ["trunk", "mozilla-beta"]
                             windows10-64.*shippable.*: ["trunk", "mozilla-beta"]
+                            macosx1100.*shippable.*: ["mozilla-central", "mozilla-beta"]
                             default: []
                     default: []
     tier:

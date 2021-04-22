@@ -76,6 +76,7 @@ crashtest:
             default:
                 by-test-platform:
                     windows10-aarch64.*: 2
+                    macosx1100.*: 2
                     android-hw-.*-qr/.*: 2
                     default: default
 
@@ -121,6 +122,10 @@ jsreftest:
             macosx.*64-ccov.*/.*: 7200
             linux.*64-ccov.*/.*: 7200
             default: 3600
+    tier:
+        by-test-platform:
+            macosx1100.*: 2
+            default: default
     run-on-projects:
         by-variant:
             fission: []
@@ -194,6 +199,7 @@ reftest:
                 by-test-platform:
                     windows10-aarch64.*: 2
                     android-hw-.*-qr/.*: 2
+                    macosx1100.*: 2
                     default: default
 
 reftest-qr:
