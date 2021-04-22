@@ -9,7 +9,6 @@ include protocol PContent;
 include protocol PHttpChannel;
 include protocol PCookieService;
 include protocol PBrowser;
-include protocol PFTPChannel;
 #ifdef MOZ_WIDGET_GTK
 include protocol PGIOChannel;
 #endif
@@ -55,7 +54,6 @@ nested(upto inside_cpow) sync protocol PNecko
   manager PContent;
   manages PHttpChannel;
   manages PCookieService;
-  manages PFTPChannel;
   manages PWebSocket;
   manages PWebSocketEventListener;
   manages PTCPSocket;
@@ -82,8 +80,6 @@ parent:
   async PHttpChannel(nullable PBrowser browser,
                      SerializedLoadContext loadContext,
                      HttpChannelCreationArgs args);
-  async PFTPChannel(nullable PBrowser browser, SerializedLoadContext loadContext,
-                    FTPChannelCreationArgs args);
 
   async PWebSocket(nullable PBrowser browser, SerializedLoadContext loadContext,
                    uint32_t aSerialID);
