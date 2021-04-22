@@ -1323,7 +1323,7 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
   }
 
   // Look for a getter we can call on the xray or its prototype chain.
-  Rooted<PropertyDescriptor> desc(cx_);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx_);
   RootedObject holder(cx_, obj);
   RootedObjectVector prototypes(cx_);
   RootedObjectVector prototypeExpandoShapeWrappers(cx_);
@@ -1332,7 +1332,7 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
       cx_->clearPendingException();
       return AttachDecision::NoAction;
     }
-    if (desc.object()) {
+    if (desc.isSome()) {
       break;
     }
     if (!GetPrototype(cx_, holder, &holder)) {
@@ -1352,11 +1352,11 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
       return AttachDecision::NoAction;
     }
   }
-  if (!desc.isAccessorDescriptor()) {
+  if (!desc->isAccessorDescriptor()) {
     return AttachDecision::NoAction;
   }
 
-  RootedObject getter(cx_, desc.getterObject());
+  RootedObject getter(cx_, desc->getterObject());
   if (!getter || !getter->is<JSFunction>() ||
       !getter->as<JSFunction>().isNativeWithoutJitEntry()) {
     return AttachDecision::NoAction;

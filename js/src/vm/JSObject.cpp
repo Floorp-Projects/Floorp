@@ -1020,12 +1020,12 @@ static bool CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
 
   // |obj| and |cx| are generally not same-compartment with |target| here.
   cx->check(obj, id);
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
 
   if (!GetOwnPropertyDescriptor(cx, obj, id, &desc)) {
     return false;
   }
-  MOZ_ASSERT(desc.object());
+  MOZ_ASSERT(desc.isSome());
 
   JSAutoRealm ar(cx, target);
   cx->markId(id);
@@ -1034,7 +1034,8 @@ static bool CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
     return false;
   }
 
-  return DefineProperty(cx, target, wrappedId, desc);
+  Rooted<PropertyDescriptor> desc_(cx, *desc);
+  return DefineProperty(cx, target, wrappedId, desc_);
 }
 
 JS_FRIEND_API bool JS_CopyOwnPropertiesAndPrivateFields(JSContext* cx,
@@ -2374,21 +2375,6 @@ bool js::PreventExtensions(JSContext* cx, HandleObject obj) {
   return PreventExtensions(cx, obj, result) && result.checkStrict(cx, obj);
 }
 
-bool js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
-                                  MutableHandle<PropertyDescriptor> desc) {
-  Rooted<Maybe<PropertyDescriptor>> desc_(cx);
-  if (!GetOwnPropertyDescriptor(cx, obj, id, &desc_)) {
-    return false;
-  }
-
-  if (desc_.isNothing()) {
-    desc.object().set(nullptr);
-  } else {
-    desc.set(*desc_);
-  }
-  return true;
-}
-
 bool js::GetOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, HandleId id,
     MutableHandle<Maybe<PropertyDescriptor>> desc) {
@@ -2523,12 +2509,14 @@ bool js::GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                                MutableHandle<PropertyDescriptor> desc) {
   RootedObject pobj(cx);
 
+  Rooted<Maybe<PropertyDescriptor>> desc_(cx);
   for (pobj = obj; pobj;) {
-    if (!GetOwnPropertyDescriptor(cx, pobj, id, desc)) {
+    if (!GetOwnPropertyDescriptor(cx, pobj, id, &desc_)) {
       return false;
     }
 
-    if (desc.object()) {
+    if (desc_.isSome()) {
+      desc.set(*desc_);
       return true;
     }
 

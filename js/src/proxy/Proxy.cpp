@@ -73,23 +73,23 @@ static bool ProxyGetOnExpando(JSContext* cx, HandleObject proxy,
   // Because we controlled the creation of the expando, we know it's not a
   // proxy, and so can safely call internal methods on it without worrying about
   // exposing information about private names.
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
   if (!GetOwnPropertyDescriptor(cx, expando, id, &desc)) {
     return false;
   }
+  // We must have the object, same reasoning as the expando.
+  MOZ_ASSERT(desc.isSome());
 
   // If the private name has a getter, delegate to that.
-  if (desc.hasGetterObject()) {
-    RootedValue getter(cx, JS::ObjectValue(*desc.getterObject().get()));
+  if (desc->hasGetterObject()) {
+    RootedValue getter(cx, JS::ObjectValue(*desc->getterObject().get()));
     return js::CallGetter(cx, receiver, getter, vp);
   }
 
-  // We must have the object, same reasoning as the expando.
-  MOZ_ASSERT(desc.object());
-  MOZ_ASSERT(desc.hasValue());
-  MOZ_ASSERT(desc.isDataDescriptor());
+  MOZ_ASSERT(desc->hasValue());
+  MOZ_ASSERT(desc->isDataDescriptor());
 
-  vp.set(desc.value());
+  vp.set(desc->value());
   return true;
 }
 
