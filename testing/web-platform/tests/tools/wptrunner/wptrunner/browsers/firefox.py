@@ -1,12 +1,9 @@
-import base64
-import io
 import json
 import os
 import platform
 import signal
 import subprocess
 import sys
-import zipfile
 from abc import ABCMeta, abstractmethod
 
 import mozinfo
@@ -108,20 +105,10 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
             "specialpowers_path": kwargs["specialpowers_path"]}
 
 
-class WdSpecProfile(object):
-    def __init__(self, profile):
-        self.profile = profile
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args, **kwargs):
-        self.profile.cleanup()
-
-
-def executor_kwargs(logger, test_type, test_environment, run_info_data,
+def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_data,
                     **kwargs):
-    executor_kwargs = base_executor_kwargs(test_type, test_environment, run_info_data,
+    executor_kwargs = base_executor_kwargs(test_type, server_config,
+                                           cache_manager, run_info_data,
                                            **kwargs)
     executor_kwargs["close_after_done"] = test_type != "reftest"
     executor_kwargs["timeout_multiplier"] = get_timeout_multiplier(test_type,
@@ -135,33 +122,21 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data,
         executor_kwargs["reftest_internal"] = kwargs["reftest_internal"]
         executor_kwargs["reftest_screenshot"] = kwargs["reftest_screenshot"]
     if test_type == "wdspec":
-        options = {"args": []}
+        options = {}
         if kwargs["binary"]:
             options["binary"] = kwargs["binary"]
         if kwargs["binary_args"]:
             options["args"] = kwargs["binary_args"]
-
-        profile_creator = ProfileCreator(logger,
-                                         kwargs["prefs_root"],
-                                         test_environment.config,
-                                         test_type,
-                                         kwargs["extra_prefs"],
-                                         kwargs["gecko_e10s"],
-                                         kwargs["enable_fission"],
-                                         kwargs["browser_channel"],
-                                         kwargs["binary"],
-                                         kwargs["certutil_binary"],
-                                         test_environment.config.ssl_config["ca_cert_path"])
-        if kwargs["processes"] > 1:
-            # With multiple processes, we would need a profile directory per process, but we
-            # don't have an easy way to do that, so include the profile in the capabilties
-            # directly instead. This means recreating it per session, which is slow
-            options["profile"] = profile_creator.create_base64()
-        else:
-            profile = profile_creator.create()
-            options["args"].extend(["--profile", profile.profile])
-            test_environment.env_extras_cms.append(WdSpecProfile(profile))
-
+        if kwargs["headless"]:
+            if "args" not in options:
+                options["args"] = []
+            if "--headless" not in options["args"]:
+                options["args"].append("--headless")
+        options["prefs"] = {
+            "network.dns.localDomains": ",".join(server_config.domains_set)
+        }
+        for pref, value in kwargs["extra_prefs"]:
+            options["prefs"].update({pref: Preferences.cast(value)})
         capabilities["moz:firefoxOptions"] = options
 
         # This gets reused for firefox_android, but the environment setup
@@ -174,17 +149,8 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data,
                                   kwargs["headless"],
                                   kwargs["enable_webrender"],
                                   kwargs["chaos_mode_flags"])
-        else:
-            if kwargs["headless"] and not "--headless" in options["args"]:
-                options["args"].append("--headless")
 
-        # This doesn't work with wdspec tests
-        # In particular tests can create a session without passing in the capabilites
-        # and in those cases we get the default geckodriver profile which doesn't
-        # guarantee zero network access
-        del environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"]
-
-        executor_kwargs["environ"] = environ
+            executor_kwargs["environ"] = environ
     if kwargs["certutil_binary"] is None:
         capabilities["acceptInsecureCerts"] = True
     if capabilities:
@@ -391,7 +357,6 @@ class SingleInstanceManager(FirefoxInstanceManager):
             if instance:
                 instance.stop(force)
                 instance.cleanup()
-        self.base_profile.cleanup()
 
 
 class PreloadInstanceManager(FirefoxInstanceManager):
@@ -420,7 +385,6 @@ class PreloadInstanceManager(FirefoxInstanceManager):
             if instance:
                 instance.stop(force, skip_marionette=skip_marionette)
                 instance.cleanup()
-        self.base_profile.cleanup()
 
 
 class BrowserInstance(object):
@@ -482,7 +446,7 @@ class BrowserInstance(object):
         return False
 
     def cleanup(self):
-        self.runner.cleanup()
+        # mozprofile handles deleting the profile when the refcount reaches 0
         self.runner = None
 
 
@@ -616,28 +580,12 @@ class ProfileCreator(object):
         preferences = self._load_prefs()
 
         profile = FirefoxProfile(preferences=preferences,
-                                 restore=False,
                                  **kwargs)
         self._set_required_prefs(profile)
         if self.ca_certificate_path is not None:
             self._setup_ssl(profile)
 
         return profile
-
-    def create_base64(self, **kwargs):
-        profile = self.create(**kwargs)
-        try:
-            with io.BytesIO() as buf:
-                with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
-                    for dirpath, _, filenames in os.walk(profile.profile):
-                        for filename in filenames:
-                            src_path = os.path.join(dirpath, filename)
-                            dest_path = os.path.relpath(src_path, profile.profile)
-                            with open(src_path, "rb") as f:
-                                zipf.writestr(dest_path, f.read())
-                return base64.b64encode(buf.getvalue()).decode("ascii").strip()
-        finally:
-            profile.cleanup()
 
     def _load_prefs(self):
         prefs = Preferences()

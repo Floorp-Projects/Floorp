@@ -295,7 +295,8 @@ def run_tests(config, test_paths, product, **kwargs):
                     executor_cls = product.executor_classes.get(test_type)
                     executor_kwargs = product.get_executor_kwargs(logger,
                                                                   test_type,
-                                                                  test_environment,
+                                                                  test_environment.config,
+                                                                  test_environment.cache_manager,
                                                                   run_info,
                                                                   **kwargs)
 
