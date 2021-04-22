@@ -89,6 +89,9 @@ pub enum SwapchainError {
     /// Window in use
     #[error("Window is in use")]
     WindowInUse,
+    /// Unknown error.
+    #[error("Swapchain can't be created for an unlknown reason")]
+    Unknown,
 }
 
 /// An extent describes the size of a rectangle, such as

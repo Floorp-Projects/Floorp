@@ -403,7 +403,7 @@ impl<'a> GraphicsPipelineInfoBuf<'a> {
             .logic_op_enable(false) // TODO
             .logic_op(vk::LogicOp::CLEAR)
             .attachments(&this.blend_states) // TODO:
-            .blend_constants(match desc.baked_states.blend_color {
+            .blend_constants(match desc.baked_states.blend_constants {
                 Some(value) => value,
                 None => {
                     this.dynamic_states.push(vk::DynamicState::BLEND_CONSTANTS);
@@ -987,7 +987,9 @@ impl d::Device<B> for super::Device {
                     (false, 1.0)
                 }
             });
-        let info = vk::SamplerCreateInfo::builder()
+
+        let mut reduction_info;
+        let mut info = vk::SamplerCreateInfo::builder()
             .flags(vk::SamplerCreateFlags::empty())
             .mag_filter(conv::map_filter(desc.mag_filter))
             .min_filter(conv::map_filter(desc.min_filter))
@@ -1006,6 +1008,13 @@ impl d::Device<B> for super::Device {
             .max_lod(desc.lod_range.end.0)
             .border_color(conv::map_border_color(desc.border))
             .unnormalized_coordinates(!desc.normalized);
+
+        if self.shared.features.contains(Features::SAMPLER_REDUCTION) {
+            reduction_info = vk::SamplerReductionModeCreateInfo::builder()
+                .reduction_mode(conv::map_reduction(desc.reduction_mode))
+                .build();
+            info = info.push_next(&mut reduction_info);
+        }
 
         let result = self.shared.raw.create_sampler(&info, None);
 
@@ -1200,12 +1209,14 @@ impl d::Device<B> for super::Device {
         kind: image::ViewKind,
         format: format::Format,
         swizzle: format::Swizzle,
+        usage: image::Usage,
         range: image::SubresourceRange,
     ) -> Result<n::ImageView, image::ViewCreationError> {
         let is_cube = image
             .flags
             .intersects(vk::ImageCreateFlags::CUBE_COMPATIBLE);
-        let info = vk::ImageViewCreateInfo::builder()
+        let mut image_view_info;
+        let mut info = vk::ImageViewCreateInfo::builder()
             .flags(vk::ImageViewCreateFlags::empty())
             .image(image.raw)
             .view_type(match conv::map_view_kind(kind, image.ty, is_cube) {
@@ -1215,6 +1226,13 @@ impl d::Device<B> for super::Device {
             .format(conv::map_format(format))
             .components(conv::map_swizzle(swizzle))
             .subresource_range(conv::map_subresource_range(&range));
+
+        if self.shared.image_view_usage {
+            image_view_info = vk::ImageViewUsageCreateInfo::builder()
+                .usage(conv::map_image_usage(usage))
+                .build();
+            info = info.push_next(&mut image_view_info);
+        }
 
         let result = self.shared.raw.create_image_view(&info, None);
 
@@ -1962,7 +1980,10 @@ impl super::Device {
             Err(vk::Result::ERROR_NATIVE_WINDOW_IN_USE_KHR) => {
                 return Err(hal::window::SwapchainError::WindowInUse)
             }
-            _ => unreachable!("Unexpected result - driver bug? {:?}", result),
+            Err(other) => {
+                error!("Unexpected result - driver bug? {:?}", other);
+                return Err(hal::window::SwapchainError::Unknown);
+            }
         };
 
         let result = functor.get_swapchain_images(swapchain_raw);

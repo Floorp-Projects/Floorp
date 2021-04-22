@@ -368,6 +368,7 @@ impl device::Device<Backend> for Device {
         _: hal::image::ViewKind,
         _: format::Format,
         _: format::Swizzle,
+        _: hal::image::Usage,
         _: hal::image::SubresourceRange,
     ) -> Result<(), hal::image::ViewCreationError> {
         Ok(())

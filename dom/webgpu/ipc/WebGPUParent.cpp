@@ -696,16 +696,9 @@ ipc::IPCResult WebGPUParent::RecvShutdown() {
 
 ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
                                               const ipc::ByteBuf& aByteBuf) {
-  ipc::ByteBuf byteBuf;
   ErrorBuffer error;
   ffi::wgpu_server_device_action(mContext, aSelf, ToFFI(&aByteBuf),
-                                 ToFFI(&byteBuf), error.ToFFI());
-
-  if (byteBuf.mData) {
-    if (!SendDropAction(std::move(byteBuf))) {
-      NS_WARNING("Unable to set a drop action!");
-    }
-  }
+                                 error.ToFFI());
 
   error.CheckAndForward(this, aSelf);
   return IPC_OK();

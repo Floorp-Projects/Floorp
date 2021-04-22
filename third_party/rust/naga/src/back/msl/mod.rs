@@ -23,37 +23,84 @@ For the result type, if it's a structure, we re-compose it with a temporary valu
 holding the result.
 !*/
 
-use crate::{arena::Handle, valid::ModuleInfo, FastHashMap};
+use crate::{arena::Handle, valid::ModuleInfo};
 use std::fmt::{Error as FmtError, Write};
 
 mod keywords;
+pub mod sampler;
 mod writer;
 
 pub use writer::Writer;
 
-#[derive(Clone, Debug, Default, PartialEq)]
+pub type Slot = u8;
+pub type InlineSamplerIndex = u8;
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+pub enum BindSamplerTarget {
+    Resource(Slot),
+    Inline(InlineSamplerIndex),
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub struct BindTarget {
-    pub buffer: Option<u8>,
-    pub texture: Option<u8>,
-    pub sampler: Option<u8>,
+    #[cfg_attr(feature = "deserialize", serde(default))]
+    pub buffer: Option<Slot>,
+    #[cfg_attr(feature = "deserialize", serde(default))]
+    pub texture: Option<Slot>,
+    #[cfg_attr(feature = "deserialize", serde(default))]
+    pub sampler: Option<BindSamplerTarget>,
+    #[cfg_attr(feature = "deserialize", serde(default))]
     pub mutable: bool,
 }
 
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub struct BindSource {
     pub stage: crate::ShaderStage,
     pub group: u32,
     pub binding: u32,
 }
 
-pub type BindingMap = FastHashMap<BindSource, BindTarget>;
+pub type BindingMap = std::collections::BTreeMap<BindSource, BindTarget>;
+
+#[derive(Clone, Debug, Default, Hash, Eq, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+pub struct PushConstantsMap {
+    #[cfg_attr(feature = "deserialize", serde(default))]
+    pub vs_buffer: Option<Slot>,
+    #[cfg_attr(feature = "deserialize", serde(default))]
+    pub fs_buffer: Option<Slot>,
+    #[cfg_attr(feature = "deserialize", serde(default))]
+    pub cs_buffer: Option<Slot>,
+}
 
 enum ResolvedBinding {
     BuiltIn(crate::BuiltIn),
     Attribute(u32),
     Color(u32),
-    User { prefix: &'static str, index: u32 },
+    User {
+        prefix: &'static str,
+        index: u32,
+        interpolation: ResolvedInterpolation
+    },
     Resource(BindTarget),
+}
+
+#[derive(Copy, Clone)]
+enum ResolvedInterpolation {
+    CenterPerspective,
+    CenterNoPerspective,
+    CentroidPerspective,
+    CentroidNoPerspective,
+    SamplePerspective,
+    SampleNoPerspective,
+    Flat,
 }
 
 // Note: some of these should be removed in favor of proper IR validation.
@@ -77,9 +124,13 @@ pub enum Error {
 }
 
 #[derive(Clone, Debug, PartialEq, thiserror::Error)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum EntryPointError {
     #[error("mapping of {0:?} is missing")]
     MissingBinding(BindSource),
+    #[error("mapping for push constants at stage {0:?} is missing")]
+    MissingPushConstants(crate::ShaderStage),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -90,19 +141,22 @@ enum LocationMode {
     Uniform,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub struct Options {
     /// (Major, Minor) target version of the Metal Shading Language.
     pub lang_version: (u8, u8),
     /// Binding model mapping to Metal.
     pub binding_map: BindingMap,
+    /// Push constants mapping to Metal.
+    pub push_constants_map: PushConstantsMap,
+    /// Samplers to be inlined into the code.
+    pub inline_samplers: Vec<sampler::InlineSampler>,
     /// Make it possible to link different stages via SPIRV-Cross.
     pub spirv_cross_compatibility: bool,
     /// Don't panic on missing bindings, instead generate invalid MSL.
     pub fake_missing_bindings: bool,
-    /// Allow `BuiltIn::PointSize` in the vertex shader.
-    /// Metal doesn't like this for non-point primitive topologies.
-    pub allow_point_size: bool,
 }
 
 impl Default for Options {
@@ -110,8 +164,27 @@ impl Default for Options {
         Options {
             lang_version: (1, 0),
             binding_map: BindingMap::default(),
+            push_constants_map: PushConstantsMap::default(),
+            inline_samplers: Vec::new(),
             spirv_cross_compatibility: false,
             fake_missing_bindings: true,
+        }
+    }
+}
+
+// A subset of options that are meant to be changed per pipeline.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize))]
+#[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+pub struct PipelineOptions {
+    /// Allow `BuiltIn::PointSize` in the vertex shader.
+    /// Metal doesn't like this for non-point primitive topologies.
+    pub allow_point_size: bool,
+}
+
+impl Default for PipelineOptions {
+    fn default() -> Self {
+        PipelineOptions {
             allow_point_size: true,
         }
     }
@@ -125,21 +198,29 @@ impl Options {
     ) -> Result<ResolvedBinding, Error> {
         match *binding {
             crate::Binding::BuiltIn(built_in) => Ok(ResolvedBinding::BuiltIn(built_in)),
-            crate::Binding::Location(index, _) => match mode {
-                LocationMode::VertexInput => Ok(ResolvedBinding::Attribute(index)),
-                LocationMode::FragmentOutput => Ok(ResolvedBinding::Color(index)),
+            crate::Binding::Location { location, interpolation, sampling } => match mode {
+                LocationMode::VertexInput => Ok(ResolvedBinding::Attribute(location)),
+                LocationMode::FragmentOutput => Ok(ResolvedBinding::Color(location)),
                 LocationMode::Intermediate => Ok(ResolvedBinding::User {
                     prefix: if self.spirv_cross_compatibility {
                         "locn"
                     } else {
                         "loc"
                     },
-                    index,
+                    index: location,
+                    interpolation: {
+                        // unwrap: The verifier ensures that vertex shader outputs and fragment
+                        // shader inputs always have fully specified interpolation, and that
+                        // sampling is `None` only for Flat interpolation.
+                        let interpolation = interpolation.unwrap();
+                        let sampling = sampling.unwrap_or(crate::Sampling::Center);
+                        ResolvedInterpolation::from_binding(interpolation, sampling)
+                    }
                 }),
                 LocationMode::Uniform => {
                     log::error!(
                         "Unexpected Binding::Location({}) for the Uniform mode",
-                        index
+                        location
                     );
                     Err(Error::Validation)
                 }
@@ -147,7 +228,7 @@ impl Options {
         }
     }
 
-    fn resolve_global_binding(
+    fn resolve_resource_binding(
         &self,
         stage: crate::ShaderStage,
         res_binding: &crate::ResourceBinding,
@@ -162,16 +243,52 @@ impl Options {
             None if self.fake_missing_bindings => Ok(ResolvedBinding::User {
                 prefix: "fake",
                 index: 0,
+                interpolation: ResolvedInterpolation::CenterPerspective,
             }),
             None => Err(EntryPointError::MissingBinding(source)),
+        }
+    }
+
+    fn resolve_push_constants(
+        &self,
+        stage: crate::ShaderStage,
+    ) -> Result<ResolvedBinding, EntryPointError> {
+        let slot = match stage {
+            crate::ShaderStage::Vertex => self.push_constants_map.vs_buffer,
+            crate::ShaderStage::Fragment => self.push_constants_map.fs_buffer,
+            crate::ShaderStage::Compute => self.push_constants_map.cs_buffer,
+        };
+        match slot {
+            Some(slot) => Ok(ResolvedBinding::Resource(BindTarget {
+                buffer: Some(slot),
+                texture: None,
+                sampler: None,
+                mutable: false,
+            })),
+            None if self.fake_missing_bindings => Ok(ResolvedBinding::User {
+                prefix: "fake",
+                index: 0,
+                interpolation: ResolvedInterpolation::CenterPerspective,
+            }),
+            None => Err(EntryPointError::MissingPushConstants(stage)),
         }
     }
 }
 
 impl ResolvedBinding {
+    fn as_inline_sampler<'a>(&self, options: &'a Options) -> Option<&'a sampler::InlineSampler> {
+        match *self {
+            Self::Resource(BindTarget {
+                sampler: Some(BindSamplerTarget::Inline(index)),
+                ..
+            }) => Some(&options.inline_samplers[index as usize]),
+            _ => None,
+        }
+    }
+
     fn try_fmt<W: Write>(&self, out: &mut W) -> Result<(), Error> {
         match *self {
-            ResolvedBinding::BuiltIn(built_in) => {
+            Self::BuiltIn(built_in) => {
                 use crate::BuiltIn as Bi;
                 let name = match built_in {
                     Bi::Position => "position",
@@ -194,25 +311,27 @@ impl ResolvedBinding {
                     Bi::WorkGroupId => "threadgroup_position_in_grid",
                     Bi::WorkGroupSize => "dispatch_threads_per_threadgroup",
                 };
-                Ok(write!(out, "{}", name)?)
+                write!(out, "{}", name)?;
             }
-            ResolvedBinding::Attribute(index) => Ok(write!(out, "attribute({})", index)?),
-            ResolvedBinding::Color(index) => Ok(write!(out, "color({})", index)?),
-            ResolvedBinding::User { prefix, index } => {
-                Ok(write!(out, "user({}{})", prefix, index)?)
+            Self::Attribute(index) => write!(out, "attribute({})", index)?,
+            Self::Color(index) => write!(out, "color({})", index)?,
+            Self::User { prefix, index, interpolation } => {
+                write!(out, "user({}{}), ", prefix, index)?;
+                interpolation.try_fmt(out)?;
             }
-            ResolvedBinding::Resource(ref target) => {
+            Self::Resource(ref target) => {
                 if let Some(id) = target.buffer {
-                    Ok(write!(out, "buffer({})", id)?)
+                    write!(out, "buffer({})", id)?;
                 } else if let Some(id) = target.texture {
-                    Ok(write!(out, "texture({})", id)?)
-                } else if let Some(id) = target.sampler {
-                    Ok(write!(out, "sampler({})", id)?)
+                    write!(out, "texture({})", id)?;
+                } else if let Some(BindSamplerTarget::Resource(id)) = target.sampler {
+                    write!(out, "sampler({})", id)?;
                 } else {
-                    Err(Error::UnimplementedBindTarget(target.clone()))
+                    return Err(Error::UnimplementedBindTarget(target.clone()));
                 }
             }
         }
+        Ok(())
     }
 
     fn try_fmt_decorated<W: Write>(&self, out: &mut W, terminator: &str) -> Result<(), Error> {
@@ -220,6 +339,40 @@ impl ResolvedBinding {
         self.try_fmt(out)?;
         write!(out, "]]")?;
         write!(out, "{}", terminator)?;
+        Ok(())
+    }
+}
+
+impl ResolvedInterpolation {
+    fn from_binding(interpolation: crate::Interpolation,
+                    sampling: crate::Sampling)
+                    -> Self
+{
+        use crate::Interpolation as I;
+        use crate::Sampling as S;
+
+        match (interpolation, sampling) {
+            (I::Perspective, S::Center)   => Self::CenterPerspective,
+            (I::Perspective, S::Centroid) => Self::CentroidPerspective,
+            (I::Perspective, S::Sample)   => Self::SamplePerspective,
+            (I::Linear,      S::Center)   => Self::CenterNoPerspective,
+            (I::Linear,      S::Centroid) => Self::CentroidNoPerspective,
+            (I::Linear,      S::Sample)   => Self::SampleNoPerspective,
+            (I::Flat, _)                        => Self::Flat,
+        }
+    }
+
+    fn try_fmt<W: Write>(self, out: &mut W) -> Result<(), Error> {
+        let identifier = match self {
+            Self::CenterPerspective => "center_perspective",
+            Self::CenterNoPerspective => "center_no_perspective",
+            Self::CentroidPerspective => "centroid_perspective",
+            Self::CentroidNoPerspective => "centroid_no_perspective",
+            Self::SamplePerspective => "sample_perspective",
+            Self::SampleNoPerspective => "sample_no_perspective",
+            Self::Flat => "flat",
+        };
+        out.write_str(identifier)?;
         Ok(())
     }
 }
@@ -238,9 +391,10 @@ pub fn write_string(
     module: &crate::Module,
     info: &ModuleInfo,
     options: &Options,
+    pipeline_options: &PipelineOptions,
 ) -> Result<(String, TranslationInfo), Error> {
     let mut w = writer::Writer::new(String::new());
-    let info = w.write(module, info, options)?;
+    let info = w.write(module, info, options, pipeline_options)?;
     Ok((w.finish(), info))
 }
 

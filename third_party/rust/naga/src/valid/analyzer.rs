@@ -318,6 +318,10 @@ impl FunctionInfo {
             },
             // always uniform
             E::Constant(_) => Uniformity::new(),
+            E::Splat { size: _, value } => Uniformity {
+                non_uniform_result: self.add_ref(value),
+                requirements: UniformityRequirements::empty(),
+            },
             E::Compose { ref components, .. } => {
                 let non_uniform_result = components
                     .iter()
@@ -340,7 +344,10 @@ impl FunctionInfo {
                         _ => false,
                     },
                     // only flat inputs are uniform
-                    Some(crate::Binding::Location(_, Some(crate::Interpolation::Flat))) => true,
+                    Some(crate::Binding::Location {
+                        interpolation: Some(crate::Interpolation::Flat),
+                        ..
+                    }) => true,
                     _ => false,
                 };
                 Uniformity {

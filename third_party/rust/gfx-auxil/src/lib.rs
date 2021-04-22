@@ -65,7 +65,7 @@ pub fn read_spirv<R: io::Read + io::Seek>(mut x: R) -> io::Result<Vec<u32>> {
             "input length not divisible by 4",
         ));
     }
-    if size > usize::max_value() as u64 {
+    if size > usize::MAX as u64 {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "input too long"));
     }
     let words = (size / 4) as usize;

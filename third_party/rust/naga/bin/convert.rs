@@ -202,8 +202,14 @@ fn main() {
         #[cfg(feature = "msl-out")]
         "metal" => {
             use naga::back::msl;
-            let (msl, _) =
-                msl::write_string(&module, info.as_ref().unwrap(), &params.msl).unwrap_pretty();
+            let pipeline_options = msl::PipelineOptions::default();
+            let (msl, _) = msl::write_string(
+                &module,
+                info.as_ref().unwrap(),
+                &params.msl,
+                &pipeline_options,
+            )
+            .unwrap_pretty();
             fs::write(output_path, msl).unwrap();
         }
         #[cfg(feature = "spv-out")]
@@ -254,6 +260,20 @@ fn main() {
             use naga::back::dot;
             let output = dot::write(&module, info.as_ref()).unwrap();
             fs::write(output_path, output).unwrap();
+        }
+        #[cfg(feature = "hlsl-out")]
+        "hlsl" => {
+            use naga::back::hlsl;
+
+            let hlsl = hlsl::write_string(&module).unwrap_pretty();
+            fs::write(output_path, hlsl).unwrap();
+        }
+        #[cfg(feature = "wgsl-out")]
+        "wgsl" => {
+            use naga::back::wgsl;
+
+            let wgsl = wgsl::write_string(&module).unwrap_pretty();
+            fs::write(output_path, wgsl).unwrap();
         }
         other => {
             let _ = params;

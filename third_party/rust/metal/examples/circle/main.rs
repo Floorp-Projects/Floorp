@@ -46,6 +46,22 @@ fn main() {
     let device = Device::system_default().expect("no device found");
     println!("Your device is: {}", device.name(),);
 
+    let binary_archive_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples/circle/binary_archive.metallib");
+
+    let binary_archive_url =
+        URL::new_with_string(&format!("file://{}", binary_archive_path.display()));
+
+    let binary_archive_descriptor = BinaryArchiveDescriptor::new();
+    if binary_archive_path.exists() {
+        binary_archive_descriptor.set_url(&binary_archive_url);
+    }
+
+    // Set up a binary archive to cache compiled shaders.
+    let binary_archive = device
+        .new_binary_archive_with_descriptor(&binary_archive_descriptor)
+        .unwrap();
+
     let library_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("examples/circle/shaders.metallib");
 
@@ -53,7 +69,12 @@ fn main() {
     let library = device.new_library_with_file(library_path).unwrap();
 
     // The render pipeline generated from the vertex and fragment shaders in the .metal shader file.
-    let pipeline_state = prepare_pipeline_state(&device, &library);
+    let pipeline_state = prepare_pipeline_state(&device, &library, &binary_archive);
+
+    // Serialize the binary archive to disk.
+    binary_archive
+        .serialize_to_url(&binary_archive_url)
+        .unwrap();
 
     // Set the command queue used to pass commands to the device.
     let command_queue = device.new_command_queue();
@@ -199,7 +220,11 @@ fn prepare_render_pass_descriptor(descriptor: &RenderPassDescriptorRef, texture:
     color_attachment.set_store_action(MTLStoreAction::Store);
 }
 
-fn prepare_pipeline_state(device: &Device, library: &Library) -> RenderPipelineState {
+fn prepare_pipeline_state(
+    device: &Device,
+    library: &Library,
+    binary_archive: &BinaryArchive,
+) -> RenderPipelineState {
     let vert = library.get_function("vs", None).unwrap();
     let frag = library.get_function("ps", None).unwrap();
 
@@ -211,6 +236,13 @@ fn prepare_pipeline_state(device: &Device, library: &Library) -> RenderPipelineS
         .object_at(0)
         .unwrap()
         .set_pixel_format(MTLPixelFormat::BGRA8Unorm);
+    // Set the binary archives to search for a cached pipeline in.
+    pipeline_state_descriptor.set_binary_archives(&[binary_archive]);
+
+    // Add the pipeline descriptor to the binary archive cache.
+    binary_archive
+        .add_render_pipeline_functions_with_descriptor(&pipeline_state_descriptor)
+        .unwrap();
 
     device
         .new_render_pipeline_state(&pipeline_state_descriptor)

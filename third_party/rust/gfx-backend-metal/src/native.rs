@@ -1,5 +1,3 @@
-#[cfg(feature = "cross")]
-use crate::internal::FastStorageMap;
 use crate::{
     internal::Channel, Backend, BufferPtr, FastHashMap, ResourceIndex, SamplerPtr, TexturePtr,
     MAX_COLOR_ATTACHMENTS,
@@ -28,6 +26,10 @@ use std::{
 };
 
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(
+    feature = "pipeline-cache",
+    derive(serde::Serialize, serde::Deserialize)
+)]
 pub struct EntryPoint {
     pub internal_name: Result<String, naga::back::msl::EntryPointError>,
     pub work_group_size: [u32; 3],
@@ -41,6 +43,8 @@ pub struct ShaderModule {
     pub(crate) prefer_naga: bool,
     #[cfg(feature = "cross")]
     pub(crate) spv: Vec<u32>,
+    #[cfg(feature = "pipeline-cache")]
+    pub(crate) spv_hash: u64,
     pub(crate) naga: Result<hal::device::NagaShader, String>,
 }
 
@@ -204,17 +208,22 @@ pub struct ModuleInfo {
     pub rasterization_enabled: bool,
 }
 
-pub struct PipelineCache {
-    #[cfg(feature = "cross")] //TODO: Naga path
-    pub(crate) modules:
-        FastStorageMap<spirv_cross::msl::CompilerOptions, FastStorageMap<Vec<u32>, ModuleInfo>>,
+#[derive(Clone, Debug)]
+#[cfg_attr(
+    feature = "pipeline-cache",
+    derive(serde::Serialize, serde::Deserialize)
+)]
+pub struct SerializableModuleInfo {
+    pub source: String,
+    pub entry_point_map: EntryPointMap,
+    pub rasterization_enabled: bool,
 }
 
-impl fmt::Debug for PipelineCache {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        write!(formatter, "PipelineCache")
-    }
-}
+#[cfg(not(feature = "pipeline-cache"))]
+pub type PipelineCache = ();
+
+#[cfg(feature = "pipeline-cache")]
+pub use crate::pipeline_cache::PipelineCache;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct RasterizerState {
@@ -395,7 +404,8 @@ unsafe impl Sync for ImageView {}
 pub struct Sampler {
     pub(crate) raw: Option<metal::SamplerState>,
     #[cfg(feature = "cross")]
-    pub(crate) data: spirv_cross::msl::SamplerData,
+    pub(crate) cross_data: spirv_cross::msl::SamplerData,
+    pub(crate) data: naga::back::msl::sampler::InlineSampler,
 }
 
 unsafe impl Send for Sampler {}
@@ -875,6 +885,7 @@ pub struct ArgumentLayout {
 
 #[derive(Debug)]
 pub struct ImmutableSampler {
+    pub(crate) data: naga::back::msl::sampler::InlineSampler,
     #[cfg(feature = "cross")]
     pub(crate) cross_data: spirv_cross::msl::SamplerData,
 }

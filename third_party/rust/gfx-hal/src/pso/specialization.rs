@@ -92,7 +92,7 @@ where
 {
     fn fold(self, storage: &mut SpecializationStorage) {
         let size = std::mem::size_of::<H>();
-        assert!(storage.data.len() + size <= u16::max_value() as usize);
+        assert!(storage.data.len() + size <= u16::MAX as usize);
         let offset = storage.data.len() as u16;
         storage.data.extend_from_slice(unsafe {
             // Inspecting bytes is always safe.
