@@ -26,6 +26,7 @@
   --in-content-border-hover: var(--grey-90-a50);
   --in-content-border-invalid: var(--red-50);
   --in-content-border-color: #d7d7db;
+  --in-content-error-text-color: #c50042;
   --in-content-link-color: var(--blue-60);
   --in-content-link-color-hover: var(--blue-70);
   --in-content-link-color-active: var(--blue-80);
@@ -149,6 +150,8 @@
     --in-content-border-color: rgba(249,249,250,0.2);
     --in-content-border-hover: rgba(249,249,250,0.3);
     --in-content-border-invalid: rgb(255,132,139);
+
+    --in-content-error-text-color: #FF9AA2;
 
     --in-content-button-background: rgb(43,42,51);
     --in-content-button-background-hover: rgb(82,82,94);
