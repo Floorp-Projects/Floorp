@@ -35,6 +35,19 @@ class ThreeDotMainMenuRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun openAddToHSDialog(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
+            addToHSmenuItem.waitForExists(waitingTime)
+            // If the menu item is not clickable, wait and retry
+            while (!addToHSmenuItem.isClickable) {
+                mDevice.pressBack()
+                threeDotMenuButton.perform(click())
+            }
+            addToHSmenuItem.click()
+
+            AddToHomeScreenRobot().interact()
+            return AddToHomeScreenRobot.Transition()
+        }
     }
 }
 
@@ -43,4 +56,11 @@ private val settingsMenuButton = onView(ViewMatchers.withId(R.id.settings))
 private val shareBtn = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/share")
+)
+
+private val threeDotMenuButton = onView(ViewMatchers.withId(R.id.menuView))
+
+private val addToHSmenuItem = mDevice.findObject(
+    UiSelector()
+        .resourceId("$packageName:id/add_to_homescreen")
 )

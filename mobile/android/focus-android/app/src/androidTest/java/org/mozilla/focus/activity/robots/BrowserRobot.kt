@@ -56,12 +56,10 @@ class BrowserRobot {
 
         browserURLbar.waitForExists(webPageLoadwaitingTime)
 
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/webview"))
-            .waitForExists(webPageLoadwaitingTime)
-
         runWithIdleRes(sessionLoadedIdlingResource) {
             assertTrue(
-                browserURLbar.text.contains(expectedText, ignoreCase = true)
+                mDevice.findObject(UiSelector().textContains(expectedText))
+                    .waitForExists(webPageLoadwaitingTime)
             )
         }
     }
@@ -130,6 +128,15 @@ class BrowserRobot {
 
         fun openMainMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
             browserURLbar.waitForExists(webPageLoadwaitingTime)
+            mainMenu
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            ThreeDotMainMenuRobot().interact()
+            return ThreeDotMainMenuRobot.Transition()
+        }
+
+        fun openThreeDotMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
             mainMenu
                 .check(matches(isDisplayed()))
                 .perform(click())
