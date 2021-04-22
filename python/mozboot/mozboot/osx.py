@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-import platform
 import subprocess
 import sys
 import tempfile
@@ -99,22 +98,6 @@ class OSXBootstrapperLight(BaseBootstrapper):
 
     def install_system_packages(self):
         ensure_command_line_tools()
-
-        if platform.machine() == "arm64":
-            # If Rosetta is installed, running `arch -x86_64 command` will
-            # run the command as x86_64, if it's a universal binary. System
-            # binaries are, so we use one: cat. With stdin set to /dev/null,
-            # it returns immediately without an error. In case of error, it
-            # means Rosetta is not installed.
-            proc = subprocess.run(
-                ["arch", "-x86_64", "cat"],
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            if proc.returncode != 0:
-                print("Installing Rosetta")
-                subprocess.check_call(["softwareupdate", "--install-rosetta"])
 
     # All the installs below are assumed to be handled by mach configure/build by
     # default, which is true for arm64.
