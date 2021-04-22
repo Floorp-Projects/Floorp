@@ -74,7 +74,7 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           // in-content search.
           if (isFirstChange) {
             isFirstChange = false;
-            urlBar.removeHiddenFocus();
+            urlBar.removeHiddenFocus(true);
             urlBar.search("");
             this.sendAsyncMessage("DisableSearch");
             urlBar.removeEventListener("compositionstart", checkFirstChange);
@@ -93,10 +93,12 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           }
         };
 
-        let onDone = () => {
+        let onDone = ev => {
           // We are done. Show in-content search again and cleanup.
           this.sendAsyncMessage("ShowSearch");
-          urlBar.removeHiddenFocus();
+
+          const forceSuppressFocusBorder = ev?.type === "mousedown";
+          urlBar.removeHiddenFocus(forceSuppressFocusBorder);
 
           urlBar.removeEventListener("keydown", onKeydown);
           urlBar.removeEventListener("mousedown", onDone);
