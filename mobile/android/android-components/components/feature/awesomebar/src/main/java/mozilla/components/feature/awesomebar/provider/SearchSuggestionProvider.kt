@@ -58,6 +58,8 @@ class SearchSuggestionProvider private constructor(
      * @param icon The image to display next to the result. If not specified, the engine icon is used.
      * @param showDescription whether or not to add the search engine name as description.
      * @param filterExactMatch If true filters out suggestions that exactly match the entered text.
+     * @param private When set to `true` then all requests to search engines will be made in private
+     * mode.
      */
     constructor(
         searchEngine: SearchEngine,
@@ -68,9 +70,10 @@ class SearchSuggestionProvider private constructor(
         engine: Engine? = null,
         icon: Bitmap? = null,
         showDescription: Boolean = true,
-        filterExactMatch: Boolean = false
+        filterExactMatch: Boolean = false,
+        private: Boolean = false
     ) : this (
-        SearchSuggestionClient(searchEngine) { url -> fetch(fetchClient, url) },
+        SearchSuggestionClient(searchEngine) { url -> fetch(fetchClient, url, private) },
         searchUseCase,
         limit,
         mode,
@@ -95,6 +98,8 @@ class SearchSuggestionProvider private constructor(
      * @param icon The image to display next to the result. If not specified, the engine icon is used.
      * @param showDescription whether or not to add the search engine name as description.
      * @param filterExactMatch If true filters out suggestions that exactly match the entered text.
+     * @param private When set to `true` then all requests to search engines will be made in private
+     * mode.
      */
     constructor(
         context: Context,
@@ -106,9 +111,10 @@ class SearchSuggestionProvider private constructor(
         engine: Engine? = null,
         icon: Bitmap? = null,
         showDescription: Boolean = true,
-        filterExactMatch: Boolean = false
+        filterExactMatch: Boolean = false,
+        private: Boolean = false
     ) : this (
-        SearchSuggestionClient(context, store) { url -> fetch(fetchClient, url) },
+        SearchSuggestionClient(context, store) { url -> fetch(fetchClient, url, private) },
         searchUseCase,
         limit,
         mode,
@@ -242,12 +248,13 @@ class SearchSuggestionProvider private constructor(
         private const val ID_OF_ENTERED_TEXT = "<@@@entered_text_id@@@>"
 
         @Suppress("ReturnCount", "TooGenericExceptionCaught")
-        private fun fetch(fetchClient: Client, url: String): String? {
+        private fun fetch(fetchClient: Client, url: String, private: Boolean): String? {
             try {
                 val request = Request(
                         url = url.sanitizeURL(),
                         readTimeout = Pair(READ_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
-                        connectTimeout = Pair(CONNECT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)
+                        connectTimeout = Pair(CONNECT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
+                        private = private
                 )
 
                 val response = fetchClient.fetch(request)
