@@ -279,3 +279,4 @@ class BaseRunner(object):
         Cleanup all runner state
         """
         self.stop()
+        self.profile.cleanup()
