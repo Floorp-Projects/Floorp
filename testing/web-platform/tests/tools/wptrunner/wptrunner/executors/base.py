@@ -17,19 +17,17 @@ from .protocol import Protocol, BaseProtocolPart
 here = os.path.dirname(__file__)
 
 
-
-def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
-                    **kwargs):
+def executor_kwargs(test_type, test_environment, run_info_data, **kwargs):
     timeout_multiplier = kwargs["timeout_multiplier"]
     if timeout_multiplier is None:
         timeout_multiplier = 1
 
-    executor_kwargs = {"server_config": server_config,
+    executor_kwargs = {"server_config": test_environment.config,
                        "timeout_multiplier": timeout_multiplier,
                        "debug_info": kwargs["debug_info"]}
 
     if test_type in ("reftest", "print-reftest"):
-        executor_kwargs["screenshot_cache"] = cache_manager.dict()
+        executor_kwargs["screenshot_cache"] = test_environment.cache_manager.dict()
 
     if test_type == "wdspec":
         executor_kwargs["binary"] = kwargs.get("binary")
