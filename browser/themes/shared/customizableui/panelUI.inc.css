@@ -1840,6 +1840,7 @@ menuitem.panel-subview-footer@menuStateActive@,
 #protections-popup-multiView toolbarseparator,
 #identity-popup-mainView > toolbarseparator,
 #identity-popup-securityView > toolbarseparator,
+#editBookmarkSeparator,
 .cui-widget-panelview menuseparator,
 .cui-widget-panel toolbarseparator {
   appearance: none;
