@@ -299,6 +299,7 @@ STATIC_ATOMS = [
     Atom("dateTime", "date-time"),
     Atom("date", "date"),
     Atom("datetime", "datetime"),
+    Atom("datetime_local", "datetime-local"),
     Atom("datetimeInputBoxWrapper", "datetime-input-box-wrapper"),
     Atom("datetimeResetButton", "datetime-reset-button"),
     Atom("dd", "dd"),
