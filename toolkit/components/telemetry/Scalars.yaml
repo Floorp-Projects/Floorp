@@ -5441,9 +5441,10 @@ encoding:
       - 1554592
       - 1603047
       - 1648464
+      - 1706838
     description: >-
       Whether an item other than Automatic in the Text Encoding menu was used to override an encoding in this subsession.
-    expires: "91"
+    expires: "96"
     kind: boolean
     notification_emails:
       - hsivonen@mozilla.com
@@ -5457,9 +5458,10 @@ encoding:
   override_used_automatic:
     bug_numbers:
       - 1648464
+      - 1706838
     description: >-
       Whether the item Automatic in the Text Encoding menu was used to override an encoding in this subsession.
-    expires: "91"
+    expires: "96"
     kind: boolean
     notification_emails:
       - hsivonen@mozilla.com
