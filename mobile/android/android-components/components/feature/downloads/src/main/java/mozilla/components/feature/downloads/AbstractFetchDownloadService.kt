@@ -220,12 +220,7 @@ abstract class AbstractFetchDownloadService : Service() {
                     }
 
                     ACTION_OPEN -> {
-                        if (!openFile(
-                                context = context,
-                                filePath = currentDownloadJobState.state.filePath,
-                                contentType = currentDownloadJobState.state.contentType
-                            )
-                        ) {
+                        if (!openFile(context, currentDownloadJobState.state)) {
                             val fileExt = MimeTypeMap.getFileExtensionFromUrl(
                                 currentDownloadJobState.state.filePath.toString()
                             )
@@ -893,46 +888,9 @@ abstract class AbstractFetchDownloadService : Service() {
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
 
-        val resolver = applicationContext.contentResolver
-
-        val queryProjection = arrayOf(MediaStore.Downloads._ID)
-        val querySelection = "${MediaStore.Downloads.DISPLAY_NAME} = ?"
-        val querySelectionArgs = arrayOf("${download.fileName}")
-
-        val queryBundle = Bundle().apply {
-            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, querySelection)
-            putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, querySelectionArgs)
-        }
-
-        // Query if we have a pending download with the same name. This can happen
-        // if a download was interrupted, failed or cancelled before the file was
-        // written to disk. Our logic above will have generated a unique file name
-        // based on existing files on the device, but we might already have a row
-        // for the download in the content resolver.
-
         val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        val queryCollection =
-            if (SDK_INT >= Build.VERSION_CODES.R) {
-                queryBundle.putInt(MediaStore.QUERY_ARG_MATCH_PENDING, MediaStore.MATCH_INCLUDE)
-                collection
-            } else {
-                @Suppress("DEPRECATION")
-                setIncludePending(collection)
-            }
-
-        var downloadUri: Uri? = null
-        resolver.query(
-            queryCollection,
-            queryProjection,
-            queryBundle,
-            null
-        )?.use {
-            if (it.count > 0) {
-                val idColumnIndex = it.getColumnIndex(MediaStore.Downloads._ID)
-                it.moveToFirst()
-                downloadUri = ContentUris.withAppendedId(collection, it.getLong(idColumnIndex))
-            }
-        }
+        val resolver = applicationContext.contentResolver
+        var downloadUri = queryDownloadMediaStore(applicationContext, download)
 
         if (downloadUri == null) {
             downloadUri = resolver.insert(collection, values)
@@ -968,22 +926,78 @@ abstract class AbstractFetchDownloadService : Service() {
         /**
          * Launches an intent to open the given file, returns whether or not the file could be opened
          */
-        fun openFile(context: Context, filePath: String, contentType: String?): Boolean {
-            // Create a new file with the location of the saved file to extract the correct path
-            // `file` has the wrong path, so we must construct it based on the `fileName` and `dir.path`s
-            val constructedFilePath = getFilePathUri(context, filePath)
+        fun openFile(applicationContext: Context, download: DownloadState): Boolean {
+            val filePath = download.filePath
+            val contentType = download.contentType
+
+            // For devices that support the scoped storage we can query the directly the download
+            // media store otherwise we have to construct the uri based on the file path.
+            val fileUri: Uri = if (SDK_INT >= Build.VERSION_CODES.Q) {
+                queryDownloadMediaStore(applicationContext, download)
+                        ?: getFilePathUri(applicationContext, filePath)
+            } else {
+                // Create a new file with the location of the saved file to extract the correct path
+                // `file` has the wrong path, so we must construct it based on the `fileName` and `dir.path`s
+                getFilePathUri(applicationContext, filePath)
+            }
 
             val newIntent = Intent(ACTION_VIEW).apply {
-                setDataAndType(constructedFilePath, getSafeContentType(context, constructedFilePath, contentType))
+                setDataAndType(fileUri, getSafeContentType(applicationContext, fileUri, contentType))
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
             }
 
             return try {
-                context.startActivity(newIntent)
+                applicationContext.startActivity(newIntent)
                 true
             } catch (error: ActivityNotFoundException) {
                 false
             }
+        }
+
+        @TargetApi(Build.VERSION_CODES.Q)
+        @VisibleForTesting
+        internal fun queryDownloadMediaStore(applicationContext: Context, download: DownloadState): Uri? {
+            val resolver = applicationContext.contentResolver
+            val queryProjection = arrayOf(MediaStore.Downloads._ID)
+            val querySelection = "${MediaStore.Downloads.DISPLAY_NAME} = ?"
+            val querySelectionArgs = arrayOf("${download.fileName}")
+
+            val queryBundle = Bundle().apply {
+                putString(ContentResolver.QUERY_ARG_SQL_SELECTION, querySelection)
+                putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, querySelectionArgs)
+            }
+
+            // Query if we have a pending download with the same name. This can happen
+            // if a download was interrupted, failed or cancelled before the file was
+            // written to disk. Our logic above will have generated a unique file name
+            // based on existing files on the device, but we might already have a row
+            // for the download in the content resolver.
+
+            val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val queryCollection =
+                    if (SDK_INT >= Build.VERSION_CODES.R) {
+                        queryBundle.putInt(MediaStore.QUERY_ARG_MATCH_PENDING, MediaStore.MATCH_INCLUDE)
+                        collection
+                    } else {
+                        @Suppress("DEPRECATION")
+                        setIncludePending(collection)
+                    }
+
+            var downloadUri: Uri? = null
+            resolver.query(
+                    queryCollection,
+                    queryProjection,
+                    queryBundle,
+                    null
+            )?.use {
+                if (it.count > 0) {
+                    val idColumnIndex = it.getColumnIndex(MediaStore.Downloads._ID)
+                    it.moveToFirst()
+                    downloadUri = ContentUris.withAppendedId(collection, it.getLong(idColumnIndex))
+                }
+            }
+
+            return downloadUri
         }
 
         @VisibleForTesting
