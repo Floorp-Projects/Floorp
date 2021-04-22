@@ -223,23 +223,20 @@ const Value CacheIRCloner::getValueField(uint32_t stubOffset) {
 }
 
 IRGenerator::IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                         CacheKind cacheKind, ICState::Mode mode,
-                         bool isFirstStub)
+                         CacheKind cacheKind, ICState state)
     : writer(cx),
       cx_(cx),
       script_(script),
       pc_(pc),
       cacheKind_(cacheKind),
-      mode_(mode),
-      isFirstStub_(isFirstStub) {}
+      mode_(state.mode()),
+      isFirstStub_(state.newStubIsFirstStub()) {}
 
 GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, HandleScript script,
-                                       jsbytecode* pc, ICState::Mode mode,
-                                       bool isFirstStub, CacheKind cacheKind,
-                                       HandleValue val, HandleValue idVal)
-    : IRGenerator(cx, script, pc, cacheKind, mode, isFirstStub),
-      val_(val),
-      idVal_(idVal) {}
+                                       jsbytecode* pc, ICState state,
+                                       CacheKind cacheKind, HandleValue val,
+                                       HandleValue idVal)
+    : IRGenerator(cx, script, pc, cacheKind, state), val_(val), idVal_(idVal) {}
 
 static void EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderId,
                                NativeObject* holder, ShapeProperty prop) {
@@ -2712,10 +2709,10 @@ void SetPropIRGenerator::maybeEmitIdGuard(jsid id) {
 }
 
 GetNameIRGenerator::GetNameIRGenerator(JSContext* cx, HandleScript script,
-                                       jsbytecode* pc, ICState::Mode mode,
-                                       bool isFirstStub, HandleObject env,
+                                       jsbytecode* pc, ICState state,
+                                       HandleObject env,
                                        HandlePropertyName name)
-    : IRGenerator(cx, script, pc, CacheKind::GetName, mode, isFirstStub),
+    : IRGenerator(cx, script, pc, CacheKind::GetName, state),
       env_(env),
       name_(name) {}
 
@@ -2990,10 +2987,10 @@ void GetNameIRGenerator::trackAttached(const char* name) {
 }
 
 BindNameIRGenerator::BindNameIRGenerator(JSContext* cx, HandleScript script,
-                                         jsbytecode* pc, ICState::Mode mode,
-                                         bool isFirstStub, HandleObject env,
+                                         jsbytecode* pc, ICState state,
+                                         HandleObject env,
                                          HandlePropertyName name)
-    : IRGenerator(cx, script, pc, CacheKind::BindName, mode, isFirstStub),
+    : IRGenerator(cx, script, pc, CacheKind::BindName, state),
       env_(env),
       name_(name) {}
 
@@ -3127,12 +3124,10 @@ void BindNameIRGenerator::trackAttached(const char* name) {
 }
 
 HasPropIRGenerator::HasPropIRGenerator(JSContext* cx, HandleScript script,
-                                       jsbytecode* pc, ICState::Mode mode,
-                                       bool isFirstStub, CacheKind cacheKind,
-                                       HandleValue idVal, HandleValue val)
-    : IRGenerator(cx, script, pc, cacheKind, mode, isFirstStub),
-      val_(val),
-      idVal_(idVal) {}
+                                       jsbytecode* pc, ICState state,
+                                       CacheKind cacheKind, HandleValue idVal,
+                                       HandleValue val)
+    : IRGenerator(cx, script, pc, cacheKind, state), val_(val), idVal_(idVal) {}
 
 AttachDecision HasPropIRGenerator::tryAttachDense(HandleObject obj,
                                                   ObjOperandId objId,
@@ -3440,11 +3435,9 @@ void HasPropIRGenerator::trackAttached(const char* name) {
 }
 
 CheckPrivateFieldIRGenerator::CheckPrivateFieldIRGenerator(
-    JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
-    bool isFirstStub, CacheKind cacheKind, HandleValue idVal, HandleValue val)
-    : IRGenerator(cx, script, pc, cacheKind, mode, isFirstStub),
-      val_(val),
-      idVal_(idVal) {
+    JSContext* cx, HandleScript script, jsbytecode* pc, ICState state,
+    CacheKind cacheKind, HandleValue idVal, HandleValue val)
+    : IRGenerator(cx, script, pc, cacheKind, state), val_(val), idVal_(idVal) {
   MOZ_ASSERT(idVal.isSymbol() && idVal.toSymbol()->isPrivateName());
 }
 
@@ -3551,10 +3544,9 @@ bool IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
 
 SetPropIRGenerator::SetPropIRGenerator(JSContext* cx, HandleScript script,
                                        jsbytecode* pc, CacheKind cacheKind,
-                                       ICState::Mode mode, bool isFirstStub,
-                                       HandleValue lhsVal, HandleValue idVal,
-                                       HandleValue rhsVal)
-    : IRGenerator(cx, script, pc, cacheKind, mode, isFirstStub),
+                                       ICState state, HandleValue lhsVal,
+                                       HandleValue idVal, HandleValue rhsVal)
+    : IRGenerator(cx, script, pc, cacheKind, state),
       lhsVal_(lhsVal),
       idVal_(idVal),
       rhsVal_(rhsVal) {}
@@ -3697,7 +3689,8 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   // Don't attach a megamorphic store slot stub for ops like JSOp::InitElem.
   if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp &&
       IsPropertySetOp(JSOp(*pc_))) {
-    writer.megamorphicStoreSlot(objId, id.toAtom()->asPropertyName(), rhsId);
+    writer.megamorphicStoreSlot(objId, JSID_TO_ATOM(id)->asPropertyName(),
+                                rhsId);
     writer.returnFromIC();
     trackAttached("MegamorphicNativeSlot");
     return AttachDecision::Attach;
@@ -4656,10 +4649,9 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
 }
 
 InstanceOfIRGenerator::InstanceOfIRGenerator(JSContext* cx, HandleScript script,
-                                             jsbytecode* pc, ICState::Mode mode,
-                                             bool isFirstStub, HandleValue lhs,
-                                             HandleObject rhs)
-    : IRGenerator(cx, script, pc, CacheKind::InstanceOf, mode, isFirstStub),
+                                             jsbytecode* pc, ICState state,
+                                             HandleValue lhs, HandleObject rhs)
+    : IRGenerator(cx, script, pc, CacheKind::InstanceOf, state),
       lhsVal_(lhs),
       rhsObj_(rhs) {}
 
@@ -4770,10 +4762,9 @@ void InstanceOfIRGenerator::trackAttached(const char* name) {
 }
 
 TypeOfIRGenerator::TypeOfIRGenerator(JSContext* cx, HandleScript script,
-                                     jsbytecode* pc, ICState::Mode mode,
-                                     bool isFirstStub, HandleValue value)
-    : IRGenerator(cx, script, pc, CacheKind::TypeOf, mode, isFirstStub),
-      val_(value) {}
+                                     jsbytecode* pc, ICState state,
+                                     HandleValue value)
+    : IRGenerator(cx, script, pc, CacheKind::TypeOf, state), val_(value) {}
 
 void TypeOfIRGenerator::trackAttached(const char* name) {
 #ifdef JS_CACHEIR_SPEW
@@ -4829,11 +4820,11 @@ AttachDecision TypeOfIRGenerator::tryAttachObject(ValOperandId valId) {
   return AttachDecision::Attach;
 }
 
-GetIteratorIRGenerator::GetIteratorIRGenerator(
-    JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
-    bool isFirstStub, HandleValue value)
-    : IRGenerator(cx, script, pc, CacheKind::GetIterator, mode, isFirstStub),
-      val_(value) {}
+GetIteratorIRGenerator::GetIteratorIRGenerator(JSContext* cx,
+                                               HandleScript script,
+                                               jsbytecode* pc, ICState state,
+                                               HandleValue value)
+    : IRGenerator(cx, script, pc, CacheKind::GetIterator, state), val_(value) {}
 
 AttachDecision GetIteratorIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::GetIterator);
@@ -4896,10 +4887,9 @@ void GetIteratorIRGenerator::trackAttached(const char* name) {
 }
 
 OptimizeSpreadCallIRGenerator::OptimizeSpreadCallIRGenerator(
-    JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
-    bool isFirstStub, HandleValue value)
-    : IRGenerator(cx, script, pc, CacheKind::OptimizeSpreadCall, mode,
-                  isFirstStub),
+    JSContext* cx, HandleScript script, jsbytecode* pc, ICState state,
+    HandleValue value)
+    : IRGenerator(cx, script, pc, CacheKind::OptimizeSpreadCall, state),
       val_(value) {}
 
 AttachDecision OptimizeSpreadCallIRGenerator::tryAttachStub() {
@@ -5054,11 +5044,11 @@ void OptimizeSpreadCallIRGenerator::trackAttached(const char* name) {
 }
 
 CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
-                                 jsbytecode* pc, JSOp op, ICState::Mode mode,
-                                 bool isFirstStub, uint32_t argc,
-                                 HandleValue callee, HandleValue thisval,
-                                 HandleValue newTarget, HandleValueArray args)
-    : IRGenerator(cx, script, pc, CacheKind::Call, mode, isFirstStub),
+                                 jsbytecode* pc, JSOp op, ICState state,
+                                 uint32_t argc, HandleValue callee,
+                                 HandleValue thisval, HandleValue newTarget,
+                                 HandleValueArray args)
+    : IRGenerator(cx, script, pc, CacheKind::Call, state),
       op_(op),
       argc_(argc),
       callee_(callee),
@@ -9509,10 +9499,9 @@ void jit::LoadShapeWrapperContents(MacroAssembler& masm, Register obj,
 }
 
 CompareIRGenerator::CompareIRGenerator(JSContext* cx, HandleScript script,
-                                       jsbytecode* pc, ICState::Mode mode,
-                                       bool isFirstStub, JSOp op,
+                                       jsbytecode* pc, ICState state, JSOp op,
                                        HandleValue lhsVal, HandleValue rhsVal)
-    : IRGenerator(cx, script, pc, CacheKind::Compare, mode, isFirstStub),
+    : IRGenerator(cx, script, pc, CacheKind::Compare, state),
       op_(op),
       lhsVal_(lhsVal),
       rhsVal_(rhsVal) {}
@@ -10041,10 +10030,9 @@ void CompareIRGenerator::trackAttached(const char* name) {
 }
 
 ToBoolIRGenerator::ToBoolIRGenerator(JSContext* cx, HandleScript script,
-                                     jsbytecode* pc, ICState::Mode mode,
-                                     bool isFirstStub, HandleValue val)
-    : IRGenerator(cx, script, pc, CacheKind::ToBool, mode, isFirstStub),
-      val_(val) {}
+                                     jsbytecode* pc, ICState state,
+                                     HandleValue val)
+    : IRGenerator(cx, script, pc, CacheKind::ToBool, state), val_(val) {}
 
 void ToBoolIRGenerator::trackAttached(const char* name) {
 #ifdef JS_CACHEIR_SPEW
@@ -10160,11 +10148,11 @@ AttachDecision ToBoolIRGenerator::tryAttachBigInt() {
   return AttachDecision::Attach;
 }
 
-GetIntrinsicIRGenerator::GetIntrinsicIRGenerator(
-    JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
-    bool isFirstStub, HandleValue val)
-    : IRGenerator(cx, script, pc, CacheKind::GetIntrinsic, mode, isFirstStub),
-      val_(val) {}
+GetIntrinsicIRGenerator::GetIntrinsicIRGenerator(JSContext* cx,
+                                                 HandleScript script,
+                                                 jsbytecode* pc, ICState state,
+                                                 HandleValue val)
+    : IRGenerator(cx, script, pc, CacheKind::GetIntrinsic, state), val_(val) {}
 
 void GetIntrinsicIRGenerator::trackAttached(const char* name) {
 #ifdef JS_CACHEIR_SPEW
@@ -10183,10 +10171,10 @@ AttachDecision GetIntrinsicIRGenerator::tryAttachStub() {
 }
 
 UnaryArithIRGenerator::UnaryArithIRGenerator(JSContext* cx, HandleScript script,
-                                             jsbytecode* pc, ICState::Mode mode,
-                                             bool isFirstStub, JSOp op,
-                                             HandleValue val, HandleValue res)
-    : IRGenerator(cx, script, pc, CacheKind::UnaryArith, mode, isFirstStub),
+                                             jsbytecode* pc, ICState state,
+                                             JSOp op, HandleValue val,
+                                             HandleValue res)
+    : IRGenerator(cx, script, pc, CacheKind::UnaryArith, state),
       op_(op),
       val_(val),
       res_(res) {}
@@ -10477,11 +10465,12 @@ AttachDecision UnaryArithIRGenerator::tryAttachStringNumber() {
   return AttachDecision::Attach;
 }
 
-ToPropertyKeyIRGenerator::ToPropertyKeyIRGenerator(
-    JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
-    bool isFirstStub, HandleValue val)
-    : IRGenerator(cx, script, pc, CacheKind::ToPropertyKey, mode, isFirstStub),
-      val_(val) {}
+ToPropertyKeyIRGenerator::ToPropertyKeyIRGenerator(JSContext* cx,
+                                                   HandleScript script,
+                                                   jsbytecode* pc,
+                                                   ICState state,
+                                                   HandleValue val)
+    : IRGenerator(cx, script, pc, CacheKind::ToPropertyKey, state), val_(val) {}
 
 void ToPropertyKeyIRGenerator::trackAttached(const char* name) {
 #ifdef JS_CACHEIR_SPEW
@@ -10568,11 +10557,12 @@ AttachDecision ToPropertyKeyIRGenerator::tryAttachSymbol() {
   return AttachDecision::Attach;
 }
 
-BinaryArithIRGenerator::BinaryArithIRGenerator(
-    JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
-    bool isFirstStub, JSOp op, HandleValue lhs, HandleValue rhs,
-    HandleValue res)
-    : IRGenerator(cx, script, pc, CacheKind::BinaryArith, mode, isFirstStub),
+BinaryArithIRGenerator::BinaryArithIRGenerator(JSContext* cx,
+                                               HandleScript script,
+                                               jsbytecode* pc, ICState state,
+                                               JSOp op, HandleValue lhs,
+                                               HandleValue rhs, HandleValue res)
+    : IRGenerator(cx, script, pc, CacheKind::BinaryArith, state),
       op_(op),
       lhs_(lhs),
       rhs_(rhs),
@@ -11059,10 +11049,9 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
 }
 
 NewArrayIRGenerator::NewArrayIRGenerator(JSContext* cx, HandleScript script,
-                                         jsbytecode* pc, ICState::Mode mode,
-                                         bool isFirstStub, JSOp op,
+                                         jsbytecode* pc, ICState state, JSOp op,
                                          HandleObject templateObj)
-    : IRGenerator(cx, script, pc, CacheKind::NewArray, mode, isFirstStub),
+    : IRGenerator(cx, script, pc, CacheKind::NewArray, state),
 #ifdef JS_CACHEIR_SPEW
       op_(op),
 #endif
@@ -11123,10 +11112,9 @@ AttachDecision NewArrayIRGenerator::tryAttachStub() {
 }
 
 NewObjectIRGenerator::NewObjectIRGenerator(JSContext* cx, HandleScript script,
-                                           jsbytecode* pc, ICState::Mode mode,
-                                           bool isFirstStub, JSOp op,
-                                           HandleObject templateObj)
-    : IRGenerator(cx, script, pc, CacheKind::NewObject, mode, isFirstStub),
+                                           jsbytecode* pc, ICState state,
+                                           JSOp op, HandleObject templateObj)
+    : IRGenerator(cx, script, pc, CacheKind::NewObject, state),
 #ifdef JS_CACHEIR_SPEW
       op_(op),
 #endif
