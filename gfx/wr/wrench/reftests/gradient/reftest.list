@@ -22,7 +22,7 @@ fuzzy-range(<=1,*4800) == linear-hard-stop.yaml linear-hard-stop-ref.png
 fuzzy(1,20000) == linear.yaml linear-ref.yaml
 fuzzy(1,20000) == linear-reverse.yaml linear-ref.yaml
 
-fuzzy(1,15200) == linear-aligned-clip.yaml linear-aligned-clip-ref.yaml
+fuzzy(1,40000) == linear-aligned-clip.yaml linear-aligned-clip-ref.yaml
 
 platform(linux,mac) fuzzy(1,80000) == radial-circle.yaml radial-circle-ref.png
 platform(linux,mac) fuzzy(1,80000) == radial-ellipse.yaml radial-ellipse-ref.png
