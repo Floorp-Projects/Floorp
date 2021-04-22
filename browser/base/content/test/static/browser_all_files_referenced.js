@@ -49,6 +49,10 @@ var gExceptionPaths = [
   // Exclude all services-automation because they are used through webdriver
   "resource://gre/modules/services-automation/",
   "resource://services-automation/ServicesAutomation.jsm",
+
+  // Paths from this folder are constructed in NetErrorParent.jsm based on
+  // the type of cert or net error the user is encountering.
+  "chrome://browser/content/certerror/supportpages/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
