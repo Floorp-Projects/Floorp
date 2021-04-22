@@ -1464,7 +1464,7 @@ if (rtc_include_tests) {
   }
 }
 
-if (is_android) {
+if (is_android && !build_with_mozilla) {
   rtc_android_library("base_java") {
     visibility = [ "*" ]
     sources = [

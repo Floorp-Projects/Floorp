@@ -35,6 +35,11 @@ if (is_mac) {
   import("//build/config/mac/rules.gni")
 }
 
+if (is_android) {
+  import("//build/config/android/config.gni")
+  import("//build/config/android/rules.gni")
+}
+
 declare_args() {
   # Setting this to true will make RTC_EXPORT (see rtc_base/system/rtc_export.h)
   # expand to code that will manage symbols visibility.
@@ -998,7 +1003,7 @@ if (is_mac) {
   }
 }
 
-if (is_android) {
+if (is_android && !build_with_mozilla) {
   template("rtc_android_library") {
     android_library(target_name) {
       forward_variables_from(invoker,
