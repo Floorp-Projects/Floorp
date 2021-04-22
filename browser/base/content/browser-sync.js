@@ -1406,6 +1406,18 @@ var gSync = {
           this.sendTabToDevice(t.url, to, t.title)
         )
       ).then(results => {
+        // Show the Sent! confirmation if any of the sends succeeded.
+        if (results.includes(true)) {
+          // FxA button could be hidden with CSS since the user is logged out,
+          // although it seems likely this would only happen in testing...
+          let fxastatus = document.documentElement.getAttribute("fxastatus");
+          let anchorNode =
+            (fxastatus &&
+              fxastatus != "not_configured" &&
+              document.getElementById("fxa-toolbar-menu-button")) ||
+            document.getElementById("PanelUI-menu-button");
+          ConfirmationHint.show(anchorNode, "sendToDevice");
+        }
         fxAccounts.flushLogFile();
       });
     };
