@@ -132,7 +132,9 @@ static void TryAttachIonStub(JSContext* cx, IonIC* ic, IonScript* ionScript,
   if (ic->state().canAttachStub()) {
     RootedScript script(cx, ic->script());
     bool attached = false;
-    IRGenerator gen(cx, script, ic->pc(), ic->state(),
+    bool isFirstStub = ((ic->state().mode() == ICState::Mode::Specialized) &&
+                        (ic->state().numOptimizedStubs() == 0));
+    IRGenerator gen(cx, script, ic->pc(), ic->state().mode(), isFirstStub,
                     std::forward<Args>(args)...);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach:
@@ -238,9 +240,10 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     RootedValue objv(cx, ObjectValue(*obj));
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
-
-    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state(), objv, idVal,
-                           rhs);
+    bool isFirstStub = ((ic->state().mode() == ICState::Mode::Specialized) &&
+                        (ic->state().numOptimizedStubs() == 0));
+    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(),
+                           isFirstStub, objv, idVal, rhs);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach:
         ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
@@ -315,8 +318,10 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     RootedValue objv(cx, ObjectValue(*obj));
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
-    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state(), objv, idVal,
-                           rhs);
+    bool isFirstStub = ((ic->state().mode() == ICState::Mode::Specialized) &&
+                        (ic->state().numOptimizedStubs() == 0));
+    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(),
+                           isFirstStub, objv, idVal, rhs);
     MOZ_ASSERT(deferType == DeferType::AddSlot);
     AttachDecision decision = gen.tryAttachAddSlotStub(oldShape);
 
