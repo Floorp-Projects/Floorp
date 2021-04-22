@@ -24,11 +24,11 @@ fuzzy-if(skiaContent,0-1,0-343) == percent-3.html percent-3-ref.html
 
 # more serious tests, using SVG reference
 fuzzy-if(skiaContent,0-17,0-58) fuzzy-if(webrender,30-30,65-70) == border-circle-2.html border-circle-2-ref.xhtml
-fuzzy-if(gtkWidget,0-14,0-280) fuzzy-if(cocoaWidget,0-4,0-582) fuzzy-if(Android,0-36,0-264) fuzzy-if(d2d,0-51,0-323) fuzzy-if(winWidget&&!d2d,0-16,0-377) fuzzy-if(skiaContent,0-63,0-507) fuzzy-if(webrender,62-62,930-1013) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
+fuzzy-if(gtkWidget,0-14,0-280) fuzzy-if(cocoaWidget,0-4,0-582) fuzzy-if(Android,0-36,0-264) fuzzy-if(d2d,0-51,0-323) fuzzy-if(winWidget&&!d2d,0-16,0-377) fuzzy-if(skiaContent,0-63,0-507) fuzzy-if(webrender,61-62,930-1013) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
 
 # Corners
-fuzzy-if(skiaContent,0-17,0-47) fuzzy-if(webrender,28-30,53-58) == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
-fuzzy-if(gtkWidget,0-23,0-5) fuzzy-if(winWidget&&!d2d,0-23,0-5) fuzzy-if(d2d,0-32,0-8) fuzzy-if(Android,0-10,0-8) fuzzy-if(skiaContent,0-18,0-49) fuzzy-if(webrender,28-30,52-57) == corner-2.html corner-2-ref.svg # right corners different radius than left corners; see bug 500804
+fuzzy-if(skiaContent,0-17,0-47) fuzzy-if(webrender,28-30,51-58) == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
+fuzzy-if(gtkWidget,0-23,0-5) fuzzy-if(winWidget&&!d2d,0-23,0-5) fuzzy-if(d2d,0-32,0-8) fuzzy-if(Android,0-10,0-8) fuzzy-if(skiaContent,0-18,0-49) fuzzy-if(webrender,28-30,50-57) == corner-2.html corner-2-ref.svg # right corners different radius than left corners; see bug 500804
 fuzzy-if(gtkWidget,0-3,0-10) fuzzy-if(winWidget&&!d2d,0-3,0-10) fuzzy-if(d2d,0-15,0-32) fuzzy-if(Android,0-3,0-15) fuzzy-if(skiaContent,0-18,0-90) fuzzy-if(webrender,21-23,101-105) == corner-3.html corner-3-ref.svg
 fuzzy-if(skiaContent,0-13,0-83) fuzzy-if(webrender,13-13,96-108) == corner-4.html corner-4-ref.svg
 

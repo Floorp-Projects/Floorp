@@ -34,38 +34,38 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1375518-5.html bug137
 == frame_above_rules_all.html frame_above_rules_all_ref.html
 == frame_above_rules_cols.html frame_above_rules_cols_ref.html
 == frame_above_rules_groups.html frame_above_rules_groups_ref.html
-== frame_above_rules_none.html frame_above_rules_none_ref.html
+fuzzy-if(appleSilicon,1-1,281-281) == frame_above_rules_none.html frame_above_rules_none_ref.html
 == frame_above_rules_rows.html frame_above_rules_rows_ref.html
 == frame_below_rules_all.html frame_below_rules_all_ref.html
 == frame_below_rules_cols.html frame_below_rules_cols_ref.html
 == frame_below_rules_groups.html frame_below_rules_groups_ref.html
-== frame_below_rules_none.html frame_below_rules_none_ref.html
+fuzzy-if(appleSilicon,1-1,281-281) == frame_below_rules_none.html frame_below_rules_none_ref.html
 == frame_below_rules_rows.html frame_below_rules_rows_ref.html
 == frame_border_rules_all.html frame_border_rules_all_ref.html
 == frame_border_rules_cols.html frame_border_rules_cols_ref.html
 == frame_border_rules_groups.html frame_border_rules_groups_ref.html
-== frame_border_rules_none.html frame_border_rules_none_ref.html
+fuzzy-if(appleSilicon,1-1,800-800) == frame_border_rules_none.html frame_border_rules_none_ref.html
 == frame_border_rules_rows.html frame_border_rules_rows_ref.html
 == frame_box_rules_all.html frame_box_rules_all_ref.html
 == frame_box_rules_cols.html frame_box_rules_cols_ref.html
 == frame_box_rules_groups.html frame_box_rules_groups_ref.html
-== frame_box_rules_none.html frame_box_rules_none_ref.html
+fuzzy-if(appleSilicon,1-1,800-800) == frame_box_rules_none.html frame_box_rules_none_ref.html
 == frame_box_rules_none-collapse.html frame_box_rules_none-collapse-ref.html
 == frame_box_rules_rows.html frame_box_rules_rows_ref.html
 == frame_hsides_rules_all.html frame_hsides_rules_all_ref.html
 == frame_hsides_rules_cols.html frame_hsides_rules_cols_ref.html
 == frame_hsides_rules_groups.html frame_hsides_rules_groups_ref.html
-== frame_hsides_rules_none.html frame_hsides_rules_none_ref.html
+fuzzy-if(appleSilicon,1-1,562-562) == frame_hsides_rules_none.html frame_hsides_rules_none_ref.html
 == frame_hsides_rules_rows.html frame_hsides_rules_rows_ref.html
 == frame_lhs_rules_all.html frame_lhs_rules_all_ref.html
 == frame_lhs_rules_cols.html frame_lhs_rules_cols_ref.html
 == frame_lhs_rules_groups.html frame_lhs_rules_groups_ref.html
-== frame_lhs_rules_none.html frame_lhs_rules_none_ref.html
+fuzzy-if(appleSilicon,1-1,118-118) == frame_lhs_rules_none.html frame_lhs_rules_none_ref.html
 == frame_lhs_rules_rows.html frame_lhs_rules_rows_ref.html
 == frame_rhs_rules_all.html frame_rhs_rules_all_ref.html
 == frame_rhs_rules_cols.html frame_rhs_rules_cols_ref.html
 == frame_rhs_rules_groups.html frame_rhs_rules_groups_ref.html
-== frame_rhs_rules_none.html  frame_rhs_rules_none_ref.html
+fuzzy-if(appleSilicon,1-1,118-118) == frame_rhs_rules_none.html  frame_rhs_rules_none_ref.html
 == frame_rhs_rules_rows.html frame_rhs_rules_rows_ref.html
 == frame_void_rules_all.html frame_void_rules_all_ref.html
 == frame_void_rules_cols.html frame_void_rules_cols_ref.html
@@ -75,7 +75,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1375518-5.html bug137
 == frame_vsides_rules_all.html frame_vsides_rules_all_ref.html
 == frame_vsides_rules_cols.html frame_vsides_rules_cols_ref.html
 == frame_vsides_rules_groups.html frame_vsides_rules_groups_ref.html
-== frame_vsides_rules_none.html frame_vsides_rules_none_ref.html
+fuzzy-if(appleSilicon,1-1,236-236) == frame_vsides_rules_none.html frame_vsides_rules_none_ref.html
 == frame_vsides_rules_rows.html frame_vsides_rules_rows_ref.html
 == borderhandling-1.html borderhandling-ref.html
 == borderhandling-2.html borderhandling-ref.html
@@ -110,11 +110,11 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1375518-5.html bug137
 # Fuzzy because border-collapsed borders are not antialiased, since each segment is painted separately.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-fuzzy(0-255,0-40) fuzzy-if(webrender,52-52,40-526) fails-if(geckoview&&webrender) == border-style-outset-becomes-groove.html border-style-outset-becomes-groove-ref.html
+fuzzy(0-255,0-40) fuzzy-if(webrender,52-52,40-526) fuzzy-if(appleSilicon,52-52,9760-9760) fails-if(geckoview&&webrender) == border-style-outset-becomes-groove.html border-style-outset-becomes-groove-ref.html
 # Fuzzy because border-collapsed borders are not antialiased, since each segment is painted separately.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-fuzzy(0-255,0-40) fuzzy-if(webrender,52-52,40-526) fails-if(geckoview&&webrender) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
+fuzzy(0-255,0-40) fuzzy-if(webrender,52-52,40-526) fuzzy-if(appleSilicon,52-52,9760-9760) fails-if(geckoview&&webrender) == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge-ref.html
 fuzzy(0-2,0-11000) == 1324524.html 1324524-ref.html
 == 1384602-1a.html 1384602-1-ref.html
 == 1384602-1b.html 1384602-1-ref.html

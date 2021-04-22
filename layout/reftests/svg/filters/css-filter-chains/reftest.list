@@ -4,4 +4,4 @@
 # Some platforms render this complex filter chain a little differently, and that's ok.
 fuzzy(0-5,0-13638) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&layersGPUAccelerated,0-35,0-13638) fuzzy-if(webrender,4-6,12000-19484) fuzzy-if(webrender&&swgl,9-10,19336-20088) == long-chain.html long-chain-ref.html # Win10: Bug 1258241
 == moz-element.html moz-element-ref.html
-fuzzy-if(webrender,13-15,7670-7980) fuzzy-if(webrender&&swgl,12-12,14052-14052) == same-filter.html same-filter-ref.html
+fuzzy-if(webrender,13-15,7670-7982) fuzzy-if(webrender&&swgl,12-12,14052-14052) == same-filter.html same-filter-ref.html
