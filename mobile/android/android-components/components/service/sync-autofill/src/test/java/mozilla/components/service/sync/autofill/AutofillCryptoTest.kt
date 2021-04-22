@@ -6,9 +6,9 @@ package mozilla.components.service.sync.autofill
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.storage.CreditCardNumber
-import mozilla.components.lib.dataprotect.KeyGenerationReason
-import mozilla.components.lib.dataprotect.KeyRecoveryHandler
-import mozilla.components.lib.dataprotect.ManagedKey
+import mozilla.components.concept.storage.KeyGenerationReason
+import mozilla.components.concept.storage.KeyRecoveryHandler
+import mozilla.components.concept.storage.ManagedKey
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext

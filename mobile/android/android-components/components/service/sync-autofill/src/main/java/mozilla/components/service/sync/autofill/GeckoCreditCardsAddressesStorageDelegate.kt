@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
+import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.CreditCardsAddressesStorage
 import mozilla.components.concept.storage.CreditCardsAddressesStorageDelegate
 
@@ -20,6 +21,12 @@ class GeckoCreditCardsAddressesStorageDelegate(
     private val storage: Lazy<CreditCardsAddressesStorage>,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : CreditCardsAddressesStorageDelegate {
+
+    override fun decrypt(encryptedCardNumber: CreditCardNumber.Encrypted): CreditCardNumber.Plaintext? {
+        val crypto = storage.value.getCreditCardCrypto()
+        val key = crypto.key()
+        return crypto.decrypt(key, encryptedCardNumber)
+    }
 
     override fun onAddressesFetch(): Deferred<List<Address>> {
         return scope.async {

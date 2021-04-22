@@ -22,8 +22,8 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import mozilla.appservices.syncmanager.SyncParams
 import mozilla.appservices.syncmanager.SyncServiceStatus
+import mozilla.components.concept.storage.KeyProvider
 import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
-import mozilla.components.lib.dataprotect.KeyProvider
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig

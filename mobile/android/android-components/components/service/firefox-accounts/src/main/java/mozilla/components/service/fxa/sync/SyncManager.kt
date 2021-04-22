@@ -4,8 +4,8 @@
 
 package mozilla.components.service.fxa.sync
 
+import mozilla.components.concept.storage.KeyProvider
 import mozilla.components.concept.sync.SyncableStore
-import mozilla.components.lib.dataprotect.KeyProvider
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.SyncEnginesStorage

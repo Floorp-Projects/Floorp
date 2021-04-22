@@ -10,11 +10,11 @@ import mozilla.appservices.autofill.ErrorException
 import mozilla.appservices.autofill.createKey
 import mozilla.appservices.autofill.decryptString
 import mozilla.appservices.autofill.encryptString
+import mozilla.components.concept.storage.CreditCardCrypto
 import mozilla.components.concept.storage.CreditCardNumber
-import mozilla.components.lib.dataprotect.KeyGenerationReason
-import mozilla.components.lib.dataprotect.KeyProvider
-import mozilla.components.lib.dataprotect.KeyRecoveryHandler
-import mozilla.components.lib.dataprotect.ManagedKey
+import mozilla.components.concept.storage.KeyGenerationReason
+import mozilla.components.concept.storage.KeyRecoveryHandler
+import mozilla.components.concept.storage.ManagedKey
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.base.log.logger.Logger
 
@@ -33,15 +33,14 @@ class AutofillCrypto(
     private val context: Context,
     private val securePrefs: SecureAbove22Preferences,
     private val keyRecoveryHandler: KeyRecoveryHandler
-) : KeyProvider {
+) : CreditCardCrypto {
     private val logger = Logger("AutofillCrypto")
     private val plaintextPrefs by lazy { context.getSharedPreferences(AUTOFILL_PREFS, Context.MODE_PRIVATE) }
 
-    /**
-     * Encrypt a [CreditCardNumber.Plaintext] using provided key.
-     * A `null` result means a bad key was provided. In that case caller should obtain a new key and try again.
-     */
-    fun encrypt(key: ManagedKey, plaintextCardNumber: CreditCardNumber.Plaintext): CreditCardNumber.Encrypted? {
+    override fun encrypt(
+        key: ManagedKey,
+        plaintextCardNumber: CreditCardNumber.Plaintext
+    ): CreditCardNumber.Encrypted? {
         return try {
             CreditCardNumber.Encrypted(encrypt(key, plaintextCardNumber.number))
         } catch (e: ErrorException.JsonError) {
@@ -53,11 +52,10 @@ class AutofillCrypto(
         }
     }
 
-    /**
-     * Decrypt a [CreditCardNumber.Encrypted] using provided key.
-     * A `null` result means a bad key was provided. In that case caller should obtain a new key and try again.
-     */
-    fun decrypt(key: ManagedKey, encryptedCardNumber: CreditCardNumber.Encrypted): CreditCardNumber.Plaintext? {
+    override fun decrypt(
+        key: ManagedKey,
+        encryptedCardNumber: CreditCardNumber.Encrypted
+    ): CreditCardNumber.Plaintext? {
         return try {
             CreditCardNumber.Plaintext(decrypt(key, encryptedCardNumber.number))
         } catch (e: ErrorException.JsonError) {

@@ -104,6 +104,46 @@ interface CreditCardsAddressesStorage {
      * @param guid Unique identifier for the desired address.
      */
     suspend fun touchAddress(guid: String)
+
+    /**
+     * Returns an instance of [CreditCardCrypto] that knows how to encrypt and decrypt credit card
+     * numbers.
+     *
+     * @return [CreditCardCrypto] instance.
+     */
+    fun getCreditCardCrypto(): CreditCardCrypto
+}
+
+/**
+ * An interface that defines methods for encrypting and decrypting a credit card number.
+ */
+interface CreditCardCrypto : KeyProvider {
+
+    /**
+     * Encrypt a [CreditCardNumber.Plaintext] using the provided key. A `null` result means a
+     * bad key was provided. In that case caller should obtain a new key and try again.
+     *
+     * @param key The encryption key to encrypt the plaintext credit card number.
+     * @param plaintextCardNumber A plaintext credit card number to be encrypted.
+     * @return An encrypted credit card number or `null` if a bad [key] was provided.
+     */
+    fun encrypt(
+        key: ManagedKey,
+        plaintextCardNumber: CreditCardNumber.Plaintext
+    ): CreditCardNumber.Encrypted?
+
+    /**
+     * Decrypt a [CreditCardNumber.Encrypted] using the provided key. A `null` result means a
+     * bad key was provided. In that case caller should obtain a new key and try again.
+     *
+     * @param key The encryption key to decrypt the decrypt credit card number.
+     * @param encryptedCardNumber An encrypted credit card number to be decrypted.
+     * @return A plaintext, non-encrypted credit card number or `null` if a bad [key] was provided.
+     */
+    fun decrypt(
+        key: ManagedKey,
+        encryptedCardNumber: CreditCardNumber.Encrypted
+    ): CreditCardNumber.Plaintext?
 }
 
 /**
@@ -272,6 +312,15 @@ data class UpdatableAddressFields(
  * An instance of this should be attached to the Gecko runtime in order to be used.
  */
 interface CreditCardsAddressesStorageDelegate {
+
+    /**
+     * Decrypt a [CreditCardNumber.Encrypted] into its plaintext equivalent or `null` if
+     * it fails to decrypt.
+     *
+     * @param encryptedCardNumber An encrypted credit card number to be decrypted.
+     * @return A plaintext, non-encrypted credit card number.
+     */
+    fun decrypt(encryptedCardNumber: CreditCardNumber.Encrypted): CreditCardNumber.Plaintext?
 
     /**
      * Returns all stored addresses. This is called when the engine believes an address field

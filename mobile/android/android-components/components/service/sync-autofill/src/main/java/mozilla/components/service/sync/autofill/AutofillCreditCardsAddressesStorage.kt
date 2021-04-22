@@ -13,12 +13,12 @@ import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.CreditCardsAddressesStorage
+import mozilla.components.concept.storage.KeyGenerationReason
+import mozilla.components.concept.storage.KeyRecoveryHandler
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.concept.sync.SyncableStore
-import mozilla.components.lib.dataprotect.KeyGenerationReason
-import mozilla.components.lib.dataprotect.KeyRecoveryHandler
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.base.log.logger.Logger
 import java.io.Closeable
@@ -155,6 +155,10 @@ class AutofillCreditCardsAddressesStorage(
 
     override suspend fun touchAddress(guid: String) = withContext(coroutineContext) {
         conn.getStorage().touchAddress(guid)
+    }
+
+    override fun getCreditCardCrypto(): AutofillCrypto {
+        return crypto
     }
 
     override fun registerWithSyncManager() {

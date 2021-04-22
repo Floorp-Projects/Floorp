@@ -21,6 +21,9 @@ permalink: /changelog/
 * **browser-menu**:
   * 🚒 Bug fixed [issue #10133](https://github.com/mozilla-mobile/android-components/issues/10133) - A BrowserMenuCompoundButton used in our BrowserMenu setup with a DynamicWidthRecyclerView is not clipped anymore.
 
+* **browser-engine-gecko**:
+  * Implements the new GeckoView `Autocomplete.StorageDelegate` interface in `GeckoStorageDelegateWrapper`. This will replace the deprecated `GeckoLoginDelegateWrapper` and provide additional autocomplete support for credit cards. [#10140](https://github.com/mozilla-mobile/android-components/issues/10140)
+
 * **feature-downloads**:
   * ⚠️ **This is a breaking change**: `AbstractFetchDownloadService.openFile()` changed its signature from `AbstractFetchDownloadService.openFile(context: Context, filePath: String, contentType: String?)` to `AbstractFetchDownloadService.openFile(applicationContext: Context, download: DownloadState)`.
   * 🚒 Bug fixed [issue #10138](https://github.com/mozilla-mobile/android-components/issues/10138) - The downloaded files cannot be seen.
@@ -37,6 +40,8 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `CreditCard`'s number field changed to `encryptedCardNumber`, `cardNumberLast4` added.
   * New `CreditCardNumber` class, which encapsulate either an encrypted or plaintext versions of credit cards.
   * `AutofillCreditCardsAddressesStorage` reflects these breaking changes.
+  * Introduced a new `CreditCardCrypto` interface for for encrypting and decrypting a credit card number. [#10140](https://github.com/mozilla-mobile/android-components/issues/10140)
+  * 🌟️ New APIs for managing keys - `ManagedKey`, `KeyProvider` and `KeyRecoveryHandler`. `AutofillCreditCardsAddressesStorage` implements these APIs for managing keys for credit card storage.
 
 * **service-firefox-accounts**
   * 🌟️ When configuring syncable storage layers, `SyncManager` now takes an optional `KeyProvider` to handle encryption/decryption of protected values.
@@ -44,10 +49,6 @@ permalink: /changelog/
 
 * **service-glean**
   * `ConceptFetchHttpUploader` adds support for private requests. By default, all requests are non-private.
-
-* **lib-dataprotect**
-  * 🌟️ New APIs for managing keys - `ManagedKey`, `KeyProvider` and `KeyRecoveryHandler`.
-  * 🌟️ `AutofillCreditCardsAddressesStorage` implements these APIs for managing keys for credit card storage.
 
 * **lib-state**
   * 🌟️ Added `AbstractBinding` for simple features that want to observe changes to the `State` in a `Store` without needing to manually manage the CoroutineScope. This can now be handled like other `LifecycleAwareFeature` implementations:
