@@ -629,8 +629,7 @@ class WdspecExecutor(TestExecutor):
         return pytestrunner.run(path,
                                 self.server_config,
                                 session_config,
-                                timeout=timeout,
-                                environ=self.environ)
+                                timeout=timeout)
 
     def do_delayed_imports(self):
         global pytestrunner
@@ -719,13 +718,16 @@ class WdspecProtocol(Protocol):
         self.capabilities = self.executor.capabilities
         self.session_config = None
         self.server = None
+        self.environ = os.environ.copy()
+        self.environ.update(executor.environ)
 
     def connect(self):
         """Connect to browser via the HTTP server."""
         self.server = self.server_cls(
             self.logger,
             binary=self.webdriver_binary,
-            args=self.webdriver_args)
+            args=self.webdriver_args,
+            env=self.environ)
         self.server.start(block=False)
         self.logger.info(
             "WebDriver HTTP server listening at %s" % self.server.url)

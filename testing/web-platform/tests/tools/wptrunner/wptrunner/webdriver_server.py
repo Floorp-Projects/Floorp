@@ -183,13 +183,14 @@ class InternetExplorerDriverServer(WebDriverServer):
 
 class GeckoDriverServer(WebDriverServer):
     def __init__(self, logger, marionette_port=2828, binary="geckodriver",
-                 host="127.0.0.1", port=None, args=None):
-        env = os.environ.copy()
+                 host="127.0.0.1", port=None, env=None, args=None):
+        if env is None:
+            env = os.environ.copy()
         env["RUST_BACKTRACE"] = "1"
         WebDriverServer.__init__(self, logger, binary,
                                  host=host,
                                  port=port,
-                                 env=cast_env(env),
+                                 env=env,
                                  args=args)
         self.marionette_port = marionette_port
 
@@ -218,7 +219,7 @@ class ServoDriverServer(WebDriverServer):
         WebDriverServer.__init__(self, logger, binary,
                                  host=host,
                                  port=port,
-                                 env=cast_env(env),
+                                 env=env,
                                  args=args)
         self.binary_args = binary_args
 
