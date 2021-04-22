@@ -29,6 +29,7 @@ LOCAL_INCLUDES += [
     "/netwerk/protocol/about",
     "/netwerk/protocol/data",
     "/netwerk/protocol/file",
+    "/netwerk/protocol/ftp",
     "/netwerk/protocol/http",
     "/netwerk/protocol/res",
     "/netwerk/protocol/viewsource",
