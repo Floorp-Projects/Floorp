@@ -67,6 +67,7 @@ Structure:
           channel: <string>, // e.g. "release", null on failure
           enabled: <bool>, // true on failure
           autoDownload: <bool>, // true on failure
+          background: <bool>, // Indicates whether updates may be installed when Firefox is not running.
         },
         userPrefs: {
           // Only prefs which are changed are listed in this block
