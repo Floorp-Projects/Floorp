@@ -30,7 +30,7 @@ toolbar[brighttext] {
 .toolbarbutton-1 {
   color: inherit !important;
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
+  fill: var(--toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
@@ -400,7 +400,7 @@ toolbar[brighttext] #panic-button[open] {
 
 #save-to-pocket-button {
   list-style-image: url("chrome://browser/skin/pocket-outline.svg");
-  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
+  fill: var(--toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
@@ -420,7 +420,7 @@ toolbar[brighttext] #panic-button[open] {
 
 toolbarbutton.bookmark-item {
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
+  fill: var(--toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
