@@ -4,7 +4,8 @@
 
 package org.mozilla.fenix.tabstray
 
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import android.view.View
+import android.widget.ImageButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -19,15 +20,15 @@ import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 import org.mozilla.fenix.utils.Settings
 
 /**
- * Do not show fab when accessibility service is enabled
+ * Do not show accessible new tab button when accessibility service is disabled
  *
- * This binding is coupled with [AccessibleNewTabButtonBinding].
- * When [AccessibleNewTabButtonBinding] is visible this should not be visible
+ * This binding is coupled with [FloatingActionButtonBinding].
+ * When [FloatingActionButtonBinding] is visible this should not be visible
  */
-class FloatingActionButtonBinding(
+class AccessibleNewTabButtonBinding(
     private val store: TabsTrayStore,
     private val settings: Settings,
-    private val actionButton: ExtendedFloatingActionButton,
+    private val newTabButton: ImageButton,
     private val browserTrayInteractor: BrowserTrayInteractor,
     private val syncedTabsInteractor: SyncedTabsInteractor
 ) : LifecycleAwareFeature {
@@ -36,8 +37,8 @@ class FloatingActionButtonBinding(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun start() {
-        if (settings.accessibilityServicesEnabled) {
-            actionButton.hide()
+        if (!settings.accessibilityServicesEnabled) {
+            newTabButton.visibility = View.GONE
             return
         }
 
@@ -50,7 +51,7 @@ class FloatingActionButtonBinding(
                     )
                 }
                 .collect { state ->
-                    setFab(state.selectedPage, state.syncing)
+                    setAccessibleNewTabButton(state.selectedPage, state.syncing)
                 }
         }
     }
@@ -59,40 +60,35 @@ class FloatingActionButtonBinding(
         scope?.cancel()
     }
 
-    private fun setFab(selectedPage: Page, syncing: Boolean) {
+    private fun setAccessibleNewTabButton(selectedPage: Page, syncing: Boolean) {
         when (selectedPage) {
             Page.NormalTabs -> {
-                actionButton.apply {
-                    shrink()
-                    show()
-                    setIconResource(R.drawable.ic_new)
+                newTabButton.apply {
+                    visibility = View.VISIBLE
+                    setImageResource(R.drawable.ic_new)
                     setOnClickListener {
                         browserTrayInteractor.onFabClicked(false)
                     }
                 }
             }
             Page.PrivateTabs -> {
-                actionButton.apply {
-                    setText(R.string.tab_drawer_fab_content)
-                    extend()
-                    show()
-                    setIconResource(R.drawable.ic_new)
+                newTabButton.apply {
+                    visibility = View.VISIBLE
+                    setImageResource(R.drawable.ic_new)
                     setOnClickListener {
                         browserTrayInteractor.onFabClicked(true)
                     }
                 }
             }
             Page.SyncedTabs -> {
-                actionButton.apply {
-                    setText(
+                newTabButton.apply {
+                    visibility =
                         when (syncing) {
-                            true -> R.string.sync_syncing_in_progress
-                            false -> R.string.tab_drawer_fab_sync
+                            true -> View.GONE
+                            false -> View.VISIBLE
                         }
-                    )
-                    extend()
-                    show()
-                    setIconResource(R.drawable.ic_fab_sync)
+
+                    setImageResource(R.drawable.ic_fab_sync)
                     setOnClickListener {
                         // Notify the store observers (one of which is the SyncedTabsFeature), that
                         // a sync was requested.

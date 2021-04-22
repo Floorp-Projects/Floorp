@@ -17,6 +17,7 @@
     android:elevation="99dp"
     android:text="@string/tab_drawer_fab_content"
     android:textColor="@color/photonWhite"
+    android:visibility="gone"
     app:elevation="99dp"
     app:borderWidth="0dp"
     app:icon="@drawable/ic_new"

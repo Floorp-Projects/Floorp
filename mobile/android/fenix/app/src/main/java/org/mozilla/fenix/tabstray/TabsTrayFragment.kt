@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -68,6 +69,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
     private val tabCounterBinding = ViewBoundFeatureWrapper<TabCounterBinding>()
     private val floatingActionButtonBinding = ViewBoundFeatureWrapper<FloatingActionButtonBinding>()
+    private val newTabButtonBinding = ViewBoundFeatureWrapper<AccessibleNewTabButtonBinding>()
     private val selectionBannerBinding = ViewBoundFeatureWrapper<SelectionBannerBinding>()
     private val selectionHandleBinding = ViewBoundFeatureWrapper<SelectionHandleBinding>()
     private val tabsTrayCtaBinding = ViewBoundFeatureWrapper<TabsTrayInfoBannerBinding>()
@@ -211,7 +213,20 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         floatingActionButtonBinding.set(
             feature = FloatingActionButtonBinding(
                 store = tabsTrayStore,
+                settings = requireComponents.settings,
                 actionButton = new_tab_button,
+                browserTrayInteractor = browserTrayInteractor,
+                syncedTabsInteractor = syncedTabsTrayInteractor
+            ),
+            owner = this,
+            view = view
+        )
+
+        newTabButtonBinding.set(
+            feature = AccessibleNewTabButtonBinding(
+                store = tabsTrayStore,
+                settings = requireComponents.settings,
+                newTabButton = tab_tray_new_tab,
                 browserTrayInteractor = browserTrayInteractor,
                 syncedTabsInteractor = syncedTabsTrayInteractor
             ),
@@ -312,7 +327,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             },
             operation = { },
             elevation = ELEVATION,
-            anchorView = new_tab_button
+            anchorView = if (new_tab_button.isVisible) new_tab_button else null
         )
     }
 
