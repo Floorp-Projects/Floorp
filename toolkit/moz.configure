@@ -1048,10 +1048,14 @@ add_old_configure_assignment("FT2_CFLAGS", ft2_info.cflags)
 # The source code lives under ../remote.
 
 
-@depends(build_project)
-def remote_default(build_project):
-    # enable for Firefox only
-    return build_project in ("browser", "mobile/android")
+@depends(target, build_project)
+def remote_default(target, project):
+    # no support for Android
+    if target.os == "Android":
+        return False
+
+    # enable for Firefox Desktop only
+    return project == "browser"
 
 
 option("--enable-cdp", default=remote_default, help="{Enable|Disable} remote agent")
