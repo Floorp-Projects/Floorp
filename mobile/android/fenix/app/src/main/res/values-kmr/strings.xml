@@ -19,10 +19,6 @@
     <string name="no_open_tabs_description">Hilpekînên te yên vekirî ew ê li vir bên nîşandan.</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Hilpekînên te yên veşartî ew ê li vir bên nîşandan.</string>
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 hilpekîna vekirî. Ji bo hilpekînê biguherînî, bitikîne.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -180,6 +176,13 @@
     <string name="browser_menu_open_app_link">Di sepanê de veke</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Xuyang</string>
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Moda xwînerê taybet bike</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Lê zêde bike</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Serast bike</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Nayê girêdan. Şemaya URLyê nayê nasîn.</string>
@@ -217,6 +220,11 @@
     <string name="search_suggestions_onboarding_text">%s dê hemû tiştên tu li darika navnîşanan binivîsî bi motora te ya lêgerînê ya derbasdar re parve bike.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Zêdetir bizane</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Bi %s bigere</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Lêgerînê rasterast ji darikê navnîşanan bike</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -603,12 +611,16 @@
     <string name="tabs_header_private_title">Rûniştina veşartî</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Hilpekînên veşartî</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Hilpekînên senkronîzekirî</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Hilpekînê tevlî bike</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Hilpekîna veşartî tevlî bike</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Veşartî</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Senkronîzekirin</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Hilpekînên vekirî</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -619,6 +631,8 @@
     <string name="tab_tray_menu_item_share">Hemû hilpekînan parve bike</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Hilpekînên herî dawî hatine girtin</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Sazkariyên hesabî</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Sazkariyên hilpekînê</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -970,6 +984,8 @@
     <string name="share_link_all_apps_subheader">Hemû çalakî</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Bikaranînên herî dawî</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Ji bo senkronîzekirinê têkevê</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Têkeve Sync’ê</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1165,9 +1181,6 @@
     <string name="onboarding_header">Tu bi xêr hatî %s’ê!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Jixwe hesabekî te heye?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s’ê nas bike</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Tiştên nû bibîne</string>
     <!-- text for the "what's new" onboarding card description
@@ -1175,10 +1188,10 @@
     <string name="onboarding_whats_new_description">Pirsên te derbarê %s’ê ya nû de hene? Dixwazî bizanî ka çi guheriye?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Bersiv li vir in</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Bi hesabê xwe yê Firefoxê dest bi senkronîzekirina favoriyan, pêborînan û zêdetirî wan, bike.</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Firefoxê di navbera amûran de senkronîze bike</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Zêdetir bizane</string>
+    <string name="onboarding_manual_sign_in_description">Favorî, raborî û şîfreyên xwe bîne Firefoxa vê amûrê.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1187,8 +1200,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Erê, têkeve</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Dikevê…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Têkeve Firefox’ê</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Xwe tomar bike</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Têketinê neke</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1196,26 +1209,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Têketin bi ser neket</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Nihêniya otomatîk</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Sazkariyên nihênî û ewlekariyê şopîneran û sepanên niyetxerab û şirketênku  dixwazin te bişopînin asteng dike.</string>
+    <string name="onboarding_tracking_protection_header_3">Her car -nepen</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox bixweber rê li şirketan digire ku bi dizî li dora te tevnegerin.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (jixweber)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Hindiktir şopîneran asteng dike. Rûpel ew ê bi awayê normal vebin.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Nepenî û performansa bi aheng. Rûpel bi asayî tên barkirin.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Tund (tê pêşniyarkirin)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Tund</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Zêdetir şopîneran, reklaman û pencereyên vebûnok asteng dike. Rûpel zûtir vedibin, lê dibe ku hin taybetî nexebitin.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Aliyê xwe hilbijêre</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Ji bo rûpel zûtir bên vekirin zêdetir şopîneran asteng dike lê dibe ku hin fonksiyonên rûpelan xira bibin.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Ciyê darikê amûran hilbijêre</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Darikê amûran ê jêrîn bi destekî biceribîne an jî wê bibe jorê tu bi kêfa xwe yî.</string>
+    <string name="onboarding_toolbar_placement_description_1">Darikê amûran dayne ciyekê bi hêsanî bigihîjiyê. Dikarî wê li xwarê bihêlî yan jî bibî jorê.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Bi nihênî bigere</string>
     <!-- text for the private browsing onboarding card description
@@ -1228,7 +1238,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Nihêniya te</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Me %s ji bo hindê çêkiriye ku derbarê tiştên tu li ser înternetê û tiştên bi me re parve dikî de kontrol di destê te de be.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Agahdariya me ya nihêniyê bixwîne</string>
@@ -1242,7 +1252,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Rûkara xwe hilbijêre</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Bi çalakkirina moda tarî him ji bataryayê teserûf bike him jî çavên xwe rehet bike.</string>
+    <string name="onboarding_theme_picker_description_2">Bi moda tarî dikarî ji bataryayê teseruf bikî û çavên xwe vehesînî.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Otomatîk</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1298,13 +1308,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (heyî)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Hindiktir şopîneran asteng dike. Rûpel ew ê bi awayê normal vebin.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Hevsengiya ji bo nepenî û performansê. Rûpel asayî tên barkirin.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Bi parastina ji şopandinê ya standard çi tên astengkirin?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Tund</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Zêdetir şopîneran, reklaman û pencereyên vebûnok asteng dike. Rûpel zûtir vedibin, lê dibe ku hin taybetî nexebitin.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Ji bo rûpel zûtir bên vekirin zêdetir şopîneran asteng dike lê dibe ku hin fonksiyonên rûpelan xira bibin.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Bi parastina ji şopandinê ya tund çi tên astengkirin?</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1353,6 +1363,8 @@
     <string name="etp_cryptominers_description">Skrîptên xirab yên ji bo ku kankerên krîpto ji bo çêkirina pereyên krîpto xwe bigihînin amûra te asteng dike.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Şoptilî</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Rê li berhevkirina zanyariyên derbarê amûra te de yên pêkan e biawayekî bêmînak bên pênasekirin digire ku pêkan e ji bo şopandinê bên bikaranîn.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Naverokên şopandinê</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
@@ -1380,6 +1392,9 @@
 
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Şoînerên beralîkirinê</string>
+
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Kûkiyên ji aliyê beralîkirinên malperên tên naskirin ve hatine bicîkirin paqij dike.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Piştgirî</string>
@@ -1515,6 +1530,8 @@
     <string name="logins_biometric_prompt_message">ji bo hesabên xwe yên tomarkirî bibînî, kilîdê veke</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Hesab û pêborînên xwe biparêze</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Deseneke kilîdê, PIN yan jî şîfreyekê diyar bike da ku gava amûra te bikeve destê kesên din têketin û şîfreyên te yên tomarkirî parastî bin.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Piştre</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1523,6 +1540,8 @@
     <string name="logins_biometric_prompt_message_pin">Kilîda cîhaza xwe rake</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Hemû malperan nêzîk bike</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Ji bo destûrdana jidandin û nêzîkkirinê çalak bike, di wan malperan de jî ku vê tevgeriyanê asteng dikin.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Nav (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1530,6 +1549,45 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menûya rêzkirina hesaban</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Kartên krediyê</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Kartên tomarkirî û xweber tên dagirtin</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Dane şîfrekirî ne</string>
+
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Kartan di navbera amûran de senkronîze bike</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Kredîkartekê lê zêde bike</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Kartên tomarkirî bi rê ve bibe</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Kartê lê zêde bike</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Kartê serast bike</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Hejmara kartê</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Dema dawî ya bikaranînê</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Navê li ser kartê</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Navê kartê</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Kartê jê bibe</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Kartê jê bibe</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Tomar bike</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Tomar bike</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Betal</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Kartên tomarkirî</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Motora lêgerînê tevlî bike</string>
@@ -1688,6 +1746,9 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Betal bike</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Bila lînkên ji malperan, e-posteyan û peyaman xweber di Firefoxê de bên vekirin.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Rake</string>
 
@@ -1704,4 +1765,6 @@
     <string name="no_collections_description1">Lêgerîn, malper û hilpekînên wekhev, bike kom da ku paşê tu karibî xwe zû bigihînî wan.</string>
     <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
     <string name="onboarding_firefox_account_auto_signin_header_2">Tu li ser vê telefonê di gerokeke din a Firefoxê de wekî %s têketî yê. Tu dixwazî bi vî hesabî têkevî?</string>
-    </resources>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Tu dikarî vê malperê bi hêsanî li ekrana Malê ya telefona xwe zêde bikî û dikarî vê malperê bilez û wekî ku bernamokek be bi kar bînî.</string>
+</resources>

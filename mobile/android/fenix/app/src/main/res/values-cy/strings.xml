@@ -907,7 +907,7 @@
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Rhwystro sain a fideo ar ddata cellol yn unig</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
-    <string name="preference_option_autoplay_allowed_wifi_subtext">Bydd sain a fideo yn chwarae ar ddiwifr</string>
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Bydd sain a fideo yn chwarae ar Wi-Fi</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Rhwystro sain yn unig</string>
     <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->

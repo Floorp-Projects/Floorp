@@ -288,6 +288,8 @@
     <string name="preferences_sign_in_description">Кыстыргычларны, тарихны һәм башкаларны Firefox Хисабыгыз белән синхронлау</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox хисап язмасы</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Синхронлауны дәвам итү өчен яңадан тоташыгыз</string>
     <!-- Preference for language -->
     <string name="preferences_language">Тел</string>
 
@@ -371,6 +373,10 @@
     <string name="empty_device_name_error">Җиһаз исеме буш була алмый.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Синхронлау...</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Синхронлау барып чыкмады. Соңгы синхронлау: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Синхронлау барып чыкмады. Соңгы синхронлау: һичкайчан</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Соңгы синхронлау: %s</string>
     <!-- Label summary showing never synced -->
@@ -443,6 +449,10 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Җиһаз темасына иярү</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Яңарту өчен тартыгыз</string>
+
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Сессияләр</string>
@@ -474,6 +484,8 @@
     <string name="library_search">Эзләү</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Көйләүләр</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Тарих элементы менюсы</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Ябу</string>
 
@@ -494,6 +506,8 @@
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">Таблар</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Таб күренеше</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Исемлек</string>
     <!-- Option for a grid tab view -->
@@ -559,6 +573,8 @@
     <string name="tab_tray_menu_open_new_tab">Яңа таб</string>
     <!-- Shortcut action to open the home screen -->
     <string name="tab_tray_menu_home">Баш биткә кайту </string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Таб режимын алыштыру</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Кыстыргыч</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -593,6 +609,8 @@
     <string name="current_session_save">Саклау</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Уртаклашу</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Агымдагы сессия рәсеме</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">Җыентыкка саклау</string>
     <!-- Text for the menu button to delete a collection -->
@@ -638,6 +656,9 @@
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d сайланды</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">%1$d элементны бетерү</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Бүген</string>
     <!-- Text for the header that groups the history for yesterday -->
@@ -697,6 +718,8 @@
     <string name="bookmark_select_folder">Папка сайлау</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Папка бетерүне раслыйсызмы?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s сайланган элементларны бетерәчәк.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
     <string name="bookmark_delete_folder_snackbar">%1$s бетерелде</string>
     <!-- Screen title for adding a bookmarks folder -->
@@ -884,8 +907,14 @@
     <string name="sync_sign_in">Синхронлауга керү</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Барлык җиһазларга җибәрү</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Синхронлауга яңадан тоташу</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Офлайн</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Башка җиһазны тоташтыру</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Табны җибәрү өчен, кимендә тагын бер башка җиһаздан Firefox-ка керегез.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Аңладым</string>
 
@@ -995,6 +1024,10 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Чыгу</string>
 
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Бу сезнең барлык гизү мәгълүматларыгызны да бетерәчәк.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s сайланган гизү мәгълүматларын бетерәчәк.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Баш тарту</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -1005,6 +1038,9 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Гизү мәгълүматларын бетерү…</string>
 
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview хәзер Firefox Nightly дип атала</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">Android Beta өчен Firefox алу</string>
 
@@ -1058,6 +1094,9 @@
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Ябу</string>
 
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Гизүне башлау</string>
+
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Теманы сайлау</string>
@@ -1078,6 +1117,12 @@
     <string name="sync_sent_tab_error_snackbar_action">КАБАТЛАУ</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Кодны сканерлау</string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Сканерлауга әзер</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Камерагыз ярдәмендә керегез</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Моның урынына эл. почта кулланыгыз</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Өзү</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1099,6 +1144,8 @@
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Кукилар</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Каралмаган сайтлардан булган кукилар</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Барлык табларда</string>
 
@@ -1128,6 +1175,8 @@
 
     <!-- About page link text to open support link -->
     <string name="about_support">Техник ярдәм</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Өзеклеклер</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Хосусыйлык аңлатмасы</string>
     <!-- About page link text to open know your rights link -->
@@ -1393,5 +1442,8 @@
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Бетерү</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Күбрәк белү өчен басыгыз</string>
 
     </resources>

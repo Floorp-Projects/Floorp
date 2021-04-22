@@ -17,10 +17,6 @@
     <string name="no_open_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù digoret.</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Diskouezet e vo amañ hocʼh ivinelloù prevez.</string>
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 ivinell digor. Stokit evit mont dʼun ivinell all.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -177,6 +173,11 @@
     <string name="browser_menu_open_app_link">Digeriñ en arload</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Neuz</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Ouzhpennañ</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Embann</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Ne cʼhaller ket kennaskañ. Steuñv URL dianav.</string>
@@ -612,6 +613,8 @@
     <string name="tab_tray_menu_item_share">Rannañ an holl ivinelloù</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Ivinelloù serret nevez zo</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Arventennoù ar gont</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Arventennoù an ivinelloù</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1160,9 +1163,6 @@
     <string name="onboarding_header">Donemat war %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Ur gont hoc’h eus dija?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Grit anaoudegezh gant %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Gwelout pezh a zo nevez</string>
     <!-- text for the "what's new" onboarding card description
@@ -1170,10 +1170,6 @@
     <string name="onboarding_whats_new_description">Goulennoù hoc’h eus a-zivout ar %s nevez? Fellout a ra deoc’h gouzout pezh a zo bet cheñchet?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Amañ emañ ar respontoù</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Krogit da c’houbredañ ho sinedoù, ho kerioù-tremen, ha muioc’h c’hoazh gant ho kont FIrefox.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Gouzout hiroc’h</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1182,35 +1178,18 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Ya, kennaskit ac’hanon</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">O kennaskañ…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Kennaskañ ouzh FIrefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Chom kennasket</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Enaouet eo Sync</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">C’hwitadenn war ar c’hennaskañ</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Prevezded emgefreek</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Ar arventennoù prevezded ha diogelroez a stank an heulierien, ar meziantoù touellus hag an embregerezhioù a heuilh ac’hanoc’h.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Skoueriek (dre ziouer)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Na stank ket kement a heulier. Ar pajennoù a gargo evel boaz.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strizh (erbedet)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strizh</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Stankañ a raio muioc’h a heulierien, bruderezhioù ha diflugelloù. Buanoc’h e kargo ar pajennoù, met gallout a ra traoù ’zo chom hep mont en-dro.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Dibabit un tu</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Klaskit ar merdeiñ gant un dorn a-drugarez d’ar varrenn-ostilhoù en traoñ, pe laoskit anezhi en nec’h.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Merdeiñ prevez</string>
     <!-- text for the private browsing onboarding card description
@@ -1223,7 +1202,7 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ho puhez prevez</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Savet hon eus %s evit ma c’hallfec’h reoliñ ar pezh a rannit enlinenn hag ar pezh a rannit ganeomp.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lennit hon evezhiadenn a-get buhez prevez</string>
@@ -1237,8 +1216,6 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Dibabit an neuz</string>
 
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Espernit ho patiri hag ho taoulagad gant ar mod teñval.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Emgefreek</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1292,14 +1269,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Gouzout hiroc’h</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Skoueriek (dre ziouer)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Na stank ket kement a heulier. Ar pajennoù a gargo evel boaz.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ar pezh a zo stanket gant ar gwarez heuliañ skoueriek</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strizh</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Stankañ a raio muioc’h a heulierien, bruderezhioù ha diflugelloù. Buanoc’h e kargo ar pajennoù, met gallout a ra traoù ’zo chom hep mont en-dro.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ar pezh a zo stanket gant ar gwarez heuliañ strizh</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1533,6 +1506,43 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Lañser rummañ an titouroù kennaskañ</string>
 
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Kartennoù kred</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Enrollañ ha leuniañ ar c’hartennoù en un doare emgefreek</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Rineget eo ar roadennoù</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Ouzhpennañ ur gartenn gred</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Merañ ar c’hartennoù enrollet</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Ouzhpennañ ur gartenn</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Kemmañ ar gartenn</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Niverenn ar gartenn</string>
+
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Deiziad termen</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Anv war ar gartenn</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Lesanv ar gartenn</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Dilemel ar gartenn</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Dilemel ar gartenn</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Enrollañ</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Enrollañ</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Nullañ</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Kartennoù enrollet</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ouzhpennañ ul lusker klask</string>
     <!-- Title of the Edit search engine screen -->
@@ -1690,6 +1700,9 @@
 	<string name="top_sites_rename_dialog_ok">Mat eo</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Nullañ</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Digeriñ liammoù al lec’hiennoù, posteloù ha kemennadennoù e Firefox en un doare emgefreek.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Dilemel</string>

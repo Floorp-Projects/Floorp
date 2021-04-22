@@ -629,6 +629,8 @@
     <string name="tab_tray_menu_item_share">Partejar totes los onglets</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Onglets tampats recentament</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Paramètres del compte</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Paramètres dels onglets</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -990,8 +992,6 @@
     <string name="share_link_all_apps_subheader">Totas las accions</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Utilizats fa res</string>
-    <!-- An string shown when an account is signed in where %1$s is a placeholder for the email-->
-    <string name="sync_signed_as">Identificat coma %1$s</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Se connectar per sincronizar</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1161,17 +1161,29 @@
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview ara es Firefox Nightly</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">
+        Firefox Nightly es actualizat cada nuèch e prepausa de foncionalitats novèlas experimentalas.
+        Pasmens es mens estable. Telecargatz la version beta de nòstre navegador per una experiéncia                         mai estabala.</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button_2">Installar Firefox per Android Beta</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly a mudat los catons</string>
 
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">
+        Aquesta aplicacion aurà pas mai de mesa a jorn de seguretat. Deuriatz quitar de l’utilizar e utilizar puslèu lo Nightly novèl a la plaça.
+        \n\nPer transferir vòstres marcapaginas, vòstres identificants e vòstre istoric cap a una autra aplicacion, creatz un compte Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Passar la Nightly nòu</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly a mudat los catons</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">
+        Aquesta aplicacion aurà pas mai de mesa a jorn de seguretat. Deuriatz quitar de l’utilizar e utilizar puslèu lo Nightly novèl a la plaça..
+        \n\nPer transferir vòstres marcapaginas, vòstres identificants e vòstre istoric cap a una autra aplicacion, creatz un compte Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Obténer lo novèl Nightly</string>
 
@@ -1188,6 +1200,10 @@
     <string name="onboarding_whats_new_description">Avètz de question tocant lo nòu %s ? Volètz saber çò que cambièt ?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Trobatz de responsas aquí</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Sincronizar Firefox entre vòstres aparelhs</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">Importatz vòstres marcapaginas, vòstre istoric e vòstres senhals dins Firefox sus aqueste aparelh.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1216,6 +1232,12 @@
     <string name="onboarding_tracking_protection_strict_button">Estricte (recomandat)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Estricte</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Bloca mai de traçadors, accelèra la cargament de las paginas mas d’unas pòdon quitar de foncionar.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Causissètz ont conhar la barra d’aisinas</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Plaçatz la barra d’aisinas a portada de man. Daissatz-la enbàs o ennaut.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegatz d’un biais privat</string>
     <!-- text for the private browsing onboarding card description
@@ -1241,6 +1263,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Causissètz vòstre tèma</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Estalviatz la batariá e vòstra vista en activant lo mòde fosc.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatic</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1301,6 +1325,8 @@
     <string name="preference_enhanced_tracking_protection_standard_info_button">Çò que la proteccion contra lo seguiment estandarda bloca</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricte</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Bloca mai de traçadors, accelèra la cargament de las paginas mas d’unas pòdon quitar de foncionar.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Çò que la proteccion contra lo seguiment estricta bloca</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1559,6 +1585,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">Gerir las cartas enregistradas</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Apondre una carta</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Modificar la carta</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Numèro de carta</string>
     <!-- The header for the expiration date of a credit card -->
@@ -1567,6 +1595,8 @@
     <string name="credit_cards_name_on_card">Titular</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Nom de la carta</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Suprimir la carta</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Suprimir la carta</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1738,6 +1768,9 @@
 	<string name="top_sites_rename_dialog_ok">D’acòrdi</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Anullar</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Causir de dobrir los sites web, los corrièls e messatges automaticament dins Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Suprimir</string>

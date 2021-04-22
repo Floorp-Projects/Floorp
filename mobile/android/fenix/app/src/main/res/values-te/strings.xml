@@ -209,6 +209,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ఇంకా తెలుసుకోండి</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s‌లో వెతకండి</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">ఒక కొత్త Firefox ట్యాబును తెరువండి</string>
@@ -886,15 +889,21 @@
     <string name="tracking_protection_off">అచేతనం</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ఆడియో, వీడియోలను అనుమతించు</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">ఆడియో, వీడియోలను అనుమతించు</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">ఆడియో, వీడియోలను సెల్యులార్ డేటాని వాడుతున్నప్పుడు మాత్రమే నిరోధించు</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">ఆడియో, వీడియోలు వై-ఫైలో ఉన్నప్పుడు మాత్రమే ఆడతాయి</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">ఆడియోను మాత్రమే నిరోధించు</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">ఆడియోను మాత్రమే నిరోధించు</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">ఆడియో, వీడియోలను నిరోధించు</string>
 
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">ఆడియో, వీడియోలను నిరోధించు</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">చేతనం</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1181,6 +1190,8 @@
     <string name="onboarding_tracking_protection_strict_button">కఠినం (సిఫార్సు చేయబడింది)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">కఠినం</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">పనిముట్లపట్టీ ఎక్కడ ఉండాలో ఎంచుకోండి</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">అంతరంగికంగా విహరించండి</string>
     <!-- text for the private browsing onboarding card description
@@ -1204,6 +1215,8 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">మీ అలంకారాన్ని ఎంచుకోండి</string>
 
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">చీకటి రీతితో కొంచెం బ్యాటరీని, మీ కంటిచూపుని ఆదాచేసుకోండి.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ఆటోమెటిక్</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1505,8 +1518,17 @@
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">క్రెడిట్ కార్డులు</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">కార్డులను భద్రపరుచు, స్వయంచాలకంగా పూరించు</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">డేటా గుప్తీకరించబడుతుంది
+</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">కార్డులను పరికరాల మధ్య సింక్రనించు</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">క్రెడిట్ కార్డును చేర్చు</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">భద్రపరచిన కార్డుల నిర్వహణ</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">కార్డును చేర్చు</string>
     <!-- Title of the "Edit card" screen -->
