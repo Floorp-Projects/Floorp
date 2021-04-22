@@ -263,6 +263,20 @@ class NetErrorParent extends JSWindowActorParent {
     request.send(null);
   }
 
+  displayOfflineSupportPage(supportPageSlug) {
+    const AVAILABLE_PAGES = ["connection-not-secure", "time-errors"];
+    if (!AVAILABLE_PAGES.includes(supportPageSlug)) {
+      console.log(
+        `[Not supported] Offline support is not yet available for ${supportPageSlug} errors.`
+      );
+      return;
+    }
+
+    let offlinePagePath = `chrome://browser/content/certerror/supportpages/${supportPageSlug}.html`;
+    let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    this.browser.loadURI(offlinePagePath, { triggeringPrincipal });
+  }
+
   receiveMessage(message) {
     switch (message.name) {
       case "Browser:EnableOnlineMode":
@@ -314,7 +328,9 @@ class NetErrorParent extends JSWindowActorParent {
           message.data.xfoAndCspInfo
         );
         break;
-
+      case "DisplayOfflineSupportPage":
+        this.displayOfflineSupportPage(message.data.supportPageSlug);
+        break;
       case "Browser:CertExceptionError":
         switch (message.data.elementId) {
           case "viewCertificate": {
