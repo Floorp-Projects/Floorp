@@ -608,16 +608,17 @@ impl SceneBuilderThread {
                     display_list,
                     preserve_frame_state,
                 } => {
-                    let (gecko_display_list_time, builder_start_time_ns,
-                         builder_end_time_ns, send_time_ns) = display_list.times();
-
+                    let (builder_start_time_ns, builder_end_time_ns, send_time_ns) =
+                      display_list.times();
                     let content_send_time = profiler::ns_to_ms(precise_time_ns() - send_time_ns);
                     let dl_build_time = profiler::ns_to_ms(builder_end_time_ns - builder_start_time_ns);
                     profile.set(profiler::CONTENT_SEND_TIME, content_send_time);
                     profile.set(profiler::DISPLAY_LIST_BUILD_TIME, dl_build_time);
                     profile.set(profiler::DISPLAY_LIST_MEM, profiler::bytes_to_mb(display_list.data().len()));
 
-                    frame_stats.gecko_display_list_time += gecko_display_list_time;
+                    let (gecko_display_list_time, full_display_list) = display_list.gecko_display_list_stats();
+                    frame_stats.full_display_list = full_display_list;
+                    frame_stats.gecko_display_list_time = gecko_display_list_time;
                     frame_stats.wr_display_list_time += dl_build_time;
 
                     if self.removed_pipelines.contains(&pipeline_id) {

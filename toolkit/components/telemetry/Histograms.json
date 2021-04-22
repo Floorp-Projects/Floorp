@@ -14540,31 +14540,57 @@
     "description": "The reason that CONTENT_FRAME_TIME recorded a slow (>200) result, if any.",
     "labels": ["OnTime", "NoVsync", "MissedComposite", "SlowComposite", "MissedCompositeMid", "MissedCompositeLong", "MissedCompositeLow", "NoVsyncNoId"]
   },
-  "CONTENT_LARGE_PAINT_PHASE_WEIGHT": {
+  "CONTENT_SMALL_PAINT_PHASE_WEIGHT_PARTIAL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
-    "bug_numbers": [1309442, 1518134],
-    "expires_in_version": "72",
-    "keyed": true,
-    "keys": ["dl", "flb", "fr", "r"],
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 10,
-    "description": "Percentages of times for phases in an expensive content paint relative to the time spent in the entire expensive paint. (\"dl\" = Display list, \"flb\" = Frame layer builder, \"fr\" = Flush rasterization, \"r\" = Rasterization)"
-  },
-  "CONTENT_SMALL_PAINT_PHASE_WEIGHT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mmynttinen@mozilla.com"],
     "bug_numbers": [1430897, 1518134],
-    "expires_in_version": "72",
+    "expires_in_version": "never",
     "keyed": true,
-    "keys": ["dl", "flb", "fr", "r"],
+    "keys": ["dl", "wrdl", "sb", "fb"],
     "kind": "linear",
     "high": 100,
-    "n_buckets": 10,
-    "description": "Percentages of times for phases in a normal content paint relative to the time spent in the entire normal paint. (\"dl\" = Display list, \"flb\" = Frame layer builder, \"fr\" = Flush rasterization, \"r\" = Rasterization)"
+    "n_buckets": 12,
+    "description": "Percentages of times for phases in a normal content paint relative to the time spent in the entire normal paint. (\"dl\" = Display list, \"wrdl\" = WebRender display list, \"sb\" = Scene building, \"fb\" = Frame building)"
+  },
+  "CONTENT_LARGE_PAINT_PHASE_WEIGHT_PARTIAL": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mmynttinen@mozilla.com"],
+    "bug_numbers": [1309442, 1518134],
+    "expires_in_version": "never",
+    "keyed": true,
+    "keys": ["dl", "wrdl", "sb", "fb"],
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 12,
+    "description": "Percentages of times for phases in an expensive content paint relative to the time spent in the entire expensive paint. (\"dl\" = Display list, \"wrdl\" = WebRender display list, \"sb\" = Scene building, \"fb\" = Frame building)"
+  },
+  "CONTENT_SMALL_PAINT_PHASE_WEIGHT_FULL": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mmynttinen@mozilla.com"],
+    "bug_numbers": [1430897, 1518134],
+    "expires_in_version": "never",
+    "keyed": true,
+    "keys": ["dl", "wrdl", "sb", "fb"],
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 12,
+    "description": "Percentages of times for phases in a normal content paint relative to the time spent in the entire normal paint. (\"dl\" = Display list, \"wrdl\" = WebRender display list, \"sb\" = Scene building, \"fb\" = Frame building)"
+  },
+  "CONTENT_LARGE_PAINT_PHASE_WEIGHT_FULL": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mmynttinen@mozilla.com"],
+    "bug_numbers": [1309442, 1518134],
+    "expires_in_version": "never",
+    "keyed": true,
+    "keys": ["dl", "wrdl", "sb", "fb"],
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 12,
+    "description": "Percentages of times for phases in an expensive content paint relative to the time spent in the entire expensive paint. (\"dl\" = Display list, \"wrdl\" = WebRender display list, \"sb\" = Scene building, \"fb\" = Frame building)"
   },
   "GPU_WAIT_TIME_MS": {
     "record_in_processes": ["main", "gpu"],

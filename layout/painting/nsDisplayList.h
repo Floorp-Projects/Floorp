@@ -7409,26 +7409,6 @@ namespace mozilla {
 
 class PaintTelemetry {
  public:
-  enum class Metric {
-    DisplayList,
-    Layerization,
-    FlushRasterization,
-    Rasterization,
-    COUNT,
-  };
-
-  class AutoRecord {
-   public:
-    explicit AutoRecord(Metric aMetric);
-    ~AutoRecord();
-
-    TimeStamp GetStart() const { return mStart; }
-
-   private:
-    Metric mMetric;
-    mozilla::TimeStamp mStart;
-  };
-
   class AutoRecordPaint {
    public:
     AutoRecordPaint();
@@ -7440,8 +7420,6 @@ class PaintTelemetry {
 
  private:
   static uint32_t sPaintLevel;
-  static uint32_t sMetricLevel;
-  static mozilla::EnumeratedArray<Metric, Metric::COUNT, double> sMetrics;
 };
 
 }  // namespace mozilla
