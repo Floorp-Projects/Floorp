@@ -71,12 +71,7 @@ class PullRequestImporter(MachCommandBase):
         "https://github.com/servo/webrender/pull/3665).",
     )
     def import_pr(
-        self,
-        command_context,
-        pull_request,
-        bug_number=None,
-        bugzilla_token=None,
-        reviewer=None,
+        self, pull_request, bug_number=None, bugzilla_token=None, reviewer=None
     ):
         import requests
 

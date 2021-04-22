@@ -36,7 +36,6 @@ class CondprofileCommandProvider(MachCommandBase):
     )
     def fetch(
         self,
-        command_context,
         target_dir,
         platform,
         scenario,
@@ -89,7 +88,7 @@ class CondprofileCommandProvider(MachCommandBase):
         default=sys.platform.startswith("win") and "geckodriver.exe" or "geckodriver",
     )
     @CommandArgument("--device-name", help="Name of the device", type=str, default=None)
-    def run(self, command_context, **kw):
+    def run(self, **kw):
         os.environ["MANUAL_MACH_RUN"] = "1"
         self._init()
 

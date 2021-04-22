@@ -29,7 +29,7 @@ class MachCommands(MachCommandBase):
     )
     @CommandArgument("ide", choices=["eclipse", "visualstudio", "vscode"])
     @CommandArgument("args", nargs=argparse.REMAINDER)
-    def run(self, command_context, ide, args):
+    def run(self, ide, args):
         if ide == "eclipse":
             backend = "CppEclipse"
         elif ide == "visualstudio":

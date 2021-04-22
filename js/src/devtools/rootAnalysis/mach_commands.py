@@ -58,9 +58,11 @@ def inherit_command_args(command, subcommand=None):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
+    @property
     def state_dir(self):
         return os.environ.get("MOZBUILD_STATE_PATH", os.path.expanduser("~/.mozbuild"))
 
+    @property
     def tools_dir(self):
         if os.environ.get("MOZ_FETCHES_DIR"):
             # In automation, tools are provided by toolchain dependencies.
@@ -70,14 +72,17 @@ class MachCommands(MachCommandBase):
         # to avoid colliding with the "main" compiler versions, which can
         # change separately (and the precompiled sixgill and compiler version
         # must match exactly).
-        return os.path.join(self.state_dir(), "hazard-tools")
+        return os.path.join(self.state_dir, "hazard-tools")
 
+    @property
     def sixgill_dir(self):
-        return os.path.join(self.tools_dir(), "sixgill")
+        return os.path.join(self.tools_dir, "sixgill")
 
+    @property
     def gcc_dir(self):
-        return os.path.join(self.tools_dir(), "gcc")
+        return os.path.join(self.tools_dir, "gcc")
 
+    @property
     def script_dir(self):
         return os.path.join(self.topsrcdir, "js/src/devtools/rootAnalysis")
 
@@ -92,13 +97,13 @@ class MachCommands(MachCommandBase):
 
     # Force the use of hazard-compatible installs of tools.
     def setup_env_for_tools(self, env):
-        gccbin = os.path.join(self.gcc_dir(), "bin")
+        gccbin = os.path.join(self.gcc_dir, "bin")
         env["CC"] = os.path.join(gccbin, "gcc")
         env["CXX"] = os.path.join(gccbin, "g++")
         env["PATH"] = "{sixgill_dir}/usr/bin:{gccbin}:{PATH}".format(
-            sixgill_dir=self.sixgill_dir(), gccbin=gccbin, PATH=env["PATH"]
+            sixgill_dir=self.sixgill_dir, gccbin=gccbin, PATH=env["PATH"]
         )
-        env["LD_LIBRARY_PATH"] = "{}/lib64".format(self.gcc_dir())
+        env["LD_LIBRARY_PATH"] = "{}/lib64".format(self.gcc_dir)
 
     @Command(
         "hazards",
@@ -106,7 +111,7 @@ class MachCommands(MachCommandBase):
         order="declaration",
         description="Commands for running the static analysis for GC rooting hazards",
     )
-    def hazards(self, command_context):
+    def hazards(self):
         """Commands related to performing the GC rooting hazard analysis"""
         print("See `mach hazards --help` for a list of subcommands")
 
@@ -116,9 +121,9 @@ class MachCommands(MachCommandBase):
         "bootstrap",
         description="Install prerequisites for the hazard analysis",
     )
-    def bootstrap(self, command_context, **kwargs):
+    def bootstrap(self, **kwargs):
         orig_dir = os.getcwd()
-        os.chdir(self.ensure_dir_exists(self.tools_dir()))
+        os.chdir(self.ensure_dir_exists(self.tools_dir))
         try:
             kwargs["from_build"] = ("linux64-gcc-sixgill", "linux64-gcc-8")
             self._mach_context.commands.dispatch(
@@ -137,7 +142,7 @@ class MachCommands(MachCommandBase):
         metavar="FILENAME",
         help="Build with the given mozconfig.",
     )
-    def build_shell(self, command_context, **kwargs):
+    def build_shell(self, **kwargs):
         """Build a JS shell to use to run the rooting hazard analysis."""
         # The JS shell requires some specific configuration settings to execute
         # the hazard analysis code, and configuration is done via mozconfig.
@@ -210,7 +215,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
     @CommandArgument(
         "--work-dir", default=None, help="Directory for output and working files."
     )
-    def gather_hazard_data(self, command_context, **kwargs):
+    def gather_hazard_data(self, **kwargs):
         """Gather analysis information by compiling the tree"""
         application = kwargs["application"]
         objdir = kwargs["haz_objdir"]
@@ -232,11 +237,11 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
                 gcc_bin = "{gcc_dir}/bin"
             """
             ).format(
-                script_dir=self.script_dir(),
+                script_dir=self.script_dir,
                 objdir=objdir,
                 srcdir=self.topsrcdir,
-                sixgill_dir=self.sixgill_dir(),
-                gcc_dir=self.gcc_dir(),
+                sixgill_dir=self.sixgill_dir,
+                gcc_dir=self.gcc_dir,
             )
             fh.write(data)
 
@@ -248,7 +253,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
             ]
         )
         args = [
-            os.path.join(self.script_dir(), "analyze.py"),
+            os.path.join(self.script_dir, "analyze.py"),
             "dbs",
             "--upto",
             "dbs",
@@ -274,7 +279,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         default=os.environ.get("HAZ_OBJDIR"),
         help="Write object files to this directory.",
     )
-    def inner_compile(self, command_context, **kwargs):
+    def inner_compile(self, **kwargs):
         """Build a source tree and gather analysis information while running
         under the influence of the analysis collection server."""
 
@@ -311,7 +316,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         env["MOZCONFIG"] = os.path.join(self.topsrcdir, mozconfig_path)
 
         # hazard mozconfigs need to find binaries in .mozbuild
-        env["MOZBUILD_STATE_PATH"] = self.state_dir()
+        env["MOZBUILD_STATE_PATH"] = self.state_dir
 
         # Suppress the gathering of sources, to save disk space and memory.
         env["XGILL_NO_SOURCE"] = "1"
@@ -341,12 +346,12 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
     @CommandArgument(
         "--work-dir", default=None, help="Directory for output and working files."
     )
-    def analyze(self, command_context, application, shell_objdir, work_dir):
+    def analyze(self, application, shell_objdir, work_dir):
         """Analyzed gathered data for rooting hazards"""
 
         shell = self.ensure_shell(shell_objdir)
         args = [
-            os.path.join(self.script_dir(), "analyze.py"),
+            os.path.join(self.script_dir, "analyze.py"),
             "--js",
             shell,
             "gcTypes",
@@ -369,18 +374,18 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         default=None,
         help="objdir containing the optimized JS shell for running the analysis.",
     )
-    def self_test(self, command_context, shell_objdir):
+    def self_test(self, shell_objdir):
         """Analyzed gathered data for rooting hazards"""
         shell = self.ensure_shell(shell_objdir)
         args = [
-            os.path.join(self.script_dir(), "run-test.py"),
+            os.path.join(self.script_dir, "run-test.py"),
             "-v",
             "--js",
             shell,
             "--sixgill",
-            os.path.join(self.tools_dir(), "sixgill"),
+            os.path.join(self.tools_dir, "sixgill"),
             "--gccdir",
-            self.gcc_dir(),
+            self.gcc_dir,
         ]
 
         self.setup_env_for_tools(os.environ)

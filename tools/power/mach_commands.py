@@ -42,7 +42,7 @@ class MachCommands(MachCommandBase):
         default=30000,
         help="The sample period, measured in milliseconds. Defaults to 30000.",
     )
-    def power(self, command_context, interval):
+    def power(self, interval):
         import os
         import re
         import subprocess
