@@ -3591,7 +3591,7 @@ impl ClipBatcher {
                             }
                         };
 
-                        // If the primitive transform is axis aligned, we can skip any need for scissoring
+                        // If the clip transform is axis-aligned, we can skip any need for scissoring
                         // by clipping the local clip rect with the backwards transformed target bounds.
                         // If it is not axis-aligned, then we pass the local clip rect through unmodified
                         // to the shader and also set up a scissor rect for the overall target bounds to
@@ -3601,7 +3601,7 @@ impl ClipBatcher {
                             sub_rect.translate(actual_rect.origin.to_vector()) / global_device_pixel_scale;
                         let (local_rect, scissor_rect) = match map_local_to_world.unmap(&world_rect) {
                             Some(local_rect)
-                                if prim_transform_id.transform_kind() == TransformedRectKind::AxisAligned => {
+                                if clip_transform_id.transform_kind() == TransformedRectKind::AxisAligned => {
                                 (local_rect.intersection(&rect).unwrap_or_default(), None)
                             }
                             _ => {

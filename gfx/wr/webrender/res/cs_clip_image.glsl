@@ -60,7 +60,7 @@ ClipImageVertexInfo write_clip_image_vertex(RectWithSize tile_rect,
     gl_Position = uTransform * final_pos;
 
     init_transform_vs(
-        prim_transform.is_axis_aligned
+        clip_transform.is_axis_aligned
             ? vec4(vec2(-1.0e16), vec2(1.0e16))
             : vec4(local_clip_rect.p0, local_clip_rect.p0 + local_clip_rect.size));
 
