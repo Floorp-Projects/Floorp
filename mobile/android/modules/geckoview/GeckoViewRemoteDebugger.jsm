@@ -54,14 +54,16 @@ var GeckoViewRemoteDebugger = {
     this._isEnabled = false;
     this._usbDebugger = new USBRemoteDebugger();
 
-    // This lets Marionette start listening (when it's enabled).  Both
-    // GeckoView and Marionette do most of their initialization in
-    // "profile-after-change", and there is no order enforced between
-    // them.  Therefore we defer asking Marionette to startup until
+    // This lets Marionette and the Remote Agent (used for our CDP and the
+    // upcoming WebDriver BiDi implementation) start listening (when enabled).
+    // Both GeckoView and these two remote protocols do most of their
+    // initialization in "profile-after-change", and there is no order enforced
+    // between them.  Therefore we defer asking Marionette to startup until
     // after all "profile-after-change" handlers (including this one)
     // have completed.
     Services.tm.dispatchToMainThread(() => {
       Services.obs.notifyObservers(null, "marionette-startup-requested");
+      Services.obs.notifyObservers(null, "remote-startup-requested");
     });
   },
 
