@@ -51,9 +51,9 @@ permalink: /changelog/
 * **browser-menu**:
   * 🌟️ New StickyHeaderLinearLayoutManager and StickyFooterLinearLayoutManager that can be used to keep an item from being scrolled off-screen.
   * To use this set `isSticky = true` for any menu item of the menu. Since only one sticky item is supported if more items have this property the sticky item will be the one closest to the top the menu anchor.
-  * 🚒 Bug fixed [issue #](https://github.com/mozilla-mobile/android-components/issues/10032) - Fix a recent issue with ExpandableLayout - user touches on an expanded menu might not have any effect on Samsung devices.
-  * 🚒 Bug fixed [issue #](https://github.com/mozilla-mobile/android-components/issues/10005) - Fix a recent issue with BrowserMenu#show() - endOfMenuAlwaysVisible not being applied.
-  * 🚒 Bug fixed [issue #](https://github.com/mozilla-mobile/android-components/issues/9922) - The browser menu will have it's dynamic width calculated only once, before the first layout.
+  * 🚒 Bug fixed [issue #10032](https://github.com/mozilla-mobile/android-components/issues/10032) - Fix a recent issue with ExpandableLayout - user touches on an expanded menu might not have any effect on Samsung devices.
+  * 🚒 Bug fixed [issue #10005](https://github.com/mozilla-mobile/android-components/issues/10005) - Fix a recent issue with BrowserMenu#show() - endOfMenuAlwaysVisible not being applied.
+  * 🚒 Bug fixed [issue #9922](https://github.com/mozilla-mobile/android-components/issues/9922) - The browser menu will have it's dynamic width calculated only once, before the first layout.
   * 🌟️ BrowserMenu support a bottom collapsed/expandable layout through a new ExpandableLayout that will wrap a menu layout before being used in a PopupWindow and automatically allow the collapse/expand behaviors.
   * To use this set `isCollapsingMenuLimit = true` for any menu item of a bottom anchored menu.
   * 🌟️ `WebExtensionBrowserMenuBuilder` provide a new way to customize how items look like via `Style()` where the `tintColor`, `backPressDrawable` and `addonsManagerDrawable` can be customized.
