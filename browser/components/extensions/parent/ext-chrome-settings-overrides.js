@@ -35,7 +35,6 @@ ChromeUtils.defineModuleGetter(
 
 const DEFAULT_SEARCH_STORE_TYPE = "default_search";
 const DEFAULT_SEARCH_SETTING_NAME = "defaultSearch";
-const ENGINE_ADDED_SETTING_NAME = "engineAdded";
 
 const HOMEPAGE_PREF = "browser.startup.homepage";
 const HOMEPAGE_PRIVATE_ALLOWED =
@@ -215,20 +214,6 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
   }
 
   static async removeEngine(id) {
-    await ExtensionSettingsStore.initialize();
-    let item = await ExtensionSettingsStore.getSetting(
-      DEFAULT_SEARCH_STORE_TYPE,
-      ENGINE_ADDED_SETTING_NAME,
-      id
-    );
-    if (item) {
-      ExtensionSettingsStore.removeSetting(
-        id,
-        DEFAULT_SEARCH_STORE_TYPE,
-        ENGINE_ADDED_SETTING_NAME
-      );
-    }
-
     try {
       await Services.search.removeWebExtensionEngine(id);
     } catch (e) {
@@ -502,16 +487,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
   async addSearchEngine() {
     let { extension } = this;
     try {
-      let engines = await Services.search.addEnginesFromExtension(extension);
-      if (engines.length) {
-        await ExtensionSettingsStore.initialize();
-        await ExtensionSettingsStore.addSetting(
-          extension.id,
-          DEFAULT_SEARCH_STORE_TYPE,
-          ENGINE_ADDED_SETTING_NAME,
-          engines[0].name
-        );
-      }
+      await Services.search.addEnginesFromExtension(extension);
     } catch (e) {
       Cu.reportError(e);
       return false;
