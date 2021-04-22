@@ -1092,6 +1092,11 @@ bool nsLookAndFeel::ConfigureContentGtkTheme() {
   return changed;
 }
 
+static bool AnyColorChannelIsDifferent(nscolor aColor) {
+  return NS_GET_R(aColor) != NS_GET_G(aColor) ||
+         NS_GET_R(aColor) != NS_GET_B(aColor);
+}
+
 void nsLookAndFeel::EnsureInit() {
   if (mInitialized) {
     return;
@@ -1317,9 +1322,13 @@ void nsLookAndFeel::EnsureInit() {
     mAccentColor = mTextSelectedBackground;
     mAccentColorForeground = mTextSelectedText;
 
-    // Accent is the darker of the selection background / foreground.
+    // Accent is the darker of the selection background / foreground, unless the
+    // foreground isn't really a color (is all white / black / gray) and the
+    // background is, in which case we stick to what we have.
     if (RelativeLuminanceUtils::Compute(mAccentColor) >
-        RelativeLuminanceUtils::Compute(mAccentColorForeground)) {
+            RelativeLuminanceUtils::Compute(mAccentColorForeground) &&
+        (AnyColorChannelIsDifferent(mAccentColorForeground) ||
+         !AnyColorChannelIsDifferent(mAccentColor))) {
       std::swap(mAccentColor, mAccentColorForeground);
     }
   }
