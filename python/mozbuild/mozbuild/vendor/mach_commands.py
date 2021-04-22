@@ -51,6 +51,7 @@ class Vendor(MachCommandBase):
     )
     def vendor(
         self,
+        command_context,
         library,
         revision,
         ignore_modified=False,
@@ -138,7 +139,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         ),
         default=False,
     )
-    def vendor_rust(self, **kwargs):
+    def vendor_rust(self, command_context, **kwargs):
         from mozbuild.vendor.vendor_rust import VendorRust
 
         vendor_command = self._spawn(VendorRust)
@@ -167,7 +168,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         "then Pipfile.lock will be regenerated. Note that transient dependencies "
         "may be updated when running this command.",
     )
-    def vendor_python(self, **kwargs):
+    def vendor_python(self, command_context, **kwargs):
         from mozbuild.vendor.vendor_python import VendorPython
 
         vendor_command = self._spawn(VendorPython)

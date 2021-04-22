@@ -72,7 +72,7 @@ class PackageFrontend(MachCommandBase):
         category="post-build",
         description="Use pre-built artifacts to build Firefox.",
     )
-    def artifact(self):
+    def artifact(self, command_context):
         """Download, cache, and install pre-built binary artifacts to build Firefox.
 
         Use |mach build| as normal to freshen your installed binary libraries:
@@ -176,6 +176,7 @@ class PackageFrontend(MachCommandBase):
     )
     def artifact_install(
         self,
+        command_context,
         source=None,
         skip_cache=False,
         tree=None,
@@ -207,7 +208,7 @@ class PackageFrontend(MachCommandBase):
         "clear-cache",
         "Delete local artifacts and reset local artifact cache.",
     )
-    def artifact_clear_cache(self, tree=None, job=None, verbose=False):
+    def artifact_clear_cache(self, command_context, tree=None, job=None, verbose=False):
         self._set_log_level(verbose)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.clear_cache()
@@ -259,6 +260,7 @@ class PackageFrontend(MachCommandBase):
     )
     def artifact_toolchain(
         self,
+        command_context,
         verbose=False,
         cache_dir=None,
         skip_cache=False,
