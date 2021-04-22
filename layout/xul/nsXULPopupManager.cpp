@@ -774,7 +774,9 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
                                               Event* aTriggerEvent) {
   if (mNativeMenu) {
     NS_WARNING("Native menu still open when trying to open another");
-    mNativeMenu->RemoveObserver(this);
+    RefPtr<NativeMenu> menu = mNativeMenu;
+    (void)menu->Close();
+    menu->RemoveObserver(this);
     mNativeMenu = nullptr;
   }
 
