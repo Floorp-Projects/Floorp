@@ -107,6 +107,7 @@ const kSafeSchemes = [
   "ircs",
   "magnet",
   "mailto",
+  "matrix",
   "mms",
   "news",
   "nntp",
