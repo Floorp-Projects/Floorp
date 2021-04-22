@@ -5,7 +5,6 @@
 use api::{ColorF, ColorU, GradientStop, PremultipliedColorF};
 use api::units::{LayoutRect, LayoutSize, LayoutVector2D};
 use crate::gpu_cache::GpuDataRequest;
-use crate::prim_store::PrimitiveOpacity;
 use std::hash;
 
 mod linear;
@@ -67,25 +66,6 @@ impl hash::Hash for GradientStopKey {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.offset.to_bits().hash(state);
         self.color.hash(state);
-    }
-}
-
-pub fn get_gradient_opacity(
-    prim_rect: LayoutRect,
-    stretch_size: LayoutSize,
-    tile_spacing: LayoutSize,
-    stops_opacity: PrimitiveOpacity,
-) -> PrimitiveOpacity {
-    // If the coverage of the gradient extends to or beyond
-    // the primitive rect, then the opacity can be determined
-    // by the colors of the stops. If we have tiling / spacing
-    // then we just assume the gradient is translucent for now.
-    // (In the future we could consider segmenting in some cases).
-    let stride = stretch_size + tile_spacing;
-    if stride.width >= prim_rect.size.width && stride.height >= prim_rect.size.height {
-        stops_opacity
-    } else {
-        PrimitiveOpacity::translucent()
     }
 }
 
@@ -393,7 +373,7 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<LinearGradient>(), 72, "LinearGradient size changed");
-    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 120, "LinearGradientTemplate size changed");
+    assert_eq!(mem::size_of::<LinearGradientTemplate>(), 144, "LinearGradientTemplate size changed");
     assert_eq!(mem::size_of::<LinearGradientKey>(), 88, "LinearGradientKey size changed");
 
     assert_eq!(mem::size_of::<RadialGradient>(), 72, "RadialGradient size changed");

@@ -82,6 +82,7 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     }
 
     for name in &[
+        "cs_linear_gradient",
         "cs_radial_gradient",
         "cs_conic_gradient",
     ] {

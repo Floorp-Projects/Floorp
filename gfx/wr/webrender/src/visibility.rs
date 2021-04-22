@@ -497,6 +497,7 @@ pub fn update_primitive_visibility(
                         PrimitiveInstanceKind::YuvImage { .. } => debug_colors::BLUE,
                         PrimitiveInstanceKind::Image { .. } => debug_colors::BLUE,
                         PrimitiveInstanceKind::LinearGradient { .. } => debug_colors::PINK,
+                        PrimitiveInstanceKind::CachedLinearGradient { .. } => debug_colors::PINK,
                         PrimitiveInstanceKind::RadialGradient { .. } => debug_colors::PINK,
                         PrimitiveInstanceKind::ConicGradient { .. } => debug_colors::PINK,
                         PrimitiveInstanceKind::Clear { .. } => debug_colors::CYAN,
