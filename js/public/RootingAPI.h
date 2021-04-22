@@ -993,6 +993,14 @@ class RootingContext {
   /* Limit pointer for checking native stack consumption. */
   uintptr_t nativeStackLimit[StackKindCount];
 
+#ifdef __wasi__
+  // For WASI we can't catch call-stack overflows with stack-pointer checks, so
+  // we count recursion depth with RAII based AutoCheckRecursionLimit.
+  uint32_t wasiRecursionDepth = 0u;
+
+  static constexpr uint32_t wasiRecursionDepthLimit = 100u;
+#endif  // __wasi__
+
   static const RootingContext* get(const JSContext* cx) {
     return reinterpret_cast<const RootingContext*>(cx);
   }
