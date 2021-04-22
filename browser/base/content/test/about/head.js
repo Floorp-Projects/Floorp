@@ -7,26 +7,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 SearchTestUtils.init(this);
 
-// A test in this folder used to rely on the initial timer of
-// TestUtils.waitForCondition. Removing these timers makes
-// browser_aboutNewTab_defaultBrowserNotification.js fail.
-// See bug 1660723.
-const originalWaitForCondition = TestUtils.waitForCondition;
-TestUtils.waitForCondition = async function(
-  condition,
-  msg,
-  interval = 100,
-  maxTries = 50
-) {
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  await new Promise(resolve => setTimeout(resolve, 100));
-
-  return originalWaitForCondition(condition, msg, interval, maxTries);
-};
-registerCleanupFunction(function() {
-  TestUtils.waitForCondition = originalWaitForCondition;
-});
-
 function getSecurityInfo(securityInfoAsString) {
   const serhelper = Cc[
     "@mozilla.org/network/serialization-helper;1"

@@ -36,7 +36,6 @@ add_task(async function proton_shows_prompt() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [CHECK_PREF, true],
-      ["browser.defaultbrowser.notificationbar", true],
       ["browser.proton.enabled", true],
       ["browser.shell.didSkipDefaultBrowserCheckOnFirstRun", true],
     ],
@@ -48,17 +47,6 @@ add_task(async function proton_shows_prompt() {
     willPrompt,
     !AppConstants.DEBUG,
     "Show default browser prompt with proton on non-debug builds"
-  );
-});
-
-add_task(async function not_proton_shows_notificationbar() {
-  Services.prefs.setBoolPref("browser.proton.enabled", false);
-
-  const willPrompt = await DefaultBrowserCheck.willCheckDefaultBrowser();
-
-  Assert.ok(
-    !willPrompt,
-    "Not proton shows notificationbar as set in previous task"
   );
 });
 
