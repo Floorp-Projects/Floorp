@@ -8,12 +8,14 @@ use base64;
 use mozdevice::AndroidStorageInput;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
+use mozrunner::firefox_args::{get_arg_value, parse_args, Arg};
 use mozrunner::runner::platform::firefox_default_path;
 use mozversion::{self, firefox_binary_version, firefox_version, Version};
 use regex::bytes::Regex;
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::default::Default;
+use std::ffi::OsString;
 use std::fmt::{self, Display};
 use std::fs;
 use std::io;
@@ -407,6 +409,34 @@ impl FirefoxOptions {
             rv.log = FirefoxOptions::load_log(&options)?;
             rv.prefs = FirefoxOptions::load_prefs(&options)?;
             rv.profile = FirefoxOptions::load_profile(&options)?;
+        }
+
+        if let Some(args) = rv.args.as_ref() {
+            let os_args = parse_args(
+                args.iter()
+                    .map(|x| OsString::from(x))
+                    .collect::<Vec<_>>()
+                    .iter(),
+            );
+            if let Some(path) = get_arg_value(os_args.iter(), Arg::Profile) {
+                if rv.profile.is_some() {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "Can't provide both a --profile argument and a profile",
+                    ));
+                }
+                let path_buf = PathBuf::from(path);
+                rv.profile = Some(Profile::new_from_path(&path_buf)?);
+            }
+
+            if let Some(_) = get_arg_value(os_args.iter(), Arg::NamedProfile) {
+                if rv.profile.is_some() {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "Can't provide both a -P argument and a profile",
+                    ));
+                }
+            }
         }
 
         if let Some(json) = matched.remove("moz:debuggerAddress") {
@@ -1156,7 +1186,7 @@ mod tests {
         let opts = make_options(firefox_opts).expect("valid profile and prefs");
         let mut profile = opts.profile.expect("valid firefox profile");
 
-        let handler = MarionetteHandler::new(Default::default());
+        let mut handler = MarionetteHandler::new(Default::default());
         handler
             .set_prefs(2828, &mut profile, true, opts.prefs)
             .expect("set preferences");
@@ -1173,5 +1203,31 @@ mod tests {
             Some(&Pref::new("#00ff00"))
         );
         assert_eq!(prefs_set.get("marionette.port"), Some(&Pref::new(2828)));
+    }
+
+    #[test]
+    fn fx_options_args_profile() {
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("args".into(), json!(["--profile", "foo"]));
+
+        make_options(firefox_opts).expect("Valid args");
+    }
+
+    #[test]
+    fn fx_options_args_profile_and_profile() {
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("args".into(), json!(["--profile", "foo"]));
+        firefox_opts.insert("profile".into(), json!("foo"));
+
+        make_options(firefox_opts).expect_err("Invalid args");
+    }
+
+    #[test]
+    fn fx_options_args_p_and_profile() {
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("args".into(), json!(["-P"]));
+        firefox_opts.insert("profile".into(), json!("foo"));
+
+        make_options(firefox_opts).expect_err("Invalid args");
     }
 }
