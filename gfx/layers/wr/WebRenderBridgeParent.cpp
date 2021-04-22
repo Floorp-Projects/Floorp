@@ -2322,6 +2322,53 @@ void WebRenderBridgeParent::NotifyDidSceneBuild(
   CompositeToTarget(mCompositorScheduler->GetLastVsyncId(), nullptr, nullptr);
 }
 
+static Telemetry::HistogramID GetHistogramId(const bool aIsLargePaint,
+                                             const bool aIsFullDisplayList) {
+  const Telemetry::HistogramID histogramIds[] = {
+      Telemetry::CONTENT_SMALL_PAINT_PHASE_WEIGHT_PARTIAL,
+      Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT_PARTIAL,
+      Telemetry::CONTENT_SMALL_PAINT_PHASE_WEIGHT_FULL,
+      Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT_FULL,
+  };
+
+  return histogramIds[(aIsFullDisplayList * 2) + aIsLargePaint];
+}
+
+static void RecordPaintPhaseTelemetry(wr::RendererStats* aStats) {
+  if (!aStats || !aStats->full_paint) {
+    return;
+  }
+
+  const double geckoDL = aStats->gecko_display_list_time;
+  const double wrDL = aStats->wr_display_list_time;
+  const double sceneBuild = aStats->scene_build_time;
+  const double frameBuild = aStats->frame_build_time;
+  const double totalMs = geckoDL + wrDL + sceneBuild + frameBuild;
+
+  // If the total time was >= 16ms, then it's likely we missed a frame due to
+  // painting. We bucket these metrics separately.
+  const bool isLargePaint = totalMs >= 16.0;
+
+  // Split the results based on display list build type, partial or full.
+  const bool isFullDisplayList = aStats->full_display_list;
+
+  auto AsPercentage = [&](const double aTimeMs) -> double {
+    MOZ_ASSERT(aTimeMs <= totalMs);
+    return (aTimeMs / totalMs) * 100.0;
+  };
+
+  auto RecordKey = [&](const nsCString& aKey, const double aTimeMs) -> void {
+    const auto val = static_cast<uint32_t>(AsPercentage(aTimeMs));
+    const auto histogramId = GetHistogramId(isLargePaint, isFullDisplayList);
+    Telemetry::Accumulate(histogramId, aKey, val);
+  };
+
+  RecordKey("dl"_ns, geckoDL);
+  RecordKey("wrdl"_ns, wrDL);
+  RecordKey("sb"_ns, sceneBuild);
+  RecordKey("fb"_ns, frameBuild);
+}
+
 Maybe<TransactionId> WebRenderBridgeParent::FlushTransactionIdsForEpoch(
     const wr::Epoch& aEpoch, const VsyncId& aCompositeStartId,
     const TimeStamp& aCompositeStartTime, const TimeStamp& aRenderStartTime,
@@ -2347,6 +2394,9 @@ Maybe<TransactionId> WebRenderBridgeParent::FlushTransactionIdsForEpoch(
           transactionId.mTxnStartTime, aCompositeStartId, aEndTime,
           fullPaintTime, mVsyncRate, transactionId.mContainsSVGGroup, true,
           aStats);
+
+      RecordPaintPhaseTelemetry(aStats);
+
       if (contentFrameTime > 200) {
         aOutputStats->AppendElement(FrameStats(
             transactionId.mId, aCompositeStartTime, aRenderStartTime, aEndTime,
