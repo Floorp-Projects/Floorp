@@ -9,8 +9,8 @@
         android:viewportHeight="24.0">
     <path
         android:fillColor="@color/mozac_ui_icons_fill"
-        android:pathData="M11.293,17.707a1,1 0,0 0,1.414 0l6,-6a1,1 0,0 0,-1.414 -1.414L13,14.586V3a1,1 0,0 0,-2 0V14.586L6.707,10.293a1,1 0,0 0,-1.414 1.414Z"/>
+        android:pathData="M5.782 20.5l-0.8-0.8v-1.95a0.75 0.75 0 0 0-1.5 0v1.75a2.5 2.5 0 0 0 2.5 2.5h11.535a2.5 2.5 0 0 0 2.5-2.5v-1.75a0.75 0.75 0 0 0-1.5 0v1.95l-0.8 0.8H5.782z" />
     <path
         android:fillColor="@color/mozac_ui_icons_fill"
-        android:pathData="M18,20H6a1,1 0,0 0,0 2H18a1,1 0,0 0,0 -2Z"/>
+        android:pathData="M18.03 10.059a0.75 0.75 0 0 0-1.061 0l-4.47 4.47V2.75a0.749 0.749 0 1 0-1.499 0v11.779l-4.47-4.47a0.75 0.75 0 1 0-1.061 1.061L11.35 17h0.8l5.88-5.88a0.75 0.75 0 0 0 0-1.061z" />
 </vector>
