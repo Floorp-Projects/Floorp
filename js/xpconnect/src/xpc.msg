@@ -170,11 +170,6 @@ XPC_MSG_DEF(NS_ERROR_REMOTE_XUL                     , "Attempt to access remote 
 XPC_MSG_DEF(NS_ERROR_LOAD_SHOWED_ERRORPAGE          , "The load caused an error page to be displayed.")
 XPC_MSG_DEF(NS_ERROR_BLOCKED_BY_POLICY              , "The request was blocked by a policy set by the system administrator.")
 
-XPC_MSG_DEF(NS_ERROR_FTP_LOGIN                      , "FTP error while logging in")
-XPC_MSG_DEF(NS_ERROR_FTP_CWD                        , "FTP error while changing directory")
-XPC_MSG_DEF(NS_ERROR_FTP_PASV                       , "FTP error while changing to passive mode")
-XPC_MSG_DEF(NS_ERROR_FTP_PWD                        , "FTP error while retrieving current directory")
-XPC_MSG_DEF(NS_ERROR_FTP_LIST                       , "FTP error while retrieving a directory listing")
 XPC_MSG_DEF(NS_ERROR_UNKNOWN_HOST                   , "The lookup of the hostname failed")
 XPC_MSG_DEF(NS_ERROR_DNS_LOOKUP_QUEUE_FULL          , "The DNS lookup queue is full")
 XPC_MSG_DEF(NS_ERROR_UNKNOWN_PROXY_HOST             , "The lookup of the proxy hostname failed")
