@@ -895,8 +895,9 @@ static void DoFramePointerStackWalk(MozWalkStackCallback aCallback,
 
 namespace mozilla {
 
-void FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aMaxFrames,
-                           void* aClosure, void** aBp, void* aStackEnd) {
+MFBT_API void FramePointerStackWalk(MozWalkStackCallback aCallback,
+                                    uint32_t aMaxFrames, void* aClosure,
+                                    void** aBp, void* aStackEnd) {
   // We don't pass a aFirstFramePC because we start walking the stack from the
   // frame at aBp.
   DoFramePointerStackWalk(aCallback, nullptr, aMaxFrames, aClosure, aBp,
@@ -909,7 +910,6 @@ void FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aMaxFrames,
 
 namespace mozilla {
 MFBT_API void FramePointerStackWalk(MozWalkStackCallback aCallback,
-                                    const void* aFirstFramePC,
                                     uint32_t aMaxFrames, void* aClosure,
                                     void** aBp, void* aStackEnd) {}
 }  // namespace mozilla
