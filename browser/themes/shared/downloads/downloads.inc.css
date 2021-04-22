@@ -193,6 +193,8 @@ button.downloadButton {
 }
 
 #downloadsPanel-blockedSubview[verdict="PotentiallyUnwanted"] > .panel-view-body-unscrollable {
+  -moz-context-properties: fill;
+  fill: #ffbf00;
   background-image: url("chrome://global/skin/icons/warning.svg");
 }
 
@@ -274,6 +276,8 @@ button.downloadButton {
 #downloadsPanel-blockedSubview[verdict="PotentiallyUnwanted"] .downloadsPanel-blockedSubview-image,
 @item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadgeNew,
 @item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadge {
+  -moz-context-properties: fill;
+  fill: #ffbf00;
   background-image: url("chrome://global/skin/icons/warning.svg");
 }
 
