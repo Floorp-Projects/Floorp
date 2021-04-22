@@ -171,6 +171,10 @@ browsertime:
     - browsertime-benchmark-wasm
     - browsertime-tp6-profiling
 
+browsertime-high-priority:
+    - browsertime-benchmark
+    - browsertime-tp6
+
 # Raptor desktop power tests
 # (requires Intel Power Gadget to be pre-installed)
 raptor-firefox-power:
@@ -402,6 +406,23 @@ macosx1100-64-qr-failures-tests:
     - xpcshell-apple-silicon
     - mochitest-media-apple-silicon
     - mochitest-browser-chrome-apple-silicon
+
+macosx1100-64-jittests:
+    - jittest
+
+macosx1100-64-qr-tests:
+    - crashtest
+    - jsreftest
+    - mochitest-browser-chrome
+    - mochitest-chrome-gpu
+    - mochitest-media
+    - mochitest-webgpu
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
+    - reftest
+    - xpcshell
 
 macosx1015-64-qr-tests:
     - cppunit
