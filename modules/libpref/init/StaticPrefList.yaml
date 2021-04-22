@@ -11096,7 +11096,7 @@
 #ifdef XP_MACOSX
 - name: widget.macos.native-context-menus
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: widget.macos.respect-system-appearance
