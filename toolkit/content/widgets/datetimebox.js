@@ -1164,18 +1164,6 @@ this.DateTimeBoxWidget = class {
       return;
     }
 
-    let maxLength = aField.getAttribute("maxlength");
-    if (aValue.length == maxLength) {
-      let min = Number(aField.getAttribute("min"));
-      let max = Number(aField.getAttribute("max"));
-
-      if (value < min) {
-        value = min;
-      } else if (value > max) {
-        value = max;
-      }
-    }
-
     if (aField == this.mHourField) {
       if (this.mHour12) {
         // Try to change to 12hr format if user input is 0 or greater
@@ -1188,6 +1176,18 @@ this.DateTimeBoxWidget = class {
         }
       } else if (value > this.mMaxHour) {
         value = this.mMaxHour;
+      }
+    }
+
+    let maxLength = aField.getAttribute("maxlength");
+    if (aValue.length == maxLength) {
+      let min = Number(aField.getAttribute("min"));
+      let max = Number(aField.getAttribute("max"));
+
+      if (value < min) {
+        value = min;
+      } else if (value > max) {
+        value = max;
       }
     }
 
