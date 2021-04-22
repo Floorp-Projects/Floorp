@@ -63,9 +63,8 @@
 }
 
 button {
-  min-width: 140px;
-  width: 170px;
-  height: 30px;
+  min-width: 170px;
+  min-height: 30px;
   margin: 0;
 }
 
