@@ -68,15 +68,15 @@ html|input.findbar-textbox:-moz-lwtheme {
 }
 
 html|input.findbar-textbox:focus {
-  /* Make a 2px border without shifting contents */
-  border-color: var(--focus-outline-color, -moz-accent-color);
-  outline: 1px solid var(--focus-outline-color, -moz-accent-color);
+  border-color: transparent;
+  outline: 2px solid color-mix(in srgb, var(--focus-outline-color, -moz-accent-color) 50%, transparent);
+  outline-offset: -1px; /* Prevents antialising around the corners */
 }
 
 html|input.findbar-textbox[status="notfound"] {
-  /* Make a 2px border without shifting contents */
-  border-color: var(--input-error-border-color, #E22850);
-  outline: 1px solid var(--input-error-border-color, #E22850);
+  border-color: transparent;
+  outline: 2px solid var(--input-error-border-color, #E22850);
+  outline-offset: -1px; /* Prevents antialising around the corners */
 }
 
 html|input.findbar-textbox[flash="true"] {
