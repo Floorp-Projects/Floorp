@@ -7,6 +7,7 @@
 #define nsIFormControl_h___
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsISupports.h"
 
 namespace mozilla {
@@ -262,7 +263,8 @@ bool nsIFormControl::IsSingleLineTextControl(bool aExcludePassword,
          aType == NS_FORM_INPUT_URL || aType == NS_FORM_INPUT_NUMBER ||
          // TODO: those are temporary until bug 773205 is fixed.
          aType == NS_FORM_INPUT_MONTH || aType == NS_FORM_INPUT_WEEK ||
-         aType == NS_FORM_INPUT_DATETIME_LOCAL ||
+         (aType == NS_FORM_INPUT_DATETIME_LOCAL &&
+          !mozilla::StaticPrefs::dom_forms_datetime_local_widget()) ||
          (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
 }
 
