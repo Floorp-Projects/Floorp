@@ -18,6 +18,10 @@
 #  include <process.h>
 #  include <string.h>
 #  include <windows.h>
+#elif __wasi__
+#  include <dirent.h>
+#  include <sys/types.h>
+#  include <unistd.h>
 #else
 #  include <dirent.h>
 #  include <sys/types.h>
@@ -101,6 +105,9 @@ JSString* ResolvePath(JSContext* cx, HandleString filenameStr,
   if (!filenameStr) {
 #ifdef XP_WIN
     return JS_NewStringCopyZ(cx, "nul");
+#elif defined(__wasi__)
+    MOZ_CRASH("NYI for WASI");
+    return nullptr;
 #else
     return JS_NewStringCopyZ(cx, "/dev/null");
 #endif
@@ -148,9 +155,22 @@ JSString* ResolvePath(JSContext* cx, HandleString filenameStr,
       return nullptr;
     }
 
+#  ifdef __wasi__
+    // dirname() seems not to behave properly with wasi-libc; so we do our own
+    // simple thing here.
+    char* p = buffer + strlen(buffer);
+    while (p > buffer) {
+      if (*p == '/') {
+        *p = '\0';
+        break;
+      }
+      p--;
+    }
+#  else
     // dirname(buffer) might return buffer, or it might return a
     // statically-allocated string
     memmove(buffer, dirname(buffer), strlen(buffer) + 1);
+#  endif
 #endif
   } else {
     const char* cwd = getcwd(buffer, PATH_MAX);
