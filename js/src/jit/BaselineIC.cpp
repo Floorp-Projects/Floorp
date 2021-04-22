@@ -654,9 +654,7 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
     ICScript* icScript = frame->icScript();
     jsbytecode* pc = stub->icEntry()->pc(script);
     bool attached = false;
-    bool isFirstStub = stub->newStubIsFirstStub();
-    IRGenerator gen(cx, script, pc, stub->state().mode(), isFirstStub,
-                    std::forward<Args>(args)...);
+    IRGenerator gen(cx, script, pc, stub->state(), std::forward<Args>(args)...);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
         ICStub* newStub =
@@ -1023,9 +1021,8 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 
   if (stub->state().canAttachStub() && !mayThrow) {
     ICScript* icScript = frame->icScript();
-    bool isFirstStub = stub->newStubIsFirstStub();
-    SetPropIRGenerator gen(cx, script, pc, CacheKind::SetElem,
-                           stub->state().mode(), isFirstStub, objv, index, rhs);
+    SetPropIRGenerator gen(cx, script, pc, CacheKind::SetElem, stub->state(),
+                           objv, index, rhs);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
         ICStub* newStub = AttachBaselineCacheIRStub(
@@ -1085,9 +1082,8 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   bool canAttachStub = stub->state().canAttachStub();
 
   if (deferType != DeferType::None && canAttachStub) {
-    bool isFirstStub = stub->newStubIsFirstStub();
-    SetPropIRGenerator gen(cx, script, pc, CacheKind::SetElem,
-                           stub->state().mode(), isFirstStub, objv, index, rhs);
+    SetPropIRGenerator gen(cx, script, pc, CacheKind::SetElem, stub->state(),
+                           objv, index, rhs);
 
     MOZ_ASSERT(deferType == DeferType::AddSlot);
     AttachDecision decision = gen.tryAttachAddSlotStub(oldShape);
@@ -1607,9 +1603,8 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 
   if (stub->state().canAttachStub()) {
     RootedValue idVal(cx, StringValue(name));
-    bool isFirstStub = stub->newStubIsFirstStub();
-    SetPropIRGenerator gen(cx, script, pc, CacheKind::SetProp,
-                           stub->state().mode(), isFirstStub, lhs, idVal, rhs);
+    SetPropIRGenerator gen(cx, script, pc, CacheKind::SetProp, stub->state(),
+                           lhs, idVal, rhs);
     switch (gen.tryAttachStub()) {
       case AttachDecision::Attach: {
         ICScript* icScript = frame->icScript();
@@ -1678,9 +1673,8 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 
   if (deferType != DeferType::None && canAttachStub) {
     RootedValue idVal(cx, StringValue(name));
-    bool isFirstStub = stub->newStubIsFirstStub();
-    SetPropIRGenerator gen(cx, script, pc, CacheKind::SetProp,
-                           stub->state().mode(), isFirstStub, lhs, idVal, rhs);
+    SetPropIRGenerator gen(cx, script, pc, CacheKind::SetProp, stub->state(),
+                           lhs, idVal, rhs);
 
     MOZ_ASSERT(deferType == DeferType::AddSlot);
     AttachDecision decision = gen.tryAttachAddSlotStub(oldShape);
@@ -1797,9 +1791,8 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   // allowed to attach stubs.
   if (canAttachStub) {
     HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);
-    bool isFirstStub = stub->newStubIsFirstStub();
-    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), isFirstStub,
-                        argc, callee, callArgs.thisv(), newTarget, args);
+    CallIRGenerator gen(cx, script, pc, op, stub->state(), argc, callee,
+                        callArgs.thisv(), newTarget, args);
     switch (gen.tryAttachStub()) {
       case AttachDecision::NoAction:
         break;
@@ -1887,9 +1880,8 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
 
     HandleValueArray args = HandleValueArray::fromMarkedLocation(
         aobj->length(), aobj->getDenseElements());
-    bool isFirstStub = stub->newStubIsFirstStub();
-    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), isFirstStub,
-                        1, callee, thisv, newTarget, args);
+    CallIRGenerator gen(cx, script, pc, op, stub->state(), 1, callee, thisv,
+                        newTarget, args);
     switch (gen.tryAttachStub()) {
       case AttachDecision::NoAction:
         break;
