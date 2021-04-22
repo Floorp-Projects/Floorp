@@ -54,11 +54,12 @@ class NodeOffsetRange {
 
  public:
   NodeOffsetRange() {}
-  NodeOffsetRange(NodeOffset b, NodeOffset e) : mBegin(b), mEnd(e) {}
+  NodeOffsetRange(NodeOffset b, NodeOffset e)
+      : mBegin(std::move(b)), mEnd(std::move(e)) {}
 
-  NodeOffset Begin() const { return mBegin; }
+  const NodeOffset& Begin() const { return mBegin; }
 
-  NodeOffset End() const { return mEnd; }
+  const NodeOffset& End() const { return mEnd; }
 };
 
 /**
