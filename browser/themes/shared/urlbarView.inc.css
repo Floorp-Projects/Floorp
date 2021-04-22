@@ -618,7 +618,8 @@
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-no-wrap >.urlbarView-action,
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-url,
 .urlbarView-row-inner[selected] > .urlbarView-no-wrap >.urlbarView-action,
-.urlbarView-row-inner[selected] > .urlbarView-url {
+.urlbarView-row-inner[selected] > .urlbarView-url,
+.urlbarView-row[type=tabtosearch][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
   color: inherit;
 }
 
