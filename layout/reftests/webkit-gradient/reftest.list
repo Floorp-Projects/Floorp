@@ -10,7 +10,7 @@
 == webkit-gradient-linear-1b.html webkit-gradient-linear-1-ref.html
 == webkit-gradient-linear-1c.html webkit-gradient-linear-1-ref.html
 == webkit-gradient-linear-1d.html webkit-gradient-linear-1-ref.html
-== webkit-gradient-linear-2.html webkit-gradient-linear-2-ref.html
+fuzzy-if(webrender,0-1,0-150) == webkit-gradient-linear-2.html webkit-gradient-linear-2-ref.html
 
 # Tests for -webkit-gradient(radial, ...)
 == webkit-gradient-radial-1a.html webkit-gradient-radial-1-ref.html

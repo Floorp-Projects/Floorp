@@ -179,7 +179,7 @@ fails == bfc-004.html bfc-004-ref.html # bug 1602484
 == bfc-007.html bfc-006-ref.html
 == bfc-008.html bfc-006-ref.html
 
-pref(layout.display-list.improve-fragmentation,true) fuzzy-if(cocoaWidget&&swgl,1-1,21-21) == inline-block-frag-simple-1.html inline-block-frag-simple-1-ref.html
+pref(layout.display-list.improve-fragmentation,true) fuzzy-if(swgl,0-1,0-200) == inline-block-frag-simple-1.html inline-block-frag-simple-1-ref.html
 pref(layout.display-list.improve-fragmentation,true) fuzzy-if(cocoaWidget&&swgl,0-1,0-21) == inline-block-frag-simple-2.html inline-block-frag-simple-2-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-offset-1.html inline-block-frag-offset-1-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-frag-offset-2.html inline-block-frag-offset-2-ref.html
