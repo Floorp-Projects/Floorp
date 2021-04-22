@@ -60,14 +60,51 @@ add_task(async function test_sendTabToDevice_callsFlushLogFile() {
   updateTabContextMenu(testTab);
   await openTabContextMenu("context_sendTabToDevice");
   let promiseObserved = promiseObserver("service:log-manager:flush-log-file");
-  document
-    .getElementById("context_sendTabToDevicePopupMenu")
-    .querySelector("menuitem")
-    .click();
 
+  await activateMenuItem();
   await promiseObserved;
-  await hideTabContextMenu();
+  ok(true, "Got flush-log-file observer message");
+
+  await closeConfirmationHint();
   sandbox.restore();
+});
+
+async function checkForConfirmationHint(targetId) {
+  const sandbox = setupSendTabMocks({ fxaDevices });
+  updateTabContextMenu(testTab);
+
+  await openTabContextMenu("context_sendTabToDevice");
+  await activateMenuItem();
+  is(
+    ConfirmationHint._panel.anchorNode.id,
+    targetId,
+    `Hint anchored to ${targetId}`
+  );
+  await closeConfirmationHint();
+  sandbox.restore();
+}
+
+add_task(async function test_sendTabToDevice_showsConfirmationHint_fxa() {
+  // We need to change the fxastatus from "not_configured" to show the FxA button.
+  is(
+    document.documentElement.getAttribute("fxastatus"),
+    "not_configured",
+    "FxA button is hidden"
+  );
+  document.documentElement.setAttribute("fxastatus", "foo");
+  await checkForConfirmationHint("fxa-toolbar-menu-button");
+  document.documentElement.setAttribute("fxastatus", "not_configured");
+});
+
+add_task(async function test_sendTabToDevice_showsConfirmationHint_appMenu() {
+  // If fxastatus is "not_configured" then the FxA button is hidden, and we
+  // should use the appMenu.
+  is(
+    document.documentElement.getAttribute("fxastatus"),
+    "not_configured",
+    "FxA button is hidden"
+  );
+  await checkForConfirmationHint("PanelUI-menu-button");
 });
 
 add_task(async function test_tab_contextmenu() {
@@ -80,7 +117,8 @@ add_task(async function test_tab_contextmenu() {
       "about:mozilla",
       [fxaDevices[1]],
       "The Book of Mozilla, 6:27"
-    );
+    )
+    .returns(true);
 
   updateTabContextMenu(testTab);
   await openTabContextMenu("context_sendTabToDevice");
@@ -95,12 +133,9 @@ add_task(async function test_tab_contextmenu() {
     "Send tab to device is enabled"
   );
 
-  document
-    .getElementById("context_sendTabToDevicePopupMenu")
-    .querySelector("menuitem")
-    .click();
+  await activateMenuItem();
+  await closeConfirmationHint();
 
-  await hideTabContextMenu();
   expectation.verify();
   sandbox.restore();
 });
@@ -246,16 +281,6 @@ async function openTabContextMenu(openSubmenuId = null) {
   }
 }
 
-async function hideTabContextMenu() {
-  const contextMenu = document.getElementById("tabContextMenu");
-  const awaitPopupHidden = BrowserTestUtils.waitForEvent(
-    contextMenu,
-    "popuphidden"
-  );
-  contextMenu.hidePopup();
-  await awaitPopupHidden;
-}
-
 function promiseObserver(topic) {
   return new Promise(resolve => {
     let obs = (aSubject, aTopic, aData) => {
@@ -264,4 +289,34 @@ function promiseObserver(topic) {
     };
     Services.obs.addObserver(obs, topic);
   });
+}
+
+function waitForConfirmationHint() {
+  return BrowserTestUtils.waitForEvent(ConfirmationHint._panel, "popuphidden");
+}
+
+async function activateMenuItem() {
+  let popupHidden = BrowserTestUtils.waitForEvent(
+    document.getElementById("tabContextMenu"),
+    "popuphidden"
+  );
+  let hintShown = BrowserTestUtils.waitForEvent(
+    ConfirmationHint._panel,
+    "popupshown"
+  );
+  let menuitem = document
+    .getElementById("context_sendTabToDevicePopupMenu")
+    .querySelector("menuitem");
+  menuitem.closest("menupopup").activateItem(menuitem);
+  await popupHidden;
+  await hintShown;
+}
+
+async function closeConfirmationHint() {
+  let hintHidden = BrowserTestUtils.waitForEvent(
+    ConfirmationHint._panel,
+    "popuphidden"
+  );
+  ConfirmationHint._panel.hidePopup();
+  await hintHidden;
 }
