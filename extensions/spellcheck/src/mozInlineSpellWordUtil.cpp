@@ -819,6 +819,9 @@ void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(
           firstOffsetInNode = 0;
         }
 
+        MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
+                ("%s: adjusting mBegin.mOffset from %i to %i.", __FUNCTION__,
+                 mBegin.mOffset, firstOffsetInNode));
         mBegin.mOffset = firstOffsetInNode;
       }
       break;
