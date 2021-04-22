@@ -2,7 +2,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender&&winWidg
 == simple-2.svg simple.svg
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender&&winWidget,122-127,221-254) == simple-underline.svg simple-underline-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-scaled.svg simple-underline-scaled-ref.svg # Bug 1392106
-fuzzy-if(webrender&&winWidget,119-166,255-318) fuzzy-if(webrender&&OSX,1-1,1-1) == simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
+fuzzy-if(webrender&&winWidget,119-166,255-318) fuzzy-if(webrender&&OSX,0-1,0-1) == simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
 fuzzy-if(webrender&&winWidget,117-139,182-204) == simple-anchor-end-rtl.svg simple-anchor-end-rtl-ref.html
 fuzzy-if(webrender&&winWidget,119-137,220-250) == simple-anchor-end.svg simple-anchor-end-ref.html
 fuzzy-if(skiaContent&&dwrite,0-104,0-131) fuzzy-if(cocoaWidget,0-143,0-124) fuzzy-if(webrender&&!(gtkWidget||geckoview),79-200,59-319) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html

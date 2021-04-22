@@ -44,7 +44,7 @@ skip-if(d2d) fuzzy-if(skiaContent,0-1,0-6400) == feFlood-2.svg feFlood-2-ref.svg
 fuzzy(0-1,0-6400) fuzzy-if(skiaContent,0-1,0-6404) fuzzy-if(webrender,177-178,2556-3042) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 fuzzy-if(webrender,0-2,0-304) == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
 # != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
-fuzzy-if(webrender,3-5,4764-8168) == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
+fuzzy-if(webrender,2-5,4764-8168) == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
 fuzzy-if(geckoview&&webrender,0-4,0-200) == feGaussianBlur-5.svg feGaussianBlur-5-ref.svg
 == feGaussianBlur-6.svg feGaussianBlur-6-ref.svg
 skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software-ref.html
