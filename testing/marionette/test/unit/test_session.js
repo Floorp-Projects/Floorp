@@ -22,6 +22,12 @@ const {
   WebDriverSession,
 } = ChromeUtils.import("chrome://marionette/content/session.js");
 
+// FTP protocol handler is needed for ftpProxy tests
+registerCleanupFunction(function() {
+  Preferences.reset("network.ftp.enabled");
+});
+Preferences.set("network.ftp.enabled", true);
+
 add_test(function test_WebDriverSession_ctor() {
   const session = new WebDriverSession();
 
@@ -151,6 +157,7 @@ add_test(function test_Proxy_ctor() {
     "proxyType",
     "httpProxy",
     "sslProxy",
+    "ftpProxy",
     "socksProxy",
     "socksVersion",
     "proxyAutoconfigUrl",
@@ -200,7 +207,7 @@ add_test(function test_Proxy_init() {
   equal(Preferences.get("network.proxy.type"), 5);
 
   // manual
-  for (let proxy of ["http", "ssl", "socks"]) {
+  for (let proxy of ["ftp", "http", "ssl", "socks"]) {
     p = new Proxy();
     p.proxyType = "manual";
     p.noProxy = ["foo", "bar"];
@@ -251,7 +258,7 @@ add_test(function test_Proxy_toJSON() {
   p.proxyType = "manual";
   deepEqual(p.toJSON(), { proxyType: "manual" });
 
-  for (let proxy of ["httpProxy", "sslProxy", "socksProxy"]) {
+  for (let proxy of ["ftpProxy", "httpProxy", "sslProxy", "socksProxy"]) {
     let expected = { proxyType: "manual" };
 
     p = new Proxy();
@@ -329,7 +336,7 @@ add_test(function test_Proxy_fromJSON() {
   p.proxyType = "manual";
   deepEqual(p, Proxy.fromJSON({ proxyType: "manual" }));
 
-  for (let proxy of ["httpProxy", "sslProxy", "socksProxy"]) {
+  for (let proxy of ["httpProxy", "sslProxy", "ftpProxy", "socksProxy"]) {
     let manual = { proxyType: "manual" };
 
     // invalid hosts
@@ -387,7 +394,7 @@ add_test(function test_Proxy_fromJSON() {
       if (proxy === "socksProxy") {
         p[`${proxy}Port`] = null;
       } else {
-        let default_ports = { httpProxy: 80, sslProxy: 443 };
+        let default_ports = { ftpProxy: 21, httpProxy: 80, sslProxy: 443 };
 
         p[`${proxy}Port`] = default_ports[proxy];
       }

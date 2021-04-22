@@ -19,6 +19,8 @@ Preferences.addAll([
   { id: "network.proxy.type", type: "int" },
   { id: "network.proxy.http", type: "string" },
   { id: "network.proxy.http_port", type: "int" },
+  { id: "network.proxy.ftp", type: "string" },
+  { id: "network.proxy.ftp_port", type: "int" },
   { id: "network.proxy.ssl", type: "string" },
   { id: "network.proxy.ssl_port", type: "int" },
   { id: "network.proxy.socks", type: "string" },
@@ -29,6 +31,8 @@ Preferences.addAll([
   { id: "network.proxy.share_proxy_settings", type: "bool" },
   { id: "signon.autologin.proxy", type: "bool" },
   { id: "pref.advanced.proxies.disable_button.reload", type: "bool" },
+  { id: "network.proxy.backup.ftp", type: "string" },
+  { id: "network.proxy.backup.ftp_port", type: "int" },
   { id: "network.proxy.backup.ssl", type: "string" },
   { id: "network.proxy.backup.ssl_port", type: "int" },
   { id: "network.trr.mode", type: "int" },
@@ -133,7 +137,7 @@ var gConnectionsDialog = {
     );
 
     // If the port is 0 and the proxy server is specified, focus on the port and cancel submission.
-    for (let prefName of ["http", "ssl", "socks"]) {
+    for (let prefName of ["http", "ssl", "ftp", "socks"]) {
       let proxyPortPref = Preferences.get(
         "network.proxy." + prefName + "_port"
       );
@@ -155,15 +159,26 @@ var gConnectionsDialog = {
 
     // In the case of a shared proxy preference, backup the current values and update with the HTTP value
     if (shareProxiesPref.value) {
-      var proxyServerURLPref = Preferences.get("network.proxy.ssl");
-      var proxyPortPref = Preferences.get("network.proxy.ssl_port");
-      var backupServerURLPref = Preferences.get("network.proxy.backup.ssl");
-      var backupPortPref = Preferences.get("network.proxy.backup.ssl_port");
-      backupServerURLPref.value =
-        backupServerURLPref.value || proxyServerURLPref.value;
-      backupPortPref.value = backupPortPref.value || proxyPortPref.value;
-      proxyServerURLPref.value = httpProxyURLPref.value;
-      proxyPortPref.value = httpProxyPortPref.value;
+      var proxyPrefs = ["ssl", "ftp"];
+      for (var i = 0; i < proxyPrefs.length; ++i) {
+        var proxyServerURLPref = Preferences.get(
+          "network.proxy." + proxyPrefs[i]
+        );
+        var proxyPortPref = Preferences.get(
+          "network.proxy." + proxyPrefs[i] + "_port"
+        );
+        var backupServerURLPref = Preferences.get(
+          "network.proxy.backup." + proxyPrefs[i]
+        );
+        var backupPortPref = Preferences.get(
+          "network.proxy.backup." + proxyPrefs[i] + "_port"
+        );
+        backupServerURLPref.value =
+          backupServerURLPref.value || proxyServerURLPref.value;
+        backupPortPref.value = backupPortPref.value || proxyPortPref.value;
+        proxyServerURLPref.value = httpProxyURLPref.value;
+        proxyPortPref.value = httpProxyPortPref.value;
+      }
     }
 
     this.sanitizeNoProxiesPref();
@@ -251,7 +266,7 @@ var gConnectionsDialog = {
     var shareProxiesPref = Preferences.get(
       "network.proxy.share_proxy_settings"
     );
-    var proxyPrefs = ["ssl", "socks"];
+    var proxyPrefs = ["ssl", "ftp", "socks"];
     for (var i = 0; i < proxyPrefs.length; ++i) {
       var proxyServerURLPref = Preferences.get(
         "network.proxy." + proxyPrefs[i]
@@ -611,6 +626,12 @@ var gConnectionsDialog = {
     );
     setSyncFromPrefListener("networkProxySSL_Port", () =>
       this.readProxyProtocolPref("ssl", true)
+    );
+    setSyncFromPrefListener("networkProxyFTP", () =>
+      this.readProxyProtocolPref("ftp", false)
+    );
+    setSyncFromPrefListener("networkProxyFTP_Port", () =>
+      this.readProxyProtocolPref("ftp", true)
     );
     setSyncFromPrefListener("networkProxySOCKS", () =>
       this.readProxyProtocolPref("socks", false)

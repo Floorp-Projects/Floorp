@@ -31,6 +31,7 @@ const PROXY_TYPES_MAP = new Map([
 const DEFAULT_PORTS = new Map([
   ["http", 80],
   ["ssl", 443],
+  ["ftp", 21],
   ["socks", 1080],
 ]);
 
@@ -41,6 +42,8 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
     "network.proxy.http",
     "network.proxy.http_port",
     "network.proxy.share_proxy_settings",
+    "network.proxy.ftp",
+    "network.proxy.ftp_port",
     "network.proxy.ssl",
     "network.proxy.ssl_port",
     "network.proxy.socks",
@@ -65,7 +68,7 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
       "network.http.proxy.respect-be-conservative": value.respectBeConservative,
     };
 
-    for (let prop of ["http", "ssl", "socks"]) {
+    for (let prop of ["http", "ftp", "ssl", "socks"]) {
       if (value[prop]) {
         let url = new URL(`http://${value[prop]}`);
         prefs[`network.proxy.${prop}`] = url.hostname;
@@ -204,7 +207,7 @@ this.proxy = class extends ExtensionAPI {
                 );
               }
 
-              for (let prop of ["http", "ssl", "socks"]) {
+              for (let prop of ["http", "ftp", "ssl", "socks"]) {
                 let host = Services.prefs.getCharPref(`network.proxy.${prop}`);
                 let port = Services.prefs.getIntPref(
                   `network.proxy.${prop}_port`
@@ -260,10 +263,12 @@ this.proxy = class extends ExtensionAPI {
                 // Match what about:preferences does with proxy settings
                 // since the proxy service does not check the value
                 // of share_proxy_settings.
-                value.ssl = value.http;
+                for (let prop of ["ftp", "ssl"]) {
+                  value[prop] = value.http;
+                }
               }
 
-              for (let prop of ["http", "ssl", "socks"]) {
+              for (let prop of ["http", "ftp", "ssl", "socks"]) {
                 let host = value[prop];
                 if (host) {
                   try {

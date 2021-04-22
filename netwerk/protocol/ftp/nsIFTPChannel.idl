@@ -1,0 +1,29 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface may be used to determine if a channel is a FTP channel.
+ */
+[scriptable, uuid(07f0d5cd-1fd5-4aa3-b6fc-665bdc5dbf9f)]
+interface nsIFTPChannel : nsISupports
+{
+    attribute PRTime lastModifiedTime;
+};
+
+/**
+ * This interface may be defined as a notification callback on the FTP
+ * channel.  It allows a consumer to receive a log of the FTP control
+ * connection conversation.
+ */
+[scriptable, uuid(455d4234-0330-43d2-bbfb-99afbecbfeb0)]
+interface nsIFTPEventSink : nsISupports
+{
+    /**
+     * XXX document this method!  (see bug 328915)
+     */
+    void OnFTPControlLog(in boolean server, in string msg);
+};
