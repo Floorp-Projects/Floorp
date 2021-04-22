@@ -22,12 +22,13 @@ use marionette_rs::webdriver::{
     Url as MarionetteUrl, WindowRect as MarionetteWindowRect,
 };
 use mozdevice::AndroidStorageInput;
-use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
+use mozprofile::{preferences::Pref, profile::PrefFile};
 use mozrunner::runner::{FirefoxProcess, FirefoxRunner, Runner, RunnerProcess};
 use serde::de::{self, Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use serde_json::{self, Map, Value};
+use std::fs;
 use std::io::prelude::*;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
@@ -109,6 +110,7 @@ pub struct MarionetteHandler {
     pub connection: Mutex<Option<MarionetteConnection>>,
     pub settings: MarionetteSettings,
     pub browser: Option<Browser>,
+    prefs_backup: Option<(PathBuf, PathBuf)>,
 }
 
 impl MarionetteHandler {
@@ -117,6 +119,7 @@ impl MarionetteHandler {
             connection: Mutex::new(None),
             settings,
             browser: None,
+            prefs_backup: None,
         }
     }
 
@@ -283,7 +286,7 @@ impl MarionetteHandler {
     }
 
     pub fn set_prefs(
-        &self,
+        &mut self,
         port: u16,
         profile: &mut Profile,
         custom_profile: bool,
@@ -295,6 +298,10 @@ impl MarionetteHandler {
                 "Unable to read profile preferences file",
             )
         })?;
+
+        if custom_profile && prefs.path.exists() {
+            self.backup_prefs(prefs)?;
+        }
 
         for &(ref name, ref value) in prefs::DEFAULT.iter() {
             if !custom_profile || !prefs.contains_key(name) {
@@ -320,6 +327,35 @@ impl MarionetteHandler {
                 format!("Unable to write Firefox profile: {}", e),
             )
         })
+    }
+
+    fn backup_prefs(&mut self, prefs: &PrefFile) -> WebDriverResult<()> {
+        let mut prefs_backup_path = prefs.path.clone();
+        let mut counter = 0;
+        while {
+            let ext = if counter > 0 {
+                format!("geckodriver_backup_{}", counter)
+            } else {
+                "geckodriver_backup".to_string()
+            };
+            prefs_backup_path.set_extension(ext);
+            prefs_backup_path.exists()
+        } {
+            counter += 1
+        }
+        debug!("Backing up prefs to {:?}", prefs_backup_path);
+        fs::copy(&prefs.path, &prefs_backup_path)?;
+        self.prefs_backup = Some((prefs.path.clone(), prefs_backup_path));
+        Ok(())
+    }
+
+    fn restore_prefs(&mut self) {
+        if let Some((orig_path, backup_path)) = self.prefs_backup.as_ref() {
+            if backup_path.exists() {
+                let _ = fs::rename(backup_path, orig_path);
+                self.prefs_backup = None;
+            }
+        }
     }
 }
 
@@ -440,8 +476,15 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
             None => {}
         }
 
+        self.restore_prefs();
         self.connection = Mutex::new(None);
         self.browser = None;
+    }
+}
+
+impl Drop for MarionetteHandler {
+    fn drop(&mut self) {
+        self.restore_prefs()
     }
 }
 
@@ -1713,8 +1756,11 @@ impl ToMarionette<MarionetteWindowRect> for WindowRectParameters {
 #[cfg(test)]
 mod tests {
     use super::{MarionetteHandler, MarionetteSettings};
-    use mozprofile::preferences::PrefValue;
+    use crate::webdriver::server::WebDriverHandler;
+    use mozprofile::preferences::{Pref, PrefValue};
     use mozprofile::profile::Profile;
+    use std::fs;
+    use std::io::{Read, Write};
 
     // This is not a pretty test, mostly due to the nature of
     // mozprofile's and MarionetteHandler's APIs, but we have had
@@ -1722,7 +1768,7 @@ mod tests {
     #[test]
     fn test_marionette_log_level() {
         let mut profile = Profile::new().unwrap();
-        let handler = MarionetteHandler::new(MarionetteSettings::default());
+        let mut handler = MarionetteHandler::new(MarionetteSettings::default());
         handler.set_prefs(2828, &mut profile, false, vec![]).ok();
         let user_prefs = profile.user_prefs().unwrap();
 
@@ -1738,5 +1784,66 @@ mod tests {
                 assert!(ch.is_lowercase());
             }
         }
+    }
+
+    #[test]
+    fn test_pref_backup() {
+        let mut profile = Profile::new().unwrap();
+        let mut handler = MarionetteHandler::new(MarionetteSettings::default());
+
+        // Create some prefs in the profile
+        let initial_prefs = profile.user_prefs().unwrap();
+        initial_prefs.insert("geckodriver.example", Pref::new("example"));
+        initial_prefs.write().unwrap();
+
+        let prefs_path = initial_prefs.path.clone();
+
+        let mut conflicting_backup_path = initial_prefs.path.clone();
+        conflicting_backup_path.set_extension("geckodriver_backup".to_string());
+        println!("{:?}", conflicting_backup_path);
+        let mut file = fs::File::create(&conflicting_backup_path).unwrap();
+        file.write_all(b"test").unwrap();
+        assert!(conflicting_backup_path.exists());
+
+        let mut initial_prefs_data = String::new();
+        fs::File::open(&prefs_path)
+            .expect("Initial prefs exist")
+            .read_to_string(&mut initial_prefs_data)
+            .unwrap();
+
+        handler.set_prefs(2828, &mut profile, true, vec![]).ok();
+        let user_prefs = profile.user_prefs().unwrap();
+
+        assert!(user_prefs.path.exists());
+        let mut backup_path = user_prefs.path.clone();
+        backup_path.set_extension("geckodriver_backup_1".to_string());
+
+        assert!(backup_path.exists());
+
+        // Ensure the actual prefs contain both the existing ones and the ones we added
+        let pref = user_prefs.get("marionette.port").unwrap();
+        assert_eq!(pref.value, PrefValue::Int(2828));
+
+        let pref = user_prefs.get("geckodriver.example").unwrap();
+        assert_eq!(pref.value, PrefValue::String("example".into()));
+
+        // Ensure the backup prefs don't contain the new settings
+        let mut backup_data = String::new();
+        fs::File::open(&backup_path)
+            .expect("Backup prefs exist")
+            .read_to_string(&mut backup_data)
+            .unwrap();
+        assert_eq!(backup_data, initial_prefs_data);
+
+        // Check that after we finish the session we corectly restore the original file
+        handler.delete_session(&None);
+
+        assert!(!backup_path.exists());
+        let mut final_prefs_data = String::new();
+        fs::File::open(&prefs_path)
+            .expect("Initial prefs exist")
+            .read_to_string(&mut final_prefs_data)
+            .unwrap();
+        assert_eq!(final_prefs_data, initial_prefs_data);
     }
 }
