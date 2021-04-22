@@ -74,7 +74,7 @@ fuzzy-if(skiaContent,0-73,0-900) == twostops-1e.html twostops-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||skiaContent&&layersGPUAccelerated,0-8,0-20000) == aja-linear-1a.html aja-linear-1-ref.html
-fails-if(!d2d&&!skiaContent) fuzzy-if(skiaContent,0-1,0-20000) fuzzy-if(webrender&&winWidget,1-1,5300-20000) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
+fails-if(!d2d&&!skiaContent) fuzzy-if(skiaContent,0-1,0-20000) fuzzy-if(webrender&&winWidget,1-1,5000-20000) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-1c.html aja-linear-1-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-1d.html aja-linear-1-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||skiaContent,0-8,0-20000) == aja-linear-1e.html aja-linear-1-ref.html 
@@ -108,4 +108,4 @@ fuzzy(0-4,0-800000) == mask-gradient-translucent-end-color-1.html mask-gradient-
 
 == scaled-color-stop-position.html scaled-color-stop-position-ref.html
 fuzzy-if(webrender&&winWidget,0-1,0-387) == color-stop-clamp-interpolation.html color-stop-clamp-interpolation-ref.html
-== linear-gradient-repeated.html linear-gradient-repeated-ref.html
+fuzzy-if(webrender&&swgl,0-2,0-80000) == linear-gradient-repeated.html linear-gradient-repeated-ref.html
