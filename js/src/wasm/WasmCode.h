@@ -242,12 +242,7 @@ class FuncExport {
     return pod.eagerInterpEntryOffset_;
   }
 
-  bool canHaveJitEntry() const {
-    return !funcType_.hasUnexposableArgOrRet() &&
-           !funcType_.temporarilyUnsupportedReftypeForEntry() &&
-           !funcType_.temporarilyUnsupportedResultCountForJitEntry() &&
-           JitOptions.enableWasmJitEntry;
-  }
+  bool canHaveJitEntry() const { return funcType_.canHaveJitEntry(); }
 
   bool clone(const FuncExport& src) {
     mozilla::PodAssign(&pod, &src.pod);
@@ -301,6 +296,8 @@ class FuncImport {
     mozilla::PodAssign(&pod, &src.pod);
     return funcType_.clone(src.funcType_);
   }
+
+  bool canHaveJitExit() const { return funcType_.canHaveJitExit(); }
 
   WASM_DECLARE_SERIALIZABLE(FuncImport)
 };
