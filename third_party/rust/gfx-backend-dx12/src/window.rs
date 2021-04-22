@@ -277,7 +277,6 @@ impl w::PresentationSurface<Backend> for Surface {
             surface_type: base_format.0,
             kind,
             mip_levels: 1,
-            usage: sc.usage,
             default_view_format: None,
             view_caps: i::ViewCapabilities::empty(),
             descriptor,

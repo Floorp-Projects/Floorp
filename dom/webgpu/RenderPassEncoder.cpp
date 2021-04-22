@@ -234,11 +234,11 @@ void RenderPassEncoder::SetScissorRect(uint32_t x, uint32_t y, uint32_t width,
   }
 }
 
-void RenderPassEncoder::SetBlendColor(
+void RenderPassEncoder::SetBlendConstant(
     const dom::DoubleSequenceOrGPUColorDict& color) {
   if (mValid) {
     ffi::WGPUColor aColor = ConvertColor(color.GetAsGPUColorDict());
-    ffi::wgpu_render_pass_set_blend_color(mPass, &aColor);
+    ffi::wgpu_render_pass_set_blend_constant(mPass, &aColor);
   }
 }
 

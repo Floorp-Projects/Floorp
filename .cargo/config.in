@@ -105,17 +105,17 @@ rev = "39f95e2f7cd6e632a379cdeee62c68e8cedd7810"
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"
-tag = "gfx-20"
+tag = "gfx-22"
 
 [source."https://github.com/gfx-rs/metal-rs"]
 git = "https://github.com/gfx-rs/metal-rs"
 replace-with = "vendored-sources"
-rev = "439c986eb7a9b91e88b61def2daa66e4043fcbef"
+rev = "78f632d194c7c16d18b71d7373c4080847d110b0"
 
 [source."https://github.com/gfx-rs/gfx"]
 git = "https://github.com/gfx-rs/gfx"
 replace-with = "vendored-sources"
-rev = "3ee1ca9ba486b166a52765024d8d149cbb28d486"
+rev = "84e02f96149207b1bafecb1924b14315930c98ee"
 
 [source."https://github.com/gfx-rs/d3d12-rs"]
 git = "https://github.com/gfx-rs/d3d12-rs"

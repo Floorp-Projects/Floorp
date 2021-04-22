@@ -166,8 +166,9 @@ pub enum BuiltIn {
     WorkGroupSize,
 }
 
-/// Number of bytes.
+/// Number of bytes per scalar.
 pub type Bytes = u8;
+pub type Alignment = NonZeroU32;
 
 /// Number of components in a vector.
 #[repr(u8)]
@@ -225,11 +226,23 @@ pub enum Interpolation {
     Linear,
     /// Indicates that no interpolation will be performed.
     Flat,
-    /// When used with multi-sampling rasterization, allow
-    /// a single interpolation location for an entire pixel.
+}
+
+/// The sampling qualifiers of a binding or struct field.
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+pub enum Sampling {
+    /// Interpolate the value at the center of the pixel.
+    Center,
+
+    /// Interpolate the value at a point that lies within all samples covered by
+    /// the fragment within the current primitive. In multisampling, use a
+    /// single value for all samples in the primitive.
     Centroid,
-    /// When used with multi-sampling rasterization, require
-    /// per-sample interpolation.
+
+    /// Interpolate the value at each sample location. In multisampling, invoke
+    /// the fragment shader once per sample.
     Sample,
 }
 
@@ -244,10 +257,8 @@ pub struct StructMember {
     pub ty: Handle<Type>,
     /// For I/O structs, defines the binding.
     pub binding: Option<Binding>,
-    /// Overrides the size computed off the type.
-    pub size: Option<NonZeroU32>,
-    /// Overrides the alignment computed off the type.
-    pub align: Option<NonZeroU32>,
+    /// Offset from the beginning from the struct.
+    pub offset: u32,
 }
 
 /// The number of dimensions an image has.
@@ -346,6 +357,18 @@ pub enum ImageClass {
     Storage(StorageFormat),
 }
 
+/// Qualifier of the type level, at which a struct can be used.
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+pub enum StructLevel {
+    /// This is a root level struct, it can't be nested inside
+    /// other composite types.
+    Root,
+    /// This is a normal struct, and it has to be aligned for nesting.
+    Normal { alignment: Alignment },
+}
+
 /// A data type declared in the module.
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
@@ -392,13 +415,13 @@ pub enum TypeInner {
     Array {
         base: Handle<Type>,
         size: ArraySize,
-        stride: Option<NonZeroU32>,
+        stride: u32,
     },
     /// User-defined structure.
     Struct {
-        /// This is a top-level host-shareable structure.
-        block: bool,
+        level: StructLevel,
         members: Vec<StructMember>,
+        span: u32,
     },
     /// Possibly multidimensional array of texels.
     Image {
@@ -454,7 +477,11 @@ pub enum Binding {
     /// Built-in shader variable.
     BuiltIn(BuiltIn),
     /// Indexed location.
-    Location(u32, Option<Interpolation>),
+    Location {
+        location: u32,
+        interpolation: Option<Interpolation>,
+        sampling: Option<Sampling>
+    },
 }
 
 /// Pipeline binding information for global resources.
@@ -672,6 +699,11 @@ pub enum Expression {
     },
     /// Constant value.
     Constant(Handle<Constant>),
+    /// Splat scalar into a vector.
+    Splat {
+        size: VectorSize,
+        value: Handle<Expression>,
+    },
     /// Composite expression.
     Compose {
         ty: Handle<Type>,

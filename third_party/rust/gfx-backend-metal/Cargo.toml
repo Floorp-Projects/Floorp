@@ -16,6 +16,7 @@ edition = "2018"
 default = []
 signpost = []
 cross = ["spirv_cross", "auxil", "naga/spv-out"]
+pipeline-cache = ["tempfile", "serde", "bincode", "naga/serialize", "naga/deserialize", "naga/spv-out"]
 
 [lib]
 name = "gfx_backend_metal"
@@ -29,7 +30,7 @@ copyless = "0.1.4"
 fxhash = "0.2.1"
 log = { version = "0.4" }
 dispatch = { version = "0.2", optional = true }
-metal = { git = "https://github.com/gfx-rs/metal-rs", rev="439c986eb7a9b91e88b61def2daa66e4043fcbef", features = ["private"] }
+metal = { git = "https://github.com/gfx-rs/metal-rs", rev="78f632d194c7c16d18b71d7373c4080847d110b0", features = ["private"] }
 foreign-types = "0.3"
 objc = "0.2.5"
 block = "0.1"
@@ -37,6 +38,10 @@ cocoa-foundation = "0.1"
 parking_lot = "0.11"
 storage-map = "0.3"
 raw-window-handle = "0.3"
+profiling = { version = "0.1.10", default-features = false }
+tempfile = { version = "3.2", optional = true }
+serde = { version = "1", features = ["serde_derive"], optional = true }
+bincode = { version = "1", optional = true }
 
 [dependencies.auxil]
 package = "gfx-auxil"
@@ -52,7 +57,7 @@ optional = true
 
 [dependencies.naga]
 git = "https://github.com/gfx-rs/naga"
-tag = "gfx-20"
+tag = "gfx-22"
 features = ["spv-in", "msl-out"]
 
 # This forces docs.rs to build the crate on mac, otherwise the build fails

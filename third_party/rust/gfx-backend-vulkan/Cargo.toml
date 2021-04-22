@@ -33,7 +33,7 @@ inplace_it = "0.3.3"
 
 [dependencies.naga]
 git = "https://github.com/gfx-rs/naga"
-tag = "gfx-20"
+tag = "gfx-22"
 features = ["spv-out"]
 optional = true
 

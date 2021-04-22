@@ -393,8 +393,28 @@ impl RenderPipelineDescriptorRef {
 
     // TODO: tesselation stuff
 
-    // TODO: binaryArchives
-    // @property (readwrite, nullable, nonatomic, copy) NSArray<id<MTLBinaryArchive>> *binaryArchives API_AVAILABLE(macos(11.0), ios(14.0));
+    /// API_AVAILABLE(macos(11.0), ios(14.0));
+    /// Marshal to Rust Vec
+    pub fn binary_archives(&self) -> Vec<BinaryArchive> {
+        unsafe {
+            let archives: *mut Object = msg_send![self, binaryArchives];
+            let count: NSUInteger = msg_send![archives, count];
+            let ret = (0..count)
+                .map(|i| {
+                    let a = msg_send![archives, objectAtIndex: i];
+                    BinaryArchive::from_ptr(a)
+                })
+                .collect();
+            ret
+        }
+    }
+
+    /// API_AVAILABLE(macos(11.0), ios(14.0));
+    /// Marshal from Rust slice
+    pub fn set_binary_archives(&self, archives: &[&BinaryArchiveRef]) {
+        let ns_array = Array::<BinaryArchive>::from_slice(archives);
+        unsafe { msg_send![self, setBinaryArchives: ns_array] }
+    }
 
     pub fn reset(&self) {
         unsafe { msg_send![self, reset] }

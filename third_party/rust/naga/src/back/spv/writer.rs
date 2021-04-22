@@ -3,7 +3,7 @@ use super::{
 };
 use crate::{
     arena::{Arena, Handle},
-    proc::{Layouter, TypeResolution},
+    proc::TypeResolution,
     valid::{FunctionInfo, ModuleInfo},
 };
 use spirv::Word;
@@ -70,6 +70,7 @@ struct Function {
     signature: Option<Instruction>,
     parameters: Vec<Instruction>,
     variables: crate::FastHashMap<Handle<crate::LocalVariable>, LocalVariable>,
+    internal_variables: Vec<LocalVariable>,
     blocks: Vec<Block>,
     entry_point_context: Option<EntryPointContext>,
 }
@@ -85,6 +86,9 @@ impl Function {
             if index == 0 {
                 for local_var in self.variables.values() {
                     local_var.instruction.to_words(sink);
+                }
+                for internal_var in self.internal_variables.iter() {
+                    internal_var.instruction.to_words(sink);
                 }
             }
             for instruction in block.body.iter() {
@@ -275,7 +279,8 @@ pub struct Writer {
     global_variables: Vec<GlobalVariable>,
     cached: CachedExpressions,
     gl450_ext_inst_id: Word,
-    temp_chain: Vec<Word>,
+    // Just a temporary list of SPIR-V ids
+    temp_list: Vec<Word>,
 }
 
 impl Writer {
@@ -307,7 +312,7 @@ impl Writer {
             global_variables: Vec::new(),
             cached: CachedExpressions::default(),
             gl450_ext_inst_id,
-            temp_chain: Vec::new(),
+            temp_list: Vec::new(),
         })
     }
 
@@ -336,6 +341,20 @@ impl Writer {
                 LookupType::Local(local_ty) => self.write_type_declaration_local(arena, local_ty),
             }
         }
+    }
+
+    fn get_expression_type_id(
+        &mut self,
+        arena: &Arena<crate::Type>,
+        tr: &TypeResolution,
+    ) -> Result<Word, Error> {
+        let lookup_ty = match *tr {
+            TypeResolution::Handle(ty_handle) => LookupType::Handle(ty_handle),
+            TypeResolution::Value(ref inner) => {
+                LookupType::Local(self.physical_layout.make_local(inner).unwrap())
+            }
+        };
+        self.get_type_id(arena, lookup_ty)
     }
 
     fn get_pointer_id(
@@ -398,6 +417,10 @@ impl Writer {
         Ok(id)
     }
 
+    fn decorate(&mut self, id: Word, decoration: spirv::Decoration, operands: &[Word]) {
+        self.annotations.push(Instruction::decorate(id, decoration, operands));
+    }
+
     fn write_function(
         &mut self,
         ir_function: &crate::Function,
@@ -455,10 +478,8 @@ impl Writer {
                         .body
                         .push(Instruction::load(argument_type_id, id, varying_id, None));
                     id
-                } else if let crate::TypeInner::Struct {
-                    block: _,
-                    ref members,
-                } = ir_module.types[argument.ty].inner
+                } else if let crate::TypeInner::Struct { ref members, .. } =
+                    ir_module.types[argument.ty].inner
                 {
                     let struct_id = self.id_gen.next();
                     let mut constituent_ids = Vec::with_capacity(members.len());
@@ -509,10 +530,8 @@ impl Writer {
                             type_id,
                             built_in: binding.to_built_in(),
                         });
-                    } else if let crate::TypeInner::Struct {
-                        block: _,
-                        ref members,
-                    } = ir_module.types[result.ty].inner
+                    } else if let crate::TypeInner::Struct { ref members, .. } =
+                        ir_module.types[result.ty].inner
                     {
                         for member in members {
                             let type_id =
@@ -652,11 +671,6 @@ impl Writer {
         };
         self.check(exec_model.required_capabilities())?;
 
-        if self.flags.contains(WriterFlags::DEBUG) {
-            self.debugs
-                .push(Instruction::name(function_id, &entry_point.name));
-        }
-
         Ok(Instruction::entry_point(
             exec_model,
             function_id,
@@ -760,10 +774,10 @@ impl Writer {
     fn write_type_declaration_arena(
         &mut self,
         arena: &Arena<crate::Type>,
-        layouter: &Layouter,
         handle: Handle<crate::Type>,
     ) -> Result<Word, Error> {
         let ty = &arena[handle];
+        let decorate_layout = true; //TODO?
 
         let id = if let Some(local) = self.physical_layout.make_local(&ty.inner) {
             match self.lookup_type.entry(LookupType::Local(local)) {
@@ -789,6 +803,8 @@ impl Writer {
                 self.debugs.push(Instruction::name(id, name));
             }
         }
+
+        use spirv::Decoration;
 
         let instruction = match ty.inner {
             crate::TypeInner::Scalar { kind, width } => self.write_scalar(id, kind, width),
@@ -843,12 +859,8 @@ impl Writer {
             }
             crate::TypeInner::Sampler { comparison: _ } => Instruction::type_sampler(id),
             crate::TypeInner::Array { base, size, stride } => {
-                if let Some(array_stride) = stride {
-                    self.annotations.push(Instruction::decorate(
-                        id,
-                        spirv::Decoration::ArrayStride,
-                        &[array_stride.get()],
-                    ));
+                if decorate_layout {
+                    self.decorate(id, Decoration::ArrayStride, &[stride]);
                 }
 
                 let type_id = self.get_type_id(arena, LookupType::Handle(base))?;
@@ -860,23 +872,25 @@ impl Writer {
                     crate::ArraySize::Dynamic => Instruction::type_runtime_array(id, type_id),
                 }
             }
-            crate::TypeInner::Struct { block, ref members } => {
-                if block {
-                    self.annotations
-                        .push(Instruction::decorate(id, spirv::Decoration::Block, &[]));
+            crate::TypeInner::Struct {
+                ref level,
+                ref members,
+                span: _,
+            } => {
+                if let crate::StructLevel::Root = *level {
+                    self.decorate(id, Decoration::Block, &[]);
                 }
 
-                let mut current_offset = 0;
                 let mut member_ids = Vec::with_capacity(members.len());
                 for (index, member) in members.iter().enumerate() {
-                    let (placement, _) = layouter.member_placement(current_offset, member);
-                    self.annotations.push(Instruction::member_decorate(
-                        id,
-                        index as u32,
-                        spirv::Decoration::Offset,
-                        &[placement.start],
-                    ));
-                    current_offset = placement.end;
+                    if decorate_layout {
+                        self.annotations.push(Instruction::member_decorate(
+                            id,
+                            index as u32,
+                            Decoration::Offset,
+                            &[member.offset],
+                        ));
+                    }
 
                     if self.flags.contains(WriterFlags::DEBUG) {
                         if let Some(ref name) = member.name {
@@ -885,11 +899,17 @@ impl Writer {
                         }
                     }
 
+                    // The matrix decorations also go on arrays of matrices,
+                    // so lets check this first.
+                    let member_array_subty_inner = match arena[member.ty].inner {
+                        crate::TypeInner::Array { base, .. } => &arena[base].inner,
+                        ref other => other,
+                    };
                     if let crate::TypeInner::Matrix {
                         columns,
                         rows: _,
                         width,
-                    } = arena[member.ty].inner
+                    } = *member_array_subty_inner
                     {
                         let byte_stride = match columns {
                             crate::VectorSize::Bi => 2 * width,
@@ -898,13 +918,13 @@ impl Writer {
                         self.annotations.push(Instruction::member_decorate(
                             id,
                             index as u32,
-                            spirv::Decoration::ColMajor,
+                            Decoration::ColMajor,
                             &[],
                         ));
                         self.annotations.push(Instruction::member_decorate(
                             id,
                             index as u32,
-                            spirv::Decoration::MatrixStride,
+                            Decoration::MatrixStride,
                             &[byte_stride as u32],
                         ));
                     }
@@ -1067,23 +1087,32 @@ impl Writer {
             }
         }
 
+        use spirv::{BuiltIn, Decoration};
+
         match *binding {
-            crate::Binding::Location(location, interpolation) => {
-                self.annotations.push(Instruction::decorate(
-                    id,
-                    spirv::Decoration::Location,
-                    &[location],
-                ));
-                let interp_decoration = match interpolation {
-                    Some(crate::Interpolation::Linear) => Some(spirv::Decoration::NoPerspective),
-                    Some(crate::Interpolation::Flat) => Some(spirv::Decoration::Flat),
-                    Some(crate::Interpolation::Centroid) => Some(spirv::Decoration::Centroid),
-                    Some(crate::Interpolation::Sample) => Some(spirv::Decoration::Sample),
-                    Some(crate::Interpolation::Perspective) | None => None,
-                };
-                if let Some(decoration) = interp_decoration {
-                    self.annotations
-                        .push(Instruction::decorate(id, decoration, &[]));
+            crate::Binding::Location { location, interpolation, sampling } => {
+                self.decorate(id, Decoration::Location, &[location]);
+
+                match interpolation {
+                    // Perspective-correct interpolation is the default in SPIR-V.
+                    None | Some(crate::Interpolation::Perspective) => (),
+                    Some(crate::Interpolation::Flat) => {
+                        self.decorate(id, Decoration::Flat, &[]);
+                    }
+                    Some(crate::Interpolation::Linear) => {
+                        self.decorate(id, Decoration::NoPerspective, &[]);
+                    }
+                }
+
+                match sampling {
+                    // Center sampling is the default in SPIR-V.
+                    None | Some(crate::Sampling::Center) => (),
+                    Some(crate::Sampling::Centroid) => {
+                        self.decorate(id, Decoration::Centroid, &[]);
+                    }
+                    Some(crate::Sampling::Sample) => {
+                        self.decorate(id, Decoration::Sample, &[]);
+                    }
                 }
             }
             crate::Binding::BuiltIn(built_in) => {
@@ -1091,36 +1120,32 @@ impl Writer {
                 let built_in = match built_in {
                     Bi::Position => {
                         if class == spirv::StorageClass::Output {
-                            spirv::BuiltIn::Position
+                            BuiltIn::Position
                         } else {
-                            spirv::BuiltIn::FragCoord
+                            BuiltIn::FragCoord
                         }
                     }
                     // vertex
-                    Bi::BaseInstance => spirv::BuiltIn::BaseInstance,
-                    Bi::BaseVertex => spirv::BuiltIn::BaseVertex,
-                    Bi::ClipDistance => spirv::BuiltIn::ClipDistance,
-                    Bi::InstanceIndex => spirv::BuiltIn::InstanceIndex,
-                    Bi::PointSize => spirv::BuiltIn::PointSize,
-                    Bi::VertexIndex => spirv::BuiltIn::VertexIndex,
+                    Bi::BaseInstance => BuiltIn::BaseInstance,
+                    Bi::BaseVertex => BuiltIn::BaseVertex,
+                    Bi::ClipDistance => BuiltIn::ClipDistance,
+                    Bi::InstanceIndex => BuiltIn::InstanceIndex,
+                    Bi::PointSize => BuiltIn::PointSize,
+                    Bi::VertexIndex => BuiltIn::VertexIndex,
                     // fragment
-                    Bi::FragDepth => spirv::BuiltIn::FragDepth,
-                    Bi::FrontFacing => spirv::BuiltIn::FrontFacing,
-                    Bi::SampleIndex => spirv::BuiltIn::SampleId,
-                    Bi::SampleMask => spirv::BuiltIn::SampleMask,
+                    Bi::FragDepth => BuiltIn::FragDepth,
+                    Bi::FrontFacing => BuiltIn::FrontFacing,
+                    Bi::SampleIndex => BuiltIn::SampleId,
+                    Bi::SampleMask => BuiltIn::SampleMask,
                     // compute
-                    Bi::GlobalInvocationId => spirv::BuiltIn::GlobalInvocationId,
-                    Bi::LocalInvocationId => spirv::BuiltIn::LocalInvocationId,
-                    Bi::LocalInvocationIndex => spirv::BuiltIn::LocalInvocationIndex,
-                    Bi::WorkGroupId => spirv::BuiltIn::WorkgroupId,
-                    Bi::WorkGroupSize => spirv::BuiltIn::WorkgroupSize,
+                    Bi::GlobalInvocationId => BuiltIn::GlobalInvocationId,
+                    Bi::LocalInvocationId => BuiltIn::LocalInvocationId,
+                    Bi::LocalInvocationIndex => BuiltIn::LocalInvocationIndex,
+                    Bi::WorkGroupId => BuiltIn::WorkgroupId,
+                    Bi::WorkGroupSize => BuiltIn::WorkgroupSize,
                 };
 
-                self.annotations.push(Instruction::decorate(
-                    id,
-                    spirv::Decoration::BuiltIn,
-                    &[built_in as u32],
-                ));
+                self.decorate(id, Decoration::BuiltIn, &[built_in as u32]);
             }
         }
 
@@ -1149,27 +1174,20 @@ impl Writer {
             }
         }
 
+        use spirv::Decoration;
+
         let access_decoration = match global_variable.storage_access {
-            crate::StorageAccess::LOAD => Some(spirv::Decoration::NonWritable),
-            crate::StorageAccess::STORE => Some(spirv::Decoration::NonReadable),
+            crate::StorageAccess::LOAD => Some(Decoration::NonWritable),
+            crate::StorageAccess::STORE => Some(Decoration::NonReadable),
             _ => None,
         };
         if let Some(decoration) = access_decoration {
-            self.annotations
-                .push(Instruction::decorate(id, decoration, &[]));
+            self.decorate(id, decoration, &[]);
         }
 
         if let Some(ref res_binding) = global_variable.binding {
-            self.annotations.push(Instruction::decorate(
-                id,
-                spirv::Decoration::DescriptorSet,
-                &[res_binding.group],
-            ));
-            self.annotations.push(Instruction::decorate(
-                id,
-                spirv::Decoration::Binding,
-                &[res_binding.binding],
-            ));
+            self.decorate(id, Decoration::DescriptorSet, &[res_binding.group]);
+            self.decorate(id, Decoration::Binding, &[res_binding.binding]);
         }
 
         // TODO Initializer is optional and not (yet) included in the IR
@@ -1194,21 +1212,6 @@ impl Writer {
                 id
             }
         }
-    }
-
-    fn write_composite_construct(
-        &mut self,
-        base_type_id: Word,
-        constituent_ids: &[Word],
-        block: &mut Block,
-    ) -> Word {
-        let id = self.id_gen.next();
-        block.body.push(Instruction::composite_construct(
-            base_type_id,
-            id,
-            constituent_ids,
-        ));
-        id
     }
 
     fn write_texture_coordinates(
@@ -1282,33 +1285,86 @@ impl Writer {
                 }),
             )?;
 
-            self.write_composite_construct(
+            let id = self.id_gen.next();
+            block.body.push(Instruction::composite_construct(
                 extended_coordinate_type_id,
+                id,
                 &constituent_ids[..size as usize],
-                block,
-            )
+            ));
+            id
         } else {
             coordinate_id
         })
     }
 
-    /// Cache an expression for a value.
-    fn cache_expression_value<'a>(
+    #[allow(clippy::too_many_arguments)]
+    fn promote_access_expression_to_variable(
         &mut self,
-        ir_module: &'a crate::Module,
+        ir_types: &Arena<crate::Type>,
+        result_type_id: Word,
+        container_id: Word,
+        container_resolution: &TypeResolution,
+        index_id: Word,
+        element_ty: Handle<crate::Type>,
+        block: &mut Block,
+    ) -> Result<(Word, LocalVariable), Error> {
+        let container_type_id = self.get_expression_type_id(ir_types, container_resolution)?;
+        let pointer_type_id = self.id_gen.next();
+        Instruction::type_pointer(
+            pointer_type_id,
+            spirv::StorageClass::Function,
+            container_type_id,
+        )
+        .to_words(&mut self.logical_layout.declarations);
+
+        let variable = {
+            let id = self.id_gen.next();
+            LocalVariable {
+                id,
+                instruction: Instruction::variable(
+                    pointer_type_id,
+                    id,
+                    spirv::StorageClass::Function,
+                    None,
+                ),
+            }
+        };
+        block
+            .body
+            .push(Instruction::store(variable.id, container_id, None));
+
+        let element_pointer_id = self.id_gen.next();
+        let element_pointer_type_id =
+            self.get_pointer_id(ir_types, element_ty, spirv::StorageClass::Function)?;
+        block.body.push(Instruction::access_chain(
+            element_pointer_type_id,
+            element_pointer_id,
+            variable.id,
+            &[index_id],
+        ));
+        let id = self.id_gen.next();
+        block.body.push(Instruction::load(
+            result_type_id,
+            id,
+            element_pointer_id,
+            None,
+        ));
+
+        Ok((id, variable))
+    }
+
+    /// Cache an expression for a value.
+    fn cache_expression_value(
+        &mut self,
+        ir_module: &crate::Module,
         ir_function: &crate::Function,
         fun_info: &FunctionInfo,
         expr_handle: Handle<crate::Expression>,
         block: &mut Block,
         function: &mut Function,
     ) -> Result<(), Error> {
-        let result_lookup_ty = match fun_info[expr_handle].ty {
-            TypeResolution::Handle(ty_handle) => LookupType::Handle(ty_handle),
-            TypeResolution::Value(ref inner) => {
-                LookupType::Local(self.physical_layout.make_local(inner).unwrap())
-            }
-        };
-        let result_type_id = self.get_type_id(&ir_module.types, result_lookup_ty)?;
+        let result_type_id =
+            self.get_expression_type_id(&ir_module.types, &fun_info[expr_handle].ty)?;
 
         let id = match ir_function.expressions[expr_handle] {
             crate::Expression::Access { base, index } => {
@@ -1322,10 +1378,10 @@ impl Writer {
                     0
                 } else {
                     let index_id = self.cached[index];
+                    let base_id = self.cached[base];
                     match *fun_info[base].ty.inner_with(&ir_module.types) {
                         crate::TypeInner::Vector { .. } => {
                             let id = self.id_gen.next();
-                            let base_id = self.cached[base];
                             block.body.push(Instruction::vector_extract_dynamic(
                                 result_type_id,
                                 id,
@@ -1334,7 +1390,21 @@ impl Writer {
                             ));
                             id
                         }
-                        //TODO: support `crate::TypeInner::Array { .. }` ?
+                        crate::TypeInner::Array {
+                            base: ty_element, ..
+                        } => {
+                            let (id, variable) = self.promote_access_expression_to_variable(
+                                &ir_module.types,
+                                result_type_id,
+                                base_id,
+                                &fun_info[base].ty,
+                                index_id,
+                                ty_element,
+                                block,
+                            )?;
+                            function.internal_variables.push(variable);
+                            id
+                        }
                         ref other => {
                             log::error!("Unable to access {:?}", other);
                             return Err(Error::FeatureNotImplemented("access for type"));
@@ -1376,17 +1446,35 @@ impl Writer {
             }
             crate::Expression::GlobalVariable(handle) => self.global_variables[handle.index()].id,
             crate::Expression::Constant(handle) => self.constant_ids[handle.index()],
+            crate::Expression::Splat { size, value } => {
+                let value_id = self.cached[value];
+                self.temp_list.clear();
+                self.temp_list.resize(size as usize, value_id);
+
+                let id = self.id_gen.next();
+                block.body.push(Instruction::composite_construct(
+                    result_type_id,
+                    id,
+                    &self.temp_list,
+                ));
+                id
+            }
             crate::Expression::Compose {
                 ty: _,
                 ref components,
             } => {
-                //TODO: avoid allocation
-                let mut constituent_ids = Vec::with_capacity(components.len());
+                self.temp_list.clear();
                 for &component in components {
-                    let component_id = self.cached[component];
-                    constituent_ids.push(component_id);
+                    self.temp_list.push(self.cached[component]);
                 }
-                self.write_composite_construct(result_type_id, &constituent_ids, block)
+
+                let id = self.id_gen.next();
+                block.body.push(Instruction::composite_construct(
+                    result_type_id,
+                    id,
+                    &self.temp_list,
+                ));
+                id
             }
             crate::Expression::Unary { op, expr } => {
                 let id = self.id_gen.next();
@@ -1985,8 +2073,10 @@ impl Writer {
                 });
                 id
             }
-            ref other => {
-                log::error!("unimplemented {:?}", other);
+            crate::Expression::ImageQuery { .. }
+            | crate::Expression::Relational { .. }
+            | crate::Expression::ArrayLength(_) => {
+                log::error!("unimplemented {:?}", ir_function.expressions[expr_handle]);
                 return Err(Error::FeatureNotImplemented("expression"));
             }
         };
@@ -2013,17 +2103,17 @@ impl Writer {
         };
         let result_type_id = self.get_type_id(&ir_module.types, result_lookup_ty)?;
 
-        self.temp_chain.clear();
+        self.temp_list.clear();
         let (root_id, class) = loop {
             expr_handle = match ir_function.expressions[expr_handle] {
                 crate::Expression::Access { base, index } => {
                     let index_id = self.cached[index];
-                    self.temp_chain.push(index_id);
+                    self.temp_list.push(index_id);
                     base
                 }
                 crate::Expression::AccessIndex { base, index } => {
                     let const_id = self.get_index_constant(index, &ir_module.types)?;
-                    self.temp_chain.push(const_id);
+                    self.temp_list.push(const_id);
                     base
                 }
                 crate::Expression::GlobalVariable(handle) => {
@@ -2038,16 +2128,16 @@ impl Writer {
             }
         };
 
-        let id = if self.temp_chain.is_empty() {
+        let id = if self.temp_list.is_empty() {
             root_id
         } else {
-            self.temp_chain.reverse();
+            self.temp_list.reverse();
             let id = self.id_gen.next();
             block.body.push(Instruction::access_chain(
                 result_type_id,
                 id,
                 root_id,
-                &self.temp_chain,
+                &self.temp_list,
             ));
             id
         };
@@ -2439,12 +2529,9 @@ impl Writer {
                     result,
                 } => {
                     let id = self.id_gen.next();
-                    //TODO: avoid heap allocation
-                    let mut argument_ids = vec![];
-
+                    self.temp_list.clear();
                     for &argument in arguments {
-                        let arg_id = self.cached[argument];
-                        argument_ids.push(arg_id);
+                        self.temp_list.push(self.cached[argument]);
                     }
 
                     let type_id = match result {
@@ -2465,7 +2552,7 @@ impl Writer {
                         type_id,
                         id,
                         self.lookup_function[&local_function],
-                        argument_ids.as_slice(),
+                        &self.temp_list,
                     ));
                 }
             }
@@ -2534,7 +2621,7 @@ impl Writer {
 
         // then all types, some of them may rely on constants and struct type set
         for (handle, _) in ir_module.types.iter() {
-            self.write_type_declaration_arena(&ir_module.types, &mod_info.layouter, handle)?;
+            self.write_type_declaration_arena(&ir_module.types, handle)?;
         }
 
         // the all the composite constants, they rely on types

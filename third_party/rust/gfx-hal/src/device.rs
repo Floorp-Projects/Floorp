@@ -455,6 +455,7 @@ pub trait Device<B: Backend>: fmt::Debug + Any + Send + Sync {
         view_kind: image::ViewKind,
         format: format::Format,
         swizzle: format::Swizzle,
+        usage: image::Usage,
         range: image::SubresourceRange,
     ) -> Result<B::ImageView, image::ViewCreationError>;
 

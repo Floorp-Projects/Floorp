@@ -48,9 +48,10 @@ use crate::{
     valid::{FunctionInfo, ModuleInfo},
     Arena, ArraySize, BinaryOperator, Binding, BuiltIn, Bytes, ConservativeDepth, Constant,
     ConstantInner, DerivativeAxis, Expression, FastHashMap, Function, GlobalVariable, Handle,
-    ImageClass, Interpolation, LocalVariable, Module, RelationalFunction, ScalarKind, ScalarValue,
-    ShaderStage, Statement, StorageAccess, StorageClass, StorageFormat, StructMember, Type,
-    TypeInner, UnaryOperator,
+    ImageClass, Interpolation, LocalVariable, Module, RelationalFunction, Sampling, ScalarKind,
+    ScalarValue, ShaderStage, Statement, StorageAccess, StorageClass, StorageFormat, StructMember,
+    Type, TypeInner, UnaryOperator,
+
 };
 use features::FeaturesManager;
 use std::{
@@ -232,8 +233,10 @@ impl IdGenerator {
 /// Helper wrapper used to get a name for a varying
 ///
 /// Varying have different naming schemes depending on their binding:
-/// - Varyings with builtin bindings get the from [`glsl_built_in`](glsl_built_in)
-/// - Varyings with location bindings are named `_location_X` where `X` is the location
+/// - Varyings with builtin bindings get the from [`glsl_built_in`](glsl_built_in).
+/// - Varyings with location bindings are named `_S_location_X` where `S` is a
+///   prefix identifying which pipeline stage the varying connects, and `X` is
+///   the location.
 struct VaryingName<'a> {
     binding: &'a Binding,
     stage: ShaderStage,
@@ -242,7 +245,7 @@ struct VaryingName<'a> {
 impl fmt::Display for VaryingName<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.binding {
-            Binding::Location(location, _) => {
+            Binding::Location { location, .. } => {
                 let prefix = match (self.stage, self.output) {
                     (ShaderStage::Compute, _) => unreachable!(),
                     // pipeline to vertex
@@ -448,11 +451,7 @@ impl<'a, W: Write> Writer<'a, W> {
         // This are always ordered because of the IR is structured in a way that you can't make a
         // struct without adding all of it's members first
         for (handle, ty) in self.module.types.iter() {
-            if let TypeInner::Struct {
-                block: _,
-                ref members,
-            } = ty.inner
-            {
+            if let TypeInner::Struct { ref members, .. } = ty.inner {
                 // No needed to write a struct that also should be written as a global variable
                 let is_global_struct = self
                     .module
@@ -670,11 +669,12 @@ impl<'a, W: Write> Writer<'a, W> {
             // glsl has no pointer types so just write types as normal and loads are skipped
             TypeInner::Pointer { base, .. } => self.write_type(base),
             TypeInner::Struct {
-                block: true,
+                level: crate::StructLevel::Root,
                 ref members,
+                span: _,
             } => self.write_struct(true, ty, members),
             // glsl structs are written as just the struct name if it isn't a block
-            TypeInner::Struct { block: false, .. } => {
+            TypeInner::Struct { .. } => {
                 // Get the struct name
                 let name = &self.names[&NameKey::Type(ty)];
                 write!(self.out, "{}", name)?;
@@ -790,25 +790,28 @@ impl<'a, W: Write> Writer<'a, W> {
         output: bool,
     ) -> Result<(), Error> {
         match self.module.types[ty].inner {
-            crate::TypeInner::Struct {
-                block: _,
-                ref members,
-            } => {
+            crate::TypeInner::Struct { ref members, .. } => {
                 for member in members {
                     self.write_varying(member.binding.as_ref(), member.ty, output)?;
                 }
             }
             _ => {
-                let (location, interpolation) = match binding {
-                    Some(&Binding::Location(location, interpolation)) => (location, interpolation),
+                let (location, interpolation, sampling) = match binding {
+                    Some(&Binding::Location { location, interpolation, sampling }) => (location, interpolation, sampling),
                     _ => return Ok(()),
                 };
+
                 // Write the interpolation modifier if needed
                 //
-                // We ignore all interpolation modifiers that aren't used in input globals in fragment
-                // shaders or output globals in vertex shaders
+                // We ignore all interpolation and auxiliary modifiers that aren't used in fragment
+                // shaders' input globals or vertex shaders' output globals.
+                let emit_interpolation_and_auxiliary = match self.options.shader_stage {
+                    ShaderStage::Vertex => output,
+                    ShaderStage::Fragment => !output,
+                    _ => false,
+                };
                 if let Some(interp) = interpolation {
-                    if self.options.shader_stage == ShaderStage::Fragment {
+                    if emit_interpolation_and_auxiliary {
                         write!(self.out, "{} ", glsl_interpolation(interp))?;
                     }
                 }
@@ -817,13 +820,26 @@ impl<'a, W: Write> Writer<'a, W> {
                 if self.options.version.supports_explicit_locations() {
                     write!(
                         self.out,
-                        "layout(location = {}) {} ",
-                        location,
-                        if output { "out" } else { "in" }
-                    )?;
-                } else {
-                    write!(self.out, "{} ", if output { "out" } else { "in" })?;
+                        "layout(location = {}) ",
+                        location)?;
                 }
+
+                // Write the sampling auxiliary qualifier.
+                //
+                // Before GLSL 4.2, the `centroid` and `sample` qualifiers were required to appear
+                // immediately before the `in` / `out` qualifier, so we'll just follow that rule
+                // here, regardless of the version.
+                if let Some(sampling) = sampling {
+                    if emit_interpolation_and_auxiliary {
+                        if let Some(qualifier) = glsl_sampling(sampling) {
+                            write!(self.out, "{} ", qualifier)?;
+                        }
+                    }
+                }
+
+                // Write the input/output qualifier.
+                write!(self.out, "{} ", if output { "out" } else { "in" })?;
+
                 // Write the type
                 // `write_type` adds no leading or trailing spaces
                 self.write_type(ty)?;
@@ -831,7 +847,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 // Finally write the global name and end the global with a `;` and a newline
                 // Leading space is important
                 let vname = VaryingName {
-                    binding: &Binding::Location(location, None),
+                    binding: &Binding::Location { location, interpolation: None, sampling: None },
                     stage: self.entry_point.stage,
                     output,
                 };
@@ -918,10 +934,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 write!(self.out, " {}", name)?;
                 write!(self.out, " = ")?;
                 match self.module.types[arg.ty].inner {
-                    crate::TypeInner::Struct {
-                        block: _,
-                        ref members,
-                    } => {
+                    crate::TypeInner::Struct { ref members, .. } => {
                         self.write_type(arg.ty)?;
                         write!(self.out, "(")?;
                         for (index, member) in members.iter().enumerate() {
@@ -1338,10 +1351,7 @@ impl<'a, W: Write> Writer<'a, W> {
                         if let Some(ref result) = ep.function.result {
                             let value = value.unwrap();
                             match self.module.types[result.ty].inner {
-                                crate::TypeInner::Struct {
-                                    block: _,
-                                    ref members,
-                                } => {
+                                crate::TypeInner::Struct { ref members, .. } => {
                                     for (index, member) in members.iter().enumerate() {
                                         let varying_name = VaryingName {
                                             binding: member.binding.as_ref().unwrap(),
@@ -1488,6 +1498,14 @@ impl<'a, W: Write> Writer<'a, W> {
             // Constants are delegated to `write_constant`
             Expression::Constant(constant) => {
                 self.write_constant(&self.module.constants[constant])?
+            }
+            // `Splat` needs to actually write down a vector, it's not always inferred in GLSL.
+            Expression::Splat { size: _, value } => {
+                let resolved = ctx.info[expr].ty.inner_with(&self.module.types);
+                self.write_value_type(resolved)?;
+                write!(self.out, "(")?;
+                self.write_expr(value, ctx)?;
+                write!(self.out, ")")?
             }
             // `Compose` is pretty simple we just write `type(components)` where `components` is a
             // comma separated list of expressions
@@ -2205,8 +2223,15 @@ fn glsl_interpolation(interpolation: Interpolation) -> &'static str {
         Interpolation::Perspective => "smooth",
         Interpolation::Linear => "noperspective",
         Interpolation::Flat => "flat",
-        Interpolation::Centroid => "centroid",
-        Interpolation::Sample => "sample",
+    }
+}
+
+/// Return the GLSL auxiliary qualifier for the given sampling value.
+fn glsl_sampling(sampling: Sampling) -> Option<&'static str> {
+    match sampling {
+        Sampling::Center => None,
+        Sampling::Centroid => Some("centroid"),
+        Sampling::Sample => Some("sample"),
     }
 }
 

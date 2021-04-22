@@ -537,6 +537,14 @@ impl MTLFeatureSet {
         }
     }
 
+    pub fn supports_binary_archive(&self) -> bool {
+        match self.os() {
+            OS::iOS => self.gpu_family() >= 3,
+            OS::tvOS => self.gpu_family() >= 3,
+            OS::macOS => self.gpu_family() >= 1,
+        }
+    }
+
     pub fn max_vertex_attributes(&self) -> u32 {
         31
     }
@@ -1799,10 +1807,10 @@ impl DeviceRef {
     pub fn new_binary_archive_with_descriptor(
         &self,
         descriptor: &BinaryArchiveDescriptorRef,
-    ) -> Result<(), String> {
+    ) -> Result<BinaryArchive, String> {
         unsafe {
             let mut err: *mut Object = ptr::null_mut();
-            let _r: () = msg_send![self, newBinaryArchiveWithDescriptor:descriptor
+            let binary_archive: *mut MTLBinaryArchive = msg_send![self, newBinaryArchiveWithDescriptor:descriptor
                                                      error:&mut err];
             if !err.is_null() {
                 // TODO: copy pasta
@@ -1811,7 +1819,7 @@ impl DeviceRef {
                 let message = CStr::from_ptr(c_msg).to_string_lossy().into_owned();
                 Err(message)
             } else {
-                Ok(())
+                Ok(BinaryArchive::from_ptr(binary_archive))
             }
         }
     }
@@ -1828,6 +1836,27 @@ impl DeviceRef {
             let pipeline_state: *mut MTLRenderPipelineState = try_objc! { err =>
                 msg_send![self, newRenderPipelineStateWithDescriptor:descriptor
                                                              options:reflection_options
+                                                          reflection:reflection
+                                                               error:&mut err]
+            };
+
+            Ok(RenderPipelineState::from_ptr(pipeline_state))
+        }
+    }
+
+    /// Useful for debugging binary archives.
+    pub fn new_render_pipeline_state_with_fail_on_binary_archive_miss(
+        &self,
+        descriptor: &RenderPipelineDescriptorRef,
+    ) -> Result<RenderPipelineState, String> {
+        unsafe {
+            let pipeline_options = MTLPipelineOption::FailOnBinaryArchiveMiss;
+
+            let reflection: *mut MTLRenderPipelineReflection = std::ptr::null_mut();
+
+            let pipeline_state: *mut MTLRenderPipelineState = try_objc! { err =>
+                msg_send![self, newRenderPipelineStateWithDescriptor:descriptor
+                                                             options:pipeline_options
                                                           reflection:reflection
                                                                error:&mut err]
             };
@@ -2040,5 +2069,10 @@ impl DeviceRef {
 
     pub fn current_allocated_size(&self) -> NSUInteger {
         unsafe { msg_send![self, currentAllocatedSize] }
+    }
+
+    /// Only available on (macos(10.14), ios(12.0), tvos(12.0))
+    pub fn max_buffer_length(&self) -> NSUInteger {
+        unsafe { msg_send![self, maxBufferLength] }
     }
 }

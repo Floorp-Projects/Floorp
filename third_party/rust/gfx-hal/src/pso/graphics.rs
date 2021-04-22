@@ -61,7 +61,7 @@ pub struct BakedStates {
     /// Static scissor. TODO: multiple scissors
     pub scissor: Option<Rect>,
     /// Static blend constant color.
-    pub blend_color: Option<ColorValue>,
+    pub blend_constants: Option<ColorValue>,
     /// Static depth bounds.
     pub depth_bounds: Option<Range<f32>>,
 }
