@@ -687,6 +687,19 @@ bool wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode) {
   }
 }
 
+bool FuncType::canHaveJitEntry() const {
+  return !hasUnexposableArgOrRet() &&
+         !temporarilyUnsupportedReftypeForEntry() &&
+         !temporarilyUnsupportedResultCountForJitEntry() &&
+         JitOptions.enableWasmJitEntry;
+}
+
+bool FuncType::canHaveJitExit() const {
+  return !hasUnexposableArgOrRet() && !temporarilyUnsupportedReftypeForExit() &&
+         !temporarilyUnsupportedResultCountForJitExit() &&
+         JitOptions.enableWasmJitExit;
+}
+
 size_t FuncType::serializedSize() const {
   return SerializedPodVectorSize(results_) + SerializedPodVectorSize(args_);
 }

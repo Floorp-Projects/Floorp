@@ -8607,12 +8607,12 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
   auto bestTier = inst.code().bestTier();
   const wasm::FuncExport& funcExport =
       inst.metadata(bestTier).lookupFuncExport(funcIndex);
-  const wasm::FuncType& sig = funcExport.funcType();
 
   MOZ_ASSERT(!IsInsideNursery(inst.object()));
+  MOZ_ASSERT(funcExport.canHaveJitEntry(),
+             "Function should allow a Wasm JitEntry");
 
-  MOZ_ASSERT(!sig.temporarilyUnsupportedReftypeForInlineEntry(),
-             "Function should not have a Wasm JitEntry");
+  const wasm::FuncType& sig = funcExport.funcType();
 
   // If there are too many arguments, don't optimize (we won't be able to store
   // the arguments in the LIR node).
