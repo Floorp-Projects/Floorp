@@ -33,7 +33,7 @@
     #TabsToolbar {
       background-image: radial-gradient(ellipse at bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5) 80%, transparent);
       color: black;
-      --lwt-toolbarbutton-icon-fill: currentColor;
+      --toolbarbutton-icon-fill: currentColor;
     }
   }
 }
@@ -63,7 +63,7 @@
   @media not (-moz-proton) {
   /* Use opaque white icons on Aero Glass. */
   #TabsToolbar {
-    --lwt-toolbarbutton-icon-fill: white;
+    --toolbarbutton-icon-fill: white;
   }
   } /*** END !proton ***/
 
