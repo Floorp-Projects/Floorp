@@ -17,6 +17,7 @@
 #include "nsISerialEventTarget.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
+#include "nsIThread.h"
 
 using mozilla::wr::ByteBuffer;
 

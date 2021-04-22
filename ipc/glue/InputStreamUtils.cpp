@@ -40,16 +40,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-namespace {
-
-NS_DEFINE_CID(kStringInputStreamCID, NS_STRINGINPUTSTREAM_CID);
-NS_DEFINE_CID(kFileInputStreamCID, NS_LOCALFILEINPUTSTREAM_CID);
-NS_DEFINE_CID(kBufferedInputStreamCID, NS_BUFFEREDINPUTSTREAM_CID);
-NS_DEFINE_CID(kMIMEInputStreamCID, NS_MIMEINPUTSTREAM_CID);
-NS_DEFINE_CID(kMultiplexInputStreamCID, NS_MULTIPLEXINPUTSTREAM_CID);
-
-}  // namespace
-
 namespace mozilla {
 namespace ipc {
 

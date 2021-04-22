@@ -10,6 +10,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 
 namespace mozilla {
 namespace ipc {
