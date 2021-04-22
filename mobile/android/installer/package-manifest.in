@@ -206,6 +206,12 @@
 
 @BINPATH@/components/GeckoView.manifest
 
+; CDP remote agent
+#ifdef ENABLE_REMOTE_AGENT
+@BINPATH@/chrome/remote@JAREXT@
+@BINPATH@/chrome/remote.manifest
+#endif
+
 ; Remote control protocol
 #ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@
