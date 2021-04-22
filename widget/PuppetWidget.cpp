@@ -403,6 +403,9 @@ nsIWidget::ContentAndAPZEventStatus PuppetWidget::DispatchInputEvent(
       Unused << mBrowserChild->SendDispatchKeyboardEvent(
           *aEvent->AsKeyboardEvent());
       break;
+    case eTouchEventClass:
+      Unused << mBrowserChild->SendDispatchTouchEvent(*aEvent->AsTouchEvent());
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("unsupported event type");
   }

@@ -413,6 +413,9 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvDispatchKeyboardEvent(
       const mozilla::WidgetKeyboardEvent& aEvent);
 
+  mozilla::ipc::IPCResult RecvDispatchTouchEvent(
+      const mozilla::WidgetTouchEvent& aEvent);
+
   mozilla::ipc::IPCResult RecvScrollRectIntoView(
       const nsRect& aRect, const ScrollAxis& aVertical,
       const ScrollAxis& aHorizontal, const ScrollFlags& aScrollFlags,
