@@ -34,6 +34,10 @@
   -moz-context-properties: fill;
 }
 
+.urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner[selected] > .urlbarView-no-wrap > .urlbarView-favicon {
+  color: inherit;
+}
+
 .urlbarView-dynamic-onboardTabToSearch-text-container {
   display: flex;
   flex-direction: column;
