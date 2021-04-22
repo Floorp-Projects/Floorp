@@ -20,14 +20,14 @@ fuzzy-if(azureSkiaGL,0-2,0-7174) == background-blending-image-gradient.html back
 == background-blending-color-burn.html background-blending-color-burn-ref.svg
 == background-blending-color-dodge.html background-blending-color-dodge-ref.svg
 # need to investigate why these tests are fuzzy - first suspect is a possible color space conversion on some platforms; same for mix-blend-mode tests
-fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(d2d,0-1,0-8000) fuzzy-if(swgl,1-1,8000-9600) == background-blending-color.html background-blending-color-ref.svg
+fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,1-1,11200-11200) fuzzy-if(d2d,0-1,0-8000) fuzzy-if(swgl,1-1,8000-9600) == background-blending-color.html background-blending-color-ref.svg
 == background-blending-darken.html background-blending-darken-ref.svg
 == background-blending-difference.html background-blending-difference-ref.svg
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-1600) == background-blending-exclusion.html background-blending-exclusion-ref.svg
 fuzzy-if(cocoaWidget||d2d||swgl,0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
 fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(webrender&&!geckoview,1-1,9600-11240) == background-blending-hue.html background-blending-hue-ref.svg
 == background-blending-lighten.html background-blending-lighten-ref.svg
-fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(swgl,1-1,8000-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
+fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,1-1,11200-11200) fuzzy-if(swgl,1-1,8000-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
 fuzzy-if(skiaContent,0-1,0-1600) == background-blending-multiply.html background-blending-multiply-ref.svg
 == background-blending-normal.html background-blending-normal-ref.svg
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||gtkWidget,0-1,0-1600) == background-blending-overlay.html background-blending-overlay-ref.svg
