@@ -110,7 +110,10 @@ mochitest-a11y:
     test-manifest-loader: default  # ensure we don't run with manifest-scheduling
     loopback-video: true
     e10s: false
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            .*-tsan/opt: ['trunk']
+            default: built-projects
     mozharness:
         mochitest-flavor: a11y
 
