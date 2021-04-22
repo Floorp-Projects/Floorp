@@ -17,7 +17,7 @@
               "type": "string",
               "enum": [
                 "bitcoin", "dat", "dweb", "ftp", "geo", "gopher", "im", "ipfs", "ipns", "irc", "ircs", "magnet",
-                "mailto", "mms", "news", "nntp", "sip", "sms", "smsto", "ssb", "ssh",
+                "mailto", "matrix", "mms", "news", "nntp", "sip", "sms", "smsto", "ssb", "ssh",
                 "tel", "urn", "webcal", "wtai", "xmpp"
               ]
             }, {
