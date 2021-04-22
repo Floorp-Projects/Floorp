@@ -299,17 +299,8 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return true;
   }
 
-  // Should have been guarded earlier
-  MOZ_ASSERT(!fi.funcType().hasUnexposableArgOrRet());
-
-  // Functions with unsupported reference types in signature don't have a jit
-  // exit at the moment.
-  if (fi.funcType().temporarilyUnsupportedReftypeForExit()) {
-    return true;
-  }
-
-  // Functions that return multiple values don't have a jit exit at the moment.
-  if (fi.funcType().temporarilyUnsupportedResultCountForJitExit()) {
+  // Skip if the function does not have a signature that allows for a JIT exit.
+  if (!fi.canHaveJitExit()) {
     return true;
   }
 

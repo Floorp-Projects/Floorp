@@ -1572,6 +1572,48 @@ class FuncType {
   ValTypeVector args_;
   ValTypeVector results_;
 
+  // Entry from JS to wasm via the JIT is currently unimplemented for
+  // functions that return multiple values.
+  bool temporarilyUnsupportedResultCountForJitEntry() const {
+    return results().length() > MaxResultsForJitEntry;
+  }
+  // Calls out from wasm to JS that return multiple values is currently
+  // unsupported.
+  bool temporarilyUnsupportedResultCountForJitExit() const {
+    return results().length() > MaxResultsForJitExit;
+  }
+  // For JS->wasm jit entries, temporarily disallow certain types until the
+  // stubs generator is improved.
+  //   * ref params may be nullable externrefs
+  //   * ref results may not be type indices
+  // V128 types are excluded per spec but are guarded against separately.
+  bool temporarilyUnsupportedReftypeForEntry() const {
+    for (ValType arg : args()) {
+      if (arg.isReference() && (!arg.isExternRef() || !arg.isNullable())) {
+        return true;
+      }
+    }
+    for (ValType result : results()) {
+      if (result.isTypeIndex()) {
+        return true;
+      }
+    }
+    return false;
+  }
+  // For wasm->JS jit exits, temporarily disallow certain types until
+  // the stubs generator is improved.
+  //   * ref results may be nullable externrefs
+  // Unexposable types must be guarded against separately.
+  bool temporarilyUnsupportedReftypeForExit() const {
+    for (ValType result : results()) {
+      if (result.isReference() &&
+          (!result.isExternRef() || !result.isNullable())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
  public:
   FuncType() : args_(), results_() {}
   FuncType(ValTypeVector&& args, ValTypeVector&& results)
@@ -1621,16 +1663,9 @@ class FuncType {
   }
   bool operator!=(const FuncType& rhs) const { return !(*this == rhs); }
 
-  // Entry from JS to wasm via the JIT is currently unimplemented for
-  // functions that return multiple values.
-  bool temporarilyUnsupportedResultCountForJitEntry() const {
-    return results().length() > MaxResultsForJitEntry;
-  }
-  // Calls out from wasm to JS that return multiple values is currently
-  // unsupported.
-  bool temporarilyUnsupportedResultCountForJitExit() const {
-    return results().length() > MaxResultsForJitExit;
-  }
+  bool canHaveJitEntry() const;
+  bool canHaveJitExit() const;
+
   bool hasUnexposableArgOrRet() const {
     for (ValType arg : args()) {
       if (!arg.isExposable()) {
@@ -1644,55 +1679,7 @@ class FuncType {
     }
     return false;
   }
-  // For JS->wasm jit entries, temporarily disallow certain types until the
-  // stubs generator is improved.
-  //   * ref params may be nullable externrefs
-  //   * ref results may not be type indices
-  // V128 types are excluded per spec but are guarded against separately.
-  bool temporarilyUnsupportedReftypeForEntry() const {
-    for (ValType arg : args()) {
-      if (arg.isReference() && (!arg.isExternRef() || !arg.isNullable())) {
-        return true;
-      }
-    }
-    for (ValType result : results()) {
-      if (result.isTypeIndex()) {
-        return true;
-      }
-    }
-    return false;
-  }
-  // For inline JS->wasm jit entries, temporarily disallow certain types until
-  // the stubs generator is improved.
-  //   * ref params may be nullable externrefs
-  //   * ref results may not be type indices
-  // V128 types are excluded per spec but are guarded against separately.
-  bool temporarilyUnsupportedReftypeForInlineEntry() const {
-    for (ValType arg : args()) {
-      if (arg.isReference() && (!arg.isExternRef() || !arg.isNullable())) {
-        return true;
-      }
-    }
-    for (ValType result : results()) {
-      if (result.isTypeIndex()) {
-        return true;
-      }
-    }
-    return false;
-  }
-  // For wasm->JS jit exits, temporarily disallow certain types until
-  // the stubs generator is improved.
-  //   * ref results may be nullable externrefs
-  // Unexposable types must be guarded against separately.
-  bool temporarilyUnsupportedReftypeForExit() const {
-    for (ValType result : results()) {
-      if (result.isReference() &&
-          (!result.isExternRef() || !result.isNullable())) {
-        return true;
-      }
-    }
-    return false;
-  }
+
 #ifdef WASM_PRIVATE_REFTYPES
   bool exposesTypeIndex() const {
     for (const ValType& arg : args()) {
