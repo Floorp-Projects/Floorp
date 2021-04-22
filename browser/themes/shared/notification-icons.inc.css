@@ -243,8 +243,14 @@
 
 #webRTC-all-windows-shared,
 #webRTC-previewWarning {
-  font-size: 0.75em;
-  opacity: 0.6;
+  font-size: 0.8em;
+}
+
+@media not (prefers-contrast) {
+  #webRTC-all-windows-shared,
+  #webRTC-previewWarning {
+    opacity: 0.6;
+  }
 }
 
 #webRTC-previewWarning {
