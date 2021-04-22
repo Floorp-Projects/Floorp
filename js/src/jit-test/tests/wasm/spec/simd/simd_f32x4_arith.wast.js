@@ -5507,10 +5507,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -5809,10 +5809,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -5860,10 +5860,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -5894,10 +5894,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -5945,10 +5945,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -5996,10 +5996,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6035,10 +6035,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6074,10 +6074,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6113,10 +6113,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6152,10 +6152,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6191,10 +6191,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6230,10 +6230,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6269,10 +6269,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6308,10 +6308,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6342,10 +6342,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6376,10 +6376,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6410,10 +6410,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6444,10 +6444,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6478,10 +6478,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6512,10 +6512,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6546,10 +6546,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6580,10 +6580,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6614,10 +6614,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6648,10 +6648,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6682,10 +6682,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6716,10 +6716,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6755,10 +6755,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6794,10 +6794,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6833,10 +6833,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6872,10 +6872,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6906,10 +6906,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6940,10 +6940,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -6974,10 +6974,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7008,10 +7008,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7059,10 +7059,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7110,10 +7110,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7161,10 +7161,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -7212,10 +7212,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -7246,10 +7246,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7280,10 +7280,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7331,10 +7331,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7382,10 +7382,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7421,10 +7421,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7460,10 +7460,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7499,10 +7499,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7538,10 +7538,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7577,10 +7577,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7616,10 +7616,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7655,10 +7655,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7694,10 +7694,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7728,10 +7728,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7762,10 +7762,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7796,10 +7796,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7830,10 +7830,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7864,10 +7864,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7898,10 +7898,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7932,10 +7932,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -7966,10 +7966,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8000,10 +8000,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8034,10 +8034,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8068,10 +8068,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8102,10 +8102,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8141,10 +8141,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8180,10 +8180,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8219,10 +8219,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8258,10 +8258,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8292,10 +8292,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8326,10 +8326,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8360,10 +8360,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8394,10 +8394,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8445,10 +8445,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8496,10 +8496,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -8547,10 +8547,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8598,10 +8598,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8632,10 +8632,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8666,10 +8666,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8717,10 +8717,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8768,10 +8768,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8807,10 +8807,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8846,10 +8846,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8885,10 +8885,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8924,10 +8924,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -8963,10 +8963,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9002,10 +9002,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9041,10 +9041,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9080,10 +9080,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9114,10 +9114,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9148,10 +9148,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9182,10 +9182,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9216,10 +9216,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9250,10 +9250,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9284,10 +9284,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9318,10 +9318,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9352,10 +9352,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9386,10 +9386,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9420,10 +9420,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9454,10 +9454,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9488,10 +9488,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9527,10 +9527,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9566,10 +9566,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9605,10 +9605,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9644,10 +9644,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9678,10 +9678,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9712,10 +9712,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9746,10 +9746,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9780,10 +9780,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9831,10 +9831,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9882,10 +9882,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9933,10 +9933,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -9984,10 +9984,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10018,10 +10018,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10052,10 +10052,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10103,10 +10103,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10154,10 +10154,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10193,10 +10193,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10232,10 +10232,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10271,10 +10271,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10310,10 +10310,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10349,10 +10349,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10388,10 +10388,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10427,10 +10427,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10466,10 +10466,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10500,10 +10500,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10534,10 +10534,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10568,10 +10568,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10602,10 +10602,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10636,10 +10636,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10670,10 +10670,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10704,10 +10704,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10738,10 +10738,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10772,10 +10772,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10806,10 +10806,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10840,10 +10840,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10874,10 +10874,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10913,10 +10913,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10952,10 +10952,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -10991,10 +10991,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -11030,10 +11030,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -11064,10 +11064,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -11098,10 +11098,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -11132,10 +11132,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -11166,10 +11166,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -11217,10 +11217,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -11268,10 +11268,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -11319,10 +11319,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -11370,10 +11370,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -17431,10 +17431,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -17767,10 +17767,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -17801,10 +17801,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -17835,10 +17835,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -17886,10 +17886,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -17937,10 +17937,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -17976,10 +17976,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18015,10 +18015,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18054,10 +18054,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18093,10 +18093,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18132,10 +18132,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18171,10 +18171,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18210,10 +18210,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18249,10 +18249,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18283,10 +18283,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18317,10 +18317,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18351,10 +18351,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18385,10 +18385,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18419,10 +18419,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18453,10 +18453,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18487,10 +18487,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18521,10 +18521,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18555,10 +18555,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18589,10 +18589,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18623,10 +18623,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18657,10 +18657,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18696,10 +18696,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18735,10 +18735,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18774,10 +18774,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18813,10 +18813,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18847,10 +18847,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18881,10 +18881,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18915,10 +18915,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -18949,10 +18949,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19000,10 +19000,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19051,10 +19051,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19102,10 +19102,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -19153,10 +19153,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -19187,10 +19187,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19221,10 +19221,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19272,10 +19272,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19323,10 +19323,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19362,10 +19362,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19401,10 +19401,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19440,10 +19440,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19479,10 +19479,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19518,10 +19518,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19557,10 +19557,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19596,10 +19596,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19635,10 +19635,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19669,10 +19669,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19703,10 +19703,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19737,10 +19737,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19771,10 +19771,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19805,10 +19805,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19839,10 +19839,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19873,10 +19873,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19907,10 +19907,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19941,10 +19941,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -19975,10 +19975,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20009,10 +20009,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20043,10 +20043,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20082,10 +20082,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20121,10 +20121,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20160,10 +20160,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20199,10 +20199,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20233,10 +20233,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20267,10 +20267,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20301,10 +20301,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20335,10 +20335,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20386,10 +20386,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20437,10 +20437,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -20488,10 +20488,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20539,10 +20539,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20573,10 +20573,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20607,10 +20607,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20658,10 +20658,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20709,10 +20709,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20748,10 +20748,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20787,10 +20787,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20826,10 +20826,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20865,10 +20865,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20904,10 +20904,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20943,10 +20943,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -20982,10 +20982,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21021,10 +21021,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21055,10 +21055,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21089,10 +21089,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21123,10 +21123,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21157,10 +21157,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21191,10 +21191,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21225,10 +21225,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21259,10 +21259,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21293,10 +21293,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21327,10 +21327,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21361,10 +21361,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21395,10 +21395,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21429,10 +21429,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21468,10 +21468,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21507,10 +21507,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21546,10 +21546,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21585,10 +21585,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21619,10 +21619,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21653,10 +21653,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21687,10 +21687,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21721,10 +21721,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21772,10 +21772,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21823,10 +21823,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21874,10 +21874,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21925,10 +21925,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21959,10 +21959,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -21993,10 +21993,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22044,10 +22044,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22095,10 +22095,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22134,10 +22134,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22173,10 +22173,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22212,10 +22212,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22251,10 +22251,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22290,10 +22290,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22329,10 +22329,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22368,10 +22368,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22407,10 +22407,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22441,10 +22441,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22475,10 +22475,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22509,10 +22509,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22543,10 +22543,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22577,10 +22577,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22611,10 +22611,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22645,10 +22645,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22679,10 +22679,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22713,10 +22713,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22747,10 +22747,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22781,10 +22781,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22815,10 +22815,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22854,10 +22854,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22893,10 +22893,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22932,10 +22932,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -22971,10 +22971,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -23005,10 +23005,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -23039,10 +23039,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -23073,10 +23073,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -23107,10 +23107,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -23158,10 +23158,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -23209,10 +23209,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -23260,10 +23260,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -23311,10 +23311,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -24186,10 +24186,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -24203,10 +24203,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -24760,10 +24760,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -24794,10 +24794,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29087,10 +29087,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29121,10 +29121,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29406,10 +29406,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29440,10 +29440,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29742,10 +29742,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29776,10 +29776,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29827,10 +29827,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29878,10 +29878,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29917,10 +29917,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29956,10 +29956,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -29995,10 +29995,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30034,10 +30034,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30073,10 +30073,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30112,10 +30112,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30151,10 +30151,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30190,10 +30190,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30224,10 +30224,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30258,10 +30258,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30292,10 +30292,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30326,10 +30326,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30360,10 +30360,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30394,10 +30394,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30428,10 +30428,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30462,10 +30462,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30496,10 +30496,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30530,10 +30530,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30564,10 +30564,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30598,10 +30598,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30637,10 +30637,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30676,10 +30676,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30715,10 +30715,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30754,10 +30754,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30788,10 +30788,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30822,10 +30822,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30856,10 +30856,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30890,10 +30890,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30941,10 +30941,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -30992,10 +30992,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31043,10 +31043,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -31094,10 +31094,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -31128,10 +31128,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31162,10 +31162,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31213,10 +31213,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31264,10 +31264,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31303,10 +31303,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31342,10 +31342,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31381,10 +31381,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31420,10 +31420,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31459,10 +31459,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31498,10 +31498,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31537,10 +31537,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31576,10 +31576,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31610,10 +31610,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31644,10 +31644,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31678,10 +31678,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31712,10 +31712,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31746,10 +31746,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31780,10 +31780,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31814,10 +31814,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31848,10 +31848,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31882,10 +31882,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31916,10 +31916,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31950,10 +31950,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -31984,10 +31984,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32023,10 +32023,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32062,10 +32062,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32101,10 +32101,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32140,10 +32140,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32174,10 +32174,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32208,10 +32208,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32242,10 +32242,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32276,10 +32276,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32327,10 +32327,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32378,10 +32378,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -32429,10 +32429,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32480,10 +32480,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32514,10 +32514,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32548,10 +32548,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32599,10 +32599,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32650,10 +32650,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32689,10 +32689,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32728,10 +32728,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32767,10 +32767,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32806,10 +32806,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32845,10 +32845,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32884,10 +32884,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32923,10 +32923,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32962,10 +32962,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -32996,10 +32996,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33030,10 +33030,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33064,10 +33064,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33098,10 +33098,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33132,10 +33132,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33166,10 +33166,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33200,10 +33200,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33234,10 +33234,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33268,10 +33268,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33302,10 +33302,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33336,10 +33336,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33370,10 +33370,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33409,10 +33409,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33448,10 +33448,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33487,10 +33487,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33526,10 +33526,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33560,10 +33560,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33594,10 +33594,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33628,10 +33628,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33662,10 +33662,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33713,10 +33713,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33764,10 +33764,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33815,10 +33815,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33866,10 +33866,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33900,10 +33900,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33934,10 +33934,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -33985,10 +33985,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34036,10 +34036,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34075,10 +34075,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34114,10 +34114,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34153,10 +34153,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34192,10 +34192,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34231,10 +34231,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34270,10 +34270,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34309,10 +34309,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34348,10 +34348,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34382,10 +34382,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34416,10 +34416,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34450,10 +34450,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34484,10 +34484,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34518,10 +34518,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34552,10 +34552,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34586,10 +34586,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34620,10 +34620,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34654,10 +34654,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34688,10 +34688,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34722,10 +34722,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34756,10 +34756,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34795,10 +34795,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34834,10 +34834,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34873,10 +34873,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34912,10 +34912,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34946,10 +34946,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -34980,10 +34980,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -35014,10 +35014,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -35048,10 +35048,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -35099,10 +35099,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -35150,10 +35150,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -35201,10 +35201,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -35252,10 +35252,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -35853,10 +35853,10 @@ assert_return(
   () => invoke($0, `f32x4.div`, [f32x4([0, 0, 0, 0]), f32x4([0, 0, 0, 0])]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -35887,10 +35887,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -36178,10 +36178,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -36229,10 +36229,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41313,10 +41313,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41330,10 +41330,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41632,10 +41632,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41649,10 +41649,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41683,10 +41683,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41717,10 +41717,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41768,10 +41768,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41819,10 +41819,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41858,10 +41858,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41897,10 +41897,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41936,10 +41936,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -41975,10 +41975,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42014,10 +42014,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42053,10 +42053,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42092,10 +42092,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42131,10 +42131,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42165,10 +42165,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42199,10 +42199,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42233,10 +42233,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42267,10 +42267,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42301,10 +42301,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42335,10 +42335,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42369,10 +42369,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42403,10 +42403,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42437,10 +42437,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42471,10 +42471,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42505,10 +42505,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42539,10 +42539,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42578,10 +42578,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42617,10 +42617,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42656,10 +42656,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42695,10 +42695,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42729,10 +42729,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42763,10 +42763,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42797,10 +42797,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42831,10 +42831,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42882,10 +42882,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42933,10 +42933,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -42984,10 +42984,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -43035,10 +43035,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -43069,10 +43069,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43103,10 +43103,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43154,10 +43154,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43205,10 +43205,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43244,10 +43244,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43283,10 +43283,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43322,10 +43322,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43361,10 +43361,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43400,10 +43400,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43439,10 +43439,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43478,10 +43478,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43517,10 +43517,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43551,10 +43551,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43585,10 +43585,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43619,10 +43619,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43653,10 +43653,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43687,10 +43687,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43721,10 +43721,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43755,10 +43755,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43789,10 +43789,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43823,10 +43823,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43857,10 +43857,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43891,10 +43891,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43925,10 +43925,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -43964,10 +43964,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44003,10 +44003,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44042,10 +44042,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44081,10 +44081,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44115,10 +44115,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44149,10 +44149,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44183,10 +44183,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44217,10 +44217,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44268,10 +44268,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44319,10 +44319,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -44370,10 +44370,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44421,10 +44421,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44455,10 +44455,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44489,10 +44489,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44540,10 +44540,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44591,10 +44591,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44630,10 +44630,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44669,10 +44669,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44708,10 +44708,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44747,10 +44747,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44786,10 +44786,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44825,10 +44825,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44864,10 +44864,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44903,10 +44903,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44937,10 +44937,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -44971,10 +44971,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45005,10 +45005,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45039,10 +45039,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45073,10 +45073,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45107,10 +45107,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45141,10 +45141,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45175,10 +45175,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45209,10 +45209,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45243,10 +45243,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45277,10 +45277,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45311,10 +45311,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45350,10 +45350,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45389,10 +45389,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45428,10 +45428,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45467,10 +45467,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45501,10 +45501,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45535,10 +45535,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45569,10 +45569,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45603,10 +45603,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45654,10 +45654,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45705,10 +45705,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45756,10 +45756,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45807,10 +45807,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45841,10 +45841,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45875,10 +45875,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45926,10 +45926,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -45977,10 +45977,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46016,10 +46016,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46055,10 +46055,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46094,10 +46094,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46133,10 +46133,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46172,10 +46172,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46211,10 +46211,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46250,10 +46250,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46289,10 +46289,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46323,10 +46323,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46357,10 +46357,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46391,10 +46391,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46425,10 +46425,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46459,10 +46459,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46493,10 +46493,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46527,10 +46527,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46561,10 +46561,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46595,10 +46595,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46629,10 +46629,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46663,10 +46663,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46697,10 +46697,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46736,10 +46736,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46775,10 +46775,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46814,10 +46814,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46853,10 +46853,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46887,10 +46887,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46921,10 +46921,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46955,10 +46955,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -46989,10 +46989,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -47040,10 +47040,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -47091,10 +47091,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -47142,10 +47142,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -47193,10 +47193,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -47866,10 +47866,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -47908,10 +47908,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -47931,10 +47931,10 @@ assert_return(
   () => invoke($0, `f32x4.sqrt`, [f32x4([-0.5, -0.5, -0.5, -0.5])]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -47952,10 +47952,10 @@ assert_return(() => invoke($0, `f32x4.sqrt`, [f32x4([1, 1, 1, 1])]), [
 // ./test/core/simd/simd_f32x4_arith.wast:5119
 assert_return(() => invoke($0, `f32x4.sqrt`, [f32x4([-1, -1, -1, -1])]), [
   new F32x4Pattern(
-    `f32_canonical_nan`,
-    `f32_canonical_nan`,
-    `f32_canonical_nan`,
-    `f32_canonical_nan`,
+    `canonical_nan`,
+    `canonical_nan`,
+    `canonical_nan`,
+    `canonical_nan`,
   ),
 ]);
 
@@ -47983,10 +47983,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -48025,10 +48025,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -48055,10 +48055,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -48088,10 +48088,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -48121,10 +48121,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
-      `f32_canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
+      `canonical_nan`,
     ),
   ],
 );
@@ -48154,10 +48154,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -48187,10 +48187,10 @@ assert_return(
     ]),
   [
     new F32x4Pattern(
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
-      `f32_arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
+      `arithmetic_nan`,
     ),
   ],
 );
@@ -49563,8 +49563,8 @@ let $1 = instantiate(`(module
 // ./test/core/simd/simd_f32x4_arith.wast:5290
 assert_return(() => invoke($1, `f32x4_sqrt_arith`, []), [
   new F32x4Pattern(
-    `f32_arithmetic_nan`,
-    `f32_arithmetic_nan`,
+    `arithmetic_nan`,
+    `arithmetic_nan`,
     value("f32", 4),
     value("f32", 5),
   ),
@@ -49573,8 +49573,8 @@ assert_return(() => invoke($1, `f32x4_sqrt_arith`, []), [
 // ./test/core/simd/simd_f32x4_arith.wast:5291
 assert_return(() => invoke($1, `f32x4_sqrt_canon`, []), [
   new F32x4Pattern(
-    `f32_canonical_nan`,
-    `f32_canonical_nan`,
+    `canonical_nan`,
+    `canonical_nan`,
     value("f32", 2),
     value("f32", 3),
   ),
@@ -49583,8 +49583,8 @@ assert_return(() => invoke($1, `f32x4_sqrt_canon`, []), [
 // ./test/core/simd/simd_f32x4_arith.wast:5292
 assert_return(() => invoke($1, `f32x4_sqrt_mixed`, []), [
   new F32x4Pattern(
-    `f32_canonical_nan`,
-    `f32_arithmetic_nan`,
+    `canonical_nan`,
+    `arithmetic_nan`,
     value("f32", 6),
     value("f32", 7),
   ),

@@ -431,8 +431,8 @@ fn float64_to_js_value(val: &wast::Float64) -> String {
 fn f32_pattern_to_js_value(pattern: &wast::NanPattern<wast::Float32>) -> String {
     use wast::NanPattern::*;
     match pattern {
-        CanonicalNan => format!("`f32_canonical_nan`"),
-        ArithmeticNan => format!("`f32_arithmetic_nan`"),
+        CanonicalNan => format!("`canonical_nan`"),
+        ArithmeticNan => format!("`arithmetic_nan`"),
         Value(x) => float32_to_js_value(x),
     }
 }
@@ -440,8 +440,8 @@ fn f32_pattern_to_js_value(pattern: &wast::NanPattern<wast::Float32>) -> String 
 fn f64_pattern_to_js_value(pattern: &wast::NanPattern<wast::Float64>) -> String {
     use wast::NanPattern::*;
     match pattern {
-        CanonicalNan => format!("`f64_canonical_nan`"),
-        ArithmeticNan => format!("`f64_arithmetic_nan`"),
+        CanonicalNan => format!("`canonical_nan`"),
+        ArithmeticNan => format!("`arithmetic_nan`"),
         Value(x) => float64_to_js_value(x),
     }
 }

@@ -89,10 +89,10 @@ assert_return(() => invoke($2, `f32.no_fold_add_zero`, [bytes('f32', [0x0, 0x0, 
 assert_return(() => invoke($2, `f64.no_fold_add_zero`, [value('f64', -0)]), [value('f64', 0)]);
 
 // ./test/core/float_exprs.wast:49
-assert_return(() => invoke($2, `f32.no_fold_add_zero`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($2, `f32.no_fold_add_zero`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:50
-assert_return(() => invoke($2, `f64.no_fold_add_zero`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($2, `f64.no_fold_add_zero`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:54
 let $3 = instantiate(`(module
@@ -109,10 +109,10 @@ assert_return(() => invoke($3, `f32.no_fold_zero_sub`, [value('f32', 0)]), [valu
 assert_return(() => invoke($3, `f64.no_fold_zero_sub`, [value('f64', 0)]), [value('f64', 0)]);
 
 // ./test/core/float_exprs.wast:63
-assert_return(() => invoke($3, `f32.no_fold_zero_sub`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($3, `f32.no_fold_zero_sub`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:64
-assert_return(() => invoke($3, `f64.no_fold_zero_sub`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($3, `f64.no_fold_zero_sub`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:68
 let $4 = instantiate(`(module
@@ -123,10 +123,10 @@ let $4 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:75
-assert_return(() => invoke($4, `f32.no_fold_sub_zero`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($4, `f32.no_fold_sub_zero`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:76
-assert_return(() => invoke($4, `f64.no_fold_sub_zero`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($4, `f64.no_fold_sub_zero`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:80
 let $5 = instantiate(`(module
@@ -146,7 +146,7 @@ assert_return(() => invoke($5, `f32.no_fold_mul_zero`, [value('f32', -1)]), [byt
 assert_return(() => invoke($5, `f32.no_fold_mul_zero`, [value('f32', -2)]), [bytes('f32', [0x0, 0x0, 0x0, 0x80])]);
 
 // ./test/core/float_exprs.wast:90
-assert_return(() => invoke($5, `f32.no_fold_mul_zero`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($5, `f32.no_fold_mul_zero`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:91
 assert_return(() => invoke($5, `f64.no_fold_mul_zero`, [value('f64', -0)]), [value('f64', -0)]);
@@ -158,7 +158,7 @@ assert_return(() => invoke($5, `f64.no_fold_mul_zero`, [value('f64', -1)]), [val
 assert_return(() => invoke($5, `f64.no_fold_mul_zero`, [value('f64', -2)]), [value('f64', -0)]);
 
 // ./test/core/float_exprs.wast:94
-assert_return(() => invoke($5, `f64.no_fold_mul_zero`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($5, `f64.no_fold_mul_zero`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:99
 let $6 = instantiate(`(module
@@ -169,10 +169,10 @@ let $6 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:106
-assert_return(() => invoke($6, `f32.no_fold_mul_one`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($6, `f32.no_fold_mul_one`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:107
-assert_return(() => invoke($6, `f64.no_fold_mul_one`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($6, `f64.no_fold_mul_one`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:111
 let $7 = instantiate(`(module
@@ -183,28 +183,28 @@ let $7 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:118
-assert_return(() => invoke($7, `f32.no_fold_zero_div`, [value('f32', 0)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($7, `f32.no_fold_zero_div`, [value('f32', 0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:119
-assert_return(() => invoke($7, `f32.no_fold_zero_div`, [bytes('f32', [0x0, 0x0, 0x0, 0x80])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($7, `f32.no_fold_zero_div`, [bytes('f32', [0x0, 0x0, 0x0, 0x80])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:120
-assert_return(() => invoke($7, `f32.no_fold_zero_div`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($7, `f32.no_fold_zero_div`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:121
-assert_return(() => invoke($7, `f32.no_fold_zero_div`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($7, `f32.no_fold_zero_div`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:122
-assert_return(() => invoke($7, `f64.no_fold_zero_div`, [value('f64', 0)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($7, `f64.no_fold_zero_div`, [value('f64', 0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:123
-assert_return(() => invoke($7, `f64.no_fold_zero_div`, [value('f64', -0)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($7, `f64.no_fold_zero_div`, [value('f64', -0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:124
-assert_return(() => invoke($7, `f64.no_fold_zero_div`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`f64_canonical_nan`]);
+assert_return(() => invoke($7, `f64.no_fold_zero_div`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:125
-assert_return(() => invoke($7, `f64.no_fold_zero_div`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($7, `f64.no_fold_zero_div`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:129
 let $8 = instantiate(`(module
@@ -215,10 +215,10 @@ let $8 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:136
-assert_return(() => invoke($8, `f32.no_fold_div_one`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($8, `f32.no_fold_div_one`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:137
-assert_return(() => invoke($8, `f64.no_fold_div_one`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($8, `f64.no_fold_div_one`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:141
 let $9 = instantiate(`(module
@@ -229,10 +229,10 @@ let $9 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:148
-assert_return(() => invoke($9, `f32.no_fold_div_neg1`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($9, `f32.no_fold_div_neg1`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:149
-assert_return(() => invoke($9, `f64.no_fold_div_neg1`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($9, `f64.no_fold_div_neg1`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:153
 let $10 = instantiate(`(module
@@ -243,10 +243,10 @@ let $10 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:160
-assert_return(() => invoke($10, `f32.no_fold_neg0_sub`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($10, `f32.no_fold_neg0_sub`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:161
-assert_return(() => invoke($10, `f64.no_fold_neg0_sub`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($10, `f64.no_fold_neg0_sub`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:165
 let $11 = instantiate(`(module
@@ -257,10 +257,10 @@ let $11 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:172
-assert_return(() => invoke($11, `f32.no_fold_neg1_mul`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($11, `f32.no_fold_neg1_mul`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:173
-assert_return(() => invoke($11, `f64.no_fold_neg1_mul`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($11, `f64.no_fold_neg1_mul`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:177
 let $12 = instantiate(`(module
@@ -299,16 +299,16 @@ let $14 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:208
-assert_return(() => invoke($14, `f32.no_fold_sub_self`, [value('f32', Infinity)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($14, `f32.no_fold_sub_self`, [value('f32', Infinity)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:209
-assert_return(() => invoke($14, `f32.no_fold_sub_self`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($14, `f32.no_fold_sub_self`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:210
-assert_return(() => invoke($14, `f64.no_fold_sub_self`, [value('f64', Infinity)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($14, `f64.no_fold_sub_self`, [value('f64', Infinity)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:211
-assert_return(() => invoke($14, `f64.no_fold_sub_self`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`f64_canonical_nan`]);
+assert_return(() => invoke($14, `f64.no_fold_sub_self`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:215
 let $15 = instantiate(`(module
@@ -319,28 +319,28 @@ let $15 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:222
-assert_return(() => invoke($15, `f32.no_fold_div_self`, [value('f32', Infinity)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($15, `f32.no_fold_div_self`, [value('f32', Infinity)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:223
-assert_return(() => invoke($15, `f32.no_fold_div_self`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($15, `f32.no_fold_div_self`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:224
-assert_return(() => invoke($15, `f32.no_fold_div_self`, [value('f32', 0)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($15, `f32.no_fold_div_self`, [value('f32', 0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:225
-assert_return(() => invoke($15, `f32.no_fold_div_self`, [bytes('f32', [0x0, 0x0, 0x0, 0x80])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($15, `f32.no_fold_div_self`, [bytes('f32', [0x0, 0x0, 0x0, 0x80])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:226
-assert_return(() => invoke($15, `f64.no_fold_div_self`, [value('f64', Infinity)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($15, `f64.no_fold_div_self`, [value('f64', Infinity)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:227
-assert_return(() => invoke($15, `f64.no_fold_div_self`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`f64_canonical_nan`]);
+assert_return(() => invoke($15, `f64.no_fold_div_self`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:228
-assert_return(() => invoke($15, `f64.no_fold_div_self`, [value('f64', 0)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($15, `f64.no_fold_div_self`, [value('f64', 0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:229
-assert_return(() => invoke($15, `f64.no_fold_div_self`, [value('f64', -0)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($15, `f64.no_fold_div_self`, [value('f64', -0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:233
 let $16 = instantiate(`(module
@@ -629,16 +629,16 @@ assert_return(() => invoke($23, `f32.no_fold_div_0`, [value('f32', Infinity)]), 
 assert_return(() => invoke($23, `f32.no_fold_div_0`, [value('f32', -Infinity)]), [value('f32', -Infinity)]);
 
 // ./test/core/float_exprs.wast:384
-assert_return(() => invoke($23, `f32.no_fold_div_0`, [value('f32', 0)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($23, `f32.no_fold_div_0`, [value('f32', 0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:385
-assert_return(() => invoke($23, `f32.no_fold_div_0`, [bytes('f32', [0x0, 0x0, 0x0, 0x80])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($23, `f32.no_fold_div_0`, [bytes('f32', [0x0, 0x0, 0x0, 0x80])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:386
-assert_return(() => invoke($23, `f32.no_fold_div_0`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($23, `f32.no_fold_div_0`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:387
-assert_return(() => invoke($23, `f32.no_fold_div_0`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($23, `f32.no_fold_div_0`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:388
 assert_return(() => invoke($23, `f64.no_fold_div_0`, [value('f64', 1)]), [value('f64', Infinity)]);
@@ -653,16 +653,16 @@ assert_return(() => invoke($23, `f64.no_fold_div_0`, [value('f64', Infinity)]), 
 assert_return(() => invoke($23, `f64.no_fold_div_0`, [value('f64', -Infinity)]), [value('f64', -Infinity)]);
 
 // ./test/core/float_exprs.wast:392
-assert_return(() => invoke($23, `f64.no_fold_div_0`, [value('f64', 0)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($23, `f64.no_fold_div_0`, [value('f64', 0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:393
-assert_return(() => invoke($23, `f64.no_fold_div_0`, [value('f64', -0)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($23, `f64.no_fold_div_0`, [value('f64', -0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:394
-assert_return(() => invoke($23, `f64.no_fold_div_0`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`f64_canonical_nan`]);
+assert_return(() => invoke($23, `f64.no_fold_div_0`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:395
-assert_return(() => invoke($23, `f64.no_fold_div_0`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($23, `f64.no_fold_div_0`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:399
 let $24 = instantiate(`(module
@@ -685,16 +685,16 @@ assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [value('f32', Infinity)]
 assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [value('f32', -Infinity)]), [value('f32', Infinity)]);
 
 // ./test/core/float_exprs.wast:410
-assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [value('f32', 0)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [value('f32', 0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:411
-assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [bytes('f32', [0x0, 0x0, 0x0, 0x80])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [bytes('f32', [0x0, 0x0, 0x0, 0x80])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:412
-assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:413
-assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($24, `f32.no_fold_div_neg0`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:414
 assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [value('f64', 1)]), [value('f64', -Infinity)]);
@@ -709,16 +709,16 @@ assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [value('f64', Infinity)]
 assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [value('f64', -Infinity)]), [value('f64', Infinity)]);
 
 // ./test/core/float_exprs.wast:418
-assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [value('f64', 0)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [value('f64', 0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:419
-assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [value('f64', -0)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [value('f64', -0)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:420
-assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`f64_canonical_nan`]);
+assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:421
-assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($24, `f64.no_fold_div_neg0`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:425
 let $25 = instantiate(`(module
@@ -1082,7 +1082,7 @@ let $36 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:638
-assert_return(() => invoke($36, `no_fold_promote_demote`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($36, `no_fold_promote_demote`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/float_exprs.wast:639
 assert_return(() => invoke($36, `no_fold_promote_demote`, [value('f32', 0)]), [value('f32', 0)]);
@@ -2693,10 +2693,10 @@ assert_return(() => invoke($66, `f32.no_fold_add_neg`, [value('f32', 0)]), [valu
 assert_return(() => invoke($66, `f32.no_fold_add_neg`, [bytes('f32', [0x0, 0x0, 0x0, 0x80])]), [value('f32', 0)]);
 
 // ./test/core/float_exprs.wast:1656
-assert_return(() => invoke($66, `f32.no_fold_add_neg`, [value('f32', Infinity)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($66, `f32.no_fold_add_neg`, [value('f32', Infinity)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:1657
-assert_return(() => invoke($66, `f32.no_fold_add_neg`, [value('f32', -Infinity)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($66, `f32.no_fold_add_neg`, [value('f32', -Infinity)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:1659
 assert_return(() => invoke($66, `f64.no_fold_add_neg`, [value('f64', 0)]), [value('f64', 0)]);
@@ -2705,10 +2705,10 @@ assert_return(() => invoke($66, `f64.no_fold_add_neg`, [value('f64', 0)]), [valu
 assert_return(() => invoke($66, `f64.no_fold_add_neg`, [value('f64', -0)]), [value('f64', 0)]);
 
 // ./test/core/float_exprs.wast:1661
-assert_return(() => invoke($66, `f64.no_fold_add_neg`, [value('f64', Infinity)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($66, `f64.no_fold_add_neg`, [value('f64', Infinity)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:1662
-assert_return(() => invoke($66, `f64.no_fold_add_neg`, [value('f64', -Infinity)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($66, `f64.no_fold_add_neg`, [value('f64', -Infinity)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:1666
 let $67 = instantiate(`(module
@@ -2921,7 +2921,7 @@ let $72 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:1793
-assert_return(() => invoke($72, `f32.no_fold_mul_sqrts`, [value('f32', 0.000000000000000000000000000000000000043885047), value('f32', -0.00000000000000000000000011867334)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($72, `f32.no_fold_mul_sqrts`, [value('f32', 0.000000000000000000000000000000000000043885047), value('f32', -0.00000000000000000000000011867334)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:1794
 assert_return(() => invoke($72, `f32.no_fold_mul_sqrts`, [value('f32', 0.00000000000000000000000000025365908), value('f32', 0.00000000041320675)]), [value('f32', 0.00000000000000000032374932)]);
@@ -2936,7 +2936,7 @@ assert_return(() => invoke($72, `f32.no_fold_mul_sqrts`, [value('f32', 372407630
 assert_return(() => invoke($72, `f32.no_fold_mul_sqrts`, [value('f32', 0.00000000000000001866056), value('f32', 0.002111261)]), [value('f32', 0.00000000019848755)]);
 
 // ./test/core/float_exprs.wast:1799
-assert_return(() => invoke($72, `f64.no_fold_mul_sqrts`, [value('f64', -0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012742064369772862), value('f64', -0.006829962938197246)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($72, `f64.no_fold_mul_sqrts`, [value('f64', -0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012742064369772862), value('f64', -0.006829962938197246)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:1800
 assert_return(() => invoke($72, `f64.no_fold_mul_sqrts`, [value('f64', 0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037082569269527534), value('f64', 0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000047183002857015043)]), [value('f64', 0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000041829020688865954)]);
@@ -2960,7 +2960,7 @@ let $73 = instantiate(`(module
 )`);
 
 // ./test/core/float_exprs.wast:1815
-assert_return(() => invoke($73, `f32.no_fold_div_sqrts`, [value('f32', -58545012), value('f32', -0.000000000000000006443773)]), [`f32_canonical_nan`]);
+assert_return(() => invoke($73, `f32.no_fold_div_sqrts`, [value('f32', -58545012), value('f32', -0.000000000000000006443773)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:1816
 assert_return(() => invoke($73, `f32.no_fold_div_sqrts`, [value('f32', 7407384000), value('f32', 209778930)]), [value('f32', 5.9422584)]);
@@ -2975,7 +2975,7 @@ assert_return(() => invoke($73, `f32.no_fold_div_sqrts`, [value('f32', 979288960
 assert_return(() => invoke($73, `f32.no_fold_div_sqrts`, [value('f32', 0.00000000000000000000000000000000029141283), value('f32', 0.00000000000000000000000000000017928174)]), [value('f32', 0.04031682)]);
 
 // ./test/core/float_exprs.wast:1821
-assert_return(() => invoke($73, `f64.no_fold_div_sqrts`, [value('f64', -0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012206137319883022), value('f64', -0.000000000000000000000000000000000000000000000000000000008209583449676083)]), [`f64_canonical_nan`]);
+assert_return(() => invoke($73, `f64.no_fold_div_sqrts`, [value('f64', -0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000012206137319883022), value('f64', -0.000000000000000000000000000000000000000000000000000000008209583449676083)]), [`canonical_nan`]);
 
 // ./test/core/float_exprs.wast:1822
 assert_return(() => invoke($73, `f64.no_fold_div_sqrts`, [value('f64', 0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000033818852462305824), value('f64', 7655783976315048000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000)]), [value('f64', 0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021017671425665687)]);
