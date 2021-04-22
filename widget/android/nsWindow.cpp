@@ -844,7 +844,7 @@ class NPZCSupport final
 
     // Dispatch APZ input event on Gecko thread.
     PostInputEvent([aInput, result](nsWindow* window) {
-      WidgetTouchEvent touchEvent = aInput.ToWidgetTouchEvent(window);
+      WidgetTouchEvent touchEvent = aInput.ToWidgetEvent(window);
       window->ProcessUntransformedAPZEvent(&touchEvent, result);
       window->DispatchHitTest(touchEvent);
     });
