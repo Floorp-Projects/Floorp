@@ -111,6 +111,8 @@ mozInlineSpellStatus::CreateForEditorChange(
     nsINode* aAnchorNode, uint32_t aAnchorOffset, nsINode* aPreviousNode,
     uint32_t aPreviousOffset, nsINode* aStartNode, uint32_t aStartOffset,
     nsINode* aEndNode, uint32_t aEndOffset) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Verbose, ("%s", __FUNCTION__));
+
   if (NS_WARN_IF(!aAnchorNode) || NS_WARN_IF(!aPreviousNode)) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -221,6 +223,8 @@ mozInlineSpellStatus::CreateForNavigation(
     int32_t aNewPositionOffset, nsINode* aOldAnchorNode,
     uint32_t aOldAnchorOffset, nsINode* aNewAnchorNode,
     uint32_t aNewAnchorOffset, bool* aContinue) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Verbose, ("%s", __FUNCTION__));
+
   UniquePtr<mozInlineSpellStatus> status{
       /* The constructor is `private`, hence the explicit allocation. */
       new mozInlineSpellStatus{&aSpellChecker}};
@@ -269,6 +273,8 @@ mozInlineSpellStatus::CreateForNavigation(
 // static
 UniquePtr<mozInlineSpellStatus> mozInlineSpellStatus::CreateForSelection(
     mozInlineSpellChecker& aSpellChecker) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Verbose, ("%s", __FUNCTION__));
+
   UniquePtr<mozInlineSpellStatus> status{
       /* The constructor is `private`, hence the explicit allocation. */
       new mozInlineSpellStatus{&aSpellChecker}};
@@ -308,6 +314,9 @@ UniquePtr<mozInlineSpellStatus> mozInlineSpellStatus::CreateForRange(
 
 nsresult mozInlineSpellStatus::FinishInitOnEvent(
     mozInlineSpellWordUtil& aWordUtil) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Verbose,
+          ("%s: mRange=%p", __FUNCTION__, mRange.get()));
+
   nsresult rv;
   if (!mRange) {
     rv = mSpellChecker->MakeSpellCheckRange(nullptr, 0, nullptr, 0,
@@ -359,6 +368,8 @@ nsresult mozInlineSpellStatus::FinishInitOnEvent(
 
 nsresult mozInlineSpellStatus::FinishNavigationEvent(
     mozInlineSpellWordUtil& aWordUtil) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Verbose, ("%s", __FUNCTION__));
+
   RefPtr<TextEditor> textEditor = mSpellChecker->mTextEditor;
   if (!textEditor) {
     return NS_ERROR_FAILURE;  // editor is gone
@@ -427,6 +438,8 @@ nsresult mozInlineSpellStatus::FinishNavigationEvent(
 
 nsresult mozInlineSpellStatus::FillNoCheckRangeFromAnchor(
     mozInlineSpellWordUtil& aWordUtil) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Verbose, ("%s", __FUNCTION__));
+
   if (!mAnchorRange->IsPositioned()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -1158,7 +1171,9 @@ bool mozInlineSpellChecker::ShouldSpellCheckNode(TextEditor* aTextEditor,
 
 nsresult mozInlineSpellChecker::ScheduleSpellCheck(
     UniquePtr<mozInlineSpellStatus>&& aStatus) {
-  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug, ("%s", __FUNCTION__));
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug,
+          ("%s: mFullSpellCheckScheduled=%i", __FUNCTION__,
+           mFullSpellCheckScheduled));
 
   if (mFullSpellCheckScheduled) {
     // Just ignore this; we're going to spell-check everything anyway
