@@ -1502,16 +1502,16 @@ assert_return(() => invoke($0, `f64.promote_f32`, [value('f32', Infinity)]), [va
 assert_return(() => invoke($0, `f64.promote_f32`, [value('f32', -Infinity)]), [value('f64', -Infinity)]);
 
 // ./test/core/conversions.wast:560
-assert_return(() => invoke($0, `f64.promote_f32`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`f64_canonical_nan`]);
+assert_return(() => invoke($0, `f64.promote_f32`, [bytes('f32', [0x0, 0x0, 0xc0, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/conversions.wast:561
-assert_return(() => invoke($0, `f64.promote_f32`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($0, `f64.promote_f32`, [bytes('f32', [0x0, 0x0, 0xa0, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/conversions.wast:562
-assert_return(() => invoke($0, `f64.promote_f32`, [bytes('f32', [0x0, 0x0, 0xc0, 0xff])]), [`f64_canonical_nan`]);
+assert_return(() => invoke($0, `f64.promote_f32`, [bytes('f32', [0x0, 0x0, 0xc0, 0xff])]), [`canonical_nan`]);
 
 // ./test/core/conversions.wast:563
-assert_return(() => invoke($0, `f64.promote_f32`, [bytes('f32', [0x0, 0x0, 0xa0, 0xff])]), [`f64_arithmetic_nan`]);
+assert_return(() => invoke($0, `f64.promote_f32`, [bytes('f32', [0x0, 0x0, 0xa0, 0xff])]), [`arithmetic_nan`]);
 
 // ./test/core/conversions.wast:565
 assert_return(() => invoke($0, `f32.demote_f64`, [value('f64', 0)]), [value('f32', 0)]);
@@ -1640,16 +1640,16 @@ assert_return(() => invoke($0, `f32.demote_f64`, [value('f64', -2.82381284841419
 assert_return(() => invoke($0, `f32.demote_f64`, [value('f64', -9063376370095757000000000000000000)]), [value('f32', -9063376000000000000000000000000000)]);
 
 // ./test/core/conversions.wast:607
-assert_return(() => invoke($0, `f32.demote_f64`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($0, `f32.demote_f64`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [`canonical_nan`]);
 
 // ./test/core/conversions.wast:608
-assert_return(() => invoke($0, `f32.demote_f64`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($0, `f32.demote_f64`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [`arithmetic_nan`]);
 
 // ./test/core/conversions.wast:609
-assert_return(() => invoke($0, `f32.demote_f64`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0xff])]), [`f32_canonical_nan`]);
+assert_return(() => invoke($0, `f32.demote_f64`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0xff])]), [`canonical_nan`]);
 
 // ./test/core/conversions.wast:610
-assert_return(() => invoke($0, `f32.demote_f64`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0xff])]), [`f32_arithmetic_nan`]);
+assert_return(() => invoke($0, `f32.demote_f64`, [bytes('f64', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0xff])]), [`arithmetic_nan`]);
 
 // ./test/core/conversions.wast:611
 assert_return(() => invoke($0, `f32.demote_f64`, [value('f64', 0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022250738585072014)]), [value('f32', 0)]);

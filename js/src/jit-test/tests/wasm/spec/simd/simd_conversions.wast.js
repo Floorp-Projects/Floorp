@@ -82,16 +82,16 @@ assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [f32x4([Infinity, Infi
 assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [f32x4([-Infinity, -Infinity, -Infinity, -Infinity])]), [new F64x2Pattern(value('f64', -Infinity), value('f64', -Infinity))]);
 
 // ./test/core/simd/simd_conversions.wast:61
-assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [bytes('v128', [0x0, 0x0, 0xc0, 0x7f, 0x0, 0x0, 0xc0, 0x7f, 0x0, 0x0, 0xc0, 0x7f, 0x0, 0x0, 0xc0, 0x7f])]), [new F64x2Pattern(`f64_canonical_nan`, `f64_canonical_nan`)]);
+assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [bytes('v128', [0x0, 0x0, 0xc0, 0x7f, 0x0, 0x0, 0xc0, 0x7f, 0x0, 0x0, 0xc0, 0x7f, 0x0, 0x0, 0xc0, 0x7f])]), [new F64x2Pattern(`canonical_nan`, `canonical_nan`)]);
 
 // ./test/core/simd/simd_conversions.wast:63
-assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [bytes('v128', [0x0, 0x0, 0xa0, 0x7f, 0x0, 0x0, 0xa0, 0x7f, 0x0, 0x0, 0xa0, 0x7f, 0x0, 0x0, 0xa0, 0x7f])]), [new F64x2Pattern(`f64_arithmetic_nan`, `f64_arithmetic_nan`)]);
+assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [bytes('v128', [0x0, 0x0, 0xa0, 0x7f, 0x0, 0x0, 0xa0, 0x7f, 0x0, 0x0, 0xa0, 0x7f, 0x0, 0x0, 0xa0, 0x7f])]), [new F64x2Pattern(`arithmetic_nan`, `arithmetic_nan`)]);
 
 // ./test/core/simd/simd_conversions.wast:65
-assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [bytes('v128', [0x0, 0x0, 0xc0, 0xff, 0x0, 0x0, 0xc0, 0xff, 0x0, 0x0, 0xc0, 0xff, 0x0, 0x0, 0xc0, 0xff])]), [new F64x2Pattern(`f64_canonical_nan`, `f64_canonical_nan`)]);
+assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [bytes('v128', [0x0, 0x0, 0xc0, 0xff, 0x0, 0x0, 0xc0, 0xff, 0x0, 0x0, 0xc0, 0xff, 0x0, 0x0, 0xc0, 0xff])]), [new F64x2Pattern(`canonical_nan`, `canonical_nan`)]);
 
 // ./test/core/simd/simd_conversions.wast:67
-assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [bytes('v128', [0x0, 0x0, 0xa0, 0xff, 0x0, 0x0, 0xa0, 0xff, 0x0, 0x0, 0xa0, 0xff, 0x0, 0x0, 0xa0, 0xff])]), [new F64x2Pattern(`f64_arithmetic_nan`, `f64_arithmetic_nan`)]);
+assert_return(() => invoke($0, `f64x2.promote_low_f32x4`, [bytes('v128', [0x0, 0x0, 0xa0, 0xff, 0x0, 0x0, 0xa0, 0xff, 0x0, 0x0, 0xa0, 0xff, 0x0, 0x0, 0xa0, 0xff])]), [new F64x2Pattern(`arithmetic_nan`, `arithmetic_nan`)]);
 
 // ./test/core/simd/simd_conversions.wast:73
 assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [f64x2([0, 0])]), [new F32x4Pattern(value('f32', 0), value('f32', 0), value('f32', 0), value('f32', 0))]);
@@ -220,16 +220,16 @@ assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [f64x2([-2.82381284841
 assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [f64x2([-9063376370095757000000000000000000, -9063376370095757000000000000000000])]), [new F32x4Pattern(value('f32', -9063376000000000000000000000000000), value('f32', -9063376000000000000000000000000000), value('f32', 0), value('f32', 0))]);
 
 // ./test/core/simd/simd_conversions.wast:157
-assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [bytes('v128', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [new F32x4Pattern(`f32_canonical_nan`, `f32_canonical_nan`, value('f32', 0), value('f32', 0))]);
+assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [bytes('v128', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0x7f])]), [new F32x4Pattern(`canonical_nan`, `canonical_nan`, value('f32', 0), value('f32', 0))]);
 
 // ./test/core/simd/simd_conversions.wast:159
-assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [bytes('v128', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [new F32x4Pattern(`f32_arithmetic_nan`, `f32_arithmetic_nan`, value('f32', 0), value('f32', 0))]);
+assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [bytes('v128', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0x7f])]), [new F32x4Pattern(`arithmetic_nan`, `arithmetic_nan`, value('f32', 0), value('f32', 0))]);
 
 // ./test/core/simd/simd_conversions.wast:161
-assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [bytes('v128', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0xff])]), [new F32x4Pattern(`f32_canonical_nan`, `f32_canonical_nan`, value('f32', 0), value('f32', 0))]);
+assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [bytes('v128', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf8, 0xff])]), [new F32x4Pattern(`canonical_nan`, `canonical_nan`, value('f32', 0), value('f32', 0))]);
 
 // ./test/core/simd/simd_conversions.wast:163
-assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [bytes('v128', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0xff])]), [new F32x4Pattern(`f32_arithmetic_nan`, `f32_arithmetic_nan`, value('f32', 0), value('f32', 0))]);
+assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [bytes('v128', [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xf4, 0xff])]), [new F32x4Pattern(`arithmetic_nan`, `arithmetic_nan`, value('f32', 0), value('f32', 0))]);
 
 // ./test/core/simd/simd_conversions.wast:165
 assert_return(() => invoke($0, `f32x4.demote_f64x2_zero`, [f64x2([0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022250738585072014, 0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000022250738585072014])]), [new F32x4Pattern(value('f32', 0), value('f32', 0), value('f32', 0), value('f32', 0))]);
