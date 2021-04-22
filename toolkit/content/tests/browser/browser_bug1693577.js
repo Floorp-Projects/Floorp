@@ -17,20 +17,10 @@ add_task(async function test_search_input_popupshowing() {
 
   let inputField = sidebar.contentDocument.getElementById("search-box")
     .inputField;
-  let popupShownPromise = new Promise(resolve => {
-    sidebar.contentWindow.addEventListener(
-      "popupshowing",
-      e => {
-        Assert.equal(
-          e.target.triggerNode?.id,
-          "search-box",
-          "Popupshowing event for the search input includes triggernode."
-        );
-        resolve();
-      },
-      { once: true }
-    );
-  });
+  const popupshowing = BrowserTestUtils.waitForEvent(
+    sidebar.contentWindow,
+    "popupshowing"
+  );
 
   EventUtils.synthesizeMouseAtCenter(
     inputField,
@@ -40,6 +30,20 @@ add_task(async function test_search_input_popupshowing() {
     },
     sidebar.contentWindow
   );
-  await popupShownPromise;
+  let popupshowingEvent = await popupshowing;
+
+  Assert.equal(
+    popupshowingEvent.target.triggerNode?.id,
+    "search-box",
+    "Popupshowing event for the search input includes triggernode."
+  );
+
+  const popup = popupshowingEvent.target;
+  await BrowserTestUtils.waitForEvent(popup, "popupshown");
+
+  const popuphidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+  popup.hidePopup();
+  await popuphidden;
+
   SidebarUI.toggle("viewBookmarksSidebar");
 });
