@@ -80,7 +80,6 @@ class TrySelect(MachCommandBase):
         self.parser = self._mach_context.handler.parser
         self._presets = None
 
-    @property
     def presets(self):
         if self._presets:
             return self._presets
@@ -111,9 +110,9 @@ class TrySelect(MachCommandBase):
         """
         from tryselect.util.dicttools import merge
 
-        user_presets = self.presets.handlers[0]
+        user_presets = self.presets().handlers[0]
         if preset_action == "list":
-            self.presets.list()
+            self.presets().list()
             sys.exit()
 
         if preset_action == "edit":
@@ -134,11 +133,11 @@ class TrySelect(MachCommandBase):
             sys.exit()
 
         if preset:
-            if preset not in self.presets:
+            if preset not in self.presets():
                 self.parser.error("preset '{}' does not exist".format(preset))
 
             name = preset
-            preset = self.presets[name]
+            preset = self.presets()[name]
             selector = preset.pop("selector")
             preset.pop("description", None)  # description isn't used by any selectors
 
@@ -218,10 +217,10 @@ class TrySelect(MachCommandBase):
         # works no matter what subcommand 'foo' was saved with.
         preset = kwargs["preset"]
         if preset:
-            if preset not in self.presets:
+            if preset not in self.presets():
                 self.parser.error("preset '{}' does not exist".format(preset))
 
-            self.subcommand = self.presets[preset]["selector"]
+            self.subcommand = self.presets()[preset]["selector"]
 
         sub = self.subcommand or self._mach_context.settings["try"]["default"]
         return self._mach_context.commands.dispatch(
