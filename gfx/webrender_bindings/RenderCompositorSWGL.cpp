@@ -62,7 +62,7 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
   layers::BufferMode bufferMode = layers::BufferMode::BUFFERED;
   mDT = mWidget->StartRemoteDrawingInRegion(mDirtyRegion, &bufferMode);
   if (!mDT) {
-    gfxCriticalNote
+    gfxCriticalNoteOnce
         << "RenderCompositorSWGL failed mapping default framebuffer, no dt";
     return false;
   }
@@ -117,7 +117,7 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
       // We failed mapping the data surface, so need to cancel the frame.
       mWidget->EndRemoteDrawingInRegion(mDT, mDirtyRegion);
       ClearMappedBuffer();
-      gfxCriticalNote
+      gfxCriticalNoteOnce
           << "RenderCompositorSWGL failed mapping default framebuffer, no surf";
       return false;
     }
