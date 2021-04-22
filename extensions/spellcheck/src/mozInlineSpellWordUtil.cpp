@@ -947,7 +947,7 @@ auto mozInlineSpellWordUtil::BuildRealWords() const
  * ************/
 
 int32_t mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(
-    NodeOffset aNodeOffset) const {
+    const NodeOffset& aNodeOffset) const {
   if (!mSoftText.mIsValid) {
     NS_ERROR("Soft text must be valid if we're to map into it");
     return -1;
