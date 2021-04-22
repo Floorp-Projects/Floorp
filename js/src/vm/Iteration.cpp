@@ -1410,12 +1410,13 @@ static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
           return false;
         }
 
-        Rooted<PropertyDescriptor> desc(cx);
-        if (!GetPropertyDescriptor(cx, proto, id, &desc)) {
+        Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
+        RootedObject holder(cx);
+        if (!GetPropertyDescriptor(cx, proto, id, &desc, &holder)) {
           return false;
         }
 
-        if (desc.object() && desc.enumerable()) {
+        if (desc.isSome() && desc->enumerable()) {
           continue;
         }
       }
