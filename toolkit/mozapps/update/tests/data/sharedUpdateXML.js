@@ -341,6 +341,11 @@ function getUpdateString(aUpdateProps) {
   let disableBITS = aUpdateProps.disableBITS
     ? 'disableBITS="' + aUpdateProps.disableBITS + '" '
     : "";
+  let disableBackgroundUpdates = aUpdateProps.disableBackgroundUpdates
+    ? 'disableBackgroundUpdates="' +
+      aUpdateProps.disableBackgroundUpdates +
+      '" '
+    : "";
   let custom1 = aUpdateProps.custom1 ? aUpdateProps.custom1 + " " : "";
   let custom2 = aUpdateProps.custom2 ? aUpdateProps.custom2 + " " : "";
   let buildID = 'buildID="' + aUpdateProps.buildID + '"';
@@ -354,6 +359,7 @@ function getUpdateString(aUpdateProps) {
     detailsURL +
     promptWaitTime +
     disableBITS +
+    disableBackgroundUpdates +
     custom1 +
     custom2 +
     buildID
