@@ -23,68 +23,105 @@ this.DateTimeBoxWidget = class {
    * Callback called by UAWidgets right after constructor.
    */
   onsetup() {
-    this.switchImpl();
+    this.onchange(/* aDestroy = */ false);
   }
 
   /*
    * Callback called by UAWidgets when the "type" property changes.
    */
-  onchange() {
-    this.switchImpl();
-  }
-
-  /*
-   * Actually switch the implementation.
-   * - With type equal to "date", DateInputImplWidget should load.
-   * - With type equal to "time", TimeInputImplWidget should load.
-   * - Otherwise, nothing should load and loaded impl should be unloaded.
-   */
-  switchImpl() {
-    let newImpl;
-    if (this.element.type == "date") {
-      newImpl = DateInputImplWidget;
-    } else if (this.element.type == "time") {
-      newImpl = TimeInputImplWidget;
-    }
-    // Skip if we are asked to load the same implementation.
-    // This can happen if the property is set again w/o value change.
-    if (this.impl && this.impl.constructor == newImpl) {
+  onchange(aDestroy = true) {
+    let newType = this.element.type;
+    if (this.type == newType) {
       return;
     }
-    if (this.impl) {
-      this.impl.destructor();
-      this.shadowRoot.firstChild.remove();
+
+    if (aDestroy) {
+      this.destructor();
     }
-    if (newImpl) {
-      this.impl = new newImpl(this.shadowRoot);
-      this.impl.onsetup();
-    } else {
-      this.impl = undefined;
-    }
+    this.type = newType;
+    this.setup();
+  }
+
+  shouldShowTime() {
+    return this.type == "time";
+  }
+
+  shouldShowDate() {
+    return this.type == "date";
   }
 
   destructor() {
-    if (!this.impl) {
+    this.mResetButton.addEventListener("mousedown", this, {
+      mozSystemGroup: true,
+    });
+
+    this.mInputElement.removeEventListener("keypress", this, {
+      capture: true,
+      mozSystemGroup: true,
+    });
+    this.mInputElement.removeEventListener("click", this, {
+      mozSystemGroup: true,
+    });
+
+    this.CONTROL_EVENTS.forEach(eventName => {
+      this.mDateTimeBoxElement.removeEventListener(eventName, this);
+    });
+
+    this.removeEditFields();
+
+    this.mInputElement = null;
+
+    this.shadowRoot.firstChild.remove();
+  }
+
+  removeEditFields() {
+    this.removeEventListenersToField(this.mYearField);
+    this.removeEventListenersToField(this.mMonthField);
+    this.removeEventListenersToField(this.mDayField);
+    this.removeEventListenersToField(this.mHourField);
+    this.removeEventListenersToField(this.mMinuteField);
+    this.removeEventListenersToField(this.mSecondField);
+    this.removeEventListenersToField(this.mMillisecField);
+    this.removeEventListenersToField(this.mDayPeriodField);
+
+    this.mYearField = null;
+    this.mMonthField = null;
+    this.mDayField = null;
+    this.mHourField = null;
+    this.mMinuteField = null;
+    this.mSecondField = null;
+    this.mMillisecField = null;
+    this.mDayPeriodField = null;
+
+    let root = this.shadowRoot.getElementById("edit-wrapper");
+    while (root.firstChild) {
+      root.firstChild.remove();
+    }
+  }
+
+  rebuildEditFieldsIfNeeded() {
+    if (
+      this.shouldShowSecondField() == !!this.mSecondField &&
+      this.shouldShowMillisecField() == !!this.mMillisecField
+    ) {
       return;
     }
-    this.impl.destructor();
-    this.shadowRoot.firstChild.remove();
-    delete this.impl;
-  }
-};
 
-this.DateTimeInputBaseImplWidget = class {
-  constructor(shadowRoot) {
-    this.shadowRoot = shadowRoot;
-    this.element = shadowRoot.host;
-    this.document = this.element.ownerDocument;
-    this.window = this.document.defaultView;
+    let focused = this.mInputElement.matches(":focus");
+
+    this.removeEditFields();
+    this.buildEditFields();
+
+    if (focused) {
+      this.focusInnerTextBox();
+    }
   }
 
-  onsetup() {
+  setup() {
+    this.DEBUG = false;
+
     this.generateContent();
 
-    this.DEBUG = false;
     this.mDateTimeBoxElement = this.shadowRoot.firstChild;
     this.mInputElement = this.element;
     this.mLocales = this.window.getWebExposedLocales();
@@ -100,10 +137,46 @@ this.DateTimeInputBaseImplWidget = class {
       inputBoxWrapper.dir = "rtl";
     }
 
-    this.mMin = this.mInputElement.min;
-    this.mMax = this.mInputElement.max;
-    this.mStep = this.mInputElement.step;
     this.mIsPickerOpen = false;
+
+    this.mMinMonth = 1;
+    this.mMaxMonth = 12;
+    this.mMinDay = 1;
+    this.mMaxDay = 31;
+    this.mMinYear = 1;
+    // Maximum year limited by ECMAScript date object range, year <= 275760.
+    this.mMaxYear = 275760;
+    this.mMonthDayLength = 2;
+    this.mYearLength = 4;
+    this.mMonthPageUpDownInterval = 3;
+    this.mDayPageUpDownInterval = 7;
+    this.mYearPageUpDownInterval = 10;
+
+    const kDefaultAMString = "AM";
+    const kDefaultPMString = "PM";
+
+    let { amString, pmString } = this.getStringsForLocale(this.mLocales);
+
+    this.mAMIndicator = amString || kDefaultAMString;
+    this.mPMIndicator = pmString || kDefaultPMString;
+
+    this.mHour12 = this.is12HourTime(this.mLocales);
+    this.mMillisecSeparatorText = ".";
+    this.mMaxLength = 2;
+    this.mMillisecMaxLength = 3;
+    this.mDefaultStep = 60 * 1000; // in milliseconds
+
+    this.mMinHour = this.mHour12 ? 1 : 0;
+    this.mMaxHour = this.mHour12 ? 12 : 23;
+    this.mMinMinute = 0;
+    this.mMaxMinute = 59;
+    this.mMinSecond = 0;
+    this.mMaxSecond = 59;
+    this.mMinMillisecond = 0;
+    this.mMaxMillisecond = 999;
+
+    this.mHourPageUpDownInterval = 3;
+    this.mMinSecPageUpDownInterval = 10;
 
     this.mResetButton = this.shadowRoot.getElementById("reset-button");
     this.mResetButton.style.visibility = "hidden";
@@ -135,6 +208,13 @@ this.DateTimeInputBaseImplWidget = class {
     this.CONTROL_EVENTS.forEach(eventName => {
       this.mDateTimeBoxElement.addEventListener(eventName, this, {}, false);
     });
+
+    this.buildEditFields();
+    this.updateEditAttributes();
+
+    if (this.mInputElement.value) {
+      this.setFieldsFromInputValue();
+    }
   }
 
   generateContent() {
@@ -204,25 +284,6 @@ this.DateTimeInputBaseImplWidget = class {
       parserDoc.documentElement,
       true
     );
-  }
-
-  destructor() {
-    this.mResetButton.addEventListener("mousedown", this, {
-      mozSystemGroup: true,
-    });
-
-    this.mInputElement.removeEventListener("keypress", this, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-    this.mInputElement.removeEventListener("click", this, {
-      mozSystemGroup: true,
-    });
-
-    this.CONTROL_EVENTS.forEach(eventName => {
-      this.mDateTimeBoxElement.removeEventListener(eventName, this);
-    });
-    this.mInputElement = null;
   }
 
   get FIELD_EVENTS() {
@@ -382,7 +443,11 @@ this.DateTimeInputBaseImplWidget = class {
   }
 
   notifyMinMaxStepAttrChanged() {
-    // No operation by default
+    // Second and millisecond part are optional, rebuild edit fields if
+    // needed.
+    this.rebuildEditFieldsIfNeeded();
+    // Fill in values again.
+    this.setFieldsFromInputValue();
   }
 
   setValueFromPicker(aValue) {
@@ -463,42 +528,6 @@ this.DateTimeInputBaseImplWidget = class {
       aField.setAttribute("typeBuffer", "");
     }
     this.updateResetButtonVisibility();
-  }
-
-  setFieldValue() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  clearInputFields() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  setFieldsFromInputValue() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  setInputValueFromFields() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  setFieldsFromPicker() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  handleKeypress() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  handleKeyboardNav() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  getCurrentValue() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  isAnyFieldAvailable() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   notifyPicker() {
@@ -708,54 +737,25 @@ this.DateTimeInputBaseImplWidget = class {
       this.mInputElement.openDateTimePicker(this.getCurrentValue());
     }
   }
-};
-
-this.DateInputImplWidget = class extends DateTimeInputBaseImplWidget {
-  constructor(shadowRoot) {
-    super(shadowRoot);
-  }
-
-  onsetup() {
-    super.onsetup();
-
-    this.mMinMonth = 1;
-    this.mMaxMonth = 12;
-    this.mMinDay = 1;
-    this.mMaxDay = 31;
-    this.mMinYear = 1;
-    // Maximum year limited by ECMAScript date object range, year <= 275760.
-    this.mMaxYear = 275760;
-    this.mMonthDayLength = 2;
-    this.mYearLength = 4;
-    this.mMonthPageUpDownInterval = 3;
-    this.mDayPageUpDownInterval = 7;
-    this.mYearPageUpDownInterval = 10;
-
-    this.buildEditFields();
-    this.updateEditAttributes();
-
-    if (this.mInputElement.value) {
-      this.setFieldsFromInputValue();
-    }
-  }
-
-  destructor() {
-    this.removeEventListenersToField(this.mYearField);
-    this.removeEventListenersToField(this.mMonthField);
-    this.removeEventListenersToField(this.mDayField);
-    super.destructor();
-  }
 
   buildEditFields() {
     let root = this.shadowRoot.getElementById("edit-wrapper");
 
-    let yearMaxLength = this.mMaxYear.toString().length;
+    let options = {};
 
-    let formatter = Intl.DateTimeFormat(this.mLocales, {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-    });
+    if (this.shouldShowTime()) {
+      options.hour = options.minute = "numeric";
+      options.hour12 = this.mHour12;
+      if (this.shouldShowSecondField()) {
+        options.second = "numeric";
+      }
+    }
+
+    if (this.shouldShowDate()) {
+      options.year = options.month = options.day = "numeric";
+    }
+
+    let formatter = Intl.DateTimeFormat(this.mLocales, options);
     formatter.formatToParts(Date.now()).map(part => {
       switch (part.type) {
         case "year":
@@ -764,7 +764,7 @@ this.DateInputImplWidget = class extends DateTimeInputBaseImplWidget {
             this.mYearLabel,
             true,
             this.mYearLength,
-            yearMaxLength,
+            this.mMaxYear.toString().length,
             this.mMinYear,
             this.mMaxYear,
             this.mYearPageUpDownInterval
@@ -797,457 +797,6 @@ this.DateInputImplWidget = class extends DateTimeInputBaseImplWidget {
           );
           this.addEventListenersToField(this.mDayField);
           break;
-        default:
-          let span = this.shadowRoot.createElementAndAppendChildAt(
-            root,
-            "span"
-          );
-          span.textContent = part.value;
-          break;
-      }
-    });
-  }
-
-  clearInputFields(aFromInputElement) {
-    this.log("clearInputFields");
-
-    if (this.mMonthField) {
-      this.clearFieldValue(this.mMonthField);
-    }
-
-    if (this.mDayField) {
-      this.clearFieldValue(this.mDayField);
-    }
-
-    if (this.mYearField) {
-      this.clearFieldValue(this.mYearField);
-    }
-
-    if (!aFromInputElement) {
-      if (this.mInputElement.value) {
-        this.mInputElement.setUserInput("");
-      } else {
-        this.mInputElement.updateValidityState();
-      }
-    }
-  }
-
-  setFieldsFromInputValue() {
-    let value = this.mInputElement.value;
-    if (!value) {
-      this.clearInputFields(true);
-      return;
-    }
-
-    this.log("setFieldsFromInputValue: " + value);
-    let [year, month, day] = value.split("-");
-
-    this.setFieldValue(this.mYearField, year);
-    this.setFieldValue(this.mMonthField, month);
-    this.setFieldValue(this.mDayField, day);
-
-    this.notifyPicker();
-  }
-
-  setInputValueFromFields() {
-    if (this.isAnyFieldEmpty()) {
-      // Clear input element's value if any of the field has been cleared,
-      // otherwise update the validity state, since it may become "not"
-      // invalid if fields are not complete.
-      if (this.mInputElement.value) {
-        this.mInputElement.setUserInput("");
-      } else {
-        this.mInputElement.updateValidityState();
-      }
-      // We still need to notify picker in case any of the field has
-      // changed.
-      this.notifyPicker();
-      return;
-    }
-
-    let { year, month, day } = this.getCurrentValue();
-
-    // Convert to a valid date string according to:
-    // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-date-string
-    year = year.toString().padStart(this.mYearLength, "0");
-    month = month < 10 ? "0" + month : month;
-    day = day < 10 ? "0" + day : day;
-
-    let date = [year, month, day].join("-");
-
-    if (date == this.mInputElement.value) {
-      return;
-    }
-
-    this.log("setInputValueFromFields: " + date);
-    this.notifyPicker();
-    this.mInputElement.setUserInput(date);
-  }
-
-  setFieldsFromPicker(aValue) {
-    let year = aValue.year;
-    let month = aValue.month;
-    let day = aValue.day;
-
-    if (!this.isEmpty(year)) {
-      this.setFieldValue(this.mYearField, year);
-    }
-
-    if (!this.isEmpty(month)) {
-      this.setFieldValue(this.mMonthField, month);
-    }
-
-    if (!this.isEmpty(day)) {
-      this.setFieldValue(this.mDayField, day);
-    }
-
-    // Update input element's .value if needed.
-    this.setInputValueFromFields();
-  }
-
-  handleKeypress(aEvent) {
-    if (!this.isEditable()) {
-      return;
-    }
-
-    let targetField = aEvent.originalTarget;
-    let key = aEvent.key;
-
-    if (targetField.classList.contains("numeric") && key.match(/[0-9]/)) {
-      let buffer = targetField.getAttribute("typeBuffer") || "";
-
-      buffer = buffer.concat(key);
-      this.setFieldValue(targetField, buffer);
-
-      let n = Number(buffer);
-      let max = targetField.getAttribute("max");
-      let maxLength = targetField.getAttribute("maxlength");
-      if (buffer.length >= maxLength || n * 10 > max) {
-        buffer = "";
-        this.advanceToNextField();
-      }
-      targetField.setAttribute("typeBuffer", buffer);
-      if (!this.isAnyFieldEmpty()) {
-        this.setInputValueFromFields();
-      }
-    }
-  }
-
-  incrementFieldValue(aTargetField, aTimes) {
-    let value = this.getFieldValue(aTargetField);
-
-    // Use current date if field is empty.
-    if (this.isEmpty(value)) {
-      let now = new Date();
-
-      if (aTargetField == this.mYearField) {
-        value = now.getFullYear();
-      } else if (aTargetField == this.mMonthField) {
-        value = now.getMonth() + 1;
-      } else if (aTargetField == this.mDayField) {
-        value = now.getDate();
-      } else {
-        this.log("Field not supported in incrementFieldValue.");
-        return;
-      }
-    }
-
-    let min = Number(aTargetField.getAttribute("min"));
-    let max = Number(aTargetField.getAttribute("max"));
-
-    value += Number(aTimes);
-    if (value > max) {
-      value -= max - min + 1;
-    } else if (value < min) {
-      value += max - min + 1;
-    }
-
-    this.setFieldValue(aTargetField, value);
-  }
-
-  handleKeyboardNav(aEvent) {
-    if (!this.isEditable()) {
-      return;
-    }
-
-    let targetField = aEvent.originalTarget;
-    let key = aEvent.key;
-
-    // Home/End key does nothing on year field.
-    if (targetField == this.mYearField && (key == "Home" || key == "End")) {
-      return;
-    }
-
-    switch (key) {
-      case "ArrowUp":
-        this.incrementFieldValue(targetField, 1);
-        break;
-      case "ArrowDown":
-        this.incrementFieldValue(targetField, -1);
-        break;
-      case "PageUp": {
-        let interval = targetField.getAttribute("pginterval");
-        this.incrementFieldValue(targetField, interval);
-        break;
-      }
-      case "PageDown": {
-        let interval = targetField.getAttribute("pginterval");
-        this.incrementFieldValue(targetField, 0 - interval);
-        break;
-      }
-      case "Home":
-        let min = targetField.getAttribute("min");
-        this.setFieldValue(targetField, min);
-        break;
-      case "End":
-        let max = targetField.getAttribute("max");
-        this.setFieldValue(targetField, max);
-        break;
-    }
-    this.setInputValueFromFields();
-  }
-
-  getCurrentValue() {
-    let year = this.getFieldValue(this.mYearField);
-    let month = this.getFieldValue(this.mMonthField);
-    let day = this.getFieldValue(this.mDayField);
-
-    let date = { year, month, day };
-
-    this.log("getCurrentValue: " + JSON.stringify(date));
-    return date;
-  }
-
-  setFieldValue(aField, aValue) {
-    if (!aField || !aField.classList.contains("numeric")) {
-      return;
-    }
-
-    let value = Number(aValue);
-    if (isNaN(value)) {
-      this.log("NaN on setFieldValue!");
-      return;
-    }
-
-    let maxLength = aField.getAttribute("maxlength");
-    if (aValue.length == maxLength) {
-      let min = Number(aField.getAttribute("min"));
-      let max = Number(aField.getAttribute("max"));
-
-      if (value < min) {
-        value = min;
-      } else if (value > max) {
-        value = max;
-      }
-    }
-
-    aField.setAttribute("value", value);
-
-    // Display formatted value based on locale.
-    let minDigits = aField.getAttribute("mindigits");
-    let formatted = value.toLocaleString(this.mLocales, {
-      minimumIntegerDigits: minDigits,
-      useGrouping: false,
-    });
-
-    aField.textContent = formatted;
-    aField.setAttribute("aria-valuetext", formatted);
-    this.updateResetButtonVisibility();
-  }
-
-  isAnyFieldAvailable(aForPicker) {
-    let { year, month, day } = this.getCurrentValue();
-
-    return !this.isEmpty(year) || !this.isEmpty(month) || !this.isEmpty(day);
-  }
-
-  isAnyFieldEmpty() {
-    let { year, month, day } = this.getCurrentValue();
-
-    return this.isEmpty(year) || this.isEmpty(month) || this.isEmpty(day);
-  }
-};
-
-this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
-  constructor(shadowRoot) {
-    super(shadowRoot);
-  }
-
-  onsetup() {
-    super.onsetup();
-
-    const kDefaultAMString = "AM";
-    const kDefaultPMString = "PM";
-
-    let { amString, pmString } = this.getStringsForLocale(this.mLocales);
-
-    this.mAMIndicator = amString || kDefaultAMString;
-    this.mPMIndicator = pmString || kDefaultPMString;
-
-    this.mHour12 = this.is12HourTime(this.mLocales);
-    this.mMillisecSeparatorText = ".";
-    this.mMaxLength = 2;
-    this.mMillisecMaxLength = 3;
-    this.mDefaultStep = 60 * 1000; // in milliseconds
-
-    this.mMinHour = this.mHour12 ? 1 : 0;
-    this.mMaxHour = this.mHour12 ? 12 : 23;
-    this.mMinMinute = 0;
-    this.mMaxMinute = 59;
-    this.mMinSecond = 0;
-    this.mMaxSecond = 59;
-    this.mMinMillisecond = 0;
-    this.mMaxMillisecond = 999;
-
-    this.mHourPageUpDownInterval = 3;
-    this.mMinSecPageUpDownInterval = 10;
-
-    this.buildEditFields();
-    this.updateEditAttributes();
-
-    if (this.mInputElement.value) {
-      this.setFieldsFromInputValue();
-    }
-  }
-
-  destructor() {
-    this.removeEventListenersToField(this.mHourField);
-    this.removeEventListenersToField(this.mMinuteField);
-    this.removeEventListenersToField(this.mSecondField);
-    this.removeEventListenersToField(this.mMillisecField);
-    this.removeEventListenersToField(this.mDayPeriodField);
-    super.destructor();
-  }
-
-  get kMsPerSecond() {
-    return 1000;
-  }
-
-  get kMsPerMinute() {
-    return 60 * 1000;
-  }
-
-  getInputElementValues() {
-    let value = this.mInputElement.value;
-    if (value.length === 0) {
-      return {};
-    }
-
-    let hour, minute, second, millisecond;
-    [hour, minute, second] = value.split(":");
-    if (second) {
-      [second, millisecond] = second.split(".");
-
-      // Convert fraction of second to milliseconds.
-      if (millisecond && millisecond.length === 1) {
-        millisecond *= 100;
-      } else if (millisecond && millisecond.length === 2) {
-        millisecond *= 10;
-      }
-    }
-
-    return { hour, minute, second, millisecond };
-  }
-
-  hasSecondField() {
-    return !!this.mSecondField;
-  }
-
-  hasMillisecField() {
-    return !!this.mMillisecField;
-  }
-
-  hasDayPeriodField() {
-    return !!this.mDayPeriodField;
-  }
-
-  shouldShowSecondField() {
-    let { second } = this.getInputElementValues();
-    if (second != undefined) {
-      return true;
-    }
-
-    let stepBase = this.mInputElement.getStepBase();
-    if (stepBase % this.kMsPerMinute != 0) {
-      return true;
-    }
-
-    let step = this.mInputElement.getStep();
-    if (step % this.kMsPerMinute != 0) {
-      return true;
-    }
-
-    return false;
-  }
-
-  shouldShowMillisecField() {
-    let { millisecond } = this.getInputElementValues();
-    if (millisecond != undefined) {
-      return true;
-    }
-
-    let stepBase = this.mInputElement.getStepBase();
-    if (stepBase % this.kMsPerSecond != 0) {
-      return true;
-    }
-
-    let step = this.mInputElement.getStep();
-    if (step % this.kMsPerSecond != 0) {
-      return true;
-    }
-
-    return false;
-  }
-
-  rebuildEditFieldsIfNeeded() {
-    if (
-      this.shouldShowSecondField() == this.hasSecondField() &&
-      this.shouldShowMillisecField() == this.hasMillisecField()
-    ) {
-      return;
-    }
-
-    let focused = this.mInputElement.matches(":focus");
-
-    let root = this.shadowRoot.getElementById("edit-wrapper");
-    while (root.firstChild) {
-      root.firstChild.remove();
-    }
-
-    this.removeEventListenersToField(this.mHourField);
-    this.removeEventListenersToField(this.mMinuteField);
-    this.removeEventListenersToField(this.mSecondField);
-    this.removeEventListenersToField(this.mMillisecField);
-    this.removeEventListenersToField(this.mDayPeriodField);
-
-    this.mHourField = null;
-    this.mMinuteField = null;
-    this.mSecondField = null;
-    this.mMillisecField = null;
-    this.mDayPeriodField = null;
-
-    this.buildEditFields();
-    if (focused) {
-      this.focusInnerTextBox();
-    }
-  }
-
-  buildEditFields() {
-    let root = this.shadowRoot.getElementById("edit-wrapper");
-
-    let options = {
-      hour: "numeric",
-      minute: "numeric",
-      hour12: this.mHour12,
-    };
-
-    if (this.shouldShowSecondField()) {
-      options.second = "numeric";
-    }
-
-    let formatter = Intl.DateTimeFormat(this.mLocales, options);
-    formatter.formatToParts(Date.now()).map(part => {
-      switch (part.type) {
         case "hour":
           this.mHourField = this.createEditFieldAndAppend(
             this.mHourPlaceHolder,
@@ -1329,6 +878,470 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
     });
   }
 
+  clearInputFields(aFromInputElement) {
+    this.log("clearInputFields");
+
+    if (this.mMonthField) {
+      this.clearFieldValue(this.mMonthField);
+    }
+
+    if (this.mDayField) {
+      this.clearFieldValue(this.mDayField);
+    }
+
+    if (this.mYearField) {
+      this.clearFieldValue(this.mYearField);
+    }
+
+    if (this.mHourField) {
+      this.clearFieldValue(this.mHourField);
+    }
+
+    if (this.mMinuteField) {
+      this.clearFieldValue(this.mMinuteField);
+    }
+
+    if (this.mSecondField) {
+      this.clearFieldValue(this.mSecondField);
+    }
+
+    if (this.mMillisecField) {
+      this.clearFieldValue(this.mMillisecField);
+    }
+
+    if (this.mDayPeriodField) {
+      this.clearFieldValue(this.mDayPeriodField);
+    }
+
+    if (!aFromInputElement) {
+      if (this.mInputElement.value) {
+        this.mInputElement.setUserInput("");
+      } else {
+        this.mInputElement.updateValidityState();
+      }
+    }
+  }
+
+  setFieldsFromInputValue() {
+    // Second and millisecond part are optional, rebuild edit fields if
+    // needed.
+    this.rebuildEditFieldsIfNeeded();
+
+    let value = this.mInputElement.value;
+    if (!value) {
+      this.clearInputFields(true);
+      return;
+    }
+
+    let {
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+      millisecond,
+    } = this.getInputElementValues();
+    if (this.shouldShowDate()) {
+      this.log("setFieldsFromInputValue: " + value);
+      this.setFieldValue(this.mYearField, year);
+      this.setFieldValue(this.mMonthField, month);
+      this.setFieldValue(this.mDayField, day);
+    }
+
+    if (this.shouldShowTime()) {
+      if (this.isEmpty(hour) && this.isEmpty(minute)) {
+        this.clearInputFields(true);
+        return;
+      }
+
+      this.setFieldValue(this.mHourField, hour);
+      this.setFieldValue(this.mMinuteField, minute);
+      if (this.mHour12) {
+        this.setDayPeriodValue(
+          hour >= this.mMaxHour ? this.mPMIndicator : this.mAMIndicator
+        );
+      }
+
+      if (this.mSecondField) {
+        this.setFieldValue(this.mSecondField, second || 0);
+      }
+
+      if (this.mMillisecField) {
+        this.setFieldValue(this.mMillisecField, millisecond || 0);
+      }
+    }
+
+    this.notifyPicker();
+  }
+
+  setInputValueFromFields() {
+    if (this.isAnyFieldEmpty()) {
+      // Clear input element's value if any of the field has been cleared,
+      // otherwise update the validity state, since it may become "not"
+      // invalid if fields are not complete.
+      if (this.mInputElement.value) {
+        this.mInputElement.setUserInput("");
+      } else {
+        this.mInputElement.updateValidityState();
+      }
+      // We still need to notify picker in case any of the field has
+      // changed.
+      this.notifyPicker();
+      return;
+    }
+
+    let {
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+      millisecond,
+      dayPeriod,
+    } = this.getCurrentValue();
+
+    let value = "";
+
+    // Convert to a valid time string according to:
+    // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-time-string
+    //
+    // TODO(emilio): Handle datetime-local.
+    if (this.type == "time") {
+      if (this.mHour12) {
+        if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
+          hour += this.mMaxHour;
+        } else if (dayPeriod == this.mAMIndicator && hour == this.mMaxHour) {
+          hour = 0;
+        }
+      }
+
+      hour = hour < 10 ? "0" + hour : hour;
+      minute = minute < 10 ? "0" + minute : minute;
+
+      value = hour + ":" + minute;
+      if (second != undefined) {
+        second = second < 10 ? "0" + second : second;
+        value += ":" + second;
+      }
+
+      if (millisecond != undefined) {
+        // Convert milliseconds to fraction of second.
+        millisecond = millisecond
+          .toString()
+          .padStart(this.mMillisecMaxLength, "0");
+        value += "." + millisecond;
+      }
+    }
+
+    if (this.type == "date") {
+      // Convert to a valid date string according to:
+      // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-date-string
+      year = year.toString().padStart(this.mYearLength, "0");
+      month = month < 10 ? "0" + month : month;
+      day = day < 10 ? "0" + day : day;
+      value = [year, month, day].join("-");
+    }
+
+    if (value == this.mInputElement.value) {
+      return;
+    }
+    this.log("setInputValueFromFields: " + value);
+    this.notifyPicker();
+    this.mInputElement.setUserInput(value);
+  }
+
+  setFieldsFromPicker({ year, month, day, hour, minute }) {
+    if (!this.isEmpty(hour)) {
+      this.setFieldValue(this.mHourField, hour);
+      if (this.mHour12) {
+        this.setDayPeriodValue(
+          hour >= this.mMaxHour ? this.mPMIndicator : this.mAMIndicator
+        );
+      }
+    }
+
+    if (!this.isEmpty(minute)) {
+      this.setFieldValue(this.mMinuteField, minute);
+    }
+
+    if (!this.isEmpty(year)) {
+      this.setFieldValue(this.mYearField, year);
+    }
+
+    if (!this.isEmpty(month)) {
+      this.setFieldValue(this.mMonthField, month);
+    }
+
+    if (!this.isEmpty(day)) {
+      this.setFieldValue(this.mDayField, day);
+    }
+
+    // Update input element's .value if needed.
+    this.setInputValueFromFields();
+  }
+
+  handleKeypress(aEvent) {
+    if (!this.isEditable()) {
+      return;
+    }
+
+    let targetField = aEvent.originalTarget;
+    let key = aEvent.key;
+
+    if (targetField == this.mDayPeriodField) {
+      if (key == "a" || key == "A") {
+        this.setDayPeriodValue(this.mAMIndicator);
+      } else if (key == "p" || key == "P") {
+        this.setDayPeriodValue(this.mPMIndicator);
+      }
+      if (!this.isAnyFieldEmpty()) {
+        this.setInputValueFromFields();
+      }
+      return;
+    }
+
+    if (targetField.classList.contains("numeric") && key.match(/[0-9]/)) {
+      let buffer = targetField.getAttribute("typeBuffer") || "";
+
+      buffer = buffer.concat(key);
+      this.setFieldValue(targetField, buffer);
+
+      let n = Number(buffer);
+      let max = targetField.getAttribute("max");
+      let maxLength = targetField.getAttribute("maxlength");
+      if (buffer.length >= maxLength || n * 10 > max) {
+        buffer = "";
+        this.advanceToNextField();
+      }
+      targetField.setAttribute("typeBuffer", buffer);
+      if (!this.isAnyFieldEmpty()) {
+        this.setInputValueFromFields();
+      }
+    }
+  }
+
+  getCurrentValue() {
+    let value = {};
+    if (this.shouldShowDate()) {
+      value.year = this.getFieldValue(this.mYearField);
+      value.month = this.getFieldValue(this.mMonthField);
+      value.day = this.getFieldValue(this.mDayField);
+    }
+
+    if (this.shouldShowTime()) {
+      let dayPeriod = this.getDayPeriodValue();
+      let hour = this.getFieldValue(this.mHourField);
+      if (!this.isEmpty(hour)) {
+        if (this.mHour12) {
+          if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
+            hour += this.mMaxHour;
+          } else if (dayPeriod == this.mAMIndicator && hour == this.mMaxHour) {
+            hour = 0;
+          }
+        }
+      }
+      value.hour = hour;
+      value.dayPeriod = dayPeriod;
+      value.minute = this.getFieldValue(this.mMinuteField);
+      value.second = this.getFieldValue(this.mSecondField);
+      value.millisecond = this.getFieldValue(this.mMillisecField);
+    }
+
+    this.log("getCurrentValue: " + JSON.stringify(value));
+    return value;
+  }
+
+  setFieldValue(aField, aValue) {
+    if (!aField || !aField.classList.contains("numeric")) {
+      return;
+    }
+
+    let value = Number(aValue);
+    if (isNaN(value)) {
+      this.log("NaN on setFieldValue!");
+      return;
+    }
+
+    let maxLength = aField.getAttribute("maxlength");
+    if (aValue.length == maxLength) {
+      let min = Number(aField.getAttribute("min"));
+      let max = Number(aField.getAttribute("max"));
+
+      if (value < min) {
+        value = min;
+      } else if (value > max) {
+        value = max;
+      }
+    }
+
+    if (aField == this.mHourField) {
+      if (this.mHour12) {
+        // Try to change to 12hr format if user input is 0 or greater
+        // than 12.
+        let maxLength = aField.getAttribute("maxlength");
+        if (value == 0 && aValue.length == maxLength) {
+          value = this.mMaxHour;
+        } else {
+          value = value > this.mMaxHour ? value % this.mMaxHour : value;
+        }
+      } else if (value > this.mMaxHour) {
+        value = this.mMaxHour;
+      }
+    }
+
+    aField.setAttribute("value", value);
+
+    let minDigits = aField.getAttribute("mindigits");
+    let formatted = value.toLocaleString(this.mLocales, {
+      minimumIntegerDigits: minDigits,
+      useGrouping: false,
+    });
+
+    aField.textContent = formatted;
+    aField.setAttribute("aria-valuetext", formatted);
+    this.updateResetButtonVisibility();
+  }
+
+  isAnyFieldAvailable(aForPicker = false) {
+    let {
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+      millisecond,
+    } = this.getCurrentValue();
+    if (
+      !this.isEmpty(year) ||
+      !this.isEmpty(month) ||
+      !this.isEmpty(day) ||
+      !this.isEmpty(hour) ||
+      !this.isEmpty(minute)
+    ) {
+      return true;
+    }
+
+    // Picker doesn't care about seconds / milliseconds / day period.
+    if (aForPicker) {
+      return false;
+    }
+
+    let dayPeriod = this.getDayPeriodValue();
+    return (
+      (this.mDayPeriodField && !this.isEmpty(dayPeriod)) ||
+      (this.mSecondField && !this.isEmpty(second)) ||
+      (this.mMillisecField && !this.isEmpty(millisecond))
+    );
+  }
+
+  isAnyFieldEmpty() {
+    let {
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+      millisecond,
+    } = this.getCurrentValue();
+    return (
+      (this.mYearField && this.isEmpty(year)) ||
+      (this.mMonthField && this.isEmpty(month)) ||
+      (this.mDayField && this.isEmpty(day)) ||
+      (this.mHourField && this.isEmpty(hour)) ||
+      (this.mMinuteField && this.isEmpty(minute)) ||
+      (this.mDayPeriodField && this.isEmpty(this.getDayPeriodValue())) ||
+      (this.mSecondField && this.isEmpty(second)) ||
+      (this.mMillisecField && this.isEmpty(millisecond))
+    );
+  }
+
+  get kMsPerSecond() {
+    return 1000;
+  }
+
+  get kMsPerMinute() {
+    return 60 * 1000;
+  }
+
+  getInputElementValues() {
+    let value = this.mInputElement.value;
+    if (value.length === 0) {
+      return {};
+    }
+
+    let year, month, day, hour, minute, second, millisecond;
+
+    // TODO(emilio): Handle datetime-local.
+    if (this.type == "date") {
+      [year, month, day] = value.split("-");
+    }
+
+    if (this.type == "time") {
+      [hour, minute, second] = value.split(":");
+      if (second) {
+        [second, millisecond] = second.split(".");
+
+        // Convert fraction of second to milliseconds.
+        if (millisecond && millisecond.length === 1) {
+          millisecond *= 100;
+        } else if (millisecond && millisecond.length === 2) {
+          millisecond *= 10;
+        }
+      }
+    }
+
+    return { year, month, day, hour, minute, second, millisecond };
+  }
+
+  shouldShowSecondField() {
+    if (!this.shouldShowTime()) {
+      return false;
+    }
+    let { second } = this.getInputElementValues();
+    if (second != undefined) {
+      return true;
+    }
+
+    let stepBase = this.mInputElement.getStepBase();
+    if (stepBase % this.kMsPerMinute != 0) {
+      return true;
+    }
+
+    let step = this.mInputElement.getStep();
+    if (step % this.kMsPerMinute != 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  shouldShowMillisecField() {
+    if (!this.shouldShowTime()) {
+      return false;
+    }
+
+    let { millisecond } = this.getInputElementValues();
+    if (millisecond != undefined) {
+      return true;
+    }
+
+    let stepBase = this.mInputElement.getStepBase();
+    if (stepBase % this.kMsPerSecond != 0) {
+      return true;
+    }
+
+    let step = this.mInputElement.getStep();
+    if (step % this.kMsPerSecond != 0) {
+      return true;
+    }
+
+    return false;
+  }
+
   getStringsForLocale(aLocales) {
     this.log("getStringsForLocale: " + aLocales);
 
@@ -1361,157 +1374,6 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
     return options.hour12;
   }
 
-  setFieldsFromInputValue() {
-    let { hour, minute, second, millisecond } = this.getInputElementValues();
-
-    if (this.isEmpty(hour) && this.isEmpty(minute)) {
-      this.clearInputFields(true);
-      return;
-    }
-
-    // Second and millisecond part are optional, rebuild edit fields if
-    // needed.
-    this.rebuildEditFieldsIfNeeded();
-
-    this.setFieldValue(this.mHourField, hour);
-    this.setFieldValue(this.mMinuteField, minute);
-    if (this.mHour12) {
-      this.setDayPeriodValue(
-        hour >= this.mMaxHour ? this.mPMIndicator : this.mAMIndicator
-      );
-    }
-
-    if (this.hasSecondField()) {
-      this.setFieldValue(this.mSecondField, second != undefined ? second : 0);
-    }
-
-    if (this.hasMillisecField()) {
-      this.setFieldValue(
-        this.mMillisecField,
-        millisecond != undefined ? millisecond : 0
-      );
-    }
-
-    this.notifyPicker();
-  }
-
-  setInputValueFromFields() {
-    if (this.isAnyFieldEmpty()) {
-      // Clear input element's value if any of the field has been cleared,
-      // otherwise update the validity state, since it may become "not"
-      // invalid if fields are not complete.
-      if (this.mInputElement.value) {
-        this.mInputElement.setUserInput("");
-      } else {
-        this.mInputElement.updateValidityState();
-      }
-      // We still need to notify picker in case any of the field has
-      // changed.
-      this.notifyPicker();
-      return;
-    }
-
-    let { hour, minute, second, millisecond } = this.getCurrentValue();
-    let dayPeriod = this.getDayPeriodValue();
-
-    // Convert to a valid time string according to:
-    // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-time-string
-    if (this.mHour12) {
-      if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
-        hour += this.mMaxHour;
-      } else if (dayPeriod == this.mAMIndicator && hour == this.mMaxHour) {
-        hour = 0;
-      }
-    }
-
-    hour = hour < 10 ? "0" + hour : hour;
-    minute = minute < 10 ? "0" + minute : minute;
-
-    let time = hour + ":" + minute;
-    if (second != undefined) {
-      second = second < 10 ? "0" + second : second;
-      time += ":" + second;
-    }
-
-    if (millisecond != undefined) {
-      // Convert milliseconds to fraction of second.
-      millisecond = millisecond
-        .toString()
-        .padStart(this.mMillisecMaxLength, "0");
-      time += "." + millisecond;
-    }
-
-    if (time == this.mInputElement.value) {
-      return;
-    }
-
-    this.log("setInputValueFromFields: " + time);
-    this.notifyPicker();
-    this.mInputElement.setUserInput(time);
-  }
-
-  setFieldsFromPicker(aValue) {
-    let hour = aValue.hour;
-    let minute = aValue.minute;
-    this.log("setFieldsFromPicker: " + hour + ":" + minute);
-
-    if (!this.isEmpty(hour)) {
-      this.setFieldValue(this.mHourField, hour);
-      if (this.mHour12) {
-        this.setDayPeriodValue(
-          hour >= this.mMaxHour ? this.mPMIndicator : this.mAMIndicator
-        );
-      }
-    }
-
-    if (!this.isEmpty(minute)) {
-      this.setFieldValue(this.mMinuteField, minute);
-    }
-
-    // Update input element's .value if needed.
-    this.setInputValueFromFields();
-  }
-
-  clearInputFields(aFromInputElement) {
-    this.log("clearInputFields");
-
-    if (this.mHourField) {
-      this.clearFieldValue(this.mHourField);
-    }
-
-    if (this.mMinuteField) {
-      this.clearFieldValue(this.mMinuteField);
-    }
-
-    if (this.hasSecondField()) {
-      this.clearFieldValue(this.mSecondField);
-    }
-
-    if (this.hasMillisecField()) {
-      this.clearFieldValue(this.mMillisecField);
-    }
-
-    if (this.hasDayPeriodField()) {
-      this.clearFieldValue(this.mDayPeriodField);
-    }
-
-    if (!aFromInputElement) {
-      if (this.mInputElement.value) {
-        this.mInputElement.setUserInput("");
-      } else {
-        this.mInputElement.updateValidityState();
-      }
-    }
-  }
-
-  notifyMinMaxStepAttrChanged() {
-    // Second and millisecond part are optional, rebuild edit fields if
-    // needed.
-    this.rebuildEditFieldsIfNeeded();
-    // Fill in values again.
-    this.setFieldsFromInputValue();
-  }
-
   incrementFieldValue(aTargetField, aTimes) {
     let value = this.getFieldValue(aTargetField);
 
@@ -1519,7 +1381,13 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
     if (this.isEmpty(value)) {
       let now = new Date();
 
-      if (aTargetField == this.mHourField) {
+      if (aTargetField == this.mYearField) {
+        value = now.getFullYear();
+      } else if (aTargetField == this.mMonthField) {
+        value = now.getMonth() + 1;
+      } else if (aTargetField == this.mDayField) {
+        value = now.getDate();
+      } else if (aTargetField == this.mHourField) {
         value = now.getHours();
         if (this.mHour12) {
           value = value % this.mMaxHour || this.mMaxHour;
@@ -1536,8 +1404,8 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
       }
     }
 
-    let min = aTargetField.getAttribute("min");
-    let max = aTargetField.getAttribute("max");
+    let min = +aTargetField.getAttribute("min");
+    let max = +aTargetField.getAttribute("max");
 
     value += Number(aTimes);
     if (value > max) {
@@ -1557,7 +1425,12 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
     let targetField = aEvent.originalTarget;
     let key = aEvent.key;
 
-    if (this.hasDayPeriodField() && targetField == this.mDayPeriodField) {
+    if (targetField == this.mYearField && (key == "Home" || key == "End")) {
+      // Home/End key does nothing on year field.
+      return;
+    }
+
+    if (targetField == this.mDayPeriodField) {
       // Home/End key does nothing on AM/PM field.
       if (key == "Home" || key == "End") {
         return;
@@ -1601,160 +1474,23 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
     this.setInputValueFromFields();
   }
 
-  handleKeypress(aEvent) {
-    if (!this.isEditable()) {
-      return;
-    }
-
-    let targetField = aEvent.originalTarget;
-    let key = aEvent.key;
-
-    if (this.hasDayPeriodField() && targetField == this.mDayPeriodField) {
-      if (key == "a" || key == "A") {
-        this.setDayPeriodValue(this.mAMIndicator);
-      } else if (key == "p" || key == "P") {
-        this.setDayPeriodValue(this.mPMIndicator);
-      }
-      if (!this.isAnyFieldEmpty()) {
-        this.setInputValueFromFields();
-      }
-      return;
-    }
-
-    if (targetField.classList.contains("numeric") && key.match(/[0-9]/)) {
-      let buffer = targetField.getAttribute("typeBuffer") || "";
-
-      buffer = buffer.concat(key);
-      this.setFieldValue(targetField, buffer);
-
-      let n = Number(buffer);
-      let max = targetField.getAttribute("max");
-      let maxLength = targetField.getAttribute("maxlength");
-      if (buffer.length >= maxLength || n * 10 > max) {
-        buffer = "";
-        this.advanceToNextField();
-      }
-      targetField.setAttribute("typeBuffer", buffer);
-      if (!this.isAnyFieldEmpty()) {
-        this.setInputValueFromFields();
-      }
-    }
-  }
-
-  setFieldValue(aField, aValue) {
-    if (!aField || !aField.classList.contains("numeric")) {
-      return;
-    }
-
-    let value = Number(aValue);
-    if (isNaN(value)) {
-      this.log("NaN on setFieldValue!");
-      return;
-    }
-
-    if (aField == this.mHourField) {
-      if (this.mHour12) {
-        // Try to change to 12hr format if user input is 0 or greater
-        // than 12.
-        let maxLength = aField.getAttribute("maxlength");
-        if (value == 0 && aValue.length == maxLength) {
-          value = this.mMaxHour;
-        } else {
-          value = value > this.mMaxHour ? value % this.mMaxHour : value;
-        }
-      } else if (value > this.mMaxHour) {
-        value = this.mMaxHour;
-      }
-    }
-
-    aField.setAttribute("value", value);
-
-    let minDigits = aField.getAttribute("mindigits");
-    let formatted = value.toLocaleString(this.mLocales, {
-      minimumIntegerDigits: minDigits,
-      useGrouping: false,
-    });
-
-    aField.textContent = formatted;
-    aField.setAttribute("aria-valuetext", formatted);
-    this.updateResetButtonVisibility();
-  }
-
   getDayPeriodValue(aValue) {
-    if (!this.hasDayPeriodField()) {
+    if (!this.mDayPeriodField) {
       return "";
     }
 
     let placeholder = this.mDayPeriodField.placeholder;
     let value = this.mDayPeriodField.textContent;
-
     return value == placeholder ? "" : value;
   }
 
   setDayPeriodValue(aValue) {
-    if (!this.hasDayPeriodField()) {
+    if (!this.mDayPeriodField) {
       return;
     }
 
     this.mDayPeriodField.textContent = aValue;
     this.mDayPeriodField.setAttribute("value", aValue);
     this.updateResetButtonVisibility();
-  }
-
-  isAnyFieldAvailable(aForPicker) {
-    let { hour, minute, second, millisecond } = this.getCurrentValue();
-    let dayPeriod = this.getDayPeriodValue();
-
-    let available = !this.isEmpty(hour) || !this.isEmpty(minute);
-    if (available) {
-      return true;
-    }
-
-    // Picker only cares about hour:minute.
-    if (aForPicker) {
-      return false;
-    }
-
-    return (
-      (this.hasDayPeriodField() && !this.isEmpty(dayPeriod)) ||
-      (this.hasSecondField() && !this.isEmpty(second)) ||
-      (this.hasMillisecField() && !this.isEmpty(millisecond))
-    );
-  }
-
-  isAnyFieldEmpty() {
-    let { hour, minute, second, millisecond } = this.getCurrentValue();
-    let dayPeriod = this.getDayPeriodValue();
-
-    return (
-      this.isEmpty(hour) ||
-      this.isEmpty(minute) ||
-      (this.hasDayPeriodField() && this.isEmpty(dayPeriod)) ||
-      (this.hasSecondField() && this.isEmpty(second)) ||
-      (this.hasMillisecField() && this.isEmpty(millisecond))
-    );
-  }
-
-  getCurrentValue() {
-    let hour = this.getFieldValue(this.mHourField);
-    if (!this.isEmpty(hour)) {
-      if (this.mHour12) {
-        let dayPeriod = this.getDayPeriodValue();
-        if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
-          hour += this.mMaxHour;
-        } else if (dayPeriod == this.mAMIndicator && hour == this.mMaxHour) {
-          hour = 0;
-        }
-      }
-    }
-
-    let minute = this.getFieldValue(this.mMinuteField);
-    let second = this.getFieldValue(this.mSecondField);
-    let millisecond = this.getFieldValue(this.mMillisecField);
-
-    let time = { hour, minute, second, millisecond };
-
-    this.log("getCurrentValue: " + JSON.stringify(time));
-    return time;
   }
 };
