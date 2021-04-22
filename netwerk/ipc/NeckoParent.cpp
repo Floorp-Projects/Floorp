@@ -14,7 +14,6 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/CookieServiceParent.h"
-#include "mozilla/net/FTPChannelParent.h"
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/net/WebSocketEventListenerParent.h"
 #include "mozilla/net/DataChannelParent.h"
@@ -123,16 +122,6 @@ static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
   }
 
   const HttpChannelOpenArgs& args = aArgs.get_HttpChannelOpenArgs();
-  return GetRequestingPrincipal(args.loadInfo());
-}
-
-static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
-    const FTPChannelCreationArgs& aArgs) {
-  if (aArgs.type() != FTPChannelCreationArgs::TFTPChannelOpenArgs) {
-    return nullptr;
-  }
-
-  const FTPChannelOpenArgs& args = aArgs.get_FTPChannelOpenArgs();
   return GetRequestingPrincipal(args.loadInfo());
 }
 
@@ -276,47 +265,6 @@ bool NeckoParent::DeallocPAltDataOutputStreamParent(
       static_cast<AltDataOutputStreamParent*>(aActor);
   parent->Release();
   return true;
-}
-
-PFTPChannelParent* NeckoParent::AllocPFTPChannelParent(
-    PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
-    const FTPChannelCreationArgs& aOpenArgs) {
-  nsCOMPtr<nsIPrincipal> requestingPrincipal =
-      GetRequestingPrincipal(aOpenArgs);
-
-  nsCOMPtr<nsILoadContext> loadContext;
-  const char* error = CreateChannelLoadContext(
-      aBrowser, Manager(), aSerialized, requestingPrincipal, loadContext);
-  if (error) {
-    printf_stderr(
-        "NeckoParent::AllocPFTPChannelParent: "
-        "FATAL error: %s: KILLING CHILD PROCESS\n",
-        error);
-    return nullptr;
-  }
-  PBOverrideStatus overrideStatus =
-      PBOverrideStatusFromLoadContext(aSerialized);
-  FTPChannelParent* p = new FTPChannelParent(BrowserParent::GetFrom(aBrowser),
-                                             loadContext, overrideStatus);
-  p->AddRef();
-  return p;
-}
-
-bool NeckoParent::DeallocPFTPChannelParent(PFTPChannelParent* channel) {
-  FTPChannelParent* p = static_cast<FTPChannelParent*>(channel);
-  p->Release();
-  return true;
-}
-
-mozilla::ipc::IPCResult NeckoParent::RecvPFTPChannelConstructor(
-    PFTPChannelParent* aActor, PBrowserParent* aBrowser,
-    const SerializedLoadContext& aSerialized,
-    const FTPChannelCreationArgs& aOpenArgs) {
-  FTPChannelParent* p = static_cast<FTPChannelParent*>(aActor);
-  if (!p->Init(aOpenArgs)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
 }
 
 already_AddRefed<PDocumentChannelParent>
