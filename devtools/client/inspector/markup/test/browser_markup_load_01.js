@@ -51,7 +51,7 @@ add_task(async function() {
 
   info("Inspect element via context menu");
   const markupLoaded = inspector.once("markuploaded");
-  await chooseWithInspectElementContextMenu("img", tab);
+  await clickOnInspectMenuItem(testActor, "img");
 
   info("Wait for load");
   await pageLoaded;
@@ -64,19 +64,6 @@ add_task(async function() {
   ok(inspector.markup, "There is a markup view");
   is(inspector.markup._elt.children.length, 1, "The markup view is rendering");
 });
-
-async function chooseWithInspectElementContextMenu(selector, tab) {
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    selector,
-    {
-      type: "contextmenu",
-      button: 2,
-    },
-    tab.linkedBrowser
-  );
-
-  await EventUtils.sendString("Q");
-}
 
 function waitForLinkedBrowserEvent(tab, event) {
   return BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, event, true);
