@@ -260,14 +260,9 @@ function compareResults(results, expected) {
 }
 
 function compareResult(result, expected) {
-  if (expected === `f32_canonical_nan` ||
-      expected === `f32_arithmetic_nan`) {
-    // TODO: compare exact NaN bits
-    return wasmGlobalsEqual(result, value('f32', NaN));
-  } else if (expected === `f64_canonical_nan` ||
-             expected === `f64_arithmetic_nan`) {
-    // TODO: compare exact NaN bits
-    return wasmGlobalsEqual(result, value('f64', NaN));
+  if (expected === `canonical_nan` ||
+      expected === `arithmetic_nan`) {
+    return wasmGlobalIsNaN(result, expected);
   } else if (expected instanceof F32x4Pattern) {
     return compareResult(wasmGlobalExtractLane(result, 'f32x4', 0), expected.x) &&
       compareResult(wasmGlobalExtractLane(result, 'f32x4', 1), expected.y) &&
