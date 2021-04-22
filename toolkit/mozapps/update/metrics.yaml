@@ -13,7 +13,7 @@ background_update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - highly_sensitive
       - technical
@@ -30,7 +30,7 @@ background_update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -47,7 +47,7 @@ background_update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -63,7 +63,7 @@ background_update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -80,7 +80,7 @@ background_update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -97,7 +97,7 @@ background_update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -116,7 +116,7 @@ update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -134,7 +134,7 @@ update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -152,7 +152,7 @@ update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -170,7 +170,7 @@ update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -187,7 +187,7 @@ update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -207,7 +207,7 @@ update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -226,7 +226,7 @@ update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -245,7 +245,7 @@ update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
@@ -264,7 +264,7 @@ update:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
     data_sensitivity:
       - technical
     notification_emails:
