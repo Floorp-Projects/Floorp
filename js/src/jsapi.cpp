@@ -2011,6 +2011,15 @@ JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
   return true;
 }
 
+JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
+    JSContext* cx, HandleObject obj, HandleId id,
+    MutableHandle<Maybe<PropertyDescriptor>> desc) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(obj, id);
+  return GetOwnPropertyDescriptor(cx, obj, id, desc);
+}
+
 JS_PUBLIC_API bool JS_GetOwnPropertyDescriptor(
     JSContext* cx, HandleObject obj, const char* name,
     MutableHandle<PropertyDescriptor> desc) {

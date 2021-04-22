@@ -974,6 +974,10 @@ extern JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
     JSContext* cx, JS::HandleObject obj, JS::HandleId id,
     JS::MutableHandle<JS::PropertyDescriptor> desc);
 
+extern JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
+    JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
+
 extern JS_PUBLIC_API bool JS_GetOwnPropertyDescriptor(
     JSContext* cx, JS::HandleObject obj, const char* name,
     JS::MutableHandle<JS::PropertyDescriptor> desc);
@@ -2243,7 +2247,7 @@ JS_PUBLIC_API size_t JS_GetStringEncodingLength(JSContext* cx, JSString* str);
  *
  * The function does not store an additional zero byte.
  */
-JS_PUBLIC_API mozilla::Maybe<mozilla::Tuple<size_t, size_t> >
+JS_PUBLIC_API mozilla::Maybe<mozilla::Tuple<size_t, size_t>>
 JS_EncodeStringToUTF8BufferPartial(JSContext* cx, JSString* str,
                                    mozilla::Span<char> buffer);
 
