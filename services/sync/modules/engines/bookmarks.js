@@ -425,12 +425,15 @@ BookmarksEngine.prototype = {
       if (
         Async.isShutdownException(ex) ||
         ex.status > 0 ||
-        ex.name == "MergeConflictError" ||
         ex.name == "InterruptedError"
       ) {
         // Don't run maintenance on shutdown or HTTP errors, or if we aborted
         // the sync because the user changed their bookmarks during merging.
         throw ex;
+      }
+      if (ex.name == "MergeConflictError") {
+        this._log.warn("Bookmark syncing ran into a merge conflict error...will retry later");
+        return;
       }
       // Run Places maintenance periodically to try to recover from corruption
       // that might have caused the sync to fail. We cap the interval because
