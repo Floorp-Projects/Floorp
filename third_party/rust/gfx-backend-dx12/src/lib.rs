@@ -1448,7 +1448,7 @@ impl hal::Instance<Backend> for Instance {
                     },
                     dynamic_pipeline_states: hal::DynamicStates::VIEWPORT
                         | hal::DynamicStates::SCISSOR
-                        | hal::DynamicStates::BLEND_COLOR
+                        | hal::DynamicStates::BLEND_CONSTANTS
                         | hal::DynamicStates::STENCIL_REFERENCE,
                     downlevel: hal::DownlevelProperties::all_enabled(),
                     ..PhysicalDeviceProperties::default()

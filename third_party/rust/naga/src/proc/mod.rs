@@ -1,11 +1,10 @@
 //! Module processing functionality.
 
-mod layouter;
+mod interpolator;
 mod namer;
 mod terminator;
 mod typifier;
 
-pub use layouter::{Alignment, Layouter, TypeLayout};
 pub use namer::{EntryPointIndex, NameKey, Namer};
 pub use terminator::ensure_block_returns;
 pub use typifier::{ResolveContext, ResolveError, TypeResolution};
@@ -61,6 +60,8 @@ impl super::ScalarValue {
     }
 }
 
+pub const POINTER_SPAN: u32 = 4;
+
 impl super::TypeInner {
     pub fn scalar_kind(&self) -> Option<super::ScalarKind> {
         match *self {
@@ -69,6 +70,39 @@ impl super::TypeInner {
             }
             super::TypeInner::Matrix { .. } => Some(super::ScalarKind::Float),
             _ => None,
+        }
+    }
+
+    pub fn span(&self, constants: &super::Arena<super::Constant>) -> u32 {
+        match *self {
+            Self::Scalar { kind: _, width } => width as u32,
+            Self::Vector {
+                size,
+                kind: _,
+                width,
+            } => (size as u8 * width) as u32,
+            Self::Matrix {
+                columns,
+                rows,
+                width,
+            } => (columns as u8 * rows as u8 * width) as u32,
+            Self::Pointer { .. } | Self::ValuePointer { .. } => POINTER_SPAN,
+            Self::Array {
+                base: _,
+                size,
+                stride,
+            } => {
+                let count = match size {
+                    super::ArraySize::Constant(handle) => {
+                        constants[handle].to_array_length().unwrap()
+                    }
+                    // A dynamically-sized array has to have at least one element
+                    super::ArraySize::Dynamic => 1,
+                };
+                count * stride
+            }
+            Self::Struct { span, .. } => span,
+            Self::Image { .. } | Self::Sampler { .. } => 0,
         }
     }
 }
@@ -179,7 +213,7 @@ impl crate::Binding {
     pub fn to_built_in(&self) -> Option<crate::BuiltIn> {
         match *self {
             Self::BuiltIn(bi) => Some(bi),
-            Self::Location(..) => None,
+            Self::Location { .. } => None,
         }
     }
 }

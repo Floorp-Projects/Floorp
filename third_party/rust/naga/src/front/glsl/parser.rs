@@ -10,7 +10,7 @@ pomelo! {
             ConstantInner, Expression,
             Function, FunctionArgument, FunctionResult,
             GlobalVariable, Handle, Interpolation,
-            LocalVariable, ResourceBinding, ScalarValue, ScalarKind,
+            LocalVariable, ResourceBinding, Sampling, ScalarValue, ScalarKind,
             Statement, StorageAccess, StorageClass, StructMember,
             SwitchCase, Type, TypeInner, UnaryOperator,
         };
@@ -120,6 +120,8 @@ pomelo! {
     %type storage_qualifier StorageQualifier;
     %type interpolation_qualifier Interpolation;
     %type Interpolation Interpolation;
+    %type sampling_qualifier Sampling;
+    %type Sampling Sampling;
 
     // types
     %type fully_specified_type (Vec<TypeQualifier>, Option<Handle<Type>>);
@@ -514,15 +516,21 @@ pomelo! {
         if i.1 == "gl_PerVertex" {
             None
         } else {
-            let block = !t.is_empty();
+            let level = if t.is_empty() {
+                //TODO
+                crate::StructLevel::Normal { alignment: crate::Alignment::new(1).unwrap() }
+            } else {
+                crate::StructLevel::Root
+            };
             Some(VarDeclaration {
                 type_qualifiers: t,
                 ids_initializers: vec![(None, None)],
                 ty: extra.module.types.fetch_or_append(Type{
                     name: Some(i.1),
                     inner: TypeInner::Struct {
-                        block,
+                        level,
                         members: sdl,
+                        span: 0, //TODO
                     },
                 }),
             })
@@ -531,15 +539,21 @@ pomelo! {
 
     declaration ::= type_qualifier(t) Identifier(i1) LeftBrace
         struct_declaration_list(sdl) RightBrace Identifier(i2) Semicolon {
-        let block = !t.is_empty();
+        let level = if t.is_empty() {
+            //TODO
+            crate::StructLevel::Normal { alignment: crate::Alignment::new(1).unwrap() }
+        } else {
+            crate::StructLevel::Root
+        };
         Some(VarDeclaration {
             type_qualifiers: t,
             ids_initializers: vec![(Some(i2.1), None)],
             ty: extra.module.types.fetch_or_append(Type{
                 name: Some(i1.1),
                 inner: TypeInner::Struct {
-                    block,
+                    level,
                     members: sdl,
+                    span: 0, //TODO
                 },
             }),
         })
@@ -601,10 +615,15 @@ pomelo! {
         i
     }
 
+    sampling_qualifier ::= Sampling((_, s)) {
+        s
+    }
+
     layout_qualifier ::= Layout LeftParen layout_qualifier_id_list(l) RightParen {
-        if let Some(&(_, loc)) = l.iter().find(|&q| q.0.as_str() == "location") {
+        if let Some(&(_, location)) = l.iter().find(|&q| q.0.as_str() == "location") {
             let interpolation = None; //TODO
-            StructLayout::Binding(Binding::Location(loc, interpolation))
+            let sampling = None; //TODO
+            StructLayout::Binding(Binding::Location { location, interpolation, sampling })
         } else if let Some(&(_, binding)) = l.iter().find(|&q| q.0.as_str() == "binding") {
             let group = if let Some(&(_, set)) = l.iter().find(|&q| q.0.as_str() == "set") {
                 set
@@ -658,6 +677,9 @@ pomelo! {
     single_type_qualifier ::= interpolation_qualifier(i) {
         TypeQualifier::Interpolation(i)
     }
+    single_type_qualifier ::= sampling_qualifier(i) {
+        TypeQualifier::Sampling(i)
+    }
     // single_type_qualifier ::= invariant_qualifier;
     // single_type_qualifier ::= precise_qualifier;
 
@@ -706,8 +728,9 @@ pomelo! {
         Type{
             name: Some(i.1),
             inner: TypeInner::Struct {
-                block: false,
+                level: crate::StructLevel::Normal { alignment: crate::Alignment::new(1).unwrap() },
                 members: vec![],
+                span: 0,
             }
         }
     }
@@ -729,8 +752,7 @@ pomelo! {
                 binding: None, //TODO
                 //TODO: if the struct is a uniform struct, these values have to reflect
                 // std140 layout. Otherwise, std430.
-                size: None,
-                align: None,
+                offset: 0,
             }).collect()
         } else {
             return Err(ErrorKind::SemanticError("Struct member can't be void".into()))
@@ -1121,8 +1143,16 @@ pomelo! {
                     let interpolation = d.type_qualifiers.iter().find_map(|tq| {
                         if let TypeQualifier::Interpolation(interp) = *tq { Some(interp) } else { None }
                     });
-                    if let Some(Binding::Location(_, ref mut interp)) = binding {
+                    let sampling = d.type_qualifiers.iter().find_map(|tq| {
+                        if let TypeQualifier::Sampling(samp) = *tq { Some(samp) } else { None }
+                    });
+                    if let Some(Binding::Location {
+                        interpolation: ref mut interp,
+                        sampling: ref mut samp,
+                        ..
+                    }) = binding {
                         *interp = interpolation;
+                        *samp = sampling;
                     }
 
                     for (id, _initializer) in d.ids_initializers {

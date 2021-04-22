@@ -241,7 +241,9 @@ impl w::PresentationSurface<Backend> for Surface {
         device: &Device,
         config: w::SwapchainConfig,
     ) -> Result<(), w::SwapchainError> {
-        assert!(image::Usage::COLOR_ATTACHMENT.contains(config.image_usage));
+        if !image::Usage::COLOR_ATTACHMENT.contains(config.image_usage) {
+            warn!("Swapchain usage {:?} is not expected", config.image_usage);
+        }
         self.swapchain_format = self.configure(&device.shared, &config);
         Ok(())
     }

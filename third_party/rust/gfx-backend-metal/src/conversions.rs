@@ -9,6 +9,7 @@ use hal::{
     IndexType,
 };
 use metal::*;
+use std::num::NonZeroU32;
 
 impl PrivateCapabilities {
     pub fn map_format(&self, format: Format) -> Option<MTLPixelFormat> {
@@ -801,5 +802,143 @@ pub fn map_naga_stage_to_cross(stage: naga::ShaderStage) -> spirv_cross::spirv::
         naga::ShaderStage::Vertex => Em::Vertex,
         naga::ShaderStage::Fragment => Em::Fragment,
         naga::ShaderStage::Compute => Em::GlCompute,
+    }
+}
+
+#[cfg(feature = "cross")]
+pub fn map_sampler_data_to_cross(info: &image::SamplerDesc) -> spirv_cross::msl::SamplerData {
+    use spirv_cross::msl;
+    fn map_address(wrap: image::WrapMode) -> msl::SamplerAddress {
+        match wrap {
+            image::WrapMode::Tile => msl::SamplerAddress::Repeat,
+            image::WrapMode::Mirror => msl::SamplerAddress::MirroredRepeat,
+            image::WrapMode::Clamp => msl::SamplerAddress::ClampToEdge,
+            image::WrapMode::Border => msl::SamplerAddress::ClampToBorder,
+            image::WrapMode::MirrorClamp => {
+                unimplemented!("https://github.com/grovesNL/spirv_cross/issues/138")
+            }
+        }
+    }
+
+    let lods = info.lod_range.start.0..info.lod_range.end.0;
+    msl::SamplerData {
+        coord: if info.normalized {
+            msl::SamplerCoord::Normalized
+        } else {
+            msl::SamplerCoord::Pixel
+        },
+        min_filter: match info.min_filter {
+            image::Filter::Nearest => msl::SamplerFilter::Nearest,
+            image::Filter::Linear => msl::SamplerFilter::Linear,
+        },
+        mag_filter: match info.mag_filter {
+            image::Filter::Nearest => msl::SamplerFilter::Nearest,
+            image::Filter::Linear => msl::SamplerFilter::Linear,
+        },
+        mip_filter: match info.min_filter {
+            image::Filter::Nearest if info.lod_range.end.0 < 0.5 => msl::SamplerMipFilter::None,
+            image::Filter::Nearest => msl::SamplerMipFilter::Nearest,
+            image::Filter::Linear => msl::SamplerMipFilter::Linear,
+        },
+        s_address: map_address(info.wrap_mode.0),
+        t_address: map_address(info.wrap_mode.1),
+        r_address: map_address(info.wrap_mode.2),
+        compare_func: match info.comparison {
+            Some(func) => unsafe { std::mem::transmute(map_compare_function(func) as u32) },
+            None => msl::SamplerCompareFunc::Always,
+        },
+        border_color: match info.border {
+            image::BorderColor::TransparentBlack => msl::SamplerBorderColor::TransparentBlack,
+            image::BorderColor::OpaqueBlack => msl::SamplerBorderColor::OpaqueBlack,
+            image::BorderColor::OpaqueWhite => msl::SamplerBorderColor::OpaqueWhite,
+        },
+        lod_clamp_min: lods.start.into(),
+        lod_clamp_max: lods.end.into(),
+        max_anisotropy: info.anisotropy_clamp.map_or(0, |aniso| aniso as i32),
+        planes: 0,
+        resolution: msl::FormatResolution::_444,
+        chroma_filter: msl::SamplerFilter::Nearest,
+        x_chroma_offset: msl::ChromaLocation::CositedEven,
+        y_chroma_offset: msl::ChromaLocation::CositedEven,
+        swizzle: [
+            msl::ComponentSwizzle::Identity,
+            msl::ComponentSwizzle::Identity,
+            msl::ComponentSwizzle::Identity,
+            msl::ComponentSwizzle::Identity,
+        ],
+        ycbcr_conversion_enable: false,
+        ycbcr_model: msl::SamplerYCbCrModelConversion::RgbIdentity,
+        ycbcr_range: msl::SamplerYCbCrRange::ItuFull,
+        bpc: 8,
+    }
+}
+
+pub fn map_sampler_data_to_naga(
+    info: &image::SamplerDesc,
+) -> naga::back::msl::sampler::InlineSampler {
+    use naga::back::msl::sampler as sm;
+    fn map_address(wrap: image::WrapMode) -> sm::Address {
+        match wrap {
+            image::WrapMode::Tile => sm::Address::Repeat,
+            image::WrapMode::Mirror => sm::Address::MirroredRepeat,
+            image::WrapMode::Clamp => sm::Address::ClampToEdge,
+            image::WrapMode::Border => sm::Address::ClampToBorder,
+            image::WrapMode::MirrorClamp => {
+                error!("Unsupported address mode - MirrorClamp");
+                sm::Address::ClampToEdge
+            }
+        }
+    }
+
+    sm::InlineSampler {
+        coord: if info.normalized {
+            sm::Coord::Normalized
+        } else {
+            sm::Coord::Pixel
+        },
+        min_filter: match info.min_filter {
+            image::Filter::Nearest => sm::Filter::Nearest,
+            image::Filter::Linear => sm::Filter::Linear,
+        },
+        mag_filter: match info.mag_filter {
+            image::Filter::Nearest => sm::Filter::Nearest,
+            image::Filter::Linear => sm::Filter::Linear,
+        },
+        mip_filter: match info.min_filter {
+            image::Filter::Nearest if info.lod_range.end.0 < 0.5 => None,
+            image::Filter::Nearest => Some(sm::Filter::Nearest),
+            image::Filter::Linear => Some(sm::Filter::Linear),
+        },
+        address: [
+            map_address(info.wrap_mode.0),
+            map_address(info.wrap_mode.1),
+            map_address(info.wrap_mode.2),
+        ],
+        compare_func: match info.comparison {
+            Some(func) => match func {
+                Comparison::Never => sm::CompareFunc::Never,
+                Comparison::Less => sm::CompareFunc::Less,
+                Comparison::LessEqual => sm::CompareFunc::LessEqual,
+                Comparison::Equal => sm::CompareFunc::Equal,
+                Comparison::GreaterEqual => sm::CompareFunc::GreaterEqual,
+                Comparison::Greater => sm::CompareFunc::Greater,
+                Comparison::NotEqual => sm::CompareFunc::NotEqual,
+                Comparison::Always => sm::CompareFunc::Always,
+            },
+            None => sm::CompareFunc::Never,
+        },
+        border_color: match info.border {
+            image::BorderColor::TransparentBlack => sm::BorderColor::TransparentBlack,
+            image::BorderColor::OpaqueBlack => sm::BorderColor::OpaqueBlack,
+            image::BorderColor::OpaqueWhite => sm::BorderColor::OpaqueWhite,
+        },
+        lod_clamp: if info.lod_range.start.0 > 0.0 || info.lod_range.end.0 < 100.0 {
+            Some(info.lod_range.start.0..info.lod_range.end.0)
+        } else {
+            None
+        },
+        max_anisotropy: info
+            .anisotropy_clamp
+            .and_then(|aniso| NonZeroU32::new(aniso as u32)),
     }
 }

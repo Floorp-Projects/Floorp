@@ -708,6 +708,7 @@ pub struct RawDevice {
     /// This flag is `true` if the device has `VK_KHR_maintenance1`/1.1+ and `false` otherwise (i.e. in the case of `VK_AMD_negative_viewport_height`).
     flip_y_requires_shift: bool,
     imageless_framebuffers: bool,
+    image_view_usage: bool,
     timestamp_period: f32,
 }
 

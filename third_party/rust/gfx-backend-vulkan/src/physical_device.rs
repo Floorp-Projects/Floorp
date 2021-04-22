@@ -1,5 +1,5 @@
 use ash::{
-    extensions::{self, khr::DrawIndirectCount, khr::Swapchain, nv::MeshShader},
+    extensions::{khr::DrawIndirectCount, khr::Swapchain, nv::MeshShader},
     version::{DeviceV1_0, InstanceV1_0},
     vk,
 };
@@ -66,7 +66,6 @@ impl PhysicalDeviceFeatures {
         enabled_extensions: &[&'static CStr],
         requested_features: Features,
         supports_vulkan12_imageless_framebuffer: bool,
-        supports_vulkan12_sampler_filter_minmax: bool,
     ) -> PhysicalDeviceFeatures {
         // This must follow the "Valid Usage" requirements of [`VkDeviceCreateInfo`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkDeviceCreateInfo.html).
         let features = requested_features;
@@ -183,7 +182,7 @@ impl PhysicalDeviceFeatures {
                         .runtime_descriptor_array(
                             features.contains(Features::UNSIZED_DESCRIPTOR_ARRAY),
                         )
-                        .sampler_filter_minmax(supports_vulkan12_sampler_filter_minmax)
+                        .sampler_filter_minmax(features.contains(Features::SAMPLER_REDUCTION))
                         .imageless_framebuffer(supports_vulkan12_imageless_framebuffer)
                         .build(),
                 )
@@ -424,14 +423,15 @@ impl PhysicalDeviceFeatures {
             bits |= Features::NDC_Y_UP;
         }
 
-        if info.supports_extension(vk::KhrSamplerMirrorClampToEdgeFn::name())
-            || info.api_version() >= Version::V1_2
-        {
+        if info.supports_extension(vk::KhrSamplerMirrorClampToEdgeFn::name()) {
             bits |= Features::SAMPLER_MIRROR_CLAMP_EDGE;
         }
 
-        if info.supports_extension(DrawIndirectCount::name()) || info.api_version() >= Version::V1_2
-        {
+        if info.supports_extension(vk::ExtSamplerFilterMinmaxFn::name()) {
+            bits |= Features::SAMPLER_REDUCTION;
+        }
+
+        if info.supports_extension(DrawIndirectCount::name()) {
             bits |= Features::DRAW_INDIRECT_COUNT
         }
 
@@ -457,6 +457,9 @@ impl PhysicalDeviceFeatures {
             }
             if vulkan_1_2.sampler_mirror_clamp_to_edge != 0 {
                 bits |= Features::SAMPLER_MIRROR_CLAMP_EDGE;
+            }
+            if vulkan_1_2.sampler_filter_minmax != 0 {
+                bits |= Features::SAMPLER_REDUCTION
             }
             if vulkan_1_2.draw_indirect_count != 0 {
                 bits |= Features::DRAW_INDIRECT_COUNT
@@ -515,7 +518,7 @@ impl PhysicalDeviceInfo {
     fn get_required_extensions(&self, requested_features: Features) -> Vec<&'static CStr> {
         let mut requested_extensions = Vec::new();
 
-        requested_extensions.push(extensions::khr::Swapchain::name());
+        requested_extensions.push(Swapchain::name());
 
         if self.api_version() < Version::V1_1 {
             requested_extensions.push(vk::KhrMaintenance1Fn::name());
@@ -556,6 +559,12 @@ impl PhysicalDeviceInfo {
             && requested_features.intersects(Features::SAMPLER_MIRROR_CLAMP_EDGE)
         {
             requested_extensions.push(vk::KhrSamplerMirrorClampToEdgeFn::name());
+        }
+
+        if self.api_version() < Version::V1_2
+            && requested_features.contains(Features::SAMPLER_REDUCTION)
+        {
+            requested_extensions.push(vk::ExtSamplerFilterMinmaxFn::name());
         }
 
         if requested_features.intersects(Features::MESH_SHADER_MASK) {
@@ -666,6 +675,7 @@ pub struct PhysicalDevice {
     known_memory_flags: vk::MemoryPropertyFlags,
     device_info: PhysicalDeviceInfo,
     device_features: PhysicalDeviceFeatures,
+    available_features: Features,
 }
 
 pub(crate) fn load_adapter(
@@ -693,6 +703,23 @@ pub(crate) fn load_adapter(
         },
     };
 
+    let available_features = {
+        let mut bits = device_features.to_hal_features(&device_info);
+
+        // see https://github.com/gfx-rs/gfx/issues/1930
+        let is_windows_intel_dual_src_bug = cfg!(windows)
+            && device_info.properties.vendor_id == info::intel::VENDOR
+            && (device_info.properties.device_id & info::intel::DEVICE_KABY_LAKE_MASK
+                == info::intel::DEVICE_KABY_LAKE_MASK
+                || device_info.properties.device_id & info::intel::DEVICE_SKY_LAKE_MASK
+                    == info::intel::DEVICE_SKY_LAKE_MASK);
+        if is_windows_intel_dual_src_bug {
+            bits.set(Features::DUAL_SRC_BLENDING, false);
+        }
+
+        bits
+    };
+
     let physical_device = PhysicalDevice {
         instance: instance.clone(),
         handle: device,
@@ -703,6 +730,7 @@ pub(crate) fn load_adapter(
             | vk::MemoryPropertyFlags::LAZILY_ALLOCATED,
         device_info,
         device_features,
+        available_features,
     };
 
     let queue_families = unsafe {
@@ -809,9 +837,6 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                     &enabled_extensions,
                     requested_features,
                     supports_vulkan12_imageless_framebuffer,
-                    self.device_features
-                        .vulkan_1_2
-                        .map_or(false, |features| features.sampler_filter_minmax == vk::TRUE),
                 );
             let info = vk::DeviceCreateInfo::builder()
                 .queue_create_infos(&family_infos)
@@ -912,6 +937,10 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                     || self
                         .device_info
                         .supports_extension(vk::KhrImagelessFramebufferFn::name()),
+                image_view_usage: self.device_info.api_version() >= Version::V1_1
+                    || self
+                        .device_info
+                        .supports_extension(vk::KhrMaintenance2Fn::name()),
                 timestamp_period: self.device_info.properties.limits.timestamp_period,
             }),
             vendor_id: self.device_info.properties.vendor_id,
@@ -956,12 +985,8 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             .supports_extension(vk::KhrMaintenance1Fn::name());
 
         let supports_sampler_filter_minmax = self
-            .device_info
-            .supports_extension(vk::ExtSamplerFilterMinmaxFn::name())
-            || self
-                .device_features
-                .vulkan_1_2
-                .map_or(false, |features| features.sampler_filter_minmax == vk::TRUE);
+            .available_features
+            .contains(Features::SAMPLER_REDUCTION);
 
         format::Properties {
             linear_tiling: conv::map_image_features(
@@ -1062,20 +1087,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
     }
 
     fn features(&self) -> Features {
-        let mut bits = self.device_features.to_hal_features(&self.device_info);
-
-        // see https://github.com/gfx-rs/gfx/issues/1930
-        let is_windows_intel_dual_src_bug = cfg!(windows)
-            && self.device_info.properties.vendor_id == info::intel::VENDOR
-            && (self.device_info.properties.device_id & info::intel::DEVICE_KABY_LAKE_MASK
-                == info::intel::DEVICE_KABY_LAKE_MASK
-                || self.device_info.properties.device_id & info::intel::DEVICE_SKY_LAKE_MASK
-                    == info::intel::DEVICE_SKY_LAKE_MASK);
-        if is_windows_intel_dual_src_bug {
-            bits = bits & !Features::DUAL_SRC_BLENDING;
-        }
-
-        bits
+        self.available_features
     }
 
     fn properties(&self) -> PhysicalDeviceProperties {
@@ -1192,6 +1204,7 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
 
         let mut descriptor_indexing_capabilities = hal::DescriptorIndexingProperties::default();
         let mut mesh_shader_capabilities = hal::MeshShaderProperties::default();
+        let mut sampler_reduction_capabilities = hal::SamplerReductionProperties::default();
 
         if let Some(get_physical_device_properties) =
             self.instance.get_physical_device_properties.as_ref()
@@ -1199,13 +1212,16 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
             let mut descriptor_indexing_properties =
                 vk::PhysicalDeviceDescriptorIndexingPropertiesEXT::builder();
             let mut mesh_shader_properties = vk::PhysicalDeviceMeshShaderPropertiesNV::builder();
+            let mut sampler_reduction_properties =
+                vk::PhysicalDeviceSamplerFilterMinmaxProperties::builder();
 
             unsafe {
                 get_physical_device_properties.get_physical_device_properties2_khr(
                     self.handle,
                     &mut vk::PhysicalDeviceProperties2::builder()
-                        .push_next(&mut mesh_shader_properties)
                         .push_next(&mut descriptor_indexing_properties)
+                        .push_next(&mut mesh_shader_properties)
+                        .push_next(&mut sampler_reduction_properties)
                         .build() as *mut _,
                 );
             }
@@ -1255,12 +1271,22 @@ impl adapter::PhysicalDevice<Backend> for PhysicalDevice {
                 mesh_output_per_primitive_granularity: mesh_shader_properties
                     .mesh_output_per_primitive_granularity,
             };
+
+            sampler_reduction_capabilities = hal::SamplerReductionProperties {
+                single_component_formats: sampler_reduction_properties
+                    .filter_minmax_single_component_formats
+                    == vk::TRUE,
+                image_component_mapping: sampler_reduction_properties
+                    .filter_minmax_image_component_mapping
+                    == vk::TRUE,
+            };
         }
 
         PhysicalDeviceProperties {
             limits,
             descriptor_indexing: descriptor_indexing_capabilities,
             mesh_shader: mesh_shader_capabilities,
+            sampler_reduction: sampler_reduction_capabilities,
             performance_caveats: Default::default(),
             dynamic_pipeline_states: DynamicStates::all(),
             downlevel: DownlevelProperties::all_enabled(),

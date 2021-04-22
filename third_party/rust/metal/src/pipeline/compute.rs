@@ -235,6 +235,7 @@ impl ComputePipelineDescriptorRef {
         }
     }
 
+    /// API_AVAILABLE(macos(11.0), ios(14.0));
     /// Marshal from Rust slice
     pub fn set_binary_archives(&self, archives: &[&BinaryArchiveRef]) {
         let ns_array = Array::<BinaryArchive>::from_slice(archives);

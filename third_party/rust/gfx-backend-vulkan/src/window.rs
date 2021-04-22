@@ -358,6 +358,7 @@ impl w::PresentationSurface<Backend> for Surface {
     ) -> Result<(), w::SwapchainError> {
         use hal::device::Device as _;
 
+        let usage = config.image_usage;
         let format = config.format;
         let old = self
             .swapchain
@@ -380,6 +381,7 @@ impl w::PresentationSurface<Backend> for Surface {
                             hal::image::ViewKind::D2,
                             format,
                             hal::format::Swizzle::NO,
+                            usage,
                             hal::image::SubresourceRange {
                                 aspects: hal::format::Aspects::COLOR,
                                 ..Default::default()

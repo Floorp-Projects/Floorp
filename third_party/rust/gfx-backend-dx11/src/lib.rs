@@ -622,7 +622,7 @@ impl hal::Instance<Backend> for Instance {
                     limits,
                     dynamic_pipeline_states: hal::DynamicStates::VIEWPORT
                         | hal::DynamicStates::SCISSOR
-                        | hal::DynamicStates::BLEND_COLOR
+                        | hal::DynamicStates::BLEND_CONSTANTS
                         | hal::DynamicStates::DEPTH_BOUNDS
                         | hal::DynamicStates::STENCIL_REFERENCE,
                     downlevel,
@@ -1686,7 +1686,7 @@ impl CommandBufferState {
             let blend_color = if let Some(ref pipeline) = self.graphics_pipeline {
                 pipeline
                     .baked_states
-                    .blend_color
+                    .blend_constants
                     .or(self.blend_factor)
                     .unwrap_or([0f32; 4])
             } else {

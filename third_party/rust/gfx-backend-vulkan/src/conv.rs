@@ -225,6 +225,15 @@ pub fn map_wrap(wrap: image::WrapMode) -> vk::SamplerAddressMode {
     }
 }
 
+pub fn map_reduction(reduction: image::ReductionMode) -> vk::SamplerReductionMode {
+    use hal::image::ReductionMode as Rm;
+    match reduction {
+        Rm::WeightedAverage => vk::SamplerReductionMode::WEIGHTED_AVERAGE,
+        Rm::Minimum => vk::SamplerReductionMode::MIN,
+        Rm::Maximum => vk::SamplerReductionMode::MAX,
+    }
+}
+
 pub fn map_border_color(border_color: image::BorderColor) -> vk::BorderColor {
     match border_color {
         image::BorderColor::TransparentBlack => vk::BorderColor::FLOAT_TRANSPARENT_BLACK,

@@ -16,6 +16,13 @@ populated at the start of an entry point. The outputs are saved at the end.
 The function associated with an entry point is wrapped in another function,
 such that we can handle any `Return` statements without problems.
 
+## Row-major matrices
+
+We don't handle them natively, since the IR only expects column majority.
+Instead, we detect when such matrix is accessed in the `OpAccessChain`,
+and we generate a parallel expression that loads the value, but transposed.
+This value then gets used instead of `OpLoad` result later on.
+
 !*/
 #![allow(dead_code)]
 
@@ -41,6 +48,7 @@ use std::{convert::TryInto, num::NonZeroU32, path::PathBuf};
 
 pub const SUPPORTED_CAPABILITIES: &[spirv::Capability] = &[
     spirv::Capability::Shader,
+    spirv::Capability::VulkanMemoryModel,
     spirv::Capability::ClipDistance,
     spirv::Capability::CullDistance,
     spirv::Capability::SampleRateShading,
@@ -60,7 +68,7 @@ pub const SUPPORTED_CAPABILITIES: &[spirv::Capability] = &[
     spirv::Capability::UniformBufferArrayDynamicIndexing,
     spirv::Capability::StorageBufferArrayDynamicIndexing,
 ];
-pub const SUPPORTED_EXTENSIONS: &[&str] = &[];
+pub const SUPPORTED_EXTENSIONS: &[&str] = &["SPV_KHR_vulkan_memory_model"];
 pub const SUPPORTED_EXT_SETS: &[&str] = &["GLSL.std.450"];
 
 #[derive(Copy, Clone)]
@@ -192,7 +200,7 @@ bitflags::bitflags! {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Majority {
     Column,
     Row,
@@ -212,6 +220,7 @@ struct Decoration {
     matrix_stride: Option<NonZeroU32>,
     matrix_major: Option<Majority>,
     interpolation: Option<crate::Interpolation>,
+    sampling: Option<crate::Sampling>,
     flags: DecorationFlags,
 }
 
@@ -243,10 +252,11 @@ impl Decoration {
             } => map_builtin(built_in).map(crate::Binding::BuiltIn),
             Decoration {
                 built_in: None,
-                location: Some(loc),
+                location: Some(location),
                 interpolation,
+                sampling,
                 ..
-            } => Ok(crate::Binding::Location(loc, interpolation)),
+            } => Ok(crate::Binding::Location { location, interpolation, sampling }),
             _ => Err(Error::MissingDecoration(spirv::Decoration::Location)),
         }
     }
@@ -300,6 +310,21 @@ struct LookupExpression {
     type_id: spirv::Word,
 }
 
+#[derive(Debug)]
+struct LookupMember {
+    type_id: spirv::Word,
+    // This is true for either matrices, or arrays of matrices (yikes).
+    row_major: bool,
+}
+
+#[derive(Clone, Debug)]
+enum LookupLoadOverride {
+    /// For arrays of matrices, we track them but not loading yet.
+    Pending,
+    /// For matrices, vectors, and scalars, we pre-load the data.
+    Loaded(Handle<crate::Expression>),
+}
+
 #[derive(Clone, Debug)]
 struct Assignment {
     to: Handle<crate::Expression>,
@@ -337,7 +362,7 @@ pub struct Parser<I> {
     ext_glsl_id: Option<spirv::Word>,
     future_decor: FastHashMap<spirv::Word, Decoration>,
     future_member_decor: FastHashMap<(spirv::Word, MemberIndex), Decoration>,
-    lookup_member_type_id: FastHashMap<(Handle<crate::Type>, MemberIndex), spirv::Word>,
+    lookup_member: FastHashMap<(Handle<crate::Type>, MemberIndex), LookupMember>,
     handle_sampling: FastHashMap<Handle<crate::GlobalVariable>, image::SamplingFlags>,
     lookup_type: FastHashMap<spirv::Word, LookupType>,
     lookup_void_type: Option<spirv::Word>,
@@ -346,6 +371,8 @@ pub struct Parser<I> {
     lookup_constant: FastHashMap<spirv::Word, LookupConstant>,
     lookup_variable: FastHashMap<spirv::Word, LookupVariable>,
     lookup_expression: FastHashMap<spirv::Word, LookupExpression>,
+    // Load overrides are used to work around row-major matrices
+    lookup_load_override: FastHashMap<spirv::Word, LookupLoadOverride>,
     lookup_sampled_image: FastHashMap<spirv::Word, image::LookupSampledImage>,
     lookup_function_type: FastHashMap<spirv::Word, LookupFunctionType>,
     lookup_function: FastHashMap<spirv::Word, Handle<crate::Function>>,
@@ -373,13 +400,14 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             future_decor: FastHashMap::default(),
             future_member_decor: FastHashMap::default(),
             handle_sampling: FastHashMap::default(),
-            lookup_member_type_id: FastHashMap::default(),
+            lookup_member: FastHashMap::default(),
             lookup_type: FastHashMap::default(),
             lookup_void_type: None,
             lookup_storage_buffer_types: FastHashSet::default(),
             lookup_constant: FastHashMap::default(),
             lookup_variable: FastHashMap::default(),
             lookup_expression: FastHashMap::default(),
+            lookup_load_override: FastHashMap::default(),
             lookup_sampled_image: FastHashMap::default(),
             lookup_function_type: FastHashMap::default(),
             lookup_function: FastHashMap::default(),
@@ -478,10 +506,10 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 dec.interpolation = Some(crate::Interpolation::Flat);
             }
             spirv::Decoration::Centroid => {
-                dec.interpolation = Some(crate::Interpolation::Centroid);
+                dec.sampling = Some(crate::Sampling::Centroid);
             }
             spirv::Decoration::Sample => {
-                dec.interpolation = Some(crate::Interpolation::Sample);
+                dec.sampling = Some(crate::Sampling::Sample);
             }
             spirv::Decoration::NonReadable => {
                 dec.flags |= DecorationFlags::NON_READABLE;
@@ -636,11 +664,11 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let root_lookup = self.lookup_type.lookup(root_type_id)?;
         let (count, child_type_id) = match type_arena[root_lookup.handle].inner {
             crate::TypeInner::Struct { ref members, .. } => {
-                let child_type_id = *self
-                    .lookup_member_type_id
+                let child_member = self
+                    .lookup_member
                     .get(&(root_lookup.handle, selection))
                     .ok_or(Error::InvalidAccessType(root_type_id))?;
-                (members.len(), child_type_id)
+                (members.len(), child_member.type_id)
             }
             // crate::TypeInner::Array //TODO?
             crate::TypeInner::Vector { size, .. }
@@ -797,6 +825,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                     struct AccessExpression {
                         base_handle: Handle<crate::Expression>,
                         type_id: spirv::Word,
+                        load_override: Option<LookupLoadOverride>,
                     }
 
                     inst.expect_at_least(4)?;
@@ -813,50 +842,84 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         AccessExpression {
                             base_handle: lexp.handle,
                             type_id: lty.base_id.ok_or(Error::InvalidAccessType(lexp.type_id))?,
+                            load_override: self.lookup_load_override.get(&base_id).cloned(),
                         }
                     };
                     for _ in 4..inst.wc {
                         let access_id = self.next()?;
                         log::trace!("\t\t\tlooking up index expr {:?}", access_id);
                         let index_expr = self.lookup_expression.lookup(access_id)?.clone();
-                        let index_type_handle = self.lookup_type.lookup(index_expr.type_id)?.handle;
-                        match type_arena[index_type_handle].inner {
-                            crate::TypeInner::Scalar {
-                                kind: crate::ScalarKind::Uint,
-                                ..
+                        let index_expr_data = &expressions[index_expr.handle];
+                        let index_maybe = match *index_expr_data {
+                            crate::Expression::Constant(const_handle) => {
+                                Some(const_arena[const_handle].to_array_length().ok_or(
+                                    Error::InvalidAccess(crate::Expression::Constant(const_handle)),
+                                )?)
                             }
-                            | crate::TypeInner::Scalar {
-                                kind: crate::ScalarKind::Sint,
-                                ..
-                            } => (),
-                            ref other => {
-                                log::warn!("access index type {:?}", other);
-                                return Err(Error::UnsupportedType(index_type_handle));
-                            }
-                        }
+                            _ => None,
+                        };
+
                         log::trace!("\t\t\tlooking up type {:?}", acex.type_id);
                         let type_lookup = self.lookup_type.lookup(acex.type_id)?;
                         acex = match type_arena[type_lookup.handle].inner {
+                            // can only index a struct with a constant
                             crate::TypeInner::Struct { .. } => {
-                                let index = match expressions[index_expr.handle] {
-                                    crate::Expression::Constant(const_handle) => {
-                                        match const_arena[const_handle].inner {
-                                            crate::ConstantInner::Scalar {
-                                                width: 4,
-                                                value: crate::ScalarValue::Uint(v),
-                                            } => v as u32,
-                                            crate::ConstantInner::Scalar {
-                                                width: 4,
-                                                value: crate::ScalarValue::Sint(v),
-                                            } => v as u32,
-                                            _ => {
-                                                return Err(Error::InvalidAccess(
-                                                    crate::Expression::Constant(const_handle),
-                                                ))
+                                let index = index_maybe
+                                    .ok_or_else(|| Error::InvalidAccess(index_expr_data.clone()))?;
+                                let lookup_member = self
+                                    .lookup_member
+                                    .get(&(type_lookup.handle, index))
+                                    .ok_or(Error::InvalidAccessType(acex.type_id))?;
+                                let base_handle =
+                                    expressions.append(crate::Expression::AccessIndex {
+                                        base: acex.base_handle,
+                                        index,
+                                    });
+                                AccessExpression {
+                                    base_handle,
+                                    type_id: lookup_member.type_id,
+                                    load_override: if lookup_member.row_major {
+                                        debug_assert!(acex.load_override.is_none());
+                                        let sub_type_lookup =
+                                            self.lookup_type.lookup(lookup_member.type_id)?;
+                                        Some(match type_arena[sub_type_lookup.handle].inner {
+                                            // load it transposed, to match column major expectations
+                                            crate::TypeInner::Matrix { .. } => {
+                                                let loaded =
+                                                    expressions.append(crate::Expression::Load {
+                                                        pointer: base_handle,
+                                                    });
+                                                let transposed =
+                                                    expressions.append(crate::Expression::Math {
+                                                        fun: crate::MathFunction::Transpose,
+                                                        arg: loaded,
+                                                        arg1: None,
+                                                        arg2: None,
+                                                    });
+                                                LookupLoadOverride::Loaded(transposed)
                                             }
-                                        }
+                                            _ => LookupLoadOverride::Pending,
+                                        })
+                                    } else {
+                                        None
+                                    },
+                                }
+                            }
+                            // we can't dynamically index matrices, so expecting constant index here
+                            crate::TypeInner::Matrix { .. } => {
+                                let index = index_maybe
+                                    .ok_or_else(|| Error::InvalidAccess(index_expr_data.clone()))?;
+                                let load_override = match acex.load_override {
+                                    // We are indexing inside a row-major matrix
+                                    Some(LookupLoadOverride::Loaded(load_expr)) => {
+                                        let sub_expr =
+                                            expressions.append(crate::Expression::AccessIndex {
+                                                base: load_expr,
+                                                index,
+                                            });
+                                        Some(LookupLoadOverride::Loaded(sub_expr))
                                     }
-                                    ref other => return Err(Error::InvalidAccess(other.clone())),
+                                    _ => None,
                                 };
                                 AccessExpression {
                                     base_handle: expressions.append(
@@ -865,24 +928,62 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                                             index,
                                         },
                                     ),
-                                    type_id: *self
-                                        .lookup_member_type_id
-                                        .get(&(type_lookup.handle, index))
+                                    type_id: type_lookup
+                                        .base_id
                                         .ok_or(Error::InvalidAccessType(acex.type_id))?,
+                                    load_override,
                                 }
                             }
-                            _ => AccessExpression {
-                                base_handle: expressions.append(crate::Expression::Access {
+                            // This must be a vector or an array.
+                            _ => {
+                                let base_handle = expressions.append(crate::Expression::Access {
                                     base: acex.base_handle,
                                     index: index_expr.handle,
-                                }),
-                                type_id: type_lookup
-                                    .base_id
-                                    .ok_or(Error::InvalidAccessType(acex.type_id))?,
-                            },
+                                });
+                                let load_override = match acex.load_override {
+                                    // If there is a load override in place, then we always end up
+                                    // with a side-loaded value here.
+                                    Some(lookup_load_override) => {
+                                        let sub_expr = match lookup_load_override {
+                                            // We must be indexing into the array of row-major matrices.
+                                            // Let's load the result of indexing and transpose it.
+                                            LookupLoadOverride::Pending => {
+                                                let loaded =
+                                                    expressions.append(crate::Expression::Load {
+                                                        pointer: base_handle,
+                                                    });
+                                                expressions.append(crate::Expression::Math {
+                                                    fun: crate::MathFunction::Transpose,
+                                                    arg: loaded,
+                                                    arg1: None,
+                                                    arg2: None,
+                                                })
+                                            }
+                                            // We are indexing inside a row-major matrix.
+                                            LookupLoadOverride::Loaded(load_expr) => expressions
+                                                .append(crate::Expression::Access {
+                                                    base: load_expr,
+                                                    index: index_expr.handle,
+                                                }),
+                                        };
+                                        Some(LookupLoadOverride::Loaded(sub_expr))
+                                    }
+                                    None => None,
+                                };
+                                AccessExpression {
+                                    base_handle,
+                                    type_id: type_lookup
+                                        .base_id
+                                        .ok_or(Error::InvalidAccessType(acex.type_id))?,
+                                    load_override,
+                                }
+                            }
                         };
                     }
 
+                    if let Some(load_expr) = acex.load_override {
+                        self.lookup_load_override.insert(result_id, load_expr);
+                    }
                     let lookup_expression = LookupExpression {
                         handle: acex.base_handle,
                         type_id: result_type_id,
@@ -997,10 +1098,12 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         log::trace!("\t\t\tlooking up type {:?}", lexp.type_id);
                         let type_lookup = self.lookup_type.lookup(lexp.type_id)?;
                         let type_id = match type_arena[type_lookup.handle].inner {
-                            crate::TypeInner::Struct { .. } => *self
-                                .lookup_member_type_id
-                                .get(&(type_lookup.handle, index))
-                                .ok_or(Error::InvalidAccessType(lexp.type_id))?,
+                            crate::TypeInner::Struct { .. } => {
+                                self.lookup_member
+                                    .get(&(type_lookup.handle, index))
+                                    .ok_or(Error::InvalidAccessType(lexp.type_id))?
+                                    .type_id
+                            }
                             crate::TypeInner::Array { .. }
                             | crate::TypeInner::Vector { .. }
                             | crate::TypeInner::Matrix { .. } => type_lookup
@@ -1071,9 +1174,17 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         let lexp = self.lookup_expression.lookup(comp_id)?;
                         components.push(lexp.handle);
                     }
-                    let expr = crate::Expression::Compose {
-                        ty: self.lookup_type.lookup(result_type_id)?.handle,
-                        components,
+                    let ty = self.lookup_type.lookup(result_type_id)?.handle;
+                    let first = components[0];
+                    let expr = match type_arena[ty].inner {
+                        // this is an optimization to detect the splat
+                        crate::TypeInner::Vector { size, .. }
+                            if components.len() == size as usize
+                                && components[1..].iter().all(|&c| c == first) =>
+                        {
+                            crate::Expression::Splat { size, value: first }
+                        }
+                        _ => crate::Expression::Compose { ty, components },
                     };
                     self.lookup_expression.insert(
                         id,
@@ -1100,9 +1211,13 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                         crate::TypeInner::Image { .. } | crate::TypeInner::Sampler { .. } => {
                             base_lexp.handle
                         }
-                        _ => expressions.append(crate::Expression::Load {
-                            pointer: base_lexp.handle,
-                        }),
+                        _ => match self.lookup_load_override.get(&pointer_id) {
+                            Some(&LookupLoadOverride::Loaded(handle)) => handle,
+                            //Note: we aren't handling `LookupLoadOverride::Pending` properly here
+                            _ => expressions.append(crate::Expression::Load {
+                                pointer: base_lexp.handle,
+                            }),
+                        },
                     };
 
                     self.lookup_expression.insert(
@@ -2301,35 +2416,13 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
         let vector_type_lookup = self.lookup_type.lookup(vector_type_id)?;
         let inner = match module.types[vector_type_lookup.handle].inner {
-            crate::TypeInner::Vector { size, width, .. } => {
-                if let Some(Decoration {
-                    matrix_stride: Some(stride),
-                    ..
-                }) = decor
-                {
-                    if stride.get() != (size as u32) * (width as u32) {
-                        return Err(Error::UnsupportedMatrixStride(stride.get()));
-                    }
-                }
-                crate::TypeInner::Matrix {
-                    columns: map_vector_size(num_columns)?,
-                    rows: size,
-                    width,
-                }
-            }
+            crate::TypeInner::Vector { size, width, .. } => crate::TypeInner::Matrix {
+                columns: map_vector_size(num_columns)?,
+                rows: size,
+                width,
+            },
             _ => return Err(Error::InvalidInnerType(vector_type_id)),
         };
-
-        if let Some(Decoration {
-            matrix_major: Some(ref major),
-            ..
-        }) = decor
-        {
-            match *major {
-                Majority::Column => (),
-                Majority::Row => return Err(Error::UnsupportedRowMajorMatrix),
-            }
-        }
 
         self.lookup_type.insert(
             id,
@@ -2419,17 +2512,21 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let length_id = self.next()?;
         let length_const = self.lookup_constant.lookup(length_id)?;
 
-        let decor = self.future_decor.remove(&id);
+        let decor = self.future_decor.remove(&id).unwrap_or_default();
+        let base = self.lookup_type.lookup(type_id)?.handle;
         let inner = crate::TypeInner::Array {
-            base: self.lookup_type.lookup(type_id)?.handle,
+            base,
             size: crate::ArraySize::Constant(length_const.handle),
-            stride: decor.as_ref().and_then(|dec| dec.array_stride),
+            stride: match decor.array_stride {
+                Some(stride) => stride.get(),
+                None => module.types[base].inner.span(&module.constants),
+            },
         };
         self.lookup_type.insert(
             id,
             LookupType {
                 handle: module.types.append(crate::Type {
-                    name: decor.and_then(|dec| dec.name),
+                    name: decor.name,
                     inner,
                 }),
                 base_id: Some(type_id),
@@ -2448,17 +2545,21 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let id = self.next()?;
         let type_id = self.next()?;
 
-        let decor = self.future_decor.remove(&id);
+        let decor = self.future_decor.remove(&id).unwrap_or_default();
+        let base = self.lookup_type.lookup(type_id)?.handle;
         let inner = crate::TypeInner::Array {
             base: self.lookup_type.lookup(type_id)?.handle,
             size: crate::ArraySize::Dynamic,
-            stride: decor.as_ref().and_then(|dec| dec.array_stride),
+            stride: match decor.array_stride {
+                Some(stride) => stride.get(),
+                None => module.types[base].inner.span(&module.constants),
+            },
         };
         self.lookup_type.insert(
             id,
             LookupType {
                 handle: module.types.append(crate::Type {
-                    name: decor.and_then(|dec| dec.name),
+                    name: decor.name,
                     inner,
                 }),
                 base_id: Some(type_id),
@@ -2478,28 +2579,72 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         let parent_decor = self.future_decor.remove(&id);
         let block_decor = parent_decor.as_ref().and_then(|decor| decor.block.clone());
 
-        let mut members = Vec::with_capacity(inst.wc as usize - 2);
-        let mut member_type_ids = Vec::with_capacity(members.capacity());
+        let mut members = Vec::<crate::StructMember>::with_capacity(inst.wc as usize - 2);
+        let mut member_lookups = Vec::with_capacity(members.capacity());
         for i in 0..u32::from(inst.wc) - 2 {
             let type_id = self.next()?;
-            member_type_ids.push(type_id);
             let ty = self.lookup_type.lookup(type_id)?.handle;
             let decor = self
                 .future_member_decor
                 .remove(&(id, i))
                 .unwrap_or_default();
+
+            member_lookups.push(LookupMember {
+                type_id,
+                row_major: decor.matrix_major == Some(Majority::Row),
+            });
+
             let binding = decor.io_binding().ok();
+            let offset = match decor.offset {
+                Some(offset) => offset,
+                None => match members.last() {
+                    Some(member) => {
+                        //TODO: is this needed?
+                        // If offsets are required, we can just put 0 here
+                        member.offset + module.types[member.ty].inner.span(&module.constants)
+                    }
+                    None => 0,
+                },
+            };
+
+            if let crate::TypeInner::Matrix {
+                columns: _,
+                rows,
+                width,
+            } = module.types[ty].inner
+            {
+                if let Some(stride) = decor.matrix_stride {
+                    if stride.get() != (rows as u32) * (width as u32) {
+                        return Err(Error::UnsupportedMatrixStride(stride.get()));
+                    }
+                }
+            }
+
             members.push(crate::StructMember {
                 name: decor.name,
                 ty,
                 binding,
-                size: None, //TODO
-                align: None,
+                offset,
             });
         }
 
+        //TODO: we should be able to do better than this.
+        const STRUCT_ALIGNMENT: u32 = 16;
+
         let inner = crate::TypeInner::Struct {
-            block: block_decor.is_some(),
+            level: match block_decor {
+                Some(_) => crate::StructLevel::Root,
+                None => crate::StructLevel::Normal {
+                    alignment: crate::Alignment::new(STRUCT_ALIGNMENT).unwrap(),
+                },
+            },
+            span: match members.last() {
+                Some(member) => {
+                    let end = member.offset + module.types[member.ty].inner.span(&module.constants);
+                    ((end - 1) | (STRUCT_ALIGNMENT - 1)) + 1
+                }
+                None => STRUCT_ALIGNMENT,
+            },
             members,
         };
         let ty_handle = module.types.append(crate::Type {
@@ -2510,9 +2655,9 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         if block_decor == Some(Block { buffer: true }) {
             self.lookup_storage_buffer_types.insert(ty_handle);
         }
-        for (i, type_id) in member_type_ids.into_iter().enumerate() {
-            self.lookup_member_type_id
-                .insert((ty_handle, i as u32), type_id);
+        for (i, member_lookup) in member_lookups.into_iter().enumerate() {
+            self.lookup_member
+                .insert((ty_handle, i as u32), member_lookup);
         }
         self.lookup_type.insert(
             id,

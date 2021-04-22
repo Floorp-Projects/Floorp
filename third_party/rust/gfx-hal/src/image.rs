@@ -397,6 +397,20 @@ pub enum WrapMode {
     MirrorClamp,
 }
 
+/// Specifies how the image texels in the filter kernel are reduced to a single value.
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum ReductionMode {
+    ///
+    WeightedAverage,
+    ///
+    /// Only valid if `Features::SAMPLER_FILTER_MINMAX` is enabled.
+    Minimum,
+    ///
+    /// Only valid if `Features::SAMPLER_FILTER_MINMAX` is enabled.
+    Maximum,
+}
+
 /// A wrapper for the LOD level of an image. Needed so that we can
 /// implement Eq and Hash for it.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
@@ -467,7 +481,6 @@ impl Into<[f32; 4]> for BorderColor {
 /// available that alter how the GPU goes from a coordinate in an image
 /// to producing an actual value from the texture, including filtering/
 /// scaling, wrap mode, etc.
-// TODO: document the details of sampling.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SamplerDesc {
@@ -477,6 +490,8 @@ pub struct SamplerDesc {
     pub mag_filter: Filter,
     /// Mip filter method to use.
     pub mip_filter: Filter,
+    /// Reduction mode over the filter.
+    pub reduction_mode: ReductionMode,
     /// Wrapping mode for each of the U, V, and W axis (S, T, and R in OpenGL
     /// speak).
     pub wrap_mode: (WrapMode, WrapMode, WrapMode),
@@ -506,6 +521,7 @@ impl SamplerDesc {
             min_filter: filter,
             mag_filter: filter,
             mip_filter: filter,
+            reduction_mode: ReductionMode::WeightedAverage,
             wrap_mode: (wrap, wrap, wrap),
             lod_bias: Lod(0.0),
             lod_range: Lod::RANGE.clone(),
