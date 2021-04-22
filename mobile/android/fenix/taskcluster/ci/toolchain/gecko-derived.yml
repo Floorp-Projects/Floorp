@@ -43,7 +43,7 @@ linux64-minidump-stackwalk:
 
 linux64-node:
     attributes:
-        toolchain-artifact: public/build/node.tar.xz
+        toolchain-artifact: public/build/node.tar.zst
     description: "Node.js toolchain"
     run:
         index-search:
