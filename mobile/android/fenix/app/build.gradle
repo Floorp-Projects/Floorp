@@ -310,25 +310,6 @@ android.applicationVariants.all { variant ->
     }
 
 // -------------------------------------------------------------------------------------------------
-// Leanplum: Read token from local file if it exists
-// -------------------------------------------------------------------------------------------------
-
-    print("Leanplum token: ")
-
-    try {
-        def parts = new File("${rootDir}/.leanplum_token").text.trim().split(":")
-        def id = parts[0]
-        def key = parts[1]
-        buildConfigField 'String', 'LEANPLUM_ID', '"' + id + '"'
-        buildConfigField 'String', 'LEANPLUM_TOKEN', '"' + key + '"'
-        println "(Added from .leanplum_token file)"
-    } catch (FileNotFoundException ignored) {
-        buildConfigField 'String', 'LEANPLUM_ID', 'null'
-        buildConfigField 'String', 'LEANPLUM_TOKEN', 'null'
-        println("X_X")
-    }
-
-// -------------------------------------------------------------------------------------------------
 // MLS: Read token from local file if it exists
 // -------------------------------------------------------------------------------------------------
 
@@ -423,9 +404,6 @@ dependencies {
     implementation Deps.androidx_coordinatorlayout
 
     implementation Deps.sentry
-
-    implementation Deps.leanplum_core
-    implementation Deps.leanplum_fcm
 
     implementation Deps.mozilla_concept_base
     implementation Deps.mozilla_concept_engine

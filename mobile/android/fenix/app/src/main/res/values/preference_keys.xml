@@ -88,7 +88,6 @@
     <string name="pref_key_sync_sign_in" translatable="false">pref_key_sync_sign_in</string>
     <string name="pref_key_sync_problem" translatable="false">pref_key_sync_problem</string>
     <string name="pref_key_push_project_id" translatable="false">project_id</string>
-    <string name="pref_key_fxa_signed_in" translatable="false">pref_key_fxa_signed_in</string>
     <string name="pref_key_fxa_has_synced_items" translatable="false">pref_key_fxa_has_synced_items</string>
     <string name="pref_key_search_widget_installed" translatable="false">pref_key_search_widget_installed</string>
     <string name="pref_key_saved_logins_sorting_strategy" translatable="false">pref_key_saved_logins_sorting_strategy</string>
@@ -268,8 +267,6 @@
 
     <!-- Secret Info Setting Keys -->
     <string name="pref_key_secret_debug_info" translatable="false">pref_key_secret_debug_info</string>
-    <string name="pref_key_leanplum_user_id" translatable="false">pref_key_leanplum_user_id</string>
-    <string name="pref_key_leanplum_device_id" translatable="false">pref_key_leanplum_device_id</string>
     <string name="pref_key_search_region_home" translatable="false">pref_key_search_region_home</string>
     <string name="pref_key_search_region_current" translatable="false">pref_key_search_region_current</string>
 

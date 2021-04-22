@@ -23,7 +23,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.components.metrics.AdjustMetricsService
 import org.mozilla.fenix.components.metrics.GleanMetricsService
-import org.mozilla.fenix.components.metrics.LeanplumMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.experiments.createNimbus
 import org.mozilla.fenix.ext.components
@@ -90,13 +89,10 @@ class Analytics(
         )
     }
 
-    val leanplumMetricsService by lazyMonitored { LeanplumMetricsService(context as Application) }
-
     val metrics: MetricController by lazyMonitored {
         MetricController.create(
             listOf(
                 GleanMetricsService(context, lazy { context.components.core.store }),
-                leanplumMetricsService,
                 AdjustMetricsService(context as Application)
             ),
             isDataTelemetryEnabled = { context.settings().isTelemetryEnabled },

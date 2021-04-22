@@ -216,14 +216,9 @@ internal class TelemetryAccountObserver(
         }?.let {
             metricController.track(it)
         }
-
-        // Used by Leanplum as a context variable.
-        settings.fxaSignedIn = true
     }
 
     override fun onLoggedOut() {
         metricController.track(Event.SyncAuthSignOut)
-        // Used by Leanplum as a context variable.
-        settings.fxaSignedIn = false
     }
 }

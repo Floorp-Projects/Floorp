@@ -80,7 +80,6 @@ gen-external-apklibs
 .DS_Store
 
 # Secrets files, e.g. tokens
-.leanplum_token
 .adjust_token
 .sentry_token
 .mls_token

@@ -161,18 +161,6 @@ allprojects {
                 }
             }
         }
-
-        maven {
-            name "LeanplumRepo"
-            if (project.hasProperty("leanplumRepo")) {
-                url project.property("leanplumRepo")
-            } else {
-                url "https://repo.leanplum.com"
-            }
-            content {
-                includeGroup("com.leanplum")
-            }
-        }
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

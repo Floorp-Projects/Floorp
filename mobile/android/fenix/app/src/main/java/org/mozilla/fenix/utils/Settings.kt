@@ -851,11 +851,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
-    var fxaSignedIn by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_fxa_signed_in),
-        default = false
-    )
-
     var fxaHasSyncedItems by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_fxa_has_synced_items),
         default = false

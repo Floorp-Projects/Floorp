@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components.metrics
 
 import androidx.annotation.VisibleForTesting
-import com.leanplum.Leanplum
 import mozilla.components.browser.awesomebar.facts.BrowserAwesomeBarFacts
 import mozilla.components.browser.menu.facts.BrowserMenuFacts
 import mozilla.components.browser.toolbar.facts.ToolbarFacts
@@ -218,7 +217,6 @@ internal class ReleaseMetricController(
                 if (installedAddons is List<*>) {
                     settings.installedAddonsCount = installedAddons.size
                     settings.installedAddonsList = installedAddons.joinToString(",")
-                    Leanplum.setUserAttributes(mapOf("installed_addons" to installedAddons.size))
                 }
             }
 
@@ -226,7 +224,6 @@ internal class ReleaseMetricController(
                 if (enabledAddons is List<*>) {
                     settings.enabledAddonsCount = enabledAddons.size
                     settings.enabledAddonsList = enabledAddons.joinToString()
-                    Leanplum.setUserAttributes(mapOf("enabled_addons" to enabledAddons.size))
                 }
             }
 
