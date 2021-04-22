@@ -966,7 +966,7 @@ class StorageUI {
     let value;
 
     // Get the string value (async action) and the update the UI synchronously.
-    if (item?.name && item?.valueActor) {
+    if ((item?.name || item?.name === "") && item?.valueActor) {
       value = await item.valueActor.string();
     }
 
