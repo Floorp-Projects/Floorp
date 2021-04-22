@@ -891,14 +891,6 @@ bool GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id,
 bool HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id,
                             bool* result);
 
-// Deprecated: Use the Maybe<PropertyDescriptor> overload!
-bool GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
-                              MutableHandle<JS::PropertyDescriptor> desc);
-
-bool GetOwnPropertyDescriptor(
-    JSContext* cx, HandleObject obj, HandleId id,
-    MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
-
 /*
  * Like JS::FromPropertyDescriptor, but ignore desc.object() and always set vp
  * to an object on success.

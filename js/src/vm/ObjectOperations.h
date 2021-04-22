@@ -10,6 +10,7 @@
 #define vm_ObjectOperations_h
 
 #include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
+#include "mozilla/Maybe.h"
 
 #include <stdint.h>  // uint32_t
 
@@ -77,12 +78,11 @@ extern bool PreventExtensions(JSContext* cx, JS::Handle<JSObject*> obj);
 /*
  * ES6 [[GetOwnProperty]]. Get a description of one of obj's own properties.
  *
- * If no such property exists on obj, return true with desc.object() set to
- * null.
+ * If no such property exists on obj, desc will be Nothing().
  */
 extern bool GetOwnPropertyDescriptor(
     JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-    JS::MutableHandle<JS::PropertyDescriptor> desc);
+    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 
 /* ES6 [[DefineOwnProperty]]. Define a property on obj. */
 extern bool DefineProperty(JSContext* cx, JS::Handle<JSObject*> obj,
