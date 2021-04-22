@@ -3863,6 +3863,10 @@ impl TileCacheInstance {
         // surfaces that were not referenced during the update_prim_dependencies pass.
         self.external_native_surface_cache.retain(|_, surface| {
             if !surface.used_this_frame {
+                // If we removed an external surface, we need to mark the dirty rects as
+                // invalid so a full composite occurs on the next frame.
+                frame_state.composite_state.dirty_rects_are_valid = false;
+
                 frame_state.resource_cache.destroy_compositor_surface(surface.native_surface_id);
             }
 
