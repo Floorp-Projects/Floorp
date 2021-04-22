@@ -142,6 +142,16 @@ void nsWaylandDisplay::SetViewporter(wp_viewporter* aViewporter) {
   mViewporter = aViewporter;
 }
 
+void nsWaylandDisplay::SetRelativePointerManager(
+    zwp_relative_pointer_manager_v1* aRelativePointerManager) {
+  mRelativePointerManager = aRelativePointerManager;
+}
+
+void nsWaylandDisplay::SetPointerConstraints(
+    zwp_pointer_constraints_v1* aPointerConstraints) {
+  mPointerConstraints = aPointerConstraints;
+}
+
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
@@ -185,6 +195,19 @@ static void global_registry_handler(void* data, wl_registry* registry,
     wl_proxy_set_queue((struct wl_proxy*)idle_inhibit_manager,
                        display->GetEventQueue());
     display->SetIdleInhibitManager(idle_inhibit_manager);
+  } else if (strcmp(interface, "zwp_relative_pointer_manager_v1") == 0) {
+    auto* relative_pointer_manager =
+        WaylandRegistryBind<zwp_relative_pointer_manager_v1>(
+            registry, id, &zwp_relative_pointer_manager_v1_interface, 1);
+    wl_proxy_set_queue((struct wl_proxy*)relative_pointer_manager,
+                       display->GetEventQueue());
+    display->SetRelativePointerManager(relative_pointer_manager);
+  } else if (strcmp(interface, "zwp_pointer_constraints_v1") == 0) {
+    auto* pointer_constraints = WaylandRegistryBind<zwp_pointer_constraints_v1>(
+        registry, id, &zwp_pointer_constraints_v1_interface, 1);
+    wl_proxy_set_queue((struct wl_proxy*)pointer_constraints,
+                       display->GetEventQueue());
+    display->SetPointerConstraints(pointer_constraints);
   } else if (strcmp(interface, "wl_compositor") == 0) {
     // Requested wl_compositor version 4 as we need wl_surface_damage_buffer().
     auto* compositor = WaylandRegistryBind<wl_compositor>(
@@ -302,6 +325,8 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay, bool aLighWrapper)
       mPrimarySelectionDeviceManagerGtk(nullptr),
       mPrimarySelectionDeviceManagerZwpV1(nullptr),
       mIdleInhibitManager(nullptr),
+      mRelativePointerManager(nullptr),
+      mPointerConstraints(nullptr),
       mRegistry(nullptr),
       mViewporter(nullptr),
       mExplicitSync(false) {

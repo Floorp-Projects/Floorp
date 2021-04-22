@@ -278,6 +278,9 @@ class PuppetWidget : public nsBaseWidget,
   virtual nsresult SynthesizeNativeTouchpadDoubleTap(
       LayoutDeviceIntPoint aPoint, uint32_t aModifierFlags) override;
 
+  virtual void LockNativePointer() override;
+  virtual void UnlockNativePointer() override;
+
   virtual void StartAsyncScrollbarDrag(
       const AsyncDragMetrics& aDragMetrics) override;
 

@@ -503,6 +503,9 @@ nsWindow::nsWindow() {
 #ifdef MOZ_WAYLAND
   mNeedsCompositorResume = false;
   mCompositorInitiallyPaused = false;
+  mNativePointerLockCenter = LayoutDeviceIntPoint();
+  mRelativePointer = nullptr;
+  mLockedPointer = nullptr;
 #endif
   mWaitingForMoveToRectCB = false;
   mPendingSizeRect = LayoutDeviceIntRect(0, 0, 0, 0);
@@ -8041,6 +8044,13 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
       // all other cases we'll synthesize a motion event that will be emitted by
       // gdk_display_warp_pointer().
       // XXX How to activate native modifier for the other events?
+#ifdef MOZ_WAYLAND
+      // Impossible to warp the pointer on Wayland.
+      // For pointer lock, pointer-constraints and relative-pointer are used.
+      if (GdkIsWaylandDisplay()) {
+        return NS_OK;
+      }
+#endif
       GdkScreen* screen = gdk_window_get_screen(mGdkWindow);
       GdkPoint point = DevicePixelsToGdkPointRoundDown(aPoint);
       gdk_display_warp_pointer(display, screen, point.x, point.y);
@@ -8464,6 +8474,106 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
 }
 
 #ifdef MOZ_WAYLAND
+static void relative_pointer_handle_relative_motion(
+    void* data, struct zwp_relative_pointer_v1* pointer, uint32_t time_hi,
+    uint32_t time_lo, wl_fixed_t dx_w, wl_fixed_t dy_w, wl_fixed_t dx_unaccel_w,
+    wl_fixed_t dy_unaccel_w) {
+  RefPtr<nsWindow> window(reinterpret_cast<nsWindow*>(data));
+
+  WidgetMouseEvent event(true, eMouseMove, window, WidgetMouseEvent::eReal);
+
+  event.mRefPoint = window->GetNativePointerLockCenter();
+  event.mRefPoint.x += wl_fixed_to_double(dx_unaccel_w);
+  event.mRefPoint.y += wl_fixed_to_double(dy_unaccel_w);
+
+  event.AssignEventTime(window->GetWidgetEventTime(time_lo));
+  window->DispatchInputEvent(&event);
+}
+
+static const struct zwp_relative_pointer_v1_listener relative_pointer_listener =
+    {
+        relative_pointer_handle_relative_motion,
+};
+
+void nsWindow::SetNativePointerLockCenter(
+    const LayoutDeviceIntPoint& aLockCenter) {
+  mNativePointerLockCenter = aLockCenter;
+}
+
+void nsWindow::LockNativePointer() {
+  if (!GdkIsWaylandDisplay()) {
+    return;
+  }
+
+  auto waylandDisplay = WaylandDisplayGet();
+
+  auto* pointerConstraints = waylandDisplay->GetPointerConstraints();
+  if (!pointerConstraints) {
+    return;
+  }
+
+  auto* relativePointerMgr = waylandDisplay->GetRelativePointerManager();
+  if (!relativePointerMgr) {
+    return;
+  }
+
+  GdkDisplay* display = gdk_display_get_default();
+
+  GdkDeviceManager* manager = gdk_display_get_device_manager(display);
+  MOZ_ASSERT(manager);
+
+  GdkDevice* device = gdk_device_manager_get_client_pointer(manager);
+  if (!device) {
+    NS_WARNING("Could not find Wayland pointer to lock");
+    return;
+  }
+  wl_pointer* pointer = gdk_wayland_device_get_wl_pointer(device);
+  MOZ_ASSERT(pointer);
+
+  wl_surface* surface =
+      gdk_wayland_window_get_wl_surface(gtk_widget_get_window(GetGtkWidget()));
+  if (!surface) {
+    /* Can be null when the window is hidden.
+     * Though it's unlikely that a lock request comes in that case, be
+     * defensive. */
+    return;
+  }
+
+  mLockedPointer = zwp_pointer_constraints_v1_lock_pointer(
+      pointerConstraints, surface, pointer, nullptr,
+      ZWP_POINTER_CONSTRAINTS_V1_LIFETIME_PERSISTENT);
+  if (!mLockedPointer) {
+    NS_WARNING("Could not lock Wayland pointer");
+    return;
+  }
+
+  mRelativePointer = zwp_relative_pointer_manager_v1_get_relative_pointer(
+      relativePointerMgr, pointer);
+  if (!mRelativePointer) {
+    NS_WARNING("Could not create relative Wayland pointer");
+    zwp_locked_pointer_v1_destroy(mLockedPointer);
+    mLockedPointer = nullptr;
+    return;
+  }
+
+  zwp_relative_pointer_v1_add_listener(mRelativePointer,
+                                       &relative_pointer_listener, this);
+}
+
+void nsWindow::UnlockNativePointer() {
+  if (!GdkIsWaylandDisplay()) {
+    return;
+  }
+  if (mRelativePointer) {
+    zwp_relative_pointer_v1_destroy(mRelativePointer);
+    mRelativePointer = nullptr;
+  }
+  if (mLockedPointer) {
+    zwp_locked_pointer_v1_destroy(mLockedPointer);
+    mLockedPointer = nullptr;
+  }
+}
+
 nsresult nsWindow::GetScreenRect(LayoutDeviceIntRect* aRect) {
   typedef struct _GdkMonitor GdkMonitor;
   static auto s_gdk_display_get_monitor_at_window =
