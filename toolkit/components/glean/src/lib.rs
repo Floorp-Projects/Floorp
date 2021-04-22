@@ -35,6 +35,7 @@ extern crate cstr;
 #[macro_use]
 extern crate xpcom;
 
+use std::env;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 use std::path::PathBuf;
@@ -144,6 +145,14 @@ pub unsafe extern "C" fn fog_init(
         }
     } else {
         log::error!("Failed to create Viaduct via XPCOM. Ping upload may not be available.");
+    }
+
+    // If we're operating in automation without any specific source tags to set,
+    // set the tag "automation" so any pings that escape don't clutter the tables.
+    // See https://mozilla.github.io/glean/book/user/debugging/index.html#enabling-debugging-features-through-environment-variables
+    // IMPORTANT: Call this before glean::initialize until bug 1706729 is sorted.
+    if env::var("MOZ_AUTOMATION").is_ok() && env::var("GLEAN_SOURCE_TAGS").is_err() {
+        glean::set_source_tags(vec!["automation".to_string()]);
     }
 
     glean::initialize(configuration, client_info);
