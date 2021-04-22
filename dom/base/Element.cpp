@@ -1757,10 +1757,8 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
     HandleShadowDOMRelatedInsertionSteps(hadParent);
   }
 
-  if (MayHaveStyle() && !IsXULElement()) {
-    // XXXbz if we already have a style attr parsed, this won't do
-    // anything... need to fix that.
-    // If MayHaveStyle() is true, we must be an nsStyledElement
+  if (MayHaveStyle()) {
+    // If MayHaveStyle() is true, we must be an nsStyledElement.
     static_cast<nsStyledElement*>(this)->ReparseStyleAttribute(
         /* aForceInDataDoc = */ false);
   }
