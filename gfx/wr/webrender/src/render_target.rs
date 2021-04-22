@@ -17,7 +17,10 @@ use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
 use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
-use crate::prim_store::gradient::{FastLinearGradientInstance, RadialGradientInstance, ConicGradientInstance};
+use crate::prim_store::gradient::{
+    FastLinearGradientInstance, LinearGradientInstance, RadialGradientInstance,
+    ConicGradientInstance,
+};
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
@@ -403,6 +406,7 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::FastLinearGradient(..) |
+            RenderTaskKind::LinearGradient(..) |
             RenderTaskKind::RadialGradient(..) |
             RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::LineDecoration(..) => {
@@ -498,6 +502,7 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::FastLinearGradient(..) |
+            RenderTaskKind::LinearGradient(..) |
             RenderTaskKind::RadialGradient(..) |
             RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::SvgFilter(..) => {
@@ -601,6 +606,7 @@ pub struct TextureCacheRenderTarget {
     pub clears: Vec<DeviceIntRect>,
     pub line_decorations: Vec<LineDecorationJob>,
     pub fast_linear_gradients: Vec<FastLinearGradientInstance>,
+    pub linear_gradients: Vec<LinearGradientInstance>,
     pub radial_gradients: Vec<RadialGradientInstance>,
     pub conic_gradients: Vec<ConicGradientInstance>,
 }
@@ -616,6 +622,7 @@ impl TextureCacheRenderTarget {
             clears: vec![],
             line_decorations: vec![],
             fast_linear_gradients: vec![],
+            linear_gradients: vec![],
             radial_gradients: vec![],
             conic_gradients: vec![],
         }
@@ -687,6 +694,9 @@ impl TextureCacheRenderTarget {
             }
             RenderTaskKind::FastLinearGradient(ref task_info) => {
                 self.fast_linear_gradients.push(task_info.to_instance(&target_rect));
+            }
+            RenderTaskKind::LinearGradient(ref task_info) => {
+                self.linear_gradients.push(task_info.to_instance(&target_rect, gpu_cache));
             }
             RenderTaskKind::RadialGradient(ref task_info) => {
                 self.radial_gradients.push(task_info.to_instance(&target_rect, gpu_cache));

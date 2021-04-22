@@ -112,15 +112,6 @@ pub mod desc {
                 kind: VertexAttributeKind::F32,
             },
             VertexAttribute {
-                name: "aStops",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-            // TODO(gw): We should probably pack these as u32 colors instead
-            //           of passing as full float vec4 here. It won't make much
-            //           difference in real world, since these are only invoked
-            //           rarely, when creating the cache.
-            VertexAttribute {
                 name: "aColor0",
                 count: 4,
                 kind: VertexAttributeKind::F32,
@@ -131,24 +122,49 @@ pub mod desc {
                 kind: VertexAttributeKind::F32,
             },
             VertexAttribute {
-                name: "aColor2",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-            VertexAttribute {
-                name: "aColor3",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-            VertexAttribute {
                 name: "aAxisSelect",
                 count: 1,
                 kind: VertexAttributeKind::F32,
             },
+        ],
+    };
+
+    pub const LINEAR_GRADIENT: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::U8Norm,
+        }],
+        instance_attributes: &[
             VertexAttribute {
-                name: "aStartStop",
+                name: "aTaskRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aStartPoint",
                 count: 2,
                 kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aEndPoint",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aScale",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aExtendMode",
+                count: 1,
+                kind: VertexAttributeKind::I32,
+            },
+            VertexAttribute {
+                name: "aGradientStopsAddress",
+                count: 1,
+                kind: VertexAttributeKind::I32,
             },
         ],
     };
@@ -747,6 +763,7 @@ pub enum VertexArrayKind {
     Scale,
     LineDecoration,
     FastLinearGradient,
+    LinearGradient,
     RadialGradient,
     ConicGradient,
     Resolve,
@@ -970,6 +987,7 @@ pub struct RendererVAOs {
     line_vao: VAO,
     scale_vao: VAO,
     fast_linear_gradient_vao: VAO,
+    linear_gradient_vao: VAO,
     radial_gradient_vao: VAO,
     conic_gradient_vao: VAO,
     resolve_vao: VAO,
@@ -1015,6 +1033,7 @@ impl RendererVAOs {
             scale_vao: device.create_vao_with_new_instances(&desc::SCALE, &prim_vao),
             line_vao: device.create_vao_with_new_instances(&desc::LINE, &prim_vao),
             fast_linear_gradient_vao: device.create_vao_with_new_instances(&desc::FAST_LINEAR_GRADIENT, &prim_vao),
+            linear_gradient_vao: device.create_vao_with_new_instances(&desc::LINEAR_GRADIENT, &prim_vao),
             radial_gradient_vao: device.create_vao_with_new_instances(&desc::RADIAL_GRADIENT, &prim_vao),
             conic_gradient_vao: device.create_vao_with_new_instances(&desc::CONIC_GRADIENT, &prim_vao),
             resolve_vao: device.create_vao_with_new_instances(&desc::RESOLVE, &prim_vao),
@@ -1032,6 +1051,7 @@ impl RendererVAOs {
         device.delete_vao(self.clip_box_shadow_vao);
         device.delete_vao(self.clip_image_vao);
         device.delete_vao(self.fast_linear_gradient_vao);
+        device.delete_vao(self.linear_gradient_vao);
         device.delete_vao(self.radial_gradient_vao);
         device.delete_vao(self.conic_gradient_vao);
         device.delete_vao(self.blur_vao);
@@ -1058,6 +1078,7 @@ impl ops::Index<VertexArrayKind> for RendererVAOs {
             VertexArrayKind::Scale => &self.scale_vao,
             VertexArrayKind::LineDecoration => &self.line_vao,
             VertexArrayKind::FastLinearGradient => &self.fast_linear_gradient_vao,
+            VertexArrayKind::LinearGradient => &self.linear_gradient_vao,
             VertexArrayKind::RadialGradient => &self.radial_gradient_vao,
             VertexArrayKind::ConicGradient => &self.conic_gradient_vao,
             VertexArrayKind::Resolve => &self.resolve_vao,

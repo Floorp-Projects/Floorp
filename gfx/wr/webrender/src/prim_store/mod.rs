@@ -1034,10 +1034,19 @@ pub enum PrimitiveInstanceKind {
         image_instance_index: ImageInstanceIndex,
         is_compositor_surface: bool,
     },
+    /// Always rendered directly into the picture. This tends to be
+    /// faster with SWGL.
     LinearGradient {
         /// Handle to the common interned data for this primitive.
         data_handle: LinearGradientDataHandle,
-        gradient_index: LinearGradientIndex,
+        visible_tiles_range: GradientTileRange,
+    },
+    /// Always rendered via a cached render task. Usually faster with
+    /// a GPU.
+    CachedLinearGradient {
+        /// Handle to the common interned data for this primitive.
+        data_handle: LinearGradientDataHandle,
+        visible_tiles_range: GradientTileRange,
     },
     RadialGradient {
         /// Handle to the common interned data for this primitive.
@@ -1144,6 +1153,9 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
                 data_handle.uid()
             }
+            PrimitiveInstanceKind::CachedLinearGradient { data_handle, .. } => {
+                data_handle.uid()
+            }
             PrimitiveInstanceKind::NormalBorder { data_handle, .. } => {
                 data_handle.uid()
             }
@@ -1190,7 +1202,6 @@ pub type ImageInstanceStorage = storage::Storage<ImageInstance>;
 pub type ImageInstanceIndex = storage::Index<ImageInstance>;
 pub type GradientTileStorage = storage::Storage<VisibleGradientTile>;
 pub type GradientTileRange = storage::Range<VisibleGradientTile>;
-pub type LinearGradientIndex = storage::Index<LinearGradientPrimitive>;
 pub type LinearGradientStorage = storage::Storage<LinearGradientPrimitive>;
 
 /// Contains various vecs of data that is used only during frame building,
