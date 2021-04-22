@@ -328,6 +328,27 @@ XPCOMUtils.defineLazyGetter(
 );
 
 /**
+ * gIsBackgroundTaskMode will be true if Firefox is currently running as a
+ * background task. Otherwise it will be false.
+ */
+XPCOMUtils.defineLazyGetter(
+  this,
+  "gIsBackgroundTaskMode",
+  function aus_gCurrentlyRunningAsBackgroundTask() {
+    if (!("@mozilla.org/backgroundtasks;1" in Cc)) {
+      return false;
+    }
+    const bts = Cc["@mozilla.org/backgroundtasks;1"].getService(
+      Ci.nsIBackgroundTasks
+    );
+    if (!bts) {
+      return false;
+    }
+    return bts.isBackgroundTaskMode;
+  }
+);
+
+/**
  * When a plain JS object is passed through xpconnect the other side sees a
  * wrapped version of the object instead of the real object. Since these two
  * objects are different they act as different keys for Map and WeakMap. However
@@ -731,10 +752,7 @@ function getCanApplyUpdates() {
       // in nsXULAppInfo::GetUserCanElevate which is located in nsAppRunner.cpp.
       let userCanElevate = Services.appinfo.QueryInterface(Ci.nsIWinAppHelper)
         .userCanElevate;
-      const bts =
-        "@mozilla.org/backgroundtasks;1" in Cc &&
-        Cc["@mozilla.org/backgroundtasks;1"].getService(Ci.nsIBackgroundTasks);
-      if (bts && bts.isBackgroundTaskMode) {
+      if (gIsBackgroundTaskMode) {
         LOG(
           "getCanApplyUpdates - in background task mode, assuming user can't elevate"
         );
@@ -2553,13 +2571,6 @@ UpdateService.prototype = {
    *          Additional data
    */
   observe: async function AUS_observe(subject, topic, data) {
-    // Background tasks do not notify any delayed startup notificatons.  The
-    // intentional fallthrough blocks below make it awkward to define this locally.
-    const bts =
-      "@mozilla.org/backgroundtasks;1" in Cc &&
-      Cc["@mozilla.org/backgroundtasks;1"].getService(Ci.nsIBackgroundTasks);
-    let isBackgroundTaskMode = bts && bts.isBackgroundTaskMode;
-
     switch (topic) {
       case "post-update-processing":
         // This pref was not cleared out of profiles after it stopped being used
@@ -2568,7 +2579,8 @@ UpdateService.prototype = {
         Services.prefs.clearUserPref("app.update.enabled");
         Services.prefs.clearUserPref("app.update.BITS.inTrialGroup");
 
-        if (!isBackgroundTaskMode && Services.appinfo.ID in APPID_TO_TOPIC) {
+        // Background tasks do not notify any delayed startup notifications.
+        if (!gIsBackgroundTaskMode && Services.appinfo.ID in APPID_TO_TOPIC) {
           // Delay post-update processing to ensure that possible update
           // dialogs are shown in front of the app window, if possible.
           // See bug 311614.
@@ -2578,7 +2590,8 @@ UpdateService.prototype = {
       // intentional fallthrough
       case "sessionstore-windows-restored":
       case "mail-startup-done":
-        if (!isBackgroundTaskMode && Services.appinfo.ID in APPID_TO_TOPIC) {
+        // Background tasks do not notify any delayed startup notifications.
+        if (!gIsBackgroundTaskMode && Services.appinfo.ID in APPID_TO_TOPIC) {
           Services.obs.removeObserver(
             this,
             APPID_TO_TOPIC[Services.appinfo.ID]
@@ -5356,6 +5369,17 @@ Downloader.prototype = {
     // this.(_patch|_update).(get|set)Property can always safely be called.
     this._update.QueryInterface(Ci.nsIWritablePropertyBag);
     this._patch.QueryInterface(Ci.nsIWritablePropertyBag);
+
+    if (
+      this._update.getProperty("disableBackgroundUpdates") != null &&
+      gIsBackgroundTaskMode
+    ) {
+      LOG(
+        "Downloader:downloadUpdate - Background update disabled by update " +
+          "advertisement"
+      );
+      return false;
+    }
 
     this.isCompleteUpdate = this._patch.type == "complete";
 
