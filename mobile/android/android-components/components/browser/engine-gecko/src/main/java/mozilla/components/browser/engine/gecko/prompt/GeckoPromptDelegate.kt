@@ -8,6 +8,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.browser.engine.gecko.ext.toLogin
+import mozilla.components.browser.engine.gecko.ext.toLoginEntry
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
@@ -56,24 +58,6 @@ typealias AC_FILE_FACING_MODE = PromptRequest.File.FacingMode
  */
 internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSession) :
     PromptDelegate {
-
-    private fun Autocomplete.LoginEntry.toLogin() = Login(
-        guid = guid,
-        origin = origin,
-        formActionOrigin = formActionOrigin,
-        httpRealm = httpRealm,
-        username = username,
-        password = password
-    )
-
-    private fun Login.toLoginEntry() = Autocomplete.LoginEntry.Builder()
-        .guid(guid)
-        .origin(origin)
-        .formActionOrigin(formActionOrigin)
-        .httpRealm(httpRealm)
-        .username(username)
-        .password(password)
-        .build()
 
     override fun onLoginSave(
         session: GeckoSession,

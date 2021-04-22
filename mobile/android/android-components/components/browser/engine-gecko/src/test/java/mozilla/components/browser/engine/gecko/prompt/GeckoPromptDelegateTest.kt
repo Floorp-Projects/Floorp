@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko.prompt
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.browser.engine.gecko.ext.toLoginEntry
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
@@ -753,18 +754,6 @@ class GeckoPromptDelegateTest {
         usernameField = usernameField,
         passwordField = passwordField
     )
-
-    /**
-     * Converts an Android Components [Login] to a GeckoView [LoginStorage.LoginEntry]
-     */
-    private fun Login.toLoginEntry() = Autocomplete.LoginEntry.Builder()
-        .guid(guid)
-        .origin(origin)
-        .formActionOrigin(formActionOrigin)
-        .httpRealm(httpRealm)
-        .username(username)
-        .password(password)
-        .build()
 
     @Test
     fun `Calling onAuthPrompt must provide an Authentication PromptRequest`() {

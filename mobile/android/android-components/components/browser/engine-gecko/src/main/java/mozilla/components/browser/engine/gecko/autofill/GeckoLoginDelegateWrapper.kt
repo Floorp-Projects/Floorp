@@ -7,6 +7,8 @@ package mozilla.components.browser.engine.gecko.autofill
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import mozilla.components.browser.engine.gecko.ext.toLogin
+import mozilla.components.browser.engine.gecko.ext.toLoginEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginStorageDelegate
 import org.mozilla.geckoview.Autocomplete
@@ -42,27 +44,3 @@ class GeckoLoginDelegateWrapper(private val storageDelegate: LoginStorageDelegat
         return result
     }
 }
-
-/**
- * Converts a GeckoView [LoginStorage.LoginEntry] to an Android Components [Login]
- */
-private fun Autocomplete.LoginEntry.toLogin() = Login(
-    guid = guid,
-    origin = origin,
-    formActionOrigin = formActionOrigin,
-    httpRealm = httpRealm,
-    username = username,
-    password = password
-)
-
-/**
- * Converts an Android Components [Login] to a GeckoView [LoginStorage.LoginEntry]
- */
-private fun Login.toLoginEntry() = Autocomplete.LoginEntry.Builder()
-    .guid(guid)
-    .origin(origin)
-    .formActionOrigin(formActionOrigin)
-    .httpRealm(httpRealm)
-    .username(username)
-    .password(password)
-    .build()
