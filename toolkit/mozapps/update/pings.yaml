@@ -27,6 +27,6 @@ background-update:
   bugs:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318
   data_reviews:
-    - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#cXXX
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1703318#c17
   notification_emails:
     - install-update@mozilla.com
