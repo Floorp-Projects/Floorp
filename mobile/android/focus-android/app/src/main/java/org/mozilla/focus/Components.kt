@@ -21,7 +21,6 @@ import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.prompts.PromptMiddleware
 import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
 import mozilla.components.feature.session.SessionUseCases
@@ -126,7 +125,7 @@ class Components(
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
 
     val searchUseCases: SearchUseCases by lazy {
-        SearchUseCases(store, store.toDefaultSearchEngineProvider(), tabsUseCases)
+        SearchUseCases(store, tabsUseCases)
     }
 
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }

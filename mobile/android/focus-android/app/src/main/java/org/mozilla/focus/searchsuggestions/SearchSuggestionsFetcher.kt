@@ -13,10 +13,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.browser.search.suggestions.SearchSuggestionClient
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.fetch.Client
-import mozilla.components.feature.search.ext.legacy
+import mozilla.components.feature.search.suggestions.SearchSuggestionClient
 import mozilla.components.support.ktx.kotlin.sanitizeURL
 import mozilla.components.concept.fetch.Request as FetchRequest
 import org.mozilla.focus.utils.debounce
@@ -60,7 +59,7 @@ class SearchSuggestionsFetcher(
     fun updateSearchEngine(searchEngine: SearchEngine?) {
         canProvideSearchSuggestions = searchEngine?.suggestUrl != null
         client = if (canProvideSearchSuggestions) {
-            SearchSuggestionClient(searchEngine!!.legacy()) { fetch(it) }
+            SearchSuggestionClient(searchEngine!!) { fetch(it) }
         } else {
             null
         }

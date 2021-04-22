@@ -142,7 +142,6 @@ dependencies {
     implementation "org.mozilla.components:browser-engine-gecko:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:browser-domains:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:browser-errorpages:${AndroidComponents.VERSION}"
-    implementation "org.mozilla.components:browser-search:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:browser-session:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:browser-state:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:concept-engine:${AndroidComponents.VERSION}"

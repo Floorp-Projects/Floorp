@@ -6,9 +6,8 @@ package org.mozilla.focus.search
 
 import android.content.Context
 import android.content.SharedPreferences
-import mozilla.components.browser.search.SearchEngineParser
 import mozilla.components.browser.state.search.SearchEngine
-import mozilla.components.feature.search.ext.migrate
+import mozilla.components.feature.search.ext.parseLegacySearchEngine
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import org.mozilla.focus.utils.Settings
 import org.xmlpull.v1.XmlPullParserException
@@ -48,7 +47,6 @@ class SearchMigration(
     private fun loadCustomSearchEngines(
         preferences: SharedPreferences
     ): List<SearchEngine> {
-        val parser = SearchEngineParser()
         val engines = preferences.getStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, emptySet())!!
 
         return engines.mapNotNull { engine ->
@@ -56,15 +54,15 @@ class SearchMigration(
                 .byteInputStream()
                 .buffered()
 
-            parser.loadSafely(engine, engineInputStream)
+            loadSafely(engine, engineInputStream)
         }
     }
 }
 
-@Suppress("SwallowedException")
-private fun SearchEngineParser.loadSafely(id: String, stream: BufferedInputStream?): SearchEngine? {
+@Suppress("SwallowedException", "DEPRECATION")
+private fun loadSafely(id: String, stream: BufferedInputStream?): SearchEngine? {
     return try {
-        stream?.let { load(id, it).migrate() }
+        stream?.let { parseLegacySearchEngine(id, it) }
     } catch (e: IOException) {
         null
     } catch (e: XmlPullParserException) {

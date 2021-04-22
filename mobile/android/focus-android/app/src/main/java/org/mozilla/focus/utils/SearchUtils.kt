@@ -6,7 +6,7 @@ package org.mozilla.focus.utils
 
 import android.content.Context
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
-import mozilla.components.feature.search.ext.legacy
+import mozilla.components.feature.search.ext.buildSearchUrl
 import org.mozilla.focus.ext.components
 
 object SearchUtils {
@@ -14,6 +14,6 @@ object SearchUtils {
         val searchEngine = context?.components?.store?.state?.search?.selectedOrDefaultSearchEngine
             ?: return text
 
-        return searchEngine.legacy().buildSearchUrl(text)
+        return searchEngine.buildSearchUrl(text)
     }
 }
