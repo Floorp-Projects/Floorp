@@ -45,7 +45,6 @@
     --tab-selected-bgcolor: rgb(255,255,255);
     --tabs-border-color: transparent;
     --toolbar-color: rgb(21,20,26);
-    --toolbar-non-lwt-bgcolor: #f9f9fb;
     --toolbarbutton-icon-fill: rgb(91,91,102);
 
     --urlbar-popup-action-color: rgb(21,20,26);
@@ -54,12 +53,10 @@
     --autocomplete-popup-separator-color: rgb(240,240,244);
     --toolbar-field-border-color: transparent;
     --arrowpanel-border-color: transparent;
-    --chrome-content-separator-color: rgb(204,204,204);
 
     --toolbar-field-non-lwt-bgcolor: rgb(240,240,244);
-    --toolbar-field-non-lwt-color: rgb(21,20,26);
 
-    --autocomplete-popup-highlight-background: "#e0e0e6";
+    --autocomplete-popup-highlight-background: var(--arrowpanel-dimmed);
     --autocomplete-popup-highlight-color: rgb(21,20,26);
     --autocomplete-popup-hover-background: rgb(240,240,244);
   }
