@@ -1194,7 +1194,8 @@ namespace detail {
 
 nsDependentCSubstring GetSourceTreeBase();
 
-nsDependentCSubstring MakeRelativeSourceFileName(const nsACString& aSourceFile);
+nsDependentCSubstring MakeSourceFileRelativePath(
+    const nsACString& aSourceFilePath);
 
 }  // namespace detail
 
@@ -1205,12 +1206,12 @@ enum class Severity {
 };
 
 void LogError(const nsACString& aExpr, Maybe<nsresult> aRv,
-              const nsACString& aSourceFile, int32_t aSourceLine,
+              const nsACString& aSourceFilePath, int32_t aSourceLine,
               Severity aSeverity);
 
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
-                                           const char* aSourceFile,
+                                           const char* aSourceFilePath,
                                            int32_t aSourceLine);
 #endif
 
@@ -1284,41 +1285,42 @@ struct MOZ_STACK_CLASS ScopedLogExtraInfo {
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
 template <typename T>
 MOZ_COLD void HandleError(const char* aExpr, const T& aRv,
-                          const char* aSourceFile, int32_t aSourceLine,
+                          const char* aSourceFilePath, int32_t aSourceLine,
                           const Severity aSeverity) {
   if constexpr (std::is_same_v<T, nsresult>) {
     mozilla::dom::quota::LogError(nsDependentCString(aExpr), Some(aRv),
-                                  nsDependentCString(aSourceFile), aSourceLine,
-                                  aSeverity);
+                                  nsDependentCString(aSourceFilePath),
+                                  aSourceLine, aSeverity);
   } else {
     mozilla::dom::quota::LogError(nsDependentCString(aExpr), Nothing{},
-                                  nsDependentCString(aSourceFile), aSourceLine,
-                                  aSeverity);
+                                  nsDependentCString(aSourceFilePath),
+                                  aSourceLine, aSeverity);
   }
 }
 #else
 template <typename T>
 MOZ_ALWAYS_INLINE constexpr void HandleError(const char* aExpr, const T& aRv,
-                                             const char* aSourceFile,
+                                             const char* aSourceFilePath,
                                              int32_t aSourceLine,
                                              const Severity aSeverity) {}
 #endif
 
 template <typename T>
 Nothing HandleErrorReturnNothing(const char* aExpr, const T& aRv,
-                                 const char* aSourceFile, int32_t aSourceLine,
+                                 const char* aSourceFilePath,
+                                 int32_t aSourceLine,
                                  const Severity aSeverity) {
-  HandleError(aExpr, aRv, aSourceFile, aSourceLine, aSeverity);
+  HandleError(aExpr, aRv, aSourceFilePath, aSourceLine, aSeverity);
   return Nothing();
 }
 
 template <typename T, typename CleanupFunc>
 Nothing HandleErrorWithCleanupReturnNothing(const char* aExpr, const T& aRv,
-                                            const char* aSourceFile,
+                                            const char* aSourceFilePath,
                                             int32_t aSourceLine,
                                             const Severity aSeverity,
                                             CleanupFunc&& aCleanupFunc) {
-  HandleError(aExpr, aRv, aSourceFile, aSourceLine, aSeverity);
+  HandleError(aExpr, aRv, aSourceFilePath, aSourceLine, aSeverity);
   std::forward<CleanupFunc>(aCleanupFunc)(aRv);
   return Nothing();
 }
