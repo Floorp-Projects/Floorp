@@ -50,7 +50,7 @@
 #searchbar {
   min-height: var(--urlbar-min-height);
   text-shadow: none;
-  color: var(--toolbar-field-non-lwt-color, FieldText);
+  color: FieldText;
 }
 
 @media not (-moz-proton) {
