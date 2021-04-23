@@ -144,6 +144,8 @@ HTMLElement includes ElementCSSInlineStyle;
 
 SVGElement includes ElementCSSInlineStyle;
 
+MathMLElement includes ElementCSSInlineStyle;
+
 partial interface Window {
   [NewObject] CSSStyleDeclaration getComputedStyle(Element elt, optional CSSOMString? pseudoElt);
 };
