@@ -52,10 +52,26 @@ class SVGAnimatedString final : public SVGAnimatedClassOrString {
 
   UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
+  SVGAnimatedString() = default;
+
+  SVGAnimatedString& operator=(const SVGAnimatedString& aOther) {
+    mAttrEnum = aOther.mAttrEnum;
+    mIsBaseSet = aOther.mIsBaseSet;
+    if (aOther.mAnimVal) {
+      mAnimVal = MakeUnique<nsString>(*aOther.mAnimVal);
+    }
+    return *this;
+  }
+
+  SVGAnimatedString(const SVGAnimatedString& aOther) : SVGAnimatedString() {
+    *this = aOther;
+  }
+
  private:
+  // FIXME: Should probably use void string rather than UniquePtr<nsString>.
   UniquePtr<nsString> mAnimVal;
-  uint8_t mAttrEnum;  // element specified tracking for attribute
-  bool mIsBaseSet;
+  uint8_t mAttrEnum = 0;  // element specified tracking for attribute
+  bool mIsBaseSet = false;
 
  public:
   struct SMILString : public SMILAttr {

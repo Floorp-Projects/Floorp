@@ -121,6 +121,16 @@ void SVGElement::AttributesInfo<Value, Info>::ResetAll() {
   }
 }
 
+template <typename Value, typename Info>
+void SVGElement::AttributesInfo<Value, Info>::CopyAllFrom(
+    const AttributesInfo& aOther) {
+  MOZ_DIAGNOSTIC_ASSERT(mCount == aOther.mCount,
+                        "Should only be called on clones");
+  for (uint32_t i = 0; i < mCount; ++i) {
+    mValues[i] = aOther.mValues[i];
+  }
+}
+
 template <>
 void SVGElement::LengthAttributesInfo::Reset(uint8_t aAttrEnum) {
   mValues[aAttrEnum].Init(mInfos[aAttrEnum].mCtxType, aAttrEnum,
@@ -188,11 +198,27 @@ nsresult SVGElement::CopyInnerTo(mozilla::dom::Element* aDest) {
   nsresult rv = Element::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  auto* dest = static_cast<SVGElement*>(aDest);
+
   // cloning a node must retain its internal nonce slot
-  nsString* nonce = static_cast<nsString*>(GetProperty(nsGkAtoms::nonce));
-  if (nonce) {
-    static_cast<SVGElement*>(aDest)->SetNonce(*nonce);
+  if (auto* nonce = static_cast<nsString*>(GetProperty(nsGkAtoms::nonce))) {
+    dest->SetNonce(*nonce);
   }
+
+  // If our destination is a print document, copy all the relevant length values
+  // etc so that they match the state of the original node.
+  if (aDest->OwnerDoc()->IsStaticDocument()) {
+    dest->GetLengthInfo().CopyAllFrom(GetLengthInfo());
+    dest->GetNumberInfo().CopyAllFrom(GetNumberInfo());
+    dest->GetNumberPairInfo().CopyAllFrom(GetNumberPairInfo());
+    dest->GetIntegerInfo().CopyAllFrom(GetIntegerInfo());
+    dest->GetIntegerPairInfo().CopyAllFrom(GetIntegerPairInfo());
+    dest->GetEnumInfo().CopyAllFrom(GetEnumInfo());
+    dest->GetStringInfo().CopyAllFrom(GetStringInfo());
+    dest->GetLengthListInfo().CopyAllFrom(GetLengthListInfo());
+    dest->GetNumberListInfo().CopyAllFrom(GetNumberListInfo());
+  }
+
   return NS_OK;
 }
 
