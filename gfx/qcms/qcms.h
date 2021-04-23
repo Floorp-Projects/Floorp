@@ -111,8 +111,7 @@ typedef enum {
 	QCMS_DATA_RGBA_8,
 	QCMS_DATA_BGRA_8,
 	QCMS_DATA_GRAY_8,
-	QCMS_DATA_GRAYA_8,
-	QCMS_DATA_CMYK
+	QCMS_DATA_GRAYA_8
 } qcms_data_type;
 
 /* the names for the following two types are sort of ugly */
