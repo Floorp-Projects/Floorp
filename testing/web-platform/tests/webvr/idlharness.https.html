@@ -144,8 +144,9 @@ interface VRPose {
   readonly attribute Float32Array? angularAcceleration;
 };
 
-[Constructor]
 interface VRFrameData {
+  constructor();
+
   readonly attribute Float32Array leftProjectionMatrix;
   readonly attribute Float32Array leftViewMatrix;
 
@@ -182,8 +183,8 @@ enum VRDisplayEventReason {
   "unmounted"
 };
 
-[Constructor(DOMString type, VRDisplayEventInit eventInitDict)]
 interface VRDisplayEvent : Event {
+  constructor(DOMString type, VRDisplayEventInit eventInitDict);
   readonly attribute VRDisplay display;
   readonly attribute VRDisplayEventReason? reason;
 };
