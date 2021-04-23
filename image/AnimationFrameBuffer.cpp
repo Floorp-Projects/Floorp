@@ -408,8 +408,11 @@ RawAccessFrameRef AnimationFrameRecyclingQueue::RecycleFrame(
     // area. We know that all of the frames still in the recycling queue
     // need to take into account the same dirty rect because they are also
     // frames which cross the boundary.
+    //
+    // Note that this may actually shrink the dirty rect if we estimated it
+    // earlier with the full frame size and now we have the actual, more
+    // conservative aggregate for the animation.
     for (RecycleEntry& entry : mRecycle) {
-      MOZ_ASSERT(mFirstFrameRefreshArea.Contains(entry.mDirtyRect));
       entry.mDirtyRect = mFirstFrameRefreshArea;
     }
     // Until we advance to the first frame again, any subsequent recycled
