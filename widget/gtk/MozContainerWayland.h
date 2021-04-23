@@ -43,6 +43,7 @@ struct MozContainerWayland {
   gboolean surface_needs_clear;
   gboolean ready_to_draw;
   gboolean before_first_size_alloc;
+  int buffer_scale;
   std::vector<std::function<void(void)>> initial_draw_cbs;
   // mozcontainer is used from Compositor and Rendering threads
   // so we need to control access to mozcontainer where wayland internals
