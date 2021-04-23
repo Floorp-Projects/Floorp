@@ -40,6 +40,15 @@ class SVGNumberList {
   SVGNumberList() = default;
   ~SVGNumberList() = default;
 
+  SVGNumberList& operator=(const SVGNumberList& aOther) {
+    mNumbers.ClearAndRetainStorage();
+    // Best-effort, really.
+    Unused << mNumbers.AppendElements(aOther.mNumbers, fallible);
+    return *this;
+  }
+
+  SVGNumberList(const SVGNumberList& aOther) { *this = aOther; }
+
   // Only methods that don't make/permit modification to this list are public.
   // Only our friend classes can access methods that may change us.
 

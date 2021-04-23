@@ -1,0 +1,9 @@
+[
+  {
+    "algorithm": "sha512",
+    "digest": "23b6923c11004c22a7e021b8eeaa62a330a5f7f864bd9cbeb6373113a74edcb3fffc0633b491b24c2046f27a77a2ae15a4d68db34b3367479eef13165e1b59fb",
+    "filename": "mitm6-android-fenix-wikipedia.zip",
+    "size": 763266,
+    "visibility": "public"
+  }
+]
