@@ -174,13 +174,17 @@ browsertime-benchmark:
                     firefox:
                         by-subtest:
                             motionmark-animometer: 1
+                            unity-webgl: 3
                             default:
                                 by-test-platform:
                                     windows10-64-ref-hw-2017/opt: 2
                                     windows10-64-ccov.*/.*: 3
                                     linux64-ccov.*/.*: 3
                                     default: 2
-                    default: 2
+                    default:
+                        by-subtest:
+                            unity-webgl: 3
+                            default: 2
     run-on-projects:
         by-variant:
             fission:
