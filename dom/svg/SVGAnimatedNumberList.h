@@ -41,7 +41,16 @@ class SVGAnimatedNumberList {
   friend class dom::DOMSVGNumberList;
 
  public:
-  SVGAnimatedNumberList() : mIsBaseSet(false) {}
+  SVGAnimatedNumberList() = default;
+
+  SVGAnimatedNumberList& operator=(const SVGAnimatedNumberList& aOther) {
+    mIsBaseSet = aOther.mIsBaseSet;
+    mBaseVal = aOther.mBaseVal;
+    if (aOther.mAnimVal) {
+      mAnimVal = MakeUnique<SVGNumberList>(*aOther.mAnimVal);
+    }
+    return *this;
+  }
 
   /**
    * Because it's so important that mBaseVal and its DOMSVGNumberList wrapper
@@ -85,7 +94,7 @@ class SVGAnimatedNumberList {
 
   SVGNumberList mBaseVal;
   UniquePtr<SVGNumberList> mAnimVal;
-  bool mIsBaseSet;
+  bool mIsBaseSet = false;
 
   struct SMILAnimatedNumberList : public SMILAttr {
    public:

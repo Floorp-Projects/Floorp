@@ -8,6 +8,6 @@ civet-source:
     fetch:
         type: git
         repo: git@github.com:mozilla-services/civet.git
-        revision: 80aad808762b28268d69cfd503f52a81375249b4
+        revision: fa787d2047a5c3759e67f0df58415a984dcc8777
         ssh-key: project/civet/github-deploy-key
         artifact-name: civet-source.tar.zst

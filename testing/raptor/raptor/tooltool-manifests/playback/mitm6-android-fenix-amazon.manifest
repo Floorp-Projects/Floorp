@@ -1,0 +1,9 @@
+[
+  {
+    "algorithm": "sha512",
+    "digest": "4b8f1d77389390f6ad582ada8b322350ea7652e4dc15b3e09d91fed33b2cc3c58e87dd1a6939d6785b0ff5be52b05572c46845a61e80c6ab73a3bcd70a338c22",
+    "filename": "mitm6-android-fenix-amazon.zip",
+    "size": 3199995,
+    "visibility": "public"
+  }
+]

@@ -63,8 +63,8 @@ bool SVGGeometryElement::AttributeDefinesGeometry(const nsAtom* aName) {
 
   // Check for SVGAnimatedLength attribute
   LengthAttributesInfo info = GetLengthInfo();
-  for (uint32_t i = 0; i < info.mLengthCount; i++) {
-    if (aName == info.mLengthInfo[i].mName) {
+  for (uint32_t i = 0; i < info.mCount; i++) {
+    if (aName == info.mInfos[i].mName) {
       return true;
     }
   }
@@ -76,8 +76,8 @@ bool SVGGeometryElement::GeometryDependsOnCoordCtx() {
   // Check the SVGAnimatedLength attribute
   LengthAttributesInfo info =
       const_cast<SVGGeometryElement*>(this)->GetLengthInfo();
-  for (uint32_t i = 0; i < info.mLengthCount; i++) {
-    if (info.mLengths[i].GetSpecifiedUnitType() ==
+  for (uint32_t i = 0; i < info.mCount; i++) {
+    if (info.mValues[i].GetSpecifiedUnitType() ==
         SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE) {
       return true;
     }

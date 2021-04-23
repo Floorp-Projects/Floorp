@@ -1,9 +1,0 @@
-[
-  {
-    "algorithm": "sha512",
-    "digest": "4fe25fdcd8723ac3ec6a256d7f5bc3579328ae5b10be38d180334c95ca2ead7a87c6fa4340a09e570b97b029bea9b9ace9f95ee974da99ddfe34a4ab126d4412",
-    "filename": "mitm4-pixel2-fennec-cnn.zip",
-    "size": 14748578,
-    "visibility": "public"
-  }
-]

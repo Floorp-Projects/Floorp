@@ -1,9 +1,0 @@
-[
-  {
-    "algorithm": "sha512",
-    "digest": "c7424109c649848a4bb05109f4219d55d3f91bd903607c8c29a247c9d0a69c961da2bd1b4089744ae4fcf022290cf944ef3a52fee7be347a6bd93bde1bfec4fd", 
-    "filename": "mitm5-motog5-gve-google-maps.zip",
-    "size": 6685335,
-    "visibility": "public"
-  }
-]

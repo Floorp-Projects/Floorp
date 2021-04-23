@@ -1,9 +1,0 @@
-[
-  {
-    "algorithm": "sha512",
-    "digest": "cc027d912f608251f26facf6f33da69f9755af17394f33186251be861772aedc312c805eaf4ed5aa948ab046844e637705175ddfbe966ad630e03892210376ca",
-    "filename": "mitm4-pixel2-fennec-imdb.zip",
-    "size": 9309311,
-    "visibility": "public"
-  }
-]

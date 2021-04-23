@@ -1,0 +1,9 @@
+[
+  {
+    "algorithm": "sha512",
+    "digest": "ecc1b12a7c169e9a4269770b83a1a69dc8bcfba300db3e00e4b57bb6b4a252f7e88f3e0adb3faaa68bc3540410db225c8e2f8d644ff5e171f4b34302d0fc1446",
+    "filename": "mitm6-android-fenix-bing.zip",
+    "size": 1283380,
+    "visibility": "public"
+  }
+]

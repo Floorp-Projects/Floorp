@@ -770,8 +770,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.allrecipes.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -789,8 +790,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.amazon.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -808,8 +810,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.amazon.com/s/ref=nb_sb_noss_2/139-6317191-5622045?url=search-alias%3Daps&field-keywords=mobile+phone>`__
    * **type**: pageload
    * **unit**: ms
@@ -846,8 +849,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.bing.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -884,8 +888,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.booking.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -903,8 +908,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://cnn.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -941,8 +947,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://m.ebay-kleinanzeigen.de>`__
    * **type**: pageload
    * **unit**: ms
@@ -960,8 +967,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://m.ebay-kleinanzeigen.de/s-anzeigen/auf-zeit-wg-berlin/zimmer/c199-l3331>`__
    * **type**: pageload
    * **unit**: ms
@@ -979,8 +987,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words>`__
    * **type**: pageload
    * **unit**: ms
@@ -1017,8 +1026,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://m.facebook.com/Cristiano>`__
    * **type**: pageload
    * **unit**: ms
@@ -1055,9 +1065,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm5-motog5-gve-{subtest}.manifest
-   * **playback recordings**: mitm5-motog5-gve-{subtest}.mp
-   * **playback version**: 5.1.1
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.google.com/maps?force=pwa>`__
    * **type**: pageload
    * **unit**: ms
@@ -1094,8 +1104,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://m.imdb.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -1151,8 +1162,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://support.microsoft.com/en-us>`__
    * **type**: pageload
    * **unit**: ms
@@ -1170,8 +1182,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.reddit.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -1189,8 +1202,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://stackoverflow.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -1208,8 +1222,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://web.de/magazine/politik/politologe-glaubt-grossen-koalition-herbst-knallen-33563566>`__
    * **type**: pageload
    * **unit**: ms
@@ -1227,8 +1242,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://en.m.wikipedia.org/wiki/Main_Page>`__
    * **type**: pageload
    * **unit**: ms
@@ -1265,8 +1281,9 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-android-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-android-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.youtube.com/watch?v=COU5T-Wafa4>`__
    * **type**: pageload
    * **unit**: ms
