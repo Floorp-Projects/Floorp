@@ -1192,7 +1192,19 @@ CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
 
 namespace detail {
 
+// Determine the absolute path of the root of our built source tree so we can
+// derive source-relative paths for non-exported header files in
+// MakeSourceFileRelativePath. Exported header files end up in the objdir and
+// we have GetObjdirDistIncludeTreeBase for that.
 nsDependentCSubstring GetSourceTreeBase();
+
+// Determine the absolute path of the root of our built OBJDIR/dist/include
+// directory. The aQuotaCommonHPath argument cleverly defaults to __FILE__
+// initialized in our exported header; no argument should ever be provided to
+// this method. GetSourceTreeBase handles identifying the root of the source
+// tree.
+nsDependentCSubstring GetObjdirDistIncludeTreeBase(
+    const nsLiteralCString& aQuotaCommonHPath = nsLiteralCString(__FILE__));
 
 nsDependentCSubstring MakeSourceFileRelativePath(
     const nsACString& aSourceFilePath);
