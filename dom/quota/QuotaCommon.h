@@ -1192,22 +1192,9 @@ CreateAndExecuteSingleStepStatement(mozIStorageConnection& aConnection,
 
 namespace detail {
 
-// Determine the absolute path of the root of our built source tree so we can
-// derive source-relative paths for non-exported header files in
-// MakeSourceFileRelativePath. Exported header files end up in the objdir and
-// we have GetObjdirDistIncludeTreeBase for that.
 nsDependentCSubstring GetSourceTreeBase();
 
-// Determine the absolute path of the root of our built OBJDIR/dist/include
-// directory. The aQuotaCommonHPath argument cleverly defaults to __FILE__
-// initialized in our exported header; no argument should ever be provided to
-// this method. GetSourceTreeBase handles identifying the root of the source
-// tree.
-nsDependentCSubstring GetObjdirDistIncludeTreeBase(
-    const nsLiteralCString& aQuotaCommonHPath = nsLiteralCString(__FILE__));
-
-nsDependentCSubstring MakeSourceFileRelativePath(
-    const nsACString& aSourceFilePath);
+nsDependentCSubstring MakeRelativeSourceFileName(const nsACString& aSourceFile);
 
 }  // namespace detail
 
@@ -1218,13 +1205,13 @@ enum class Severity {
 };
 
 void LogError(const nsACString& aExpr, Maybe<nsresult> aRv,
-              const nsACString& aSourceFilePath, int32_t aSourceFileLine,
+              const nsACString& aSourceFile, int32_t aSourceLine,
               Severity aSeverity);
 
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
-                                           const char* aSourceFilePath,
-                                           int32_t aSourceFileLine);
+                                           const char* aSourceFile,
+                                           int32_t aSourceLine);
 #endif
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
@@ -1297,42 +1284,41 @@ struct MOZ_STACK_CLASS ScopedLogExtraInfo {
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
 template <typename T>
 MOZ_COLD void HandleError(const char* aExpr, const T& aRv,
-                          const char* aSourceFilePath, int32_t aSourceFileLine,
+                          const char* aSourceFile, int32_t aSourceLine,
                           const Severity aSeverity) {
   if constexpr (std::is_same_v<T, nsresult>) {
     mozilla::dom::quota::LogError(nsDependentCString(aExpr), Some(aRv),
-                                  nsDependentCString(aSourceFilePath),
-                                  aSourceFileLine, aSeverity);
+                                  nsDependentCString(aSourceFile), aSourceLine,
+                                  aSeverity);
   } else {
     mozilla::dom::quota::LogError(nsDependentCString(aExpr), Nothing{},
-                                  nsDependentCString(aSourceFilePath),
-                                  aSourceFileLine, aSeverity);
+                                  nsDependentCString(aSourceFile), aSourceLine,
+                                  aSeverity);
   }
 }
 #else
 template <typename T>
 MOZ_ALWAYS_INLINE constexpr void HandleError(const char* aExpr, const T& aRv,
-                                             const char* aSourceFilePath,
-                                             int32_t aSourceFileLine,
+                                             const char* aSourceFile,
+                                             int32_t aSourceLine,
                                              const Severity aSeverity) {}
 #endif
 
 template <typename T>
 Nothing HandleErrorReturnNothing(const char* aExpr, const T& aRv,
-                                 const char* aSourceFilePath,
-                                 int32_t aSourceFileLine,
+                                 const char* aSourceFile, int32_t aSourceLine,
                                  const Severity aSeverity) {
-  HandleError(aExpr, aRv, aSourceFilePath, aSourceFileLine, aSeverity);
+  HandleError(aExpr, aRv, aSourceFile, aSourceLine, aSeverity);
   return Nothing();
 }
 
 template <typename T, typename CleanupFunc>
 Nothing HandleErrorWithCleanupReturnNothing(const char* aExpr, const T& aRv,
-                                            const char* aSourceFilePath,
-                                            int32_t aSourceFileLine,
+                                            const char* aSourceFile,
+                                            int32_t aSourceLine,
                                             const Severity aSeverity,
                                             CleanupFunc&& aCleanupFunc) {
-  HandleError(aExpr, aRv, aSourceFilePath, aSourceFileLine, aSeverity);
+  HandleError(aExpr, aRv, aSourceFile, aSourceLine, aSeverity);
   std::forward<CleanupFunc>(aCleanupFunc)(aRv);
   return Nothing();
 }
