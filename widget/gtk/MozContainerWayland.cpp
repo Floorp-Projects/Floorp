@@ -173,6 +173,7 @@ void moz_container_wayland_init(MozContainerWayland* container) {
   container->subsurface_dx = 0;
   container->subsurface_dy = 0;
   container->before_first_size_alloc = true;
+  container->buffer_scale = 1;
   container->initial_draw_cbs.clear();
   container->container_lock = new mozilla::Mutex("MozContainer lock");
 }
@@ -279,6 +280,7 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
 
   wl_container->surface_needs_clear = true;
   wl_container->ready_to_draw = false;
+  wl_container->buffer_scale = 1;
 
   LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
 }
@@ -421,11 +423,17 @@ static void moz_container_wayland_set_opaque_region(MozContainer* container) {
 
 static void moz_container_wayland_set_scale_factor_locked(
     MozContainer* container) {
+  MozContainerWayland* wl_container = &container->wl_container;
   nsWindow* window = moz_container_get_nsWindow(container);
   int scale = window ? window->GdkScaleFactor() : 1;
 
+  if (scale == wl_container->buffer_scale) {
+    return;
+  }
+
   LOGWAYLAND(("%s [%p] scale %d\n", __FUNCTION__, (void*)container, scale));
-  wl_surface_set_buffer_scale(container->wl_container.surface, scale);
+  wl_surface_set_buffer_scale(wl_container->surface, scale);
+  wl_container->buffer_scale = scale;
 }
 
 void moz_container_wayland_set_scale_factor(MozContainer* container) {
