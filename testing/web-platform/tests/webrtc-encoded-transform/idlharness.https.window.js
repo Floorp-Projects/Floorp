@@ -5,7 +5,7 @@
 'use strict';
 
 idl_test(
-  ['webrtc-insertable-streams'],
+  ['webrtc-encoded-transform'],
   ['webrtc'],
   async idlArray => {
     idlArray.add_objects({
