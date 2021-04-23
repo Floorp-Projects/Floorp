@@ -375,6 +375,7 @@ web-platform-tests-crashtest:
             linux1804-64-qr/debug: ['webrender-sw', 'fission']
             windows10-64-qr/debug: ['webrender-sw', 'fission']
             macosx101.*64-qr/debug: ['webrender-sw', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
             linux.*64/debug: ['fission']
             default: ['fission']
     run-on-projects:
