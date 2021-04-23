@@ -311,25 +311,80 @@ void ScopedLogExtraInfo::AddInfo() {
 
 namespace detail {
 
+// Given aPath of /foo/bar/baz and aRelativePath of /bar/baz, returns the
+// absolute portion of aPath /foo by removing the common suffix from aPath.
+nsDependentCSubstring GetTreeBase(const nsLiteralCString& aPath,
+                                  const nsLiteralCString& aRelativePath) {
+  MOZ_ASSERT(StringEndsWith(aPath, aRelativePath));
+  return Substring(aPath, 0, aPath.Length() - aRelativePath.Length());
+}
+
 nsDependentCSubstring GetSourceTreeBase() {
   static constexpr auto thisSourceFileRelativePath =
       "/dom/quota/QuotaCommon.cpp"_ns;
 
-  static constexpr auto path = nsLiteralCString(__FILE__);
-
-  MOZ_ASSERT(StringEndsWith(path, thisSourceFileRelativePath));
-  return Substring(path, 0,
-                   path.Length() - thisSourceFileRelativePath.Length());
+  return GetTreeBase(nsLiteralCString(__FILE__), thisSourceFileRelativePath);
 }
+
+nsDependentCSubstring GetObjdirDistIncludeTreeBase(
+    const nsLiteralCString& aQuotaCommonHPath) {
+  static constexpr auto quotaCommonHSourceFileRelativePath =
+      "/mozilla/dom/quota/QuotaCommon.h"_ns;
+
+  return GetTreeBase(aQuotaCommonHPath, quotaCommonHSourceFileRelativePath);
+}
+
+static constexpr auto kSourceFileRelativePathMap =
+    std::array<std::pair<nsLiteralCString, nsLiteralCString>, 1>{
+        {{"mozilla/dom/LocalStorageCommon.h"_ns,
+          "dom/localstorage/LocalStorageCommon.h"_ns}}};
 
 nsDependentCSubstring MakeSourceFileRelativePath(
     const nsACString& aSourceFilePath) {
   static constexpr auto error = "ERROR"_ns;
+  static constexpr auto mozillaRelativeBase = "mozilla/"_ns;
 
   static const auto sourceTreeBase = GetSourceTreeBase();
 
   if (MOZ_LIKELY(StringBeginsWith(aSourceFilePath, sourceTreeBase))) {
     return Substring(aSourceFilePath, sourceTreeBase.Length() + 1);
+  }
+
+  // The source file could have been exported to the OBJDIR/dist/include
+  // directory, so we need to check that case as well.
+  static const auto objdirDistIncludeTreeBase = GetObjdirDistIncludeTreeBase();
+
+  if (MOZ_LIKELY(
+          StringBeginsWith(aSourceFilePath, objdirDistIncludeTreeBase))) {
+    const auto sourceFileRelativePath =
+        Substring(aSourceFilePath, objdirDistIncludeTreeBase.Length() + 1);
+
+    // Exported source files don't have to use the same directory structure as
+    // original source files. Check if we have a mapping for the exported
+    // source file.
+    const auto foundIt = std::find_if(
+        kSourceFileRelativePathMap.cbegin(), kSourceFileRelativePathMap.cend(),
+        [&sourceFileRelativePath](const auto& entry) {
+          return entry.first == sourceFileRelativePath;
+        });
+
+    if (MOZ_UNLIKELY(foundIt != kSourceFileRelativePathMap.cend())) {
+      return Substring(foundIt->second, 0);
+    }
+
+    // If we don't have a mapping for it, just remove the mozilla/ prefix
+    // (if there's any).
+    if (MOZ_LIKELY(
+            StringBeginsWith(sourceFileRelativePath, mozillaRelativeBase))) {
+      return Substring(sourceFileRelativePath, mozillaRelativeBase.Length());
+    }
+
+    // At this point, we don't know how to transform the relative path of the
+    // exported source file back to the relative path of the original source
+    // file. This can happen when QM_TRY is used in an exported nsIFoo.h file.
+    // If you really need to use QM_TRY there, consider adding a new mapping
+    // for the exported source file.
+    return sourceFileRelativePath;
   }
 
   nsCString::const_iterator begin, end;
