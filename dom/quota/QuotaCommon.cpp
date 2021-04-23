@@ -348,7 +348,7 @@ nsDependentCSubstring MakeSourceFileRelativePath(
 }  // namespace detail
 
 void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
-              const nsACString& aSourceFilePath, const int32_t aSourceLine,
+              const nsACString& aSourceFilePath, const int32_t aSourceFileLine,
               const Severity aSeverity) {
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   nsAutoCString extraInfosString;
@@ -400,17 +400,17 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
                                   : static_cast<const nsCString&>(nsAutoCString(
                                         aExpr + extraInfosString)))
           .get(),
-      nsPromiseFlatCString(sourceFileRelativePath).get(), aSourceLine);
+      nsPromiseFlatCString(sourceFileRelativePath).get(), aSourceFileLine);
 #endif
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   nsCOMPtr<nsIConsoleService> console =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   if (console) {
-    NS_ConvertUTF8toUTF16 message("QM_TRY failure ("_ns + severityString +
-                                  ")"_ns + ": '"_ns + aExpr + "' at "_ns +
-                                  sourceFileRelativePath + ":"_ns +
-                                  IntToCString(aSourceLine) + extraInfosString);
+    NS_ConvertUTF8toUTF16 message(
+        "QM_TRY failure ("_ns + severityString + ")"_ns + ": '"_ns + aExpr +
+        "' at "_ns + sourceFileRelativePath + ":"_ns +
+        IntToCString(aSourceFileLine) + extraInfosString);
 
     // The concatenation above results in a message like:
     // QM_TRY failure: 'EXPR' failed with result NS_ERROR_FAILURE at
@@ -433,7 +433,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
       res.AppendElement(
           EventExtraEntry{"source_file"_ns, nsCString(sourceFileRelativePath)});
       res.AppendElement(
-          EventExtraEntry{"source_line"_ns, IntToCString(aSourceLine)});
+          EventExtraEntry{"source_line"_ns, IntToCString(aSourceFileLine)});
       res.AppendElement(EventExtraEntry{
           "context"_ns, nsPromiseFlatCString{*contextIt->second}});
       res.AppendElement(EventExtraEntry{"severity"_ns, severityString});
@@ -466,7 +466,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
                                            const char* aSourceFilePath,
-                                           const int32_t aSourceLine) {
+                                           const int32_t aSourceFileLine) {
   nsString leafName;
   nsresult rv = aFile.GetLeafName(leafName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -502,7 +502,7 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
       nsPrintfCString("Something (%s) in the directory that doesn't belong!",
                       NS_ConvertUTF16toUTF8(leafName).get())
           .get(),
-      nullptr, aSourceFilePath, aSourceLine);
+      nullptr, aSourceFilePath, aSourceFileLine);
 
   return true;
 }
