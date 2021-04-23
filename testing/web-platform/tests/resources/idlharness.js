@@ -1116,7 +1116,7 @@ IdlArray.prototype.assert_type_is = function(value, type)
 
     switch(type)
     {
-        case "void":
+        case "undefined":
             assert_equals(value, undefined);
             return;
 

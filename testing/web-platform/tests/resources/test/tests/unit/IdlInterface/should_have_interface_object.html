@@ -14,7 +14,7 @@ test(function() {
 }, "callback interface with a constant");
 
 test(function() {
-    var i = interfaceFrom("callback interface A { void b(); sequence<any> c(); };");
+    var i = interfaceFrom("callback interface A { undefined b(); sequence<any> c(); };");
     assert_false(i.should_have_interface_object());
 }, "callback interface without a constant");
 
