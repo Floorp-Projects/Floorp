@@ -1206,13 +1206,13 @@ enum class Severity {
 };
 
 void LogError(const nsACString& aExpr, Maybe<nsresult> aRv,
-              const nsACString& aSourceFilePath, int32_t aSourceLine,
+              const nsACString& aSourceFilePath, int32_t aSourceFileLine,
               Severity aSeverity);
 
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
                                            const char* aSourceFilePath,
-                                           int32_t aSourceLine);
+                                           int32_t aSourceFileLine);
 #endif
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
@@ -1285,42 +1285,42 @@ struct MOZ_STACK_CLASS ScopedLogExtraInfo {
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
 template <typename T>
 MOZ_COLD void HandleError(const char* aExpr, const T& aRv,
-                          const char* aSourceFilePath, int32_t aSourceLine,
+                          const char* aSourceFilePath, int32_t aSourceFileLine,
                           const Severity aSeverity) {
   if constexpr (std::is_same_v<T, nsresult>) {
     mozilla::dom::quota::LogError(nsDependentCString(aExpr), Some(aRv),
                                   nsDependentCString(aSourceFilePath),
-                                  aSourceLine, aSeverity);
+                                  aSourceFileLine, aSeverity);
   } else {
     mozilla::dom::quota::LogError(nsDependentCString(aExpr), Nothing{},
                                   nsDependentCString(aSourceFilePath),
-                                  aSourceLine, aSeverity);
+                                  aSourceFileLine, aSeverity);
   }
 }
 #else
 template <typename T>
 MOZ_ALWAYS_INLINE constexpr void HandleError(const char* aExpr, const T& aRv,
                                              const char* aSourceFilePath,
-                                             int32_t aSourceLine,
+                                             int32_t aSourceFileLine,
                                              const Severity aSeverity) {}
 #endif
 
 template <typename T>
 Nothing HandleErrorReturnNothing(const char* aExpr, const T& aRv,
                                  const char* aSourceFilePath,
-                                 int32_t aSourceLine,
+                                 int32_t aSourceFileLine,
                                  const Severity aSeverity) {
-  HandleError(aExpr, aRv, aSourceFilePath, aSourceLine, aSeverity);
+  HandleError(aExpr, aRv, aSourceFilePath, aSourceFileLine, aSeverity);
   return Nothing();
 }
 
 template <typename T, typename CleanupFunc>
 Nothing HandleErrorWithCleanupReturnNothing(const char* aExpr, const T& aRv,
                                             const char* aSourceFilePath,
-                                            int32_t aSourceLine,
+                                            int32_t aSourceFileLine,
                                             const Severity aSeverity,
                                             CleanupFunc&& aCleanupFunc) {
-  HandleError(aExpr, aRv, aSourceFilePath, aSourceLine, aSeverity);
+  HandleError(aExpr, aRv, aSourceFilePath, aSourceFileLine, aSeverity);
   std::forward<CleanupFunc>(aCleanupFunc)(aRv);
   return Nothing();
 }
