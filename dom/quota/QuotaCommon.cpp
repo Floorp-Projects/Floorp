@@ -312,33 +312,33 @@ void ScopedLogExtraInfo::AddInfo() {
 namespace detail {
 
 nsDependentCSubstring GetSourceTreeBase() {
-  static constexpr auto thisFileRelativeSourceFileName =
+  static constexpr auto thisSourceFileRelativePath =
       "/dom/quota/QuotaCommon.cpp"_ns;
 
   static constexpr auto path = nsLiteralCString(__FILE__);
 
-  MOZ_ASSERT(StringEndsWith(path, thisFileRelativeSourceFileName));
+  MOZ_ASSERT(StringEndsWith(path, thisSourceFileRelativePath));
   return Substring(path, 0,
-                   path.Length() - thisFileRelativeSourceFileName.Length());
+                   path.Length() - thisSourceFileRelativePath.Length());
 }
 
-nsDependentCSubstring MakeRelativeSourceFileName(
-    const nsACString& aSourceFile) {
+nsDependentCSubstring MakeSourceFileRelativePath(
+    const nsACString& aSourceFilePath) {
   static constexpr auto error = "ERROR"_ns;
 
   static const auto sourceTreeBase = GetSourceTreeBase();
 
-  if (MOZ_LIKELY(StringBeginsWith(aSourceFile, sourceTreeBase))) {
-    return Substring(aSourceFile, sourceTreeBase.Length() + 1);
+  if (MOZ_LIKELY(StringBeginsWith(aSourceFilePath, sourceTreeBase))) {
+    return Substring(aSourceFilePath, sourceTreeBase.Length() + 1);
   }
 
   nsCString::const_iterator begin, end;
-  if (RFindInReadable("/"_ns, aSourceFile.BeginReading(begin),
-                      aSourceFile.EndReading(end))) {
+  if (RFindInReadable("/"_ns, aSourceFilePath.BeginReading(begin),
+                      aSourceFilePath.EndReading(end))) {
     // Use the basename as a fallback, to avoid exposing any user parts of the
     // path.
     ++begin;
-    return Substring(begin, aSourceFile.EndReading(end));
+    return Substring(begin, aSourceFilePath.EndReading(end));
   }
 
   return nsDependentCSubstring{static_cast<mozilla::Span<const char>>(
@@ -348,7 +348,7 @@ nsDependentCSubstring MakeRelativeSourceFileName(
 }  // namespace detail
 
 void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
-              const nsACString& aSourceFile, const int32_t aSourceLine,
+              const nsACString& aSourceFilePath, const int32_t aSourceLine,
               const Severity aSeverity) {
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   nsAutoCString extraInfosString;
@@ -368,8 +368,8 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
         !rvName.IsEmpty() ? rvName.get() : "", !rvName.IsEmpty() ? ")" : "");
   }
 
-  const auto relativeSourceFile =
-      detail::MakeRelativeSourceFileName(aSourceFile);
+  const auto sourceFileRelativePath =
+      detail::MakeSourceFileRelativePath(aSourceFilePath);
 
   const auto severityString = [&aSeverity]() -> nsLiteralCString {
     switch (aSeverity) {
@@ -400,7 +400,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
                                   : static_cast<const nsCString&>(nsAutoCString(
                                         aExpr + extraInfosString)))
           .get(),
-      nsPromiseFlatCString(relativeSourceFile).get(), aSourceLine);
+      nsPromiseFlatCString(sourceFileRelativePath).get(), aSourceLine);
 #endif
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
@@ -409,7 +409,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
   if (console) {
     NS_ConvertUTF8toUTF16 message("QM_TRY failure ("_ns + severityString +
                                   ")"_ns + ": '"_ns + aExpr + "' at "_ns +
-                                  relativeSourceFile + ":"_ns +
+                                  sourceFileRelativePath + ":"_ns +
                                   IntToCString(aSourceLine) + extraInfosString);
 
     // The concatenation above results in a message like:
@@ -431,7 +431,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
       // directory, but we probably don't need to.
       // res.AppendElement(EventExtraEntry{"module"_ns, aModule});
       res.AppendElement(
-          EventExtraEntry{"source_file"_ns, nsCString(relativeSourceFile)});
+          EventExtraEntry{"source_file"_ns, nsCString(sourceFileRelativePath)});
       res.AppendElement(
           EventExtraEntry{"source_line"_ns, IntToCString(aSourceLine)});
       res.AppendElement(EventExtraEntry{
@@ -465,7 +465,7 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
 
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
-                                           const char* aSourceFile,
+                                           const char* aSourceFilePath,
                                            const int32_t aSourceLine) {
   nsString leafName;
   nsresult rv = aFile.GetLeafName(leafName);
@@ -502,7 +502,7 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
       nsPrintfCString("Something (%s) in the directory that doesn't belong!",
                       NS_ConvertUTF16toUTF8(leafName).get())
           .get(),
-      nullptr, aSourceFile, aSourceLine);
+      nullptr, aSourceFilePath, aSourceLine);
 
   return true;
 }
