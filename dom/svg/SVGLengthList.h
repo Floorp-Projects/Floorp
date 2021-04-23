@@ -42,6 +42,15 @@ class SVGLengthList {
   SVGLengthList() = default;
   ~SVGLengthList() = default;
 
+  SVGLengthList& operator=(const SVGLengthList& aOther) {
+    mLengths.ClearAndRetainStorage();
+    // Best-effort, really.
+    Unused << mLengths.AppendElements(aOther.mLengths, fallible);
+    return *this;
+  }
+
+  SVGLengthList(const SVGLengthList& aOther) { *this = aOther; }
+
   // Only methods that don't make/permit modification to this list are public.
   // Only our friend classes can access methods that may change us.
 
