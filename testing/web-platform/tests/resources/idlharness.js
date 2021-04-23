@@ -1603,15 +1603,10 @@ IdlInterface.prototype.test = function()
     this.test_members();
 };
 
-// This supports both Constructor extended attributes and constructor
-// operations until all idl fragments have been updated.
 IdlInterface.prototype.constructors = function()
 {
-    var extendedAttributes = this.extAttrs
-        .filter(function(attr) { return attr.name == "Constructor"; });
-    var operations = this.members
+    return this.members
         .filter(function(m) { return m.type == "constructor"; });
-    return extendedAttributes.concat(operations);
 }
 
 IdlInterface.prototype.test_self = function()
@@ -1696,11 +1691,7 @@ IdlInterface.prototype.test_self = function()
         }
 
         if (!this.constructors().length) {
-            // "The internal [[Call]] method of the interface object behaves as
-            // follows . . .
-            //
-            // "If I was not declared with a [Constructor] extended attribute,
-            // then throw a TypeError."
+            // "If I was not declared with a constructor operation, then throw a TypeError."
             var interface_object = this.get_interface_object();
             assert_throws_js(globalOf(interface_object).TypeError, function() {
                 interface_object();
