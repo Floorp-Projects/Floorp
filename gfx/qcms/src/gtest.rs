@@ -925,4 +925,23 @@ mod test {
         xfm.apply(&mut data);
         assert_eq!(data, [188, 188, 189]);
     }
+
+    #[test]
+    fn cmyk() {
+        let input = profile_from_path("ps_cmyk_min.icc");
+        let output = Profile::new_sRGB();
+        let xfm = crate::Transform::new_to(
+            &input,
+            &output,
+            crate::DataType::CMYK,
+            crate::DataType::RGB8,
+            crate::Intent::default(),
+        )
+        .unwrap();
+        let src = [4, 30, 80, 10];
+        let mut dst = [0, 0, 0];
+        xfm.convert(&src, &mut dst);
+        assert_eq!(dst, [252, 237, 211]);
+
+    }
 }

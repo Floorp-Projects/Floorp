@@ -12,10 +12,11 @@ keywords = ["color"]
 categories = ["graphics"]
 
 [features]
-default = ["iccv4-enabled"]
+default = ["iccv4-enabled", "cmyk"]
 c_bindings = ["libc"]
 neon = []
 iccv4-enabled = []
+cmyk = []
 
 [dependencies]
 libc = {version = "0.2", optional = true }
