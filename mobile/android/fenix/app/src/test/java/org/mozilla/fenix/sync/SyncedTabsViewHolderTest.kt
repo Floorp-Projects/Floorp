@@ -101,7 +101,7 @@ class SyncedTabsViewHolderTest {
 
         verify { deviceViewGroupName.text = "Charcoal" }
         verify {
-            deviceViewGroupName.setCompoundDrawablesWithIntrinsicBounds(
+            deviceViewGroupName.setCompoundDrawablesRelativeWithIntrinsicBounds(
                 R.drawable.mozac_ic_device_desktop, 0, 0, 0
             )
         }
@@ -117,7 +117,7 @@ class SyncedTabsViewHolderTest {
 
         verify { deviceViewGroupName.text = "Emerald" }
         verify {
-            deviceViewGroupName.setCompoundDrawablesWithIntrinsicBounds(
+            deviceViewGroupName.setCompoundDrawablesRelativeWithIntrinsicBounds(
                 R.drawable.mozac_ic_device_mobile, 0, 0, 0
             )
         }

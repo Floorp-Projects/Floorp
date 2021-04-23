@@ -22,6 +22,7 @@
         android:textAppearance="@style/Header14TextStyle"
         android:textColor="@color/primary_text_normal_theme"
         android:textSize="12sp"
+        android:textDirection="locale"
         app:drawableStartCompat="@drawable/mozac_ic_device_desktop"
         app:drawableTint="@color/primary_text_normal_theme"
         app:layout_constraintEnd_toEndOf="parent"

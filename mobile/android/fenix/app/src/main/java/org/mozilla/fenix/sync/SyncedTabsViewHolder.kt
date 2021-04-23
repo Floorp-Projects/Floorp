@@ -87,7 +87,7 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
             }
 
             itemView.synced_tabs_group_name.text = device.device.displayName
-            itemView.synced_tabs_group_name.setCompoundDrawablesWithIntrinsicBounds(
+            itemView.synced_tabs_group_name.setCompoundDrawablesRelativeWithIntrinsicBounds(
                 deviceLogoDrawable,
                 0,
                 0,
