@@ -83,7 +83,7 @@ interface VRDisplay : EventTarget {
    * Passing the value returned by `requestAnimationFrame` to
    * `cancelAnimationFrame` will unregister the callback.
    */
-  void cancelAnimationFrame(long handle);
+  undefined cancelAnimationFrame(long handle);
 
   /**
    * Begin presenting to the VRDisplay. Must be called in response to a user gesture.
@@ -91,12 +91,12 @@ interface VRDisplay : EventTarget {
    * If the number of values in the leftBounds/rightBounds arrays is not 0 or 4 for any of the passed layers the promise is rejected
    * If the source of any of the layers is not present (null), the promise is rejected.
    */
-  Promise<void> requestPresent(sequence<VRLayerInit> layers);
+  Promise<undefined> requestPresent(sequence<VRLayerInit> layers);
 
   /**
    * Stops presenting to the VRDisplay.
    */
-  Promise<void> exitPresent();
+  Promise<undefined> exitPresent();
 
   /**
    * Get the layers currently being presented.
@@ -109,7 +109,7 @@ interface VRDisplay : EventTarget {
    * canvas as any other operation that uses its source image, and canvases
    * created without preserveDrawingBuffer set to true will be cleared.
    */
-  void submitFrame();
+  undefined submitFrame();
 };
 
 typedef (HTMLCanvasElement or
