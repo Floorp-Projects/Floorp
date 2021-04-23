@@ -39,6 +39,7 @@ pub const RGB_SIGNATURE: u32 = 0x52474220;
 pub const GRAY_SIGNATURE: u32 = 0x47524159;
 pub const XYZ_SIGNATURE: u32 = 0x58595A20;
 pub const LAB_SIGNATURE: u32 = 0x4C616220;
+pub const CMYK_SIGNATURE: u32 = 0x434D594B; // 'CMYK'
 
 /// A color profile
 #[derive(Default)]
@@ -285,6 +286,8 @@ fn read_color_space(mut profile: &mut Profile, mem: &mut MemSource) {
     profile.color_space = read_u32(mem, 16);
     match profile.color_space {
         RGB_SIGNATURE | GRAY_SIGNATURE => {}
+        #[cfg(feature = "cmyk")]
+        CMYK_SIGNATURE => {}
         _ => {
             invalid_source(mem, "Unsupported colorspace");
         }
@@ -734,8 +737,8 @@ fn read_tag_lutType(src: &mut MemSource, tag: &Tag) -> Option<Box<lutType>> {
     }
     let in_chan = read_u8(src, (offset + 8) as usize);
     let out_chan = read_u8(src, (offset + 9) as usize);
-    if in_chan != 3 || out_chan != 3 {
-        invalid_source(src, "CLUT only supports RGB");
+    if !(in_chan == 3 || in_chan == 4) || out_chan != 3 {
+        invalid_source(src, "CLUT only supports RGB and CMYK");
         return None;
     }
 
@@ -1170,6 +1173,15 @@ impl Profile {
             } else if profile.color_space == GRAY_SIGNATURE {
                 profile.grayTRC = read_tag_curveType(src, &index, TAG_kTRC);
                 profile.grayTRC.as_ref()?;
+            } else if profile.color_space == CMYK_SIGNATURE {
+                if let Some(A2B0) = find_tag(&index, TAG_A2B0) {
+                    let lut_type = read_u32(src, A2B0.offset as usize);
+                    if lut_type == LUT8_TYPE || lut_type == LUT16_TYPE {
+                        profile.A2B0 = read_tag_lutType(src, A2B0)
+                    } else if lut_type == LUT_MBA_TYPE {
+                        profile.mAB = read_tag_lutmABType(src, A2B0)
+                    }
+                }
             } else {
                 debug_assert!(false, "read_color_space protects against entering here");
                 return None;
