@@ -75,9 +75,6 @@ with Files("mozilla/tests/html/semantics/scripting-1/**"):
 with Files("mozilla/tests/placeholder"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
-with Files("mozilla/tests/wasm/**"):
-    BUG_COMPONENT = ("Core", "Javascript: WebAssembly")
-
 with Files("update/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
@@ -741,9 +738,6 @@ with Files("tests/webrtc-extensions/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
 with Files("tests/webrtc-identity/**"):
-    BUG_COMPONENT = ("Core", "WebRTC")
-
-with Files("tests/webrtc-insertable-streams/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
 with Files("tests/webrtc-stats/**"):
