@@ -632,6 +632,8 @@
     <string name="tab_tray_menu_item_share">Deli vse zavihke</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Nedavno zaprti zavihki</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Nastavitve računa</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Nastavitve zavihkov</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -1194,6 +1196,8 @@
     <string name="onboarding_whats_new_description_linktext">Tukaj poiščite odgovore</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sinhronizirajte Firefox med napravami</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">Prinesite zaznamke, zgodovino in gesla v Firefox na tej napravi.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1210,12 +1214,24 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync je vklopljen</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Prijava ni uspela</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Vedno vključena zasebnost</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Firefox samodejno prepreči, da bi vas podjetja na skrivaj spremljala po spletu.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Običajno (privzeto)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Uravnotežena zasebnost in učinkovitost delovanja. Strani bodo delovale običajno.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Strogo (priporočljivo)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strogo</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Zavrača več sledilcev in pospeši nalaganje strani, vendar deli strani lahko nehajo delovati.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Izberite postavitev orodne vrstice</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Postavite si orodno vrstico na doseg roke. Naj bo na dnu ali pa jo premaknite na vrh.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Brskajte zasebno</string>
     <!-- text for the private browsing onboarding card description
@@ -1242,6 +1258,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Izberite si temo</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Prihranite nekaj baterije in sprostite oči s temnim načinom.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Samodejno</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1296,10 +1314,14 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Več o tem</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Običajno (privzeto)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Uravnotežena zasebnost in učinkovitost delovanja. Strani bodo delovale običajno.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Kaj je zavrnjeno s standardno zaščito pred sledenjem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strogo</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Zavrača več sledilcev in pospeši nalaganje strani, vendar deli strani lahko nehajo delovati.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Kaj je zavrnjeno s strogo zaščito pred sledenjem</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1543,6 +1565,8 @@
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kreditne kartice</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Shrani in samodejno izpolni kartice</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Podatki so šifrirani</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1554,12 +1578,18 @@
     <string name="preferences_credit_cards_manage_saved_cards">Upravljanje shranjenih kartic</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Dodaj kartico</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Uredi kartico</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Številka kartice</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Datum poteka</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Ime na kartici</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Vzdevek kartice</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Izbriši kartico</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Izbriši kartico</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1733,6 +1763,9 @@
 	<string name="top_sites_rename_dialog_ok">V redu</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Prekliči</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Nastavite, naj se povezave s spletnih strani, e-pošte in sporočil samodejno odpirajo v Firefoxu.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Odstrani</string>
