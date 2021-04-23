@@ -1758,11 +1758,11 @@ TEST(QuotaCommon_CallWithDelayedRetriesIfAccessDenied, FailuresAndSuccess)
   EXPECT_TRUE(res.isOk());
 }
 
-static constexpr auto thisSourceFileRelativePath =
-    "dom/quota/test/gtest/TestQuotaCommon.cpp"_ns;
-
 TEST(QuotaCommon_MakeSourceFileRelativePath, ThisSourceFile)
 {
+  static constexpr auto thisSourceFileRelativePath =
+      "dom/quota/test/gtest/TestQuotaCommon.cpp"_ns;
+
   const nsCString sourceFileRelativePath{
       mozilla::dom::quota::detail::MakeSourceFileRelativePath(
           nsLiteralCString(__FILE__))};
@@ -1770,13 +1770,56 @@ TEST(QuotaCommon_MakeSourceFileRelativePath, ThisSourceFile)
   EXPECT_STREQ(sourceFileRelativePath.get(), thisSourceFileRelativePath.get());
 }
 
-static nsCString MakeFullPath(const nsACString& aRelativePath) {
-  nsCString path{mozilla::dom::quota::detail::GetSourceTreeBase()};
+static nsCString MakeTreePath(const nsACString& aBasePath,
+                              const nsACString& aRelativePath) {
+  nsCString path{aBasePath};
 
   path.Append("/");
   path.Append(aRelativePath);
 
   return path;
+}
+
+static nsCString MakeSourceTreePath(const nsACString& aRelativePath) {
+  return MakeTreePath(mozilla::dom::quota::detail::GetSourceTreeBase(),
+                      aRelativePath);
+}
+
+static nsCString MakeObjdirDistIncludeTreePath(
+    const nsACString& aRelativePath) {
+  return MakeTreePath(
+      mozilla::dom::quota::detail::GetObjdirDistIncludeTreeBase(),
+      aRelativePath);
+}
+
+TEST(QuotaCommon_MakeSourceFileRelativePath, DomQuotaSourceFile)
+{
+  static constexpr auto domQuotaSourceFileRelativePath =
+      "dom/quota/ActorsParent.cpp"_ns;
+
+  const nsCString sourceFileRelativePath{
+      mozilla::dom::quota::detail::MakeSourceFileRelativePath(
+          MakeSourceTreePath(domQuotaSourceFileRelativePath))};
+
+  EXPECT_STREQ(sourceFileRelativePath.get(),
+               domQuotaSourceFileRelativePath.get());
+}
+
+TEST(QuotaCommon_MakeSourceFileRelativePath, DomQuotaSourceFile_Exported)
+{
+  static constexpr auto mozillaDomQuotaSourceFileRelativePath =
+      "mozilla/dom/quota/QuotaCommon.h"_ns;
+
+  static constexpr auto domQuotaSourceFileRelativePath =
+      "dom/quota/QuotaCommon.h"_ns;
+
+  const nsCString sourceFileRelativePath{
+      mozilla::dom::quota::detail::MakeSourceFileRelativePath(
+          MakeObjdirDistIncludeTreePath(
+              mozillaDomQuotaSourceFileRelativePath))};
+
+  EXPECT_STREQ(sourceFileRelativePath.get(),
+               domQuotaSourceFileRelativePath.get());
 }
 
 TEST(QuotaCommon_MakeSourceFileRelativePath, DomIndexedDBSourceFile)
@@ -1786,10 +1829,27 @@ TEST(QuotaCommon_MakeSourceFileRelativePath, DomIndexedDBSourceFile)
 
   const nsCString sourceFileRelativePath{
       mozilla::dom::quota::detail::MakeSourceFileRelativePath(
-          MakeFullPath(domIndexedDBSourceFileRelativePath))};
+          MakeSourceTreePath(domIndexedDBSourceFileRelativePath))};
 
   EXPECT_STREQ(sourceFileRelativePath.get(),
                domIndexedDBSourceFileRelativePath.get());
+}
+
+TEST(QuotaCommon_MakeSourceFileRelativePath,
+     DomLocalstorageSourceFile_Exported_Mapped)
+{
+  static constexpr auto mozillaDomSourceFileRelativePath =
+      "mozilla/dom/LocalStorageCommon.h"_ns;
+
+  static constexpr auto domLocalstorageSourceFileRelativePath =
+      "dom/localstorage/LocalStorageCommon.h"_ns;
+
+  const nsCString sourceFileRelativePath{
+      mozilla::dom::quota::detail::MakeSourceFileRelativePath(
+          MakeObjdirDistIncludeTreePath(mozillaDomSourceFileRelativePath))};
+
+  EXPECT_STREQ(sourceFileRelativePath.get(),
+               domLocalstorageSourceFileRelativePath.get());
 }
 
 TEST(QuotaCommon_MakeSourceFileRelativePath, NonDomSourceFile)
@@ -1799,7 +1859,7 @@ TEST(QuotaCommon_MakeSourceFileRelativePath, NonDomSourceFile)
 
   const nsCString sourceFileRelativePath{
       mozilla::dom::quota::detail::MakeSourceFileRelativePath(
-          MakeFullPath(nonDomSourceFileRelativePath))};
+          MakeSourceTreePath(nonDomSourceFileRelativePath))};
 
   EXPECT_STREQ(sourceFileRelativePath.get(),
                nonDomSourceFileRelativePath.get());
