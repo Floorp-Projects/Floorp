@@ -38,15 +38,22 @@
     return fd;
   }
 
-  test(() => {
-    assert_throws_js(TypeError, () => { new FormData(null); });
-    assert_throws_js(TypeError, () => { new FormData("string"); });
-  }, "Constructors should throw a type error");
-
   do_test("empty formdata", new FormData(), '\n');
   do_test("formdata with string", create_formdata(['key', 'value']), 'key=value,\n');
   do_test("formdata with named string", create_formdata(['key', new Blob(['value'], {type: 'text/plain'}), 'kv.txt']), '\nkey=kv.txt:text/plain:5,');
   do_test("formdata from form", new FormData(document.getElementById('form')), 'key=value,\n');
+
+  do_test("formdata with blob", create_formdata(['key', new Blob(['value'], {type: 'text/x-value'})]), '\nkey=blob:text/x-value:5,');
+  do_test("formdata with named blob", create_formdata(['key', new Blob(['value'], {type: 'text/x-value'}), 'blob.txt']), '\nkey=blob.txt:text/x-value:5,');
+
+  // If 3rd argument is given and 2nd is not a Blob, formdata.append() should throw
+  const append_test = async_test('formdata.append() should throw if value is string and file name is given'); // needs to be async just because the others above are
+  append_test.step(function(){
+    assert_throws_js(TypeError, function(){
+      create_formdata('a', 'b', 'c');
+    });
+  });
+  append_test.done();
 
   test(() => {
     let form = populateForm('<input name=n1 value=v1>');

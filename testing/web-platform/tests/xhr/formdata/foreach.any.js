@@ -1,11 +1,5 @@
-<!doctype html>
-<html lang=en>
-<meta charset=utf-8>
-<title>FormData: foreach</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-    <link rel="help" href="https://xhr.spec.whatwg.org/#interface-formdata" />
-<script>
+// META: title=FormData: foreach
+
     var fd = new FormData();
     fd.append('n1', 'v1');
     fd.append('n2', 'v2');
@@ -60,4 +54,3 @@
         assert_array_equals(myvalues, expected_values,
                             'values() iterator should see non-deleted values');
     }, 'Values iterator should return non-deleted values');
-</script>

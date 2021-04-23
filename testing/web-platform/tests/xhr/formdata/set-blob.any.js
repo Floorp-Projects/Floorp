@@ -1,14 +1,5 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-<title>formData.set(blob) and formData.set(file)</title>
-<link rel="author" title="Timothy Gu" href="mailto:timothygu99@gmail.com">
-<link rel="help" href="https://xhr.spec.whatwg.org/#dom-formdata">
-<link rel="help" href="https://html.spec.whatwg.org/multipage/#constructing-form-data-set">
+// META: title=formData.set(blob) and formData.set(file)
 
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-
-<script>
 "use strict";
 
 const formData = new FormData();
@@ -57,4 +48,3 @@ test(() => {
   assert_equals(file2.type, "");
   assert_equals(file2.lastModified, 123, "lastModified should be 123");
 }, "file with lastModified and custom name");
-</script>
