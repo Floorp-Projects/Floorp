@@ -1,9 +1,0 @@
-[
-  {
-    "algorithm": "sha512",
-    "visibility": "public",
-    "filename": "mitm4-pixel2-fennec-booking.zip",
-    "digest": "03ecc52c7c747f8c59e634799caea52eac209b61eba6416804d98fe9277ec9805ef0263b074579a8a5ab0c0c78e288be400e66f241c0036b551167955df2043b",
-    "size": 4339703
-  }
-]
