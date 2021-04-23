@@ -314,7 +314,8 @@ def test_tests_affected_idlharness(capsys, manifest_dir):
         wpt.main(argv=["tests-affected", "--metadata", manifest_dir, "%s~..%s" % (commit, commit)])
     assert excinfo.value.code == 0
     out, err = capsys.readouterr()
-    assert ("webrtc-encoded-transform/idlharness.https.window.js\n" +
+    assert ("mst-content-hint/idlharness.window.js\n" +
+            "webrtc-encoded-transform/idlharness.https.window.js\n" +
             "webrtc-identity/idlharness.https.window.js\n" +
             "webrtc-stats/idlharness.window.js\n" +
             "webrtc-stats/supported-stats.html\n" +
