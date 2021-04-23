@@ -3,22 +3,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity
 
+import androidx.test.espresso.IdlingRegistry
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.focus.R
 import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
-import org.mozilla.focus.helpers.TestHelper.pressBackKey
+import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
+import org.mozilla.focus.idlingResources.RecyclerViewIdlingResource
 
 // This test checks the search engine can be changed and that search suggestions appear
 class SearchTest {
-    private val enginesList = listOf("Google", "DuckDuckGo", "Amazon.com", "Wikipedia")
+    private val enginesList = listOf("DuckDuckGo", "Google", "Amazon.com", "Wikipedia")
+    private var searchSuggestionsIdlingResources: RecyclerViewIdlingResource? = null
 
     @get: Rule
     var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
+
+    @After
+    fun tearDown() {
+        if (searchSuggestionsIdlingResources != null) {
+            IdlingRegistry.getInstance().unregister(searchSuggestionsIdlingResources!!)
+        }
+    }
 
     @Test
     fun changeSearchEngineTest() {
@@ -31,11 +43,8 @@ class SearchTest {
             }.openSearchSettingsMenu {
                 openSearchEngineSubMenu()
                 selectSearchEngine(searchEngine)
+                exitToTop()
             }
-            // press back 3 times to exit to HomeScreen
-            pressBackKey()
-            pressBackKey()
-            pressBackKey()
 
             searchScreen {
                 typeInSearchBar("mozilla ")
@@ -57,8 +66,17 @@ class SearchTest {
             typeInSearchBar(" ")
             pressEnterKey()
             verifySearchBarIsDisplayed()
+            // type and check search suggestions are displayed
             typeInSearchBar(searchString)
             allowEnableSearchSuggestions()
+
+            searchSuggestionsIdlingResources =
+                RecyclerViewIdlingResource(
+                    mActivityTestRule.activity.findViewById(R.id.suggestionList),
+                    1
+                )
+            IdlingRegistry.getInstance().register(searchSuggestionsIdlingResources!!)
+
             verifyHintForSearch(searchString)
             verifySearchSuggestionsAreShown()
         }
@@ -97,9 +115,9 @@ class SearchTest {
         }.openSettings {
         }.openSearchSettingsMenu {
             clickSearchSuggestionsSwitch()
+            exitToTop()
         }
-        pressBackKey()
-        pressBackKey()
+
         searchScreen {
             typeInSearchBar(searchString)
             verifySearchSuggestionsAreNotShown()
