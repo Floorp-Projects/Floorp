@@ -1,0 +1,233 @@
+diff --git a/clang/include/clang/Basic/DiagnosticGroups.td b/clang/include/clang/Basic/DiagnosticGroups.td
+index df2a46cecc5d..e202645d1f2b 100644
+--- a/clang/include/clang/Basic/DiagnosticGroups.td
++++ b/clang/include/clang/Basic/DiagnosticGroups.td
+@@ -162,12 +162,8 @@ def CXX11CompatDeprecatedWritableStr :
+ def DeprecatedArrayCompare : DiagGroup<"deprecated-array-compare">;
+ def DeprecatedAttributes : DiagGroup<"deprecated-attributes">;
+ def DeprecatedCommaSubscript : DiagGroup<"deprecated-comma-subscript">;
+-def DeprecatedCopyWithUserProvidedCopy : DiagGroup<"deprecated-copy-with-user-provided-copy">;
+-def DeprecatedCopyWithUserProvidedDtor : DiagGroup<"deprecated-copy-with-user-provided-dtor">;
+-def DeprecatedCopy : DiagGroup<"deprecated-copy", [DeprecatedCopyWithUserProvidedCopy]>;
+-def DeprecatedCopyWithDtor : DiagGroup<"deprecated-copy-with-dtor", [DeprecatedCopyWithUserProvidedDtor]>;
+-// For compatibility with GCC.
+-def : DiagGroup<"deprecated-copy-dtor", [DeprecatedCopyWithDtor]>;
++def DeprecatedCopy : DiagGroup<"deprecated-copy">;
++def DeprecatedCopyDtor : DiagGroup<"deprecated-copy-dtor">;
+ def DeprecatedDeclarations : DiagGroup<"deprecated-declarations">;
+ def UnavailableDeclarations : DiagGroup<"unavailable-declarations">;
+ def UnguardedAvailabilityNew : DiagGroup<"unguarded-availability-new">;
+@@ -190,7 +186,7 @@ def Deprecated : DiagGroup<"deprecated", [DeprecatedAnonEnumEnumConversion,
+                                           DeprecatedAttributes,
+                                           DeprecatedCommaSubscript,
+                                           DeprecatedCopy,
+-                                          DeprecatedCopyWithDtor,
++                                          DeprecatedCopyDtor,
+                                           DeprecatedDeclarations,
+                                           DeprecatedDynamicExceptionSpec,
+                                           DeprecatedEnumCompare,
+diff --git a/clang/include/clang/Basic/DiagnosticSemaKinds.td b/clang/include/clang/Basic/DiagnosticSemaKinds.td
+index 3a58d3dc5c4a..aeeed560b514 100644
+--- a/clang/include/clang/Basic/DiagnosticSemaKinds.td
++++ b/clang/include/clang/Basic/DiagnosticSemaKinds.td
+@@ -567,24 +567,15 @@ def warn_access_decl_deprecated : Warning<
+ def err_access_decl : Error<
+   "ISO C++11 does not allow access declarations; "
+   "use using declarations instead">;
+-def warn_deprecated_copy : Warning<
++def warn_deprecated_copy_operation : Warning<
+   "definition of implicit copy %select{constructor|assignment operator}1 "
+   "for %0 is deprecated because it has a user-declared copy "
+   "%select{assignment operator|constructor}1">,
+   InGroup<DeprecatedCopy>, DefaultIgnore;
+-def warn_deprecated_copy_with_dtor : Warning<
++def warn_deprecated_copy_dtor_operation : Warning<
+   "definition of implicit copy %select{constructor|assignment operator}1 "
+   "for %0 is deprecated because it has a user-declared destructor">,
+-  InGroup<DeprecatedCopyWithDtor>, DefaultIgnore;
+-def warn_deprecated_copy_with_user_provided_copy: Warning<
+-  "definition of implicit copy %select{constructor|assignment operator}1 "
+-  "for %0 is deprecated because it has a user-provided copy "
+-  "%select{assignment operator|constructor}1">,
+-  InGroup<DeprecatedCopyWithUserProvidedCopy>, DefaultIgnore;
+-def warn_deprecated_copy_with_user_provided_dtor : Warning<
+-  "definition of implicit copy %select{constructor|assignment operator}1 "
+-  "for %0 is deprecated because it has a user-provided destructor">,
+-  InGroup<DeprecatedCopyWithUserProvidedDtor>, DefaultIgnore;
++  InGroup<DeprecatedCopyDtor>, DefaultIgnore;
+ def warn_cxx17_compat_exception_spec_in_signature : Warning<
+   "mangled name of %0 will change in C++17 due to non-throwing exception "
+   "specification in function signature">, InGroup<CXX17CompatMangling>;
+diff --git a/clang/lib/Sema/SemaDeclCXX.cpp b/clang/lib/Sema/SemaDeclCXX.cpp
+index 342b1be23638..06ff38808ac8 100644
+--- a/clang/lib/Sema/SemaDeclCXX.cpp
++++ b/clang/lib/Sema/SemaDeclCXX.cpp
+@@ -14027,20 +14027,12 @@ static void diagnoseDeprecatedCopyOperation(Sema &S, CXXMethodDecl *CopyOp) {
+     assert(UserDeclaredOperation);
+   }
+ 
+-  if (UserDeclaredOperation) {
+-    bool UDOIsUserProvided = UserDeclaredOperation->isUserProvided();
+-    bool UDOIsDestructor = isa<CXXDestructorDecl>(UserDeclaredOperation);
+-    bool IsCopyAssignment = !isa<CXXConstructorDecl>(CopyOp);
+-    unsigned DiagID =
+-        (UDOIsUserProvided && UDOIsDestructor)
+-            ? diag::warn_deprecated_copy_with_user_provided_dtor
+-        : (UDOIsUserProvided && !UDOIsDestructor)
+-            ? diag::warn_deprecated_copy_with_user_provided_copy
+-        : (!UDOIsUserProvided && UDOIsDestructor)
+-            ? diag::warn_deprecated_copy_with_dtor
+-            : diag::warn_deprecated_copy;
+-    S.Diag(UserDeclaredOperation->getLocation(), DiagID)
+-        << RD << IsCopyAssignment;
++  if (UserDeclaredOperation && UserDeclaredOperation->isUserProvided()) {
++    S.Diag(UserDeclaredOperation->getLocation(),
++           isa<CXXDestructorDecl>(UserDeclaredOperation)
++               ? diag::warn_deprecated_copy_dtor_operation
++               : diag::warn_deprecated_copy_operation)
++        << RD << /*copy assignment*/ !isa<CXXConstructorDecl>(CopyOp);
+   }
+ }
+ 
+diff --git a/clang/test/SemaCXX/deprecated-copy-with-dtor.cpp b/clang/test/SemaCXX/deprecated-copy-with-dtor.cpp
+deleted file mode 100644
+index 463b1c895009..000000000000
+--- a/clang/test/SemaCXX/deprecated-copy-with-dtor.cpp
++++ /dev/null
+@@ -1,13 +0,0 @@
+-// RUN: %clang_cc1 -std=c++11 %s -Wdeprecated -verify
+-// RUN: %clang_cc1 -std=c++11 %s -Wdeprecated-copy-dtor -verify
+-// RUN: %clang_cc1 -std=c++11 %s -Wdeprecated-copy-with-dtor -verify
+-
+-class A {
+-public:
+-   ~A() = default; // expected-warning {{definition of implicit copy constructor for 'A' is deprecated because it has a user-declared destructor}}
+-};
+-
+-void test() {
+-  A a1;
+-  A a2 = a1; // expected-note {{in implicit copy constructor for 'A' first required here}}
+-}
+diff --git a/clang/test/SemaCXX/deprecated-copy-with-user-provided-copy.cpp b/clang/test/SemaCXX/deprecated-copy-with-user-provided-copy.cpp
+deleted file mode 100644
+index 4f259ca78854..000000000000
+--- a/clang/test/SemaCXX/deprecated-copy-with-user-provided-copy.cpp
++++ /dev/null
+@@ -1,11 +0,0 @@
+-// RUN: %clang_cc1 -std=c++11 %s -Wdeprecated -verify
+-// RUN: %clang_cc1 -std=c++11 %s -Wdeprecated-copy-with-user-provided-copy -verify
+-
+-struct A {
+-  A &operator=(const A &); // expected-warning {{definition of implicit copy constructor for 'A' is deprecated because it has a user-provided copy assignment operator}}
+-};
+-
+-void foo() {
+-  A a1;
+-  A a2(a1); // expected-note {{implicit copy constructor for 'A' first required here}}
+-}
+diff --git a/clang/test/SemaCXX/deprecated-copy-with-user-provided-dtor.cpp b/clang/test/SemaCXX/deprecated-copy-with-user-provided-dtor.cpp
+deleted file mode 100644
+index 490ae6fbdabb..000000000000
+--- a/clang/test/SemaCXX/deprecated-copy-with-user-provided-dtor.cpp
++++ /dev/null
+@@ -1,11 +0,0 @@
+-// RUN: %clang_cc1 -std=c++11 %s -Wdeprecated -verify
+-// RUN: %clang_cc1 -std=c++11 %s -Wdeprecated-copy-with-user-provided-dtor -verify
+-
+-struct A {
+-  ~A(); // expected-warning {{definition of implicit copy constructor for 'A' is deprecated because it has a user-provided destructor}}
+-};
+-
+-void test() {
+-  A a1;
+-  A a2(a1); // expected-note {{implicit copy constructor for 'A' first required here}}
+-}
+diff --git a/clang/test/SemaCXX/deprecated-copy.cpp b/clang/test/SemaCXX/deprecated-copy.cpp
+index 9a17067aefae..4d3e798d912b 100644
+--- a/clang/test/SemaCXX/deprecated-copy.cpp
++++ b/clang/test/SemaCXX/deprecated-copy.cpp
+@@ -1,26 +1,23 @@
+-// RUN: %clang_cc1 -std=c++11 %s -Wdeprecated -verify
+ // RUN: %clang_cc1 -std=c++11 %s -Wdeprecated-copy -verify
++// RUN: %clang_cc1 -std=c++11 %s -Wdeprecated-copy-dtor -DDEPRECATED_COPY_DTOR -verify
++// RUN: %clang_cc1 -std=c++11 %s -Wextra -verify
+ 
++#ifdef DEPRECATED_COPY_DTOR
+ struct A {
+-    A& operator=(const A&) = default; // expected-warning {{definition of implicit copy constructor for 'A' is deprecated because it has a user-declared copy assignment operator}}
++  int *ptr;
++  ~A() { delete ptr; } // expected-warning {{definition of implicit copy constructor for 'A' is deprecated because it has a user-declared destructor}}
+ };
+ 
++void foo() {
++  A a{};
++  A b = a; // expected-note {{implicit copy constructor for 'A' first required here}}
++}
++#else
+ struct B {
+-    B& operator=(const B&) = delete; // expected-warning {{definition of implicit copy constructor for 'B' is deprecated because it has a user-declared copy assignment operator}}
++  B &operator=(const B &); // expected-warning {{definition of implicit copy constructor for 'B' is deprecated because it has a user-declared copy assignment operator}}
+ };
+ 
+-void test() {
+-  A a1;
+-  A a2(a1); // expected-note {{implicit copy constructor for 'A' first required here}}
+-
+-  B b1;
+-  B b2(b1); // expected-note {{implicit copy constructor for 'B' first required here}}
++void bar() {
++  B b1, b2(b1); // expected-note {{implicit copy constructor for 'B' first required here}}
+ }
+-
+-// PR45634
+-struct S {
+-    int i;
+-    S& operator=(const S&) = delete; // expected-warning {{definition of implicit copy constructor for 'S' is deprecated because it has a user-declared copy assignment operator}}
+-};
+-
+-S test(const S &s) { return S(s); } // expected-note {{implicit copy constructor for 'S' first required here}}
++#endif
+diff --git a/clang/test/SemaCXX/deprecated.cpp b/clang/test/SemaCXX/deprecated.cpp
+index 8ba72862039e..b2320c41073c 100644
+--- a/clang/test/SemaCXX/deprecated.cpp
++++ b/clang/test/SemaCXX/deprecated.cpp
+@@ -83,31 +83,30 @@ struct T : private S {
+ #if __cplusplus >= 201103L
+ namespace DeprecatedCopy {
+   struct Assign {
+-    Assign &operator=(const Assign&); // expected-warning {{definition of implicit copy constructor for 'Assign' is deprecated because it has a user-provided copy assignment operator}}
++    Assign &operator=(const Assign&); // expected-warning {{definition of implicit copy constructor for 'Assign' is deprecated because it has a user-declared copy assignment operator}}
+   };
+   Assign a1, a2(a1); // expected-note {{implicit copy constructor for 'DeprecatedCopy::Assign' first required here}}
+ 
+   struct Ctor {
+     Ctor();
+-    Ctor(const Ctor&); // expected-warning {{definition of implicit copy assignment operator for 'Ctor' is deprecated because it has a user-provided copy constructor}}
++    Ctor(const Ctor&); // expected-warning {{definition of implicit copy assignment operator for 'Ctor' is deprecated because it has a user-declared copy constructor}}
+   };
+   Ctor b1, b2;
+   void f() { b1 = b2; } // expected-note {{implicit copy assignment operator for 'DeprecatedCopy::Ctor' first required here}}
+ 
+   struct Dtor {
+     ~Dtor();
+-    // expected-warning@-1 {{definition of implicit copy constructor for 'Dtor' is deprecated because it has a user-provided destructor}}
+-    // expected-warning@-2 {{definition of implicit copy assignment operator for 'Dtor' is deprecated because it has a user-provided destructor}}
++    // expected-warning@-1 {{definition of implicit copy constructor for 'Dtor' is deprecated because it has a user-declared destructor}}
++    // expected-warning@-2 {{definition of implicit copy assignment operator for 'Dtor' is deprecated because it has a user-declared destructor}}
+   };
+   Dtor c1, c2(c1); // expected-note {{implicit copy constructor for 'DeprecatedCopy::Dtor' first required here}}
+   void g() { c1 = c2; } // expected-note {{implicit copy assignment operator for 'DeprecatedCopy::Dtor' first required here}}
+ 
+   struct DefaultedDtor {
+-    ~DefaultedDtor() = default; // expected-warning {{definition of implicit copy constructor for 'DefaultedDtor' is deprecated because it has a user-declared destructor}}
+-  };                            // expected-warning@-1 {{definition of implicit copy assignment operator for 'DefaultedDtor' is deprecated because it has a user-declared destructor}}
+-  DefaultedDtor d1;
+-  DefaultedDtor d2(d1);         // expected-note {{in implicit copy constructor for 'DeprecatedCopy::DefaultedDtor' first required here}}
+-  void h() { d1 = d2; }         // expected-note {{in implicit copy assignment operator for 'DeprecatedCopy::DefaultedDtor' first required here}}
++    ~DefaultedDtor() = default;
++  };
++  DefaultedDtor d1, d2(d1);
++  void h() { d1 = d2; }
+ }
+ #endif
+ 
