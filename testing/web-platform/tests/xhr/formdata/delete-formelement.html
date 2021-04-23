@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang=en>
 <meta charset=utf-8>
-<title>FormData: delete</title>
+<title>FormData: delete (with form element)</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
     <link rel="help" href="https://xhr.spec.whatwg.org/#dom-formdata-get" />
@@ -15,13 +15,8 @@
     <input type="hidden" name="key1" value="value1">
     <input type="hidden" name="key2" value="value2">
 </form>
-<form id="empty-form" />
+<form id="empty-form"></form>
 <script>
-    test(function() {
-        var fd = create_formdata(['key', 'value1'], ['key', 'value2']);
-        fd.delete('key');
-        assert_equals(fd.get('key'), null);
-    }, 'testFormDataDelete');
     test(function() {
         var fd = new FormData(document.getElementById('form1'));
         fd.delete('key');
@@ -43,23 +38,4 @@
         fd.delete('key');
         assert_equals(fd.get('key'), null);
     }, 'testFormDataDeleteFromEmptyForm');
-    test(function() {
-        var fd = create_formdata(['key', 'value1'], ['key', 'value2']);
-        fd.delete('nil');
-        assert_equals(fd.get('key'), 'value1');
-    }, 'testFormDataDeleteNonExistentKey');
-    test(function() {
-        var fd = create_formdata(['key1', 'value1'], ['key2', 'value2']);
-        fd.delete('key1');
-        assert_equals(fd.get('key1'), null);
-        assert_equals(fd.get('key2'), 'value2');
-    }, 'testFormDataDeleteOtherKey');
-
-    function create_formdata() {
-        var fd = new FormData();
-        for (var i = 0; i < arguments.length; i++) {
-            fd.append.apply(fd, arguments[i]);
-        };
-        return fd;
-    }
 </script>
