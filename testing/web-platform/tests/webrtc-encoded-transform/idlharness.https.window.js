@@ -6,7 +6,7 @@
 
 idl_test(
   ['webrtc-encoded-transform'],
-  ['webrtc'],
+  ['webrtc', 'streams', 'html', 'dom'],
   async idlArray => {
     idlArray.add_objects({
       // TODO: RTCEncodedVideoFrame
