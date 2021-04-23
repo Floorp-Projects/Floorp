@@ -52,10 +52,10 @@ const SVGEnumMapping* SVGAnimatedEnumeration::GetMapping(
     SVGElement* aSVGElement) {
   SVGElement::EnumAttributesInfo info = aSVGElement->GetEnumInfo();
 
-  NS_ASSERTION(info.mEnumCount > 0 && mAttrEnum < info.mEnumCount,
+  NS_ASSERTION(info.mCount > 0 && mAttrEnum < info.mCount,
                "mapping request for a non-attrib enum");
 
-  return info.mEnumInfo[mAttrEnum].mMapping;
+  return info.mInfos[mAttrEnum].mMapping;
 }
 
 bool SVGAnimatedEnumeration::SetBaseValueAtom(const nsAtom* aValue,
