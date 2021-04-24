@@ -89,9 +89,11 @@ Result<NotNull<nsCOMPtr<nsIFile>>, nsresult> BodyGetCacheDir(nsIFile& aBaseDir,
   // the name of the sub-directory.
   CACHE_TRY(cacheDir->Append(IntToString(aId.m3[7])));
 
-  QM_TRY(
-      QM_OR_ELSE_WARN(ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
-                      ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
+  // Callers call this function without checking if the directory already
+  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we want
+  // to ignore NS_ERROR_FILE_ALREADY_EXISTS completely.
+  QM_TRY(ToResult(cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0755))
+             .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
 
   return WrapNotNullUnchecked(std::move(cacheDir));
 }
