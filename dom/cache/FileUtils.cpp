@@ -104,9 +104,11 @@ nsresult BodyCreateDir(nsIFile& aBaseDir) {
   CACHE_TRY_INSPECT(const auto& bodyDir,
                     CloneFileAndAppend(aBaseDir, kMorgueDirectory));
 
-  QM_TRY(
-      QM_OR_ELSE_WARN(ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755)),
-                      ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
+  // Callers call this function without checking if the directory already
+  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we want
+  // to ignore NS_ERROR_FILE_ALREADY_EXISTS completely.
+  QM_TRY(ToResult(bodyDir->Create(nsIFile::DIRECTORY_TYPE, 0755))
+             .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
 
   return NS_OK;
 }
