@@ -1,12 +1,13 @@
-name: Regenerate WPT certificates
+name: certificates
 on:
+  # Our certificates are good for ~1 year, but we regenerate them every
+  # month to be sure. Also support manually triggering the workflow.
   schedule:
-    # Our certificates are good for ~1 year, but we regenerate them every
-    # month to be sure.
-    - cron: '0 0 12 * *'
+    - cron: 0 0 12 * *
+  workflow_dispatch:
 jobs:
   update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -23,7 +24,7 @@ jobs:
     - name: Commit and create pull request
       # Use a conditional step instead of a conditional job to work around #20700.
       if: github.repository == 'web-platform-tests/wpt'
-      uses: peter-evans/create-pull-request@v2
+      uses: peter-evans/create-pull-request@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: Automated regeneration of WPT certificates
