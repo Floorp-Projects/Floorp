@@ -1,11 +1,5 @@
-﻿<!DOCTYPE html>
-<title>FileReader: starting new reads while one is in progress</title>
-<link rel="author" title="Yinkan Li" href="mailto:liyinkan.biz@gmail.com">
-<link rel="help" href="http://dev.w3.org/2006/webapi/FileAPI/#MultipleReads">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
+// META: title=FileReader: starting new reads while one is in progress
+
 test(function() {
   var blob_1 = new Blob(['TEST000000001'])
   var blob_2 = new Blob(['TEST000000002'])
@@ -85,5 +79,3 @@ async_test(function() {
   });
   reader.readAsText(blob_1);
 }, 'test abort and restart in onloadstart event for readAsText');
-
-</script>
