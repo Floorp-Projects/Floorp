@@ -963,10 +963,16 @@ interface GPUCanvasContext {
     GPUTextureFormat getSwapChainPreferredFormat(GPUAdapter adapter);
 };
 
+enum GPUCanvasCompositingAlphaMode {
+    "opaque",
+    "premultiplied",
+};
+
 dictionary GPUSwapChainDescriptor : GPUObjectDescriptorBase {
     required GPUDevice device;
     required GPUTextureFormat format;
     GPUTextureUsageFlags usage = 0x10;  // GPUTextureUsage.RENDER_ATTACHMENT
+    GPUCanvasCompositingAlphaMode compositingAlphaMode = "opaque";
 };
 
 [Exposed=Window]
