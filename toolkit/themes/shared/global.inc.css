@@ -30,7 +30,6 @@
   --panel-disabled-color: GrayText;
 
   --popup-notification-body-width: calc(31em - calc(2 * var(--arrowpanel-padding)));
-  --toolbarbutton-icon-fill: var(--toolbar-color, currentColor);
 }
 
 @media not (-moz-proton-doorhangers) {
