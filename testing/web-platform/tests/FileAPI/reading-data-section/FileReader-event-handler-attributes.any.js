@@ -1,10 +1,5 @@
-<!doctype html>
-<meta charset="utf-8">
-<title>FileReader event handler attributes</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id=log></div>
-<script>
+// META: title=FileReader event handler attributes
+
 var attributes = [
   "onloadstart",
   "onprogress",
@@ -20,4 +15,3 @@ attributes.forEach(function(a) {
                   "event handler attribute should initially be null");
   }, "FileReader." + a + ": initial value");
 });
-</script>

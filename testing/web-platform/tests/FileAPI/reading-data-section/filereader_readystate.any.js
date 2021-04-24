@@ -1,17 +1,5 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>FileAPI Test: filereader_readystate</title>
-    <link rel="author" title="Intel" href="http://www.intel.com">
-    <link rel="help" href="http://dev.w3.org/2006/webapi/FileAPI/#blobreader-state">
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-  </head>
-  <body>
-    <div id="log"></div>
+// META: title=FileAPI Test: filereader_readystate
 
-    <script>
     async_test(function() {
       var blob = new Blob(["THIS TEST THE READYSTATE WHEN READ BLOB"]);
       var reader = new FileReader();
@@ -29,6 +17,3 @@
 
       reader.readAsDataURL(blob);
     });
-    </script>
-  </body>
-</html>

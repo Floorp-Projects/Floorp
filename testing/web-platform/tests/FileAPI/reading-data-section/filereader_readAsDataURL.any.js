@@ -1,12 +1,5 @@
-<!doctype html>
-<meta charset="utf-8">
-<title>FileAPI Test: FileReader.readAsDataURL</title>
-<link rel="author" title="Intel" href="http://www.intel.com">
-<link rel="help" href="https://w3c.github.io/FileAPI/#readAsDataURL">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+// META: title=FileAPI Test: FileReader.readAsDataURL
 
-<script>
 async_test(function(testCase) {
   var blob = new Blob(["TEST"]);
   var reader = new FileReader();
@@ -47,5 +40,3 @@ async_test(function(testCase) {
   });
   reader.readAsDataURL(blob);
 }, 'readAsDataURL result for Blob with unspecified MIME type');
-
-</script>
