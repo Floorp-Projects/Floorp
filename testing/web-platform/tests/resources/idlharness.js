@@ -174,19 +174,19 @@ self.IdlArray = function()
 
     /**
      * When adding multiple collections of IDLs one at a time, an earlier one
-     * might contain a partial interface or implements statement that depends
+     * might contain a partial interface or includes statement that depends
      * on a later one.  Save these up and handle them right before we run
      * tests.
      *
      * .partials is simply an array of objects from WebIDLParser.js'
-     * "partialinterface" production.  .implements maps strings to arrays of
+     * "partialinterface" production.  .includes maps strings to arrays of
      * strings, such that
      *
-     *   A implements B;
-     *   A implements C;
-     *   D implements E;
+     *   A includes B;
+     *   A includes C;
+     *   D includes E;
      *
-     * results in this["implements"] = { A: ["B", "C"], D: ["E"] }.
+     * results in this["includes"] = { A: ["B", "C"], D: ["E"] }.
      *
      * Similarly,
      *
@@ -196,7 +196,6 @@ self.IdlArray = function()
      * results in this["inheritance"] = { A: "B", B: "C" }
      */
     this.partials = [];
-    this["implements"] = {};
     this["includes"] = {};
     this["inheritance"] = {};
 
@@ -251,10 +250,6 @@ IdlArray.prototype.internal_add_dependency_idls = function(parsed_idls, options)
 
     const all_deps = new Set();
     Object.values(this.inheritance).forEach(v => all_deps.add(v));
-    Object.entries(this.implements).forEach(([k, v]) => {
-        all_deps.add(k);
-        all_deps.add(v);
-    });
     // NOTE: If 'A includes B' for B that we care about, then A is also a dep.
     Object.keys(this.includes).forEach(k => {
         all_deps.add(k);
@@ -317,9 +312,6 @@ IdlArray.prototype.internal_add_dependency_idls = function(parsed_idls, options)
         var deps = [];
         if (parsed.name) {
             deps.push(parsed.name);
-        } else if (parsed.type === "implements") {
-            deps.push(parsed.target);
-            deps.push(parsed.implements);
         } else if (parsed.type === "includes") {
             deps.push(parsed.target);
             deps.push(parsed.includes);
@@ -347,7 +339,7 @@ IdlArray.prototype.internal_add_dependency_idls = function(parsed_idls, options)
             }
 
             const follow_up = new Set();
-            for (const dep_type of ["inheritance", "implements", "includes"]) {
+            for (const dep_type of ["inheritance", "includes"]) {
                 if (parsed[dep_type]) {
                     const inheriting = parsed[dep_type];
                     const inheritor = parsed.name || parsed.target;
@@ -433,20 +425,6 @@ IdlArray.prototype.internal_add_idls = function(parsed_idls, options)
                 return;
             }
             this.partials.push(parsed_idl);
-            return;
-        }
-
-        if (parsed_idl.type == "implements")
-        {
-            if (should_skip(parsed_idl.target))
-            {
-                return;
-            }
-            if (!(parsed_idl.target in this["implements"]))
-            {
-                this["implements"][parsed_idl.target] = [];
-            }
-            this["implements"][parsed_idl.target].push(parsed_idl["implements"]);
             return;
         }
 
@@ -549,34 +527,6 @@ IdlArray.prototype.prevent_multiple_testing = function(name)
 {
     /** Entry point.  See documentation at beginning of file. */
     this.members[name].prevent_multiple_testing = true;
-};
-
-IdlArray.prototype.recursively_get_implements = function(interface_name)
-{
-    /**
-     * Helper function for test().  Returns an array of things that implement
-     * interface_name, so if the IDL contains
-     *
-     *   A implements B;
-     *   B implements C;
-     *   B implements D;
-     *
-     * then recursively_get_implements("A") should return ["B", "C", "D"].
-     */
-    var ret = this["implements"][interface_name];
-    if (ret === undefined)
-    {
-        return [];
-    }
-    for (var i = 0; i < this["implements"][interface_name].length; i++)
-    {
-        ret = ret.concat(this.recursively_get_implements(ret[i]));
-        if (ret.indexOf(ret[i]) != ret.lastIndexOf(ret[i]))
-        {
-            throw new IdlHarnessError("Circular implements statements involving " + ret[i]);
-        }
-    }
-    return ret;
 };
 
 IdlArray.prototype.recursively_get_includes = function(interface_name)
@@ -702,7 +652,7 @@ IdlArray.prototype.is_json_type = function(type)
                while (thing)
                {
                    if (thing.has_to_json_regular_operation()) { return true; }
-                   var mixins = this.implements[thing.name] || this.includes[thing.name];
+                   var mixins = this.includes[thing.name];
                    if (mixins) {
                        mixins = mixins.map(function(id) {
                            var mixin = this.members[id];
@@ -802,36 +752,8 @@ IdlArray.prototype.test = function()
 {
     /** Entry point.  See documentation at beginning of file. */
 
-    // First merge in all the partial interfaces and implements statements we
-    // encountered.
+    // First merge in all partial definitions and interface mixins.
     this.collapse_partials();
-
-    for (var lhs in this["implements"])
-    {
-        this.recursively_get_implements(lhs).forEach(function(rhs)
-        {
-            var errStr = lhs + " implements " + rhs + ", but ";
-            if (!(lhs in this.members)) throw errStr + lhs + " is undefined.";
-            if (!(this.members[lhs] instanceof IdlInterface)) throw errStr + lhs + " is not an interface.";
-            if (!(rhs in this.members)) throw errStr + rhs + " is undefined.";
-            if (!(this.members[rhs] instanceof IdlInterface)) throw errStr + rhs + " is not an interface.";
-
-            if (this.members[rhs].members.length) {
-                test(function () {
-                    var clash = this.members[rhs].members.find(function(member) {
-                        return this.members[lhs].members.find(function(m) {
-                            return this.are_duplicate_members(m, member);
-                        }.bind(this));
-                    }.bind(this));
-                    this.members[rhs].members.forEach(function(member) {
-                        this.members[lhs].members.push(new IdlInterfaceMember(member));
-                    }.bind(this));
-                    assert_true(!clash, "member " + (clash && clash.name) + " is unique");
-                }.bind(this), lhs + " implements " + rhs + ": member names are unique");
-            }
-        }.bind(this));
-    }
-    this["implements"] = {};
 
     for (var lhs in this["includes"])
     {
@@ -1543,12 +1465,12 @@ IdlInterface.prototype.traverse_inherited_and_consequential_interfaces = functio
 function _traverse_inherited_and_consequential_interfaces(stack, callback) {
     var I = stack.pop();
     callback(I);
-    var mixins = I.array["implements"][I.name] || I.array["includes"][I.name];
+    var mixins = I.array["includes"][I.name];
     if (mixins) {
         mixins.forEach(function(id) {
             var mixin = I.array.members[id];
             if (!mixin) {
-                throw new Error("Interface " + id + " not found (implemented by " + I.name + ")");
+                throw new Error("Interface mixin " + id + " not found (included by " + I.name + ")");
             }
             var interfaces = mixin.get_inheritance_stack();
             _traverse_inherited_and_consequential_interfaces(interfaces, callback);
