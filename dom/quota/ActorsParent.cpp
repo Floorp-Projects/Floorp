@@ -2391,9 +2391,9 @@ int64_t GetLastModifiedTime(PersistenceType aPersistenceType, nsIFile& aFile) {
 Result<bool, nsresult> EnsureDirectory(nsIFile& aDirectory) {
   AssertIsOnIOThread();
 
-  // Callers call this function without checking if the file already exists
-  // (idempotent usage). QM_OR_ELSE_WARN is not used here since we want to
-  // ignore NS_ERROR_FILE_ALREADY_EXISTS completely.
+  // Callers call this function without checking if the directory already
+  // exists (idempotent usage). QM_OR_ELSE_WARN is not used here since we want
+  // to ignore NS_ERROR_FILE_ALREADY_EXISTS completely.
   QM_TRY_INSPECT(
       const auto& exists,
       MOZ_TO_RESULT_INVOKE(aDirectory, Create, nsIFile::DIRECTORY_TYPE, 0755)
