@@ -10552,6 +10552,10 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
     QM_TRY_INSPECT(const auto& idbDirectory,
                    CloneFileAndAppend(*aDirectory, idbDirectoryName));
 
+    // Usually we don't use QM_OR_ELSE_WARN with Create and
+    // NS_ERROR_FILE_ALREADY_EXISTS check, but normally the idb directory
+    // shouldn't exist during the upgrade and the upgrade normally runs only
+    // once.
     QM_TRY(QM_OR_ELSE_WARN(
         ToResult(idbDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755)),
         ([&idbDirectory](const nsresult rv) -> Result<Ok, nsresult> {
