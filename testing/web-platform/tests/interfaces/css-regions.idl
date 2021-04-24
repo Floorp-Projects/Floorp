@@ -15,10 +15,10 @@ partial interface Document {
 interface NamedFlow : EventTarget {
   readonly attribute CSSOMString name;
   readonly attribute boolean overset;
-  sequence<Region> getRegions();
+  sequence<Element> getRegions();
   readonly attribute short firstEmptyRegionIndex;
   sequence<Node> getContent();
-  sequence<Region> getRegionsByContent(Node node);
+  sequence<Element> getRegionsByContent(Node node);
 };
 
 interface mixin Region {

@@ -12,19 +12,16 @@ interface LayoutWorkletGlobalScope : WorkletGlobalScope {
     undefined registerLayout(DOMString name, VoidFunction layoutCtor);
 };
 
-[Exposed=LayoutWorklet]
 dictionary LayoutOptions {
   ChildDisplayType childDisplay = "block";
   LayoutSizingMode sizing = "block-like";
 };
 
-[Exposed=LayoutWorklet]
 enum ChildDisplayType {
     "block", // default - "blockifies" the child boxes.
     "normal",
 };
 
-[Exposed=LayoutWorklet]
 enum LayoutSizingMode {
     "block-like", // default - Sizing behaves like block containers.
     "manual", // Sizing is specified by the web developer.
