@@ -647,6 +647,12 @@ void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
+static bool IsButtonBox(const nsIFrame* aFrame) {
+  auto pseudoType = aFrame->Style()->GetPseudoType();
+  return pseudoType == PseudoStyleType::mozNumberSpinBox ||
+         pseudoType == PseudoStyleType::mozSearchClearButton;
+}
+
 void nsTextControlFrame::ReflowTextControlChild(
     nsIFrame* aKid, nsPresContext* aPresContext,
     const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
@@ -657,9 +663,7 @@ void nsTextControlFrame::ReflowTextControlChild(
   LogicalSize availSize = aReflowInput.ComputedSizeWithPadding(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
 
-  const bool isButtonBox =
-      aKid->Style()->GetPseudoType() == PseudoStyleType::mozNumberSpinBox ||
-      aKid->Style()->GetPseudoType() == PseudoStyleType::mozSearchClearButton;
+  const bool isButtonBox = IsButtonBox(aKid);
 
   ReflowInput kidReflowInput(aPresContext, aReflowInput, aKid, availSize,
                              Nothing(), ReflowInput::InitFlag::CallerWillInit);
@@ -1296,11 +1300,24 @@ void nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     BuildDisplayListForChild(aBuilder, kid, set);
   }
 
+  nsIFrame* buttonBox = nullptr;
   for (auto* kid : mFrames) {
     if (kid->GetContent() == mPlaceholderDiv) {
       continue;  // Handled above already.
     }
+    if (IsButtonBox(kid)) {
+      MOZ_ASSERT(!buttonBox);
+      buttonBox = kid;
+      continue;  // Handled below.
+    }
     BuildDisplayListForChild(aBuilder, kid, set);
+  }
+
+  if (buttonBox) {
+    // We add the display items for our button-box *after* all other children,
+    // in order to be sure these buttons paint & hit-test in front of the other
+    // components.
+    BuildDisplayListForChild(aBuilder, buttonBox, set);
   }
 }
 

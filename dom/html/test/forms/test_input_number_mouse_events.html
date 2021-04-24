@@ -12,9 +12,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=935501
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     input {
-      margin: 0 ! important;
-      border: 0 ! important;
-      padding: 0 ! important;
+      margin: 0;
+      border: 0;
+      padding: 0;
+      width: 200px;
+      box-sizing: border-box;
     }
   </style>
 </head>
@@ -25,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=935501
   <input id="input" type="number">
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 
 /**
  * Test for Bug 935501
@@ -119,6 +121,24 @@ function test() {
   synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, {});
   is(input.value, "1", "Test that preventDefault() works for click on spin-down button");
   input.removeEventListener("mousedown", preventDefault);
+
+  // Test for bug 1707070.
+  input.style.paddingRight = "30px";
+  input.getBoundingClientRect(); // flush layout
+
+  input.value = 0;
+  synthesizeMouse(input, SPIN_UP_X - 30, SPIN_UP_Y, { type: "mousedown" });
+  is(input.value, "1", "Spinner down works on with padding (mousedown)");
+  synthesizeMouse(input, SPIN_UP_X - 30, SPIN_UP_Y, { type: "mouseup" });
+  is(input.value, "1", "Spinner down works with padding (mouseup)");
+
+  synthesizeMouse(input, SPIN_DOWN_X - 30, SPIN_DOWN_Y, { type: "mousedown" });
+  is(input.value, "0", "Spinner works with padding (mousedown)");
+  synthesizeMouse(input, SPIN_DOWN_X - 30, SPIN_DOWN_Y, { type: "mouseup" });
+  is(input.value, "0", "Spinner works with padding (mouseup)");
+
+  input.style.paddingRight = "";
+  input.getBoundingClientRect(); // flush layout
 
   // Run the spin tests:
   runNextSpinTest();
