@@ -317,7 +317,7 @@ interface mixin SVGElementInstance {
 
 [Exposed=Window]
 interface ShadowAnimation : Animation {
-  constructor(Animation source, Animatable newTarget);
+  constructor(Animation source, (Element or CSSPseudoElement) newTarget);
   [SameObject] readonly attribute Animation sourceAnimation;
 };
 

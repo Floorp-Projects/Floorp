@@ -3,7 +3,7 @@
 // (https://github.com/w3c/webref)
 // Source: WebGL EXT_texture_norm16 Extension Specification (https://www.khronos.org/registry/webgl/extensions/EXT_texture_norm16/)
 
-[Exposed=Window, LegacyNoInterfaceObject]
+[Exposed=(Window,Worker), LegacyNoInterfaceObject]
 interface EXT_texture_norm16 {
   const GLenum R16_EXT = 0x822A;
   const GLenum RG16_EXT = 0x822C;
