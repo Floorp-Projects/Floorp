@@ -3,8 +3,10 @@
 // (https://github.com/w3c/webref)
 // Source: Portals (https://wicg.github.io/portals/)
 
-[Exposed=Window, HTMLConstructor]
+[Exposed=Window]
 interface HTMLPortalElement : HTMLElement {
+    [HTMLConstructor] constructor();
+
     [CEReactions] attribute USVString src;
     [CEReactions] attribute DOMString referrerPolicy;
 

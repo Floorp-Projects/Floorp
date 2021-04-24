@@ -3,7 +3,7 @@
 // (https://github.com/w3c/webref)
 // Source: WebGL WEBGL_blend_equation_advanced_coherent Extension Draft Specification (https://www.khronos.org/registry/webgl/extensions/WEBGL_blend_equation_advanced_coherent/)
 
-[Exposed=Window, LegacyNoInterfaceObject]
+[Exposed=(Window,Worker), LegacyNoInterfaceObject]
 interface WEBGL_blend_equation_advanced_coherent  {
   const GLenum MULTIPLY       = 0x9294;
   const GLenum SCREEN         = 0x9295;
