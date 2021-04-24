@@ -1,17 +1,5 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>FileAPI Test: filereader_readAsArrayBuffer</title>
-    <link rel="author" title="Intel" href="http://www.intel.com">
-    <link rel="help" href="http://dev.w3.org/2006/webapi/FileAPI/#readAsArrayBuffer">
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-  </head>
-  <body>
-    <div id="log"></div>
+// META: title=FileAPI Test: filereader_readAsArrayBuffer
 
-    <script>
     async_test(function() {
       var blob = new Blob(["TEST"]);
       var reader = new FileReader();
@@ -33,6 +21,3 @@
 
       reader.readAsArrayBuffer(blob);
     });
-    </script>
-  </body>
-</html>

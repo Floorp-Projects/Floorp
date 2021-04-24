@@ -1,17 +1,5 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>FileAPI Test: filereader_readAsText</title>
-    <link rel="author" title="Intel" href="http://www.intel.com">
-    <link rel="help" href="http://dev.w3.org/2006/webapi/FileAPI/#readAsDataText">
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-  </head>
-  <body>
-    <div id="log"></div>
+// META: title=FileAPI Test: filereader_readAsText
 
-    <script>
     async_test(function() {
       var blob = new Blob(["TEST"]);
       var reader = new FileReader();
@@ -46,6 +34,3 @@
       });
       reader_UTF16.readAsText(blob, "UTF-16");
     }, "readAsText should correctly read UTF-16.");
-    </script>
-  </body>
-</html>

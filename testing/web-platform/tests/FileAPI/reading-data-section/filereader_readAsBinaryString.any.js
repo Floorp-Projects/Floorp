@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-<title>FileAPI Test: filereader_readAsBinaryString</title>
-<link rel="author" title="Intel" href="http://www.intel.com">
-<link rel="help" href="https://w3c.github.io/FileAPI/#readAsBinaryString">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
+// META: title=FileAPI Test: filereader_readAsBinaryString
 
 async_test(t => {
   const blob = new Blob(["σ"]);
@@ -28,5 +21,3 @@ async_test(t => {
 
   reader.readAsBinaryString(blob);
 });
-
-</script>

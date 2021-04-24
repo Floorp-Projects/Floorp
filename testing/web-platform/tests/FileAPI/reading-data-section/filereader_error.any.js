@@ -1,18 +1,5 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>FileAPI Test: filereader_error</title>
-    <link rel="author" title="Intel" href="http://www.intel.com">
-    <link rel="help" href="http://dev.w3.org/2006/webapi/FileAPI/#dfn-domerror">
-    <link rel="help" href="http://dev.w3.org/2006/webapi/FileAPI/#abort">
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
-  </head>
-  <body>
-    <div id="log"></div>
+// META: title=FileAPI Test: filereader_error
 
-    <script>
     async_test(function() {
       var blob = new Blob(["TEST THE ERROR ATTRIBUTE AND ERROR EVENT"]);
       var reader = new FileReader();
@@ -30,6 +17,3 @@
       reader.readAsText(blob);
       reader.abort();
     });
-    </script>
-  </body>
-</html>
