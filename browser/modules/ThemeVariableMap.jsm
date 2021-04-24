@@ -101,7 +101,7 @@ const ThemeVariableMap = [
     },
   ],
   [
-    "--toolbarbutton-icon-fill",
+    "--lwt-toolbarbutton-icon-fill",
     {
       lwtProperty: "icon_color",
     },

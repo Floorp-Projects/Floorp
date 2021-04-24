@@ -1017,7 +1017,7 @@
 
 #tabbrowser-arrowscrollbox::part(scrollbutton-up),
 #tabbrowser-arrowscrollbox::part(scrollbutton-down) {
-  fill: var(--toolbarbutton-icon-fill, currentColor);
+  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
