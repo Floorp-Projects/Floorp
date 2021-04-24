@@ -31,26 +31,11 @@ function test_computed_style(width, height, expected) {
   test_computed_style_aspect_ratio("input", {type: "submit", width: width, height: height}, "auto");
 }
 
-test_computed_style("10", "20", "auto 10 / 20");
-// These are invalid per spec, but see
-// https://github.com/whatwg/html/issues/4961
-test_computed_style("0", "1", "auto 0 / 1");
-test_computed_style("1", "0", "auto 1 / 0");
-test_computed_style("0", "0", "auto 0 / 0");
-// https://html.spec.whatwg.org/#map-to-the-aspect-ratio-property
-// https://html.spec.whatwg.org/#rules-for-parsing-non-zero-dimension-values
-test_computed_style("0.5", "1.5", "auto 0.5 / 1.5");
-
-test_computed_style(null, null, "auto");
-test_computed_style("10", null, "auto");
-test_computed_style(null, "20", "auto");
-test_computed_style("xx", "20", "auto");
-test_computed_style("10%", "20", "auto");
-
 // Create and append a new image and immediately check the ratio.
 // This is not racy because the spec requires the user agent to queue a task:
 // https://html.spec.whatwg.org/multipage/images.html#updating-the-image-data
 test(function() {
+  // This img will be tested again after loaded. In order to locate it correctly, body should append it first.
   var img = new Image();
   img.width = 250;
   img.height = 100;
@@ -78,6 +63,21 @@ test(function () {
   assert_equals(getComputedStyle(img).height, "0px");
 }, "Create, append and test immediately: <img> with attributes width=50% height=25%");
 
+test_computed_style("10", "20", "auto 10 / 20");
+// These are invalid per spec, but see
+// https://github.com/whatwg/html/issues/4961
+test_computed_style("0", "1", "auto 0 / 1");
+test_computed_style("1", "0", "auto 1 / 0");
+test_computed_style("0", "0", "auto 0 / 0");
+// https://html.spec.whatwg.org/#map-to-the-aspect-ratio-property
+// https://html.spec.whatwg.org/#rules-for-parsing-non-zero-dimension-values
+test_computed_style("0.5", "1.5", "auto 0.5 / 1.5");
+
+test_computed_style(null, null, "auto");
+test_computed_style("10", null, "auto");
+test_computed_style(null, "20", "auto");
+test_computed_style("xx", "20", "auto");
+test_computed_style("10%", "20", "auto");
 
 onload = function() {
   let images = document.querySelectorAll("img");
