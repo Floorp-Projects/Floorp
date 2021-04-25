@@ -176,11 +176,11 @@ template <XDRMode mode>
   uint8_t flags = 0;
 
   if (mode == XDR_ENCODE) {
-    flags = stencil.flags_.serialize();
+    flags = stencil.flags_.toRaw();
   }
   MOZ_TRY(xdr->codeUint8(&flags));
   if (mode == XDR_DECODE) {
-    stencil.flags_.deserialize(flags);
+    stencil.flags_.setRaw(flags);
   }
 
   MOZ_TRY(xdr->codeUint32(&stencil.propertyCount_));

@@ -67,7 +67,7 @@ bool ObjLiteralWriter::checkForDuplicatedNames(JSContext* cx) {
 
     auto p = propNameSet.lookupForAdd(propName);
     if (p) {
-      flags_ += ObjLiteralFlag::HasIndexOrDuplicatePropName;
+      flags_.setFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName);
       break;
     }
 
@@ -119,7 +119,7 @@ bool InterpretObjLiteralObj(JSContext* cx, HandlePlainObject obj,
                             const frontend::CompilationAtomCache& atomCache,
                             const mozilla::Span<const uint8_t> literalInsns,
                             ObjLiteralFlags flags) {
-  bool singleton = flags.contains(ObjLiteralFlag::Singleton);
+  bool singleton = flags.hasFlag(ObjLiteralFlag::Singleton);
 
   ObjLiteralReader reader(literalInsns);
 
@@ -184,7 +184,7 @@ static JSObject* InterpretObjLiteralObj(
     return nullptr;
   }
 
-  if (!flags.contains(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
+  if (!flags.hasFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
     if (!InterpretObjLiteralObj<PropertySetKind::UniqueNames>(
             cx, obj, atomCache, literalInsns, flags)) {
       return nullptr;
@@ -227,7 +227,7 @@ static JSObject* InterpretObjLiteral(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
     uint32_t propertyCount) {
-  return flags.contains(ObjLiteralFlag::Array)
+  return flags.hasFlag(ObjLiteralFlag::Array)
              ? InterpretObjLiteralArray(cx, atomCache, literalInsns, flags,
                                         propertyCount)
              : InterpretObjLiteralObj(cx, atomCache, literalInsns, flags,
@@ -249,21 +249,21 @@ bool ObjLiteralStencil::isContainedIn(const LifoAlloc& alloc) const {
 
 static void DumpObjLiteralFlagsItems(js::JSONPrinter& json,
                                      ObjLiteralFlags flags) {
-  if (flags.contains(ObjLiteralFlag::Array)) {
+  if (flags.hasFlag(ObjLiteralFlag::Array)) {
     json.value("Array");
-    flags -= ObjLiteralFlag::Array;
+    flags.clearFlag(ObjLiteralFlag::Array);
   }
-  if (flags.contains(ObjLiteralFlag::Singleton)) {
+  if (flags.hasFlag(ObjLiteralFlag::Singleton)) {
     json.value("Singleton");
-    flags -= ObjLiteralFlag::Singleton;
+    flags.clearFlag(ObjLiteralFlag::Singleton);
   }
-  if (flags.contains(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
+  if (flags.hasFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
     json.value("HasIndexOrDuplicatePropName");
-    flags -= ObjLiteralFlag::HasIndexOrDuplicatePropName;
+    flags.clearFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName);
   }
 
   if (!flags.isEmpty()) {
-    json.value("Unknown(%x)", flags.serialize());
+    json.value("Unknown(%x)", flags.toRaw());
   }
 }
 

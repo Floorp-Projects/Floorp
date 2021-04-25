@@ -4911,7 +4911,7 @@ bool BytecodeEmitter::emitCallSiteObjectArray(ListNode* cookedOrRaw,
 
   ObjLiteralWriter writer;
 
-  ObjLiteralFlags flags(ObjLiteralFlag::Array);
+  ObjLiteralFlags flags({ObjLiteralFlag::Array});
   writer.beginObject(flags);
   writer.beginDenseArrayElements();
 
@@ -9279,7 +9279,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
 #endif
 
   writer.beginObject(flags);
-  bool singleton = flags.contains(ObjLiteralFlag::Singleton);
+  bool singleton = flags.hasFlag(ObjLiteralFlag::Singleton);
 
   for (ParseNode* propdef : obj->contents()) {
     BinaryNode* prop = &propdef->as<BinaryNode>();
@@ -9398,7 +9398,7 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead) {
 
   ObjLiteralWriter writer;
 
-  ObjLiteralFlags flags(ObjLiteralFlag::Array, ObjLiteralFlag::Singleton);
+  ObjLiteralFlags flags({ObjLiteralFlag::Array, ObjLiteralFlag::Singleton});
 
   writer.beginObject(flags);
 
@@ -10125,7 +10125,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode) {
     ObjLiteralFlags flags;
     if (singleton) {
       // Case 1 or 2.
-      flags += ObjLiteralFlag::Singleton;
+      flags.setFlag(ObjLiteralFlag::Singleton);
     } else {
       // Case 3.
       useObjLiteralValues = false;

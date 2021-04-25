@@ -63,6 +63,7 @@ class EnumFlags {
   constexpr bool isEmpty() const { return flags_ == 0; }
 
   constexpr FieldType toRaw() const { return flags_; }
+  void setRaw(FieldType flag) { flags_ = flag; }
 
   constexpr bool operator==(const EnumFlags& other) const {
     return flags_ == other.flags_;

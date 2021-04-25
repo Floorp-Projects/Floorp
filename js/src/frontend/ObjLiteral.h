@@ -17,6 +17,7 @@
 #include "js/GCPolicyAPI.h"
 #include "js/Value.h"
 #include "js/Vector.h"
+#include "util/EnumFlags.h"
 
 /*
  * [SMDOC] ObjLiteral (Object Literal) Handling
@@ -134,19 +135,19 @@ enum class ObjLiteralOpcode : uint8_t {
 // (These become bitflags by wrapping with EnumSet below.)
 enum class ObjLiteralFlag : uint8_t {
   // If set, this object is an array.
-  Array = 1,
+  Array = 1 << 0,
 
   // If set, this is an object literal in a singleton context and property
   // values are included. See also JSOp::Object.
-  Singleton = 2,
+  Singleton = 1 << 1,
 
   // If set, this object contains index property, or duplicate non-index
   // property.
   // This flag is valid only if Array flag isn't set.
-  HasIndexOrDuplicatePropName = 3,
+  HasIndexOrDuplicatePropName = 1 << 2,
 };
 
-using ObjLiteralFlags = mozilla::EnumSet<ObjLiteralFlag>;
+using ObjLiteralFlags = EnumFlags<ObjLiteralFlag>;
 
 inline bool ObjLiteralOpcodeHasValueArg(ObjLiteralOpcode op) {
   return op == ObjLiteralOpcode::ConstValue;
@@ -299,7 +300,7 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
     // Only valid in object-mode.
     setPropNameNoDuplicateCheck(parserAtoms, propName);
 
-    if (flags_.contains(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
+    if (flags_.hasFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName)) {
       return true;
     }
 
@@ -320,20 +321,20 @@ struct ObjLiteralWriter : private ObjLiteralWriterBase {
       frontend::ParserAtomsTable& parserAtoms,
       const frontend::TaggedParserAtomIndex propName) {
     // Only valid in object-mode.
-    MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
+    MOZ_ASSERT(!flags_.hasFlag(ObjLiteralFlag::Array));
     parserAtoms.markUsedByStencil(propName);
     nextKey_ = ObjLiteralKey::fromPropName(propName);
   }
   void setPropIndex(uint32_t propIndex) {
     // Only valid in object-mode.
-    MOZ_ASSERT(!flags_.contains(ObjLiteralFlag::Array));
+    MOZ_ASSERT(!flags_.hasFlag(ObjLiteralFlag::Array));
     MOZ_ASSERT(propIndex <= ATOM_INDEX_MASK);
     nextKey_ = ObjLiteralKey::fromArrayIndex(propIndex);
-    flags_ += ObjLiteralFlag::HasIndexOrDuplicatePropName;
+    flags_.setFlag(ObjLiteralFlag::HasIndexOrDuplicatePropName);
   }
   void beginDenseArrayElements() {
     // Only valid in array-mode.
-    MOZ_ASSERT(flags_.contains(ObjLiteralFlag::Array));
+    MOZ_ASSERT(flags_.hasFlag(ObjLiteralFlag::Array));
     // Dense array element sequences do not use the keys; the indices are
     // implicit.
     nextKey_ = ObjLiteralKey::none();
