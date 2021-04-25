@@ -389,6 +389,8 @@
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Башка җиһаздагы таблар</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Башка Firefox җиһазларыннан алынган таблар өчен искәртүләр.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Таб кабул ителде</string>
     <!-- When multiple tabs have been received -->
@@ -406,12 +408,19 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Күбрәк белү</string>
 
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Тулысынча сүндерелгән, аны кабызу өчен көйләүләргә керегез.</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Телеметрия</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Куллану турында һәм техник мәгълүматлар</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Маркетинг мәгълүматлары</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Тикшеренүләр</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Тәҗрибәләр</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">Mozilla урнашу хезмәте</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
@@ -428,6 +437,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Хисап язмасын бетерү</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[<b>Firefox.com/pair</b> адресында күрсәтелгән QR кодны сканерлагыз]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Камераны ачу</string>
     <!-- Button to cancel pairing -->
@@ -1117,6 +1129,8 @@
     <string name="sync_sent_tab_error_snackbar_action">КАБАТЛАУ</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Кодны сканерлау</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Компьютерыгызда Firefox-ны ачыгыз һәм <b>https://firefox.com/pair</b> адресына үтегез]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Сканерлауга әзер</string>
     <!-- Text shown for settings option for sign with pairing -->
@@ -1127,6 +1141,9 @@
     <string name="sign_out_disconnect">Өзү</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Баш тарту</string>
+
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Стандарт папкаларны үзгәртә алмыйм</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
@@ -1141,11 +1158,15 @@
     <string name="preference_enhanced_tracking_protection_strict">Катгый</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Үзгә</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Кайсы төр трекерларны һәм скриптларны блокларга икәнен сайлагыз.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Кукилар</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">Каралмаган сайтлардан булган кукилар</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Күзәтүче эчтәлек</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Барлык табларда</string>
 
@@ -1155,11 +1176,23 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Үзгә табларда гына</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Криптомайнерләр</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Бармак эзләрен җыючылар (идентификаторлар)</string>
     <string name="enhanced_tracking_protection_blocked">Тыелган</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Рөхсәт ителгән</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Социаль челтәр күзәтүчеләре</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Криптомайнерләр</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Бармак эзләрен җыючылар (идентификаторлар)</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Күзәтүче эчтәлек</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Бу сайт өчен саклау КАБЫНГАН</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Бу сайт өчен саклау СҮНГӘН</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Кире кайту</string>
@@ -1185,6 +1218,11 @@
     <string name="about_licensing_information">Лицензия турында мәгълүмат</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Без кулланган китапханәләр</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Хата төзәтү менюсы: кабызу өчен %1$d чиртү калды</string>
+    <string name="about_debug_menu_toast_done">Хата төзәтү менюсы кабынган</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 таб</string>
@@ -1244,6 +1282,8 @@
     <string name="preferences_passwords_exceptions_description_empty">Сакланмаган логиннар һәм серсүзләр монда күрсәтеләчәк.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">Бу сайтлар өчен логиннар һәм серсүзләр сакланмаячак.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Барлык чыгармаларны бетерү</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Логиннардан эзләү</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -1293,16 +1333,25 @@
     <string name="logins_biometric_prompt_message">Сакланган логиннарыгызны карау өчен йозакны ачыгыз</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Cоңрак</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Хәзер урнаштыру</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">Җиһазыгызның йозагын ачыгыз</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Барлык вебсайтларны да масштаблау</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Исем (А-Я)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Соңгы кулланылган</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Логиннар менюсын тәртипкә китерү</string>
+
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Кредит карталары</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Карталарны саклау һәм автотөгәлләү</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Мәгълүматлар шифрланган</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1313,12 +1362,18 @@
     <string name="preferences_credit_cards_manage_saved_cards">Сакланган карталар белән идарә итү</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Картаны өстәү</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Картаны үзгәртү</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Карта номеры</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Вакыты чыгу датасы</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Картадагы исем</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Карта исеме</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Картаны бетерү</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Картаны бетерү</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1350,18 +1405,26 @@
     <string name="search_add_custom_engine_name_hint">Исем</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Эзләнәчәк сүз я сүзтезмә</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Сорауны “%s” юлы белән алыштырыгыз. Мисал өчен:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Күбрәк белү</string>
 
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Үзгә эзләү системасының нечкәлекләре</string>
     <!-- Accessibility description for the 'Learn more' link -->
     <string name="search_add_custom_engine_learn_more_description">Күбрәк белү сылтамасы</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Эзләү системасының исемен кертегез</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">“%s” исемле эзләү системасы инде бар.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Эзләнәсе сүзтезмәне кертегез</string>
     <!-- Text shown when a user leaves out the required template string -->
     <string name="search_add_custom_engine_error_missing_template">Эзләнәсе сүзтезмәнең Мисал форматына туры килүен тикшерегез</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">“%s” адресына тоташу хатасы</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s ясалды</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1369,6 +1432,8 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s бетерелде</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Өр яңа %s-ка рәхим итегез</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s яңартыла…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1377,6 +1442,13 @@
     <string name="migration_icon_description">Күчерү тәмамланды</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Серсүзләр</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Рөхсәт итү өчен:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Android көйләүләренә керегез</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>Рөхсәтләр</b>’гә басыгыз]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Хәвефсез бәйләнеш</string>
@@ -1388,6 +1460,8 @@
     <string name="confirm_clear_permissions_site">Бу сайт өчен бирелгән барлык рөхсәтләрне дә чистартуны раслыйсызмы?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
     <string name="confirm_clear_permission_site">Әлеге сайт өчен бирелгән бу рөхсәтне кире алуны раслыйсызмы?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Сайт өчен чыгармалар юк</string>
     <!-- Label for the Pocket default top site -->
     <string name="pocket_top_articles">Төп мәкаләләр</string>
     <!-- Bookmark deletion confirmation -->
@@ -1407,6 +1481,12 @@
     <string name="dialog_delete_positive">Бетерү</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Логин көйләүләре </string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Логинның веб-адресы өчен үзгәртелә торган текст кыры.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Логинның кулланучы исеме өчен үзгәртелә торган текст кыры.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Логинның серсүзе өчен үзгәртелә торган текст кыры.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Логин үзгәрешләрен саклау.</string>
     <!--  The button description to discard changes to an edited login. -->
@@ -1421,9 +1501,20 @@
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Хәзер сөйләгез</string>
 
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Мондый исемле кулланучы бар инде</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Башка бер җиһазны тоташтыру.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Зинһар, сайтка яңадан керегез.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Зинһар, таблар синхронлауны кабызыгыз.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Башка җиһазларыгыздагы Firefox-ларда ачык таблар юк.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Башка җиһазларыгызда ачылган таблар исемлеген карау.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Синхронлауга керү</string>
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
@@ -1431,7 +1522,9 @@
 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Яхшы, аңладым</string>
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Иң күп каралган сайтларны күрсәтү</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Исем</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Төп сайт исеме</string>
