@@ -203,17 +203,17 @@
 }
 
 .playButton {
-  background-image: url(chrome://global/skin/media/pauseButton.svg);
+  background-image: url(chrome://global/skin/media/pause-fill.svg);
 }
 .playButton[paused] {
-  background-image: url(chrome://global/skin/media/playButton.svg);
+  background-image: url(chrome://global/skin/media/play-fill.svg);
 }
 
 .muteButton {
-  background-image: url(chrome://global/skin/media/audioUnmutedButton.svg);
+  background-image: url(chrome://global/skin/media/audio.svg);
 }
 .muteButton[muted] {
-  background-image: url(chrome://global/skin/media/audioMutedButton.svg);
+  background-image: url(chrome://global/skin/media/audio-muted.svg);
 }
 .muteButton[noAudio] {
   background-image: url(chrome://global/skin/media/audioNoAudioButton.svg);
@@ -477,7 +477,7 @@
 .statusIcon[type="pictureInPicture"] {
   min-width: 84px;
   min-height: 84px;
-  background-image: url(chrome://global/skin/media/pictureinpicture.svg);
+  background-image: url(chrome://global/skin/media/picture-in-picture-open.svg);
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -546,7 +546,7 @@
   min-width: var(--clickToPlay-size);
   min-height: var(--clickToPlay-size);
   border-radius: 50%;
-  background-image: url(chrome://global/skin/media/playButton.svg);
+  background-image: url(chrome://global/skin/media/play-fill.svg);
   background-repeat: no-repeat;
   background-position: 54% 50%;
   background-size: 40% 40%;
@@ -680,7 +680,7 @@
   top: 8px;
   left: 8px;
   pointer-events: none;
-  background-image: url("chrome://global/skin/media/pictureinpicture.svg");
+  background-image: url("chrome://global/skin/media/picture-in-picture-open.svg");
   background-size: var(--pip-icon-size) var(--pip-icon-size);
   -moz-context-properties: fill;
   fill: currentColor;
