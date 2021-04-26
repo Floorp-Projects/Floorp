@@ -210,8 +210,8 @@ impl Param {
                 g,
                 a: 1.,
                 b: 0.,
-                c: 0.,
-                d: -1.,
+                c: 1.,
+                d: 0.,
                 e: 0.,
                 f: 0.,
             },
@@ -262,6 +262,78 @@ impl Param {
             (self.a * x + self.b).powf(self.g) + self.e
         }
     }
+
+    fn invert(&self) -> Option<Param> {
+        // First check if the function is continuous at the cross-over point d.
+        let d1 = (self.a * self.d + self.b).powf(self.g) + self.e;
+        let d2 = self.c * self.d + self.f;
+
+        if (d1 - d2).abs() > 0.1 {
+            return None;
+        }
+        let d = d1;
+
+        // y = (a * x + b)^g + e
+        // y - e = (a * x + b)^g
+        // (y - e)^(1/g) = a*x + b
+        // (y - e)^(1/g) - b = a*x
+        // (y - e)^(1/g)/a - b/a = x
+        // ((y - e)/a^g)^(1/g) - b/a = x
+        // ((1/(a^g)) * y - e/(a^g))^(1/g) - b/a = x
+        let a = 1. / self.a.powf(self.g);
+        let b = -self.e / self.a.powf(self.g);
+        let g = 1. / self.g;
+        let e = -self.b / self.a;
+
+        // y = c * x + f
+        // y - f = c * x
+        // y/c - f/c = x
+        let (c, f);
+        if d <= 0. {
+            c = 1.;
+            f = 0.;
+        } else {
+            c = 1. / self.c;
+            f = -self.f / self.c;
+        }
+
+        // if self.d > 0. and self.c == 0 as is likely with type 1 and 2 parametric function
+        // then c and f will not be finite.
+        if !(g.is_finite()
+            && a.is_finite()
+            && b.is_finite()
+            && c.is_finite()
+            && d.is_finite()
+            && e.is_finite()
+            && f.is_finite())
+        {
+            return None;
+        }
+
+        Some(Param {
+            g,
+            a,
+            b,
+            c,
+            d,
+            e,
+            f,
+        })
+    }
+}
+
+#[test]
+fn param_invert() {
+    let p3 = Param::new(&[2.4, 0.948, 0.052, 0.077, 0.04]);
+    p3.invert().unwrap();
+    let g2_2 = Param::new(&[2.2]);
+    g2_2.invert().unwrap();
+    let g2_2 = Param::new(&[2.2, 0.9, 0.052]);
+    g2_2.invert().unwrap();
+    let g2_2 = dbg!(Param::new(&[2.2, 0.9, -0.52]));
+    g2_2.invert().unwrap();
+    let g2_2 = dbg!(Param::new(&[2.2, 0.9, -0.52, 0.1]));
+    assert!(g2_2.invert().is_none());
 }
 
 /* The following code is copied nearly directly from lcms.
