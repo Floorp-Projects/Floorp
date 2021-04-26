@@ -1839,6 +1839,11 @@
   value: false
   mirror: always
 
+- name: dom.mouse_capture.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for Performance.mozMemory enabled?
 - name: dom.enable_memory_stats
   type: bool
@@ -5658,7 +5663,7 @@
     mirror: always
 #endif  // NIGHTLY_BUILD
 
-  # Experimental support for the egonomic brand check proposal. 
+  # Experimental support for the ergonomic brand check proposal.
 - name: javascript.options.experimental.ergonomic_brand_checks
   type: bool
   value: false
