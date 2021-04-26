@@ -897,6 +897,7 @@ class BrowserParent final : public PBrowserParent,
   LayersObserverEpoch mLayerTreeEpoch;
 
   Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
+  Maybe<ScreenRect> mRemoteDocumentRect;
 
   nsIntRect mRect;
   ScreenIntSize mDimensions;

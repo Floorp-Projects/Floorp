@@ -2491,7 +2491,14 @@ BrowserParent::GetChildToParentConversionMatrix() {
 void BrowserParent::SetChildToParentConversionMatrix(
     const Maybe<LayoutDeviceToLayoutDeviceMatrix4x4>& aMatrix,
     const ScreenRect& aRemoteDocumentRect) {
+  if (mChildToParentConversionMatrix == aMatrix &&
+      mRemoteDocumentRect.isSome() &&
+      mRemoteDocumentRect.value() == aRemoteDocumentRect) {
+    return;
+  }
+
   mChildToParentConversionMatrix = aMatrix;
+  mRemoteDocumentRect = Some(aRemoteDocumentRect);
   if (mIsDestroyed) {
     return;
   }
