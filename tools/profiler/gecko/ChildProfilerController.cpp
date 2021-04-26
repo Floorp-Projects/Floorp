@@ -11,6 +11,7 @@
 #include "mozilla/ProfilerState.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "nsExceptionHandler.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;
@@ -26,15 +27,25 @@ already_AddRefed<ChildProfilerController> ChildProfilerController::Create(
   return cpc.forget();
 }
 
-ChildProfilerController::ChildProfilerController() {
+ChildProfilerController::ChildProfilerController()
+    : mThread(nullptr, "ChildProfilerController::mThread") {
   MOZ_COUNT_CTOR(ChildProfilerController);
 }
 
 void ChildProfilerController::Init(Endpoint<PProfilerChild>&& aEndpoint) {
-  if (NS_SUCCEEDED(
-          NS_NewNamedThread("ProfilerChild", getter_AddRefs(mThread)))) {
+  RefPtr<nsIThread> newProfilerChildThread;
+  if (NS_SUCCEEDED(NS_NewNamedThread("ProfilerChild",
+                                     getter_AddRefs(newProfilerChildThread)))) {
+    {
+      auto lock = mThread.Lock();
+      RefPtr<nsIThread>& lockedmThread = lock.ref();
+      MOZ_ASSERT(!lockedmThread, "There is already a ProfilerChild thread");
+      // Copy ref'd ptr into mThread. Don't move/swap, so that
+      // newProfilerChildThread can be used below.
+      lockedmThread = newProfilerChildThread;
+    }
     // Now that mThread has been set, run SetupProfilerChild on the thread.
-    mThread->Dispatch(
+    newProfilerChildThread->Dispatch(
         NewRunnableMethod<Endpoint<PProfilerChild>&&>(
             "ChildProfilerController::SetupProfilerChild", this,
             &ChildProfilerController::SetupProfilerChild, std::move(aEndpoint)),
@@ -54,35 +65,61 @@ void ChildProfilerController::Shutdown() {
 
 void ChildProfilerController::ShutdownAndMaybeGrabShutdownProfileFirst(
     nsCString* aOutShutdownProfile) {
-  if (mThread) {
+  // First, get the owning reference out of mThread, so it cannot be used in
+  // ChildProfilerController after this (including re-entrantly during the
+  // profilerChildThread->Shutdown() inner event loop below).
+  RefPtr<nsIThread> profilerChildThread;
+  {
+    auto lock = mThread.Lock();
+    RefPtr<nsIThread>& lockedmThread = lock.ref();
+    lockedmThread.swap(profilerChildThread);
+  }
+  if (profilerChildThread) {
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::ProfilerChildShutdownPhase,
         profiler_is_active()
             ? "Profiling - Dispatching ShutdownProfilerChild"_ns
             : "Not profiling - Dispatching ShutdownProfilerChild"_ns);
-    mThread->Dispatch(NewRunnableMethod<nsCString*>(
-                          "ChildProfilerController::ShutdownProfilerChild",
-                          this, &ChildProfilerController::ShutdownProfilerChild,
-                          aOutShutdownProfile),
-                      NS_DISPATCH_NORMAL);
+    profilerChildThread->Dispatch(
+        NewRunnableMethod<nsCString*>(
+            "ChildProfilerController::ShutdownProfilerChild", this,
+            &ChildProfilerController::ShutdownProfilerChild,
+            aOutShutdownProfile),
+        NS_DISPATCH_NORMAL);
     // Shut down the thread. This call will spin until all runnables (including
     // the ShutdownProfilerChild runnable) have been processed.
-    mThread->Shutdown();
-    mThread = nullptr;
+    profilerChildThread->Shutdown();
+    // At this point, `profilerChildThread` should be the last reference to the
+    // thread, so it will now get destroyed.
   }
 }
 
 ChildProfilerController::~ChildProfilerController() {
   MOZ_COUNT_DTOR(ChildProfilerController);
 
-  MOZ_ASSERT(!mThread,
-             "Please call Shutdown before destroying ChildProfilerController");
+#ifdef DEBUG
+  {
+    auto lock = mThread.Lock();
+    RefPtr<nsIThread>& lockedmThread = lock.ref();
+    MOZ_ASSERT(
+        !lockedmThread,
+        "Please call Shutdown before destroying ChildProfilerController");
+  }
+#endif
   MOZ_ASSERT(!mProfilerChild);
 }
 
 void ChildProfilerController::SetupProfilerChild(
     Endpoint<PProfilerChild>&& aEndpoint) {
-  MOZ_RELEASE_ASSERT(mThread == NS_GetCurrentThread());
+  {
+    auto lock = mThread.Lock();
+    RefPtr<nsIThread>& lockedmThread = lock.ref();
+    // We should be on the ProfilerChild thread. In rare cases, we could already
+    // be in shutdown, in which case mThread is null; we still need to continue,
+    // so that ShutdownProfilerChild can work on a valid mProfilerChild.
+    MOZ_RELEASE_ASSERT(!lockedmThread ||
+                       lockedmThread == NS_GetCurrentThread());
+  }
   MOZ_ASSERT(aEndpoint.IsValid());
 
   mProfilerChild = new ProfilerChild();
@@ -95,8 +132,6 @@ void ChildProfilerController::SetupProfilerChild(
 
 void ChildProfilerController::ShutdownProfilerChild(
     nsCString* aOutShutdownProfile) {
-  MOZ_RELEASE_ASSERT(mThread == NS_GetCurrentThread());
-
   const bool isProfiling = profiler_is_active();
   if (aOutShutdownProfile) {
     CrashReporter::AnnotateCrashReport(

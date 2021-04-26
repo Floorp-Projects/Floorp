@@ -9,6 +9,7 @@
 #include "base/process.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 #include "nsStringFwd.h"
@@ -43,7 +44,7 @@ class ChildProfilerController final {
   void ShutdownProfilerChild(nsCString* aOutShutdownProfile);
 
   RefPtr<ProfilerChild> mProfilerChild;  // only accessed on mThread
-  RefPtr<nsIThread> mThread;
+  DataMutex<RefPtr<nsIThread>> mThread;
 };
 
 }  // namespace mozilla
