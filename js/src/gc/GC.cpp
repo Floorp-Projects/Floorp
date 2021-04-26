@@ -3175,8 +3175,8 @@ void ArenaLists::checkNoArenasToUpdateForKind(AllocKind kind) {
 #endif
 }
 
-SliceBudget::SliceBudget(TimeBudget time, int64_t stepsPerTimeCheckArg)
- : budget(TimeBudget(time)), stepsPerTimeCheck(stepsPerTimeCheckArg), counter(stepsPerTimeCheckArg) {
+SliceBudget::SliceBudget(TimeBudget time)
+    : budget(time), counter(StepsPerTimeCheck) {
   budget.as<TimeBudget>().deadline =
       ReallyNow() + TimeDuration::FromMilliseconds(timeBudget());
 }
@@ -3206,7 +3206,7 @@ bool SliceBudget::checkOverBudget() {
     return true;
   }
 
-  counter = stepsPerTimeCheck;
+  counter = StepsPerTimeCheck;
   return false;
 }
 
