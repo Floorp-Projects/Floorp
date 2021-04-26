@@ -602,7 +602,7 @@
 }
 
 .tab-icon-sound[pictureinpicture] {
-  list-style-image: url(chrome://global/skin/media/pictureinpicture.svg);
+  list-style-image: url(chrome://global/skin/media/picture-in-picture-open.svg);
   width: 14px;
   height: 14px;
   opacity: .8;
