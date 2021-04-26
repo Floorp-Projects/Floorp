@@ -45,6 +45,21 @@ if CONFIG["MOZ_DEBUG"] == "1":
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["_DEBUG"] = True
 
+if CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["ANDROID"] = True
+    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["WEBRTC_ANDROID"] = True
+    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    OS_LIBS += [
+        "GLESv2",
+        "log"
+    ]
+
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["WEBRTC_MAC"] = True
@@ -76,5 +91,30 @@ if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
+
+if CONFIG["CPU_ARCH"] == "arm":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+    OS_LIBS += [
+        "android_support",
+        "unwind"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+    OS_LIBS += [
+        "android_support"
+    ]
 
 Library("builtin_video_encoder_factory_gn")

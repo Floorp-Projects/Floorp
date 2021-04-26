@@ -45,6 +45,20 @@ if CONFIG["MOZ_DEBUG"] == "1":
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["_DEBUG"] = True
 
+if CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["ANDROID"] = True
+    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["WEBRTC_ANDROID"] = True
+    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    OS_LIBS += [
+        "log"
+    ]
+
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["WEBRTC_MAC"] = True
@@ -86,6 +100,50 @@ if CONFIG["CPU_ARCH"] == "aarch64":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_neon.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "arm":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+    OS_LIBS += [
+        "android_support",
+        "unwind"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_neon.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86":
+
+    CXXFLAGS += [
+        "-msse2",
+        "-msse2"
+    ]
+
+    OS_LIBS += [
+        "android_support"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_sse2.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
