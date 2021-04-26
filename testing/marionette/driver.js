@@ -1446,6 +1446,9 @@ GeckoDriver.prototype.setWindowHandle = async function(
       tab?.linkedBrowser.browsingContext;
   }
 
+  // Check for existing dialogs for the new window
+  this.dialog = modal.findModalDialogs(this.curBrowser);
+
   if (focus) {
     await this.curBrowser.focusWindow();
   }
