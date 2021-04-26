@@ -85,8 +85,10 @@ class mozInlineSpellStatus {
  private:
   // @param aSpellChecker must be non-nullptr.
   // @param aForceNavigationWordCheck see mForceNavigationWordCheck.
+  // @param aNewNavigationPositionOffset see mNewNavigationPositionOffset.
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker,
-                                bool aForceNavigationWordCheck);
+                                bool aForceNavigationWordCheck,
+                                int32_t aNewNavigationPositionOffset);
 
   // For resuming a previously started check.
   Operation mOp;
@@ -121,7 +123,7 @@ class mozInlineSpellStatus {
   const bool mForceNavigationWordCheck;
 
   // Contains the offset passed in to HandleNavigationEvent
-  int32_t mNewNavigationPositionOffset;
+  const int32_t mNewNavigationPositionOffset;
 
   nsresult FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil);
 
