@@ -212,6 +212,7 @@ partial interface Document {
    *
    * @see <https://developer.mozilla.org/en/DOM/document.releaseCapture>
    */
+  [Deprecated=DocumentReleaseCapture, Pref="dom.mouse_capture.enabled"]
   void releaseCapture();
   /**
    * Use the given DOM element as the source image of target |-moz-element()|.
