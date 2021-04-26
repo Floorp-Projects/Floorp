@@ -84,7 +84,9 @@ class mozInlineSpellStatus {
 
  private:
   // @param aSpellChecker must be non-nullptr.
-  explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
+  // @param aForceNavigationWordCheck see mForceNavigationWordCheck.
+  explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker,
+                                bool aForceNavigationWordCheck);
 
   // For resuming a previously started check.
   Operation mOp;
@@ -116,7 +118,7 @@ class mozInlineSpellStatus {
   // Set when we should force checking the current word. See
   // mozInlineSpellChecker::HandleNavigationEvent for a description of why we
   // have this.
-  bool mForceNavigationWordCheck;
+  const bool mForceNavigationWordCheck;
 
   // Contains the offset passed in to HandleNavigationEvent
   int32_t mNewNavigationPositionOffset;
