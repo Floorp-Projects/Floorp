@@ -91,7 +91,7 @@ pub(crate) struct lutmABType {
     pub b_curves: [Option<Box<curveType>>; MAX_CHANNELS],
     pub m_curves: [Option<Box<curveType>>; MAX_CHANNELS],
 }
-
+#[derive(Clone)]
 pub(crate) enum curveType {
     Curve(Vec<uInt16Number>),
     Parametric(Vec<f32>),
@@ -1021,6 +1021,51 @@ impl Profile {
     /// Returns true if this profile is sRGB
     pub fn is_sRGB(&self) -> bool {
         matches!(self.is_srgb, Some(true))
+    }
+
+    pub(crate) fn new_sRGB_parametric() -> Box<Profile> {
+        let primaries = qcms_CIE_xyYTRIPLE {
+            red: {
+                qcms_CIE_xyY {
+                    x: 0.6400,
+                    y: 0.3300,
+                    Y: 1.0,
+                }
+            },
+            green: {
+                qcms_CIE_xyY {
+                    x: 0.3000,
+                    y: 0.6000,
+                    Y: 1.0,
+                }
+            },
+            blue: {
+                qcms_CIE_xyY {
+                    x: 0.1500,
+                    y: 0.0600,
+                    Y: 1.0,
+                }
+            },
+        };
+        let white_point = qcms_white_point_sRGB();
+        let mut profile = profile_create();
+        set_rgb_colorants(&mut profile, white_point, primaries);
+
+        let curve = Box::new(curveType::Parametric(vec![
+            2.4,
+            1. / 1.055,
+            0.055 / 1.055,
+            1. / 12.92,
+            0.04045,
+        ]));
+        profile.redTRC = Some(curve.clone());
+        profile.blueTRC = Some(curve.clone());
+        profile.greenTRC = Some(curve);
+        profile.class_type = DISPLAY_DEVICE_PROFILE;
+        profile.rendering_intent = Perceptual;
+        profile.color_space = RGB_SIGNATURE;
+        profile.pcs = XYZ_TYPE;
+        profile
     }
 
     /// Create a new profile with D50 adopted white and identity transform functions
