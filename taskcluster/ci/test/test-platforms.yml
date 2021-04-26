@@ -369,6 +369,13 @@ macosx1100-64-qr/opt:
         - macosx1100-64-jittests
         - macosx1100-64-qr-failures-tests
 
+macosx1015-64-shippable/opt:
+    build-platform: macosx64-shippable/opt
+    test-sets:
+        - macosx64-talos
+        - awsy
+        - browsertime
+
 macosx1015-64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
