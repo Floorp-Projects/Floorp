@@ -684,10 +684,24 @@ function wait(ms) {
  *        A message to output if the condition fails.
  * @param number interval [optional]
  *        How often the predicate is invoked, in milliseconds.
+ *        Can be set globally for a test via `waitFor.overrideIntervalForTestFile = someNumber;`.
+ * @param number maxTries [optional]
+ *        How many times the predicate is invoked before timing out.
+ *        Can be set globally for a test via `waitFor.overrideMaxTriesForTestFile = someNumber;`.
  * @return object
  *         A promise that is resolved with the result of the condition.
  */
 async function waitFor(condition, message = "", interval = 10, maxTries = 500) {
+  // Update interval & maxTries if overrides are defined on the waitFor object.
+  interval =
+    typeof waitFor.overrideIntervalForTestFile !== "undefined"
+      ? waitFor.overrideIntervalForTestFile
+      : interval;
+  maxTries =
+    typeof waitFor.overrideMaxTriesForTestFile !== "undefined"
+      ? waitFor.overrideMaxTriesForTestFile
+      : maxTries;
+
   try {
     const value = await BrowserTestUtils.waitForCondition(
       condition,
