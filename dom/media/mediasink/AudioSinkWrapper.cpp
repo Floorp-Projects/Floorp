@@ -171,7 +171,7 @@ nsresult AudioSinkWrapper::Start(const TimeUnit& aStartTime,
     return NS_OK;
   }
 
-  mAudioSink.reset(mCreator->Create());
+  mAudioSink.reset(mCreator->Create(aStartTime));
   Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> rv =
       mAudioSink->Start(mParams);
   if (rv.isErr()) {
