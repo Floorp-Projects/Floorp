@@ -472,6 +472,8 @@ class ShapeTable {
     set_.replaceKey(ptr, key, newShape);
   }
 
+  void compact() { set_.compact(); }
+
   void trace(JSTracer* trc);
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkAfterMovingGC();

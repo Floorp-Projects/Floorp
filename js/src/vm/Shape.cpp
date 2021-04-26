@@ -139,6 +139,10 @@ void ShapeCachePtr::maybePurgeCache(JSFreeOp* fop, Shape* shape) {
     if (table->freeList() == SHAPE_INVALID_SLOT) {
       fop->delete_(shape, getTablePointer(), MemoryUse::ShapeCache);
       p = 0;
+    } else {
+      // We can't purge this table because that would lose the slot freeList,
+      // but we can compact its HashSet.
+      table->compact();
     }
   } else if (isIC()) {
     fop->delete_<ShapeIC>(shape, getICPointer(), MemoryUse::ShapeCache);
