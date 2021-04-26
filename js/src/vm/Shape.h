@@ -337,8 +337,6 @@ class PropertyTree {
 
 class TenuringTracer;
 
-enum class MaybeAdding { Adding = true, NotAdding = false };
-
 class AutoKeepShapeCaches;
 
 /*
@@ -406,10 +404,6 @@ class ShapeIC {
   UniquePtr<Entry[], JS::FreePolicy> entries_;
 };
 
-/*
- * ShapeTable uses multiplicative hashing, but specialized to
- * minimize footprint.
- */
 class ShapeTable {
  public:
   friend class NativeObject;
@@ -417,144 +411,71 @@ class ShapeTable {
   friend class Shape;
   friend class ShapeCachePtr;
 
-  class Entry {
-    // js::Shape pointer tag bit indicating a collision.
-    static const uintptr_t SHAPE_COLLISION = 1;
-    static Shape* const SHAPE_REMOVED;  // = SHAPE_COLLISION
-
-    Shape* shape_;
-
-    Entry() = delete;
-    Entry(const Entry&) = delete;
-    Entry& operator=(const Entry&) = delete;
-
-   public:
-    bool isFree() const { return shape_ == nullptr; }
-    bool isRemoved() const { return shape_ == SHAPE_REMOVED; }
-    bool isLive() const { return !isFree() && !isRemoved(); }
-    bool hadCollision() const { return uintptr_t(shape_) & SHAPE_COLLISION; }
-
-    void setFree() { shape_ = nullptr; }
-    void setRemoved() { shape_ = SHAPE_REMOVED; }
-
-    Shape* shape() const {
-      return reinterpret_cast<Shape*>(uintptr_t(shape_) & ~SHAPE_COLLISION);
-    }
-
-    void setShape(Shape* shape) {
-      MOZ_ASSERT(isFree());
-      MOZ_ASSERT(shape);
-      MOZ_ASSERT(shape != SHAPE_REMOVED);
-      shape_ = shape;
-      MOZ_ASSERT(!hadCollision());
-    }
-
-    void flagCollision() {
-      shape_ = reinterpret_cast<Shape*>(uintptr_t(shape_) | SHAPE_COLLISION);
-    }
-    void setPreservingCollision(Shape* shape) {
-      shape_ = reinterpret_cast<Shape*>(uintptr_t(shape) |
-                                        uintptr_t(hadCollision()));
-    }
-  };
-
  private:
-  static const uint32_t HASH_BITS = mozilla::tl::BitSize<HashNumber>::value;
+  struct Hasher : public DefaultHasher<Shape*> {
+    using Key = Shape*;
+    using Lookup = PropertyKey;
+    static MOZ_ALWAYS_INLINE HashNumber hash(PropertyKey key);
+    static MOZ_ALWAYS_INLINE bool match(Shape* shape, PropertyKey key);
+  };
+  using Set = HashSet<Shape*, Hasher, SystemAllocPolicy>;
+  Set set_;
 
-  // This value is low because it's common for a ShapeTable to be created
-  // with an entryCount of zero.
-  static const uint32_t MIN_SIZE_LOG2 = 2;
-  static const uint32_t MIN_SIZE = Bit(MIN_SIZE_LOG2);
+  // SHAPE_INVALID_SLOT or head of slot freelist in owning dictionary-mode
+  // object.
+  uint32_t freeList_ = SHAPE_INVALID_SLOT;
 
-  uint32_t hashShift_; /* multiplicative hash shift */
-
-  uint32_t entryCount_;   /* number of entries in table */
-  uint32_t removedCount_; /* removed entry sentinels in table */
-
-  uint32_t freeList_; /* SHAPE_INVALID_SLOT or head of slot
-                         freelist in owning dictionary-mode
-                         object */
-
-  UniquePtr<Entry[], JS::FreePolicy>
-      entries_; /* table of ptrs to shared tree nodes */
-
-  template <MaybeAdding Adding>
-  MOZ_ALWAYS_INLINE Entry& searchUnchecked(jsid id);
-
- public:
-  explicit ShapeTable(uint32_t nentries)
-      : hashShift_(HASH_BITS - MIN_SIZE_LOG2),
-        entryCount_(nentries),
-        removedCount_(0),
-        freeList_(SHAPE_INVALID_SLOT),
-        entries_(nullptr) {
-    /* NB: entries is set by init, which must be called. */
+  MOZ_ALWAYS_INLINE Set::Ptr searchUnchecked(jsid id) {
+    return set_.lookup(id);
   }
 
+ public:
+  using Ptr = Set::Ptr;
+
+  ShapeTable() = default;
   ~ShapeTable() = default;
 
-  uint32_t entryCount() const { return entryCount_; }
+  uint32_t entryCount() const { return set_.count(); }
 
   uint32_t freeList() const { return freeList_; }
   void setFreeList(uint32_t slot) { freeList_ = slot; }
 
-  /*
-   * This counts the ShapeTable object itself (which must be
-   * heap-allocated) and its |entries| array.
-   */
+  // This counts the ShapeTable object itself (which must be heap-allocated) and
+  // its HashSet.
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-    return mallocSizeOf(this) + mallocSizeOf(entries_.get());
+    return mallocSizeOf(this) + set_.shallowSizeOfExcludingThis(mallocSizeOf);
   }
 
   // init() is fallible and reports OOM to the context.
   bool init(JSContext* cx, Shape* lastProp);
 
-  // change() is fallible but does not report OOM.
-  bool change(JSContext* cx, int log2Delta);
+  MOZ_ALWAYS_INLINE Set::Ptr search(jsid id, const AutoKeepShapeCaches&) {
+    return searchUnchecked(id);
+  }
+  MOZ_ALWAYS_INLINE Set::Ptr search(jsid id, const JS::AutoCheckCannotGC&) {
+    return searchUnchecked(id);
+  }
 
-  template <MaybeAdding Adding>
-  MOZ_ALWAYS_INLINE Entry& search(jsid id, const AutoKeepShapeCaches&);
+  bool add(JSContext* cx, PropertyKey key, Shape* shape) {
+    if (!set_.putNew(key, shape)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    return true;
+  }
 
-  template <MaybeAdding Adding>
-  MOZ_ALWAYS_INLINE Entry& search(jsid id, const JS::AutoCheckCannotGC&);
+  void remove(Ptr ptr) { set_.remove(ptr); }
+  void remove(PropertyKey key) { set_.remove(key); }
+
+  void replaceShape(Ptr ptr, PropertyKey key, Shape* newShape) {
+    MOZ_ASSERT(*ptr != newShape);
+    set_.replaceKey(ptr, key, newShape);
+  }
 
   void trace(JSTracer* trc);
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkAfterMovingGC();
 #endif
-
- private:
-  Entry& getEntry(uint32_t i) const {
-    MOZ_ASSERT(i < capacity());
-    return entries_[i];
-  }
-  void decEntryCount() {
-    MOZ_ASSERT(entryCount_ > 0);
-    entryCount_--;
-  }
-  void incEntryCount() {
-    entryCount_++;
-    MOZ_ASSERT(entryCount_ + removedCount_ <= capacity());
-  }
-  void incRemovedCount() {
-    removedCount_++;
-    MOZ_ASSERT(entryCount_ + removedCount_ <= capacity());
-  }
-
-  // By definition, hashShift = HASH_BITS - log2(capacity).
-  uint32_t capacity() const { return Bit(HASH_BITS - hashShift_); }
-
-  // Whether we need to grow.  We want to do this if the load factor
-  // is >= 0.75
-  bool needsToGrow() const {
-    uint32_t size = capacity();
-    return entryCount_ + removedCount_ >= size - (size >> 2);
-  }
-
-  // Try to grow the table.  On failure, reports out of memory on cx
-  // and returns false.  This will make any extant pointers into the
-  // table invalid.  Don't call this unless needsToGrow() is true.
-  bool grow(JSContext* cx);
 };
 
 /*
@@ -597,7 +518,6 @@ class ShapeCachePtr {
 
   ShapeCachePtr() : p(0) {}
 
-  template <MaybeAdding Adding>
   MOZ_ALWAYS_INLINE bool search(jsid id, Shape* start, Shape** foundShape);
 
   bool isIC() const { return (getType() == CacheType::IC); }
@@ -970,14 +890,12 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   void clearDictionaryNextPtr();
   void dictNextPreWriteBarrier();
 
-  template <MaybeAdding Adding = MaybeAdding::NotAdding>
   static MOZ_ALWAYS_INLINE Shape* search(JSContext* cx, Shape* start, jsid id);
 
-  template <MaybeAdding Adding = MaybeAdding::NotAdding>
   [[nodiscard]] static inline bool search(JSContext* cx, Shape* start, jsid id,
                                           const AutoKeepShapeCaches&,
                                           Shape** pshape, ShapeTable** ptable,
-                                          ShapeTable::Entry** pentry);
+                                          ShapeTable::Ptr* pptr);
 
   static inline Shape* searchNoHashify(Shape* start, jsid id);
 
@@ -1017,10 +935,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   }
 
   [[nodiscard]] MOZ_ALWAYS_INLINE bool maybeCreateCacheForLookup(JSContext* cx);
-
-  MOZ_ALWAYS_INLINE void updateDictionaryTable(ShapeTable* table,
-                                               ShapeTable::Entry* entry,
-                                               const AutoKeepShapeCaches& keep);
 
   void setObjectFlags(ObjectFlags flags) {
     MOZ_ASSERT(inDictionary());
@@ -1619,7 +1533,6 @@ inline bool Shape::matches(const StackShape& other) const {
                               other.attrs);
 }
 
-template <MaybeAdding Adding>
 MOZ_ALWAYS_INLINE bool ShapeCachePtr::search(jsid id, Shape* start,
                                              Shape** foundShape) {
   bool found = false;
@@ -1628,8 +1541,8 @@ MOZ_ALWAYS_INLINE bool ShapeCachePtr::search(jsid id, Shape* start,
     found = ic->search(id, foundShape);
   } else if (isTable()) {
     ShapeTable* table = getTablePointer();
-    ShapeTable::Entry& entry = table->searchUnchecked<Adding>(id);
-    *foundShape = entry.shape();
+    auto p = table->searchUnchecked(id);
+    *foundShape = p ? *p : nullptr;
     found = true;
   }
   return found;
@@ -1701,6 +1614,14 @@ class MOZ_RAII ShapePropertyIter {
   };
   FakePtr operator->() const { return {get()}; }
 };
+
+MOZ_ALWAYS_INLINE HashNumber ShapeTable::Hasher::hash(PropertyKey key) {
+  return HashId(key);
+}
+MOZ_ALWAYS_INLINE bool ShapeTable::Hasher::match(Shape* shape,
+                                                 PropertyKey key) {
+  return shape->propidRaw() == key;
+}
 
 }  // namespace js
 
