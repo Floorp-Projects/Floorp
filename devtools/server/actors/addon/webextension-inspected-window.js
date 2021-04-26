@@ -118,6 +118,7 @@ function CustomizedReload(params) {
 
   this.ignoreCache = params.ignoreCache;
   this.injectedScript = params.injectedScript;
+  this.userAgent = params.userAgent;
 
   this.customizedReloadWindows = new WeakSet();
 }
@@ -146,6 +147,10 @@ CustomizedReload.prototype = {
       this.waitForReloadCompleted = new Promise((resolve, reject) => {
         this.resolveReloadCompleted = resolve;
         this.rejectReloadCompleted = reject;
+
+        if (this.userAgent) {
+          this.browsingContext.customUserAgent = this.userAgent;
+        }
 
         let reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
 
@@ -259,6 +264,14 @@ CustomizedReload.prototype = {
 
     if (this.injectedScript) {
       Services.obs.removeObserver(this, "initial-document-element-inserted");
+    }
+
+    // Reset the customized user agent.
+    if (
+      this.userAgent &&
+      this.browsingContext.customUserAgent == this.userAgent
+    ) {
+      this.browsingContext.customUserAgent = null;
     }
 
     if (error) {
@@ -421,17 +434,18 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
               inspectedWindowEval: this.eval.bind(this),
               callerInfo,
               injectedScript,
+              userAgent,
               ignoreCache,
             });
 
             this.customizedReload
               .start()
-              .catch(err => {
-                console.error(err);
-              })
               .then(() => {
                 delete this.customizedReload;
-                this.emit("reload-ready");
+              })
+              .catch(err => {
+                delete this.customizedReload;
+                console.error(err);
               });
           } catch (err) {
             // Cancel the customized reload (if any) on exception during the
@@ -439,7 +453,6 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
             if (this.customizedReload) {
               this.customizedReload.stop(err);
             }
-            this.emit("reload-ready");
 
             throw err;
           }
@@ -451,7 +464,6 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
             reloadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
           }
           this.webNavigation.reload(reloadFlags);
-          this.emit("reload-ready");
         }
       };
 
