@@ -194,9 +194,8 @@ void js::NativeObject::checkShapeConsistency() {
       while (shape->parent) {
         MOZ_ASSERT_IF(lastProperty() != shape, !shape->hasTable());
 
-        ShapeTable::Entry& entry =
-            table->search<MaybeAdding::NotAdding>(shape->propid(), nogc);
-        MOZ_ASSERT(entry.shape() == shape);
+        ShapeTable::Ptr p = table->search(shape->propid(), nogc);
+        MOZ_ASSERT(*p == shape);
         shape = shape->parent;
       }
     }
@@ -219,9 +218,8 @@ void js::NativeObject::checkShapeConsistency() {
       if (ShapeTable* table = shape->maybeTable(nogc)) {
         MOZ_ASSERT(shape->parent);
         for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront()) {
-          ShapeTable::Entry& entry =
-              table->search<MaybeAdding::NotAdding>(r.front().propid(), nogc);
-          MOZ_ASSERT(entry.shape() == &r.front());
+          ShapeTable::Ptr p = table->search(r.front().propid(), nogc);
+          MOZ_ASSERT(*p == &r.front());
         }
       }
       if (prev) {
