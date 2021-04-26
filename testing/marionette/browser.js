@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://marionette/content/log.js",
   MessageManagerDestroyedPromise: "chrome://marionette/content/sync.js",
   waitForEvent: "chrome://marionette/content/sync.js",
-  waitForObserverTopic: "chrome://marionette/content/sync.js",
   WebElementEventTarget: "chrome://marionette/content/dom.js",
   windowManager: "chrome://marionette/content/window-manager.js",
 });
@@ -259,13 +258,7 @@ browser.Context = class {
    *     A promise which is resolved when the current window has been closed.
    */
   async closeWindow() {
-    const destroyed = waitForObserverTopic("xul-window-destroyed", {
-      checkFn: () => this.window && this.window.closed,
-    });
-
-    this.window.close();
-
-    return destroyed;
+    return windowManager.closeWindow(this.window);
   }
 
   /**
@@ -275,14 +268,7 @@ browser.Context = class {
    *     A promise which is resolved when the current window has been focused.
    */
   async focusWindow() {
-    if (Services.focus.activeWindow != this.window) {
-      let activated = waitForEvent(this.window, "activate");
-      let focused = waitForEvent(this.window, "focus", { capture: true });
-
-      this.window.focus();
-
-      await Promise.all([activated, focused]);
-    }
+    return windowManager.focusWindow(this.window);
   }
 
   /**
@@ -292,38 +278,7 @@ browser.Context = class {
    *     A promise resolving to the newly created chrome window.
    */
   async openBrowserWindow(focus = false, isPrivate = false) {
-    switch (AppInfo.name) {
-      case "Firefox":
-        // Open new browser window, and wait until it is fully loaded.
-        // Also wait for the window to be focused and activated to prevent a
-        // race condition when promptly focusing to the original window again.
-        const win = this.window.OpenBrowserWindow({ private: isPrivate });
-
-        const activated = waitForEvent(win, "activate");
-        const focused = waitForEvent(win, "focus", { capture: true });
-        const startup = waitForObserverTopic(
-          "browser-delayed-startup-finished",
-          {
-            checkFn: subject => subject == win,
-          }
-        );
-
-        win.focus();
-        await Promise.all([activated, focused, startup]);
-
-        // The new window shouldn't get focused. As such set the
-        // focus back to the opening window.
-        if (!focus) {
-          await this.focusWindow();
-        }
-
-        return win;
-
-      default:
-        throw new error.UnsupportedOperationError(
-          `openWindow() not supported in ${AppInfo.name}`
-        );
-    }
+    return windowManager.openBrowserWindow(this.window, focus, isPrivate);
   }
 
   /**
