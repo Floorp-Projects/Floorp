@@ -708,23 +708,21 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .addon-banner-item::after {
-  background: url(chrome://browser/skin/warning.svg) no-repeat center;
+  background: url(chrome://global/skin/icons/warning.svg) no-repeat center;
 }
 
 @media not (-moz-proton) {
 :root[lwt-popup-brighttext] .addon-banner-item::after {
-  -moz-context-properties: fill, stroke;
+  -moz-context-properties: fill;
   fill: #FFE900;
-  stroke: transparent;
 }
 }
 
 @media (-moz-proton) {
 .addon-banner-item::after {
   margin-inline-end: 8px;
-  -moz-context-properties: fill, stroke;
+  -moz-context-properties: fill;
   fill: var(--panel-banner-item-warning-icon-bgcolor);
-  stroke: var(--arrowpanel-background);
 }
 }
 
@@ -863,7 +861,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 /* Error states */
 #appMenu-fxa-status[fxastatus="unverified"] > #appMenu-fxa-label,
 #appMenu-fxa-status[fxastatus="login-failed"] > #appMenu-fxa-label {
-  list-style-image: url(chrome://browser/skin/warning.svg);
+  list-style-image: url(chrome://global/skin/icons/warning.svg);
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
@@ -946,18 +944,15 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   }
 
   #appMenu-fxa-status2[fxastatus="login-failed"] #appMenu-fxa-label2::after {
-    content: url("chrome://browser/skin/warning.svg");
-    -moz-context-properties: fill, stroke;
+    content: url("chrome://global/skin/icons/warning.svg");
+    -moz-context-properties: fill;
     fill: var(--panel-banner-item-warning-icon-bgcolor);
-    stroke: var(--arrowpanel-background);
   }
 
   #appMenu-fxa-status2[fxastatus="unverified"] #appMenu-fxa-label2::after {
-    content: url("chrome://global/skin/icons/info.svg");
+    content: url("chrome://global/skin/icons/info-filled.svg");
     -moz-context-properties: fill;
-    fill: var(--panel-banner-item-background-color);
-    background: var(--panel-banner-item-info-icon-bgcolor);
-    border-radius: 50%;
+    fill: var(--panel-banner-item-info-icon-bgcolor);
   }
 
 } /** END Proton **/
