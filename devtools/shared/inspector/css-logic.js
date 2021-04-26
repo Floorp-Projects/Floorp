@@ -527,7 +527,7 @@ function hasVisitedState(node) {
     return false;
   }
 
-  const NS_EVENT_STATE_VISITED = 1 << 24;
+  const NS_EVENT_STATE_VISITED = 1 << 19;
 
   return (
     !!(InspectorUtils.getContentState(node) & NS_EVENT_STATE_VISITED) ||
