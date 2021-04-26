@@ -350,9 +350,14 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
 /* static */ MOZ_ALWAYS_INLINE bool NativeObject::addProperty(
     JSContext* cx, HandleNativeObject obj, HandleId id, uint32_t slot,
     unsigned attrs, uint32_t* slotOut) {
+  // The object must not contain a property named |id|. The object must be
+  // extensible, but allow private fields and sparsifying dense elements.
   MOZ_ASSERT(!JSID_IS_VOID(id));
-  MOZ_ASSERT_IF(!id.isPrivateName(), obj->uninlinedNonProxyIsExtensible());
   MOZ_ASSERT(!obj->containsPure(id));
+  MOZ_ASSERT_IF(
+      !id.isPrivateName(),
+      obj->isExtensible() ||
+          (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))));
 
   AutoKeepShapeCaches keep(cx);
   ShapeTable* table = nullptr;
