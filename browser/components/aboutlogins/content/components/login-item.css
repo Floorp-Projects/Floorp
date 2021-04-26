@@ -325,7 +325,7 @@ input[name="password"] {
   /* !important is needed to override common.css styling for checkboxes */
   background-color: transparent !important;
   border-width: 0 !important;
-  background-image: url("chrome://browser/content/aboutlogins/icons/show-password.svg") !important;
+  background-image: url("chrome://browser/content/aboutlogins/icons/password.svg") !important;
   margin-inline: 10px 0 !important;
   cursor: pointer;
   -moz-context-properties: fill;
@@ -344,7 +344,7 @@ input[name="password"] {
 }
 
 .reveal-password-checkbox:checked {
-  background-image: url("chrome://browser/content/aboutlogins/icons/hide-password.svg") !important;
+  background-image: url("chrome://browser/content/aboutlogins/icons/password-hide.svg") !important;
 }
 
 .login-item-favicon {
