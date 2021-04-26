@@ -116,3 +116,15 @@ chrome/toolkit/skin/classic/global/icons/close.svg
 # Bug 1706206 - De-duplicate storage icons
 browser/chrome/browser/skin/classic/browser/notification-icons/indexedDB.svg
 browser/chrome/browser/skin/classic/browser/notification-icons/persistent-storage.svg
+
+# Bug 1707101 - De-duplicate Protections Panel icons
+browser/chrome/browser/skin/classic/browser/controlcenter/cryptominers-disabled.svg
+browser/chrome/browser/skin/classic/browser/notification-icons/block-cryptominer.svg
+browser/chrome/browser/skin/classic/browser/controlcenter/socialblock-disabled.svg
+browser/chrome/browser/skin/classic/browser/notification-icons/block-social.svg
+browser/chrome/browser/skin/classic/browser/controlcenter/tracker-image.svg
+browser/chrome/browser/skin/classic/browser/notification-icons/canvas.svg
+browser/chrome/browser/skin/classic/browser/controlcenter/tracker-image-disabled.svg
+browser/chrome/browser/skin/classic/browser/notification-icons/canvas-blocked.svg
+browser/chrome/browser/skin/classic/browser/controlcenter/fingerprinters.svg
+browser/chrome/browser/skin/classic/browser/notification-icons/webauthn.svg
