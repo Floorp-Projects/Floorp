@@ -3949,7 +3949,7 @@ browser.search:
     type: labeled_counter
     description: |
       Records counts of SERP pages with adverts displayed.
-      The key format is ‘<provider-name>’.
+      The key format is `<provider-name>`.
     send_in_pings:
       - metrics
     bugs:
@@ -3966,7 +3966,7 @@ browser.search:
     type: labeled_counter
     description: |
       Records clicks of adverts on SERP pages.
-      The key format is ‘<provider-name>’.
+      The key format is `<provider-name>`.
     send_in_pings:
       - metrics
     bugs:
