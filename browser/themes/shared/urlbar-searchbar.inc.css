@@ -388,9 +388,21 @@
 }
 } /*** END !proton ***/
 
+@media (-moz-proton) {
+#urlbar[searchmode] > #urlbar-input-container > #urlbar-search-mode-indicator {
+  display: inline-flex;
+}
+
+#urlbar[searchmode] > #urlbar-input-container > #urlbar-label-box {
+  display: none;
+}
+} /*** END proton ***/
+
+@media not (-moz-proton) {
 #urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-search-mode-indicator {
   display: inline-flex;
 }
+} /*** END !proton ***/
 
 /* Use system colors for low/high contrast mode */
 @media (prefers-contrast) {
