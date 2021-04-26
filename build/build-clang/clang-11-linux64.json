@@ -18,6 +18,7 @@
       "unpoison-thread-stacks_clang_10.patch",
       "downgrade-mangling-error.patch",
       "llvmorg-12-init-10926-gb79e990f401-LTO-new-pass-manager.patch",
+      "tsan-D101154.patch",
       "loosen-msvc-detection.patch"
     ]
 }
