@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
 trap 'echo "*** ERROR *** Generation did not complete successfully!"' ERR 
@@ -90,8 +90,8 @@ elif [ -d ./third_party/libwebrtc/buildtools ]; then
 fi
 ln -s $MOZ_LIBWEBRTC/src/buildtools ./third_party/libwebrtc/
 
-if [ -L ./third_party/libwebrtc/buildtools ]; then
-  rm ./third_party/libwebrtc/buildtools
+if [ -L ./third_party/libwebrtc/.git ]; then
+  rm ./third_party/libwebrtc/.git
 elif [ -d ./third_party/libwebrtc/.git ]; then
   rm -rf ./third_party/libwebrtc/.git
 fi
@@ -109,7 +109,7 @@ ln -s $MOZ_LIBWEBRTC_GIT/.git ./third_party/libwebrtc/
 for THIS_BUILD in $CONFIGS
 do
   echo "Building gn json file for $THIS_BUILD"
-  MOZCONFIG=dom/media/webrtc/third_party_build/gn-configs/$THIS_BUILD.mozconfig 
+  export MOZCONFIG=dom/media/webrtc/third_party_build/gn-configs/$THIS_BUILD.mozconfig 
   echo "Using MOZCONFIG=$MOZCONFIG"
 
   ./mach configure | tee $THIS_BUILD.configure.log
@@ -118,7 +118,7 @@ do
     exit 1
   fi
   ./mach build-backend -b GnConfigGen --verbose | tee $THIS_BUILD.build-backend.log
-  cp obj-$THIS_BUILD/third_party/libwebrtc/gn-output/*.json dom/media/webrtc/third_party_build/gn-configs
+  cp obj-$THIS_BUILD/third_party/libwebrtc/gn-output/$THIS_BUILD.json dom/media/webrtc/third_party_build/gn-configs
 done
 
 # run some fixup (mostly removing dev-machine dependent info) from json files
