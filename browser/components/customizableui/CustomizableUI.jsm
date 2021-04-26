@@ -641,13 +641,13 @@ var CustomizableUIInternal = {
       return;
     }
 
-    if (!gSavedState) {
+    let placements = gSavedState?.placements[CustomizableUI.AREA_NAVBAR];
+
+    if (!placements) {
       // The profile was created with this version, so no need to migrate.
       Services.prefs.setIntPref(kPrefProtonToolbarVersion, VERSION);
       return;
     }
-
-    let placements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
 
     // Remove the home button if it hasn't been used and is set to about:home
     if (currentVersion < 1) {
