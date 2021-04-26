@@ -246,9 +246,9 @@ add_task(async function testNullSavedState() {
 });
 
 /**
- * Checks that a saved state that is missing the placements value does not prevent migration.
+ * Checks that a saved state that is missing nav-bar placements does not prevent migration.
  */
-add_task(async function testNullPlacements() {
+add_task(async function testNoNavbarPlacements() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [kPrefProtonToolbarVersion, 0],
@@ -269,6 +269,38 @@ add_task(async function testNullPlacements() {
   CustomizableUIBSPass.gSavedState = {
     placements: { "widget-overflow-fixed-list": [] },
   };
+  CustomizableUIInternal._updateForNewProtonVersion();
+
+  Assert.ok(true, "_updateForNewProtonVersion didn't throw");
+
+  // Cleanup
+  CustomizableUIBSPass.gSavedState = oldState;
+
+  await SpecialPowers.popPrefEnv();
+});
+
+/**
+ * Checks that a saved state that is missing the placements value does not prevent migration.
+ */
+add_task(async function testNullPlacements() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [kPrefProtonToolbarVersion, 0],
+      [kPrefProtonToolbarEnabled, true],
+    ],
+  });
+
+  let oldState = CustomizableUIBSPass.gSavedState;
+
+  Assert.equal(
+    Services.prefs.getIntPref(kPrefProtonToolbarVersion),
+    0,
+    "Toolbar proton version is 0"
+  );
+
+  let { CustomizableUIInternal } = CustomizableUIBSPass;
+
+  CustomizableUIBSPass.gSavedState = {};
   CustomizableUIInternal._updateForNewProtonVersion();
 
   Assert.ok(true, "_updateForNewProtonVersion didn't throw");
