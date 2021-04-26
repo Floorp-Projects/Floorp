@@ -115,7 +115,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void RemoveDispatchedAsBlocking();
 
   void DisableSpdy() override;
-  void DoNotRemoveAltSvc() override { mDoNotRemoveAltSvc = true; }
   void DisableHttp3() override;
 
   nsHttpTransaction* QueryHttpTransaction() override { return this; }
@@ -250,7 +249,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
       nsresult aErrorCode);
 
   void OnHttp3BackupTimer();
-  void OnBackupConnectionReady(bool aTriggeredByHTTPSRR);
+  void OnBackupConnectionReady(bool aHTTPSRRUsed);
   void OnFastFallbackTimer();
   void HandleFallback(nsHttpConnectionInfo* aFallbackConnInfo);
   void MaybeCancelFallbackTimer();
