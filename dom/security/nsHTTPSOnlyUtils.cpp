@@ -666,6 +666,45 @@ TestHTTPAnswerRunnable::TestHTTPAnswerRunnable(
       mURI(aURI),
       mDocumentLoadListener(aDocumentLoadListener) {}
 
+/* static */
+bool TestHTTPAnswerRunnable::IsBackgroundRequestRedirected(
+    nsIHttpChannel* aChannel) {
+  // If the request was not redirected, then there is nothing to do here.
+  nsCOMPtr<nsILoadInfo> loadinfo = aChannel->LoadInfo();
+  if (loadinfo->RedirectChain().IsEmpty()) {
+    return false;
+  }
+
+  // If the final URI is not targeting an https scheme, then we definitely not
+  // dealing with a 'same-origin' redirect.
+  nsCOMPtr<nsIURI> finalURI;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalURI));
+  NS_ENSURE_SUCCESS(rv, false);
+  if (!finalURI->SchemeIs("https")) {
+    return false;
+  }
+
+  // If the background request was not http, then there is nothing to do here.
+  nsCOMPtr<nsIPrincipal> firstURIPrincipal;
+  loadinfo->RedirectChain()[0]->GetPrincipal(getter_AddRefs(firstURIPrincipal));
+  if (!firstURIPrincipal || !firstURIPrincipal->SchemeIs("http")) {
+    return false;
+  }
+
+  // By now we have verified that the inital background request was http and
+  // that the redirected scheme is https. We want to find the following case
+  // where the background channel redirects to the https version of the
+  // top-level request.
+  // --> background channel: http://example.com
+  //      |--> redirects to: https://example.com
+  // Now we have to check that the hosts are 'same-origin'.
+  nsAutoCString redirectHost;
+  nsAutoCString finalHost;
+  firstURIPrincipal->GetAsciiHost(redirectHost);
+  finalURI->GetAsciiHost(finalHost);
+  return finalHost.Equals(redirectHost);
+}
+
 NS_IMETHODIMP
 TestHTTPAnswerRunnable::OnStartRequest(nsIRequest* aRequest) {
   // If the request status is not OK, it means it encountered some
@@ -692,6 +731,17 @@ TestHTTPAnswerRunnable::OnStartRequest(nsIRequest* aRequest) {
         do_QueryInterface(httpsOnlyChannel);
     bool isAuthChannel = false;
     mozilla::Unused << httpChannelInternal->GetIsAuthChannel(&isAuthChannel);
+    // some server configurations need a long time to respond to an https
+    // connection, but also redirect any http connection to the https version of
+    // it. If the top-level load has not started yet, but the http background
+    // request redirects to https, then do not show the error page, but keep
+    // waiting for the https response of the upgraded top-level request.
+    if (!topLevelLoadInProgress) {
+      nsCOMPtr<nsIHttpChannel> backgroundHttpChannel =
+          do_QueryInterface(aRequest);
+      topLevelLoadInProgress =
+          IsBackgroundRequestRedirected(backgroundHttpChannel);
+    }
     if (!topLevelLoadInProgress && !isAuthChannel) {
       // Only really cancel the original top-level channel if it's
       // status is still NS_OK, otherwise it might have already
