@@ -1141,14 +1141,6 @@ void NativeObject::freeSlot(JSContext* cx, uint32_t slot) {
   setSlot(slot, UndefinedValue());
 }
 
-/* static */
-bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
-                               HandlePropertyName name, uint32_t slot,
-                               unsigned attrs, uint32_t* slotOut) {
-  RootedId id(cx, NameToId(name));
-  return addProperty(cx, obj, id, slot, attrs, slotOut);
-}
-
 template <AllowGC allowGC>
 bool js::NativeLookupOwnProperty(
     JSContext* cx, typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
