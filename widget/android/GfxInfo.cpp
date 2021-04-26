@@ -605,8 +605,11 @@ nsresult GfxInfo::GetFeatureStatusImpl(
                      gpu.Find("Adreno (TM) 5", /*ignoreCase*/ true) >= 0 ||
                      gpu.Find("Adreno (TM) 6", /*ignoreCase*/ true) >= 0;
 
-      // Enable Webrender on all Mali-Txxx GPUs
-      isUnblocked |= gpu.Find("Mali-T", /*ignoreCase*/ true) >= 0;
+      // Enable Webrender on all Mali-Txxx GPUs...
+      isUnblocked |=
+          gpu.Find("Mali-T", /*ignoreCase*/ true) >= 0 &&
+          // Excluing Android versions 5.1 or lower due to bug 1707283.
+          mSDKVersion > 22;
 
       // Enable Webrender on all Mali-Gxx GPUs...
       isUnblocked |= gpu.Find("Mali-G", /*ignoreCase*/ true) >= 0 &&
