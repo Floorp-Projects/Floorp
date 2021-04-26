@@ -236,12 +236,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     }
   };
 
-  const onDialogOpened = (action, dialog, win) => {
-    // Only care about modals of the currently selected window.
-    if (win !== chromeWindow) {
-      return;
-    }
-
+  const onDialogOpened = action => {
     if (action === modal.ACTION_OPENED) {
       logger.trace("Canceled page load listener because a dialog opened");
       checkDone({ finished: true });
