@@ -1037,26 +1037,11 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
   AssertValidArrayIndex(obj, id);
   AssertValidCustomDataProp(obj, attrs);
 
-  // Search for id in order to claim its entry if table has been allocated.
-  AutoKeepShapeCaches keep(cx);
-  RootedShape shape(cx);
-  {
-    ShapeTable* table;
-    ShapeTable::Entry* entry;
-    if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
-                                            shape.address(), &table, &entry)) {
-      return false;
-    }
-
-    MOZ_ASSERT(shape);
-
-    // Property exists: search must have returned a valid entry.
-    MOZ_ASSERT_IF(entry, !entry->isRemoved());
-  }
+  RootedShape shape(cx, obj->lastProperty()->search(cx, id));
+  MOZ_ASSERT(shape);
+  MOZ_ASSERT(shape->isCustomDataProperty());
 
   AssertCanChangeAttrs(shape, attrs);
-
-  MOZ_ASSERT(shape->isCustomDataProperty());
 
   ObjectFlags objectFlags =
       GetObjectFlagsForNewProperty(obj->lastProperty(), id, attrs, cx);
