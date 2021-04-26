@@ -1307,8 +1307,15 @@ static bool ChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
   }
 
   uint32_t slot;
-  if (!NativeObject::putProperty(cx, obj, id, attrs, &slot)) {
-    return false;
+  if (existing->isNativeProperty()) {
+    if (!NativeObject::putProperty(cx, obj, id, attrs, &slot)) {
+      return false;
+    }
+  } else {
+    if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT, attrs,
+                                   &slot)) {
+      return false;
+    }
   }
 
   obj->setSlot(slot, PrivateGCThingValue(gs));
@@ -1392,8 +1399,15 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
       }
     } else {
       uint32_t slot;
-      if (!NativeObject::putProperty(cx, obj, id, desc.attributes(), &slot)) {
-        return false;
+      if (existing->isNativeProperty()) {
+        if (!NativeObject::putProperty(cx, obj, id, desc.attributes(), &slot)) {
+          return false;
+        }
+      } else {
+        if (!NativeObject::addProperty(cx, obj, id, SHAPE_INVALID_SLOT,
+                                       desc.attributes(), &slot)) {
+          return false;
+        }
       }
       obj->setSlot(slot, desc.value());
     }

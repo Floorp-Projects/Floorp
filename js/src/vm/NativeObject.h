@@ -974,7 +974,7 @@ class NativeObject : public JSObject {
                           HandlePropertyName name, uint32_t slot,
                           unsigned attrs, uint32_t* slotOut);
 
-  // Add or change a property for id in this object.
+  // Change a property with key |id| in this object.
   static bool putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                           unsigned attrs, uint32_t* slotOut);
 

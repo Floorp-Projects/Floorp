@@ -928,29 +928,8 @@ bool NativeObject::putProperty(JSContext* cx, HandleNativeObject obj,
   MOZ_ASSERT(!(attrs & JSPROP_CUSTOM_DATA_PROP),
              "Use changeCustomDataPropAttributes for custom data properties");
 
-  // Search for id in order to claim its entry if table has been allocated.
-  AutoKeepShapeCaches keep(cx);
-  RootedShape shape(cx);
-  {
-    ShapeTable* table;
-    ShapeTable::Entry* entry;
-    if (!Shape::search<MaybeAdding::Adding>(cx, obj->lastProperty(), id, keep,
-                                            shape.address(), &table, &entry)) {
-      return false;
-    }
-
-    if (!shape) {
-      MOZ_ASSERT(
-          obj->isExtensible() ||
-              (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))),
-          "Can't add new property to non-extensible object");
-      return addPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT, attrs, table,
-                                 entry, keep, slotOut);
-    }
-
-    // Property exists: search must have returned a valid entry.
-    MOZ_ASSERT_IF(entry, !entry->isRemoved());
-  }
+  RootedShape shape(cx, obj->lastProperty()->search(cx, id));
+  MOZ_ASSERT(shape);
 
   AssertCanChangeAttrs(shape, attrs);
 
