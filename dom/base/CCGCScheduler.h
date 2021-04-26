@@ -58,6 +58,9 @@ static const TimeDuration kMaxCCLockedoutTime = TimeDuration::FromSeconds(30);
 // Trigger a CC if the purple buffer exceeds this size when we check it.
 static const uint32_t kCCPurpleLimit = 200;
 
+// How many cycle collected nodes to traverse between time checks.
+static const int64_t kNumCCNodesBetweenTimeChecks = 1000;
+
 enum class CCRunnerAction {
   None,
   ForgetSkippable,
@@ -351,7 +354,7 @@ js::SliceBudget CCGCScheduler::ComputeCCSliceBudget(
 
   if (aCCBeginTime.IsNull()) {
     // If no CC is in progress, use the standard slice time.
-    return js::SliceBudget(baseBudget);
+    return js::SliceBudget(js::TimeBudget(baseBudget), kNumCCNodesBetweenTimeChecks);
   }
 
   // Only run a limited slice if we're within the max running time.
@@ -380,7 +383,8 @@ js::SliceBudget CCGCScheduler::ComputeCCSliceBudget(
   // baseBudget will be negative and we will end up returning
   // laterSliceBudget.
   return js::SliceBudget(
-      std::max({delaySliceBudget, laterSliceBudget, baseBudget}));
+      js::TimeBudget(std::max({delaySliceBudget, laterSliceBudget, baseBudget})),
+      kNumCCNodesBetweenTimeChecks);
 }
 
 inline TimeDuration CCGCScheduler::ComputeInterSliceGCBudget(
