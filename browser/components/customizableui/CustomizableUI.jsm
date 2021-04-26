@@ -641,7 +641,7 @@ var CustomizableUIInternal = {
       return;
     }
 
-    let placements = gSavedState?.placements[CustomizableUI.AREA_NAVBAR];
+    let placements = gSavedState?.placements?.[CustomizableUI.AREA_NAVBAR];
 
     if (!placements) {
       // The profile was created with this version, so no need to migrate.
