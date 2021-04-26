@@ -61,6 +61,7 @@
 #endif
 
 #include "nsXULAppAPI.h"
+#include "nsIXULAppInfo.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 
@@ -3315,6 +3316,14 @@ void gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend) {
     Telemetry::ScalarSet(
         Telemetry::ScalarID::GFX_COMPOSITOR,
         NS_ConvertUTF8toUTF16(GetLayersBackendName(mCompositorBackend)));
+
+    nsCString geckoVersion;
+    nsCOMPtr<nsIXULAppInfo> app = do_GetService("@mozilla.org/xre/app-info;1");
+    if (app) {
+      app->GetVersion(geckoVersion);
+    }
+    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_LAST_COMPOSITOR_GECKO_VERSION,
+                         NS_ConvertASCIItoUTF16(geckoVersion));
 
     Telemetry::ScalarSet(
         Telemetry::ScalarID::GFX_FEATURE_WEBRENDER,
