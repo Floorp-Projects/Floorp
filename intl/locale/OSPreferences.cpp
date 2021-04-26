@@ -385,7 +385,7 @@ bool OSPreferences::GetDateTimeConnectorPattern(const nsACString& aLocale,
   // Check for a valid override pref and use that if present.
   nsAutoCString value;
   nsresult nr = Preferences::GetCString(
-      "intl.date_time.pattern_override.date_time_short", value);
+      "intl.date_time.pattern_override.connector_short", value);
   if (NS_SUCCEEDED(nr) && value.Find("{0}") != kNotFound &&
       value.Find("{1}") != kNotFound) {
     aRetVal = std::move(value);
