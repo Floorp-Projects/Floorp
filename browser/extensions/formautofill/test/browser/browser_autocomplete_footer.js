@@ -29,9 +29,7 @@ add_task(async function test_press_enter_on_footer() {
       true
     );
     for (let i = 0; i < listItemElems.length; i++) {
-      if (!listItemElems[i].collapsed) {
-        await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-      }
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     }
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
     info(`expecting tab: about:preferences#privacy opened`);
@@ -57,14 +55,9 @@ add_task(async function test_click_on_footer() {
 
     await openPopupOn(browser, "#organization");
     // Click on the footer
-    let optionButton = itemsBox.querySelector(
+    const optionButton = itemsBox.querySelector(
       ".autocomplete-richlistitem:last-child"
-    );
-    while (optionButton.collapsed) {
-      optionButton = optionButton.previousElementSibling;
-    }
-    optionButton = optionButton._optionButton;
-
+    )._optionButton;
     const prefTabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
       PRIVACY_PREF_URL,

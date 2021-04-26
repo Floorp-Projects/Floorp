@@ -688,16 +688,14 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let rejectPopup = () => {
-        ok(false, "Popup should not be displayed");
-      };
-      browser.addEventListener("popupshowing", rejectPopup, true);
-
-      await SimpleTest.promiseFocus(browser);
-      await focusAndWaitForFieldsIdentified(browser, "form #cc-number");
-      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-
-      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
+      await openPopupOn(browser, "form #cc-number").then(
+        () => {
+          return Promise.reject("Popup should not be displayed");
+        },
+        () => {
+          ok(true, "Popup has not been displayed");
+        }
+      );
 
       await SpecialPowers.spawn(browser, [], async function() {
         let form = content.document.getElementById("form");
@@ -717,12 +715,7 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
       });
 
       await sleep(1000);
-      is(
-        PopupNotifications.panel.state,
-        "closed",
-        "Doorhanger is still hidden"
-      );
-      browser.removeEventListener("popupshowing", rejectPopup, true);
+      is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
     }
   );
 
