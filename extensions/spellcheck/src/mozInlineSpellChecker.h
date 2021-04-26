@@ -84,14 +84,15 @@ class mozInlineSpellStatus {
 
  private:
   // @param aSpellChecker must be non-nullptr.
+  // @param aOp see mOp.
   // @param aForceNavigationWordCheck see mForceNavigationWordCheck.
   // @param aNewNavigationPositionOffset see mNewNavigationPositionOffset.
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker,
-                                bool aForceNavigationWordCheck,
+                                Operation aOp, bool aForceNavigationWordCheck,
                                 int32_t aNewNavigationPositionOffset);
 
   // For resuming a previously started check.
-  Operation mOp;
+  const Operation mOp;
 
   //
   // If we happen to know something was inserted, this is that range.
