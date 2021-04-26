@@ -553,6 +553,8 @@ void com_wl_add_surface(WLWindow* window, uint64_t surface_id, int offset_x,
     if (view_w > 0 && view_h > 0) {
       show_tile(window, tile);
 
+      wl_surface_set_buffer_transform(tile->surface,
+                                      WL_OUTPUT_TRANSFORM_FLIPPED_180);
       wl_subsurface_set_position(tile->subsurface, pos_x, pos_y);
       wp_viewport_set_source(tile->viewport, wl_fixed_from_double(view_x),
                              wl_fixed_from_double(view_y),
