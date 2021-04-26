@@ -93,13 +93,54 @@ class InspectedWindowCommand {
   }
 
   /**
-   * For more information about the arguments, please have a look at
-   * the actor specification: devtools/shared/specs/addon/webextension-inspected-window.js
-   * or actor: devtools/server/actors/addon/webextension-inspected-window.js
+   * Reload the target tab, optionally bypass cache, customize the userAgent and/or
+   * inject a script in targeted document or any of its sub-frame.
+   *
+   * @param {WebExtensionCallerInfo} callerInfo
+   *   the addonId and the url (the addon base url or the url of the actual caller
+   *   filename and lineNumber) used to log useful debugging information in the
+   *   produced error logs and eval stack trace.
+   * @param {Object} options
+   * @param {boolean|undefined} options.ignoreCache
+   *        Enable/disable the cache bypass headers.
+   * @param {string|undefined} options.injectedScript
+   *        Evaluate the provided javascript code in the top level and every sub-frame
+   *        created during the page reload, before any other script in the page has been
+   *        executed.
+   * @param {string|undefined} options.userAgent
+   *        Customize the userAgent during the page reload.
+   * @returns {Promise} A promise that resolves once the page is done loading when userAgent
+   *          or injectedScript option are passed. If those options are not provided, the
+   *          Promise will resolve after the reload was initiated.
    */
-  async reload(callerInfo, options) {
-    const front = await this.getFront();
-    return front.reload(callerInfo, options);
+  async reload(callerInfo, options = {}) {
+    if (this._reloadPending) {
+      return null;
+    }
+
+    this._reloadPending = true;
+
+    try {
+      // If this is called with a `userAgent` property, we need to update the target configuration
+      // so the custom user agent will be set on the parent process.
+      if (typeof options.userAgent !== undefined) {
+        await this.commands.targetConfigurationCommand.updateConfiguration({
+          customUserAgent: options.userAgent,
+        });
+      }
+
+      const front = await this.getFront();
+      const result = await front.reload(callerInfo, options);
+      this._reloadPending = false;
+
+      return result;
+    } catch (e) {
+      this._reloadPending = false;
+      Cu.reportError(e);
+      return Promise.reject({
+        message: "An unexpected error occurred",
+      });
+    }
   }
 }
 

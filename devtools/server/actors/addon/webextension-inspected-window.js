@@ -118,7 +118,6 @@ function CustomizedReload(params) {
 
   this.ignoreCache = params.ignoreCache;
   this.injectedScript = params.injectedScript;
-  this.userAgent = params.userAgent;
 
   this.customizedReloadWindows = new WeakSet();
 }
@@ -147,10 +146,6 @@ CustomizedReload.prototype = {
       this.waitForReloadCompleted = new Promise((resolve, reject) => {
         this.resolveReloadCompleted = resolve;
         this.rejectReloadCompleted = reject;
-
-        if (this.userAgent) {
-          this.browsingContext.customUserAgent = this.userAgent;
-        }
 
         let reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
 
@@ -264,14 +259,6 @@ CustomizedReload.prototype = {
 
     if (this.injectedScript) {
       Services.obs.removeObserver(this, "initial-document-element-inserted");
-    }
-
-    // Reset the customized user agent.
-    if (
-      this.userAgent &&
-      this.browsingContext.customUserAgent == this.userAgent
-    ) {
-      this.browsingContext.customUserAgent = null;
     }
 
     if (error) {
@@ -401,7 +388,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
      *   created during the page reload, before any other script in the page has been
      *   executed.
      */
-    reload(callerInfo, { ignoreCache, userAgent, injectedScript }) {
+    async reload(callerInfo, { ignoreCache, userAgent, injectedScript }) {
       if (isSystemPrincipalWindow(this.window)) {
         console.error(
           "Ignored inspectedWindow.reload on system principal target for " +
@@ -410,67 +397,68 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
         return {};
       }
 
-      const delayedReload = () => {
-        // This won't work while the browser is shutting down and we don't really
-        // care.
-        if (Services.startup.shuttingDown) {
-          return;
-        }
-
-        if (injectedScript || userAgent) {
-          if (this.customizedReload) {
-            // TODO(rpl): check what chrome does, and evaluate if queue the new reload
-            // after the current one has been completed.
-            console.error(
-              "Reload already in progress. Ignored inspectedWindow.reload for " +
-                `${callerInfo.url}:${callerInfo.lineNumber}`
-            );
+      await new Promise(resolve => {
+        const delayedReload = () => {
+          // This won't work while the browser is shutting down and we don't really
+          // care.
+          if (Services.startup.shuttingDown) {
             return;
           }
 
-          try {
-            this.customizedReload = new CustomizedReload({
-              targetActor: this.targetActor,
-              inspectedWindowEval: this.eval.bind(this),
-              callerInfo,
-              injectedScript,
-              userAgent,
-              ignoreCache,
-            });
-
-            this.customizedReload
-              .start()
-              .then(() => {
-                delete this.customizedReload;
-              })
-              .catch(err => {
-                delete this.customizedReload;
-                console.error(err);
-              });
-          } catch (err) {
-            // Cancel the customized reload (if any) on exception during the
-            // reload setup.
+          if (injectedScript || userAgent) {
             if (this.customizedReload) {
-              this.customizedReload.stop(err);
+              // TODO(rpl): check what chrome does, and evaluate if queue the new reload
+              // after the current one has been completed.
+              console.error(
+                "Reload already in progress. Ignored inspectedWindow.reload for " +
+                  `${callerInfo.url}:${callerInfo.lineNumber}`
+              );
+              return;
             }
 
-            throw err;
-          }
-        } else {
-          // If there is no custom user agent and/or injected script, then
-          // we can reload the target without subscribing any observer/listener.
-          let reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-          if (ignoreCache) {
-            reloadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-          }
-          this.webNavigation.reload(reloadFlags);
-        }
-      };
+            try {
+              this.customizedReload = new CustomizedReload({
+                targetActor: this.targetActor,
+                inspectedWindowEval: this.eval.bind(this),
+                callerInfo,
+                injectedScript,
+                ignoreCache,
+              });
 
-      // Execute the reload in a dispatched runnable, so that we can
-      // return the reply to the caller before the reload is actually
-      // started.
-      Services.tm.dispatchToMainThread(delayedReload);
+              this.customizedReload
+                .start()
+                .catch(err => {
+                  console.error(err);
+                })
+                .then(() => {
+                  delete this.customizedReload;
+                  resolve();
+                });
+            } catch (err) {
+              // Cancel the customized reload (if any) on exception during the
+              // reload setup.
+              if (this.customizedReload) {
+                this.customizedReload.stop(err);
+              }
+              throw err;
+            }
+          } else {
+            // If there is no custom user agent and/or injected script, then
+            // we can reload the target without subscribing any observer/listener.
+            let reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+            if (ignoreCache) {
+              reloadFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+            }
+            this.webNavigation.reload(reloadFlags);
+            resolve();
+          }
+        };
+
+        // Execute the reload in a dispatched runnable, so that we can
+        // return the reply to the caller before the reload is actually
+        // started.
+        Services.tm.dispatchToMainThread(delayedReload);
+      });
 
       return {};
     },
