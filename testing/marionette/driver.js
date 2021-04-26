@@ -1249,11 +1249,7 @@ GeckoDriver.prototype.switchToWindow = async function(cmd) {
   );
   assert.boolean(focus, pprint`Expected "focus" to be a boolean, got ${focus}`);
 
-  const id = parseInt(handle);
-  const found = this.findWindow(
-    windowManager.windows,
-    (win, winId) => id == winId
-  );
+  const found = windowManager.findWindowByHandle(parseInt(handle));
 
   let selected = false;
   if (found) {
@@ -1271,51 +1267,6 @@ GeckoDriver.prototype.switchToWindow = async function(cmd) {
 };
 
 /**
- * Find a specific window according to some filter function.
- *
- * @param {Iterable.<Window>} winIterable
- *     Iterable that emits Window objects.
- * @param {function(Window, number): boolean} filter
- *     A callback function taking two arguments; the window and
- *     the outerId of the window, and returning a boolean indicating
- *     whether the window is the target.
- *
- * @return {Object}
- *     A window handle object containing the window and some
- *     associated metadata.
- */
-GeckoDriver.prototype.findWindow = function(winIterable, filter) {
-  for (const win of winIterable) {
-    const browsingContext = win.docShell.browsingContext;
-    const tabBrowser = browser.getTabBrowser(win);
-
-    // In case the wanted window is a chrome window, we are done.
-    if (filter(win, browsingContext.id)) {
-      return { win, id: browsingContext.id, hasTabBrowser: !!tabBrowser };
-
-      // Otherwise check if the chrome window has a tab browser, and that it
-      // contains a tab with the wanted window handle.
-    } else if (tabBrowser && tabBrowser.tabs) {
-      for (let i = 0; i < tabBrowser.tabs.length; ++i) {
-        let contentBrowser = browser.getBrowserForTab(tabBrowser.tabs[i]);
-        let contentWindowId = windowManager.getIdForBrowser(contentBrowser);
-
-        if (filter(win, contentWindowId)) {
-          return {
-            win,
-            id: browsingContext.id,
-            hasTabBrowser: true,
-            tabIndex: i,
-          };
-        }
-      }
-    }
-  }
-
-  return null;
-};
-
-/**
  * Switch the marionette window to a given window. If the browser in
  * the window is unregistered, register that browser and wait for
  * the registration is complete. If |focus| is true then set the focus
@@ -1323,7 +1274,7 @@ GeckoDriver.prototype.findWindow = function(winIterable, filter) {
  *
  * @param {Object} winProperties
  *     Object containing window properties such as returned from
- *     GeckoDriver#findWindow
+ *     :js:func:`GeckoDriver#getWindowProperties`
  * @param {boolean=} focus
  *     A boolean value which determines whether to focus the window.
  *     Defaults to true.

@@ -64,6 +64,80 @@ class WindowManager {
   }
 
   /**
+   * Find a specific window matching the provided window handle.
+   *
+   * @param {Number} handle
+   *     The unique handle of either a chrome window or a content browser, as
+   *     returned by :js:func:`#getIdForBrowser` or :js:func:`#getIdForWindow`.
+   *
+   * @return {Object} A window properties object,
+   *     @see :js:func:`GeckoDriver#getWindowProperties`
+   */
+  findWindowByHandle(handle) {
+    for (const win of this.windows) {
+      // In case the wanted window is a chrome window, we are done.
+      const chromeWindowId = this.getIdForWindow(win);
+      if (chromeWindowId == handle) {
+        return this.getWindowProperties(win);
+      }
+
+      // Otherwise check if the chrome window has a tab browser, and that it
+      // contains a tab with the wanted window handle.
+      const tabBrowser = browser.getTabBrowser(win);
+      if (tabBrowser && tabBrowser.tabs) {
+        for (let i = 0; i < tabBrowser.tabs.length; ++i) {
+          let contentBrowser = browser.getBrowserForTab(tabBrowser.tabs[i]);
+          let contentWindowId = this.getIdForBrowser(contentBrowser);
+
+          if (contentWindowId == handle) {
+            return this.getWindowProperties(win, { tabIndex: i });
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * A set of properties describing a window and that should allow to uniquely
+   * identify it. The described window can either be a Chrome Window or a
+   * Content Window.
+   *
+   * @typedef {Object} WindowProperties
+   * @property {Window} win - The Chrome Window containing the window.
+   *     When describing a Chrome Window, this is the window itself.
+   * @property {String} id - The unique id of the containing Chrome Window.
+   * @property {Boolean} hasTabBrowser - `true` if the Chrome Window has a
+   *     tabBrowser.
+   * @property {Number} tabIndex - Optional, the index of the specific tab
+   *     within the window.
+   */
+
+  /**
+   * Returns a WindowProperties object, that can be used with :js:func:`GeckoDriver#setWindowHandle`.
+   *
+   * @param {Window} win
+   *     The Chrome Window for which we want to create a properties object.
+   * @param {Object} options
+   * @param {Number} options.tabIndex
+   *     Tab index of a specific Content Window in the specified Chrome Window.
+   * @return {WindowProperties} A window properties object.
+   */
+  getWindowProperties(win, options = {}) {
+    if (!(win instanceof Window)) {
+      throw new TypeError("Invalid argument, expected a Window object");
+    }
+
+    return {
+      win,
+      id: win.browsingContext.id,
+      hasTabBrowser: !!browser.getTabBrowser(win),
+      tabIndex: options.tabIndex,
+    };
+  }
+
+  /**
    * Forces an update for the given browser's id.
    */
   updateIdForBrowser(browserElement, newId) {
