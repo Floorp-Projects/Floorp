@@ -9417,12 +9417,6 @@
   value: 100
   mirror: always
 
-# The global half open sockets allowed for creating a backup connection.
-- name: network.http.http3.parallel_fallback_conn_limit
-  type: RelaxedAtomicUint32
-  value: 32
-  mirror: always
-
 # When true, a http request will be upgraded to https when HTTPS RR is
 # available.
 - name: network.dns.upgrade_with_https_rr
