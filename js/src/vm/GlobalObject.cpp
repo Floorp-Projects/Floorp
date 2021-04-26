@@ -1084,6 +1084,30 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
 }
 
 /* static */
+bool GlobalObject::getIntrinsicValueSlow(JSContext* cx,
+                                         Handle<GlobalObject*> global,
+                                         HandlePropertyName name,
+                                         MutableHandleValue value) {
+  if (!cx->runtime()->cloneSelfHostedValue(cx, name, value)) {
+    return false;
+  }
+
+  // It's possible in certain edge cases that cloning the value ended up
+  // defining the intrinsic. For instance, cloning can call NewArray, which
+  // resolves Array.prototype, which defines some self-hosted functions. If this
+  // happens we use the value already defined on the intrinsics holder.
+  bool exists = false;
+  if (!GlobalObject::maybeGetIntrinsicValue(cx, global, name, value, &exists)) {
+    return false;
+  }
+  if (exists) {
+    return true;
+  }
+
+  return GlobalObject::addIntrinsicValue(cx, global, name, value);
+}
+
+/* static */
 bool GlobalObject::addIntrinsicValue(JSContext* cx,
                                      Handle<GlobalObject*> global,
                                      HandlePropertyName name,
@@ -1093,11 +1117,12 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
     return false;
   }
 
+  RootedId id(cx, NameToId(name));
+  MOZ_ASSERT(!holder->containsPure(id));
+
   uint32_t slot = holder->slotSpan();
   RootedShape last(cx, holder->lastProperty());
   Rooted<BaseShape*> base(cx, last->base());
-
-  RootedId id(cx, NameToId(name));
   Rooted<StackShape> child(cx,
                            StackShape(base, last->objectFlags(), id, slot, 0));
   Shape* shape = cx->zone()->propertyTree().getChild(cx, last, child);
