@@ -132,7 +132,7 @@ class mozInlineSpellStatus {
 
   mozilla::dom::Document* GetDocument() const;
   already_AddRefed<nsRange> PositionToCollapsedRange(nsINode* aNode,
-                                                     uint32_t aOffset);
+                                                     uint32_t aOffset) const;
 };
 
 class mozInlineSpellChecker final : public nsIInlineSpellChecker,
