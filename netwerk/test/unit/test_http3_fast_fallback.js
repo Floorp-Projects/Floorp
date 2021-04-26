@@ -61,6 +61,9 @@ registerCleanupFunction(async () => {
   );
   Services.prefs.clearUserPref("network.http.http3.backup_timer_delay");
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+  Services.prefs.clearUserPref(
+    "network.http.http3.parallel_fallback_conn_limit"
+  );
   if (trrServer) {
     await trrServer.stop();
   }
@@ -154,34 +157,6 @@ add_task(async function test_fast_fallback_with_speculative_connection() {
   await fast_fallback_test();
 });
 
-let HTTPObserver = {
-  observeActivity(
-    aChannel,
-    aType,
-    aSubtype,
-    aTimestamp,
-    aSizeData,
-    aStringData
-  ) {
-    aChannel.QueryInterface(Ci.nsIChannel);
-    if (aChannel.URI.spec == `https://foo.example.com:${h2Port}/`) {
-      if (
-        aType == Ci.nsIHttpActivityDistributor.ACTIVITY_TYPE_HTTP_TRANSACTION &&
-        aSubtype ==
-          Ci.nsIHttpActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_HEADER
-      ) {
-        // We need to enable speculative connection again, since the backup
-        // connection is done by using speculative connection.
-        Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
-        let observerService = Cc[
-          "@mozilla.org/network/http-activity-distributor;1"
-        ].getService(Ci.nsIHttpActivityDistributor);
-        observerService.removeObserver(HTTPObserver);
-      }
-    }
-  },
-};
-
 // Test the case when speculative connection is disabled. In this case, when the
 // back connection is ready, the http transaction is already activated,
 // but the socket is not ready to write.
@@ -192,11 +167,6 @@ add_task(async function test_fast_fallback_without_speculative_connection() {
   // Clear the h3 excluded list, otherwise the Alt-Svc mapping will not be used.
   Services.obs.notifyObservers(null, "network:reset-http3-excluded-list");
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
-
-  let observerService = Cc[
-    "@mozilla.org/network/http-activity-distributor;1"
-  ].getService(Ci.nsIHttpActivityDistributor);
-  observerService.addObserver(HTTPObserver);
 
   await fast_fallback_test();
 
@@ -647,9 +617,10 @@ add_task(async function testH3FallbackWithMultipleTransactions() {
 
   // Disable fast fallback.
   Services.prefs.setIntPref(
-    "network.dns.httpssvc.http3_fast_fallback_timeout",
+    "network.http.http3.parallel_fallback_conn_limit",
     0
   );
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
 
   await trrServer.registerDoHAnswers("test.multiple_trans.org", "HTTPS", {
     answers: [
@@ -684,8 +655,10 @@ add_task(async function testH3FallbackWithMultipleTransactions() {
 
   let promises = [];
   for (let i = 0; i < 2; ++i) {
-    let chan = makeChan(`https://test.multiple_trans.org:${h2Port}/server-timing`);
-    promises.push(channelOpenPromise(chan))
+    let chan = makeChan(
+      `https://test.multiple_trans.org:${h2Port}/server-timing`
+    );
+    promises.push(channelOpenPromise(chan));
   }
 
   let res = await Promise.all(promises);

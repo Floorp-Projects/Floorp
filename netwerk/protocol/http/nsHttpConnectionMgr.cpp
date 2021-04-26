@@ -3304,7 +3304,8 @@ void nsHttpConnectionMgr::DoSpeculativeConnection(
   } else {
     LOG(
         ("OnMsgSpeculativeConnect Transport "
-         "not created due to existing connection count\n"));
+         "not created due to existing connection count:%d",
+         parallelSpeculativeConnectLimit));
   }
 }
 
