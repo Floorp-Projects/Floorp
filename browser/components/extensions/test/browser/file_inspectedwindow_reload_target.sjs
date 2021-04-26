@@ -7,7 +7,7 @@ Components.utils.importGlobalProperties(["URLSearchParams"]);
 function handleRequest(request, response) {
   let params = new URLSearchParams(request.queryString);
 
-  switch(params.get("test")) {
+  switch (params.get("test")) {
     case "cache":
       handleCacheTestRequest(request, response);
       break;
@@ -26,20 +26,71 @@ function handleCacheTestRequest(request, response) {
   response.setHeader("Content-Type", "text/plain; charset=UTF-8", false);
 
   if (request.hasHeader("pragma") && request.hasHeader("cache-control")) {
-    response.write(`${request.getHeader("pragma")}:${request.getHeader("cache-control")}`);
+    response.write(
+      `${request.getHeader("pragma")}:${request.getHeader("cache-control")}`
+    );
   } else {
     response.write("empty cache headers");
   }
 }
 
 function handleUserAgentTestRequest(request, response) {
-  response.setHeader("Content-Type", "text/plain; charset=UTF-8", false);
+  response.setHeader("Content-Type", "text/html", false);
 
-  if (request.hasHeader("user-agent")) {
-    response.write(request.getHeader("user-agent"));
-  } else {
-    response.write("no user agent header");
+  const userAgentHeader = request.hasHeader("user-agent")
+    ? request.getHeader("user-agent")
+    : null;
+
+  const query = new URLSearchParams(request.queryString);
+  if (query.get("crossOriginIsolated") === "true") {
+    response.setHeader("Cross-Origin-Opener-Policy", "same-origin", false);
   }
+
+  const IFRAME_HTML = `
+  <!doctype html>
+  <html>
+    <head>
+      <meta charset=utf8>
+      <script>
+        globalThis.initialUserAgent = navigator.userAgent;
+      </script>
+    </head>
+    <body>
+      <h1>Iframe</h1>
+    </body>
+  </html>`;
+  // We always want the iframe to have a different host from the top-level document.
+  const iframeHost =
+    request.host === "example.com" ? "example.org" : "example.com";
+  const iframeOrigin = `${request.scheme}://${iframeHost}`;
+  const iframeUrl = `${iframeOrigin}/document-builder.sjs?html=${encodeURI(
+    IFRAME_HTML
+  )}`;
+
+  const HTML = `
+  <!doctype html>
+  <html>
+    <head>
+      <meta charset=utf8>
+      <title>test</title>
+      <script>
+        "use strict";
+        /*
+         * Store the user agent very early in the document loading process
+         * so we can assert in tests that it is set early enough.
+         */
+        globalThis.initialUserAgent = navigator.userAgent;
+        globalThis.userAgentHeader = ${JSON.stringify(userAgentHeader)};
+      </script>
+    </head>
+    <body>
+      <h1>Top-level</h1>
+      <h2>${userAgentHeader ?? "no user-agent header"}</h2>
+      <iframe src='${iframeUrl}'></iframe>
+    </body>
+  </html>`;
+
+  response.write(HTML);
 }
 
 function handleInjectedScriptTestRequest(request, response, params) {
@@ -50,7 +101,8 @@ function handleInjectedScriptTestRequest(request, response, params) {
   if (frames > 0) {
     // Output an iframe in seamless mode, so that there is an higher chance that in case
     // of test failures we get a screenshot where the nested iframes are all visible.
-    content = `<iframe seamless src="?test=injected-script&frames=${frames - 1}"></iframe>`;
+    content = `<iframe seamless src="?test=injected-script&frames=${frames -
+      1}"></iframe>`;
   }
 
   response.write(`<!DOCTYPE html>

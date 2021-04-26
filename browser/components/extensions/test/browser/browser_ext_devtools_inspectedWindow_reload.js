@@ -8,16 +8,22 @@ requestLongerTimeout(4);
 
 loadTestSubscript("head_devtools.js");
 
+const TEST_ORIGIN = "http://mochi.test:8888";
+const TEST_BASE = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  ""
+);
+const TEST_PATH = `${TEST_BASE}file_inspectedwindow_reload_target.sjs`;
+
 // Small helper which provides the common steps to the following reload test cases.
 async function runReloadTestCase({
   urlParams,
   background,
   devtoolsPage,
   testCase,
+  closeToolbox = true,
 }) {
-  const BASE =
-    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
-  const TEST_TARGET_URL = `${BASE}/file_inspectedwindow_reload_target.sjs?${urlParams}`;
+  const TEST_TARGET_URL = `${TEST_ORIGIN}/${TEST_PATH}?${urlParams}`;
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     TEST_TARGET_URL
@@ -45,7 +51,7 @@ async function runReloadTestCase({
 
   await extension.startup();
 
-  await openToolboxForTab(tab);
+  const toolbox = await openToolboxForTab(tab);
 
   // Wait the test extension to be ready.
   await extension.awaitMessage("devtools_inspected_window_reload.ready");
@@ -53,9 +59,11 @@ async function runReloadTestCase({
   info("devtools page ready");
 
   // Run the test case.
-  await testCase(extension);
+  await testCase(extension, tab, toolbox);
 
-  await closeToolboxForTab(tab);
+  if (closeToolbox) {
+    await closeToolboxForTab(tab);
+  }
 
   BrowserTestUtils.removeTab(tab);
 
@@ -159,6 +167,8 @@ add_task(async function test_devtools_inspectedWindow_reload_ignore_cache() {
 
 add_task(
   async function test_devtools_inspectedWindow_reload_custom_user_agent() {
+    const CUSTOM_USER_AGENT = "CustomizedUserAgent";
+
     function background() {
       browser.runtime.onMessage.addListener(async msg => {
         if (msg !== "devtools_page.ready") {
@@ -166,64 +176,18 @@ add_task(
           return;
         }
 
-        const tabs = await browser.tabs.query({ active: true });
-        const activeTabId = tabs[0].id;
-        let reloads = 0;
-
-        browser.webNavigation.onCompleted.addListener(async details => {
-          if (details.tabId == activeTabId && details.frameId == 0) {
-            reloads++;
-
-            let expectedContent;
-            let enabled;
-
-            switch (reloads) {
-              case 1:
-                enabled = false;
-                expectedContent = window.navigator.userAgent;
-                break;
-              case 2:
-                enabled = true;
-                expectedContent = "CustomizedUserAgent";
-                break;
-            }
-
-            if (!expectedContent) {
-              browser.test.fail(`Unexpected number of tab reloads: ${reloads}`);
-            } else {
-              const code = `document.body.textContent`;
-              try {
-                const [text] = await browser.tabs.executeScript(activeTabId, {
-                  code,
-                });
-                browser.test.assertEq(
-                  expectedContent,
-                  text,
-                  `Got the expected userAgent with userAgent=${enabled}`
-                );
-              } catch (err) {
-                browser.test.fail(`Error: ${err.message} - ${err.stack}`);
-              }
-            }
-
-            browser.test.sendMessage(
-              "devtools_inspectedWindow_reload_checkUserAgent.done"
-            );
-          }
-        });
-
         browser.test.sendMessage("devtools_inspected_window_reload.ready");
       });
     }
 
     function devtoolsPage() {
-      browser.test.onMessage.addListener(msg => {
+      browser.test.onMessage.addListener(async msg => {
         switch (msg) {
           case "no-custom-user-agent":
-            browser.devtools.inspectedWindow.reload({});
+            await browser.devtools.inspectedWindow.reload({});
             break;
           case "custom-user-agent":
-            browser.devtools.inspectedWindow.reload({
+            await browser.devtools.inspectedWindow.reload({
               userAgent: "CustomizedUserAgent",
             });
             break;
@@ -235,22 +199,157 @@ add_task(
       browser.runtime.sendMessage("devtools_page.ready");
     }
 
+    async function checkUserAgent(expectedUA) {
+      const contexts = gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
+
+      const uniqueRemoteTypes = new Set();
+      for (const context of contexts) {
+        uniqueRemoteTypes.add(context.currentRemoteType);
+      }
+
+      info(
+        `Got ${contexts.length} with remoteTypes: ${Array.from(
+          uniqueRemoteTypes
+        )}`
+      );
+      ok(contexts.length >= 2, "There should be at least 2 browsing contexts");
+
+      if (Services.appinfo.fissionAutostart) {
+        ok(
+          uniqueRemoteTypes.size >= 2,
+          "Expect at least one cross origin sub frame"
+        );
+      }
+
+      for (const context of contexts) {
+        const url = context.currentURI?.spec?.replace(
+          context.currentURI?.query,
+          "…"
+        );
+        info(
+          `Checking user agent on ${url} (remoteType: ${context.currentRemoteType})`
+        );
+        await SpecialPowers.spawn(context, [expectedUA], async _expectedUA => {
+          is(
+            content.navigator.userAgent,
+            _expectedUA,
+            `expected navigator.userAgent value`
+          );
+          is(
+            content.wrappedJSObject.initialUserAgent,
+            _expectedUA,
+            `expected navigator.userAgent value at startup`
+          );
+          if (content.wrappedJSObject.userAgentHeader) {
+            is(
+              content.wrappedJSObject.userAgentHeader,
+              _expectedUA,
+              `user agent header has expected value`
+            );
+          }
+        });
+      }
+    }
+
     await runReloadTestCase({
       urlParams: "test=user-agent",
       background,
       devtoolsPage,
-      testCase: async function(extension) {
+      closeToolbox: false,
+      testCase: async function(extension, tab, toolbox) {
+        info("Get the initial user agent");
+        const initialUserAgent = await SpecialPowers.spawn(
+          gBrowser.selectedBrowser,
+          [],
+          () => {
+            return content.navigator.userAgent;
+          }
+        );
+
+        info(
+          "Check that calling inspectedWindow.reload without userAgent does not change the user agent of the page"
+        );
+        let onPageLoaded = BrowserTestUtils.browserLoaded(
+          gBrowser.selectedBrowser,
+          true
+        );
         extension.sendMessage("no-custom-user-agent");
+        await onPageLoaded;
 
-        await extension.awaitMessage(
-          "devtools_inspectedWindow_reload_checkUserAgent.done"
+        await checkUserAgent(initialUserAgent);
+
+        info(
+          "Check that calling inspectedWindow.reload with userAgent does change the user agent of the page"
         );
-
+        onPageLoaded = BrowserTestUtils.browserLoaded(
+          gBrowser.selectedBrowser,
+          true
+        );
         extension.sendMessage("custom-user-agent");
+        await onPageLoaded;
 
-        await extension.awaitMessage(
-          "devtools_inspectedWindow_reload_checkUserAgent.done"
+        await checkUserAgent(CUSTOM_USER_AGENT);
+
+        info("Check that the user agent persists after a reload");
+        onPageLoaded = BrowserTestUtils.browserLoaded(
+          gBrowser.selectedBrowser,
+          true
         );
+        // Mimick the user reloading the page through firefox UI.
+        gBrowser.reloadTab(tab);
+        await onPageLoaded;
+
+        await checkUserAgent(CUSTOM_USER_AGENT);
+
+        info(
+          "Check that the user agent persists after navigating to a new browsing context"
+        );
+        const previousBrowsingContextId =
+          gBrowser.selectedBrowser.browsingContext.id;
+        onPageLoaded = BrowserTestUtils.browserLoaded(
+          gBrowser.selectedBrowser,
+          true
+        );
+
+        // Navigate to a different origin
+        await navigateToWithDevToolsOpen(
+          tab,
+          `https://example.com/${TEST_PATH}?test=user-agent&crossOriginIsolated=true`
+        );
+
+        isnot(
+          gBrowser.selectedBrowser.browsingContext.id,
+          previousBrowsingContextId,
+          "A new browsing context was created"
+        );
+
+        await checkUserAgent(CUSTOM_USER_AGENT);
+
+        info(
+          "Check that closing DevTools resets the user agent of the page to its initial value"
+        );
+
+        await closeToolboxForTab(tab);
+
+        // XXX: This is needed at the moment since Navigator.cpp retrieves the UserAgent from the
+        // headers (when there's no custom user agent). And here, since we reloaded the page once
+        // we set the custom user agent, the header was set accordingly and still holds the custom
+        // user agent value. This should be fixed by Bug 1705326.
+        is(
+          gBrowser.selectedBrowser.browsingContext.customUserAgent,
+          "",
+          "The flag on the browsing context was reset"
+        );
+        await checkUserAgent(CUSTOM_USER_AGENT);
+
+        onPageLoaded = BrowserTestUtils.browserLoaded(
+          gBrowser.selectedBrowser,
+          true
+        );
+        gBrowser.reloadTab(tab);
+        await onPageLoaded;
+
+        await checkUserAgent(initialUserAgent);
       },
     });
   }
