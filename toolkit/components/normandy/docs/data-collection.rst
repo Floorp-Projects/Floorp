@@ -174,6 +174,24 @@ Enrollment
          will be included in all future telemetry for this user in this
          study.
 
+Enrollment Failed
+   method
+      The string ``"enrollFailed"``
+   object
+      The string ``"preference_study"``
+   value
+      The slug of the study (``recipe.arguments.slug``)
+   extra
+      reason
+         The reason for unenrollment. Possible values are:
+
+         * ``"invalid-branch"``: The recipe specifies an invalid preference
+           branch (not to be confused with the experiment branch). Valid values
+           are "default" and "user".
+      preferenceBranch
+         If the reason was ``"invalid-branch"``, the branch that was
+         specified, truncated to 80 characters.
+
 Unenrollment
    method
       The string ``"unenroll"``.
@@ -194,26 +212,13 @@ Unenrollment
            applicable to this client This can be because the recipe
            was disabled, or the user no longer matches the recipe's
            filter.
-         * ``"user-preference-changed"``: The study preference was
-           changed on the user branch. This could mean the user
-           changed the preference, or that some other mechanism set a
-           non-default value for the preference.
-         * ``"user-preference-changed-sideload"``: The study
-           preference was changed on the user branch while Normandy was
-           inactive. This could mean that the value was manually
-           changed in a profile while Firefox was not running.
          * ``"unknown"``: A reason was not specified. This should be
            considered a bug.
-      changedPref
-         For ``user-preference-changed`` and
-         ``user-preference-changed-sideload``, the preference that was
-         detected to change that caused the unenrollment. Note that there may
-         be multiple preferences changed, this only reports the first found.
       enrollmentId
          The ID that was generated at enrollment.
 
 Unenroll Failed
-   methods
+   method
       The string ``"unenrollFailed"``.
    object
       The string ``"preference_study"``.
@@ -229,14 +234,34 @@ Unenroll Failed
            does not exist. This is a bug.
          * ``"already-unenrolled"``: The system attempted to unenroll a study
            that has already been unenrolled. This is likely a bug.
-      changedPref
-         In some cases, the preference that was detected to change that
-         caused the attempted unenrollment.
       caller
          On Nightly builds only, a string identifying the source of the requested stop.
       originalReason
          The code that would had been used for the unenrollment, had it not failed.
 
+Experimental Preference Changed
+   method
+      The string ``"expPrefChanged"``
+   object
+      The string ``"preference_study"``.
+   value
+      The name of the study (``recipe.arguments.slug``)
+   extra
+      enrollmentId
+         The ID that was generated at enrollment.
+      preferenceName
+         The name of the preference that changed. Note that the value of the
+         preference (old or new) is not given.
+      reason
+         A code describing the reason that Normandy detected the preference
+         change. Possible values are:
+
+         * ``"atEnroll"``: The preferences already had user value when the
+           experiment started.
+         * ``"sideload"``: A preference was changed while Normandy's observers
+           weren't active, likely while the browser was shut down.
+         * ``"observer"``: The preference was observed to change by Normandy at
+           runtime.
 
 Preference Rollouts
 ^^^^^^^^^^^^^^^^^^^

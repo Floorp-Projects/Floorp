@@ -333,7 +333,6 @@ var PreferenceRollouts = {
     for (const rollout of await this.getAllActive()) {
       for (const prefSpec of rollout.preferences) {
         PrefUtils.setPref(
-          "user",
           STARTUP_PREFS_BRANCH + prefSpec.preferenceName,
           prefSpec.value
         );
