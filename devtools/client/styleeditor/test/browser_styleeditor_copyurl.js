@@ -36,7 +36,7 @@ add_task(async function() {
     "Click on Copy URL menu item and wait for the URL to be copied to the clipboard."
   );
   await waitForClipboardPromise(
-    () => ui._copyUrlItem.click(),
+    () => ui._contextMenu.activateItem(ui._copyUrlItem),
     ui._contextMenuStyleSheet.href
   );
 });
