@@ -436,6 +436,7 @@ fn main() {
         clear_color: Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
         debug_flags,
         compositor_config,
+        surface_origin_is_top_left: false,
         ..webrender::RendererOptions::default()
     };
     let (tx, rx) = mpsc::channel();
