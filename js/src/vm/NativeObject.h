@@ -953,8 +953,9 @@ class NativeObject : public JSObject {
       JSContext* cx, HandleNativeObject obj, HandleId id, ShapeTable** table,
       ShapeTable::Entry** entry, const AutoKeepShapeCaches& keep);
 
-  static bool maybeToDictionaryModeForPut(JSContext* cx, HandleNativeObject obj,
-                                          MutableHandleShape shape);
+  static bool maybeToDictionaryModeForChange(JSContext* cx,
+                                             HandleNativeObject obj,
+                                             MutableHandleShape shape);
 
  public:
   // Add a new property. Must only be used when the |id| is not already present.
@@ -974,9 +975,10 @@ class NativeObject : public JSObject {
                           HandlePropertyName name, uint32_t slot,
                           unsigned attrs, uint32_t* slotOut);
 
-  // Change a property with key |id| in this object.
-  static bool putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
-                          unsigned attrs, uint32_t* slotOut);
+  // Change a property with key |id| in this object. The object must already
+  // have a property (stored in the shape tree) with this |id|.
+  static bool changeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                             unsigned attrs, uint32_t* slotOut);
 
   static bool changeCustomDataPropAttributes(JSContext* cx,
                                              HandleNativeObject obj,
