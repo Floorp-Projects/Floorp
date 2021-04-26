@@ -975,11 +975,18 @@ ParentAPIManager = {
     let handlingUserInput = false;
 
     let listener = async (...listenerArgs) => {
+      // Extract urgentSend flag to avoid deserializing args holder later.
+      let urgentSend = false;
+      if (listenerArgs[0] && data.path.startsWith("webRequest.")) {
+        urgentSend = listenerArgs[0].urgentSend;
+        delete listenerArgs[0].urgentSend;
+      }
       let result = await this.conduit.queryRunListener(childId, {
         childId,
         handlingUserInput,
         listenerId: data.listenerId,
         path: data.path,
+        urgentSend,
         get args() {
           return new StructuredCloneHolder(listenerArgs);
         },

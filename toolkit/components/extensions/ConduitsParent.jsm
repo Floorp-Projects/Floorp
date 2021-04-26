@@ -317,30 +317,44 @@ class ConduitsParent extends JSWindowActorParent {
     super();
     this.batchData = [];
     this.batchPromise = null;
+    this.batchResolve = null;
+    this.timerActive = false;
   }
 
   /**
    * Group webRequest events to send them as a batch, reducing IPC overhead.
    * @param {string} name
    * @param {MessageData} data
+   * @returns {Promise<object>}
    */
-  async batch(name, data) {
-    let num = this.batchData.length;
+  batch(name, data) {
+    let pos = this.batchData.length;
     this.batchData.push(data);
 
-    if (!num) {
-      let resolve;
-      this.batchPromise = new Promise(r => (resolve = r));
+    let sendNow = idleDispatch => {
+      if (this.batchData.length && this.manager) {
+        this.batchResolve(this.sendQuery(name, this.batchData));
+      } else {
+        this.batchResolve([]);
+      }
+      this.batchData = [];
+      this.timerActive = !idleDispatch;
+    };
 
-      let send = () => {
-        resolve(this.manager && this.sendQuery(name, this.batchData));
-        this.batchData = [];
-      };
-      ChromeUtils.idleDispatch(send, { timeout: BATCH_TIMEOUT_MS });
+    if (!pos) {
+      this.batchPromise = new Promise(r => (this.batchResolve = r));
+      if (!this.timerActive) {
+        ChromeUtils.idleDispatch(sendNow, { timeout: BATCH_TIMEOUT_MS });
+        this.timerActive = true;
+      }
     }
 
-    let results = await this.batchPromise;
-    return results && results[num];
+    if (data.arg.urgentSend) {
+      // If this is an urgent blocking event, run this batch right away.
+      sendNow(false);
+    }
+
+    return this.batchPromise.then(results => results[pos]);
   }
 
   /**

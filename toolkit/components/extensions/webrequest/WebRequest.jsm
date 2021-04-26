@@ -33,6 +33,15 @@ XPCOMUtils.defineLazyGetter(this, "getCookieStoreIdForOriginAttributes", () => {
   return ExtensionParent.apiManager.global.getCookieStoreIdForOriginAttributes;
 });
 
+// Classes of requests that should be sent immediately instead of batched.
+// Covers basically anything that can delay first paint or DOMContentLoaded:
+// top frame HTML, <head> blocking CSS, fonts preflight, sync JS and XHR.
+const URGENT_CLASSES =
+  Ci.nsIClassOfService.Leader |
+  Ci.nsIClassOfService.Unblocked |
+  Ci.nsIClassOfService.UrgentStart |
+  Ci.nsIClassOfService.TailForbidden;
+
 function runLater(job) {
   Services.tm.dispatchToMainThread(job);
 }
@@ -263,6 +272,7 @@ function serializeRequestData(eventName) {
     incognito: this.incognito,
     thirdParty: this.thirdParty,
     cookieStoreId: this.cookieStoreId,
+    urgentSend: this.urgentSend,
   };
 
   if (MAYBE_CACHED_EVENTS.has(eventName)) {
@@ -727,6 +737,8 @@ HttpObserverManager = {
 
   getRequestData(channel, extraData) {
     let originAttributes = channel.loadInfo?.originAttributes;
+    let cos = channel.channel.QueryInterface(Ci.nsIClassOfService);
+
     let data = {
       requestId: String(channel.id),
       url: channel.finalURL,
@@ -753,6 +765,9 @@ HttpObserverManager = {
       requestSize: channel.requestSize,
       responseSize: channel.responseSize,
       urlClassification: channel.urlClassification,
+
+      // Figure out if this is an urgent request that shouldn't be batched.
+      urgentSend: (cos.classFlags & URGENT_CLASSES) > 0,
     };
 
     if (originAttributes) {
@@ -856,6 +871,7 @@ HttpObserverManager = {
           }
         }
         let data = Object.create(commonData);
+        data.urgentSend = data.urgentSend && opts.blocking;
 
         if (registerFilter && opts.blocking && opts.policy) {
           data.registerTraceableChannel = (policy, remoteTab) => {
