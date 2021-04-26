@@ -140,23 +140,11 @@ fn compute_curve_gamma_table_type2(table: &[u16]) -> Box<[f32; 256]> {
     gamma_table.into_boxed_slice().try_into().unwrap()
 }
 fn compute_curve_gamma_table_type_parametric(params: &[f32]) -> Box<[f32; 256]> {
-    let g: f32 = params[0];
-    let (a, b, c, d, e, f) = match &params[1..] {
-        [] => (1., 0., 0., -1., 0., 0.),
-        [a, b] => (*a, *b, 0., -b / a, 0., 0.),
-        [a, b, c] => (*a, *b, 0., -b / a, *c, *c),
-        [a, b, c, d] => (*a, *b, *c, *d, 0., 0.),
-        [a, b, c, d, e, f] => (*a, *b, *c, *d, *e, *f),
-        _ => panic!(),
-    };
+    let params = Param::new(params);
     let mut gamma_table = Vec::with_capacity(256);
     for i in 0..256 {
         let X = i as f32 / 255.;
-        gamma_table.push(clamp_float(if X >= d {
-            (a * X + b).powf(g) + e
-        } else {
-            c * X + f
-        }))
+        gamma_table.push(clamp_float(params.eval(X)));
     }
     gamma_table.into_boxed_slice().try_into().unwrap()
 }
@@ -199,6 +187,83 @@ pub fn build_colorant_matrix(p: &Profile) -> Matrix {
     result.invalid = false;
     result
 }
+
+/** Parametric representation of transfer function */
+#[derive(Debug)]
+struct Param {
+    g: f32,
+    a: f32,
+    b: f32,
+    c: f32,
+    d: f32,
+    e: f32,
+    f: f32,
+}
+
+impl Param {
+    fn new(params: &[f32]) -> Param {
+	// convert from the variable number of parameters
+	// contained in profiles to a unified representation.
+        let g: f32 = params[0];
+        match params[1..] {
+            [] => Param {
+                g,
+                a: 1.,
+                b: 0.,
+                c: 0.,
+                d: -1.,
+                e: 0.,
+                f: 0.,
+            },
+            [a, b] => Param {
+                g,
+                a,
+                b,
+                c: 0.,
+                d: -b / a,
+                e: 0.,
+                f: 0.,
+            },
+            [a, b, c] => Param {
+                g,
+                a,
+                b,
+                c: 0.,
+                d: -b / a,
+                e: c,
+                f: c,
+            },
+            [a, b, c, d] => Param {
+                g,
+                a,
+                b,
+                c,
+                d,
+                e: 0.,
+                f: 0.,
+            },
+            [a, b, c, d, e, f] => Param {
+                g,
+                a,
+                b,
+                c,
+                d,
+                e,
+                f,
+            },
+            _ => panic!(),
+        }
+    }
+
+    fn eval(&self, x: f32) -> f32 {
+        if x < self.d {
+            self.c * x + self.f
+        } else {
+            (self.a * x + self.b).powf(self.g) + self.e
+        }
+    }
+}
+
 /* The following code is copied nearly directly from lcms.
  * I think it could be much better. For example, Argyll seems to have better code in
  * icmTable_lookup_bwd and icmTable_setup_bwd. However, for now this is a quick way
