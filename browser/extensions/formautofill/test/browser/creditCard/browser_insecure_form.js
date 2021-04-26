@@ -90,11 +90,15 @@ add_task(async function test_click_on_insecure_warning() {
     { gBrowser, url: "http" + TEST_URL_PATH_CC },
     async function(browser) {
       await openPopupOn(browser, "#cc-name");
-
       const insecureItem = getDisplayedPopupItems(browser)[0];
+      let popupClosePromise = BrowserTestUtils.waitForPopupEvent(
+        browser.autoCompletePopup,
+        "hidden"
+      );
       await EventUtils.synthesizeMouseAtCenter(insecureItem, {});
       // Check input's value after popup closed to ensure the completion of autofilling.
-      await expectPopupClose(browser);
+      await popupClosePromise;
+
       const inputValue = await SpecialPowers.spawn(
         browser,
         [],
@@ -116,9 +120,15 @@ add_task(async function test_press_enter_on_insecure_warning() {
       await openPopupOn(browser, "#cc-name");
 
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+
+      let popupClosePromise = BrowserTestUtils.waitForPopupEvent(
+        browser.autoCompletePopup,
+        "hidden"
+      );
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       // Check input's value after popup closed to ensure the completion of autofilling.
-      await expectPopupClose(browser);
+      await popupClosePromise;
+
       const inputValue = await SpecialPowers.spawn(
         browser,
         [],
