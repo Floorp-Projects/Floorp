@@ -113,15 +113,8 @@ ScreenHelperGTK::~ScreenHelperGTK() {
 }
 
 gint ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum) {
-  // Since GDK 3.10
-  static auto sGdkScreenGetMonitorScaleFactorPtr =
-      (gint(*)(GdkScreen*, gint))dlsym(RTLD_DEFAULT,
-                                       "gdk_screen_get_monitor_scale_factor");
-  if (sGdkScreenGetMonitorScaleFactorPtr) {
-    GdkScreen* screen = gdk_screen_get_default();
-    return sGdkScreenGetMonitorScaleFactorPtr(screen, aMonitorNum);
-  }
-  return 1;
+  GdkScreen* screen = gdk_screen_get_default();
+  return gdk_screen_get_monitor_scale_factor(screen, aMonitorNum);
 }
 
 static uint32_t GetGTKPixelDepth() {
