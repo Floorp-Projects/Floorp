@@ -1,6 +1,461 @@
 {
   "data": [
     {
+      "schema": 1619087600557,
+      "appliesTo": [
+        {
+          "excluded": {
+            "regions": [
+              "au",
+              "ca"
+            ]
+          },
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            }
+          }
+        },
+        {
+          "override": true,
+          "orderHint": 1500,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          },
+          "webExtension": {
+            "locales": [
+              "mozillaonline"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ix",
+                "value": "sunray"
+              },
+              {
+                "name": "pageletid",
+                "value": "headsearch"
+              },
+              {
+                "name": "searchType",
+                "value": ""
+              },
+              {
+                "name": "Go.x",
+                "value": "0"
+              },
+              {
+                "name": "Go.y",
+                "value": "0"
+              },
+              {
+                "name": "bestSaleNum",
+                "value": "0"
+              },
+              {
+                "name": "tag",
+                "value": "wwwcanoniccom-20"
+              },
+              {
+                "name": "keywords",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "canonical",
+              "canonical-001",
+              "canonical-002"
+            ]
+          }
+        }
+      ],
+      "telemetryId": "amazondotcn",
+      "webExtension": {
+        "id": "amazondotcn@search.mozilla.org"
+      },
+      "id": "ccb137f1-7733-464c-bb70-037be4ba2529",
+      "last_modified": 1619106893467
+    },
+    {
+      "schema": 1619023005238,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "bn",
+                "bn-IN",
+                "kn",
+                "gu-IN",
+                "mr",
+                "pa-IN",
+                "ta",
+                "te",
+                "ur"
+              ]
+            }
+          },
+          "telemetryId": "amazon-in",
+          "webExtension": {
+            "locales": [
+              "in"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "ar",
+                "az",
+                "bg",
+                "cak",
+                "en-US",
+                "eo",
+                "es-AR",
+                "fa",
+                "gn",
+                "hy-AM",
+                "ia",
+                "is",
+                "ka",
+                "km",
+                "lt",
+                "mk",
+                "ms",
+                "my",
+                "ro",
+                "si",
+                "th",
+                "tl",
+                "trs",
+                "uz"
+              ]
+            },
+            "regions": [
+              "fr"
+            ]
+          },
+          "telemetryId": "amazon-france",
+          "webExtension": {
+            "locales": [
+              "france"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "br",
+                "ff",
+                "fr",
+                "son",
+                "wo"
+              ]
+            }
+          },
+          "telemetryId": "amazon-france",
+          "webExtension": {
+            "locales": [
+              "france"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ja-JP-macos",
+                "ja"
+              ]
+            }
+          },
+          "telemetryId": "amazon-jp",
+          "webExtension": {
+            "locales": [
+              "jp"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "it",
+                "lij"
+              ]
+            }
+          },
+          "telemetryId": "amazon-it",
+          "webExtension": {
+            "locales": [
+              "it"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "de",
+                "dsb",
+                "hsb"
+              ]
+            }
+          },
+          "telemetryId": "amazon-de",
+          "webExtension": {
+            "locales": [
+              "de"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "de",
+                "dsb",
+                "hsb"
+              ]
+            }
+          },
+          "experiment": "amazon-de-adm",
+          "telemetryId": "amazon-de-adm",
+          "webExtension": {
+            "locales": [
+              "de-adm"
+            ]
+          },
+          "sendAttributionRequest": true
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "ar",
+                "az",
+                "bg",
+                "cak",
+                "en-US",
+                "eo",
+                "es-AR",
+                "fa",
+                "gn",
+                "hy-AM",
+                "ia",
+                "is",
+                "ka",
+                "km",
+                "lt",
+                "mk",
+                "ms",
+                "my",
+                "ro",
+                "si",
+                "th",
+                "tl",
+                "trs",
+                "uz"
+              ]
+            },
+            "regions": [
+              "gb"
+            ]
+          },
+          "telemetryId": "amazon-en-GB",
+          "webExtension": {
+            "locales": [
+              "en-GB"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "ach",
+                "af",
+                "ar",
+                "az",
+                "bg",
+                "cak",
+                "en-US",
+                "eo",
+                "es-AR",
+                "fa",
+                "gn",
+                "hy-AM",
+                "ia",
+                "is",
+                "ka",
+                "km",
+                "lt",
+                "mk",
+                "ms",
+                "my",
+                "ro",
+                "si",
+                "th",
+                "tl",
+                "trs",
+                "uz"
+              ]
+            },
+            "regions": [
+              "gb"
+            ]
+          },
+          "experiment": "amazon-en-GB-adm",
+          "telemetryId": "amazon-en-GB-adm",
+          "webExtension": {
+            "locales": [
+              "en-GB-adm"
+            ]
+          },
+          "sendAttributionRequest": true
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cy",
+                "da",
+                "el",
+                "en-GB",
+                "eu",
+                "ga-IE",
+                "gd",
+                "gl",
+                "hr",
+                "nb-NO",
+                "nn-NO",
+                "pt-PT",
+                "sq",
+                "sr"
+              ]
+            }
+          },
+          "telemetryId": "amazon-en-GB",
+          "webExtension": {
+            "locales": [
+              "en-GB"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cy",
+                "da",
+                "el",
+                "en-GB",
+                "eu",
+                "ga-IE",
+                "gd",
+                "gl",
+                "hr",
+                "nb-NO",
+                "nn-NO",
+                "pt-PT",
+                "sq",
+                "sr"
+              ]
+            }
+          },
+          "experiment": "amazon-en-GB-adm",
+          "telemetryId": "amazon-en-GB-adm",
+          "webExtension": {
+            "locales": [
+              "en-GB-adm"
+            ]
+          },
+          "sendAttributionRequest": true
+        },
+        {
+          "included": {
+            "regions": [
+              "ca"
+            ]
+          },
+          "telemetryId": "amazon-ca",
+          "webExtension": {
+            "locales": [
+              "ca"
+            ]
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "au"
+            ]
+          },
+          "telemetryId": "amazon-au",
+          "webExtension": {
+            "locales": [
+              "au"
+            ]
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "field-keywords",
+                "value": "{searchTerms}"
+              },
+              {
+                "name": "ie",
+                "value": "{inputEncoding}"
+              },
+              {
+                "name": "mode",
+                "value": "blended"
+              },
+              {
+                "name": "tag",
+                "value": "wwwcanoniccom-20"
+              },
+              {
+                "name": "sourceid",
+                "value": "Mozilla-search"
+              }
+            ]
+          },
+          "override": true,
+          "application": {
+            "distributions": [
+              "canonical",
+              "canonical-001",
+              "canonical-002"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "amazon@search.mozilla.org"
+      },
+      "id": "a620b506-c3ae-4332-97bb-190a73868580",
+      "last_modified": 1619106893464
+    },
+    {
       "schema": 1613395976252,
       "appliesTo": [
         {
@@ -1279,469 +1734,6 @@
       "last_modified": 1605203142482
     },
     {
-      "schema": 1599470446693,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "bn",
-                "bn-IN",
-                "kn",
-                "gu-IN",
-                "mr",
-                "pa-IN",
-                "ta",
-                "te",
-                "ur"
-              ]
-            }
-          },
-          "telemetryId": "amazon-in",
-          "webExtension": {
-            "locales": [
-              "in"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "en-US",
-                "eo",
-                "es-AR",
-                "fa",
-                "gn",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "ro",
-                "si",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            },
-            "regions": [
-              "fr"
-            ]
-          },
-          "telemetryId": "amazon-france",
-          "webExtension": {
-            "locales": [
-              "france"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "br",
-                "ff",
-                "fr",
-                "son",
-                "wo"
-              ]
-            }
-          },
-          "telemetryId": "amazon-france",
-          "webExtension": {
-            "locales": [
-              "france"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "br",
-                "cak",
-                "en-US",
-                "eo",
-                "es-AR",
-                "fa",
-                "ff",
-                "fr",
-                "gn",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "ro",
-                "si",
-                "son",
-                "th",
-                "tl",
-                "trs",
-                "uz",
-                "wo"
-              ]
-            },
-            "regions": [
-              "ca"
-            ]
-          },
-          "telemetryId": "amazon-ca",
-          "webExtension": {
-            "locales": [
-              "ca"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "en-CA"
-              ]
-            }
-          },
-          "telemetryId": "amazon-ca",
-          "webExtension": {
-            "locales": [
-              "ca"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ja-JP-macos",
-                "ja"
-              ]
-            }
-          },
-          "telemetryId": "amazon-jp",
-          "webExtension": {
-            "locales": [
-              "jp"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "it",
-                "lij"
-              ]
-            }
-          },
-          "telemetryId": "amazon-it",
-          "webExtension": {
-            "locales": [
-              "it"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "de",
-                "dsb",
-                "hsb"
-              ]
-            }
-          },
-          "telemetryId": "amazon-de",
-          "webExtension": {
-            "locales": [
-              "de"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "de",
-                "dsb",
-                "hsb"
-              ]
-            }
-          },
-          "experiment": "amazon-de-adm",
-          "telemetryId": "amazon-de-adm",
-          "webExtension": {
-            "locales": [
-              "de-adm"
-            ]
-          },
-          "sendAttributionRequest": true
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "en-US",
-                "eo",
-                "es-AR",
-                "fa",
-                "gn",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "ro",
-                "si",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            },
-            "regions": [
-              "gb"
-            ]
-          },
-          "telemetryId": "amazon-en-GB",
-          "webExtension": {
-            "locales": [
-              "en-GB"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "en-US",
-                "eo",
-                "es-AR",
-                "fa",
-                "gn",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "ro",
-                "si",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            },
-            "regions": [
-              "gb"
-            ]
-          },
-          "experiment": "amazon-en-GB-adm",
-          "telemetryId": "amazon-en-GB-adm",
-          "webExtension": {
-            "locales": [
-              "en-GB-adm"
-            ]
-          },
-          "sendAttributionRequest": true
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "cy",
-                "da",
-                "el",
-                "en-GB",
-                "eu",
-                "ga-IE",
-                "gd",
-                "gl",
-                "hr",
-                "nb-NO",
-                "nn-NO",
-                "pt-PT",
-                "sq",
-                "sr"
-              ]
-            }
-          },
-          "telemetryId": "amazon-en-GB",
-          "webExtension": {
-            "locales": [
-              "en-GB"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "cy",
-                "da",
-                "el",
-                "en-GB",
-                "eu",
-                "ga-IE",
-                "gd",
-                "gl",
-                "hr",
-                "nb-NO",
-                "nn-NO",
-                "pt-PT",
-                "sq",
-                "sr"
-              ]
-            }
-          },
-          "experiment": "amazon-en-GB-adm",
-          "telemetryId": "amazon-en-GB-adm",
-          "webExtension": {
-            "locales": [
-              "en-GB-adm"
-            ]
-          },
-          "sendAttributionRequest": true
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ach",
-                "af",
-                "ar",
-                "az",
-                "bg",
-                "cak",
-                "cy",
-                "da",
-                "el",
-                "en-GB",
-                "en-US",
-                "eo",
-                "es-AR",
-                "eu",
-                "fa",
-                "ga-IE",
-                "gd",
-                "gl",
-                "gn",
-                "hr",
-                "hy-AM",
-                "ia",
-                "is",
-                "ka",
-                "km",
-                "lt",
-                "mk",
-                "ms",
-                "my",
-                "nb-NO",
-                "nn-NO",
-                "pt-PT",
-                "ro",
-                "si",
-                "sq",
-                "sr",
-                "th",
-                "tl",
-                "trs",
-                "uz"
-              ]
-            },
-            "regions": [
-              "au"
-            ]
-          },
-          "telemetryId": "amazon-au",
-          "webExtension": {
-            "locales": [
-              "au"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "field-keywords",
-                "value": "{searchTerms}"
-              },
-              {
-                "name": "ie",
-                "value": "{inputEncoding}"
-              },
-              {
-                "name": "mode",
-                "value": "blended"
-              },
-              {
-                "name": "tag",
-                "value": "wwwcanoniccom-20"
-              },
-              {
-                "name": "sourceid",
-                "value": "Mozilla-search"
-              }
-            ]
-          },
-          "override": true,
-          "application": {
-            "distributions": [
-              "canonical",
-              "canonical-001",
-              "canonical-002"
-            ]
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "amazon@search.mozilla.org"
-      },
-      "id": "a620b506-c3ae-4332-97bb-190a73868580",
-      "last_modified": 1599574471325
-    },
-    {
       "schema": 1599421304249,
       "appliesTo": [
         {
@@ -1991,86 +1983,6 @@
       },
       "id": "1571e5fc-17e4-492b-b6d2-106d8669b6c8",
       "last_modified": 1597327602800
-    },
-    {
-      "schema": 1594312404762,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            }
-          }
-        },
-        {
-          "override": true,
-          "orderHint": 1500,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          },
-          "webExtension": {
-            "locales": [
-              "mozillaonline"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ix",
-                "value": "sunray"
-              },
-              {
-                "name": "pageletid",
-                "value": "headsearch"
-              },
-              {
-                "name": "searchType",
-                "value": ""
-              },
-              {
-                "name": "Go.x",
-                "value": "0"
-              },
-              {
-                "name": "Go.y",
-                "value": "0"
-              },
-              {
-                "name": "bestSaleNum",
-                "value": "0"
-              },
-              {
-                "name": "tag",
-                "value": "wwwcanoniccom-20"
-              },
-              {
-                "name": "keywords",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "override": true,
-          "application": {
-            "distributions": [
-              "canonical",
-              "canonical-001",
-              "canonical-002"
-            ]
-          }
-        }
-      ],
-      "telemetryId": "amazondotcn",
-      "webExtension": {
-        "id": "amazondotcn@search.mozilla.org"
-      },
-      "id": "ccb137f1-7733-464c-bb70-037be4ba2529",
-      "last_modified": 1595254832070
     },
     {
       "schema": 1594312388385,
