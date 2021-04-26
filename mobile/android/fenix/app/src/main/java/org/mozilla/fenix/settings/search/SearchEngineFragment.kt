@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.search
 
 import android.os.Bundle
+import androidx.core.content.edit
 import androidx.navigation.fragment.findNavController
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
@@ -18,6 +19,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.requirePreference
+import org.mozilla.gecko.search.SearchWidgetProvider
 
 class SearchEngineFragment : PreferenceFragmentCompat() {
 
@@ -83,7 +85,16 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         showSyncedTabsSuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
         showClipboardSuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
         searchSuggestionsInPrivatePreference.onPreferenceChangeListener = SharedPreferenceUpdater()
-        showVoiceSearchPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showVoiceSearchPreference.onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                val newBooleanValue = newValue as? Boolean ?: return false
+                requireContext().settings().preferences.edit {
+                    putBoolean(preference.key, newBooleanValue)
+                }
+                SearchWidgetProvider.updateAllWidgets(requireContext())
+                return true
+            }
+        }
         autocompleteURLsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
 
         searchSuggestionsPreference.setOnPreferenceClickListener {

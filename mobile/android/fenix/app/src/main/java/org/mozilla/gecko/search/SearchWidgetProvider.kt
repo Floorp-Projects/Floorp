@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -98,7 +99,12 @@ class SearchWidgetProvider : AppWidgetProvider() {
     /**
      * Builds pending intent that starts a new voice search.
      */
-    private fun createVoiceSearchIntent(context: Context): PendingIntent? {
+    @VisibleForTesting
+    internal fun createVoiceSearchIntent(context: Context): PendingIntent? {
+        if (!context.settings().shouldShowVoiceSearch) {
+            return null
+        }
+
         val voiceIntent = Intent(context, VoiceSearchActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra(SPEECH_PROCESSING, true)
@@ -171,6 +177,20 @@ class SearchWidgetProvider : AppWidgetProvider() {
         private const val DP_LARGE = 256
         private const val REQUEST_CODE_NEW_TAB = 0
         private const val REQUEST_CODE_VOICE = 1
+
+        fun updateAllWidgets(context: Context) {
+            val widgetManager = AppWidgetManager.getInstance(context)
+            val widgetIds = widgetManager.getAppWidgetIds(ComponentName(context, SearchWidgetProvider::class.java))
+
+            if (widgetIds.isNotEmpty()) {
+                context.sendBroadcast(
+                    Intent(context, SearchWidgetProvider::class.java).apply {
+                        action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                        putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds)
+                    }
+                )
+            }
+        }
 
         @VisibleForTesting
         internal fun getLayoutSize(@Dimension(unit = DP) dp: Int) = when {

@@ -4,16 +4,29 @@
 
 package org.mozilla.fenix.widget
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.gecko.search.SearchWidgetProvider
 import org.mozilla.gecko.search.SearchWidgetProviderSize
 
+@RunWith(FenixRobolectricTestRunner::class)
 class SearchWidgetProviderTest {
 
     @Test
@@ -114,5 +127,63 @@ class SearchWidgetProviderTest {
         assertNull(SearchWidgetProvider.getText(SearchWidgetProviderSize.SMALL, context))
         assertNull(SearchWidgetProvider.getText(SearchWidgetProviderSize.EXTRA_SMALL_V1, context))
         assertNull(SearchWidgetProvider.getText(SearchWidgetProviderSize.EXTRA_SMALL_V2, context))
+    }
+
+    @Test
+    fun `GIVEN voice search is disabled WHEN createVoiceSearchIntent is called THEN it returns null`() {
+        val widgetProvider = SearchWidgetProvider()
+        val context: Context = mockk {
+            every { settings().shouldShowVoiceSearch } returns false
+        }
+
+        val result = widgetProvider.createVoiceSearchIntent(context)
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `GIVEN widgets set on screen shown WHEN updateAllWidgets is called THEN it sends a broadcast to update all widgets`() {
+        try {
+            mockkStatic(AppWidgetManager::class)
+            val widgetManager: AppWidgetManager = mockk()
+            every { AppWidgetManager.getInstance(any()) } returns widgetManager
+            val componentNameCaptor = slot<ComponentName>()
+            val widgetsToUpdate = intArrayOf(1, 2)
+            every { widgetManager.getAppWidgetIds(capture(componentNameCaptor)) } returns widgetsToUpdate
+            val context: Context = mockk(relaxed = true)
+            val intentCaptor = slot<Intent>()
+            every { context.sendBroadcast(capture(intentCaptor)) } just Runs
+
+            SearchWidgetProvider.updateAllWidgets(context)
+
+            verify { context.sendBroadcast(any()) }
+            assertEquals(SearchWidgetProvider::class.java.name, componentNameCaptor.captured.className)
+            assertEquals(SearchWidgetProvider::class.java.name, intentCaptor.captured.component!!.className)
+            assertEquals(AppWidgetManager.ACTION_APPWIDGET_UPDATE, intentCaptor.captured.action)
+            assertEquals(widgetsToUpdate, intentCaptor.captured.extras!!.get(AppWidgetManager.EXTRA_APPWIDGET_IDS))
+        } finally {
+            unmockkStatic(AppWidgetManager::class)
+        }
+    }
+
+    @Test
+    fun `GIVEN no widgets set shown WHEN updateAllWidgets is called THEN it does not try to update widgets`() {
+        try {
+            mockkStatic(AppWidgetManager::class)
+            val widgetManager: AppWidgetManager = mockk()
+            every { AppWidgetManager.getInstance(any()) } returns widgetManager
+            val componentNameCaptor = slot<ComponentName>()
+            val widgetsToUpdate = intArrayOf()
+            every { widgetManager.getAppWidgetIds(capture(componentNameCaptor)) } returns widgetsToUpdate
+            val context: Context = mockk(relaxed = true)
+            val intentCaptor = slot<Intent>()
+            every { context.sendBroadcast(capture(intentCaptor)) } just Runs
+
+            SearchWidgetProvider.updateAllWidgets(context)
+
+            verify(exactly = 0) { context.sendBroadcast(any()) }
+        } finally {
+            unmockkStatic(AppWidgetManager::class)
+        }
     }
 }
