@@ -97,41 +97,9 @@ class InspectedWindowCommand {
    * the actor specification: devtools/shared/specs/addon/webextension-inspected-window.js
    * or actor: devtools/server/actors/addon/webextension-inspected-window.js
    */
-  async reload(callerInfo, options = {}) {
-    if (this._pendingReload === true) {
-      return null;
-    }
-
-    this._pendingReload = true;
-
-    try {
-      const onFront = this.getFront();
-
-      // If this is called with a `userAgent` property, we need to update the target configuration
-      // so the custom user agent will be set on the parent process.
-      if (typeof options.userAgent !== undefined) {
-        await this.commands.targetConfigurationCommand.updateConfiguration({
-          customUserAgent: options.userAgent,
-        });
-      }
-
-      const front = await onFront;
-
-      // `reload` returns directly, without waiting for the document to be fully loaded.
-      // So here we listen for the reload-ready event which is emitted once the actor is
-      // ready to accept a new reload call.
-      front.once("reload-ready", () => {
-        this._pendingReload = false;
-      });
-      return front.reload(callerInfo, options);
-    } catch (e) {
-      this._pendingReload = false;
-      Cu.reportError(e);
-      return Promise.reject({
-        message:
-          "An unexpected error occurred when handling browser.devtools.inspectedWindow",
-      });
-    }
+  async reload(callerInfo, options) {
+    const front = await this.getFront();
+    return front.reload(callerInfo, options);
   }
 }
 
