@@ -203,7 +203,7 @@
   background-repeat: no-repeat;
   background-position: center;
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--lwt-toolbarbutton-icon-fill, var(--toolbar-color));
+  fill: var(--toolbarbutton-icon-fill);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
