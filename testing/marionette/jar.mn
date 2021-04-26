@@ -46,6 +46,7 @@ marionette.jar:
   content/stream-utils.js (stream-utils.js)
   content/sync.js (sync.js)
   content/transport.js (transport.js)
+  content/window-manager.js (window-manager.js)
 #ifdef ENABLE_TESTS
   content/test.xhtml (chrome/test.xhtml)
   content/test2.xhtml (chrome/test2.xhtml)
