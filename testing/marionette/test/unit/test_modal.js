@@ -4,20 +4,31 @@
 
 "use strict";
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { modal } = ChromeUtils.import("chrome://marionette/content/modal.js");
 
+const chromeWindow = {};
+
 const mockModalDialog = {
+  docShell: {
+    chromeEventHandler: null,
+  },
   opener: {
-    ownerGlobal: "foo",
+    ownerGlobal: chromeWindow,
+  },
+  Dialog: {
+    args: {
+      modalType: Services.prompt.MODAL_TYPE_WINDOW,
+    },
   },
 };
 
-const mockTabModalDialog = {
-  ownerGlobal: "foo",
+const mockCurBrowser = {
+  window: chromeWindow,
 };
 
 add_test(function test_addCallback() {
-  let observer = new modal.DialogObserver();
+  let observer = new modal.DialogObserver(() => mockCurBrowser);
   let cb1 = () => true;
   let cb2 = () => false;
 
@@ -33,7 +44,7 @@ add_test(function test_addCallback() {
 });
 
 add_test(function test_removeCallback() {
-  let observer = new modal.DialogObserver();
+  let observer = new modal.DialogObserver(() => mockCurBrowser);
   let cb1 = () => true;
   let cb2 = () => false;
 
@@ -53,7 +64,7 @@ add_test(function test_removeCallback() {
 });
 
 add_test(function test_registerDialogClosedEventHandler() {
-  let observer = new modal.DialogObserver();
+  let observer = new modal.DialogObserver(() => mockCurBrowser);
   let mockChromeWindow = {
     addEventListener(event, cb) {
       equal(
@@ -70,40 +81,22 @@ add_test(function test_registerDialogClosedEventHandler() {
 });
 
 add_test(function test_handleCallbackOpenModalDialog() {
-  let observer = new modal.DialogObserver();
+  let observer = new modal.DialogObserver(() => mockCurBrowser);
 
-  observer.add((action, target, win) => {
+  observer.add((action, dialog) => {
     equal(action, modal.ACTION_OPENED, "'opened' action has been passed");
-    equal(
-      target.get(),
-      mockModalDialog,
-      "weak reference has been created for target"
-    );
-    equal(
-      win,
-      mockModalDialog.opener.ownerGlobal,
-      "chrome window has been passed"
-    );
+    equal(dialog, mockModalDialog, "dialog has been passed");
     run_next_test();
   });
   observer.observe(mockModalDialog, "common-dialog-loaded");
 });
 
 add_test(function test_handleCallbackCloseModalDialog() {
-  let observer = new modal.DialogObserver();
+  let observer = new modal.DialogObserver(() => mockCurBrowser);
 
-  observer.add((action, target, win) => {
+  observer.add((action, dialog) => {
     equal(action, modal.ACTION_CLOSED, "'closed' action has been passed");
-    equal(
-      target.get(),
-      mockModalDialog,
-      "weak reference has been created for target"
-    );
-    equal(
-      win,
-      mockModalDialog.opener.ownerGlobal,
-      "chrome window has been passed"
-    );
+    equal(dialog, mockModalDialog, "dialog has been passed");
     run_next_test();
   });
   observer.handleEvent({
@@ -112,49 +105,14 @@ add_test(function test_handleCallbackCloseModalDialog() {
   });
 });
 
-add_test(function test_handleCallbackOpenTabModalDialog() {
-  let observer = new modal.DialogObserver();
-
-  observer.add((action, target, win) => {
-    equal(action, modal.ACTION_OPENED, "'opened' action has been passed");
-    equal(
-      target.get(),
-      mockTabModalDialog,
-      "weak reference has been created for target"
-    );
-    equal(win, mockTabModalDialog.ownerGlobal, "chrome window has been passed");
-    run_next_test();
-  });
-  observer.observe(mockTabModalDialog, "tabmodal-dialog-loaded");
-});
-
 add_test(function test_dialogClosed() {
-  let observer = new modal.DialogObserver();
+  let observer = new modal.DialogObserver(() => mockCurBrowser);
 
-  observer.dialogClosed(mockTabModalDialog.ownerGlobal).then(() => {
+  observer.dialogClosed().then(() => {
     run_next_test();
   });
   observer.handleEvent({
     type: "DOMModalDialogClosed",
-    target: mockTabModalDialog,
-  });
-});
-
-add_test(function test_handleCallbackCloseTabModalDialog() {
-  let observer = new modal.DialogObserver();
-
-  observer.add((action, target, win) => {
-    equal(action, modal.ACTION_CLOSED, "'closed' action has been passed");
-    equal(
-      target.get(),
-      mockTabModalDialog,
-      "weak reference has been created for target"
-    );
-    equal(win, mockTabModalDialog.ownerGlobal, "chrome window has been passed");
-    run_next_test();
-  });
-  observer.handleEvent({
-    type: "DOMModalDialogClosed",
-    target: mockTabModalDialog,
+    target: mockModalDialog,
   });
 });
