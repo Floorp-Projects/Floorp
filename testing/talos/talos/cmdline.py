@@ -161,6 +161,18 @@ def create_parser(mach_interface=False):
         help="How many samples to take with the profiler",
     )
     add_arg(
+        "--gecko-profile-features",
+        dest="gecko_profile_features",
+        type=str,
+        help="Comma-separated list of features to enable in the profiler",
+    )
+    add_arg(
+        "--gecko-profile-threads",
+        dest="gecko_profile_threads",
+        type=str,
+        help="Comma-separated list of threads to sample",
+    )
+    add_arg(
         "--extension",
         dest="extensions",
         action="append",

@@ -199,9 +199,22 @@ def create_parser(mach_interface=False):
     )
     add_arg(
         "--gecko-profile-thread",
-        dest="gecko_profile_threads",
+        dest="gecko_profile_extra_threads",
+        default=[],
         action="append",
         help="Name of the extra thread to be profiled",
+    )
+    add_arg(
+        "--gecko-profile-threads",
+        dest="gecko_profile_threads",
+        type=str,
+        help="Comma-separated list of all threads to sample",
+    )
+    add_arg(
+        "--gecko-profile-features",
+        dest="gecko_profile_features",
+        type=str,
+        help="What features to enable in the profiler",
     )
     add_arg(
         "--symbolsPath",
