@@ -306,10 +306,6 @@ add_task(
         );
         const previousBrowsingContextId =
           gBrowser.selectedBrowser.browsingContext.id;
-        onPageLoaded = BrowserTestUtils.browserLoaded(
-          gBrowser.selectedBrowser,
-          true
-        );
 
         // Navigate to a different origin
         await navigateToWithDevToolsOpen(
