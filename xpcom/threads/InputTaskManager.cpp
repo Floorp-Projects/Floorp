@@ -160,7 +160,6 @@ void InputTaskManager::InputPriorityController::LeavePendingVsyncState(
     MOZ_ASSERT(mInputVsyncState == InputVsyncState::HasPendingVsync);
     mInputVsyncState = InputVsyncState::RunVsync;
   } else {
-    MOZ_ASSERT(mInputVsyncState == InputVsyncState::RunVsync);
     mInputVsyncState = InputVsyncState::NoPendingVsync;
   }
 
