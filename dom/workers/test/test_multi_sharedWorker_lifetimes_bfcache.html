@@ -115,8 +115,14 @@
 
         let sendToGenerator = testGenerator.next.bind(testGenerator);
 
+        function runTest() {
+          // If Fission is disabled, the pref is no-op.
+          SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+            testGenerator.next();
+          });
+        }
       </script>
   </head>
-  <body onload="testGenerator.next();">
+  <body onload="runTest()">
   </body>
 </html>
