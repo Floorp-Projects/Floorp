@@ -145,8 +145,13 @@
 }
 } /*** END proton ***/
 
+#urlbar[searchmode]:not([focused="true"]) > #urlbar-input-container > #urlbar-search-mode-indicator,
 #urlbar[searchmode]:not([focused="true"]) > #urlbar-input-container > #urlbar-label-box {
   pointer-events: none;
+}
+
+#urlbar[searchmode]:not([focused="true"]) > #urlbar-input-container > #urlbar-search-mode-indicator > #urlbar-search-mode-indicator-close {
+  pointer-events: initial;
 }
 
 @media not (-moz-proton) {
