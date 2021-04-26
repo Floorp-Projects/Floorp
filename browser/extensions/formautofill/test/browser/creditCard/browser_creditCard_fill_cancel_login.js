@@ -17,12 +17,8 @@ add_task(async function test_fill_creditCard_but_cancel_login() {
     async function(browser) {
       await openPopupOn(browser, "#cc-name");
       const ccItem = getDisplayedPopupItems(browser)[0];
-      let popupClosePromise = BrowserTestUtils.waitForPopupEvent(
-        browser.autoCompletePopup,
-        "hidden"
-      );
       await EventUtils.synthesizeMouseAtCenter(ccItem, {});
-      await Promise.all([osKeyStoreLoginShown, popupClosePromise]);
+      await Promise.all([osKeyStoreLoginShown, expectPopupClose(browser)]);
 
       await SpecialPowers.spawn(browser, [], async function() {
         is(content.document.querySelector("#cc-name").value, "", "Check name");
