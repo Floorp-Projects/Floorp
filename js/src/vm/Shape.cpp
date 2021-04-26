@@ -571,17 +571,14 @@ bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
   }
 
   // Find or create a property tree node labeled by our arguments.
-  RootedShape shape(cx);
-  {
-    RootedShape last(cx, obj->lastProperty());
-    ObjectFlags objectFlags = GetObjectFlagsForNewProperty(last, id, attrs, cx);
+  RootedShape last(cx, obj->lastProperty());
+  ObjectFlags objectFlags = GetObjectFlagsForNewProperty(last, id, attrs, cx);
 
-    Rooted<StackShape> child(
-        cx, StackShape(last->base(), objectFlags, id, slot, attrs));
-    shape = getChildProperty(cx, obj, last, &child);
-    if (!shape) {
-      return false;
-    }
+  Rooted<StackShape> child(
+      cx, StackShape(last->base(), objectFlags, id, slot, attrs));
+  Shape* shape = getChildProperty(cx, obj, last, &child);
+  if (!shape) {
+    return false;
   }
 
   MOZ_ASSERT(shape == obj->lastProperty());
