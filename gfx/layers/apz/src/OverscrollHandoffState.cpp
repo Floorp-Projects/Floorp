@@ -152,6 +152,20 @@ RefPtr<AsyncPanZoomController> OverscrollHandoffChain::FindFirstScrollable(
       return mChain[i];
     }
 
+    // If there is any directions we allow overscroll effects on the root
+    // content APZC (i.e. the overscroll-behavior of the root one is not
+    // `none`), we consider the APZC can be scrollable in terms of pan gestures
+    // because it causes overscrolling even if it's not able to scroll to the
+    // direction.
+    if (StaticPrefs::apz_overscroll_enabled() &&
+        // FIXME: Bug 1707491: Drop this pan gesture input check.
+        aInput.mInputType == PANGESTURE_INPUT && mChain[i]->IsRootContent()) {
+      *aOutAllowedScrollDirections &= mChain[i]->GetOverscrollableDirections();
+      if (!aOutAllowedScrollDirections->isEmpty()) {
+        return mChain[i];
+      }
+    }
+
     *aOutAllowedScrollDirections &= mChain[i]->GetAllowedHandoffDirections();
     if (aOutAllowedScrollDirections->isEmpty()) {
       return nullptr;
