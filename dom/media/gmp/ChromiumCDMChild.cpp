@@ -318,6 +318,14 @@ void ChromiumCDMChild::OnSessionClosed(const char* aSessionId,
                           nsCString(aSessionId, aSessionIdSize));
 }
 
+void ChromiumCDMChild::QueryOutputProtectionStatus() {
+  GMP_LOG_DEBUG("ChromiumCDMChild::QueryOutputProtectionStatus()");
+  if (mCDM) {
+    mCDM->OnQueryOutputProtectionStatus(cdm::kQuerySucceeded, uint32_t{},
+                                        uint32_t{});
+  }
+}
+
 void ChromiumCDMChild::OnInitialized(bool aSuccess) {
   MOZ_ASSERT(!mInitPromise.IsEmpty(),
              "mInitPromise should exist during init callback!");
