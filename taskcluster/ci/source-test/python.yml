@@ -206,6 +206,7 @@ mozlint:
     python-version: [3]
     treeherder:
         symbol: mozlint
+        tier: 2
     run:
         using: python-test
         subsuite: mozlint
