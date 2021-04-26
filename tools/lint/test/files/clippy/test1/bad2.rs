@@ -5,10 +5,7 @@ fn main() {
     println!("Hello World!");
     let mut a;
     let mut b=1;
-    let mut vec = Vec::new();
-    vec.push(1);
-    vec.push(2);
-
+    let mut vec = vec![1, 2];
 
     for x in 5..10 - 5 {
         a = x;
