@@ -33,10 +33,15 @@ def test_basic(lint, config, paths):
     assert results[5].relpath == "test1/bad2.rs"
     assert results[5].rule == "unused_mut"
 
-    assert "this range is empty so" in results[6].message
-    assert results[6].level == "error"
+    assert "unused variable: `vec`" in results[6].message
+    assert results[6].level == "warning"
     assert results[6].relpath == "test1/bad2.rs"
-    assert results[6].rule == "clippy::reversed_empty_ranges"
+    assert results[6].rule == "unused_variables"
+
+    assert "this range is empty so" in results[8].message
+    assert results[8].level == "error"
+    assert results[8].relpath == "test1/bad2.rs"
+    assert results[8].rule == "clippy::reversed_empty_ranges"
 
 
 def test_error(lint, config, paths):
@@ -60,12 +65,19 @@ def test_file_and_path_provided(lint, config, paths):
     assert results[0].relpath == "test1/bad.rs"
     assert "tools/lint/test/files/clippy/test1/bad.rs" in results[0].path
     assert "value assigned to `a` is never read" in results[0].message
-    assert results[8].level == "warning"
-    assert results[8].lineno == 1
-    assert results[8].column == 4
-    assert results[8].rule == "dead_code"
-    assert results[8].relpath == "test2/src/bad_1.rs"
-    assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[8].path
+    assert results[8].level == "error"
+    assert results[8].lineno == 10
+    assert results[8].column == 14
+    assert results[8].rule == "clippy::reversed_empty_ranges"
+    assert results[8].relpath == "test1/bad2.rs"
+    assert "tools/lint/test/files/clippy/test1/bad2.rs" in results[8].path
+
+    assert results[10].level == "warning"
+    assert results[10].lineno == 1
+    assert results[10].column == 4
+    assert results[10].rule == "dead_code"
+    assert results[10].relpath == "test2/src/bad_1.rs"
+    assert "tools/lint/test/files/clippy/test2/src/bad_1.rs" in results[10].path
     for r in results:
         assert "bad_2.rs" not in r.relpath
 
