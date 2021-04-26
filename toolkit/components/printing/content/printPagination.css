@@ -68,7 +68,7 @@
   background-position: center center;
   background-size: 12px;
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
+  fill: var(--toolbarbutton-icon-fill);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 

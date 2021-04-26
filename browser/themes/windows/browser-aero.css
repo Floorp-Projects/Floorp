@@ -72,7 +72,7 @@
             color: -moz-accent-color-foreground;
           }
           :root[tabsintitlebar][lwt-default-theme-in-dark-mode] #titlebar {
-            --lwt-toolbarbutton-icon-fill: currentColor;
+            --toolbarbutton-icon-fill: currentColor;
             --toolbarbutton-icon-fill-opacity: .7;
           }
         }

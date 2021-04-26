@@ -88,11 +88,6 @@ add_task(async function test_no_icons_properties() {
 
   let toolbarbutton = document.querySelector("#home-button");
   let toolbarbuttonCS = window.getComputedStyle(toolbarbutton);
-  Assert.equal(
-    toolbarbuttonCS.getPropertyValue("--lwt-toolbarbutton-icon-fill"),
-    "",
-    "Icon fill should not be set when the value is not specified in the manifest."
-  );
   let currentColor = toolbarbuttonCS.getPropertyValue("color");
   Assert.equal(
     window.getComputedStyle(toolbarbutton).getPropertyValue("fill"),
