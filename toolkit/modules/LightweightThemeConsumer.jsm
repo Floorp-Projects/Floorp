@@ -96,7 +96,7 @@ const toolkitVariableMap = [
         );
         element.style.setProperty(
           descriptionColorVariable,
-          `rgba(${r}, ${g}, ${b}, 0.65)`
+          `rgba(${r}, ${g}, ${b}, 0.7)`
         );
         return `rgba(${r}, ${g}, ${b}, ${a})`;
       },
