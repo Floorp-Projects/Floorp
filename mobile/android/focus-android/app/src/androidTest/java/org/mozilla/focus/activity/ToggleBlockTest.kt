@@ -21,12 +21,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
-import org.mozilla.focus.helpers.SessionLoadedIdlingResource
 import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.pressBackKey
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.waitForWebContent
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 import java.io.IOException
 
 // This test toggles blocking within the browser view

@@ -17,7 +17,7 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
-import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
+import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource;
 
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.UiAutomatorScreenshotStrategy;
