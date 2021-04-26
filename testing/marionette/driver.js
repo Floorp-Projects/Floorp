@@ -52,6 +52,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
   unregisterEventsActor:
     "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
+  waitForEvent: "chrome://marionette/content/sync.js",
   waitForLoadEvent: "chrome://marionette/content/sync.js",
   waitForObserverTopic: "chrome://marionette/content/sync.js",
   WebDriverSession: "chrome://marionette/content/session.js",
@@ -226,10 +227,14 @@ GeckoDriver.prototype.QueryInterface = ChromeUtils.generateQI([
  * Callback used to observe the creation of new modal or tab modal dialogs
  * during the session's lifetime.
  */
-GeckoDriver.prototype.handleModalDialog = function(action, dialog) {
+GeckoDriver.prototype.handleModalDialog = function(action, dialog, win) {
+  // Only care about modals of the currently selected window.
+  if (win !== this.curBrowser.window) {
+    return;
+  }
+
   if (action === modal.ACTION_OPENED) {
     this.dialog = new modal.Dialog(() => this.curBrowser, dialog);
-    this.getActor().notifyDialogOpened();
   } else if (action === modal.ACTION_CLOSED) {
     this.dialog = null;
   }
@@ -615,7 +620,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   }
 
   // Setup observer for modal dialogs
-  this.dialogObserver = new modal.DialogObserver(() => this.curBrowser);
+  this.dialogObserver = new modal.DialogObserver(this);
   this.dialogObserver.add(this.handleModalDialog.bind(this));
 
   Services.obs.addObserver(this, "browsing-context-attached");
@@ -1441,12 +1446,7 @@ GeckoDriver.prototype.setWindowHandle = async function(
       tab?.linkedBrowser.browsingContext;
   }
 
-  // Check for existing dialogs for the new window
-  this.dialog = modal.findModalDialogs(this.curBrowser);
-
-  // If there is an open window modal dialog the underlying chrome window
-  // cannot be focused.
-  if (focus && !this.dialog?.isWindowModal) {
+  if (focus) {
     await this.curBrowser.focusWindow();
   }
 };
@@ -2624,14 +2624,13 @@ GeckoDriver.prototype.dismissDialog = async function() {
   assert.open(this.getBrowsingContext({ top: true }));
   this._checkIfAlertIsPresent();
 
-  const dialogClosed = this.dialogObserver.dialogClosed();
+  const win = this.getCurrentWindow();
+  const dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
 
   const { button0, button1 } = this.dialog.ui;
   (button1 ? button1 : button0).click();
 
   await dialogClosed;
-
-  const win = this.getCurrentWindow();
   await new IdlePromise(win);
 };
 
@@ -2646,14 +2645,13 @@ GeckoDriver.prototype.acceptDialog = async function() {
   assert.open(this.getBrowsingContext({ top: true }));
   this._checkIfAlertIsPresent();
 
-  const dialogClosed = this.dialogObserver.dialogClosed();
+  const win = this.getCurrentWindow();
+  const dialogClosed = waitForEvent(win, "DOMModalDialogClosed");
 
   const { button0 } = this.dialog.ui;
   button0.click();
 
   await dialogClosed;
-
-  const win = this.getCurrentWindow();
   await new IdlePromise(win);
 };
 
