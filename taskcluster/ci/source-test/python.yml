@@ -28,7 +28,7 @@ job-defaults:
                 max-run-time: 3600
     treeherder:
         kind: test
-        tier: 2
+        tier: 1
     run:
         using: mach
     when:
