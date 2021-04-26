@@ -235,6 +235,7 @@ GeckoDriver.prototype.handleModalDialog = function(action, dialog, win) {
 
   if (action === modal.ACTION_OPENED) {
     this.dialog = new modal.Dialog(() => this.curBrowser, dialog);
+    this.getActor().notifyDialogOpened();
   } else if (action === modal.ACTION_CLOSED) {
     this.dialog = null;
   }
