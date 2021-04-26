@@ -591,6 +591,14 @@ impl TransformPaletteId {
             TransformedRectKind::Complex
         }
     }
+
+    /// Override the kind of transform stored in this id. This can be useful in
+    /// cases where we don't want shaders to consider certain transforms axis-
+    /// aligned (i.e. perspective warp) even though we may still want to for the
+    /// general case.
+    pub fn override_transform_kind(&self, kind: TransformedRectKind) -> Self {
+        TransformPaletteId((self.0 & 0xFFFFFFu32) | ((kind as u32) << 24))
+    }
 }
 
 /// The GPU data payload for a transform palette entry.
