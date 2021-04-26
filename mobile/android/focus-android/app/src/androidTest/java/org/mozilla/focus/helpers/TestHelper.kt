@@ -112,6 +112,21 @@ object TestHelper {
         }
     }
 
+    fun setNetworkEnabled(enabled: Boolean) {
+        when (enabled) {
+            true -> {
+                mDevice.executeShellCommand("svc data enable")
+                mDevice.executeShellCommand("svc wifi enable")
+            }
+
+            false -> {
+                mDevice.executeShellCommand("svc data disable")
+                mDevice.executeShellCommand("svc wifi disable")
+            }
+        }
+        mDevice.waitForIdle(waitingTime)
+    }
+
     // wait for web area to be visible
     @JvmStatic
     fun waitForWebContent() {
