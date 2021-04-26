@@ -789,11 +789,12 @@ class GlobalObject : public NativeObject {
     if (exists) {
       return true;
     }
-    if (!cx->runtime()->cloneSelfHostedValue(cx, name, value)) {
-      return false;
-    }
-    return GlobalObject::addIntrinsicValue(cx, global, name, value);
+    return getIntrinsicValueSlow(cx, global, name, value);
   }
+
+  static bool getIntrinsicValueSlow(JSContext* cx, Handle<GlobalObject*> global,
+                                    HandlePropertyName name,
+                                    MutableHandleValue value);
 
   static bool addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
                                 HandlePropertyName name, HandleValue value);
