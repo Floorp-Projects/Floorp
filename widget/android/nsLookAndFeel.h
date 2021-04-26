@@ -23,8 +23,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   virtual bool GetEchoPasswordImpl() override;
   virtual uint32_t GetPasswordMaskDelayImpl() override;
   virtual char16_t GetPasswordCharacterImpl() override;
- protected:
 
+ protected:
   bool mInitializedSystemColors = false;
   mozilla::AndroidSystemColors mSystemColors;
   bool mInitializedShowPassword = false;

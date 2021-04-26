@@ -32,8 +32,7 @@ class nsNativeThemeWin : private nsNativeTheme, public nsITheme {
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  const nsRect& aRect,
-                                  const nsRect& aDirtyRect,
+                                  const nsRect& aRect, const nsRect& aDirtyRect,
                                   DrawOverflow) override;
 
   [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(

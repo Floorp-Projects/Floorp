@@ -55,9 +55,7 @@ class nsMappedAttributes final {
   auto Attrs() const {
     return mozilla::Span<const InternalAttr>{mBuffer, mAttrCount};
   }
-  auto Attrs() {
-    return mozilla::Span<InternalAttr>{mBuffer, mAttrCount};
-  }
+  auto Attrs() { return mozilla::Span<InternalAttr>{mBuffer, mAttrCount}; }
   const nsAttrName* NameAt(uint32_t aPos) const {
     NS_ASSERTION(aPos < mAttrCount, "out-of-bounds");
     return &Attrs()[aPos].mName;

@@ -18,8 +18,7 @@ NS_IMETHODIMP
 HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
                                        const nsRect& aRect,
-                                       const nsRect& aDirtyRect,
-                                       DrawOverflow) {
+                                       const nsRect& aDirtyRect, DrawOverflow) {
   return NS_OK;
 }
 

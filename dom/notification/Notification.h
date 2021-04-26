@@ -251,8 +251,7 @@ class Notification : public DOMEventTargetHelper,
 
   static already_AddRefed<Notification> CreateInternal(
       nsIGlobalObject* aGlobal, const nsAString& aID, const nsAString& aTitle,
-      const NotificationOptions& aOptions,
-      ErrorResult& aRv);
+      const NotificationOptions& aOptions, ErrorResult& aRv);
 
   nsresult Init();
   bool IsInPrivateBrowsing();
