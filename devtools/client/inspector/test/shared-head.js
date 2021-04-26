@@ -763,7 +763,7 @@ async function waitUntilVisitedState(tab, selectors) {
       tab.linkedBrowser,
       selectors,
       args => {
-        const NS_EVENT_STATE_VISITED = 1 << 24;
+        const NS_EVENT_STATE_VISITED = 1 << 19;
 
         for (const selector of args) {
           const target = content.wrappedJSObject.document.querySelector(

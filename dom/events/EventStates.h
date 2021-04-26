@@ -199,57 +199,50 @@ class EventStates {
 #define NS_EVENT_STATE_MOZ_UI_INVALID NS_DEFINE_EVENT_STATE_MACRO(13)
 // Content could not be rendered (image/object/etc).
 #define NS_EVENT_STATE_BROKEN NS_DEFINE_EVENT_STATE_MACRO(14)
-
-// There are two free bits here.
-
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet).
-#define NS_EVENT_STATE_LOADING NS_DEFINE_EVENT_STATE_MACRO(17)
+#define NS_EVENT_STATE_LOADING NS_DEFINE_EVENT_STATE_MACRO(15)
 // Content is required.
-#define NS_EVENT_STATE_REQUIRED NS_DEFINE_EVENT_STATE_MACRO(21)
+#define NS_EVENT_STATE_REQUIRED NS_DEFINE_EVENT_STATE_MACRO(16)
 // Content is optional (and can be required).
-#define NS_EVENT_STATE_OPTIONAL NS_DEFINE_EVENT_STATE_MACRO(22)
+#define NS_EVENT_STATE_OPTIONAL NS_DEFINE_EVENT_STATE_MACRO(17)
 // Element is either a defined custom element or uncustomized element.
-#define NS_EVENT_STATE_DEFINED NS_DEFINE_EVENT_STATE_MACRO(23)
+#define NS_EVENT_STATE_DEFINED NS_DEFINE_EVENT_STATE_MACRO(18)
 // Link has been visited.
-#define NS_EVENT_STATE_VISITED NS_DEFINE_EVENT_STATE_MACRO(24)
+#define NS_EVENT_STATE_VISITED NS_DEFINE_EVENT_STATE_MACRO(19)
 // Link hasn't been visited.
-#define NS_EVENT_STATE_UNVISITED NS_DEFINE_EVENT_STATE_MACRO(25)
+#define NS_EVENT_STATE_UNVISITED NS_DEFINE_EVENT_STATE_MACRO(20)
 // Drag is hovering over content.
-#define NS_EVENT_STATE_DRAGOVER NS_DEFINE_EVENT_STATE_MACRO(26)
+#define NS_EVENT_STATE_DRAGOVER NS_DEFINE_EVENT_STATE_MACRO(21)
 // Content value is in-range (and can be out-of-range).
-#define NS_EVENT_STATE_INRANGE NS_DEFINE_EVENT_STATE_MACRO(27)
+#define NS_EVENT_STATE_INRANGE NS_DEFINE_EVENT_STATE_MACRO(22)
 // Content value is out-of-range.
-#define NS_EVENT_STATE_OUTOFRANGE NS_DEFINE_EVENT_STATE_MACRO(28)
+#define NS_EVENT_STATE_OUTOFRANGE NS_DEFINE_EVENT_STATE_MACRO(23)
 // Content is read-only.
 // TODO(emilio): This is always the inverse of READWRITE. With some style system
 // work we could remove one of the two bits.
-#define NS_EVENT_STATE_READONLY NS_DEFINE_EVENT_STATE_MACRO(29)
+#define NS_EVENT_STATE_READONLY NS_DEFINE_EVENT_STATE_MACRO(24)
 // Content is editable.
-#define NS_EVENT_STATE_READWRITE NS_DEFINE_EVENT_STATE_MACRO(30)
+#define NS_EVENT_STATE_READWRITE NS_DEFINE_EVENT_STATE_MACRO(25)
 // Content is the default one (meaning depends of the context).
-#define NS_EVENT_STATE_DEFAULT NS_DEFINE_EVENT_STATE_MACRO(31)
+#define NS_EVENT_STATE_DEFAULT NS_DEFINE_EVENT_STATE_MACRO(26)
 // Content is a submit control and the form isn't valid.
-#define NS_EVENT_STATE_MOZ_SUBMITINVALID NS_DEFINE_EVENT_STATE_MACRO(32)
+#define NS_EVENT_STATE_MOZ_SUBMITINVALID NS_DEFINE_EVENT_STATE_MACRO(27)
 // Content is in the optimum region.
-#define NS_EVENT_STATE_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(33)
+#define NS_EVENT_STATE_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(28)
 // Content is in the suboptimal region.
-#define NS_EVENT_STATE_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(34)
+#define NS_EVENT_STATE_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(29)
 // Content is in the sub-suboptimal region.
-#define NS_EVENT_STATE_SUB_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(35)
-// Element is highlighted (devtools inspector)
-#define NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED NS_DEFINE_EVENT_STATE_MACRO(36)
-// Element is transitioning for rules changed by style editor
-#define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(37)
-#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(38)
+#define NS_EVENT_STATE_SUB_SUB_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(30)
+#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL NS_DEFINE_EVENT_STATE_MACRO(31)
 // Content has focus and should show a ring.
-#define NS_EVENT_STATE_FOCUSRING NS_DEFINE_EVENT_STATE_MACRO(39)
+#define NS_EVENT_STATE_FOCUSRING NS_DEFINE_EVENT_STATE_MACRO(32)
 // Element has focus-within.
-#define NS_EVENT_STATE_FOCUS_WITHIN NS_DEFINE_EVENT_STATE_MACRO(43)
+#define NS_EVENT_STATE_FOCUS_WITHIN NS_DEFINE_EVENT_STATE_MACRO(33)
 // Element is ltr (for :dir pseudo-class)
-#define NS_EVENT_STATE_LTR NS_DEFINE_EVENT_STATE_MACRO(44)
+#define NS_EVENT_STATE_LTR NS_DEFINE_EVENT_STATE_MACRO(34)
 // Element is rtl (for :dir pseudo-class)
-#define NS_EVENT_STATE_RTL NS_DEFINE_EVENT_STATE_MACRO(45)
+#define NS_EVENT_STATE_RTL NS_DEFINE_EVENT_STATE_MACRO(35)
 // States for tracking the state of the "dir" attribute for HTML elements.  We
 // use these to avoid having to get "dir" attributes all the time during
 // selector matching for some parts of the UA stylesheet.
@@ -260,28 +253,31 @@ class EventStates {
 // Element is HTML and has a "dir" attibute.  This state might go away depending
 // on how https://github.com/whatwg/html/issues/2769 gets resolved.  The value
 // could be anything.
-#define NS_EVENT_STATE_HAS_DIR_ATTR NS_DEFINE_EVENT_STATE_MACRO(46)
+#define NS_EVENT_STATE_HAS_DIR_ATTR NS_DEFINE_EVENT_STATE_MACRO(36)
 // Element is HTML, has a "dir" attribute, and the attribute's value is
 // case-insensitively equal to "ltr".
-#define NS_EVENT_STATE_DIR_ATTR_LTR NS_DEFINE_EVENT_STATE_MACRO(47)
+#define NS_EVENT_STATE_DIR_ATTR_LTR NS_DEFINE_EVENT_STATE_MACRO(37)
 // Element is HTML, has a "dir" attribute, and the attribute's value is
 // case-insensitively equal to "rtl".
-#define NS_EVENT_STATE_DIR_ATTR_RTL NS_DEFINE_EVENT_STATE_MACRO(48)
+#define NS_EVENT_STATE_DIR_ATTR_RTL NS_DEFINE_EVENT_STATE_MACRO(38)
 // Element is HTML, and is either a <bdi> element with no valid-valued "dir"
 // attribute or any HTML element which has a "dir" attribute whose value is
 // "auto".
-#define NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO NS_DEFINE_EVENT_STATE_MACRO(49)
+#define NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO NS_DEFINE_EVENT_STATE_MACRO(39)
 // Element is filled by Autofill feature.
-#define NS_EVENT_STATE_AUTOFILL NS_DEFINE_EVENT_STATE_MACRO(50)
+#define NS_EVENT_STATE_AUTOFILL NS_DEFINE_EVENT_STATE_MACRO(40)
 // Element is filled with preview data by Autofill feature.
-#define NS_EVENT_STATE_AUTOFILL_PREVIEW NS_DEFINE_EVENT_STATE_MACRO(51)
-// There's a free bit here.
+#define NS_EVENT_STATE_AUTOFILL_PREVIEW NS_DEFINE_EVENT_STATE_MACRO(41)
 // Modal <dialog> element
-#define NS_EVENT_STATE_MODAL_DIALOG NS_DEFINE_EVENT_STATE_MACRO(53)
+#define NS_EVENT_STATE_MODAL_DIALOG NS_DEFINE_EVENT_STATE_MACRO(42)
 // Inert subtrees
-#define NS_EVENT_STATE_MOZINERT NS_DEFINE_EVENT_STATE_MACRO(54)
+#define NS_EVENT_STATE_MOZINERT NS_DEFINE_EVENT_STATE_MACRO(43)
 // Topmost Modal <dialog> element in top layer
-#define NS_EVENT_STATE_TOPMOST_MODAL_DIALOG NS_DEFINE_EVENT_STATE_MACRO(55)
+#define NS_EVENT_STATE_TOPMOST_MODAL_DIALOG NS_DEFINE_EVENT_STATE_MACRO(44)
+// Devtools highlighter (but it's used for something else atm).
+#define NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED NS_DEFINE_EVENT_STATE_MACRO(45)
+// Devtools style inspector stuff.
+#define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(46)
 /**
  * NOTE: do not go over 63 without updating EventStates::InternalType!
  */
