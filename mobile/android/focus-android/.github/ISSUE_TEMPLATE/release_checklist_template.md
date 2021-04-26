@@ -14,7 +14,7 @@ Code freeze for a milestone is the *second Friday of the sprint*, and most of re
 
 ## Feature complete [Monday, 1st week of next milestone]
 
-- [ ] Create a branch for the *current* milestone and protect it through Settings on the repo (need admin privileges). After that master is tracking the next milestone. Usually done on the Monday after feature complete on Friday.
+- [ ] Create a branch for the *current* milestone and protect it through Settings on the repo (need admin privileges). After that `main` is tracking the next milestone. Usually done on the Monday after feature complete on Friday.
 - [ ] Create an issue in the *upcoming* milestone: "What's New Entry for [release]" to track work for the SUMO page ([example](https://github.com/mozilla-mobile/focus-android/issues/1670)).
 - [ ] [Create an issue](https://github.com/mozilla-mobile/focus-android/issues/new?template=release_checklist_template.md&title=Releng+for+) in the *upcoming* milestone: "Releng for [release]" and copy this checklist into it. Assign the next assignee.
 - [ ] Go through the list of bugs closed during this sprint and make sure all they're all added to the correct milestone.
@@ -22,7 +22,7 @@ Code freeze for a milestone is the *second Friday of the sprint*, and most of re
 - [ ] Add either `ReadyForQA` or `QANotNeeded` flags on each of the bugs in the current milestone.
 
 ## Final string Import [Wednesday, 1st week of next milestone]
-- [ ] Cherry pick any new string import commits from `master` into the release branch
+- [ ] Cherry pick any new string import commits from `main` into the release branch
 
 ## Beta Submission [Thursday, 1st week of next milestone]
 
@@ -40,7 +40,7 @@ Code freeze for a milestone is the *second Friday of the sprint*, and most of re
 ## During Beta
 
 - [ ] Check Google Play for new crashes. File issues and triage.
-- [ ] If bugs are considered release blocker then fix them on master and the milestone branch (cherry-pick / uplift)
+- [ ] If bugs are considered release blocker then fix them on `main` and the milestone branch (cherry-pick / uplift)
 - [ ] If needed tag a new RC version (e.g. v1.0-RC2) and follow the submission checklist again.
 
 ## Release

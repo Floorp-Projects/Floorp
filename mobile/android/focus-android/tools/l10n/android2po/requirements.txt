@@ -1,7 +1,0 @@
-# Install using pip install -r requirements.txt
-
-argparse
-babel==2.4
-lxml==4.6.3
-ordereddict
-termcolor

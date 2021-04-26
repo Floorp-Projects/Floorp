@@ -140,7 +140,7 @@ class TaskBuilder(object):
                 "name": name,
                 "description": description,
                 "owner": "skaspari@mozilla.com",
-                "source": "https://github.com/mozilla-mobile/focus-android/tree/master/tools/taskcluster"
+                "source": "https://github.com/mozilla-mobile/focus-android/tree/main/tools/taskcluster"
             }
         }
 

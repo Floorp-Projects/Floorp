@@ -4,7 +4,7 @@
 
 """
 This script will be executed whenever a change is pushed to the
-master branch. It will schedule multiple child tasks that build
+main branch. It will schedule multiple child tasks that build
 the app, run tests and execute code quality tools:
 """
 
@@ -20,7 +20,7 @@ REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
 BRANCH = os.environ.get('MOBILE_HEAD_BRANCH')
 COMMIT = os.environ.get('MOBILE_HEAD_REV')
 OWNER = "skaspari@mozilla.com"
-SOURCE = "https://github.com/mozilla-mobile/focus-android/tree/master/tools/taskcluster"
+SOURCE = "https://github.com/mozilla-mobile/focus-android/tree/main/tools/taskcluster"
 
 
 def generate_build_task():
