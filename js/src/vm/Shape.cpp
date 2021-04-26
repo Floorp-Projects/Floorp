@@ -36,9 +36,6 @@ using mozilla::PodZero;
 
 using JS::AutoCheckCannotGC;
 
-Shape* const ShapeTable::Entry::SHAPE_REMOVED =
-    (Shape*)ShapeTable::Entry::SHAPE_COLLISION;
-
 bool ShapeIC::init(JSContext* cx) {
   size_ = MAX_SIZE;
   entries_.reset(cx->pod_calloc<Entry>(size_));
@@ -46,40 +43,16 @@ bool ShapeIC::init(JSContext* cx) {
 }
 
 bool ShapeTable::init(JSContext* cx, Shape* lastProp) {
-  uint32_t sizeLog2 = CeilingLog2Size(entryCount_);
-  uint32_t size = Bit(sizeLog2);
-  if (entryCount_ >= size - (size >> 2)) {
-    sizeLog2++;
-  }
-  if (sizeLog2 < MIN_SIZE_LOG2) {
-    sizeLog2 = MIN_SIZE_LOG2;
-  }
-
-  size = Bit(sizeLog2);
-  entries_.reset(cx->pod_calloc<Entry>(size));
-  if (!entries_) {
+  if (!set_.reserve(lastProp->entryCount())) {
+    ReportOutOfMemory(cx);
     return false;
   }
 
-  MOZ_ASSERT(sizeLog2 <= HASH_BITS);
-  hashShift_ = HASH_BITS - sizeLog2;
-
   for (Shape::Range<NoGC> r(lastProp); !r.empty(); r.popFront()) {
     Shape& shape = r.front();
-    Entry& entry = searchUnchecked<MaybeAdding::Adding>(shape.propid());
-
-    /*
-     * Beware duplicate args and arg vs. var conflicts: the youngest shape
-     * (nearest to lastProp) must win. See bug 600067.
-     */
-    if (!entry.shape()) {
-      entry.setPreservingCollision(&shape);
-    }
+    set_.putNewInfallible(shape.propidRaw(), &shape);
   }
 
-  MOZ_ASSERT(capacity() == size);
-  MOZ_ASSERT(size >= MIN_SIZE);
-  MOZ_ASSERT(!needsToGrow());
   return true;
 }
 
@@ -143,8 +116,7 @@ void Shape::handoffTableTo(Shape* shape) {
 bool Shape::hashify(JSContext* cx, Shape* shape) {
   MOZ_ASSERT(!shape->hasTable());
 
-  UniquePtr<ShapeTable> table =
-      cx->make_unique<ShapeTable>(shape->entryCount());
+  UniquePtr<ShapeTable> table = cx->make_unique<ShapeTable>();
   if (!table) {
     return false;
   }
@@ -192,65 +164,6 @@ bool Shape::cachify(JSContext* cx, Shape* shape) {
   return true;
 }
 
-bool ShapeTable::change(JSContext* cx, int log2Delta) {
-  MOZ_ASSERT(entries_);
-  MOZ_ASSERT(-1 <= log2Delta && log2Delta <= 1);
-
-  /*
-   * Grow, shrink, or compress by changing this->entries_.
-   */
-  uint32_t oldLog2 = HASH_BITS - hashShift_;
-  uint32_t newLog2 = oldLog2 + log2Delta;
-  uint32_t oldSize = Bit(oldLog2);
-  uint32_t newSize = Bit(newLog2);
-  Entry* newTable = cx->maybe_pod_calloc<Entry>(newSize);
-  if (!newTable) {
-    return false;
-  }
-
-  /* Now that we have newTable allocated, update members. */
-  MOZ_ASSERT(newLog2 <= HASH_BITS);
-  hashShift_ = HASH_BITS - newLog2;
-  removedCount_ = 0;
-  Entry* oldTable = entries_.release();
-  entries_.reset(newTable);
-
-  /* Copy only live entries, leaving removed and free ones behind. */
-  AutoCheckCannotGC nogc;
-  for (Entry* oldEntry = oldTable; oldSize != 0; oldEntry++) {
-    if (Shape* shape = oldEntry->shape()) {
-      Entry& entry = search<MaybeAdding::Adding>(shape->propid(), nogc);
-      MOZ_ASSERT(entry.isFree());
-      entry.setShape(shape);
-    }
-    oldSize--;
-  }
-
-  MOZ_ASSERT(capacity() == newSize);
-
-  /* Finally, free the old entries storage. */
-  js_free(oldTable);
-  return true;
-}
-
-bool ShapeTable::grow(JSContext* cx) {
-  MOZ_ASSERT(needsToGrow());
-
-  uint32_t size = capacity();
-  int delta = removedCount_ < (size >> 2);
-
-  MOZ_ASSERT(entryCount_ + removedCount_ <= size - 1);
-
-  if (!change(cx, delta)) {
-    if (entryCount_ + removedCount_ == size - 1) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-  }
-
-  return true;
-}
-
 void ShapeCachePtr::trace(JSTracer* trc) {
   if (isIC()) {
     getICPointer()->trace(trc);
@@ -269,14 +182,12 @@ void ShapeIC::trace(JSTracer* trc) {
 }
 
 void ShapeTable::trace(JSTracer* trc) {
-  for (size_t i = 0; i < capacity(); i++) {
-    Entry& entry = getEntry(i);
-    Shape* shape = entry.shape();
-    if (shape) {
-      TraceManuallyBarrieredEdge(trc, &shape, "ShapeTable shape");
-      if (shape != entry.shape()) {
-        entry.setPreservingCollision(shape);
-      }
+  for (Set::Enum e(set_); !e.empty(); e.popFront()) {
+    Shape* shape = e.front();
+    MOZ_ASSERT(shape);
+    TraceManuallyBarrieredEdge(trc, &shape, "ShapeTable shape");
+    if (shape != e.front()) {
+      e.mutableFront() = shape;
     }
   }
 }
@@ -311,12 +222,10 @@ void ShapeIC::checkAfterMovingGC() {
 }
 
 void ShapeTable::checkAfterMovingGC() {
-  for (size_t i = 0; i < capacity(); i++) {
-    Entry& entry = getEntry(i);
-    Shape* shape = entry.shape();
-    if (shape) {
-      CheckGCThingAfterMovingGC(shape);
-    }
+  for (Set::Enum e(set_); !e.empty(); e.popFront()) {
+    Shape* shape = e.front();
+    MOZ_ASSERT(shape);
+    CheckGCThingAfterMovingGC(shape);
   }
 }
 
@@ -393,19 +302,36 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
   }
 
   if (obj->inDictionaryMode()) {
+    AutoKeepShapeCaches keep(cx);
+    ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+    if (!table) {
+      return nullptr;
+    }
+
     MOZ_ASSERT(parent == obj->lastProperty());
     Shape* shape = Allocate<Shape>(cx);
     if (!shape) {
       return nullptr;
     }
+    // First try to add the shape to the table. If allocating slots below fails,
+    // we have to remove the entry again.
+    if (!table->add(cx, child.propid(), shape)) {
+      new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
+      return nullptr;
+    }
     if (child.slot() >= obj->slotSpan()) {
       if (!obj->ensureSlotsForDictionaryObject(cx, child.slot() + 1)) {
         new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
+        table->remove(child.propid());
         return nullptr;
       }
     }
     shape->initDictionaryShape(child, obj->numFixedSlots(),
                                DictionaryShapeLink(obj));
+
+    // Pass the table along to the new last property.
+    MOZ_ASSERT(shape->previous()->maybeTable(keep) == table);
+    shape->previous()->handoffTableTo(shape);
     return shape;
   }
 
@@ -433,13 +359,27 @@ Shape* Shape::replaceLastProperty(JSContext* cx, ObjectFlags objectFlags,
   child.setSlot(parent->maybeSlot());
 
   if (obj->inDictionaryMode()) {
+    AutoKeepShapeCaches keep(cx);
+    ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+    if (!table) {
+      return nullptr;
+    }
+
     MOZ_ASSERT(parent == obj->lastProperty());
     Shape* shape = Allocate<Shape>(cx);
     if (!shape) {
       return nullptr;
     }
+    if (!table->add(cx, child.propid(), shape)) {
+      new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
+      return nullptr;
+    }
     shape->initDictionaryShape(child, obj->numFixedSlots(),
                                DictionaryShapeLink(obj));
+
+    // Pass the table along to the new last property.
+    MOZ_ASSERT(shape->previous()->maybeTable(keep) == table);
+    shape->previous()->handoffTableTo(shape);
     return shape;
   }
 
@@ -553,49 +493,15 @@ class MOZ_RAII AutoCheckShapeConsistency {
 }  // namespace js
 
 /* static */ MOZ_ALWAYS_INLINE bool
-NativeObject::maybeConvertToOrGrowDictionaryForAdd(
-    JSContext* cx, HandleNativeObject obj, HandleId id, ShapeTable** table,
-    ShapeTable::Entry** entry, const AutoKeepShapeCaches& keep) {
-  MOZ_ASSERT(!!*table == !!*entry);
-
-  // The code below deals with either converting obj to dictionary mode or
-  // growing an object that's already in dictionary mode.
-  if (!obj->inDictionaryMode()) {
-    if (!ShouldConvertToDictionary(obj)) {
-      return true;
-    }
-    if (!toDictionaryMode(cx, obj)) {
-      return false;
-    }
-    *table = obj->lastProperty()->maybeTable(keep);
-  } else {
-    if (!(*table)->needsToGrow()) {
-      return true;
-    }
-    if (!(*table)->grow(cx)) {
-      return false;
-    }
+NativeObject::maybeConvertToDictionaryForAdd(JSContext* cx,
+                                             HandleNativeObject obj) {
+  if (obj->inDictionaryMode()) {
+    return true;
   }
-
-  *entry = &(*table)->search<MaybeAdding::Adding>(id, keep);
-  MOZ_ASSERT(!(*entry)->shape());
-  return true;
-}
-
-MOZ_ALWAYS_INLINE void Shape::updateDictionaryTable(
-    ShapeTable* table, ShapeTable::Entry* entry,
-    const AutoKeepShapeCaches& keep) {
-  MOZ_ASSERT(table);
-  MOZ_ASSERT(entry);
-  MOZ_ASSERT(inDictionary());
-
-  // Store this Shape in the table entry.
-  entry->setPreservingCollision(this);
-  table->incEntryCount();
-
-  // Pass the table along to the new last property, namely *this.
-  MOZ_ASSERT(parent->maybeTable(keep) == table);
-  parent->handoffTableTo(this);
+  if (!ShouldConvertToDictionary(obj)) {
+    return true;
+  }
+  return toDictionaryMode(cx, obj);
 }
 
 static void AssertValidCustomDataProp(NativeObject* obj, unsigned attrs) {
@@ -616,19 +522,7 @@ bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
   AutoCheckShapeConsistency check(obj);
   AssertValidCustomDataProp(obj, attrs);
 
-  AutoKeepShapeCaches keep(cx);
-  ShapeTable* table = nullptr;
-  ShapeTable::Entry* entry = nullptr;
-  if (obj->inDictionaryMode()) {
-    table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-    if (!table) {
-      return false;
-    }
-    entry = &table->search<MaybeAdding::Adding>(id, keep);
-  }
-
-  if (!maybeConvertToOrGrowDictionaryForAdd(cx, obj, id, &table, &entry,
-                                            keep)) {
+  if (!maybeConvertToDictionaryForAdd(cx, obj)) {
     return false;
   }
 
@@ -647,10 +541,6 @@ bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
   }
 
   MOZ_ASSERT(shape == obj->lastProperty());
-
-  if (table) {
-    shape->updateDictionaryTable(table, entry, keep);
-  }
 
   return true;
 }
@@ -676,19 +566,7 @@ bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
       obj->isExtensible() ||
           (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))));
 
-  AutoKeepShapeCaches keep(cx);
-  ShapeTable* table = nullptr;
-  ShapeTable::Entry* entry = nullptr;
-  if (obj->inDictionaryMode()) {
-    table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-    if (!table) {
-      return false;
-    }
-    entry = &table->search<MaybeAdding::Adding>(id, keep);
-  }
-
-  if (!maybeConvertToOrGrowDictionaryForAdd(cx, obj, id, &table, &entry,
-                                            keep)) {
+  if (!maybeConvertToDictionaryForAdd(cx, obj)) {
     return false;
   }
 
@@ -707,10 +585,6 @@ bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
   }
 
   MOZ_ASSERT(shape == obj->lastProperty());
-
-  if (table) {
-    shape->updateDictionaryTable(table, entry, keep);
-  }
 
   *slotOut = shape->slot();
   return true;
@@ -789,38 +663,20 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
     return obj->setLastPropertyForNewDataProperty(cx, child);
   } while (0);
 
-  AutoKeepShapeCaches keep(cx);
-  ShapeTable* table = nullptr;
-  ShapeTable::Entry* entry = nullptr;
-
-  if (!obj->inDictionaryMode()) {
-    if (MOZ_UNLIKELY(ShouldConvertToDictionary(obj))) {
-      if (!toDictionaryMode(cx, obj)) {
-        return false;
-      }
-      table = obj->lastProperty()->maybeTable(keep);
-      entry = &table->search<MaybeAdding::Adding>(id, keep);
-    }
-  } else {
-    table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-    if (!table) {
-      return false;
-    }
-    if (table->needsToGrow()) {
-      if (!table->grow(cx)) {
-        return false;
-      }
-    }
-    entry = &table->search<MaybeAdding::Adding>(id, keep);
-    MOZ_ASSERT(!entry->shape());
+  if (!maybeConvertToDictionaryForAdd(cx, obj)) {
+    return false;
   }
-
-  MOZ_ASSERT(!!table == !!entry);
 
   /* Find or create a property tree node labeled by our arguments. */
 
   Shape* shape;
   if (obj->inDictionaryMode()) {
+    AutoKeepShapeCaches keep(cx);
+    ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+    if (!table) {
+      return false;
+    }
+
     uint32_t slot;
     if (!allocDictionarySlot(cx, obj, &slot)) {
       return false;
@@ -834,14 +690,25 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
     if (!shape) {
       return false;
     }
+    // First try to add the shape to the table. If allocating slots below fails,
+    // we have to remove the entry again.
+    if (!table->add(cx, id, shape)) {
+      new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
+      return false;
+    }
     if (slot >= obj->slotSpan()) {
       if (MOZ_UNLIKELY(!obj->ensureSlotsForDictionaryObject(cx, slot + 1))) {
         new (shape) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
+        table->remove(id);
         return false;
       }
     }
     shape->initDictionaryShape(child, obj->numFixedSlots(),
                                DictionaryShapeLink(obj));
+
+    // Pass the table along to the new last property.
+    MOZ_ASSERT(shape->previous()->maybeTable(keep) == table);
+    shape->previous()->handoffTableTo(shape);
   } else {
     uint32_t slot = obj->slotSpan();
     MOZ_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
@@ -863,10 +730,6 @@ bool NativeObject::addEnumerableDataProperty(JSContext* cx,
   }
 
   MOZ_ASSERT(shape == obj->lastProperty());
-
-  if (table) {
-    shape->updateDictionaryTable(table, entry, keep);
-  }
 
   *slotOut = shape->slot();
   return true;
@@ -930,8 +793,7 @@ bool NativeObject::maybeToDictionaryModeForChange(JSContext* cx,
   AutoCheckCannotGC nogc;
   ShapeTable* table = obj->lastProperty()->maybeTable(nogc);
   MOZ_ASSERT(table);
-  shape.set(
-      table->search<MaybeAdding::NotAdding>(shape->propid(), nogc).shape());
+  shape.set(*table->search(shape->propid(), nogc));
   return true;
 }
 
@@ -1108,10 +970,10 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 
   AutoKeepShapeCaches keep(cx);
   ShapeTable* table;
-  ShapeTable::Entry* entry;
+  ShapeTable::Ptr ptr;
   RootedShape shape(cx);
   if (!Shape::search(cx, obj->lastProperty(), id, keep, shape.address(), &table,
-                     &entry)) {
+                     &ptr)) {
     return false;
   }
 
@@ -1127,9 +989,9 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
     if (!NativeObject::setHadGetterSetterChange(cx, obj)) {
       return false;
     }
-    // Relookup shape/table/entry in case setHadGetterSetterChange changed them.
+    // Relookup shape/table/ptr in case setHadGetterSetterChange changed them.
     if (!Shape::search(cx, obj->lastProperty(), id, keep, shape.address(),
-                       &table, &entry)) {
+                       &table, &ptr)) {
       return false;
     }
   }
@@ -1147,8 +1009,8 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
     }
     table = obj->lastProperty()->maybeTable(keep);
     MOZ_ASSERT(table);
-    entry = &table->search<MaybeAdding::NotAdding>(shape->propid(), keep);
-    shape = entry->shape();
+    ptr = table->search(shape->propid(), keep);
+    shape = *ptr;
   }
 
   /*
@@ -1179,28 +1041,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
    */
   if (obj->inDictionaryMode()) {
     MOZ_ASSERT(obj->lastProperty()->maybeTable(keep) == table);
-
-    if (entry->hadCollision()) {
-      entry->setRemoved();
-      table->decEntryCount();
-      table->incRemovedCount();
-    } else {
-      entry->setFree();
-      table->decEntryCount();
-
-#ifdef DEBUG
-      /*
-       * Check the consistency of the table but limit the number of
-       * checks not to alter significantly the complexity of the
-       * delete in debug builds, see bug 534493.
-       */
-      Shape* aprop = obj->lastProperty();
-      for (int n = 50; --n >= 0 && aprop->parent; aprop = aprop->parent) {
-        MOZ_ASSERT_IF(aprop != shape,
-                      obj->containsPure(aprop->propid(), aprop->property()));
-      }
-#endif
-    }
+    table->remove(ptr);
 
     {
       // Remove shape from its non-circular doubly linked list.
@@ -1222,12 +1063,6 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 
     /* Generate a new shape for the object, infallibly. */
     MOZ_ALWAYS_TRUE(NativeObject::generateOwnShape(cx, obj, spare));
-
-    /* Consider shrinking table if its load factor is <= .25. */
-    uint32_t size = table->capacity();
-    if (size > ShapeTable::MIN_SIZE && table->entryCount() <= size >> 2) {
-      (void)table->change(cx, -1);
-    }
   } else {
     /*
      * Non-dictionary-mode shape tables are shared immutables, so all we
@@ -1271,11 +1106,6 @@ bool NativeObject::generateOwnShape(JSContext* cx, HandleNativeObject obj,
     return false;
   }
 
-  ShapeTable::Entry* entry =
-      oldShape->isEmptyShape()
-          ? nullptr
-          : &table->search<MaybeAdding::NotAdding>(oldShape->propidRef(), nogc);
-
   // Replace the old last-property shape with the new one.
   StackShape nshape(oldShape);
   newShape->initDictionaryShape(nshape, obj->numFixedSlots(),
@@ -1287,9 +1117,12 @@ bool NativeObject::generateOwnShape(JSContext* cx, HandleNativeObject obj,
   MOZ_ASSERT(newShape == obj->lastProperty());
   oldShape->handoffTableTo(newShape);
 
-  if (entry) {
-    entry->setPreservingCollision(newShape);
+  if (!newShape->isEmptyShape()) {
+    ShapeTable::Ptr ptr = table->search(oldShape->propidRef(), nogc);
+    MOZ_ASSERT(*ptr == oldShape);
+    table->replaceShape(ptr, newShape->propidRaw(), newShape);
   }
+
   return true;
 }
 
@@ -1456,12 +1289,9 @@ bool Shape::canSkipMarkingShapeCache() {
   uint32_t count = 0;
   for (Shape::Range<NoGC> r(this); !r.empty(); r.popFront()) {
     Shape* shape = &r.front();
-    ShapeTable::Entry& entry =
-        cache.getTablePointer()->search<MaybeAdding::NotAdding>(shape->propid(),
-                                                                nogc);
-    if (entry.isLive()) {
-      count++;
-    }
+    ShapeTable::Ptr p = cache.getTablePointer()->search(shape->propid(), nogc);
+    MOZ_ASSERT(*p == shape);
+    count++;
   }
 
   return count == cache.getTablePointer()->entryCount();
