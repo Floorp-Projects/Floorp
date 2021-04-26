@@ -147,6 +147,7 @@ textarea > scrollbar {
 ::-moz-text-control-preview {
   overflow: auto;
   border: 0;
+  /* This is necessary to make overflow-clip-box work */
   padding: inherit;
   margin: 0;
   text-decoration: inherit;
@@ -204,10 +205,12 @@ textarea::-moz-text-control-editing-root {
   overflow: hidden;
 
   /*
-   * The placeholder or preview should be ignored by pointer otherwise, we might have some
-   * unexpected behavior like the resize handle not being selectable.
+   * The placeholder or preview should be ignored by pointer / selection / etc.
+   * Otherwise, we might have some unexpected behavior like the resize handle
+   * not being selectable.
    */
   pointer-events: none;
+  user-select: none;
 }
 
 ::placeholder {

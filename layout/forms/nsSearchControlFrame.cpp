@@ -51,34 +51,34 @@ nsresult nsSearchControlFrame::CreateAnonymousContent(
   // follows:
   //
   // input
-  //   button - clear button
-  //   div    - editor root
   //   div    - placeholder
   //   div    - preview div
+  //   div    - editor root
+  //   button - clear button
   //
-  // If you change this, be careful to change the destruction order in
-  // nsSearchControlFrame::DestroyFrom.
+  // If you change this, be careful to change the order of stuff in
+  // AppendAnonymousContentTo.
+
+  nsTextControlFrame::CreateAnonymousContent(aElements);
 
   // Create the ::-moz-search-clear-button pseudo-element:
   mClearButton = MakeAnonElement(PseudoStyleType::mozSearchClearButton, nullptr,
                                  nsGkAtoms::button);
 
-  aElements.AppendElement(mClearButton);
-
-  nsTextControlFrame::CreateAnonymousContent(aElements);
-
   // Update clear button visibility based on value
   UpdateClearButtonState();
+
+  aElements.AppendElement(mClearButton);
 
   return NS_OK;
 }
 
 void nsSearchControlFrame::AppendAnonymousContentTo(
     nsTArray<nsIContent*>& aElements, uint32_t aFilter) {
+  nsTextControlFrame::AppendAnonymousContentTo(aElements, aFilter);
   if (mClearButton) {
     aElements.AppendElement(mClearButton);
   }
-  nsTextControlFrame::AppendAnonymousContentTo(aElements, aFilter);
 }
 
 void nsSearchControlFrame::UpdateClearButtonState() {
