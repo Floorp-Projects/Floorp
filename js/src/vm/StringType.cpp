@@ -722,7 +722,6 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   const size_t wholeLength = root->length();
   size_t wholeCapacity;
   CharT* wholeChars;
-  CharT* pos;
 
   // JSString::setFlattenData() is used to store a tagged pointer to the parent
   // node. These flags indicates what to do when we return to the parent.
@@ -742,6 +741,8 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   bool reuseLeftmostBuffer = CanReuseLeftmostBuffer(
       leftmostRope, wholeLength, std::is_same_v<CharT, char16_t>);
 
+  uint32_t leftmostChildLength = 0;  // Only set if we reuse leftmost buffer.
+
   if (reuseLeftmostBuffer) {
     JSExtensibleString& left = leftmostRope->leftChild()->asExtensible();
     size_t capacity = left.capacity();
@@ -757,7 +758,7 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
 
     ropeBarrierDuringFlattening<usingBarrier>(leftmostRope);
     leftmostRope->setNonInlineChars(wholeChars);
-    uint32_t left_len = left.length();
+    leftmostChildLength = left.length();
 
     // Remove memory association for left node we're about to make into a
     // dependent string.
@@ -769,14 +770,13 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
     if (left.inStringToAtomCache()) {
       flags |= IN_STRING_TO_ATOM_CACHE;
     }
-    left.setLengthAndFlags(left_len, StringFlagsForCharType<CharT>(flags));
+    left.setLengthAndFlags(leftmostChildLength,
+                           StringFlagsForCharType<CharT>(flags));
     left.d.s.u3.base = (JSLinearString*)root; /* will be true on exit */
     if (left.isTenured() && !root->isTenured()) {
       // leftmost child -> root is a tenured -> nursery edge.
       root->storeBuffer()->putWholeCell(&left);
     }
-
-    pos = wholeChars + left_len;
   } else {
     // If we can't reuse the leftmost child's buffer, allocate a new one.
 
@@ -791,17 +791,18 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
         return nullptr;
       }
     }
-
-    pos = wholeChars;
   }
 
   JSString* str = root;
+  CharT* pos = wholeChars;
 
 first_visit_node : {
   if (reuseLeftmostBuffer && str == leftmostRope) {
     // Left child has already been overwritten.
+    pos += leftmostChildLength;
     goto visit_right_child;
   }
+
   JSString& left = *str->d.s.u2.left;
   ropeBarrierDuringFlattening<usingBarrier>(str);
   str->setNonInlineChars(pos);
