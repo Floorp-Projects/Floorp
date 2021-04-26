@@ -165,8 +165,7 @@ CFTypeRefPtr<IOSurfaceRef> SurfacePoolCA::LockedPool::ObtainSurfaceFromPool(cons
       }));
   if (surface) {
     if (StaticPrefs::gfx_color_management_native_srgb()) {
-      IOSurfaceSetValue(surface.get(), CFSTR("IOSurfaceColorSpace"),
-                        kCGColorSpaceSRGB);
+      IOSurfaceSetValue(surface.get(), CFSTR("IOSurfaceColorSpace"), kCGColorSpaceSRGB);
     }
     // Create a new entry in mInUseEntries.
     MutateEntryStorage("Create", aSize, [&]() {

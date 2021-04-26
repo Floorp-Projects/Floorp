@@ -1582,8 +1582,8 @@ class HTMLInputElement final : public TextControlElement,
 
   static bool MayFireChangeOnBlur(uint8_t aType) {
     return IsSingleLineTextControl(false, aType) ||
-           CreatesDateTimeWidget(aType) ||
-           aType == NS_FORM_INPUT_RANGE || aType == NS_FORM_INPUT_NUMBER;
+           CreatesDateTimeWidget(aType) || aType == NS_FORM_INPUT_RANGE ||
+           aType == NS_FORM_INPUT_NUMBER;
   }
 
   /**

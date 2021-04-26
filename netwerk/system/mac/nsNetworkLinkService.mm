@@ -174,8 +174,7 @@ nsNetworkLinkService::GetResolvers(nsTArray<RefPtr<nsINetAddr>>& aResolvers) {
 }
 
 NS_IMETHODIMP
-nsNetworkLinkService::GetNativeResolvers(
-    nsTArray<mozilla::net::NetAddr>& aResolvers) {
+nsNetworkLinkService::GetNativeResolvers(nsTArray<mozilla::net::NetAddr>& aResolvers) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

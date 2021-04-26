@@ -44,7 +44,8 @@ class LabellingEventTarget final : public nsISerialEventTarget,
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_LABELLINGEVENTTARGET_IID)
 
-  explicit LabellingEventTarget(mozilla::PerformanceCounter* aPerformanceCounter)
+  explicit LabellingEventTarget(
+      mozilla::PerformanceCounter* aPerformanceCounter)
       : mPerformanceCounter(aPerformanceCounter),
         mMainThread(
             static_cast<nsThread*>(mozilla::GetMainThreadSerialEventTarget())) {

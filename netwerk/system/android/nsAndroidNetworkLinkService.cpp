@@ -153,7 +153,8 @@ nsAndroidNetworkLinkService::GetDnsSuffixList(
 }
 
 NS_IMETHODIMP
-nsAndroidNetworkLinkService::GetResolvers(nsTArray<RefPtr<nsINetAddr>>& aResolvers) {
+nsAndroidNetworkLinkService::GetResolvers(
+    nsTArray<RefPtr<nsINetAddr>>& aResolvers) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

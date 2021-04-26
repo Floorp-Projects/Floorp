@@ -895,13 +895,16 @@ already_AddRefed<Notification> Notification::CreateInternal(
   }
 
   nsTArray<uint32_t> vibrate;
-  if (StaticPrefs::dom_webnotifications_vibrate_enabled() && aOptions.mVibrate.WasPassed()) {
+  if (StaticPrefs::dom_webnotifications_vibrate_enabled() &&
+      aOptions.mVibrate.WasPassed()) {
     if (silent) {
-      aRv.ThrowTypeError("Silent notifications must not specify vibration patterns.");
+      aRv.ThrowTypeError(
+          "Silent notifications must not specify vibration patterns.");
       return nullptr;
     }
 
-    const OwningUnsignedLongOrUnsignedLongSequence& value = aOptions.mVibrate.Value();
+    const OwningUnsignedLongOrUnsignedLongSequence& value =
+        aOptions.mVibrate.Value();
     if (value.IsUnsignedLong()) {
       AutoTArray<uint32_t, 1> array;
       array.AppendElement(value.GetAsUnsignedLong());
@@ -911,11 +914,10 @@ already_AddRefed<Notification> Notification::CreateInternal(
     }
   }
 
-  RefPtr<Notification> notification =
-      new Notification(aGlobal, id, aTitle, aOptions.mBody, aOptions.mDir,
-                       aOptions.mLang, aOptions.mTag, aOptions.mIcon,
-                       aOptions.mRequireInteraction, silent,
-                       std::move(vibrate), aOptions.mMozbehavior);
+  RefPtr<Notification> notification = new Notification(
+      aGlobal, id, aTitle, aOptions.mBody, aOptions.mDir, aOptions.mLang,
+      aOptions.mTag, aOptions.mIcon, aOptions.mRequireInteraction, silent,
+      std::move(vibrate), aOptions.mMozbehavior);
   rv = notification->Init();
   NS_ENSURE_SUCCESS(rv, nullptr);
   return notification.forget();
@@ -1418,10 +1420,10 @@ void Notification::ShowInternal() {
       do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
   NS_ENSURE_TRUE_VOID(alert);
   nsIPrincipal* principal = GetPrincipal();
-  rv = alert->Init(alertName, iconUrl, mTitle, mBody, true, uniqueCookie,
-                   DirectionToString(mDir), mLang, mDataAsBase64,
-                   GetPrincipal(), inPrivateBrowsing, requireInteraction,
-                   mSilent, mVibrate);
+  rv =
+      alert->Init(alertName, iconUrl, mTitle, mBody, true, uniqueCookie,
+                  DirectionToString(mDir), mLang, mDataAsBase64, GetPrincipal(),
+                  inPrivateBrowsing, requireInteraction, mSilent, mVibrate);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (isPersistent) {
