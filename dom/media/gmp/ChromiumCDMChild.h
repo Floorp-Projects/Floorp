@@ -55,7 +55,7 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
                              const char* aChallenge,
                              uint32_t aChallengeSize) override {}
   void EnableOutputProtection(uint32_t aDesiredProtectionMask) override {}
-  void QueryOutputProtectionStatus() override {}
+  void QueryOutputProtectionStatus() override;
   void OnDeferredInitializationDone(cdm::StreamType aStreamType,
                                     cdm::Status aDecoderStatus) override {}
   void RequestStorageId(uint32_t aVersion) override;
