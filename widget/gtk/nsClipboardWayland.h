@@ -40,12 +40,28 @@ class DataOffer {
 class WaylandDataOffer : public DataOffer {
  public:
   explicit WaylandDataOffer(wl_data_offer* aWaylandDataOffer);
+
+  void DragOfferAccept(const char* aMimeType, uint32_t aTime);
+  void SetDragStatus(GdkDragAction aPreferredAction, uint32_t aTime);
+
+  GdkDragAction GetSelectedDragAction();
+  void SetSelectedDragAction(uint32_t aWaylandAction);
+
+  void SetAvailableDragActions(uint32_t aWaylandActions);
+  GdkDragAction GetAvailableDragActions();
+
+  void SetWaylandDragContext(nsWaylandDragContext* aDragContext);
+  nsWaylandDragContext* GetWaylandDragContext();
+
   virtual ~WaylandDataOffer();
 
  private:
   bool RequestDataTransfer(const char* aMimeType, int fd) override;
 
   wl_data_offer* mWaylandDataOffer;
+  RefPtr<nsWaylandDragContext> mDragContext;
+  uint32_t mSelectedDragAction;
+  uint32_t mAvailableDragActions;
 };
 
 class PrimaryDataOffer : public DataOffer {
@@ -61,6 +77,35 @@ class PrimaryDataOffer : public DataOffer {
 
   gtk_primary_selection_offer* mPrimaryDataOfferGtk;
   zwp_primary_selection_offer_v1* mPrimaryDataOfferZwpV1;
+};
+
+class nsWaylandDragContext : public nsISupports {
+  NS_DECL_ISUPPORTS
+
+ public:
+  nsWaylandDragContext(WaylandDataOffer* aWaylandDataOffer,
+                       wl_display* aDisplay);
+
+  void DropDataEnter(GtkWidget* aGtkWidget, uint32_t aTime, nscoord aX,
+                     nscoord aY);
+  void DropMotion(uint32_t aTime, nscoord aX, nscoord aY);
+  void GetLastDropInfo(uint32_t* aTime, nscoord* aX, nscoord* aY);
+
+  void SetDragStatus(GdkDragAction aPreferredAction);
+  GdkDragAction GetAvailableDragActions();
+
+  GtkWidget* GetWidget() { return mGtkWidget; }
+  GList* GetTargets();
+  char* GetData(const char* aMimeType, uint32_t* aContentLength);
+
+ private:
+  virtual ~nsWaylandDragContext() = default;
+
+  mozilla::UniquePtr<WaylandDataOffer> mDataOffer;
+  wl_display* mDisplay;
+  uint32_t mTime;
+  GtkWidget* mGtkWidget;
+  nscoord mX, mY;
 };
 
 class nsRetrievalContextWayland : public nsRetrievalContext {
@@ -84,6 +129,10 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
   void SetClipboardDataOffer(wl_data_offer* aWaylandDataOffer);
   void SetPrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
   void SetPrimaryDataOffer(zwp_primary_selection_offer_v1* aPrimaryDataOffer);
+  void AddDragAndDropDataOffer(wl_data_offer* aWaylandDataOffer);
+  nsWaylandDragContext* GetDragContext();
+
+  void ClearDragAndDropDataOffer();
 
   void TransferFastTrackClipboard(ClipboardDataType aDataType,
                                   int aClipboardRequestNumber,
@@ -99,6 +148,7 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
   GHashTable* mActiveOffers;
   mozilla::UniquePtr<DataOffer> mClipboardOffer;
   mozilla::UniquePtr<DataOffer> mPrimaryOffer;
+  RefPtr<nsWaylandDragContext> mDragContext;
 
   int mClipboardRequestNumber;
   char* mClipboardData;
