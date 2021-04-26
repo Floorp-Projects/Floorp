@@ -1061,7 +1061,7 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
 
   if (mWaylandFullscreenDamage) {
     LOGWAYLAND(("    wl_surface_damage full screen\n"));
-    wl_surface_damage(waylandSurface, 0, 0, INT_MAX, INT_MAX);
+    wl_surface_damage_buffer(waylandSurface, 0, 0, INT_MAX, INT_MAX);
   } else {
     for (auto iter = mWaylandBufferDamage.RectIter(); !iter.Done();
          iter.Next()) {

@@ -381,7 +381,9 @@ class nsWindow final : public nsBaseWidget {
       const LayoutDeviceIntRegion& aRegion) override;
 
   // HiDPI scale conversion
-  gint GdkScaleFactor();
+  gint GdkCeiledScaleFactor();
+  bool UseFractionalScale();
+  double FractionalScaleFactor();
 
   // To GDK
   gint DevicePixelsToGdkCoordRoundUp(int pixels);
