@@ -95,12 +95,6 @@ types.addDictType("webExtensionReloadOptions", {
 const webExtensionInspectedWindowSpec = generateActorSpec({
   typeName: "webExtensionInspectedWindow",
 
-  events: {
-    "reload-ready": {
-      type: "reload-ready",
-    },
-  },
-
   methods: {
     reload: {
       request: {
