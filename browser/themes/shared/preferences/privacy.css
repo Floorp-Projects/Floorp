@@ -314,7 +314,7 @@
 }
 
 .warning-description {
-  background: url(chrome://browser/skin/controlcenter/warning.svg) no-repeat 0 5px;
+  background: url(chrome://global/skin/icons/warning.svg) no-repeat 0 5px;
   opacity: 0.6;
   -moz-context-properties: fill, stroke;
   fill: #d7b600;
