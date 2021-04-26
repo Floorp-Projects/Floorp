@@ -385,7 +385,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(
       MOZ_ASSERT(outFilePath);
       outFilePathRaw = jenv->GetStringUTFChars(outFilePath, nullptr);
     }
-    gBootstrap->GeckoStart(jenv, argv, argc, sAppData, xpcshell, outFilePathRaw);
+    gBootstrap->GeckoStart(jenv, argv, argc, sAppData, xpcshell,
+                           outFilePathRaw);
     if (outFilePathRaw) {
       jenv->ReleaseStringUTFChars(outFilePath, outFilePathRaw);
     }

@@ -577,7 +577,7 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
 
   if (!useParanoidHandling) {
     const ScopedLazyBind bindPBO(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER,
-      webgl->mBoundPixelUnpackBuffer);
+                                 webgl->mBoundPixelUnpackBuffer);
 
     *out_error =
         DoTexOrSubImage(isSubImage, gl, target, level, dui, xOffset, yOffset,

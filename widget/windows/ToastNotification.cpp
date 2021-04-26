@@ -88,11 +88,10 @@ ToastNotification::ShowAlertNotification(
   }
   // vibrate is unused for now
   nsTArray<uint32_t> vibrate;
-  nsresult rv =
-      alert->Init(aAlertName, aImageUrl, aAlertTitle, aAlertText,
-                  aAlertTextClickable, aAlertCookie, aBidi, aLang, aData,
-                  aPrincipal, aInPrivateBrowsing, aRequireInteraction,
-                  false, vibrate);
+  nsresult rv = alert->Init(aAlertName, aImageUrl, aAlertTitle, aAlertText,
+                            aAlertTextClickable, aAlertCookie, aBidi, aLang,
+                            aData, aPrincipal, aInPrivateBrowsing,
+                            aRequireInteraction, false, vibrate);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

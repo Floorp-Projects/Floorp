@@ -704,10 +704,7 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   // notify "http-on-before-connect" observers
   gHttpHandler->OnBeforeConnect(this);
 
-  return CallOrWaitForResume(
-      [](auto* self) {
-        return self->Connect();
-      });
+  return CallOrWaitForResume([](auto* self) { return self->Connect(); });
 }
 
 nsresult nsHttpChannel::Connect() {
@@ -6708,9 +6705,7 @@ nsresult nsHttpChannel::BeginConnect() {
   }
 
   rv = CallOrWaitForResume(
-    [](nsHttpChannel* self) {
-      return self->PrepareToConnect();
-    });
+      [](nsHttpChannel* self) { return self->PrepareToConnect(); });
   if (NS_FAILED(rv)) {
     return rv;
   }

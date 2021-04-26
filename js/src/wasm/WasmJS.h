@@ -34,7 +34,7 @@
 #include "js/RootingAPI.h"     // MovableCellHasher
 #include "js/SweepingAPI.h"    // JS::WeakCache
 #include "js/TypeDecls.h"  // HandleValue, HandleObject, MutableHandleObject, MutableHandleFunction
-#include "js/Vector.h"        // JS::Vector
+#include "js/Vector.h"  // JS::Vector
 #include "js/WasmFeatures.h"
 #include "vm/JSFunction.h"    // JSFunction
 #include "vm/NativeObject.h"  // NativeObject

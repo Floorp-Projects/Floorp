@@ -27,8 +27,7 @@ class nsNativeThemeGTK final : private nsNativeTheme,
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
-                                  const nsRect& aRect,
-                                  const nsRect& aDirtyRect,
+                                  const nsRect& aRect, const nsRect& aDirtyRect,
                                   DrawOverflow) override;
 
   bool CreateWebRenderCommandsForWidget(

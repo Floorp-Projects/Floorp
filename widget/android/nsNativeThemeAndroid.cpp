@@ -475,12 +475,9 @@ static void PaintRangeThumb(DrawTarget* aDrawTarget, const Rect& aRect,
 }
 
 NS_IMETHODIMP
-nsNativeThemeAndroid::DrawWidgetBackground(gfxContext* aContext,
-                                           nsIFrame* aFrame,
-                                           StyleAppearance aAppearance,
-                                           const nsRect& aRect,
-                                           const nsRect& /* aDirtyRect */,
-                                           DrawOverflow) {
+nsNativeThemeAndroid::DrawWidgetBackground(
+    gfxContext* aContext, nsIFrame* aFrame, StyleAppearance aAppearance,
+    const nsRect& aRect, const nsRect& /* aDirtyRect */, DrawOverflow) {
   DrawTarget* dt = aContext->GetDrawTarget();
   const nscoord twipsPerPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   EventStates eventState = GetContentState(aFrame, aAppearance);
