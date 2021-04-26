@@ -534,22 +534,25 @@ fn build_pow_table(gamma: f32, length: i32) -> Vec<u16> {
     output
 }
 
-pub(crate) fn build_output_lut(trc: &curveType) -> Vec<u16> {
+pub(crate) fn build_output_lut(trc: &curveType) -> Option<Vec<u16>> {
     match trc {
         curveType::Parametric(params) => {
+            let params = Param::new(params);
+            let inv_params = params.invert()?;
+
             let mut output = Vec::with_capacity(256);
-            let gamma_table = compute_curve_gamma_table_type_parametric(params);
             for i in 0..256 {
-                output.push((gamma_table[i as usize] * 65535f32) as u16);
+                let X = i as f32 / 255.;
+                output.push((inv_params.eval(X) * 65535.) as u16);
             }
-            output
+            Some(output)
         }
         curveType::Curve(data) => {
             match data.len() {
-                0 => build_linear_table(4096),
+                0 => Some(build_linear_table(4096)),
                 1 => {
                     let gamma = 1. / u8Fixed8Number_to_float(data[0]);
-                    build_pow_table(gamma, 4096)
+                    Some(build_pow_table(gamma, 4096))
                 }
                 _ => {
                     //XXX: the choice of a minimum of 256 here is not backed by any theory,
@@ -558,7 +561,7 @@ pub(crate) fn build_output_lut(trc: &curveType) -> Vec<u16> {
                     if output_gamma_lut_length < 256 {
                         output_gamma_lut_length = 256
                     }
-                    invert_lut(data, output_gamma_lut_length as i32)
+                    Some(invert_lut(data, output_gamma_lut_length as i32))
                 }
             }
         }
