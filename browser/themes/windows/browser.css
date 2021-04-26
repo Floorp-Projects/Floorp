@@ -40,7 +40,6 @@
 
 @media (-moz-windows-default-theme) {
   :root {
-    --toolbar-non-lwt-bgcolor: #f9f9fa;
     --toolbar-non-lwt-textcolor: #0c0c0d;
     --toolbar-non-lwt-bgimage: none;
 
