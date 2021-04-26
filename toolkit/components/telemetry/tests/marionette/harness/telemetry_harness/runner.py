@@ -45,6 +45,9 @@ class TelemetryTestRunner(BaseMarionetteTestRunner):
                 # Disable Normandy to avoid extra subsessions due to Experiment
                 # activation in tests (bug 1641571)
                 "app.normandy.enabled": False,
+                # Disable Normandy a little harder (bug 1608807).
+                # This should also disable Nimbus.
+                "app.shield.optoutstudies.enabled": False,
             }
         )
 
