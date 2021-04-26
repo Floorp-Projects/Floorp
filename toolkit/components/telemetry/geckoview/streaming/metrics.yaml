@@ -775,6 +775,28 @@ gfx.status:
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
     expires: never
+  last_compositor_gecko_version:
+    description: >
+      The gecko version at the last time a compositor was initialized, and
+      therefore when gfx_status_compositor was last updated. Due to
+      gfx_status_compositor's user lifetime we see lots of unexpected values for
+      the current gecko version. We believe this is because the user has not
+      opened a tab since they were updated to a version where webrender should
+      be enabled on their device. This can be used to verify that theory.
+    type: string
+    # Temporary misuse of the user lifetime approved by Glean team
+    # in order to match gfx_status_compositor's lifetime.
+    # DO NOT DUPLICATE unless approved by Glean team.
+    lifetime: user
+    gecko_datapoint: gfx.last_compositor_gecko_version
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1704842
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1704842#c8
+    notification_emails:
+      - jnicol@mozilla.com
+      - gfx-telemetry-alerts@mozilla.com
+    expires: never
   headless:
     description: >
       Boolean indicated whether graphics is running in
