@@ -48,7 +48,7 @@ awsy:
                 by-test-platform:
                     .*-devedition/.*: []  # don't run on devedition
                     windows.*-32.*/opt: []
-                    (linux|windows10|mac)(?!.*shippable).*/opt: []
+                    (linux|windows10-64|mac)(?!.*shippable).*/opt: []
                     default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
 
 awsy-tp6:
@@ -66,7 +66,7 @@ awsy-tp6:
                 by-test-platform:
                     .*-devedition/.*: []  # don't run on devedition
                     windows.*-32.*/opt: []
-                    (linux|windows10|mac)(?!.*shippable).*/opt: []
+                    (linux|windows10-64|mac)(?!.*shippable).*/opt: []
                     default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     mozharness:
         extra-options:
@@ -94,7 +94,7 @@ awsy-base:
                 by-test-platform:
                     .*-devedition/.*: []  # don't run on devedition
                     windows.*-32.*/opt: []
-                    (linux|windows10|mac)(?!.*shippable).*/opt: []
+                    (linux|windows10-64|mac)(?!.*shippable).*/opt: []
                     default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     mozharness:
         extra-options:
