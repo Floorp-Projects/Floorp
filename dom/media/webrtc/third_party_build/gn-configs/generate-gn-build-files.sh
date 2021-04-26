@@ -57,13 +57,17 @@ set -eEuo pipefail
 
 SYS_NAME=`uname`
 
-# For now, only macOS, Windows, and Linux are supported here.
+# For now, only macOS, Windows, and Linux (including Android builds) are supported here.
 if [ "x$SYS_NAME" = "xDarwin" ]; then
   CONFIGS="x64_False_arm64_mac x64_True_arm64_mac x64_False_x64_mac x64_True_x64_mac"
 elif [ "x$SYS_NAME" = "xMINGW32_NT-6.2" ]; then
   CONFIGS="x64_True_x64_win x64_False_x64_win"
 else
   CONFIGS="x64_False_x64_linux x64_True_x64_linux"
+  CONFIGS="$CONFIGS x64_False_arm_android x64_True_arm_android"
+  CONFIGS="$CONFIGS x64_False_x64_android x64_True_x64_android"
+  CONFIGS="$CONFIGS x64_False_x86_android x64_True_x86_android"
+  CONFIGS="$CONFIGS x64_False_arm64_android x64_True_arm64_android"
 fi
 
 MODIFIED_FILES=`hg status --modified --added --exclude "**/moz.build" --exclude "dom/media/webrtc/third_party_build/**.json"`
