@@ -1,0 +1,240 @@
+diff --git a/compiler-rt/lib/tsan/rtl/tsan_interceptors_posix.cpp b/compiler-rt/lib/tsan/rtl/tsan_interceptors_posix.cpp
+--- a/compiler-rt/lib/tsan/rtl/tsan_interceptors_posix.cpp
++++ b/compiler-rt/lib/tsan/rtl/tsan_interceptors_posix.cpp
+@@ -1976,7 +1976,8 @@
+   // because in async signal processing case (when handler is called directly
+   // from rtl_generic_sighandler) we have not yet received the reraised
+   // signal; and it looks too fragile to intercept all ways to reraise a signal.
+-  if (flags()->report_bugs && !sync && sig != SIGTERM && errno != 99) {
++  if (ShouldReport(thr, ReportTypeErrnoInSignal) && !sync && sig != SIGTERM &&
++      errno != 99) {
+     VarSizeStackTrace stack;
+     // StackTrace::GetNestInstructionPc(pc) is used because return address is
+     // expected, OutputReport() will undo this.
+diff --git a/compiler-rt/lib/tsan/rtl/tsan_mman.cpp b/compiler-rt/lib/tsan/rtl/tsan_mman.cpp
+--- a/compiler-rt/lib/tsan/rtl/tsan_mman.cpp
++++ b/compiler-rt/lib/tsan/rtl/tsan_mman.cpp
+@@ -145,7 +145,7 @@
+ 
+ static void SignalUnsafeCall(ThreadState *thr, uptr pc) {
+   if (atomic_load_relaxed(&thr->in_signal_handler) == 0 ||
+-      !flags()->report_signal_unsafe)
++      !ShouldReport(thr, ReportTypeSignalUnsafe))
+     return;
+   VarSizeStackTrace stack;
+   ObtainCurrentStack(thr, pc, &stack);
+diff --git a/compiler-rt/lib/tsan/rtl/tsan_rtl.h b/compiler-rt/lib/tsan/rtl/tsan_rtl.h
+--- a/compiler-rt/lib/tsan/rtl/tsan_rtl.h
++++ b/compiler-rt/lib/tsan/rtl/tsan_rtl.h
+@@ -624,6 +624,7 @@
+   ScopedErrorReportLock lock_;
+ };
+ 
++bool ShouldReport(ThreadState *thr, ReportType typ);
+ ThreadContext *IsThreadStackOrTls(uptr addr, bool *is_stack);
+ void RestoreStack(int tid, const u64 epoch, VarSizeStackTrace *stk,
+                   MutexSet *mset, uptr *tag = nullptr);
+diff --git a/compiler-rt/lib/tsan/rtl/tsan_rtl.cpp b/compiler-rt/lib/tsan/rtl/tsan_rtl.cpp
+--- a/compiler-rt/lib/tsan/rtl/tsan_rtl.cpp
++++ b/compiler-rt/lib/tsan/rtl/tsan_rtl.cpp
+@@ -519,23 +519,22 @@
+ void ForkBefore(ThreadState *thr, uptr pc) {
+   ctx->thread_registry->Lock();
+   ctx->report_mtx.Lock();
+-  // Ignore memory accesses in the pthread_atfork callbacks.
+-  // If any of them triggers a data race we will deadlock
+-  // on the report_mtx.
++  // Suppress all reports in the pthread_atfork callbacks.
++  // Reports will deadlock on the report_mtx.
+   // We could ignore interceptors and sync operations as well,
+   // but so far it's unclear if it will do more good or harm.
+   // Unnecessarily ignoring things can lead to false positives later.
+-  ThreadIgnoreBegin(thr, pc);
++  thr->suppress_reports++;
+ }
+ 
+ void ForkParentAfter(ThreadState *thr, uptr pc) {
+-  ThreadIgnoreEnd(thr, pc);  // Begin is in ForkBefore.
++  thr->suppress_reports--;  // Enabled in ForkBefore.
+   ctx->report_mtx.Unlock();
+   ctx->thread_registry->Unlock();
+ }
+ 
+ void ForkChildAfter(ThreadState *thr, uptr pc) {
+-  ThreadIgnoreEnd(thr, pc);  // Begin is in ForkBefore.
++  thr->suppress_reports--;  // Enabled in ForkBefore.
+   ctx->report_mtx.Unlock();
+   ctx->thread_registry->Unlock();
+ 
+diff --git a/compiler-rt/lib/tsan/rtl/tsan_rtl_mutex.cpp b/compiler-rt/lib/tsan/rtl/tsan_rtl_mutex.cpp
+--- a/compiler-rt/lib/tsan/rtl/tsan_rtl_mutex.cpp
++++ b/compiler-rt/lib/tsan/rtl/tsan_rtl_mutex.cpp
+@@ -51,6 +51,8 @@
+   // or false positives (e.g. unlock in a different thread).
+   if (SANITIZER_GO)
+     return;
++  if (!ShouldReport(thr, typ))
++    return;
+   ThreadRegistryLock l(ctx->thread_registry);
+   ScopedReport rep(typ);
+   rep.AddMutex(mid);
+@@ -107,7 +109,7 @@
+   if (!unlock_locked)
+     s->Reset(thr->proc());  // must not reset it before the report is printed
+   s->mtx.Unlock();
+-  if (unlock_locked) {
++  if (unlock_locked && ShouldReport(thr, ReportTypeMutexDestroyLocked)) {
+     ThreadRegistryLock l(ctx->thread_registry);
+     ScopedReport rep(ReportTypeMutexDestroyLocked);
+     rep.AddMutex(mid);
+@@ -534,7 +536,7 @@
+ }
+ 
+ void ReportDeadlock(ThreadState *thr, uptr pc, DDReport *r) {
+-  if (r == 0)
++  if (r == 0 || !ShouldReport(thr, ReportTypeDeadlock))
+     return;
+   ThreadRegistryLock l(ctx->thread_registry);
+   ScopedReport rep(ReportTypeDeadlock);
+diff --git a/compiler-rt/lib/tsan/rtl/tsan_rtl_report.cpp b/compiler-rt/lib/tsan/rtl/tsan_rtl_report.cpp
+--- a/compiler-rt/lib/tsan/rtl/tsan_rtl_report.cpp
++++ b/compiler-rt/lib/tsan/rtl/tsan_rtl_report.cpp
+@@ -142,6 +142,27 @@
+   return stack;
+ }
+ 
++bool ShouldReport(ThreadState *thr, ReportType typ) {
++  // We set thr->suppress_reports in the fork context.
++  // Taking any locking in the fork context can lead to deadlocks.
++  // If any locks are already taken, it's too late to do this check.
++  CheckNoLocks(thr);
++  if (SANITIZER_DEBUG)
++    ThreadRegistryLock l(ctx->thread_registry);
++  if (!flags()->report_bugs || thr->suppress_reports)
++    return false;
++  switch (typ) {
++    case ReportTypeSignalUnsafe:
++      return flags()->report_signal_unsafe;
++    case ReportTypeThreadLeak:
++      return flags()->report_thread_leaks;
++    case ReportTypeMutexDestroyLocked:
++      return flags()->report_destroy_locked;
++    default:
++      return true;
++  }
++}
++
+ ScopedReportBase::ScopedReportBase(ReportType typ, uptr tag) {
+   ctx->thread_registry->CheckLocked();
+   void *mem = internal_alloc(MBlockReport, sizeof(ReportDesc));
+@@ -497,8 +518,10 @@
+ }
+ 
+ bool OutputReport(ThreadState *thr, const ScopedReport &srep) {
+-  if (!flags()->report_bugs || thr->suppress_reports)
+-    return false;
++  // These should have been checked in ShouldReport.
++  // It's too late to check them here, we have already taken locks.
++  CHECK(flags()->report_bugs);
++  CHECK(!thr->suppress_reports);
+   atomic_store_relaxed(&ctx->last_symbolize_time_ns, NanoTime());
+   const ReportDesc *rep = srep.GetReport();
+   CHECK_EQ(thr->current_report, nullptr);
+@@ -589,7 +612,7 @@
+   // at best it will cause deadlocks on internal mutexes.
+   ScopedIgnoreInterceptors ignore;
+ 
+-  if (!flags()->report_bugs)
++  if (!ShouldReport(thr, ReportTypeRace))
+     return;
+   if (!flags()->report_atomic_races && !RaceBetweenAtomicAndFree(thr))
+     return;
+diff --git a/compiler-rt/lib/tsan/rtl/tsan_rtl_thread.cpp b/compiler-rt/lib/tsan/rtl/tsan_rtl_thread.cpp
+--- a/compiler-rt/lib/tsan/rtl/tsan_rtl_thread.cpp
++++ b/compiler-rt/lib/tsan/rtl/tsan_rtl_thread.cpp
+@@ -210,7 +210,7 @@
+ void ThreadFinalize(ThreadState *thr) {
+   ThreadCheckIgnore(thr);
+ #if !SANITIZER_GO
+-  if (!flags()->report_thread_leaks)
++  if (!ShouldReport(thr, ReportTypeThreadLeak))
+     return;
+   ThreadRegistryLock l(ctx->thread_registry);
+   Vector<ThreadLeak> leaks;
+diff --git a/compiler-rt/test/tsan/pthread_atfork_deadlock3.c b/compiler-rt/test/tsan/pthread_atfork_deadlock3.c
+new file mode 100644
+--- /dev/null
++++ b/compiler-rt/test/tsan/pthread_atfork_deadlock3.c
+@@ -0,0 +1,71 @@
++// RUN: %clang_tsan -O1 %s -o %t && %run %t 2>&1 | FileCheck %s
++// Regression test for
++// https://groups.google.com/g/thread-sanitizer/c/TQrr4-9PRYo/m/HFR4FMi6AQAJ
++#include "test.h"
++#include <sys/types.h>
++#include <sys/wait.h>
++#include <errno.h>
++#include <string.h>
++#include <signal.h>
++
++long glob = 0;
++
++void *worker(void *main) {
++  glob++;
++  barrier_wait(&barrier);
++  barrier_wait(&barrier);
++  pthread_kill((pthread_t)main, SIGPROF);
++  barrier_wait(&barrier);
++  return NULL;
++}
++
++void atfork() {
++  barrier_wait(&barrier);
++  barrier_wait(&barrier);
++  write(2, "in atfork\n", strlen("in atfork\n"));
++  static volatile long a;
++  __atomic_fetch_add(&a, 1, __ATOMIC_RELEASE);
++}
++
++void handler(int sig) {
++  write(2, "in handler\n", strlen("in handler\n"));
++  glob++;
++}
++
++int main() {
++  barrier_init(&barrier, 2);
++  struct sigaction act = {};
++  act.sa_handler = &handler;
++  if (sigaction(SIGPROF, &act, 0)) {
++    perror("sigaction");
++    exit(1);
++  }
++  pthread_atfork(atfork, NULL, NULL);
++  pthread_t t;
++  pthread_create(&t, NULL, worker, (void*)pthread_self());
++  barrier_wait(&barrier);
++  pid_t pid = fork();
++  if (pid < 0) {
++    fprintf(stderr, "fork failed: %d\n", errno);
++    return 1;
++  }
++  if (pid == 0) {
++    fprintf(stderr, "CHILD\n");
++    return 0;
++  }
++  if (pid != waitpid(pid, NULL, 0)) {
++    fprintf(stderr, "waitpid failed: %d\n", errno);
++    return 1;
++  }
++  pthread_join(t, NULL);
++  fprintf(stderr, "PARENT\n");
++  return 0;
++}
++
++// CHECK: in atfork
++// CHECK: in handler
++// Note: There is a race, but we won't report it
++// to not deadlock.
++// CHECK-NOT: ThreadSanitizer: data race
++// CHECK: CHILD
++// CHECK: PARENT
+

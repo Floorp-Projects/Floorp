@@ -18,6 +18,7 @@
       "unpoison-thread-stacks_clang_10.patch",
       "downgrade-mangling-error_clang_12.patch",
       "revert-llvmorg-12-init-7827-g2a078c307204.patch",
+      "tsan-D101154.patch",
       "loosen-msvc-detection.patch"
     ]
 }
