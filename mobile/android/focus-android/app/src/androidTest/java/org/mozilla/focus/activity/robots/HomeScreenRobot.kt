@@ -24,6 +24,8 @@ class HomeScreenRobot {
         assertTrue(searchBar.text.equals(getStringResource(R.string.urlbar_hint)))
     }
 
+    fun skipFirstRun() = onView(withId(R.id.skip)).perform(click())
+
     class Transition {
         fun openMainMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
             searchBar.waitForExists(waitingTime)

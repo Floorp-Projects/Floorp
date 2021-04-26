@@ -10,85 +10,109 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.preference.PreferenceManager
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import okhttp3.mockwebserver.MockResponse
+import junit.framework.TestCase.assertTrue
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.focus.R
-import org.mozilla.focus.fragment.FirstrunFragment
-import org.mozilla.focus.helpers.TestHelper.readTestAsset
+import org.mozilla.focus.activity.robots.browserScreen
+import org.mozilla.focus.activity.robots.customTab
+import org.mozilla.focus.activity.robots.homeScreen
+import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
-@Ignore("Crashing the instrumentation tests, no session ID error")
 class CustomTabTest {
-    private var webServer: MockWebServer? = null
+    private lateinit var webServer: MockWebServer
     private val MENU_ITEM_LABEL = "TestItem4223"
-    private val ACTION_BUTTON_DESCRIPTION = "TestButton1337"
-    private val TEST_PAGE_HEADER_ID = "header"
+    private val ACTION_BUTTON_DESCRIPTION = "TestButton"
     private val TEST_PAGE_HEADER_TEXT = "focus test page"
 
     @get: Rule
-    var activityTestRule = ActivityTestRule(
+    val activityTestRule = ActivityTestRule(
         IntentReceiverActivity::class.java, true, false
     )
 
     @Before
-    fun setUp() {}
+    fun setUp() {
+        webServer = MockWebServer()
+        webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
+        webServer.enqueue(createMockResponseFromAsset("tab1.html"))
+        webServer.start()
+    }
 
     @After
     fun tearDown() {
-        stopWebServer()
+        try {
+            webServer.shutdown()
+        } catch (e: IOException) {
+            throw AssertionError("Could not stop web server", e)
+        }
     }
 
     @Test
     fun testCustomTabUI() {
-        startWebServer()
+        val customTabPage = webServer.url("plain_test.html").toString()
+        val customTabActivity = activityTestRule.launchActivity(createCustomTabIntent(customTabPage))
 
-        // Launch activity with custom tabs intent
-        activityTestRule.launchActivity(createCustomTabIntent())
+        browserScreen {
+            progressBar.waitUntilGone(webPageLoadwaitingTime)
+            verifyPageContent(TEST_PAGE_HEADER_TEXT)
+            verifyPageURL(customTabPage)
+        }
 
-        // Wait for website to load
+        customTab {
+            verifyCustomTabActionButton(ACTION_BUTTON_DESCRIPTION)
+            openCustomTabMenu()
+            verifyTheStandardMenuItems()
+            verifyShareButtonIsDisplayed()
+            verifyCustomMenuItem(MENU_ITEM_LABEL)
+            // Close the menu and close the tab
+            mDevice.pressBack()
+            closeCustomTab()
+            assertTrue(customTabActivity.isDestroyed)
+        }
+    }
 
-        // Verify action button is visible
-        Espresso.onView(ViewMatchers.withContentDescription(ACTION_BUTTON_DESCRIPTION))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+    @Test
+    fun openCustomTabInFocusTest() {
+        val customTabPage = webServer.url("plain_test.html").toString()
+        val browserPage = webServer.url("tab1.html").toString()
 
-        // Open menu
-        Espresso.onView(ViewMatchers.withId(R.id.menuView))
-            .perform(ViewActions.click())
+        activityTestRule.launchActivity(null)
+        homeScreen {
+            skipFirstRun()
+        }
 
-        // Verify share action is visible
-        Espresso.onView(ViewMatchers.withId(R.id.share))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        searchScreen {
+        }.loadPage(browserPage) {}
 
-        // Verify custom menu item is visible
-        Espresso.onView(ViewMatchers.withText(MENU_ITEM_LABEL))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        activityTestRule.launchActivity(createCustomTabIntent(customTabPage))
+        customTab {
+            progressBar.waitUntilGone(webPageLoadwaitingTime)
+            openCustomTabMenu()
+            clickOpenInFocusButton()
+        }
 
-        // Close the menu again
-        Espresso.pressBack()
-
-        // Verify close button is visible - Click it to close custom tab.
-        Espresso.onView(ViewMatchers.withId(R.id.customtab_close))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-            .perform(ViewActions.click())
+        browserScreen {
+            mDevice.waitForIdle(waitingTime)
+            verifyNumberOfTabsOpened(2)
+            mDevice.pressBack()
+            verifyPageURL(browserPage)
+        }
     }
 
     @Suppress("Deprecation")
-    private fun createCustomTabIntent(): Intent {
+    private fun createCustomTabIntent(pageUrl: String): Intent {
         val appContext = InstrumentationRegistry.getInstrumentation()
             .targetContext
             .applicationContext
@@ -99,37 +123,8 @@ class CustomTabTest {
             .setActionButton(createTestBitmap(), ACTION_BUTTON_DESCRIPTION, pendingIntent, true)
             .setToolbarColor(Color.MAGENTA)
             .build()
-        customTabsIntent.intent.data = Uri.parse(webServer!!.url("/").toString())
+        customTabsIntent.intent.data = Uri.parse(pageUrl)
         return customTabsIntent.intent
-    }
-
-    private fun startWebServer() {
-        val appContext = InstrumentationRegistry.getInstrumentation()
-            .targetContext
-            .applicationContext
-        PreferenceManager.getDefaultSharedPreferences(appContext)
-            .edit()
-            .putBoolean(FirstrunFragment.FIRSTRUN_PREF, true)
-            .apply()
-        webServer = MockWebServer()
-        try {
-            webServer!!.enqueue(
-                MockResponse()
-                    .setBody(readTestAsset("plain_test.html"))
-            )
-            webServer!!.start()
-        } catch (e: IOException) {
-            throw AssertionError("Could not start web server", e)
-        }
-    }
-
-    private fun stopWebServer() {
-        try {
-            webServer!!.close()
-            webServer!!.shutdown()
-        } catch (e: IOException) {
-            throw AssertionError("Could not stop web server", e)
-        }
     }
 
     private fun createTestBitmap(): Bitmap {
