@@ -17,6 +17,7 @@
 #include "nsContentUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsCSSPseudoElements.h"
+#include "nsLayoutUtils.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/AccTypes.h"
@@ -53,15 +54,17 @@ nsresult nsNumberControlFrame::CreateAnonymousContent(
   // follows:
   //
   // input
+  //   div    - placeholder
+  //   div    - preview div
+  //   div    - editor root
   //   div    - spin box wrapping up/down arrow buttons
   //     div  - spin up (up arrow button)
   //     div  - spin down (down arrow button)
-  //   div    - editor root
-  //   div    - placeholder
-  //   div    - preview div
   //
-  // If you change this, be careful to change the destruction order in
-  // nsNumberControlFrame::DestroyFrom.
+  // If you change this, be careful to change the order of stuff returned in
+  // AppendAnonymousContentTo.
+
+  nsTextControlFrame::CreateAnonymousContent(aElements);
 
   // The author has elected to hide the spinner by setting this
   // -moz-appearance. We will reframe if it changes.
@@ -75,12 +78,8 @@ nsresult nsNumberControlFrame::CreateAnonymousContent(
     // Create the ::-moz-number-spin-down pseudo-element:
     mSpinDown = MakeAnonElement(PseudoStyleType::mozNumberSpinDown, mSpinBox);
 
-    // It's important that this goes first, so that reflow can know our size for
-    // the rest of the children.
     aElements.AppendElement(mSpinBox);
   }
-
-  nsTextControlFrame::CreateAnonymousContent(aElements);
 
   return NS_OK;
 }
@@ -164,10 +163,10 @@ bool nsNumberControlFrame::SpinnerDownButtonIsDepressed() const {
 
 void nsNumberControlFrame::AppendAnonymousContentTo(
     nsTArray<nsIContent*>& aElements, uint32_t aFilter) {
+  nsTextControlFrame::AppendAnonymousContentTo(aElements, aFilter);
   if (mSpinBox) {
     aElements.AppendElement(mSpinBox);
   }
-  nsTextControlFrame::AppendAnonymousContentTo(aElements, aFilter);
 }
 
 #ifdef ACCESSIBILITY
