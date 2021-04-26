@@ -8,3 +8,4 @@ These linked pages contain design documents for the Networking stack implementat
 
    cache2/doc
    http/logging
+   dns/dns-over-https-trr
