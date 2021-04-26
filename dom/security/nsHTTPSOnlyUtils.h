@@ -217,6 +217,14 @@ class TestHTTPAnswerRunnable final : public mozilla::Runnable,
   ~TestHTTPAnswerRunnable() = default;
 
  private:
+  /**
+   * Checks whether the HTTP background request results in a redirect
+   * to the same upgraded top-level HTTPS URL
+   * @param  aChannel a nsIHttpChannel object
+   * @return  true if the backgroundchannel is redirected
+   */
+  static bool IsBackgroundRequestRedirected(nsIHttpChannel* aChannel);
+
   RefPtr<nsIURI> mURI;
   // We're keeping a reference to DocumentLoadListener instead of a specific
   // channel, because the current top-level channel can change (for example
