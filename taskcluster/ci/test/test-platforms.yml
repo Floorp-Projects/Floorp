@@ -160,79 +160,55 @@ windows7-32/debug:
     build-platform: win32/debug
     test-sets:
         - windows-reftest-gpu
-        - windows-7-tests
+        - windows-tests
+        - web-platform-tests
+        - mochitest-webgpu
 
 windows7-32/opt:
     build-platform: win32/opt
     test-sets:
+        - awsy
+        - desktop-screenshot-capture
         - windows-reftest-gpu
-        - windows-7-tests
+        - windows-talos
+        - windows-tests
+        - web-platform-tests
+        - raptor-firefox
+        - browsertime
+        - mochitest-webgpu
+        - web-platform-tests-wdspec-headless
 
 windows7-32-shippable/opt:
     build-platform: win32-shippable/opt
     test-sets:
+        - awsy
+        - desktop-screenshot-capture
         - windows-reftest-gpu
-        - windows-7-tests
+        - windows-talos
+        - windows-tests
+        - web-platform-tests
+        - web-platform-tests-wdspec-headless
+        - raptor-chrome
+        - raptor-chromium
+        - raptor-firefox
+        - browsertime
+        - mochitest-webgpu
 
 # win7 qr builds for try purposes
 windows7-32-qr/debug:
     build-platform: win32/debug
     test-sets:
         - mochitest-webgpu
-        - windows7-qr-tests
+        - windows-qr-tests
+        - web-platform-tests
 
 windows7-32-qr/opt:
     build-platform: win32/opt
     test-sets:
-        - windows7-qr-tests
-
-# win10-32 qr builds for try purposes
-windows10-32-qr/debug:
-    build-platform: win32/debug
-    test-sets:
-        - web-platform-tests
-        - windows32-qr-tests
-
-windows10-32-qr/opt:
-    build-platform: win32/opt
-    test-sets:
         - awsy
-        - web-platform-tests
+        - windows-qr-tests
         - windows-talos
-        - windows32-qr-tests
-
-windows10-32-shippable/opt:
-    build-platform: win32-shippable/opt
-    test-sets:
-        - awsy
-        - browsertime
-        - desktop-screenshot-capture
-        - raptor-chrome
-        - raptor-chromium
-        - raptor-firefox
         - web-platform-tests
-        - web-platform-tests-wdspec-headless
-        - windows32-tests
-        - windows-talos
-
-windows10-32/opt:
-    build-platform: win32/opt
-    test-sets:
-        - awsy
-        - browsertime
-        - desktop-screenshot-capture
-        - raptor-firefox
-        - web-platform-tests
-        - web-platform-tests-wdspec-headless
-        - windows32-tests
-        - windows-talos
-
-windows10-32/debug:
-    build-platform: win32/debug
-    test-sets:
-        - web-platform-tests
-        - windows32-tests
-
 
 # win64
 windows10-64-ccov-qr/opt:
