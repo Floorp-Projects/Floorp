@@ -23,10 +23,11 @@
 #include "libyuv/convert.h"
 #include "libyuv/row.h"
 
-#include "webrtc/modules/video_coding/include/video_error_codes.h"
+#include "modules/video_coding/include/video_error_codes.h"
 
-#include "webrtc/api/video/i420_buffer.h"
-#include <webrtc/common_video/libyuv/include/webrtc_libyuv.h>
+#include "api/video/i420_buffer.h"
+#include <common_video/libyuv/include/webrtc_libyuv.h>
+#include "rtc_base/deprecated/recursive_critical_section.h"
 
 using namespace mozilla;
 
@@ -51,25 +52,27 @@ class CallbacksSupport final : public JavaCallbacksSupport {
 
   ~CallbacksSupport() {
     CSFLogDebug(LOGTAG, "%s %p", __FUNCTION__, this);
-    if (mEncodedImage._size) {
-      delete[] mEncodedImage._buffer;
-      mEncodedImage._buffer = nullptr;
-      mEncodedImage._size = 0;
-    }
+    // !mjf! EncodedImage comes from api/video/encoded_image.h
+    mEncodedImage.ClearEncodedData();
+//     if (mEncodedImage.size()) {
+//       delete[] mEncodedImage._buffer;
+//       mEncodedImage._buffer = nullptr;
+//       mEncodedImage.set_size(0);
+//     }
   }
 
   void VerifyAndAllocate(const uint32_t minimumSize) {
     CSFLogDebug(LOGTAG, "%s %p", __FUNCTION__, this);
-    if (minimumSize > mEncodedImage._size) {
-      uint8_t* newBuffer = new uint8_t[minimumSize];
-      MOZ_RELEASE_ASSERT(newBuffer);
-
-      if (mEncodedImage._buffer) {
-        delete[] mEncodedImage._buffer;
-      }
-      mEncodedImage._buffer = newBuffer;
-      mEncodedImage._size = minimumSize;
-    }
+//     if (minimumSize > mEncodedImage.size()) {
+//       uint8_t* newBuffer = new uint8_t[minimumSize];
+//       MOZ_RELEASE_ASSERT(newBuffer);
+//
+//       if (mEncodedImage._buffer) {
+//         delete[] mEncodedImage._buffer;
+//       }
+//       mEncodedImage._buffer = newBuffer;
+//       mEncodedImage.set_size(minimumSize);
+//     }
   }
 
   void HandleInput(jlong aTimestamp, bool aProcessed) override {
@@ -98,41 +101,36 @@ class CallbacksSupport final : public JavaCallbacksSupport {
       ok = NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs));
       MOZ_RELEASE_ASSERT(ok);
 
-      mEncodedImage._timeStamp = presentationTimeUs / PR_USEC_PER_MSEC;
-      mEncodedImage.capture_time_ms_ = mEncodedImage._timeStamp;
+//       mEncodedImage._timeStamp = presentationTimeUs / PR_USEC_PER_MSEC;
+//       mEncodedImage.capture_time_ms_ = mEncodedImage._timeStamp;
 
       int32_t flags;
       ok = NS_SUCCEEDED(info->Flags(&flags));
       MOZ_ASSERT(ok);
 
-      if (flags == java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
-        mEncodedImage._frameType = webrtc::kVideoFrameKey;
-      } else {
-        mEncodedImage._frameType = webrtc::kVideoFrameDelta;
-      }
-      mEncodedImage._completeFrame = true;
-      mEncodedImage._length = size;
+//       if (flags == java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
+//         mEncodedImage._frameType = webrtc::kVideoFrameKey;
+//       } else {
+//         mEncodedImage._frameType = webrtc::kVideoFrameDelta;
+//       }
+//       mEncodedImage._completeFrame = true;
+//       mEncodedImage._length = size;
 
       jni::ByteBuffer::LocalRef dest =
-          jni::ByteBuffer::New(mEncodedImage._buffer, size);
+          jni::ByteBuffer::New(nullptr/* !mjf! mEncodedImage._buffer*/, size);
       aBuffer->WriteToByteBuffer(dest, 0, size);
 
       webrtc::CodecSpecificInfo info;
       info.codecType = webrtc::kVideoCodecVP8;
-      info.codecSpecific.VP8.pictureId = mPictureId;
+//       info.codecSpecific.VP8.pictureId = mPictureId;
       mPictureId = (mPictureId + 1) & 0x7FFF;
-      info.codecSpecific.VP8.tl0PicIdx = -1;
+//       info.codecSpecific.VP8.tl0PicIdx = -1;
       info.codecSpecific.VP8.keyIdx = -1;
       info.codecSpecific.VP8.temporalIdx = 1;
-      info.codecSpecific.VP8.simulcastIdx = 0;
-
-      webrtc::RTPFragmentationHeader header;
-      memset(&header, 0, sizeof(header));
-      header.VerifyAndAllocateFragmentationHeader(1);
-      header.fragmentationLength[0] = mEncodedImage._length;
+//       info.codecSpecific.VP8.simulcastIdx = 0;
 
       MOZ_RELEASE_ASSERT(mCallback);
-      mCallback->OnEncodedImage(mEncodedImage, &info, &header);
+      mCallback->OnEncodedImage(mEncodedImage, &info);
     }
   }
 
@@ -146,7 +144,7 @@ class CallbacksSupport final : public JavaCallbacksSupport {
   webrtc::EncodedImageCallback* mCallback;
   Atomic<bool> mCanceled;
   webrtc::EncodedImage mEncodedImage;
-  rtc::CriticalSection mCritSect;
+  rtc::RecursiveCriticalSection mCritSect;
   uint32_t mPictureId;
 };
 
@@ -421,13 +419,13 @@ class WebrtcAndroidMediaCodec {
     time = PR_IntervalNow();
 #endif
 
-    size_t size = inputImage._length;
+    size_t size = 0;//!mjf! inputImage._length;
 
     JNIEnv* const env = jni::GetEnvForThread();
     jobject buffer = env->GetObjectArrayElement(mInputBuffers, inputIndex);
-    void* directBuffer = env->GetDirectBufferAddress(buffer);
+//     void* directBuffer = env->GetDirectBufferAddress(buffer);
 
-    PodCopy((uint8_t*)directBuffer, inputImage._buffer, size);
+//     PodCopy((uint8_t*)directBuffer, inputImage._buffer, size);
 
     if (inputIndex >= 0) {
       CSFLogError(LOGTAG, "%s queue input buffer inputIndex = %d", __FUNCTION__,
@@ -442,7 +440,7 @@ class WebrtcAndroidMediaCodec {
         EncodedFrame frame;
         frame.width_ = mWidth;
         frame.height_ = mHeight;
-        frame.timeStamp_ = inputImage._timeStamp;
+//         frame.timeStamp_ = inputImage._timeStamp;
         frame.decode_timestamp_ = renderTimeMs;
         mOutputDrain->QueueInput(frame);
       }
@@ -677,7 +675,7 @@ class WebrtcAndroidMediaCodec {
 
 static bool I420toNV12(uint8_t* dstY, uint16_t* dstUV,
                        const webrtc::VideoFrame& inputImage) {
-  rtc::scoped_refptr<webrtc::I420BufferInterface> inputBuffer =
+  rtc::scoped_refptr<const webrtc::I420BufferInterface> inputBuffer =
       inputImage.video_frame_buffer()->GetI420();
 
   uint8_t* buffer = dstY;
@@ -722,20 +720,20 @@ bool WebrtcMediaCodecVP8VideoEncoder::ResetOutputBuffers() {
 
 int32_t WebrtcMediaCodecVP8VideoEncoder::VerifyAndAllocate(
     const uint32_t minimumSize) {
-  if (minimumSize > mEncodedImage._size) {
-    // create buffer of sufficient size
-    uint8_t* newBuffer = new uint8_t[minimumSize];
-    if (newBuffer == nullptr) {
-      return -1;
-    }
-    if (mEncodedImage._buffer) {
-      // copy old data
-      memcpy(newBuffer, mEncodedImage._buffer, mEncodedImage._size);
-      delete[] mEncodedImage._buffer;
-    }
-    mEncodedImage._buffer = newBuffer;
-    mEncodedImage._size = minimumSize;
-  }
+//   if (minimumSize > mEncodedImage.size()) {
+//     // create buffer of sufficient size
+//     uint8_t* newBuffer = new uint8_t[minimumSize];
+//     if (newBuffer == nullptr) {
+//       return -1;
+//     }
+//     if (mEncodedImage._buffer) {
+//       // copy old data
+//       memcpy(newBuffer, mEncodedImage._buffer, mEncodedImage.size());
+//       delete[] mEncodedImage._buffer;
+//     }
+//     mEncodedImage._buffer = newBuffer;
+//     mEncodedImage.set_size(minimumSize);
+//   }
   return 0;
 }
 
@@ -751,7 +749,7 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::InitEncode(
 
 int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
     const webrtc::VideoFrame& inputImage,
-    const std::vector<webrtc::FrameType>* frame_types) {
+    const std::vector<webrtc::VideoFrameType>* frame_types) {
   CSFLogDebug(LOGTAG, "%s, w = %d, h = %d", __FUNCTION__, inputImage.width(),
               inputImage.height());
 
@@ -805,7 +803,7 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
   uint32_t time = PR_IntervalNow();
 #endif
 
-  rtc::scoped_refptr<webrtc::I420BufferInterface> inputBuffer =
+  rtc::scoped_refptr<const webrtc::I420BufferInterface> inputBuffer =
       inputImage.video_frame_buffer()->GetI420();
   size_t sizeY = inputImage.height() * inputBuffer->StrideY();
   size_t sizeUV = ((inputImage.height() + 1) / 2) * inputBuffer->StrideU();
@@ -859,10 +857,10 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
                 __FUNCTION__,
                 PR_IntervalToMilliseconds(PR_IntervalNow() - time));
 #endif
-    mEncodedImage._encodedWidth = inputImage.width();
-    mEncodedImage._encodedHeight = inputImage.height();
-    mEncodedImage._timeStamp = inputImage.timestamp();
-    mEncodedImage.capture_time_ms_ = inputImage.timestamp();
+//     mEncodedImage._encodedWidth = inputImage.width();
+//     mEncodedImage._encodedHeight = inputImage.height();
+//     mEncodedImage._timeStamp = inputImage.timestamp();
+//     mEncodedImage.capture_time_ms_ = inputImage.timestamp();
 
     nsresult res;
     java::sdk::BufferInfo::LocalRef bufferInfo;
@@ -915,12 +913,12 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
             reinterpret_cast<uint8_t*>(env->GetDirectBufferAddress(buffer)) +
             offset;
 
-        if (flags == java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
-          mEncodedImage._frameType = webrtc::kVideoFrameKey;
-        } else {
-          mEncodedImage._frameType = webrtc::kVideoFrameDelta;
-        }
-        mEncodedImage._completeFrame = true;
+//         if (flags == java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
+//           mEncodedImage._frameType = webrtc::kVideoFrameKey;
+//         } else {
+//           mEncodedImage._frameType = webrtc::kVideoFrameDelta;
+//         }
+//         mEncodedImage._completeFrame = true;
 
         int32_t size;
         bufferInfo->Size(&size);
@@ -937,27 +935,27 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
           return WEBRTC_VIDEO_CODEC_ERROR;
         }
 
-        mEncodedImage._length = size;
+//         mEncodedImage._length = size;
 
         // xxx It's too bad the mediacodec API forces us to memcpy this....
         // we should find a way that able to 'hold' the buffer or transfer it
         // from inputImage (ping-pong buffers or select them from a small pool)
-        memcpy(mEncodedImage._buffer, directBuffer, mEncodedImage._length);
+        memcpy(nullptr/*!mjf! mEncodedImage._buffer*/, directBuffer, 0/*!mjf! mEncodedImage._length*/);
 
         webrtc::CodecSpecificInfo info;
         info.codecType = webrtc::kVideoCodecVP8;
-        info.codecSpecific.VP8.pictureId = -1;
-        info.codecSpecific.VP8.tl0PicIdx = -1;
+//         info.codecSpecific.VP8.pictureId = -1;
+//         info.codecSpecific.VP8.tl0PicIdx = -1;
         info.codecSpecific.VP8.keyIdx = -1;
         info.codecSpecific.VP8.temporalIdx = 1;
 
         // Generate a header describing a single fragment.
-        webrtc::RTPFragmentationHeader header;
-        memset(&header, 0, sizeof(header));
-        header.VerifyAndAllocateFragmentationHeader(1);
-        header.fragmentationLength[0] = mEncodedImage._length;
+//         webrtc::RTPFragmentationHeader header;
+//         memset(&header, 0, sizeof(header));
+//         header.VerifyAndAllocateFragmentationHeader(1);
+//         header.fragmentationLength[0] = 0;// !mjf! mEncodedImage._length;
 
-        mCallback->OnEncodedImage(mEncodedImage, &info, &header);
+        mCallback->OnEncodedImage(mEncodedImage, &info);
 
         mMediaCodecEncoder->ReleaseOutputBuffer(outputIndex, false);
         env->DeleteLocalRef(buffer);
@@ -981,9 +979,9 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Release() {
   delete mMediaCodecEncoder;
   mMediaCodecEncoder = nullptr;
 
-  delete[] mEncodedImage._buffer;
-  mEncodedImage._buffer = nullptr;
-  mEncodedImage._size = 0;
+//   delete[] mEncodedImage._buffer;
+//   mEncodedImage._buffer = nullptr;
+//   mEncodedImage.set_size(0);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -993,19 +991,17 @@ WebrtcMediaCodecVP8VideoEncoder::~WebrtcMediaCodecVP8VideoEncoder() {
   Release();
 }
 
-int32_t WebrtcMediaCodecVP8VideoEncoder::SetRates(
+void WebrtcMediaCodecVP8VideoEncoder::SetRates(
     const webrtc::VideoEncoder::RateControlParameters& aParameters) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   if (!mMediaCodecEncoder) {
-    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+    return;
   }
 
   // XXX
   // 1. implement MediaCodec's setParameters method
   // 2.find a way to initiate a Java Bundle instance as parameter for MediaCodec
   // setParameters method. mMediaCodecEncoder->setParameters
-
-  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 WebrtcMediaCodecVP8VideoRemoteEncoder::
@@ -1020,25 +1016,24 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::InitEncode(
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::SetRates(
+void WebrtcMediaCodecVP8VideoRemoteEncoder::SetRates(
     const webrtc::VideoEncoder::RateControlParameters& aParameters) {
   MOZ_ASSERT(aParameters.bitrate.IsSpatialLayerUsed(0));
   MOZ_ASSERT(!aParameters.bitrate.HasBitrate(0, 1),
              "No simulcast support for MediaCodec impl");
   MOZ_ASSERT(!aParameters.bitrate.IsSpatialLayerUsed(1),
              "No simulcast support for MediaCodec impl");
-  CSFLogDebug(LOGTAG, "%s, newBitRate: %d bps, frameRate: %d fps", __FUNCTION__,
+  CSFLogDebug(LOGTAG, "%s, newBitRate: %d bps, frameRate: %lf fps", __FUNCTION__,
               aParameters.bitrate.GetBitrate(0, 0), aParameters.framerate_fps);
   if (!mJavaEncoder) {
-    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+    return;
   }
   mJavaEncoder->SetBitrate(aParameters.bitrate.GetBitrate(0, 0));
-  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
     const webrtc::VideoFrame& inputImage,
-    const std::vector<webrtc::FrameType>* frame_types) {
+    const std::vector<webrtc::VideoFrameType>* frame_types) {
   CSFLogDebug(LOGTAG, "%s, w = %d, h = %d", __FUNCTION__, inputImage.width(),
               inputImage.height());
   if (inputImage.width() == 0 || inputImage.height() == 0) {
@@ -1078,7 +1073,7 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
     }
   }
 
-  rtc::scoped_refptr<webrtc::I420BufferInterface> inputBuffer =
+  rtc::scoped_refptr<const webrtc::I420BufferInterface> inputBuffer =
       inputImage.video_frame_buffer()->GetI420();
   size_t sizeY = inputImage.height() * inputBuffer->StrideY();
   size_t sizeUV = ((inputImage.height() + 1) / 2) * inputBuffer->StrideU();
@@ -1109,7 +1104,7 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if ((*frame_types)[0] == webrtc::kVideoFrameKey) {
+  if ((*frame_types)[0] == webrtc::VideoFrameType::kVideoFrameKey) {
     bufferInfo->Set(0, size, inputImage.render_time_ms() * PR_USEC_PER_MSEC,
                     java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME);
   } else {
@@ -1185,18 +1180,18 @@ int32_t WebrtcMediaCodecVP8VideoDecoder::InitDecode(
 
 int32_t WebrtcMediaCodecVP8VideoDecoder::Decode(
     const webrtc::EncodedImage& inputImage, bool missingFrames,
-    const webrtc::RTPFragmentationHeader* fragmentation,
-    const webrtc::CodecSpecificInfo* codecSpecificInfo, int64_t renderTimeMs) {
+    /*const webrtc::RTPFragmentationHeader* fragmentation,
+    const webrtc::CodecSpecificInfo* codecSpecificInfo,*/ int64_t renderTimeMs) {
   CSFLogDebug(LOGTAG, "%s, renderTimeMs = %" PRId64, __FUNCTION__,
               renderTimeMs);
 
-  if (inputImage._length == 0 || !inputImage._buffer) {
+  if (inputImage.size() == 0 || !inputImage.data()) {
     CSFLogDebug(LOGTAG, "%s, input Image invalid. length = %" PRIdPTR,
-                __FUNCTION__, inputImage._length);
+                __FUNCTION__, inputImage.size());
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (inputImage._frameType == webrtc::kVideoFrameKey) {
+  if (inputImage._frameType == webrtc::VideoFrameType::kVideoFrameKey) {
     CSFLogDebug(LOGTAG, "%s, inputImage is Golden frame", __FUNCTION__);
     mFrameWidth = inputImage._encodedWidth;
     mFrameHeight = inputImage._encodedHeight;

@@ -15,7 +15,7 @@
 #include "AudioConduit.h"
 #include "VideoConduit.h"
 
-#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "modules/video_coding/include/video_codec_interface.h"
 
 namespace mozilla {
 
@@ -41,14 +41,14 @@ class WebrtcMediaCodecVP8VideoEncoder : public WebrtcVideoEncoder {
 
   virtual int32_t Encode(
       const webrtc::VideoFrame& inputImage,
-      const std::vector<webrtc::FrameType>* frame_types) override;
+      const std::vector<webrtc::VideoFrameType>* frame_types) override;
 
   virtual int32_t RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* callback) override;
 
   virtual int32_t Release() override;
 
-  virtual int32_t SetRates(
+  virtual void SetRates(
       const webrtc::VideoEncoder::RateControlParameters& aParameters) override;
 
  private:
@@ -80,14 +80,14 @@ class WebrtcMediaCodecVP8VideoRemoteEncoder : public WebrtcVideoEncoder {
                      const webrtc::VideoEncoder::Settings& settings) override;
 
   int32_t Encode(const webrtc::VideoFrame& inputImage,
-                 const std::vector<webrtc::FrameType>* frame_types) override;
+                 const std::vector<webrtc::VideoFrameType>* frame_types) override;
 
   int32_t RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* callback) override;
 
   int32_t Release() override;
 
-  int32_t SetRates(
+  void SetRates(
       const webrtc::VideoEncoder::RateControlParameters& aParameters) override;
 
  private:
@@ -104,16 +104,11 @@ class WebrtcMediaCodecVP8VideoDecoder : public WebrtcVideoDecoder {
 
   virtual ~WebrtcMediaCodecVP8VideoDecoder() override;
 
-  // Implement VideoDecoder interface.
-  virtual uint64_t PluginID() const override { return 0; }
-
   virtual int32_t InitDecode(const webrtc::VideoCodec* codecSettings,
                              int32_t numberOfCores) override;
 
   virtual int32_t Decode(
       const webrtc::EncodedImage& inputImage, bool missingFrames,
-      const webrtc::RTPFragmentationHeader* fragmentation,
-      const webrtc::CodecSpecificInfo* codecSpecificInfo = NULL,
       int64_t renderTimeMs = -1) override;
 
   virtual int32_t RegisterDecodeCompleteCallback(
