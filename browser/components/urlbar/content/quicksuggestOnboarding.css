@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#infoContainer {
+  text-align: center;
+  min-width: 500px;
+  padding: 1em 0;
+}
+
+#infoTitle {
+  font-size: 24px;
+}
+
+#infoIcon {
+  width: 112px;
+  height: 112px;
+  margin: 1em auto;
+  background-image: url("chrome://branding/content/about-logo.svg");
+  background-size: 100%;
+}
+
+/* Copied from https://searchfox.org/mozilla-central/source/browser/components/newtab/aboutwelcome/content/aboutwelcome.css#88 */
+/* We will want to check in to figure out if we want to share this code somehow */
+span.zap {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.zap::after {
+  display: block;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  content: '';
+  position: absolute;
+  top: calc(100% - 0.15em);
+  width: 100%;
+  height: 0.3em;
+  left: 0;
+  z-index: -1;
+}
+
+.zap.short::after {
+  background-image:  url('chrome://activity-stream/content/data/content/assets/short-zap.svg');
+}
