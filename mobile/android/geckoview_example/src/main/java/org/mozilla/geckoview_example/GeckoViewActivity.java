@@ -43,6 +43,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Build;
@@ -1103,6 +1104,15 @@ public class GeckoViewActivity
         menu.findItem(R.id.desktop_mode).setChecked(mDesktopMode);
         menu.findItem(R.id.action_tpe).setChecked(mTrackingProtectionException);
         menu.findItem(R.id.action_forward).setEnabled(mCanGoForward);
+
+        final boolean hasSession = mTabSessionManager.getCurrentSession() != null;
+        menu.findItem(R.id.action_reload).setEnabled(hasSession);
+        menu.findItem(R.id.action_forward).setEnabled(hasSession);
+        menu.findItem(R.id.action_close_tab).setEnabled(hasSession);
+        menu.findItem(R.id.action_tpe).setEnabled(hasSession);
+        menu.findItem(R.id.action_pb).setEnabled(hasSession);
+        menu.findItem(R.id.desktop_mode).setEnabled(hasSession);
+
         return true;
     }
 
@@ -1223,15 +1233,13 @@ public class GeckoViewActivity
 
     @Override
     public void closeTab(TabSession session) {
-        if (mTabSessionManager.sessionCount() > 1) {
-            mTabSessionManager.closeSession(session);
-            TabSession tabSession = mTabSessionManager.getCurrentSession();
-            setGeckoViewSession(tabSession);
+        mTabSessionManager.closeSession(session);
+        TabSession tabSession = mTabSessionManager.getCurrentSession();
+        setGeckoViewSession(tabSession);
+        if (tabSession != null) {
             tabSession.reload();
-            mToolbarView.updateTabCount();
-        } else {
-            recreateSession(session);
         }
+        mToolbarView.updateTabCount();
     }
 
     @Override
@@ -1274,11 +1282,22 @@ public class GeckoViewActivity
         if (previousSession != null) {
             controller.setTabActive(previousSession, false);
         }
-        mGeckoView.setSession(session);
-        if (activateTab) {
-            controller.setTabActive(session, true);
+
+        final boolean hasSession = session != null;
+        final LocationView view = mToolbarView.getLocationView();
+        // No point having the URL bar enabled if there's no session to navigate to
+        view.setEnabled(hasSession);
+
+        if (hasSession) {
+            mGeckoView.setSession(session);
+            if (activateTab) {
+                controller.setTabActive(session, true);
+            }
+            mTabSessionManager.setCurrentSession(session);
+        } else {
+            mGeckoView.coverUntilFirstPaint(Color.WHITE);
+            view.setText("");
         }
-        mTabSessionManager.setCurrentSession(session);
     }
 
     @Override
