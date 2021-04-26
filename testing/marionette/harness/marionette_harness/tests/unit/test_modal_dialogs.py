@@ -29,6 +29,7 @@ class TestModalDialogs(WindowManagerMixin, MarionetteTestCase):
             pass
 
         self.close_all_tabs()
+        self.close_all_windows()
 
         super(TestModalDialogs, self).tearDown()
 
@@ -43,7 +44,7 @@ class TestModalDialogs(WindowManagerMixin, MarionetteTestCase):
     def wait_for_alert(self, timeout=None):
         Wait(self.marionette, timeout=timeout).until(lambda _: self.alert_present)
 
-    def open_custom_prompt(self, modal_type):
+    def open_custom_prompt(self, modal_type, delay=0):
         browsing_context_id = self.marionette.execute_script(
             """
             return window.browsingContext.id;
@@ -56,7 +57,7 @@ class TestModalDialogs(WindowManagerMixin, MarionetteTestCase):
                 """
                 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-                const [ modalType, browsingContextId ] = arguments;
+                const [ modalType, browsingContextId, delay ] = arguments;
 
                 const modalTypes = {
                   1: Services.prompt.MODAL_TYPE_CONTENT,
@@ -65,21 +66,27 @@ class TestModalDialogs(WindowManagerMixin, MarionetteTestCase):
                   4: Services.prompt.MODAL_TYPE_INTERNAL_WINDOW,
                 }
 
-                const bc = (modalType === 3) ? null : BrowsingContext.get(browsingContextId);
-                Services.prompt.alertBC(bc, modalTypes[modalType], "title", "text");
+                window.setTimeout(() => {
+                  Services.prompt.alertBC(
+                    BrowsingContext.get(browsingContextId),
+                    modalTypes[modalType],
+                    "title",
+                    "text"
+                  );
+                }, delay);
             """,
-                script_args=(modal_type, browsing_context_id),
+                script_args=(modal_type, browsing_context_id, delay * 1000),
             )
 
     @parameterized("content", 1)
     @parameterized("tab", 2)
     @parameterized("window", 3)
     @parameterized("internal_window", 4)
-    def test_detect_modal_type(self, type):
+    def test_detect_modal_type_in_current_tab_for_type(self, type):
         self.open_custom_prompt(type)
         self.wait_for_alert()
 
-        self.marionette.switch_to_alert()
+        self.assertTrue(self.alert_present)
 
         # Restart the session to ensure we still find the formerly left-open dialog.
         self.marionette.delete_session()
@@ -87,6 +94,53 @@ class TestModalDialogs(WindowManagerMixin, MarionetteTestCase):
 
         alert = self.marionette.switch_to_alert()
         alert.dismiss()
+
+    @parameterized("content", 1)
+    @parameterized("tab", 2)
+    def test_dont_detect_content_and_tab_modal_type_in_another_tab_for_type(self, type):
+        self.open_custom_prompt(type, delay=0.25)
+
+        self.marionette.switch_to_window(self.start_tab)
+        with self.assertRaises(errors.TimeoutException):
+            self.wait_for_alert(2)
+
+        self.marionette.switch_to_window(self.new_tab)
+        alert = self.marionette.switch_to_alert()
+        alert.dismiss()
+
+    @parameterized("window", 3)
+    @parameterized("internal_window", 4)
+    def test_detect_window_modal_type_in_another_tab_for_type(self, type):
+        self.open_custom_prompt(type, delay=0.25)
+
+        self.marionette.switch_to_window(self.start_tab)
+        self.wait_for_alert()
+
+        alert = self.marionette.switch_to_alert()
+        alert.dismiss()
+
+        self.marionette.switch_to_window(self.new_tab)
+        self.assertFalse(self.alert_present)
+
+    @parameterized("window", 3)
+    @parameterized("internal_window", 4)
+    def test_detect_window_modal_type_in_another_window_for_type(self, type):
+        self.new_window = self.open_window()
+
+        self.marionette.switch_to_window(self.new_window)
+
+        self.open_custom_prompt(type, delay=0.25)
+
+        self.marionette.switch_to_window(self.new_tab)
+        with self.assertRaises(errors.TimeoutException):
+            self.wait_for_alert(2)
+
+        self.marionette.switch_to_window(self.new_window)
+        alert = self.marionette.switch_to_alert()
+        alert.dismiss()
+
+        self.marionette.switch_to_window(self.new_tab)
+        self.assertFalse(self.alert_present)
 
     def test_http_auth_dismiss(self):
         with self.marionette.using_prefs({self.http_auth_pref: True}):
