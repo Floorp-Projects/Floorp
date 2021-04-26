@@ -9,4 +9,3 @@ which are still useful for other projects
 
    adjust
    mma
-   uitelemetry
