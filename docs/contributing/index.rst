@@ -36,4 +36,4 @@ development process and source code documentation.
    directory_structure
    build/artifact_builds
    build/building_mobile_firefox
-   build/supported_configurations
+   build/supported
