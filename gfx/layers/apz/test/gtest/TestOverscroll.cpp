@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "APZCBasicTester.h"
+#include "APZCTreeManagerTester.h"
 #include "APZTestCommon.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
 
@@ -87,8 +88,7 @@ class APZCOverscrollTester : public APZCBasicTester {
     rootLayerScrollData.AppendScrollMetadata(scrollData, metadata);
     scrollData.AddLayerData(rootLayerScrollData);
 
-    registration =
-        MakeUnique<ScopedLayerTreeRegistration>(guid.mLayersId, mcc);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(guid.mLayersId, mcc);
     tm->UpdateHitTestingTree(WebRenderScrollDataWrapper(*updater, &scrollData),
                              false, guid.mLayersId, 0);
     return guid;
@@ -1316,5 +1316,47 @@ TEST_F(APZCOverscrollTester, OverscrollByPanGesturesInterruptedByReflowZoom) {
                           mcc->Time());
   // The overscrolling state should have been restored.
   EXPECT_TRUE(!apzc->IsOverscrolled());
+}
+#endif
+
+class APZCOverscrollTesterForLayersOnly : public APZCTreeManagerTester {
+ public:
+  APZCOverscrollTesterForLayersOnly() { mLayersOnly = true; }
+
+  UniquePtr<ScopedLayerTreeRegistration> registration;
+  TestAsyncPanZoomController* rootApzc;
+};
+
+#ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
+TEST_F(APZCOverscrollTesterForLayersOnly, OverscrollHandoff) {
+  SCOPED_GFX_PREF_BOOL("apz.overscroll.enabled", true);
+
+  const char* layerTreeSyntax = "c(c)";
+  nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
+                                      nsIntRegion(IntRect(0, 0, 100, 50))};
+  root =
+      CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                            CSSRect(0, 0, 200, 200));
+  SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
+                            // same size as the visible region so that
+                            // the container is not scrollable in any directions
+                            // actually. This is simulating overflow: hidden
+                            // iframe document in Fission, though we don't set
+                            // a different layers id.
+                            CSSRect(0, 0, 100, 50));
+
+  SetScrollHandoff(layers[1], root);
+
+  registration =
+      MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, root, mcc);
+  UpdateHitTestingTree();
+  rootApzc = ApzcOf(root);
+  rootApzc->GetFrameMetrics().SetIsRootContent(true);
+
+  // A pan gesture on the child scroller (which is not scrollable though).
+  PanGesture(PanGestureInput::PANGESTURE_START, manager, ScreenIntPoint(50, 20),
+             ScreenPoint(0, -2), mcc->Time());
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
 }
 #endif
