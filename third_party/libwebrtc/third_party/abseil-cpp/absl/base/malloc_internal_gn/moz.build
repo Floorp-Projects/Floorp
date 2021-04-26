@@ -37,6 +37,13 @@ if CONFIG["MOZ_DEBUG"] == "1":
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["_DEBUG"] = True
 
+if CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["ANDROID"] = True
+    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
@@ -58,6 +65,27 @@ if CONFIG["OS_TARGET"] == "Linux":
 
     OS_LIBS += [
         "atomic"
+    ]
+
+if CONFIG["CPU_ARCH"] == "arm":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    OS_LIBS += [
+        "android_support",
+        "unwind"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+    OS_LIBS += [
+        "android_support"
     ]
 
 Library("malloc_internal_gn")
