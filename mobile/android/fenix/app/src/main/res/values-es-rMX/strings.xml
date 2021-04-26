@@ -19,10 +19,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Tus pestañas privadas aparecerán aquí.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 pestaña abierta. Tocar para cambiar de pestaña.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -127,6 +123,8 @@
     <string name="browser_menu_edit_bookmark">Editar marcador</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Complementos</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Extensiones</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">No hay complementos aquí</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -875,15 +873,15 @@
     <string name="tracking_protection_on">Activada</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desactivada</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Permitir audio y video</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Bloquear audio y video solo con datos móviles</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">El audio y el video se reproducirán con Wi-Fi</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Bloquear solo audio</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Bloquear audio y video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Activado</string>
@@ -1081,6 +1079,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Libera espacio de almacenamiento</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Permisos del sitio</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Descargas</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Eliminar datos de navegación</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -1140,9 +1140,6 @@
     <string name="onboarding_header">¡Te damos la bienvenida a %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">¿Ya tienes una cuenta?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Descubre %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Ver las novedades</string>
     <!-- text for the "what's new" onboarding card description
@@ -1150,10 +1147,6 @@
     <string name="onboarding_whats_new_description">¿Tienes preguntas sobre el rediseño de %s? ¿Quieres saber qué ha cambiado?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Obtén respuestas aquí</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Empieza a sincronizar marcadores, contraseñas y más con tu cuenta de Firefox.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Saber más</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1162,36 +1155,19 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Sí, iniciar sesión</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Iniciando sesión…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Iniciar sesión en Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Mantenerme desconectado</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync está activado</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Error al iniciar sesión</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Privacidad automática</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">La configuración de privacidad y seguridad bloquea los rastreadores, el malware y las compañías que te siguen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Estándar (predeterminado)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Bloquea menos rastreadores. Las páginas se cargarán normalmente.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (recomendada)</string>
 
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Estricto</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Bloquear más rastreadores, publicidad y ventanas emergentes. Las páginas cargan más rápido, pero pueden tener problemas de funcionalidad.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Toma una posición</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Prueba la navegación con una sola mano con la barra de herramientas inferior o muévela a la parte superior.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegar de forma privada</string>
     <!-- text for the private browsing onboarding card description
@@ -1205,9 +1181,8 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Tu privacidad</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Hemos diseñado %s para darte control sobre lo que compartes
-        en línea y lo que compartes con nosotros.</string>
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
+    <string name="onboarding_privacy_notice_description2">Hemos diseñado %s para darte el control sobre lo que compartes en línea y lo que compartes con nosotros.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Leer nuestro aviso de privacidad</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -1219,8 +1194,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Elige tu tema</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Ahorra un poco de batería y descansa la vista activando el modo oscuro.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automático</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1274,14 +1247,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saber más</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Estándar (predeterminado)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Bloquea menos rastreadores. Las páginas se cargarán normalmente.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Qué es lo que está bloqueado por la protección estándar contra el rastreo</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricto</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloquear más rastreadores, publicidad y ventanas emergentes. Las páginas cargan más rápido, pero pueden tener problemas de funcionalidad.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Qué es lo que está bloqueado por la protección estricta contra el rastreo</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
