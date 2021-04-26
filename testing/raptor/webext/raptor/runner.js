@@ -70,6 +70,7 @@ var geckoProfiling = false;
 var geckoInterval = 1;
 var geckoEntries = 1000000;
 var geckoThreads = [];
+var geckoFeatures = null;
 var debugMode = 0;
 var screenCapture = false;
 
@@ -136,6 +137,7 @@ async function getTestSettings() {
     geckoEntries = settings.gecko_profile_entries;
     geckoInterval = settings.gecko_profile_interval;
     geckoThreads = settings.gecko_profile_threads;
+    geckoFeatures = settings.gecko_profile_features;
   }
 
   if (settings.screen_capture !== undefined) {
@@ -378,10 +380,13 @@ async function startGeckoProfiling() {
     "status",
     `starting Gecko profiling for threads: ${geckoThreads}`
   );
+  const features = geckoFeatures
+    ? geckoFeatures.split(",")
+    : ["js", "leaf", "stackwalk", "cpu", "threads", "responsiveness"];
   await ext.geckoProfiler.start({
     bufferSize: geckoEntries,
     interval: geckoInterval,
-    features: ["js", "leaf", "stackwalk", "cpu", "threads", "responsiveness"],
+    features,
     threads: geckoThreads.split(","),
   });
 }
