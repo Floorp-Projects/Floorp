@@ -4,8 +4,10 @@
 
 :root {
   --player-bg-color: #000;
+  --player-control-icon-fill: #fff;
   --btn-bg-color: rgba(50,50,50,0.55);
   --close-btn-bg-color: rgb(211,216,220);
+  --close-btn-fill-color: #000;
   --resize-margin: 5px;
 }
 
@@ -85,6 +87,11 @@ browser {
   transition: opacity 160ms linear;
   opacity: 0;
   background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--player-control-icon-fill);
+  background-position: center;
+  background-size: 60%;
+  background-repeat: no-repeat;
 }
 
 #controls[keying] .control-item:focus {
@@ -104,10 +111,10 @@ browser {
 #close {
   background-color: var(--close-btn-bg-color);
   background-image: url("chrome://global/skin/icons/close.svg");
-  background-size: cover;
   position: absolute;
   right: 10px;
   top: 10px;
+  fill: var(--close-btn-fill-color);
 }
 
 #close[mac="true"] {
@@ -120,30 +127,24 @@ browser {
 }
 
 #controls.playing #playpause {
-  background-image: url("chrome://global/skin/pictureinpicture/pause.svg");
+  background-image: url("chrome://global/skin/media/pause-fill.svg");
 }
 
 #controls:not(.playing) #playpause {
-  background-image: url("chrome://global/skin/pictureinpicture/play.svg");
+  background-image: url("chrome://global/skin/media/play-fill.svg");
 }
 
 #controls.muted #audio {
-  background-image: url("chrome://global/skin/pictureinpicture/audio-mute.svg");
+  background-image: url("chrome://global/skin/media/audio-muted.svg");
 }
 
 #controls:not(.muted) #audio {
-  background-image: url("chrome://global/skin/pictureinpicture/audio.svg");
+  background-image: url("chrome://global/skin/media/audio.svg");
 }
 
 #unpip {
+  background-image: url("chrome://global/skin/media/picture-in-picture-closed.svg");
   left: 45%;
-}
-
-#unpip {
-  background-image: url("chrome://global/skin/pictureinpicture/unpip.svg");
-  background-position: 60%;
-  background-repeat: no-repeat;
-  background-size: 80%;
 }
 
 #unpip:-moz-locale-dir(rtl) {
