@@ -1350,9 +1350,9 @@ pub fn transform_create(
         if output.redTRC.is_none() || output.greenTRC.is_none() || output.blueTRC.is_none() {
             return None;
         }
-        transform.output_gamma_lut_r = Some(build_output_lut(output.redTRC.as_deref().unwrap()));
-        transform.output_gamma_lut_g = Some(build_output_lut(output.greenTRC.as_deref().unwrap()));
-        transform.output_gamma_lut_b = Some(build_output_lut(output.blueTRC.as_deref().unwrap()));
+        transform.output_gamma_lut_r = build_output_lut(output.redTRC.as_deref().unwrap());
+        transform.output_gamma_lut_g = build_output_lut(output.greenTRC.as_deref().unwrap());
+        transform.output_gamma_lut_b = build_output_lut(output.blueTRC.as_deref().unwrap());
 
         if transform.output_gamma_lut_r.is_none()
             || transform.output_gamma_lut_g.is_none()

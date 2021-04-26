@@ -897,9 +897,9 @@ fn modular_transform_create_output(out: &Profile) -> Option<Vec<Box<dyn ModularT
         transforms.push(transform);
 
         let mut transform = Box::new(GammaLut::default());
-        transform.output_gamma_lut_r = Some(build_output_lut(redTRC));
-        transform.output_gamma_lut_g = Some(build_output_lut(greenTRC));
-        transform.output_gamma_lut_b = Some(build_output_lut(blueTRC));
+        transform.output_gamma_lut_r = Some(build_output_lut(redTRC)?);
+        transform.output_gamma_lut_g = Some(build_output_lut(greenTRC)?);
+        transform.output_gamma_lut_b = Some(build_output_lut(blueTRC)?);
         transforms.push(transform);
     } else {
         debug_assert!(false, "Unsupported output profile workflow.");
