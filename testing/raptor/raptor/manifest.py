@@ -269,6 +269,10 @@ def write_test_settings_json(args, test_details, oskey):
             }
         )
 
+        features = test_details.get("gecko_profile_features")
+        if features:
+            test_settings["raptor-options"]["gecko_profile_features"] = features
+
     if test_details.get("newtab_per_cycle", None) is not None:
         test_settings["raptor-options"]["newtab_per_cycle"] = bool(
             test_details["newtab_per_cycle"]
@@ -399,17 +403,27 @@ def get_raptor_test_list(args, oskey):
                 threads = list(
                     filter(None, next_test.get("gecko_profile_threads", "").split(","))
                 )
-                threads.extend(args.gecko_profile_threads)
+                threads.extend(args.gecko_profile_threads.split(","))
+                if (
+                    "gecko_profile_extra_threads" in args
+                    and args.gecko_profile_extra_threads is not None
+                ):
+                    threads.extend(getattr(args, "gecko_profile_extra_threads", []))
                 next_test["gecko_profile_threads"] = ",".join(threads)
-                LOG.info(
-                    "gecko-profiling extra threads %s" % args.gecko_profile_threads
-                )
+                LOG.info("gecko-profiling threads %s" % args.gecko_profile_threads)
+            if (
+                "gecko_profile_features" in args
+                and args.gecko_profile_features is not None
+            ):
+                next_test["gecko_profile_features"] = args.gecko_profile_features
+                LOG.info("gecko-profiling features %s" % args.gecko_profile_features)
 
         else:
-            # if the gecko profiler is not enabled, ignore all of it's settings
+            # if the gecko profiler is not enabled, ignore all of its settings
             next_test.pop("gecko_profile_entries", None)
             next_test.pop("gecko_profile_interval", None)
             next_test.pop("gecko_profile_threads", None)
+            next_test.pop("gecko_profile_features", None)
 
         if args.debug_mode is True:
             next_test["debug_mode"] = True
