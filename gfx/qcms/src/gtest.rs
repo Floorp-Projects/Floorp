@@ -942,6 +942,16 @@ mod test {
         let mut dst = [0, 0, 0];
         xfm.convert(&src, &mut dst);
         assert_eq!(dst, [252, 237, 211]);
+    }
 
+    #[test]
+    fn sRGB_parametric() {
+        let src = Profile::new_sRGB();
+        let dst = Profile::new_sRGB_parametric();
+        let xfm =
+            Transform::new(&src, &dst, crate::DataType::RGB8, crate::Intent::default()).unwrap();
+        let mut data = [4, 30, 80];
+        xfm.apply(&mut data);
+        assert_eq!(data, [4, 30, 80]);
     }
 }
