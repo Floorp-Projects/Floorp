@@ -134,7 +134,7 @@ async function testNetworkMessage(toolbox, messageNode) {
 
 // Status Info
 async function testStatusInfo(messageNode) {
-  const statusInfo = await waitFor(() =>
+  const statusInfo = await waitForLonger(() =>
     messageNode.querySelector(".status-info")
   );
   ok(statusInfo, "Status info is not empty");
@@ -152,7 +152,7 @@ async function testHeaders(messageNode) {
 
   // Select Headers tab and check the content.
   headersTab.click();
-  await waitFor(
+  await waitForLonger(
     () => messageNode.querySelector("#headers-panel .headers-overview"),
     "Wait for .header-overview to be rendered"
   );
@@ -170,7 +170,7 @@ async function testCookies(messageNode) {
 
   // Select tab and check the content.
   cookiesTab.click();
-  await waitFor(
+  await waitForLonger(
     () => messageNode.querySelector("#cookies-panel .treeValueCell"),
     "Wait for .treeValueCell to be rendered"
   );
@@ -219,7 +219,7 @@ async function testResponse(messageNode) {
   // is delayed, so again wait for a little while.
   responseTab.click();
   const responsePanel = messageNode.querySelector("#response-panel");
-  const responsePayloadHeader = await waitFor(() =>
+  const responsePayloadHeader = await waitForLonger(() =>
     responsePanel.querySelector(".data-header")
   );
   // Expand the header if it wasn't yet.
@@ -246,7 +246,7 @@ async function testTimings(messageNode) {
 
   // Select Timings tab and check the content.
   timingsTab.click();
-  const timingsContent = await waitFor(() =>
+  const timingsContent = await waitForLonger(() =>
     messageNode.querySelector(
       "#timings-panel .timings-container .timings-label",
       "Wait for .timings-label to be rendered"
@@ -268,7 +268,7 @@ async function testStackTrace(messageNode) {
 
   // Select Stack Trace tab and check the content.
   stackTraceTab.click();
-  await waitFor(
+  await waitForLonger(
     () => messageNode.querySelector("#stack-trace-panel .frame-link"),
     "Wait for .frame-link to be rendered"
   );
@@ -281,14 +281,14 @@ function testEmptySecurity(messageNode) {
 }
 
 async function testSecurity(messageNode) {
-  const securityTab = await waitFor(() =>
+  const securityTab = await waitForLonger(() =>
     messageNode.querySelector("#security-tab")
   );
   ok(securityTab, "Security tab is available");
 
   // Select Security tab and check the content.
   securityTab.click();
-  await waitFor(
+  await waitForLonger(
     () => messageNode.querySelector("#security-panel .treeTable .treeRow"),
     "Wait for #security-panel .treeTable .treeRow to be rendered"
   );
@@ -305,8 +305,18 @@ function expandXhrMessage(node) {
     "Click on XHR message and wait for the network detail panel to be displayed"
   );
   node.querySelector(".url").click();
-  return waitFor(
+  return waitForLonger(
     () => node.querySelector(".network-info"),
     "Wait for .network-info to be rendered"
   );
+}
+
+async function waitForLonger(predicate) {
+  const message = "";
+  // Default interval is 10ms. The test often times out on waitFor statements
+  // use a 50ms interval instead.
+  const interval = 50;
+  const maxTries = 500;
+
+  return waitFor(predicate, message, interval, maxTries);
 }
