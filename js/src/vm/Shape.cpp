@@ -656,12 +656,9 @@ bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
 }
 
 /* static */
-bool NativeObject::addPropertyInternal(JSContext* cx, HandleNativeObject obj,
-                                       HandleId id, uint32_t slot,
-                                       unsigned attrs, ShapeTable* table,
-                                       ShapeTable::Entry* entry,
-                                       const AutoKeepShapeCaches& keep,
-                                       uint32_t* slotOut) {
+bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
+                               HandleId id, uint32_t slot, unsigned attrs,
+                               uint32_t* slotOut) {
   AutoCheckShapeConsistency check(obj);
   MOZ_ASSERT(!(attrs & JSPROP_CUSTOM_DATA_PROP),
              "Use addCustomDataProperty for custom data properties");
@@ -669,6 +666,26 @@ bool NativeObject::addPropertyInternal(JSContext* cx, HandleNativeObject obj,
   // The slot, if any, must be a reserved slot.
   MOZ_ASSERT(slot == SHAPE_INVALID_SLOT ||
              slot < JSCLASS_RESERVED_SLOTS(obj->getClass()));
+
+  // The object must not contain a property named |id|. The object must be
+  // extensible, but allow private fields and sparsifying dense elements.
+  MOZ_ASSERT(!JSID_IS_VOID(id));
+  MOZ_ASSERT(!obj->containsPure(id));
+  MOZ_ASSERT_IF(
+      !id.isPrivateName(),
+      obj->isExtensible() ||
+          (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))));
+
+  AutoKeepShapeCaches keep(cx);
+  ShapeTable* table = nullptr;
+  ShapeTable::Entry* entry = nullptr;
+  if (obj->inDictionaryMode()) {
+    table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+    if (!table) {
+      return false;
+    }
+    entry = &table->search<MaybeAdding::Adding>(id, keep);
+  }
 
   if (!maybeConvertToOrGrowDictionaryForAdd(cx, obj, id, &table, &entry,
                                             keep)) {

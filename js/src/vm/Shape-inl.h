@@ -347,33 +347,6 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
   return foundShape;
 }
 
-/* static */ MOZ_ALWAYS_INLINE bool NativeObject::addProperty(
-    JSContext* cx, HandleNativeObject obj, HandleId id, uint32_t slot,
-    unsigned attrs, uint32_t* slotOut) {
-  // The object must not contain a property named |id|. The object must be
-  // extensible, but allow private fields and sparsifying dense elements.
-  MOZ_ASSERT(!JSID_IS_VOID(id));
-  MOZ_ASSERT(!obj->containsPure(id));
-  MOZ_ASSERT_IF(
-      !id.isPrivateName(),
-      obj->isExtensible() ||
-          (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))));
-
-  AutoKeepShapeCaches keep(cx);
-  ShapeTable* table = nullptr;
-  ShapeTable::Entry* entry = nullptr;
-  if (obj->inDictionaryMode()) {
-    table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-    if (!table) {
-      return false;
-    }
-    entry = &table->search<MaybeAdding::Adding>(id, keep);
-  }
-
-  return addPropertyInternal(cx, obj, id, slot, attrs, table, entry, keep,
-                             slotOut);
-}
-
 MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(Shape* last, jsid id,
                                                            unsigned attrs,
                                                            JSContext* cx) {

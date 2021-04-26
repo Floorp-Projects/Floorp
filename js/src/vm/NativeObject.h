@@ -958,22 +958,24 @@ class NativeObject : public JSObject {
                                              MutableHandleShape shape);
 
  public:
-  // Add a new property. Must only be used when the |id| is not already present.
-  static MOZ_ALWAYS_INLINE bool addProperty(JSContext* cx,
-                                            HandleNativeObject obj, HandleId id,
-                                            uint32_t slot, unsigned attrs,
-                                            uint32_t* slotOut);
+  // Add a new property. Must only be used when the |id| is not already present
+  // in the object's shape. Checks for non-extensibility must be done by the
+  // callers.
+  static bool addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
+                          uint32_t slot, unsigned attrs, uint32_t* slotOut);
+
+  static bool addProperty(JSContext* cx, HandleNativeObject obj,
+                          HandlePropertyName name, uint32_t slot,
+                          unsigned attrs, uint32_t* slotOut) {
+    RootedId id(cx, NameToId(name));
+    return addProperty(cx, obj, id, slot, attrs, slotOut);
+  }
 
   static bool addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
                                     HandleId id, unsigned attrs);
 
   static bool addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj,
                                         HandleId id, uint32_t* slotOut);
-
-  // Add a new property. Must only be used when the |id| is not already present.
-  static bool addProperty(JSContext* cx, HandleNativeObject obj,
-                          HandlePropertyName name, uint32_t slot,
-                          unsigned attrs, uint32_t* slotOut);
 
   // Change a property with key |id| in this object. The object must already
   // have a property (stored in the shape tree) with this |id|.
@@ -988,15 +990,6 @@ class NativeObject : public JSObject {
   static bool removeProperty(JSContext* cx, HandleNativeObject obj, jsid id);
 
  protected:
-  // Internal helper to add a new property. Must only be used when the |id| is
-  // not already present.
-  // Note: checks for non-extensibility must be done by callers.
-  static bool addPropertyInternal(JSContext* cx, HandleNativeObject obj,
-                                  HandleId id, uint32_t slot, unsigned attrs,
-                                  ShapeTable* table, ShapeTable::Entry* entry,
-                                  const AutoKeepShapeCaches& keep,
-                                  uint32_t* slotOut);
-
   [[nodiscard]] static bool fillInAfterSwap(JSContext* cx,
                                             HandleNativeObject obj,
                                             NativeObject* old,
