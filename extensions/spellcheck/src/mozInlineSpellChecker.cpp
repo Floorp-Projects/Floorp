@@ -95,9 +95,11 @@ static const PRTime kMaxSpellCheckTimeInUsec =
     INLINESPELL_CHECK_TIMEOUT * PR_USEC_PER_MSEC;
 
 mozInlineSpellStatus::mozInlineSpellStatus(
-    mozInlineSpellChecker* aSpellChecker, const bool aForceNavigationWordCheck,
+    mozInlineSpellChecker* aSpellChecker, const Operation aOp,
+    const bool aForceNavigationWordCheck,
     const int32_t aNewNavigationPositionOffset)
     : mSpellChecker(aSpellChecker),
+      mOp(aOp),
       mForceNavigationWordCheck(aForceNavigationWordCheck),
       mNewNavigationPositionOffset(aNewNavigationPositionOffset) {}
 
@@ -111,24 +113,13 @@ mozInlineSpellStatus::mozInlineSpellStatus(
 // static
 Result<UniquePtr<mozInlineSpellStatus>, nsresult>
 mozInlineSpellStatus::CreateForEditorChange(
-    mozInlineSpellChecker& aSpellChecker, EditSubAction aEditSubAction,
+    mozInlineSpellChecker& aSpellChecker, const EditSubAction aEditSubAction,
     nsINode* aAnchorNode, uint32_t aAnchorOffset, nsINode* aPreviousNode,
     uint32_t aPreviousOffset, nsINode* aStartNode, uint32_t aStartOffset,
     nsINode* aEndNode, uint32_t aEndOffset) {
   MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Verbose, ("%s", __FUNCTION__));
 
   if (NS_WARN_IF(!aAnchorNode) || NS_WARN_IF(!aPreviousNode)) {
-    return Err(NS_ERROR_FAILURE);
-  }
-
-  UniquePtr<mozInlineSpellStatus> status{
-      /* The constructor is `private`, hence the explicit allocation. */
-      new mozInlineSpellStatus{&aSpellChecker, false, 0}};
-
-  // save the anchor point as a range so we can find the current word later
-  status->mAnchorRange =
-      status->PositionToCollapsedRange(aAnchorNode, aAnchorOffset);
-  if (NS_WARN_IF(!status->mAnchorRange)) {
     return Err(NS_ERROR_FAILURE);
   }
 
@@ -139,16 +130,25 @@ mozInlineSpellStatus::CreateForEditorChange(
     deleted = !aPreviousNode->IsInComposedDoc();
   }
 
+  UniquePtr<mozInlineSpellStatus> status{
+      /* The constructor is `private`, hence the explicit allocation. */
+      new mozInlineSpellStatus{
+          &aSpellChecker, deleted ? eOpChangeDelete : eOpChange, false, 0}};
+
+  // save the anchor point as a range so we can find the current word later
+  status->mAnchorRange =
+      status->PositionToCollapsedRange(aAnchorNode, aAnchorOffset);
+  if (NS_WARN_IF(!status->mAnchorRange)) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
   if (deleted) {
     // Deletes are easy, the range is just the current anchor. We set the range
     // to check to be empty, FinishInitOnEvent will fill in the range to be
     // the current word.
-    status->mOp = eOpChangeDelete;
     status->mRange = nullptr;
     return status;
   }
-
-  status->mOp = eOpChange;
 
   // range to check
   status->mRange = nsRange::Create(aPreviousNode);
@@ -231,10 +231,8 @@ mozInlineSpellStatus::CreateForNavigation(
 
   UniquePtr<mozInlineSpellStatus> status{
       /* The constructor is `private`, hence the explicit allocation. */
-      new mozInlineSpellStatus{&aSpellChecker, aForceCheck,
+      new mozInlineSpellStatus{&aSpellChecker, eOpNavigation, aForceCheck,
                                aNewPositionOffset}};
-
-  status->mOp = eOpNavigation;
 
   // get the root node for checking
   TextEditor* textEditor = status->mSpellChecker->mTextEditor;
@@ -279,8 +277,7 @@ UniquePtr<mozInlineSpellStatus> mozInlineSpellStatus::CreateForSelection(
 
   UniquePtr<mozInlineSpellStatus> status{
       /* The constructor is `private`, hence the explicit allocation. */
-      new mozInlineSpellStatus{&aSpellChecker, false, 0}};
-  status->mOp = eOpSelection;
+      new mozInlineSpellStatus{&aSpellChecker, eOpSelection, false, 0}};
   return status;
 }
 
@@ -297,9 +294,8 @@ UniquePtr<mozInlineSpellStatus> mozInlineSpellStatus::CreateForRange(
 
   UniquePtr<mozInlineSpellStatus> status{
       /* The constructor is `private`, hence the explicit allocation. */
-      new mozInlineSpellStatus{&aSpellChecker, false, 0}};
+      new mozInlineSpellStatus{&aSpellChecker, eOpChange, false, 0}};
 
-  status->mOp = eOpChange;
   status->mRange = aRange;
   return status;
 }
