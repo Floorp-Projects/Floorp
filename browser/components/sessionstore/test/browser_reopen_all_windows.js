@@ -19,9 +19,39 @@ var URLS_WIN2 = [
 ];
 var EXPECTED_URLS_WIN2 = ["about:blank", ...URLS_WIN2];
 
-add_task(async () => {
-  requestLongerTimeout(4);
+requestLongerTimeout(4);
 
+function allTabsRestored(win, expectedUrls) {
+  return new Promise(resolve => {
+    let tabsRestored = 0;
+    function handler(event) {
+      let spec = event.target.linkedBrowser.currentURI.spec;
+      if (expectedUrls.includes(spec)) {
+        tabsRestored++;
+      }
+      info(`Got SSTabRestored for ${spec}, tabsRestored=${tabsRestored}`);
+      if (tabsRestored === expectedUrls.length) {
+        win.gBrowser.tabContainer.removeEventListener(
+          "SSTabRestored",
+          handler,
+          true
+        );
+        resolve();
+      }
+    }
+    win.gBrowser.tabContainer.addEventListener("SSTabRestored", handler, true);
+  });
+}
+
+async function windowAndTabsRestored(win, expectedUrls) {
+  await TestUtils.topicObserved(
+    "browser-window-before-show",
+    subject => subject === win
+  );
+  return allTabsRestored(win, expectedUrls);
+}
+
+add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Set the pref to true so we know exactly how many tabs should be restoring at
@@ -60,106 +90,30 @@ add_task(async () => {
     "The closed windows was added to Recently Closed Windows"
   );
 
-  // Library -> History -> Recently Closed Windows -> Reopen all Windows
-
-  // Show the Library view.
-  info("About to open the PanelUI menu");
-  let appMenu = document.getElementById("PanelUI-menu-button");
-  let appMenuPopup = document.getElementById("appMenu-popup");
-  let PopupShownPromise = BrowserTestUtils.waitForEvent(
-    appMenuPopup,
-    "popupshown"
-  );
-  appMenu.click();
-  await PopupShownPromise;
-
-  let promise;
-  if (!gProton) {
-    info("About to click on the Library option");
-
-    document.getElementById("appMenu-library-button").click();
-    let libraryView = document.getElementById("appMenu-libraryView");
-    promise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
-    await promise;
+  // We previously used to manually navigate the Library menu to click the
+  // "Reopen all Windows" button, but that reopens all windows at once without
+  // returning a reference to each window. Since we need to attach listeners to
+  // these windows *before* they start restoring tabs, we now manually call
+  // undoCloseWindow() here, which has the same effect, but also gives us the
+  // window references.
+  info("Reopening windows");
+  let restoredWindows = [];
+  while (SessionStore.getClosedWindowCount() > 0) {
+    restoredWindows.unshift(undoCloseWindow());
   }
+  is(restoredWindows.length, 2, "Reopened correct number of windows");
 
-  // Navigate to the History subview.
-  info("About to click on the History option");
-  let historyId = gProton
-    ? "appMenu-history-button"
-    : "appMenu-library-history-button";
-  document.getElementById(historyId).click();
-  let historyView = document.getElementById("PanelUI-history");
-  promise = BrowserTestUtils.waitForEvent(historyView, "ViewShown");
-  await promise;
-
-  // Click on "Recently Closed Windows"
-  info("About to click on 'Recently Closed Windows'");
-  document.getElementById("appMenuRecentlyClosedWindows").click();
-  let recentlyClosedWindowsView = document.getElementById(
-    "appMenu-library-recentlyClosedWindows"
+  let win1Restored = windowAndTabsRestored(
+    restoredWindows[0],
+    EXPECTED_URLS_WIN1
   );
-  promise = BrowserTestUtils.waitForEvent(
-    recentlyClosedWindowsView,
-    "ViewShown"
-  );
-  await promise;
-
-  // Click on "Restore All Windows"
-  var restoreAll = document.getElementsByClassName(
-    "restoreallitem subviewbutton subviewbutton-iconic panel-subview-footer-button"
-  );
-
-  // Wait for all windows to be restored
-  var observedWin1 = TestUtils.topicObserved(
-    "sessionstore-single-window-restored",
-    subject => {
-      return subject.gBrowser.tabs.length == EXPECTED_URLS_WIN1.length;
-    }
-  );
-  var observedWin2 = TestUtils.topicObserved(
-    "sessionstore-single-window-restored",
-    subject => {
-      return subject.gBrowser.tabs.length == EXPECTED_URLS_WIN2.length;
-    }
-  );
-  var allPromises = Promise.all([observedWin1, observedWin2]);
-  restoreAll[0].click();
-  var restoredWindows = (await allPromises).map(([subject, data]) => subject);
-  let allTabsRestored = PromiseUtils.defer();
-  var tabsRestored = 0;
-  function SSTabRestoredHandler() {
-    tabsRestored++;
-    info(`Received a SSTabRestored event`);
-    if (tabsRestored == EXPECTED_URLS_WIN1.length + EXPECTED_URLS_WIN2.length) {
-      info(`All tabs have been restored`);
-      restoredWindows[0].gBrowser.tabContainer.removeEventListener(
-        "SSTabRestored",
-        SSTabRestoredHandler,
-        true
-      );
-      restoredWindows[1].gBrowser.tabContainer.removeEventListener(
-        "SSTabRestored",
-        SSTabRestoredHandler,
-        true
-      );
-      allTabsRestored.resolve();
-    }
-  }
-  info("About to add an event listener for SSTabRestored");
-  restoredWindows[0].gBrowser.tabContainer.addEventListener(
-    "SSTabRestored",
-    SSTabRestoredHandler,
-    true
-  );
-  restoredWindows[1].gBrowser.tabContainer.addEventListener(
-    "SSTabRestored",
-    SSTabRestoredHandler,
-    true
+  let win2Restored = windowAndTabsRestored(
+    restoredWindows[1],
+    EXPECTED_URLS_WIN2
   );
 
   info("About to wait for tabs to be restored");
-  await allTabsRestored.promise;
+  await Promise.all([win1Restored, win2Restored]);
 
   is(
     restoredWindows[0].gBrowser.tabs.length,
