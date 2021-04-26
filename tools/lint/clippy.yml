@@ -102,10 +102,10 @@ clippy:
         - rs
     support-files:
         - 'tools/lint/clippy/**'
-    # the version of clippy is:
-    # clippy 0.0.212 (d4092ac 2020-05-11)
-    # but 0.0.212 isn't updated. we use the date instead
+    # the version of cargo-clippy is:
+    # clippy 0.1.51 (2fd73fa 2021-03-23)
+    # we use the date instead to facilitate the check
     # replacing - by . because Python StrictVersion expects this
-    min_clippy_version: 2020.05.11
+    min_clippy_version: 2021.03.23
     type: external
     payload: clippy:lint
