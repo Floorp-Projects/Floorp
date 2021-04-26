@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   waitForEvent: "chrome://marionette/content/sync.js",
   waitForObserverTopic: "chrome://marionette/content/sync.js",
   WebElementEventTarget: "chrome://marionette/content/dom.js",
+  windowManager: "chrome://marionette/content/window-manager.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -178,8 +179,6 @@ browser.Context = class {
     this.tab = null;
 
     this.frameRegsPending = 0;
-
-    this.updateIdForBrowser = driver.updateIdForBrowser.bind(driver);
   }
 
   /**
@@ -469,7 +468,7 @@ browser.Context = class {
       // Note that browsing contexts can be swapped during navigation in which
       // case this id would no longer match the target. See Bug 1680479.
       const uid = target.browsingContext.id;
-      this.updateIdForBrowser(this.contentBrowser, uid);
+      windowManager.updateIdForBrowser(this.contentBrowser, uid);
     }
   }
 };
