@@ -165,6 +165,55 @@ add_task(async function load_moz_extension_with_and_without_cors() {
       expectLoad: false,
       description: "cross-origin redirect to non-accessible script, cors",
     });
+
+    // Sub-resource integrity usually requires CORS. Verify that web-accessible
+    // extension resources are still subjected to SRI.
+    const sriHashOkJs = // SRI hash for "window.status = 'loaded';" (=ok.js).
+      "sha384-EAofaAZpgy6JshegITJJHeE3ROzn9ngGw1GAuuzjSJV1c/YS9PLvHMt9oh4RovrI";
+
+    async function testSRI({ integrityMatches }) {
+      const integrity = integrityMatches ? sriHashOkJs : "sha384-bad-sri-hash";
+      const sriDescription = integrityMatches
+        ? "web-accessible script, good sri, "
+        : "web-accessible script, sri not matching, ";
+      await checkScriptLoad({
+        setupScript(scriptElem) {
+          scriptElem.src = `${EXT_BASE_URL}/ok.js`;
+          scriptElem.integrity = integrity;
+        },
+        expectLoad: integrityMatches,
+        description: `${sriDescription} no cors, plain load`,
+      });
+      await checkScriptLoad({
+        setupScript(scriptElem) {
+          scriptElem.src = `${EXT_BASE_URL}/ok.js`;
+          scriptElem.crossOrigin = "anonymous";
+          scriptElem.integrity = integrity;
+        },
+        expectLoad: integrityMatches,
+        description: `${sriDescription} cors, plain load`,
+      });
+      await checkScriptLoad({
+        setupScript(scriptElem) {
+          scriptElem.src = sameOriginRedirectUrl(`${EXT_BASE_URL}/ok.js`);
+          scriptElem.crossOrigin = "anonymous";
+          scriptElem.integrity = integrity;
+        },
+        expectLoad: integrityMatches,
+        description: `${sriDescription} cors, same-origin redirect`,
+      });
+      await checkScriptLoad({
+        setupScript(scriptElem) {
+          scriptElem.src = crossOriginRedirectUrl(`${EXT_BASE_URL}/ok.js`);
+          scriptElem.crossOrigin = "anonymous";
+          scriptElem.integrity = integrity;
+        },
+        expectLoad: integrityMatches,
+        description: `${sriDescription} cors, cross-origin redirect`,
+      });
+    }
+    await testSRI({ integrityMatches: true });
+    await testSRI({ integrityMatches: false });
   });
   await contentPage.close();
   await extension.unload();
