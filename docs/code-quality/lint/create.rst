@@ -243,8 +243,13 @@ To run the tests:
 
 .. code-block:: shell
 
-    $ ./mach python-test --python 3 --subsuite mozlint
+    $ ./mach python-test --subsuite mozlint
 
+To run a specific test:
+
+.. code-block:: shell
+
+    ./mach python-test --subsuite mozlint tools/lint/test/test_clippy.py
 
 More tests can be `found in-tree <https://searchfox.org/mozilla-central/source/tools/lint/test>`_.
 
