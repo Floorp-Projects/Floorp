@@ -384,24 +384,16 @@
 }
 
 .tab-icon-overlay:not([crashed]):is([pinned], [sharing]) {
-  top: -5.5px;
-  inset-inline-end: -6px;
+  top: -4.5px;
+  inset-inline-end: -9px;
   z-index: 1; /* Overlay tab title */
   padding: 2px;
 }
 
-#TabsToolbar:not([brighttext]) .tab-icon-overlay:not([crashed]):is([pinned], [sharing]) {
-  stroke: white;
-}
-
-#TabsToolbar[brighttext] .tab-icon-overlay:not([crashed]):is([pinned], [sharing]):not(:hover) {
-  stroke: black;
-}
-
 @media not (-moz-proton) {
 .tab-icon-overlay[pictureinpicture] {
-  top: -5.5px;
-  inset-inline-end: -6px;
+  top: -4.5px;
+  inset-inline-end: -9px;
   z-index: 1; /* Overlay tab title */
   padding: 0;
 }
@@ -419,16 +411,14 @@
 .tab-icon-overlay[muted]:not([crashed]),
 .tab-icon-overlay[activemedia-blocked]:not([crashed]) {
   border-radius: 10px;
-  -moz-context-properties: fill, fill-opacity, stroke;
+  -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  stroke: transparent;
 }
 
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[soundplaying]:hover,
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[muted]:hover,
 .tab-icon-overlay:is([pinned], [sharing]):not([crashed])[activemedia-blocked]:hover {
   background-color: white;
-  stroke: white;
   color: black;
 }
 
@@ -1050,10 +1040,9 @@
   /* Match the color of the button, rather than label default. */
   color: inherit;
   display: block;
-  -moz-context-properties: fill, fill-opacity, stroke;
+  -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
-  stroke: transparent;
   /* "!important" is necessary to override the rule in toolbarbutton.css */
   margin: -7px 0 0 !important;
   margin-inline-end: -4px !important;
