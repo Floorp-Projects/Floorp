@@ -32,7 +32,7 @@ use crate::space::SpaceMapper;
 use crate::visibility::{PrimitiveVisibilityFlags, VisibilityState};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
-use crate::util::{project_rect, MaxRect, TransformedRectKind};
+use crate::util::{project_rect, MaxRect, MatrixHelpers, TransformedRectKind};
 use crate::segment::EdgeAaSegmentMask;
 
 // Special sentinel value recognized by the shader. It is considered to be
@@ -3601,13 +3601,20 @@ impl ClipBatcher {
                         // rect back to local space, we also fall back to just using a scissor rectangle.
                         let world_rect =
                             sub_rect.translate(actual_rect.origin.to_vector()) / global_device_pixel_scale;
-                        let (local_rect, scissor_rect) = match map_local_to_world.unmap(&world_rect) {
+                        let (clip_transform_id, local_rect, scissor) = match map_local_to_world.unmap(&world_rect) {
                             Some(local_rect)
-                                if clip_transform_id.transform_kind() == TransformedRectKind::AxisAligned => {
-                                (local_rect.intersection(&rect).unwrap_or_default(), None)
+                                if clip_transform_id.transform_kind() == TransformedRectKind::AxisAligned &&
+                                   !map_local_to_world.get_transform().has_perspective_component() => {
+                                    match local_rect.intersection(&rect) {
+                                        Some(local_rect) => (clip_transform_id, local_rect, None),
+                                        None => return,
+                                    }
                             }
                             _ => {
-                                (rect,
+                                // If for some reason inverting the transform failed, then don't consider
+                                // the transform to be axis-aligned if it was.
+                                (clip_transform_id.override_transform_kind(TransformedRectKind::Complex),
+                                 rect,
                                  Some(common.sub_rect
                                     .translate(task_origin.to_vector())
                                     .round_out()
@@ -3617,11 +3624,12 @@ impl ClipBatcher {
 
                         self.get_batch_list(is_first_clip)
                             .images
-                            .entry((cache_item.texture_id, scissor_rect))
+                            .entry((cache_item.texture_id, scissor))
                             .or_insert_with(Vec::new)
                             .push(ClipMaskInstanceImage {
                                 common: ClipMaskInstanceCommon {
                                     sub_rect,
+                                    clip_transform_id,
                                     ..common
                                 },
                                 resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
