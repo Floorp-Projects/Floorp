@@ -136,8 +136,8 @@ mozInlineSpellStatus::CreateForEditorChange(
           &aSpellChecker, deleted ? eOpChangeDelete : eOpChange, false, 0}};
 
   // save the anchor point as a range so we can find the current word later
-  status->mAnchorRange =
-      status->PositionToCollapsedRange(aAnchorNode, aAnchorOffset);
+  status->mAnchorRange = mozInlineSpellStatus::PositionToCollapsedRange(
+      aAnchorNode, aAnchorOffset);
   if (NS_WARN_IF(!status->mAnchorRange)) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -251,12 +251,13 @@ mozInlineSpellStatus::CreateForNavigation(
   }
 
   status->mOldNavigationAnchorRange =
-      status->PositionToCollapsedRange(aOldAnchorNode, aOldAnchorOffset);
+      mozInlineSpellStatus::PositionToCollapsedRange(aOldAnchorNode,
+                                                     aOldAnchorOffset);
   if (NS_WARN_IF(!status->mOldNavigationAnchorRange)) {
     return Err(NS_ERROR_FAILURE);
   }
-  status->mAnchorRange =
-      status->PositionToCollapsedRange(aNewAnchorNode, aNewAnchorOffset);
+  status->mAnchorRange = mozInlineSpellStatus::PositionToCollapsedRange(
+      aNewAnchorNode, aNewAnchorOffset);
   if (NS_WARN_IF(!status->mAnchorRange)) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -467,9 +468,10 @@ Document* mozInlineSpellStatus::GetDocument() const {
 //    position. We use ranges to store DOM positions becuase they stay
 //    updated as the DOM is changed.
 
+// static
 already_AddRefed<nsRange> mozInlineSpellStatus::PositionToCollapsedRange(
-    nsINode* aNode, uint32_t aOffset) const {
-  if (NS_WARN_IF(!aNode) || NS_WARN_IF(!GetDocument())) {
+    nsINode* aNode, uint32_t aOffset) {
+  if (NS_WARN_IF(!aNode)) {
     return nullptr;
   }
   IgnoredErrorResult ignoredError;
