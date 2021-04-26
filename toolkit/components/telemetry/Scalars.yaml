@@ -3689,6 +3689,21 @@ gfx:
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out
+  last_compositor_gecko_version:
+    bug_numbers:
+      - 1704842
+    description: >
+      The gecko version at the last time a compositor was initialized.
+    expires: never
+    kind: string
+    notification_emails:
+      - jnicol@mozilla.com
+      - gfx-telemetry-alerts@mozilla.com
+    products:
+      - 'geckoview_streaming'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
   headless:
     bug_numbers:
       - 1594145
