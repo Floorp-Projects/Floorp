@@ -11241,6 +11241,12 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
+
+# Force fractional scaling using wp_viewporter. Valid values: 0.5 - 8
+- name: widget.wayland.fractional_buffer_scale
+  type: AtomicFloat
+  value: 0.0f
+  mirror: always
 #endif
 
 #---------------------------------------------------------------------------
