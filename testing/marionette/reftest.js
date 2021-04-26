@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://marionette/content/log.js",
   navigate: "chrome://marionette/content/navigate.js",
   print: "chrome://marionette/content/print.js",
+  windowManager: "chrome://marionette/content/window-manager.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -168,8 +169,8 @@ reftest.Runner = class {
     this.windowUtils = reftestWin.windowUtils;
     this.reftestWin = reftestWin;
 
-    let found = this.driver.findWindow([reftestWin], () => true);
-    await this.driver.setWindowHandle(found, true);
+    let windowHandle = windowManager.getWindowProperties(reftestWin);
+    await this.driver.setWindowHandle(windowHandle, true);
 
     const url = await this.driver._getCurrentURL();
     this.lastURL = url.href;
@@ -234,10 +235,7 @@ max-width: ${width}px; max-height: ${height}px`;
   async abort() {
     if (this.reftestWin && this.reftestWin != this.parentWindow) {
       this.driver.closeChromeWindow();
-      let parentHandle = this.driver.findWindow(
-        [this.parentWindow],
-        () => true
-      );
+      let parentHandle = windowManager.getWindowProperties(this.parentWindow);
       await this.driver.setWindowHandle(parentHandle);
     }
     this.reftestWin = null;
