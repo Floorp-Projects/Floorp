@@ -97,7 +97,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
       queryContext.trimmedSearchString &&
       !queryContext.searchMode &&
       NimbusFeatures.urlbar.getValue().quickSuggestEnabled &&
-      UrlbarPrefs.get("quicksuggest.showedOnboardingDialog") &&
       UrlbarPrefs.get(SUGGEST_PREF) &&
       UrlbarPrefs.get("suggest.searches") &&
       UrlbarPrefs.get("browser.search.suggest.enabled") &&
