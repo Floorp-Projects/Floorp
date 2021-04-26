@@ -120,7 +120,7 @@ class SessionNotificationService : Service() {
 
         intent.action = MainActivity.ACTION_ERASE
         intent.putExtra(MainActivity.EXTRA_NOTIFICATION, true)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
 
         return PendingIntent.getActivity(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
