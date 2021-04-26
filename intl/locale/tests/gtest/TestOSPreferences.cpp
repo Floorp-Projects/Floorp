@@ -172,7 +172,7 @@ TEST(Intl_Locale_OSPreferences, GetDateTimePatternPrefOverrides)
   mozilla::Preferences::SetCString("intl.date_time.pattern_override.time_short",
                                    "HH:mm:ss");
   mozilla::Preferences::SetCString(
-      "intl.date_time.pattern_override.date_time_short", "{1} {0}");
+      "intl.date_time.pattern_override.connector_short", "{1} {0}");
   nr = osprefs->GetDateTimePattern(mozIOSPreferences::dateTimeFormatStyleShort,
                                    mozIOSPreferences::dateTimeFormatStyleShort,
                                    nsDependentCString(""), pattern);
@@ -185,7 +185,7 @@ TEST(Intl_Locale_OSPreferences, GetDateTimePatternPrefOverrides)
 
   // Invalid patterns are ignored
   mozilla::Preferences::SetCString(
-      "intl.date_time.pattern_override.date_time_short", "hello, world!");
+      "intl.date_time.pattern_override.connector_short", "hello, world!");
   nr = osprefs->GetDateTimePattern(mozIOSPreferences::dateTimeFormatStyleShort,
                                    mozIOSPreferences::dateTimeFormatStyleShort,
                                    nsDependentCString(""), pattern);
@@ -194,7 +194,7 @@ TEST(Intl_Locale_OSPreferences, GetDateTimePatternPrefOverrides)
 
   // Clearing the override results in getting the default pattern back.
   mozilla::Preferences::ClearUser(
-      "intl.date_time.pattern_override.date_time_short");
+      "intl.date_time.pattern_override.connector_short");
   nr = osprefs->GetDateTimePattern(mozIOSPreferences::dateTimeFormatStyleShort,
                                    mozIOSPreferences::dateTimeFormatStyleShort,
                                    nsDependentCString(""), pattern);
