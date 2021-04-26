@@ -55,10 +55,10 @@ async function openAboutWelcomeBrowserWindow() {
 
 add_task(async function test_multistage_default() {
   let win = await openAboutWelcomeBrowserWindow();
-  Assert.ok(win.gURLBar.focused, "Focus should be on awesome bar");
+  Assert.ok(!win.gURLBar.focused, "Focus should not be on awesome bar");
   Assert.ok(
-    win.gURLBar.hasAttribute("focused"),
-    "Has focused attribute on urlBar"
+    !win.gURLBar.hasAttribute("focused"),
+    "No focused attribute on urlBar"
   );
 
   registerCleanupFunction(async () => {
@@ -68,6 +68,7 @@ add_task(async function test_multistage_default() {
 
 add_task(async function test_multistage_without_skipFocus() {
   await setAboutWelcomeOverrideContent(JSON.stringify(TEST_MULTISTAGE_JSON));
+  await pushPrefs([ABOUT_WELCOME_FOCUS_PREF, false]);
   let win = await openAboutWelcomeBrowserWindow();
   Assert.ok(win.gURLBar.focused, "Focus should be on awesome bar");
   Assert.ok(
