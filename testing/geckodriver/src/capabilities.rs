@@ -671,7 +671,7 @@ impl FirefoxOptions {
                         "-d".to_string(),
                         "about:blank".to_string(),
                     ])
-                },
+                }
             };
 
             Ok(Some(android))
