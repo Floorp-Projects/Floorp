@@ -930,6 +930,7 @@ class NativeObject : public JSObject {
     return found.isSome() && *found == prop;
   }
 
+ private:
   /*
    * Allocate and free an object slot.
    *
@@ -939,9 +940,9 @@ class NativeObject : public JSObject {
    */
   static bool allocDictionarySlot(JSContext* cx, HandleNativeObject obj,
                                   uint32_t* slotp);
-  void freeSlot(JSContext* cx, uint32_t slot);
 
- private:
+  void freeDictionarySlot(ShapeTable* table, uint32_t slot);
+
   static MOZ_ALWAYS_INLINE Shape* getChildProperty(
       JSContext* cx, HandleNativeObject obj, HandleShape parent,
       MutableHandle<StackShape> child);

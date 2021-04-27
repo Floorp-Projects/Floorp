@@ -1036,7 +1036,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 
   // If shape has a slot, free its slot number.
   if (shape->hasSlot()) {
-    obj->freeSlot(cx, shape->slot());
+    obj->freeDictionarySlot(table, shape->slot());
   }
 
   // A dictionary-mode object owns mutable, unique shapes on a non-circular
