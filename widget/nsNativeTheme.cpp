@@ -650,12 +650,7 @@ bool nsNativeTheme::IsDarkBackground(nsIFrame* aFrame) {
   }
 
   if (const auto* style = GetBackgroundStyle(scrollFrame->GetScrolledFrame())) {
-    nscolor bgColor = style->StyleBackground()->BackgroundColor(style);
-    // Consider the background color dark if the sum of the r, g and b values is
-    // less than 384 in a semi-transparent document.  This heuristic matches
-    // what WebKit does, and we can improve it later if needed.
-    return NS_GET_A(bgColor) > 127 &&
-           NS_GET_R(bgColor) + NS_GET_G(bgColor) + NS_GET_B(bgColor) < 384;
+    return IsDarkColor(style->StyleBackground()->BackgroundColor(style));
   }
   return false;
 }

@@ -1747,7 +1747,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
 
   mozilla::StyleCursor mCursor;
 
-  mozilla::StyleColorOrAuto mCaretColor;
+  mozilla::StyleColorOrAuto mAccentColor;
+  mozilla::StyleCaretColor mCaretColor;
   mozilla::StyleScrollbarColor mScrollbarColor;
 
   inline mozilla::StylePointerEvents GetEffectivePointerEvents(

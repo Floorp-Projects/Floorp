@@ -9282,6 +9282,22 @@ var gCSSProperties = {
     other_values: ["drag", "no-drag"],
     invalid_values: ["none"],
   },
+  "accent-color": {
+    domProp: "accentColor",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    prerequisites: { color: "black" },
+    initial_values: ["auto"],
+    other_values: [
+      "currentcolor",
+      "black",
+      "green",
+      "transparent",
+      "rgba(128,128,128,.5)",
+      "#123",
+    ],
+    invalid_values: ["#0", "#00", "#00000", "cc00ff"],
+  },
   "align-content": {
     domProp: "alignContent",
     inherited: false,

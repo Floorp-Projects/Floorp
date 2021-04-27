@@ -491,6 +491,7 @@ cbindgen-types = [
     { gecko = "StyleGenericBorderRadius", servo = "crate::values::generics::border::BorderRadius" },
     { gecko = "StyleLetterSpacing", servo = "crate::values::computed::text::LetterSpacing" },
     { gecko = "StyleGenericLineHeight", servo = "crate::values::generics::text::LineHeight" },
+    { gecko = "StyleCaretColor", servo = "crate::values::computed::color::CaretColor" },
     { gecko = "StyleContain", servo = "crate::values::computed::Contain" },
     { gecko = "StyleRestyleHint", servo = "crate::invalidation::element::restyle_hints::RestyleHint" },
     { gecko = "StyleTouchAction", servo = "crate::values::computed::TouchAction" },

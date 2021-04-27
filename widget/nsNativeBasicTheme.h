@@ -100,6 +100,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   using RectCornerRadii = mozilla::gfx::RectCornerRadii;
   using LayoutDeviceCoord = mozilla::LayoutDeviceCoord;
   using LayoutDeviceRect = mozilla::LayoutDeviceRect;
+  class AccentColor;
 
  public:
   static void Init();
@@ -187,8 +188,10 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
 
   std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(const EventStates&,
                                                         StyleAppearance,
+                                                        const AccentColor&,
                                                         UseSystemColors);
-  sRGBColor ComputeCheckmarkColor(const EventStates&, UseSystemColors);
+  sRGBColor ComputeCheckmarkColor(const EventStates&, const AccentColor&,
+                                  UseSystemColors);
   sRGBColor ComputeBorderColor(const EventStates&, UseSystemColors);
 
   std::pair<sRGBColor, sRGBColor> ComputeButtonColors(const EventStates&,
@@ -197,18 +200,22 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   std::pair<sRGBColor, sRGBColor> ComputeTextfieldColors(const EventStates&,
                                                          UseSystemColors);
   std::pair<sRGBColor, sRGBColor> ComputeRangeProgressColors(const EventStates&,
+                                                             const AccentColor&,
                                                              UseSystemColors);
   std::pair<sRGBColor, sRGBColor> ComputeRangeTrackColors(const EventStates&,
                                                           UseSystemColors);
   std::pair<sRGBColor, sRGBColor> ComputeRangeThumbColors(const EventStates&,
+                                                          const AccentColor&,
                                                           UseSystemColors);
-  std::pair<sRGBColor, sRGBColor> ComputeProgressColors(UseSystemColors);
+  std::pair<sRGBColor, sRGBColor> ComputeProgressColors(const AccentColor&,
+                                                        UseSystemColors);
   std::pair<sRGBColor, sRGBColor> ComputeProgressTrackColors(UseSystemColors);
   std::pair<sRGBColor, sRGBColor> ComputeMeterchunkColors(
       const EventStates& aMeterState, UseSystemColors);
   sRGBColor ComputeMenulistArrowButtonColor(const EventStates&,
                                             UseSystemColors);
-  std::array<sRGBColor, 3> ComputeFocusRectColors(UseSystemColors);
+  std::array<sRGBColor, 3> ComputeFocusRectColors(const AccentColor&,
+                                                  UseSystemColors);
 
   static bool ShouldUseDarkScrollbar(nsIFrame*, const ComputedStyle&);
   sRGBColor ComputeScrollbarTrackColor(nsIFrame*, const ComputedStyle&,
@@ -226,12 +233,12 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
 
   template <typename PaintBackendData>
   void PaintRoundedFocusRect(PaintBackendData&, const LayoutDeviceRect&,
-                             UseSystemColors, DPIRatio, CSSCoord aRadius,
-                             CSSCoord aOffset);
+                             const AccentColor&, UseSystemColors, DPIRatio,
+                             CSSCoord aRadius, CSSCoord aOffset);
   template <typename PaintBackendData>
   void PaintAutoStyleOutline(nsIFrame*, PaintBackendData&,
-                             const LayoutDeviceRect&, UseSystemColors,
-                             DPIRatio);
+                             const LayoutDeviceRect&, const AccentColor&,
+                             UseSystemColors, DPIRatio);
 
   static void PaintRoundedRectWithRadius(DrawTarget&,
                                          const LayoutDeviceRect& aRect,
@@ -263,11 +270,13 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                        const sRGBColor&);
 
   void PaintCheckboxControl(DrawTarget& aDrawTarget, const LayoutDeviceRect&,
-                            const EventStates&, UseSystemColors, DPIRatio);
+                            const EventStates&, const AccentColor&,
+                            UseSystemColors, DPIRatio);
   void PaintCheckMark(DrawTarget&, const LayoutDeviceRect&, const EventStates&,
-                      UseSystemColors);
+                      const AccentColor&, UseSystemColors);
   void PaintIndeterminateMark(DrawTarget&, const LayoutDeviceRect&,
-                              const EventStates&, UseSystemColors);
+                              const EventStates&, const AccentColor&,
+                              UseSystemColors);
 
   template <typename PaintBackendData>
   void PaintStrokedCircle(PaintBackendData&, const LayoutDeviceRect&,
@@ -285,19 +294,23 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                          CSSCoord aShadowBlurStdDev, DPIRatio);
   template <typename PaintBackendData>
   void PaintRadioControl(PaintBackendData&, const LayoutDeviceRect&,
-                         const EventStates&, UseSystemColors, DPIRatio);
+                         const EventStates&, const AccentColor&,
+                         UseSystemColors, DPIRatio);
   template <typename PaintBackendData>
   void PaintRadioCheckmark(PaintBackendData&, const LayoutDeviceRect&,
                            const EventStates&, DPIRatio);
   template <typename PaintBackendData>
   void PaintTextField(PaintBackendData&, const LayoutDeviceRect&,
-                      const EventStates&, UseSystemColors, DPIRatio);
+                      const EventStates&, const AccentColor& aAccent,
+                      UseSystemColors, DPIRatio);
   template <typename PaintBackendData>
   void PaintListbox(PaintBackendData&, const LayoutDeviceRect&,
-                    const EventStates&, UseSystemColors, DPIRatio);
+                    const EventStates&, const AccentColor&, UseSystemColors,
+                    DPIRatio);
   template <typename PaintBackendData>
   void PaintMenulist(PaintBackendData&, const LayoutDeviceRect&,
-                     const EventStates&, UseSystemColors, DPIRatio);
+                     const EventStates&, const AccentColor&, UseSystemColors,
+                     DPIRatio);
   void PaintArrow(DrawTarget&, const LayoutDeviceRect&,
                   const float aArrowPolygonX[], const float aArrowPolygonY[],
                   const float aArrowPolygonSize, const int32_t aArrowNumPoints,
@@ -309,15 +322,16 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                           DPIRatio);
   template <typename PaintBackendData>
   void PaintRange(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
-                  const EventStates&, UseSystemColors, DPIRatio,
-                  bool aHorizontal);
+                  const EventStates&, const AccentColor&, UseSystemColors,
+                  DPIRatio, bool aHorizontal);
   template <typename PaintBackendData>
   void PaintProgress(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
-                     const EventStates&, UseSystemColors, DPIRatio,
-                     bool aIsMeter);
+                     const EventStates&, const AccentColor&, UseSystemColors,
+                     DPIRatio, bool aIsMeter);
   template <typename PaintBackendData>
   void PaintButton(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
-                   const EventStates&, UseSystemColors, DPIRatio);
+                   const EventStates&, const AccentColor&, UseSystemColors,
+                   DPIRatio);
 
   void PaintScrollbarButton(DrawTarget&, StyleAppearance,
                             const LayoutDeviceRect&, nsIFrame*,
@@ -395,14 +409,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                   const EventStates& aDocumentState,
                                   UseSystemColors, DPIRatio);
 
-  static sRGBColor sAccentColor;
-  static sRGBColor sAccentColorForeground;
-
-  // Note that depending on the exact accent color, lighter/darker might really
-  // be inverted.
-  static sRGBColor sAccentColorLight;
-  static sRGBColor sAccentColorDark;
-  static sRGBColor sAccentColorDarker;
   static CSSIntCoord sHorizontalScrollbarHeight;
   static CSSIntCoord sVerticalScrollbarWidth;
   static bool sOverlayScrollbars;
