@@ -9,8 +9,7 @@
 
 menupopup,
 panel {
-  appearance: auto;
-  -moz-default-appearance: menupopup;
+  border: 1px solid ThreeDShadow;
   min-width: 1px;
   background-color: Menu;
   color: MenuText;
@@ -20,6 +19,7 @@ panel {
 
 panel[type="arrow"] {
   appearance: none;
+  border: none;
   background-color: transparent;
 }
 
