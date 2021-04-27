@@ -60,7 +60,7 @@
 }
 
 :root:-moz-lwtheme {
-  --urlbar-popup-action-color: rgb(21,20,26);
+  --urlbar-popup-action-color: rgb(91,91,102);
   /* Fallback colours for when theme authors don't define lwtheme variables. */
   --autocomplete-popup-highlight-background: rgb(0, 99, 255);
   --autocomplete-popup-highlight-color: white;
