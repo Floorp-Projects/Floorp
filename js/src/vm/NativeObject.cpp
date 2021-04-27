@@ -1106,37 +1106,27 @@ bool NativeObject::allocDictionarySlot(JSContext* cx, HandleNativeObject obj,
   return obj->ensureSlotsForDictionaryObject(cx, slot + 1);
 }
 
-void NativeObject::freeSlot(JSContext* cx, uint32_t slot) {
+void NativeObject::freeDictionarySlot(ShapeTable* table, uint32_t slot) {
+  MOZ_ASSERT(inDictionaryMode());
   MOZ_ASSERT(slot < slotSpan());
 
-  if (inDictionaryMode()) {
-    // Ensure we have a ShapeTable as it stores the object's free list (the
-    // list of available slots in dictionary objects).
-    AutoCheckCannotGC nogc;
-    if (ShapeTable* table =
-            lastProperty()->ensureTableForDictionary(cx, nogc)) {
-      uint32_t last = table->freeList();
+  AutoCheckCannotGC nogc;
+  MOZ_ASSERT(lastProperty()->maybeTable(nogc) == table);
 
-      // Can't afford to check the whole free list, but let's check the head.
-      MOZ_ASSERT_IF(last != SHAPE_INVALID_SLOT,
-                    last < slotSpan() && last != slot);
+  uint32_t last = table->freeList();
 
-      // Place all freed slots other than reserved slots (bug 595230) on the
-      // dictionary's free list.
-      if (JSSLOT_FREE(getClass()) <= slot) {
-        MOZ_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan());
-        setSlot(slot, PrivateUint32Value(last));
-        table->setFreeList(slot);
-        return;
-      }
-    } else {
-      // OOM while creating the ShapeTable holding the free list. We can
-      // recover from it - it just means we won't be able to reuse this
-      // slot later.
-      cx->recoverFromOutOfMemory();
-    }
+  // Can't afford to check the whole free list, but let's check the head.
+  MOZ_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan() && last != slot);
+
+  // Place all freed slots other than reserved slots (bug 595230) on the
+  // dictionary's free list.
+  if (JSSLOT_FREE(getClass()) <= slot) {
+    MOZ_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan());
+    setSlot(slot, PrivateUint32Value(last));
+    table->setFreeList(slot);
+  } else {
+    setSlot(slot, UndefinedValue());
   }
-  setSlot(slot, UndefinedValue());
 }
 
 template <AllowGC allowGC>
