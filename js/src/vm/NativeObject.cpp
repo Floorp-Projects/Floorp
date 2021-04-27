@@ -604,38 +604,8 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
     obj->markDenseElementsMaybeInIteration();
   }
 
-  RootedValue value(cx);
-
-  RootedShape shape(cx, obj->shape());
-  while (!shape->isEmptyShape()) {
-    jsid id = shape->propid();
-    uint32_t index;
-    if (IdIsIndex(id, &index)) {
-      value = obj->getSlot(shape->slot());
-
-      /*
-       * When removing a property from a dictionary, the specified
-       * property will be removed from the dictionary list and the
-       * last property will then be changed due to reshaping the object.
-       * Compute the next shape in the traverse, watching for such
-       * removals from the list.
-       */
-      if (shape != obj->lastProperty()) {
-        shape = shape->previous();
-        if (!NativeObject::removeProperty(cx, obj, id)) {
-          return DenseElementResult::Failure;
-        }
-      } else {
-        if (!NativeObject::removeProperty(cx, obj, id)) {
-          return DenseElementResult::Failure;
-        }
-        shape = obj->lastProperty();
-      }
-
-      obj->setDenseElement(index, value);
-    } else {
-      shape = shape->previous();
-    }
+  if (!NativeObject::densifySparseElements(cx, obj)) {
+    return DenseElementResult::Failure;
   }
 
   /*
