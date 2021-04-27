@@ -954,8 +954,8 @@ description#identity-popup-content-verifier,
 
 .permission-popup-permission-remove-button > .button-box > .button-icon {
   margin: 0;
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   list-style-image: url(chrome://global/skin/icons/close.svg);
   -moz-context-properties: fill;
   fill: currentColor;
