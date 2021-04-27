@@ -13,6 +13,15 @@ const { NimbusFeatures, ExperimentFeature } = ChromeUtils.import(
 const BROWSER_GLUE = Cc["@mozilla.org/browser/browserglue;1"].getService()
   .wrappedJSObject;
 
+function mockAppConstants() {
+  const stub = sinon.stub(window, "AppConstants").value({
+    isPlatformAndVersionAtMost() {
+      return true;
+    },
+  });
+  mockAppConstants.restore = () => stub.restore();
+}
+
 function waitForDialog(callback = win => win.close()) {
   return BrowserTestUtils.promiseAlertDialog(
     null,
@@ -209,6 +218,42 @@ add_task(async function exit_early() {
     ["content", "button", "upgrade-dialog-new-secondary-button"],
     ["content", "close", "early"]
   );
+});
+
+add_task(async function win7_okay() {
+  mockAppConstants();
+
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("primary").click();
+  });
+
+  AssertEvents(
+    "Dialog uses special windows 7 primary button",
+    ["content", "show", "0"],
+    ["content", "show", "cfr-doorhanger-doh-primary-button-2"],
+    ["content", "button", "cfr-doorhanger-doh-primary-button-2"],
+    ["content", "close", "win7"]
+  );
+});
+
+add_task(async function win7_1screen() {
+  mockShell();
+
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("secondary").click();
+  });
+
+  AssertEvents(
+    "Dialog closed after Windows 7's only screen",
+    ["content", "show", "0"],
+    ["content", "show", "upgrade-dialog-new-primary-default-button"],
+    ["content", "button", "upgrade-dialog-new-secondary-button"],
+    ["content", "close", "win7"]
+  );
+
+  mockAppConstants.restore();
 });
 
 add_task(async function quit_app() {
