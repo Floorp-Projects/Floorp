@@ -85,6 +85,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
+  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
@@ -2338,6 +2339,12 @@ BrowserGlue.prototype = {
       {
         task: () => {
           this._maybeShowDefaultBrowserPrompt();
+        },
+      },
+
+      {
+        task: () => {
+          UrlbarQuickSuggest.maybeShowOnboardingDialog();
         },
       },
 
