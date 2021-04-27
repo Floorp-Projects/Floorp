@@ -2761,7 +2761,8 @@ static bool ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr) {
   for (int i = 0; i < rects->num_rectangles; i++) {
     const cairo_rectangle_t& r = rects->rectangles[i];
     aRegion.Or(aRegion,
-               LayoutDeviceIntRect::Truncate(r.x, r.y, r.width, r.height));
+               LayoutDeviceIntRect::Truncate((float)r.x, (float)r.y,
+                                             (float)r.width, (float)r.height));
     LOG(("\t%f %f %f %f\n", r.x, r.y, r.width, r.height));
   }
 
@@ -3698,7 +3699,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
   InitButtonEvent(event, aEvent);
   gdouble pressure = 0;
   gdk_event_get_axis((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
-  event.mPressure = pressure ? pressure : mLastMotionPressure;
+  event.mPressure = pressure ? (float)pressure : (float)mLastMotionPressure;
 
   // The mRefPoint is manipulated in DispatchInputEvent, we're saving it
   // to use it for the doubleclick position check.
@@ -5206,7 +5207,7 @@ void nsWindow::SetWindowClass(const nsAString& xulWinType) {
       *c = '_';
     }
   }
-  res_name[0] = toupper(res_name[0]);
+  res_name[0] = (char)toupper(res_name[0]);
   if (!role) role = res_name;
 
   mGtkWindowAppName = res_name;
@@ -6780,8 +6781,8 @@ static GdkCursor* get_gtk_cursor(nsCursor aCursor) {
     const unsigned char* mask_bits = GtkCursors[newType].mask_bits;
 
     for (int i = 0; i < 128; i++) {
-      char bit = *bits++;
-      char mask = *mask_bits++;
+      char bit = (char)*bits++;
+      char mask = (char)*mask_bits++;
       for (int j = 0; j < 8; j++) {
         unsigned char pix = ~(((bit >> j) & 0x01) * 0xff);
         *data++ = pix;
@@ -7946,24 +7947,26 @@ GdkRectangle nsWindow::DevicePixelsToGdkSizeRoundUp(
 }
 
 int nsWindow::GdkCoordToDevicePixels(gint coord) {
-  return coord * FractionalScaleFactor();
+  return (int)(coord * FractionalScaleFactor());
 }
 
 LayoutDeviceIntPoint nsWindow::GdkEventCoordsToDevicePixels(gdouble x,
                                                             gdouble y) {
   double scale = FractionalScaleFactor();
-  return LayoutDeviceIntPoint::Floor(x * scale, y * scale);
+  return LayoutDeviceIntPoint::Floor((float)(x * scale), (float)(y * scale));
 }
 
 LayoutDeviceIntPoint nsWindow::GdkPointToDevicePixels(GdkPoint point) {
   double scale = FractionalScaleFactor();
-  return LayoutDeviceIntPoint::Floor(point.x * scale, point.y * scale);
+  return LayoutDeviceIntPoint::Floor((float)(point.x * scale),
+                                     (float)(point.y * scale));
 }
 
 LayoutDeviceIntRect nsWindow::GdkRectToDevicePixels(GdkRectangle rect) {
   double scale = FractionalScaleFactor();
-  return LayoutDeviceIntRect::RoundIn(rect.x * scale, rect.y * scale,
-                                      rect.width * scale, rect.height * scale);
+  return LayoutDeviceIntRect::RoundIn(
+      (float)(rect.x * scale), (float)(rect.y * scale),
+      (float)(rect.width * scale), (float)(rect.height * scale));
 }
 
 nsresult nsWindow::SynthesizeNativeMouseEvent(
@@ -8708,9 +8711,9 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
     AddCSDDecorationSize(&decWidth, &decHeight);
 
     float width =
-        (float)DevicePixelsToGdkCoordRoundDown(mBounds.width) + decWidth;
-    float height =
-        (float)DevicePixelsToGdkCoordRoundDown(mBounds.height) + decHeight;
+        (float)DevicePixelsToGdkCoordRoundDown(mBounds.width) + (float)decWidth;
+    float height = (float)DevicePixelsToGdkCoordRoundDown(mBounds.height) +
+                   (float)decHeight;
 
     mAspectRatio = width / height;
     LOG(("nsWindow::LockAspectRatio() [%p] width %f height %f aspect %f\n",
