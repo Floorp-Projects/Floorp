@@ -207,7 +207,7 @@ ZoomTarget CalculateRectToZoomTo(
   if (!rect.IsEmpty() && compositedArea.Width() > 0.0f) {
     const float widthRatio = rect.Width() / compositedArea.Width();
     float targetHeight = compositedArea.Height() * widthRatio;
-    if (widthRatio < 0.9 && targetHeight < rect.Height()) {
+    if (targetHeight < rect.Height()) {
       float newY = documentRelativePoint.y - (targetHeight * 0.5f);
       if ((newY + targetHeight) > rect.YMost()) {
         rect.MoveByY(rect.Height() - targetHeight);
