@@ -2801,10 +2801,15 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
 
 nsIContent* EditorBase::GetPreviousContent(
     const nsINode& aNode, const WalkTreeOptions& aOptions) const {
-  if (!IsDescendantOfEditorRoot(&aNode)) {
+  Element* anonDivOrEditingHost = GetEditorRoot();
+  if (&aNode == anonDivOrEditingHost ||
+      (anonDivOrEditingHost &&
+       !aNode.IsInclusiveDescendantOf(anonDivOrEditingHost))) {
     return nullptr;
   }
-  return FindNode(&aNode, false, aOptions);
+  return EditorBase::GetAdjacentContent(aNode, WalkTreeDirection::Backward,
+                                        aOptions, GetEditorType(),
+                                        anonDivOrEditingHost);
 }
 
 nsIContent* EditorBase::GetPreviousContent(
@@ -2856,10 +2861,15 @@ nsIContent* EditorBase::GetPreviousContent(
 
 nsIContent* EditorBase::GetNextContent(const nsINode& aNode,
                                        const WalkTreeOptions& aOptions) const {
-  if (!IsDescendantOfEditorRoot(&aNode)) {
+  Element* anonDivOrEditingHost = GetEditorRoot();
+  if (&aNode == anonDivOrEditingHost ||
+      (anonDivOrEditingHost &&
+       !aNode.IsInclusiveDescendantOf(anonDivOrEditingHost))) {
     return nullptr;
   }
-  return FindNode(&aNode, true, aOptions);
+  return EditorBase::GetAdjacentContent(aNode, WalkTreeDirection::Forward,
+                                        aOptions, GetEditorType(),
+                                        anonDivOrEditingHost);
 }
 
 nsIContent* EditorBase::GetNextContent(const EditorRawDOMPoint& aPoint,
@@ -2922,20 +2932,23 @@ nsIContent* EditorBase::GetNextContent(const EditorRawDOMPoint& aPoint,
   return GetNextContent(*point.GetContainer(), aOptions);
 }
 
-nsIContent* EditorBase::FindNextLeafNode(
-    const nsINode* aCurrentNode, bool aGoForward,
-    const WalkTreeOptions& aOptions) const {
+// static
+nsIContent* EditorBase::GetAdjacentLeafContent(
+    const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
+    const WalkTreeOptions& aOptions,
+    const Element* aAncestorLimiter /* = nullptr */) {
   // called only by GetPriorNode so we don't need to check params.
-  MOZ_ASSERT(
-      IsDescendantOfEditorRoot(aCurrentNode) && !IsEditorRoot(aCurrentNode),
-      "Bogus arguments");
+  MOZ_ASSERT(&aNode != aAncestorLimiter);
+  MOZ_ASSERT_IF(aAncestorLimiter,
+                aAncestorLimiter->IsInclusiveDescendantOf(aAncestorLimiter));
 
-  const nsINode* cur = aCurrentNode;
+  const nsINode* node = &aNode;
   for (;;) {
-    // if aCurrentNode has a sibling in the right direction, return
+    // if aNode has a sibling in the right direction, return
     // that sibling's closest child (or itself if it has no children)
-    nsIContent* sibling =
-        aGoForward ? cur->GetNextSibling() : cur->GetPreviousSibling();
+    nsIContent* sibling = aWalkTreeDirection == WalkTreeDirection::Forward
+                              ? node->GetNextSibling()
+                              : node->GetPreviousSibling();
     if (sibling) {
       if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
           HTMLEditUtils::IsBlockElement(*sibling)) {
@@ -2947,58 +2960,58 @@ nsIContent* EditorBase::FindNextLeafNode(
               ? LeafNodeType::LeafNodeOrChildBlock
               : LeafNodeType::OnlyLeafNode};
       nsIContent* leafContent =
-          aGoForward ? HTMLEditUtils::GetFirstLeafChild(*sibling, leafNodeTypes)
-                     : HTMLEditUtils::GetLastLeafChild(*sibling, leafNodeTypes);
+          aWalkTreeDirection == WalkTreeDirection::Forward
+              ? HTMLEditUtils::GetFirstLeafChild(*sibling, leafNodeTypes)
+              : HTMLEditUtils::GetLastLeafChild(*sibling, leafNodeTypes);
       return leafContent ? leafContent : sibling;
     }
 
-    nsINode* parent = cur->GetParentNode();
+    nsIContent* parent = node->GetParent();
     if (!parent) {
       return nullptr;
     }
 
-    NS_ASSERTION(IsDescendantOfEditorRoot(parent),
-                 "We started with a proper descendant of root, and should stop "
-                 "if we ever hit the root, so we better have a descendant of "
-                 "root now!");
-    if (IsEditorRoot(parent) ||
+    if (parent == aAncestorLimiter ||
         (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-         parent->IsContent() &&
-         HTMLEditUtils::IsBlockElement(*parent->AsContent()))) {
+         HTMLEditUtils::IsBlockElement(*parent))) {
       return nullptr;
     }
 
-    cur = parent;
+    node = parent;
   }
 
   MOZ_ASSERT_UNREACHABLE("What part of for(;;) do you not understand?");
   return nullptr;
 }
 
-nsIContent* EditorBase::FindNode(const nsINode* aCurrentNode, bool aGoForward,
-                                 const WalkTreeOptions& aOptions) const {
-  if (IsEditorRoot(aCurrentNode)) {
+// static
+nsIContent* EditorBase::GetAdjacentContent(
+    const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
+    const WalkTreeOptions& aOptions, EditorType aEditorType,
+    const Element* aAncestorLimiter /* = nullptr */) {
+  if (&aNode == aAncestorLimiter) {
     // Don't allow traversal above the root node! This helps
     // prevent us from accidentally editing browser content
     // when the editor is in a text widget.
-
     return nullptr;
   }
 
-  nsIContent* candidate = FindNextLeafNode(aCurrentNode, aGoForward, aOptions);
-
-  if (!candidate) {
+  nsIContent* leafContent = EditorBase::GetAdjacentLeafContent(
+      aNode, aWalkTreeDirection, aOptions, aAncestorLimiter);
+  if (!leafContent) {
     return nullptr;
   }
 
   if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-       EditorUtils::IsEditableContent(*candidate, GetEditorType())) &&
+       EditorUtils::IsEditableContent(*leafContent, aEditorType)) &&
       (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
-       EditorUtils::IsElementOrText(*candidate))) {
-    return candidate;
+       EditorUtils::IsElementOrText(*leafContent))) {
+    return leafContent;
   }
 
-  return FindNode(candidate, aGoForward, aOptions);
+  return EditorBase::GetAdjacentContent(*leafContent, aWalkTreeDirection,
+                                        aOptions, aEditorType,
+                                        aAncestorLimiter);
 }
 
 bool EditorBase::IsRoot(const nsINode* inNode) const {

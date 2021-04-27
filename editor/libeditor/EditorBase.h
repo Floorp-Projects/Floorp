@@ -2158,10 +2158,15 @@ class EditorBase : public nsIEditor,
   /**
    * Helper for GetPreviousContent() and GetNextContent().
    */
-  nsIContent* FindNextLeafNode(const nsINode* aCurrentNode, bool aGoForward,
-                               const WalkTreeOptions& aOptions) const;
-  nsIContent* FindNode(const nsINode* aCurrentNode, bool aGoForward,
-                       const WalkTreeOptions& aOptions) const;
+  enum class WalkTreeDirection { Forward, Backward };
+  static nsIContent* GetAdjacentLeafContent(
+      const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
+      const WalkTreeOptions& aOptions,
+      const Element* aAncestorLimiter = nullptr);
+  static nsIContent* GetAdjacentContent(
+      const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
+      const WalkTreeOptions& aOptions, EditorType aEditorType,
+      const Element* aAncestorLimiter = nullptr);
 
   virtual nsresult InstallEventListeners();
   virtual void CreateEventListeners();
