@@ -143,7 +143,10 @@ add_task(async function init() {
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.searches", true]],
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.startup.upgradeDialog.version", 89],
+    ],
   });
   // Wait for Experiment Store to initialize before trying to enroll
   await ExperimentAPI.ready();
@@ -161,13 +164,42 @@ add_task(async function init() {
 
   await UrlbarQuickSuggest.init();
   await UrlbarQuickSuggest._processSuggestionsJSON(TEST_DATA);
+  let onEnabled = UrlbarQuickSuggest.onEnabledUpdate;
+  UrlbarQuickSuggest.onEnabledUpdate = () => {};
 
   registerCleanupFunction(async function() {
     Services.search.setDefault(oldDefaultEngine);
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
     await doExperimentCleanup();
+    UrlbarQuickSuggest.onEnabledUpdate = onEnabled;
   });
+});
+
+add_task(async function test_onboarding() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "fra",
+  });
+  await assertNoQuickSuggestResults();
+
+  // Simulate 3 restarts. this function is only called by BrowserGlue
+  // on startup, the first restart would be where MR1 was shown then
+  // we will show onboarding the 2nd restart after that.
+  UrlbarQuickSuggest.maybeShowOnboardingDialog();
+  UrlbarQuickSuggest.maybeShowOnboardingDialog();
+  UrlbarQuickSuggest.maybeShowOnboardingDialog();
+
+  await BrowserTestUtils.promiseAlertDialog(
+    "accept",
+    "chrome://browser/content/urlbar/quicksuggestOnboarding.xhtml",
+    { isSubDialog: true }
+  );
+
+  TestUtils.waitForPrefChange(
+    "browser.urlbar.quicksuggest.showedOnboardingDialog",
+    value => value === true
+  );
 });
 
 add_task(async function basic_test() {
