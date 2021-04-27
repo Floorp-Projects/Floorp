@@ -731,10 +731,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
     case StyleAppearance::Radiomenuitem:
       aGtkWidgetType = MOZ_GTK_RADIOMENUITEM;
       break;
-    case StyleAppearance::Window:
-    case StyleAppearance::Dialog:
-      aGtkWidgetType = MOZ_GTK_WINDOW;
-      break;
     case StyleAppearance::MozGtkInfoBar:
       aGtkWidgetType = MOZ_GTK_INFO_BAR;
       break;
@@ -1207,31 +1203,6 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   }
 
   return NS_OK;
-}
-
-bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
-    mozilla::wr::DisplayListBuilder& aBuilder,
-    mozilla::wr::IpcResourceUpdateQueue& aResources,
-    const mozilla::layers::StackingContextHelper& aSc,
-    mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
-    StyleAppearance aAppearance, const nsRect& aRect) {
-  nsPresContext* presContext = aFrame->PresContext();
-  wr::LayoutRect bounds = wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(
-      aRect, presContext->AppUnitsPerDevPixel()));
-
-  switch (aAppearance) {
-    case StyleAppearance::Window:
-    case StyleAppearance::Dialog:
-      aBuilder.PushRect(bounds, bounds, true,
-                        wr::ToColorF(ToDeviceColor(LookAndFeel::Color(
-                            LookAndFeel::ColorID::WindowBackground,
-                            LookAndFeel::ColorScheme::Light,
-                            LookAndFeel::UseStandins::No, NS_TRANSPARENT))));
-      return true;
-
-    default:
-      return false;
-  }
 }
 
 WidgetNodeType nsNativeThemeGTK::NativeThemeToGtkTheme(
@@ -1710,9 +1681,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
       aAppearance == StyleAppearance::Menubar ||
       aAppearance == StyleAppearance::Menupopup ||
       aAppearance == StyleAppearance::Tooltip ||
-      aAppearance == StyleAppearance::Menuseparator ||
-      aAppearance == StyleAppearance::Window ||
-      aAppearance == StyleAppearance::Dialog) {
+      aAppearance == StyleAppearance::Menuseparator) {
     *aShouldRepaint = false;
     return NS_OK;
   }
@@ -1891,8 +1860,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Radiomenuitem:
     case StyleAppearance::Splitter:
-    case StyleAppearance::Window:
-    case StyleAppearance::Dialog:
     case StyleAppearance::MozGtkInfoBar:
     case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonClose:
@@ -1959,10 +1926,8 @@ bool nsNativeThemeGTK::ThemeNeedsComboboxDropmarker() { return false; }
 nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   switch (aAppearance) {
-    // These widgets always draw a default background.
+    // These always draw a default background.
     case StyleAppearance::Menupopup:
-    case StyleAppearance::Window:
-    case StyleAppearance::Dialog:
       return eOpaque;
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:

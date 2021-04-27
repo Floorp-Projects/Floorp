@@ -30,13 +30,6 @@ class nsNativeThemeGTK final : private nsNativeTheme,
                                   const nsRect& aRect, const nsRect& aDirtyRect,
                                   DrawOverflow) override;
 
-  bool CreateWebRenderCommandsForWidget(
-      mozilla::wr::DisplayListBuilder& aBuilder,
-      mozilla::wr::IpcResourceUpdateQueue& aResources,
-      const mozilla::layers::StackingContextHelper& aSc,
-      mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
-      StyleAppearance aAppearance, const nsRect& aRect) override;
-
   [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
       StyleAppearance aAppearance) override;
