@@ -1064,7 +1064,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
   // the last property. Otherwise, a shape could replay and caches might
   // return deleted DictionaryShapes! See bug 595365. Do this before changing
   // the object or table, so the remaining removal is infallible.
-  RootedShape spare(cx, Allocate<Shape>(cx));
+  Shape* spare = Allocate<Shape>(cx);
   if (!spare) {
     return false;
   }
@@ -1080,43 +1080,46 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
 /* static */
 bool NativeObject::densifySparseElements(JSContext* cx,
                                          HandleNativeObject obj) {
+  AutoCheckShapeConsistency check(obj);
   MOZ_ASSERT(obj->inDictionaryMode());
 
-  RootedValue value(cx);
+  // First allocate a new Shape, because this function needs to be infallible
+  // after we start removing properties. See also removeProperty.
+  Shape* spare = Allocate<Shape>(cx);
+  if (!spare) {
+    return false;
+  }
+  new (spare) Shape(obj->lastProperty()->base(), ObjectFlags(), 0);
 
-  RootedShape shape(cx, obj->shape());
-  while (!shape->isEmptyShape()) {
-    jsid id = shape->propid();
-    uint32_t index;
-    if (!IdIsIndex(id, &index)) {
-      shape = shape->previous();
-      continue;
+  // Convert all sparse elements to dense elements.
+  {
+    AutoCheckCannotGC nogc;
+    ShapeTable* table = obj->lastProperty()->ensureTableForDictionary(cx, nogc);
+    if (!table) {
+      return false;
     }
 
-    value = obj->getSlot(shape->slot());
+    Shape* shape = obj->lastProperty();
+    while (!shape->isEmptyShape()) {
+      jsid id = shape->propid();
+      uint32_t index;
+      if (!IdIsIndex(id, &index)) {
+        shape = shape->previous();
+        continue;
+      }
 
-    /*
-     * When removing a property from a dictionary, the specified
-     * property will be removed from the dictionary list and the
-     * last property will then be changed due to reshaping the object.
-     * Compute the next shape in the traverse, watching for such
-     * removals from the list.
-     */
-    if (shape != obj->lastProperty()) {
-      shape = shape->previous();
-      if (!NativeObject::removeProperty(cx, obj, id)) {
-        return false;
-      }
-    } else {
-      if (!NativeObject::removeProperty(cx, obj, id)) {
-        return false;
-      }
-      shape = obj->lastProperty();
+      Value value = obj->getSlot(shape->slot());
+      obj->setDenseElement(index, value);
+
+      Shape* previous = shape->previous();
+      ShapeTable::Ptr ptr = table->search(id, nogc);
+      obj->removeDictionaryPropertyWithoutReshape(table, ptr, shape);
+      shape = previous;
     }
-
-    obj->setDenseElement(index, value);
   }
 
+  // Generate a new shape for the object, infallibly.
+  MOZ_ALWAYS_TRUE(NativeObject::generateOwnShape(cx, obj, spare));
   return true;
 }
 
