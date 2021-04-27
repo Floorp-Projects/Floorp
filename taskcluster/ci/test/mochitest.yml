@@ -244,7 +244,7 @@ mochitest-chrome:
             windows10-64-ccov-qr/opt: 3
             .*-asan/opt: 3
             .*-tsan/opt: 6
-            (linux.*64|windows.*-..|macosx10..)/debug: 3
+            (linux.*64|windows.*|macosx1015-64)/debug: 3
             default: 2
     max-run-time: 3600
     e10s: false
@@ -440,7 +440,7 @@ mochitest-media:
             windows10-64.*: 1
             macosx.*64.*/.*: 2
             windows10-aarch64/.*: 1
-            windows7-32-shippable/.*: 2
+            windows.*32-shippable/.*: 2
             linux1804-64(-shippable|-devedition|-.*qr)/opt: 2
             linux.*64-tsan/opt: 4
             default: 3
