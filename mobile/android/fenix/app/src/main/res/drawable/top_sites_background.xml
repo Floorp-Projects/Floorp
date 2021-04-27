@@ -6,7 +6,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:shape="rectangle">
-    <corners android:radius="4dp" />
+    <corners android:radius="8dp" />
     <solid
         android:color="?mozac_widget_favicon_background_color"
         tools:color="@color/photonWhite" />
