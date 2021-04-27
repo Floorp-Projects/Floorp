@@ -54,6 +54,7 @@ add_task(async function init() {
     PartnerLinkAttribution._pingCentre,
     "sendStructuredIngestionPing"
   );
+  sandbox.stub(UrlbarQuickSuggest, "_setupRemoteSettings").resolves(true);
 
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
@@ -61,6 +62,7 @@ add_task(async function init() {
     set: [
       [EXPERIMENT_PREF, true],
       ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.quicksuggest.showedOnboardingDialog", true],
     ],
   });
 
@@ -72,7 +74,6 @@ add_task(async function init() {
   // Set up Quick Suggest.
   await UrlbarQuickSuggest.init();
   await UrlbarQuickSuggest._processSuggestionsJSON(TEST_DATA);
-
   UrlbarProviderQuickSuggest._helpUrl = TEST_HELP_URL;
 
   // Enable local telemetry recording for the duration of the test.
