@@ -1447,6 +1447,7 @@ class NativeObject : public JSObject {
    */
   static DenseElementResult maybeDensifySparseElements(JSContext* cx,
                                                        HandleNativeObject obj);
+  static bool densifySparseElements(JSContext* cx, HandleNativeObject obj);
 
   inline HeapSlot* fixedElements() const {
     static_assert(2 * sizeof(Value) == sizeof(ObjectElements),
