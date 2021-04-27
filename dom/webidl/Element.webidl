@@ -115,9 +115,9 @@ interface Element : Node {
   boolean mozMatchesSelector(UTF8String selector);
 
   // Pointer events methods.
-  [Throws]
+  [UseCounter, Throws]
   void setPointerCapture(long pointerId);
-  [Throws]
+  [UseCounter, Throws]
   void releasePointerCapture(long pointerId);
   boolean hasPointerCapture(long pointerId);
 
