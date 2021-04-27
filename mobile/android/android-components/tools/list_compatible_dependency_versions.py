@@ -16,7 +16,6 @@ Potential script improvements:
 
 import os
 import sys
-from enum import Enum
 from urllib.error import HTTPError
 from urllib.request import urlopen
 
@@ -177,7 +176,7 @@ def main_repo_to_hash(fenix_path, is_no_fenix_passed):
         print(INDENT2 + ac_hash.decode('utf-8'))
     print()
 
-    mc_hash, _, _, nightlyv, = ac_checkout_to_mc_hash(PATH_AC_ROOT)
+    mc_hash, nightlyv, = ac_checkout_to_mc_hash(PATH_AC_ROOT)
     print('Building ac with a local GeckoView?')
     print(INDENT + 'The last known GV nightly version that cleanly builds with your ac checkout is...')
     print(INDENT2 + nightlyv)
