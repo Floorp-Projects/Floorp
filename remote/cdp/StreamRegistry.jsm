@@ -47,14 +47,16 @@ class StreamRegistry {
 
   async _discard(stream) {
     if (stream instanceof OS.File) {
-      const fileInfo = await stream.stat();
-      stream.close();
+      let fileInfo;
 
       // Also remove the temporary file
       try {
+        fileInfo = await stream.stat();
+
+        stream.close();
         await OS.File.remove(fileInfo.path, { ignoreAbsent: true });
       } catch (e) {
-        console.error(`Failed to remove ${fileInfo.path}: ${e.message}`);
+        console.error(`Failed to remove ${fileInfo?.path}: ${e.message}`);
       }
     }
   }

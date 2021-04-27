@@ -1,3 +1,5 @@
+// |jit-test| skip-if: getBuildConfiguration()['wasi']
+//
 // Two Environments nested in the same runtime scope share the correct tail of their parent chains.
 
 // The compiler must be allowed to elide empty scopes and so forth, so this

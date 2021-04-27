@@ -76,7 +76,7 @@ add_task(async function test_popup_styling(browser, accDoc) {
 
       Assert.equal(
         arrowContentComputedStyle.getPropertyValue("--panel-description-color"),
-        `rgba(${hexToRGB(POPUP_TEXT_COLOR).join(", ")}, 0.65)`,
+        `rgba(${hexToRGB(POPUP_TEXT_COLOR).join(", ")}, 0.7)`,
         "Popup text description color should have been themed"
       );
 

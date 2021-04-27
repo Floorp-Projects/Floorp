@@ -29,6 +29,7 @@
 
 #if defined(XP_WIN)
 #  include <objbase.h>
+#  include "mozilla/WindowsProcessMitigations.h"
 #endif
 
 using std::max;
@@ -90,8 +91,10 @@ DecodePool::DecodePool() : mMutex("image::IOThread") {
   // On Windows we use the io thread to get icons from the system. Any thread
   // that makes system calls needs to call CoInitialize. And these system calls
   // (SHGetFileInfo) should only be called from one thread at a time, in case
-  // we ever create more than on io thread.
-  nsCOMPtr<nsIRunnable> initer = new IOThreadIniter();
+  // we ever create more than one io thread. If win32k is locked down, we can't
+  // call SHGetFileInfo anyway, so we don't need the initializer.
+  nsCOMPtr<nsIRunnable> initer =
+      IsWin32kLockedDown() ? nullptr : new IOThreadIniter();
   nsresult rv = NS_NewNamedThread("ImageIO", getter_AddRefs(mIOThread), initer);
 #else
   nsresult rv = NS_NewNamedThread("ImageIO", getter_AddRefs(mIOThread));

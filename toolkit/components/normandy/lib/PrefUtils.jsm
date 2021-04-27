@@ -26,33 +26,39 @@ const kPrefBranches = {
 
 var PrefUtils = {
   /**
-   * Get a preference from the named branch
-   * @param {string} branchName One of "default" or "user"
+   * Get a preference of any type from the named branch.
    * @param {string} pref
-   * @param {string|boolean|integer|null} [default]
+   * @param {object} [options]
+   * @param {"default"|"user"} [options.branchName="user"] One of "default" or "user"
+   * @param {string|boolean|integer|null} [options.defaultValue]
    *   The value to return if the preference does not exist. Defaults to null.
    */
-  getPref(branchName, pref, defaultValue = null) {
-    const branch = kPrefBranches[branchName];
-    const type = branch.getPrefType(pref);
+  getPref(pref, { branch = "user", defaultValue = null } = {}) {
+    const branchObj = kPrefBranches[branch];
+    if (!branchObj) {
+      throw new this.UnexpectedPreferenceBranch(
+        `"${branch}" is not a valid preference branch`
+      );
+    }
+    const type = branchObj.getPrefType(pref);
 
     try {
       switch (type) {
         case Services.prefs.PREF_BOOL: {
-          return branch.getBoolPref(pref);
+          return branchObj.getBoolPref(pref);
         }
         case Services.prefs.PREF_STRING: {
-          return branch.getStringPref(pref);
+          return branchObj.getStringPref(pref);
         }
         case Services.prefs.PREF_INT: {
-          return branch.getIntPref(pref);
+          return branchObj.getIntPref(pref);
         }
         case Services.prefs.PREF_INVALID: {
           return defaultValue;
         }
       }
     } catch (e) {
-      if (branchName === "default" && e.result === Cr.NS_ERROR_UNEXPECTED) {
+      if (branch === "default" && e.result === Cr.NS_ERROR_UNEXPECTED) {
         // There is a value for the pref on the user branch but not on the default branch. This is ok.
         return defaultValue;
       }
@@ -67,28 +73,33 @@ var PrefUtils = {
 
   /**
    * Set a preference on the named branch
-   * @param {string} branchName One of "default" or "user"
    * @param {string} pref
-   * @param {string|boolean|integer|null} value
-   *   The value to set. Must match the type named in `type`.
+   * @param {string|boolean|integer|null} value The value to set.
+   * @param {object} options
+   * @param {"user"|"default"} options.branchName The branch to make the change on.
    */
-  setPref(branchName, pref, value) {
+  setPref(pref, value, { branch = "user" } = {}) {
     if (value === null) {
-      this.clearPref(branchName, pref);
+      this.clearPref(pref, { branch });
       return;
     }
-    const branch = kPrefBranches[branchName];
+    const branchObj = kPrefBranches[branch];
+    if (!branchObj) {
+      throw new this.UnexpectedPreferenceBranch(
+        `"${branch}" is not a valid preference branch`
+      );
+    }
     switch (typeof value) {
       case "boolean": {
-        branch.setBoolPref(pref, value);
+        branchObj.setBoolPref(pref, value);
         break;
       }
       case "string": {
-        branch.setStringPref(pref, value);
+        branchObj.setStringPref(pref, value);
         break;
       }
       case "number": {
-        branch.setIntPref(pref, value);
+        branchObj.setIntPref(pref, value);
         break;
       }
       default: {
@@ -100,17 +111,28 @@ var PrefUtils = {
   },
 
   /**
-   * Remove a preference from a branch.
-   * @param {string} branchName One of "default" or "user"
+   * Remove a preference from a branch. Note that default branch preferences
+   * cannot effectively be cleared. If "default" is passed for a branch, an
+   * error will be logged and nothing else will happen.
+   *
    * @param {string} pref
+   * @param {object} options
+   * @param {"user"|"default"} options.branchName The branch to clear
    */
-  clearPref(branchName, pref) {
-    if (branchName === "user") {
+  clearPref(pref, { branch = "user" } = {}) {
+    if (branch === "user") {
       kPrefBranches.user.clearUserPref(pref);
-    } else if (branchName === "default") {
+    } else if (branch === "default") {
       log.warn(
-        `Cannot not reset pref ${pref} on the default branch. Pref will be cleared at next restart.`
+        `Cannot reset pref ${pref} on the default branch. Pref will be cleared at next restart.`
+      );
+    } else {
+      throw new this.UnexpectedPreferenceBranch(
+        `"${branch}" is not a valid preference branch`
       );
     }
   },
+
+  UnexpectedPreferenceType: class extends Error {},
+  UnexpectedPreferenceBranch: class extends Error {},
 };
