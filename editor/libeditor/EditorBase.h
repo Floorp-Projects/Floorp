@@ -1727,56 +1727,48 @@ class EditorBase : public nsIEditor,
    * Get the previous node.
    */
   nsIContent* GetPreviousNode(const EditorRawDOMPoint& aPoint) const {
-    return GetPreviousNodeInternal(aPoint, {});
+    return GetPreviousContent(aPoint, {});
   }
   nsIContent* GetPreviousElementOrText(const EditorRawDOMPoint& aPoint) const {
-    return GetPreviousNodeInternal(aPoint,
-                                   {WalkTreeOption::IgnoreDataNodeExceptText});
+    return GetPreviousContent(aPoint,
+                              {WalkTreeOption::IgnoreDataNodeExceptText});
   }
   nsIContent* GetPreviousEditableNode(const EditorRawDOMPoint& aPoint) const {
-    return GetPreviousNodeInternal(aPoint,
-                                   {WalkTreeOption::IgnoreNonEditableNode});
+    return GetPreviousContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode});
   }
   nsIContent* GetPreviousNodeInBlock(const EditorRawDOMPoint& aPoint) const {
-    return GetPreviousNodeInternal(aPoint,
-                                   {WalkTreeOption::StopAtBlockBoundary});
+    return GetPreviousContent(aPoint, {WalkTreeOption::StopAtBlockBoundary});
   }
   nsIContent* GetPreviousElementOrTextInBlock(
       const EditorRawDOMPoint& aPoint) const {
-    return GetPreviousNodeInternal(aPoint,
-                                   {WalkTreeOption::IgnoreDataNodeExceptText,
-                                    WalkTreeOption::StopAtBlockBoundary});
+    return GetPreviousContent(aPoint, {WalkTreeOption::IgnoreDataNodeExceptText,
+                                       WalkTreeOption::StopAtBlockBoundary});
   }
   nsIContent* GetPreviousEditableNodeInBlock(
       const EditorRawDOMPoint& aPoint) const {
-    return GetPreviousNodeInternal(aPoint,
-                                   {WalkTreeOption::IgnoreNonEditableNode,
-                                    WalkTreeOption::StopAtBlockBoundary});
+    return GetPreviousContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode,
+                                       WalkTreeOption::StopAtBlockBoundary});
   }
   nsIContent* GetPreviousNode(const nsINode& aNode) const {
-    return GetPreviousNodeInternal(aNode, {});
+    return GetPreviousContent(aNode, {});
   }
   nsIContent* GetPreviousElementOrText(const nsINode& aNode) const {
-    return GetPreviousNodeInternal(aNode,
-                                   {WalkTreeOption::IgnoreDataNodeExceptText});
+    return GetPreviousContent(aNode,
+                              {WalkTreeOption::IgnoreDataNodeExceptText});
   }
   nsIContent* GetPreviousEditableNode(const nsINode& aNode) const {
-    return GetPreviousNodeInternal(aNode,
-                                   {WalkTreeOption::IgnoreNonEditableNode});
+    return GetPreviousContent(aNode, {WalkTreeOption::IgnoreNonEditableNode});
   }
   nsIContent* GetPreviousNodeInBlock(const nsINode& aNode) const {
-    return GetPreviousNodeInternal(aNode,
-                                   {WalkTreeOption::StopAtBlockBoundary});
+    return GetPreviousContent(aNode, {WalkTreeOption::StopAtBlockBoundary});
   }
   nsIContent* GetPreviousElementOrTextInBlock(const nsINode& aNode) const {
-    return GetPreviousNodeInternal(aNode,
-                                   {WalkTreeOption::IgnoreDataNodeExceptText,
-                                    WalkTreeOption::StopAtBlockBoundary});
+    return GetPreviousContent(aNode, {WalkTreeOption::IgnoreDataNodeExceptText,
+                                      WalkTreeOption::StopAtBlockBoundary});
   }
   nsIContent* GetPreviousEditableNodeInBlock(const nsINode& aNode) const {
-    return GetPreviousNodeInternal(aNode,
-                                   {WalkTreeOption::IgnoreNonEditableNode,
-                                    WalkTreeOption::StopAtBlockBoundary});
+    return GetPreviousContent(aNode, {WalkTreeOption::IgnoreNonEditableNode,
+                                      WalkTreeOption::StopAtBlockBoundary});
   }
 
   /**
@@ -1807,58 +1799,89 @@ class EditorBase : public nsIEditor,
    */
   template <typename PT, typename CT>
   nsIContent* GetNextNode(const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextNodeInternal(aPoint, {});
+    return GetNextContent(aPoint, {});
   }
   template <typename PT, typename CT>
   nsIContent* GetNextElementOrText(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextNodeInternal(aPoint,
-                               {WalkTreeOption::IgnoreDataNodeExceptText});
+    return GetNextContent(aPoint, {WalkTreeOption::IgnoreDataNodeExceptText});
   }
   template <typename PT, typename CT>
   nsIContent* GetNextEditableNode(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextNodeInternal(aPoint, {WalkTreeOption::IgnoreNonEditableNode});
+    return GetNextContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode});
   }
   template <typename PT, typename CT>
   nsIContent* GetNextNodeInBlock(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextNodeInternal(aPoint, {WalkTreeOption::StopAtBlockBoundary});
+    return GetNextContent(aPoint, {WalkTreeOption::StopAtBlockBoundary});
   }
   template <typename PT, typename CT>
   nsIContent* GetNextElementOrTextInBlock(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextNodeInternal(aPoint,
-                               {WalkTreeOption::IgnoreDataNodeExceptText,
-                                WalkTreeOption::StopAtBlockBoundary});
+    return GetNextContent(aPoint, {WalkTreeOption::IgnoreDataNodeExceptText,
+                                   WalkTreeOption::StopAtBlockBoundary});
   }
   template <typename PT, typename CT>
   nsIContent* GetNextEditableNodeInBlock(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextNodeInternal(aPoint, {WalkTreeOption::IgnoreNonEditableNode,
-                                        WalkTreeOption::StopAtBlockBoundary});
+    return GetNextContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode,
+                                   WalkTreeOption::StopAtBlockBoundary});
   }
   nsIContent* GetNextNode(const nsINode& aNode) const {
-    return GetNextNodeInternal(aNode, {});
+    return GetNextContent(aNode, {});
   }
   nsIContent* GetNextElementOrText(const nsINode& aNode) const {
-    return GetNextNodeInternal(aNode,
-                               {WalkTreeOption::IgnoreDataNodeExceptText});
+    return GetNextContent(aNode, {WalkTreeOption::IgnoreDataNodeExceptText});
   }
   nsIContent* GetNextEditableNode(const nsINode& aNode) const {
-    return GetNextNodeInternal(aNode, {WalkTreeOption::IgnoreNonEditableNode});
+    return GetNextContent(aNode, {WalkTreeOption::IgnoreNonEditableNode});
   }
   nsIContent* GetNextNodeInBlock(const nsINode& aNode) const {
-    return GetNextNodeInternal(aNode, {WalkTreeOption::StopAtBlockBoundary});
+    return GetNextContent(aNode, {WalkTreeOption::StopAtBlockBoundary});
   }
   nsIContent* GetNextElementOrTextInBlock(const nsINode& aNode) const {
-    return GetNextNodeInternal(aNode, {WalkTreeOption::IgnoreDataNodeExceptText,
-                                       WalkTreeOption::StopAtBlockBoundary});
+    return GetNextContent(aNode, {WalkTreeOption::IgnoreDataNodeExceptText,
+                                  WalkTreeOption::StopAtBlockBoundary});
   }
   nsIContent* GetNextEditableNodeInBlock(const nsINode& aNode) const {
-    return GetNextNodeInternal(aNode, {WalkTreeOption::IgnoreNonEditableNode,
-                                       WalkTreeOption::StopAtBlockBoundary});
+    return GetNextContent(aNode, {WalkTreeOption::IgnoreNonEditableNode,
+                                  WalkTreeOption::StopAtBlockBoundary});
   }
+
+  /**
+   * Get previous content node of aNode if there is.
+   *
+   * @param aNode       The node from which we start to walk the DOM tree.
+   */
+  enum class WalkTreeOption {
+    IgnoreNonEditableNode,     // Ignore non-editable nodes and their children.
+    IgnoreDataNodeExceptText,  // Ignore data nodes which are not text node.
+    StopAtBlockBoundary,       // Stop waking the tree at a block boundary.
+  };
+  using WalkTreeOptions = EnumSet<WalkTreeOption>;
+  nsIContent* GetPreviousContent(const nsINode& aNode,
+                                 const WalkTreeOptions& aOptions) const;
+
+  /**
+   * And another version that takes a point in DOM tree rather than a node.
+   */
+  nsIContent* GetPreviousContent(const EditorRawDOMPoint& aPoint,
+                                 const WalkTreeOptions& aOptions) const;
+
+  /**
+   * Get next content node of aNode if there is.
+   *
+   * @param aNode       The node from which we start to walk the DOM tree.
+   */
+  nsIContent* GetNextContent(const nsINode& aNode,
+                             const WalkTreeOptions& aOptions) const;
+
+  /**
+   * And another version that takes a point in DOM tree rather than a node.
+   */
+  nsIContent* GetNextContent(const EditorRawDOMPoint& aPoint,
+                             const WalkTreeOptions& aOptions) const;
 
   /**
    * Returns true if aNode is our root node.
@@ -2230,47 +2253,7 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ScrollSelectionFocusIntoView();
 
   /**
-   * Get the node immediately previous node of aNode.
-   * @param atNode               The node from which we start the search.
-   * @return                     The node that occurs before aNode in
-   *                             the tree, skipping non-editable nodes if
-   *                             aFindEditableNode is true.  If there is no
-   *                             previous node, returns nullptr.
-   */
-  enum class WalkTreeOption {
-    IgnoreNonEditableNode,     // Ignore non-editable nodes and their children.
-    IgnoreDataNodeExceptText,  // Ignore data nodes which are not text node.
-    StopAtBlockBoundary,       // Stop waking the tree at a block boundary.
-  };
-  using WalkTreeOptions = EnumSet<WalkTreeOption>;
-  nsIContent* GetPreviousNodeInternal(const nsINode& aNode,
-                                      const WalkTreeOptions& aOptions) const;
-
-  /**
-   * And another version that takes a point in DOM tree rather than a node.
-   */
-  nsIContent* GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
-                                      const WalkTreeOptions& aOptions) const;
-
-  /**
-   * Get the node immediately next node of aNode.
-   * @param aNode                The node from which we start the search.
-   * @return                     The node that occurs after aNode in the
-   *                             tree, skipping non-editable nodes if
-   *                             aFindEditableNode is true.  If there is no
-   *                             next node, returns nullptr.
-   */
-  nsIContent* GetNextNodeInternal(const nsINode& aNode,
-                                  const WalkTreeOptions& aOptions) const;
-
-  /**
-   * And another version that takes a point in DOM tree rather than a node.
-   */
-  nsIContent* GetNextNodeInternal(const EditorRawDOMPoint& aPoint,
-                                  const WalkTreeOptions& aOptions) const;
-
-  /**
-   * Helper for GetPreviousNodeInternal() and GetNextNodeInternal().
+   * Helper for GetPreviousContent() and GetNextContent().
    */
   nsIContent* FindNextLeafNode(const nsINode* aCurrentNode, bool aGoForward,
                                const WalkTreeOptions& aOptions) const;
