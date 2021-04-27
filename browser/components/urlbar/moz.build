@@ -9,6 +9,8 @@ DIRS += [
     "unitconverters",
 ]
 
+JAR_MANIFESTS += ["jar.mn"]
+
 EXTRA_JS_MODULES += [
     "UrlbarController.jsm",
     "UrlbarEventBufferer.jsm",
