@@ -7,8 +7,6 @@
 "use strict";
 
 add_task(async function() {
-  await pushPref("devtools.testing.enableServerWatcherSupport", true);
-
   const URL = URL_ROOT_COM + "storage-indexeddb-iframe.html";
 
   // open tab
