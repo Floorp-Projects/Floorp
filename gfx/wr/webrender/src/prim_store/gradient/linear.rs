@@ -258,10 +258,6 @@ pub fn optimize_linear_gradient(
         segment_rect.origin.x += segment_start;
         segment_rect.size.width = segment_length;
 
-        if segment_rect.to_i32().is_empty() {
-            continue
-        }
-
         let mut start = point2(0.0, 0.0);
         let mut end = point2(segment_length, 0.0);
 
@@ -374,7 +370,7 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
             extend_mode: item.extend_mode,
             start_point,
             end_point,
-            task_size: task_size.to_i32(),
+            task_size: task_size.ceil().to_i32(),
             scale,
             stretch_size,
             tile_spacing,
