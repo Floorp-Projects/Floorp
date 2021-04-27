@@ -832,6 +832,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
    * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.bbc.com/news/business-47245877>`__
    * **type**: pageload
    * **unit**: ms
@@ -871,6 +872,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
    * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.bing.com/search?q=restaurants>`__
    * **type**: pageload
    * **unit**: ms
@@ -930,6 +932,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
    * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other>`__
    * **type**: pageload
    * **unit**: ms
@@ -1003,12 +1006,14 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
+   * **login**: true
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-g5-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-g5-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://m.facebook.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -1042,12 +1047,14 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
+   * **login**: true
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-g5-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-g5-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.google.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -1081,12 +1088,14 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
+   * **login**: true
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-g5-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-g5-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.google.com/search?q=restaurants+near+me>`__
    * **type**: pageload
    * **unit**: ms
@@ -1120,12 +1129,14 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
+   * **login**: true
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy-android
-   * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
-   * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback pageset manifest**: mitm6-g5-fenix-{subtest}.manifest
+   * **playback recordings**: mitm6-g5-fenix-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.instagram.com>`__
    * **type**: pageload
    * **unit**: ms
@@ -1145,6 +1156,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
    * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://www.jianshu.com/>`__
    * **type**: pageload
    * **unit**: ms
@@ -1264,6 +1276,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **playback**: mitmproxy-android
    * **playback pageset manifest**: mitm4-pixel2-fennec-{subtest}.manifest
    * **playback recordings**: mitm4-pixel2-fennec-{subtest}.mp
+   * **playback version**: 6.0.2
    * **test url**: `<https://m.youtube.com>`__
    * **type**: pageload
    * **unit**: ms
