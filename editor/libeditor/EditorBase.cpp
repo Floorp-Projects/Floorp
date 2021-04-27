@@ -2599,7 +2599,7 @@ nsINode* EditorBase::GetFirstEditableNode(nsINode* aRoot) {
   nsIContent* content =
       HTMLEditUtils::GetFirstLeafChild(*aRoot, {LeafNodeType::OnlyLeafNode});
   if (content && !EditorUtils::IsEditableContent(*content, editorType)) {
-    content = GetNextEditableNode(*content);
+    content = GetNextContent(*content, {WalkTreeOption::IgnoreNonEditableNode});
   }
 
   return (content != aRoot) ? content : nullptr;
@@ -3443,8 +3443,8 @@ EditorBase::CreateTransactionForCollapsedRange(
       point.IsStartOfContainer()) {
     // We're backspacing from the beginning of a node.  Delete the last thing
     // of previous editable content.
-    nsIContent* previousEditableContent =
-        GetPreviousEditableNode(*point.GetContainer());
+    nsIContent* previousEditableContent = GetPreviousContent(
+        *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode});
     if (!previousEditableContent) {
       NS_WARNING("There was no editable content before the collapsed range");
       return nullptr;
@@ -3485,8 +3485,8 @@ EditorBase::CreateTransactionForCollapsedRange(
       point.IsEndOfContainer()) {
     // We're deleting from the end of a node.  Delete the first thing of
     // next editable content.
-    nsIContent* nextEditableContent =
-        GetNextEditableNode(*point.GetContainer());
+    nsIContent* nextEditableContent = GetNextContent(
+        *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode});
     if (!nextEditableContent) {
       NS_WARNING("There was no editable content after the collapsed range");
       return nullptr;
@@ -3545,8 +3545,8 @@ EditorBase::CreateTransactionForCollapsedRange(
 
   nsIContent* editableContent =
       aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward
-          ? GetPreviousEditableNode(point)
-          : GetNextEditableNode(point);
+          ? GetPreviousContent(point, {WalkTreeOption::IgnoreNonEditableNode})
+          : GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode});
   if (!editableContent) {
     NS_WARNING("There was no editable content around the collapsed range");
     return nullptr;
@@ -3556,8 +3556,10 @@ EditorBase::CreateTransactionForCollapsedRange(
     // Can't delete an empty text node (bug 762183)
     editableContent =
         aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward
-            ? GetPreviousEditableNode(*editableContent)
-            : GetNextEditableNode(*editableContent);
+            ? GetPreviousContent(*editableContent,
+                                 {WalkTreeOption::IgnoreNonEditableNode})
+            : GetNextContent(*editableContent,
+                             {WalkTreeOption::IgnoreNonEditableNode});
   }
   if (NS_WARN_IF(!editableContent)) {
     NS_WARNING(

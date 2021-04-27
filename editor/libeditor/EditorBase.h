@@ -1726,14 +1726,8 @@ class EditorBase : public nsIEditor,
   /**
    * Get the previous node.
    */
-  nsIContent* GetPreviousEditableNode(const EditorRawDOMPoint& aPoint) const {
-    return GetPreviousContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode});
-  }
   nsIContent* GetPreviousNodeInBlock(const EditorRawDOMPoint& aPoint) const {
     return GetPreviousContent(aPoint, {WalkTreeOption::StopAtBlockBoundary});
-  }
-  nsIContent* GetPreviousEditableNode(const nsINode& aNode) const {
-    return GetPreviousContent(aNode, {WalkTreeOption::IgnoreNonEditableNode});
   }
   nsIContent* GetPreviousNodeInBlock(const nsINode& aNode) const {
     return GetPreviousContent(aNode, {WalkTreeOption::StopAtBlockBoundary});
@@ -1747,14 +1741,16 @@ class EditorBase : public nsIEditor,
    * loop.
    *
    * EditorRawDOMPoint point(aEditableNode);
-   * while (nsIContent* content = GetNextEditableNode(point)) {
+   * while (nsIContent* content =
+   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode})) {
    *   // Do something...
    *   point.Set(content);
    * }
    *
    * Following code must be you expected:
    *
-   * while (nsIContent* content = GetNextEditableNode(point)) {
+   * while (nsIContent* content =
+   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode}) {
    *   // Do something...
    *   DebugOnly<bool> advanced = point.Advanced();
    *   MOZ_ASSERT(advanced);
@@ -1766,17 +1762,9 @@ class EditorBase : public nsIEditor,
    * node.
    */
   template <typename PT, typename CT>
-  nsIContent* GetNextEditableNode(
-      const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode});
-  }
-  template <typename PT, typename CT>
   nsIContent* GetNextNodeInBlock(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
     return GetNextContent(aPoint, {WalkTreeOption::StopAtBlockBoundary});
-  }
-  nsIContent* GetNextEditableNode(const nsINode& aNode) const {
-    return GetNextContent(aNode, {WalkTreeOption::IgnoreNonEditableNode});
   }
   nsIContent* GetNextNodeInBlock(const nsINode& aNode) const {
     return GetNextContent(aNode, {WalkTreeOption::StopAtBlockBoundary});

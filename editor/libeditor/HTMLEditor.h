@@ -978,8 +978,8 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * GetPreviousEditableHTMLNode*() methods are similar to
-   * EditorBase::GetPreviousEditableNode() but this won't return nodes outside
-   * active editing host.
+   * EditorBase::GetPreviousContent({WalkTreeOption::IgnoreNonEditableNode}) but
+   * this won't return nodes outside active editing host.
    */
   nsIContent* GetPreviousEditableHTMLNode(nsINode& aNode) const {
     return GetPreviousEditableHTMLNodeInternal(aNode, false);
@@ -1047,8 +1047,8 @@ class HTMLEditor final : public TextEditor,
 
   /**
    * GetNextEditableHTMLNode*() methods are similar to
-   * EditorBase::GetNextEditableNode() but this won't return nodes outside
-   * active editing host.
+   * EditorBase::GetNextContent({WalkTreeOption::IgnoreNonEditableNode}) but
+   * this won't return nodes outside active editing host.
    *
    * Note that same as EditorBase::GetTextEditableNode(), methods which take
    * |const EditorRawDOMPoint&| start to search from the node pointed by it.
