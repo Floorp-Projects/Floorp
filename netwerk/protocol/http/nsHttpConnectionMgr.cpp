@@ -3401,6 +3401,9 @@ void nsHttpConnectionMgr::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
   }
 
   ent->DontReuseHttp3Conn();
+  // Need to cancel the transactions in the pending queue. Otherwise, they'll
+  // stay in the queue forever.
+  ent->CancelAllTransactions(NS_ERROR_NET_RESET);
 }
 
 void nsHttpConnectionMgr::MoveToWildCardConnEntry(
