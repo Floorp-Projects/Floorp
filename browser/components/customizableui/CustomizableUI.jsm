@@ -2342,7 +2342,9 @@ var CustomizableUIInternal = {
     }
 
     // Destroyed API widgets are in gSeenWidgets, but not in gPalette:
-    if (gSeenWidgets.has(aWidgetId)) {
+    // The Pocket button is a default API widget that acts like a custom widget.
+    // If it's not in gPalette, it doesn't exist.
+    if (gSeenWidgets.has(aWidgetId) || aWidgetId === "save-to-pocket-button") {
       return false;
     }
 
@@ -3417,7 +3419,9 @@ var CustomizableUIInternal = {
 
   get inDefaultState() {
     for (let [areaId, props] of gAreas) {
-      let defaultPlacements = props.get("defaultPlacements");
+      let defaultPlacements = props
+        .get("defaultPlacements")
+        .filter(item => this.widgetExists(item));
       let currentPlacements = gPlacements.get(areaId);
       // We're excluding all of the placement IDs for items that do not exist,
       // and items that have removable="false",
