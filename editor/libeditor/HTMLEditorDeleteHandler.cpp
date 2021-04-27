@@ -3878,6 +3878,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
                          "nsRange::SetStartAndEnd() failed");
   };
 
+  RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
   for (OwningNonNull<nsRange>& range : aRangesToDelete.Ranges()) {
     // If it's not collapsed, `DeleteRangeTransaction::Create()` will be called
     // with it and `DeleteRangeTransaction` won't modify the range.
@@ -3896,9 +3897,10 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
     if (howToHandleCollapsedRange ==
             EditorBase::HowToHandleCollapsedRange::ExtendBackward &&
         caretPoint.IsStartOfContainer()) {
-      nsIContent* previousEditableContent = aHTMLEditor.GetPreviousContent(
+      nsIContent* previousEditableContent = EditorBase::GetPreviousContent(
           *caretPoint.GetContainer(),
-          {EditorBase::WalkTreeOption::IgnoreNonEditableNode});
+          {EditorBase::WalkTreeOption::IgnoreNonEditableNode}, EditorType::HTML,
+          editingHost);
       if (!previousEditableContent) {
         continue;
       }
@@ -3919,9 +3921,10 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
     if (howToHandleCollapsedRange ==
             EditorBase::HowToHandleCollapsedRange::ExtendForward &&
         caretPoint.IsEndOfContainer()) {
-      nsIContent* nextEditableContent = aHTMLEditor.GetNextContent(
+      nsIContent* nextEditableContent = EditorBase::GetNextContent(
           *caretPoint.GetContainer(),
-          {EditorBase::WalkTreeOption::IgnoreNonEditableNode});
+          {EditorBase::WalkTreeOption::IgnoreNonEditableNode}, EditorType::HTML,
+          editingHost);
       if (!nextEditableContent) {
         continue;
       }
@@ -3956,12 +3959,14 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
     nsIContent* editableContent =
         howToHandleCollapsedRange ==
                 EditorBase::HowToHandleCollapsedRange::ExtendBackward
-            ? aHTMLEditor.GetPreviousContent(
+            ? EditorBase::GetPreviousContent(
                   caretPoint,
-                  {EditorBase::WalkTreeOption::IgnoreNonEditableNode})
-            : aHTMLEditor.GetNextContent(
+                  {EditorBase::WalkTreeOption::IgnoreNonEditableNode},
+                  EditorType::HTML, editingHost)
+            : EditorBase::GetNextContent(
                   caretPoint,
-                  {EditorBase::WalkTreeOption::IgnoreNonEditableNode});
+                  {EditorBase::WalkTreeOption::IgnoreNonEditableNode},
+                  EditorType::HTML, editingHost);
     if (!editableContent) {
       continue;
     }
@@ -3970,10 +3975,12 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
       editableContent =
           howToHandleCollapsedRange ==
                   EditorBase::HowToHandleCollapsedRange::ExtendBackward
-              ? aHTMLEditor.GetPreviousContent(
-                    *editableContent, {WalkTreeOption::IgnoreNonEditableNode})
-              : aHTMLEditor.GetNextContent(
-                    *editableContent, {WalkTreeOption::IgnoreNonEditableNode});
+              ? EditorBase::GetPreviousContent(
+                    *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
+                    EditorType::HTML, editingHost)
+              : EditorBase::GetNextContent(
+                    *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
+                    EditorType::HTML, editingHost);
     }
     if (!editableContent) {
       continue;
@@ -4423,10 +4430,11 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
           atStart.IsEndOfContainer() && range.StartRef().GetChild() &&
                   range.StartRef().GetChild()->IsHTMLElement(nsGkAtoms::br) &&
                   !aHTMLEditor.IsVisibleBRElement(range.StartRef().GetChild())
-              ? aHTMLEditor.GetNextContent(
+              ? EditorBase::GetNextContent(
                     *atStart.ContainerAsContent(),
                     {WalkTreeOption::IgnoreDataNodeExceptText,
-                     WalkTreeOption::StopAtBlockBoundary})
+                     WalkTreeOption::StopAtBlockBoundary},
+                    EditorType::HTML, aHTMLEditor.GetActiveEditingHost())
               : nullptr;
       if (!nextContent || nextContent != range.StartRef().GetChild()) {
         noNeedToChangeStart = true;
@@ -5172,7 +5180,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
           EditorRawDOMPoint::After(mEmptyInclusiveAncestorBlockElement));
       MOZ_ASSERT(afterEmptyBlock.IsSet());
       if (nsIContent* nextContentOfEmptyBlock =
-              aHTMLEditor.GetNextContent(afterEmptyBlock, {})) {
+              EditorBase::GetNextContent(afterEmptyBlock, {}, EditorType::HTML,
+                                         aHTMLEditor.GetActiveEditingHost())) {
         EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
             *nextContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {
@@ -5193,8 +5202,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       // if there is.  Otherwise, to after the empty block.
       EditorRawDOMPoint atEmptyBlock(mEmptyInclusiveAncestorBlockElement);
       if (nsIContent* previousContentOfEmptyBlock =
-              aHTMLEditor.GetPreviousContent(
-                  atEmptyBlock, {WalkTreeOption::IgnoreNonEditableNode})) {
+              EditorBase::GetPreviousContent(
+                  atEmptyBlock, {WalkTreeOption::IgnoreNonEditableNode},
+                  EditorType::HTML, aHTMLEditor.GetActiveEditingHost())) {
         EditorDOMPoint pt = aHTMLEditor.GetGoodCaretPointFor(
             *previousContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {
