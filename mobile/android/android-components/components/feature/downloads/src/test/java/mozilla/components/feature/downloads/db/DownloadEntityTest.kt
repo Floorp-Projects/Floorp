@@ -8,6 +8,7 @@ import android.os.Environment
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -63,5 +64,31 @@ class DownloadEntityTest {
         assertEquals(downloadState.status, downloadEntity.status)
         assertEquals(downloadState.destinationDirectory, downloadEntity.destinationDirectory)
         assertEquals(downloadState.createdTime, downloadEntity.createdAt)
+    }
+
+    @Test
+    fun `GIVEN a download with data URL WHEN converting a DownloadState to DownloadEntity THEN data url is removed`() {
+        val downloadState = DownloadState(
+            id = "1",
+            url = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="
+        )
+
+        val downloadEntity = downloadState.toDownloadEntity()
+
+        assertEquals(downloadState.id, downloadEntity.id)
+        assertTrue(downloadEntity.url.isEmpty())
+    }
+
+    @Test
+    fun `GIVEN a download with no data URL WHEN converting a DownloadState to DownloadEntity THEN data url is not removed`() {
+        val downloadState = DownloadState(
+            id = "1",
+            url = "url"
+        )
+
+        val downloadEntity = downloadState.toDownloadEntity()
+
+        assertEquals(downloadState.id, downloadEntity.id)
+        assertEquals(downloadState.url, downloadEntity.url)
     }
 }

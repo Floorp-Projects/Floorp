@@ -61,9 +61,22 @@ internal data class DownloadEntity(
 }
 
 internal fun DownloadState.toDownloadEntity(): DownloadEntity {
+
+    /**
+     * Data URLs cause problems when restoring the values from the db,
+     * as the string could be so long that it could break the maximum allowed size for a cursor,
+     * causing SQLiteBIobTooBigException when restoring downloads from the DB.
+     */
+    val isDataURL = url.startsWith("data:")
+    val sanitizedURL = if (isDataURL) {
+        ""
+    } else {
+        url
+    }
+
     return DownloadEntity(
         id,
-        url,
+        sanitizedURL,
         fileName,
         contentType,
         contentLength,

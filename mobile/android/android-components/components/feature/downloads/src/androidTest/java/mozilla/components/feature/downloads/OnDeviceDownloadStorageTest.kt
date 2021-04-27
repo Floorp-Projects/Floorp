@@ -146,6 +146,49 @@ class OnDeviceDownloadStorageTest {
     }
 
     @Test
+    fun testAddingDataURLDownload() = runBlockingTest {
+        val download1 = createMockDownload("1", "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==")
+        val download2 = createMockDownload("2", "url2")
+
+        storage.add(download1)
+        storage.add(download2)
+
+        val downloads = getDownloadsPagedList()
+
+        assertEquals(2, downloads.size)
+
+        assertTrue(DownloadStorage.isSameDownload(download1.copy(url = ""), downloads.first()))
+        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]!!))
+    }
+
+    @Test
+    fun testUpdatingDataURLDownload() = runBlockingTest {
+        val download1 = createMockDownload("1", "url1")
+        val download2 = createMockDownload("2", "url2")
+
+        storage.add(download1)
+        storage.add(download2)
+
+        var downloads = getDownloadsPagedList()
+
+        assertEquals(2, downloads.size)
+
+        assertTrue(DownloadStorage.isSameDownload(download1, downloads.first()))
+        assertTrue(DownloadStorage.isSameDownload(download2, downloads[1]!!))
+
+        val updatedDownload1 = createMockDownload("1", "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==")
+        val updatedDownload2 = createMockDownload("2", "updated_url2")
+
+        storage.update(updatedDownload1)
+        storage.update(updatedDownload2)
+
+        downloads = getDownloadsPagedList()
+
+        assertTrue(DownloadStorage.isSameDownload(updatedDownload1.copy(url = ""), downloads.first()))
+        assertTrue(DownloadStorage.isSameDownload(updatedDownload2, downloads[1]!!))
+    }
+
+    @Test
     fun testRemovingDownload() = runBlockingTest {
         val download1 = createMockDownload("1", "url1")
         val download2 = createMockDownload("2", "url2")
