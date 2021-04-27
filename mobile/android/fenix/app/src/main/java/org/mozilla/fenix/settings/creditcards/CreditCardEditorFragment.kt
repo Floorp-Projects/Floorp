@@ -13,11 +13,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_credit_card_editor.*
-import mozilla.components.concept.storage.CreditCardNumber
-import mozilla.components.concept.storage.NewCreditCardFields
-import mozilla.components.concept.storage.UpdatableCreditCardFields
-import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
@@ -31,6 +26,8 @@ import org.mozilla.fenix.settings.creditcards.view.CreditCardEditorView
  */
 class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) {
 
+    private lateinit var creditCardEditorState: CreditCardEditorState
+    private lateinit var creditCardEditorView: CreditCardEditorView
     private val args by navArgs<CreditCardEditorFragmentArgs>()
 
     /**
@@ -60,9 +57,10 @@ class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) 
             )
         )
 
-        val creditCardEditorState =
+        creditCardEditorState =
             args.creditCard?.toCreditCardEditorState() ?: getInitialCreditCardEditorState()
-        CreditCardEditorView(view, interactor).bind(creditCardEditorState)
+        creditCardEditorView = CreditCardEditorView(view, interactor)
+        creditCardEditorView.bind(creditCardEditorState)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -78,35 +76,7 @@ class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) 
             true
         }
         R.id.save_credit_card_button -> {
-            view?.hideKeyboard()
-
-            val creditCard = args.creditCard
-
-            // TODO need to know if we're updating a number, or just round-tripping it
-            val cardNumber = card_number_input.text.toString()
-
-            if (creditCard != null) {
-                val fields = UpdatableCreditCardFields(
-                        billingName = name_on_card_input.text.toString(),
-                        cardNumber = CreditCardNumber.Plaintext(cardNumber),
-                        cardNumberLast4 = cardNumber.substring(cardNumber.length - 5, cardNumber.length - 1),
-                        expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
-                        expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                        cardType = CARD_TYPE_PLACEHOLDER
-                    )
-                interactor.onUpdateCreditCard(creditCard.guid, fields)
-            } else {
-                val fields = NewCreditCardFields(
-                    billingName = name_on_card_input.text.toString(),
-                    plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
-                    cardNumberLast4 = cardNumber.substring(cardNumber.length - 5, cardNumber.length - 1),
-                    expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
-                    expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                    cardType = CARD_TYPE_PLACEHOLDER
-                )
-                interactor.onSaveCreditCard(fields)
-            }
-
+            creditCardEditorView.saveCreditCardInfo(creditCardEditorState)
             true
         }
         else -> false

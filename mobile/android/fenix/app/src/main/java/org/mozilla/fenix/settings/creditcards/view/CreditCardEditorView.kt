@@ -32,7 +32,6 @@ class CreditCardEditorView(
     /**
      * Binds the given [CreditCardEditorState] in the [CreditCardEditorFragment].
      */
-    @Suppress("MagicNumber")
     fun bind(state: CreditCardEditorState) {
         if (state.isEditing) {
             delete_button.apply {
@@ -49,32 +48,7 @@ class CreditCardEditorView(
         }
 
         save_button.setOnClickListener {
-            containerView.hideKeyboard()
-
-            // TODO same as in the corresponding fragment, plaintext number if it's being updated or
-            //  round-tripped otherwise. Also, why is there so much duplication?
-            val cardNumber = card_number_input.text.toString()
-            if (state.isEditing) {
-                val fields = UpdatableCreditCardFields(
-                    billingName = name_on_card_input.text.toString(),
-                    cardNumber = CreditCardNumber.Encrypted(cardNumber),
-                    cardNumberLast4 = cardNumber.substring(cardNumber.length - 4),
-                    expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
-                    expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                    cardType = CARD_TYPE_PLACEHOLDER
-                )
-                interactor.onUpdateCreditCard(state.guid, fields)
-            } else {
-                val fields = NewCreditCardFields(
-                    billingName = name_on_card_input.text.toString(),
-                    plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
-                    cardNumberLast4 = cardNumber.substring(cardNumber.length - 4),
-                    expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
-                    expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
-                    cardType = CARD_TYPE_PLACEHOLDER
-                )
-                interactor.onSaveCreditCard(fields)
-            }
+            saveCreditCardInfo(state)
         }
 
         card_number_input.text = state.cardNumber.toEditable()
@@ -82,6 +56,35 @@ class CreditCardEditorView(
 
         bindExpiryMonthDropDown(state.expiryMonth)
         bindExpiryYearDropDown(state.expiryYears)
+    }
+
+    @Suppress("MagicNumber")
+    internal fun saveCreditCardInfo(state: CreditCardEditorState) {
+        containerView.hideKeyboard()
+
+        // TODO need to know if we're updating a number, or just round-tripping it
+        val cardNumber = card_number_input.text.toString()
+        if (state.isEditing) {
+            val fields = UpdatableCreditCardFields(
+                billingName = name_on_card_input.text.toString(),
+                cardNumber = CreditCardNumber.Encrypted(cardNumber),
+                cardNumberLast4 = cardNumber.substring(cardNumber.length - 4),
+                expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
+                expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
+                cardType = CARD_TYPE_PLACEHOLDER
+            )
+            interactor.onUpdateCreditCard(state.guid, fields)
+        } else {
+            val fields = NewCreditCardFields(
+                billingName = name_on_card_input.text.toString(),
+                plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
+                cardNumberLast4 = cardNumber.substring(cardNumber.length - 4),
+                expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
+                expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
+                cardType = CARD_TYPE_PLACEHOLDER
+            )
+            interactor.onSaveCreditCard(fields)
+        }
     }
 
     /**
