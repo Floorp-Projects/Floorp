@@ -254,11 +254,13 @@
 }
 
 .urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow],
+.urlbarView-tags[overflow],
 .urlbarView-url[overflow] {
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
-.urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl) {
+.urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl),
+.urlbarView-tags[overflow]:-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent, black 2em);
 }
 
@@ -669,24 +671,21 @@
      margin-inline-start already set on this element. */
   margin-inline-end: -1.4em;
 }
-} /*** END !proton ***/
+
+/* Tags */
 
 .urlbarView-tags {
   overflow: hidden;
+  display: flex;
 }
 
 .urlbarView-tag {
-  background-color: var(--arrowpanel-dimmed);
-  border-radius: 2px;
-  border: 1px solid var(--panel-separator-color);
-  padding: 0 1px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  padding: 0 4px;
   margin-inline-start: .4em;
+  border-radius: 4px;
 }
-
-.urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-tags > .urlbarView-tag {
-  background-color: var(--autocomplete-popup-highlight-color);
-  color: var(--autocomplete-popup-highlight-background);
-}
+} /*** END !proton ***/
 
 /* Search one-offs */
 
