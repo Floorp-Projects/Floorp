@@ -935,46 +935,7 @@ var DownloadsView = {
 
     DownloadsViewController.updateCommands();
 
-    let download = element._shell.download;
-    let mimeInfo = DownloadsCommon.getMimeInfo(download);
-    let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
-
-    // Set the state attribute so that only the appropriate items are displayed.
-    let { contextMenu } = this;
-    contextMenu.setAttribute("state", element.getAttribute("state"));
-    if (element.hasAttribute("exists")) {
-      contextMenu.setAttribute("exists", "true");
-    } else {
-      contextMenu.removeAttribute("exists");
-    }
-    contextMenu.classList.toggle(
-      "temporary-block",
-      element.classList.contains("temporary-block")
-    );
-    if (element.hasAttribute("viewable-internally")) {
-      contextMenu.setAttribute("viewable-internally", "true");
-      let alwaysUseSystemViewerItem = contextMenu.querySelector(
-        ".downloadAlwaysUseSystemDefaultMenuItem"
-      );
-      if (preferredAction === useSystemDefault) {
-        alwaysUseSystemViewerItem.setAttribute("checked", "true");
-      } else {
-        alwaysUseSystemViewerItem.removeAttribute("checked");
-      }
-      alwaysUseSystemViewerItem.toggleAttribute(
-        "enabled",
-        DownloadsCommon.alwaysOpenInSystemViewerItemEnabled
-      );
-      let useSystemViewerItem = contextMenu.querySelector(
-        ".downloadUseSystemDefaultMenuItem"
-      );
-      useSystemViewerItem.toggleAttribute(
-        "enabled",
-        DownloadsCommon.openInSystemViewerItemEnabled
-      );
-    } else {
-      contextMenu.removeAttribute("viewable-internally");
-    }
+    DownloadsViewUI.updateContextMenuForElement(this.contextMenu, element);
   },
 
   onDownloadDragStart(aEvent) {
