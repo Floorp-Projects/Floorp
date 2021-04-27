@@ -274,6 +274,13 @@ interface nsILoginManager : nsISupports {
    */
   Promise setLastSync(in double timestamp);
 
+  /**
+   * Ensures that the local sync ID for the engine matches the sync ID for
+   * the collection on the server. If they don't match, then we set
+    * the local sync ID to newSyncID and reset the last sync timestamp.
+   */
+  Promise ensureCurrentSyncID(in AString newSyncID);
+
  /**
   * True when a master password prompt is being displayed.
   */
