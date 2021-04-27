@@ -1,3 +1,5 @@
+// |jit-test| skip-if: getBuildConfiguration()['wasi']
+//
 // Tests aimed at AbstractGeneratorObject::FixedSlotLimit.
 
 "use strict";

@@ -1,3 +1,4 @@
+// |jit-test| skip-if: getBuildConfiguration()['wasi']
 var s = "";
 var input = "";
 for (var i = 0; i < 500; ++i) {
