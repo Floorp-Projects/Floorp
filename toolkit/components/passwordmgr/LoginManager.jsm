@@ -563,6 +563,18 @@ LoginManager.prototype = {
     await this._storage.setLastSync(timestamp);
   },
 
+  async ensureCurrentSyncID(newSyncID) {
+    let existingSyncID = await this.getSyncID();
+    if (existingSyncID == newSyncID) {
+      return existingSyncID;
+    }
+    log.debug("Engine syncIDs: " + [newSyncID, existingSyncID]);
+
+    await this.setSyncID(newSyncID);
+    await this.setLastSync(0);
+    return newSyncID;
+  },
+
   get uiBusy() {
     return this._storage.uiBusy;
   },

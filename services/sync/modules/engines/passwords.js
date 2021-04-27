@@ -90,40 +90,9 @@ PasswordEngine.prototype = {
 
   syncPriority: 2,
 
-  // Metadata for syncing is stored in the login manager. We also migrate it
-  // from preferences which can be removed eventually via bug 1651568. Note that
-  // we don't support profile downgrades - once it's migrated, the login manager
-  // becomes the single source of truth.
-  // Note also that the syncID is stored encrypted and null is returned if it
-  // can't be decrypted - this is done for that 'return null' side-effect rather
-  // than due to privacy - we want failure to decrypt the store to be treated as
-  // an engine reset.
-  async getSyncID() {
-    let legacyValue = this._syncID; // the base preference getter.
-    if (legacyValue) {
-      await Services.logins.setSyncID(legacyValue);
-      Svc.Prefs.reset(this.name + ".syncID");
-      this._log.debug(`migrated syncID of ${legacyValue} to the logins store`);
-      return legacyValue;
-    }
-    return Services.logins.getSyncID();
-  },
-
+  // Metadata for syncing is stored in the login manager
   async ensureCurrentSyncID(newSyncID) {
-    // getSyncID above really only exists for this function - the rest of sync
-    // has already moved away from it, and even our tests  barely use it.
-    // When we remove the migration code (bug 1651568) we should consider
-    // removing getSyncID() from both here and the login manager, and pushing
-    // this ensureCurrentSyncID() function down into the login manager.
-    let existingSyncID = await this.getSyncID();
-    if (existingSyncID == newSyncID) {
-      return existingSyncID;
-    }
-    this._log.debug("Engine syncIDs: " + [newSyncID, existingSyncID]);
-
-    await Services.logins.setSyncID(newSyncID);
-    await Services.logins.setLastSync(0);
-    return newSyncID;
+    return Services.logins.ensureCurrentSyncID(newSyncID);
   },
 
   async getLastSync() {
