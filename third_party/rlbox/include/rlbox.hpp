@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "rlbox_app_pointer.hpp"
 #include "rlbox_conversion.hpp"
 #include "rlbox_helpers.hpp"
 #include "rlbox_policy_types.hpp"
