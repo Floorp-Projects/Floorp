@@ -5040,6 +5040,10 @@ static bool ScheduleWatchdog(JSContext* cx, double t) {
     return true;
   }
 
+#ifdef __wasi__
+  return false;
+#endif
+
   auto interval = TimeDuration::FromSeconds(t);
   auto timeout = TimeStamp::Now() + interval;
   LockGuard<Mutex> guard(sc->watchdogLock);
@@ -11562,7 +11566,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
   return true;
 }
 
-static int Shell(JSContext* cx, OptionParser* op, char** envp) {
+static int Shell(JSContext* cx, OptionParser* op) {
   if (JS::TraceLoggerSupported()) {
     JS::StartTraceLogger(cx);
   }
@@ -11818,7 +11822,7 @@ static bool WriteSelfHostedXDRFile(JSContext* cx,
   return true;
 }
 
-int main(int argc, char** argv, char** envp) {
+int main(int argc, char** argv) {
   PreInit();
 
   sArgc = argc;
@@ -12610,7 +12614,7 @@ int main(int argc, char** argv, char** envp) {
   }
 #endif  // __wasi__
 
-  result = Shell(cx, &op, envp);
+  result = Shell(cx, &op);
 
 #ifdef DEBUG
   if (OOM_printAllocationCount) {
