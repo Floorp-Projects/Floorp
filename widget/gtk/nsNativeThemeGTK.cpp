@@ -707,9 +707,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
     case StyleAppearance::Menubar:
       aGtkWidgetType = MOZ_GTK_MENUBAR;
       break;
-    case StyleAppearance::Menupopup:
-      aGtkWidgetType = MOZ_GTK_MENUPOPUP;
-      break;
     case StyleAppearance::Menuitem: {
       nsMenuFrame* menuFrame = do_QueryFrame(aFrame);
       if (menuFrame && menuFrame->IsOnMenuBar()) {
@@ -1679,7 +1676,6 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
       aAppearance == StyleAppearance::Progresschunk ||
       aAppearance == StyleAppearance::ProgressBar ||
       aAppearance == StyleAppearance::Menubar ||
-      aAppearance == StyleAppearance::Menupopup ||
       aAppearance == StyleAppearance::Tooltip ||
       aAppearance == StyleAppearance::Menuseparator) {
     *aShouldRepaint = false;
@@ -1853,7 +1849,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::CheckboxLabel:
     case StyleAppearance::RadioLabel:
     case StyleAppearance::Menubar:
-    case StyleAppearance::Menupopup:
     case StyleAppearance::Menuitem:
     case StyleAppearance::Menuarrow:
     case StyleAppearance::Menuseparator:
@@ -1926,9 +1921,6 @@ bool nsNativeThemeGTK::ThemeNeedsComboboxDropmarker() { return false; }
 nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   switch (aAppearance) {
-    // These always draw a default background.
-    case StyleAppearance::Menupopup:
-      return eOpaque;
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
       // Make scrollbar tracks opaque on the window's scroll frame to prevent
