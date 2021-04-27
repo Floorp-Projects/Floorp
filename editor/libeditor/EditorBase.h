@@ -1726,10 +1726,6 @@ class EditorBase : public nsIEditor,
   /**
    * Get the previous node.
    */
-  nsIContent* GetPreviousElementOrText(const EditorRawDOMPoint& aPoint) const {
-    return GetPreviousContent(aPoint,
-                              {WalkTreeOption::IgnoreDataNodeExceptText});
-  }
   nsIContent* GetPreviousEditableNode(const EditorRawDOMPoint& aPoint) const {
     return GetPreviousContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode});
   }
@@ -1745,10 +1741,6 @@ class EditorBase : public nsIEditor,
       const EditorRawDOMPoint& aPoint) const {
     return GetPreviousContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode,
                                        WalkTreeOption::StopAtBlockBoundary});
-  }
-  nsIContent* GetPreviousElementOrText(const nsINode& aNode) const {
-    return GetPreviousContent(aNode,
-                              {WalkTreeOption::IgnoreDataNodeExceptText});
   }
   nsIContent* GetPreviousEditableNode(const nsINode& aNode) const {
     return GetPreviousContent(aNode, {WalkTreeOption::IgnoreNonEditableNode});
@@ -1792,11 +1784,6 @@ class EditorBase : public nsIEditor,
    * node.
    */
   template <typename PT, typename CT>
-  nsIContent* GetNextElementOrText(
-      const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextContent(aPoint, {WalkTreeOption::IgnoreDataNodeExceptText});
-  }
-  template <typename PT, typename CT>
   nsIContent* GetNextEditableNode(
       const EditorDOMPointBase<PT, CT>& aPoint) const {
     return GetNextContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode});
@@ -1817,9 +1804,6 @@ class EditorBase : public nsIEditor,
       const EditorDOMPointBase<PT, CT>& aPoint) const {
     return GetNextContent(aPoint, {WalkTreeOption::IgnoreNonEditableNode,
                                    WalkTreeOption::StopAtBlockBoundary});
-  }
-  nsIContent* GetNextElementOrText(const nsINode& aNode) const {
-    return GetNextContent(aNode, {WalkTreeOption::IgnoreDataNodeExceptText});
   }
   nsIContent* GetNextEditableNode(const nsINode& aNode) const {
     return GetNextContent(aNode, {WalkTreeOption::IgnoreNonEditableNode});

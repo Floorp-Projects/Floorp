@@ -5004,8 +5004,10 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
-  return aNoBlockCrossing ? GetPreviousElementOrTextInBlock(aNode)
-                          : GetPreviousElementOrText(aNode);
+  return aNoBlockCrossing
+             ? GetPreviousElementOrTextInBlock(aNode)
+             : GetPreviousContent(aNode,
+                                  {WalkTreeOption::IgnoreDataNodeExceptText});
 }
 
 template <typename PT, typename CT>
@@ -5014,8 +5016,10 @@ nsIContent* HTMLEditor::GetPreviousHTMLElementOrTextInternal(
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
-  return aNoBlockCrossing ? GetPreviousElementOrTextInBlock(aPoint)
-                          : GetPreviousElementOrText(aPoint);
+  return aNoBlockCrossing
+             ? GetPreviousElementOrTextInBlock(aPoint)
+             : GetPreviousContent(aPoint,
+                                  {WalkTreeOption::IgnoreDataNodeExceptText});
 }
 
 nsIContent* HTMLEditor::GetPreviousEditableHTMLNodeInternal(
@@ -5042,8 +5046,10 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
-  return aNoBlockCrossing ? GetNextElementOrTextInBlock(aNode)
-                          : GetNextElementOrText(aNode);
+  return aNoBlockCrossing
+             ? GetNextElementOrTextInBlock(aNode)
+             : GetNextContent(aNode,
+                              {WalkTreeOption::IgnoreDataNodeExceptText});
 }
 
 template <typename PT, typename CT>
@@ -5052,8 +5058,10 @@ nsIContent* HTMLEditor::GetNextHTMLElementOrTextInternal(
   if (NS_WARN_IF(!GetActiveEditingHost())) {
     return nullptr;
   }
-  return aNoBlockCrossing ? GetNextElementOrTextInBlock(aPoint)
-                          : GetNextElementOrText(aPoint);
+  return aNoBlockCrossing
+             ? GetNextElementOrTextInBlock(aPoint)
+             : GetNextContent(aPoint,
+                              {WalkTreeOption::IgnoreDataNodeExceptText});
 }
 
 nsIContent* HTMLEditor::GetNextEditableHTMLNodeInternal(
