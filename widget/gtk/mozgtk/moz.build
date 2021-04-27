@@ -6,6 +6,10 @@
 
 SharedLibrary("mozgtk")
 
+SOURCES += [
+    "mozgtk.c",
+]
+
 # If LDFLAGS contains -Wl,--as-needed or if it's the default for the toolchain,
 # we need to add -Wl,--no-as-needed before the gtk libraries, otherwise the
 # linker will drop those dependencies because no symbols are used from them.
