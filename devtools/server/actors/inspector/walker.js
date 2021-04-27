@@ -164,11 +164,6 @@ const HELPER_SHEET =
   .__fx-devtools-hide-shortcut__ {
     visibility: hidden !important;
   }
-
-  :-moz-devtools-highlighted {
-    outline: 2px dashed #F06!important;
-    outline-offset: -2px !important;
-  }
 `);
 
 /**
