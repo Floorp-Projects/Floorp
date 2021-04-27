@@ -1000,10 +1000,8 @@ void NativeObject::removeDictionaryPropertyWithoutReshape(ShapeTable* table,
 
 /* static */
 bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
-                                  jsid id_) {
+                                  HandleId id) {
   AutoCheckShapeConsistency check(obj);
-
-  RootedId id(cx, id_);
 
   AutoKeepShapeCaches keep(cx);
   ShapeTable* table;
