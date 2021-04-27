@@ -32,10 +32,9 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   char16_t GetPasswordCharacterImpl() override;
   bool GetEchoPasswordImpl() override;
 
-  void WithThemeConfiguredForContent(
-      const std::function<void(const LookAndFeelTheme&, bool)>& aFn) override;
-  bool FromParentTheme(IntID) override;
-  bool FromParentTheme(ColorID) override;
+  void WithAltThemeConfigured(const std::function<void(bool)>&);
+
+  void GetGtkContentTheme(LookAndFeelTheme&) override;
 
   static void ConfigureTheme(const LookAndFeelTheme& aTheme);
 
@@ -57,6 +56,10 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     bool mIsDark = false;
     bool mHighContrast = false;
     bool mPreferDarkTheme = false;
+
+    // NOTE(emilio): This is unused, but if we need to we can use it to override
+    // system colors with standins like we do for the non-native theme.
+    bool mCompatibleWithHTMLLightColors = false;
 
     // Cached fonts
     nsString mDefaultFontName;
@@ -124,6 +127,19 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   };
 
   PerThemeData mSystemTheme;
+
+  // If the system theme is light, a dark theme. Otherwise, a light theme. The
+  // alternative theme to the current one is preferred, but otherwise we fall
+  // back to Adwaita / Adwaita Dark, respectively.
+  PerThemeData mAltTheme;
+
+  const PerThemeData& LightTheme() const {
+    return mSystemTheme.mIsDark ? mAltTheme : mSystemTheme;
+  }
+
+  const PerThemeData& DarkTheme() const {
+    return mSystemTheme.mIsDark ? mSystemTheme : mAltTheme;
+  }
 
   int32_t mCaretBlinkTime = 0;
   bool mCSDAvailable = false;
