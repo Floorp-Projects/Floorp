@@ -17,7 +17,7 @@ bool SessionStoreRestoreData::IsEmpty() {
           mEntries.IsEmpty() && mChildren.IsEmpty());
 }
 
-SessionStoreRestoreData* SessionStoreRestoreData::FindChild(
+SessionStoreRestoreData* SessionStoreRestoreData::FindDataForChild(
     BrowsingContext* aContext) {
   nsTArray<uint32_t> offsets;
   for (const BrowsingContext* current = aContext;
