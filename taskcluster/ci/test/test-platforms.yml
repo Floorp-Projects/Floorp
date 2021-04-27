@@ -159,19 +159,16 @@ linux1804-64-ccov/opt:
 windows7-32/debug:
     build-platform: win32/debug
     test-sets:
-        - windows-reftest-gpu
         - windows-7-tests
 
 windows7-32/opt:
     build-platform: win32/opt
     test-sets:
-        - windows-reftest-gpu
         - windows-7-tests
 
 windows7-32-shippable/opt:
     build-platform: win32-shippable/opt
     test-sets:
-        - windows-reftest-gpu
         - windows-7-tests
 
 # win7 qr builds for try purposes
@@ -239,7 +236,6 @@ windows10-64-ccov-qr/opt:
     build-platform: win64-ccov/opt
     test-sets:
         - desktop-screenshot-capture
-        - windows-reftest-gpu
         - windows-tests
         - windows-ccov-tests
         - windows10-tests

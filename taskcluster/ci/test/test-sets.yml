@@ -311,9 +311,6 @@ windows32-qr-tests:
     - mochitest-plain-gpu
     - test-verify
 
-windows-reftest-gpu:
-    - reftest-gpu
-
 windows-7-tests:
     - cppunit
     - gtest
