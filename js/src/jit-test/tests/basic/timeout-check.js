@@ -1,4 +1,4 @@
-// |jit-test| exitstatus: 6
+// |jit-test| exitstatus: 6; skip-if: getBuildConfiguration()['wasi']
 function f(x) {
     if (x === 0)
 	return;

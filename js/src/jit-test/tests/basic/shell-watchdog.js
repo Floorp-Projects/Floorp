@@ -1,4 +1,4 @@
-// |jit-test| exitstatus: 6;
+// |jit-test| exitstatus: 6; skip-if: getBuildConfiguration()['wasi']
 
 /* This test will loop infinitely if the shell watchdog
    fails to kick in. */
