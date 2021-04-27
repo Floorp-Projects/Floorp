@@ -7927,7 +7927,7 @@ bool nsWindow::UseFractionalScale() {
   return (GdkIsWaylandDisplay() &&
           StaticPrefs::widget_wayland_fractional_buffer_scale() > 0 &&
           WaylandDisplayGet()->GetViewporter());
-#elif
+#else
   return false;
 #endif
 }
