@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.rlbox += [
     "/third_party/rlbox/include/rlbox.hpp",
+    "/third_party/rlbox/include/rlbox_app_pointer.hpp",
     "/third_party/rlbox/include/rlbox_conversion.hpp",
     "/third_party/rlbox/include/rlbox_helpers.hpp",
     "/third_party/rlbox/include/rlbox_noop_sandbox.hpp",
