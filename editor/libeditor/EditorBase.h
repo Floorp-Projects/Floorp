@@ -1724,51 +1724,13 @@ class EditorBase : public nsIEditor,
   DoTransactionInternal(nsITransaction* aTransaction);
 
   /**
-   * Get the previous node.
-   */
-  nsIContent* GetPreviousNodeInBlock(const EditorRawDOMPoint& aPoint) const {
-    return GetPreviousContent(aPoint, {WalkTreeOption::StopAtBlockBoundary});
-  }
-  nsIContent* GetPreviousNodeInBlock(const nsINode& aNode) const {
-    return GetPreviousContent(aNode, {WalkTreeOption::StopAtBlockBoundary});
-  }
-
-  /**
    * Get the next node.
    *
-   * Note that methods taking EditorRawDOMPoint behavior includes the
-   * child at offset as search target.  E.g., following code causes infinite
-   * loop.
-   *
-   * EditorRawDOMPoint point(aEditableNode);
-   * while (nsIContent* content =
-   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode})) {
-   *   // Do something...
-   *   point.Set(content);
-   * }
-   *
-   * Following code must be you expected:
-   *
-   * while (nsIContent* content =
-   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode}) {
-   *   // Do something...
-   *   DebugOnly<bool> advanced = point.Advanced();
-   *   MOZ_ASSERT(advanced);
-   *   point.Set(point.GetChild());
-   * }
    *
    * On the other hand, the methods taking nsINode behavior must be what
    * you want.  They start to search the result from next node of the given
    * node.
    */
-  template <typename PT, typename CT>
-  nsIContent* GetNextNodeInBlock(
-      const EditorDOMPointBase<PT, CT>& aPoint) const {
-    return GetNextContent(aPoint, {WalkTreeOption::StopAtBlockBoundary});
-  }
-  nsIContent* GetNextNodeInBlock(const nsINode& aNode) const {
-    return GetNextContent(aNode, {WalkTreeOption::StopAtBlockBoundary});
-  }
 
   /**
    * Get previous content node of aNode if there is.
@@ -1800,6 +1762,26 @@ class EditorBase : public nsIEditor,
 
   /**
    * And another version that takes a point in DOM tree rather than a node.
+   *
+   * Note that this may return the child at the offset.  E.g., following code
+   * causes infinite loop.
+   *
+   * EditorRawDOMPoint point(aEditableNode);
+   * while (nsIContent* content =
+   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode})) {
+   *   // Do something...
+   *   point.Set(content);
+   * }
+   *
+   * Following code must be you expected:
+   *
+   * while (nsIContent* content =
+   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode}) {
+   *   // Do something...
+   *   DebugOnly<bool> advanced = point.Advanced();
+   *   MOZ_ASSERT(advanced);
+   *   point.Set(point.GetChild());
+   * }
    */
   nsIContent* GetNextContent(const EditorRawDOMPoint& aPoint,
                              const WalkTreeOptions& aOptions) const;
