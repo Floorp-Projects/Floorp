@@ -15,9 +15,9 @@
     "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillaaustra-22&sourceid=Mozilla-search"
   },
   "suggestUrl": {
-    "message": ""
+    "message": "https://completion.amazon.com.au/search/complete"
   },
   "suggestUrlGetParams": {
-    "message": ""
+    "message": "q={searchTerms}&search-alias=aps&mkt=111172"
   }
 }
