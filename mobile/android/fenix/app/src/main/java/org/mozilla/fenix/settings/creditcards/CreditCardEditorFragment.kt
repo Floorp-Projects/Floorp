@@ -76,7 +76,7 @@ class CreditCardEditorFragment : Fragment(R.layout.fragment_credit_card_editor) 
             true
         }
         R.id.save_credit_card_button -> {
-            creditCardEditorView.saveCreditCardInfo(creditCardEditorState)
+            creditCardEditorView.saveCreditCard(creditCardEditorState)
             true
         }
         else -> false

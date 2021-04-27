@@ -8,6 +8,8 @@ import androidx.annotation.VisibleForTesting
 
 private const val MAX_CREDIT_CARD_NUMBER_LENGTH = 19
 private const val MIN_CREDIT_CARD_NUMBER_LENGTH = 12
+// Number of last digits to be shown when credit card number is obfuscated.
+private const val LAST_VISIBLE_DIGITS_COUNT = 4
 
 /**
  * Strips characters other than digits from a string.
@@ -15,6 +17,13 @@ private const val MIN_CREDIT_CARD_NUMBER_LENGTH = 12
  */
 fun String.toCreditCardNumber(): String {
     return this.filter { it.isDigit() }
+}
+
+/**
+ * Returns the last 4 digits from a formatted credit card number string.
+ */
+fun String.last4Digits(): String {
+    return this.takeLast(LAST_VISIBLE_DIGITS_COUNT)
 }
 
 /**

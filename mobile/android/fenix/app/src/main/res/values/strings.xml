@@ -1549,6 +1549,8 @@
     <string name="credit_cards_cancel_button">Cancel</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Saved cards</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Please enter a valid credit card number</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Add search engine</string>
