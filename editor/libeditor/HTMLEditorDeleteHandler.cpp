@@ -4415,8 +4415,10 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
           atStart.IsEndOfContainer() && range.StartRef().GetChild() &&
                   range.StartRef().GetChild()->IsHTMLElement(nsGkAtoms::br) &&
                   !aHTMLEditor.IsVisibleBRElement(range.StartRef().GetChild())
-              ? aHTMLEditor.GetNextElementOrTextInBlock(
-                    *atStart.ContainerAsContent())
+              ? aHTMLEditor.GetNextContent(
+                    *atStart.ContainerAsContent(),
+                    {WalkTreeOption::IgnoreDataNodeExceptText,
+                     WalkTreeOption::StopAtBlockBoundary})
               : nullptr;
       if (!nextContent || nextContent != range.StartRef().GetChild()) {
         noNeedToChangeStart = true;
