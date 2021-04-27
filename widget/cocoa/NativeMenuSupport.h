@@ -32,6 +32,9 @@ class NativeMenuSupport final {
   // as a native context menu.
   static already_AddRefed<NativeMenu> CreateNativeContextMenu(
       dom::Element* aPopup);
+
+  // Whether or not native context menus are enabled.
+  static bool ShouldUseNativeContextMenus();
 };
 
 }  // namespace widget
