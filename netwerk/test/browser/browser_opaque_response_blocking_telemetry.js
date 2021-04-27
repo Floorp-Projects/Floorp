@@ -24,6 +24,10 @@ const NOSNIFF_URL = `${ORIGIN2}/${DIRPATH}res_nosniff2.html`;
 const NOT_OK_URL = `${ORIGIN2}/${DIRPATH}res_not_ok.html`;
 const UNKNOWN_URL = `${ORIGIN2}/${DIRPATH}res.unknown`;
 const IMAGE_UNKNOWN_URL = `${ORIGIN2}/${DIRPATH}res_img_unknown.png`;
+const MEDIA_URL = `${ORIGIN2}/${DIRPATH}res.mp3`;
+const MEDIA_206_URL = `${ORIGIN2}/${DIRPATH}res_206.mp3`;
+const MEDIA_INVALID_PARTIAL_URL = `${ORIGIN2}/${DIRPATH}res_invalid_partial.mp3`;
+const MEDIA_NOT_200OR206_URL = `${ORIGIN2}/${DIRPATH}res_not_200or206.mp3`;
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
@@ -69,6 +73,26 @@ add_task(async function() {
       url: IMAGE_UNKNOWN_URL,
       key: "Blocked_ContentTypeBeginsWithImageOrVideoOrAudio",
     },
+    {
+      url: MEDIA_URL,
+      key: "Allowed_SniffAsImageOrAudioOrVideo",
+      media: true,
+    },
+    {
+      url: MEDIA_206_URL,
+      key: "Allowed_SniffAsImageOrAudioOrVideo",
+      media: true,
+    },
+    {
+      url: MEDIA_INVALID_PARTIAL_URL,
+      key: "Blocked_InvaliidPartialResponse",
+      media: true,
+    },
+    {
+      url: MEDIA_NOT_200OR206_URL,
+      key: "Blocked_Not200Or206",
+      media: true,
+    },
   ];
 
   for (let testcase of testcases) {
@@ -85,7 +109,22 @@ add_task(async function() {
         [testcase.url, testcase.media],
         async (url, media) => {
           try {
-            await content.window.fetch(url);
+            if (media) {
+              const audio = content.document.createElement("audio");
+              audio.src = url;
+              content.document.body.appendChild(audio);
+              audio.load();
+              await new Promise(res => {
+                audio.onloadedmetadata = () => {
+                  audio.src = "";
+                  audio.onloadedmetadata = undefined;
+                  audio.load();
+                  res();
+                };
+              });
+            } else {
+              await content.window.fetch(url);
+            }
           } catch (e) {
             /* Ignore result */
           }
