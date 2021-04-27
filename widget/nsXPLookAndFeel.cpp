@@ -416,13 +416,13 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   }
 }
 
-static constexpr nsLiteralCString kBoolMediaQueryPrefs[] = {
+static constexpr nsLiteralCString kMediaQueryPrefs[] = {
     "browser.proton.enabled"_ns,
     "browser.proton.contextmenus.enabled"_ns,
     "browser.proton.modals.enabled"_ns,
     "browser.proton.doorhangers.enabled"_ns,
     "browser.proton.places-tooltip.enabled"_ns,
-    "browser.theme.dark-toolbar-theme"_ns,
+    "browser.theme.toolbar-theme"_ns,
 };
 
 // Read values from the user's preferences.
@@ -444,7 +444,7 @@ void nsXPLookAndFeel::Init() {
   // that start with that string.
   Preferences::RegisterCallback(OnPrefChanged, "accessibility.tabfocus");
 
-  for (auto& pref : kBoolMediaQueryPrefs) {
+  for (auto& pref : kMediaQueryPrefs) {
     Preferences::RegisterCallback(
         [](const char*, void*) {
           LookAndFeel::NotifyChangedAllWindows(
