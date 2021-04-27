@@ -2687,11 +2687,11 @@ bool nsHttpHandler::IsHttp2Excluded(const nsHttpConnectionInfo* ci) {
 void nsHttpHandler::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  mConnMgr->ExcludeHttp3(ci);
   if (!mExcludedHttp3Origins.Contains(ci->GetRoutedHost())) {
     MutexAutoLock lock(mHttpExclusionLock);
     mExcludedHttp3Origins.Insert(ci->GetRoutedHost());
   }
+  mConnMgr->ExcludeHttp3(ci);
 }
 
 bool nsHttpHandler::IsHttp3Excluded(const nsACString& aRoutedHost) {
