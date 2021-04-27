@@ -285,6 +285,9 @@ static const char gToolkitVersion[] = MOZ_STRINGIFY(GRE_MILESTONE);
 extern const char gToolkitBuildID[];
 
 static nsIProfileLock* gProfileLock;
+#if defined(MOZ_HAS_REMOTE)
+static nsRemoteService* gRemoteService;
+#endif
 
 int gRestartArgc;
 char** gRestartArgv;
@@ -2451,6 +2454,12 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
         SaveFileToEnv("XRE_PROFILE_PATH", aProfileDir);
         SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", aProfileLocalDir);
 
+#if defined(MOZ_HAS_REMOTE)
+        if (gRemoteService) {
+          gRemoteService->UnlockStartup();
+          gRemoteService = nullptr;
+        }
+#endif
         return LaunchChild(false, true);
       }
     } else {
@@ -2553,7 +2562,12 @@ static ReturnAbortOnError ShowProfileManager(
     gRestartArgv[gRestartArgc++] = const_cast<char*>("-os-restarted");
     gRestartArgv[gRestartArgc] = nullptr;
   }
-
+#if defined(MOZ_HAS_REMOTE)
+  if (gRemoteService) {
+    gRemoteService->UnlockStartup();
+    gRemoteService = nullptr;
+  }
+#endif
   return LaunchChild(false, true);
 }
 
@@ -4480,6 +4494,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   mRemoteService = new nsRemoteService(gAppData->remotingName);
   if (mRemoteService && !mDisableRemoteServer) {
     mRemoteService->LockStartup();
+    gRemoteService = mRemoteService;
   }
 #endif
 #if defined(MOZ_WIDGET_GTK)
@@ -5261,6 +5276,7 @@ nsresult XREMain::XRE_mainRun() {
       if (mRemoteService && !mDisableRemoteServer) {
         mRemoteService->StartupServer();
         mRemoteService->UnlockStartup();
+        gRemoteService = nullptr;
       }
 #endif /* MOZ_WIDGET_GTK */
 
