@@ -15,9 +15,7 @@ jobs:
     steps:
       - name: "Discover A-C Version"
         id: ac-version-for-fenix-beta
-        uses: mozilla-mobile/ac-version-for-fenix-beta@1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: mozilla-mobile/ac-version-for-fenix-beta@1.1.0
       - name: "Checkout Master Branch"
         uses: actions/checkout@v2
         with:
