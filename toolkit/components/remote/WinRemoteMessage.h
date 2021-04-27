@@ -51,9 +51,9 @@ class WinRemoteMessageSender final {
 class WinRemoteMessageReceiver final {
   nsCOMPtr<nsICommandLineRunner> mCommandLine;
 
-  nsresult ParseV0(char* aBuffer);
-  nsresult ParseV1(char* aBuffer);
-  nsresult ParseV2(char16_t* aBuffer);
+  nsresult ParseV0(const nsACString& aBuffer);
+  nsresult ParseV1(const nsACString& aBuffer);
+  nsresult ParseV2(const nsAString& aBuffer);
 
  public:
   WinRemoteMessageReceiver() = default;
@@ -62,7 +62,7 @@ class WinRemoteMessageReceiver final {
   WinRemoteMessageReceiver& operator=(const WinRemoteMessageReceiver&) = delete;
   WinRemoteMessageReceiver& operator=(WinRemoteMessageReceiver&&) = delete;
 
-  nsresult Parse(COPYDATASTRUCT* aMessageData);
+  nsresult Parse(const COPYDATASTRUCT* aMessageData);
   nsICommandLineRunner* CommandLineRunner();
 };
 

@@ -49,7 +49,7 @@ WinRemoteMessageSender::WinRemoteMessageSender(const wchar_t* aCommandLine,
 
 COPYDATASTRUCT* WinRemoteMessageSender::CopyData() { return &mData; }
 
-nsresult WinRemoteMessageReceiver::ParseV0(char* aBuffer) {
+nsresult WinRemoteMessageReceiver::ParseV0(const nsACString& aBuffer) {
   CommandLineParserWin<char> parser;
   parser.HandleCommandLine(aBuffer);
 
@@ -58,42 +58,33 @@ nsresult WinRemoteMessageReceiver::ParseV0(char* aBuffer) {
                             nsICommandLine::STATE_REMOTE_AUTO);
 }
 
-nsresult WinRemoteMessageReceiver::ParseV1(char* aBuffer) {
+nsresult WinRemoteMessageReceiver::ParseV1(const nsACString& aBuffer) {
   CommandLineParserWin<char> parser;
-  parser.HandleCommandLine(aBuffer);
-
-  // Moving |wdpath| to the working dir followed by the first null char.
-  char* wdpath = aBuffer;
-  while (*wdpath) {
-    ++wdpath;
-  }
-  ++wdpath;
+  size_t cch = parser.HandleCommandLine(aBuffer);
+  ++cch;  // skip a null char
 
   nsCOMPtr<nsIFile> workingDir;
-  NS_NewLocalFile(NS_ConvertUTF8toUTF16(wdpath), false,
-                  getter_AddRefs(workingDir));
+  if (cch < aBuffer.Length()) {
+    NS_NewLocalFile(NS_ConvertUTF8toUTF16(Substring(aBuffer, cch)), false,
+                    getter_AddRefs(workingDir));
+  }
 
   mCommandLine = new nsCommandLine();
   return mCommandLine->Init(parser.Argc(), parser.Argv(), workingDir,
                             nsICommandLine::STATE_REMOTE_AUTO);
 }
 
-nsresult WinRemoteMessageReceiver::ParseV2(char16_t* aBuffer) {
+nsresult WinRemoteMessageReceiver::ParseV2(const nsAString& aBuffer) {
   CommandLineParserWin<char16_t> parser;
-  parser.HandleCommandLine(aBuffer);
-
-  // Moving |wdpath| to the working dir followed by the first null char.
-  char16_t* wdpath = aBuffer;
-  while (*wdpath) {
-    ++wdpath;
-  }
-  ++wdpath;
+  size_t cch = parser.HandleCommandLine(aBuffer);
+  ++cch;  // skip a null char
 
   nsCOMPtr<nsIFile> workingDir;
-  NS_NewLocalFile(nsDependentString(wdpath), false, getter_AddRefs(workingDir));
+  if (cch < aBuffer.Length()) {
+    NS_NewLocalFile(Substring(aBuffer, cch), false, getter_AddRefs(workingDir));
+  }
 
   int argc = parser.Argc();
-
   Vector<nsAutoCString> utf8args;
   if (!utf8args.reserve(argc)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -110,14 +101,18 @@ nsresult WinRemoteMessageReceiver::ParseV2(char16_t* aBuffer) {
                             nsICommandLine::STATE_REMOTE_AUTO);
 }
 
-nsresult WinRemoteMessageReceiver::Parse(COPYDATASTRUCT* aMessageData) {
+nsresult WinRemoteMessageReceiver::Parse(const COPYDATASTRUCT* aMessageData) {
   switch (static_cast<WinRemoteMessageVersion>(aMessageData->dwData)) {
     case WinRemoteMessageVersion::CommandLineOnly:
-      return ParseV0(reinterpret_cast<char*>(aMessageData->lpData));
+      return ParseV0(nsDependentCSubstring(
+          reinterpret_cast<char*>(aMessageData->lpData), aMessageData->cbData));
     case WinRemoteMessageVersion::CommandLineAndWorkingDir:
-      return ParseV1(reinterpret_cast<char*>(aMessageData->lpData));
+      return ParseV1(nsDependentCSubstring(
+          reinterpret_cast<char*>(aMessageData->lpData), aMessageData->cbData));
     case WinRemoteMessageVersion::CommandLineAndWorkingDirInUtf16:
-      return ParseV2(reinterpret_cast<char16_t*>(aMessageData->lpData));
+      return ParseV2(nsDependentSubstring(
+          reinterpret_cast<char16_t*>(aMessageData->lpData),
+          aMessageData->cbData / sizeof(char16_t)));
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported message version");
       return NS_ERROR_FAILURE;
