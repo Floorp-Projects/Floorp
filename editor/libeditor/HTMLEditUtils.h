@@ -698,7 +698,7 @@ class HTMLEditUtils final {
                            *leafContent, EditorBase::EditorType::HTML)) {
       leafContent = EditorBase::GetNextContent(
           *leafContent, {EditorBase::WalkTreeOption::IgnoreNonEditableNode},
-          EditorBase::EditorType::HTML, &aRootElement);
+          &aRootElement);
     }
     MOZ_ASSERT(leafContent != &aRootElement);
     return leafContent;

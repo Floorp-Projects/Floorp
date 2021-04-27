@@ -2805,20 +2805,19 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
 // static
 nsIContent* EditorBase::GetPreviousContent(
     const nsINode& aNode, const WalkTreeOptions& aOptions,
-    EditorType aEditorType, const Element* aAncestorLimiter /* = nullptr */) {
+    const Element* aAncestorLimiter /* = nullptr */) {
   if (&aNode == aAncestorLimiter ||
       (aAncestorLimiter && !aNode.IsInclusiveDescendantOf(aAncestorLimiter))) {
     return nullptr;
   }
   return EditorBase::GetAdjacentContent(aNode, WalkTreeDirection::Backward,
-                                        aOptions, aEditorType,
-                                        aAncestorLimiter);
+                                        aOptions, aAncestorLimiter);
 }
 
 // static
 nsIContent* EditorBase::GetPreviousContent(
     const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-    EditorType aEditorType, const Element* aAncestorLimiter /* = nullptr */) {
+    const Element* aAncestorLimiter /* = nullptr */) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   NS_WARNING_ASSERTION(
       !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
@@ -2835,13 +2834,13 @@ nsIContent* EditorBase::GetPreviousContent(
       return nullptr;
     }
     return EditorBase::GetPreviousContent(*aPoint.GetContainer(), aOptions,
-                                          aEditorType, aAncestorLimiter);
+                                          aAncestorLimiter);
   }
 
   // else look before the child at 'aOffset'
   if (aPoint.GetChild()) {
     return EditorBase::GetPreviousContent(*aPoint.GetChild(), aOptions,
-                                          aEditorType, aAncestorLimiter);
+                                          aAncestorLimiter);
   }
 
   // unless there isn't one, in which case we are at the end of the node
@@ -2856,34 +2855,33 @@ nsIContent* EditorBase::GetPreviousContent(
   }
 
   if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-       EditorUtils::IsEditableContent(*lastLeafContent, aEditorType)) &&
+       EditorUtils::IsEditableContent(*lastLeafContent, EditorType::HTML)) &&
       (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
        EditorUtils::IsElementOrText(*lastLeafContent))) {
     return lastLeafContent;
   }
 
   // restart the search from the non-editable node we just found
-  return EditorBase::GetPreviousContent(*lastLeafContent, aOptions, aEditorType,
+  return EditorBase::GetPreviousContent(*lastLeafContent, aOptions,
                                         aAncestorLimiter);
 }
 
 // static
 nsIContent* EditorBase::GetNextContent(
     const nsINode& aNode, const WalkTreeOptions& aOptions,
-    EditorType aEditorType, const Element* aAncestorLimiter /* = nullptr */) {
+    const Element* aAncestorLimiter /* = nullptr */) {
   if (&aNode == aAncestorLimiter ||
       (aAncestorLimiter && !aNode.IsInclusiveDescendantOf(aAncestorLimiter))) {
     return nullptr;
   }
   return EditorBase::GetAdjacentContent(aNode, WalkTreeDirection::Forward,
-                                        aOptions, aEditorType,
-                                        aAncestorLimiter);
+                                        aOptions, aAncestorLimiter);
 }
 
 // static
 nsIContent* EditorBase::GetNextContent(
     const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-    EditorType aEditorType, const Element* aAncestorLimiter /* = nullptr */) {
+    const Element* aAncestorLimiter /* = nullptr */) {
   MOZ_ASSERT(aPoint.IsSetAndValid());
   NS_WARNING_ASSERTION(
       !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
@@ -2924,14 +2922,14 @@ nsIContent* EditorBase::GetNextContent(
     }
 
     if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-         EditorUtils::IsEditableContent(*firstLeafContent, aEditorType)) &&
+         EditorUtils::IsEditableContent(*firstLeafContent, EditorType::HTML)) &&
         (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
          EditorUtils::IsElementOrText(*firstLeafContent))) {
       return firstLeafContent;
     }
 
     // restart the search from the non-editable node we just found
-    return EditorBase::GetNextContent(*firstLeafContent, aOptions, aEditorType,
+    return EditorBase::GetNextContent(*firstLeafContent, aOptions,
                                       aAncestorLimiter);
   }
 
@@ -2945,7 +2943,7 @@ nsIContent* EditorBase::GetNextContent(
   }
 
   return EditorBase::GetNextContent(*point.GetContainer(), aOptions,
-                                    aEditorType, aAncestorLimiter);
+                                    aAncestorLimiter);
 }
 
 // static
@@ -3003,7 +3001,7 @@ nsIContent* EditorBase::GetAdjacentLeafContent(
 // static
 nsIContent* EditorBase::GetAdjacentContent(
     const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-    const WalkTreeOptions& aOptions, EditorType aEditorType,
+    const WalkTreeOptions& aOptions,
     const Element* aAncestorLimiter /* = nullptr */) {
   if (&aNode == aAncestorLimiter) {
     // Don't allow traversal above the root node! This helps
@@ -3019,15 +3017,14 @@ nsIContent* EditorBase::GetAdjacentContent(
   }
 
   if ((!aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) ||
-       EditorUtils::IsEditableContent(*leafContent, aEditorType)) &&
+       EditorUtils::IsEditableContent(*leafContent, EditorType::HTML)) &&
       (!aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) ||
        EditorUtils::IsElementOrText(*leafContent))) {
     return leafContent;
   }
 
   return EditorBase::GetAdjacentContent(*leafContent, aWalkTreeDirection,
-                                        aOptions, aEditorType,
-                                        aAncestorLimiter);
+                                        aOptions, aAncestorLimiter);
 }
 
 bool EditorBase::IsRoot(const nsINode* inNode) const {
@@ -3514,7 +3511,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     // of previous editable content.
     nsIContent* previousEditableContent = EditorBase::GetPreviousContent(
         *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
-        EditorType::HTML, GetEditorRoot());
+        GetEditorRoot());
     if (!previousEditableContent) {
       NS_WARNING("There was no editable content before the collapsed range");
       return nullptr;
@@ -3558,7 +3555,7 @@ EditorBase::CreateTransactionForCollapsedRange(
     // next editable content.
     nsIContent* nextEditableContent = EditorBase::GetNextContent(
         *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
-        EditorType::HTML, GetEditorRoot());
+        GetEditorRoot());
     if (!nextEditableContent) {
       NS_WARNING("There was no editable content after the collapsed range");
       return nullptr;
@@ -3621,10 +3618,10 @@ EditorBase::CreateTransactionForCollapsedRange(
         aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward
             ? EditorBase::GetPreviousContent(
                   point, {WalkTreeOption::IgnoreNonEditableNode},
-                  EditorType::HTML, GetEditorRoot())
+                  GetEditorRoot())
             : EditorBase::GetNextContent(
                   point, {WalkTreeOption::IgnoreNonEditableNode},
-                  EditorType::HTML, GetEditorRoot());
+                  GetEditorRoot());
     if (!editableContent) {
       NS_WARNING("There was no editable content around the collapsed range");
       return nullptr;
@@ -3637,10 +3634,10 @@ EditorBase::CreateTransactionForCollapsedRange(
                   HowToHandleCollapsedRange::ExtendBackward
               ? EditorBase::GetPreviousContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                    EditorType::HTML, GetEditorRoot())
+                    GetEditorRoot())
               : EditorBase::GetNextContent(
                     *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                    EditorType::HTML, GetEditorRoot());
+                    GetEditorRoot());
     }
     if (!editableContent) {
       NS_WARNING(
